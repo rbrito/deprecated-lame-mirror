@@ -198,7 +198,6 @@ typedef struct  {
 
   /* VBR tags.  This data is here because VBR header is writen after
    * input file is closed and *internal_flags struct is free'd */
-  int nZeroStreamSize;
   int TotalFrameSize;
   int* pVbrFrames;
   int nVbrNumFrames;

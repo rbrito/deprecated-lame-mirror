@@ -67,18 +67,13 @@
 
 
 const static char	VBRTag[]={"Xing"};
-const int SizeOfEmptyFrame[2][2]=
-{
-	{17,9},
-	{32,17},
-};
 
 
 /***********************************************************************
  *  Robert Hegemann 2001-01-17
  ***********************************************************************/
 
-void addVbr(VBR_seek_info_t * v, int bitrate)
+static void addVbr(VBR_seek_info_t * v, int bitrate)
 {
     int i;
 
@@ -103,7 +98,7 @@ void addVbr(VBR_seek_info_t * v, int bitrate)
     }
 }
 
-void Xing_seek_table(VBR_seek_info_t * v, unsigned char *t)
+static void Xing_seek_table(VBR_seek_info_t * v, unsigned char *t)
 {
     int i, index;
     int seek_point;
@@ -188,7 +183,7 @@ static int ExtractI4(unsigned char *buf)
 	return x;
 }
 
-void CreateI4(unsigned char *buf, int nValue)
+static void CreateI4(unsigned char *buf, int nValue)
 {
         /* big endian create */
 	buf[0]=(nValue>>24)&0xff;
@@ -358,16 +353,6 @@ int InitVbrTag(lame_global_flags *gfp)
 
 
 
-	/* Reserve the proper amount of bytes */
-	if (nMode==3)
-	{
-		gfp->nZeroStreamSize=SizeOfEmptyFrame[gfp->version][1]+4;
-	}
-	else
-	{
-		gfp->nZeroStreamSize=SizeOfEmptyFrame[gfp->version][0]+4;
-	}
-
 	/*
 	// Xing VBR pretends to be a 48kbs layer III frame.  (at 44.1kHz).
         // (at 48kHz they use 56kbs since 48kbs frame not big enough for
@@ -394,7 +379,7 @@ int InitVbrTag(lame_global_flags *gfp)
 	}
 	gfp->TotalFrameSize= 
 	  ((gfp->version+1)*72000*bitrate) / gfp->out_samplerate;
-	tot = (gfp->nZeroStreamSize+VBRHEADERSIZE);
+	tot = (gfc->sideinfo_len+VBRHEADERSIZE);
 	tot += 20;  /* extra 20 bytes for LAME & version string */
 
 	assert(gfp->TotalFrameSize >= tot );
@@ -509,10 +494,6 @@ int PutVbrTag(lame_global_flags *gfp,FILE *fpStream,int nVbrScale)
 	  pbtStreamBuffer[2]=(char) bbyte | abyte;     /* 64kbs MPEG2 frame */
 	}
 
-
-	/*Seek to the beginning of the stream */
-	fseek(fpStream,id3v2TagSize,SEEK_SET);
-
 	/* Clear all TOC entries */
 	memset(btToc,0,sizeof(btToc));
 
@@ -520,7 +501,7 @@ int PutVbrTag(lame_global_flags *gfp,FILE *fpStream,int nVbrScale)
         /* print_seeking (btToc); */
 
 	/* Start writing the tag after the zero frame */
-	nStreamIndex=gfp->nZeroStreamSize;
+	nStreamIndex=gfc->sideinfo_len;
 
 	/* Put Vbr tag */
 	pbtStreamBuffer[nStreamIndex++]=VBRTag[0];
@@ -555,11 +536,19 @@ int PutVbrTag(lame_global_flags *gfp,FILE *fpStream,int nVbrScale)
 
 
 #ifdef DEBUG_VBRTAG
-{
-	VBRTAGDATA TestHeader;
-	GetVbrTag(&TestHeader,pbtStreamBuffer);
-}
+	{
+	  VBRTAGDATA TestHeader;
+	  GetVbrTag(&TestHeader,pbtStreamBuffer);
+	}
 #endif
+
+	if (gfp->error_protection) {
+	  /* (jo) error_protection: add crc16 information to header */
+	  CRC_writeheader(gfc, pbtStreamBuffer);
+	}
+
+	/*Seek to the beginning of the stream */
+	fseek(fpStream,id3v2TagSize,SEEK_SET);
 
         /* Put it all to disk again */
 	if (fwrite(pbtStreamBuffer,(unsigned int)gfp->TotalFrameSize,1,fpStream)!=1)
