@@ -27018,6 +27018,16 @@ cat >>confdefs.h <<\_ACEOF
 _ACEOF
 
 	;;
+x86_64)
+dns CPUTYPE="i386" because nasm does not support elf64 currently
+
+	# this may make a faster binary
+
+cat >>confdefs.h <<\_ACEOF
+#define TAKEHIRO_IEEE754_HACK 1
+_ACEOF
+
+	;;
 *)
 	CPUTYPE="no"
 	;;

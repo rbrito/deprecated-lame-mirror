@@ -581,6 +581,12 @@ case $host_cpu in
 	# this may make a faster binary
 	AC_DEFINE(TAKEHIRO_IEEE754_HACK, 1, IEEE754 compatible machine)
 	;;
+x86_64)
+dns CPUTYPE="i386" because nasm does not support elf64 currently
+
+	# this may make a faster binary
+	AC_DEFINE(TAKEHIRO_IEEE754_HACK, 1, IEEE754 compatible machine)
+	;;
 *)
 	CPUTYPE="no"
 	;;
