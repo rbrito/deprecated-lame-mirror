@@ -22,15 +22,7 @@
 #ifndef LAME_TABLES_H
 #define LAME_TABLES_H
 
-struct huffcodetab {
-    const int    xlen; 	        /* max. x-index+			*/ 
-    const int    dummy;
-    const short* table;		/* pointer to array[xlen][ylen]		*/
-    const char*  hlen;	        /* pointer to array[xlen][ylen]		*/
-};
-
 /* array of all huffcodtable headers, Huffman code table 0..31 */
-extern const struct huffcodetab ht[];
 extern const char htESC_xlen[];
 extern const short escHB[];
 extern const char escLen[];
