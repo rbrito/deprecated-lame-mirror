@@ -941,6 +941,54 @@ static int local_strcasecmp ( const char* s1, const char* s2 )
 }
 
 
+
+int isnumber(const char *string){
+    unsigned int i; //index variable
+    int countdots=0; //keeps track of number of periods in a string
+
+    /* count the number of periods in the string */
+    for (i = 0; i < strlen(string); i++) { //fcn 'strlen' calculates string length
+        if (string[i] == '.') {
+            countdots++;
+        }
+    }
+
+    /* if string is of length one and element is not numeric, string in not a
+    number */
+    if (strlen(string) == 1 && !isdigit(string[0])) {
+        return 0;
+    }
+
+    /* if more than one period, string is not a number */
+    else if (countdots > 1) {
+        return 0;
+    }
+
+    /* if string is longer than one, first element is '-' and all others are
+    numbers or a dot then string is a number */
+    else if (string[0] == '-') {
+        for (i = 0; i < strlen(string); i++){
+            if (isdigit(string[i]) || string[i] == '.') {
+                return 1;
+            }
+        }
+    }
+
+    /* if string is longer than one, first element is a number or '.' and all 
+    others are numbers or a dot then string is a number */
+    else if (isdigit(string[0]) || string[0] == '.') {
+        for (i = 0; i < strlen(string); i++) {
+            if (isdigit(string[i]) || string[i] == '.') {
+                return 1;
+            }
+        }
+    }
+
+    /* nothing else can be a number */
+    return 0;
+}
+
+
 /* LAME is a simple frontend which just uses the file extension */
 /* to determine the file type.  Trying to analyze the file */
 /* contents is well beyond the scope of LAME and should not be added. */
@@ -1281,13 +1329,21 @@ char* const inPath, char* const outPath, char **nogap_inPath, int *num_nogap)
                 
 #if defined(__OS2__)
       		T_ELIF ("priority")
-      		    argUsed=1;
-      		    setOS2Priority(gfp, atoi(nextArg));
+                if (isnumber(nextArg)) {
+      		        argUsed=1;
+      		        setOS2Priority(gfp, atoi(nextArg));
+                } else {
+      		        setOS2Priority(gfp, 0);
+                }
 #endif
 #if defined(WIN32)
       		T_ELIF ("priority")
-      		    argUsed=1;
-      		    setWin32Priority(gfp, atoi(nextArg));
+                if (isnumber(nextArg)) {
+      		        argUsed=1;
+      		        setWin32Priority(gfp, atoi(nextArg));
+                } else {
+      		        setWin32Priority(gfp, 0);
+                }
 #endif
 
                 /* options for ID3 tag */
