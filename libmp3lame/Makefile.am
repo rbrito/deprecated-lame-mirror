@@ -63,6 +63,7 @@ noinst_HEADERS= \
 	l3side.h \
 	lame-analysis.h \
 	lame_global_flags.h \
+	lameerror.h \
 	machine.h \
 	newmdct.h \
 	pcm.h \
@@ -71,7 +72,9 @@ noinst_HEADERS= \
 	quantize_pvt.h \
 	reservoir.h \
 	tables.h \
+	tools.h \
 	util.h \
+	vbrquantize.h \
 	version.h
 
 CLEANFILES = lclint.txt
