@@ -69,7 +69,7 @@
 #include <sys/time.h>
 #include <sys/types.h>
 
-#define  MAX  (1<<16)
+#define  MAX  (1<<17)
 
 #ifdef HAVE_SYS_SOUNDCARD_H
 # include <sys/soundcard.h>
@@ -81,7 +81,7 @@
 
 #define  BF           ((freq)/25)
 #define  MAX_LEN      (210 * 44100)
-#define  DMA_SAMPLES  512	    	/* My Linux driver uses a DMA buffer of 65536*16 bit, which is 32768 samples in 16 bit stereo mode */
+#define  DMA_SAMPLES  512               /* My Linux driver uses a DMA buffer of 65536*16 bit, which is 32768 samples in 16 bit stereo mode */
 
 int verbose = 0;
 
@@ -589,10 +589,10 @@ void testing ( const stereo_t* A, const stereo_t* B, size_t len, long freq )
             break;
 
         case 'o'  :
-	    start = calc_true_index ( index, start, stop);
+            start = calc_true_index ( index, start, stop);
             break;
         case 'p'  :
-	    stop  = calc_true_index ( index, start, stop);
+            stop  = calc_true_index ( index, start, stop);
             break;
         case 'h'  :
             if ( start > freq/100 )
@@ -854,10 +854,13 @@ const decoder_t  decoder [] = {
     { ".mp1"    , "/usr/local/bin/mpg123 -w - %s"                   REDIR },  // MPEG Layer I         : www.iis.fhg.de, www.mpeg.org
     { ".mp2"    , "/usr/local/bin/mpg123 -w - %s"                   REDIR },  // MPEG Layer II        : www.iis.fhg.de, www.uq.net.au/~zzmcheng, www.mpeg.org
     { ".mp3"    , "/usr/local/bin/mpg123 -w - %s"                   REDIR },  // MPEG Layer III       : www.iis.fhg.de, www.mp3dev.org/mp3, www.mpeg.org
+    { ".mpt"    , "/usr/local/bin/mpg123 -w - %s"                   REDIR },  // MPEG Layer III       : www.iis.fhg.de, www.mp3dev.org/mp3, www.mpeg.org
     { ".mpp"    , "/usr/local/bin/mppdec %s -"                      REDIR },  // MPEGplus             : www.stud.uni-hannover.de/user/73884
     { ".mp+"    , "/usr/local/bin/mppdec %s -"                      REDIR },  // MPEGplus             : www.stud.uni-hannover.de/user/73884
     { ".aac"    , "/usr/local/bin/faad -t.wav -w %s"                REDIR },  // Advanced Audio Coding: psytel.hypermart.net, www.aac-tech.com, sourceforge.net/projects/faac, www.aac-audio.com, www.mpeg.org
+    { "aac.lqt" , "/usr/local/bin/faad -t.wav -w %s"                REDIR },  // Advanced Audio Coding: psytel.hypermart.net, www.aac-tech.com, sourceforge.net/projects/faac, www.aac-audio.com, www.mpeg.org
     { ".ac3"    , "/usr/local/bin/ac3dec %s"                        REDIR },  // Dolby AC3            : www.att.com
+    { "ac3.lqt" , "/usr/local/bin/ac3dec %s"                        REDIR },  // Dolby AC3            : www.att.com
     { ".ogg"    , "/usr/local/bin/ogg123 -d wav -o file:"STDOUT" %s"REDIR },  // Ogg Vorbis           : www.xiph.org/ogg/vorbis/index.html
     { ".pac"    , "/usr/local/bin/lpac -x %s "STDOUT                REDIR },  // Lossless predictive Audio Compression: www-ft.ee.tu-berlin.de/~liebchen/lpac.html (liebchen@ft.ee.tu-berlin.de)
     { ".shn"    , "/usr/local/bin/shorten -x < %s"                  REDIR },  // Shorten              : shnutils.freeshell.org, www.softsound.com/Shorten.html (shnutils@freeshell.org, shorten@softsound.com)
@@ -866,11 +869,12 @@ const decoder_t  decoder [] = {
     { ".wav.sz2", "szip2 -d < %s | sox -twav - -twav -sw -"         REDIR },  // sziped WAV
     { ".raw"    , "sox -r44100 -sw -c2 -traw %s -twav -sw -"        REDIR },  // raw files are treated as CD like audio
     { ".rm"     , "echo %s '???'"                                   REDIR },  // Real Audio           : www.real.com
-    { ".???"    , "echo %s '???'"                                   REDIR },  // ePAC                 : www.audioveda.com, www.lucent.com/ldr
+    { ".epc"    , "echo %s '???'"                                   REDIR },  // ePAC                 : www.audioveda.com, www.lucent.com/ldr
     { ".mov"    , "echo %s '???'"                                   REDIR },  // QDesign Music 2      : www.qdesign.com
     { ".vqf"    , "echo %s '???'"                                   REDIR },  // TwinVQ               : www.yamaha-xg.com/english/xg/SoundVQ, www.vqf.com, sound.splab.ecl.ntt.co.jp/twinvq-e
     { ".wma"    , "echo %s '???'"                                   REDIR },  // Microsoft Media Audio: www.windowsmedia.com, www.microsoft.com/windows/windowsmedia
-    { ".???"    , "echo %s '???'"                                   REDIR },  // Monkey's Audio Codec : www.monkeysaudio.com (email@monkeysaudio.com)
+    { ".ape"    , "echo %s '???'"                                   REDIR },  // Monkey's Audio Codec : www.monkeysaudio.com (email@monkeysaudio.com)
+    { ".rka"    , "/opt/winapp/rkau -d %s"                          REDIR },  // RK Audio:              
     { ".mod"    , "xmp -b16 -c -f44100 --stereo -o- %s | sox -r44100 -sw -c2 -traw - -twav -sw -"
                                                                     REDIR },  // Amiga's Music on Disk:
     { ""        , "sox %s -twav -sw -"                              REDIR },  // Rest, may be possible with sox
@@ -1197,8 +1201,8 @@ int  main ( int argc, char** argv )
 
     if ( verbose ) {
         fprintf ( stderr, "Delay Ch1 is %.4f samples\n", fshift );
-	fprintf ( stderr, "Delay Ch2 is %.4f samples\n", 
-	          cross_analyze ( (stereo_t*)(((sample_t*)A)+1), (stereo_t*)(((sample_t*)B)+1), len ) );
+        fprintf ( stderr, "Delay Ch2 is %.4f samples\n", 
+                  cross_analyze ( (stereo_t*)(((sample_t*)A)+1), (stereo_t*)(((sample_t*)B)+1), len ) );
     }
 
     if (shift > 0) {
@@ -1252,4 +1256,3 @@ int  main ( int argc, char** argv )
 }
 
 /* end of abx.c */
-
