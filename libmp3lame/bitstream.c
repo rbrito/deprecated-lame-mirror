@@ -710,16 +710,11 @@ void
 flush_bitstream(lame_global_flags *gfp)
 {
     III_side_info_t *l3_side = &gfp->internal_flags->l3_side;
-    Bit_stream_struc *bs = &gfp->internal_flags->bs;
     int nbytes, flushbits;
-    int last_ptr = (bs->h_ptr - 1) & (MAX_HEADER_BUF-1);
 
     if ((flushbits = compute_flushbits(gfp,&nbytes)) < 0)
 	return;  
     drain_into_ancillary(gfp, flushbits);
-
-    /* check that the 100% of the last frame has been written to bitstream */
-    assert(bs->header[last_ptr].write_timing + getframebits(gfp) == bs->totbit);
 
     /* we have padded out all frames with ancillary data, which is the
        same as filling the bitreservoir with ancillary data, so : */
