@@ -54,6 +54,9 @@ void quantize_sfb_3DN(const FLOAT *, int, int, int *);
 #define SCALEFAC_SCFSI_FLAG    (-1)
 #define SCALEFAC_ANYTHING_GOES (-2)
 
+#define MAX_SUBBLOCK_GAIN 7
+#define MAX_GLOBAL_GAIN 255
+
 #define ROUNDFAC ((FLOAT)0.40539644249863946664)
 
 #endif /* LAME_QUANTIZE_PVT_H */
