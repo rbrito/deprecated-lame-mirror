@@ -161,8 +161,25 @@ ABR_iteration_loop (lame_global_flags *gfp,
   III_side_info_t *l3_side;
 
   l3_side = &gfc->l3_side;
+  gfc->ATH_lower = (4-gfp->VBR_q)*4.0; 
   iteration_init(gfp,l3_side,l3_enc);
 
+  /* - lower masking depending on Quality setting
+   * - quality control together with adjusted ATH MDCT scaling
+   *   on lower quality setting allocate more noise from
+   *   ATH masking, and on higher quality setting allocate
+   *   less noise from ATH masking.
+   * - experiments show that going more than 2dB over GPSYCHO's
+   *   limits ends up in very annoying artefacts
+   */
+  {
+    static const FLOAT8 dbQ[10]={-5.0,-3.75,-2.5,-1.25,0,0.4,0.8,1.2,1.6,2.0};
+    FLOAT8 masking_lower_db;
+    assert( gfp->VBR_q <= 9 );
+    assert( gfp->VBR_q >= 0 );
+    masking_lower_db = dbQ[gfp->VBR_q];
+    gfc->masking_lower = pow(10.0,masking_lower_db/10);
+  }
   gfc->bitrate_index = gfc->VBR_max_bitrate;
   getframebits (gfp,&bitsPerFrame, &mean_bits);
   max_frame_bits=ResvFrameBegin (gfp,l3_side, mean_bits, bitsPerFrame);
@@ -330,8 +347,7 @@ VBR_iteration_loop (lame_global_flags *gfp,
   III_psy_xmin l3_xmin;
   gr_info  *cod_info = NULL;
   int       save_bits[2][2];
-  FLOAT8    noise[4];      /* over,max_noise,over_noise,tot_noise; */
-  FLOAT8    targ_noise[4]; /* over,max_noise,over_noise,tot_noise; */
+  FLOAT8    noise[4];          /* over,max_noise,over_noise,tot_noise; */
   FLOAT8    xfsf[4][SBMAX_l];
   int       this_bits, dbits;
   int       used_bits=0;
@@ -459,7 +475,6 @@ VBR_iteration_loop (lame_global_flags *gfp,
 
       /* bin search to within +/- 10 bits of optimal */
       do {
-	  int better;
 	  assert(this_bits>=min_bits);
 	  assert(this_bits<=max_bits);
 
@@ -473,16 +488,6 @@ VBR_iteration_loop (lame_global_flags *gfp,
 	      continue; /* skips the rest of this do-while loop */
 	  }
 
-	  /* VBR will look for a quantization which has better values
-	   * then those specified below.*/
-	  targ_noise[0]=0;          /* over */
-	  targ_noise[1]=0;          /* max_noise */
-	  targ_noise[2]=0;          /* over_noise */
-	  targ_noise[3]=0;          /* tot_noise */
-	
-	  targ_noise[0]=Max(0,targ_noise[0]);
-	  targ_noise[2]=Max(0,targ_noise[2]);
-
 	  /*
 	   *  OK, start with a fresh setting
 	   *  - scalefac  will be set up by outer_loop
@@ -491,19 +496,12 @@ VBR_iteration_loop (lame_global_flags *gfp,
 	   */
 	  memcpy( cod_info, &clean_cod_info, sizeof(gr_info) );
 
-	  outer_loop( gfp,xr[gr][ch], this_bits, noise, 
-		      &l3_xmin, l3_enc[gr][ch],
-		      &scalefac[gr][ch], cod_info, xfsf,
-		      ch);
+	  outer_loop( gfp,xr[gr][ch], this_bits, noise, &l3_xmin,
+                      l3_enc[gr][ch], &scalefac[gr][ch], cod_info, xfsf, ch);
 
-	  /* is quantization as good as we are looking for ? */
-	  better=VBR_compare((int)targ_noise[0],targ_noise[3],targ_noise[2],
-			     targ_noise[1],(int)noise[0],noise[3],noise[2],
-			     noise[1]);
-	  if (gfp->gtkflag)
-	    set_pinfo(gfp, cod_info, &ratio[gr][ch], &scalefac[gr][ch], xr[gr][ch], xfsf, noise, gr, ch);
-
-	  if (better) {
+	  /* is quantization as good as we are looking for ?
+           */
+	  if (noise[0] <= 0) {
 	      /* 
 	       * we now know it can be done with "real_bits"
 	       * and maybe we can skip some iterations
@@ -516,6 +514,7 @@ VBR_iteration_loop (lame_global_flags *gfp,
               memcpy(  bst_l3_enc,    l3_enc  [gr][ch], sizeof(int)*576         );
               memcpy( &bst_cod_info,  cod_info,         sizeof(gr_info)         );
               if (gfp->gtkflag) {
+	        set_pinfo(gfp, cod_info, &ratio[gr][ch], &scalefac[gr][ch], xr[gr][ch], xfsf, noise, gr, ch);
                 memcpy( &bst_pinfo, gfc->pinfo, sizeof(plotting_data) );
 	      }
 	      /*
@@ -540,7 +539,15 @@ VBR_iteration_loop (lame_global_flags *gfp,
         if (gfp->gtkflag) {
           memcpy( gfc->pinfo, &bst_pinfo, sizeof(plotting_data) );
 	}
+      } 
+      else
+      { /* we didn't find any satisfying quantization above
+         * the only thing we still need to set is the gtk info field
+         */
+        if (gfp->gtkflag)
+	  set_pinfo(gfp, cod_info, &ratio[gr][ch], &scalefac[gr][ch], xr[gr][ch], xfsf, noise, gr, ch);
       }
+
       assert((int)cod_info->part2_3_length <= max_bits);
       assert((int)cod_info->part2_3_length < 4096);
       save_bits[gr][ch] = cod_info->part2_3_length;
@@ -830,8 +837,17 @@ void outer_loop(
     }
 
     /* if no bands with distortion, we are done */
-    if (gfc->noise_shaping_stop==0 && over==0)
-      notdone=0;
+    if (!gfp->experimentalX) {
+        if (gfc->noise_shaping_stop==0 && over==0)
+          notdone=0;
+    } else {
+        /* do at least 7 tries and stop 
+         * if our best quantization so far had no distorted bands
+         * this gives us more possibilities for our different quant_compare modes
+         */
+        if (iteration>7 && gfc->noise_shaping_stop==0 && best_noise_info.over_count==0)
+          notdone=0;
+    }
 
     if (notdone) {
 	amp_scalefac_bands( gfp, xrpow, cod_info, &scalefac_w, distort);
@@ -1086,78 +1102,39 @@ int quant_compare(int experimentalX,
    */
   int better=0;
 
-  if (experimentalX==0) {
-    better = ( (calc->over_count < best->over_count) ||
-    	          ((calc->over_count == best->over_count)
-		     && (calc->over_avg_noise <= best->over_avg_noise)) ) ;
-  }
+  switch (experimentalX) {
+  default:
+  case 0: better =   calc->over_count      < best->over_count
+                 ||( calc->over_count     == best->over_count
+                  && calc->over_avg_noise <= best->over_avg_noise ); break;
 
-  if (experimentalX==1) 
-    better = calc->max_noise < best->max_noise;
+  case 1: better = calc->max_noise < best->max_noise; break;
 
-  if (experimentalX==2) {
-    better = calc->tot_avg_noise < best->tot_avg_noise;
-  }
-  if (experimentalX==3) {
-    better = (calc->tot_avg_noise < best->tot_avg_noise) &&
-      (calc->max_noise < best->max_noise + 2);
-  }
-  if (experimentalX==4) {
-    better = ( ( (0>=calc->max_noise) && (best->max_noise>2)) ||
+  case 2: better = calc->tot_avg_noise < best->tot_avg_noise; break;
+  
+  case 3: better =  calc->tot_avg_noise < best->tot_avg_noise
+                 && calc->max_noise     < best->max_noise + 2; break;
+  
+  case 4: better = ( ( (0>=calc->max_noise) && (best->max_noise>2)) ||
      ( (0>=calc->max_noise) && (best->max_noise<0) && ((best->max_noise+2)>calc->max_noise) && (calc->tot_avg_noise<best->tot_avg_noise) ) ||
      ( (0>=calc->max_noise) && (best->max_noise>0) && ((best->max_noise+2)>calc->max_noise) && (calc->tot_avg_noise<(best->tot_avg_noise+best->over_avg_noise)) ) ||
      ( (0<calc->max_noise) && (best->max_noise>-0.5) && ((best->max_noise+1)>calc->max_noise) && ((calc->tot_avg_noise+calc->over_avg_noise)<(best->tot_avg_noise+best->over_avg_noise)) ) ||
      ( (0<calc->max_noise) && (best->max_noise>-1) && ((best->max_noise+1.5)>calc->max_noise) && ((calc->tot_avg_noise+calc->over_avg_noise+calc->over_avg_noise)<(best->tot_avg_noise+best->over_avg_noise+best->over_avg_noise)) ) );
-  }
-  if (experimentalX==5) {
-    better =   (calc->over_avg_noise <  best->over_avg_noise)
-      || ((calc->over_avg_noise == best->over_avg_noise)&&(calc->tot_avg_noise < best->tot_avg_noise));
-  }
-  if (experimentalX==6) {
-    better = (calc->over_avg_noise < best->over_avg_noise)
-           ||( (calc->over_avg_noise == best->over_avg_noise)
-             &&( (calc->max_noise < best->max_noise)
-               ||( (calc->max_noise == best->max_noise)
-                 &&(calc->tot_avg_noise <= best->tot_avg_noise)
-                 )
-               ) 
-	     );
-  }
-  if (experimentalX==7) {
-    better = ( (calc->over_count < best->over_count) ||
-               (calc->over_noise <  best->over_noise) );
-  }
-
-
-  return better;
-}
-
-
-int VBR_compare(
-int best_over,FLOAT8 best_tot_noise,FLOAT8 best_over_noise,FLOAT8 best_max_noise,
-int over,FLOAT8 tot_noise, FLOAT8 over_noise, FLOAT8 max_noise)
-{
-  /*
-    noise is given in decibals (db) relative to masking thesholds.
-
-    over_noise:  sum of quantization noise > masking
-    tot_noise:   sum of all quantization noise
-    max_noise:   max quantization noise 
-
-   */
-  int better=0;
-
-  better = ((over <= best_over) &&
-	    (over_noise<=best_over_noise) &&
-	    (tot_noise<=best_tot_noise) &&
-	    (max_noise<=best_max_noise));
-  return better;
-}
+     break;
+     
+  case 5: better =   calc->over_avg_noise  < best->over_avg_noise
+                 ||( calc->over_avg_noise == best->over_avg_noise
+                  && calc->tot_avg_noise   < best->tot_avg_noise ); break;
   
+  case 6: better =     calc->over_avg_noise  < best->over_avg_noise
+                 ||(   calc->over_avg_noise == best->over_avg_noise
+                  &&(  calc->max_noise       < best->max_noise
+                   ||( calc->max_noise      == best->max_noise
+                    && calc->tot_avg_noise  <= best->tot_avg_noise ))); break;
+  
+  case 7: better =  calc->over_count < best->over_count
+                 || calc->over_noise < best->over_noise; break;
+  }
 
-
-
-
-
-
-
+  return better;
+}

@@ -105,10 +105,6 @@ int count_bits(lame_global_flags *gfp,int  *ix, FLOAT8 xr[576], gr_info *cod_inf
 
 int quant_compare(int type, calc_noise_result *best_noise, calc_noise_result *noise);
 
-int VBR_compare(
-int best_over,FLOAT8 best_tot_noise,FLOAT8 best_over_noise,FLOAT8 best_max_over,
-int over,FLOAT8 tot_noise, FLOAT8 over_noise,FLOAT8 max_noise);
-
 void best_huffman_divide(lame_internal_flags *gfc, int gr, int ch, gr_info *cod_info, int *ix);
 
 void best_scalefac_store(lame_global_flags *gfp,int gr, int ch,
