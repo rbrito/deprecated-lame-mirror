@@ -1201,7 +1201,7 @@ find_scalefac(const FLOAT * xr, const FLOAT * xr34, FLOAT l3_xmin, int bw,
     }
 
     if (sfmin <= sf_ok && sf_ok < 256)
-	return sf_ok;
+	sf = sf_ok;
     return sf;
 }
 
