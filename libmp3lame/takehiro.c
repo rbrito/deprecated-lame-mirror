@@ -831,27 +831,13 @@ int count_bits(
           calc_noise_data* prev_noise
 	  )
 {
-    int i;
     int *const ix = gi->l3_enc;
 
     /* since quantize_xrpow uses table lookup, we need to check this first: */
     FLOAT8 w = (IXMAX_VAL) / IPOW20(gi->global_gain);
-    int max_coeff = Min(gi->max_nonzero_coeff + 4, 576);
-    max_coeff = max_coeff >> 2;
-    i = 0;
+    if (gi->xrpow_max > w)
+        return LARGE_BITS;
     
-    /* this small loop is consuming about 5% of total time */
-    do {
-	    if (xr[i] > w)
-	        return LARGE_BITS;
-	    if (xr[i+1] > w)
-	        return LARGE_BITS;
-	    if (xr[i+2] > w)
-	        return LARGE_BITS;
-	    if (xr[i+3] > w)
-	        return LARGE_BITS;
-        i+=4;
-    } while (--max_coeff);
 
     if (gfc->quantization) 
 	    quantize_xrpow(xr, ix, IPOW20(gi->global_gain), gi, prev_noise);

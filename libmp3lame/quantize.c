@@ -182,26 +182,30 @@ init_xrpow(
     int i;
 
     assert( xrpow != NULL );
+    cod_info->xrpow_max = 0;
     
     /*  check if there is some energy we have to quantize
      *  and calculate xrpow matching our fresh scalefactors
      */
     for (i = 0; i < 576; ++i) {
         tmp = fabs (cod_info->xr[i]);
-	sum += tmp;
+        sum += tmp;
         xrpow[i] = sqrt (tmp * sqrt(tmp));
+
+        if (xrpow[i] > cod_info->xrpow_max)
+            cod_info->xrpow_max = xrpow[i];
     }
     /*  return 1 if we have something to quantize, else 0
      */
     if (sum > (FLOAT8)1E-20) {
-	int j = 0;
-	if (gfc->substep_shaping & 2)
-	    j = 1;
+        int j = 0;
+        if (gfc->substep_shaping & 2)
+            j = 1;
 
-	for (i = 0; i < cod_info->psymax; i++)
-	    gfc->pseudohalf[i] = j;
+        for (i = 0; i < cod_info->psymax; i++)
+            gfc->pseudohalf[i] = j;
 
-	return 1;
+        return 1;
     }
 
     memset(&cod_info->l3_enc, 0, sizeof(int)*576);

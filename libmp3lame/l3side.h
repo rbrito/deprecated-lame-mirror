@@ -52,6 +52,7 @@ typedef struct {
     FLOAT8 xr[576];
     int l3_enc[576];
     int scalefac[SFBMAX];
+    FLOAT8 xrpow_max;
 
     int part2_3_length;
     int big_values;
