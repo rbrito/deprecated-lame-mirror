@@ -747,20 +747,17 @@ static const char* presets_alias( const char* preset_name )
 {
     int i;
     unsigned char p0;
-                                /* original presets to be aliased */
-    const char* dm_standard = "dm-standard";
-    const char* dm_xtreme   = "dm-xtreme";
-    const char* dm_insane   = "dm-insane";
-    const char* dm_metal    = "dm-metal";
 
+    /* note (rh): previous code did not compile with GNU-C
+     */
     struct ps_alias {
-        const unsigned char *in;
+        const char *in;
         const char *out;
     } ps_xlat[] = {             /* alphabetically ordered alias table  */
-        {"insane", dm_insane},
-        {"metal", dm_metal},
-        {"standard", dm_standard}, 
-        {"xtreme", dm_xtreme},
+        {"insane", "dm-insane"},
+        {"metal",  "dm-metal"},
+        {"standard", "dm-standard"}, 
+        {"xtreme", "dm-xtreme"},
         {"\xff", NULL}
     };
 
@@ -839,6 +836,7 @@ static int  r3mix_presets( lame_t gfp, const char* preset_subname )
     return -1;
 }
 
+extern void lame_set_msfix( lame_t gfp, double msfix );
 
 /*  some presets thanks to Dibrom
  */

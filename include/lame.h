@@ -273,8 +273,7 @@ int CDECL lame_get_experimentalZ(const lame_global_flags *);
 int CDECL lame_set_exp_nspsytune(lame_global_flags *, int);
 int CDECL lame_get_exp_nspsytune(const lame_global_flags *);
 
-// setting which allows modification of msfix value when Naoki's safejoint is used
-void CDECL lame_set_msfix( lame_t gfp, double msfix );
+
 
 /********************************************************************
  * VBR control
