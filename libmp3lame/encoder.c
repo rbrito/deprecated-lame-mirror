@@ -188,7 +188,13 @@ int  lame_encode_mp3_frame (				// Output
     
     iteration_init(gfp);
     
-    gfc->ATH->adjust = 1.0;
+    /*  prepare for ATH auto adjustment:
+     *  we want to decrease the ATH by 12 dB per second
+     */ {
+        FLOAT8 frame_duration = 576. * gfc->mode_gr / gfp->out_samplerate;
+        gfc->ATH->decay = pow(10., -12./10. * frame_duration);
+        gfc->ATH->adjust = 1.0;
+    }
   }
 
 
@@ -254,15 +260,17 @@ int  lame_encode_mp3_frame (				// Output
         /*  adjust ATH depending on range of maximum value
          */
         if (vbr_mtrh == gfp->VBR) {
-            /*  this code reduces the ATH in 32 steps
-             *  from ~15 dB (0...1023) to ~0.14 dB (31744...32767)
-             *  and 0 dB at 32768
+            /*  this code reduces slowly the ATH (speed of 12 dB per second)
+             *  with some supporting stages to limit the reduction
+             *    640  ->  ~17 dB
+             *         :
+             *  32640  ->  ~0.01 dB
              */
             FLOAT8 
-            x = Max (1024, 1024*(int)(max_val/1024));
+            x = Max (640, 320*(int)(max_val/320));
             x = x/32768;
-            gfc->ATH->adjust *= 0.93;       /* reduce by ~0.3 dB */
-            if (gfc->ATH->adjust < x)       /* but not more than x dB */
+            gfc->ATH->adjust *= gfc->ATH->decay;
+            if (gfc->ATH->adjust < x)       /* but not more than f(x) dB */
                 gfc->ATH->adjust = x;
         }
         else {
