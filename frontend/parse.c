@@ -813,6 +813,13 @@ static int  presets_set( lame_t gfp, int fast, int cbr, const char* preset_name,
         return 0;
     }
     
+    if (strcmp(preset_name, "standard3") == 0) {
+
+           lame_set_preset(gfp, STANDARD3);
+
+        return 0;
+    }
+    
     else if (strcmp(preset_name, "extreme") == 0){
 
         if (fast > 0)
