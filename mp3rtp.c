@@ -59,7 +59,7 @@ int main(int argc, char **argv)
 
   int i,port,ttl;
   char *tmp,*Arg;
-  lame_global_flags *gf;
+  lame_global_flags gf;
   int iread,imp3;
   FILE *outf;
   short int Buffer[2][1152];
@@ -100,21 +100,21 @@ int main(int argc, char **argv)
 
 
   /* initialize encoder */
-  gf=lame_init();
+  lame_init(&gf);
 
   /* Remove the argumets that are rtp related, and then 
    * parse the command line arguments, setting various flags in the
    * struct pointed to by 'gf'.  If you want to parse your own arguments,
    * or call libmp3lame from a program which uses a GUI to set arguments,
-   * skip this call and set the values of interest in the gf-> struct.  
+   * skip this call and set the values of interest in the gf struct.  
    * (see lame.h for documentation about these parameters)
    */
   for (i=1; i<argc-1; i++)  /* remove first argument, it was for rtp */
     argv[i]=argv[i+1];
-  lame_parse_args(argc-1, argv); 
+  lame_parse_args(&gf,argc-1, argv); 
 
-  /* open the output file.  Filename parsed into gf->inPath */
-  if (!strcmp(gf->outPath, "-")) {
+  /* open the output file.  Filename parsed into gf.inPath */
+  if (!strcmp(gf.outPath, "-")) {
 #ifdef __EMX__
     _fsetmode(stdout,"b");
 #elif (defined  __BORLANDC__)
@@ -126,49 +126,46 @@ int main(int argc, char **argv)
 #endif
     outf = stdout;
   } else {
-    if ((outf = fopen(gf->outPath, "wb")) == NULL) {
-      fprintf(stderr,"Could not create \"%s\".\n", gf->outPath);
+    if ((outf = fopen(gf.outPath, "wb")) == NULL) {
+      fprintf(stderr,"Could not create \"%s\".\n", gf.outPath);
       exit(1);
     }
   }
 
 
   /* open the wav/aiff/raw pcm or mp3 input file.  This call will
-   * open the file with name gf->inFile, try to parse the headers and
-   * set gf->samplerate, gf->num_channels, gf->num_samples.
+   * open the file with name gf.inFile, try to parse the headers and
+   * set gf.samplerate, gf.num_channels, gf.num_samples.
    * if you want to do your own file input, skip this call and set
    * these values yourself.  
    */
-  lame_init_infile();
+  lame_init_infile(&gf);
 
 
   /* Now that all the options are set, lame needs to analyze them and
    * set some more options 
    */
-  lame_init_params();
-  lame_print_config();   /* print usefull information about options being used */
+  lame_init_params(&gf);
+  lame_print_config(&gf);   /* print usefull information about options being used */
 
   /* encode until we hit eof */
   do {
     /* read in 'iread' samples */
-    iread=lame_readframe(Buffer);
-    /* check to make sure mp3buffer is big enough */
-    if (LAME_MAXMP3BUFFER < 1.25*iread + 7200) 
-      fprintf(stderr,"mp3 buffer is not big enough. \n");
+    iread=lame_readframe(&gf,Buffer);
     /* encode the frame */
-    imp3=lame_encode_buffer(Buffer[0],Buffer[1],iread,
-			    mp3buffer,LAME_MAXMP3BUFFER); 
+    imp3=lame_encode_buffer(&gf,Buffer[0],Buffer[1],iread,
+			    mp3buffer,sizeof(mp3buffer));
     fwrite(mp3buffer,1,imp3,outf);       /* write the MP3 output to file  */
     rtp_output(mp3buffer,imp3);          /* write MP3 output to RTP port */    
   } while (iread);
   
 
-  imp3=lame_encode_finish(mp3buffer);   /* may return one or more mp3 frame */
+  imp3=lame_encode_finish(&gf,mp3buffer,sizeof(mp3buffer));   /* may return one or more mp3 frame */
   fwrite(mp3buffer,1,imp3,outf);  
   rtp_output(mp3buffer,imp3);
   fclose(outf);
-  lame_close_infile();             /* close the sound input file */
-  lame_mp3_tags();                /* add id3 or VBR tags to mp3 file */
+  lame_close_infile(&gf);             /* close the sound input file */
+  lame_mp3_tags(&gf);                /* add id3 or VBR tags to mp3 file */
   return 0;
 }
 

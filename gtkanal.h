@@ -59,7 +59,7 @@ typedef struct {
 } plotting_data;
  
 
-int gtkcontrol(void);
+int gtkcontrol(lame_global_flags *gfp);
 extern plotting_data *pinfo;
 
 #endif

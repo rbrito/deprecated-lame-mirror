@@ -171,7 +171,7 @@ The LAME API
 /* REQUIRED: initialize the encoder.  sets default for all encoder paramters,
  * returns pointer to encoder parameters listed above 
  */
-lame_global_flags *lame_init(void);
+void lame_init(lame_global_flags *);
 
 
 
@@ -183,21 +183,21 @@ lame_global_flags *lame_init(void);
 /* OPTIONAL: call this to print an error with a brief command line usage guide and quit 
  * only supported if libmp3lame compiled with LAMEPARSE defined.  
  */
-void lame_usage(char *);
+void lame_usage(lame_global_flags *, char *);
 
 /* OPTIONAL: call this to print a command line interface usage guide and quit   */
-void lame_help(char *);
+void lame_help(lame_global_flags *, char *);
 
 /* OPTIONAL: get the version number, in a string. of the form:  "3.63 (beta)" or 
    just "3.63".  Max allows length is 20 characters  */
-void lame_version(char *);
+void lame_version(lame_global_flags *, char *);
 
 
 /* OPTIONAL: set internal options via command line argument parsing 
  * You can skip this call if you like the default values, or if
  * set the encoder parameters your self 
  */
-void lame_parse_args(int argc, char **argv);
+void lame_parse_args(lame_global_flags *, int argc, char **argv);
 
 
 
@@ -206,11 +206,11 @@ void lame_parse_args(int argc, char **argv);
 /* REQUIRED:  sets more internal configuration based on data provided
  * above
  */
-void lame_init_params(void);
+void lame_init_params(lame_global_flags *);
 
 
 /* OPTONAL:  print internal lame configuration on stderr*/
-void lame_print_config(void);
+void lame_print_config(lame_global_flags *);
 
 
 
@@ -222,18 +222,24 @@ void lame_print_config(void);
  *
  * mp3buffer_size in bytes = 1.25*num_samples + 7200
  * 
+ * set mp3buffer_size = 0 if you dont want LAME to check if the mp3 buffer
+ * is large enough
+ *
  * return code = number of bytes output in mp3buffer.  can be 0 
+ * if return code = -1:  mp3buffer was too small
 */
-int lame_encode_buffer(short int leftpcm[], short int rightpcm[],int num_samples,
+int lame_encode_buffer(lame_global_flags *,short int leftpcm[], short int rightpcm[],int num_samples,
 char *mp3buffer,int  mp3buffer_size);
 
 
 
-/* input 1 pcm frame, output (maybe) 1 mp3 frame. */ 
-/* return code = number of bytes output in mp3buffer.  can be 0 */
-/* NOTE: this interface is outdated, please use lame_encode_buffer() instead */
-/* declair mp3buffer with:  char mp3buffer[LAME_MAXMP3BUFFER] */
-int lame_encode(short int Buffer[2][1152],char *mp3buffer);
+/* input 1 pcm frame, output (maybe) 1 mp3 frame.  
+ * return code = number of bytes output in mp3buffer.  can be 0 
+ * NOTE: this interface is outdated, please use lame_encode_buffer() instead 
+ * declair mp3buffer with:  char mp3buffer[LAME_MAXMP3BUFFER] 
+ * if return code = -1:  mp3buffer was too small 
+ */
+int lame_encode(lame_global_flags *,short int Buffer[2][1152],char *mp3buffer,int mp3buffer_size);
 
 
 
@@ -242,7 +248,7 @@ int lame_encode(short int Buffer[2][1152],char *mp3buffer);
  *
  * return code = number of bytes output to mp3buffer.  can be 0
  */
-int lame_encode_finish(char *mp3buffer);
+int lame_encode_finish(lame_global_flags *,char *mp3buffer, int size);
 
 
 /* OPTIONAL:  lame_mp3_tags will append id3 and Xing VBR tags to
@@ -252,7 +258,7 @@ before calling these routines.
 Note: if VBR and id3 tags are turned off by the user, or turned off
 by LAME because the output is not a regular file, this call does nothing
 */
-void lame_mp3_tags(void);
+void lame_mp3_tags(lame_global_flags *);
 
 
 
@@ -264,16 +270,16 @@ void lame_mp3_tags(void);
 /* OPTIONAL: open the input file, and parse headers if possible 
  * you can skip this call if you will do your own PCM input 
  */
-void lame_init_infile(void);
+void lame_init_infile(lame_global_flags *);
 
 /* OPTIONAL:  read one frame of PCM data from audio input file opened by 
  * lame_init_infile.  Input file can be wav, aiff, raw pcm, anything
  * supported by libsndfile, or an mp3 file
  */
-int lame_readframe(short int Buffer[2][1152]);
+int lame_readframe(lame_global_flags *,short int Buffer[2][1152]);
 
 /* OPTIONAL: close the sound input file if lame_init_infile() was used */
-void lame_close_infile(void);
+void lame_close_infile(lame_global_flags *);
 
 
 

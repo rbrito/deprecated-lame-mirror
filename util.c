@@ -262,12 +262,14 @@ void empty_buffer(Bit_stream_struc *bs)
    bs->buf[bs->buf_byte_idx] = 0;  /* what does this do? */
 
 }
-int copy_buffer(char *buffer,Bit_stream_struc *bs)
+int copy_buffer(char *buffer,int size,Bit_stream_struc *bs)
 {
   int i,j=0;
+  if (size!=0 && (bs->buf_size-1 - bs->buf_byte_idx) > size ) return -1;
   for (i=bs->buf_size-1 ; i > bs->buf_byte_idx ; (i-- ))
     buffer[j++]=bs->buf[i];
-  empty_buffer(bs);  /* empty buffer */
+  assert(j == (bs->buf_size-1 - bs->buf_byte_idx));
+  empty_buffer(bs);  /* empty buffer, (changes bs->buf_size) */
   return j;
 }
 

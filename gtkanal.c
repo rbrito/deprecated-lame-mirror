@@ -59,6 +59,7 @@ struct gtkinfostruct {
 } gtkinfo;
 
 
+static lame_global_flags *gfp;
 
 /**********************************************************************
  * read one frame and encode it 
@@ -88,7 +89,7 @@ int gtkmakeframe(void)
   pinfo->stereo = gf.stereo;
 
   if (gf.input_format == sf_mp3) {
-    iread=lame_readframe(Buffer);
+    iread=lame_readframe(gfp,Buffer);
     gf.frameNum++;
   }else {
     while (gf.frameNum == pinfo->frameNum) {
@@ -97,12 +98,10 @@ int gtkmakeframe(void)
 	lame_decode_init();
       }
       if (gf.frameNum==1) init=0; /* reset for next time frameNum==0 */
-      iread=lame_readframe(Buffer);
+      iread=lame_readframe(gfp,Buffer);
       
-      /* frame analyzer wont work with resampling */
-      //      assert(gf.resample_ratio==1);
       
-      mp3count=lame_encode(Buffer,mp3buffer); /* encode frame */
+      mp3count=lame_encode(gfp,Buffer,mp3buffer,sizeof(mp3buffer)); /* encode frame */
       assert( !(mp3count > 0 && gf.frameNum == pinfo->frameNum));
       /* not possible to produce mp3 data without encoding at least 
        * one frame of data which would increment gf.frameNum */
@@ -702,7 +701,7 @@ static void plotclick( GtkWidget *widget, gpointer   data )
 
 
 
-static int frameadv1( GtkWidget *widget, gpointer   data )
+static int frameadv1(GtkWidget *widget, gpointer   data )
 {
   int i;
   if (idle_keepgoing ){
@@ -1168,7 +1167,7 @@ static void get_main_menu(GtkWidget *window, GtkWidget ** menubar) {
 
 
 
-int gtkcontrol(void)
+int gtkcontrol(lame_global_flags *gfp2)
 {
     /* GtkWidget is the storage type for widgets */
     GtkWidget *button;
@@ -1186,6 +1185,7 @@ int gtkcontrol(void)
     graphx = 500;  /* minimum allowed size of pixmap */
     graphy = 95;
 
+    gfp=gfp2;
 
     /* set some global defaults/variables */
     gtkinfo.filetype = (gf.input_format == sf_mp3);

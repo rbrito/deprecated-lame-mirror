@@ -34,9 +34,8 @@
 
 
 
-int get_audio_resample(short int Buffer[2][1152],FLOAT resample_ratio,int stereo);
-void CloseSndFile(void);
-FILE * OpenSndFile(const char* lpszFileName,int default_samp, int 
+void CloseSndFile(lame_global_flags *gfp);
+FILE * OpenSndFile(lame_global_flags *gfp,const char* lpszFileName,int default_samp, int 
    default_chan);
 unsigned long GetSndSamples(void);
 int		GetSndSampleRate(void);
@@ -44,7 +43,7 @@ int		GetSndChannels(void);
 int		GetSndBitrate(void);
 
 
-int get_audio(short buffer[2][1152],int stereo);
+int get_audio(lame_global_flags *gfp,short buffer[2][1152],int stereo);
 
 
 

@@ -8,16 +8,16 @@
 
 /* dummy file i/o routines if file i/o support is not compiled into lame */
 #if !(defined LIBSNDFILE || defined LAMESNDFILE)
-void lame_init_infile(void) 
+void lame_init_infile(lame_global_flags *gfp) 
 {
   fprintf(stderr,"Error: libmp3lame was not compiled with I/O support \n");
   exit(1);
 }
-void lame_close_infile(void) {
+void lame_close_infile(lame_global_flags *gfp) {
   fprintf(stderr,"Error: libmp3lame was not compiled with I/O support \n");
   exit(1);
 }
-int lame_readframe(short int Buffer[2][1152]) {
+int lame_readframe(lame_global_flags *gfp,short int Buffer[2][1152]) {
   fprintf(stderr,"Error: libmp3lame was not compiled with I/O support \n");
   exit(1);
 }
@@ -31,8 +31,8 @@ static int input_bitrate;
 static int num_channels;
 static int count_samples_carefully;
 
-int read_samples_pcm( short sample_buffer[2304],int frame_size, int samples_to_read);
-int read_samples_mp3(FILE *musicin,short int mpg123pcm[2][1152],int num_chan);
+int read_samples_pcm(lame_global_flags *gfp,short sample_buffer[2304],int frame_size, int samples_to_read);
+int read_samples_mp3(lame_global_flags *gfp,FILE *musicin,short int mpg123pcm[2][1152],int num_chan);
 
 /* read mp3 file until mpglib returns one frame of PCM data */
 #ifdef AMIGA_MPEGA
@@ -49,19 +49,19 @@ int lame_decode_fromfile(FILE *fd,short int mpg123pcm[2][1152]);
 
 
 
-void lame_init_infile(void)
+void lame_init_infile(lame_global_flags *gfp)
 {
   /* open the input file */
   count_samples_carefully=0;
-  OpenSndFile(gf.inPath,gf.in_samplerate,gf.num_channels);  
+  OpenSndFile(gfp,gfp->inPath,gfp->in_samplerate,gfp->num_channels);  
   /* if GetSndSampleRate is non zero, use it to overwrite the default */
-  if (GetSndSampleRate()) gf.in_samplerate=GetSndSampleRate();
-  if (GetSndChannels()) gf.num_channels=GetSndChannels();
-  gf.num_samples = GetSndSamples();
+  if (GetSndSampleRate()) gfp->in_samplerate=GetSndSampleRate();
+  if (GetSndChannels()) gfp->num_channels=GetSndChannels();
+  gfp->num_samples = GetSndSamples();
 }
-void lame_close_infile(void)
+void lame_close_infile(lame_global_flags *gfp)
 {
-  CloseSndFile();
+  CloseSndFile(gfp);
 }
 
 
@@ -77,17 +77,17 @@ void lame_close_infile(void)
 *
 *
 ************************************************************************/
-int lame_readframe(short int Buffer[2][1152])
+int lame_readframe(lame_global_flags *gfp,short int Buffer[2][1152])
 {
   int iread;
 
-  /* note: if input is gf.stereo and output is mono, get_audio() 
+  /* note: if input is gfp->stereo and output is mono, get_audio() 
    * will return  .5*(L+R) in channel 0,  and nothing in channel 1. */
-  iread = get_audio(Buffer,gf.stereo);
+  iread = get_audio(gfp,Buffer,gfp->stereo);
   
   /* check to see if we overestimated/underestimated totalframes */
-  if (iread==0)  gf.totalframes = Min(gf.totalframes,gf.frameNum+2);
-  if (gf.frameNum > (gf.totalframes-1)) gf.totalframes = gf.frameNum;
+  if (iread==0)  gfp->totalframes = Min(gfp->totalframes,gfp->frameNum+2);
+  if (gfp->frameNum > (gfp->totalframes-1)) gfp->totalframes = gfp->frameNum;
   return iread;
 }
 
@@ -105,7 +105,7 @@ int lame_readframe(short int Buffer[2][1152])
 *
 *
 ************************************************************************/
-int get_audio(short buffer[2][1152],int stereo)
+int get_audio(lame_global_flags *gfp,short buffer[2][1152],int stereo)
 {
 
   int		j;
@@ -115,14 +115,14 @@ int get_audio(short buffer[2][1152],int stereo)
   static unsigned long num_samples_read;
   unsigned long remaining;
   int autoconvert=0;
-  int num_channels = gf.num_channels;
+  int num_channels = gfp->num_channels;
 
-  if (gf.frameNum==0) {
+  if (gfp->frameNum==0) {
     num_samples_read=0;
     num_samples= GetSndSamples();
   }
-  if (num_channels==2 && gf.stereo==1) autoconvert=1;
-  framesize = gf.mode_gr*576;
+  if (num_channels==2 && gfp->stereo==1) autoconvert=1;
+  framesize = gfp->mode_gr*576;
 
   samples_to_read = framesize;
   if (count_samples_carefully) { 
@@ -136,11 +136,11 @@ int get_audio(short buffer[2][1152],int stereo)
   }
 
 
-  if (gf.input_format==sf_mp3) {
+  if (gfp->input_format==sf_mp3) {
     /* decode an mp3 file for the input */
-    samples_read=read_samples_mp3(musicin,buffer,num_channels);
+    samples_read=read_samples_mp3(gfp,musicin,buffer,num_channels);
   }else{
-    samples_read = read_samples_pcm(insamp,num_channels*framesize,num_channels*samples_to_read);
+    samples_read = read_samples_pcm(gfp,insamp,num_channels*framesize,num_channels*samples_to_read);
     samples_read /=num_channels;
 
     for(j=0;j<framesize;j++) {
@@ -177,7 +177,7 @@ int GetSndBitrate(void)
 
 
 
-int read_samples_mp3(FILE *musicin,short int mpg123pcm[2][1152],int stereo)
+int read_samples_mp3(lame_global_flags *gfp,FILE *musicin,short int mpg123pcm[2][1152],int stereo)
 {
 #if (defined  AMIGA_MPEGA || defined HAVEMPGLIB) 
   int j,out=0;
@@ -186,7 +186,7 @@ int read_samples_mp3(FILE *musicin,short int mpg123pcm[2][1152],int stereo)
   int ch;
 #endif
   int autoconvert=0;
-  if (gf.num_channels==2  && gf.stereo==1) autoconvert=1;
+  if (gfp->num_channels==2  && gfp->stereo==1) autoconvert=1;
 
   out=lame_decode_fromfile(musicin,mpg123pcm);
   /* out = -1:  error, probably EOF */
@@ -208,7 +208,7 @@ int read_samples_mp3(FILE *musicin,short int mpg123pcm[2][1152],int stereo)
 
 
 #ifdef HAVEGTK
-  if (gf.gtkflag) {
+  if (gfp->gtkflag) {
     framesize=1152;
     if (out==576) framesize=576;
     
@@ -222,8 +222,8 @@ int read_samples_mp3(FILE *musicin,short int mpg123pcm[2][1152],int stereo)
 	pinfo->pcmdata2[ch][j+framesize-DECDELAY] = mpg123pcm[ch][j];
     }
   
-  pinfo->frameNum123 = gf.frameNum-1;
-  pinfo->frameNum = gf.frameNum;
+  pinfo->frameNum123 = gfp->frameNum-1;
+  pinfo->frameNum = gfp->frameNum;
   }
 #endif
   if (out==-1) return 0;
@@ -281,9 +281,9 @@ int GetSndChannels(void)
 	return gs_wfInfo.channels;
 }
 
-void CloseSndFile(void)
+void CloseSndFile(lame_global_flags *gfp)
 {
-  if (gf.input_format==sf_mp3) {
+  if (gfp->input_format==sf_mp3) {
 #ifndef AMIGA_MPEGA
     if (fclose(musicin) != 0){
       fprintf(stderr, "Could not close audio input file\n");
@@ -304,11 +304,11 @@ void CloseSndFile(void)
 
 
 
-FILE * OpenSndFile(const char* lpszFileName, int default_samp,
+FILE * OpenSndFile(lame_global_flags *gfp,const char* lpszFileName, int default_samp,
 int default_channels)
 {
   input_bitrate=0;
-  if (gf.input_format==sf_mp3) {
+  if (gfp->input_format==sf_mp3) {
 #ifdef AMIGA_MPEGA
     if (-1==lame_decode_initfile(lpszFileName,&num_channels,&samp_freq,&input_bitrate,&num_samples)) {
       fprintf(stderr,"Error reading headers in mp3 input file %s.\n", lpszFileName);
@@ -333,7 +333,7 @@ int default_channels)
 
     /* Try to open the sound file */
     /* set some defaults incase input is raw PCM */
-    gs_wfInfo.seekable=(gf.input_format!=sf_raw);  /* if user specified -r, set to not seekable */
+    gs_wfInfo.seekable=(gfp->input_format!=sf_raw);  /* if user specified -r, set to not seekable */
     gs_wfInfo.samplerate=default_samp;
     gs_wfInfo.pcmbitwidth=16;
     gs_wfInfo.channels=default_channels;
@@ -354,7 +354,7 @@ int default_channels)
 
     if ((gs_wfInfo.format==SF_FORMAT_RAW_LE) || 
 	(gs_wfInfo.format==SF_FORMAT_RAW_BE)) 
-      gf.input_format=sf_raw;
+      gfp->input_format=sf_raw;
 
 #ifdef _DEBUG_SND_FILE
 	printf("\n\nSF_INFO structure\n");
@@ -422,7 +422,7 @@ int default_channels)
     /* try to figure out num_samples */
     if (0==stat(lpszFileName,&sb)) {
       /* try file size, assume 2 bytes per sample */
-      if (gf.input_format == sf_mp3) {
+      if (gfp->input_format == sf_mp3) {
 	FLOAT totalseconds = (sb.st_size*8.0/(1000.0*GetSndBitrate()));
 	gs_wfInfo.samples= totalseconds*GetSndSampleRate();
       }else{
@@ -446,7 +446,7 @@ int default_channels)
 *
 ************************************************************************/
 
-int read_samples_pcm(short sample_buffer[2304],int frame_size,int samples_to_read)
+int read_samples_pcm(lame_global_flags *gfp,short sample_buffer[2304],int frame_size,int samples_to_read)
 {
     int 		samples_read;
     int			rcode;
@@ -504,7 +504,7 @@ int fskip(FILE *sf,long num_bytes,int dummy)
 
 
 
-void CloseSndFile(void)
+void CloseSndFile(lame_global_flags *gfp)
 {
   if (fclose(musicin) != 0){
     fprintf(stderr, "Could not close audio input file\n");
@@ -528,11 +528,11 @@ int GetSndChannels(void)
 }
 
 
-FILE * OpenSndFile(const char* inPath, int default_samp,
+FILE * OpenSndFile(lame_global_flags *gfp,const char* inPath, int default_samp,
 int default_channels)
 {
   struct stat sb;
-  void parse_file_header(FILE *sf);
+  void parse_file_header(lame_global_flags *gfp,FILE *sf);
   /* set the defaults from info incase we cannot determine them from file */
   num_samples=MAX_U_32_NUM;
   samp_freq=default_samp;
@@ -558,7 +558,7 @@ int default_channels)
   }
   
   input_bitrate=0;
-  if (gf.input_format==sf_mp3) {
+  if (gfp->input_format==sf_mp3) {
 #ifdef AMIGA_MPEGA
     if (-1==lame_decode_initfile(inPath,&num_channels,&samp_freq,&input_bitrate,&num_samples)) {
       fprintf(stderr,"Error reading headers in mp3 input file %s.\n", inPath);
@@ -572,14 +572,14 @@ int default_channels)
     }
 #endif
  }else{
-   if (gf.input_format != sf_raw) {
-     parse_file_header(musicin);
+   if (gfp->input_format != sf_raw) {
+     parse_file_header(gfp,musicin);
    }
    
-   if (gf.input_format==sf_raw) {
+   if (gfp->input_format==sf_raw) {
      /* assume raw PCM */
      fprintf(stderr, "Assuming raw pcm input file");
-     if (gf.swapbytes==TRUE)
+     if (gfp->swapbytes==TRUE)
        fprintf(stderr, " : Forcing byte-swapping\n");
      else
        fprintf(stderr, "\n");
@@ -590,7 +590,7 @@ int default_channels)
     /* try to figure out num_samples */
     if (0==stat(inPath,&sb)) {  
       /* try file size, assume 2 bytes per sample */
-      if (gf.input_format == sf_mp3) {
+      if (gfp->input_format == sf_mp3) {
 	FLOAT totalseconds = (sb.st_size*8.0/(1000.0*GetSndBitrate()));
 	num_samples= totalseconds*GetSndSampleRate();
       }else{
@@ -614,11 +614,11 @@ int default_channels)
 *
 ************************************************************************/
 
-int read_samples_pcm(short sample_buffer[2304], int frame_size,int samples_to_read)
+int read_samples_pcm(lame_global_flags *gfp,short sample_buffer[2304], int frame_size,int samples_to_read)
 {
     int samples_read;
     int rcode;
-    int iswav=(gf.input_format==sf_wave);
+    int iswav=(gfp->input_format==sf_wave);
 
     samples_read = fread(sample_buffer, sizeof(short), samples_to_read, musicin);
     if (ferror(musicin)) {
@@ -645,7 +645,7 @@ int read_samples_pcm(short sample_buffer[2304], int frame_size,int samples_to_re
     if (iswav && ( NativeByteOrder == order_bigEndian ))
       SwapBytesInWords( sample_buffer, samples_read );
 
-    if (gf.swapbytes==TRUE)
+    if (gfp->swapbytes==TRUE)
       SwapBytesInWords( sample_buffer, samples_read );
 
 
@@ -927,7 +927,7 @@ parse_aiff_header(FILE *sf)
 *
 ************************************************************************/
 
-void parse_file_header(FILE *sf)
+void parse_file_header(lame_global_flags *gfp,FILE *sf)
 {
 	u_int type = 0;
 	type = Read32BitsHighLow(sf);
@@ -936,23 +936,23 @@ void parse_file_header(FILE *sf)
 		"First word of input stream: %08x '%4.4s'\n", type, (char*) &type); */
 
 	count_samples_carefully=0;
-	gf.input_format = sf_raw;
+	gfp->input_format = sf_raw;
 
 	if (type == WAV_ID_RIFF) {
 		/* It's probably a WAV file */
 		if (parse_wave_header(sf)) {
-			gf.input_format = sf_wave;
+			gfp->input_format = sf_wave;
 			count_samples_carefully=1;
 		}
 
 	} else if (type == IFF_ID_FORM) {
 		/* It's probably an AIFF file */
 		if (parse_aiff_header(sf)) {
-			gf.input_format = sf_aiff;
+			gfp->input_format = sf_aiff;
 			count_samples_carefully=1;
 		}
 	}
-	if (gf.input_format==sf_raw) {
+	if (gfp->input_format==sf_raw) {
 	  /*
 	  ** Assume it's raw PCM.	 Since the audio data is assumed to begin
 	  ** at byte zero, this will unfortunately require seeking.
@@ -960,7 +960,7 @@ void parse_file_header(FILE *sf)
 	  if (fseek(sf, 0L, SEEK_SET) != 0) {
 	    /* ignore errors */
 	  }
-	  gf.input_format = sf_raw;
+	  gfp->input_format = sf_raw;
 	}
 }
 #endif  /* LAMESNDFILE */
