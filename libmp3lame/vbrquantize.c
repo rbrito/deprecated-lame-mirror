@@ -36,6 +36,7 @@
 #include <dmalloc.h>
 #endif
 
+extern FLOAT8 adj43[PRECALC_SIZE];
 
 extern void
 trancate_smallspectrums(
@@ -54,14 +55,14 @@ typedef union {
 #define MAGIC_FLOAT (65536*(128))
 #define MAGIC_INT    0x4b000000
 
+
 #ifdef TAKEHIRO_IEEE754_HACK
 
 #define DUFFBLOCK() do { \
         xp = xr34[index] * sfpow34_p1; \
         xe = xr34[index] * sfpow34_eq; \
         xm = xr34[index] * sfpow34_m1; \
-        if (xm > IXMAX_VAL)  \
-            return -1; \
+        if ( xm <= IXMAX_VAL ) { \
         xp += MAGIC_FLOAT; \
         xe += MAGIC_FLOAT; \
         xm += MAGIC_FLOAT; \
@@ -82,7 +83,10 @@ typedef union {
         xfsf_eq += xe * xe; \
         xfsf_m1 += xm * xm; \
         ++index; \
+        } else return -1; \
     } while(0)
+    
+#   define ROUNDFAC -0.0946    
 #else
 
 /*********************************************************************
@@ -99,6 +103,121 @@ typedef union {
 
 
 #endif
+
+
+#define BLOCK_IEEE754_x34_4 \
+	                x0 += MAGIC_FLOAT; fi[0].f = x0;    \
+	                x1 += MAGIC_FLOAT; fi[1].f = x1;    \
+	                x2 += MAGIC_FLOAT; fi[2].f = x2;    \
+	                x3 += MAGIC_FLOAT; fi[3].f = x3;    \
+	                fi[0].f = x0 + adj43_asm[fi[0].i];  \
+	                fi[1].f = x1 + adj43_asm[fi[1].i];  \
+    	            fi[2].f = x2 + adj43_asm[fi[2].i];  \
+        	        fi[3].f = x3 + adj43_asm[fi[3].i];  \
+	                fi[0].i -= MAGIC_INT;               \
+	                fi[1].i -= MAGIC_INT;               \
+	                fi[2].i -= MAGIC_INT;               \
+	                fi[3].i -= MAGIC_INT;               
+
+
+#define BLOCK_IEEE754_x34_2 \
+	                x0 += MAGIC_FLOAT; fi[0].f = x0;    \
+	                x1 += MAGIC_FLOAT; fi[1].f = x1;    \
+	                fi[0].f = x0 + adj43_asm[fi[0].i];  \
+	                fi[1].f = x1 + adj43_asm[fi[1].i];  \
+	                fi[0].i -= MAGIC_INT;               \
+	                fi[1].i -= MAGIC_INT;               
+
+
+
+
+#define BLOCK_PLAIN_C_x34_4 \
+    	            XRPOW_FTOI(x0, fi[0].i);    \
+	                XRPOW_FTOI(x1, fi[1].i);    \
+    	            XRPOW_FTOI(x2, fi[2].i);    \
+	                XRPOW_FTOI(x3, fi[3].i);    \
+	                x0 += QUANTFAC(fi[0].i);    \
+                    x1 += QUANTFAC(fi[1].i);    \
+                    x2 += QUANTFAC(fi[2].i);    \
+                    x3 += QUANTFAC(fi[3].i);    \
+                    XRPOW_FTOI(x0, fi[0].i);    \
+    	            XRPOW_FTOI(x1, fi[1].i);    \
+	                XRPOW_FTOI(x2, fi[2].i);    \
+    	            XRPOW_FTOI(x3, fi[3].i);     
+
+#define BLOCK_PLAIN_C_x34_2 \
+    	            XRPOW_FTOI(x0, fi[0].i);    \
+	                XRPOW_FTOI(x1, fi[1].i);    \
+	                x0 += QUANTFAC(fi[0].i);    \
+                    x1 += QUANTFAC(fi[1].i);    \
+ 	                XRPOW_FTOI(x0, fi[0].i);    \
+    	            XRPOW_FTOI(x1, fi[1].i);     
+
+#define BLOCK_IEEE754_ISO_4 \
+	                x0 += (ROUNDFAC + MAGIC_FLOAT); fi[0].f = x0;   \
+	                x1 += (ROUNDFAC + MAGIC_FLOAT); fi[1].f = x1;   \
+	                x2 += (ROUNDFAC + MAGIC_FLOAT); fi[2].f = x2;   \
+	                x3 += (ROUNDFAC + MAGIC_FLOAT); fi[3].f = x3;   \
+	                fi[0].i -= MAGIC_INT;                           \
+	                fi[1].i -= MAGIC_INT;                           \
+	                fi[2].i -= MAGIC_INT;                           \
+	                fi[3].i -= MAGIC_INT;
+
+#define BLOCK_IEEE754_ISO_2 \
+	                x0 += (ROUNDFAC + MAGIC_FLOAT); fi[0].f = x0;   \
+	                x1 += (ROUNDFAC + MAGIC_FLOAT); fi[1].f = x1;   \
+	                fi[0].i -= MAGIC_INT;                           \
+	                fi[1].i -= MAGIC_INT;
+
+#define BLOCK_PLAIN_C_ISO_4 \
+	            if (compareval0 > xr34[0]) {           \
+	                fi[0].i = 0;                            \
+	            } else if (compareval1 > xr34[0]) {    \
+	                fi[0].i = 1;                            \
+	            } else {                                    \
+	                fi[0].i = x0 + ROUNDFAC;                \
+	            }                                           \
+	            if (compareval0 > xr34[1]) {           \
+	                fi[1].i = 0;                            \
+	            } else if (compareval1 > xr34[1]) {    \
+	                fi[1].i = 1;                            \
+	            } else {                                    \
+	                fi[1].i = x1 + ROUNDFAC;                \
+	            }                                           \
+	            if (compareval0 > xr34[2]) {           \
+	                fi[2].i = 0;                            \
+	            } else if (compareval1 > xr34[2]) {    \
+	                fi[2].i = 1;                            \
+	            } else {                                    \
+	                fi[2].i = x2 + ROUNDFAC;                \
+	            }                                           \
+	            if (compareval0 > xr34[3]) {           \
+	                fi[3].i = 0;                            \
+	            } else if (compareval1 > xr34[3]) {    \
+	                fi[3].i = 1;                            \
+	            } else {                                    \
+	                fi[3].i = x3 + ROUNDFAC;                \
+	            }                                           \
+
+
+#define BLOCK_PLAIN_C_ISO_2 \
+	            if (compareval0 > xr34[0]) {           \
+	                fi[0].i = 0;                            \
+	            } else if (compareval1 > xr34[0]) {    \
+	                fi[0].i = 1;                            \
+	            } else {                                    \
+	                fi[0].i = x0 + ROUNDFAC;                \
+	            }                                           \
+	            if (compareval0 > xr34[1]) {           \
+	                fi[1].i = 0;                            \
+	            } else if (compareval1 > xr34[1]) {    \
+	                fi[1].i = 1;                            \
+	            } else {                                    \
+	                fi[1].i = x1 + ROUNDFAC;                \
+	            }                                           \
+
+
+
 
 /*  caution: a[] will be resorted!!
  */
@@ -176,90 +295,313 @@ select_kth(FLOAT8 a[], int N, int k)
 }
 
 
+/*  rh 20040215: for some reason, the VC6+SP5+processor pack does
+	crash by accessing pow43[fi[k].i]
+	the debugging version would run too, but be painful slow.
+	casting fi[k].i to short does help the compiler to understand
+	the programmers intention.
+ */
+#define ERRDELTA_4 \
+x0 = fabs(xr[0]) - sfpow * pow43[(short)(fi[0].i)]; \
+x1 = fabs(xr[1]) - sfpow * pow43[(short)(fi[1].i)]; \
+x2 = fabs(xr[2]) - sfpow * pow43[(short)(fi[2].i)]; \
+x3 = fabs(xr[3]) - sfpow * pow43[(short)(fi[3].i)]; 
+#define ERRDELTA_2 \
+x0 = fabs(xr[0]) - sfpow * pow43[(short)(fi[0].i)]; \
+x1 = fabs(xr[1]) - sfpow * pow43[(short)(fi[1].i)]; 
+ 
+
+static  FLOAT8
+calc_sfb_noise_x34(const FLOAT8 * xr, const FLOAT8 * xr34, unsigned int bw, int sf)
+{
+#ifdef TAKEHIRO_IEEE754_HACK
+    const FLOAT8* adj43_asm = adj43asm-MAGIC_INT;
+#endif
+    const FLOAT8 sfpow = POW20(sf);  /*pow(2.0,sf/4.0); */
+    const FLOAT8 sfpow34 = IPOW20(sf); /*pow(sfpow,-3.0/4.0); */
+
+    FLOAT8 xfsf = 0;
+    fi_union fi[4];
+    int j = bw >> 1;
+    int remaining = j % 2;
+    assert( bw >= 0 );
+    for ( j >>= 1; j > 0; --j ) {
+        double x0 = sfpow34 * xr34[0];
+        double x1 = sfpow34 * xr34[1];
+        double x2 = sfpow34 * xr34[2];
+        double x3 = sfpow34 * xr34[3];
+        if ( x0 <= IXMAX_VAL
+          && x1 <= IXMAX_VAL
+          && x2 <= IXMAX_VAL
+          && x3 <= IXMAX_VAL ) {
+#ifdef TAKEHIRO_IEEE754_HACK
+            BLOCK_IEEE754_x34_4
+#else
+            BLOCK_PLAIN_C_x34_4
+#endif
+			ERRDELTA_4
+
+            xfsf += x0*x0 + x1*x1 + x2*x2 + x3*x3;
+            
+            xr   += 4;
+            xr34 += 4;
+        }
+        else return -1;
+    }
+    if ( remaining ) {
+        double x0 = sfpow34 * xr34[0];
+        double x1 = sfpow34 * xr34[1];
+        if ( x0 <= IXMAX_VAL
+          && x1 <= IXMAX_VAL ) {
+#ifdef TAKEHIRO_IEEE754_HACK
+            BLOCK_IEEE754_x34_2
+#else
+            BLOCK_PLAIN_C_x34_2
+#endif
+			ERRDELTA_2
+
+            xfsf += x0*x0 + x1*x1;
+        }
+        else return -1;
+    }
+    return xfsf;
+}
 
 
 static  FLOAT8
-calc_sfb_noise(const FLOAT8 * xr, const FLOAT8 * xr34, unsigned int bw, int sf)
+calc_sfb_noise_ISO(const FLOAT8 * xr, const FLOAT8 * xr34, unsigned int bw, int sf)
 {
-    unsigned int j;
-    fi_union fi;
-    FLOAT8  temp;
-    FLOAT8  xfsf = 0;
-    FLOAT8  sfpow, sfpow34;
+    const FLOAT8 sfpow = POW20(sf);  /*pow(2.0,sf/4.0); */
+    const FLOAT8 sfpow34 = IPOW20(sf); /*pow(sfpow,-3.0/4.0); */
 
-    sfpow = POW20(sf);  /*pow(2.0,sf/4.0); */
-    sfpow34 = IPOW20(sf); /*pow(sfpow,-3.0/4.0); */
-
-    for (j = 0; j < bw; ++j) {
-        temp = sfpow34 * xr34[j];
-        if (temp > IXMAX_VAL)
-            return -1;
-
-#ifdef TAKEHIRO_IEEE754_HACK
-        temp += MAGIC_FLOAT;
-        fi.f = temp;
-        fi.f = temp + (adj43asm - MAGIC_INT)[fi.i];
-        fi.i -= MAGIC_INT;
-#else
-        XRPOW_FTOI(temp, fi.i);
-        XRPOW_FTOI(temp + QUANTFAC(fi.i), fi.i);
+#ifndef TAKEHIRO_IEEE754_HACK
+    const FLOAT8 compareval0 = (1.0 - 0.4054)/sfpow34;
+    const FLOAT8 compareval1 = (2.0 - 0.4054)/sfpow34;
 #endif
 
-        temp = fabs(xr[j]) - pow43[fi.i] * sfpow;
-        xfsf += temp * temp;
+    FLOAT8 xfsf = 0;
+    fi_union fi[4];
+    int j = bw >> 1;
+    int remaining = j % 2;
+    assert( bw >= 0 );
+    for ( j >>= 1; j > 0; --j ) {
+        double x0 = sfpow34 * xr34[0];
+        double x1 = sfpow34 * xr34[1];
+        double x2 = sfpow34 * xr34[2];
+        double x3 = sfpow34 * xr34[3];
+        if ( x0 <= IXMAX_VAL
+          && x1 <= IXMAX_VAL
+          && x2 <= IXMAX_VAL
+          && x3 <= IXMAX_VAL ) {
+#ifdef TAKEHIRO_IEEE754_HACK
+            BLOCK_IEEE754_ISO_4
+#else
+            BLOCK_PLAIN_C_ISO_4
+#endif
+			ERRDELTA_4
+
+            xfsf += x0*x0 + x1*x1 + x2*x2 + x3*x3;
+            
+            xr   += 4;
+            xr34 += 4;
+        }
+        else return -1;
+    }
+    if ( remaining ) {
+        double x0 = sfpow34 * xr34[0];
+        double x1 = sfpow34 * xr34[1];
+        if ( x0 <= IXMAX_VAL
+          && x1 <= IXMAX_VAL ) {
+#ifdef TAKEHIRO_IEEE754_HACK
+            BLOCK_IEEE754_ISO_2
+#else
+            BLOCK_PLAIN_C_ISO_2
+#endif
+			ERRDELTA_2
+
+            xfsf += x0*x0 + x1*x1;
+        }
+        else return -1;
     }
     return xfsf;
 }
 
 
 
-
 static  FLOAT8
-calc_sfb_noise_mq(const FLOAT8 * xr, const FLOAT8 * xr34, int bw, int sf, int mq)
+calc_sfb_noise_mq_x34(const FLOAT8 * xr, const FLOAT8 * xr34, int bw, int sf, int mq)
 {
-    int     j, k;
-    fi_union fi;
-    FLOAT8  temp, scratch[192];
-    FLOAT8  sfpow, sfpow34, xfsfm = 0, xfsf = 0;
-
-    sfpow = POW20(sf);  /*pow(2.0,sf/4.0); */
-    sfpow34 = IPOW20(sf); /*pow(sfpow,-3.0/4.0); */
-
-    for (j = 0; j < bw; ++j) {
-        temp = xr34[j] * sfpow34;
-        if (temp > IXMAX_VAL)
-            return -1;
-
+    FLOAT8  scratch_[192];
+    FLOAT8  *scratch = scratch_;
 #ifdef TAKEHIRO_IEEE754_HACK
-        temp += MAGIC_FLOAT;
-        fi.f = temp;
-        fi.f = temp + (adj43asm - MAGIC_INT)[fi.i];
-        fi.i -= MAGIC_INT;
-#else
-        XRPOW_FTOI(temp, fi.i);
-        XRPOW_FTOI(temp + QUANTFAC(fi.i), fi.i);
+    const FLOAT8* adj43_asm = adj43asm-MAGIC_INT;
 #endif
+    const FLOAT8 sfpow = POW20(sf);  /*pow(2.0,sf/4.0); */
+    const FLOAT8 sfpow34 = IPOW20(sf); /*pow(sfpow,-3.0/4.0); */
 
-        temp = fabs(xr[j]) - pow43[fi.i] * sfpow;
-        temp *= temp;
+    FLOAT8 xfsfm = 0, xfsf = 0;
+    fi_union fi[4];
+    int k, j = bw >> 1;
+    int remaining = j % 2;
+    assert( bw >= 0 );
+    for ( j >>= 1; j > 0; --j ) {
+        double x0 = sfpow34 * xr34[0];
+        double x1 = sfpow34 * xr34[1];
+        double x2 = sfpow34 * xr34[2];
+        double x3 = sfpow34 * xr34[3];
+        if ( x0 <= IXMAX_VAL
+          && x1 <= IXMAX_VAL
+          && x2 <= IXMAX_VAL
+          && x3 <= IXMAX_VAL ) {
+#ifdef TAKEHIRO_IEEE754_HACK
+            BLOCK_IEEE754_x34_4
+#else
+            BLOCK_PLAIN_C_x34_4
+#endif
+			ERRDELTA_4
 
-        scratch[j] = temp;
-        if (xfsfm < temp)
-            xfsfm = temp;
-        xfsf += temp;
+            scratch[0] = x0*x0;
+            scratch[1] = x1*x1;
+            scratch[2] = x2*x2;
+            scratch[3] = x3*x3;
+            if (xfsfm < scratch[0])
+                xfsfm = scratch[0];
+            if (xfsfm < scratch[1])
+                xfsfm = scratch[1];
+            if (xfsfm < scratch[2])
+                xfsfm = scratch[2];
+            if (xfsfm < scratch[3])
+                xfsfm = scratch[3];
+            xfsf += scratch[0] + scratch[1] + scratch[2] + scratch[3];
+            scratch += 4;
+            xr      += 4;
+            xr34    += 4;
+        }
+        else return -1;
     }
-    if (mq == 1)
-        return bw * select_kth(scratch, bw, bw * 13 / 16);
+    if ( remaining ) {
+        double x0 = sfpow34 * xr34[0];
+        double x1 = sfpow34 * xr34[1];
+        if ( x0 <= IXMAX_VAL
+          && x1 <= IXMAX_VAL ) {
+#ifdef TAKEHIRO_IEEE754_HACK
+            BLOCK_IEEE754_x34_2
+#else
+            BLOCK_PLAIN_C_x34_2
+#endif
+			ERRDELTA_2
 
+            scratch[0] = x0*x0;
+            scratch[1] = x1*x1;
+            if (xfsfm < scratch[0])
+                xfsfm = scratch[0];
+            if (xfsfm < scratch[1])
+                xfsfm = scratch[1];
+            xfsf += scratch[0] + scratch[1];
+        }
+        else return -1;
+    }
+    if (mq == 1) {
+        return bw * select_kth(scratch_, bw, bw * 13 / 16);
+    }
     xfsf /= bw;
     for (k = 1, j = 0; j < bw; ++j) {
-        if (scratch[j] > xfsf) {
-            xfsfm += scratch[j];
+        if (scratch_[j] > xfsf) {
+            xfsfm += scratch_[j];
             ++k;
         }
     }
     return xfsfm / k * bw;
 }
+
+
+static  FLOAT8
+calc_sfb_noise_mq_ISO(const FLOAT8 * xr, const FLOAT8 * xr34, int bw, int sf, int mq)
+{
+    FLOAT8  scratch_[192];
+    FLOAT8  *scratch = scratch_;
+    const FLOAT8 sfpow = POW20(sf);  /*pow(2.0,sf/4.0); */
+    const FLOAT8 sfpow34 = IPOW20(sf); /*pow(sfpow,-3.0/4.0); */
+#ifndef TAKEHIRO_IEEE754_HACK
+    const FLOAT8 compareval0 = (1.0 - 0.4054)/sfpow34;
+    const FLOAT8 compareval1 = (2.0 - 0.4054)/sfpow34;
+#endif
+
+    FLOAT8 xfsfm = 0, xfsf = 0;
+    fi_union fi[4];
+    int k, j = bw >> 1;
+    int remaining = j % 2;
+    assert( bw >= 0 );
+    for ( j >>= 1; j > 0; --j ) {
+        double x0 = sfpow34 * xr34[0];
+        double x1 = sfpow34 * xr34[1];
+        double x2 = sfpow34 * xr34[2];
+        double x3 = sfpow34 * xr34[3];
+        if ( x0 <= IXMAX_VAL
+          && x1 <= IXMAX_VAL
+          && x2 <= IXMAX_VAL
+          && x3 <= IXMAX_VAL ) {
+#ifdef TAKEHIRO_IEEE754_HACK
+            BLOCK_IEEE754_ISO_4
+#else
+            BLOCK_PLAIN_C_ISO_4
+#endif
+			ERRDELTA_4
+
+            scratch[0] = x0*x0;
+            scratch[1] = x1*x1;
+            scratch[2] = x2*x2;
+            scratch[3] = x3*x3;
+            if (xfsfm < scratch[0])
+                xfsfm = scratch[0];
+            if (xfsfm < scratch[1])
+                xfsfm = scratch[1];
+            if (xfsfm < scratch[2])
+                xfsfm = scratch[2];
+            if (xfsfm < scratch[3])
+                xfsfm = scratch[3];
+            xfsf += scratch[0] + scratch[1] + scratch[2] + scratch[3];
+            scratch += 4;
+            xr      += 4;
+            xr34    += 4;
+        }
+        else return -1;
+    }
+    if ( remaining ) {
+        double x0 = sfpow34 * xr34[0];
+        double x1 = sfpow34 * xr34[1];
+        if ( x0 <= IXMAX_VAL
+          && x1 <= IXMAX_VAL ) {
+#ifdef TAKEHIRO_IEEE754_HACK
+            BLOCK_IEEE754_ISO_2
+#else
+            BLOCK_PLAIN_C_ISO_2
+#endif
+			ERRDELTA_2
+
+            scratch[0] = x0*x0;
+            scratch[1] = x1*x1;
+            if (xfsfm < scratch[0])
+                xfsfm = scratch[0];
+            if (xfsfm < scratch[1])
+                xfsfm = scratch[1];
+            xfsf += scratch[0] + scratch[1];
+        }
+        else return -1;
+    }
+    if (mq == 1) {
+        return bw * select_kth(scratch_, bw, bw * 13 / 16);
+    }
+    xfsf /= bw;
+    for (k = 1, j = 0; j < bw; ++j) {
+        if (scratch_[j] > xfsf) {
+            xfsfm += scratch_[j];
+            ++k;
+        }
+    }
+    return xfsfm / k * bw;
+}
+
 
 
 static const FLOAT8 facm1 = .8408964153; /* pow(2,(sf-1)/4.0) */
@@ -346,6 +688,47 @@ calc_sfb_noise_ave(const FLOAT8 * xr, const FLOAT8 * xr34, int bw, int sf)
     return xfsf_eq;
 }
 
+static  FLOAT8
+calc_sfb_noise_ave_x34(const FLOAT8 * xr, const FLOAT8 * xr34, int bw, int sf)
+{
+    FLOAT8 xfsf_p;
+    FLOAT8 xfsf_e;
+    FLOAT8 xfsf_m = calc_sfb_noise_x34( xr, xr34, bw, sf-1 );
+    if ( xfsf_m > -0.5 ) {
+        xfsf_e = calc_sfb_noise_x34( xr, xr34, bw, sf );
+        xfsf_p = calc_sfb_noise_x34( xr, xr34, bw, sf+1 );
+        if ( xfsf_e < xfsf_p ) {
+            xfsf_e = xfsf_p;
+        }
+        if ( xfsf_e < xfsf_m ) {
+            return xfsf_m;
+        }
+        return xfsf_e;
+    }
+    return -1;
+}
+
+
+static  FLOAT8
+calc_sfb_noise_ave_ISO(const FLOAT8 * xr, const FLOAT8 * xr34, int bw, int sf)
+{
+    FLOAT8 xfsf_p;
+    FLOAT8 xfsf_e;
+    FLOAT8 xfsf_m = calc_sfb_noise_ISO( xr, xr34, bw, sf-1 );
+    if ( xfsf_m > -0.5 ) {
+        xfsf_e = calc_sfb_noise_ISO( xr, xr34, bw, sf );
+        xfsf_p = calc_sfb_noise_ISO( xr, xr34, bw, sf+1 );
+        if ( xfsf_e < xfsf_p ) {
+            xfsf_e = xfsf_p;
+        }
+        if ( xfsf_e < xfsf_m ) {
+            return xfsf_m;
+        }
+        return xfsf_e;
+    }
+    return -1;
+}
+
 
 /* the find_scalefac* routines calculate
  * a quantization step size which would
@@ -357,121 +740,84 @@ calc_sfb_noise_ave(const FLOAT8 * xr, const FLOAT8 * xr34, int bw, int sf)
  * differences in quantization step sizes
  * per band (shaping the noise).
  */
-inline int
-find_scalefac(
-    const FLOAT8 * xr, const FLOAT8 * xr34, FLOAT8 l3_xmin, int bw)
-{
-    FLOAT8  xfsf;
-    int     i, sf, sf_ok, delsf;
+ 
 
-    /* search will range from sf:  -209 -> 45  */
-    sf = 128;
-    delsf = 128;
-
-    sf_ok = 10000;
-    for (i = 0; i < 7; ++i) {
-        delsf /= 2;
-        xfsf = calc_sfb_noise(xr, xr34, bw, sf);
-
-        if (xfsf < 0) {
-            /* scalefactors too small */
-            sf += delsf;
-        }
-        else {
-            if (xfsf > l3_xmin) {
-                /* distortion.  try a smaller scalefactor */
-                sf -= delsf;
-            }
-            else {
-                sf_ok = sf;
-                sf += delsf;
-            }
-        }
-    }
-
-    /*  returning a scalefac without distortion, if possible
-     */
-    if (sf_ok <= 255)
-        return sf_ok;
+#define FIND_BODY( FUNC ) \
+    FLOAT8  xfsf;                                               \
+    int     i, sf, sf_ok, delsf;                                \
+                                                                \
+    /* search will range from sf:  -209 -> 45  */               \
+    sf = 128;                                                   \
+    delsf = 128;                                                \
+                                                                \
+    sf_ok = 10000;                                              \
+    for (i = 0; i < 7; ++i) {                                   \
+        delsf /= 2;                                             \
+        xfsf = FUNC;                                            \
+                                                                \
+        if (xfsf < 0) {                                         \
+            /* scalefactors too small */                        \
+            sf += delsf;                                        \
+        }                                                       \
+        else {                                                  \
+            if (xfsf > l3_xmin) {                               \
+                /* distortion.  try a smaller scalefactor */    \
+                sf -= delsf;                                    \
+            }                                                   \
+            else {                                              \
+                sf_ok = sf;                                     \
+                sf += delsf;                                    \
+            }                                                   \
+        }                                                       \
+    }                                                           \
+                                                                \
+    /*  returning a scalefac without distortion, if possible    \
+     */                                                         \
+    if (sf_ok <= 255)                                           \
+        return sf_ok;                                           \
     return sf;
+
+
+static int
+find_scalefac_ave_ISO( 
+    const FLOAT8* xr, const FLOAT8* xr34, FLOAT8 l3_xmin, int bw )
+{
+    FIND_BODY( calc_sfb_noise_ave_ISO(xr, xr34, bw, sf) )
 }
 
-inline int
-find_scalefac_mq(const FLOAT8 * xr, const FLOAT8 * xr34, FLOAT8 l3_xmin,
-		 int bw, int mq)
+static int
+find_scalefac_x34( 
+    const FLOAT8* xr, const FLOAT8* xr34, FLOAT8 l3_xmin, int bw )
 {
-    FLOAT8  xfsf;
-    int     i, sf, sf_ok, delsf;
-
-    /* search will range from sf:  -209 -> 45  */
-    sf = 128;
-    delsf = 128;
-
-    sf_ok = 10000;
-    for (i = 0; i < 7; ++i) {
-        delsf /= 2;
-        xfsf = calc_sfb_noise_mq(xr, xr34, bw, sf, mq);
-
-        if (xfsf < 0) {
-            /* scalefactors too small */
-            sf += delsf;
-        }
-        else {
-            if (xfsf > l3_xmin) {
-                /* distortion.  try a smaller scalefactor */
-                sf -= delsf;
-            }
-            else {
-                sf_ok = sf;
-                sf += delsf;
-            }
-        }
-    }
-
-    /*  returning a scalefac without distortion, if possible
-     */
-    if (sf_ok <= 255)
-        return sf_ok;
-    return sf;
+    FIND_BODY( calc_sfb_noise_x34(xr, xr34, bw, sf) )
 }
 
-inline int
-find_scalefac_ave(
-    const FLOAT8 * xr, const FLOAT8 * xr34, FLOAT8 l3_xmin, int bw)
+static int
+find_scalefac_ISO( 
+    const FLOAT8* xr, const FLOAT8* xr34, FLOAT8 l3_xmin, int bw )
 {
-    FLOAT8  xfsf;
-    int     i, sf, sf_ok, delsf;
+    FIND_BODY( calc_sfb_noise_ISO(xr, xr34, bw, sf) )
+}
 
-    /* search will range from sf:  -209 -> 45  */
-    sf = 128;
-    delsf = 128;
+static int
+find_scalefac_ave_x34( 
+    const FLOAT8* xr, const FLOAT8* xr34, FLOAT8 l3_xmin, int bw )
+{
+    FIND_BODY( calc_sfb_noise_ave(xr, xr34, bw, sf) )
+}
 
-    sf_ok = 10000;
-    for (i = 0; i < 7; ++i) {
-        delsf /= 2;
-        xfsf = calc_sfb_noise_ave(xr, xr34, bw, sf);
+static int
+find_scalefac_mq_ISO( 
+    const FLOAT8* xr, const FLOAT8* xr34, FLOAT8 l3_xmin, int bw, int mq )
+{
+    FIND_BODY( calc_sfb_noise_mq_ISO(xr, xr34, bw, sf, mq) )
+}
 
-        if (xfsf < 0) {
-            /* scalefactors too small */
-            sf += delsf;
-        }
-        else {
-            if (xfsf > l3_xmin) {
-                /* distortion.  try a smaller scalefactor */
-                sf -= delsf;
-            }
-            else {
-                sf_ok = sf;
-                sf += delsf;
-            }
-        }
-    }
-
-    /*  returning a scalefac without distortion, if possible
-     */
-    if (sf_ok <= 255)
-        return sf_ok;
-    return sf;
+static int
+find_scalefac_mq_x34( 
+    const FLOAT8* xr, const FLOAT8* xr34, FLOAT8 l3_xmin, int bw, int mq )
+{
+    FIND_BODY( calc_sfb_noise_mq_x34(xr, xr34, bw, sf, mq) )
 }
 
 
@@ -733,21 +1079,39 @@ block_sf(const lame_internal_flags * gfc, const FLOAT8 * l3_xmin,
         case 0:
             /*  the slower and better mode to use at higher quality
              */
-            vbrsf[sfb] =
-                find_scalefac_ave(&gi->xr[j], &xr34_orig[j], l3_xmin[sfb], width);
+            if ( gfc->quantization ) {
+                vbrsf[sfb] = find_scalefac_ave_x34(
+                    &gi->xr[j], &xr34_orig[j], l3_xmin[sfb], width);
+            }
+            else {
+                vbrsf[sfb] = find_scalefac_ave_ISO(
+                    &gi->xr[j], &xr34_orig[j], l3_xmin[sfb], width);
+            }
             break;
         case 1:
         case 2:
             /*  maxnoise mode to use at higher quality
              */
-            vbrsf[sfb]
-		= find_scalefac_mq(&gi->xr[j], &xr34_orig[j], l3_xmin[sfb],
-				   width, 2 - scalefac_criteria);
+            if ( gfc->quantization ) {
+                vbrsf[sfb] = find_scalefac_mq_x34(
+                    &gi->xr[j], &xr34_orig[j], l3_xmin[sfb],
+                    width, 2 - scalefac_criteria);
+            }
+            else {
+                vbrsf[sfb] = find_scalefac_mq_ISO(
+                    &gi->xr[j], &xr34_orig[j], l3_xmin[sfb],
+		    	    width, 2 - scalefac_criteria);
+            }
             break;
         case 3:
             /*  the faster and sloppier mode to use at lower quality
              */
-            vbrsf[sfb] = find_scalefac(&gi->xr[j], &xr34_orig[j], l3_xmin[sfb], width);
+            if ( gfc->quantization ) {
+                vbrsf[sfb] = find_scalefac_x34(&gi->xr[j], &xr34_orig[j], l3_xmin[sfb], width);
+            }
+            else {
+                vbrsf[sfb] = find_scalefac_ISO(&gi->xr[j], &xr34_orig[j], l3_xmin[sfb], width);
+            }
             break;
         case 4:
         default:
@@ -1160,58 +1524,289 @@ long_block_scalefacs(const lame_internal_flags * gfc, gr_info * cod_info,
  *
  ***********************************************************************/
 
-static FLOAT8
-block_xr34(const lame_internal_flags * gfc,  gr_info * const cod_info,
+
+
+
+#define BODY_1 \
+	/* 0.634521682242439 = 0.5946*2**(.5*0.1875) */                                     \
+	const FLOAT8 roundfac = 0.634521682242439                                           \
+                    / IPOW20(cod_info->global_gain+cod_info->scalefac_scale);           \
+    const int max_nonzero_coeff = cod_info->max_nonzero_coeff;                          \
+    const int *scalefac = cod_info->scalefac;                                           \
+    int     sfb, j = 0, sfbmax;                                                         \
+                                                                                        \
+    fi_union *fi = (fi_union *)cod_info->l3_enc;                                        \
+                                                                                        \
+    /* even though there is no scalefactor for sfb12/sfb21                              \
+     * subblock gain affects upper frequencies too, that's why                          \
+     * we have to go up to SBMAX_s/SBMAX_l                                              \
+     */                                                                                 \
+    sfbmax = cod_info->psymax;                                                          \
+    if (sfbmax == 35 || sfbmax == 36) /* short block / mixed? case */                   \
+        sfbmax += 3;                                                                    \
+    if (sfbmax == 21) /* long block case */                                             \
+        sfbmax += 1;                                                                    \
+                                                                                        \
+    for (sfb = 0; sfb < sfbmax; ++sfb) {                                                \
+        const int s =  ((scalefac[sfb] + (cod_info->preflag ? pretab[sfb] : 0))         \
+                 << (cod_info->scalefac_scale + 1))                                     \
+                 + cod_info->subblock_gain[cod_info->window[sfb]] * 8;                  \
+        int remaining;                                                                  \
+        int l = cod_info->width[sfb];                                                   \
+        const int notpseudohalf = !(gfc->pseudohalf[sfb]&&(gfc->substep_shaping & 2));  \
+                                                                                        \
+        FLOAT8 fac = IIPOW20(s);                                                        \
+        FLOAT8 jstep = fac*istep;                                                       \
+                                                                                        \
+        if ( l >= max_nonzero_coeff-j+1 ) {                                             \
+            l = max_nonzero_coeff-j+1;                                                  \
+        }                                                                               \
+        assert( l >= 0 );                                                                                \
+        j += l;                                                                         \
+        l >>= 1;                                                                        \
+        remaining = l%2;                                                                \
+                                                                                        \
+        for ( l >>= 1; l > 0; --l ) {                                                   \
+            xr34[0] = fac * xr34_orig[0];                                               \
+            xr34[1] = fac * xr34_orig[1];                                               \
+            xr34[2] = fac * xr34_orig[2];                                               \
+            xr34[3] = fac * xr34_orig[3];                                               \
+            {                                                                           \
+                double x0 = jstep * xr34_orig[0];                                       \
+                double x1 = jstep * xr34_orig[1];                                       \
+                double x2 = jstep * xr34_orig[2];                                       \
+                double x3 = jstep * xr34_orig[3];                                       \
+                if ( x0 <= IXMAX_VAL                                                    \
+                  && x1 <= IXMAX_VAL                                                    \
+                  && x2 <= IXMAX_VAL                                                    \
+                  && x3 <= IXMAX_VAL ) {                                                \
+
+#define BODY_2 \
+                    if ( notpseudohalf ) {                                              \
+                        /*  most often the case */                                      \
+                    }                                                                   \
+                    else {                                                              \
+                        if ( xr34[0] > roundfac ) {} else {                             \
+                            fi[0].i = 0;                                                \
+                        }                                                               \
+                        if ( xr34[1] > roundfac ) {} else {                             \
+                            fi[1].i = 0;                                                \
+                        }                                                               \
+                        if ( xr34[2] > roundfac ) {} else {                             \
+                            fi[2].i = 0;                                                \
+                        }                                                               \
+                        if ( xr34[3] > roundfac ) {} else {                             \
+                            fi[3].i = 0;                                                \
+                        }                                                               \
+                    }                                                                   \
+                    fi += 4;                                                            \
+                    xr34 += 4;                                                          \
+                    xr34_orig +=4;                                                      \
+                }                                                                       \
+                else return 0;                                                          \
+            }                                                                           \
+        }                                                                               \
+        if ( remaining ) {                                                              \
+            xr34[0] = fac * xr34_orig[0];                                               \
+            xr34[1] = fac * xr34_orig[1];                                               \
+            {                                                                           \
+                double x0 = jstep * xr34_orig[0];                                       \
+                double x1 = jstep * xr34_orig[1];                                       \
+                if ( x0 <= IXMAX_VAL                                                    \
+                  && x1 <= IXMAX_VAL ) {                                                \
+
+#define BODY_3 \
+                    if ( notpseudohalf ) {                                              \
+                        /*  most often the case */                                      \
+                    }                                                                   \
+                    else {                                                              \
+                        if ( xr34[0] > roundfac ) {} else {                             \
+                            fi[0].i = 0;                                                \
+                        }                                                               \
+                        if ( xr34[1] > roundfac ) {} else {                             \
+                            fi[1].i = 0;                                                \
+                        }                                                               \
+                    }                                                                   \
+                    fi += 2;                                                            \
+                    xr34 += 2;                                                          \
+                    xr34_orig +=2;                                                      \
+                }                                                                       \
+                else return 0;                                                          \
+            }                                                                           \
+        }                                                                               \
+        if ( j <= max_nonzero_coeff ) {                                                 \
+            /*  most often the case */                                                  \
+        }                                                                               \
+        else {                                                                          \
+            if ( j < 576 ) {                                                            \
+                int n = 576-j;                                                          \
+                memset( xr34, 0, sizeof(FLOAT8)*n );                                    \
+                memset( fi, 0, sizeof(int)*n );                                         \
+            }                                                                           \
+            return 1;                                                                   \
+        }                                                                               \
+    }                                                                                   \
+    return 1;                                                                           \
+
+
+#ifdef TAKEHIRO_IEEE754_HACK
+
+static int
+quantize_x34(const lame_internal_flags * gfc,  gr_info * const cod_info,
 	   const FLOAT8 * xr34_orig, FLOAT8 * xr34)
 {
-    const int max_nonzero_coeff = cod_info->max_nonzero_coeff;
-    FLOAT8  xrpow_max = cod_info->xrpow_max;
-    int     sfb, j = 0, sfbmax, *scalefac = cod_info->scalefac;
-
-    /* even though there is no scalefactor for sfb12/sfb21
-     * subblock gain affects upper frequencies too, that's why
-     * we have to go up to SBMAX_s/SBMAX_l
-     */
-    sfbmax = cod_info->psymax;
-    if (sfbmax == 35 || sfbmax == 36) /* short block / mixed? case */
-        sfbmax += 3;
-    if (sfbmax == 21) /* long block case */
-        sfbmax += 1;
-
-    for (sfb = 0; sfb < sfbmax; ++sfb) {
-        FLOAT8 fac;
-        int s =  ((scalefac[sfb] + (cod_info->preflag ? pretab[sfb] : 0))
-                 << (cod_info->scalefac_scale + 1))
-                 + cod_info->subblock_gain[cod_info->window[sfb]] * 8;
-        int l = cod_info->width[sfb];
-        
-        if ( l+j > max_nonzero_coeff ) {
-            l = max_nonzero_coeff-j+1;
-        }
-
-        if (s == 0) {/* just copy */
-            memcpy(&xr34[j], &xr34_orig[j], sizeof(FLOAT8)*l);
-            j += l;
-        }
-        else {
-            fac = IIPOW20(s);
-            l >>= 1;
-            while ( l-- ) {
-                xr34[j] = xr34_orig[j] * fac;
-                if ( xrpow_max < xr34[j] ) xrpow_max = xr34[j];
-                ++j;
-                xr34[j] = xr34_orig[j] * fac;
-                if ( xrpow_max < xr34[j] ) xrpow_max = xr34[j];
-                ++j;
-            }
-        }
-        if ( j > max_nonzero_coeff ) {
-            break;
-        }
-    }
-    return xrpow_max;
+    const FLOAT8 istep = IPOW20(cod_info->global_gain);
+    const FLOAT8* adj43_asm = adj43asm-MAGIC_INT;                                       \
+    BODY_1
+    BLOCK_IEEE754_x34_4
+    BODY_2
+    BLOCK_IEEE754_x34_2
+    BODY_3
 }
 
+
+static int
+quantize_ISO(const lame_internal_flags * gfc,  gr_info * const cod_info,
+	   const FLOAT8 * xr34_orig, FLOAT8 * xr34)
+{
+    const FLOAT8 istep = IPOW20(cod_info->global_gain);
+    BODY_1
+    BLOCK_IEEE754_ISO_4
+    BODY_2
+    BLOCK_IEEE754_ISO_2
+    BODY_3
+}
+
+
+#else
+
+static int
+quantize_x34(const lame_internal_flags * gfc,  gr_info * const cod_info,
+	   const FLOAT8 * xr34_orig, FLOAT8 * xr34)
+{
+    const FLOAT8 istep = IPOW20(cod_info->global_gain);
+    BODY_1
+    BLOCK_PLAIN_C_x34_4
+    BODY_2
+    BLOCK_PLAIN_C_x34_2
+    BODY_3
+}
+
+
+static int
+quantize_ISO(const lame_internal_flags * gfc,  gr_info * const cod_info,
+	   const FLOAT8 * xr34_orig, FLOAT8 * xr34)
+{
+    const FLOAT8 istep = IPOW20(cod_info->global_gain);
+    const FLOAT8 compareval0 = (1.0 - 0.4054)/istep;
+    const FLOAT8 compareval1 = (2.0 - 0.4054)/istep;
+    BODY_1
+    BLOCK_PLAIN_C_ISO_4
+    BODY_2
+    BLOCK_PLAIN_C_ISO_2
+    BODY_3
+}
+
+#endif
+
+static int 
+count_bits_(lame_internal_flags * gfc,  gr_info * const cod_info,
+	   const FLOAT8 * xr34_orig, FLOAT8 * xr34, FLOAT8 * l3_xmin)
+{
+    int x = 0;
+    if ( gfc->quantization ) {
+        x = quantize_x34 (gfc, cod_info, xr34_orig, xr34);
+    }
+    else {
+        x = quantize_ISO (gfc, cod_info, xr34_orig, xr34);
+    }
+    if ( x ) {
+        cod_info->part2_3_length = noquant_count_bits(gfc, cod_info);
+    }
+    else {
+        cod_info->part2_3_length = LARGE_BITS;
+    }
+    return cod_info->part2_3_length;
+}
+
+/************************************************************************
+ *
+ *      bin_search_StepSize()
+ *
+ *  author/date??
+ *
+ *  binary step size search
+ *  used by outer_loop to get a quantizer step size to start with
+ *
+ ************************************************************************/
+
+typedef enum {
+    BINSEARCH_NONE,
+    BINSEARCH_UP, 
+    BINSEARCH_DOWN
+} binsearchDirection_t;
+
+static int 
+bin_search_Step_Size(
+          lame_internal_flags * const gfc,
+          gr_info * const cod_info,
+	 int             desired_rate,
+    const int             ch,
+    const FLOAT8        xr34_orig [576],
+    FLOAT8        xr34[576],
+    FLOAT8 * l3_xmin ) 
+{
+    int nBits;
+    int CurrentStep = gfc->CurrentStep[ch];
+    int flag_GoneOver = 0;
+    int start = gfc->OldValue[ch];
+    binsearchDirection_t Direction = BINSEARCH_NONE;
+    cod_info->global_gain = start;
+    desired_rate -= cod_info->part2_length;
+
+    assert(CurrentStep);
+    do {
+	int step;
+        nBits = count_bits_(gfc, cod_info, xr34_orig, xr34, l3_xmin);  
+
+        if (CurrentStep == 1 || nBits == desired_rate)
+	    break; /* nothing to adjust anymore */
+
+        if (nBits > desired_rate) {  
+            /* increase Quantize_StepSize */
+            if (Direction == BINSEARCH_DOWN)
+                flag_GoneOver = 1;
+
+	    if (flag_GoneOver) CurrentStep /= 2;
+            Direction = BINSEARCH_UP;
+	    step = CurrentStep;
+        } else {
+            /* decrease Quantize_StepSize */
+            if (Direction == BINSEARCH_UP)
+                flag_GoneOver = 1;
+
+	    if (flag_GoneOver) CurrentStep /= 2;
+            Direction = BINSEARCH_DOWN;
+	    step = -CurrentStep;
+        }
+	cod_info->global_gain += step;
+    } while (cod_info->global_gain < 256u);
+
+    if (cod_info->global_gain < 0) {
+	    cod_info->global_gain = 0;
+	    nBits = count_bits_(gfc, cod_info, xr34_orig, xr34, l3_xmin);
+    } else if (cod_info->global_gain > 255) {
+	    cod_info->global_gain = 255;
+	    nBits = count_bits_(gfc, cod_info, xr34_orig, xr34, l3_xmin);
+    } else if (nBits > desired_rate) {
+	    cod_info->global_gain++;
+	    nBits = count_bits_(gfc, cod_info, xr34_orig, xr34, l3_xmin);
+    }
+    gfc->CurrentStep[ch] = (start - cod_info->global_gain >= 4) ? 4 : 2;
+    gfc->OldValue[ch] = cod_info->global_gain;
+    cod_info->part2_3_length = nBits;
+    return nBits;
+}
 
 /************************************************************************
  *
@@ -1274,15 +1869,12 @@ VBR_noise_shaping(lame_internal_flags * gfc, FLOAT8 * xr34orig, int minbits, int
 
         if (ret != 0) {
             ret = -1;
-        } else {
-            /* quantize xr34 */
-            cod_info->xrpow_max = block_xr34(gfc, cod_info, xr34orig, xr34);            
-            cod_info->part2_3_length = count_bits(gfc, xr34, cod_info, 0);
-
-            if (cod_info->part2_3_length >= LARGE_BITS)
-               	ret = -2;
-            else if (gfc->use_best_huffman == 2)
-        		best_huffman_divide(gfc, cod_info);
+        }
+        else {
+            count_bits_(gfc, cod_info, xr34orig, xr34, l3_xmin);
+            if ( cod_info->part2_3_length == LARGE_BITS ) {
+                ret = -2;
+            }
         }
 
         if (vbrmin >= vbrmax)
@@ -1312,17 +1904,21 @@ VBR_noise_shaping(lame_internal_flags * gfc, FLOAT8 * xr34orig, int minbits, int
     if (ret == -1)      /* Houston, we have a problem */
         return -1;
 
-    if (gfc->substep_shaping & 2) {
-	FLOAT8 xrtmp[576];
-	trancate_smallspectrums(gfc, cod_info, l3_xmin, xrtmp);
-    }
-
     if (cod_info->part2_3_length < minbits - cod_info->part2_length) {
-        bin_search_StepSize (gfc, cod_info, minbits, ch, xr34);
+        bin_search_Step_Size (gfc, cod_info, minbits, ch, xr34orig, xr34, l3_xmin);
     }
     if (cod_info->part2_3_length > maxbits - cod_info->part2_length) {
-        bin_search_StepSize (gfc, cod_info, maxbits, ch, xr34);
+        bin_search_Step_Size (gfc, cod_info, maxbits, ch, xr34orig, xr34, l3_xmin);
     }
+
+    if (gfc->substep_shaping & 2) {
+        FLOAT8 xrtmp[576];
+	    trancate_smallspectrums(gfc, cod_info, l3_xmin, xrtmp);
+    }
+    if ( gfc->use_best_huffman == 2 ) {
+        best_huffman_divide(gfc, cod_info);
+    }
+
     assert (cod_info->global_gain < 256u);
 
     if (cod_info->part2_3_length + cod_info->part2_length >= LARGE_BITS) 
