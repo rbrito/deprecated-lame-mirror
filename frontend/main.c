@@ -160,14 +160,18 @@ init_files(lame_t gfp, char *inPath, char *outPath)
 
 
 static void
-WriteShort(FILE * fp, char *p)
+WriteShort(FILE * fp, short s)
 {
+    union {
+	short s;
+	char c[2];
+    } sc;
     if (swapbytes) {
-	int l = p[0];
-	p[0] = p[1];
-	p[1] = l;
+	int l = sc.c[0];
+	sc.c[0] = sc.c[1];
+	sc.c[1] = l;
     }
-    fwrite ( p, 1, sizeof(short), fp );
+    fwrite(&sc, 1, sizeof(short), fp );
 }
 
 
@@ -182,10 +186,10 @@ WriteShort(FILE * fp, char *p)
 static int
 decoder(lame_t gfp, FILE * outf, int skip, char *inPath, char *outPath)
 {
-    short Buffer[2][1152];
-    int     iread;
     double  wavsize;
-    int     i;
+    int Buffer[2][1152];
+    int iread;
+    int i;
     int tmp_num_channels = lame_get_num_channels( gfp );
 
     if (silent < 10)
@@ -243,25 +247,27 @@ decoder(lame_t gfp, FILE * outf, int skip, char *inPath, char *outPath)
     assert(1 <= tmp_num_channels && tmp_num_channels <= 2);
 
     do {
-	iread = get_audio16(gfp, Buffer); /* read in 'iread' samples */
+	iread = get_audio(gfp, Buffer); /* read in 'iread' samples */
 	mp3input_data.framenum += iread / mp3input_data.framesize;
 	wavsize += iread;
 
 	if (silent <= 0)
 	    decoder_progress(&mp3input_data);
 
-	skip -= (i = skip < iread ? skip : iread); /* 'i' samples are to skip in this frame */
-
+	i = skip;
+	if (i > iread)
+	    i = iread;
+	skip -= i;
 	for (; i < iread; i++) {
 	    if (disable_wav_header) {
-		WriteShort(outf, (char *) &Buffer[0][i]);
+		WriteShort(outf, Buffer[0][i]);
 		if (tmp_num_channels == 2)
-		    WriteShort(outf, (char *) &Buffer[1][i]);
+		    WriteShort(outf, Buffer[1][i]);
 	    }
 	    else {
-		Write16BitsLowHigh(outf, Buffer[0][i]);
+		Write16BitsLowHigh(outf, Buffer[0][i] >> 16);
 		if (tmp_num_channels == 2)
-		    Write16BitsLowHigh(outf, Buffer[1][i]);
+		    Write16BitsLowHigh(outf, Buffer[1][i] >> 16);
 	    }
 	}
     } while (iread);

@@ -171,52 +171,28 @@ get_file_size(const char* const filename)
     return (off_t) -1;
 }
 
-static int
-get_audio_common(lame_t gfp, int buffer[2][1152], short buffer16[2][1152]);
-
 /************************************************************************
-*
-* get_audio()
-*
-* PURPOSE:  reads a frame of audio data from a file to the buffer,
-*   aligns the data for future processing, and separates the
-*   left and right channels
-*
-************************************************************************/
+ *
+ * get_audio()
+ *
+ * PURPOSE:  reads a frame of audio data from a file to the buffer,
+ *   aligns the data for future processing, and separates the
+ *   left and right channels
+ *
+ *    in: gfp
+ *        buffer    output to the int buffer or 16-bit buffer
+ * returns: samples read
+ */
 int
 get_audio(lame_t gfp, int buffer[2][1152])
-{
-    return get_audio_common(gfp, buffer, NULL);
-}
-
-/*
-  get_audio16 - behave as the original get_audio function, with a limited
-                16 bit per sample output
-*/
-int
-get_audio16(lame_t gfp, short buffer[2][1152])
-{
-    return get_audio_common(gfp, NULL, buffer);
-}
-
-/************************************************************************
-  get_audio_common - central functionality of get_audio*
-    in: gfp
-        buffer    output to the int buffer or 16-bit buffer
-   out: buffer    int output    (if buffer != NULL)
-        buffer16  16-bit output (if buffer == NULL) 
-returns: samples read
-note: either buffer or buffer16 must be allocated upon call
-*/
-static int
-get_audio_common(lame_t gfp, int buffer[2][1152], short buffer16[2][1152])
 {
     int num_channels = lame_get_num_channels(gfp), samples_read;
     unsigned int tmp_num_samples = lame_get_num_samples(gfp);
     unsigned int samples_to_read = lame_get_framesize(gfp);
     unsigned int remaining;
     int     insamp[2 * 1152];
-    int     i;
+    int     i, j;
+    short   buf_tmp16[2][1152];
 
     assert(samples_to_read <= 1152);
 
@@ -246,54 +222,30 @@ get_audio_common(lame_t gfp, int buffer[2][1152], short buffer16[2][1152])
     case sf_mp1:
     case sf_mp2:
     case sf_mp3:
-	if (buffer) {
-	    short   buf_tmp16[2][1152];
-	    samples_read = read_samples_mp3(gfp, musicin, buf_tmp16)
-		/ num_channels;
-	    /* LAME mp3 output 16bit -  convert to int */
+	samples_read = read_samples_mp3(gfp, musicin, buf_tmp16);
+	/* LAME mp3 output 16bit -  convert to int */
+	for (j = 0; j < num_channels; j++) {
 	    for (i = samples_read; --i >= 0; )
-		buffer[0][i] = buf_tmp16[0][i] << (8 * sizeof(int) - 16);
-	    if (num_channels == 2) {
-		for (i = 0; i < samples_read; i++)
-		    buffer[1][i] = buf_tmp16[1][i] << (8 * sizeof(int) - 16);
-	    } else if( num_channels == 1 ) {
-		memset(buffer[1], 0, samples_read * sizeof(int));
-	    } else
-		assert(0);
-	} else {
-	    samples_read = read_samples_mp3(gfp, musicin, buffer16);
+		buffer[j][i] = buf_tmp16[j][i] << (8 * sizeof(int) - 16);
 	}
+	if( num_channels == 1 )
+	    memset(buffer[1], 0, samples_read * sizeof(int));
 	break;
 
     default:
 	samples_read
 	    = read_samples_pcm(musicin, insamp, num_channels * samples_to_read)
 	    / num_channels;
-	if (buffer) {	/* output to int buffer */
-	    if (num_channels == 2) {
-		for (i = 0; i < samples_read; i++) {
-		    buffer[0][i] = insamp[i*2  ];
-		    buffer[1][i] = insamp[i*2+1];
-		}
-	    } else if (num_channels == 1) {
-		memcpy(buffer[0], insamp, samples_read * sizeof(int));
-		memset(buffer[1], 0,      samples_read * sizeof(int));
-	    } else
-		assert(0);
-	} else {		/* convert from int; output to 16-bit buffer */
-	    if (num_channels == 2) {
-		for (i = 0; i < samples_read; i++) {
- 		    buffer16[0][i] = insamp[i*2  ] >> (8 * sizeof(int) - 16);
-		    buffer16[1][i] = insamp[i*2+1] >> (8 * sizeof(int) - 16);
-		}
-	    } else if (num_channels == 1) {
-		for (i = 0; i < samples_read; i++) {
-		    buffer16[0][i] = insamp[i] >> (8 * sizeof(int) - 16);
-		}
-		memset(buffer16[1], 0, samples_read * sizeof(short));
-	    } else
-		assert(0);
-	}
+	if (num_channels == 2) {
+	    for (i = 0; i < samples_read; i++) {
+		buffer[0][i] = insamp[i*2  ];
+		buffer[1][i] = insamp[i*2+1];
+	    }
+	} else if (num_channels == 1) {
+	    memcpy(buffer[0], insamp, samples_read * sizeof(int));
+	    memset(buffer[1], 0,      samples_read * sizeof(int));
+	} else
+	    assert(0);
     }
 
     /* if num_samples = MAX_U_32_NUM, then it is considered infinitely long.
