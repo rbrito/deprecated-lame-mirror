@@ -1101,7 +1101,7 @@ lame_encode_buffer_sample_t(
 #endif
 
     mf_needed = BLKSIZE + gfp->framesize - FFTOFFSET + 1152; /* amount needed for FFT */
-    mf_needed = Max(mf_needed, 286 + 576 * (1 + gfc->mode_gr)); /* amount needed for MDCT/filterbank */
+    mf_needed = Max(mf_needed, 480 + gfp->framesize + 1152); /* amount needed for MDCT/filterbank */
     assert(MFSIZE >= mf_needed);
 
     mfbuf[0] = gfc->mfbuf[0];

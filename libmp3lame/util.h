@@ -377,7 +377,7 @@ struct lame_internal_flags {
   int ResvMax;  /* in bits */
 
   /* variables for newmdct.c */
-  FLOAT sb_sample[2][2][18][SBLIMIT];
+  FLOAT sb_sample[2][3][18][SBLIMIT];
   FLOAT amp_filter[32];
 
   int   sparsing;

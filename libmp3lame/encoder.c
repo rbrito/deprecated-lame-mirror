@@ -297,8 +297,7 @@ int  lame_encode_mp3_frame (				// Output
     III_psy_ratio masking[2][2];  /*pointer to selected maskings*/
     const sample_t *inbuf[2];
     lame_internal_flags *gfc=gfp->internal_flags;
-
-    FLOAT ms_ener_ratio[2]={.5,.5};
+    FLOAT ms_ener_ratio[2];
 
     int ch,gr;
 
@@ -306,6 +305,7 @@ int  lame_encode_mp3_frame (				// Output
 	/* prime the MDCT/polyphase filterbank with a short block */
 	int i,j;
 	sample_t primebuff[2][286+1152+576];
+	memset(gfc->sb_sample, 0, sizeof(gfc->sb_sample));
 	gfc->lame_encode_frame_init = 1;
 	for (i=0, j=0; i<286+576*(1+gfc->mode_gr); ++i) {
 	    if (i<576*gfc->mode_gr) {
@@ -321,9 +321,9 @@ int  lame_encode_mp3_frame (				// Output
 	/* polyphase filtering / mdct */
 	for ( ch = 0; ch < gfc->channels_out; ch++ ) {
 	    for ( gr = 0; gr < gfc->mode_gr; gr++ ) {
-		gfc->l3_side.tt[gr][ch].block_type=SHORT_TYPE;
+		gfc->l3_side.tt[gr][ch].block_type = NORM_TYPE;
 	    }
-	    mdct_sub48(gfc, primebuff[ch], ch);
+	    mdct_sub48(gfc, primebuff[ch]-1152, ch);
 	}
 
 	/* check FFT will not use a negative starting offset */

@@ -366,7 +366,7 @@ static const int order[] = {
 };
 
 
-/* returns sum_j=0^31 a[j]*cos(PI*j*(k+1/2)/32), 0<=k<32 */
+/* returns sum_j=0^31 w[j]*a[j]*cos(PI*j*(k+1/2)/32), 0<=k<32 */
 inline static void
 window_subband(FLOAT coef[SBLIMIT], const sample_t *x1, FLOAT a[SBLIMIT])
 {
@@ -683,40 +683,26 @@ void mdct_sub48(
 {
     int gr, k;
 
-    wk += 286;
     /* thinking cache performance, ch->gr loop is better than gr->ch loop */
     for (gr = 0; gr < gfc->mode_gr; gr++) {
-	int	band;
 	gr_info *gi = &(gfc->l3_side.tt[gr][ch]);
+	int type = gi->block_type, band;
 	FLOAT *mdct_enc = gi->xr;
-	FLOAT *samp = gfc->sb_sample[ch][1 - gr][0];
-
-	for (k = 0; k < 18 / 2; k++) {
-	    window_subband(gfc->amp_filter, wk, samp);
-	    window_subband(gfc->amp_filter, wk + 32, samp + 32);
-	    samp += 64;
-	    wk += 64;
-	    for (band = -16; band < 0; band++)
-		/* Compensate for inversion in the analysis filter */
-		samp[band] *= -1;
-	}
-
 	/*
 	 * Perform imdct of 18 previous subband samples
 	 * + 18 current subband samples
 	 */
 	for (band = 0; band < 32; band++, mdct_enc += 18) {
-	    int type = gi->block_type;
-	    FLOAT *crnt = gfc->sb_sample[ch][  gr][0] + order[band];
-	    FLOAT *prev = gfc->sb_sample[ch][1-gr][0] + order[band];
+	    FLOAT *prev = &gfc->sb_sample[ch][gr  ][0][order[band]];
+	    FLOAT *next = &gfc->sb_sample[ch][gr+1][0][order[band]];
 	    if (type != SHORT_TYPE || (gi->mixed_block_flag && band < 2)) {
 		FLOAT work[18];
 		for (k = -NL/4; k < 0; k++) {
 		    FLOAT a, b;
-		    a = win[type][k+27] * prev[(k+9)*32]
-		      + win[type][k+36] * prev[(8-k)*32];
-		    b = win[type][k+ 9] * crnt[(k+9)*32]
-		      - win[type][k+18] * crnt[(8-k)*32];
+		    a = win[type][k+27] * next[(k+9)*32]
+		      + win[type][k+36] * next[(8-k)*32];
+		    b = win[type][k+ 9] * prev[(k+9)*32]
+		      - win[type][k+18] * prev[(8-k)*32];
 		    work[k+ 9] = a - tantab_l[k+9] * b;
 		    work[k+18] = a * tantab_l[k+9] + b;
 		}
@@ -740,18 +726,42 @@ void mdct_sub48(
 		for (kk = -NS/4; kk < 0; kk++) {
 		    int k = kk+NS/4;
 		    FLOAT w = win[SHORT_TYPE][k];
-		    mdct_enc[k*3   ] = crnt[( 6+k)*32] * w - crnt[(11-k)*32];
-		    mdct_enc[k*3+ 9] = crnt[(17-k)*32] * w + crnt[(12+k)*32];
-		    mdct_enc[k*3+ 1] = crnt[(12+k)*32] * w - crnt[(17-k)*32];
-		    mdct_enc[k*3+10] = prev[( 5-k)*32] * w + prev[(   k)*32];
-		    mdct_enc[k*3+ 2] = prev[(   k)*32] * w - prev[( 5-k)*32];
-		    mdct_enc[k*3+11] = prev[(11-k)*32] * w + prev[( 6+k)*32];
+		    mdct_enc[k*3   ] = prev[( 6+k)*32] * w - prev[(11-k)*32];
+		    mdct_enc[k*3+ 9] = prev[(17-k)*32] * w + prev[(12+k)*32];
+		    mdct_enc[k*3+ 1] = prev[(12+k)*32] * w - prev[(17-k)*32];
+		    mdct_enc[k*3+10] = next[( 5-k)*32] * w + next[(   k)*32];
+		    mdct_enc[k*3+ 2] = next[(   k)*32] * w - next[( 5-k)*32];
+		    mdct_enc[k*3+11] = next[(11-k)*32] * w + next[( 6+k)*32];
 		}
 		mdct_short(mdct_enc);
 	    }
 	}
     }
-    if (gfc->mode_gr == 1) {
-	memcpy(gfc->sb_sample[ch][0], gfc->sb_sample[ch][1], sizeof(gfc->sb_sample[ch][1]));
+
+    /* subband filtering for next frame */
+    memcpy(gfc->sb_sample[ch][0], gfc->sb_sample[ch][gfc->mode_gr],
+	   sizeof(gfc->sb_sample[ch][0]));
+    wk += 286+1152;
+    for (gr = 0; gr < gfc->mode_gr; gr++) {
+	int	band;
+	FLOAT *samp = gfc->sb_sample[ch][gr+1][0];
+	for (k = 0; k < 18 / 2; k++) {
+	    window_subband(gfc->amp_filter, wk, samp);
+	    window_subband(gfc->amp_filter, wk + 32, samp + 32);
+	    samp += 64;
+	    wk += 64;
+	    for (band = -16; band < 0; band++)
+		/* Compensate for inversion in the analysis filter */
+		samp[band] *= -1;
+	}
     }
 }
+/*
+
+                ===short====
+          ===short====
+    ===short====
+<--------------><--------------><--------------><-------------->
+==============long==============
+                ==============long==============
+*/
