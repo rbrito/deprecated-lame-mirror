@@ -331,6 +331,9 @@ void L3psycho_anal( short int *buffer[2],
       masking_MS_ratio[gr_out][chn-2].en = en[chn];
       masking_MS_ratio[gr_out][chn-2].thm = thm[chn];
       
+      fft_long ( *wsamp_l, energy,   chn, buffer);
+      fft_short( *wsamp_s, energy_s, chn, buffer); 
+#if 0
       if (chn == 2)
       {
         for (j = BLKSIZE-1; j >=0 ; --j)
@@ -351,6 +354,7 @@ void L3psycho_anal( short int *buffer[2],
 	  }
 	}
       }
+#endif
     }
 
 
