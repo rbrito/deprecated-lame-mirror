@@ -1155,31 +1155,8 @@ psycho_anal_ns(lame_t gfc, int gr, int numchn)
 	}
 #endif
 	/*********************************************************************
-	 * compute loudness approximation (used for ATH auto-level adjustment) 
+	 * tonality estimation. use ratio of  avg vs. max as tonality
 	 *********************************************************************/
-	if (ch < 3) {
-	    FLOAT loudness = (FLOAT)0.0, loudness_old;
-	    for (b = 0; b < gfc->npart_l; b++)
-		loudness += eb[b] * gfc->ATH.eql_w[b];
-
-	    if (loudness > (FLOAT)1.0)
-		loudness = (FLOAT)1.0;
-	    else {
-		loudness_old = gfc->ATH.adjust[ch] * gfc->ATH.aa_decay;
-		if (loudness < loudness_old)
-		    loudness = loudness_old;
-		if (loudness < ATHAdjustLimit)
-		    loudness = ATHAdjustLimit;
-	    }
-	    gfc->ATH.adjust[ch] = loudness;
-	    for (i = 0; i < gfc->npart_l; i++)
-		adjATH[i] = gfc->ATH.cb[i] * loudness;
-	} else 
-	    /* no loudness for side ch.
-	       same value of main(ch=2) is used for it. */
-	    gfc->ATH.adjust[ch] = gfc->ATH.adjust[ch-1];
-
-	/* tonality estimation. use ratio of  avg vs. max as tonality */
 	{
 	    FLOAT m,a;
 	    a = avg[0] + avg[1];
@@ -1218,6 +1195,36 @@ psycho_anal_ns(lame_t gfc, int gr, int numchn)
 		    a *= tab[trancate(m)];
 	    }
 	    eb2[b] = a;
+	}
+
+	/*********************************************************************
+	 * compute loudness approximation (used for ATH auto-level adjustment) 
+	 *********************************************************************/
+	if (ch < 2) {
+	    FLOAT loudness = (FLOAT)0.0, loudness_old;
+	    for (b = 0; b < gfc->npart_l; b++) {
+		loudness += eb2[b] * gfc->ATH.eql_w[b];
+	    }
+	    if (loudness > (FLOAT)1.0)
+		loudness = (FLOAT)1.0;
+	    else {
+		loudness_old = gfc->ATH.adjust[ch] * gfc->ATH.aa_decay;
+		if (loudness < loudness_old)
+		    loudness = loudness_old;
+		if (loudness < ATHAdjustLimit)
+		    loudness = ATHAdjustLimit;
+	    }
+	    gfc->ATH.adjust[ch] = loudness;
+	    for (i = 0; i < gfc->npart_l; i++)
+		adjATH[i] = gfc->ATH.cb[i] * loudness;
+	} else {
+	    /* M/S channels use the larger one of adjustment values for L/R */
+	    if (ch == 2) {
+		FLOAT loudness = Min(gfc->ATH.adjust[0], gfc->ATH.adjust[1]);
+		for (i = 0; i < gfc->npart_l; i++)
+		    adjATH[i] = gfc->ATH.cb[i] * loudness;
+		gfc->ATH.adjust[2] = gfc->ATH.adjust[3] = loudness;
+	    }
 	}
 
 	/*********************************************************************

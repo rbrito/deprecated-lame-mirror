@@ -31,7 +31,7 @@
 
 # define PSY_MAJOR_VERSION       0      /* Major version number */
 # define PSY_MINOR_VERSION      91      /* Minor version number */
-# define PSY_ALPHA_VERSION       4      /* Set number if this is an alpha version, otherwise zero */
+# define PSY_ALPHA_VERSION       5      /* Set number if this is an alpha version, otherwise zero */
 # define PSY_BETA_VERSION        0      /* Set number if this is a beta version, otherwise zero */
 
 #endif  /* LAME_VERSION_H */
