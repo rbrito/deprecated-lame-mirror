@@ -77,8 +77,7 @@
 
 
 static int
-parse_args_from_string(lame_t gfp, const char *p,
-                       char *inPath, char *outPath)
+parse_args_from_string(lame_t gfp, const char *p, char *inPath, char *outPath)
 {                       /* Quick & very Dirty */
     char   *q;
     char   *f;
@@ -95,11 +94,11 @@ parse_args_from_string(lame_t gfp, const char *p,
     r[c++] = "lhama";
     while (1) {
         r[c++] = q;
-        while (*q != ' ' && *q != '\0')
-            q++;
-        if (*q == '\0')
-            break;
-        *q++ = '\0';
+	while (*q != ' ' && *q != '\0')
+	    q++;
+	if (*q == '\0')
+	    break;
+	*q++ = '\0';
     }
     r[c] = NULL;
 
@@ -160,6 +159,17 @@ init_files(lame_t gfp, char *inPath, char *outPath)
 
 
 
+static void
+WriteShort(FILE * fp, char *p)
+{
+    if (swapbytes) {
+	int l = p[0];
+	p[0] = p[1];
+	p[1] = l;
+    }
+    fwrite ( p, 1, sizeof(short), fp );
+}
+
 
 /* the simple lame decoder */
 /* After calling lame_init(), lame_init_params() and
@@ -176,7 +186,6 @@ decoder(lame_t gfp, FILE * outf, int skip, char *inPath, char *outPath)
     int     iread;
     double  wavsize;
     int     i;
-    void    (*WriteFunction) (FILE * fp, char *p, int n);
     int tmp_num_channels = lame_get_num_channels( gfp );
 
     if (silent < 10)
@@ -223,33 +232,31 @@ decoder(lame_t gfp, FILE * outf, int skip, char *inPath, char *outPath)
 		    "skipping initial %i samples (encoder+decoder delay)\n",
 		    skip);
     }
-    if ( 0 == disable_wav_header )
+    /* at this time, size is unknown. so write maximum 32 bit signed value */
+    if (!disable_wav_header)
         WriteWaveHeader(outf, 0x7FFFFFFF, lame_get_in_samplerate( gfp ),
-                        tmp_num_channels,
-                        16);
-    /* unknown size, so write maximum 32 bit signed value */
+                        tmp_num_channels, 16);
 
     wavsize = -skip;
-    WriteFunction = swapbytes ? WriteBytesSwapped : WriteBytes;
     mp3input_data.totalframes = mp3input_data.nsamp / mp3input_data.framesize;
 
-    assert(tmp_num_channels >= 1 && tmp_num_channels <= 2);
+    assert(1 <= tmp_num_channels && tmp_num_channels <= 2);
 
     do {
 	iread = get_audio16(gfp, Buffer); /* read in 'iread' samples */
 	mp3input_data.framenum += iread / mp3input_data.framesize;
-        wavsize += iread;
+	wavsize += iread;
 
-        if (silent <= 0)
+	if (silent <= 0)
 	    decoder_progress(&mp3input_data);
 
 	skip -= (i = skip < iread ? skip : iread); /* 'i' samples are to skip in this frame */
 
 	for (; i < iread; i++) {
-	    if ( disable_wav_header ) {
-		WriteFunction(outf, (char *) &Buffer[0][i], sizeof(short));
+	    if (disable_wav_header) {
+		WriteShort(outf, (char *) &Buffer[0][i]);
 		if (tmp_num_channels == 2)
-		    WriteFunction(outf, (char *) &Buffer[1][i], sizeof(short));
+		    WriteShort(outf, (char *) &Buffer[1][i]);
 	    }
 	    else {
 		Write16BitsLowHigh(outf, Buffer[0][i]);
@@ -262,16 +269,17 @@ decoder(lame_t gfp, FILE * outf, int skip, char *inPath, char *outPath)
     i = (16 / 8) * tmp_num_channels;
     assert(i > 0);
     if (wavsize <= 0) {
-        if (silent < 10) fprintf(stderr, "WAVE file contains 0 PCM samples\n");
-        wavsize = 0;
+	if (silent < 10) fprintf(stderr, "WAVE file contains 0 PCM samples\n");
+	wavsize = 0;
     }
     else if (wavsize > 0xFFFFFFD0 / i) {
-        if (silent < 10) fprintf(stderr,
-                "Very huge WAVE file, can't set filesize accordingly\n");
-        wavsize = 0xFFFFFFD0;
+	if (silent < 10)
+	    fprintf(stderr,
+		    "Very huge WAVE file, can't set filesize accordingly\n");
+	wavsize = 0xFFFFFFD0;
     }
     else {
-        wavsize *= i;
+	wavsize *= i;
     }
 
     if (!disable_wav_header && !fseek(outf, 0l, SEEK_SET))
@@ -395,10 +403,9 @@ encoder(lame_t gfp, FILE * outf, int nogap, char *inPath,
         }
 
         if (fwrite(mp3buffer, 1, imp3, outf) != imp3) {
-            fprintf(stderr, "Error writing mp3 output \n");
+            fprintf(stderr, "Error writing mp3 output  %d\n", imp3);
             return 1;
         }
-
     } while (iread);
 
     if (nogap)
@@ -593,13 +600,13 @@ main(int argc, char **argv)
         return ret == -2 ? 0 : 1;
 
     if (update_interval < 0.)
-        update_interval = 2.;
+	update_interval = 2.;
 
     if (outPath[0] != '\0' && max_nogap>0) {
-        strncpy(nogapdir, outPath, PATH_MAX + 1);  
-        nogapout = 1;
+	strncpy(nogapdir, outPath, PATH_MAX + 1);
+	nogapout = 1;
     }
-    
+
     /* initialize input file.  This also sets samplerate and as much
        other data on the input file as available in the headers */
     if (max_nogap > 0) {

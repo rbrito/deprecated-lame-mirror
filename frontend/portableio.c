@@ -59,7 +59,7 @@
 #include	"portableio.h"
 
 #ifdef WITH_DMALLOC
-#include <dmalloc.h>
+# include <dmalloc.h>
 #endif
 
 /****************************************************************
@@ -80,58 +80,49 @@
  *     For that see comments on the old Read16BitsHighLow()
  */
 
-static signed int
-ReadByte ( FILE* fp )
-{
-    int  result = getc (fp);
-    return result == EOF  ?  0  :  (signed char) (result & 0xFF);
-}
-
 static unsigned int
 ReadByteUnsigned ( FILE* fp )
 {
     int  result = getc (fp);
-    return result == EOF  ?  0  :  (unsigned char) (result & 0xFF);
+    return result == EOF  ?  0  : result;
 }
 
 int  Read16BitsLowHigh ( FILE* fp )
 {
     int  low  = ReadByteUnsigned (fp);
-    int  high = ReadByte         (fp);
-    
-    return (high << 8) | low;
+    int  high = ReadByteUnsigned (fp);
+
+    return (int) ((short)((high << 8) | low));
 }
 
 int  Read16BitsHighLow ( FILE* fp )
 {
-    int  high = ReadByte         (fp);
+    int  high = ReadByteUnsigned (fp);
     int  low  = ReadByteUnsigned (fp);
-    
-    return (high << 8) | low;
+
+    return (int) ((short)((high << 8) | low));
 }
 
 void
 Write16BitsLowHigh(FILE *fp, int i)
 {
-	putc(i&0xff,fp);
-	putc((i>>8)&0xff,fp);
+    putc(i & 0xff, fp);
+    putc((i >> 8) & 0xff, fp);
 }
-
-#define	Read32BitsLowHigh(f)	Read32Bits(f)
 
 int  Read32Bits ( FILE* fp )
 {
     int  low  = ReadByteUnsigned (fp);
     int  medl = ReadByteUnsigned (fp);
     int  medh = ReadByteUnsigned (fp);
-    int  high = ReadByte         (fp);
+    int  high = ReadByteUnsigned (fp);
 
     return (high << 24) | (medh << 16) | (medl << 8) | low;
 }
 
 int  Read32BitsHighLow ( FILE* fp )
 {
-    int  high = ReadByte         (fp);
+    int  high = ReadByteUnsigned (fp);
     int  medh = ReadByteUnsigned (fp);
     int  medl = ReadByteUnsigned (fp);
     int  low  = ReadByteUnsigned (fp);
@@ -142,8 +133,8 @@ int  Read32BitsHighLow ( FILE* fp )
 void
 Write32BitsLowHigh(FILE *fp, int i)
 {
-	Write16BitsLowHigh(fp,(int)(i&0xffffL));
-	Write16BitsLowHigh(fp,(int)((i>>16)&0xffffL));
+    Write16BitsLowHigh(fp, i);
+    Write16BitsLowHigh(fp, i >> 16);
 }
 
 
@@ -151,19 +142,6 @@ void ReadBytes (FILE     *fp, char *p, int n)
 {
     memset ( p, 0, n );
     fread  ( p, 1, n, fp );
-}
-
-void WriteBytes(FILE *fp, char *p, int n)
-{
-    /* return n == */
-    fwrite ( p, 1, n, fp );
-}
-
-void WriteBytesSwapped(FILE *fp, char *p, int n)
-{
-    p += n;
-    while ( n-- > 0 )
-	putc ( *--p, fp );
 }
 
 /****************************************************************
@@ -175,10 +153,8 @@ void WriteBytesSwapped(FILE *fp, char *p, int n)
  ****************************************************************/
 
 #ifdef applec	/* The Apple C compiler works */
-# define FloatToUnsigned(f)	((unsigned long)(f))
 # define UnsignedToFloat(u)	((double)(u))
 #else /* applec */
-# define FloatToUnsigned(f)	((unsigned long)(((long)((f) - 2147483648.0)) + 2147483647L + 1))
 # define UnsignedToFloat(u)	(((double)((long)((u) - 2147483647L - 1))) + 2147483648.0)
 #endif /* applec */
 /****************************************************************
@@ -237,9 +213,9 @@ printf("ConvertFromIEEEExtended(%lx,%lx,%lx,%lx,%lx,%lx,%lx,%lx,%lx,%lx\r",
 double
 ReadIeeeExtendedHighLow(FILE *fp)
 {
-	char	bytes [10];
+    char	bytes [10];
 
-	ReadBytes ( fp, bytes, 10 );
-	return ConvertFromIeeeExtended ( bytes );
+    ReadBytes ( fp, bytes, 10 );
+    return ConvertFromIeeeExtended ( bytes );
 }
 

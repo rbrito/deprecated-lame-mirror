@@ -44,7 +44,6 @@
 
 #define         MAX_U_32_NUM            0xFFFFFFFF
 
-#include <math.h>
 #include <sys/stat.h>
 
 #if defined(_WIN32) || defined(__CYGWIN__)
@@ -843,7 +842,7 @@ SetIDTagsFromRiffTags(lame_t gfp, FILE * sf)
     while (subSize && !feof(sf)) {
 	int type = Read32BitsHighLow(sf);
 	char buf[INFO_SIZE+1];
-	unsigned int length=Read32BitsLowHigh(sf);
+	unsigned int length = Read32BitsLowHigh(sf);
 	if (length > INFO_SIZE)
 	    return; /* XXX ugly FIX ME */
 	ReadBytes(sf, buf, (length+1) & ~1); /* resolve word padding */
@@ -852,13 +851,14 @@ SetIDTagsFromRiffTags(lame_t gfp, FILE * sf)
 	switch (type) {
 	case WAV_ID_INAM:
 	    /* Track Name */
-	    id3tag_set_title(gfp,strdup(buf));
+	    id3tag_set_title(gfp, strdup(buf));
 	    break;
 
 	case WAV_ID_IART:
 	    /* Artist Name */
 	    id3tag_set_artist(gfp, strdup(buf));
 	    break;
+
 	case WAV_ID_IGNR:
 	    /* Genre Name */
 	    if (id3tag_set_genre(gfp,strdup(buf)))
