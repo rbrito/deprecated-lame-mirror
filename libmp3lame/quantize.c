@@ -1401,10 +1401,8 @@ VBR_iteration_loop (
             }
       
             if (gfp->VBR == vbr_mtrh) {
-                ret = VBR_noise_shaping (gfp, cod_info->xr, xrpow,
-					 cod_info->l3_enc,
+                ret = VBR_noise_shaping (gfc, xrpow,
 					 min_bits[gr][ch], max_bits[gr][ch], 
-					 &cod_info->scalefac,
 					 &l3_xmin[gr][ch], gr, ch );
                 if (ret < 0)
                     cod_info->part2_3_length = 100000;

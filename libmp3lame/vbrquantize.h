@@ -23,13 +23,10 @@
 #define LAME_VBRQUANTIZE_H
 
 int VBR_noise_shaping(
-                    lame_global_flags * gfp,
-                    FLOAT8            * xr, 
+                    lame_internal_flags * gfc,
                     FLOAT8            * xr34orig, 
-                    int               * l3_enc, 
                     int                 minbits, 
                     int                 maxbits,
-                    III_scalefac_t    * scalefac, 
                     III_psy_xmin      * l3_xmin,
                     int                 gr,
                     int                 ch );
