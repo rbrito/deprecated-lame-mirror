@@ -75,13 +75,15 @@
 /* add int32_t type */
 #undef HAVE_INT32_T
 #ifndef HAVE_INT32_T
-	typedef long int32_t;
+#undef A_INT32_T
+	typedef A_INT32_T int32_t;
 #endif
 
 /* add int64_t type */
 #undef HAVE_INT64_T
 #ifndef HAVE_INT64_T
-	typedef long long int64_t;
+#undef A_INT64_T
+	typedef A_INT64_T int64_t;
 #endif
 
 /* add int8_t type */
@@ -160,13 +162,15 @@
 /* add uint32_t type */
 #undef HAVE_UINT32_T
 #ifndef HAVE_UINT32_T
-	typedef unsigned long uint32_t;
+#undef A_UINT32_T
+	typedef A_UINT32_T uint32_t;
 #endif
 
 /* add uint64_t type */
 #undef HAVE_UINT64_T
 #ifndef HAVE_UINT64_T
-	typedef unsigned long long uint64_t;
+#undef A_UINT64_T
+	typedef A_UINT64_T uint64_t;
 #endif
 
 /* add uint8_t type */
