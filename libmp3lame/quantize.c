@@ -1082,14 +1082,14 @@ CBR_1st_bitalloc (
 static void
 CBR_bitalloc(
     lame_t gfc,
-    III_psy_ratio      ratio[2],
+    III_psy_ratio      ratio[MAX_CHANNELS],
     int min_bits,
     int max_bits,
     FLOAT factor,
     const int gr
     )
 {
-    int bits, ch, adjustBits, targ_bits[2];
+    int bits, ch, adjustBits, targ_bits[MAX_CHANNELS];
 
     /* allocate minimum bits to encode part2_length (for i-stereo) */
     bits = gfc->l3_side.tt[gr][0].part2_length
@@ -1139,7 +1139,7 @@ CBR_bitalloc(
  *
  ********************************************************************/
 void 
-ABR_iteration_loop(lame_t gfc, III_psy_ratio ratio[2][2])
+ABR_iteration_loop(lame_t gfc, III_psy_ratio ratio[MAX_GRANULES][MAX_CHANNELS])
 {
     int gr, max_bits, min_bits;
     FLOAT factor;
@@ -1174,7 +1174,7 @@ ABR_iteration_loop(lame_t gfc, III_psy_ratio ratio[2][2])
  *
  ************************************************************************/
 void 
-iteration_loop(lame_t gfc, III_psy_ratio ratio[2][2])
+iteration_loop(lame_t gfc, III_psy_ratio ratio[MAX_GRANULES][MAX_CHANNELS])
 {
     int gr, mean_bits = getframebytes(gfc);
     FLOAT factor;
@@ -1602,9 +1602,9 @@ VBR_noise_shaping(lame_t gfc, gr_info *gi, FLOAT * xmin)
 
 
 void 
-VBR_iteration_loop(lame_t gfc, III_psy_ratio ratio[2][2])
+VBR_iteration_loop(lame_t gfc, III_psy_ratio ratio[MAX_GRANULES][MAX_CHANNELS])
 {
-    FLOAT xmin[2][2][SFBMAX];
+    FLOAT xmin[MAX_GRANULES][MAX_CHANNELS][SFBMAX];
     int max_frame_bits, used_bits, ch, gr;
 
     for (gr = 0; gr < gfc->mode_gr; gr++) {
@@ -1746,7 +1746,7 @@ set_pinfo (
  *
  ************************************************************************/
 void
-set_frame_pinfo(lame_t gfc, III_psy_ratio ratio[2][2])
+set_frame_pinfo(lame_t gfc, III_psy_ratio ratio[MAX_GRANULES][MAX_CHANNELS])
 {
     int gr, ch;
 

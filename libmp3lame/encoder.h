@@ -117,6 +117,7 @@
 #define MPG_MD_MS_I   3
 
 #define MAX_CHANNELS  2
+#define MAX_GRANULES  2
 
 /* max scalefactor band, max(SBMAX_l, SBMAX_s*3, (SBMAX_s-3)*3+8) */
 #define SFBMAX (SBMAX_s*3)
@@ -215,13 +216,13 @@ typedef struct {
 
 /* Layer III side information. */
 typedef struct {
-    gr_info tt[2][2];
+    gr_info tt[MAX_GRANULES][MAX_CHANNELS];
     int main_data_begin;  /* in bytes */
     int ResvSize; /* in bits */
     int ResvMax;  /* in bits */
     int maxmp3buf; /* in bytes */
     int sideinfo_len;
-    int scfsi[2][4];
+    int scfsi[MAX_CHANNELS][4];
 } III_side_info_t;
 
 typedef struct 
@@ -249,7 +250,7 @@ struct lame_internal_flags {
     III_side_info_t l3_side;
 
     /* variables for subband filter and MDCT */
-    FLOAT sb_sample[2][3][18][SBLIMIT];
+    FLOAT sb_sample[MAX_CHANNELS][3][18][SBLIMIT];
     FLOAT amp_filter[SBLIMIT];
     int xrNumMax_longblock;
 /*  
@@ -269,7 +270,7 @@ struct lame_internal_flags {
 
     unsigned long Class_ID;
 
-    sample_t     mfbuf [2] [MFSIZE];
+    sample_t     mfbuf[MAX_CHANNELS][MFSIZE];
     int alignment;
     int lame_encode_frame_init;
     int iteration_init_init;
@@ -345,13 +346,13 @@ struct lame_internal_flags {
     FLOAT interChRatio;
 
     /* psymodel work, (for next frame data) */
-    III_psy_ratio masking_next[2][MAX_CHANNELS*2];
-    int blocktype_next[2][MAX_CHANNELS*2]; /* for block type */
+    III_psy_ratio masking_next[MAX_GRANULES][MAX_CHANNELS*2];
+    int blocktype_next[MAX_GRANULES][MAX_CHANNELS*2]; /* for block type */
     int mode_ext_next;
-    int is_start_sfb_l_next[2];
-    int is_start_sfb_s_next[2];
-    int is_start_sfb_l[2];
-    int is_start_sfb_s[2];
+    int is_start_sfb_l_next[MAX_GRANULES];
+    int is_start_sfb_s_next[MAX_GRANULES];
+    int is_start_sfb_l[MAX_GRANULES];
+    int is_start_sfb_s[MAX_GRANULES];
 
     struct {
 	/* short block tuning */
@@ -384,8 +385,8 @@ struct lame_internal_flags {
     } ATH;
 
     /* quantization */
-    int OldValue[2];
-    int CurrentStep[2];
+    int OldValue[MAX_CHANNELS];
+    int CurrentStep[MAX_CHANNELS];
     scalefac_struct scalefac_band;
 
     char bv_scf[576];

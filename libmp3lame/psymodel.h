@@ -35,8 +35,8 @@
 #define NS_MSFIX 4.0
 
 void psycho_analysis(lame_t gfc,
-		     III_psy_ratio masking[2][2],
-		     FLOAT sbsmpl[2][1152] );
+		     III_psy_ratio masking[MAX_GRANULES][MAX_CHANNELS],
+		     FLOAT sbsmpl[MAX_CHANNELS][1152] );
 
 int psymodel_init(lame_t gfc);
 void init_mask_add_max_values(lame_t gfc);
