@@ -151,15 +151,17 @@ if test "${ac_cv_sizeof_unsigned_int}" = "4"; then
 #ifndef HAVE_UINT32_T
 	typedef unsigned int uint32_t;
 #endif])
-elif test "${ac_cv_sizeof_unsigned_long}" = "4"; then
-	AH_VERBATIM([HAVE_UINT32_T],
+else
+	if test "${ac_cv_sizeof_unsigned_long}" = "4"; then
+		AH_VERBATIM([HAVE_UINT32_T],
 [/* add uint32_t type */
 #undef HAVE_UINT32_T
 #ifndef HAVE_UINT32_T
 	typedef unsigned long uint32_t;
 #endif])
-else
-	AC_MSG_ERROR([CHECK_TYPE_uint32_t - please report to lame-dev@lists.sourceforge.net])
+	else
+		AC_MSG_ERROR([CHECK_TYPE_uint32_t - please report to lame-dev@lists.sourceforge.net])
+	fi
 fi
 
 if test "${ac_cv_sizeof_int}" = "4"; then
@@ -169,15 +171,17 @@ if test "${ac_cv_sizeof_int}" = "4"; then
 #ifndef HAVE_INT32_T
 	typedef int int32_t;
 #endif])
-elif test "${ac_cv_sizeof_long}" = "4"; then
-	AH_VERBATIM([HAVE_INT32_T],
+else
+	if test "${ac_cv_sizeof_long}" = "4"; then
+		AH_VERBATIM([HAVE_INT32_T],
 [/* add int32_t type */
 #undef HAVE_INT32_T
 #ifndef HAVE_INT32_T
 	typedef long int32_t;
 #endif])
-else
-	AC_MSG_ERROR([CHECK_TYPE_int32_t - please report to lame-dev@lists.sourceforge.net])
+	else
+		AC_MSG_ERROR([CHECK_TYPE_int32_t - please report to lame-dev@lists.sourceforge.net])
+	fi
 fi
 
 if test "${ac_cv_sizeof_unsigned_long}" = "8"; then
@@ -187,15 +191,17 @@ if test "${ac_cv_sizeof_unsigned_long}" = "8"; then
 #ifndef HAVE_UINT64_T
 	typedef unsigned long uint64_t;
 #endif])
-elif test "${ac_cv_sizeof_unsigned_long_long}" = "8"; then
-AH_VERBATIM([HAVE_UINT64_T],
+else
+	if test "${ac_cv_sizeof_unsigned_long_long}" = "8"; then
+		AH_VERBATIM([HAVE_UINT64_T],
 [/* add uint64_t type */
 #undef HAVE_UINT64_T
 #ifndef HAVE_UINT64_T
 	typedef unsigned long long uint64_t;
 #endif])
-else
-	AC_MSG_ERROR([CHECK_TYPE_uint64_t - please report to lame-dev@lists.sourceforge.net])
+	else
+		AC_MSG_ERROR([CHECK_TYPE_uint64_t - please report to lame-dev@lists.sourceforge.net])
+	fi
 fi
 
 if test "${ac_cv_sizeof_long}" = "8"; then
@@ -205,15 +211,17 @@ if test "${ac_cv_sizeof_long}" = "8"; then
 #ifndef HAVE_INT64_T
 	typedef long int64_t;
 #endif])
-elif test "${ac_cv_sizeof_long_long}" = "8"; then
-	AH_VERBATIM([HAVE_INT64_T],
+else
+	if test "${ac_cv_sizeof_long_long}" = "8"; then
+		AH_VERBATIM([HAVE_INT64_T],
 [/* add int64_t type */
 #undef HAVE_INT64_T
 #ifndef HAVE_INT64_T
 	typedef long long int64_t;
 #endif])
-else
-	AC_MSG_ERROR([CHECK_TYPE_int64_t - please report to lame-dev@lists.sourceforge.net])
+	else
+		AC_MSG_ERROR([CHECK_TYPE_int64_t - please report to lame-dev@lists.sourceforge.net])
+	fi
 fi
 
 alex_IEEE854_FLOAT80
