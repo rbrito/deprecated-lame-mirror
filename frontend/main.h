@@ -55,3 +55,4 @@ extern int in_bitwidth;
 #define         Min(A, B)       ((A) < (B) ? (A) : (B))
 #define         Max(A, B)       ((A) > (B) ? (A) : (B))
 
+extern void lame_version_print ( FILE* const fp );

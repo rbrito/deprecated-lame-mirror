@@ -193,7 +193,7 @@ static int setOS2Priority( lame_global_flags*  gfp, int Priority )
 *
 ************************************************************************/
 
-int  lame_version_print ( FILE* const fp )
+void lame_version_print ( FILE* const fp )
 {
     const char * v = get_lame_version ();
     const char * u = get_lame_url ();
@@ -211,9 +211,6 @@ int  lame_version_print ( FILE* const fp )
     
     if (LAME_ALPHA_VERSION)
 	fprintf ( fp, "warning: alpha versions should be used for testing only\n\n");
-
-
-    return 0;
 }
 
 int  print_license ( const lame_global_flags* gfp, FILE* const fp, const char* ProgramName )  /* print version & license */
