@@ -1759,6 +1759,7 @@ set_frame_pinfo(
         for (ch = 0; ch < gfc->channels_out; ch ++) {
 	    gr_info *gi = &gfc->l3_side.tt[gr][ch];
 	    int scalefac_sav[SFBMAX];
+	    int sfb;
 	    memcpy(scalefac_sav, gi->scalefac, sizeof(scalefac_sav));
 
 	    gfc->pinfo->blocktype[gr][ch] = gi->block_type;
@@ -1767,12 +1768,11 @@ set_frame_pinfo(
 		   sizeof(gfc->pinfo->xr[gr][ch]));
 
 	    /* reconstruct the scalefactors in case SCFSI was used */
-	    if (gr == 1) {
-		int sfb;
-		for (sfb = 0; sfb < gi->sfb_lmax; sfb++) {
-		    if (gi->scalefac[sfb] < 0) /* scfsi */
-			gi->scalefac[sfb] = gfc->l3_side.tt[0][ch].scalefac[sfb];
-		}
+	    for (sfb = 0; sfb < gi->psymax; sfb++) {
+		if (gi->scalefac[sfb] == -1) /* scfsi */
+		    gi->scalefac[sfb] = gfc->l3_side.tt[0][ch].scalefac[sfb];
+		if (gi->scalefac[sfb] == -2) /* anything goes */
+		    gi->scalefac[sfb] = 0;
 	    }
 
 	    set_pinfo (gfc, gi, &ratio[gr][ch], gr, ch);
