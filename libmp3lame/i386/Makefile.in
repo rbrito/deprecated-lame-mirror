@@ -217,6 +217,9 @@ am__objects_1 = choose_table.lo cpu_feat.lo fft3dn.lo
 liblameasmroutines_la_OBJECTS = $(am_liblameasmroutines_la_OBJECTS)
 
 DEFAULT_INCLUDES =  -I. -I$(srcdir) -I$(top_builddir)
+CCLD = $(CC)
+LINK = $(LIBTOOL) --mode=link $(CCLD) $(AM_CFLAGS) $(CFLAGS) \
+	$(AM_LDFLAGS) $(LDFLAGS) -o $@
 DIST_SOURCES = $(am__liblameasmroutines_la_SOURCES_DIST) \
 	$(EXTRA_liblameasmroutines_la_SOURCES)
 HEADERS = $(noinst_HEADERS)
