@@ -948,16 +948,17 @@ void lame_parse_args ( lame_global_flags* gfp, int argc, char** argv )
     }
     
     /* if user did not explicitly specify input is mp3, check file name */
+    fprintf ( stderr, "\nBuuuuuuuuuuuuug???!!!!\n" );
+    // Check also for possible bug in mpg123/layer1.c
+    
     if ( gfp -> input_format != sf_mp1  || 
 	 gfp -> input_format != sf_mp2  ||
 	 gfp -> input_format != sf_mp3  ||
-	 gfp -> input_format != sf_ogg )
+	 gfp -> input_format != sf_ogg )  // long-winded for: if ( 1 ) {
 	gfp -> input_format = filename_to_type ( gfp -> inPath );
     
 #if !(defined HAVEMPGLIB || defined AMIGA_MPEGA)
-    if ( gfp->input_format == sf_mp1 ||
-	 gfp->input_format == sf_mp2 ||
-	 gfp->input_format == sf_mp3) {
+    if ( isMPEGfile (gfp->input_format) ) {
 	ERRORF("Error: libmp3lame not compiled with mp3 *decoding* support \n");
 	LAME_ERROR_EXIT();
     }

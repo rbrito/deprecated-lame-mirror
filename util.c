@@ -36,6 +36,25 @@ enum byte_order NativeByteOrder = order_unknown;
 *
 ***********************************************************************/
 
+/* Set a stream to the binary mode.
+ * This is necessary for OS where '\n' is not represented by only one character,
+ * so that a file translation, disturbing for binary data, is necessary.
+ */
+ 
+int   SetStreamBinary ( FILE* fp )
+{
+#if   defined __EMX__
+      _fsetmode ( fp, "b" );
+#elif defined  __BORLANDC__
+      setmode   (_fileno (fp),  O_BINARY );
+#elif defined  __CYGWIN__
+      setmode   ( fileno (fp), _O_BINARY );
+#elif defined _WIN32
+      _setmode  (_fileno (fp), _O_BINARY );
+#endif
+      return 0;
+}
+
 
 /* Replacement for forward fseek(,,SEEK_CUR), because fseek() fails on pipes */
 int fskip ( FILE* fp, off_t bytes, int whence )
@@ -58,6 +77,10 @@ int fskip ( FILE* fp, off_t bytes, int whence )
     return 0;
 }
 
+int isMPEGfile ( sound_file_format sf )
+{
+    return sf == sf_mp1  ||  sf == sf_mp2  ||  sf == sf_mp3;
+}    
 
 FLOAT8 ATHformula(FLOAT8 f)
 {

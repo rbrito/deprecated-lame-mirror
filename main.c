@@ -2,6 +2,7 @@
 #include <string.h>
 #include <stdio.h>
 #include <fcntl.h>
+#include "util.h"
 
 #ifdef _WIN32
 # include <io.h>              /* needed to set stdout to binary */
@@ -48,20 +49,6 @@ void riscos_FileNameConvert ( char* p )
 * psychoacoustic model.
 *
 ************************************************************************/
-
-
-void setbinary ( FILE* fp )
-{
-#if   defined __EMX__
-      _fsetmode ( fp, "b" );
-#elif defined  __BORLANDC__
-      setmode   (_fileno (fp),  O_BINARY );
-#elif defined  __CYGWIN__
-      setmode   ( fileno (fp), _O_BINARY );
-#elif defined _WIN32
-      _setmode  (_fileno (fp), _O_BINARY );
-#endif
-}
 
 
 void encoder_error ( int errorcode )
@@ -145,7 +132,7 @@ int main ( int argc, char** argv )
   if (!gf.gtkflag) {
     /* open the output file */
     if (!strcmp(gf.outPath, "-")) {
-        setbinary ( outf = stdout );
+        SetStreamBinary ( outf = stdout );
     } else {
       if ((outf = fopen(gf.outPath, "wb+")) == NULL) {
 	fprintf(stderr,"Could not create \"%s\".\n", gf.outPath);

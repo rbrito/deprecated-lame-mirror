@@ -239,7 +239,12 @@ typedef struct  {
 int    lame_init ( lame_global_flags* gfp );
 
 
-
+/*
+ * Disable File CRLF Translation, so binary data can be read
+ * needed for reading/writing from/to stdin/stdout.
+ */
+ 
+int    SetStreamBinary ( FILE* fp ); 
 
 /*********************************************************************
  * command line argument parsing & option setting.  Only supported

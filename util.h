@@ -340,6 +340,7 @@ typedef struct  {
 *  Global Function Prototype Declarations
 *
 ***********************************************************************/
+extern int            isMPEGfile               ( sound_file_format sf );
 extern int            fskip                    ( FILE* fp, off_t bytes, int whence );
 extern void           display_bitrates         ( FILE* fp );
 extern int            BitrateIndex             ( unsigned int rate, unsigned int version, unsigned long samplerate );
