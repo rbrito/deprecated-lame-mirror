@@ -1653,6 +1653,49 @@ lame_encode_buffer_int(lame_global_flags * gfp,
 
 
 
+
+int
+lame_encode_buffer_long2(lame_global_flags * gfp,
+                   const long buffer_l[],
+                   const long buffer_r[],
+                   const int nsamples, unsigned char *mp3buf, const int mp3buf_size)
+{
+    lame_internal_flags *gfc = gfp->internal_flags;
+    int     ret, i;
+    sample_t *in_buffer[2];
+
+    if (gfc->Class_ID != LAME_ID)
+        return -3;
+
+    if (nsamples == 0)
+        return 0;
+
+    in_buffer[0] = calloc(sizeof(sample_t), nsamples);
+    in_buffer[1] = calloc(sizeof(sample_t), nsamples);
+
+    if (in_buffer[0] == NULL || in_buffer[1] == NULL) {
+        ERRORF(gfc, "Error: can't allocate in_buffer buffer\n");
+        return -2;
+    }
+
+    /* make a copy of input buffer, changing type to sample_t */
+    for (i = 0; i < nsamples; i++) {
+                                /* internal code expects +/- 32768.0 */
+      in_buffer[0][i] = buffer_l[i] * (1.0 / ( 1 << (8 * sizeof(long) - 16)));
+      in_buffer[1][i] = buffer_r[i] * (1.0 / ( 1 << (8 * sizeof(long) - 16)));
+    }
+
+    ret = lame_encode_buffer_sample_t(gfp,in_buffer[0],in_buffer[1],
+				      nsamples, mp3buf, mp3buf_size);
+    
+    free(in_buffer[0]);
+    free(in_buffer[1]);
+    return ret;
+
+}
+
+
+
 int
 lame_encode_buffer_long(lame_global_flags * gfp,
                    const long buffer_l[],

@@ -558,8 +558,26 @@ int CDECL lame_encode_buffer_float(
 /* as lame_encode_buffer, but for long's 
  * !! NOTE: !! data must still be scaled to be in the same range as 
  * short int, +/- 32768  
+ *
+ * This scaling was a mistake (doesn't allow one to exploit full
+ * precision of type 'long'.  Use lame_encode_buffer_long2() instead.
+ *
  */
 int CDECL lame_encode_buffer_long(
+        lame_global_flags*  gfp,           /* global context handle         */
+        const long     buffer_l [],       /* PCM data for left channel     */
+        const long     buffer_r [],       /* PCM data for right channel    */
+        const int           nsamples,      /* number of samples per channel */
+        unsigned char*      mp3buf,        /* pointer to encoded MP3 stream */
+        const int           mp3buf_size ); /* number of valid octets in this
+                                              stream                        */
+
+/* Same as lame_encode_buffer_long(), but with correct scaling. 
+ * !! NOTE: !! data must still be scaled to be in the same range as  
+ * type 'long'.   Data should be in the range:  +/- 2^(8*size(long)-1)
+ *
+ */
+int CDECL lame_encode_buffer_long2(
         lame_global_flags*  gfp,           /* global context handle         */
         const long     buffer_l [],       /* PCM data for left channel     */
         const long     buffer_r [],       /* PCM data for right channel    */
