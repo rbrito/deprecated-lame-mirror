@@ -1,0 +1,280 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 3.2//EN">
+<HTML>
+<HEAD>
+<TITLE>Command line switch reference</TITLE>
+<META NAME="description" CONTENT="Command line switch reference">
+<META NAME="keywords" CONTENT="lame">
+<META NAME="resource-type" CONTENT="document">
+<META NAME="distribution" CONTENT="global">
+<META HTTP-EQUIV="Content-Type" CONTENT="text/html; charset=iso_8859_1">
+<LINK REL="STYLESHEET" HREF="lame.css">
+<LINK REL="next" HREF="node9.html">
+<LINK REL="previous" HREF="node7.html">
+<LINK REL="up" HREF="node5.html">
+<LINK REL="next" HREF="node9.html">
+</HEAD>
+<BODY TEXT=#000000
+        BGCOLOR=#F9FBFB LINK=#006666 VLINK=#4C4C4C
+        ALINK=#995500>
+<H1>Command line switch reference</H1>
+<P> 
+<TABLE CELLPADDING=3 BORDER="1">
+  <TR VALIGN="TOP"> 
+    <TD ALIGN="LEFT" nowrap>switch</TD>
+    <TD ALIGN="LEFT" nowrap>parameter</TD>
+  </TR>
+  <tr valign="TOP"> 
+    <td align="LEFT" nowrap><tt><a href="#a">-a</a></tt></td>
+    <td align="LEFT" nowrap>downmix stereo file to mono</td>
+  </tr>
+  <tr valign="TOP"> 
+    <td align="LEFT" nowrap><tt><a href="#b">-b</a></tt></td>
+    <td align="LEFT" nowrap>bitrate (32, 40, 48, 56, 64, 96, 112, <b>128</b>, 
+      160, 192, 224, 256, 320)</td>
+  </tr>
+  <tr valign="TOP"> 
+    <td align="LEFT" nowrap><tt><a href="#c">-c</a></tt></td>
+    <td align="LEFT" nowrap>copyright</td>
+  </tr>
+  <tr valign="TOP"> 
+    <td align="LEFT" nowrap><tt><a href="#e">-e</a></tt></td>
+    <td align="LEFT" nowrap>de-emphasis (<b>n</b>, 5, c)</td>
+  </tr>
+  <tr valign="TOP"> 
+    <td align="LEFT" nowrap><tt><a href="#f">-f</a></tt></td>
+    <td align="LEFT" nowrap> fast mode</td>
+  </tr>
+  <tr valign="TOP"> 
+    <td align="LEFT" nowrap><tt>-g</tt></td>
+    <td align="LEFT" nowrap>turn on MP3x graphical frame analyser (might not be 
+      available on your release)</td>
+  </tr>
+  <tr valign="TOP"> 
+    <td align="LEFT" nowrap><tt><a href="#h">-h</a></tt></td>
+    <td align="LEFT" nowrap>high quality</td>
+  </tr>
+  <tr valign="TOP"> 
+    <td align="LEFT" nowrap><tt><a href="#k">-k</a></tt></td>
+    <td align="LEFT" nowrap> full bandwidth</td>
+  </tr>
+  <tr valign="TOP"> 
+    <td align="LEFT" nowrap><tt><a href="#m">-m</a></tt></td>
+    <td align="LEFT" nowrap>stereo mode (s, <b>j</b>, f, m)</td>
+  </tr>
+  <tr valign="TOP"> 
+    <td align="LEFT" nowrap><tt><a href="#-nohist">--nohist</a></tt></td>
+    <td align="LEFT" nowrap>disable histogram display</td>
+  </tr>
+  <TR VALIGN="TOP"> 
+    <TD ALIGN="LEFT" nowrap><tt><a href="#o">-o</a></tt></TD>
+    <TD ALIGN="LEFT" nowrap>non-original</TD>
+  </TR>
+  <tr valign="TOP"> 
+    <td align="LEFT" nowrap><tt><a href="#p">-p</a></tt></td>
+    <td align="LEFT" nowrap>error protection</td>
+  </tr>
+  <tr valign="TOP"> 
+    <td align="LEFT" nowrap><tt><a href="#r">-r</a></tt></td>
+    <td align="LEFT" nowrap>input file is raw pcm</td>
+  </tr>
+  <TR VALIGN="TOP"> 
+    <TD ALIGN="LEFT" nowrap><TT><a href="#s">-s</a></TT></TD>
+    <TD ALIGN="LEFT" nowrap>sampling frequency</TD>
+  </TR>
+  <tr valign="TOP"> 
+    <td align="LEFT" nowrap><tt><a href="#S">-S</a></tt></td>
+    <td align="LEFT" nowrap>silent operation</td>
+  </tr>
+  <tr valign="TOP"> 
+    <td align="LEFT" nowrap><tt><a href="#t">-t</a></tt></td>
+    <td align="LEFT" nowrap>disable VBR tag</td>
+  </tr>
+  <tr valign="TOP"> 
+    <td align="LEFT" nowrap><tt><a href="#V">-V</a></tt></td>
+    <td align="LEFT" nowrap>VBR quality setting (0...9)</td>
+  </tr>
+  <tr valign="TOP"> 
+    <td align="LEFT" nowrap><tt><a href="#x">-x</a></tt></td>
+    <td align="LEFT" nowrap>swapbytes</td>
+  </tr>
+</TABLE>
+<BR>
+<dl> 
+  <dt><strong><tt>-a</tt><a name="a">&nbsp;&nbsp;&nbsp;&nbsp;downmix&#160;</a></strong> 
+  <dd>Mix the stereo input file to mono and encode as mono. This option is only 
+    needed in the case of raw PCM stereo input (because LAME cannot determine 
+    the number of channels in the input file).<br>
+    To encode a stereo PCM input file as mono, use "lame -m s -a".<br>
+    For WAV and AIFF input files, using "-m m" will always produce a mono .mp3 
+    file from both mono and stereo input.<br>
+    The downmix is calculated as the sum of the left and right channel, attenuated 
+    by 6 dB. 
+  <dt><br>
+    <br>
+    <strong><tt>-b</tt><a name="b">&nbsp;&nbsp;&nbsp;&nbsp;bitrate&nbsp;</a></strong> 
+  </dt>
+</dl>
+<dl> 
+  <dd>For MPEG1 (sampling frequencies of 32, 44.1 and 48kHz)<br>
+    n = 32,40,48,56,64,80,96,112,128,160,192,224,256,320<br>
+    <br>
+    For MPEG2 (sampling frequencies of 16, 22.05 and 24kHz)<br>
+    n = 8,16,24,32,40,48,56,64,80,96,112,128,144,160<br>
+    <br>
+    Default is 128kbs MPEG1, 80kbs MPEG2. When used with variable bitrate encodings 
+    (VBR), -b specifies the minimum bitrate to use. This is useful to prevent 
+    LAME VBR from using some very aggressive compression which can cause some 
+    distortion due to small flaws in the psycho-acoustic model. 
+  <dd> 
+  <dt><br>
+    <br>
+    <strong><tt>-c</tt><a name="c">&nbsp;&nbsp;&nbsp;&nbsp;copyright</a></strong> 
+  </dt>
+</dl>
+<dl> 
+  <dd>Mark the encoded file as being copyrighted. 
+  <dd> 
+  <dt><br>
+    <br>
+    <strong><tt>-e n/5/c</tt><a name="e">&nbsp;&nbsp;&nbsp;&nbsp;de-emphasis</a></strong> 
+  </dt>
+</dl>
+<dl> 
+  <dd> <br>
+    default=n (none) 
+  <dd> 
+  <dt><br>
+    <br>
+    <strong><tt>-f</tt><a name="f">&nbsp;&nbsp;&nbsp;&nbsp;fast mode</a></strong> 
+  </dt>
+</dl>
+<dl> 
+  <dd> This switch forces the encoder to use the fast encoding mode. It will reduce 
+    a lot the quality of the output. This might be useful for real-time processing 
+    or streaming on slowest computers. 
+  <dt><br>
+    <br>
+    <strong><tt>-h</tt><a name="h">&nbsp;&nbsp;&nbsp;&nbsp;high quality</a></strong> 
+  </dt>
+</dl>
+<dl> 
+  <dd> Enables specialized mid/side masking thresholds to be used in jstereo mode. 
+    Will sound better but is 20% slower. It is only effective on joint stereo 
+    encoding. 
+  <dt><br>
+    <br>
+    <strong><tt>-k</tt><a name="k">&nbsp;&nbsp;&nbsp;&nbsp;full bandwidth</a></strong> 
+  </dt>
+</dl>
+<dl> 
+  <dd> Tells the encoder to use full bandwidth. By default, the encoder uses a 
+    16kHz bandwidth up to 64kbps per channel, and full bandwidth at higher bitrates. 
+    Increasing the bandwidth from the default setting might produces ringing artefacts 
+    at low bitrates. Use with care! 
+  <dt><br>
+    <br>
+    <strong><tt>-m s/<b>j/</b>f/m</tt><a name="m">&nbsp;&nbsp;&nbsp;&nbsp;stereo 
+    mode</a></strong> </dt>
+</dl>
+<dl> 
+  <dd> jstereo is the default mode for stereo files with VBR or fixed bitrates 
+    of 160kbs or less. At higher fixed bitrates, the default is stereo. <b><i><br>
+    <br>
+    stereo</i></b> <br>
+    In this mode, the encoder makes no use of potentially existing correlations 
+    between the two input channels. It can, however, negotiate the bit demand 
+    between both channel, i.e. give one channel more bits if the other contains 
+    silence.<br>
+    <br>
+    <i><b>joint stereo</b></i><br>
+    In this mode, the encoder will make use of a correlation between both channels. 
+    The signal will be matrixed into a sum ("mid") and difference ("side") signal. 
+    For quasi-mono signals, this will give a significant gain in encoding quality.<br>
+    This mode does not destroy phase information like IS stereo that may be used 
+    by other encoders and thus can be used to encode DOLBY ProLogic surround signals. 
+    <br>
+    <br>
+    <b><i>forced joint stereo </i></b><br>
+    This mode will force MS joint stereo on all frames. It's slightly faster then 
+    jstereo. But it should only be used if you are sure every frame of the input 
+    file has very little stereo seperation.<br>
+    <br>
+    <b><i>mono</i></b><br>
+    The input will be encoded as a mono signal. If it was a stereo signal, it 
+    will be downsampled to mono.
+  <dt><br>
+    <br>
+    <strong><tt>--nohist</tt><a name="-nohist">&nbsp;&nbsp;&nbsp;&nbsp;disable 
+    histogram display</a></strong> </dt>
+</dl>
+<dl> 
+  <dd> By default, LAME will display a bitrate histogram while producing VBR mp3 
+    files. This will disable that feature.<br>
+    Histogram display might not be available on your release. 
+  <dt><br>
+    <br>
+    <strong><tt>-o</tt><a name="o">&nbsp;&nbsp;&nbsp;&nbsp;non-original</a></strong> 
+  </dt>
+</dl>
+<dl> 
+  <dd> Mark the encoded file as a copy.
+  <dt><br>
+    <br>
+    <strong><tt>-p</tt><a name="p">&nbsp;&nbsp;&nbsp;&nbsp;error protection</a></strong></dt>
+</dl>
+<dl> 
+  <dd> Turn on CRC error protection.
+  <dt><br>
+    <br>
+    <strong><tt>-r</tt><a name="r">&nbsp;&nbsp;&nbsp;&nbsp;input file is raw pcm</a></strong></dt>
+</dl>
+<dl> 
+  <dd> Assume the input file is raw pcm. Sampling rate and mono/stereo/jstereo 
+    must be specified on the command line. Without -r, LAME will perform several 
+    fseek()'s on the input file looking for WAV and AIFF headers.<br>
+    Might not be available on your release.
+  <dt><br>
+    <br>
+    <strong><tt>-s 16/22.05/24/32/44.1/48</tt><a name="s">&nbsp;&nbsp;&nbsp;&nbsp;sampling 
+    frequency</a></strong> </dt>
+</dl>
+<dl> 
+  <dd> Required only for raw PCM input files. Otherwise it will be determined 
+    from the header. 
+  <dt><br>
+    <br>
+    <strong><tt>-S</tt><a name="S">&nbsp;&nbsp;&nbsp;&nbsp;silent operation</a></strong> 
+  </dt>
+</dl>
+<dl> 
+  <dd> Don't print progress report.
+  <dt><br>
+    <br>
+    <strong><tt>-t</tt><a name="t">&nbsp;&nbsp;&nbsp;&nbsp;disable VBR tag</a></strong></dt>
+</dl>
+<dl> 
+  <dd> Disable writing of the VBR Tag (only valid in VBR mode).<br>
+    This tag in embedded in frame 0 of the MP3 file. It lets VBR aware players 
+    correctly seek and compute playing times of VBR files.
+  <dt><br>
+    <br>
+    <strong><tt>-V 0...9</tt><a name="V">&nbsp;&nbsp;&nbsp;&nbsp;VBR quality setting</a></strong></dt>
+</dl>
+<dl> 
+  <dd> Enable VBR (Variable BitRate) and specifies the value of VBR quality.<br>
+    default=4<br>
+    0=highest quality.
+  <dt><br>
+    <br>
+    <strong><tt>-x</tt><a name="x">&nbsp;&nbsp;&nbsp;&nbsp;swapbytes</a></strong> 
+  </dt>
+</dl>
+<dl> 
+  <dd> Swap bytes in the input file. For sorting out little endian/big endian 
+    type problems. If your encodings sounds like static, try this first. 
+</dl>
+<dl> 
+  <dd>&nbsp; 
+</dl>
+</BODY>
+</HTML>

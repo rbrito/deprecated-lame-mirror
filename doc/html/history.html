@@ -1,0 +1,1306 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.0 Transitional//EN">
+<HTML>
+<HEAD>
+   <META HTTP-EQUIV="Content-Type" CONTENT="text/html; charset=iso-8859-1">
+   <META NAME="GENERATOR" CONTENT="Mozilla/4.08 [en] (X11; I; Linux 2.0.36 i686) [Netscape]">
+   <TITLE> LAME Changelog</TITLE>
+</HEAD>
+<BODY TEXT="#000000" BGCOLOR="#FFFFFF" LINK="#888888" VLINK="#555555" ALINK="#BBBBBB">
+
+<CENTER>
+<H1>
+History</H1></CENTER>
+Starting with LAME 3.0:
+<BR><FONT COLOR="#FF0000">red = features and bug fixes which effect quality</FONT>
+<BR><FONT COLOR="#3366FF">blue = features and bug fixes which effect speed</FONT>
+<BR>black = usability, portability, other
+<H3>
+
+<HR></H3>
+
+<H3>
+LAME 3.57beta&nbsp; November 22</H3>
+
+<UL>
+<LI>
+Sigbjxrn Skjfret: patch to allow encoding from 8bit input files when using
+LIBSNDFILE</LI>
+
+<LI>
+Automatic downsampling to nearest valid samplerate.</LI>
+
+<LI>
+Scalefactor bands demarked on MDCT plot in frameanalyzer</LI>
+
+<LI>
+Scalefactor preemphasis disabled for now.&nbsp;&nbsp; The algorithm was
+often doing more harm than good.</LI>
+</UL>
+
+<H3>
+LAME 3.56beta&nbsp; November 19</H3>
+
+<UL>
+<LI>
+Kimmo Mustonen: portabilty code cleanup.</LI>
+
+<LI>
+Vladimir Marek: id3 genre patch.</LI>
+
+<LI>
+Conrad Sanderson: new applypatch script.</LI>
+
+<LI>
+Initial window type now "STOP_TYPE" to reduce initial attenuation.&nbsp;
+This is needed because the new encoder delay is so short.&nbsp; With a
+NORM_TYPE, the first 240 samples would be attenuated.</LI>
+
+<LI>
+Padding at end of file now adjusted (hopefully!) to produce as little padding
+as possible while still guarantee all input samples are encoded.</LI>
+
+<LI>
+<FONT COLOR="#FF0000">Takehiro Tominaga:&nbsp; Reduced shortblock extra
+bit allocation formulas by 10% since new huffman coding is at least 10%
+more efficient.</FONT></LI>
+</UL>
+
+<H3>
+LAME 3.55beta&nbsp; November 11</H3>
+
+<UL>
+<LI>
+Albert Faber:&nbsp; updated BladeEnc.dll</LI>
+
+<LI>
+Simple lowpass filter added to linear downsampling routine.</LI>
+
+<LI>
+Nils Faerber: updated man page.</LI>
+
+<LI>
+All floating point variables are delcared FLOAT or&nbsp; FLOAT8.&nbsp;
+Change the definition of FLOAT8 in machine.h to run at 32bit preceision.</LI>
+
+<LI>
+Bug (introduced in 3.54beta) in stereo->mono downsampling fixed.</LI>
+</UL>
+
+<H3>
+LAME 3.54beta&nbsp; November 8 1999</H3>
+
+<UL>
+<LI>
+Encoder delay is now 48 samples.&nbsp; Can be adjusted to 1160 to sync
+with FhG (see ENCDELAY in encoder.h)&nbsp; This is kind of amazing, since
+if Takehiro put his MDCT/filterbank routine in a decoder, we could have
+a total&nbsp; delay of only 96 samples.</LI>
+
+<LI>
+<FONT COLOR="#FF0000">More inconstancies found and fixed in MPEG2 tables.</FONT></LI>
+
+<LI>
+Resampling from an MP3 input file now works.&nbsp; But we still dont have
+a lowpass filter so dont expect good results.</LI>
+</UL>
+
+<H3>
+LAME 3.53beta&nbsp; November 8 1999</H3>
+
+<UL>
+<LI>
+<FONT COLOR="#3366FF">Takehiro Tominaga:&nbsp; Fixed MPEG2 problem in new
+MDCT routines.&nbsp; Takehiro's combined filterbank/MDCT routine is now
+the default.&nbsp; Removes all buffering from psymodel.c and the filterbanks/MDCT
+routines.</FONT></LI>
+</UL>
+
+<H3>
+LAME 3.52beta&nbsp; November 8 1999</H3>
+
+<UL>
+<LI>
+By permission of copyright holders of all GPL code in LAME,&nbsp; all GPL
+code is now released under a modified version of the LGPL (see the README
+file)</LI>
+
+<LI>
+By popular demand, all C++ comments changed to C style comments</LI>
+
+<LI>
+Linear resampling now works.&nbsp; Use --resample to set an output samplerate
+different from the input samplerate.&nbsp; (doesn't seem to work with mp3
+input files, and there is no lowpass filter, so dont expect good results
+just yet)</LI>
+
+<LI>
+<FONT COLOR="#3366FF">Takehiro Tominaga:&nbsp; Faster Huffman encoding
+routines</FONT></LI>
+</UL>
+<FONT COLOR="#3366FF">The following changes are disabled because of MPEG2
+problems.&nbsp; But to try them, set MDCTDELAY=48 in encoder.h, instead
+of MDCTDELAY=528.:</FONT>
+<UL>
+<LI>
+<FONT COLOR="#3366FF">Takehiro Tominaga:&nbsp; New MDCT routines with shorter
+delay (48 samples instead of 528) and even faster than the old routines.</FONT></LI>
+
+<LI>
+<FONT COLOR="#3366FF">Takehiro Tominaga:&nbsp; Removed extra buffering
+in psymodel.c</FONT></LI>
+</UL>
+
+<H3>
+LAME 3.51&nbsp; November 7 1999</H3>
+
+<UL>
+<LI>
+Takehiro Tominaga: Bug in quantize.c absolute threshold of hearing calculation
+for non-44.1kHz input files.</LI>
+</UL>
+
+<H3>
+LAME 3.50&nbsp; November 1 1999</H3>
+
+<UL>
+<LI>
+LAME 3.37beta becomes official LAME 3.50 release</LI>
+</UL>
+
+<H3>
+LAME 3.37beta&nbsp; November 1 1999</H3>
+
+<UL>
+<LI>
+<FONT COLOR="#FF0000">Lionel Bonnet:&nbsp; Found severe bug in MPEG2 Short
+block SNR.</FONT></LI>
+
+<LI>
+Sergey Sapelin:&nbsp; VBR Toc improvement.</LI>
+
+<LI>
+Sergey Dubov: fskip() routine</LI>
+
+<LI>
+Conrad Sanderson: replacement for filterbank.c.&nbsp;&nbsp; Not much faster
+but amazingly simpler.</LI>
+</UL>
+
+<H3>
+LAME 3.36beta&nbsp; October 25 1999</H3>
+
+<UL>
+<LI>
+Albert Faber:&nbsp; more MSVC and BladeDLL updates</LI>
+
+<LI>
+Kimmo Mustonen:&nbsp; Much code cleanup and Amiga updates</LI>
+
+<LI>
+Anton Oleynikov: Borland C updates</LI>
+
+<LI>
+More stdin fixes:&nbsp; For some reason, forward fseek()'s would fail when
+used on pipes even though it is okay with redirection from "&lt;". So I
+changed all the forward fseek()'s to use fread().&nbsp; This should improve
+stdin support for wav/aiff files.&nbsp; If you know the input file is raw
+pcm, you can still use the '-r' option to avoid *all* seeking of any kind.</LI>
+
+<BR>&nbsp;</UL>
+
+<H3>
+LAME 3.35beta&nbsp; October 21 1999</H3>
+
+<UL>
+<LI>
+<FONT COLOR="#FF0000">Leonid Kulakov:&nbsp; Serious bug in MPEG2 scalefactor
+band tables fixed.</FONT></LI>
+
+<LI>
+Portability patches from:&nbsp; Anton Oleynikov, Sigbj&oslash;rn Skj&aelig;ret,
+Mathew Hendry, Richard Gorton</LI>
+
+<LI>
+Alfred Weyers: compiler options, updated timestatus.</LI>
+
+<LI>
+Albert Faber:&nbsp; BladeDll and other updates (new machine.h).</LI>
+
+<LI>
+Monty:&nbsp; updated Makefile to fix gcc inline math bug.</LI>
+
+<BR>&nbsp;</UL>
+
+<H3>
+LAME 3.34beta&nbsp; October 12 1999</H3>
+
+<UL>
+<LI>
+<FONT COLOR="#FF0000">Bug fixed:&nbsp; minimum bitrate in VBR mode could
+be ignored for a few frames.</FONT></LI>
+
+<LI>
+<FONT COLOR="#FF0000">New (minor) VBR tunings.</FONT></LI>
+
+<LI>
+Tim Ruddick: New wav/aiff header parsing routines.&nbsp; Better parsing
+and fewer fseek()'s.</LI>
+
+<LI>
+Anton Oleynikov:&nbsp; patches to work with Borland C</LI>
+
+<LI>
+<FONT COLOR="#FF0000">Gabriel Bouvigne:&nbsp; Experimental voice option
+enabled with --voice</FONT></LI>
+</UL>
+
+<H3>
+LAME 3.33beta&nbsp; October 11 1999</H3>
+
+<UL>
+<LI>
+<FONT COLOR="#FF0000">Robert Hegemann: RH VBR mode now the default and
+only VBR mode.&nbsp; The new code will always quantize to 0 distortion
+and the quality is increased by reducing the masking from the psy-model.&nbsp;
+-X0 is still the default for now.</FONT></LI>
+
+<LI>
+<FONT COLOR="#FF0000">Robert Hegemann: new -X5 mode</FONT></LI>
+
+<LI>
+Mathew Hendry: New timing code, removes the need for HAVETIMES</LI>
+
+<LI>
+<FONT COLOR="#3366FF">Mathew Hendry:&nbsp; assembler quantize_xrpow for
+Windows</FONT></LI>
+
+<LI>
+Iwasa Kazmi:&nbsp; stdin/stdout patch for Windows</LI>
+
+<LI>
+New option: "--athonly" will ignore the psy-model output and use only the
+absolute threshold of hearing for the masking.</LI>
+
+<BR>&nbsp;</UL>
+
+<H3>
+LAME 3.32beta&nbsp; October 8 1999</H3>
+
+<UL>
+<LI>
+<FONT COLOR="#3366FF">Takehiro Tominaga:&nbsp; faster long block spreading
+function convolution for non 44.1kHz sampling frequencies, and faster short
+block spreading function convolution for all sampling frequencies.</FONT></LI>
+
+<LI>
+<FONT COLOR="#FF0000">Takehiro Tominaga:&nbsp; Completly rewritten huffman
+table selection and count_bits().&nbsp; More efficient table selection
+results in many more bits per frame.</FONT></LI>
+
+<LI>
+<FONT COLOR="#FF0000">Takehiro Tominaga:&nbsp; More efficient scalefac
+compress setting.</FONT></LI>
+
+<LI>
+<FONT COLOR="#3366FF">Mike Cheng: new calc_noise2()</FONT></LI>
+
+<LI>
+Alfred Weyers: patch for timestatus() seconds rollover</LI>
+
+<BR>&nbsp;</UL>
+
+<H3>
+LAME 3.31beta&nbsp; September 28 1999</H3>
+
+<UL>
+<LI>
+Albert Faber:&nbsp; updated his BladeDLL code.&nbsp; This allows LAME to
+be compiled into a BladeEnc compatiable .dll.</LI>
+
+<LI>
+<FONT COLOR="#3366FF">Mike Cheng: faster l3psycho_ener() routine.</FONT></LI>
+
+<LI>
+Sigbj&oslash;rn Skj&aelig;ret: more code cleanup.</LI>
+</UL>
+
+<H3>
+LAME&nbsp; 3.30beta&nbsp; September 27 1999</H3>
+
+<UL>
+<LI>
+Conrad Sanderson:&nbsp; ID3 tag code added (type 'lame' for instructions)</LI>
+
+<LI>
+new mdct.c from Mike Cheng (no faster, but much cleaner code)</LI>
+
+<LI>
+Mathew Hendry: Microsoft nmake makefile and a couple other changes for
+MSVC</LI>
+
+<LI>
+More modulization work:&nbsp; One input sound file interface handles mp3's,
+uncompressed audio, with or without LIBSNDFILE.&nbsp; Fixes (hopefully)
+a bunch of file I/O bugs introduced in 3.29</LI>
+
+<LI>
+LAME will now print valid samplerate/bitrate combinations</LI>
+
+<LI>
+stdin/stdout fix for OS/2 (Paul Hartman)</LI>
+
+<LI>
+For mp3 input files, totalframes estimated based on filesize and first
+frame bitrate.</LI>
+
+<LI>
+Updated all functions with new style prototypes.&nbsp; (Sigbj&oslash;rn
+Skj&aelig;ret)</LI>
+
+<BR>&nbsp;</UL>
+
+<H3>
+LAME 3.29beta&nbsp; September 21 1999</H3>
+
+<UL>
+<LI>
+<FONT COLOR="#FF0000">Bug in bigv_bitcount fixed.&nbsp; Loop.c was overestimating
+the number of bits needed, resulting in wasted bits every frame.&nbsp;
+(Leonid A. Kulakov)</FONT></LI>
+
+<LI>
+<FONT COLOR="#FF0000">Bug in *_choose_table() fixed&nbsp;&nbsp; These routines
+would not sellect the optimal Huffman table in some cases.&nbsp;&nbsp;
+(Leonid A. Kulakov)</FONT></LI>
+
+<LI>
+<FONT COLOR="#FF0000">Tuning of ATH normalization (macik)</FONT></LI>
+
+<LI>
+Removed unused variables and fixed function prototypes (Sigbj&oslash;rn
+Skj&aelig;ret)</LI>
+
+<LI>
+Sami Farin sent a&nbsp; .wav&nbsp; file that&nbsp; LAME built in support
+choked on.&nbsp;&nbsp; I added a slightly more sophisticated wav header
+parsing to handle this, but if you have trouble, use libsndfile.</LI>
+
+<LI>
+Resampling hooks and options added.&nbsp; Buffering and resampling routines
+need to be written.</LI>
+
+<LI>
+LAME will now take an mp3 file as input.&nbsp; When resampling code is
+working, LAME will be able to (for example) convert a high bitrate stereo
+mp3 to a low bitrate mono mp3 for streaming.</LI>
+</UL>
+
+<H3>
+LAME 3.28beta&nbsp; September 15 1999</H3>
+
+<UL>
+<LI>
+<FONT COLOR="#FF0000">Serious bug fixed in high frequency MDCT coefficients.&nbsp;
+Huffman coding was reversing the order of the count1 block quadruples.&nbsp;&nbsp;
+(Leonid A. Kulakov)</FONT></LI>
+
+<LI>
+nint() problems under Tru64 unix fixed and preprocessor variable HAVE_NINT
+removed.&nbsp; (Bob Bell)</LI>
+
+<LI>
+Compiler warning fixes and code cleanup&nbsp;&nbsp; (Sigbj&oslash;rn Skj&aelig;ret,
+Lionel Bonnet)</LI>
+
+<LI>
+USAGE file now includes suggestions for downsampling.&nbsp; For low bitrate
+encodings, proper downsampling can give dramatically better results.&nbsp;
+(John Hayward-Warburton)</LI>
+</UL>
+
+<H3>
+LAME 3.27beta&nbsp; September 12 1999</H3>
+
+<UL>
+<LI>
+Several bugs in encode.c and l3bitstream.c fixed by Lionel Bonnet.</LI>
+
+<LI>
+Bugs in new VBR (#define RH) formula for mono input file and mid/side encoding
+fixed.</LI>
+</UL>
+
+<H3>
+LAME 3.26beta&nbsp; September 10 1999</H3>
+
+<UL>
+<LI>
+The "-m m" option (mono .mp3 file) will automatically mix left and right
+channels if the input file is stereo.&nbsp; (Alfred Weyers)</LI>
+
+<LI>
+<FONT COLOR="#FF0000">New quant_compare algorithm (method for deciding
+which of two quantizations is better) enabled with -X4 (Greg Maxwell)</FONT></LI>
+
+<LI>
+<FONT COLOR="#FF0000">New mid/side VBR bit allocation formula.&nbsp; Mid
+channel bits are set by the quality requirements, and then the side channel
+uses a reduced number of bits (in a proportion coming from the fixed bitrate
+code).&nbsp; This might not be optimal, but it should be pretty good and
+no one knows what the optimal solution should be.&nbsp; (Greg Maxwell)</FONT></LI>
+
+<LI>
+<FONT COLOR="#FF0000">New VBR (#define RH) tunings based on detailed listening
+tests by Macik and Greg Maxwell.</FONT></LI>
+
+<LI>
+Sigbj&oslash;rn Skj&aelig;ret fixed several compiler warnings (which turned
+out to be potential bugs)</LI>
+
+<LI>
+Takehiro Tominaga fixed a low bitrate bug in reduce_side()</LI>
+
+<LI>
+Alfred Weyers fixed some buffer overflows.</LI>
+
+<LI>
+<FONT COLOR="#FF0000">New ATH (absolute threshold of hearing) formula replaces
+buggy ISO code, and adds&nbsp; analog silence treatment&nbsp; (removal
+of coefficients below below ATH).&nbsp;&nbsp; These are turned on by default
+but have not been fully tested.&nbsp; (Robert Hegemann)</FONT></LI>
+
+<LI>
+<FONT COLOR="#FF0000">Bug in short block spreading function fixed.&nbsp;
+(Robert Hegemann)</FONT></LI>
+</UL>
+
+<H3>
+LAME 3.25beta&nbsp; August 22 1999</H3>
+
+<UL>
+<LI>
+Sigbj&oslash;rn Skj&aelig;ret fixed a zero byte malloc call.&nbsp; This
+bug&nbsp; was introduced in 3.24 and causes problems on non Linux systems.</LI>
+
+<LI>
+Bit allocation routines would sometimes allocate more than 4095 bits to
+one channel of one granule.&nbsp; A couple of people reported problems
+that might be caused by this, especially at higher bitrates.</LI>
+
+<LI>
+Nils Faerber updated the man page and fixed many of the compiler warnings.</LI>
+
+<BR>&nbsp;</UL>
+
+<H3>
+LAME 3.24beta&nbsp;&nbsp; August 15 1999</H3>
+
+<UL>
+<LI>
+This release contains the following new code (for developers) which is
+disabled by default:</LI>
+
+<LI>
+Robert Hegemann:&nbsp; Completely overhauled VBR code.&nbsp; Now computes
+exact number of bits required for the given qualty and then quantized with
+the appropriate bitrate.</LI>
+
+<LI>
+Several new quantization quality measures.</LI>
+</UL>
+
+<H3>
+LAME 3.23beta&nbsp; August 8 1999</H3>
+
+<UL>
+<LI>
+Very nice continuously updated VBR histogram display from Iwasa Kazmi.&nbsp;
+(disabled with --nohist).</LI>
+
+<LI>
+More modulerization work.&nbsp; The encoding engine can now be compiled
+into libmp3lame, but the interface is awkward.</LI>
+
+<LI>
+<FONT COLOR="#FF0000">Bug fixed in FFT Hann window formula (Leonid A. Kulakov).</FONT></LI>
+
+<LI>
+New LAME logo on the download page.&nbsp; Created by Chris Michalisles.</LI>
+
+<LI>
+<FONT COLOR="#FF0000">Several VBR algorithm improvements from Robert Hegemann.&nbsp;
+New quantization noise metrics and VBR quality measure takes into account
+mid/side encoding.&nbsp; Should produce smaller files with the same quality,
+especially when using jstereo.</FONT></LI>
+</UL>
+
+<H3>
+LAME 3.22beta&nbsp; July 27 1999</H3>
+
+<UL>
+<LI>
+Downsampling (stereo to mono) bug with MPEG2 fixed.&nbsp; (Mike Oliphant)</LI>
+
+<LI>
+Downsampling now merges L &amp; R channels - before it only took the L
+channel.</LI>
+
+<LI>
+More modularization and code cleanup from Albert Faber and myself.</LI>
+
+<LI>
+Input filesize limit removed for raw pcm input files.&nbsp; For other file
+types, LAME will still only read the first 2^32 samples, (27 hours of playing
+time at 44.1kHz).</LI>
+
+<BR>&nbsp;</UL>
+
+<H3>
+LAME 3.21beta&nbsp; July 26 1999</H3>
+
+<UL>
+<LI>
+<FONT COLOR="#FF0000">Correct Mid/Side masking thresholds for JSTEREO mode!&nbsp;
+This is enabled with -h.&nbsp; It&nbsp; makes LAME about 20% slower since
+it computes psycho-acoustics for L,R Mid and Side channels.</FONT></LI>
+
+<LI>
+<FONT COLOR="#FF0000">"Analog silence" threshold added.&nbsp; Keeps VBR
+from upping the bitrate during very quite passages.&nbsp; (Robert.Hegemann)</FONT></LI>
+
+<LI>
+<FONT COLOR="#FF0000">New VBR quality setting from Robert Hegemann.&nbsp;
+It is based on the idea that distortion at lower bit rates sounds worse
+than at higher bitrates, and so the allowed distortion (VBR quality setting)
+is proportional to the bitrate.&nbsp; Because of this, default minimum
+bitrate is now 32kbs.</FONT></LI>
+
+<LI>
+<FONT COLOR="#FF0000">Expermental subblock gain code enabled with -Z.</FONT></LI>
+
+<LI>
+New "-r" option for raw pcm input files.&nbsp; With -r, LAME will not do
+any fseek()'s or look for wav and aiff headers on the input file.</LI>
+
+<LI>
+Bug fixes in mp3x (frame analyzer) for viewing frames near end of the file.</LI>
+
+<LI>
+Bug fixed to allow setting the sampling rate of raw pcm input files.</LI>
+</UL>
+
+<H3>
+LAME 3.20beta&nbsp; July 19 1999</H3>
+
+<UL>
+<LI>
+Bug in get_audio.c fixed.&nbsp; Libsndfile wrappers would not compile (Miguel
+Revilla&nbsp; Rodriguez)</LI>
+
+<LI>
+Nils Faerber found some unitialized variables and some wierd extranous
+computations in filter_subband, now fixed.&nbsp; This was causing seg faults
+on some machines.</LI>
+
+<BR>&nbsp;</UL>
+
+<H3>
+LAME 3.19beta&nbsp; July 18 1999</H3>
+
+<UL>
+<LI>
+<FONT COLOR="#FF0000">Oops!&nbsp; Robert Hegemann immediatly found a bug
+in the new&nbsp; (old -Z option) quantization code.&nbsp; calc_noise1 was
+not returning tot_noise, so non ms-stereo frames were buggy.</FONT></LI>
+
+<BR>&nbsp;</UL>
+
+<H3>
+LAME 3.18beta&nbsp; July 17 1999</H3>
+
+<UL>
+<LI>
+<FONT COLOR="#FF0000">Many psycho-acoustic bug fixes.&nbsp; Dan Nelson
+discovered a bug in MPEG2: For short blocks, the code assumes 42 partition
+bands.&nbsp; MPEG1 sometimes has less, MPEG2 can have more.&nbsp; In MPEG1,
+this bug would not have effected the output if your compiler initializes
+static variables to 0 on creation.&nbsp; In MPEG2 it leads to array out-of-bounds
+access errors. Finally, there was a related bug in MPEG1/MPEG2, short &amp;
+long blocks where the energy above 16kHz was all added to partition band
+0. (the lowest frequeny partition band!)</FONT></LI>
+
+<LI>
+<FONT COLOR="#FF0000">The -Z option (Gabriel Bouvigne's idea of using total
+quantization noise to choose between two quantizations with the same value
+of "over") is now the default.&nbsp; I believe this helps remove the trilling
+sound in Jan's testsignal4.wav.&nbsp; The quality of testsignal2.wav and
+testsignal4.wav are now better than Xing and getting closer to FhG.</FONT></LI>
+
+<LI>
+Bug fixes in frame &amp; sample count for downsampling mode. (ben "jacobs")</LI>
+
+<LI>
+Patches to improve modulization.&nbsp; (ben "jacobs")</LI>
+</UL>
+
+<H3>
+LAME 3.17beta&nbsp; July 11 1999</H3>
+
+<UL>
+<LI>
+substantial code cleanup towards goal of making LAME more modular.</LI>
+</UL>
+
+<H3>
+LAME 3.16beta&nbsp; July 11 1999</H3>
+
+<UL>
+<LI>
+<FONT COLOR="#FF0000">New tunings of window switching, and better bit allocation
+based on pe.&nbsp; (Jan Rafaj.&nbsp; improves both testsignal2.wav and
+testsignal4.wav).</FONT></LI>
+
+<LI>
+<FONT COLOR="#FF0000">Bug in mid/side quantization when side channel was
+zero fixed.&nbsp; (Albert Faber)</FONT></LI>
+
+<LI>
+Removed some extranous computations in l3psy.c (Robert Hegemann)</LI>
+
+<LI>
+More detailed timing status info, including hours display. (Sakari Ailus)
+and percentage indicator (Conrad Sanderson).</LI>
+
+<LI>
+<FONT COLOR="#3366FF">Window_subband and calc_noise1,calc_noise2 speedups.&nbsp;
+Quantize_xrpow speedup should be significant on non GNU/intel systems.
+(Mike Cheng)</FONT></LI>
+
+<LI>
+<FONT COLOR="#3366FF">Better initial guess for VBR bitrate.&nbsp; Should
+speed up VBR encoding.&nbsp; (Gabriel Bouvigne)</FONT></LI>
+
+<LI>
+More advanced .wav header parsing.&nbsp; fixes bugs involving click in
+first frame. (Robert.Hegemann)</LI>
+
+<LI>
+Correct filesize and total frame computation when using LIBSNDFILE (ben
+"jacobs")</LI>
+
+<LI>
+Click in last frame (buffering problem) when using libsndfile fixed.</LI>
+
+<LI>
+Audio I/O code overhauled.&nbsp; There is now a uniform audio i/o interface
+to libsndfile or the LAME built in wav/aiff routines.&nbsp; All audio i/o
+code localized to get_audio.c.</LI>
+
+<BR>&nbsp;</UL>
+
+<H3>
+LAME 3.15beta</H3>
+
+<UL>
+<LI>
+times()/clock() problem fixed for non-unix OS.&nbsp; (Ben "Jacobs")</LI>
+
+<LI>
+Fixed uninitialized pe[] when using fast mode.&nbsp; (Ben "Jacobs")</LI>
+</UL>
+
+<H3>
+LAME 3.13&nbsp; June 24 1999</H3>
+
+<UL>
+<LI>
+Patches for BeOS from Gertjan van Ratingen.</LI>
+
+<LI>
+Makefile info for OS/2 Warp 4.0&nbsp; (from dink.org).</LI>
+
+<LI>
+Status display now based on wall clock time, not cpu time.</LI>
+
+<LI>
+mem_alloc no longer allocates twice as much memory as needed (Jan Peman).</LI>
+</UL>
+
+<H3>
+3.12pre9</H3>
+
+<UL>
+<LI>
+Updated BLADEDLL code to handle recent changes (Albert Faber).</LI>
+
+<LI>
+Bug fixed in parsing options when not using GTK (Albert Faber).</LI>
+
+<LI>
+<FONT COLOR="#FF0000">MPEG2 Layer III psycho acoustics now working.</FONT></LI>
+
+<LI>
+<FONT COLOR="#3366FF">Improved huffman encoding Chris Matrakidis. (10%
+faster).&nbsp; I dont know how he finds these improvements!&nbsp; LAME
+with full quality now encodes faster than real time on my PII 266.</FONT></LI>
+
+<LI>
+Fixed time display when encoding takes more than 60 minutes.</LI>
+</UL>
+
+<H3>
+3.12pre8</H3>
+
+<UL>
+<LI>
+<FONT COLOR="#FF0000">New <A HREF="gpsycho/ms_stereo.html">mid/side stereo</A>
+criterion.&nbsp; LAME will use mid/side stereo only when the difference
+between L &amp; R masking thresholds (averaged over all scalefactors) is
+less then 5db.&nbsp; In several test samples it does a very good job mimicking
+the FhG encoder.</FONT></LI>
+
+<LI>
+<FONT COLOR="#FF0000">Bug in mid/side stereo fixed:&nbsp; independent variation
+of mid &amp; side channel scalefactors disabled.&nbsp; Because of the way
+outer_loop is currently coded, when encoding mid/side coefficietns using
+left/right thresholds, you have to vary the scalefactors simultaneously.</FONT></LI>
+
+<LI>
+<FONT COLOR="#FF0000">Bug in side/mid energy ratio calculation fixed. (Thanks
+to Robert Hegemann)</FONT></LI>
+
+<LI>
+Default mode is stereo (not jstereo) if bitrate is chosen as 192kbs or
+higher.&nbsp; Tero Auvinen first pointed out that FhG seems to think at
+160kbs, their encoder is so good it doesn't need jstereo tricks. Since
+LAME is not as good as FhG, I am going to claim that 192kbs LAME is so
+good it doens't need jstereo tricks, and thus it is disabled by default.</LI>
+
+<LI>
+WAV header parsing for big-endian machines, and automatic detection of
+big-endian machines.&nbsp; (Thanks to&nbsp; Sigbj&oslash;rn Skj&aelig;ret).</LI>
+
+<LI>
+added 56 sample delay to sync LAME with FhG.</LI>
+
+<LI>
+MP3x (frame analyzer) can now handle MPEG2 streams.</LI>
+</UL>
+
+<H3>
+3.12pre7</H3>
+
+<UL>
+<LI>
+MPEG2 layer III now working!&nbsp; lower bit rates (down to 8kbs) and 3
+more sampling frequencies:&nbsp; 16000, 22050, 24000Hz. Quality is poor
+- the psy-model does not yet work with these sampling frequencies.</LI>
+
+<LI>
+Fixed "ERROR: outer_loop(): huff_bits &lt; 0." bug when using VBR.</LI>
+
+<LI>
+bash and sh scripts to run LAME on multiple files now included.&nbsp; (from
+Robert Hegemann and Gerhard Wesp respectively)</LI>
+
+<LI>
+bug fix in encoding times for longer files from&nbsp; (Alvaro Martinez
+Echevarria)</LI>
+
+<LI>
+yet another segfault in the frame analyzer fixed.</LI>
+
+<LI>
+ISO psy-model/bit allocation routines removed.&nbsp; This allowed makeframe()
+to be made much simpler, and most of the complicated buffering is now gone.
+Eventually I would like the encoding engine to be a stand alone library.</LI>
+</UL>
+
+<H3>
+3.12pre6</H3>
+
+<UL>
+<LI>
+<FONT COLOR="#FF0000">Better VBR tuning.&nbsp; Find minimum bitrate with
+distortion less than the allows maximum.&nbsp; A minimum bit rate is imposed
+on frames with short blocks (where the measured distortion can not be trusted).&nbsp;&nbsp;
+A minimum frame bitrate can be specified with -b, default=64kbs.</FONT></LI>
+
+<LI>
+<A HREF="http://www.zip.com.au/~erikd/libsndfile">LIBSNDFILE</A> support.&nbsp;
+With libsndfile, LAME can encode almost all sound formats.&nbsp; Albert
+Faber did the work for this, including getting libsndfile running under
+win32.</LI>
+
+<LI>
+CRC checksum now working!&nbsp;&nbsp; (Thanks to Johannes Overmann )</LI>
+
+<LI>
+frame analyzer will now work with mono .mp3 files</LI>
+
+<LI>
+<FONT COLOR="#3366FF">more code tweeks from Jan Peman.</FONT></LI>
+
+<LI>
+<FONT COLOR="#3366FF">Compaq-Alpha(Linux) fixes and speedups from Nils
+Faerber.</FONT></LI>
+
+<LI>
+<FONT COLOR="#3366FF">Faster bin_search_StepSize from Juha Laukala.</FONT></LI>
+
+<LI>
+<FONT COLOR="#3366FF">Faster quantize() from Mike Cheng</FONT></LI>
+
+<LI>
+<FONT COLOR="#3366FF">Faster quantize_xrpow() from Chris Matrakidis.&nbsp;
+xrpow_flag removed since this option is now on by default.</FONT></LI>
+
+<LI>
+Fixed .wav header parsing from Nils Faerber.</LI>
+
+<LI>
+Xing VBR frame info header code from Albert Faber.&nbsp;&nbsp; "Xing" and
+"LAME 3.12" embedded in first frame.</LI>
+
+<LI>
+<FONT COLOR="#FF0000">Bug in VBR bit allocation based on "over" value fixed.</FONT></LI>
+</UL>
+
+<H3>
+LAME 3.11&nbsp; June 3 1999</H3>
+
+<BLOCKQUOTE>
+<LI>
+Almost all warnings (-Wall) now fixed!&nbsp; (Thanks to Jan Peman)</LI>
+
+<LI>
+More coding improvements from Gabriel Bouvigne and Warren Toomey.</LI>
+
+<LI>
+<FONT COLOR="#FF0000">VBR&nbsp; (variable bit rate).&nbsp;&nbsp; Increases
+bit rate for short blocks and for frames where the number of bands containing
+audible distortion is greater than a given value.&nbsp; Much tuning needs
+to be done.</FONT></LI>
+
+<LI>
+Patch to remove all atan() calls from James Droppo.</LI>
+</BLOCKQUOTE>
+
+<H3>
+LAME 3.10 May 30 1999</H3>
+
+<UL>
+<LI>
+<FONT COLOR="#3366FF">Fast mode (-f)&nbsp; disables psycho-acoustic model
+for real time encoding on older machines.&nbsp; Thanks to Lauri Ahonen
+who first sent a patch for this.</FONT></LI>
+
+<LI>
+<FONT COLOR="#FF0000">New bit reservoir usage scheme to accommodate the
+new pre-echo detection formulas.</FONT></LI>
+
+<LI>
+<FONT COLOR="#FF0000">Tuning of AWS and ENER_AWS pre-echo formulas by Gabriel
+Bouvigne and myself.&nbsp; They work great!&nbsp; now on by default.</FONT></LI>
+
+<LI>
+In jstereo, force blocktypes for left &amp; right channels to be identical.&nbsp;
+FhG seems to do this.&nbsp; It can be disabled with "-d".</LI>
+
+<LI>
+Patches to compile MP3x under win32 (Thanks to Albert Faber).</LI>
+
+<LI>
+<FONT COLOR="#3366FF">bin_serach_stepsize limited to a quantizationStepSize
+of&nbsp; -210 through 45.</FONT></LI>
+
+<LI>
+<FONT COLOR="#FF0000">outer_loop()&nbsp; will now vary Mid &amp; Side scalefactors
+independently.&nbsp; Can lead to better quantizations, but it is slower
+(twice as many quantizations to look at).&nbsp; Running with "-m f" does
+not need this and will run at the old speed</FONT></LI>
+
+<LI>
+<FONT COLOR="#FF0000">Bug in inner_loop would allow quantizations larger
+than allowed.&nbsp; (introduced in lame3.04, now fixed.)</FONT></LI>
+
+<LI>
+Updated HTML documentation from Gabriel Bouvigne.</LI>
+
+<LI>
+Unix&nbsp; man page from William Schelter.</LI>
+
+<LI>
+<FONT COLOR="#FF0000">numlines[] bug fixed.&nbsp; (Thanks to Rafael Luebbert,
+MPecker author).</FONT></LI>
+
+<LI>
+<FONT COLOR="#3366FF">Quantization speed improvements from Chirs Matrakidis.</FONT></LI>
+
+<LI>
+<FONT COLOR="#FF0000">When comparing quantizations with the same number
+of bands with audible distortion, use the one with the largest scalefactors,
+not the first one outer_loop happened to find.</FONT></LI>
+
+<LI>
+Improved defination of best quantization when using -f (fast mode).</LI>
+
+<LI>
+subblock code now working.&nbsp; But no algorithm to choose subblock gains
+yet.</LI>
+
+<LI>
+Linux now segfaults on floating point exceptions.&nbsp; Should prevent
+me from releasing binaries that crash on other operating systems.</LI>
+</UL>
+
+<H4>
+May 22 1999</H4>
+
+<UL>
+<LI>
+Version 3.04 released.</LI>
+
+<LI>
+Preliminary documentation from Gabriel Bouvigne.</LI>
+
+<LI>
+<FONT COLOR="#3366FF">I wouldn't have thought it was possible, but now
+there are even more speed improvements from Chris Matrakidis!&nbsp; Removed
+one FFT when using joint stereo, and many improvements in loop.c.</FONT></LI>
+
+<LI>
+"Fake" ms_stereo mode renamed "Force" ms_stereo since it forces mid/side
+stereo on all frames.&nbsp; For some music this is said to be a problem,
+but for most music mode is probably better than the default jstereo because
+it uses specialized mid/side channel masking thresholds.</LI>
+
+<LI>
+Small bugs in Force ms_stereo mode fixed.</LI>
+
+<LI>
+Compaq Alpha fixes from Nathan Slingerland.</LI>
+
+<LI>
+<FONT COLOR="#FF0000">Some new experimental pre-echo detection formulas
+in l3psy.c (#ifdef AWS and #ifdef ENER_AWS, both off by default.&nbsp;
+Thanks to Gabriel Bouvigne and Andre Osterhues)</FONT></LI>
+
+<LI>
+Several bugs in the syncing of data displayed by mp3x (the frame analyzer)
+were fixed.</LI>
+
+<LI>
+highq (-h) option added.&nbsp; This turns on things (just one so far) that
+should sound better but slow down LAME.</LI>
+</UL>
+<B>May 18 1999</B>
+<UL>
+<LI>
+Version 3.03 released.</LI>
+
+<LI>
+<FONT COLOR="#3366FF">Faster (20%) &amp; cleaner FFT (Thanks to Chris Matrakidis&nbsp;
+http://www.geocities.com/ResearchTriangle/8869/fft_summary.html)</FONT></LI>
+
+<LI>
+mods so it works with VC++ (Thanks to Gabriel Bouvigne, www.mp3tech.org)</LI>
+
+<LI>
+MP3s marked "original" by default&nbsp; (Thanks to Gabriel Bouvigne, www.mp3tech.org)</LI>
+
+<LI>
+Can now be compiled into a BladeEnc compatible .DLL&nbsp;&nbsp; (Thanks
+to&nbsp; Albert Faber, CDex author)</LI>
+
+<LI>
+Patches for "silent mode" and stdin/stdout&nbsp; (Thanks to Lars Magne
+Ingebrigtsen)</LI>
+
+<LI>
+<FONT COLOR="#FF0000">Fixed rare bug: if a long_block is sandwiched between
+two short_blocks, it must be changed to a short_block, but the short_block
+ratios have not been computed in l3psy.c.&nbsp; Now always compute short_block
+ratios just in case.</FONT></LI>
+
+<LI>
+<FONT COLOR="#FF0000">Fixed bug with initial quantize step size when many
+coefficients are zero.&nbsp; (Thanks to Martin Weghofer).</FONT></LI>
+
+<LI>
+Bug fixed in MP3x display of audible distortion.</LI>
+
+<LI>
+improved status display (Thanks to Lauri Ahonen).</LI>
+</UL>
+
+<H4>
+May 12 1999</H4>
+
+<UL>
+<LI>
+Version 3.02 released.</LI>
+
+<LI>
+<FONT COLOR="#FF0000">encoder could use ms_stereo even if channel 0 and
+1 block types were different.&nbsp; (Thanks to Jan Rafaj)</FONT></LI>
+
+<LI>
+<FONT COLOR="#FF0000">added -k option to disable the 16kHz cutoff at 128kbs.&nbsp;
+This cutoff is never used at higher bitrates. (Thanks to Jan Rafaj)</FONT></LI>
+
+<LI>
+<FONT COLOR="#FF0000">modified pe bit allocation formula to make sense
+at bit rates other than 128kbs.</FONT></LI>
+
+<LI>
+fixed l3_xmin initialization problem which showed up under FreeBSD.&nbsp;
+(Thanks to Warren Toomey)</LI>
+</UL>
+<B>May 11 1999</B>
+<UL>
+<LI>
+Version 3.01 released</LI>
+
+<LI>
+max_name_size increased to 300&nbsp; (Thanks to Mike Oliphant)</LI>
+
+<LI>
+patch to allow seeks on input file (Thanks to Scott Manley)</LI>
+
+<LI>
+fixes for mono modes (Thanks to everyone who pointed this out)</LI>
+
+<LI>
+overflow in calc_noise2 fixed</LI>
+
+<LI>
+bit reservoir overflow when encoding lots of frames with all zeros&nbsp;
+(Thanks to Jani Frilander)</LI>
+</UL>
+
+<P><BR><B>May 10 1999</B>
+<UL>
+<LI>
+Version 3.0 released</LI>
+
+<LI>
+<FONT COLOR="#FF0000">added GPSYCHO (developed by Mark Taylor)</FONT></LI>
+
+<LI>
+<FONT COLOR="#000000">added MP3x (developed by Mark Taylor)</FONT></LI>
+
+<LI>
+LAME now maintained by Mark Taylor</LI>
+</UL>
+<B>November 8 1998</B>
+<UL>
+<LI>
+Version 2.1f released</LI>
+
+<LI>
+50% faster filter_subband() routine in encode.c contributed by James Droppo</LI>
+</UL>
+<B>November 2 1998</B>
+<UL>
+<LI>
+Version 2.1e released.</LI>
+
+<LI>
+New command line switch <B>-a</B> auto-resamples a stereo input file to
+mono.</LI>
+
+<LI>
+New command line switch <B>-r</B> resamples from 44.1khz to 32khz [this
+switch doesn't work really well. Very tinny sounding output files. Has
+to do with the way I do the resampling probably]</LI>
+
+<LI>
+Both of these were put into the ISO code in the encode.c file, and are
+simply different ways of filling the input buffers from a file.</LI>
+</UL>
+<B>October 31 1998</B>
+<UL>
+<LI>
+Version 2.1d released</LI>
+
+<LI>
+Fixed memory alloc in musicin.c (for l3_sb_sample)</LI>
+
+<LI>
+Added new command line switch (-x) to force swapping of byte order</LI>
+
+<LI>
+Cleaned up memory routines in l3psy.c. All the mem_alloc() and free() routines
+where changed so that it was only done <I>once</I> and not every single
+time the routine was called.</LI>
+
+<LI>
+Added a compile time switch -DTIMER that includes all timing info. It's
+a switch for the time being until some other people have tested on their
+system. Timing code has a tendency to do different things on different
+platforms.</LI>
+</UL>
+<B>October 18 1998</B>
+<UL>
+<LI>
+Version 2.1b released.</LI>
+
+<LI>
+Fixed up bug: all PCM files were being read as WAV.</LI>
+
+<LI>
+Played with the mem_alloc routine to fix crash under amigaos (just allocating
+twice as much memory as needed). Might see if we can totally do without
+this routine. Individual malloc()s where they are needed instead</LI>
+
+<LI>
+Put Jan Peman's quality switch back in. This reduces quality via the '-q&nbsp;<int>'
+switch. Fun speedup which is mostly harmless if you're not concerned with
+quality.</LI>
+
+<LI>
+Compiling with amiga-gcc works fine</LI>
+</UL>
+<B>October 16 1998</B>
+<UL>
+<LI>
+Version 2.1a released. User input/output has been cleaned up a bit. WAV
+file reading is there in a very rudimentary sense ie the program will recognize
+the header and skip it, but not read it. The WAV file is assumed to be
+16bit stereo 44.1khz.</LI>
+</UL>
+<B>October 6 1998</B>
+<UL>
+<LI>
+Version 2.1 released with all tables now incorporated into the exe. Thanks
+to <B>Lars Magne Ingebrigtseni</B>(larsi@ifi.uio.no)</LI>
+</UL>
+<B>October 4 1998</B>In response to some concerns about the quality of
+the encoder, I have rebuilt the encoder from scratch and carefully compared
+output at all stages with the output of the unmodified ISO encoder. <A HREF="http://www.uq.net.au/~zzmcheng/lame/download.html">Version2.0</A>
+of LAME is built from the ISO source code (dist10), and incorporates modifications
+from myself and the 8hz effort. The output file from LAME v2.0 is <I>identical</I>
+to the output of the ISO encoder for my test file.Since I do not have heaps
+of time, I left the ISO AIFF file reader in the code, and did not incorporate
+a WAV file reader.Added section on <A HREF="http://www.uq.net.au/~zzmcheng/lame/quality.html">quality</A><B>October
+1 1998</B>
+<UL>
+<LI>
+Updated web page and released LAME v1.0</LI>
+</UL>
+<B>Up to September 1998</B>
+<UL>Working on the 8hz source code...
+<UL>
+<LI>
+Patched the <A HREF="http://www.8hz.com/">8hz</A> source code</LI>
+
+<LI>
+45% faster than original source (on my freebsd p166).</LI>
+
+<UL>
+<LI>
+m1 - sped up the mdct.c and quantize() functions [MDCTD, MDCTD2, LOOPD]</LI>
+
+<LI>
+m2 - sped up the filter_subband routine using <B>Stephane Tavenard</B>'s
+work from musicin [FILTST]</LI>
+
+<LI>
+m2 - minor cleanup of window_subband [WINDST2]</LI>
+
+<LI>
+m2 - Cleaned up a few bits in l3psy.c. Replaced a sparse matrix multiply
+with a hand configured unrolling [PSYD]</LI>
+
+<LI>
+m3 - (amiga only) Added in the asm FFT for m68k (based on sources from
+<B>Henryk
+Richter</B> and <B>Stephane Tavenard</B>)</LI>
+
+<LI>
+m4 - raw pcm support back in</LI>
+
+<LI>
+m5 - put in a byte-ordering switch for raw PCM reading (just in case)</LI>
+
+<LI>
+m6 - reworked the whole fft.c file. fft now 10-15% faster.</LI>
+
+<LI>
+m7 - totally new fft routine. exploits fact that this is a real->complex
+fft. About twice as fast as previous fastest fft (in m6). (C fft routine
+is faster than the asm one on an m68k!)</LI>
+
+<LI>
+m8</LI>
+
+<UL>
+<LI>
+- Now encodes from stdin. Use '-' as the input filename. Thanks to <B>Brad
+Threatt</B></LI>
+
+<LI>
+- Worked out that the 1024point FFT only ever uses the first 6 phi values,
+and the first 465 energy values. Saves a bunch of calculations.</LI>
+
+<LI>
+- Added a speed-up/quality switch. Speed is increased but quality is decreased
+<I>slightly</I>.
+My ears are bad enough not to be able to notice the difference in quality
+at low settings :). Setting '-q 1' improves speed by about 10%. '-q 100'
+improves speed by about 26%. Enoding of my test track goes from 111s (at
+default '-q 0') to 82s (at -q 100). Thanks to <B>Jan Peman</B> for this
+tip.</LI>
+</UL>
+
+<LI>
+m9 - fixed an error in l3psy.c. numlines[] is overwritten with incorrect
+data. Added a new variable numlines_s[] to fix this. Thanks again to <B>Jan
+Peman</B>.</LI>
+
+<LI>
+m10 - Down to 106 seconds by selecting a few more compiler options. Also
+added a pow20() function in l3loop.c to speed up (ever so slightly) calls
+to pow(2.0, x)</LI>
+
+<LI>
+m11</LI>
+
+<UL>
+<LI>
+No speedups. Just cleaned up some bits of the code.</LI>
+
+<LI>
+Changed K&amp;R prototyping to 'normal' format. Thanks to <B>Steffan Haeuser</B>
+for his help here.</LI>
+
+<LI>
+Changed some C++ style comments to normal C comments in huffman.c</LI>
+
+<LI>
+Removed the #warning from psy_data.h (it was getting annoying!)</LI>
+
+<LI>
+Removed reference in bitstream.c to malloc.h. Is there a system left where
+malloc.h hasn't been superceded by stdlib.h?</LI>
+</UL>
+
+<LI>
+In Progess:</LI>
+
+<UL>
+<LI>
+my PSYD hack for the spreading functions is only valid for 44.1khz - Should
+really put in a "if freq = 44.1khz" switch for it. Someone might want to
+extend the speedup for 48 and 32khz.</LI>
+
+<LI>
+Putting in Jan Peman's quantanf_init speedup.</LI>
+</UL>
+</UL>
+</UL>
+</UL>
+
+</BODY>
+</HTML>

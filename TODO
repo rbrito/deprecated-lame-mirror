@@ -1,0 +1,49 @@
+1. 
+Rewrite l3bitstream/formatbitstream (the last of the ISO code)
+  First form 'metaframes':    header+side_info + data
+In a correct mp3 stream, some of the above data will be stored in the
+previous frames (depending on main_data_begin).  When we have enough
+data in the metaframes to form a complete frame, return complete
+frame to calling program.  III_flushbuffer will pad with zeroes.
+   
+
+2. 
+When all sfb's have energy below ATH, (analog silence)
+use a 32kbs frame even if min VBR bandwidth is larger.
+
+3.
+User specified min & max bandwidth (scalefactor bands)
+
+4.
+Does stdin work when LAME is compiled to use libsndfile? 
+(new version of libsndfile supports stdin - try this out)
+
+5.
+LAME uses a linear downsampling with simple lowpass filter
+on the MDCT/polyphase coefficients.  Is this good enough, or
+would a more expensive filter give better results?
+
+6.
+make use of subblock_gain (crude algorithm enabled with -Z) 
+   One method:  loop over all possible subblock_gains and
+   see which combination gives best distortion?  But this puts a lot
+   of faith in the short block psycho acoustics
+
+7.
+make use of scalefactor_select  (crude algorithm enabled with -Y)
+
+8.
+10Hz high-pass filter.  Probably wont help much.
+
+
+9. 
+Modularization:
+
+lame_parse_args():  main.c should parse the argument list, and then
+call lame_setflags() or some other libmp3lame.a routine to 
+set all the various flags. 
+
+
+
+
+

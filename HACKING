@@ -1,0 +1,92 @@
+************************************************************************
+LAME API
+
+General outline of the code (see main.c)
+
+lame_init()              called before encoding a file
+lame_parse_args()        called to set encoding options, and input and output 
+                         filenames.  Set no_write=1 if you want to do your
+                         own I/O
+
+while not eof:
+   lame_readframe()       input one frame of data
+   lame_encodeframe()     encode one frame of data
+lame_cleanup()            close files, flush buffers
+
+
+
+lame_encodeframe():
+   l3psycho_anal()        compute masking thresholds
+   mdct_sub()             compute MDCT coefficients
+   iteration_loop()       choose scalefactors (via iteration)
+                          which determine noise shapping, and 
+                          choose best huffman tables for lossless compression
+
+   III_formatBitstream    format the bitstream and store in bit_buffer
+   copy_buffer()          make a copy of bit_buffer, to return to calling program
+   write_buffer()         optionally output bit_buffer to a file
+   empty_buffer()	  mark bit_buffer as empty
+
+
+
+
+
+************************************************************************
+We are in the process of switching the whole code to FLOAT, which
+defined in machine.h.  Avoid using float or double, and instead use:
+
+FLOAT    4 byte floating point.  
+FLOAT8   8 byte floating point (only when necessary)
+
+
+************************************************************************
+Initialization:   LAME can be used as a library, and there are two
+kinds of static data:  data that has to be initialized only once
+when the library is called, and data that has to be initialized
+every time you start encoding a new sample.
+
+These routines should be coded something like:
+
+#include "globalflags"
+void subroutine(void)
+{
+  static int firstcall=1;
+  if (firstcall) {
+    firstcall=0;
+    /* code that needs to be done only once when routine is loaded */
+  }
+  if (frameNum==0) {
+    /* code that needs to be done before encoding each file/stream */
+  }
+}
+
+
+
+************************************************************************
+Global flags
+
+For better or worse, there are many global flags in lame.  
+The rules for adding a global flag are:
+
+1. declaired external in globalflags.h
+2. substantiated at the top of lame.c
+3. default values must be set in lame_init()
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
