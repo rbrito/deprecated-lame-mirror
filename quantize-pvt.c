@@ -476,7 +476,7 @@ int scale_bitcount( III_scalefac_t *scalefac, gr_info *cod_info,
 
 
 /*
-  table of largest scalefactors for MPEG2
+  table of largest scalefactors (number of bits) for MPEG2
 */
 static unsigned max_sfac_tab[6][4] =
 {
@@ -486,6 +486,18 @@ static unsigned max_sfac_tab[6][4] =
     {4, 5, 5, 0},
     {3, 3, 3, 0},
     {2, 2, 0, 0}
+};
+/*
+  table of largest scalefactor values for MPEG2
+*/
+static unsigned max_range_sfac_tab[6][4] =
+{
+ { 15, 15, 7,  7},
+ { 15, 15, 7,  0},
+ { 7,  3,  0,  0},
+ { 15, 31, 31, 0},
+ { 7,  7,  7,  0},
+ { 3,  3,  0,  0}
 };
 
 
@@ -549,7 +561,7 @@ int scale_bitcount_lsf( III_scalefac_t *scalefac, gr_info *cod_info,
 
     for ( over = 0, partition = 0; partition < 4; partition++ )
     {
-	if ( max_sfac[partition] > max_sfac_tab[table_number][partition] )
+	if ( max_sfac[partition] > max_range_sfac_tab[table_number][partition] )
 	    over++;
     }
     if ( !over )
