@@ -500,7 +500,7 @@ trancate_smallspectrums(
 inline static int
 loop_break(const gr_info * const gi)
 {
-    int sfb = gi->psymax;
+    int sfb = gi->psymax-1;
     do {
 	if (gi->scalefac[sfb] + gi->subblock_gain[gi->window[sfb]] == 0)
 	    return 0;
