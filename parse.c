@@ -232,6 +232,7 @@ void lame_parse_args(lame_global_flags *gfp,int argc, char **argv)
   FLOAT srate;
   int   err = 0, i = 0;
   int autoconvert=0;
+  int user_quality=0;
 
   char *programName = argv[0]; 
   int track = 0;
@@ -538,33 +539,15 @@ void lame_parse_args(lame_global_flags *gfp,int argc, char **argv)
 	  }
 	  break;
 	case 'V':        argUsed = 1;   gfp->VBR = 1;  
-	  if (*arg == '0')
-	    { gfp->VBR_q=0; }
-	  else if (*arg == '1')
-	    { gfp->VBR_q=1; }
-	  else if (*arg == '2')
-	    { gfp->VBR_q=2; }
-	  else if (*arg == '3')
-	    { gfp->VBR_q=3; }
-	  else if (*arg == '4')
-	    { gfp->VBR_q=4; }
-	  else if (*arg == '5')
-	    { gfp->VBR_q=5; }
-	  else if (*arg == '6')
-	    { gfp->VBR_q=6; }
-	  else if (*arg == '7')
-	    { gfp->VBR_q=7; }
-	  else if (*arg == '8')
-	    { gfp->VBR_q=8; }
-	  else if (*arg == '9')
-	    { gfp->VBR_q=9; }
-	  else {
-	    fprintf(stderr,"%s: -V n must be 0-9 not %s\n",
-		    programName, arg);
-	    err = 1;
-	  }
+	  gfp->VBR_q = atoi(arg);
+	  if (gfp->VBR_q <0) gfp->VBR_q=0;
+	  if (gfp->VBR_q >9) gfp->VBR_q=9;
 	  break;
-	  
+	case 'q':        argUsed = 1; 
+	  user_quality = atoi(arg);
+	  if (user_quality<0) user_quality=0;
+	  if (user_quality>9) user_quality=9;
+	  break;
 	case 's':
 	  argUsed = 1;
 	  srate = atof( arg );
@@ -730,7 +713,9 @@ void lame_parse_args(lame_global_flags *gfp,int argc, char **argv)
   if (autoconvert) gfp->num_channels=2; 
   else if (gfp->mode == MPG_MD_MONO) gfp->num_channels=1;
   else gfp->num_channels=2;
-  
+
+  /* user specified a quality value.  override any defaults set above */
+  if (user_quality)   gfp->quality=user_quality;
 
 }
 

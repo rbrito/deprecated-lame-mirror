@@ -74,7 +74,7 @@ set_pinfo (
 	pinfo->xfsf_s[gr][ch][3*sfb+i] =  xfsf[i+1][sfb]*en0;
 	pinfo->thr_s[gr][ch][3*sfb+i] = ratio->thm.s[sfb][i];
 	pinfo->en_s[gr][ch][3*sfb+i] = ratio->en.s[sfb][i]; 
-	
+
 	pinfo->LAMEsfb_s[gr][ch][3*sfb+i]=
 	  -2*cod_info->subblock_gain[i]-ifqstep*scalefac->s[sfb][i];
       }
@@ -169,6 +169,7 @@ iteration_loop( lame_global_flags *gfp,
 	   */
           memset(&scalefac[gr][ch],0,sizeof(III_scalefac_t));
           memset(l3_enc[gr][ch],0,576*sizeof(int));
+	  memset(xfsf,0,sizeof(xfsf));
 	  noise[0]=noise[1]=noise[2]=noise[3]=0;
         }
       else

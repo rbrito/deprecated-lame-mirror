@@ -128,13 +128,12 @@ int main(int argc, char **argv)
 	  exit(1);
 	}
       } while (iread);
+      imp3=lame_encode_finish(&gf,mp3buffer,(int)sizeof(mp3buffer));   /* may return one more mp3 frame */
+      fwrite(mp3buffer,1,imp3,outf);
+      fclose(outf);
+      lame_mp3_tags(&gf);                /* add id3 or VBR tags to mp3 file */
     }
-
-  imp3=lame_encode_finish(&gf,mp3buffer,(int)sizeof(mp3buffer));   /* may return one more mp3 frame */
-  fwrite(mp3buffer,1,imp3,outf);
-  fclose(outf);
   lame_close_infile(&gf);            /* close the input file */
-  lame_mp3_tags(&gf);                /* add id3 or VBR tags to mp3 file */
   return 0;
 }
 

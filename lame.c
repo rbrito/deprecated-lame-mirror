@@ -399,6 +399,7 @@ void lame_init_params(lame_global_flags *gfp)
   /* set internal feature flags.  USER should not access these since
    * some combinations will produce strange results */
 
+  /* no psymodel, no noise shaping */
   if (gfp->quality==9) {
     gfp->filter_type=0;
     gfp->psymodel=0;
@@ -407,6 +408,20 @@ void lame_init_params(lame_global_flags *gfp)
     gfp->noise_shaping_stop=0;
     gfp->use_best_huffman=0;
   }
+
+  if (gfp->quality==8) gfp->quality=7;
+
+  /* use psymodel (for short block and m/s switching), but no noise shapping */
+  if (gfp->quality==7) {
+    gfp->filter_type=0;
+    gfp->psymodel=1;
+    gfp->quantization=0;
+    gfp->noise_shaping=0;
+    gfp->noise_shaping_stop=0;
+    gfp->use_best_huffman=0;
+  }
+
+  if (gfp->quality==6) gfp->quality=5;
 
   if (gfp->quality==5) {
     /* the default */
@@ -419,6 +434,9 @@ void lame_init_params(lame_global_flags *gfp)
     gfp->noise_shaping_stop=0;
     gfp->use_best_huffman=0;
   }
+
+  if (gfp->quality==4) gfp->quality=2;
+  if (gfp->quality==3) gfp->quality=2;
 
   if (gfp->quality==2) {
     gfp->filter_type=0;

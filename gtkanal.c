@@ -237,7 +237,7 @@ void plot_frame(void)
   color = pplot1->emph ? &oncolor : &offcolor ; 
   gtk_text_insert (GTK_TEXT(headerbox), NULL, color, NULL,"em ", -1);
 
-  sprintf(title2,"c1=%i,%i ",pplot1->big_values[0][ch],pplot1->big_values[1][ch]);
+  sprintf(title2,"bv=%i,%i ",pplot1->big_values[0][ch],pplot1->big_values[1][ch]);
   gtk_text_insert (GTK_TEXT(headerbox), NULL, &black, NULL,title2, -1);
 
   color = pplot1->scfsi[ch] ? &oncolor : &offcolor ; 
