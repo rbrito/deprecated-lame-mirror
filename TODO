@@ -108,11 +108,6 @@ maybe nspsy2 based model will solve it.
 
 
 
-60.
-mp3 decoding is not reentrant nor thread safe.
-
-
-
 70.
 Use mixed blocks.
 
@@ -127,6 +122,28 @@ Merge GOGO's fast assembler routines.
 
 1500.
 Integrate plusV extensions
+
+
+
+
+decoding core:
+1.
+mp3 decoding is not reentrant nor thread safe.
+
+2.
+mp3 decoder crashes when some invlid mp3 file.
+
+3
+mgplib has bugs with i-stereo.  flag denoting invalid
+i-stereo value (= frame is m/s stereo) is not correct.
+
+4. 
+modify mpglib to output floating point and have finaly quantization
+step a easy-to-change module so it can output other than 16bit.
+(replace mpglib with MAD?  MAD has agreed to write a call back
+which will return all data needed by the frame analyzer)
+
+
 
 
 
@@ -177,32 +194,6 @@ wave <-> mp3
 
 
 
-decoding core:
-1. 
-modify mpglib to output
-floating point and have finaly quantization step a
-easy-to-change module so it can output other than 16bit.
-(replace mpglib with MAD?  MAD has agreed to write a call back
-which will return all data needed by the frame analyzer)
-
-1.1  mgplib has bugs with i-stereo.  flag denoting invalid
-i-stereo value (= frame is m/s stereo) is not correct.  
-
-997.
-ACM wrapper for LAME.  Steve Lhomme has joied thed project
-and is working on an ACM codec!
-
-ACM is still in wide use, although MSFT has moved on to 
-DirectShow filters, or the lighter weight "DMO".  
-We do have a beta directshow filter.
-
-Contact "Florian Bruckner" <h9651030@miraculix.wu-wien.ac.at> for info - 
-he is working on the VorbisACM.
-
-
-
-
-
 Build environment
 1. MSVC project files.  It would be nice to create a working
    MSVC6 workspace, which included all the projects as possible
@@ -213,12 +204,13 @@ Build environment
           ACM codec
           directshow codec
 
-   I think the only MSVC5 project that we need to preserve is
-   for lame_enc.dll, since Albert Faber (still?) doesn't use VC6?
-   But no reason we cant have VC5 and VC6 project files for the dll.
-
 2. more 64 bit environment support.
 
 3. check the "HACKY and FAST" code on many environments. They are
 really fast, but are not confirmed to run on all environments.
 
+4. NASM version check. LAME4 needs nasm 0.98.38 (or maybe upper).
+
+
+ACM
+see ACM/TODO file
