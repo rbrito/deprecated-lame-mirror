@@ -768,7 +768,7 @@ Only call this routine after final scalefactors have been
 chosen and the channel/granule will not be re-encoded.
  */
 void best_scalefac_store(
-    const lame_internal_flags *gfc,
+    lame_internal_flags * const gfc,
     const int             gr,
     const int             ch
     )
