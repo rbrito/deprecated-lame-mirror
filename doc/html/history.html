@@ -19,11 +19,48 @@ Starting with LAME 3.0:
 <hr></h3>
 
 <h3>
-LAME 3.84beta&nbsp; (CVS)</h3>
+LAME 3.85&nbsp; (CVS)</h3>
 
 <ul>
 <li>
+new VBR routine now the default.&nbsp; Same tunings as the old routine,
+but very different scalefactor search algorithm.&nbsp; Much faster, with
+noise shaping very close to the psycho acoustic model.&nbsp; Some further
+tuning may be needed.</li>
+
+<li>
 </li>
+</ul>
+
+<h3>
+LAME 3.84beta&nbsp; June 30&nbsp; 2000</h3>
+
+<ul>
+<li>
+Mark Weinstein:&nbsp; .wav file output (with --decode option) was writing
+the wrong filesize in the .wav file.&nbsp; Now fixed.</li>
+
+<li>
+Mark Taylor:&nbsp; (optional) Vorbis support, both encoding and decoding.&nbsp;
+LAME can now produce .ogg files, or even re-encode your entire .ogg collection
+into mp3.&nbsp;&nbsp; (Just kidding: it is always a bad idea to convert
+from one lossy format to another)</li>
+
+<li>
+?: Bug fixed causing VBR to crash under windows.&nbsp;&nbsp; (pretab[]
+array overflow)</li>
+
+<li>
+Sergey Sapelin: Another bug found in the mpg123 MPEG2 tables.&nbsp; Now
+fixed for the mpg123 based decoder in LAME.</li>
+
+<li>
+Marco Remondini:&nbsp; VBR histogram works in win32.&nbsp; compile with
+-DBRHIST -DNOTERMCAP</li>
+
+<li>
+<font color="#FF0000">Takehiro Tominaga:&nbsp; LAME CBR will now use scalefac_scale
+to expand the dynamic range of the scalefactors.</font></li>
 </ul>
 
 <h3>
@@ -56,6 +93,10 @@ and energy) now displayed in frame analyzer.</li>
 <li>
 <font color="#FF0000">VBR code ATH tuning was disabled by accident in 3.81,
 now fixed.</font></li>
+
+<li>
+<font color="#000000">Mark Taylor:&nbsp; lame --decode will produce .wav
+files.&nbsp; (oops - size is off by a factor of 4)</font></li>
 </ul>
 
 <h3>
