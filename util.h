@@ -8,6 +8,7 @@
 #include "machine.h"
 #include "encoder.h"
 #include "lame.h"
+#include "gtkanal.h"
 
 /***********************************************************************
 *
@@ -249,6 +250,9 @@ struct {
 
   
   scalefac_struct scalefac_band;
+
+  /* used by the frame analyzer */
+  plotting_data *pinfo;
 
 
 } lame_internal_flags;

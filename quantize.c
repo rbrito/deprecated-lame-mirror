@@ -28,9 +28,7 @@
 #include "l3bitstream.h"
 #include "reservoir.h"
 #include "quantize-pvt.h"
-#ifdef HAVEGTK
 #include "gtkanal.h"
-#endif
 
 
 
@@ -88,9 +86,7 @@ iteration_loop( lame_global_flags *gfp,
 	   */
           memset(&scalefac[gr][ch],0,sizeof(III_scalefac_t));
           memset(l3_enc[gr][ch],0,576*sizeof(int));
-#ifdef HAVEGTK
 	  memset(xfsf,0,sizeof(xfsf));
-#endif
 	  noise[0]=noise[1]=noise[2]=noise[3]=0;
         }
       else
@@ -105,10 +101,8 @@ iteration_loop( lame_global_flags *gfp,
 	best_huffman_divide(gfc, gr, ch, cod_info, l3_enc[gr][ch]);
       }
       assert((int)cod_info->part2_3_length < 4096);
-#ifdef HAVEGTK
-      if (gfp->gtkflag)
+      if (gfc->pinfo != NULL)
 	set_pinfo (gfp, cod_info, &ratio[gr][ch], &scalefac[gr][ch], xr[gr][ch], xfsf, noise, gr, ch);
-#endif
 
 /*#define NORES_TEST */
 #ifndef NORES_TEST
@@ -157,9 +151,7 @@ VBR_iteration_loop (lame_global_flags *gfp,
                 int l3_enc[2][2][576],
                 III_scalefac_t scalefac[2][2])
 {
-#ifdef HAVEGTK
   plotting_data bst_pinfo;
-#endif
   lame_internal_flags *gfc=gfp->internal_flags;
   gr_info         bst_cod_info, clean_cod_info;
   III_scalefac_t  bst_scalefac;
@@ -263,11 +255,10 @@ VBR_iteration_loop (lame_global_flags *gfp,
         memset(&scalefac[gr][ch],0,sizeof(III_scalefac_t));
         memset(l3_enc[gr][ch],0,576*sizeof(int));
         save_bits[gr][ch] = 0;
-#ifdef HAVEGTK
-	memset(xfsf,0,sizeof(xfsf));
-	if (gfp->gtkflag)
+	if (gfc->pinfo != NULL) {
+	  memset(xfsf,0,sizeof(xfsf));
 	  set_pinfo(gfp, cod_info, &ratio[gr][ch], &scalefac[gr][ch], xr[gr][ch], xfsf, noise, gr, ch);
-#endif
+	}
 	analog_silence=1;
 	continue; /* with next channel */
       }
@@ -337,10 +328,8 @@ VBR_iteration_loop (lame_global_flags *gfp,
 	  better=VBR_compare((int)targ_noise[0],targ_noise[3],targ_noise[2],
 			     targ_noise[1],(int)noise[0],noise[3],noise[2],
 			     noise[1]);
-#ifdef HAVEGTK
-	  if (gfp->gtkflag)
+	  if (gfc->pinfo != NULL)
 	    set_pinfo(gfp, cod_info, &ratio[gr][ch], &scalefac[gr][ch], xr[gr][ch], xfsf, noise, gr, ch);
-#endif
 	  if (better) {
 	      /* 
 	       * we now know it can be done with "real_bits"
@@ -353,10 +342,10 @@ VBR_iteration_loop (lame_global_flags *gfp,
               memcpy( &bst_scalefac, &scalefac[gr][ch], sizeof(III_scalefac_t)  );
               memcpy(  bst_l3_enc,    l3_enc  [gr][ch], sizeof(int)*576         );
               memcpy( &bst_cod_info,  cod_info,         sizeof(gr_info)         );
-#ifdef HAVEGTK
-              if (gfp->gtkflag) 
+              if (gfc->pinfo != NULL) {
+		plotting_data *pinfo=gfc->pinfo;
                 memcpy( &bst_pinfo, pinfo, sizeof(plotting_data) );
-#endif
+	      }
 	      /*
 	       * try with fewer bits
 	       */
@@ -376,10 +365,10 @@ VBR_iteration_loop (lame_global_flags *gfp,
         memcpy(  cod_info,         &bst_cod_info, sizeof(gr_info)        );
         memcpy( &scalefac[gr][ch], &bst_scalefac, sizeof(III_scalefac_t) );
         memcpy(  l3_enc  [gr][ch],  bst_l3_enc,   sizeof(int)*576        );
-#ifdef HAVEGTK
-        if (gfp->gtkflag) 
+        if (gfc->pinfo != NULL) {
+	  plotting_data *pinfo=gfc->pinfo;
           memcpy( pinfo, &bst_pinfo, sizeof(plotting_data) );
-#endif
+	}
       }
       assert((int)cod_info->part2_3_length <= max_bits);
       assert((int)cod_info->part2_3_length < 4096);
@@ -455,10 +444,8 @@ VBR_iteration_loop (lame_global_flags *gfp,
 	 	      &l3_xmin, l3_enc[gr][ch], 
 		      &scalefac[gr][ch], cod_info, xfsf, ch);
 	}
-#ifdef HAVEGTK
-	if (gfp->gtkflag)
+	if (gfc->pinfo != NULL) 
 	  set_pinfo(gfp, cod_info, &ratio[gr][ch], &scalefac[gr][ch], xr[gr][ch], xfsf, noise, gr, ch);
-#endif
       }
     }
   }
@@ -473,10 +460,10 @@ VBR_iteration_loop (lame_global_flags *gfp,
       if (gfc->use_best_huffman==1 && cod_info->block_type != SHORT_TYPE) {
 	best_huffman_divide(gfc, gr, ch, cod_info, l3_enc[gr][ch]);
       }
-#ifdef HAVEGTK
-      if (gfp->gtkflag)
+      if (gfc->pinfo != NULL) {
+	plotting_data *pinfo=gfc->pinfo;
 	pinfo->LAMEmainbits[gr][ch]=cod_info->part2_3_length;
-#endif
+      }
       ResvAdjust (gfp,cod_info, l3_side, mean_bits);
     }
 
@@ -708,11 +695,9 @@ void outer_loop(
 	memcpy(l3_enc,l3_enc_w,sizeof(int)*576);
 	memcpy(&save_cod_info,cod_info,sizeof(save_cod_info));
 
-#ifdef HAVEGTK
-	if (gfp->gtkflag) {
+	if (gfc->pinfo != NULL) {
 	  memcpy(xfsf, xfsf_w, sizeof(xfsf_w));
 	}
-#endif
       }
     }
 

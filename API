@@ -10,7 +10,7 @@ the following extra features:
 #define LIBSNDFILE   to use Erik de Castro Lopo's libsndfile
 #define LAMESNDFILE  to use LAME's minimial internal sndfile I/O
 #define LAMEPARSE    to use LAME's command line parsing/option setting routines
-#define HAVEGTK      to compile in support for the GTK mp3 frame analyzer
+
 
 To use any of the above features, see lame.h more for details.
 For an example of a simple command line interface to lame, see

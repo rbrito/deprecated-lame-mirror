@@ -1,3 +1,5 @@
+#include "../gtkanal.h"
+extern plotting_data *mpg123_pinfo;
 
 struct buf {
         unsigned char *pnt;

@@ -10,9 +10,7 @@
 #include "mpg123.h"
 #include "mpglib.h"
 #include "huffman.h"
-#ifdef HAVEGTK
 #include "../gtkanal.h"
-#endif
 
 extern struct mpstr *gmp;
 
@@ -345,11 +343,9 @@ static void III_get_side_info_1(struct III_sideinfo *si,int stereo,
        {
 	 unsigned int qss = getbits_fast(8);
 	 gr_info->pow2gain = gainpow2+256 - qss + powdiff;
-#ifdef HAVEGTK
-	 if (gtkflag) {
-	   pinfo->qss[gr][ch]=qss;
+	 if (mpg123_pinfo != NULL) {
+	   mpg123_pinfo->qss[gr][ch]=qss;
 	 }
-#endif
        }
        if(ms_stereo)
          gr_info->pow2gain += 2;
@@ -372,10 +368,8 @@ static void III_get_side_info_1(struct III_sideinfo *si,int stereo,
          for(i=0;i<3;i++) {
 	   unsigned int sbg = (getbits_fast(3)<<3);
            gr_info->full_gain[i] = gr_info->pow2gain + sbg;
-#ifdef HAVEGTK
-	   if (gtkflag)
-	     pinfo->sub_gain[gr][ch][i]=sbg/8;
-#endif
+	   if (mpg123_pinfo != NULL)
+	     mpg123_pinfo->sub_gain[gr][ch][i]=sbg/8;
 	 }
 
 
@@ -436,11 +430,10 @@ static void III_get_side_info_2(struct III_sideinfo *si,int stereo,
        }
        qss=getbits_fast(8);
        gr_info->pow2gain = gainpow2+256 - qss + powdiff;
-#ifdef HAVEGTK
-       if (gtkflag) {
-	   pinfo->qss[0][ch]=qss;
+       if (mpg123_pinfo!=NULL) {
+	   mpg123_pinfo->qss[0][ch]=qss;
        }
-#endif
+
 
        if(ms_stereo)
          gr_info->pow2gain += 2;
@@ -461,10 +454,9 @@ static void III_get_side_info_2(struct III_sideinfo *si,int stereo,
          for(i=0;i<3;i++) {
 	   unsigned int sbg = (getbits_fast(3)<<3);
            gr_info->full_gain[i] = gr_info->pow2gain + sbg;
-#ifdef HAVEGTK
-	   if (gtkflag)
-	     pinfo->sub_gain[0][ch][i]=sbg/8;
-#endif
+	   if (mpg123_pinfo!=NULL)
+	     mpg123_pinfo->sub_gain[0][ch][i]=sbg/8;
+
 	 }
 
          if(gr_info->block_type == 0) {
@@ -1565,13 +1557,11 @@ int do_layer3(struct frame *fr,unsigned char *pcm_sample,int *pcm_point)
 	fprintf(stderr,"Not supported\n");
 #endif
       }
-#ifdef HAVEGTK
-      if (gtkflag) {
+      if (mpg123_pinfo!=NULL) {
 	int i;
 	for (i=0; i<39; i++) 
-	  pinfo->sfb_s[gr][0][i]=scalefacs[0][i];
+	  mpg123_pinfo->sfb_s[gr][0][i]=scalefacs[0][i];
       }
-#endif
       if(III_dequantize_sample(hybridIn[0], scalefacs[0],gr_info,sfreq,part2bits))
         return clip;
     }
@@ -1587,13 +1577,11 @@ int do_layer3(struct frame *fr,unsigned char *pcm_sample,int *pcm_point)
 	fprintf(stderr,"Not supported\n");
 #endif
       }
-#ifdef HAVEGTK
-      if (gtkflag) {
+      if (mpg123_pinfo!=NULL) {
 	int i;
 	for (i=0; i<39; i++) 
-	  pinfo->sfb_s[gr][1][i]=scalefacs[1][i];
+	  mpg123_pinfo->sfb_s[gr][1][i]=scalefacs[1][i];
       }
-#endif
 
       if(III_dequantize_sample(hybridIn[1],scalefacs[1],gr_info,sfreq,part2bits))
           return clip;
@@ -1639,39 +1627,38 @@ int do_layer3(struct frame *fr,unsigned char *pcm_sample,int *pcm_point)
       }
     }
 
-#ifdef HAVEGTK
-    if (gtkflag) {
+    if (mpg123_pinfo!=NULL) {
     extern int tabsel_123[2][3][16];
     extern int pretab[21];
     int i,j,sb;
     float ifqstep;
 
-    pinfo->bitrate = 
+    mpg123_pinfo->bitrate = 
       tabsel_123[fr->lsf][fr->lay-1][fr->bitrate_index];
-    pinfo->sampfreq = freqs[sfreq];
-    pinfo->emph = fr->emphasis;
-    pinfo->crc = fr->error_protection;
-    pinfo->padding = fr->padding;
-    pinfo->stereo = fr->stereo;
-    pinfo->js =   (fr->mode == MPG_MD_JOINT_STEREO);
-    pinfo->ms_stereo = ms_stereo;
-    pinfo->i_stereo = i_stereo;
-    pinfo->maindata = sideinfo.main_data_begin;
+    mpg123_pinfo->sampfreq = freqs[sfreq];
+    mpg123_pinfo->emph = fr->emphasis;
+    mpg123_pinfo->crc = fr->error_protection;
+    mpg123_pinfo->padding = fr->padding;
+    mpg123_pinfo->stereo = fr->stereo;
+    mpg123_pinfo->js =   (fr->mode == MPG_MD_JOINT_STEREO);
+    mpg123_pinfo->ms_stereo = ms_stereo;
+    mpg123_pinfo->i_stereo = i_stereo;
+    mpg123_pinfo->maindata = sideinfo.main_data_begin;
 
     for(ch=0;ch<stereo1;ch++) {
       struct gr_info_s *gr_info = &(sideinfo.ch[ch].gr[gr]);
-      pinfo->big_values[gr][ch]=gr_info->big_values;
-      pinfo->scalefac_scale[gr][ch]=gr_info->scalefac_scale;
-      pinfo->mixed[gr][ch] = gr_info->mixed_block_flag;
-      pinfo->mpg123blocktype[gr][ch]=gr_info->block_type;
-      pinfo->mainbits[gr][ch] = gr_info->part2_3_length;
-      if (gr==1) pinfo->scfsi[ch] = gr_info->scfsi;
+      mpg123_pinfo->big_values[gr][ch]=gr_info->big_values;
+      mpg123_pinfo->scalefac_scale[gr][ch]=gr_info->scalefac_scale;
+      mpg123_pinfo->mixed[gr][ch] = gr_info->mixed_block_flag;
+      mpg123_pinfo->mpg123blocktype[gr][ch]=gr_info->block_type;
+      mpg123_pinfo->mainbits[gr][ch] = gr_info->part2_3_length;
+      if (gr==1) mpg123_pinfo->scfsi[ch] = gr_info->scfsi;
     }
 
 
     for (ch=0;ch<stereo1;ch++) {
       struct gr_info_s *gr_info = &(sideinfo.ch[ch].gr[gr]);
-      ifqstep = ( pinfo->scalefac_scale[gr][ch] == 0 ) ? .5 : 1.0;
+      ifqstep = ( mpg123_pinfo->scalefac_scale[gr][ch] == 0 ) ? .5 : 1.0;
       if (2==gr_info->block_type) {
 	for (i=0; i<3; i++) {
 	  for (sb=0; sb<12; sb++) {
@@ -1679,20 +1666,20 @@ int do_layer3(struct frame *fr,unsigned char *pcm_sample,int *pcm_point)
 	    /*
            is_p = scalefac[sfb*3+lwin-gr_info->mixed_block_flag]; 
 	    */
-	    /* scalefac was copied into pinfo->sfb_s[] above */
-	    pinfo->sfb_s[gr][ch][j] = -ifqstep*pinfo->sfb_s[gr][ch][j-gr_info->mixed_block_flag];
-	    pinfo->sfb_s[gr][ch][j] -= 2*(pinfo->sub_gain[gr][ch][i]);
+	    /* scalefac was copied into mpg123_pinfo->sfb_s[] above */
+	    mpg123_pinfo->sfb_s[gr][ch][j] = -ifqstep*mpg123_pinfo->sfb_s[gr][ch][j-gr_info->mixed_block_flag];
+	    mpg123_pinfo->sfb_s[gr][ch][j] -= 2*(mpg123_pinfo->sub_gain[gr][ch][i]);
 	  }
-	  pinfo->sfb_s[gr][ch][3*sb+i] = - 2*(pinfo->sub_gain[gr][ch][i]);
+	  mpg123_pinfo->sfb_s[gr][ch][3*sb+i] = - 2*(mpg123_pinfo->sub_gain[gr][ch][i]);
 	}
       }else{
 	for (sb=0; sb<21; sb++) {
-	  /* scalefac was copied into pinfo->sfb[] above */
-	  pinfo->sfb[gr][ch][sb] = pinfo->sfb_s[gr][ch][sb];
-	  if (gr_info->preflag) pinfo->sfb[gr][ch][sb] += pretab[sb];
-	  pinfo->sfb[gr][ch][sb] *= -ifqstep;
+	  /* scalefac was copied into mpg123_pinfo->sfb[] above */
+	  mpg123_pinfo->sfb[gr][ch][sb] = mpg123_pinfo->sfb_s[gr][ch][sb];
+	  if (gr_info->preflag) mpg123_pinfo->sfb[gr][ch][sb] += pretab[sb];
+	  mpg123_pinfo->sfb[gr][ch][sb] *= -ifqstep;
 	}
-	pinfo->sfb[gr][ch][21]=0;
+	mpg123_pinfo->sfb[gr][ch][21]=0;
       }
     }
 
@@ -1702,11 +1689,10 @@ int do_layer3(struct frame *fr,unsigned char *pcm_sample,int *pcm_point)
       int j=0;
       for (sb=0;sb<SBLIMIT;sb++)
 	for(ss=0;ss<SSLIMIT;ss++,j++) 
-	  pinfo->mpg123xr[gr][ch][j]=hybridIn[ch][sb][ss];
+	  mpg123_pinfo->mpg123xr[gr][ch][j]=hybridIn[ch][sb][ss];
     }
   }
 
-#endif
 
     for(ch=0;ch<stereo1;ch++) {
       struct gr_info_s *gr_info = &(sideinfo.ch[ch].gr[gr]);

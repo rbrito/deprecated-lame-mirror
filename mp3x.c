@@ -24,6 +24,7 @@ int main(int argc, char **argv)
 
   lame_parse_args(&gf,argc, argv); 
   gf.gtkflag=1;
+
   lame_init_infile(&gf);
   lame_init_params(&gf);
   lame_print_config(&gf);

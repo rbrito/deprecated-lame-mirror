@@ -24,9 +24,7 @@
 #include "l3bitstream.h"
 #include "reservoir.h"
 #include "quantize-pvt.h"
-#ifdef HAVEGTK
 #include "gtkanal.h"
-#endif
 
 
 #if (defined(__GNUC__) && defined(__i386__))
@@ -383,9 +381,8 @@ VBR_quantize_granule(lame_global_flags *gfp,
   cod_info->part2_3_length += cod_info->part2_length;
   assert((int)count_bits != LARGE_BITS);
   
-#ifdef HAVEGTK
   /* do this before calling best_scalefac_store! */
-  if (gfp->gtkflag) {
+  if (gfc->pinfo != NULL) {
     FLOAT8 noise[4];
     FLOAT8 xfsf[4][SBPSY_l];
     FLOAT8 distort[4][SBPSY_l];
@@ -404,7 +401,7 @@ VBR_quantize_granule(lame_global_flags *gfp,
     
     set_pinfo (gfp, cod_info, ratio, &scalefac[gr][ch], xr, xfsf, noise, gr, ch);
   }
-#endif
+
   
   cod_info = &l3_side->gr[gr].ch[ch].tt;
   best_scalefac_store(gfp,gr, ch, l3_enc, l3_side, scalefac);
@@ -414,10 +411,12 @@ VBR_quantize_granule(lame_global_flags *gfp,
   if (cod_info->part2_3_length>4095) 
     cod_info->part2_3_length=LARGE_BITS;
   
-#ifdef HAVEGTK
-  if (gfp->gtkflag)
+
+  if (gfc->pinfo != NULL) {
+    plotting_data *pinfo=gfc->pinfo;
     pinfo->LAMEmainbits[gr][ch]=cod_info->part2_3_length;
-#endif
+  }
+
   return;
 }
   

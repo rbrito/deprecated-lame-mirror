@@ -1,9 +1,6 @@
 #include "util.h"
 #include "get_audio.h"
-#ifdef HAVEGTK
 #include "gtkanal.h"
-#include <gtk/gtk.h>
-#endif
 
 #if (defined LIBSNDFILE || defined LAMESNDFILE)
 
@@ -148,9 +145,9 @@ int read_samples_mp3(lame_global_flags *gfp,FILE *musicin,short int mpg123pcm[2]
   }
 
 
-#ifdef HAVEGTK
-  if (gfp->gtkflag) {
+  if (gfc->pinfo != NULL) {
     int ch;
+    plotting_data *pinfo=gfc->pinfo;
     /* add a delay of framesize-DECDELAY, which will make the total delay
      * exactly one frame, so we can sync MP3 output with WAV input */
     for ( ch = 0; ch < stereo; ch++ ) {
@@ -163,7 +160,7 @@ int read_samples_mp3(lame_global_flags *gfp,FILE *musicin,short int mpg123pcm[2]
   pinfo->frameNum123 = gfc->frameNum-1;
   pinfo->frameNum = gfc->frameNum;
   }
-#endif
+
   if (out==-1) return 0;
   else return out;
 #else

@@ -16,9 +16,7 @@
 #include <math.h>
 #include <assert.h>
 #include "util.h"
-#ifdef HAVEGTK
 #include "gtkanal.h"
-#endif
 #include "lame.h"
 
 /*
@@ -89,12 +87,11 @@ ResvFrameBegin(lame_global_flags *gfp,III_side_info_t *l3_side, int mean_bits, i
     if ( ResvMax > resvLimit )
 	ResvMax = resvLimit;
 
-#ifdef HAVEGTK
-  if (gfp->gtkflag){
+  if (gfc->pinfo != NULL){
+    plotting_data *pinfo=gfc->pinfo;
     pinfo->mean_bits=mean_bits/2;  /* expected bits per channel per granule */
     pinfo->resvsize=ResvSize;
   }
-#endif
 
     return fullFrameBits;
 }

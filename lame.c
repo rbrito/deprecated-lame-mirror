@@ -22,10 +22,8 @@
 
 #include <assert.h>
 
-#ifdef HAVEGTK
+
 #include "gtkanal.h"
-#include <gtk/gtk.h>
-#endif
 #include "lame.h"
 #include "util.h"
 #include "timestatus.h"
@@ -408,7 +406,7 @@ void lame_init_params(lame_global_flags *gfp)
 
 
 
-  if (gfp->gtkflag) {
+  if (gfc->pinfo != NULL) {
     gfp->bWriteVbrTag=0;  /* disable Xing VBR tag */
   }
 
@@ -531,9 +529,6 @@ void lame_init_params(lame_global_flags *gfp)
       InitVbrTag(gfp,1-gfc->version,gfp->mode,gfc->samplerate_index);
     }
 
-#ifdef HAVEGTK
-  gtkflag=gfp->gtkflag;
-#endif
 
 #ifdef BRHIST
   if (gfp->VBR) {
@@ -587,7 +582,7 @@ void lame_print_config(lame_global_flags *gfp)
 	    gfc->lowpass1*out_samplerate*500,
 	    gfc->lowpass2*out_samplerate*500);
 
-  if (gfp->gtkflag) {
+  if (gfc->pinfo != NULL) {
     fprintf(stderr, "Analyzing %s \n",gfp->inPath);
   }
   else {
@@ -741,7 +736,7 @@ char *mp3buf, int mp3buf_size)
 
 
   /********************** status display  *****************************/
-  if (!gfp->gtkflag && !gfp->silent) {
+  if (gfc->pinfo == NULL && !gfp->silent) {
     int mod = gfc->version == 0 ? 100 : 50;
     if (gfc->frameNum%mod==0) {
       timestatus(gfp->out_samplerate,gfc->frameNum,gfc->totalframes,gfc->framesize);
@@ -827,9 +822,10 @@ char *mp3buf, int mp3buf_size)
   if (gfp->force_ms) gfc->mode_ext = MPG_MD_MS_LR;
 
 
-#ifdef HAVEGTK
-  if (gfp->gtkflag) {
+
+  if (gfc->pinfo != NULL) {
     int j;
+    plotting_data *pinfo=gfc->pinfo;
     for ( gr = 0; gr < gfc->mode_gr; gr++ ) {
       for ( ch = 0; ch < gfc->stereo; ch++ ) {
 	pinfo->ms_ratio[gr]=gfc->ms_ratio[gr];
@@ -847,7 +843,6 @@ char *mp3buf, int mp3buf_size)
       }
     }
   }
-#endif
 
 
 
@@ -893,9 +888,10 @@ char *mp3buf, int mp3buf_size)
 
   if (gfp->bWriteVbrTag) AddVbrFrame((int)(gfc->bs.totbit/8));
 
-#ifdef HAVEGTK
-  if (gfp->gtkflag) {
+
+  if (gfc->pinfo != NULL) {
     int j;
+    plotting_data *pinfo=gfc->pinfo;
     for ( ch = 0; ch < gfc->stereo; ch++ ) {
       for ( j = 0; j < FFTOFFSET; j++ )
 	pinfo->pcmdata[ch][j] = pinfo->pcmdata[ch][j+gfc->framesize];
@@ -904,7 +900,7 @@ char *mp3buf, int mp3buf_size)
       }
     }
   }
-#endif
+
   gfc->frameNum++;
   return mp3count;
 }
@@ -1141,7 +1137,7 @@ int lame_encode_finish(lame_global_flags *gfp,char *mp3buffer, int mp3buffer_siz
 
 
   gfc->frameNum--;
-  if (!gfp->gtkflag && !gfp->silent) {
+  if (!gfc->pinfo != NULL && !gfp->silent) {
       timestatus(gfp->out_samplerate,gfc->frameNum,gfc->totalframes,gfc->framesize);
 #ifdef BRHIST
       if (disp_brhist)

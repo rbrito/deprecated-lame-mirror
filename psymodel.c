@@ -14,9 +14,7 @@
 #include "psymodel.h"
 #include "l3side.h"
 #include <assert.h>
-#ifdef HAVEGTK
 #include "gtkanal.h"
-#endif
 #include "tables.h"
 #include "fft.h"
 
@@ -118,11 +116,9 @@ void L3psycho_anal( lame_global_flags *gfp,
   
   /* frame analyzer 
    */
-#ifdef HAVEGTK
   static FLOAT energy_save[4][HBLKSIZE];
   static FLOAT8 pe_save[4];
   static FLOAT8 ers_save[4];
-#endif
 
   /* ratios 
    */
@@ -406,14 +402,13 @@ void L3psycho_anal( lame_global_flags *gfp,
     }
 
 
-#ifdef HAVEGTK
-  if(gfp->gtkflag) {
+  if(gfc->pinfo != NULL) {
+    plotting_data *pinfo=gfc->pinfo;
     for (j=0; j<HBLKSIZE ; j++) {
       pinfo->energy[gr_out][chn][j]=energy_save[chn][j];
       energy_save[chn][j]=energy[j];
     }
   }
-#endif
     
     /**********************************************************************
      *    compute unpredicatability of first six spectral lines            * 
@@ -693,8 +688,8 @@ void L3psycho_anal( lame_global_flags *gfp,
       }
 
 
-#ifdef HAVEGTK
-    if (gfp->gtkflag) {
+    if (gfc->pinfo != NULL) {
+      plotting_data *pinfo=gfc->pinfo;
       FLOAT mn,mx,ma=0,mb=0,mc=0;
 
       for ( j = HBLKSIZE_s/2; j < HBLKSIZE_s; j ++)
@@ -713,7 +708,6 @@ void L3psycho_anal( lame_global_flags *gfp,
       pinfo->pe[gr_out][chn]=pe_save[chn];
       pe_save[chn]=pe[chn];
     }
-#endif
     
     /*************************************************************** 
      * determine the block type (window type) based on L & R channels

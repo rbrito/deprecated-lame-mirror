@@ -19,6 +19,7 @@ static char buf[16384];
 #define FSIZE 8192  
 static char out[FSIZE];
 struct mpstr mp;
+plotting_data *mpg123_pinfo=NULL;
 
 
 int is_syncword(char *header)
@@ -174,32 +175,66 @@ For lame_decode:  return code
    0     ok, but need more data before outputing any samples
    n     number of samples output.  either 576 or 1152 depending on MP3 file.
 */
-int lame_decode(char *buf,int len,short pcm_l[],short pcm_r[])
+int lame_decode1(char *buf,int len,short pcm_l[],short pcm_r[])
 {
   int size;
   int outsize=0,j,i,ret;
 
-  ret = decodeMP3(&mp,buf,len,out,FSIZE,&size);
-  if (ret==MP3_OK) {
-    /*       printf("mpg123 output one frame out=%i \n",size/4);  */
-    outsize = size/(2*mp.fr.stereo);
-    if (outsize > 1152) {
-      fprintf(stderr,"Opps: mpg123 returned more than one frame!  shouldn't happen... \n");
-      exit(-50);
-    }
 
+  ret = decodeMP3(&mp,buf,len,out,FSIZE,&size);
+  if (ret==MP3_ERR) return -1;
+  
+  if (ret==MP3_OK) {
+    outsize = size/(2*mp.fr.stereo);
+    
     for (j=0; j<mp.fr.stereo; j++)
       for (i=0; i<outsize; i++) 
 	if (j==0) pcm_l[i] = ((short *) out)[mp.fr.stereo*i+j];
 	else pcm_r[i] = ((short *) out)[mp.fr.stereo*i+j];
-
   }
+  
   /*
   printf("ok, more, err:  %i %i %i  \n",MP3_OK, MP3_NEED_MORE, MP3_ERR);
-  printf("ret = %i out=%i \n",ret,outsize);
+  printf("ret = %i out=%i \n",ret,totsize);
   */
-  if (ret==MP3_ERR) return -1;
-  else return outsize;
+  return outsize;
+}
+
+
+
+
+/*
+For lame_decode:  return code
+  -1     error
+   0     ok, but need more data before outputing any samples
+   n     number of samples output.  a multiple of 576 or 1152 depending on MP3 file.
+*/
+int lame_decode(char *buf,int len,short pcm_l[],short pcm_r[])
+{
+  int size,totsize=0;
+  int outsize=0,j,i,ret;
+
+  do {
+    ret = decodeMP3(&mp,buf,len,out,FSIZE,&size);
+    if (ret==MP3_ERR) return -1;
+
+    if (ret==MP3_OK) {
+      outsize = size/(2*mp.fr.stereo);
+      
+      for (j=0; j<mp.fr.stereo; j++)
+	for (i=0; i<outsize; i++) 
+	  if (j==0) pcm_l[totsize + i] = ((short *) out)[mp.fr.stereo*i+j];
+	  else pcm_r[totsize + i] = ((short *) out)[mp.fr.stereo*i+j];
+
+      totsize += outsize;
+    }
+    len=0;  /* future calls to decodeMP3 are just to flush buffers */
+  } while (ret!=MP3_NEED_MORE);
+  /*
+  printf("ok, more, err:  %i %i %i  \n",MP3_OK, MP3_NEED_MORE, MP3_ERR);
+  printf("ret = %i out=%i \n",ret,totsize);
+  */
+  return totsize;
 }
 
 #endif /* HAVEMPGLIB */

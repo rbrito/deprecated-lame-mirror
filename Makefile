@@ -272,8 +272,6 @@ c_sources = \
 	util.c \
         VbrTag.c \
         version.c \
-        gtkanal.c \
-        gpkplotting.c \
         mpglib/common.c \
         mpglib/dct64_i386.c \
         mpglib/decode_i386.c \
@@ -285,6 +283,10 @@ c_sources = \
 OBJ = $(c_sources:.c=.o)
 DEP = $(c_sources:.c=.d)
 
+gtk_sources = gtkanal.c gpkplotting.c
+gtk_obj = $(gtk_sources:.c=.o)
+gtk_dep = $(gtk_sources:.c=.d)
+
 
 
 %.o: %.c 
@@ -293,14 +295,11 @@ DEP = $(c_sources:.c=.d)
 %.d: %.c
 	$(SHELL) -ec '$(CC) $(MAKEDEP)  $(CPP_OPTS) $(CC_SWITCHES)  $< | sed '\''s;$*.o;& $@;g'\'' > $@'
 
-#$(PGM):	main.o $(OBJ) Makefile 
-#	$(CC) -o $(PGM)  main.o $(OBJ) $(LIBS) $(CPP_OPTS) $(LIBSNDFILE) $(GTKLIBS) $(LIBTERMCAP)
+$(PGM):	main.o $(gtk_obj) libmp3lame.a 
+	$(CC) -o $(PGM)  main.o $(gtk_obj) -L. -lmp3lame $(LIBS) $(LIBSNDFILE) $(GTKLIBS) $(LIBTERMCAP)
 
-$(PGM):	main.o libmp3lame.a 
-	$(CC) -o $(PGM)  main.o -L. -lmp3lame $(LIBS) $(LIBSNDFILE) $(GTKLIBS) $(LIBTERMCAP)
-
-mp3x:	mp3x.o libmp3lame.a
-	$(CC) -o mp3x mp3x.o  $(OBJ) $(LIBS) $(LIBSNDFILE) $(GTKLIBS) $(LIBTERMCAP)
+mp3x:	mp3x.o $(gtk_obj) libmp3lame.a
+	$(CC) -o mp3x mp3x.o $(gtk_obj) $(OBJ) $(LIBS) $(LIBSNDFILE) $(GTKLIBS) $(LIBTERMCAP)
 
 mp3rtp:	rtp.o mp3rtp.o libmp3lame.a
 	$(CC) -o mp3rtp mp3rtp.o rtp.o   $(OBJ) $(LIBS) $(LIBSNDFILE) $(GTKLIBS) $(LIBTERMCAP)
@@ -311,7 +310,7 @@ libmp3lame.a:  $(OBJ) Makefile
 	ar cr libmp3lame.a  $(OBJ) 
 
 clean:
-	-$(RM) $(OBJ) $(DEP) $(PGM) main.o rtp.o mp3rtp mp3rtp.o \
+	-$(RM) $(gtk_obj) $(OBJ) $(DEP) $(PGM) main.o rtp.o mp3rtp mp3rtp.o \
          mp3x.o mp3x libmp3lame.a 
 
 

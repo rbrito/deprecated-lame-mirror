@@ -100,12 +100,14 @@ int main(int argc, char **argv)
 
 
 
+  if (gf.gtkflag) {
 #ifdef HAVEGTK
-  if (gf.gtkflag) gtk_init (&argc, &argv);
-  if (gf.gtkflag) gtkcontrol(&gf);
-  else
+    gtk_init (&argc, &argv);
+    gtkcontrol(&gf);
+#else
+    fprintf(stderr,"Error: lame not compiled with GTK support \n");
 #endif
-    {
+  } else {
 
       /* encode until we hit eof */
       do {

@@ -10,9 +10,10 @@
 #include "quantize-pvt.h"
 #include <assert.h>
 
-int gtkflag;
+plotting_data *pinfo;
+plotting_data *pplot;
+plotting_data Pinfo[NUMPINFO];
 
-extern int makeframe(void);
 
 /* global variables for the state of the system */
 static gint idle_keepgoing;        /* processing of frames is ON */
@@ -36,8 +37,6 @@ GtkWidget *mdctbox[2];   /* mdct coefficients gr=0,1 plotted here */
 GtkWidget *sfbbox[2];    /* scalefactors gr=0,1 plotted here */
 GtkWidget *headerbox;    /* mpg123 header info shown here */
 
-plotting_data *pinfo,*pplot;
-plotting_data Pinfo[NUMPINFO];
 
 struct gtkinfostruct {
   int filetype;           /* input file type 0=WAV, 1=MP3 */
@@ -76,7 +75,7 @@ int gtkmakeframe(void)
   int mp3out = 0;
   short mpg123pcm[2][1152];
   char mp3buffer[LAME_MAXMP3BUFFER];
-  
+  extern plotting_data *mpg123_pinfo;  
 
 #ifndef HAVEMPGLIB
   fprintf(stderr,"Error: GTK frame analyzer requires MPGLIB\n");
@@ -90,6 +89,8 @@ int gtkmakeframe(void)
   pinfo->framesize=576*gfc->mode_gr;
   pinfo->stereo = gfc->stereo;
 
+  gfc->pinfo = pinfo;
+  mpg123_pinfo = pinfo;
   if (gfp->input_format == sf_mp3) {
     iread=lame_readframe(gfp,Buffer);
     gfc->frameNum++;
@@ -108,7 +109,7 @@ int gtkmakeframe(void)
       /* not possible to produce mp3 data without encoding at least 
        * one frame of data which would increment gfc->frameNum */
     }
-    mp3out=lame_decode(mp3buffer,mp3count,mpg123pcm[0],mpg123pcm[1]); /* re-synthesis to pcm */
+    mp3out=lame_decode1(mp3buffer,mp3count,mpg123pcm[0],mpg123pcm[1]); /* re-synthesis to pcm */
     /* mp3out = 0:  need more data to decode */
     /* mp3out = -1:  error.  Lets assume 0 pcm output */
     /* mp3out = number of samples output */
@@ -1186,86 +1187,6 @@ static void get_main_menu(GtkWidget *window, GtkWidget ** menubar) {
 
 
 
-/************************************************************************/
-/*  updates plotting data                                               */
-/************************************************************************/
-void 
-set_pinfo (lame_global_flags *gfp,
-    gr_info *cod_info,
-    III_psy_ratio *ratio, 
-    III_scalefac_t *scalefac,
-    FLOAT8 xr[576],        
-    FLOAT8 xfsf[4][SBPSY_l],
-    FLOAT8 noise[4],
-    int gr,
-    int ch
-)
-{
-  lame_internal_flags *gfc=gfp->internal_flags;
-  int sfb;
-  FLOAT ifqstep;
-  int i,l,start,end,bw;
-  FLOAT8 en0;
-  D192_3 *xr_s = (D192_3 *)xr;
-  ifqstep = ( cod_info->scalefac_scale == 0 ) ? .5 : 1.0;
-	  
-  if (cod_info->block_type == SHORT_TYPE) {
-    for ( i = 0; i < 3; i++ ) {
-      for ( sfb = 0; sfb < SBPSY_s; sfb++ )  {
-	start = gfc->scalefac_band.s[ sfb ];
-	end   = gfc->scalefac_band.s[ sfb + 1 ];
-	bw = end - start;
-	for ( en0 = 0.0, l = start; l < end; l++ ) 
-	  en0 += (*xr_s)[l][i] * (*xr_s)[l][i];
-	en0=Max(en0/bw,1e-20);
-
-	/* conversion to FFT units */
-	en0 = ratio->en.s[sfb][i]/en0;
-
-	pinfo->xfsf_s[gr][ch][3*sfb+i] =  xfsf[i+1][sfb]*en0;
-	pinfo->thr_s[gr][ch][3*sfb+i] = ratio->thm.s[sfb][i];
-	pinfo->en_s[gr][ch][3*sfb+i] = ratio->en.s[sfb][i]; 
-
-	pinfo->LAMEsfb_s[gr][ch][3*sfb+i]=
-	  -2*cod_info->subblock_gain[i]-ifqstep*scalefac->s[sfb][i];
-      }
-      pinfo->LAMEsfb_s[gr][ch][3*sfb+i]=-2*cod_info->subblock_gain[i];
-    }
-  }else{
-    for ( sfb = 0; sfb < SBPSY_l; sfb++ )   {
-      start = gfc->scalefac_band.l[ sfb ];
-      end   = gfc->scalefac_band.l[ sfb+1 ];
-      bw = end - start;
-      for ( en0 = 0.0, l = start; l < end; l++ ) 
-	en0 += xr[l] * xr[l];
-      en0=Max(en0/bw,1e-20);
-      /*
-	printf("diff  = %f \n",10*log10(Max(ratio[gr][ch].en.l[sfb],1e-20))
-	-(10*log10(en0)+150));
-      */
-      
-      /* convert to FFT units */
-      en0 =   ratio->en.l[sfb]/en0;
-      
-      pinfo->xfsf[gr][ch][sfb] =  xfsf[0][sfb]*en0;
-      pinfo->thr[gr][ch][sfb] = ratio->thm.l[sfb];
-      pinfo->en[gr][ch][sfb] = ratio->en.l[sfb];
-      
-      pinfo->LAMEsfb[gr][ch][sfb]=-ifqstep*scalefac->l[sfb];
-      if (cod_info->preflag && sfb>=11) 
-	pinfo->LAMEsfb[gr][ch][sfb]-=ifqstep*pretab[sfb];
-    }
-    pinfo->LAMEsfb[gr][ch][sfb]=0;  /* there is no 22 scalefactor */
-  }
-  pinfo->LAMEqss[gr][ch] = cod_info->global_gain;
-  pinfo->LAMEmainbits[gr][ch] = cod_info->part2_3_length;
-
-  pinfo->over      [gr][ch] = noise[0];
-  pinfo->max_noise [gr][ch] = noise[1];
-  pinfo->over_noise[gr][ch] = noise[2];
-  pinfo->tot_noise [gr][ch] = noise[3];
-}
-
 
 
 
@@ -1489,7 +1410,6 @@ int gtkcontrol(lame_global_flags *gfp2)
     idle_keepgoing=1;             /* processing of frames is ON */
     idle_count_max=READ_AHEAD+1;  /* number of frames to process before plotting */
     idle_count=0;                 /* pause & plot when idle_count=idle_count_max */
-
 
     gtk_main ();
     if (!mp3done) exit(2);

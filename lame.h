@@ -272,11 +272,16 @@ void lame_close_infile(lame_global_flags *);
 /*********************************************************************
  * a simple interface to mpglib, part of mpg123, is also included if
  * libmp3lame is compiled with HAVEMPGLIB
- * input 1 mp3 frame, output (maybe) 1 pcm frame.   
+ * input 1 mp3 frame, output (maybe) pcm data.  
  * lame_decode return code:  -1: error.  0: need more data.  n>0: size of pcm output
  *********************************************************************/
 int lame_decode_init(void);
 int lame_decode(char *mp3buf,int len,short pcm_l[],short pcm_r[]);
+
+/* same as lame_decode, but returns at most one frame */
+int lame_decode1(char *mp3buf,int len,short pcm_l[],short pcm_r[]);
+
+
 /* read mp3 file until mpglib returns one frame of PCM data */
 #ifdef AMIGA_MPEGA
 int lame_decode_initfile(const char *fullname,int *stereo,int *samp,int *bitrate, unsigned long *nsamp);
