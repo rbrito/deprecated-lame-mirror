@@ -637,10 +637,13 @@ int mf_size,char *mp3buf, int mp3buf_size)
     bitsPerSlot = 8;
     avg_slots_per_frame = (bit_rate*gfp->framesize) /
            (sampfreq* bitsPerSlot);
-    frac_SpF  = avg_slots_per_frame - floor(avg_slots_per_frame);
+    /* -f fast-math option causes some strange rounding here, be carefull: */
+    frac_SpF  = avg_slots_per_frame - floor(avg_slots_per_frame + 1e-9);
+    if (fabs(frac_SpF) < 1e-9) frac_SpF = 0;
+
     slot_lag  = -frac_SpF;
     gfp->padding = 1;
-    if (fabs(frac_SpF) < 1e-9) gfp->padding = 0;
+    if (frac_SpF==0) gfp->padding = 0;
     /* check FFT will not use a negative starting offset */
     assert(576>=FFTOFFSET);
     /* check if we have enough data for FFT */

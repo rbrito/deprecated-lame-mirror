@@ -608,6 +608,7 @@ int read_samples_pcm(lame_global_flags *gfp,short sample_buffer[2304], int frame
 	    exit( 1 );
 	  }
       }
+    /* intel=littleEndian */
     if (!iswav && ( NativeByteOrder == order_littleEndian ))
       SwapBytesInWords( sample_buffer, samples_read );
 
