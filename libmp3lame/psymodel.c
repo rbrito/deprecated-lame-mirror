@@ -741,25 +741,11 @@ compute_masking_s(
 }
 
 static int
-block_type_set(
-    int blocktype_old,
-    int blocktype_current,
-    int blocktype_next
-    )
+block_type_set(int old, int current, int next)
 {
-    /* update the blocktype of the previous granule, since it depends on what
-     * happend in this granule */
-    if (blocktype_current == SHORT_TYPE)
-	return SHORT_TYPE;
-
-    if (blocktype_next == SHORT_TYPE || blocktype_next == STOP_TYPE) {
-	if (blocktype_old == SHORT_TYPE || blocktype_old == START_TYPE)
-	    return SHORT_TYPE;
-	return START_TYPE;
-    }
-    if (blocktype_old == SHORT_TYPE || blocktype_old == START_TYPE)
-	return STOP_TYPE - blocktype_current;
-    return blocktype_current;
+    /* update the blocktype of the previous/next granule,
+       since it depends on what happend in this granule */
+    return current | ((next>>1)&1) | ((old<<1)&2);
 }
 
 /* mask_add optimization */
