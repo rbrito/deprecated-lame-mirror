@@ -539,14 +539,20 @@ __declspec(dllexport) BE_ERR	beEncodeChunk(HBE_STREAM hbeStream, DWORD nSamples,
 
 __declspec(dllexport) BE_ERR beWriteVBRHeader(LPCSTR lpszFileName)
 {
+        FILE * fpStream;
 	if ( (gf.bWriteVbrTag) && (gf.VBR!=vbr_off) )
 	{
 		// Calculate relative quality of VBR stream 
 		// 0=best, 100=worst
 		int nQuality=gf.VBR_q*100/9;
 
+		fpStream=fopen(gfp->outPath,"rb+");
+		if (fpStream==NULL)
+		  return;
+
 		// Write Xing header again
-		return PutVbrTag(&gf,(LPSTR)lpszFileName,nQuality);
+		return PutVbrTag(&gf,fpStream,nQuality);
+		fclose(fpStream);
 	}
 	return BE_ERR_INVALID_FORMAT_PARAMETERS;
 }
