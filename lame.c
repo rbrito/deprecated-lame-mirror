@@ -1245,8 +1245,7 @@ FFT's                      <---------1024---------->
       L3psycho_anal( bufp, stereo, gr, info,
          s_freq[info->version][info->sampling_frequency] * 1000.0,
 	 check_ms_stereo,&ms_ratio[gr],&ms_ratio_next,
-         masking_ratio.l[gr], masking_ratio.s[gr], 
-         masking_MS_ratio.l[gr], masking_MS_ratio.s[gr], 
+         &masking_ratio, &masking_MS_ratio,
          pe[gr],pe_MS[gr],blocktype);
 
       for ( ch = 0; ch < stereo; ch++ ) 
@@ -1314,15 +1313,6 @@ FFT's                      <---------1024---------->
 	  pinfo->ers[gr][ch]=pinfo->ers[gr][ch+2];
 	  memcpy(pinfo->energy[gr][ch],pinfo->energy[gr][ch+2],
 		 sizeof(pinfo->energy[gr][ch]));
-
-	  memcpy(pinfo->thr[gr][ch],pinfo->thr[gr][ch+2],
-		 sizeof(pinfo->thr[gr][ch]));
-	  memcpy(pinfo->en[gr][ch],pinfo->en[gr][ch+2],
-		 sizeof(pinfo->en[gr][ch]));
-	  memcpy(pinfo->thr_s[gr][ch],pinfo->thr_s[gr][ch+2],
-		 sizeof(pinfo->thr_s[gr][ch]));
-	  memcpy(pinfo->en_s[gr][ch],pinfo->en_s[gr][ch+2],
-		 sizeof(pinfo->en_s[gr][ch]));
 	}
       }
     }

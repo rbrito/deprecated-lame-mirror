@@ -5,6 +5,9 @@
  * $Id$
  *
  * $Log$
+ * Revision 1.11  1999/12/21 08:18:51  markt
+ * Bug fix in Mid/Side masking thresholds
+ *
  * Revision 1.10  1999/12/19 01:47:49  markt
  * went back to ISO layer III recommended cw formulas
  *
@@ -112,25 +115,23 @@ void L3psycho_anal( short int *buffer[2], int stereo,
 		    FLOAT8 sfreq, int check_ms_stereo, 
                     FLOAT8 *ms_ratio,
                     FLOAT8 *ms_ratio_next,
-		    FLOAT8 masking_ratio_d[2][SBPSY_l], FLOAT8 masking_ratio_ds[2][SBPSY_s][3],
-		    FLOAT8 masking_MS_ratio_d[2][SBPSY_l], FLOAT8 masking_MS_ratio_ds[2][SBPSY_s][3],
+		    III_psy_ratio *masking_ratio,
+		    III_psy_ratio *masking_MS_ratio,
 		    FLOAT8 percep_entropy[2],FLOAT8 percep_MS_entropy[2], 
                     int blocktype_d[2])
 {
   static FLOAT8 pe[4]={0,0,0,0};
   static FLOAT8 ms_ratio_s_old=0,ms_ratio_l_old=0;
   
-  static FLOAT8 ratio[4][SBPSY_l];
-  static FLOAT8 ratio_s[4][SBPSY_s][3];
 #ifdef HAVEGTK
   static FLOAT energy_save[4][HBLKSIZE];
   static FLOAT8 pe_save[4];
   static FLOAT8 ers_save[4];
-  static FLOAT8 en_save[4][SBPSY_l];
-  static FLOAT8 en_s_save[4][SBPSY_s][3];
 #endif
-  static FLOAT8 thm_save[4][SBPSY_l];
-  static FLOAT8 thm_s_save[4][SBPSY_s][3];
+  static FLOAT8 thm_l[4][SBPSY_l];
+  static FLOAT8 thm_s[4][SBPSY_s][3];
+  static FLOAT8 en_l[4][SBPSY_l];
+  static FLOAT8 en_s[4][SBPSY_s][3];
   
   
   int blocktype[2],uselongblock[2],chn;
@@ -168,7 +169,6 @@ void L3psycho_anal( short int *buffer[2], int stereo,
   static int	bu_s[SBPSY_s],bo_s[SBPSY_s] ;
   static FLOAT8	w1_l[SBPSY_l], w2_l[SBPSY_l];
   static FLOAT8	w1_s[SBPSY_s], w2_s[SBPSY_s];
-  static FLOAT8	en[SBPSY_l],   thm[SBPSY_l] ;
   static int	blocktype_old[2];
   int	sb,sblock;
   static int	partition_l[HBLKSIZE],partition_s[HBLKSIZE_s];
@@ -204,6 +204,10 @@ void L3psycho_anal( short int *buffer[2], int stereo,
     memset (rx_sav,0, sizeof(rx_sav));
     memset (ax_sav,0, sizeof(ax_sav));
     memset (bx_sav,0, sizeof(bx_sav));
+    memset (en_l,0, sizeof(en_l));
+    memset (en_s,0, sizeof(en_s));
+    memset (thm_l,0, sizeof(thm_l));
+    memset (thm_s,0, sizeof(thm_s));
     
     
     
@@ -329,30 +333,41 @@ void L3psycho_anal( short int *buffer[2], int stereo,
   }
   /************************* End of Initialization *****************************/
   
-  
-  
+
+
   
   
   numchn=stereo;
   if (highq && (info->mode == MPG_MD_JOINT_STEREO)) numchn=4;
   for (chn=0; chn<numchn; chn++) {
 
+
     if (chn<2) {    
       /* LR maskings  */
       percep_entropy[chn] = pe[chn]; 
-      for ( j = 0; j < SBPSY_l; j++ )
-	masking_ratio_d[chn][j] = ratio[chn][j];
+      for ( j = 0; j < SBPSY_l; j++ ) {
+	masking_ratio->thm_l[gr_out][chn][j] = thm_l[chn][j];
+	masking_ratio->en_l[gr_out][chn][j] = en_l[chn][j];
+      }
+
       for ( j = 0; j < SBPSY_s; j++ )
-	for ( i = 0; i < 3; i++ )
-	  masking_ratio_ds[chn][j][i] = ratio_s[chn][j][i];
+	for ( i = 0; i < 3; i++ ) {
+	  masking_ratio->thm_s[gr_out][chn][j][i] = thm_s[chn][j][i];
+	  masking_ratio->en_s[gr_out][chn][j][i] = en_s[chn][j][i];
+	}
     }else{
       /* MS maskings  */
       percep_MS_entropy[chn-2] = pe[chn]; 
-      for ( j = 0; j < SBPSY_l; j++ )
-	masking_MS_ratio_d[chn-2][j] = ratio[chn][j];
+      for ( j = 0; j < SBPSY_l; j++ ) {
+	masking_MS_ratio->en_l[gr_out][chn-2][j] = en_l[chn][j];
+	masking_MS_ratio->thm_l[gr_out][chn-2][j] = thm_l[chn][j];
+      }
+
       for ( j = 0; j < SBPSY_s; j++ )
-	for ( i = 0; i < 3; i++ )
-	  masking_MS_ratio_ds[chn-2][j][i] = ratio_s[chn][j][i];
+	for ( i = 0; i < 3; i++ ) {
+	  masking_MS_ratio->en_s[gr_out][chn-2][j][i] = en_s[chn][j][i];
+	  masking_MS_ratio->thm_s[gr_out][chn-2][j][i] = thm_s[chn][j][i];
+	}
     }
     
 
@@ -360,8 +375,8 @@ void L3psycho_anal( short int *buffer[2], int stereo,
     /**********************************************************************
      *  compute FFTs
      **********************************************************************/
-
-    fft_long2( wsamp, energy, chn, buffer);
+    fft_long2( wsamp, energy, chn, buffer); /* old version */
+    //fft_long( wsamp, energy, chn, buffer);
   
 #ifdef HAVEGTK
   if(gtkflag) {
@@ -433,7 +448,19 @@ void L3psycho_anal( short int *buffer[2], int stereo,
       }
 
 
-    fft_short2( wsamp_s, energy_s, chn, buffer);
+    fft_short2( wsamp_s, energy_s, chn, buffer); /* old routines */
+#if 0
+    {
+      FLOAT wsamp_new[3][BLKSIZE_s];
+           fft_short( wsamp_new, energy_s, chn, buffer);
+           for (j=0 ; j<3; j++) {
+           for (i=0 ; i<HBLKSIZE ; i++) {
+	     printf("old=%f  new=%f  \n",wsamp_s[j][i],wsamp_new[j][i]);
+           }
+	   }
+    }
+#endif
+
     /**********************************************************************
      *     compute unpredicatibility of next 200 spectral lines            *
      **********************************************************************/ 
@@ -685,30 +712,16 @@ void L3psycho_anal( short int *buffer[2], int stereo,
     /* threshold calculation (part 2) */
     for ( sb = 0; sb < SBPSY_l; sb++ )
       {
-	en[sb] = w1_l[sb] * eb[bu_l[sb]] + w2_l[sb] * eb[bo_l[sb]];
-	thm[sb] = w1_l[sb] *thr[bu_l[sb]] + w2_l[sb] * thr[bo_l[sb]];
+	en_l[chn][sb] = w1_l[sb] * eb[bu_l[sb]] + w2_l[sb] * eb[bo_l[sb]];
+	thm_l[chn][sb] = w1_l[sb] *thr[bu_l[sb]] + w2_l[sb] * thr[bo_l[sb]];
 	for ( b = bu_l[sb]+1; b < bo_l[sb]; b++ )
 	  {
-	    en[sb]  += eb[b];
-	    thm[sb] += thr[b];
+	    en_l[chn][sb]  += eb[b];
+	    thm_l[chn][sb] += thr[b];
 	  }
-	if ( en[sb] != 0.0 )
-	  ratio[chn][sb] = thm[sb]/en[sb];
-	else
-	  ratio[chn][sb] = 0.0;
       }
-#ifdef HAVEGTK
-    if (gtkflag) {
-      for (sb=0; sb< SBPSY_l; sb ++ ) {
-	pinfo->thr[gr_out][chn][sb]=thm_save[chn][sb];
-	pinfo->en[gr_out][chn][sb]=en_save[chn][sb];
-	en_save[chn][sb]=en[sb];
-      }
-    }
-#endif
-    for (sb=0; sb< SBPSY_l; sb ++ ) {
-      thm_save[chn][sb]=thm[sb];
-    }
+
+
     
     /* threshold calculation for short blocks */
     for ( sblock = 0; sblock < 3; sblock++ )    {
@@ -734,66 +747,61 @@ void L3psycho_anal( short int *buffer[2], int stereo,
       
       for ( sb = 0; sb < SBPSY_s; sb++ )
 	{
-	  en[sb] = w1_s[sb] * eb[bu_s[sb]] + w2_s[sb] * eb[bo_s[sb]];
-	  thm[sb] = w1_s[sb] *thr[bu_s[sb]] + w2_s[sb] * thr[bo_s[sb]];
+	  en_s[chn][sb][sblock] = w1_s[sb] * eb[bu_s[sb]] + w2_s[sb] * eb[bo_s[sb]];
+	  thm_s[chn][sb][sblock] = w1_s[sb] *thr[bu_s[sb]] + w2_s[sb] * thr[bo_s[sb]];
 	  for ( b = bu_s[sb]+1; b < bo_s[sb]; b++ )
 	    {
-	      en[sb] += eb[b];
-	      thm[sb] += thr[b];
+	      en_s[chn][sb][sblock] += eb[b];
+	      thm_s[chn][sb][sblock] += thr[b];
 	    }
-	  if ( en[sb] != 0.0 ) 
-	    ratio_s[chn][sb][sblock] = thm[sb]/en[sb];
-	  else
-	    ratio_s[chn][sb][sblock] = 0.0;
-#ifdef HAVEGTK
-	  if (gtkflag) {
-	    pinfo->thr_s[gr_out][chn][3*sb+sblock]=thm_s_save[chn][sb][sblock];
-	    pinfo->en_s[gr_out][chn][3*sb+sblock]=en_s_save[chn][sb][sblock];
-	    en_s_save[chn][sb][sblock]=en[sb];
-	  }
-#endif
-	  thm_s_save[chn][sb][sblock]=thm[sb];
 	}
-      
     } 
+  } /* end loop over chn */
+
+
+  /* compute M/S thresholds from Johnston & Ferreira 1992 ICASSP paper */
+  if ( numchn==4 /* mid/side and r/l */) {
+    FLOAT8 rside,rmid,mld;
+    int chmid=2,chside=3; 
     
-    
-    /* compute M/S thresholds from Johnston & Ferreira 1992 ICASSP paper */
-#define JOHNSTON
-#ifdef JOHNSTON
-    if ( chn==3 /* the side channel */) {
-      FLOAT8 rside,rmid,mld;
-      int ch0=2,ch1=3; 
-      
-      for ( sb = 0; sb < SBPSY_l; sb++ ) {
-	/* use this fix if L & R masking differs by 2db or less */
-	/* if db = 10*log10(x2/x1) < 2 */
-	/* if (x2 < 1.58*x1) { */
- 	if (ratio[0][sb] <= 1.58*ratio[1][sb]
- 	 && ratio[1][sb] <= 1.58*ratio[0][sb]) {
-	  mld = mld_l[sb];
-	  rmid = Max(ratio[ch0][sb],Min(ratio[ch1][sb],mld));
-	  rside = Max(ratio[ch1][sb],Min(ratio[ch0][sb],mld));
-	  ratio[ch0][sb]=rmid;
-	  ratio[ch1][sb]=rside;
-	}
+    for ( sb = 0; sb < SBPSY_l; sb++ ) {
+      /* use this fix if L & R masking differs by 2db or less */
+      /* if db = 10*log10(x2/x1) < 2 */
+      /* if (x2 < 1.58*x1) { */
+      if (thm_l[0][sb] <= 1.58*thm_l[1][sb]
+	  && thm_l[1][sb] <= 1.58*thm_l[0][sb]) {
+
+	mld = mld_l[sb]*en_l[chside][sb];
+	rmid = Max(thm_l[chmid][sb],Min(thm_l[chside][sb],mld));
+
+	mld = mld_l[sb]*en_l[chmid][sb];
+	rside = Max(thm_l[chside][sb],Min(thm_l[chmid][sb],mld));
+
+	thm_l[chmid][sb]=rmid;
+	thm_l[chside][sb]=rside;
       }
-      for ( sblock = 0; sblock < 3; sblock++ ){
-	for ( sb = 0; sb < SBPSY_s; sb++ ) {
- 	  if (ratio_s[0][sb][sblock] <= 1.58*ratio_s[1][sb][sblock]
-	      && ratio_s[1][sb][sblock] <= 1.58*ratio_s[0][sb][sblock]) {
-	    mld = mld_s[sb];
-	    rmid = Max(ratio_s[ch0][sb][sblock],Min(ratio_s[ch1][sb][sblock],mld));
-	    rside = Max(ratio_s[ch1][sb][sblock],Min(ratio_s[ch0][sb][sblock],mld));
-	    ratio_s[ch0][sb][sblock]=rmid;
-	    ratio_s[ch1][sb][sblock]=rside;
-	  }
+    }
+    for ( sblock = 0; sblock < 3; sblock++ ){
+      for ( sb = 0; sb < SBPSY_s; sb++ ) {
+	if (thm_s[0][sb][sblock] <= 1.58*thm_s[1][sb][sblock]
+	    && thm_s[1][sb][sblock] <= 1.58*thm_s[0][sb][sblock]) {
+
+	  mld = mld_s[sb]*en_s[chside][sb][sblock];
+	  rmid = Max(thm_s[chmid][sb][sblock],Min(thm_s[chside][sb][sblock],mld));
+
+	  mld = mld_s[sb]*en_s[chmid][sb][sblock];
+	  rside = Max(thm_s[chside][sb][sblock],Min(thm_s[chmid][sb][sblock],mld));
+
+	  thm_s[chmid][sb][sblock]=rmid;
+	  thm_s[chside][sb][sblock]=rside;
 	}
       }
     }
-#endif
-  } /* end loop over chn */
+  }
+
+
   
+
   
   
   if (check_ms_stereo)  {
@@ -801,12 +809,12 @@ void L3psycho_anal( short int *buffer[2], int stereo,
     /* use ms_stereo (ms_ratio < .35) if average thresh. diff < 5 db */
     { FLOAT8 db,x1,x2,sidetot=0,tot=0;
     for (sb= SBPSY_l/4 ; sb< SBPSY_l; sb ++ ) {
-      x1 = minimum(thm_save[0][sb],thm_save[1][sb]);
-      x2 = maximum(thm_save[0][sb],thm_save[1][sb]);
+      x1 = minimum(thm_l[0][sb],thm_l[1][sb]);
+      x2 = maximum(thm_l[0][sb],thm_l[1][sb]);
       /* thresholds difference in db */
       if (x2 >= 1000*x1)  db=30;
       else db = 10*log10(x2/x1);  
-      /*  printf("db = %f %e %e  \n",db,thm_save[0][sb],thm_save[1][sb]);*/
+      /*  printf("db = %f %e %e  \n",db,thm_l[0][sb],thm_l[1][sb]);*/
       sidetot += db;
       tot++;
     }
@@ -816,8 +824,8 @@ void L3psycho_anal( short int *buffer[2], int stereo,
     sidetot=0; tot=0;
     for ( sblock = 0; sblock < 3; sblock++ )
       for ( sb = SBPSY_s/4; sb < SBPSY_s; sb++ ) {
-	x1 = minimum(thm_s_save[0][sb][sblock],thm_s_save[1][sb][sblock]);
-	x2 = maximum(thm_s_save[0][sb][sblock],thm_s_save[1][sb][sblock]);
+	x1 = minimum(thm_s[0][sb][sblock],thm_s[1][sb][sblock]);
+	x2 = maximum(thm_s[0][sb][sblock],thm_s[1][sb][sblock]);
 	/* thresholds difference in db */
 	if (x2 >= 1000*x1)  db=30;
 	else db = 10*log10(x2/x1);  

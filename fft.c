@@ -418,6 +418,7 @@ void fft_short(
 	int g = BLKSIZE_s * b;
 	fht(&x_real[g], BLKSIZE_s);
 
+
 	energy[b][0] = x_real[g] * x_real[g];
 	i = 1; j = BLKSIZE_s - 1;
 	do {

@@ -619,50 +619,44 @@ void outer_loop(
 
 	  if (cod_info->block_type == SHORT_TYPE) {
 	  for ( i = 0; i < 3; i++ ) {
-	    for ( sfb = 0; sfb < SBMAX_s; sfb++ )  {
+	    for ( sfb = 0; sfb < SBPSY_s; sfb++ )  {
 	      start = scalefac_band_short[ sfb ];
 	      end   = scalefac_band_short[ sfb + 1 ];
 	      bw = end - start;
 	      for ( en0 = 0.0, l = start; l < end; l++ ) 
 		en0 += (*xr_s)[l][i] * (*xr_s)[l][i];
 	      en0=Max(en0/bw,1e-20);
-	      /*
-	      pinfo->xfsf_s[gr][ch][3*sfb+i] =  
-		pinfo->thr_s[gr][ch][3*sfb+i]*xfsf[i+1][sfb]/
-		l3_xmin->s[gr][ch][sfb][i];
-	      */
-	      pinfo->xfsf_s[gr][ch][3*sfb+i] =  
-		pinfo->en_s[gr][ch][3*sfb+i]*xfsf[i+1][sfb]/en0;
-	      if (sfb < SBPSY_l) 
-		pinfo->thr_s[gr][ch][3*sfb+i] =  
-		  pinfo->en_s[gr][ch][3*sfb+i]*l3_xmin->s[gr][ch][sfb][i]/en0;
+
+	      /* conversion to FFT units */
+	      en0 = ratio->en_s[gr][ch][sfb][i]/en0;
+	
+	      pinfo->xfsf_s[gr][ch][3*sfb+i] =  xfsf[i+1][sfb]*en0;
+	      pinfo->thr_s[gr][ch][3*sfb+i] = ratio->thm_s[gr][ch][sfb][i]; 
+	      pinfo->en_s[gr][ch][3*sfb+i] = ratio->en_s[gr][ch][sfb][i]; 
 
 	      pinfo->LAMEsfb_s[gr][ch][3*sfb+i]=
 		-2*cod_info->subblock_gain[i]-ifqstep*scalefac->s[gr][ch][sfb][i];
 	    }
 	  }
 	  }else{
-	  for ( sfb = 0; sfb < SBMAX_l; sfb++ )   {
+	  for ( sfb = 0; sfb < SBPSY_l; sfb++ )   {
 	    start = scalefac_band_long[ sfb ];
 	    end   = scalefac_band_long[ sfb+1 ];
 	    bw = end - start;
 	    for ( en0 = 0.0, l = start; l < end; l++ ) 
 	      en0 += xr[gr][ch][l] * xr[gr][ch][l];
 	    en0=Max(en0/bw,1e-20);
-	    /* 
-	    pinfo->xfsf[gr][ch][sfb] =  
-	      pinfo->thr[gr][ch][sfb]*xfsf[0][sfb]/
-	      l3_xmin->l[gr][ch][sfb];
-	    */
-	    pinfo->xfsf[gr][ch][sfb] =  
-	      pinfo->en[gr][ch][sfb]*xfsf[0][sfb]/en0;
 	    /*
-	    printf("diff  = %f \n",10*log10(Max(pinfo->en[gr][ch][sfb],1e-20))
+	    printf("diff  = %f \n",10*log10(Max(ratio->en_l[gr][ch][sfb],1e-20))
 		   -(10*log10(en0)+150));
 	    */
-	    if (sfb < SBPSY_l) 
-	      pinfo->thr[gr][ch][sfb] =  
-		pinfo->en[gr][ch][sfb]*l3_xmin->l[gr][ch][sfb]/en0;
+
+	    /* convert to FFT units */
+	    en0 =   ratio->en_l[gr][ch][sfb]/en0;
+	
+	    pinfo->xfsf[gr][ch][sfb] =  xfsf[0][sfb]*en0;
+	    pinfo->thr[gr][ch][sfb] = ratio->thm_l[gr][ch][sfb];
+	    pinfo->en[gr][ch][sfb] = ratio->en_l[gr][ch][sfb];
 
 	    pinfo->LAMEsfb[gr][ch][sfb]=-ifqstep*scalefac->l[gr][ch][sfb];
 	    if (cod_info->preflag && sfb>=11) 

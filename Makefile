@@ -21,7 +21,7 @@ LIBS = -lm
 MAKEDEP = -M
 BRHIST_SWITCH = 
 LIBTERMCAP = 
-
+RM = rm -f
 
 ##########################################################################
 # Define these to produce a VBR bitrate histogram.  Requires ncurses,
@@ -261,7 +261,7 @@ libmp3lame.a:  $(OBJ) Makefile
 	ar cr libmp3lame.a  $(OBJ) 
 
 clean:
-	-rm $(OBJ) $(DEP) $(PGM) main.o mp3x.o mp3x libmp3lame.a \
+	-$(RM) $(OBJ) $(DEP) $(PGM) main.o mp3x.o mp3x libmp3lame.a \
                       mp3resample.o mp3resample	
 
 tags: TAGS
@@ -269,7 +269,10 @@ tags: TAGS
 TAGS: ${c_sources}
 	etags -T ${c_sources}
 
--include $(DEP)
+ifneq ($(MAKECMDGOALS),clean)
+  -include $(DEP)
+endif
+
 
 test21: $(PGM)
 	./lame  ../test/castanets.wav
@@ -277,12 +280,12 @@ test21: $(PGM)
 test21h: $(PGM)
 	./lame  -h  ../test/castanets.wav
 	cmp -l ../test/castanets.wav.mp3 ../test/castanets.ref21h.mp3 | head
-test20: $(PGM)
+test22: $(PGM)
 	./lame  ../test/castanets.wav
-	cmp -l ../test/castanets.wav.mp3 ../test/castanets.ref20.mp3 | head
-test20h: $(PGM)
+	cmp -l ../test/castanets.wav.mp3 ../test/castanets.ref22.mp3 | head
+test22h: $(PGM)
 	./lame  -h  ../test/castanets.wav
-	cmp -l ../test/castanets.wav.mp3 ../test/castanets.ref20h.mp3 | head
+	cmp -l ../test/castanets.wav.mp3 ../test/castanets.ref22h.mp3 | head
 testv: $(PGM)
 	./lame  -v  ../test/castanets.wav
 	cmp -l ../test/castanets.wav.mp3 ../test/castanets.refv.mp3 | head
