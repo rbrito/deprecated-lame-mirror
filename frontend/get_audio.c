@@ -918,18 +918,18 @@ OpenSndFile(lame_t gfp, char *inPath)
 		else
 		    gs_wfInfo.format = SF_ENDIAN_BIG;
 	    } else {
-#ifndef WORDS_BIGENDIAN
+# ifndef WORDS_BIGENDIAN
 		/* little endian */
 		if (pcmswapbytes)
 		    gs_wfInfo.format = SF_ENDIAN_BIG;
 		else
 		    gs_wfInfo.format = SF_ENDIAN_LITTLE;
-#else
+# else
 		if (pcmswapbytes)
 		    gs_wfInfo.format = SF_ENDIAN_LITTLE;
 		else
 		    gs_wfInfo.format = SF_ENDIAN_BIG;
-#endif
+# endif
 	    }
 	}
 
@@ -950,9 +950,9 @@ OpenSndFile(lame_t gfp, char *inPath)
 	}
 	lame_set_in_samplerate(gfp, gs_wfInfo.samplerate);
     } else
-#endif
+#endif /* LIBSNDFILE */
     {
-        if (input_format != sf_raw) {
+        if (input_format != sf_raw && !IS_MPEG123(input_format)) {
 	    parse_file_header(gfp, fp);
         }
 
