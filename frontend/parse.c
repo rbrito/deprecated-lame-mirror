@@ -785,7 +785,6 @@ static int filename_to_type ( const char* FileName )
     if ( 0 == local_strcasecmp ( FileName, ".mp2" ) ) return sf_mp2;
     if ( 0 == local_strcasecmp ( FileName, ".mp3" ) ) return sf_mp3;
     if ( 0 == local_strcasecmp ( FileName, ".wav" ) ) return sf_wave;
-    if ( 0 == local_strcasecmp ( FileName, ".aif" ) ) return sf_aiff;
     if ( 0 == local_strcasecmp ( FileName, ".raw" ) ) return sf_raw;
     return sf_unknown;
 }
@@ -1486,10 +1485,8 @@ int  parse_args (lame_t gfp, int argc, char** argv,
     if (input_format == sf_unknown)
         input_format = filename_to_type ( inPath );
     
-#if !(defined HAVE_MPGLIB || defined AMIGA_MPEGA)
-    if ( input_format == sf_mp1 ||
-         input_format == sf_mp2 ||
-         input_format == sf_mp3) {
+#ifndef HAVE_MPGLIB
+    if (IS_MPEG123(input_format)) {
         fprintf(stderr,"Error: libmp3lame not compiled with mpg123 *decoding* support \n");
         return -1;
     }

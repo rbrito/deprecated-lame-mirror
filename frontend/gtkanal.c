@@ -140,9 +140,7 @@ gtkmakeframe(void)
      */
     mpg123_pinfo = global_gfp->pinfo = pinfo;
 
-    if (input_format == sf_mp1
-	|| input_format == sf_mp2
-	|| input_format == sf_mp3) {
+    if (IS_MPEG123(input_format)) {
 	iread = get_audio(global_gfp, Buffer);
 	/* add a delay of framesize-DECDELAY, which will make the total delay
 	 * exactly one frame, so we can sync MP3 output with WAV input */
@@ -1358,15 +1356,10 @@ int gtkcontrol(lame_t gfp, char *inPath)
     global_gfp=gfp;
 
     /* set some global defaults/variables */
-    gtkinfo.filetype = (input_format == sf_mp1 ||
-                        input_format == sf_mp2 ||
-                        input_format == sf_mp3);
+    gtkinfo.flag123 = gtkinfo.filetype = !!IS_MPEG123(input_format);
     gtkinfo.msflag=0;
     gtkinfo.chflag=0;
     gtkinfo.kbflag=0;
-    gtkinfo.flag123 = (input_format == sf_mp1 ||
-                       input_format == sf_mp2 ||
-                       input_format == sf_mp3); /* MP3 file=use mpg123 output */
     gtkinfo.pupdate=0;
     gtkinfo.avebits = 0;
     gtkinfo.maxbits = 0;

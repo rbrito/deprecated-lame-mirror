@@ -149,7 +149,7 @@ fskip(FILE * fp, long offset, int whence)
     }
 
     while (offset > 0) {
-        read = offset;
+	read = offset;
 	if (read > PIPE_BUF)
 	    read = PIPE_BUF;
         if ((read = fread(buffer, 1, read, fp)) <= 0)
@@ -225,8 +225,6 @@ get_audio(lame_t gfp, int buffer[2][1152])
     unsigned int remaining;
     char    tmpbuf[2 * 1152 * sizeof(int)];
     int     i, j;
-    short   *buf_tmp16;
-    int     *insamp;
 
     assert(samples_to_read <= 1152);
 
@@ -252,9 +250,8 @@ get_audio(lame_t gfp, int buffer[2][1152])
 	    samples_to_read = remaining;
     }
 
-    switch (input_format) {
-    case sf_mp1: case sf_mp2: case sf_mp3:
-	buf_tmp16 = (short*)tmpbuf;
+    if (IS_MPEG123(input_format)) {
+	short   *buf_tmp16 = (short*)tmpbuf;
 	samples_read = read_samples_mp3(gfp, musicin, buf_tmp16);
 	/* LAME mp3 output 16bit -  convert to int */
 	for (j = 0; j < num_channels; j++) {
@@ -263,10 +260,8 @@ get_audio(lame_t gfp, int buffer[2][1152])
 	}
 	if (num_channels == 1)
 	    memset(buffer[1], 0, samples_read * sizeof(int));
-	break;
-
-    default:
-	insamp = (int*)tmpbuf;
+    } else {
+	int     *insamp = (int*)tmpbuf;
 	samples_read
 	    = read_samples_pcm(musicin, insamp, num_channels * samples_to_read)
 	    / num_channels;
@@ -342,8 +337,7 @@ WriteWaveHeader(FILE * const fp, const int pcmbytes,
 void
 close_infile(void)
 {
-    if (input_format == sf_mp1 || input_format == sf_mp2
-	|| input_format == sf_mp3) {
+    if (IS_MPEG123(input_format) {
         if (fclose(musicin) != 0) {
             fprintf(stderr, "Could not close audio input file\n");
             exit(2);
@@ -370,8 +364,7 @@ OpenSndFile(lame_t gfp, char *inPath)
     SF_INFO gs_wfInfo;
 
 #ifdef HAVE_MPGLIB
-    if (input_format == sf_mp1 ||
-        input_format == sf_mp2 || input_format == sf_mp3) {
+    if (IS_MPEG123(input_format)) {
         if ((musicin = fopen(inPath, "rb")) == NULL) {
             fprintf(stderr, "Could not find \"%s\".\n", inPath);
             exit(1);
@@ -556,9 +549,7 @@ OpenSndFile(lame_t gfp, char *inPath)
         if (flen >= 0) {
 	    /* try file size, assume 2 bytes per sample */
 	    int bps = 2*lame_get_num_channels(gfp);
-            if ((input_format == sf_mp1
-		 || input_format == sf_mp2
-		 || input_format == sf_mp3) && mp3input_data.bitrate > 0) {
+            if (IS_MPEG123(input_format) && mp3input_data.bitrate > 0) {
 		/* if input is mp3, use its bitrate */
 		bps = 1000.0 * mp3input_data.bitrate / 8.0;
 		flen /= lame_get_in_samplerate(gfp);
@@ -955,8 +946,7 @@ OpenSndFile(lame_t gfp, char *inPath)
     }
 
 #ifdef HAVE_MPGLIB
-    if (input_format == sf_mp1 ||
-        input_format == sf_mp2 || input_format == sf_mp3) {
+    if (IS_MPEG123(input_format)) {
         if (-1 == decode_initfile(gfp, musicin, &mp3input_data)) {
             fprintf(stderr, "Error reading headers in mp3 input file %s.\n",
                     inPath);
@@ -998,9 +988,7 @@ OpenSndFile(lame_t gfp, char *inPath)
         if (flen >= 0) {
 	    /* try file size, assume 2 bytes per sample */
 	    int bps = 2*lame_get_num_channels(gfp);
-            if ((input_format == sf_mp1
-		 || input_format == sf_mp2
-		 || input_format == sf_mp3) && mp3input_data.bitrate > 0) {
+            if (IS_MPEG123(input_format) && mp3input_data.bitrate > 0) {
 		/* if input is mp3, use its bitrate */
 		bps = 1000.0 * mp3input_data.bitrate / 8.0;
 		flen /= lame_get_in_samplerate(gfp);
