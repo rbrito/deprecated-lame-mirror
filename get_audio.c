@@ -1243,21 +1243,20 @@ int lame_decode_initfile(FILE *fd, mp3data_struct *mp3data)
 
 
   /* now parse the current buffer looking for MP3 headers */
-  size=0;
   ret = lame_decode1_headers(buf,len,pcm_l,pcm_r,mp3data);
   if (-1==ret) return -1;
   if (ret>0 && !xing_header) 
-    fprintf(stderr,"Oops: first frame of mpglib output will be lost \n"); 
+    fprintf(stderr,"Oops1: first frame of mpglib output will be lost \n"); 
 
   /* repeat until we decode a valid mp3 header */
-  while (mp3data->header_parsed) {
+  while (!mp3data->header_parsed) {
     len = fread(buf,1,2,fd);
     if (len ==0 ) return -1;
     ret = lame_decode1_headers(buf,len,pcm_l,pcm_r,mp3data);
     if (-1==ret) return -1;
 
     if (ret>0 && !xing_header)
-      fprintf(stderr,"Oops: first frame of mpglib output will be lost \n"); 
+      fprintf(stderr,"Oops2: first frame of mpglib output will be lost \n"); 
   }
 
   mp3data->nsamp=MAX_U_32_NUM;
