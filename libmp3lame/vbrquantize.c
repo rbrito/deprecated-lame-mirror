@@ -37,11 +37,11 @@
 #include <dmalloc.h>
 #endif
 
-extern FLOAT adj43[PRECALC_SIZE];
+extern FLOAT8 adj43[PRECALC_SIZE];
 
 extern void
         trancate_smallspectrums(lame_internal_flags * gfc,
-                                gr_info * const gi, const FLOAT * const l3_xmin, FLOAT * work);
+                                gr_info * const gi, const FLOAT8 * const l3_xmin, FLOAT8 * work);
 
 /*  Remarks on optimizing compilers:
  *
@@ -109,11 +109,11 @@ select_kth_int(int a[], int N, int k)
 
 /*  caution: a[] will be resorted!!
  */
-static  FLOAT
-select_kth(FLOAT a[], int N, int k)
+static  FLOAT8
+select_kth(FLOAT8 a[], int N, int k)
 {
     int     i, j, l, r;
-    FLOAT  v, w;
+    FLOAT8  v, w;
 
     l = 0;
     r = N - 1;
@@ -145,10 +145,10 @@ select_kth(FLOAT a[], int N, int k)
     return a[k];
 }
 
-inline  FLOAT
-max_x34(const FLOAT * xr34, unsigned int bw)
+inline  FLOAT8
+max_x34(const FLOAT8 * xr34, unsigned int bw)
 {
-    FLOAT  xfsf = 0;
+    FLOAT8  xfsf = 0;
     int     j = bw >> 1;
     int     remaining = j % 2;
     assert(bw >= 0);
@@ -173,9 +173,9 @@ max_x34(const FLOAT * xr34, unsigned int bw)
 }
 
 inline int
-find_lowest_scalefac(const FLOAT xr34)
+find_lowest_scalefac(const FLOAT8 xr34)
 {
-    FLOAT  xfsf;
+    FLOAT8  xfsf;
     int     sf = 128, sf_ok = 10000, delsf = 128, i;
     for (i = 0; i < 8; ++i) {
         delsf >>= 1;
@@ -344,14 +344,14 @@ find_lowest_scalefac(const FLOAT xr34)
  *  for which holds: sfpow34*xr34 <= IXMAX_VAL
  */
 
-static  FLOAT
-calc_sfb_noise_x34(const FLOAT * xr, const FLOAT * xr34, unsigned int bw, int sf)
+static  FLOAT8
+calc_sfb_noise_x34(const FLOAT8 * xr, const FLOAT8 * xr34, unsigned int bw, int sf)
 {
     const int SF = valid_sf(sf);
-    const FLOAT sfpow = POW20(SF); /*pow(2.0,sf/4.0); */
-    const FLOAT sfpow34 = IPOW20(SF); /*pow(sfpow,-3.0/4.0); */
+    const FLOAT8 sfpow = POW20(SF); /*pow(2.0,sf/4.0); */
+    const FLOAT8 sfpow34 = IPOW20(SF); /*pow(sfpow,-3.0/4.0); */
 
-    FLOAT  xfsf = 0;
+    FLOAT8  xfsf = 0;
     fi_union fi[4];
     int     l3[4];
     int     j = bw >> 1;
@@ -388,19 +388,19 @@ calc_sfb_noise_x34(const FLOAT * xr, const FLOAT * xr34, unsigned int bw, int sf
 }
 
 
-static  FLOAT
-calc_sfb_noise_ISO(const FLOAT * xr, const FLOAT * xr34, unsigned int bw, int sf)
+static  FLOAT8
+calc_sfb_noise_ISO(const FLOAT8 * xr, const FLOAT8 * xr34, unsigned int bw, int sf)
 {
     const int SF = valid_sf(sf);
-    const FLOAT sfpow = POW20(SF); /*pow(2.0,sf/4.0); */
-    const FLOAT sfpow34 = IPOW20(SF); /*pow(sfpow,-3.0/4.0); */
+    const FLOAT8 sfpow = POW20(SF); /*pow(2.0,sf/4.0); */
+    const FLOAT8 sfpow34 = IPOW20(SF); /*pow(sfpow,-3.0/4.0); */
 
 #ifndef TAKEHIRO_IEEE754_HACK
-    const FLOAT compareval0 = (1.0 - 0.4054) / sfpow34;
-    const FLOAT compareval1 = (2.0 - 0.4054) / sfpow34;
+    const FLOAT8 compareval0 = (1.0 - 0.4054) / sfpow34;
+    const FLOAT8 compareval1 = (2.0 - 0.4054) / sfpow34;
 #endif
 
-    FLOAT  xfsf = 0;
+    FLOAT8  xfsf = 0;
     fi_union fi[4];
     int     l3[4];
     int     j = bw >> 1;
@@ -438,16 +438,16 @@ calc_sfb_noise_ISO(const FLOAT * xr, const FLOAT * xr34, unsigned int bw, int sf
 
 
 
-static  FLOAT
-calc_sfb_noise_mq_x34(const FLOAT * xr, const FLOAT * xr34, int bw, int sf, int mq)
+static  FLOAT8
+calc_sfb_noise_mq_x34(const FLOAT8 * xr, const FLOAT8 * xr34, int bw, int sf, int mq)
 {
     const int SF = valid_sf(sf);
-    FLOAT  scratch_[192];
-    FLOAT *scratch = scratch_;
-    const FLOAT sfpow = POW20(SF); /*pow(2.0,sf/4.0); */
-    const FLOAT sfpow34 = IPOW20(SF); /*pow(sfpow,-3.0/4.0); */
+    FLOAT8  scratch_[192];
+    FLOAT8 *scratch = scratch_;
+    const FLOAT8 sfpow = POW20(SF); /*pow(2.0,sf/4.0); */
+    const FLOAT8 sfpow34 = IPOW20(SF); /*pow(sfpow,-3.0/4.0); */
 
-    FLOAT  xfsfm = 0, xfsf = 0;
+    FLOAT8  xfsfm = 0, xfsf = 0;
     fi_union fi[4];
     int     l3[4];
     int     k, j = bw >> 1;
@@ -512,20 +512,20 @@ calc_sfb_noise_mq_x34(const FLOAT * xr, const FLOAT * xr34, int bw, int sf, int 
 }
 
 
-static  FLOAT
-calc_sfb_noise_mq_ISO(const FLOAT * xr, const FLOAT * xr34, int bw, int sf, int mq)
+static  FLOAT8
+calc_sfb_noise_mq_ISO(const FLOAT8 * xr, const FLOAT8 * xr34, int bw, int sf, int mq)
 {
     const int SF = valid_sf(sf);
-    FLOAT  scratch_[192];
-    FLOAT *scratch = scratch_;
-    const FLOAT sfpow = POW20(SF); /*pow(2.0,sf/4.0); */
-    const FLOAT sfpow34 = IPOW20(SF); /*pow(sfpow,-3.0/4.0); */
+    FLOAT8  scratch_[192];
+    FLOAT8 *scratch = scratch_;
+    const FLOAT8 sfpow = POW20(SF); /*pow(2.0,sf/4.0); */
+    const FLOAT8 sfpow34 = IPOW20(SF); /*pow(sfpow,-3.0/4.0); */
 #ifndef TAKEHIRO_IEEE754_HACK
-    const FLOAT compareval0 = (1.0 - 0.4054) / sfpow34;
-    const FLOAT compareval1 = (2.0 - 0.4054) / sfpow34;
+    const FLOAT8 compareval0 = (1.0 - 0.4054) / sfpow34;
+    const FLOAT8 compareval1 = (2.0 - 0.4054) / sfpow34;
 #endif
 
-    FLOAT  xfsfm = 0, xfsf = 0;
+    FLOAT8  xfsfm = 0, xfsf = 0;
     fi_union fi[4];
     int     l3[4];
     int     k, j = bw >> 1;
@@ -630,33 +630,33 @@ calc_sfb_noise_mq_ISO(const FLOAT * xr, const FLOAT * xr34, int bw, int sf, int 
 
 
 inline int
-find_scalefac_x34(const FLOAT * xr, const FLOAT * xr34, FLOAT l3_xmin, int bw, int sf_min)
+find_scalefac_x34(const FLOAT8 * xr, const FLOAT8 * xr34, FLOAT8 l3_xmin, int bw, int sf_min)
 {
     FIND_BODY(calc_sfb_noise_x34(xr, xr34, bw, sf))
 }
 
 inline int
-find_scalefac_ISO(const FLOAT * xr, const FLOAT * xr34, FLOAT l3_xmin, int bw, int sf_min)
+find_scalefac_ISO(const FLOAT8 * xr, const FLOAT8 * xr34, FLOAT8 l3_xmin, int bw, int sf_min)
 {
     FIND_BODY(calc_sfb_noise_ISO(xr, xr34, bw, sf))
 }
 
 inline int
-find_scalefac_mq_x34(const FLOAT * xr, const FLOAT * xr34, FLOAT l3_xmin, int bw, int mq,
+find_scalefac_mq_x34(const FLOAT8 * xr, const FLOAT8 * xr34, FLOAT8 l3_xmin, int bw, int mq,
                      int sf_min)
 {
     FIND_BODY(calc_sfb_noise_mq_x34(xr, xr34, bw, sf, mq))
 }
 
 inline int
-find_scalefac_mq_ISO(const FLOAT * xr, const FLOAT * xr34, FLOAT l3_xmin, int bw, int mq,
+find_scalefac_mq_ISO(const FLOAT8 * xr, const FLOAT8 * xr34, FLOAT8 l3_xmin, int bw, int mq,
                      int sf_min)
 {
     FIND_BODY(calc_sfb_noise_mq_ISO(xr, xr34, bw, sf, mq))
 }
 
 inline int
-find_scalefac_ave_x34(const FLOAT * xr, const FLOAT * xr34, FLOAT l3_xmin, int bw, int sf_min)
+find_scalefac_ave_x34(const FLOAT8 * xr, const FLOAT8 * xr34, FLOAT8 l3_xmin, int bw, int sf_min)
 {
     int     sf = 128, sf_ok = 10000, delsf = 128, i;
     for (i = 0; i < 8; ++i) {
@@ -687,7 +687,7 @@ find_scalefac_ave_x34(const FLOAT * xr, const FLOAT * xr34, FLOAT l3_xmin, int b
 
 
 inline int
-find_scalefac_ave_ISO(const FLOAT * xr, const FLOAT * xr34, FLOAT l3_xmin, int bw, int sf_min)
+find_scalefac_ave_ISO(const FLOAT8 * xr, const FLOAT8 * xr34, FLOAT8 l3_xmin, int bw, int sf_min)
 {
     int     sf = 128, sf_ok = 10000, delsf = 128, i;
     for (i = 0; i < 8; ++i) {
@@ -722,9 +722,9 @@ find_scalefac_ave_ISO(const FLOAT * xr, const FLOAT * xr34, FLOAT l3_xmin, int b
  *  calculates quantization step size determined by allowed masking
  */
 inline int
-calc_scalefac(FLOAT l3_xmin, int bw, int sfmin)
+calc_scalefac(FLOAT8 l3_xmin, int bw, int sfmin)
 {
-    FLOAT const c = 5.799142446; /* 10 * 10^(2/3) * log10(4/3) */
+    FLOAT8 const c = 5.799142446; /* 10 * 10^(2/3) * log10(4/3) */
     int     sf = 210 + (int) (c * log10(l3_xmin / bw) - .5);
     if (sf < sfmin) {
         return sfmin;
@@ -983,8 +983,8 @@ compute_scalefacs_long(int *sf, const gr_info * cod_info, const int *vbrsfmin)
 
 /* a variation for vbr-mtrh */
 static void
-block_sf(const lame_internal_flags * gfc, const gr_info * gi, const FLOAT l3_xmin[576],
-         const FLOAT xr34_orig[576], int vbrsf[SFBMAX], int vbrsfmin[SFBMAX])
+block_sf(const lame_internal_flags * gfc, const gr_info * gi, const FLOAT8 l3_xmin[576],
+         const FLOAT8 xr34_orig[576], int vbrsf[SFBMAX], int vbrsfmin[SFBMAX])
 {
     const int psymax = gi->psymax;
     const int max_nonzero_coeff = gi->max_nonzero_coeff;
@@ -1470,7 +1470,7 @@ long_block_scalefacs(const lame_internal_flags * gfc, gr_info * cod_info,
 
 #define BODY_1 \
 	/* 0.634521682242439 = 0.5946*2**(.5*0.1875) */                                     \
-	const FLOAT roundfac = 0.634521682242439                                           \
+	const FLOAT8 roundfac = 0.634521682242439                                           \
                     / IPOW20(cod_info->global_gain+cod_info->scalefac_scale);           \
     const int max_nonzero_coeff = cod_info->max_nonzero_coeff;                          \
     const int *scalefac = cod_info->scalefac;                                           \
@@ -1487,8 +1487,8 @@ long_block_scalefacs(const lame_internal_flags * gfc, gr_info * cod_info,
         int l = cod_info->width[sfb];                                                   \
         const int notpseudohalf = !(gfc->pseudohalf[sfb]&&(gfc->substep_shaping & 2));  \
                                                                                         \
-        FLOAT fac = IIPOW20(s);                                                        \
-        FLOAT jstep = fac*istep;                                                       \
+        FLOAT8 fac = IIPOW20(s);                                                        \
+        FLOAT8 jstep = fac*istep;                                                       \
         if ( l >= max_nonzero_coeff-j+1 ) {                                             \
             l = max_nonzero_coeff-j+1;                                                  \
         }                                                                               \
@@ -1574,7 +1574,7 @@ long_block_scalefacs(const lame_internal_flags * gfc, gr_info * cod_info,
     }                                                                                   \
     if ( j < 576 ) {                                                            \
         int n = 576-j;                                                          \
-        memset( xr34, 0, n*sizeof(FLOAT) );                                    \
+        memset( xr34, 0, n*sizeof(FLOAT8) );                                    \
         memset( l3, 0, n*sizeof(int) );                                     \
     }                                                                           \
     return 1;                                                                   \
@@ -1584,41 +1584,41 @@ long_block_scalefacs(const lame_internal_flags * gfc, gr_info * cod_info,
 
 static int
 quantize_x34(const lame_internal_flags * gfc, gr_info * const cod_info,
-             const FLOAT xr34_orig[576], FLOAT xr34[576])
+             const FLOAT8 xr34_orig[576], FLOAT8 xr34[576])
 {
-    const FLOAT istep = IPOW20(cod_info->global_gain);
+    const FLOAT8 istep = IPOW20(cod_info->global_gain);
 BODY_1 BLOCK_IEEE754_x34_4 BODY_2 BLOCK_IEEE754_x34_2 BODY_3}
 
 static int
 quantize_ISO(const lame_internal_flags * gfc, gr_info * const cod_info,
-             const FLOAT xr34_orig[576], FLOAT xr34[576])
+             const FLOAT8 xr34_orig[576], FLOAT8 xr34[576])
 {
-    const FLOAT istep = IPOW20(cod_info->global_gain);
+    const FLOAT8 istep = IPOW20(cod_info->global_gain);
 BODY_1 BLOCK_IEEE754_ISO_4 BODY_2 BLOCK_IEEE754_ISO_2 BODY_3}
 
 #else
 
 static int
 quantize_x34(const lame_internal_flags * gfc, gr_info * const cod_info,
-             const FLOAT xr34_orig[576], FLOAT xr34[576])
+             const FLOAT8 xr34_orig[576], FLOAT8 xr34[576])
 {
-    const FLOAT istep = IPOW20(cod_info->global_gain);
+    const FLOAT8 istep = IPOW20(cod_info->global_gain);
 BODY_1 BLOCK_PLAIN_C_x34_4 BODY_2 BLOCK_PLAIN_C_x34_2 BODY_3}
 
 static int
 quantize_ISO(const lame_internal_flags * gfc, gr_info * const cod_info,
-             const FLOAT xr34_orig[576], FLOAT xr34[576])
+             const FLOAT8 xr34_orig[576], FLOAT8 xr34[576])
 {
-    const FLOAT istep = IPOW20(cod_info->global_gain);
-    const FLOAT compareval0 = (1.0 - 0.4054) / istep;
-    const FLOAT compareval1 = (2.0 - 0.4054) / istep;
+    const FLOAT8 istep = IPOW20(cod_info->global_gain);
+    const FLOAT8 compareval0 = (1.0 - 0.4054) / istep;
+    const FLOAT8 compareval1 = (2.0 - 0.4054) / istep;
 BODY_1 BLOCK_PLAIN_C_ISO_4 BODY_2 BLOCK_PLAIN_C_ISO_2 BODY_3}
 
 #endif
 
 inline int
-quantizeAndCountBits(lame_internal_flags * gfc, gr_info * cod_info, const FLOAT xr34_orig[576],
-                     FLOAT xr34[576])
+quantizeAndCountBits(lame_internal_flags * gfc, gr_info * cod_info, const FLOAT8 xr34_orig[576],
+                     FLOAT8 xr34[576])
 {
     int     x = 0;
     if (gfc->quantization) {
@@ -1640,9 +1640,9 @@ quantizeAndCountBits(lame_internal_flags * gfc, gr_info * cod_info, const FLOAT 
 inline int
 tryScalefacColor(lame_internal_flags * const gfc, gr_info * cod_info, int vbrsf[SFBMAX],
                  const int vbrsf2[SFBMAX], const int vbrsfmin[SFBMAX], int I, int M, int target,
-                 FLOAT xr34[576], const FLOAT xr34orig[576])
+                 FLOAT8 xr34[576], const FLOAT8 xr34orig[576])
 {
-    FLOAT  xrpow_max = cod_info->xrpow_max;
+    FLOAT8  xrpow_max = cod_info->xrpow_max;
     int     vbrmax, i, nbits;
 
     for (vbrmax = 0, i = 0; i < cod_info->psymax; ++i) {
@@ -1676,7 +1676,7 @@ tryScalefacColor(lame_internal_flags * const gfc, gr_info * cod_info, int vbrsf[
 static void
 searchScalefacColor(lame_internal_flags * const gfc, gr_info * cod_info, int sfwork[SFBMAX],
                     const int sfcalc[SFBMAX], const int vbrsfmin[SFBMAX], int minimize, int bits,
-                    FLOAT xr34[576], FLOAT xr34orig[576])
+                    FLOAT8 xr34[576], FLOAT8 xr34orig[576])
 {
     int     nbits, last, i, ok = -1, l = 0, r, vbrmin = 255, vbrmax = 0, M, target;
     for (i = 0; i < cod_info->psymax; ++i) {
@@ -1726,10 +1726,10 @@ searchScalefacColor(lame_internal_flags * const gfc, gr_info * cod_info, int sfw
 
 inline int
 tryGlobalStepsize(lame_internal_flags * const gfc, gr_info * cod_info, const int sfwork[SFBMAX],
-                  const int vbrsfmin[SFBMAX], int delta, FLOAT xr34[576],
-                  const FLOAT xr34orig[576])
+                  const int vbrsfmin[SFBMAX], int delta, FLOAT8 xr34[576],
+                  const FLOAT8 xr34orig[576])
 {
-    FLOAT  xrpow_max = cod_info->xrpow_max;
+    FLOAT8  xrpow_max = cod_info->xrpow_max;
     int     sftemp[SFBMAX], vbrmax, i, nbits;
     for (vbrmax = 0, i = 0; i < cod_info->psymax; ++i) {
         sftemp[i] = sfwork[i] + delta;
@@ -1761,8 +1761,8 @@ tryGlobalStepsize(lame_internal_flags * const gfc, gr_info * cod_info, const int
 
 static void
 searchGlobalStepsize(lame_internal_flags * const gfc, gr_info * cod_info, const int sfwork[SFBMAX],
-                     const int vbrsfmin[SFBMAX], int minimize, int target, FLOAT xr34[576],
-                     const FLOAT xr34orig[576])
+                     const int vbrsfmin[SFBMAX], int minimize, int target, FLOAT8 xr34[576],
+                     const FLOAT8 xr34orig[576])
 {
     const int gain = cod_info->global_gain;
     int     curr = gain;
@@ -1829,10 +1829,10 @@ searchGlobalStepsize(lame_internal_flags * const gfc, gr_info * cod_info, const 
  *
  ***********************************************************************/
 int
-VBR_noise_shaping(lame_internal_flags * gfc, FLOAT * xr34orig, int minbits, int maxbits,
-                  FLOAT * l3_xmin, int gr, int ch)
+VBR_noise_shaping(lame_internal_flags * gfc, FLOAT8 * xr34orig, int minbits, int maxbits,
+                  FLOAT8 * l3_xmin, int gr, int ch)
 {
-    FLOAT  xr34[576];
+    FLOAT8  xr34[576];
     int     sfwork[SFBMAX];
     int     sfcalc[SFBMAX];
     int     vbrsfmin[SFBMAX];
@@ -1881,7 +1881,7 @@ VBR_noise_shaping(lame_internal_flags * gfc, FLOAT * xr34orig, int minbits, int 
         searchGlobalStepsize(gfc, cod_info, sfwork, vbrsfmin, 0, maxbits, xr34, xr34orig);
     }
     if (gfc->substep_shaping & 2) {
-        FLOAT  xrtmp[576];
+        FLOAT8  xrtmp[576];
         trancate_smallspectrums(gfc, cod_info, l3_xmin, xrtmp);
     }
     if (gfc->use_best_huffman == 2) {

@@ -31,12 +31,15 @@
  * #define STR(x)    __STR(x)
  */
 
-# define LAME_URL              "http://www.mp3dev.org/"
+# define LAME_URL              "http://lame.sourceforge.net/"
 
 # define LAME_MAJOR_VERSION      3      /* Major version number */
-# define LAME_MINOR_VERSION     97      /* Minor version number */
-# define LAME_ALPHA_VERSION      3      /* Patch level of alpha version, otherwise zero */
-# define LAME_BETA_VERSION       0      /* Patch level of beta  version, otherwise zero */
+# define LAME_MINOR_VERSION     96      /* Minor version number */
+# define LAME_TYPE_VERSION       2      /* 0 alpha, 1 beta, 2 release */
+# define LAME_PATCH_VERSION      1      /* Patch level */
+# define LAME_ALPHA_VERSION     (LAME_TYPE_VERSION==0)
+# define LAME_BETA_VERSION      (LAME_TYPE_VERSION==1)
+# define LAME_RELEASE_VERSION   (LAME_TYPE_VERSION==2)
 
 # define PSY_MAJOR_VERSION       0      /* Major version number */
 # define PSY_MINOR_VERSION      90      /* Minor version number */
@@ -49,6 +52,7 @@ const char*  get_lame_short_version ( void );
 const char*  get_psy_version        ( void );
 const char*  get_lame_url           ( void );
 void         get_lame_version_numerical ( lame_version_t *const lvp );
+
 
 #endif  /* LAME_VERSION_H */
 
