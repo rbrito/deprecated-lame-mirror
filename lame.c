@@ -532,9 +532,14 @@ int lame_encode(short int Buffer[2][1152],char *mpg123bs)
   static FLOAT8 ms_ratio[2]={0,0};
   FLOAT8 ms_ratio_next=0;
   FLOAT8 ms_ratio_prev=0;
-  FLOAT8 ms_ener_ratio[2];
+  FLOAT8 ms_ener_ratio[2]={0,0};
   static int init=0;
 
+  memset((char *) masking_ratio, 0, sizeof(masking_ratio));
+  memset((char *) masking_MS_ratio, 0, sizeof(masking_MS_ratio));
+  memset((char *) scalefac, 0, sizeof(scalefac));
+
+  
   if (init==0) {
     memset((char *) mfbuf, 0, sizeof(mfbuf));
     init++;
@@ -852,6 +857,16 @@ lame_global_flags * lame_init(void)
   }
 #endif
 
+
+#if defined(_MSC_VER)
+  {
+	#include <float.h>
+	unsigned int mask;
+	mask=_controlfp( 0, 0 );
+	mask&=~(_EM_OVERFLOW|_EM_UNDERFLOW|_EM_ZERODIVIDE|_EM_INVALID);
+	mask=_controlfp( mask, _MCW_EM );
+	}
+#endif
 
 
   /* Global flags.  set defaults here */
