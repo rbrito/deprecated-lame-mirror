@@ -156,9 +156,6 @@
 /* Define to 1 if you have the <vecLib/vDSP.h> header file. */
 #undef HAVE_VECLIB_VDSP_H
 
-/* winsock */
-#undef HAVE_WINSOCKET
-
 /* requested by Frank, seems to be temporary needed for a smooth transition */
 #undef LAME_LIBRARY_BUILD
 
