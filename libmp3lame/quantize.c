@@ -1686,7 +1686,7 @@ iteration_loop(
     III_scalefac_t     scalefac     [2][2] )
 {
     lame_internal_flags *gfc=gfp->internal_flags;
-    III_psy_xmin l3_xmin[2];
+    III_psy_xmin l3_xmin;
     FLOAT8 xrpow[576];
     int    targ_bits[2];
     int    bitsPerFrame;
@@ -1728,8 +1728,8 @@ iteration_loop(
                  *  find some good quantization in outer_loop 
                  */
                 calc_xmin (gfp, xr[gr][ch], &ratio[gr][ch], cod_info, 
-                           &l3_xmin[ch]);
-                outer_loop (gfp, cod_info, xr[gr][ch], &l3_xmin[ch], 
+                           &l3_xmin);
+                outer_loop (gfp, cod_info, xr[gr][ch], &l3_xmin, 
                             &scalefac[gr][ch], xrpow, l3_enc[gr][ch],
                             ch, targ_bits[ch]);
             }
