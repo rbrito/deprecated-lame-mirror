@@ -125,7 +125,7 @@ SOURCE=.\encoder.c
 # End Source File
 # Begin Source File
 
-SOURCE=.\id3tag.c
+SOURCE=.\tags.c
 # End Source File
 # Begin Source File
 
@@ -163,10 +163,6 @@ SOURCE=.\takehiro.c
 # Begin Source File
 
 SOURCE=.\util.c
-# End Source File
-# Begin Source File
-
-SOURCE=.\VbrTag.c
 # End Source File
 # Begin Source File
 
@@ -227,7 +223,7 @@ SOURCE=.\fft.h
 # End Source File
 # Begin Source File
 
-SOURCE=.\id3tag.h
+SOURCE=.\tags.h
 # End Source File
 # Begin Source File
 
@@ -276,10 +272,6 @@ SOURCE=.\tools.h
 # Begin Source File
 
 SOURCE=.\util.h
-# End Source File
-# Begin Source File
-
-SOURCE=.\VbrTag.h
 # End Source File
 # Begin Source File
 
