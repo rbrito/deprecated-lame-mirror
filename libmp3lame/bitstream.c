@@ -177,7 +177,7 @@ Huffmancode(bit_stream_t *bs, const struct huffcodetab* h,
 	int code, clen;
 	int x1 = gi->l3_enc[index];
 	int x2 = gi->l3_enc[index+1];
-	assert ( (x1|x2) < 16u );
+	assert(x1 < h->xlen && x2 < h->xlen);
 
 	code = x1*h->xlen + x2;
 	clen = h->hlen[code];
@@ -362,25 +362,18 @@ encodeBitStream(lame_global_flags *gfp)
 		ptr = writeheader(p,
 				  (gi->preflag > 0)*4 + gi->scalefac_scale*2
 				  + gi->count1table_select, 3, ptr);
+		assert(gi->scalefac_scale < 2u);
 
 		slen = s1bits[gi->scalefac_compress];
 		if (slen)
-		    for (sfb = 0; sfb < gi->sfbdivide; sfb++) {
-			if (gi->scalefac[sfb] == -1)
-			    continue; /* scfsi is used */
-			if (gi->scalefac[sfb] == -2)
-			    gi->scalefac[sfb] = 0;
-			putbits24(&gfc->bs, gi->scalefac[sfb], slen);
-		    }
+		    for (sfb = 0; sfb < gi->sfbdivide; sfb++)
+			if (gi->scalefac[sfb] != -1)
+			    putbits24(&gfc->bs, Max(gi->scalefac[sfb],0), slen);
 		slen = s2bits[gi->scalefac_compress];
 		if (slen)
-		    for (sfb = gi->sfbdivide; sfb < gi->sfbmax; sfb++) {
-			if (gi->scalefac[sfb] == -1)
-			    continue; /* scfsi is used */
-			if (gi->scalefac[sfb] == -2)
-			    gi->scalefac[sfb] = 0;
-			putbits24(&gfc->bs, gi->scalefac[sfb], slen);
-		    }
+		    for (sfb = gi->sfbdivide; sfb < gi->sfbmax; sfb++)
+			if (gi->scalefac[sfb] != -1)
+			    putbits24(&gfc->bs, Max(gi->scalefac[sfb],0), slen);
 		assert(data_bits == gfc->bs.bitidx);
 		Huffmancodebits(gfc, gi);
 	    } /* for ch */
