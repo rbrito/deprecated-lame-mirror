@@ -378,15 +378,13 @@ int PutVbrTag(char* lpszFileName,int nVbrScale,int nVersion)
 	/* but sampling freq, mode andy copyright/copy protection taken */
 	/* from first valid frame */
 	pbtStreamBuffer[0]=(u_char) 0xff;    
+	abyte = (pbtStreamBuffer[1] & (char) 0xf0);
 	if (nVersion==0) {
-	  pbtStreamBuffer[1]=(u_char) 0xfb;    
+	  pbtStreamBuffer[1]=abyte | (char) 0x0b;    
 	  abyte = pbtStreamBuffer[2] & (char) 0x0c;   
 	  pbtStreamBuffer[2]=(char) 0x50 | abyte;     /* 64kbs MPEG1 frame */
 	}else{
-	  if (gfp->out_samplerate < 16000)
-	    pbtStreamBuffer[1]=(u_char) 0xe3;    /* MPEG2.5 */
-	  else
-	    pbtStreamBuffer[1]=(u_char) 0xf3;    /* MPEG2 */
+	  pbtStreamBuffer[1]=abyte | (char) 0x03;    
 	  abyte = pbtStreamBuffer[2] & (char) 0x0c;   
 	  pbtStreamBuffer[2]=(char) 0x80 | abyte;     /* 64kbs MPEG2 frame */
 	}

@@ -181,7 +181,7 @@ int lame_decode(char *buf,int len,short pcm_l[],short pcm_r[])
 
   ret = decodeMP3(&mp,buf,len,out,FSIZE,&size);
   if (ret==MP3_OK) {
-    /*    printf("mpg123 output one frame out=%i \n",size/4);  */
+    /*       printf("mpg123 output one frame out=%i \n",size/4);  */
     outsize = size/(2*mp.fr.stereo);
     if (outsize > 1152) {
       fprintf(stderr,"Opps: mpg123 returned more than one frame!  shouldn't happen... \n");
