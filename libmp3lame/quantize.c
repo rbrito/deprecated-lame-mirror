@@ -570,7 +570,7 @@ inc_subblock_gain (
         if (s1 < 16 && s2 < 8)
             continue;
 
-        if (cod_info->subblock_gain[window] > 7)
+        if (cod_info->subblock_gain[window] >= 7)
             return 1;
 
         /* even though there is no scalefactor for sfb12
