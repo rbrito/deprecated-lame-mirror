@@ -379,7 +379,7 @@ int  lame_encode_mp3_frame (				// Output
 	    }
 	gfc->ATH.adjust = 1.0;	/* no adjustment */
 	gfc->mode_ext = MPG_MD_LR_LR;
-	if (gfp->force_ms || gfp->mode == JOINT_STEREO)
+	if (gfp->mode == JOINT_STEREO)
 	    gfc->mode_ext = MPG_MD_MS_LR;
     }
 
@@ -443,7 +443,6 @@ int  lame_encode_mp3_frame (				// Output
 	    7.79609e-18*5,	 0.0467745*5,	 0.10091*5,	0.151365*5,
 	    0.187098*5
 	};
-
 	int i;
 	FLOAT f = 0.0;
 	for (i=0;i<18;i++)
