@@ -131,6 +131,27 @@ dosToLongFileName( char *fn )
     }
 }
 #endif
+#if defined(WIN32)
+#include <windows.h>
+BOOL SetPriorityClassMacro(DWORD p)
+{
+    HANDLE op = OpenProcess(PROCESS_ALL_ACCESS,TRUE,GetCurrentProcessId());
+    return SetPriorityClass(op,p);
+}
+
+static void setWin32Priority( lame_global_flags*  gfp, int Priority )
+{
+    if (Priority > 3) {
+	SetPriorityClassMacro(HIGH_PRIORITY_CLASS);
+        printf("==> Priority set to High.\n");
+    }
+    if (Priority < 3) {
+	SetPriorityClassMacro(IDLE_PRIORITY_CLASS);
+        printf("==> Priority set to Low.\n");
+    }
+}
+#endif
+
 
 #if defined(__OS2__)
 /* OS/2 priority functions */
@@ -308,6 +329,13 @@ int  usage ( const lame_global_flags* gfp, FILE* const fp, const char* ProgramNa
 int  short_help ( const lame_global_flags* gfp, FILE* const fp, const char* ProgramName )  /* print short syntax help */
 {
     lame_version_print ( fp );
+#if defined(WIN32)
+              "    --priority type  sets the process priority\n"
+              "                     0,1 = Low priority\n"
+              "                     2   = normal priority\n"
+              "                     3,4 = High priority\n"
+              "\n"
+#endif
     fprintf ( fp,
               "usage: %s [options] <infile> [outfile]\n"
               "\n"
@@ -332,7 +360,7 @@ int  short_help ( const lame_global_flags* gfp, FILE* const fp, const char* Prog
               "                    \"--preset help\" gives some more infos on these\n"
               "\n"
 #if defined(__OS2__)
-              "    --priority type  sets the process priority (OS/2 only):\n"
+              "    --priority type  sets the process priority\n"
               "                     0 = Low priority\n"
               "                     1 = Medium priority\n"
               "                     2 = Regular priority\n"
@@ -540,6 +568,14 @@ int  long_help ( const lame_global_flags* gfp, FILE* const fp, const char* Progr
               "  ID3 tag options:\n"
               "    --tt <title>    audio/song title (max 30 chars for version 1 tag)\n"
               "    --ta <artist>   audio/song artist (max 30 chars for version 1 tag)\n"
+#if defined(WIN32)
+              "\n\nMS-Windows-specific options:\n"
+              "    --priority <type>     sets the process priority:\n"
+              "                               0,1 = Low priority (IDLE_PRIORITY_CLASS)\n"
+              "                               2 = normal priority (NORMAL_PRIORITY_CLASS, default)\n"
+              "                               3,4 = High priority (HIGH_PRIORITY_CLASS))\n"
+              "    Note: Calling '--priority' without a parameter will select priority 0.\n"
+#endif
               "    --tl <album>    audio/song album (max 30 chars for version 1 tag)\n"
               "    --ty <year>     audio/song year of issue (1 to 9999)\n"
               "    --tc <comment>  user-defined text (max 30 chars for v1 tag, 28 for v1.1)\n"
@@ -1269,6 +1305,11 @@ char* const inPath, char* const outPath, char **nogap_inPath, int *num_nogap)
       		T_ELIF ("priority")
       		    argUsed=1;
       		    setOS2Priority(gfp, atoi(nextArg));
+#endif
+#if defined(WIN32)
+      		T_ELIF ("priority")
+      		    argUsed=1;
+      		    setWin32Priority(gfp, atoi(nextArg));
 #endif
 
                 /* options for ID3 tag */
