@@ -134,6 +134,8 @@ int     scale_bitcount_lsf (const lame_internal_flags *gfp,
 
 void    huffman_init (lame_internal_flags * const gfc);
 
+void    quantize_init (lame_internal_flags * const gfc);
+
 FLOAT athAdjust( FLOAT a, FLOAT x, FLOAT athFloor );
 
 #define LARGE_BITS 100000

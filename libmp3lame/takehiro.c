@@ -98,7 +98,7 @@ typedef union {
 #define MAGIC_INT 0x4b000000
 
 
-void inline quantize_lines_xrpow(int l, FLOAT8 istep, const FLOAT8* xp, int* pi)
+void quantize_lines_xrpow(int l, FLOAT8 istep, const FLOAT8* xp, int* pi)
 {
     fi_union *fi;
     int remaining;
@@ -151,7 +151,7 @@ void inline quantize_lines_xrpow(int l, FLOAT8 istep, const FLOAT8* xp, int* pi)
 
 
 #  define ROUNDFAC -0.0946
-void inline quantize_lines_xrpow_ISO(int l, FLOAT8 istep, const FLOAT8* xp, int* pi)
+void quantize_lines_xrpow_ISO(int l, FLOAT8 istep, const FLOAT8* xp, int* pi)
 {
     fi_union *fi;
     int remaining;
@@ -210,7 +210,7 @@ void inline quantize_lines_xrpow_ISO(int l, FLOAT8 istep, const FLOAT8* xp, int*
 #define ROUNDFAC 0.4054
 
 
-void inline quantize_lines_xrpow(int l, FLOAT8 istep, const FLOAT8* xr, int* ix)
+void quantize_lines_xrpow(int l, FLOAT8 istep, const FLOAT8* xr, int* ix)
 {
     int remaining;
 
@@ -258,7 +258,7 @@ void inline quantize_lines_xrpow(int l, FLOAT8 istep, const FLOAT8* xr, int* ix)
 
 
 
-void inline quantize_lines_xrpow_ISO(int l, FLOAT8 istep, const FLOAT8* xr, int* ix)
+void quantize_lines_xrpow_ISO(int l, FLOAT8 istep, const FLOAT8* xr, int* ix)
 {
 
     const FLOAT8 compareval0 = (1.0 - 0.4054)/istep;
@@ -301,6 +301,12 @@ void inline quantize_lines_xrpow_ISO(int l, FLOAT8 istep, const FLOAT8* xr, int*
 #endif
 
 
+
+/*********************************************************************
+ * Quantization function
+ * This function will select which lines to quantize and call the
+ * proper quantization function
+ *********************************************************************/
 
 static void quantize_xrpow(const FLOAT8 *xp, int *pi, FLOAT8 istep, gr_info * const cod_info, calc_noise_data* prev_noise, lame_internal_flags * const gfc)
 {
@@ -363,12 +369,7 @@ static void quantize_xrpow(const FLOAT8 *xp, int *pi, FLOAT8 istep, gr_info * co
                 break;  /* ends for-loop */
             }
 
-
-            if (gfc->quantization) 
-                quantize_lines_xrpow(l, istep, xp, iData);        
-            else
-                quantize_lines_xrpow_ISO(l, istep, xp, iData);        
-
+            gfc->quantize_lines_xrpow(l, istep, xp, iData);
         }
         if (sfb <= sfbmax) {
             iData += cod_info->width[sfb];
@@ -381,6 +382,13 @@ static void quantize_xrpow(const FLOAT8 *xp, int *pi, FLOAT8 istep, gr_info * co
 
 
 
+void quantize_init (lame_internal_flags * const gfc)
+{
+    if (gfc->quantization)
+        gfc->quantize_lines_xrpow = quantize_lines_xrpow;
+    else
+        gfc->quantize_lines_xrpow = quantize_lines_xrpow_ISO;
+}
 
 
 

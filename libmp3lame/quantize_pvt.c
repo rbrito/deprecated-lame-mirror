@@ -331,6 +331,7 @@ iteration_init( lame_global_flags *gfp)
         iipow20[i] = pow(2.0, (double)i * 0.1875);
 
     huffman_init(gfc);
+    quantize_init(gfc);
 
     if (gfp->psymodel == PSY_NSPSYTUNE) {
 	    FLOAT8 bass, alto, treble, sfb21;

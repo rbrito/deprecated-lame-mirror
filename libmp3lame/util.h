@@ -480,9 +480,11 @@ struct lame_internal_flags {
   } CPU_features;
    
   /* functions to replace with CPU feature optimized versions in takehiro.c */
-  int (*choose_table)(const int *ix, const int * const end, int * const s);
-  
+  int (*choose_table)(const int *ix, const int * const end, int * const s);  
   void (*fft_fht)(FLOAT *, int);
+  void (*quantize_lines_xrpow)(int l, FLOAT8 istep, const FLOAT8* xp, int* pi);
+
+
 
   nsPsy_t nsPsy;  /* variables used for --nspsytune */
   
