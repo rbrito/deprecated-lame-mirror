@@ -94,12 +94,15 @@ Quality related:
 --athonly      ignore psy-model output, only use masking from the ATH
 --voice        experimental voice encoding mode
 --noshort      disable short blocks
+-q n           Internal algorithm quality setting 0..9. 
+               0 = slowest algorithms, but potentially highest quality
+               9 = faster algorithms, very poor quality
+-h             same as -q2
+-f             same as -q7
 
 
 Constant Bit Rate (CBR)
 -b  n          set bitrate (8, 16, 24, ..., 320)
--h             higher quality but slower
--f             disable noise shaping.  Encodes faster, but lower quality
 --freeformat   produce a free format bitstream.  User must also specify
                a bitrate with -b, between 8 and 640 kbps.
 
@@ -332,6 +335,7 @@ fast mode
 =======================================================================
 -f   
 
+Same as -q 7.  
 disable noise shaping.  Encodes faster, but lower quality.
 Psycho acoustics are computed for bit allocation and 
 pre-echo detection.
@@ -386,14 +390,7 @@ high quality
 =======================================================================
 -h
 
-use (maybe) some quality improvements
-
-LAME 3.21 and up:  -h enables specialized mid/side masking thresholds to
-be used in jstereo mode.  Will sound better in jstereo mode
-but is 20% slower.  No effect for mono files.
-
-LAME 3.58beta and up: -h also enables a more accurate but slightly
-slower quantization formula.  
+use some quality improvements.  The same as -q 2.
 
 
 
@@ -553,6 +550,29 @@ CRC error protection
 turn on CRC error protection.  
 Yes this really does work correctly in LAME.  However, it takes 
 16 bits per frame that would otherwise be used for encoding.
+
+
+=======================================================================
+algorithm quality selection
+=======================================================================
+-q n  
+
+Bitrate is of course the main influence on quality.  The higher the
+bitrate, the higher the quality.  But for a given bitrate,
+we have a choice of algorithms to determine the best
+scalefactors and huffman encoding (noise shaping).
+
+-q 0:  use slowest & best possible version of all algorithms.
+
+-q 2:  recommended.  Same as -h.  -q 0 and -q 1 are slow and may not produce 
+       significantly higher quality.  
+
+-q 5:  default value.  Good speed, reasonable quality
+
+-q 7:  same as -f.  Very fast, ok quality.  (psycho acoustics are
+       used for pre-echo & M/S, but no noise shaping is done.  
+
+-q 9:  disables almost all algorithms including psy-model.  poor quality.
 
 
 

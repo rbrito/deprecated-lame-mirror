@@ -255,12 +255,19 @@ int  long_help ( const lame_global_flags* gfp, FILE* const fp, const char* Progr
               "    --voice         experimental voice mode\n"
               "    --preset type   type must be phone, voice, fm, tape, hifi, cd or studio\n"
               "                    \"--preset help\" gives some more infos on these" );
-  
+
+    wait_for ( fp, lessmode );
+    fprintf ( fp,
+              "  Noise shaping & psycho acoustic algorithms:\n"
+              "    -q <arg>        <arg> = 0...9.  Default  -q 5 \n"
+              "                    -q 0:  Highest quality, very slow \n"
+              "                    -q 9:  Poor quality, but fast \n"
+              "    -h              Same as -q 2.   Recommended.\n"
+              "    -f              Same as -q 7.   Fast, ok quality\n" );
+
     wait_for ( fp, lessmode );
     fprintf ( fp,
               "  CBR (constant bitrate, the default) options:\n"
-              "    -h              higher quality, but a little slower.  Recommended.\n"
-              "    -f              fast mode (lower quality)\n"
               "    -b <bitrate>    set the bitrate in kbps, default 128 kbps\n"
               "\n"
               "  ABR options:\n"
