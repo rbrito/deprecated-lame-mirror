@@ -210,7 +210,7 @@ InitVbrTag(lame_t gfc)
 	&& !(gfc->VBR_seek_table.bag  = malloc (400*sizeof(int)))) {
 	gfc->VBR_seek_table.size = 0;
 	gfc->bWriteVbrTag = 0;
-	ERRORF (gfc,"Error: can't allocate VbrFrames buffer\n");
+	gfc->report.errorf("Error: can't allocate VbrFrames buffer\n");
 	return -1;
     }   
 
@@ -292,7 +292,7 @@ PutLameVBR(lame_t gfc, FILE *fpStream,
 
     /*recall:	gfc->VBR_q is for example set by the switch -V */
     /*			gfc->quality by -q, -h, -f, etc */
-    int nQuality		= (100 - 10 * gfc->VBR_q - gfc->quality);
+    int nQuality = 100 - 10 * gfc->VBR_q - gfc->quality;
 
     uint8_t nVBR;
     uint8_t nRevMethod;

@@ -389,9 +389,12 @@ lame_init_params(lame_t gfc)
 {
     int gr, ch;
 
-    gfc->Class_ID = 0;
-
 #ifdef HAVE_NASM
+    extern int  has_MMX   ( void );
+    extern int  has_3DNow ( void );
+    extern int  has_E3DNow( void );
+    extern int  has_SSE   ( void );
+    extern int  has_SSE2  ( void );
     gfc->CPU_features.MMX
 	= gfc->CPU_features.SSE = gfc->CPU_features.SSE2
 	= gfc->CPU_features.AMD_3DNow = gfc->CPU_features.AMD_E3DNow = 0;
@@ -409,6 +412,7 @@ lame_init_params(lame_t gfc)
     }
 #endif
 
+    gfc->Class_ID = 0;
     gfc->channels_in = gfc->num_channels;
     if (gfc->channels_in == 1)
         gfc->mode = MONO;
@@ -536,7 +540,7 @@ lame_init_params(lame_t gfc)
 	gfc->bWriteVbrTag = 0; /* disable Xing VBR tag */
 	if (gfc->quality > 8) {
 	    gfc->quality = 8;
-	    ERRORF(gfc, "Analyzer needs psymodel (-q 8 or lesser).\n");
+	    gfc->report.errorf("Analyzer needs psymodel (-q 8 or lesser).\n");
 	}
     }
 #endif
@@ -546,7 +550,7 @@ lame_init_params(lame_t gfc)
 
     if (gfc->VBR == vbr && gfc->quality != 5) {
 	gfc->quality = 5;
-	ERRORF(gfc, "VBR mode with -q setting is meaningless.\n");
+	gfc->report.errorf("VBR mode with -q setting is meaningless.\n");
     }
 
     if (gfc->noise_shaping_amp > 4)
@@ -595,12 +599,9 @@ lame_init_params(lame_t gfc)
 }
 
 /*
- *  print_config
- *
+ * print_config
  *  Prints some selected information about the coding parameters via 
- *  the macro command MSGF(), which is currently mapped to lame_errorf 
- *  (reports via a error function?), which is a printf-like function 
- *  for <stderr>.
+ *  gfc->report.msgf().
  */
 
 void
@@ -613,58 +614,57 @@ lame_print_config(lame_t gfc)
     if (gfc->CPU_features.MMX
 	|| gfc->CPU_features.AMD_3DNow || gfc->CPU_features.AMD_E3DNow
         || gfc->CPU_features.SSE || gfc->CPU_features.SSE2) {
-        MSGF(gfc, "CPU features:");
+	gfc->report.msgf("CPU features:");
 
         if (gfc->CPU_features.MMX)
-            MSGF(gfc, "MMX (ASM used)");
+            gfc->report.msgf("MMX (ASM used)");
         if (gfc->CPU_features.AMD_3DNow)
-            MSGF(gfc, ", 3DNow! (ASM used)");
+            gfc->report.msgf(", 3DNow! (ASM used)");
         if (gfc->CPU_features.AMD_E3DNow)
-            MSGF(gfc, ", E3DNow! (ASM used)");
+            gfc->report.msgf(", E3DNow! (ASM used)");
         if (gfc->CPU_features.SSE)
-            MSGF(gfc, ", SSE (ASM used)");
+            gfc->report.msgf(", SSE (ASM used)");
         if (gfc->CPU_features.SSE2)
-            MSGF(gfc, ", SSE2");
-        MSGF(gfc, "\n");
+            gfc->report.msgf(", SSE2");
+        gfc->report.msgf("\n");
     }
 #endif
 
     if (gfc->num_channels == 2 && gfc->channels_out == 1 /* mono */ ) {
-        MSGF(gfc,
-             "Autoconverting from stereo to mono. Setting encoding to mono mode.\n");
+        gfc->report.msgf("Autoconverting from stereo to mono. Setting encoding to mono mode.\n");
     }
 
     if (gfc->resample.ratio != 1.) {
-        MSGF(gfc, "Resampling:  input %g kHz  output %g kHz\n",
-             1.e-3 * in_samplerate, 1.e-3 * out_samplerate);
+        gfc->report.msgf("Resampling:  input %g kHz  output %g kHz\n",
+			 1.e-3 * in_samplerate, 1.e-3 * out_samplerate);
     }
 
     if (gfc->filter_type == 0) {
         if (0. < gfc->highpass2 && gfc->highpass2 < 1.0)
-            MSGF(gfc,
-                 "Using polyphase highpass filter, transition band: %5.0f Hz - %5.0f Hz\n",
+            gfc->report.msgf(
+		"Using polyphase highpass filter, transition band: %5.0f Hz - %5.0f Hz\n",
                  0.5 * gfc->highpass1 * out_samplerate,
                  0.5 * gfc->highpass2 * out_samplerate);
         if (0. < gfc->lowpass1 && gfc->lowpass1 < 1.0) {
-	    MSGF(gfc,
-		 "Using polyphase lowpass  filter, transition band: %5.0f Hz - %5.0f Hz\n",
+	    gfc->report.msgf(
+		"Using polyphase lowpass  filter, transition band: %5.0f Hz - %5.0f Hz\n",
 		 0.5 * gfc->lowpass1 * out_samplerate,
 		 0.5 * gfc->lowpass2 * out_samplerate);
 	}
         else {
-            MSGF(gfc, "polyphase lowpass filter disabled\n");
+            gfc->report.msgf("polyphase lowpass filter disabled\n");
         }
     }
     else {
-        MSGF(gfc, "polyphase filters disabled\n");
+        gfc->report.msgf("polyphase filters disabled\n");
     }
 
     if (gfc->free_format) {
-        MSGF(gfc,
-             "Warning: many decoders cannot handle free format bitstreams\n");
+        gfc->report.msgf(
+	    "Warning: many decoders cannot handle free format bitstreams\n");
         if (gfc->mean_bitrate_kbps > 320) {
-            MSGF(gfc,
-                 "Warning: many decoders cannot handle free format bitrates >320 kbps (see documentation)\n");
+            gfc->report.msgf(
+		"Warning: many decoders cannot handle free format bitrates >320 kbps (see documentation)\n");
         }
     }
 }
@@ -683,24 +683,24 @@ lame_print_internals(lame_t gfc)
 
     /*  compiler/processor optimizations, operational, etc.
      */
-    MSGF( gfc, "\nmisc:\n\n" );
+    gfc->report.msgf("\nmisc:\n\n" );
     
-    MSGF( gfc, "\tscaling: \n");
-    MSGF( gfc, "\t ^ ch0 (left) : %f\n", gfc->scale_left );
-    MSGF( gfc, "\t ^ ch1 (right): %f\n", gfc->scale_right );
-    MSGF( gfc, "\tfilter type: %d\n", gfc->filter_type );
-    MSGF( gfc, "\t...\n" );
+    gfc->report.msgf("\tscaling: \n");
+    gfc->report.msgf("\t ^ ch0 (left) : %f\n", gfc->scale_left );
+    gfc->report.msgf("\t ^ ch1 (right): %f\n", gfc->scale_right );
+    gfc->report.msgf("\tfilter type: %d\n", gfc->filter_type );
+    gfc->report.msgf("\t...\n" );
 
     /*  everything controlling the stream format 
      */
-    MSGF( gfc, "\nstream format:\n\n" );
+    gfc->report.msgf("\nstream format:\n\n" );
     switch ( gfc->version ) {
     case 0:  pc = "2.5"; break;
     case 1:  pc = "1";   break;
     case 2:  pc = "2";   break;
     default: pc = "?";   break;
     }
-    MSGF( gfc, "\tMPEG-%s Layer 3\n", pc );
+    gfc->report.msgf("\tMPEG-%s Layer 3\n", pc );
     switch ( gfc->mode ) {
     case JOINT_STEREO: pc = "joint stereo";   break;
     case STEREO      : pc = "stereo";         break;
@@ -709,38 +709,38 @@ lame_print_internals(lame_t gfc)
     case NOT_SET     : pc = "not set (error)"; break;
     default          : pc = "unknown (error)"; break;
     }
-    MSGF( gfc, "\t%d channel - %s\n", gfc->channels_out, pc );
+    gfc->report.msgf("\t%d channel - %s\n", gfc->channels_out, pc );
     if (gfc->use_istereo)
-	MSGF(gfc, "\t ^ using intensity stereo, the ratio is %f\n",
-	     1.0-gfc->istereo_ratio);
+	gfc->report.msgf("\t ^ using intensity stereo, the ratio is %f\n",
+			 1.0-gfc->istereo_ratio);
 
     if (gfc->free_format)    pc = "(free format)";
     else pc = "";
     switch ( gfc->VBR ) {
-    case cbr : MSGF( gfc, "\tconstant bitrate - CBR %s\n", pc ); break;
-    case abr : MSGF( gfc, "\tvariable bitrate - ABR %s\n", pc ); break;
-    case vbr : MSGF( gfc, "\tvariable bitrate - VBR\n"        ); break;
-    default  : MSGF( gfc, "\t ?? oops, some new one ?? \n"    ); break;
+    case cbr : gfc->report.msgf("\tconstant bitrate - CBR %s\n", pc ); break;
+    case abr : gfc->report.msgf("\tvariable bitrate - ABR %s\n", pc ); break;
+    case vbr : gfc->report.msgf("\tvariable bitrate - VBR\n"        ); break;
+    default  : gfc->report.msgf("\t ?? oops, some new one ?? \n"    ); break;
     }
     if (gfc->bWriteVbrTag) 
-    MSGF( gfc, "\tusing LAME Tag\n" );
-    MSGF( gfc, "\t...\n" );
+    gfc->report.msgf("\tusing LAME Tag\n" );
+    gfc->report.msgf("\t...\n" );
 
     /*  everything controlling psychoacoustic settings, like ATH, etc.
      */
-    MSGF( gfc, "\npsychoacoustic:\n\n" );
-    MSGF( gfc, "\tshort block switching threshold: %f\n",
+    gfc->report.msgf("\npsychoacoustic:\n\n" );
+    gfc->report.msgf("\tshort block switching threshold: %f\n",
 	  gfc->nsPsy.attackthre);
-    MSGF( gfc, "\tpsymodel: %s\n", gfc->psymodel ? "used" : "not used");
+    gfc->report.msgf("\tpsymodel: %s\n", gfc->psymodel ? "used" : "not used");
     
     pc = "using";
     if ( gfc->ATHshort ) pc = "the only masking for short blocks";
     if ( gfc->ATHonly  ) pc = "the only masking";
     if ( gfc->noATH    ) pc = "not used";
-    MSGF( gfc, "\tATH: %s\n", pc );
-    MSGF( gfc, "\t ^ shape: %g\n", gfc->ATHcurve);
-    MSGF( gfc, "\t ^ level adjustement: %f (dB)\n", gfc->ATHlower );
-    MSGF( gfc, "\t ^ adaptive adjustment decay (dB): %f\n",
+    gfc->report.msgf("\tATH: %s\n", pc );
+    gfc->report.msgf("\t ^ shape: %g\n", gfc->ATHcurve);
+    gfc->report.msgf("\t ^ level adjustement: %f (dB)\n", gfc->ATHlower );
+    gfc->report.msgf("\t ^ adaptive adjustment decay (dB): %f\n",
 	  FAST_LOG10(gfc->ATH.aa_decay) * 10.0);
 
     bass = gfc->nsPsy.tuneBass*0.25;
@@ -748,39 +748,39 @@ lame_print_internals(lame_t gfc)
     treble = gfc->nsPsy.tuneTreble*0.25;
     sfb21 = gfc->nsPsy.tuneSFB21*0.25;
 
-    MSGF(gfc, "\tadjust masking: %f dB\n", gfc->VBR_q-4.0 );
-    MSGF(gfc, "\t ^ bass=%g dB, alto=%g dB, treble=%g dB, sfb21=%g dB\n",
+    gfc->report.msgf("\tadjust masking: %f dB\n", gfc->VBR_q-4.0 );
+    gfc->report.msgf("\t ^ bass=%g dB, alto=%g dB, treble=%g dB, sfb21=%g dB\n",
 	 bass, alto, treble, sfb21);
 
-    MSGF( gfc, "\ttemporal masking sustain factor: %f\n", gfc->nsPsy.decay);
-    MSGF( gfc, "\tinterchannel masking ratio: %f\n", gfc->interChRatio );
-    MSGF( gfc, "\treduce side channel PE factor: %f\n", 1.0-gfc->reduce_side);
-    MSGF( gfc, "\tnarrowen stereo factor: %f\n", gfc->narrowStereo*2.0);
-    MSGF( gfc, "\t...\n" );
+    gfc->report.msgf("\ttemporal masking sustain factor: %f\n", gfc->nsPsy.decay);
+    gfc->report.msgf("\tinterchannel masking ratio: %f\n", gfc->interChRatio );
+    gfc->report.msgf("\treduce side channel PE factor: %f\n", 1.0-gfc->reduce_side);
+    gfc->report.msgf("\tnarrowen stereo factor: %f\n", gfc->narrowStereo*2.0);
+    gfc->report.msgf("\t...\n" );
 
-    MSGF( gfc, "\nnoisechaping & quantization:\n\n" );
+    gfc->report.msgf("\nnoisechaping & quantization:\n\n" );
     switch( gfc->use_best_huffman ) {
     default: pc = "normal"; break;
     case  1: pc = "best (outside loop)"; break;
     case  2: pc = "best (inside loop, slow)"; break;
     }
-    MSGF( gfc, "\thuffman search: %s\n", pc );
+    gfc->report.msgf("\thuffman search: %s\n", pc );
     if (gfc->VBR != vbr) {
-	MSGF( gfc, "\tnoise shaping: %s\n", gfc->psymodel > 1 ? "used" : "not used");
-	MSGF( gfc, "\t ^ amplification: %d\n", gfc->noise_shaping_amp );
-	MSGF( gfc, "\tallow large scalefactor range=%s\n",
+	gfc->report.msgf("\tnoise shaping: %s\n", gfc->psymodel > 1 ? "used" : "not used");
+	gfc->report.msgf("\t ^ amplification: %d\n", gfc->noise_shaping_amp );
+	gfc->report.msgf("\tallow large scalefactor range=%s\n",
 	      gfc->use_scalefac_scale ? "yes" : "no");
-	MSGF( gfc, "\tuse subblock gain=%s\n",
+	gfc->report.msgf("\tuse subblock gain=%s\n",
 	      gfc->use_subblock_gain ? "yes" : "no");
     }
-    MSGF( gfc, "\tsubstep shaping=short blocks: %s, long blocks: %s\n",
+    gfc->report.msgf("\tsubstep shaping=short blocks: %s, long blocks: %s\n",
 	  gfc->substep_shaping&2 ? "yes" : "no",
 	  gfc->substep_shaping&1 ? "yes" : "no" );
-    MSGF( gfc, "\t...\n" );
+    gfc->report.msgf("\t...\n" );
 
     /*  that's all ?
      */
-    MSGF( gfc, "\n" );
+    gfc->report.msgf("\n" );
     return;
 }
 
@@ -804,7 +804,7 @@ lame_encode_buffer(lame_t gfc,
     in_buffer = malloc(sizeof(sample_t)*gfc->channels_in*nsamples);
 
     if (!in_buffer) {
-	ERRORF(gfc, "Error: can't allocate in_buffer buffer\n");
+	gfc->report.errorf("Error: can't allocate in_buffer buffer\n");
 	return -2;
     }
 
@@ -841,7 +841,7 @@ lame_encode_buffer_float(lame_t gfc,
     in_buffer = malloc(sizeof(sample_t)*gfc->channels_in*nsamples);
 
     if (!in_buffer) {
-	ERRORF(gfc, "Error: can't allocate in_buffer buffer\n");
+	gfc->report.errorf("Error: can't allocate in_buffer buffer\n");
 	return -2;
     }
 
@@ -876,7 +876,7 @@ lame_encode_buffer_int(lame_t gfc,
     in_buffer = malloc(sizeof(sample_t)*gfc->channels_in*nsamples);
 
     if (!in_buffer) {
-	ERRORF(gfc, "Error: can't allocate in_buffer buffer\n");
+	gfc->report.errorf("Error: can't allocate in_buffer buffer\n");
 	return -2;
     }
 
@@ -916,7 +916,7 @@ lame_encode_buffer_long2(lame_t gfc,
     in_buffer = malloc(sizeof(sample_t)*gfc->channels_in*nsamples);
 
     if (!in_buffer) {
-	ERRORF(gfc, "Error: can't allocate in_buffer buffer\n");
+	gfc->report.errorf("Error: can't allocate in_buffer buffer\n");
 	return -2;
     }
 
@@ -955,7 +955,7 @@ lame_encode_buffer_long(lame_t gfc,
     in_buffer = malloc(sizeof(sample_t)*gfc->channels_in*nsamples);
 
     if (!in_buffer) {
-	ERRORF(gfc, "Error: can't allocate in_buffer buffer\n");
+	gfc->report.errorf("Error: can't allocate in_buffer buffer\n");
 	return -2;
     }
 
@@ -1156,6 +1156,42 @@ lame_mp3_tags_fid(lame_t gfc, FILE * fpStream)
 /****************************************************************/
 /* initialize mp3 encoder					*/
 /****************************************************************/
+static void
+lame_debugf(const char* format, ... )
+{
+    va_list  args;
+    va_start ( args, format );
+
+    vfprintf ( stderr, format, args );
+
+    fflush ( stderr );      /* an debug function should flush immediately */
+    va_end   ( args );
+}
+
+static void
+lame_msgf(const char* format, ... )
+{
+    va_list  args;
+    va_start ( args, format );
+
+    vfprintf ( stderr, format, args );
+
+    fflush ( stderr );     /* we print to stderr, so me may want to flush */
+    va_end   ( args );
+}
+
+static void
+lame_errorf(const char* format, ... )
+{
+    va_list  args;
+    va_start ( args, format );
+
+    vfprintf ( stderr, format, args );
+    fflush   ( stderr );    /* an error function should flush immediately */
+
+    va_end   ( args );
+}
+
 lame_t
 lame_init(void)
 {
@@ -1168,6 +1204,10 @@ lame_init(void)
 
     gfc = (lame_t)(((unsigned int)work + 15) & ~15);
     gfc->alignment = (unsigned char*)gfc - (unsigned char*)work;
+
+    gfc->report.debugf = lame_debugf;
+    gfc->report.msgf   = lame_msgf;
+    gfc->report.errorf = lame_errorf;
 
     /* Global flags.  set defaults here for non-zero values */
     /* set integer values to -1 to mean that LAME will compute the

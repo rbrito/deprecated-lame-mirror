@@ -66,63 +66,6 @@ BitrateIndex(
     return -1;
 }
 
-/***********************************************************************
-*
-*  Message Output
-*
-***********************************************************************/
-void  lame_debugf (lame_t gfc, const char* format, ... )
-{
-    va_list  args;
-
-    va_start ( args, format );
-
-    if ( gfc->report.debugf ) {
-        gfc->report.debugf( format, args );
-    } else {
-        (void) vfprintf ( stderr, format, args );
-        fflush ( stderr );      /* an debug function should flush immediately */
-    }
-
-    va_end   ( args );
-}
-
-
-void  lame_msgf (lame_t gfc, const char* format, ... )
-{
-    va_list  args;
-
-    va_start ( args, format );
-   
-    if ( gfc->report.msgf ) {
-        gfc->report.msgf( format, args );
-    } else {
-        (void) vfprintf ( stderr, format, args );
-        fflush ( stderr );     /* we print to stderr, so me may want to flush */
-    }
-
-    va_end   ( args );
-}
-
-
-void  lame_errorf (lame_t gfc, const char* format, ... )
-{
-    va_list  args;
-
-    va_start ( args, format );
-    
-    if ( gfc->report.errorf ) {
-        gfc->report.errorf( format, args );
-    } else {
-        (void) vfprintf ( stderr, format, args );
-        fflush   ( stderr );    /* an error function should flush immediately */
-    }
-
-    va_end   ( args );
-}
-
-
-
 /*
  *  Disable floating point exceptions
  *  extremly system dependent stuff, move to a lib to make the code readable

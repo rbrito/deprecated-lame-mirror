@@ -305,7 +305,7 @@ lame_get_free_format(lame_t gfc)
 
 /* message handlers */
 int
-lame_set_errorf(lame_t gfc, void (*func)( const char*, va_list))
+lame_set_errorf(lame_t gfc, void (*func)(const char*, ...))
 {
     gfc->report.errorf = func;
 
@@ -313,7 +313,7 @@ lame_set_errorf(lame_t gfc, void (*func)( const char*, va_list))
 }
 
 int
-lame_set_debugf(lame_t gfc, void (*func)( const char*, va_list))
+lame_set_debugf(lame_t gfc, void (*func)(const char*, ...))
 {
     gfc->report.debugf = func;
 
@@ -321,7 +321,7 @@ lame_set_debugf(lame_t gfc, void (*func)( const char*, va_list))
 }
 
 int
-lame_set_msgf(lame_t gfc, void (*func)( const char *, va_list))
+lame_set_msgf(lame_t gfc, void (*func)( const char *, ...))
 {
     gfc->report.msgf = func;
 

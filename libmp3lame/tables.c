@@ -588,8 +588,8 @@ lame_init_params_ppflt(lame_t gfc)
      * highpass frequency will be */
     if (gfc->highpass2 > 0 && gfc->highpass2 < .9 * (.75 / 31.0)) {
 	gfc->highpass1 = gfc->highpass2 = 0;
-	MSGF(gfc,
-	     "Warning: highpass filter disabled (the frequency too small)\n");
+	gfc->report.msgf(
+	    "Warning: highpass filter disabled (the frequency too small)\n");
     }
 
     if (gfc->highpass2 > 0) {
@@ -666,10 +666,6 @@ iteration_init(lame_t gfc)
 {
     III_side_info_t * const l3_side = &gfc->l3_side;
     int i, j;
-
-    if (gfc->iteration_init_init)
-	return;
-    gfc->iteration_init_init=1;
 
     /**********************************************************************/
     /* compute info needed for polyphase filter (filter type==0, default) */

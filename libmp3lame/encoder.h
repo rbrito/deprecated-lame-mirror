@@ -266,9 +266,7 @@ struct lame_internal_flags {
 
     sample_t     mfbuf[MAX_CHANNELS][MFSIZE];
     int alignment;
-    int iteration_init_init;
 
-    int padding;        /* padding for the current frame? */
     int mode_gr;        /* granules per frame */
     int channels_in;	/* number of channels in the input data stream (PCM or decoded PCM) */
     int channels_out;   /* number of channels in the output data stream (not used for decoding) */
@@ -288,6 +286,8 @@ struct lame_internal_flags {
 
     FLOAT narrowStereo;        /* stereo image narrowen factor */
     FLOAT reduce_side;         /* side channel PE reduce factor */
+    FLOAT istereo_ratio;       /* intensity stereo threshold */
+    FLOAT interChRatio;
 
     int filter_type; /* 0=polyphase filter, 1= FIR filter 2=MDCT filter(bad)*/
     int use_scalefac_scale;   /* 0 = not use  1 = use */
@@ -310,13 +310,13 @@ struct lame_internal_flags {
 			     0 = don't use psychomodel
 			  */
     int use_best_huffman;   /* 0 = no.  1=outside loop  2=inside loop(slow) */
+    int use_istereo;           /* use intensity stereo */
+    int mixed_blocks;          /* use mixed blocks */
 
-    /* used for padding */
+    /* padding */
+    int padding;        /* padding for the current frame? */
     int frac_SpF;
     int slot_lag;
-
-    /* intensity stereo threshold */
-    FLOAT istereo_ratio;
 
     /* psymodel constants */
     FLOAT *s3_ss;
@@ -335,7 +335,6 @@ struct lame_internal_flags {
     FLOAT rnumlines_ls[CBANDS];
     FLOAT masking_lower;
     FLOAT masking_lower_short;
-    FLOAT interChRatio;
 
     /* psymodel work, (for next frame data) */
     III_psy_ratio masking_next[MAX_GRANULES][MAX_CHANNELS*2];
@@ -409,16 +408,14 @@ struct lame_internal_flags {
     }  tag_spec;
     uint16_t nMusicCRC;
 
-    unsigned int crcvalue;
-
     /* VBR tags. */
     VBR_seek_info_t VBR_seek_table; /* used for Xing VBR header */
     int TotalFrameSize;
 
     struct {
-	void (*msgf)  (const char *format, va_list ap);
-	void (*debugf)(const char *format, va_list ap);
-	void (*errorf)(const char *format, va_list ap);
+	void (*msgf)  (const char *format, ...);
+	void (*debugf)(const char *format, ...);
+	void (*errorf)(const char *format, ...);
     } report;
 
     /* variables used for resampling */
@@ -488,8 +485,6 @@ struct lame_internal_flags {
     MPEG_mode mode;            /* see enum in lame.h
 				  default = LAME picks best value */
     int force_ms;              /* force M/S mode. */
-    int use_istereo;           /* use intensity stereo */
-    int mixed_blocks;          /* use mixed blocks */
     int free_format;           /* use free format? default=0 */
 
     /*

@@ -36,33 +36,6 @@ extern "C" {
 int	BitrateIndex(int, int);
 void	disable_FPE(void);
 
-#ifdef HAVE_NASM
-extern int  has_MMX   ( void );
-extern int  has_3DNow ( void );
-extern int  has_E3DNow( void );
-extern int  has_SSE   ( void );
-extern int  has_SSE2  ( void );
-#else
-# define has_MMX()	0
-# define has_3DNow()	0
-# define has_E3DNow()	0
-# define has_SSE()	0
-# define has_SSE2()	0
-#endif
-
-/***********************************************************************
-*
-*  Macros about Message Printing and Exit
-*
-***********************************************************************/
-extern void lame_errorf(lame_t gfc, const char *, ...);
-extern void lame_debugf(lame_t gfc, const char *, ...);
-extern void lame_msgf  (lame_t gfc, const char *, ...);
-#define DEBUGF  lame_debugf
-#define ERRORF	lame_errorf
-#define MSGF	lame_msgf
-
-
 #ifdef __cplusplus
 }
 #endif

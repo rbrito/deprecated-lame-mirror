@@ -193,18 +193,21 @@ int CDECL lame_get_free_format(lame_t);
  * OPTIONAL:
  * Set printf like error/debug/message reporting functions.
  * The second argument has to be a pointer to a function which looks like
- *   void my_debugf(const char *format, va_list ap)
+ *   void my_debugf(const char *format, ...)
  *   {
- *       (void) vfprintf(stdout, format, ap);
+ *        va_list  args;
+ *        va_start ( args, format );
+ *
+ *        vfprintf ( stderr, format, args );
  *   }
  * If you use NULL as the value of the pointer in the set function, the
  * lame buildin function will be used (prints to stderr).
  * To quiet any output you have to replace the body of the example function
  * with just "return;" and use it in the set function.
  */
-int CDECL lame_set_errorf(lame_t, void (*func)(const char *, va_list));
-int CDECL lame_set_debugf(lame_t, void (*func)(const char *, va_list));
-int CDECL lame_set_msgf  (lame_t, void (*func)(const char *, va_list));
+int CDECL lame_set_errorf(lame_t, void (*func)(const char *, ...));
+int CDECL lame_set_debugf(lame_t, void (*func)(const char *, ...));
+int CDECL lame_set_msgf  (lame_t, void (*func)(const char *, ...));
 
 
 
