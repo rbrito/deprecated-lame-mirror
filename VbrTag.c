@@ -34,6 +34,21 @@
 /*  #define DEBUG_VBRTAG */
 #endif
 
+/*
+//    4 bytes for Header Tag
+//    4 bytes for Header Flags
+//  100 bytes for entry (NUMTOCENTRIES)
+//    4 bytes for FRAME SIZE
+//    4 bytes for STREAM_SIZE
+//    4 bytes for VBR SCALE. a VBR quality indicator: 0=best 100=worst
+//   20 bytes for LAME tag.  for example, "LAME3.12 (beta 6)"
+// ___________
+//  140 bytes
+*/
+#define VBRHEADERSIZE (NUMTOCENTRIES+4+4+4+4+4)
+/* the size of the Xing header in kbps */
+#define XING_BITRATE 128
+
 
 const static char	VBRTag[]={"Xing"};
 const int SizeOfEmptyFrame[2][2]=
@@ -144,8 +159,7 @@ int CheckVbrTag(unsigned char *buf)
 int GetVbrTag(VBRTAGDATA *pTagData,  unsigned char *buf)
 {
 	int			i, head_flags;
-	int			h_id, h_mode, h_sr_index;
-	static int	sr_table[4] = { 44100, 48000, 32000, 99999 };
+	int			h_bitrate,h_id, h_mode, h_sr_index;
 
 	/* get Vbr header data */
 	pTagData->flags = 0;
@@ -154,6 +168,9 @@ int GetVbrTag(VBRTAGDATA *pTagData,  unsigned char *buf)
 	h_id       = (buf[1] >> 3) & 1;
 	h_sr_index = (buf[2] >> 2) & 3;
 	h_mode     = (buf[3] >> 6) & 3;
+        h_bitrate  = ((buf[1]>>4)&0xf);
+	h_bitrate = bitrate_table[h_id][h_bitrate];
+
 
 	/*  determine offset of header */
 	if( h_id )
@@ -177,8 +194,7 @@ int GetVbrTag(VBRTAGDATA *pTagData,  unsigned char *buf)
 	buf+=4;
 
 	pTagData->h_id = h_id;
-
-	pTagData->samprate = sr_table[h_sr_index];
+	pTagData->samprate = samplerate_table[h_id][h_sr_index];
 
 	if( h_id == 0 )
 		pTagData->samprate >>= 1;
@@ -211,6 +227,10 @@ int GetVbrTag(VBRTAGDATA *pTagData,  unsigned char *buf)
 	{
 		pTagData->vbr_scale = ExtractI4(buf); buf+=4;
 	}
+
+	pTagData->headersize = 
+	  ((h_id+1)*72000*h_bitrate) / pTagData->samprate;
+
 
 #ifdef DEBUG_VBRTAG
 	DEBUGF("\n\n********************* VBR TAG INFO *****************\n");
@@ -245,7 +265,8 @@ int InitVbrTag(lame_global_flags *gfp)
 {
 	int nMode,SampIndex;
 	lame_internal_flags *gfc = gfp->internal_flags;
-	u_char pbtStreamBuffer[216];
+#define MAXFRAMESIZE 576
+	u_char pbtStreamBuffer[MAXFRAMESIZE];
 	nMode = gfp->mode;
 	SampIndex = gfc->samplerate_index;
 
@@ -282,23 +303,24 @@ int InitVbrTag(lame_global_flags *gfp)
 	// 44.1kHz:  156 bytes          208bytes@64kbs     (+1 if padding = 1)
 	// 48kHz:    144 bytes          192
 	//
-	// MPEG 2 values are the since the framesize and samplerate
+	// MPEG 2 values are the same since the framesize and samplerate
         // are each reduced by a factor of 2.
 	*/
 	{
 	int tot;
-	static const int framesize[3]={208,192,288};  /* 64kbs MPEG1 or MPEG2  framesize */
+	/* static const int framesize[3]={208,192,288};*/  /* 64kbs MPEG1 or MPEG2  framesize */
 	/* static int framesize[3]={156,144,216}; */ /* 48kbs framesize */
 
-	if (SampIndex>2) {
-	  ERRORF("illegal sampling frequency index\n");
-	  LAME_ERROR_EXIT();
-	}
-	gfp->TotalFrameSize= framesize[SampIndex];
+	gfp->TotalFrameSize= 
+	  ((gfp->version+1)*72000*XING_BITRATE) / gfp->out_samplerate;
 	tot = (gfp->nZeroStreamSize+VBRHEADERSIZE);
 	tot += 20;  /* extra 20 bytes for LAME & version string */
 
 	if (gfp->TotalFrameSize < tot ) {
+	  ERRORF("Xing VBR header problem...use -t\n");
+	  LAME_ERROR_EXIT();
+	}
+	if (gfp->TotalFrameSize > MAXFRAMESIZE ) {
 	  ERRORF("Xing VBR header problem...use -t\n");
 	  LAME_ERROR_EXIT();
 	}
@@ -324,9 +346,9 @@ int PutVbrTag(lame_global_flags *gfp,FILE *fpStream,int nVbrScale)
 	int			i;
 	long lFileSize;
 	int nStreamIndex;
-	char abyte;
+	char abyte,bbyte;
 	u_char		btToc[NUMTOCENTRIES];
-        u_char pbtStreamBuffer[216];
+        u_char pbtStreamBuffer[MAXFRAMESIZE];
 	char str1[80];
         unsigned char id3v2Header[10];
         size_t id3v2TagSize;
@@ -373,7 +395,7 @@ int PutVbrTag(lame_global_flags *gfp,FILE *fpStream,int nVbrScale)
         }
 
 	/* Seek to first real frame */
-	fseek(fpStream,id3v2TagSize+(long)gfp->TotalFrameSize,SEEK_SET);
+	fseek(fpStream,id3v2TagSize+gfp->TotalFrameSize,SEEK_SET);
 
 	/* Read the header (first valid frame) */
 	fread(pbtStreamBuffer,4,1,fpStream);
@@ -383,6 +405,7 @@ int PutVbrTag(lame_global_flags *gfp,FILE *fpStream,int nVbrScale)
 	/* from first valid frame */
 	pbtStreamBuffer[0]=(u_char) 0xff;
 	abyte = (pbtStreamBuffer[1] & (char) 0xf1);
+	bbyte = 16*BitrateIndex(XING_BITRATE,gfp->version,gfp->out_samplerate);
 	if (gfp->version==1) {
           /* changed behaviour as suggested by Mathew Hendry:
            * The Xing VBR header is a valid mpeg.  But because some
@@ -392,11 +415,11 @@ int PutVbrTag(lame_global_flags *gfp,FILE *fpStream,int nVbrScale)
            */ 
 	  pbtStreamBuffer[1]=abyte | (char) 0x0a;     /* was 0x0b; */
 	  abyte = pbtStreamBuffer[2] & (char) 0x0d;   /* AF keep also private bit */
-	  pbtStreamBuffer[2]=(char) 0x50 | abyte;     /* 64kbs MPEG1 frame */
+	  pbtStreamBuffer[2]=(char) bbyte | abyte;     /* 64kbs MPEG1 frame */
 	}else{
 	  pbtStreamBuffer[1]=abyte | (char) 0x02;     /* was 0x03; */
 	  abyte = pbtStreamBuffer[2] & (char) 0x0d;   /* AF keep also private bit */
-	  pbtStreamBuffer[2]=(char) 0x80 | abyte;     /* 64kbs MPEG2 frame */
+	  pbtStreamBuffer[2]=(char) bbyte | abyte;     /* 64kbs MPEG2 frame */
 	}
 
 

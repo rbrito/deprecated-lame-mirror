@@ -59,20 +59,8 @@ typedef struct
   int		bytes;			/* total bit stream bytes from Vbr header data*/
   int		vbr_scale;		/* encoded vbr scale from Vbr header data*/
   u_char	toc[NUMTOCENTRIES];	/* may be NULL if toc not desired*/
+  int           headersize;             /* size of VBR header, in bytes */
 }   VBRTAGDATA;
-/*
-//    4 bytes for Header Tag
-//    4 bytes for Header Flags
-//  100 bytes for entry (NUMTOCENTRIES)
-//    4 bytes for FRAME SIZE
-//    4 bytes for STREAM_SIZE
-//    4 bytes for VBR SCALE. a VBR quality indicator: 0=best 100=worst
-//   20 bytes for LAME tag.  for example, "LAME3.12 (beta 6)"
-// ___________
-//  140 bytes
-*/
-
-#define VBRHEADERSIZE (NUMTOCENTRIES+4+4+4+4+4)
 
 int CheckVbrTag(unsigned char *buf);
 int GetVbrTag(VBRTAGDATA *pTagData,  unsigned char *buf);

@@ -110,7 +110,8 @@
 *
 ***********************************************************************/
 
-extern const int      bitrate_table [2] [16];
+extern const int      bitrate_table[2][16];
+extern const int      samplerate_table[2][3];
 
 
 

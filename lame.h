@@ -185,8 +185,8 @@ typedef struct  {
   BRHST brhist;					  /* histogramming data */
 
   int version;                    /* 0=MPEG2  1=MPEG1 */
-  long int frameNum;              /* frame counter */
-  long totalframes;               /* frames: 0..totalframes-1 (estimate)*/
+  int frameNum;                   /* frame counter */
+  int totalframes;                /* frames: 0..totalframes-1 (estimate)*/
   int encoder_delay;
   int framesize;                  
 

@@ -39,6 +39,9 @@ const int  bitrate_table [2] [16] = {
           {0,8,16,24,32,40,48,56,64,80,96,112,128,144,160},
           {0,32,40,48,56,64,80,96,112,128,160,192,224,256,320}};
 
+const int samplerate_table[2][3] = { {22050, 24000, 16000},
+				     {44100, 48000, 32000}};
+
 
 enum byte_order NativeByteOrder = order_unknown;
 
@@ -104,14 +107,14 @@ void getframebits(lame_global_flags *gfp,int *bitsPerFrame, int *mean_bits) {
   int whole_SpF;
   lame_internal_flags *gfc=gfp->internal_flags;
 
-  long bit_rate;
+  int bit_rate;
   
   if (gfc->bitrate_index) 
     bit_rate = bitrate_table[gfp->version][gfc->bitrate_index];
   else
     bit_rate = gfp->brate;
   
-  whole_SpF=((gfp->version+1)*72000L*bit_rate) / gfp->out_samplerate;
+  whole_SpF=((gfp->version+1)*72000*bit_rate) / gfp->out_samplerate;
   *bitsPerFrame = 8 * (whole_SpF + gfc->padding);
   *mean_bits = (*bitsPerFrame - 8*gfc->sideinfo_len) / gfc->mode_gr;
 

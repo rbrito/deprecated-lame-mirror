@@ -1051,8 +1051,8 @@ void lame_parse_args ( lame_global_flags* gfp, int argc, char** argv )
         gfp -> quality = user_quality;
     
     if ( gfp->free_format ) {
-	if ( gfp -> brate < 8  ||  gfp -> brate > 550 ) {
-	    ERRORF("For free format, specify a bitrate between 8 and 320 (550) kbps\n");
+	if ( gfp -> brate < 8  ||  gfp -> brate > 640 ) {
+	    ERRORF("For free format, specify a bitrate between 8 and 640 kbps\n");
 	    LAME_ERROR_EXIT();
 	}
     }
