@@ -51,12 +51,6 @@
 	typedef float ieee754_float32_t;
 #endif
 
-/* add ieee754_float64_t type */
-#undef HAVE_IEEE754_FLOAT64_T
-#ifndef HAVE_IEEE754_FLOAT64_T
-	typedef double ieee754_float64_t;
-#endif
-
 /* add int16_t type */
 #undef HAVE_INT16_T
 #ifndef HAVE_INT16_T

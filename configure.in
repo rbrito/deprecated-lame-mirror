@@ -199,14 +199,7 @@ AH_VERBATIM([HAVE_UINT64_T],
 	typedef A_UINT64_T uint64_t;
 #endif])
 
-AC_CHECK_TYPES([ieee754_float64_t, ieee754_float32_t])
-
-AH_VERBATIM([HAVE_IEEE754_FLOAT64_T],
-[/* add ieee754_float64_t type */
-#undef HAVE_IEEE754_FLOAT64_T
-#ifndef HAVE_IEEE754_FLOAT64_T
-	typedef double ieee754_float64_t;
-#endif])
+AC_CHECK_TYPES([ieee754_float32_t])
 
 AH_VERBATIM([HAVE_IEEE754_FLOAT32_T],
 [/* add ieee754_float32_t type */
