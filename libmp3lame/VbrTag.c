@@ -516,6 +516,21 @@ uint16_t GetMusicCRC(lame_global_flags *gfp, FILE *fpStream, int filesize, int i
 }
 
 
+void ReportVBRProgress(lame_global_flags *gfp,int nStart)
+{
+	if (!gfp->bWriteVbrTag)
+		return;
+
+//	lame_internal_flags *gfc = gfp->internal_flags;
+
+	if (nStart)
+		MSGF( gfp->internal_flags, "Writing Lame Tag...");
+	else
+		MSGF( gfp->internal_flags, "done\n");
+
+}
+
+
 /****************************************************************************
  * Jonathan Dee 2001/08/31
  *
@@ -715,9 +730,9 @@ int PutLameVBR(lame_global_flags *gfp, FILE *fpStream, u_char *pbtStreamBuffer, 
 	//offset: after id3v2 tag, 
 	//and after this frame (i.e. where the music starts).
 	//end: before id3v1.
-	printf("Computing music CRC...");
+	
 	nMusicCRC = GetMusicCRC(gfp,fpStream, nFilesize,id3v2size, bId3v1Present);
-	printf("done.\n");
+	
 
 	/*Write all this information into the stream*/
 	
