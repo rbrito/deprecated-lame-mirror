@@ -672,7 +672,7 @@ int  calc_noise(
               calc_noise_result   * const res,
               calc_noise_data * prev_noise)
 {
-    int sfb, l, over=0;
+    unsigned int sfb, l, over=0;
     FLOAT8 over_noise_db = 0;
     FLOAT8 tot_noise_db  = 0; /*    0 dB relative to masking */
     FLOAT8 max_noise = -20.0; /* -200 dB relative to masking */
@@ -681,7 +681,7 @@ int  calc_noise(
     const int *scalefac = cod_info->scalefac;
 
 
-    for (sfb = 0; sfb < cod_info->psymax; sfb++) {
+    for (sfb = 0; sfb < (unsigned)cod_info->psymax; sfb++) {
 	    int s =
 	        cod_info->global_gain
 	        - (((*scalefac++) + (cod_info->preflag ? pretab[sfb] : 0))
@@ -703,7 +703,7 @@ int  calc_noise(
             l = cod_info->width[sfb] >> 1;
 
             if ((j+cod_info->width[sfb])>cod_info->max_nonzero_coeff) {
-                int usefullsize;
+                unsigned int usefullsize;
                 usefullsize = cod_info->max_nonzero_coeff - j +1;
                 l = usefullsize >> 1;
             }
