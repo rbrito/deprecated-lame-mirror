@@ -132,14 +132,14 @@ CPPFLAGS = @CPPFLAGS@
 LDFLAGS = @LDFLAGS@
 LIBS = @LIBS@
 ANSI2KNR = $(top_srcdir)/ansi2knr
-@LIB_WITH_DECODER_FALSE@@HAVE_NASM_TRUE@libmp3lame_la_DEPENDENCIES =  \
-@LIB_WITH_DECODER_FALSE@@HAVE_NASM_TRUE@$(top_srcdir)/libmp3lame/@CPUTYPE@/liblameasmroutines.la
-@LIB_WITH_DECODER_TRUE@@HAVE_NASM_FALSE@libmp3lame_la_DEPENDENCIES =  \
-@LIB_WITH_DECODER_TRUE@@HAVE_NASM_FALSE@$(top_srcdir)/mpglib/libmpgdecoder.la
-@LIB_WITH_DECODER_TRUE@@HAVE_NASM_TRUE@libmp3lame_la_DEPENDENCIES =  \
-@LIB_WITH_DECODER_TRUE@@HAVE_NASM_TRUE@$(top_srcdir)/libmp3lame/@CPUTYPE@/liblameasmroutines.la \
-@LIB_WITH_DECODER_TRUE@@HAVE_NASM_TRUE@$(top_srcdir)/mpglib/libmpgdecoder.la
-@LIB_WITH_DECODER_FALSE@@HAVE_NASM_FALSE@libmp3lame_la_DEPENDENCIES = 
+@HAVE_NASM_TRUE@@LIB_WITH_DECODER_FALSE@libmp3lame_la_DEPENDENCIES =  \
+@HAVE_NASM_TRUE@@LIB_WITH_DECODER_FALSE@$(top_srcdir)/libmp3lame/@CPUTYPE@/liblameasmroutines.la
+@HAVE_NASM_FALSE@@LIB_WITH_DECODER_TRUE@libmp3lame_la_DEPENDENCIES =  \
+@HAVE_NASM_FALSE@@LIB_WITH_DECODER_TRUE@$(top_srcdir)/mpglib/libmpgdecoder.la
+@HAVE_NASM_FALSE@@LIB_WITH_DECODER_FALSE@libmp3lame_la_DEPENDENCIES = 
+@HAVE_NASM_TRUE@@LIB_WITH_DECODER_TRUE@libmp3lame_la_DEPENDENCIES =  \
+@HAVE_NASM_TRUE@@LIB_WITH_DECODER_TRUE@$(top_srcdir)/libmp3lame/@CPUTYPE@/liblameasmroutines.la \
+@HAVE_NASM_TRUE@@LIB_WITH_DECODER_TRUE@$(top_srcdir)/mpglib/libmpgdecoder.la
 libmp3lame_la_OBJECTS =  VbrTag$U.lo bitstream$U.lo encoder$U.lo \
 fft$U.lo id3tag$U.lo lame$U.lo newmdct$U.lo psymodel$U.lo quantize$U.lo \
 quantize_pvt$U.lo reservoir$U.lo tables$U.lo takehiro$U.lo util$U.lo \
@@ -157,7 +157,7 @@ DIST_COMMON =  Makefile.am Makefile.in
 
 DISTFILES = $(DIST_COMMON) $(SOURCES) $(HEADERS) $(TEXINFOS) $(EXTRA_DIST)
 
-TAR = tar
+TAR = gtar
 GZIP_ENV = --best
 DEP_FILES =  .deps/VbrTag.P .deps/bitstream.P .deps/encoder.P \
 .deps/fft.P .deps/id3tag.P .deps/lame.P .deps/mpglib_interface.P \
@@ -399,7 +399,7 @@ distdir: $(DISTFILES)
 	@for file in $(DISTFILES); do \
 	  d=$(srcdir); \
 	  if test -d $$d/$$file; then \
-	    cp -pr $$d/$$file $(distdir)/$$file; \
+	    cp -pr $$/$$file $(distdir)/$$file; \
 	  else \
 	    test -f $(distdir)/$$file \
 	    || ln $$d/$$file $(distdir)/$$file 2> /dev/null \

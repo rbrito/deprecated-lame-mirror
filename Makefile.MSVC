@@ -115,7 +115,6 @@ lame_sources = \
 	frontend/main.c \
 	frontend/brhist.c \
 	frontend/get_audio.c \
-	frontend/ieeefloat.c \
 	frontend/lametime.c \
 	frontend/parse.c \
 	frontend/portableio.c \
@@ -127,7 +126,6 @@ mpx_sources = \
 	frontend/mp3x.c \
 	frontend/brhist.c \
 	frontend/get_audio.c \
-	frontend/ieeefloat.c \
 	frontend/lametime.c \
 	frontend/parse.c \
 	frontend/portableio.c \

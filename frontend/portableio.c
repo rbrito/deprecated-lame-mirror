@@ -46,6 +46,10 @@
  * $Id$
  *
  * $Log$
+ * Revision 1.4  2000/11/18 04:30:59  markt
+ * Makefiles:  removed ieeefloat.* from makefiles.
+ * get_audio.c: replaced DetermineByteOrder with original routine.
+ *
  * Revision 1.3  2000/11/18 04:24:06  markt
  * Removed ieeefloat.*
  *
@@ -351,109 +355,3 @@ ReadIeeeExtendedHighLow(FILE *fp)
 	return ConvertFromIeeeExtended(bits);
 }
 
-#if 0
-
-double
-ReadIeeeFloatHighLow(FILE *fp)
-{
-	char	bits[kFloatLength];
-
-	ReadBytes(fp, bits, kFloatLength);
-	return ConvertFromIeeeSingle(bits);
-}
-
-
-double
-ReadIeeeFloatLowHigh(FILE *fp)
-{
-	char	bits[kFloatLength];
-
-	ReadBytesSwapped(fp, bits, kFloatLength);
-	return ConvertFromIeeeSingle(bits);
-}
-
-double
-ReadIeeeDoubleHighLow(FILE *fp)
-{
-	char	bits[kDoubleLength];
-
-	ReadBytes(fp, bits, kDoubleLength);
-	return ConvertFromIeeeDouble(bits);
-}
-
-double
-ReadIeeeDoubleLowHigh(FILE *fp)
-{
-	char	bits[kDoubleLength];
-
-	ReadBytesSwapped(fp, bits, kDoubleLength);
-	return ConvertFromIeeeDouble(bits);
-}
-
-
-double
-ReadIeeeExtendedLowHigh(FILE *fp)
-{
-	char	bits[kExtendedLength];
-
-	ReadBytesSwapped(fp, bits, kExtendedLength);
-	return ConvertFromIeeeExtended(bits);
-}
-
-void
-WriteIeeeFloatLowHigh(FILE *fp, double num)
-{
-	char	bits[kFloatLength];
-
-	ConvertToIeeeSingle(num,bits);
-	WriteBytesSwapped(fp,bits,kFloatLength);
-}
-
-void
-WriteIeeeFloatHighLow(FILE *fp, double num)
-{
-	char	bits[kFloatLength];
-
-	ConvertToIeeeSingle(num,bits);
-	WriteBytes(fp,bits,kFloatLength);
-}
-
-void
-WriteIeeeDoubleLowHigh(FILE *fp, double num)
-{
-	char	bits[kDoubleLength];
-
-	ConvertToIeeeDouble(num,bits);
-	WriteBytesSwapped(fp,bits,kDoubleLength);
-}
-
-void
-WriteIeeeDoubleHighLow(FILE *fp, double num)
-{
-	char	bits[kDoubleLength];
-
-	ConvertToIeeeDouble(num,bits);
-	WriteBytes(fp,bits,kDoubleLength);
-}
-
-void
-WriteIeeeExtendedLowHigh(FILE *fp, double num)
-{
-	char	bits[kExtendedLength];
-
-	ConvertToIeeeExtended(num,bits);
-	WriteBytesSwapped(fp,bits,kExtendedLength);
-}
-
-
-void
-WriteIeeeExtendedHighLow(FILE *fp, double num)
-{
-	char	bits[kExtendedLength];
-
-	ConvertToIeeeExtended(num,bits);
-	WriteBytes(fp,bits,kExtendedLength);
-}
-
-
-#endif

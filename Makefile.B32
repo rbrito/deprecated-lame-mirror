@@ -116,7 +116,6 @@ CC_SWITCHES = -DNDEBUG $(CC_OPTS) $(SNDLIB) $(GTK) $(BRHIST_SWITCH) $(VORBIS)
 frontend_sources = \
         frontend/brhist.c \
 	frontend/get_audio.c \
-	frontend/ieeefloat.c \
         frontend/lametime.c \
         frontend/parse.c \
 	frontend/portableio.c \
