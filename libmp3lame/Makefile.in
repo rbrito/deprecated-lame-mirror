@@ -113,7 +113,7 @@ AUTOMAKE_OPTIONS = 1.4d foreign $(top_srcdir)/ansi2knr
 SUBDIRS = i386
 
 lib_LTLIBRARIES = libmp3lame.la
-@HAVE_NASM_TRUE@nasm_ldadd = @HAVE_NASM_TRUE@$(top_builddir)/libmp3lame/@CPUTYPE@/liblameasmroutines.la
+@HAVE_NASM_TRUE@nasm_ldadd = @HAVE_NASM_TRUE@$(top_builddir)/libmp3lame/@CPUTYPE@/liblameasmroutines.a
 @HAVE_NASM_FALSE@nasm_ldadd = 
 @LIB_WITH_DECODER_TRUE@decoder_ldadd = @LIB_WITH_DECODER_TRUE@$(top_builddir)/mpglib/libmpgdecoder.la
 @LIB_WITH_DECODER_FALSE@decoder_ldadd = 
@@ -164,6 +164,7 @@ noinst_HEADERS = \
 	id3tag.h \
 	l3side.h \
 	lame-analysis.h \
+	lame_global_flags.h \
 	machine.h \
 	newmdct.h \
 	pcm.h \
@@ -202,9 +203,9 @@ ANSI2KNR = $(top_srcdir)/ansi2knr
 @HAVE_NASM_FALSE@@LIB_WITH_DECODER_TRUE@libmp3lame_la_DEPENDENCIES =  \
 @HAVE_NASM_FALSE@@LIB_WITH_DECODER_TRUE@$(top_builddir)/mpglib/libmpgdecoder.la
 @HAVE_NASM_TRUE@@LIB_WITH_DECODER_FALSE@libmp3lame_la_DEPENDENCIES =  \
-@HAVE_NASM_TRUE@@LIB_WITH_DECODER_FALSE@$(top_builddir)/libmp3lame/@CPUTYPE@/liblameasmroutines.la
+@HAVE_NASM_TRUE@@LIB_WITH_DECODER_FALSE@$(top_builddir)/libmp3lame/@CPUTYPE@/liblameasmroutines.a
 @HAVE_NASM_TRUE@@LIB_WITH_DECODER_TRUE@libmp3lame_la_DEPENDENCIES =  \
-@HAVE_NASM_TRUE@@LIB_WITH_DECODER_TRUE@$(top_builddir)/libmp3lame/@CPUTYPE@/liblameasmroutines.la \
+@HAVE_NASM_TRUE@@LIB_WITH_DECODER_TRUE@$(top_builddir)/libmp3lame/@CPUTYPE@/liblameasmroutines.a \
 @HAVE_NASM_TRUE@@LIB_WITH_DECODER_TRUE@$(top_builddir)/mpglib/libmpgdecoder.la
 am_libmp3lame_la_OBJECTS =  VbrTag$U.lo bitstream$U.lo encoder$U.lo \
 fft$U.lo id3tag$U.lo lame$U.lo newmdct$U.lo pcm$U.lo psymodel$U.lo \
