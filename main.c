@@ -94,9 +94,16 @@ int main(int argc, char **argv)
     }
 #ifdef __riscos__
     /* Assign correct file type */
-    for (i = 0; gf.outPath[i]; i++)
-      if (gf.outPath[i] == '.') gf.outPath[i] = '/';
-    SetFiletype(gf.outPath, 0x1ad);
+    for (i = 0; gf.outPath[i]; i++) {
+      if (gf.outPath[i] == '.')
+        gf.outPath[i] = '/';
+      else if (gf.outPath[i] == '/')
+        gf.outPath[i] = '.';
+    }
+    if (gf.decode_only)
+      SetFiletype(gf.outPath, 0xfb1); /* Wave */
+    else
+      SetFiletype(gf.outPath, 0x1ad); /* AMPEG */
 #endif
   }
 
@@ -111,10 +118,10 @@ int main(int argc, char **argv)
 #endif
 
   } else if (gf.decode_only) {
-    
+
     /* decode an mp3 file to a .wav */
     lame_decoder(&gf,outf,gf.encoder_delay);
-    
+
   } else {
 
       /* encode until we hit eof */
@@ -125,7 +132,7 @@ int main(int argc, char **argv)
 
 	/* encode */
 	imp3=lame_encode_buffer(&gf,Buffer[0],Buffer[1],iread,
-              mp3buffer,(int)sizeof(mp3buffer)); 
+              mp3buffer,(int)sizeof(mp3buffer));
 
 	/* was our output buffer big enough? */
 	if (imp3<0) {
