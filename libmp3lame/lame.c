@@ -239,6 +239,10 @@ optimum_samplefreq(int lowpassfreq, int input_samplefreq)
  *
  */
     int suggested_samplefreq = input_samplefreq;
+
+    if (lowpassfreq == -1)
+        return suggested_samplefreq;
+
     if (lowpassfreq <= 15960)
         suggested_samplefreq = 44100;
     if (lowpassfreq <= 15250)
