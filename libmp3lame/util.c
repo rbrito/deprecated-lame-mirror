@@ -358,6 +358,8 @@ int  fill_buffer_resample (
     sample_t*  inbuf_old;
     int        bpc;                    /* number of convolution functions to pre-compute */
     
+    assert( len > 20 );
+    
     bpc = gfc->gfp->out_samplerate 
         / gcd ( gfc->gfp->out_samplerate, gfc->gfp->in_samplerate );
     
@@ -438,14 +440,26 @@ int  fill_buffer_resample (
 
 	if ( j >= filter_l/2 ) {
 	    // Broken PRECOMPUTE
-            xvalue = scalar20 ( inbuf + j-filter_l/2, gfc->blackfilt [joff] );
+/* BUG fixed? problem: sometimes j-filter_l/2 == len
+RH */
+// was      xvalue = scalar20 ( inbuf + j-filter_l/2, gfc->blackfilt [joff] );
+            xvalue = scalar20 ( inbuf + j-(filter_l+1)/2, gfc->blackfilt [joff] );
 	} else {
 	    xvalue = 0.;
             for ( i = 0 ; i <= filter_l; i++) {
-                int       j2 = i + j-filter_l/2;
+/* BUG fixed? problem: sometimes j-filter_l/2 == len
+RH */
+// was          int       j2 = i + j-filter_l/2;   <- will result in j2==len!
+                int       j2 = i + j-(filter_l+1)/2;
                 sample_t  y;
             
-                y = (j2 < 0) ? inbuf_old [BLACKSIZE+j2] : inbuf [j2];
+                if (j2 < 0) {
+                    assert (BLACKSIZE+j2 > 0);
+                    y = inbuf_old [BLACKSIZE+j2];
+                } else {
+                    assert (j2 < len);
+                    y = inbuf [j2];
+                }
 #ifdef PRECOMPUTE
                 xvalue += y*gfc->blackfilt [joff][i];
 #else
