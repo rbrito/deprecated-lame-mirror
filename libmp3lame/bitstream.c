@@ -606,7 +606,7 @@ format_bitstream(lame_global_flags *gfp)
     drainPre = drainbits & (~7U);
     if (drainPre > l3_side->main_data_begin*8)
 	drainPre = l3_side->main_data_begin*8;
-
+    l3_side->main_data_begin -= drainPre/8;
     drain_into_ancillary(gfc, drainPre);
     encodeBitStream(gfp);
     gfc->bs.bitidx += drainbits - drainPre;
