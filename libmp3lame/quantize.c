@@ -459,16 +459,15 @@ init_global_gain(
 
     if (gi->global_gain < 0) {
 	gi->global_gain = 0;
-	nbits = count_bits(gfc, xr34, gi);
+	count_bits(gfc, xr34, gi);
     } else if (gi->global_gain > 255) {
 	gi->global_gain = 255;
 	gi->big_values = gi->count1 = gi->xrNumMax;
-	nbits = count_bits(gfc, xr34, gi);
+	count_bits(gfc, xr34, gi);
     } else if (nbits > desired_rate) {
 	gi->global_gain++;
-	nbits = count_bits(gfc, xr34, gi);
+	count_bits(gfc, xr34, gi);
     }
-    gi->part2_3_length = nbits;
 }
 
 
@@ -499,64 +498,52 @@ trancate_smallspectrums(
     FLOAT		* work
     )
 {
-    int sfb, j, width;
+    int sfb, j;
     FLOAT distort[SFBMAX], dummy[SFBMAX];
 
     for (sfb = 0; sfb < gi->psymax; sfb++) {
 	dummy[sfb] = 1.0;
 	distort[sfb] = -1.0;
     }
-
     calc_noise(gi, dummy, distort);
-    for (j = 0; j < gi->xrNumMax; j++) {
-	FLOAT xr = 0.0;
-	if (gi->l3_enc[j] != 0)
-	    xr = fabs(gi->xr[j]);
-	work[j] = xr;
-    }
 
     j = sfb = 0;
     do {
-	FLOAT allowedNoise, trancateThreshold;
-	int nsame, start;
-
-	width = gi->width[sfb];
+	FLOAT threshold;
+	int nsame, start, end, width2 = 0, k = j, width = gi->width[sfb];
 	j += width;
+
 	if (distort[sfb] >= 1.0)
 	    continue;
 
-	qsort(&work[j-width], width, sizeof(FLOAT), floatcompare);
-	if (work[j - 1] == 0.0)
-	    continue; /* all zero sfb */
+	do {
+	    if (gi->l3_enc[k] != 0)
+		work[width2++] = fabs(gi->xr[k]);
+	} while (++k < j);
+	if (width2 == 0)
+	    continue; /* already all zero */
 
-	allowedNoise = xmin[sfb] - distort[sfb];
-	trancateThreshold = 0.0;
+	qsort(work, width2, sizeof(FLOAT), floatcompare);
+	threshold = xmin[sfb] - distort[sfb];
 	start = 0;
 	do {
-	    FLOAT noise;
-	    for (nsame = 1; start + nsame < width; nsame++)
-		if (work[start + j-width] != work[start+j+nsame-width])
+	    for (nsame = 1; start+nsame < width2; nsame++)
+		if (work[start] != work[start+nsame])
 		    break;
 
-	    noise = work[start+j-width] * work[start+j-width] * nsame;
-	    if (allowedNoise < noise) {
-		if (start != 0)
-		    trancateThreshold = work[start+j-width - 1];
-		break;
-	    }
-	    allowedNoise -= noise;
-	    start += nsame;
-	} while (start < width);
-	if (trancateThreshold == 0.0)
+	    threshold -= work[start] * work[start] * nsame;
+	} while (threshold > 0.0 && (start += nsame) < width);
+	if (start == 0)
 	    continue;
 
+	threshold = work[start-1];
 	do {
-	    if (fabs(gi->xr[j - width]) <= trancateThreshold)
-		gi->l3_enc[j - width] = 0;
+	    if (fabs(gi->xr[j - width]) <= threshold)
+		gi->l3_enc[j - width] = 0.0;
 	} while (--width > 0);
     } while (++sfb < gi->psymax);
 
-    gi->part2_3_length = noquant_count_bits(gfc, gi);
+    noquant_count_bits(gfc, gi);
 }
 
 
@@ -1536,8 +1523,7 @@ VBR_noise_shaping(
 
     /* quantize xr34 */
     gi->big_values = gi->count1 = gi->xrNumMax;
-    gi->part2_3_length = count_bits(gfc, xr34, gi);
-    if (gi->part2_3_length >= LARGE_BITS)
+    if (count_bits(gfc, xr34, gi) >= LARGE_BITS)
 	return -2;
 
     /* encode scalefacs */
