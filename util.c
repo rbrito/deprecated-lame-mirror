@@ -91,6 +91,15 @@ void display_bitrates(FILE *out_fh)
     fprintf(out_fh,"%i ",bitrate_table[version][index]);
   }
   fprintf(out_fh,"\n");
+
+  version = 0;
+  fprintf(out_fh,"\n");
+  fprintf(out_fh,"MPEG2.5 samplerates(kHz): 8 11.025 12 \n");
+  fprintf(out_fh,"bitrates(kbs): ");
+  for (index=1;index<15;index++) {
+    fprintf(out_fh,"%i ",bitrate_table[version][index]);
+  }
+  fprintf(out_fh,"\n");
 }
 
 

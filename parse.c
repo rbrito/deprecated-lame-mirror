@@ -76,7 +76,7 @@ void lame_short_help(lame_global_flags *gfp,char *name)  /* print syntax & exit 
   fprintf(stdout,"    -h              higher quality, but a little slower.  Recommended.\n");
   fprintf(stdout,"    -k              keep ALL frequencies (disables all filters)\n");
   fprintf(stdout,"    -m mode         (s)tereo, (j)oint, (f)orce or (m)ono  (default j)\n");
-  fprintf(stdout,"                    force = force ms_stereo on all frames. Faster\n");
+  fprintf(stdout,"                    force = force ms_stereo on all frames.\n");
   fprintf(stdout,"    -V n            quality setting for VBR.  default n=%i\n",gfp->VBR_q);
   fprintf(stdout,"\n");
   fprintf(stdout,"    --preset type   type must be phone, voice, fm, tape, hifi, cd or studio\n");
