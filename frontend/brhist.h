@@ -28,8 +28,9 @@
 #include "lame.h"
 
 int   brhist_init       ( const lame_global_flags  *gf, const int bitrate_kbps_min, const int bitrate_kbps_max );
-void  brhist_disp       ( const lame_global_flags  *gf, const int jump_back );
+void  brhist_disp       ( const lame_global_flags  *gf );
 void  brhist_disp_total ( const lame_global_flags  *gf );
+void  brhist_jump_back  ( void );
 
 typedef struct {
     FILE*   Console_fp;			/* filepointer to stream reporting information */
@@ -40,6 +41,7 @@ typedef struct {
 #endif
     int     disp_width;
     int     disp_height;
+	int	    hist_printed_lines;
     char    str_up         [10];
     char    str_clreoln    [10];
     char    str_emph       [10];

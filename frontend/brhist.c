@@ -115,6 +115,7 @@ int  brhist_init ( const lame_global_flags* gf, const int bitrate_kbps_min, cons
     /* setup basics of brhist I/O channels */
     Console_IO.disp_width  = 80;
     Console_IO.disp_height = 25;
+	Console_IO.hist_printed_lines = 0;
     Console_IO.Console_fp  = stderr;
     Console_IO.Error_fp    = stderr;
     Console_IO.Report_fp   = stderr;
@@ -238,6 +239,7 @@ static void  brhist_disp_line ( const lame_global_flags*  gf, int i, int br_hist
                   barlen_LR, brhist.bar_hash, 
                   barlen_TOT - barlen_LR, brhist.bar_asterisk, 
 		  Console_IO.disp_width - BRHIST_RES - barlen_TOT, "" );
+	Console_IO.hist_printed_lines++;
 }
 
 
@@ -245,16 +247,17 @@ static void  brhist_disp_line ( const lame_global_flags*  gf, int i, int br_hist
 #define LR  0
 #define MS  2
 
-void  brhist_disp ( const lame_global_flags*  gf, const int jump_back )
+void  brhist_disp ( const lame_global_flags*  gf )
 {
     int   i;
     int   br_hist [BRHIST_WIDTH];       /* how often a frame size was used */
     int   br_sm_hist [BRHIST_WIDTH] [4];/* how often a special frame size/stereo mode commbination was used */
     int   frames;                       /* total number of encoded frames */
     int   most_often;                   /* usage count of the most often used frame size, but not smaller than Console_IO.disp_width-BRHIST_RES (makes this sense?) and 1 */
-    int   printed_lines = 0;            /* printed number of lines for the brhist functionality, used to skip back the right number of lines */
     
-    lame_bitrate_hist             ( gf, br_hist    );
+    Console_IO.hist_printed_lines = 0;  /* printed number of lines for the brhist functionality, used to skip back the right number of lines */
+	
+	lame_bitrate_hist             ( gf, br_hist    );
     lame_bitrate_stereo_mode_hist ( gf, br_sm_hist );
 
     frames = most_often = 0;
@@ -268,44 +271,45 @@ void  brhist_disp ( const lame_global_flags*  gf, const int jump_back )
     for (; i < brhist.vbr_bitrate_min_index; i++) 
         if ( br_hist [i] ) {
             brhist_disp_line ( gf, i, br_hist [i], br_sm_hist [i][LR], most_often, frames );
-    	    printed_lines++;
 	}
     for (; i <= brhist.vbr_bitrate_max_index; i++) {
         brhist_disp_line ( gf, i, br_hist [i], br_sm_hist [i][LR], most_often, frames );
-	printed_lines++;
     }
     for (; i < BRHIST_WIDTH; i++)
         if ( br_hist [i] ) {
             brhist_disp_line ( gf, i, br_hist [i], br_sm_hist [i][LR], most_often, frames );
-	    printed_lines++;
 	}
 #else
     most_often = most_often < Console_IO.disp_width - BRHIST_RES  ?  Console_IO.disp_width - BRHIST_RES : most_often;  /* makes this sense? */
     for ( i=0 ; i < BRHIST_WIDTH; i++) {
-        brhist_disp_line ( gf, i, br_hist [i], br_sm_hist [i][LR], most_often, frames );
-	printed_lines++; 
+        brhist_disp_line ( gf, i, br_hist [i], br_sm_hist [i][LR], most_often, frames ); 
     }
 #endif	
-    
+
 #if defined(_WIN32)  &&  !defined(__CYGWIN__) 
     /* fflush is needed for Windows ! */
 	fflush ( Console_IO.Console_fp );
+#else
+    fputs ( "\r", Console_IO.Console_fp );
+    fflush ( Console_IO.Console_fp );
+#endif
+}
 
+void brhist_jump_back( void )
+{
+#if defined(_WIN32)  &&  !defined(__CYGWIN__) 
     if ( GetFileType (Console_IO.Console_Handle) != FILE_TYPE_PIPE ) {
         COORD                       Pos;
         CONSOLE_SCREEN_BUFFER_INFO  CSBI;
 	
-	GetConsoleScreenBufferInfo ( Console_IO.Console_Handle, &CSBI );
-	Pos.Y = CSBI.dwCursorPosition.Y - printed_lines ;  /* $$$ */
-	Pos.X = 0;
-	SetConsoleCursorPosition ( Console_IO.Console_Handle, Pos );
+	    GetConsoleScreenBufferInfo ( Console_IO.Console_Handle, &CSBI );
+	    Pos.Y = CSBI.dwCursorPosition.Y - Console_IO.hist_printed_lines ;  /* $$$ */
+	    Pos.X = 0;
+	    SetConsoleCursorPosition ( Console_IO.Console_Handle, Pos );
     }
 #else
-    fputs ( "\r", Console_IO.Console_fp );
-    fflush ( Console_IO.Console_fp );
-    if ( jump_back )
-        while ( printed_lines-- > 0 )
-            fputs ( Console_IO.str_up, Console_IO.Console_fp );
+    while ( Console_IO.hist_printed_lines-- > 0 )
+        fputs ( Console_IO.str_up, Console_IO.Console_fp );
 #endif
 }
 

@@ -233,10 +233,13 @@ int main(int argc, char **argv)
 	    timestatus_klemm(&gf);
 	  }else{
 	    if (0==gf.frameNum % 50) {
+#ifdef BRHIST
+          brhist_jump_back();
+#endif
 	      timestatus(gf.out_samplerate,gf.frameNum,gf.totalframes,gf.framesize);
 #ifdef BRHIST
 	      if (brhist)
-		brhist_disp(&gf,1 /* flash back */);
+		brhist_disp(&gf);
 #endif
 	    }
 	  }
@@ -267,10 +270,13 @@ int main(int argc, char **argv)
       }
 
       if (!silent) {
+#ifdef BRHIST
+    brhist_jump_back();
+#endif
 	timestatus(gf.out_samplerate,gf.frameNum,gf.totalframes,gf.framesize);
 #ifdef BRHIST
 	if (brhist) {
-	  brhist_disp(&gf,0 /* no flash back */);
+	  brhist_disp(&gf);
 #ifndef KLEMM_13	  
 	  brhist_disp_total(&gf);
 #endif	  

@@ -439,7 +439,7 @@ void timestatus_klemm(const lame_global_flags *gfp)
 		   gfp -> framesize );
 #ifdef BRHIST
       if ( brhist )
-	brhist_disp ( gfp, 1 /* jump back */ );
+	brhist_disp ( gfp );
 #endif
       last_time = GetRealTime ();  /* from now! disp_time seconds */
     }
