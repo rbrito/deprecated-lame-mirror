@@ -81,8 +81,7 @@ typedef struct ts_times {
 /*********************************************************/
 /* ts_calc_times: calculate time info (eta, speed, etc.) */
 /*********************************************************/
-void ts_calc_times(ts_times *time, int samp_rate, long frame, long frames, 
-int framesize) 
+void ts_calc_times(ts_times *time, int samp_rate, long frame, long frames,int framesize)
 {
   if (frame > 0) {
     time->estimated = time->so_far * frames / frame;
@@ -102,12 +101,10 @@ int framesize)
 /*********************************************************/
 /* timestatus: display encoding process time information */
 /*********************************************************/
-void timestatus(layer *info,long frameNum,long totalframes)
+void timestatus(int samp_rate,long frameNum,long totalframes,int framesize)
 {
-  const int samp_rate = (int)s_freq[info->version][info->sampling_frequency];
   ts_times real_time, process_time;
   int percent;
-  int framesize = (info->version==0) ? 576 : 1152;
 
   real_time.so_far = ts_real_time(frameNum);
   process_time.so_far = ts_process_time(frameNum);
@@ -117,8 +114,8 @@ void timestatus(layer *info,long frameNum,long totalframes)
     return;
   }  
 
-  ts_calc_times(&real_time, samp_rate, frameNum, totalframes,framesize);
-  ts_calc_times(&process_time, samp_rate, frameNum, totalframes,framesize);
+  ts_calc_times(&real_time, samp_rate, frameNum, totalframes, framesize);
+  ts_calc_times(&process_time, samp_rate, frameNum, totalframes, framesize);
 
   if (totalframes > 1) {
     percent = (int)(100.0 * frameNum / (totalframes - 1));

@@ -146,11 +146,11 @@ iteration_init( III_side_info_t *l3_side, int l3_enc[2][2][576],
   if ( gf.frameNum==0 ) {
     for (i = 0; i < SBMAX_l + 1; i++) {
       scalefac_band.l[i] =
-	sfBandIndex[info->sampling_frequency + (info->version * 3)].l[i];
+	sfBandIndex[info->sampling_frequency + (gf.version * 3)].l[i];
     }
     for (i = 0; i < SBMAX_s + 1; i++) {
       scalefac_band.s[i] =
-	sfBandIndex[info->sampling_frequency + (info->version * 3)].s[i];
+	sfBandIndex[info->sampling_frequency + (gf.version * 3)].s[i];
     }
 
     l3_side->main_data_begin = 0;
@@ -284,7 +284,7 @@ void compute_ath(layer *info,FLOAT8 ATH_l[SBPSY_l],FLOAT8 ATH_s[SBPSY_l])
 {
   int sfb,i,start,end;
   FLOAT8 ATH_f;
-  FLOAT8 samp_freq = s_freq[info->version][info->sampling_frequency];
+  FLOAT8 samp_freq = s_freq[gf.version][info->sampling_frequency];
 #ifdef RH_ATH
   /* going from average to peak level ATH masking
    */

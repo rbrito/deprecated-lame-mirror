@@ -38,17 +38,16 @@ enum byte_order NativeByteOrder = order_unknown;
 void getframebits(layer *info, int *bitsPerFrame, int *mean_bits) {
   int whole_SpF;
   FLOAT8 bit_rate,samp;
-  int samplesPerFrame,bitsPerSlot;
+  int bitsPerSlot;
   int sideinfo_len;
   
-  samp =      s_freq[info->version][info->sampling_frequency];
-  bit_rate = bitrate[info->version][info->lay-1][info->bitrate_index];
-  samplesPerFrame = 576 * gf.mode_gr;
+  samp =      gf.out_samplerate/1000.0;
+  bit_rate = bitrate[gf.version][2][info->bitrate_index];
   bitsPerSlot = 8;
 
   /* determine the mean bitrate for main data */
   sideinfo_len = 32;
-  if ( info->version == 1 )
+  if ( gf.version == 1 )
     {   /* MPEG 1 */
       if ( gf.stereo == 1 )
 	sideinfo_len += 136;
@@ -63,11 +62,11 @@ void getframebits(layer *info, int *bitsPerFrame, int *mean_bits) {
 	sideinfo_len += 136;
     }
   
-  if (info->error_protection) sideinfo_len += 16;
+  if (gf.error_protection) sideinfo_len += 16;
   
   
-  whole_SpF =  (samplesPerFrame /samp)*(bit_rate /  (FLOAT8)bitsPerSlot);
-  *bitsPerFrame = 8 * whole_SpF + (info->padding * 8);
+  whole_SpF =  (gf.framesize /samp)*(bit_rate /  (FLOAT8)bitsPerSlot);
+  *bitsPerFrame = 8 * whole_SpF + (gf.padding * 8);
   *mean_bits = (*bitsPerFrame - sideinfo_len) / gf.mode_gr;
 }
 
@@ -78,7 +77,7 @@ void display_bitrates(FILE *out_fh)
 {
   int index,version;
 
-  version = MPEG_AUDIO_ID;
+  version = 1;
   fprintf(out_fh,"\n");
   fprintf(out_fh,"MPEG1 samplerates(kHz): 32 44.1 48 \n");
 
@@ -89,7 +88,7 @@ void display_bitrates(FILE *out_fh)
   fprintf(out_fh,"\n");
   
   
-  version = MPEG_PHASE2_LSF; 
+  version = 0;
   fprintf(out_fh,"\n");
   fprintf(out_fh,"MPEG2 samplerates(kHz): 16 22.05 24 \n");
   fprintf(out_fh,"bitrates(kbs): ");
@@ -132,22 +131,22 @@ int  *version)
 	*version=0;
 
     if (sRate == 44100L) {
-        *version = MPEG_AUDIO_ID; return(0);
+        *version = 1; return(0);
     }
     else if (sRate == 48000L) {
-        *version = MPEG_AUDIO_ID; return(1);
+        *version = 1; return(1);
     }
     else if (sRate == 32000L) {
-        *version = MPEG_AUDIO_ID; return(2);
+        *version = 1; return(2);
     }
     else if (sRate == 24000L) {
-        *version = MPEG_PHASE2_LSF; return(1);
+        *version = 0; return(1);
     }
     else if (sRate == 22050L) {
-        *version = MPEG_PHASE2_LSF; return(0);
+        *version = 0; return(0);
     }
     else if (sRate == 16000L) {
-        *version = MPEG_PHASE2_LSF; return(2);
+        *version = 0; return(2);
     }
     else {
         fprintf(stderr, "SmpFrqIndex: %ldHz is not a legal sample rate\n", sRate);

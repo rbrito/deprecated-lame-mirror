@@ -385,7 +385,7 @@ void outer_loop_dual(
 
 	/* check to make sure we have not amplified too much */
 	if ( (status[ch] = loop_break(&scalefac_w[ch], cod_info[ch])) == 0 ) {
-	  if ( fr_ps->header->version == 1 ) {
+	  if ( gf.version == 1 ) {
 	    status[ch] = scale_bitcount(&scalefac_w[ch], cod_info[ch]);
 	  }else{
 	    status[ch] = scale_bitcount_lsf(&scalefac_w[ch], cod_info[ch]);

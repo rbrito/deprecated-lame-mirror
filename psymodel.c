@@ -301,7 +301,7 @@ void L3psycho_anal( short int *buffer[2],
     }
 
     /* MPEG1 SNR_s data is given in db, convert to energy */
-    if (info->version == MPEG_AUDIO_ID) {
+    if (gf.version == 1) {
       for ( b = 0;b < npart_s; b++ ) {
 	SNR_s[b]=exp( (FLOAT8) SNR_s[b] * LN_TO_LOG10 );
       }

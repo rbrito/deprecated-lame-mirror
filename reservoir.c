@@ -2,41 +2,6 @@
  * ISO MPEG Audio Subgroup Software Simulation Group (1996)
  * ISO 13818-3 MPEG-2 Audio Encoder - Lower Sampling Frequency Extension
  *
- * $Id$
- *
- * $Log$
- * Revision 1.7  2000/02/11 17:21:52  markt
- * fixed scalefac not-initialized problem.  This would happen when
- * xr = 0 and outer_loop() was skipped.
- *
- * Revision 1.6  2000/01/13 16:26:50  takehiro
- * moved info.stereo into gf.stereo
- *
- * Revision 1.5  2000/01/12 14:30:54  takehiro
- * more simple & fast scalefac_scale use
- * and mode_gr is moved into gf structure.
- *
- * Revision 1.4  2000/01/09 23:10:24  markt
- * moved more globalflags into the gf. struct
- *
- * Revision 1.3  2000/01/07 06:13:05  markt
- * Robert's cw_lower_limit, upper_limit code back in.  Default is compute
- * cw[] up to 8.9Khz.  set with --cwlimit <freq>
- *
- * started putting global variables into global_flags struct.
- *
- * Revision 1.2  1999/12/17 04:24:07  markt
- * added the --nores option to disable the bitreservoir.  only usefull
- * in special circumstances
- *
- * Revision 1.1.1.1  1999/11/24 08:43:39  markt
- * initial checkin of LAME
- * Starting with LAME 3.57beta with some modifications
- *
- * Revision 1.1  1996/02/14 04:04:23  rowlands
- * Initial revision
- *
- * Received from Mike Coleman
  **********************************************************************/
 /*
   Revision History:
@@ -83,7 +48,7 @@ ResvFrameBegin( frame_params *fr_ps, III_side_info_t *l3_side, int mean_bits, in
 
 
     info = fr_ps->header;
-    if ( info->version == 1 )
+    if ( gf.version == 1 )
     {
 	resvLimit = 4088; /* main_data_begin has 9 bits in MPEG 1 */
     }

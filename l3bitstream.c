@@ -2,56 +2,6 @@
  * ISO MPEG Audio Subgroup Software Simulation Group (1996)
  * ISO 13818-3 MPEG-2 Audio Encoder - Lower Sampling Frequency Extension
  *
- * $Id$
- *
- * $Log$
- * Revision 1.14  2000/02/21 23:05:05  markt
- * some 64bit DEC Alpha patches
- *
- * Revision 1.13  2000/02/19 13:32:30  afaber
- * Fixed many warning messages when compiling with MSVC
- *
- * Revision 1.12  2000/02/01 11:26:32  takehiro
- * scalefactor's structure changed
- *
- * Revision 1.11  2000/01/18 18:51:04  afaber
- * Made my bug fixes against version 1.9 instead of a previous version
- *
- * Revision 1.9  2000/01/14 12:56:34  takehiro
- * to make it use scfsi
- *
- * Revision 1.8  2000/01/13 16:26:50  takehiro
- * moved info.stereo into gf.stereo
- *
- * Revision 1.7  2000/01/12 14:30:54  takehiro
- * more simple & fast scalefac_scale use
- * and mode_gr is moved into gf structure.
- *
- * Revision 1.6  2000/01/09 10:54:56  takehiro
- * All Huffman code search algorithm is implemented.
- * (-h option to enable this)
- * more slower, but better quality.
- *
- * Revision 1.5  1999/12/26 14:48:55  takehiro
- * some foolish bug is removed :)
- *
- * Revision 1.4  1999/12/03 10:11:50  takehiro
- * foolish mistake has removed :)
- *
- * Revision 1.3  1999/12/03 09:45:30  takehiro
- * little bit cleanup
- *
- * Revision 1.2  1999/11/27 23:39:25  markt
- * More accurate quantization from Segher Boessenkool
- *
- * Revision 1.1.1.1  1999/11/24 08:43:09  markt
- * initial checkin of LAME
- * Starting with LAME 3.57beta with some modifications
- *
- * Revision 1.1  1996/02/14 04:04:23  rowlands
- * Initial revision
- *
- * Received from Mike Coleman
  **********************************************************************/
 /*
   Revision History:
@@ -202,9 +152,6 @@ encodeMainData( int              l3_enc[2][2][576],
 		III_scalefac_t   scalefac[2][2] )
 {
     int i, gr, ch, sfb, window;
-    layer *info = fr_ps->header;
-
-
 
 
     for ( gr = 0; gr < gf.mode_gr; gr++ )
@@ -215,7 +162,7 @@ encodeMainData( int              l3_enc[2][2][576],
 	for ( ch = 0; ch < gf.stereo; ch++ )
 	    codedDataPH[gr][ch]->part->nrEntries = 0;
 
-    if ( info->version == 1 )
+    if ( gf.version == 1 )
     {  /* MPEG 1 */
 	for ( gr = 0; gr < 2; gr++ )
 	{
@@ -363,19 +310,19 @@ static int encodeSideInfo( III_side_info_t  *si )
 
     headerPH->part->nrEntries = 0;
     headerPH = BF_addEntry( headerPH, 0xfff,                    12 );
-    headerPH = BF_addEntry( headerPH, info->version,            1 );
-    headerPH = BF_addEntry( headerPH, 4 - info->lay,            2 );
-    headerPH = BF_addEntry( headerPH, !info->error_protection,  1 );
+    headerPH = BF_addEntry( headerPH, gf.version,            1 );
+    headerPH = BF_addEntry( headerPH, 1,                        2 );
+    headerPH = BF_addEntry( headerPH, !gf.error_protection,     1 );
     /* (jo) from now on call the CRC_BF_addEntry() wrapper to update crc */
     headerPH = CRC_BF_addEntry( headerPH, info->bitrate_index,      4 );
     headerPH = CRC_BF_addEntry( headerPH, info->sampling_frequency, 2 );
-    headerPH = CRC_BF_addEntry( headerPH, info->padding,            1 );
-    headerPH = CRC_BF_addEntry( headerPH, info->extension,          1 );
+    headerPH = CRC_BF_addEntry( headerPH, gf.padding,            1 );
+    headerPH = CRC_BF_addEntry( headerPH, gf.extension,          1 );
     headerPH = CRC_BF_addEntry( headerPH, info->mode,               2 );
     headerPH = CRC_BF_addEntry( headerPH, info->mode_ext,           2 );
-    headerPH = CRC_BF_addEntry( headerPH, info->copyright,          1 );
-    headerPH = CRC_BF_addEntry( headerPH, info->original,           1 );
-    headerPH = CRC_BF_addEntry( headerPH, info->emphasis,           2 );
+    headerPH = CRC_BF_addEntry( headerPH, gf.copyright,          1 );
+    headerPH = CRC_BF_addEntry( headerPH, gf.original,           1 );
+    headerPH = CRC_BF_addEntry( headerPH, gf.emphasis,           2 );
     
     bits_sent = 32;
    
@@ -390,7 +337,7 @@ static int encodeSideInfo( III_side_info_t  *si )
 	for ( ch = 0; ch < gf.stereo; ch++ )
 	    spectrumSIPH[gr][ch]->part->nrEntries = 0;
 
-    if ( info->version == 1 )
+    if ( gf.version == 1 )
     {  /* MPEG1 */
 	frameSIPH = CRC_BF_addEntry( frameSIPH, si->main_data_begin, 9 );
 
@@ -495,7 +442,7 @@ static int encodeSideInfo( III_side_info_t  *si )
 	    bits_sent += 72;
     }
 
-    if ( fr_ps->header->error_protection )
+    if ( gf.error_protection )
     {   /* (jo) error_protection: add crc16 information to header */
 	headerPH = BF_addEntry( headerPH, crc, 16 );
 	bits_sent += 16;

@@ -54,8 +54,6 @@
  #define        SQRT2                   1.41421356237309504880
 #endif
 
-#define         MPEG_AUDIO_ID           1
-#define		MPEG_PHASE2_LSF		0	/* 1995-07-11 SHN */
 
 #define         BITS_IN_A_BYTE          8
 #define         HAN_SIZE                512
@@ -106,18 +104,10 @@ typedef sb_alloc        al_table[SBLIMIT][16];
 /* Header Information Structure */
 
 typedef struct {
-    int version;
-    int lay;
-    int error_protection;
     int bitrate_index;
     int sampling_frequency;
-    int padding;
-    int extension;
     int mode;
     int mode_ext;
-    int copyright;
-    int original;
-    int emphasis;
 } layer, *the_layer;
 
 /* Parent Structure Interpreting some Frame Parameters in Header */
@@ -184,5 +174,4 @@ extern void SwapBytesInWords( short *loc, int words );
 extern void 
 getframebits(layer *info, int *bitsPerFrame, int *mean_bits);
 
-void timestatus(layer *info,long frameNum,long totalframes);
 #endif

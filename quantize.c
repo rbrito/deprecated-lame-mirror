@@ -141,7 +141,7 @@ iteration_loop( FLOAT8 pe[2][2], FLOAT8 ms_ener_ratio[2],
 
   iteration_init(l3_side,l3_enc,fr_ps);
   info = fr_ps->header;
-  bit_rate = bitrate[info->version][info->lay-1][info->bitrate_index];
+  bit_rate = bitrate[gf.version][2][info->bitrate_index];
 
 
   getframebits(info, &bitsPerFrame, &mean_bits);
@@ -895,7 +895,7 @@ void outer_loop(
 	/* loop_break returns 0 if there is an unamplified scalefac */
 	/* scale_bitcount returns 0 if no scalefactors are too large */
 	if ( (status = loop_break(&scalefac_w, cod_info)) == 0 ) {
-	    if ( fr_ps->header->version == 1 ) {
+	    if ( gf.version == 1 ) {
 		status = scale_bitcount(&scalefac_w, cod_info);
 	    }else{
 		status = scale_bitcount_lsf(&scalefac_w, cod_info);

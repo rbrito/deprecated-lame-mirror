@@ -63,8 +63,8 @@ typedef struct  {
   int copyright;                  /* mark as copyright */
   int original;                   /* mark as original */
   int error_protection;           /* use 2 bytes per frame for a CRC checksum */
-  int padding;                    /* 0=no padding, 1=always pad, 2=adjust padding */
-  int private;                    /* the MP3 'private' bit.  meaningless */
+  int padding_type;               /* 0=no padding, 1=always pad, 2=adjust padding */
+  int extension;                  /* the MP3 'private extension' bit.  meaningless */
 
   /* quantization/noise shaping */
   int disable_reservoir;          /* use bit reservoir? */
@@ -106,14 +106,16 @@ typedef struct  {
 
 
 
-  /*******************************************************************/
-  /* internal variables NOT set by calling program, but which might  */
-  /* be of interest to the calling program                           */
-  /*******************************************************************/
+  /********************************************************************/
+  /* internal variables NOT set by calling program, and should not be */
+  /* modified by the calling program                                  */
+  /********************************************************************/
   long int frameNum;              /* frame counter */
   long totalframes;               /* frames: 0..totalframes-1 (estimate)*/
   int encoder_delay;
-  int framesize;
+  int framesize;                  
+  int version;                    /* 0=MPEG2  1=MPEG1 */
+  int padding;                    /* padding for the current frame? */
   int mode_gr;                    /* granules per frame */
   int stereo;                     /* number of channels */
   int VBR_min_bitrate;            /* min bitrate index */

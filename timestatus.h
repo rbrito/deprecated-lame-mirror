@@ -3,7 +3,8 @@
 
 #include "util.h"
 
-void timestatus(layer *info,long frameNum,long totalframes);
+
+void timestatus(int samp_rate,long frameNum,long totalframes, int framesize);
 
 
 #endif
