@@ -10,17 +10,12 @@
 
 
 /* 1: MPEG-1, 0: MPEG-2 LSF, 1995-07-11 shn */
-FLOAT8  s_freq[2][4] = {{22.05, 24, 16, 0}, {44.1, 48, 32, 0}};
+FLOAT8  s_freq_table[2][4] = {{22.05, 24, 16, 0}, {44.1, 48, 32, 0}};
 
 /* 1: MPEG-1, 0: MPEG-2 LSF, 1995-07-11 shn */
-int     bitrate[2][3][15] = {
-          {{0,32,48,56,64,80,96,112,128,144,160,176,192,224,256},
-           {0,8,16,24,32,40,48,56,64,80,96,112,128,144,160},
-           {0,8,16,24,32,40,48,56,64,80,96,112,128,144,160}},
-	  {{0,32,64,96,128,160,192,224,256,288,320,352,384,416,448},
-           {0,32,48,56,64,80,96,112,128,160,192,224,256,320,384},
-           {0,32,40,48,56,64,80,96,112,128,160,192,224,256,320}}
-        };
+int     bitrate_table[2][15] = {
+          {0,8,16,24,32,40,48,56,64,80,96,112,128,144,160},
+          {0,32,40,48,56,64,80,96,112,128,160,192,224,256,320}};
 
 
 enum byte_order NativeByteOrder = order_unknown;
@@ -35,14 +30,14 @@ enum byte_order NativeByteOrder = order_unknown;
 /***********************************************************************
  * compute bitsperframe and mean_bits for a layer III frame 
  **********************************************************************/
-void getframebits(layer *info, int *bitsPerFrame, int *mean_bits) {
+void getframebits(int *bitsPerFrame, int *mean_bits) {
   int whole_SpF;
   FLOAT8 bit_rate,samp;
   int bitsPerSlot;
   int sideinfo_len;
   
   samp =      gf.out_samplerate/1000.0;
-  bit_rate = bitrate[gf.version][2][info->bitrate_index];
+  bit_rate = bitrate_table[gf.version][gf.bitrate_index];
   bitsPerSlot = 8;
 
   /* determine the mean bitrate for main data */
@@ -83,7 +78,7 @@ void display_bitrates(FILE *out_fh)
 
   fprintf(out_fh,"bitrates(kbs): ");
   for (index=1;index<15;index++) {
-    fprintf(out_fh,"%i ",bitrate[version][2][index]);
+    fprintf(out_fh,"%i ",bitrate_table[version][index]);
   }
   fprintf(out_fh,"\n");
   
@@ -93,14 +88,13 @@ void display_bitrates(FILE *out_fh)
   fprintf(out_fh,"MPEG2 samplerates(kHz): 16 22.05 24 \n");
   fprintf(out_fh,"bitrates(kbs): ");
   for (index=1;index<15;index++) {
-    fprintf(out_fh,"%i ",bitrate[version][2][index]);
+    fprintf(out_fh,"%i ",bitrate_table[version][index]);
   }
   fprintf(out_fh,"\n");
 }
 
 
 int BitrateIndex(
-int layr,         /* 1 or 2 */
 int bRate,        /* legal rates from 32 to 448 */
 int version,      /* MPEG-1 or MPEG-2 LSF */
 int samplerate)   /* convert bitrate in kbps to index */
@@ -109,7 +103,7 @@ int     index = 0;
 int     found = 0;
 
     while(!found && index<15)   {
-        if(bitrate[version][layr-1][index] == bRate)
+        if(bitrate_table[version][index] == bRate)
             found = 1;
         else
             ++index;

@@ -138,7 +138,6 @@ iteration_init( III_side_info_t *l3_side, int l3_enc[2][2][576],
 		frame_params *fr_ps)
 {
   gr_info *cod_info;
-  layer *info  = fr_ps->header;
   int ch, gr, i;
 
   l3_side->resvDrain = 0;
@@ -146,15 +145,15 @@ iteration_init( III_side_info_t *l3_side, int l3_enc[2][2][576],
   if ( gf.frameNum==0 ) {
     for (i = 0; i < SBMAX_l + 1; i++) {
       scalefac_band.l[i] =
-	sfBandIndex[info->sampling_frequency + (gf.version * 3)].l[i];
+	sfBandIndex[gf.samplerate_index + (gf.version * 3)].l[i];
     }
     for (i = 0; i < SBMAX_s + 1; i++) {
       scalefac_band.s[i] =
-	sfBandIndex[info->sampling_frequency + (gf.version * 3)].s[i];
+	sfBandIndex[gf.samplerate_index + (gf.version * 3)].s[i];
     }
 
     l3_side->main_data_begin = 0;
-    compute_ath(info,ATH_l,ATH_s);
+    compute_ath(ATH_l,ATH_s);
 
     for(i=0;i<PRECALC_SIZE;i++)
         pow43[i] = pow((FLOAT8)i, 4.0/3.0);
@@ -178,7 +177,7 @@ iteration_init( III_side_info_t *l3_side, int l3_enc[2][2][576],
   convert_mdct=0;
   convert_psy=0;
   reduce_sidechannel=0;
-  if (info->mode_ext==MPG_MD_MS_LR) {
+  if (gf.mode_ext==MPG_MD_MS_LR) {
     if (gf.ms_masking) {
       convert_mdct = 1;
       convert_psy = 0;
@@ -280,11 +279,11 @@ FLOAT8 ATHformula(FLOAT8 f)
 }
  
 
-void compute_ath(layer *info,FLOAT8 ATH_l[SBPSY_l],FLOAT8 ATH_s[SBPSY_l])
+void compute_ath(FLOAT8 ATH_l[SBPSY_l],FLOAT8 ATH_s[SBPSY_l])
 {
   int sfb,i,start,end;
   FLOAT8 ATH_f;
-  FLOAT8 samp_freq = s_freq[gf.version][info->sampling_frequency];
+  FLOAT8 samp_freq = gf.out_samplerate/1000.0;
 #ifdef RH_ATH
   /* going from average to peak level ATH masking
    */

@@ -23,7 +23,6 @@
 #include "l3bitstream-pvt.h"
 #include "globalflags.h"
 
-static frame_params *fr_ps  = NULL;
 static Bit_stream_struc *bs = NULL;
 
 BF_FrameData    *frameData    = NULL;
@@ -59,14 +58,12 @@ void putMyBits( u_int val, u_int len )
 
 void
 III_format_bitstream( int              bitsPerFrame,
-		      frame_params     *in_fr_ps,
 		      int              l3_enc[2][2][576],
 		      III_side_info_t  *l3_side,
 		      III_scalefac_t   scalefac[2][2],
 		      Bit_stream_struc *in_bs)
 {
     int gr, ch;
-    fr_ps = in_fr_ps;
     bs = in_bs;
 
     if ( frameData == NULL )
@@ -304,7 +301,6 @@ static BF_PartHolder *CRC_BF_addEntry( BF_PartHolder *thePH, u_int value, u_int 
 static int encodeSideInfo( III_side_info_t  *si )
 {
     int gr, ch, scfsi_band, region, window, bits_sent;
-    layer *info = fr_ps->header;
     
     crc = 0xffff; /* (jo) init crc16 for error_protection */
 
@@ -314,12 +310,12 @@ static int encodeSideInfo( III_side_info_t  *si )
     headerPH = BF_addEntry( headerPH, 1,                        2 );
     headerPH = BF_addEntry( headerPH, !gf.error_protection,     1 );
     /* (jo) from now on call the CRC_BF_addEntry() wrapper to update crc */
-    headerPH = CRC_BF_addEntry( headerPH, info->bitrate_index,      4 );
-    headerPH = CRC_BF_addEntry( headerPH, info->sampling_frequency, 2 );
+    headerPH = CRC_BF_addEntry( headerPH, gf.bitrate_index,      4 );
+    headerPH = CRC_BF_addEntry( headerPH, gf.samplerate_index,   2 );
     headerPH = CRC_BF_addEntry( headerPH, gf.padding,            1 );
     headerPH = CRC_BF_addEntry( headerPH, gf.extension,          1 );
-    headerPH = CRC_BF_addEntry( headerPH, info->mode,               2 );
-    headerPH = CRC_BF_addEntry( headerPH, info->mode_ext,           2 );
+    headerPH = CRC_BF_addEntry( headerPH, gf.mode,               2 );
+    headerPH = CRC_BF_addEntry( headerPH, gf.mode_ext,           2 );
     headerPH = CRC_BF_addEntry( headerPH, gf.copyright,          1 );
     headerPH = CRC_BF_addEntry( headerPH, gf.original,           1 );
     headerPH = CRC_BF_addEntry( headerPH, gf.emphasis,           2 );

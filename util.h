@@ -103,17 +103,10 @@ typedef sb_alloc        al_table[SBLIMIT][16];
 
 /* Header Information Structure */
 
-typedef struct {
-    int bitrate_index;
-    int sampling_frequency;
-    int mode;
-    int mode_ext;
-} layer, *the_layer;
 
 /* Parent Structure Interpreting some Frame Parameters in Header */
 
 typedef struct {
-    layer       *header;        /* raw header information */
     int         actual_mode;    /* when writing IS, may forget if 0 chs */
     al_table    *alloc;         /* bit allocation table read in */
     int         tab_num;        /* number of table as loaded */
@@ -148,8 +141,7 @@ typedef struct  bit_stream_struc {
 *
 ***********************************************************************/
 
-extern FLOAT8   s_freq[2][4];
-extern int      bitrate[2][3][15];
+extern int      bitrate_table[2][15];
 
 /***********************************************************************
 *
@@ -158,7 +150,7 @@ extern int      bitrate[2][3][15];
 ***********************************************************************/
 
 extern void           display_bitrates(FILE *out_fh);
-extern int            BitrateIndex(int, int, int,int);
+extern int            BitrateIndex(int, int,int);
 extern int            SmpFrqIndex(long, int*);
 extern void           *mem_alloc(unsigned long, char*);
 extern void           empty_buffer(Bit_stream_struc*);
@@ -172,6 +164,6 @@ extern enum byte_order DetermineByteOrder(void);
 extern void SwapBytesInWords( short *loc, int words );
 
 extern void 
-getframebits(layer *info, int *bitsPerFrame, int *mean_bits);
+getframebits(int *bitsPerFrame, int *mean_bits);
 
 #endif

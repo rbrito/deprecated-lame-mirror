@@ -30,7 +30,7 @@ extern FLOAT8 ATH_mdct_long[576], ATH_mdct_short[192];
 #endif
 
 FLOAT8 ATHformula(FLOAT8 f);
-void compute_ath(layer *info,FLOAT8 ATH_l[SBPSY_l],FLOAT8 ATH_s[SBPSY_l]);
+void compute_ath(FLOAT8 ATH_l[SBPSY_l],FLOAT8 ATH_s[SBPSY_l]);
 void ms_convert(FLOAT8 xr[2][576],FLOAT8 xr_org[2][576]);
 void on_pe(FLOAT8 pe[2][2],III_side_info_t *l3_side,
 int targ_bits[2],int mean_bits, int gr);

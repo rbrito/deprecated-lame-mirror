@@ -3,8 +3,7 @@
 
 /* l3psy.c */
 #include "l3side.h"
-void L3psycho_anal( short int *buffer[2],
-		    int gr , layer *info,
+void L3psycho_anal( short int *buffer[2], int gr , 
 		    FLOAT8 sfreq, int check_ms, 
 		    FLOAT8 *ms_ratio, 
 		    FLOAT8 *ms_ratio_next, 

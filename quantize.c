@@ -132,7 +132,6 @@ iteration_loop( FLOAT8 pe[2][2], FLOAT8 ms_ener_ratio[2],
   FLOAT8 noise[4]; /* over,max_noise,over_noise,tot_noise; */
   III_psy_xmin l3_xmin[2];
   gr_info *cod_info;
-  layer *info;
   int over[2];
   int bitsPerFrame;
   int mean_bits;
@@ -140,11 +139,10 @@ iteration_loop( FLOAT8 pe[2][2], FLOAT8 ms_ener_ratio[2],
 
 
   iteration_init(l3_side,l3_enc,fr_ps);
-  info = fr_ps->header;
-  bit_rate = bitrate[gf.version][2][info->bitrate_index];
+  bit_rate = bitrate_table[gf.version][gf.bitrate_index];
 
 
-  getframebits(info, &bitsPerFrame, &mean_bits);
+  getframebits(&bitsPerFrame, &mean_bits);
   ResvFrameBegin( fr_ps, l3_side, mean_bits, bitsPerFrame );
 
   /* quantize! */
@@ -304,7 +302,6 @@ VBR_iteration_loop (FLOAT8 pe[2][2], FLOAT8 ms_ener_ratio[2],
   
   III_psy_xmin l3_xmin;
   gr_info  *cod_info = NULL;
-  layer    *info;
   int       save_bits[2][2];
   FLOAT8    noise[4];      /* over,max_noise,over_noise,tot_noise; */
   FLOAT8    targ_noise[4]; /* over,max_noise,over_noise,tot_noise; */
@@ -320,7 +317,6 @@ VBR_iteration_loop (FLOAT8 pe[2][2], FLOAT8 ms_ener_ratio[2],
   int	    reparted = 0;
 
   iteration_init(l3_side,l3_enc,fr_ps);
-  info = fr_ps->header;
 
 #ifdef RH_QUALITY_CONTROL
   /* with RH_QUALITY_CONTROL we have to set masking_lower only once */
@@ -330,20 +326,20 @@ VBR_iteration_loop (FLOAT8 pe[2][2], FLOAT8 ms_ener_ratio[2],
   /*******************************************************************
    * how many bits are available for each bitrate?
    *******************************************************************/
-  for( info->bitrate_index = 1;
-       info->bitrate_index <= gf.VBR_max_bitrate;
-       info->bitrate_index++    ) {
-    getframebits (info, &bitsPerFrame, &mean_bits);
-    if (info->bitrate_index == gf.VBR_min_bitrate) {
+  for( gf.bitrate_index = 1;
+       gf.bitrate_index <= gf.VBR_max_bitrate;
+       gf.bitrate_index++    ) {
+    getframebits (&bitsPerFrame, &mean_bits);
+    if (gf.bitrate_index == gf.VBR_min_bitrate) {
       /* always use at least this many bits per granule per channel */
       /* unless we detect analog silence, see below */
       min_mean_bits=mean_bits/gf.stereo;
     }
-    frameBits[info->bitrate_index]=
+    frameBits[gf.bitrate_index]=
       ResvFrameBegin (fr_ps, l3_side, mean_bits, bitsPerFrame);
   }
 
-  info->bitrate_index=gf.VBR_max_bitrate;
+  gf.bitrate_index=gf.VBR_max_bitrate;
 
   
   /*******************************************************************
@@ -552,15 +548,15 @@ VBR_iteration_loop (FLOAT8 pe[2][2], FLOAT8 ms_ener_ratio[2],
   /******************************************************************
    * find lowest bitrate able to hold used bits
    ******************************************************************/
-  for( info->bitrate_index =   (analog_silence ? 1 : gf.VBR_min_bitrate );
-       info->bitrate_index < gf.VBR_max_bitrate;
-       info->bitrate_index++    )
-    if( used_bits <= frameBits[info->bitrate_index] ) break;
+  for( gf.bitrate_index =   (analog_silence ? 1 : gf.VBR_min_bitrate );
+       gf.bitrate_index < gf.VBR_max_bitrate;
+       gf.bitrate_index++    )
+    if( used_bits <= frameBits[gf.bitrate_index] ) break;
 
   /*******************************************************************
    * calculate quantization for this bitrate
    *******************************************************************/  
-  getframebits (info, &bitsPerFrame, &mean_bits);
+  getframebits (&bitsPerFrame, &mean_bits);
   bits=ResvFrameBegin (fr_ps, l3_side, mean_bits, bitsPerFrame);
 
   /* repartion available bits in same proportion */
@@ -568,7 +564,7 @@ VBR_iteration_loop (FLOAT8 pe[2][2], FLOAT8 ms_ener_ratio[2],
     reparted = 1;
     for( gr = 0; gr < gf.mode_gr; gr++) {
       for(ch = 0; ch < gf.stereo; ch++) {
-	save_bits[gr][ch]=(save_bits[gr][ch]*frameBits[info->bitrate_index])/used_bits;
+	save_bits[gr][ch]=(save_bits[gr][ch]*frameBits[gf.bitrate_index])/used_bits;
       }
     }
     used_bits=0;

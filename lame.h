@@ -121,6 +121,9 @@ typedef struct  {
   int VBR_min_bitrate;            /* min bitrate index */
   int VBR_max_bitrate;            /* max bitrate index */
   float resample_ratio;           /* input_samp_rate/output_samp_rate */
+  int bitrate_index;
+  int samplerate_index;
+  int mode_ext;
 
   /* lowpass and highpass filter control */
   float lowpass1,lowpass2;        /* normalized frequency bounds of passband */

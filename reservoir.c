@@ -38,7 +38,6 @@ static int ResvMax  = 0; /* in bits */
 int
 ResvFrameBegin( frame_params *fr_ps, III_side_info_t *l3_side, int mean_bits, int frameLength )
 {
-    layer *info;
     int fullFrameBits;
     int resvLimit;
 
@@ -47,7 +46,6 @@ ResvFrameBegin( frame_params *fr_ps, III_side_info_t *l3_side, int mean_bits, in
     }
 
 
-    info = fr_ps->header;
     if ( gf.version == 1 )
     {
 	resvLimit = 4088; /* main_data_begin has 9 bits in MPEG 1 */

@@ -21,7 +21,7 @@ char brhist_spc[BRHIST_BARMAX+1];
 char stderr_buff[BUFSIZ];
 
 
-void brhist_init(int br_min, int br_max, layer *info)
+void brhist_init(int br_min, int br_max)
 {
   int i;
   char term_buff[1024];
@@ -31,7 +31,7 @@ void brhist_init(int br_min, int br_max, layer *info)
 
   for(i = 0; i < 15; i++)
     {
-      sprintf(brhist_bps[i], "%3d:", bitrate[gf.version][2][i]);
+      sprintf(brhist_bps[i], "%3d:", bitrate_table[gf.version][i]);
       brhist_count[i] = 0;
       brhist_temp[i] = 0;
     }
@@ -103,7 +103,7 @@ void brhist_disp(void)
   fflush(stderr);
 }
 
-void brhist_disp_total(layer *info)
+void brhist_disp_total()
 {
   int i;
   FLOAT ave;
@@ -113,7 +113,7 @@ void brhist_disp_total(layer *info)
 
   ave=0;
   for(i = brhist_vbrmin; i <= brhist_vbrmax; i++)
-    ave += bitrate[gf.version][2][i]*
+    ave += bitrate_table[gf.version][i]*
       (FLOAT)brhist_count[i] / gf.totalframes;
   fprintf(stderr, "\naverage: %2.0f kbs\n",ave);
     
@@ -123,7 +123,7 @@ void brhist_disp_total(layer *info)
   for(i = brhist_vbrmin; i <= brhist_vbrmax; i++)
     {
       fprintf(stderr, "   %3d  %8ld (%.1f%%)\n",
-	      bitrate[gf.version][2][i],
+	      bitrate_table[gf.version][i],
 	      brhist_count[i],
 	      (FLOAT)brhist_count[i] / gf.totalframes * 100.0);
     }

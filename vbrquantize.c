@@ -148,7 +148,6 @@ VBR_iteration_loop_new (FLOAT8 pe[2][2], FLOAT8 ms_ener_ratio[2],
                 III_scalefac_t scalefac[2][2], frame_params * fr_ps)
 {
   III_psy_xmin l3_xmin[2][2];
-  layer    *info;
   FLOAT8    xr[2][2][576];
   FLOAT8    masking_lower_db;
   FLOAT8    ifqstep,ol_sf,vbr_sf;
@@ -157,7 +156,6 @@ VBR_iteration_loop_new (FLOAT8 pe[2][2], FLOAT8 ms_ener_ratio[2],
   /*
   iteration_init(xr_org,l3_side,l3_enc,fr_ps);
   */
-  info = fr_ps->header;
 
 
   /* Adjust allowed masking based on quality setting */

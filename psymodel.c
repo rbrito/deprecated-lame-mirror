@@ -48,8 +48,7 @@ void L3para_read( FLOAT8 sfreq, int numlines[CBANDS],int numlines_s[CBANDS], int
 
  
 
-void L3psycho_anal( short int *buffer[2],
-		    int gr_out , layer * info,
+void L3psycho_anal( short int *buffer[2],int gr_out , 
 		    FLOAT8 sfreq, int check_ms_stereo, 
                     FLOAT8 *ms_ratio,
                     FLOAT8 *ms_ratio_next,
@@ -327,7 +326,7 @@ void L3psycho_anal( short int *buffer[2],
   
   
   numchn = gf.stereo;
-  if (gf.ms_masking && (info->mode == MPG_MD_JOINT_STEREO)) numchn=4;
+  if (gf.ms_masking && (gf.mode == MPG_MD_JOINT_STEREO)) numchn=4;
   for (chn=0; chn<numchn; chn++) {
   
     wsamp_s = wsamp_S+(chn & 1);
@@ -896,7 +895,7 @@ void L3psycho_anal( short int *buffer[2],
 
 
   if (gf.stereo==2) {
-    if (!gf.allow_diff_short || info->mode==MPG_MD_JOINT_STEREO) {
+    if (!gf.allow_diff_short || gf.mode==MPG_MD_JOINT_STEREO) {
       /* force both channels to use the same block type */
       /* this is necessary if the frame is to be encoded in ms_stereo.  */
       /* But even without ms_stereo, FhG  does this */

@@ -57,7 +57,6 @@ static Bit_stream_struc   bs;
 static III_side_info_t l3_side;
 static frame_params fr_ps;
 static int target_bitrate;
-static layer g_info;
 #define MFSIZE (1152+1152+ENCDELAY-MDCTDELAY)
 static short int mfbuf[2][MFSIZE];
 static int mf_size;
@@ -74,16 +73,12 @@ void lame_init_params(void)
 {
   int i;
   FLOAT compression_ratio;
-  layer *info = &g_info;
-
 
   /* Clear info structure */
-  memset(info,0,sizeof(layer));
   memset(&bs, 0, sizeof(Bit_stream_struc));
   memset(&fr_ps, 0, sizeof(frame_params));
   memset(&l3_side,0x00,sizeof(III_side_info_t));
 
-  fr_ps.header = info;
   fr_ps.tab_num = -1;             /* no table loaded */
   fr_ps.alloc = NULL;
 
@@ -343,18 +338,17 @@ void lame_init_params(void)
 
 
 
-  info->mode = gf.mode;
-  info->mode_ext=MPG_MD_LR_LR;
-  fr_ps.actual_mode = info->mode;
-  gf.stereo = (info->mode == MPG_MD_MONO) ? 1 : 2;
+  gf.mode_ext=MPG_MD_LR_LR;
+  fr_ps.actual_mode = gf.mode;
+  gf.stereo = (gf.mode == MPG_MD_MONO) ? 1 : 2;
 
 
-  info->sampling_frequency = SmpFrqIndex((long)gf.out_samplerate, &gf.version);
-  if( info->sampling_frequency < 0) {
+  gf.samplerate_index = SmpFrqIndex((long)gf.out_samplerate, &gf.version);
+  if( gf.samplerate_index < 0) {
     display_bitrates(stderr);
     exit(1);
   }
-  if( (info->bitrate_index = BitrateIndex(3, gf.brate, gf.version,gf.out_samplerate)) < 0) {
+  if( (gf.bitrate_index = BitrateIndex(gf.brate, gf.version,gf.out_samplerate)) < 0) {
     display_bitrates(stderr);
     exit(1);
   }
@@ -372,7 +366,7 @@ void lame_init_params(void)
       if (gf.VBR_q >= 4) gf.VBR_max_bitrate=12;   /* max = 224kbs */
       if (gf.VBR_q >= 8) gf.VBR_max_bitrate=9;    /* low quality, max = 128kbs */
     }else{
-      if( (gf.VBR_max_bitrate  = BitrateIndex(3, gf.VBR_max_bitrate_kbps, gf.version,gf.out_samplerate)) < 0) {
+      if( (gf.VBR_max_bitrate  = BitrateIndex(gf.VBR_max_bitrate_kbps, gf.version,gf.out_samplerate)) < 0) {
 	display_bitrates(stderr);
 	exit(1);
       }
@@ -380,7 +374,7 @@ void lame_init_params(void)
     if (0==gf.VBR_min_bitrate_kbps) {
       gf.VBR_min_bitrate=1;  /* 32 kbps */
     }else{
-      if( (gf.VBR_min_bitrate  = BitrateIndex(3, gf.VBR_min_bitrate_kbps, gf.version,gf.out_samplerate)) < 0) {
+      if( (gf.VBR_min_bitrate  = BitrateIndex(gf.VBR_min_bitrate_kbps, gf.version,gf.out_samplerate)) < 0) {
 	display_bitrates(stderr);
 	exit(1);
       }
@@ -419,7 +413,7 @@ void lame_init_params(void)
 #ifdef BRHIST
   if (gf.VBR) {
     if (disp_brhist)
-      brhist_init(1, 14, info);
+      brhist_init(1, 14);
   } else
     disp_brhist = 0;
 #endif
@@ -473,11 +467,11 @@ void lame_init_params(void)
 
   for (i = 0; i < SBMAX_l + 1; i++) {
     scalefac_band.l[i] =
-      sfBandIndex[info->sampling_frequency + (gf.version * 3)].l[i];
+      sfBandIndex[gf.samplerate_index + (gf.version * 3)].l[i];
   }
   for (i = 0; i < SBMAX_s + 1; i++) {
     scalefac_band.s[i] =
-      sfBandIndex[info->sampling_frequency + (gf.version * 3)].s[i];
+      sfBandIndex[gf.samplerate_index + (gf.version * 3)].s[i];
   }
 
 
@@ -485,7 +479,7 @@ void lame_init_params(void)
   if (gf.bWriteVbrTag)
     {
       /* Write initial VBR Header to bitstream */
-      InitVbrTag(&bs,gf.version-1,gf.mode,info->sampling_frequency);
+      InitVbrTag(&bs,gf.version-1,gf.mode,gf.samplerate_index);
     }
 
   return;
@@ -508,7 +502,6 @@ void lame_init_params(void)
  ************************************************************************/
 void lame_print_config(void)
 {
-  layer *info = fr_ps.header;
   char *mode_names[4] = { "stereo", "j-stereo", "dual-ch", "single-ch" };
   FLOAT out_samplerate=gf.out_samplerate/1000.0;
   FLOAT in_samplerate = gf.resample_ratio*out_samplerate;
@@ -542,11 +535,11 @@ void lame_print_config(void)
     if (gf.VBR)
       fprintf(stderr, "Encoding as %.1fkHz VBR(q=%i) %s MPEG%i LayerIII  qual=%i\n",
 	      gf.out_samplerate/1000.0,
-	      gf.VBR_q,mode_names[info->mode],2-gf.version,gf.quality);
+	      gf.VBR_q,mode_names[gf.mode],2-gf.version,gf.quality);
     else
       fprintf(stderr, "Encoding as %.1f kHz %d kbps %s MPEG%i LayerIII (%4.1fx)  qual=%i\n",
 	      gf.out_samplerate/1000.0,gf.brate,
-	      mode_names[info->mode],2-gf.version,compression,gf.quality);
+	      mode_names[gf.mode],2-gf.version,compression,gf.quality);
   }
   fflush(stderr);
 }
@@ -618,7 +611,6 @@ int lame_encode_frame(short int inbuf_l[],short int inbuf_r[],int mf_size,char *
   int ch,gr,mean_bits;
   int bitsPerFrame;
 
-  layer *info;
   int check_ms_stereo;
   static FLOAT8 ms_ratio[2]={0,0};
   FLOAT8 ms_ratio_next=0;
@@ -631,8 +623,7 @@ int lame_encode_frame(short int inbuf_l[],short int inbuf_r[],int mf_size,char *
   inbuf[0]=inbuf_l;
   inbuf[1]=inbuf_r;
 
-  info = fr_ps.header;
-  info->mode_ext = MPG_MD_LR_LR;
+  gf.mode_ext = MPG_MD_LR_LR;
 
   if (gf.frameNum==0 )  {
     /* Figure average number of 'slots' per frame. */
@@ -656,7 +647,7 @@ int lame_encode_frame(short int inbuf_l[],short int inbuf_r[],int mf_size,char *
 
 
   /* use m/s gf.stereo? */
-  check_ms_stereo =   ((info->mode == MPG_MD_JOINT_STEREO) &&
+  check_ms_stereo =   ((gf.mode == MPG_MD_JOINT_STEREO) &&
 		       (gf.version == 1) &&
 		       (gf.stereo==2) );
 
@@ -726,7 +717,7 @@ int lame_encode_frame(short int inbuf_l[],short int inbuf_r[],int mf_size,char *
       for ( ch = 0; ch < gf.stereo; ch++ )
 	bufp[ch] = &inbuf[ch][576 + gr*576-FFTOFFSET];
 
-      L3psycho_anal( bufp, gr, info,
+      L3psycho_anal( bufp, gr, 
 		     (FLOAT8)gf.out_samplerate,
 		     check_ms_stereo,
 		     &ms_ratio[gr],&ms_ratio_next,&ms_ener_ratio[gr],
@@ -773,9 +764,9 @@ int lame_encode_frame(short int inbuf_l[],short int inbuf_r[],int mf_size,char *
     /*     ms_ratio_ave = .5*(ms_ratio[0] + ms_ratio[1]);*/
     ms_ratio_ave = .25*(ms_ratio[0] + ms_ratio[1]+
 			 ms_ratio_prev + ms_ratio_next);
-    if ( ms_ratio_ave <.35) info->mode_ext = MPG_MD_MS_LR;
+    if ( ms_ratio_ave <.35) gf.mode_ext = MPG_MD_MS_LR;
   }
-  if (gf.force_ms) info->mode_ext = MPG_MD_MS_LR;
+  if (gf.force_ms) gf.mode_ext = MPG_MD_MS_LR;
 
 
 #ifdef HAVEGTK
@@ -789,7 +780,7 @@ int lame_encode_frame(short int inbuf_l[],short int inbuf_r[],int mf_size,char *
 	  l3_side.gr[gr].ch[ch].tt.block_type;
 	for ( j = 0; j < 576; j++ ) pinfo->xr[gr][ch][j]=xr[gr][ch][j];
 	/* if MS stereo, switch to MS psy data */
-	if (gf.ms_masking && (info->mode_ext==MPG_MD_MS_LR)) {
+	if (gf.ms_masking && (gf.mode_ext==MPG_MD_MS_LR)) {
 	  pinfo->pe[gr][ch]=pinfo->pe[gr][ch+2];
 	  pinfo->ers[gr][ch]=pinfo->ers[gr][ch+2];
 	  memcpy(pinfo->energy[gr][ch],pinfo->energy[gr][ch+2],
@@ -804,7 +795,7 @@ int lame_encode_frame(short int inbuf_l[],short int inbuf_r[],int mf_size,char *
 
 
   /* bit and noise allocation */
-  if ((MPG_MD_MS_LR == info->mode_ext) && gf.ms_masking) {
+  if ((MPG_MD_MS_LR == gf.mode_ext) && gf.ms_masking) {
     masking = &masking_MS_ratio;    /* use MS masking */
     pe_use=&pe_MS;
   } else {
@@ -830,13 +821,13 @@ int lame_encode_frame(short int inbuf_l[],short int inbuf_r[],int mf_size,char *
 
 
 #ifdef BRHIST
-  brhist_temp[info->bitrate_index]++;
+  brhist_temp[gf.bitrate_index]++;
 #endif
 
 
   /*  write the frame to the bitstream  */
-  getframebits(info,&bitsPerFrame,&mean_bits);
-  III_format_bitstream( bitsPerFrame, &fr_ps, l3_enc, &l3_side,
+  getframebits(&bitsPerFrame,&mean_bits);
+  III_format_bitstream( bitsPerFrame, l3_enc, &l3_side,
 			scalefac, &bs);
 
 
@@ -1237,7 +1228,7 @@ int lame_encode_finish(char *mp3buffer)
 	{
 	  brhist_add_count();
 	  brhist_disp();
-	  brhist_disp_total(fr_ps.header);
+	  brhist_disp_total();
 	}
 #endif
       fprintf(stderr,"\n");
