@@ -44,6 +44,26 @@ void operator delete(void *block) {
 	LocalFree(block);
 }
 
+extern "C" {
+
+	void *acm_Calloc( size_t num, size_t size )
+	{
+		return LocalAlloc(LPTR, num * size); // VirtualAlloc
+	}
+
+	void *acm_Malloc( size_t size )
+	{
+		return LocalAlloc(LPTR, size); // VirtualAlloc
+	}
+
+	void acm_Free( void * mem)
+	{
+		LocalFree(mem);
+	}
+};
+
+////// End of memory instrumentation
+
 #include <mmreg.h>
 #include <msacm.h>
 #include <msacmdrv.h>

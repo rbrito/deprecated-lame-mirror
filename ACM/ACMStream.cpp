@@ -151,6 +151,8 @@ bool ACMStream::open(const AEncodeProperties & the_Properties)
 	lame_set_error_protection( gfp, the_Properties.GetCRCMode()?1:0 );
 	// Set private bit?
 	lame_set_extension( gfp, the_Properties.GetPrivateMode()?1:0 );
+	// no VBR tag support
+	lame_set_bWriteVbrTag( gfp, 0 );
 
 	if (0 == lame_init_params( gfp ))
 	{
@@ -254,12 +256,12 @@ bool bResult = false;
 	}
 
 	// lame will be close in VbrWriteTag function
-if ( !lame_get_bWriteVbrTag( gfp ) )
+/*if ( !lame_get_bWriteVbrTag( gfp ) )
 	{
 		// clean up of allocated memory
 lame_close( gfp );
 	}
-    
+  */  
 	return bResult;
 }
 

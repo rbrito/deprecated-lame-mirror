@@ -80,6 +80,16 @@ typedef long double ieee854_float80_t;
 typedef double      ieee754_float64_t;
 typedef float       ieee754_float32_t;
 
+#ifdef LAME_ACM
+// memory hacking for driver purposes
+#define calloc(x,y) acm_Calloc(x,y)
+#define free(x)     acm_Free(x)
+#define malloc(x)   acm_Malloc(x)
 
+#include <stddef.h>
+void *acm_Calloc( size_t num, size_t size );
+void *acm_Malloc( size_t size );
+void acm_Free( void * mem);
+#endif // LAME_ACM
 
 #define LAME_LIBRARY_BUILD

@@ -237,8 +237,8 @@ ACM::ACM( HMODULE hModule )
 
 ACM::~ACM()
 {
-	if (my_hIcon != NULL)
-		CloseHandle(my_hIcon);
+// not used, it's done automatically when closing the driver	if (my_hIcon != NULL)
+//		CloseHandle(my_hIcon);
 
 	my_debug.OutPut(DEBUG_LEVEL_FUNC_START, "ACM Deletion (0x%08X)",this);
 }
