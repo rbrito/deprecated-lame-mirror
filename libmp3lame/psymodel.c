@@ -482,11 +482,15 @@ static void convert_partition2scalefac_l(
 	if (sb == SBMAX_l - 1)
 	    break;
 
+    assert( enn >= 0 );
+    assert( thmm >= 0 );
 	gfc->en [chn].l[sb] = enn  + 0.5 * eb [b];
 	gfc->thm[chn].l[sb] = thmm + 0.5 * thr[b];
 
 	enn  = 0.5 *  eb[b];
 	thmm = 0.5 * thr[b];
+    assert( enn >= 0 );
+    assert( thmm >= 0 );
 	b++;
 	sb++;
     }
@@ -528,6 +532,7 @@ compute_masking_s(
 	thr[b] = Max( thr[b], gfc->ATH->cb[gfc->bm_s[b]] * athlower );
 	gfc->nb_s2[chn][b] = gfc->nb_s1[chn][b];
 	gfc->nb_s1[chn][b] = ecb;
+    assert( thr[b] >= 0 );
     }
 }
 
@@ -598,9 +603,9 @@ int L3psycho_anal( lame_global_flags * gfp,
     FLOAT fftenergy_s[3][HBLKSIZE_s];
 
     /* convolution   */
-    FLOAT8 eb[CBANDS];
+    FLOAT8 eb[CBANDS+1];
     FLOAT8 cb[CBANDS];
-    FLOAT8 thr[CBANDS];
+    FLOAT8 thr[CBANDS+1];
 
     /* ratios    */
     FLOAT8 ms_ratio_l=0, ms_ratio_s=0;
@@ -612,6 +617,17 @@ int L3psycho_anal( lame_global_flags * gfp,
     int numchn, chn;
     int b, i, j, k;
     int sb,sblock;
+
+    /*  rh 20040301: the following loops do access one off the limits
+     *  so I increase  the array dimensions by one and initialize the
+     *  accessed values to zero
+     */
+    assert( gfc->npart_s <= CBANDS );
+    assert( gfc->npart_l <= CBANDS );
+    eb [gfc->npart_s] = 0;
+    thr[gfc->npart_s] = 0;
+    eb [gfc->npart_l] = 0;
+    thr[gfc->npart_l] = 0;
 
     numchn = gfc->channels_out;
     /* chn=2 and 3 = Mid and Side channels */
@@ -921,12 +937,16 @@ int L3psycho_anal( lame_global_flags * gfp,
 		    enn  += eb[b];
 		    thmm += thr[b];
 		}
-		enn  += 0.5 * eb[b];
-		thmm += 0.5 * thr[b];
+		enn  += 0.5 * eb[b];    /* for the last sfb b is larger than npart_s!! */
+		thmm += 0.5 * thr[b];   /* rh 20040301 */
+        assert( enn >= 0 );
+        assert( thmm >= 0 );
 		gfc->en [chn].s[sb][sblock] = enn;
 		gfc->thm[chn].s[sb][sblock] = thmm;
 		enn  = 0.5 * eb[b];
 		thmm = 0.5 * thr[b];
+        assert( enn >= 0 );
+        assert( thmm >= 0 );
 	    }
 	    gfc->en [chn].s[sb-1][sblock] += enn;
 	    gfc->thm[chn].s[sb-1][sblock] += thmm;
@@ -1128,7 +1148,7 @@ static inline FLOAT8 NS_INTERP(FLOAT8 x, FLOAT8 y, FLOAT8 r)
     /* was pow((x),(r))*pow((y),1-(r))*/
     if(r==1.0)
         return x;              /* 99.7% of the time */ 
-    if(y!=0.0)
+    if(y>0.0)
         return pow(x/y,r)*y;   /* rest of the time */ 
     return 0.0;                /* never happens */ 
 }
@@ -1353,8 +1373,8 @@ int L3psycho_anal_ns( lame_global_flags * gfp,
 	FLOAT fftenergy[HBLKSIZE];
 	FLOAT fftenergy_s[3][HBLKSIZE_s];
 	/* convolution   */
-	FLOAT8 eb[CBANDS],eb2[CBANDS];
-	FLOAT8 thr[CBANDS];
+	FLOAT8 eb[CBANDS+1],eb2[CBANDS];
+	FLOAT8 thr[CBANDS+1];
 
 
     /*This is the masking table:
@@ -1375,6 +1395,17 @@ int L3psycho_anal_ns( lame_global_flags * gfp,
 	    0.11749/*pow(10, -0.93)*/
 	};
 
+    /*  rh 20040301: the following loops do access one off the limits
+     *  so I increase  the array dimensions by one and initialize the
+     *  accessed values to zero
+     */
+    assert( gfc->npart_s <= CBANDS );
+    assert( gfc->npart_l <= CBANDS );
+    eb [gfc->npart_s] = 0;
+    thr[gfc->npart_s] = 0;
+    eb [gfc->npart_l] = 0;
+    thr[gfc->npart_l] = 0;
+    
 	/*************************************************************** 
 	 * determine the block type (window type)
 	 ***************************************************************/
@@ -1460,17 +1491,20 @@ int L3psycho_anal_ns( lame_global_flags * gfp,
 	    FLOAT8 enn, thmm;
 	    compute_masking_s(gfc, fftenergy_s, eb, thr, chn, sblock,
 			      gfp->ATHlower*gfc->ATH->adjust);
-	    b = -1;
+        b = -1;
 	    for (sb = 0; sb < SBMAX_s; sb++) {
 		enn = thmm = 0.0;
 		while (++b < gfc->bo_s[sb]) {
 		    enn  += eb[b];
 		    thmm += thr[b];
 		}
-		enn  += 0.5 * eb[b];
-		thmm += 0.5 * thr[b];
+		enn  += 0.5 * eb[b];    /* for the last sfb b is larger than npart_s!! */
+		thmm += 0.5 * thr[b];   /* rh 20040301 */
 		gfc->en [chn].s[sb][sblock] = enn;
-
+        
+        assert( enn >= 0 );
+        assert( thmm >= 0 );
+        
 		/****   short block pre-echo control   ****/
 		thmm *= NS_PREECHO_ATT0;
 		if (ns_attacks[sblock] >= 2 || ns_attacks[sblock+1] == 1) {
