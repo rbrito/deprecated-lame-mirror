@@ -322,7 +322,6 @@ struct lame_internal_flags {
   int lame_encode_frame_init;     
   int iteration_init_init;
   int fill_buffer_resample_init;
-  int psymodel_init;
 
   int padding;                  /* padding for the current frame? */
   int mode_gr;                    /* granules per frame */
@@ -511,17 +510,13 @@ struct lame_internal_flags {
 
   /* Scale Factor Bands    */
   int pseudohalf[SFBMAX];
-  FLOAT8	w1_l[SBMAX_l], w2_l[SBMAX_l];
-  FLOAT8	w1_s[SBMAX_s], w2_s[SBMAX_s];
   FLOAT8 mld_l[SBMAX_l],mld_s[SBMAX_s];
-  int	bu_l[SBMAX_l],bo_l[SBMAX_l] ;
-  int	bu_s[SBMAX_s],bo_s[SBMAX_s] ;
+  int	bm_l[SBMAX_l],bo_l[SBMAX_l] ;
+  int	bm_s[SBMAX_s],bo_s[SBMAX_s] ;
   int	npart_l,npart_s;
-  int	npart_l_orig,npart_s_orig;
   
   int	s3ind[CBANDS][2];
   int	s3ind_s[CBANDS][2];
-  FLOAT8 SNR_s[CBANDS];
 
   int	numlines_s[CBANDS];
   int	numlines_l[CBANDS];
