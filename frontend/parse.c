@@ -842,21 +842,33 @@ extern void lame_set_msfix( lame_t gfp, double msfix );
  */
 static int  dm_presets( lame_t gfp, int fast, int cbr, const char* preset_name, const char* ProgramName )
 {
-    // Bitrate mappings for ABR mode
-    const int abr_kbps_map [9] = { 80, 96, 112, 128, 160, 192, 224, 256, 320 };
+    int k; 
+
+    typedef struct {
+        int    abr_kbps;
+        int    expZ;
+        int    expX;
+        int    lowpass;
+        int    safejoint;
+        double nsmsfix;
+        double nsbass;
+        double scale;
+        int    kbps_compensate;
+    } dm_abr_presets_t;
+
 
     // Switch mappings for ABR mode
-    const int abr_switch_map [9] [6] = {
-             // Z  X  lowpass safejoint nsmsfix ns-bass
-              { 1, 1, 14500,  0,        0    ,  -3 }, //  80
-              { 1, 1, 15500,  0,        0    ,  -4 }, //  96
-              { 1, 1, 16000,  0,        0    ,  -5 }, // 112
-              { 1, 1, 17500,  0,        0    ,  -6 }, // 128
-              { 1, 1, 18000,  0,        0    ,  -4 }, // 160
-              { 1, 1, 19000,  1,        1.7  ,  -2 }, // 192
-              { 1, 1, 19500,  1,        1.25 ,   0 }, // 224
-              { 0, 3, 19500,  1,        0    ,   0 }, // 256
-              { 0, 3, 20500,  1,        0    ,   0 }  // 320
+    const dm_abr_presets_t abr_switch_map [] = {
+        // kbps Z  X  lowpass safejoint nsmsfix ns-bass scale  kbps_compensate
+        {  80,  1, 1, 14500,  0,        0   ,   -3,      0.85, 8    }, //  80
+        {  96,  1, 1, 15500,  0,        0   ,   -4,      0.85, 9    }, //  96
+        { 112,  1, 1, 16000,  0,        0   ,   -5,      0.87, 8    }, // 112
+        { 128,  1, 1, 17500,  0,        0   ,   -6,      0.93, 9    }, // 128
+        { 160,  1, 1, 18000,  0,        0   ,   -4,      0.95, 7    }, // 160
+        { 192,  1, 1, 19000,  1,        1.7 ,   -2,      0.97, 6    }, // 192
+        { 224,  1, 1, 19500,  1,        1.25,    0,      0.98, 3    }, // 224
+        { 256,  0, 3, 19500,  1,        0   ,    0,      1.00, 4    }, // 256
+        { 320,  0, 3, 20500,  1,        0   ,    0,      1.00, 4    }  // 320
                                        };
 
     // Variables for the ABR stuff
@@ -923,7 +935,8 @@ static int  dm_presets( lame_t gfp, int fast, int cbr, const char* preset_name, 
     }
     					
     // Insane Preset == --nspsytune -b320 -h -mj --nssafejoint --lowpass 20 --athtype 2 -X3
-    else if ((strcmp(preset_name, "insane") == 0) && (fast < 1)){
+    else if (((strcmp(preset_name, "insane") == 0) || 
+              (strcmp(preset_name, "320"   ) == 0))   && (fast < 1)) {
 
         lame_set_exp_nspsytune(gfp, lame_get_exp_nspsytune(gfp) | 1);
         lame_set_experimentalX(gfp, 3);
@@ -942,18 +955,18 @@ static int  dm_presets( lame_t gfp, int fast, int cbr, const char* preset_name, 
         if ((atoi(preset_name)) >= 80 && (atoi(preset_name)) <= 320) {
 
             // We assume specified bitrate will be 320kbps
-            upper_range_kbps = abr_kbps_map[8];
+            upper_range_kbps = abr_switch_map[8].abr_kbps;
             upper_range = 8;
-            lower_range_kbps = abr_kbps_map[8];
+            lower_range_kbps = abr_switch_map[8].abr_kbps;
             lower_range = 8;
  
             // Determine which significant bitrates the value specified falls between,
             // if loop ends without breaking then we were correct above that the value was 320
             for (b = 1; b < 9; b++) {
-                if ((Max(actual_bitrate, abr_kbps_map[b])) != actual_bitrate) {
-                      upper_range_kbps = abr_kbps_map[b];
+                if ((Max(actual_bitrate, abr_switch_map[b].abr_kbps)) != actual_bitrate) {
+                      upper_range_kbps = abr_switch_map[b].abr_kbps;
                       upper_range = b;
-                      lower_range_kbps = abr_kbps_map[b-1];
+                      lower_range_kbps = abr_switch_map[b-1].abr_kbps;
                       lower_range = (b-1);
                       break; // We found upper range 
                 }
@@ -994,23 +1007,35 @@ static int  dm_presets( lame_t gfp, int fast, int cbr, const char* preset_name, 
             }
             else {
                 lame_set_VBR(gfp, vbr_abr); 
-                lame_set_VBR_mean_bitrate_kbps(gfp, actual_bitrate);
+                lame_set_VBR_mean_bitrate_kbps(gfp, (actual_bitrate + abr_switch_map[r].kbps_compensate));
                 lame_set_VBR_mean_bitrate_kbps(gfp, Min(lame_get_VBR_mean_bitrate_kbps(gfp), 320)); 
                 lame_set_VBR_mean_bitrate_kbps(gfp, Max(lame_get_VBR_mean_bitrate_kbps(gfp), 8)); 
             }
 
             lame_set_exp_nspsytune(gfp, lame_get_exp_nspsytune(gfp) | 1);
-            lame_set_experimentalZ(gfp, abr_switch_map[r][0]);
-            lame_set_experimentalX(gfp, abr_switch_map[r][1]);
+            lame_set_experimentalZ(gfp, abr_switch_map[r].expZ);
+            lame_set_experimentalX(gfp, abr_switch_map[r].expX);
             lame_set_quality(gfp, 2);
-            lame_set_lowpassfreq(gfp, abr_switch_map[r][2]);
+            lame_set_lowpassfreq(gfp, abr_switch_map[r].lowpass);
             lame_set_mode(gfp, JOINT_STEREO);
 
-            if (abr_switch_map[r][3] > 0)
+            if (abr_switch_map[r].safejoint > 0)
                 lame_set_exp_nspsytune(gfp, lame_get_exp_nspsytune(gfp) | 2); // safejoint
 
-            if (abr_switch_map[r][4] > 0)
-                    (void) lame_set_msfix( gfp, abr_switch_map[r][4] );
+            if (abr_switch_map[r].nsmsfix > 0)
+                    (void) lame_set_msfix( gfp, abr_switch_map[r].nsmsfix );
+
+            // ns-bass tweaks
+            if (abr_switch_map[r].nsbass != 0) {
+                k = (int)(abr_switch_map[r].nsbass * 4);
+                if (k < 0) k += 64;
+                lame_set_exp_nspsytune(gfp, lame_get_exp_nspsytune(gfp) | (k << 2));
+            }
+
+            // ABR seems to have big problems with clipping, especially at low bitrates
+            // so we compensate for that here by using a scale value depending on bitrate
+            if (abr_switch_map[r].scale != 1)
+                (void) lame_set_scale( gfp, abr_switch_map[r].scale );
 
             lame_set_ATHtype(gfp, 2);
 
@@ -1040,7 +1065,7 @@ static int  dm_presets( lame_t gfp, int fast, int cbr, const char* preset_name, 
                    "   <fast>        xtreme\n"
                    "                 insane\n"
                    "          <cbr> (ABR Mode) - The ABR Mode is implied. To use it,\n"
-                   "                             simply specify a bitrate. For example:n"
+                   "                             simply specify a bitrate. For example:\n"
                    "                                         \"--dm-preset 185\" activates this\n"
                    "                             preset and uses 185 as an average kbps.\n" 
                    "\n"
