@@ -1408,8 +1408,6 @@ int L3psycho_anal_ns( lame_global_flags * gfp,
       }
 
     if (gfc->nsPsy.use2) {
-      int rch;
-
       for(;;)
 	{
 	  char chname[] = {'L','R','M','S'};
@@ -1425,8 +1423,16 @@ int L3psycho_anal_ns( lame_global_flags * gfp,
 	  if (feof(gfc->nsPsy.pass1fp)) abort();
 
 	  if (c == chname[chn]) break;
+
+	  abort();
 	}
 
+      eb2[62] = eb2[61];
+
+      for (b=0; b < gfc->npart_l_orig; b++ )
+	{
+	  eb2[b] = eb2[b] * eb[b];
+	}
     } else {
       for (b=0; b < gfc->npart_l_orig; b++ )
 	{

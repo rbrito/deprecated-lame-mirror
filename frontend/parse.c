@@ -1735,7 +1735,7 @@ char* const inPath, char* const outPath, char **nogap_inPath, int *num_nogap)
 			fprintf(stderr,"nspsytune2 : error opening %s\n",nextArg);
 			abort();
 		      }
-		      lame_set_exp_nspsytune2_pointer(gfp,1,fp);
+		      lame_set_exp_nspsytune2_pointer(gfp,0,fp);
 		    }
 		  /* nspsytune2 implies nspsytune */
                     argUsed=1;
