@@ -687,9 +687,9 @@ PutLameVBR(lame_t gfc, size_t nMusicLength, uint8_t *p, uint8_t *p0)
     int enc_padding = lame_get_encoder_padding(gfc);   /* encoder padding  */
     uint8_t vbr_type_translator[] = {1,5,3};
 
-    ieee754_float32_t fPeakSignalAmplitude = 0.0;	/*TODO... */
-    uint16_t nRadioReplayGain = 0;			/*TODO... */
-    uint16_t nAudioPhileReplayGain  = 0;		/*TODO... */
+    uint32_t nPeakSignalAmplitude = 0;
+    uint16_t nRadioReplayGain = 0;
+    uint16_t nAudioPhileReplayGain  = 0;	/* TODO */
 
     int	bNonOptimal = 0;
     int nStereoMode, nSourceFreq;
@@ -748,8 +748,28 @@ PutLameVBR(lame_t gfc, size_t nMusicLength, uint8_t *p, uint8_t *p0)
 
     *p++ = (nRevision << 4) + vbr_type_translator[lame_get_VBR(gfc)];
     *p++ = Min((int)((gfc->lowpassfreq / 100.0)+.5), 255);
-    memcpy(p, &fPeakSignalAmplitude, 4); p += 4;
 
+    /* ReplayGain */
+    if (gfc->findReplayGain) { 
+	if (gfc->RadioGain > 0x1FE)
+	    gfc->RadioGain = 0x1FE;
+	if (gfc->RadioGain < -0x1FE)
+	    gfc->RadioGain = -0x1FE;
+
+	nRadioReplayGain = 0x2000; /* set name code */
+	nRadioReplayGain |= 0xC00; /* set originator code to `determined automatically' */
+
+	if (gfc->RadioGain >= 0) 
+	    nRadioReplayGain |= gfc->RadioGain; /* set gain adjustment */
+	else {
+            nRadioReplayGain |= 0x200; /* set the sign bit */
+	    nRadioReplayGain |= -gfc->RadioGain; /* set gain adjustment */
+	}
+    }
+    if (gfc->findPeakSample)
+	nPeakSignalAmplitude = abs((int)((((double)gfc->PeakSample) / 32767.0 ) * pow(2,23) +.5));
+
+    p = CreateI4(p, nPeakSignalAmplitude);
     p = CreateI2(p, nRadioReplayGain);
     p = CreateI2(p, nAudioPhileReplayGain);
 
