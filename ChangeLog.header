@@ -1,0 +1,10 @@
+
+ ChangeLog for LAME
+-==================-
+
+ - All dates/times are in GMT.
+ - Generated from cvs log entries
+   (cvs2cl --gmt -S --no-wrap --header ChangeLog.header)
+
+-- 
+
