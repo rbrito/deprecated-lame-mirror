@@ -1,5 +1,22 @@
 /* $Id$ */
 
+
+/* Compile lame with
+
+#! /bin/bash
+
+OGGVORBIS_ROOT=/home/cvs/vorbis
+
+export CPPFLAGS="-I${OGGVORBIS_ROOT}/ogg/include -I${OGGVORBIS_ROOT}/vorbis/lib"
+export CONFIG_DEFS="-DUSE_FFT3DN"
+
+make clean
+../configure
+#echo "#define KLEMM_42  1" >> config.h
+make
+
+ */
+
 #ifdef HAVE_CONFIG_H
 # include <config.h>
 #endif
@@ -7,30 +24,29 @@
 /* LAME interface to libvorbis */
 
 #ifdef HAVE_VORBIS
+#include <stdlib.h>
+#include <limits.h>
 #include <time.h>
 #include "vorbis/codec.h"
-#include "vorbis/modes.h"
+#include "modes/modes.h"
 #include "lame.h"
-//#include "util.h"
+#include "util.h"
 
 #ifdef WITH_DMALLOC
 #include <dmalloc.h>
 #endif
 
-short int convbuffer[4096]; /* take 8k out of the data segment, not the stack */
-int convsize;
+short int  convbuffer [4096];  /* take 8 KByte out of the data segment, not the stack */
+int        convsize;
 
-ogg_sync_state   oy; /* sync and verify incoming physical bitstream */
-ogg_stream_state os; /* take physical pages, weld into a logical
-			stream of packets */
-ogg_page         og; /* one Ogg bitstream page.  Vorbis packets are inside */
-ogg_packet       op; /* one raw packet of data for decode */
-
-vorbis_info      vi; /* struct that stores all the static vorbis bitstream
-			settings */
-vorbis_comment   vc; /* struct that stores all the bitstream user comments */
-vorbis_dsp_state vd; /* central working state for the packet->PCM decoder */
-vorbis_block     vb; /* local working space for packet->PCM decode */
+ogg_sync_state    oy;  // sync and verify incoming physical bitstream
+ogg_stream_state  os;  // take physical pages, weld into a logical stream of packets
+ogg_page          og;  // one Ogg bitstream page. Vorbis packets are inside
+ogg_packet        op;  // one raw packet of data for decode
+vorbis_info       vi;  // struct that stores all the static vorbis bitstream settings
+vorbis_comment    vc;  // struct that stores all the bitstream user comments
+vorbis_dsp_state  vd;  // central working state for the packet->PCM decoder
+vorbis_block      vb;  // local working space for packet->PCM decode
 
 
 
@@ -188,7 +204,6 @@ int lame_decode_ogg_fromfile(FILE *fd,short int pcm_l[],short int pcm_r[],mp3dat
   int samples,result,i,j,eof=0,eos=0,bout=0;
   double **pcm;
 
-
   while(1){
 
     /* 
@@ -235,11 +250,6 @@ int lame_decode_ogg_fromfile(FILE *fd,short int pcm_l[],short int pcm_r[],mp3dat
       break;
     }    
 
-
-
-
-
-
     result=ogg_sync_pageout(&oy,&og);
       
     if(result==0) {
@@ -277,8 +287,6 @@ int lame_decode_ogg_fromfile(FILE *fd,short int pcm_l[],short int pcm_r[],mp3dat
       if(bytes==0)eof=1;
     }
   }
-  
-
 
   mp3data->stereo = vi.channels;
   mp3data->samplerate = vi.rate;
@@ -302,8 +310,6 @@ int lame_decode_ogg_fromfile(FILE *fd,short int pcm_l[],short int pcm_r[],mp3dat
     ogg_sync_clear(&oy);
     return -1;
   }
-
-  
   return bout;
 }
 
@@ -319,16 +325,14 @@ int lame_decode_ogg_fromfile(FILE *fd,short int pcm_l[],short int pcm_r[],mp3dat
 
 
 
-ogg_stream_state os2; /* take physical pages, weld into a logical
-			stream of packets */
-ogg_page         og2; /* one Ogg bitstream page.  Vorbis packets are inside */
-ogg_packet       op2; /* one raw packet of data for decode */
+ogg_stream_state  os2;  // take physical pages, weld into a logical stream of packets
+ogg_page          og2;  // one Ogg bitstream page. Vorbis packets are inside
+ogg_packet        op2;  // one raw packet of data for decode
 
-vorbis_info      vi2; /* struct that stores all the static vorbis bitstream
-			settings */
-vorbis_comment   vc2; /* struct that stores all the bitstream user comments */
-vorbis_dsp_state vd2; /* central working state for the packet->PCM decoder */
-vorbis_block     vb2; /* local working space for packet->PCM decode */
+vorbis_info       vi2;  // struct that stores all the static vorbis bitstream settings
+vorbis_comment    vc2;  // struct that stores all the bitstream user comments
+vorbis_dsp_state  vd2;  // central working state for the packet->PCM decoder
+vorbis_block      vb2;  // local working space for packet->PCM decode
 
 
 
@@ -376,6 +380,8 @@ int lame_encode_ogg_init(lame_global_flags *gfp)
   /* Add ID3-style comments to the output using (for the time being) the
      "private data members" in the "id3tag_spec" data structure. This was
      from a patch by Ralph Giles <giles@a3a32260.sympatico.bconnected.net> */
+     
+#ifdef THIS_CODE_IS_NOT_BROKEN_ANYMORE     
   if(gfp->tag_spec.title) {
     strcpy(comment,"TITLE=");
     strncat(comment,gfp->tag_spec.title,MAX_COMMENT_LENGTH-strlen(comment));
@@ -402,6 +408,7 @@ int lame_encode_ogg_init(lame_global_flags *gfp)
     vorbis_comment_add(&vc2,comment);
   }
   /* TODO -- support for track and genre */
+#endif  
 
   /* set up the analysis state and auxiliary encoding storage */
   vorbis_analysis_init(&vd2,&vi2);
@@ -546,11 +553,11 @@ int  lame_encode_ogg_frame (
       if(ogg_page_eos(&og2))eos=1;
     } while (1);
   }
-  frameNum++;
+  (gfp -> frameNum)++;
   return bytes;
 }
 
-
-
-
 #endif
+
+/* end of vorbis_interface.c */
+ 

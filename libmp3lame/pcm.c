@@ -10,8 +10,6 @@
  *  Anfang und am Ende wie bei meinem Resample-Programm
  */
 
-#define KLEMM_44
-
 #ifdef HAVE_CONFIG_H
 # include <config.h>
 #endif
@@ -62,7 +60,7 @@ int  octetstream_resize ( INOUT octetstream_t* const  os, OUT size_t  size )
         memset ( os -> data + os -> size, 0, size - os -> size );
         os -> size = size;
     } else if ( size < os->size ) {
-         os -> data = (uint8_t*) realloc ( os -> data, os->size = size );
+	os -> data = (uint8_t*) realloc ( os -> data, os->size = size );
     }
     return 0;
 }
@@ -82,10 +80,10 @@ int  octetstream_close ( INOUT octetstream_t* const  os )
     }
 }
 
-/*}}}*/
+/*}}}*/
 /*{{{ encode one frame                */
 
-static INLINE int  lame_encode_frame (
+static inline int  lame_encode_frame (
         INOUT lame_t*     lame,
         OUTTR sample_t**  inbuf,
         IN    uint8_t*    mp3buf,
@@ -134,7 +132,7 @@ static INLINE int  lame_encode_frame (
     return ret;
 }
 
-/*}}}*/
+/*}}}*/
 /*{{{ demultiplexing tools            */
 
 /*
@@ -242,7 +240,7 @@ static const int16_t  alaw [256] = {
  * to const unsigned char.
  */
 
-static INLINE sample_t  read_opposite_float32 ( OUT uint8_t* const src )
+static inline sample_t  read_opposite_float32 ( OUT uint8_t* const src )
 {
     uint8_t  tmp [4];
     tmp[0] = src[3];
@@ -252,7 +250,7 @@ static INLINE sample_t  read_opposite_float32 ( OUT uint8_t* const src )
     return *(const float32_t*)tmp;
 }
 
-static INLINE sample_t  read_opposite_float64 ( OUT uint8_t* const src )
+static inline sample_t  read_opposite_float64 ( OUT uint8_t* const src )
 {
     uint8_t  tmp [8];
     tmp[0] = src[7];
@@ -304,7 +302,7 @@ static sample_t  read_float80_be ( OUT uint8_t* const src )
     return sign * ldexp (mantisse, exponent);
 }
 
-static INLINE sample_t  read_opposite_float80 ( OUT uint8_t* const src )
+static inline sample_t  read_opposite_float80 ( OUT uint8_t* const src )
 {
     uint8_t  tmp [10];
     tmp[0] = src[9];
@@ -320,7 +318,7 @@ static INLINE sample_t  read_opposite_float80 ( OUT uint8_t* const src )
     return *(const float80_t*)tmp;
 }
 
-
+
 /*
  *  Now we are building all resorting functions. The macro wants the name of the function
  *  and a peek function or macro. The created function wants the following input:
@@ -340,9 +338,9 @@ typedef void (*demux_t) ( IN sample_t* dst, OUT uint8_t* src, OUT ssize_t step, 
 #define FUNCTION(name,expr)       \
 static void  name (               \
         IN  sample_t*  dst,       \
-         OUT uint8_t*   src,       \
-         OUT ssize_t    step,      \
-         OUT size_t     len )      \
+	OUT uint8_t*   src,       \
+	OUT ssize_t    step,      \
+	OUT size_t     len )      \
 {                                 \
     size_t  i = len;              \
     do {                          \
@@ -401,7 +399,7 @@ FUNCTION ( copy_f64_le , read_opposite_float64 (src) )
 FUNCTION ( copy_f64_be , *(const float64_t*)src )
 
 #endif
-
+
 /*
  *  The global collection of channel demultiplexer.
  *  For every data type we have the size of one memory object and two
@@ -488,14 +486,14 @@ const demux_info_t  demux_info [] = {
     { -1, NULL        , NULL         }, /* 3E: */
     { -1, NULL        , NULL         }, /* 3F: */
 };
-
+
 /*
  *  Selects the right demultiplexer from the attribute field
  *  (currently endian and type information is used, rest is done in
  *  lame_encode_pcm)
  */
 
-static INLINE int  select_demux ( OUT uint32_t mode, IN demux_t* retf, IN ssize_t* size )
+static inline int  select_demux ( OUT uint32_t mode, IN demux_t* retf, IN ssize_t* size )
 {
     int                  big    = mode >> 24;
     const demux_info_t*  tabptr = demux_info + ((mode >> 16) & 0x3F);
@@ -521,7 +519,7 @@ static INLINE int  select_demux ( OUT uint32_t mode, IN demux_t* retf, IN ssize_
  *  encoding engine. All buffering, resampling, etc, handled by calling program.
  */
 
-static INLINE int  internal_lame_encoding_pcm (
+static inline int  internal_lame_encoding_pcm (
         INOUT lame_t*           const lame,
         INOUT octetstream_t*    const os,
         OUT   sample_t* const * const data,
@@ -655,10 +653,10 @@ static INLINE int  internal_lame_encoding_pcm (
     return 0;
 }
 
-/*}}}*/
+/*}}}*/
 /*{{{ demultiplexing stuff            */
 
-static INLINE void  average ( sample_t* dst, const sample_t* src1, const sample_t* src2, size_t len )
+static inline void  average ( sample_t* dst, const sample_t* src1, const sample_t* src2, size_t len )
 {
     while (len--)
         *dst++ = (*src1++ + *src2++) * 0.5;
@@ -864,7 +862,7 @@ int  lame_encode_pcm_flush (
  *      - out of the scope of this file
  */
 
-/*}}}*/
+/*}}}*/
 /*{{{ Legacy stuff                    */
 
 static lame_t*  pointer2lame ( void* const handle )
@@ -960,10 +958,10 @@ int  LEGACY_lame_encode_flush (
     return ret;
 }
 
-/*}}}*/
+/*}}}*/
 /*{{{ sin/cos/sinc/rounding functions */
 
-static INLINE long  round_nearest ( long double x )
+static inline long  round_nearest ( long double x )
 {
     if ( x >= 0. )
         return (long)(x+0.5);
@@ -972,7 +970,7 @@ static INLINE long  round_nearest ( long double x )
 }
 
 
-static INLINE long  round_down ( long double x )
+static inline long  round_down ( long double x )
 {
     if ( x >= 0. )
         return +(long)(+x);
@@ -981,7 +979,7 @@ static INLINE long  round_down ( long double x )
 }
 
 
-static INLINE long double  sinpi ( long double x )
+static inline long double  sinpi ( long double x )
 {
     x -= round_down (x) & ~1;
 
@@ -999,7 +997,7 @@ static INLINE long double  sinpi ( long double x )
 }
 
 
-static INLINE long double  cospi ( long double x )
+static inline long double  cospi ( long double x )
 {
     x -= round_down (x) & ~1;
 
@@ -1017,7 +1015,7 @@ static INLINE long double  cospi ( long double x )
 }
 
 
-static INLINE long double  sinc ( long double x )
+static inline long double  sinc ( long double x )
 {
     if ( x == 0. )
         return 1.;
@@ -1031,7 +1029,7 @@ static INLINE long double  sinc ( long double x )
 /*}}}*/
 /*{{{ some window functions           */
 
-static INLINE  double  hanning ( double x )
+static inline  double  hanning ( double x )
 {
     if ( fabs (x) >= 1 )
         return 0.;
@@ -1040,7 +1038,7 @@ static INLINE  double  hanning ( double x )
     return x * x;
 }
 
-static INLINE  double  hamming ( double x )
+static inline  double  hamming ( double x )
 {
     if ( fabs (x) >= 1 )
         return 0.;
@@ -1049,7 +1047,7 @@ static INLINE  double  hamming ( double x )
     return 0.54 + 0.46 * x;
 }
 
-static INLINE  double  blackman ( double x )
+static inline  double  blackman ( double x )
 {
     if ( fabs (x) >= 1 )
         return 0.;
@@ -1058,7 +1056,7 @@ static INLINE  double  blackman ( double x )
     return (0.16 * x + 0.50) * x + 0.34;        // using addition theorem of arc functions
 }
 
-static INLINE  double  blackman1 ( double x )
+static inline  double  blackman1 ( double x )
 {
     if ( fabs (x) >= 1 )
         return 0.;
@@ -1067,7 +1065,7 @@ static INLINE  double  blackman1 ( double x )
     return 0.42 - 0.50*cospi(x) + 0.08*cospi(2*x);
 }
 
-static INLINE  double  blackman2 ( double x )
+static inline  double  blackman2 ( double x )
 {
     if ( fabs (x) >= 1 )
         return 0.;
@@ -1076,7 +1074,7 @@ static INLINE  double  blackman2 ( double x )
     return 0.375 - 0.50*cospi(x) + 0.125*cospi(2*x);
 }
 
-static INLINE  double  blackmanharris_nuttall ( double x )
+static inline  double  blackmanharris_nuttall ( double x )
 {
     if ( fabs (x) >= 1 )
         return 0.;
@@ -1085,7 +1083,7 @@ static INLINE  double  blackmanharris_nuttall ( double x )
     return (10 - 15*cospi (x) + 6*cospi (2*x) - cospi (3*x) ) * (1./32);
 }
 
-static INLINE  double  blackmanharris_min4 ( double x )
+static inline  double  blackmanharris_min4 ( double x )
 {
     if ( fabs (x) >= 1 )
         return 0.;
@@ -1116,7 +1114,7 @@ static INLINE  double  blackmanharris_min4 ( double x )
  * decay at a rate of 6(k+2) dB/octave. T&MW.
  */
 
-/*}}}*/
+/*}}}*/
 /*{{{ scalar stuff                    */
 
 
@@ -1290,7 +1288,7 @@ void  init_scalar_functions ( OUT lame_t* const lame )
     }
 }
 
-/*}}}*/
+/*}}}*/
 /*{{{ factorize                       */
 
 /*
@@ -1300,9 +1298,9 @@ void  init_scalar_functions ( OUT lame_t* const lame )
 
 static double  factorize ( 
         OUT long double  f1, 
-         OUT long double  f2, 
-         IN  int* const   x1, 
-         IN  int* const   x2 )
+	OUT long double  f2, 
+	IN  int* const   x1, 
+	IN  int* const   x2 )
 {
     unsigned     i;
     long         ltmp;
@@ -1333,7 +1331,7 @@ static double  factorize (
  *  This patch tries to find the right sampling frequency for some know rounding victims
  */
 
-long double  unround_Samplefrequency ( OUT long double freq )
+long double  unround_samplefrequency ( OUT long double freq )
 {
     if ( freq != (unsigned short)freq )
         return freq;
@@ -1359,13 +1357,13 @@ long double  unround_Samplefrequency ( OUT long double freq )
 /*}}}*/
 /*{{{ resampling stuff                */
 
-static INLINE void  Calc_Coeffs (
+static inline void  Calc_Coeffs (
         IN  sample_t*  Coeff,
         OUT int        iNew,
         OUT int        iOld,
         OUT long       i,
         OUT long       k,
-        OUT double     bandwidth )   // 0.0 ... 1.0: used bandwidth from 0....fs_out/2
+        OUT double     bandwidth )   // 0.0 ... 1.0: used bandwidth from 0...fs_out/2
 {
     long double  w   = 1.L / (WINDOW_SIZE + 0.5);
     long double  sum = 0.;
@@ -1520,20 +1518,8 @@ int  resample_buffer (                          // return code, 0 for success
 }
 
 /*}}}*/
-/*{{{ test time stuff                 */
-
-int  lame_encode_mp3_frame ( INOUT lame_global_flags* gfp, OUTTR sample_t* inbuf_l, OUTTR sample_t* inbuf_r, IN uint8_t* mp3buf, OUT size_t mp3buf_size )
-{ 
-    return (int)gfp + (int)inbuf_l + (int)inbuf_r + (int)mp3buf + (int) mp3buf_size;
-}
-
-int  main ( void ) 
-{ 
-    return 0; 
-}
-
-/*}}}*/
 
 #endif /* KLEMM_44 */
 
 /* end of pcm.c */
+ 
