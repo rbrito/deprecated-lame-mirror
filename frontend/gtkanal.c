@@ -73,6 +73,7 @@ static GtkWidget *frameprogress; /* progress bar */
 static GtkWidget *framecounter;  /* progress counter */ 
 
 static int subblock_draw[3] = { 1, 1, 1 };
+static guint callbackid = 0;
 
 /* main window */
 GtkWidget *window;
@@ -789,28 +790,28 @@ plot_frame(void)
 
 static void update_progress(void)
 {    
-  char label[80];
+    char label[80];
 
-  int tf = lame_get_totalframes(global_gfp);
-  if (gtkinfo.totalframes>0) tf=gtkinfo.totalframes;
+    int tf = lame_get_totalframes(global_gfp);
+    if (gtkinfo.totalframes>0) tf=gtkinfo.totalframes;
 
-  sprintf(label,"Frame:%4i/%4i  %6.2fs",
-	 pplot->frameNum,(int)tf-1, pplot->frametime);
-  gtk_progress_set_value (GTK_PROGRESS (frameprogress), (gfloat) pplot->frameNum);
-  gtk_label_set_text(GTK_LABEL(framecounter),label);
+    sprintf(label,"Frame:%4i/%4i  %6.2fs",
+	    pplot->frameNum,(int)tf-1, pplot->frametime);
+    gtk_progress_set_value (GTK_PROGRESS (frameprogress), (gfloat) pplot->frameNum);
+    gtk_label_set_text(GTK_LABEL(framecounter),label);
 }
 
 
 
 static void analyze(void)
 {
-    plot_frame();   
-    update_progress(); 
+    plot_frame();
+    update_progress();
     if (idle_keepgoing) {
-      idle_count = 0;
-      idle_count_max=0;
-      idle_keepgoing=0;
-      idle_end=0;
+	idle_keepgoing = 0;
+	idle_count_max = 0;
+	idle_count = 0;
+	idle_end = 0;
     }
 }
 
@@ -825,7 +826,11 @@ static void plotclick( GtkWidget *widget, gpointer   data )
 static int frameadv1(GtkWidget *widget, gpointer   data )
 {
     int i;
-    assert(idle_keepgoing);
+    if (!idle_keepgoing) {
+	gtk_idle_remove(callbackid);
+	return 0;
+    }
+
     if (idle_back) {
       /* frame displayed is the old frame.  to advance, just swap in new frame */
       idle_back--;
@@ -893,12 +898,13 @@ static void frameadv( GtkWidget *widget, gpointer   data )
     int adv;
 
     if (!strcmp((char *) data,"-1")) {
-      /* ignore if we've already gone back as far as possible */
-      if (pplot->frameNum==0 || (idle_back==NUMBACK)) return;  
-      idle_back++;
-      pplot = &Pinfo[READ_AHEAD+idle_back];
-      analyze();
-      return;
+	/* ignore if we've already gone back as far as possible */
+	idle_keepgoing = 0;
+	if (pplot->frameNum==0 || (idle_back==NUMBACK)) return;  
+	idle_back++;
+	pplot = &Pinfo[READ_AHEAD+idle_back];
+	analyze();
+	return;
     }
 
 
@@ -908,19 +914,16 @@ static void frameadv( GtkWidget *widget, gpointer   data )
     if (!strcmp((char *) data,"100")) adv = 100;
     if (!strcmp((char *) data,"finish")) idle_end = 1;
 
-
     if (idle_keepgoing) {
-      /* already running - que up additional frame advance requests */
-      idle_count_max += adv; 
+	/* already running - que up additional frame advance requests */
+	idle_count_max += adv; 
     }
     else {
-      /* turn on idleing */
-      idle_count_max = adv;
-      idle_count = 0;
-      idle_keepgoing = 1;
-    }
-    while (idle_keepgoing) {
-	frameadv1(widget, data);
+	/* turn on idleing */
+	idle_count_max = adv;
+	idle_count = 0;
+	idle_keepgoing = 1;
+	callbackid = gtk_idle_add((GtkFunction) frameadv1, NULL);
     }
 }
 
@@ -1547,12 +1550,10 @@ int gtkcontrol(lame_t gfp, char *inPath)
 
     
     idle_keepgoing=1;             /* processing of frames is ON */
+    callbackid = gtk_idle_add((GtkFunction) frameadv1, NULL);
     idle_count_max=READ_AHEAD+1;  /* number of frames to process before plotting */
     idle_count=0;                 /* pause & plot when idle_count=idle_count_max */
 
-    while (idle_keepgoing) {
-	frameadv1(NULL, NULL);
-    }
     gtk_main ();
     assert(mp3done);
     return(0);
