@@ -1125,7 +1125,7 @@ CBR_bitalloc(
 	    targ_bits[1] += bits - (ch0new - targ_bits[0]);
 	targ_bits[0] = ch0new;
     }
-    assert(targ_bits[0] + targ_bits[1] <= MAX_BITS);
+
     for (ch = 0; ch < gfc->channels_out; ch++) {
 	CBR_1st_bitalloc(gfc, &gfc->l3_side.tt[gr][ch], ch,
 			 targ_bits[ch] + gfc->l3_side.tt[gr][ch].part2_length,
@@ -1152,7 +1152,8 @@ ABR_iteration_loop(lame_global_flags *gfp, III_psy_ratio ratio[2][2])
     FLOAT factor;
 
     gfc->bitrate_index = 0;
-    factor = (getframebytes(gfp)*8 / gfc->mode_gr + 600.0)*(1.0/2600.0);
+    factor = (getframebytes(gfp)*8/gfc->mode_gr/gfc->channels_out + 300.0)
+	*(1.0/1300.0);
     if (gfc->substep_shaping & 1)
 	factor *= 1.1;
 
@@ -1183,7 +1184,7 @@ iteration_loop(lame_global_flags *gfp, III_psy_ratio ratio[2][2])
 
     ResvFrameBegin(gfc, mean_bits);
     mean_bits *= 8/gfc->mode_gr;
-    factor = (mean_bits+600)*(1.0/3000.0);
+    factor = (mean_bits/gfc->channels_out+300)*(1.0/1500.0);
 
     for (gr = 0; gr < gfc->mode_gr; gr++) {
 	/*  calculate needed bits */
@@ -1214,6 +1215,8 @@ iteration_loop(lame_global_flags *gfp, III_psy_ratio ratio[2][2])
 	max_bits += mean_bits;
 	if (max_bits > mean_bits*2)    /* limit 2*average (need tuning) */
 	    max_bits = mean_bits*2;
+	if (min_bits > max_bits)
+	    min_bits = max_bits;
 	CBR_bitalloc(gfc, ratio[gr], min_bits, max_bits, factor, gr);
     }
     assert(gfc->l3_side.ResvSize >= 0);
