@@ -329,15 +329,8 @@ mp3rtp:	rtp.o mp3rtp.o ../libmp3lame/libmp3lame.a $(LIBS) $(OBJ)
 
 
 
-
-
-
-
-
-install_program: $(PGM)
+install: $(PGM)
 	$(INSTALL_PROGRAM) $(PGM) ${BINDIR}
-
-install: @INSTALL_TARGETS@
 
 uninstall:
 	$(RM_F) $(BINDIR)/$(PGM)
