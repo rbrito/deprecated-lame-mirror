@@ -30,19 +30,6 @@ KLEMM_07 (always on):
  - new timestatus only using lametime.c functions
  - more simple code
 
-KLEMM_12:
- increase treshold for "Stereo instead of J-Stereo for high bitrates"
-  48   kHz: 171 kbps (used at 192+) -> 244 kbps (used at 256+)
-  44.1 kHz: 160 kbps (used at 160+) -> 224 kbps (used at 224+)
-  32   kHz: 119 kbps (used at 128+) -> 162 kbps (used at 192+)
----snip---
-For 160...223 (44.1 kHz) joint stereo is used (instead of stereo). But the
-threshold to switch to MS coding is increased.
-
-Increases significantly the quality for 160 kbps. Castagnets is the example
-which sounds much much better with this switch.
----snip---
-
 KLEMM_14: (missing)
  some optimizations and code simplifications (unrolled code)
 
