@@ -121,7 +121,7 @@ S.D. Stearns and R.A. David, Prentice-Hall, 1992
 
 int gcd ( int i, int j )
 {
-//    assert ( i > 0  &&  j > 0 );
+/*    assert ( i > 0  &&  j > 0 ); */
     return j ? gcd(j, i % j) : i;
 }
 

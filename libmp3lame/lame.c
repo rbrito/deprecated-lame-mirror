@@ -443,7 +443,7 @@ lame_init_params(lame_global_flags * const gfp)
     gfc->channels_out = (gfp->mode == MONO) ? 1 : 2;
     gfc->mode_ext_next = gfc->mode_ext = MPG_MD_LR_LR;
     if (gfp->mode == MONO)
-        gfp->force_ms = 0; // don't allow forced mid/side stereo for mono output
+        gfp->force_ms = 0; /* cannot use force MS stereo for mono output */
     if (gfp->VBR != cbr) {
 	gfp->free_format = 0; /* VBR can't be mixed with free format */
 	/* at 160 kbps (MPEG-2/2.5)/ 320 kbps (MPEG-1) only
@@ -593,7 +593,7 @@ lame_init_params(lame_global_flags * const gfp)
     /* initialize internal adaptive ATH settings  -jd */
     gfc->ATH.aa_sensitivity_p = db2pow(-gfp->athaa_sensitivity);
 
-//    if (gfp->useTemporal < 0 ) gfp->useTemporal = 1;  // on by default
+/*    if (gfp->useTemporal < 0 ) gfp->useTemporal = 1;  // on by default */
 
     lame_init_bitstream(gfp);
     iteration_init(gfp);
@@ -908,7 +908,7 @@ lame_encode_buffer_sample_t(
 
     /* copy out any tags that may have been written into bitstream */
     mp3out = copy_buffer(gfc,mp3buf,mp3buf_size,0);
-    if (mp3out<0) return mp3out;  // not enough buffer space
+    if (mp3out<0) return mp3out;  /* not enough buffer space */
     mp3buf += mp3out;
     mp3size += mp3out;
 
@@ -973,14 +973,14 @@ lame_encode_buffer_sample_t(
 
 
         if (gfc->mf_size >= mf_needed) {
-            /* encode the frame.  */
-            // mp3buf              = pointer to current location in buffer
-            // mp3buf_size         = size of original mp3 output buffer
-            //                     = 0 if we should not worry about the
-            //                       buffer size because calling program is 
-            //                       to lazy to compute it
-            // mp3size             = size of data written to buffer so far
-            // mp3buf_size-mp3size = amount of space avalable 
+            /* encode the frame.
+		mp3buf              = pointer to current location in buffer
+		mp3buf_size         = size of original mp3 output buffer
+				    = 0 if we should not worry about the
+				        buffer size because calling program is 
+				        to lazy to compute it
+		mp3size		    = size of data written to buffer so far
+		mp3buf_size-mp3size  = amount of space avalable */
 
             int buf_size=mp3buf_size - mp3size;
             if (mp3buf_size==0) buf_size=0;
@@ -1405,7 +1405,7 @@ lame_close(lame_global_flags * gfp)
 
     gfc->Class_ID = 0;
 
-    // this routien will free all malloc'd data in gfc, and then free gfc:
+    /* this routien will free all malloc'd data in gfc, and then free gfc: */
     freegfc(gfc);
     free((lame_internal_flags*)((int)gfc - gfc->alignment));
 
@@ -1472,7 +1472,7 @@ lame_init_old(lame_global_flags * gfp)
     lame_internal_flags *gfc;
     int align;
 
-    disable_FPE();      // disable floating point exceptions
+    disable_FPE();      /* disable floating point exceptions */
 
     memset(gfp, 0, sizeof(lame_global_flags));
 
@@ -1543,7 +1543,7 @@ lame_init_old(lame_global_flags * gfp)
     gfc->mf_size = ENCDELAY - MDCTDELAY; /* we pad input with this many 0's */
 
 #ifdef DECODE_ON_THE_FLY
-    lame_decode_init();  // initialize the decoder 
+    lame_decode_init();  /* initialize the decoder */
 #endif
 #ifdef HAVE_NASM
     gfp->asm_optimizations.mmx = 1;

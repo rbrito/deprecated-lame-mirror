@@ -649,7 +649,7 @@ lame_get_exp_nspsytune( const lame_global_flags*  gfp )
  * VBR control
  ***********************************************************************/
 
-// Types of VBR.  default = CBR
+/* Types of VBR.  default = CBR */
 int
 lame_set_VBR( lame_global_flags*  gfp,
               vbr_mode            VBR )
@@ -1208,10 +1208,10 @@ lame_get_totalframes( const lame_global_flags*  gfp )
         ((double)gfp->num_samples * gfp->out_samplerate)
 	/ ((double)gfp->in_samplerate * gfp->framesize) + 2;
 
-    /* check to see if we underestimated totalframes */
-    //    if (totalframes < gfp->frameNum)
-    //        totalframes = gfp->frameNum;
-
+    /* check to see if we underestimated totalframes
+       if (totalframes < gfp->frameNum)
+           totalframes = gfp->frameNum;
+    */
     return totalframes;
 }
 

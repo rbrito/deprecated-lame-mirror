@@ -1337,7 +1337,7 @@ L3psycho_anal_ns(
 	    FLOAT ecb;
 	    int kk = gfc->s3ind[b][0];
 	    p -= kk;
-// calculate same bark masking 1st
+/* calculate same bark masking 1st */
 	    ecb = p[b] * eb2[b];
 
 	    for (kk = 1; kk <= 3; kk++) {

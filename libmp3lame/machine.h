@@ -78,16 +78,16 @@ char *strchr (), *strrchr ();
  */
 
 #define POW20(x) (assert(-Q_MAX2 <= (x) && (x) < Q_MAX), pow20[(x)+Q_MAX2])
-//#define POW20(x)  pow(2.0,((double)(x)-210)*.25)
-//#define POW20(x)  exp( ((double)(x)-210)*(.25*LOG2) )
+/*#define POW20(x)  pow(2.0,((double)(x)-210)*.25) */
+/*#define POW20(x)  exp( ((double)(x)-210)*(.25*LOG2) ) */
 
 #define IPOW20(x)  (assert(-Q_MAX2 <= (x) && (x) < Q_MAX), ipow20[(x)+Q_MAX2])
-//#define IPOW20(x)  exp( -((double)(x)-210)*.1875*LOG2 )
-//#define IPOW20(x)  pow(2.0,-((double)(x)-210)*.1875)
+/*#define IPOW20(x)  exp( -((double)(x)-210)*.1875*LOG2 ) */
+/*#define IPOW20(x)  pow(2.0,-((double)(x)-210)*.1875) */
 
 #define db2pow(x) (exp((x)*(LOG10*0.1)))
-//#define db2pow(x) pow(10.0, (x)*0.1)
-//#define db2pow(x) pow(10.0, (x)/10.0)
+/*#define db2pow(x) pow(10.0, (x)*0.1) */
+/*#define db2pow(x) pow(10.0, (x)/10.0) */
 
 /* in case this is used without configure */
 #ifndef inline
@@ -105,7 +105,7 @@ char *strchr (), *strrchr ();
 
 #if    defined(_MSC_VER)
 # pragma warning( disable : 4244 )
-//# pragma warning( disable : 4305 )
+/*# pragma warning( disable : 4305 ) */
 #endif
 
 /*

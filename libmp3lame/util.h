@@ -119,7 +119,7 @@ inline static ieee754_float32_t fast_log2(ieee754_float32_t xx)
 
     x.f = xx;
     mantisse = x.i & 0x7FFFFF;
-//  assert(i > 0);
+/*  assert(i > 0); */
     log2val = x.i >> 23;
     i = mantisse >> (23-LOG2_SIZE_L2);
     return log2val + log_table[i*2] + log_table[i*2+1]*mantisse;
@@ -238,12 +238,12 @@ typedef struct {
 
 typedef struct 
 {
-    int sum;    // what we have seen so far
-    int seen;   // how many frames we have seen in this chunk
-    int want;   // how many frames we want to collect into one chunk
-    int pos;    // actual position in our bag
-    int size;   // size of our bag
-    int *bag;   // pointer to our bag
+    int sum;    /* what we have seen so far */
+    int seen;   /* how many frames we have seen in this chunk */
+    int want;   /* how many frames we want to collect into one chunk */
+    int pos;    /* actual position in our bag */
+    int size;   /* size of our bag */
+    int *bag;   /* pointer to our bag */
 } VBR_seek_info_t;
 
 
@@ -424,13 +424,13 @@ struct lame_internal_flags {
      *  please plugg it here into the ATH_t struct
      */
     struct {
-	FLOAT l[SBMAX_l];     // ATH for sfbs in long blocks
-	FLOAT s[SBMAX_s];     // ATH for sfbs in short blocks
-	FLOAT cb[CBANDS];     // ATH for convolution bands
+	FLOAT l[SBMAX_l];     /* ATH for sfbs in long blocks */
+	FLOAT s[SBMAX_s];     /* ATH for sfbs in short blocks */
+	FLOAT cb[CBANDS];     /* ATH for convolution bands */
 	FLOAT l_avg[SBMAX_l];
 	FLOAT s_avg[SBMAX_s];
-	FLOAT adjust;     // lowering based on peak volume, 1 = no lowering
-	FLOAT adjust_limit;   // limit for dynamic ATH adjust
+	FLOAT adjust;     /* lowering based on peak volume, 1 = no lowering */
+	FLOAT adjust_limit;   /* limit for dynamic ATH adjust */
 	FLOAT eql_w[BLKSIZE/2];/* equal loudness weights (based on ATH) */
 	/* factor for tuning the (sample power) point below which adaptive
 	 * threshold of hearing adjustment occurs 
@@ -469,7 +469,7 @@ struct lame_internal_flags {
     uint16_t nMusicCRC;
 
     unsigned int crcvalue;
-    VBR_seek_info_t VBR_seek_table; // used for Xing VBR header
+    VBR_seek_info_t VBR_seek_table; /* used for Xing VBR header */
   
     int nogap_total;
     int nogap_current;  

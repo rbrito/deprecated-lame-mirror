@@ -1397,8 +1397,8 @@ int psymodel_init(lame_global_flags *gfp)
     for( i = BLKSIZE/2; --i >= 0; )
 	gfc->ATH.eql_w[i] *= eql_balance;
 
-    // The type of window used here will make no real difference, but
-    // use blackman window for long block.
+    /* The type of window used here will make no real difference, but
+     * use blackman window for long block. */
     for (i = 0; i < BLKSIZE ; i++)
       window[i] =
 	  0.42-0.5*cos(2*PI*(i+.5)/BLKSIZE) + 0.08*cos(4*PI*(i+.5)/BLKSIZE);
