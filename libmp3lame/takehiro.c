@@ -1,7 +1,7 @@
 /*
  *	MP3 huffman table selecting and bit counting
  *
- *	Copyright 1999-2003 Takehiro TOMINAGA
+ *	Copyright 1999-2005 Takehiro TOMINAGA
  *
  * This library is free software; you can redistribute it and/or
  * modify it under the terms of the GNU Library General Public
@@ -211,10 +211,16 @@ quantize_01(const FLOAT *xp, gr_info *gi, fi_union *fi, int sfb,
 {
     do {
 	const FLOAT *xe = xp - gi->wi[sfb].width;
-	FLOAT istep = (FLOAT)(1.0 - ROUNDFAC) / IPOW20(scalefactor(gi, sfb));
-	sfb++;
+	FLOAT istep;
 	if (xe > xend)
 	    xe = xend;
+	if (gi->scalefac[sfb] < 0) {
+	    memset(fi, 0, sizeof(int)*(xe - xp));
+	    fi += (xe-xp);
+	    xp = xe;
+	    continue;
+	}
+	istep = (FLOAT)(1.0 - ROUNDFAC) / IPOW20(scalefactor(gi, sfb));
 #ifdef USE_IEEE754_HACK
 	{
 	    fi_union thre;
@@ -231,7 +237,7 @@ quantize_01(const FLOAT *xp, gr_info *gi, fi_union *fi, int sfb,
 	    (fi++)->i = *xp++ > istep ? 1:0;
 	} while (xp < xe);
 #endif
-    } while (xp < xend);
+    } while (sfb++, xp < xend);
 }
 
 /*
@@ -689,6 +695,12 @@ count_bits(lame_t gfc, gr_info * const gi)
 	xe = xp - gi->wi[sfb].width;
 	if (xe > xend)
 	    xe = xend;
+	if (gi->scalefac[sfb] < 0) {
+	    memset(fi, 0, sizeof(int)*(xe - xp));
+	    fi += (xe-xp);
+	    xp = xe;
+	    continue;
+	}
 #ifdef HAVE_NASM
 	if (gfc->CPU_features.AMD_3DNow) {
 	    fi -= xp-xe;
@@ -735,7 +747,7 @@ count_bits(lame_t gfc, gr_info * const gi)
 	    FLOAT roundfac;
 	    int l = gi->wi[sfb].width;
 	    j -= l;
-	    if (!gfc->pseudohalf[sfb])
+	    if (!gfc->pseudohalf[sfb] || gi->scalefac[sfb] < 0)
 		continue;
 	    roundfac = (FLOAT)0.634521682242439
 		/ IPOW20(scalefactor(gi, sfb) + gi->scalefac_scale);
@@ -825,7 +837,7 @@ check_preflag(gr_info * const gi)
 
     gi->preflag = 1;
     for (sfb = 11; sfb < gi->psymax; sfb++)
-	if (gi->scalefac[sfb] != LARGE_BITS)
+	if (gi->scalefac[sfb] != SCALEFAC_ANYTHING_GOES)
 	    gi->scalefac[sfb] -= pretab[sfb];
 }
 
@@ -872,25 +884,41 @@ best_scalefac_store(lame_t gfc, int gr, int ch)
 
     if (gi->psymax > gi->sfbmax && gi->block_type != SHORT_TYPE
 	&& gi->scalefac[gi->sfbmax] == SCALEFAC_ANYTHING_GOES) {
-	int minsfb = 15;
-	for (sfb = 0; sfb < gi->psymax; sfb++)
-	    if (gi->scalefac[sfb] >= 0
-	     && minsfb > gi->scalefac[sfb] + (gi->preflag>0 ? pretab[sfb]:0))
-		minsfb = gi->scalefac[sfb] + (gi->preflag>0 ? pretab[sfb]:0);
+	int minsfb0 = 999;
+	int minsfbp = 999;
+	for (sfb = 0; sfb < gi->psymax; sfb++) {
+	    if (gi->scalefac[sfb] < 0)
+		continue;
+	    if (minsfbp > gi->scalefac[sfb] + (gi->preflag>0 ? pretab[sfb]:0))
+		minsfbp = gi->scalefac[sfb] + (gi->preflag>0 ? pretab[sfb]:0);
+	    if (minsfb0 > gi->scalefac[sfb])
+		minsfb0 = gi->scalefac[sfb];
+	}
+	if (gi->global_gain - (minsfb0 << (gi->scalefac_scale+1)) < 0)
+	    minsfb0 = gi->global_gain >> (gi->scalefac_scale+1);
 
-	if (minsfb != 0) {
-	    gr_info gi_w = *gi;
-	    if (gi->global_gain - (minsfb << (gi->scalefac_scale+1)) < 0)
-		minsfb = gi->global_gain >> (gi->scalefac_scale+1);
-	    gi->global_gain -= minsfb << (gi->scalefac_scale+1);
+	if (minsfb0 != 0) {
+	    gi->global_gain -= minsfb0 << (gi->scalefac_scale+1);
 	    for (sfb = 0; sfb < gi->psymax; sfb++)
 		if (gi->scalefac[sfb] != SCALEFAC_ANYTHING_GOES)
-		    gi->scalefac[sfb] -= minsfb-(gi->preflag>0 ? pretab[sfb]:0);
-	    if (gi->preflag > 0) {
-		gi->preflag = 0;
-		if (gfc->mode_gr == 2) 
-		    check_preflag(gi);
-	    }
+		    gi->scalefac[sfb] -= minsfb0;
+
+	    gfc->scale_bitcounter(gi);
+	}
+
+	minsfbp -= minsfb0;
+	if (gi->global_gain - (minsfbp << (gi->scalefac_scale+1)) < 0)
+	    minsfbp = gi->global_gain >> (gi->scalefac_scale+1);
+	if (minsfbp != 0) {
+	    gr_info gi_w = *gi;
+	    gi->global_gain -= minsfbp << (gi->scalefac_scale+1);
+	    for (sfb = 0; sfb < gi->psymax; sfb++)
+		if (gi->scalefac[sfb] != SCALEFAC_ANYTHING_GOES)
+		    gi->scalefac[sfb] -= minsfbp-(gi->preflag>0 ? pretab[sfb]:0);
+	    gi->preflag = 0;
+	    if (gfc->mode_gr == 2) 
+		check_preflag(gi);
+
 	    gfc->scale_bitcounter(gi);
 	    if (gi->part2_length > gi_w.part2_length)
 		*gi = gi_w;
