@@ -720,65 +720,6 @@ static void  presets_info_r3mix ( FILE* msgfp )
 }
 
 
-static void  presets_info_head ( FILE* msgfp )
-{
-    fputc( '\n', msgfp );
-    lame_version_print( msgfp );
-    fprintf( msgfp, 
-             "Presets are shortcuts for common or carefully tuned settings.\n"
-             "Several separate collections of preset profiles are available.\n"
-        );
-}
-
-
-/* briefly and concisely display all available presets
-*/
-static void  presets_info ( FILE* msgfp )
-{
-    fprintf( msgfp, "For more preset details, refer to --preset longhelp.\n" );
-    presets_info_dm( msgfp );
-    presets_info_r3mix( msgfp );
-}
-
-
-/* elaborate on details for all available presets
-*/
-static void  presets_longinfo ( FILE* msgfp )
-{
-    const char hr[] = "\n----------------------------------------------------------------\n";
-
-    fprintf( msgfp, hr );
-    presets_longinfo_dm( msgfp );
-    fprintf( msgfp, hr );
-    presets_info_r3mix( msgfp );
-}
-
-
-static const char presets_set_err_unk[] = "ERROR, unknown --preset profile: ";
-
-
-
-/* presets courtesy of r3mix
- */
-static int  presets_set_r3mix( lame_t gfp, const char* preset_name, 
-                               FILE *msgfp )
-{
-    if (preset_name[0] == '\0') {
-        lame_set_preset(gfp, R3MIX);
-        return 0;
-    }
-/*  else if( strcmp(preset_name, "-...") == 0 ) {
-        ;
-        return 0;
-    }
-*/
-    fprintf( msgfp, "%sr3mix%s\n", presets_set_err_unk, preset_name );
-    presets_info_r3mix( msgfp );
-    return -1;
-}
-
-
-
 
 /*  some presets thanks to Dibrom
  */
@@ -1087,7 +1028,7 @@ char* const inPath, char* const outPath, char **nogap_inPath, int *num_nogap)
                     lame_set_VBR(gfp,vbr_off); 
 
                 T_ELIF ("r3mix")
-		    presets_set_r3mix(gfp, "", stderr);
+                    lame_set_preset(gfp, R3MIX);
                                     
                 /**
                  *  please, do *not* DOCUMENT this one
