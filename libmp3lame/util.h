@@ -329,7 +329,8 @@ struct lame_internal_flags {
   int noise_shaping_amp;    /*  0 = ISO model: amplify all distorted bands
                                 1 = amplify within 50% of max (on db scale)
                                 2 = amplify only most distorted band
-			     */
+                                3 = method 1 and refine with method 2
+                            */
   int substep_shaping;      /* 0 = no substep
 			       1 = use substep shaping at last step(VBR only)
 			           (not implemented yet)
