@@ -1828,7 +1828,7 @@ set_frame_pinfo(lame_t gfc, III_psy_ratio ratio[MAX_GRANULES][MAX_CHANNELS])
     /* copy data for MP3 frame analyzer */
     for (ch = 0; ch < gfc->channels_out; ch++) {
 	int j;
-	for (j = 0; j < 1600; j++)
+	for (j = 0; j < gfc->framesize + 448; j++)
 	    gfc->pinfo->pcmdata[ch][j] = gfc->mfbuf[ch][j];
 	gfc->pinfo->athadjust[ch] = gfc->tt[0][ch].ATHadjust;
     }
