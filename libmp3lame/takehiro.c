@@ -649,7 +649,7 @@ scfsi_calc(
     int sfb;
     gr_info *gi = &l3_side->tt[1][ch];
     gr_info *g0 = &l3_side->tt[0][ch];
-
+    s1 = 0;
     for (i = 0; i < (sizeof(scfsi_band) / sizeof(int)) - 1; i++) {
 	for (sfb = scfsi_band[i]; sfb < scfsi_band[i + 1]; sfb++) {
 	    if (g0->scalefac[sfb] != gi->scalefac[sfb]
@@ -660,10 +660,11 @@ scfsi_calc(
 	    for (sfb = scfsi_band[i]; sfb < scfsi_band[i + 1]; sfb++) {
 		gi->scalefac[sfb] = -1;
 	    }
-	    l3_side->scfsi[ch][i] = 1;
+	    s1 = l3_side->scfsi[ch][i] = 1;
 	}
     }
 
+    if (!s1) return;
     s1 = c1 = 0;
     for (sfb = 0; sfb < 11; sfb++) {
 	if (gi->scalefac[sfb] == -1)
@@ -713,6 +714,9 @@ best_scalefac_store(
     int sfb,i,j,l;
     int recalc = 0;
 
+    for ( i = 0; i < 4; i++ )
+	l3_side->scfsi[ch][i] = 0;
+
     if (gi->preflag < 0) /* this means sub channel of intensity stereo */
 	return;
 
@@ -757,13 +761,10 @@ best_scalefac_store(
 	}
     }
 
-    for ( i = 0; i < 4; i++ )
-	l3_side->scfsi[ch][i] = 0;
-
     if (gfc->mode_gr==2 && gr == 1
 	&& l3_side->tt[0][ch].block_type != SHORT_TYPE
 	&& gi->block_type != SHORT_TYPE) {
-      	scfsi_calc(ch, l3_side);
+	scfsi_calc(ch, l3_side);
     } else if (recalc)
 	gfc->scale_bitcounter(gi);
 }
