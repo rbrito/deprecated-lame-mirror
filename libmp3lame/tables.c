@@ -1026,7 +1026,8 @@ psymodel_init(lame_t gfc)
 		x = level;
 	}
 	gfc->ATH.cb[i] = x * ATHAdjustLimit * gfc->numlines_l[i];
-	gfc->ATH.eql_w[i] = ATHformula(gfc, 3300, 1) / x / FFT2MDCT;
+	gfc->ATH.eql_w[i]
+	    = ATHformula(gfc, 3300, 1) / (x * FFT2MDCT * 4 * gfc->numlines_l[i]);
     }
     for (i = 0; i < 8; i++)
 	gfc->ATH.eql_w[i] = gfc->ATH.eql_w[0];
