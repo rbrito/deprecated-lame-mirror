@@ -263,7 +263,7 @@ loop_break(
 
     for (sfb = cod_info->sfb_smin; sfb < SBPSY_s; sfb++)
         for (i = 0; i < 3; i++) 
-            if (scalefac->s[sfb][i] + cod_info->subblock_gain[i] == 0)
+            if (scalefac->s[sfb][i] == 0 && cod_info->subblock_gain[i] == 0)
                 return 0;
 
     return 1;
