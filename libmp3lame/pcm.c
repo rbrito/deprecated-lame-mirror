@@ -14,12 +14,16 @@
 # include <config.h>
 #endif
 
+#include "bitstream.h"
+#include "id3tag.h"
+
+#define FN(x)    do { static unsigned int cnt = 0; if (cnt < 1000) fprintf (stderr,"[%3u]>>>%s<<<\n",++cnt,(x)), fflush(stderr); } while (0)
+
 #ifdef KLEMM_44
 
 /*{{{ #includes                       */
 
 #include <stdio.h>
-#include <stdint.h>
 #include <limits.h>
 #include <math.h>
 #include <memory.h>
@@ -48,6 +52,7 @@
 octetstream_t*  octetstream_open ( OUT size_t  size )
 {
     octetstream_t*  ret = (octetstream_t*) calloc ( 1, sizeof(octetstream_t) );
+    FN("octetstream_open");
     ret -> data = (uint8_t*) calloc ( 1, size );
     ret -> size = size;
     return ret;
@@ -55,18 +60,20 @@ octetstream_t*  octetstream_open ( OUT size_t  size )
 
 int  octetstream_resize ( INOUT octetstream_t* const  os, OUT size_t  size )
 {
+    FN("octetstream_resize");
     if ( size > os->size ) {
         os -> data = (uint8_t*) realloc ( os -> data, size );
         memset ( os -> data + os -> size, 0, size - os -> size );
         os -> size = size;
     } else if ( size < os->size ) {
-	os -> data = (uint8_t*) realloc ( os -> data, os->size = size );
+         os -> data = (uint8_t*) realloc ( os -> data, os->size = size );
     }
     return 0;
 }
 
 int  octetstream_close ( INOUT octetstream_t* const  os )
 {
+    FN("octetstream_close");
     if ( os == NULL )
         return -1;
     if ( os -> data != NULL ) {
@@ -90,6 +97,17 @@ static inline int  lame_encode_frame (
         OUT   size_t      mp3buf_size )
 {
     int  ret;
+#if 1
+    int i;
+    static j = 0;
+    fprintf (stderr, "last_ampl=%f ampl=%f\n", lame->last_ampl, lame->ampl);
+    for (i=0; i<1152; i++)
+        printf ("%6u %f %f\n", j++, inbuf[0][i], inbuf[1][i]);
+#endif
+
+
+    
+    FN("lame_encode_frame");
 
     switch ( lame -> coding ) {
 #ifdef HAVE_MPEG_LAYER1
@@ -129,6 +147,7 @@ static inline int  lame_encode_frame (
         if ( lame->analyzer_callback != NULL )
             lame->analyzer_callback ( lame, lame->frame_size );
     }
+    fprintf (stderr, "Lame_encode_frame liefert %d\n", ret );
     return ret;
 }
 
@@ -338,9 +357,9 @@ typedef void (*demux_t) ( IN sample_t* dst, OUT uint8_t* src, OUT ssize_t step, 
 #define FUNCTION(name,expr)       \
 static void  name (               \
         IN  sample_t*  dst,       \
-	OUT uint8_t*   src,       \
-	OUT ssize_t    step,      \
-	OUT size_t     len )      \
+         OUT uint8_t*   src,       \
+         OUT ssize_t    step,      \
+         OUT size_t     len )      \
 {                                 \
     size_t  i = len;              \
     do {                          \
@@ -498,11 +517,13 @@ static inline int  select_demux ( OUT uint32_t mode, IN demux_t* retf, IN ssize_
     int                  big    = mode >> 24;
     const demux_info_t*  tabptr = demux_info + ((mode >> 16) & 0x3F);
 
-#ifndef WORDS_BIGENDIAN
-                                        // 0=little, 1=big, 2=little, 3=big
-#else
+    FN("select_demux");
+
+#ifdef WORDS_BIGENDIAN
     /* big endian */
     big  = (big >> 1) ^ big ^ 1;        // 0=big, 1=little, 2=little, 3=big
+#else
+    /* little endian */                 // 0=little, 1=big, 2=little, 3=big
 #endif
 
     *size = tabptr -> size;
@@ -537,6 +558,8 @@ static inline int  internal_lame_encoding_pcm (
     size_t           remaining = len;
     sample_t*        mfbuf [MAX_CHANNELS];
     const sample_t*  pdata [MAX_CHANNELS];
+
+    FN("internal_lame_encoding_pcm");
 
     /// this should be moved to lame_init_params();
     // some sanity checks
@@ -574,16 +597,27 @@ static inline int  internal_lame_encoding_pcm (
         ampl_on = 0;
     }
 
+    FN("internal_lame_encoding_pcm 2");
+
     while ( remaining > 0 ) {
+
+        FN("internal_lame_encoding_pcm 3");
 
         /* copy in new samples into mfbuf, with resampling if necessary */
         if ( lame->sampfreq_in != lame->sampfreq_out )  {
+         
+            FN("internal_lame_encoding_pcm 10");
+         
             if ( lame->resample_in == NULL )
                 lame->resample_in = resample_open ( lame->sampfreq_in, lame->sampfreq_out, -1. /*Auto*/, TAPS );
+
+            FN("internal_lame_encoding_pcm 11");
 
             for ( ch = 0; ch < lame->channels_out; ch++ ) {
                 n_in  = remaining;
                 n_out = lame->frame_size;
+                 
+                FN("internal_lame_encoding_pcm 12");
 
                 // resample filter virtually should have no delay !
                 ret   = resample_buffer (
@@ -595,9 +629,17 @@ static inline int  internal_lame_encoding_pcm (
                     return ret;
                 pdata [ch] += n_in;
             }
+            
+            FN("internal_lame_encoding_pcm 13");
+            
         }
         else {
+         
+            FN("internal_lame_encoding_pcm 14");
+         
             n_in = n_out = MIN ( lame->frame_size, remaining );
+
+            FN("internal_lame_encoding_pcm 15");
 
             for ( ch = 0; ch < lame->channels_out; ch++ ) {
                 memcpy (  mfbuf [ch] + lame->mf_size,
@@ -605,7 +647,12 @@ static inline int  internal_lame_encoding_pcm (
                           n_out * sizeof (**mfbuf) );
                 pdata [ch] += n_in;
             }
+            
+            FN("internal_lame_encoding_pcm 16");
+            
         }
+
+        FN("internal_lame_encoding_pcm 4");
 
         switch ( ampl_on ) {
         case 0:
@@ -625,6 +672,8 @@ static inline int  internal_lame_encoding_pcm (
             break;
         }
 
+        FN("internal_lame_encoding_pcm 4");
+
         remaining                  -= n_in;
         lame->mf_size              += n_out;
         lame->mf_samples_to_encode += n_out;
@@ -642,11 +691,16 @@ static inline int  internal_lame_encoding_pcm (
                 return ret;
             os->length += ret;
 
+            FN("internal_lame_encoding_pcm 5");
+
             // shift out old samples
             lame->mf_size              -= lame->frame_size;
             lame->mf_samples_to_encode -= lame->frame_size;
             for ( ch = 0; ch < lame->channels_out; ch++ )
                 memmove ( mfbuf [ch] + 0, mfbuf [ch] + lame->frame_size, lame->mf_size * sizeof (**mfbuf) );
+                 
+            FN("internal_lame_encoding_pcm 6");
+
         }
     }
 
@@ -658,6 +712,8 @@ static inline int  internal_lame_encoding_pcm (
 
 static inline void  average ( sample_t* dst, const sample_t* src1, const sample_t* src2, size_t len )
 {
+    FN("average");
+
     while (len--)
         *dst++ = (*src1++ + *src2++) * 0.5;
 }
@@ -677,11 +733,21 @@ int  lame_encode_pcm (
     int                 ret;
     size_t              channels_in = flags & 0xFFFF;
 
+    FN("lame_encode_pcm");
+
+    if (len == 0)
+        return 0;
+
     if (select_demux ( flags, &retf, &size ) < 0)
         return -1;
 
     data[0] = (sample_t*) calloc (sizeof(sample_t), len);
     data[1] = (sample_t*) calloc (sizeof(sample_t), len);
+
+    FN("lame_encode_pcm 2");
+    fprintf (stderr, "%08X %08X %08X %08X %08X\n", lame, os, pcm, len, flags );
+    fprintf (stderr, "size=%u\n", size);
+    fflush (stderr);
 
     switch (flags >> 28) {
     case LAME_INTERLEAVED >> 28:
@@ -710,6 +776,7 @@ int  lame_encode_pcm (
                 memcpy ( data[1], data[0], sizeof(sample_t)*len );
                 break;
             case 2:
+                fprintf (stderr, "hier %u\n", 2*size);
                 retf ( data[0], p+0*size, 2*size, len );
                 retf ( data[1], p+1*size, 2*size, len );
                 break;
@@ -768,11 +835,11 @@ int  lame_encode_pcm (
         case 1:
             switch ( channels_in ) {
             case 1:
-                retf ( data[0], q[0], 1*size, len );
+                retf ( data[0], q[0], size, len );
                 break;
             case 2:
-                retf ( data[0], q[0], 2*size, len );
-                retf ( data[1], q[1], 2*size, len );
+                retf ( data[0], q[0], size, len );
+                retf ( data[1], q[1], size, len );
                 average ( data[0], data[0], data[1], len );
                 memset ( data[1], 0, sizeof(sample_t)*len );
                 break;
@@ -784,12 +851,12 @@ int  lame_encode_pcm (
         case 2:
             switch ( channels_in ) {
             case 1:
-                retf ( data[0], q[0], 1*size, len );
+                retf ( data[0], q[0], size, len );
                 memcpy ( data[1], data[0], sizeof(sample_t)*len );
                 break;
             case 2:
-                retf ( data[0], q[0], 2*size, len );
-                retf ( data[1], q[1], 2*size, len );
+                retf ( data[0], q[0], size, len );
+                retf ( data[1], q[1], size, len );
                 break;
             default:
                 return -1;
@@ -805,7 +872,11 @@ int  lame_encode_pcm (
         return -1;
     }
 
+    FN("lame_encode_pcm 3");
+
     ret = internal_lame_encoding_pcm ( lame, os, (sample_t const* const*) data, len );
+
+    FN("lame_encode_pcm 4");
 
     free ( data[0] );
     free ( data[1] );
@@ -820,18 +891,22 @@ int  lame_encode_pcm_flush (
         octetstream_t* const  os )
 {
     int  ret;
+    int  ret2;
 
-    ret = lame_encode_pcm ( lame, os, NULL, lame->mf_samples_to_encode, LAME_INTERLEAVED | LAME_SILENCE | 1 );
+    FN("lame_encode_pcm_flush");
 
-#if 0
+    ret = lame_encode_pcm ( lame, os, NULL, lame->mf_samples_to_encode + 1152, LAME_INTERLEAVED | LAME_SILENCE | 1 );
+                                                 /* this is an ugly hack ^^^^ */
+
+
     // Question: What happens here? Is there'n easier to do this?
+    flush_bitstream (lame -> global_flags);       /* mp3 related stuff. bit buffer might still contain some mp3 data */
+    id3tag_write_v1 (lame -> global_flags);       /* write a ID3 tag to the bitstream */
+    ret2 = copy_buffer (os->data, os->size - os->length, &lame->bs);
+    fprintf (stderr, "ret2=%d\n", ret2 );
+    if (ret2 < 0) return ret2;
+    os->length += ret2;
 
-    flush_bitstream (gfp);       /* mp3 related stuff. bit buffer might still contain some mp3 data */
-    id3tag_write_v1 (gfp);       /* write a id3 tag to the bitstream */
-    imp3 = copy_buffer (mp3buffer, mp3buffer_size_remaining, &lame->bs);
-    if (imp3 < 0) return imp3;
-    mp3count += imp3;
-#endif
 
     return ret;
 }
@@ -839,8 +914,8 @@ int  lame_encode_pcm_flush (
 /*
  *  Data flow
  *  ~~~~~~~~~
- *  LEGACY_lame_encode_buffer (public)
- *  LEGACY_lame_encode_buffer_interleaved (public)
+ *  lame_encode_buffer (public)
+ *  lame_encode_buffer_interleaved (public)
  *      - do some little preparations and calls lame_encode_pcm
  *  lame_encode_pcm (public)
  *      - demultiplexing
@@ -870,6 +945,8 @@ static lame_t*  pointer2lame ( void* const handle )
     lame_t*             lame = (lame_t*)handle;
     lame_global_flags*  gfp  = (lame_global_flags*)handle;
 
+    FN("pointer2lame");
+
     if ( lame == NULL )
         return NULL;
     if ( lame->Class_ID == LAME_ID )
@@ -887,7 +964,7 @@ static lame_t*  pointer2lame ( void* const handle )
 }
 
 
-int  LEGACY_lame_encode_buffer (
+int  lame_encode_buffer (
         void* const    gfp,
         const int16_t  buffer_l [],
         const int16_t  buffer_r [],
@@ -900,6 +977,8 @@ int  LEGACY_lame_encode_buffer (
     int             ret;
     lame_t*         lame;
 
+    FN("lame_encode_buffer");
+
     lame    = pointer2lame (gfp);
     os      = octetstream_open (mp3buf_size);
     pcm [0] = buffer_l;
@@ -910,12 +989,13 @@ int  LEGACY_lame_encode_buffer (
                                 lame->channels_in );
 
     memcpy ( mp3buf, os->data, os->length );
+    if (ret == 0) ret = os->length;
     octetstream_close (os);
     return ret;
 }
 
 
-int  LEGACY_lame_encode_buffer_interleaved (
+int  lame_encode_buffer_interleaved (
         void* const    gfp,
         const int16_t  buffer [],
         size_t         nsamples,
@@ -926,6 +1006,8 @@ int  LEGACY_lame_encode_buffer_interleaved (
     int             ret;
     lame_t*         lame;
 
+    FN("lame_encode_buffer_interleaved");
+
     lame    = pointer2lame (gfp);
     os      = octetstream_open (mp3buf_size);
 
@@ -934,12 +1016,13 @@ int  LEGACY_lame_encode_buffer_interleaved (
                                 lame->channels_in );
 
     memcpy ( mp3buf, os->data, os->length );
+    if (ret == 0) ret = os->length;
     octetstream_close (os);
     return ret;
 }
 
 
-int  LEGACY_lame_encode_flush (
+int  lame_encode_flush (
         void* const    gfp,
         void* const    mp3buf,
         const size_t   mp3buf_size )
@@ -948,12 +1031,15 @@ int  LEGACY_lame_encode_flush (
     int             ret;
     lame_t*         lame;
 
+    FN("lame_encode_flush");
+
     lame    = pointer2lame (gfp);
     os      = octetstream_open (mp3buf_size);
 
     ret     = lame_encode_pcm_flush ( lame, os );
 
     memcpy ( mp3buf, os->data, os->length );
+    if (ret == 0) ret = os->length;
     octetstream_close (os);
     return ret;
 }
@@ -1298,9 +1384,9 @@ void  init_scalar_functions ( OUT lame_t* const lame )
 
 static double  factorize ( 
         OUT long double  f1, 
-	OUT long double  f2, 
-	IN  int* const   x1, 
-	IN  int* const   x2 )
+        OUT long double  f2, 
+        IN  int* const   x1, 
+        IN  int* const   x2 )
 {
     unsigned     i;
     long         ltmp;
@@ -1394,6 +1480,8 @@ resample_t*  resample_open (
     sample_t*          p;
     double             err;
 
+    FN("resample_open");
+
     err = factorize ( sampfreq_out, sampfreq_in, &(ret->scale_out), &(ret->scale_in) );
     fprintf ( stderr, "(%.6g => %.6g Hz, Ratio %d:%d",
               (double)sampfreq_in, (double)sampfreq_out, ret->scale_in, ret->scale_out );
@@ -1432,6 +1520,8 @@ resample_t*  resample_open (
 
 int  resample_close ( INOUT resample_t* const r )
 {
+    FN("resample_close");
+
     if ( r == NULL )
         return -1;
     free ( r->in_old [0] );
@@ -1479,6 +1569,8 @@ int  resample_buffer (                          // return code, 0 for success
     size_t     k;
     int        l;
 
+    FN("resample_buffer");
+
     // copy TAPS samples to the second half of in_old
     memcpy ( in_old + TAPS, in, MIN (len*sizeof(*in), TAPS*sizeof(*in)) );
 
@@ -1522,4 +1614,3 @@ int  resample_buffer (                          // return code, 0 for success
 #endif /* KLEMM_44 */
 
 /* end of pcm.c */
- 

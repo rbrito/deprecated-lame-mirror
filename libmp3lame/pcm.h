@@ -1,18 +1,18 @@
 /*{{{ #defines                        */
 
+#include "lame.h"
+#include "util.h"
+
 #define ENCDELAY      576
 #define MDCTDELAY     48
-#define FFTOFFSET     (MDCTDELAY + 224)
 #define BLKSIZE       1024
 #define HBLKSIZE      (BLKSIZE/2 + 1)
 #define BLKSIZE_s     256
 #define HBLKSIZE_s    (BLKSIZE_s/2 + 1)
-#define MFSIZE        (3*1152 + ENCDELAY - MDCTDELAY)
 #define MAX_TABLES    1002
 #define TAPS          32
 #define WINDOW_SIZE   15.5
 #define WINDOW        hanning
-#define MAX_CHANNELS  2
 #define inline        __inline
 
 #define MIN(a,b)      ((a) < (b) ? (a) : (b))
@@ -28,7 +28,6 @@
 /*}}}*/
 /*{{{ object ID's                     */
 
-#define LAME_ID         0xFFF88E3BLU
 #define RESAMPLE_ID     0x52455341LU
 #define PSYCHO_ID       0x50535943LU
 #define BITSTREAM_ID    0x42495453LU
@@ -39,86 +38,12 @@
 typedef float         float32_t;                   // IEEE-754 32 bit floating point
 typedef double        float64_t;                   // IEEE-754 64 bit floating point
 typedef long double   float80_t;                   // IEEE-854 80 bit floating point, if available
-typedef float32_t     sample_t;                    // type to store one PCM sample
 typedef long double   float_t;                     // temporarly results of float operations
 typedef long double   double_t;                    // temporarly results of double operations
 typedef long double   longdouble_t;                // temporarly results of long double operations
 
 typedef float_t (*scalar_t)  ( const sample_t* p, const sample_t* q );
 typedef float_t (*scalarn_t) ( const sample_t* p, const sample_t* q, size_t len );
-
-typedef enum {
-    coding_MPEG_Layer_1 = 1,
-    coding_MPEG_Layer_2 = 2,
-    coding_MPEG_Layer_3 = 3,
-    coding_MPEG_AAC     = 4,
-    coding_Ogg_Vorbis   = 5,
-    coding_MPEG_plus    = 6
-} coding_t;
-
-typedef struct {
-    unsigned long  Class_ID;                       // Class ID to recognize a resample_t object
-    long double    samplefreq_in;                  // Input sample frequency in Hz
-    long double    samplefreq_out;                 // requested Output sample frequency in Hz
-    float          lowpass_freq;                   // lowpass frequency, this is the -6 dB point
-    int            scale_in;                       // the resampling is actually done by scale_out:scale_in, so the real output
-    int            scale_out;                      // frequency is samplefreq_in * scale_out / scale_in
-    int            taps;                           // number of taps for every FIR resample filter
-    sample_t**     fir;                            // the FIR resample filters: fir [scale_out] [taps]
-    void*          firfree;                        // start address of the alloced memory for fir, is NOT equal to fir[0] because of additional alignments
-    unsigned char* src_step;
-    sample_t*      in_old       [MAX_CHANNELS];
-    uint64_t       sample_count [MAX_CHANNELS];
-    unsigned       fir_stepper  [MAX_CHANNELS];
-    int            inp_stepper  [MAX_CHANNELS];
-} resample_t;
-
-typedef struct {
-    int     num_channels;                          // should be normally different from LAME_ID
-    void*   internal_flags;                        // the only important data in lame_global_flags: pointer to the internal falgs
-    // ...
-} lame_global_flags;
-
-#ifdef __EXTERN__
-
-struct _lame_internal_flags {
-    const unsigned long  Class_ID;
-};
-
-#else
-
-struct _lame_internal_flags {
-    unsigned long  Class_ID;
-    lame_global_flags* global_flags;
-    struct {
-        unsigned int  i387      : 1;
-        unsigned int  AMD_3DNow : 1;
-        unsigned int  SIMD      : 1;
-        unsigned int  SIMD2     : 1;
-    }              CPU_features;
-    unsigned int   channels_in;
-    unsigned int   channels_out;
-    sample_t*      mfbuf [2];
-    long double    sampfreq_in;
-    long double    sampfreq_out;
-    resample_t*    resample_in;
-    resample_t*    resample_out;
-    size_t         frame_size;
-    size_t         mf_samples_to_encode;
-    size_t         mf_size;
-    coding_t       coding;
-    unsigned long  frame_count;
-    int (*analyzer_callback) ( const struct _lame_internal_flags* lame, size_t size ); // ja, ja, hier ist die struct-Notation notwendig, bedankt euch bei K&R und Konsorten
-    double         ampl;
-    double         last_ampl;
-    size_t         mode_gr;
-    // ...
-};
-
-#endif
-
-typedef struct _lame_internal_flags  lame_t;
-typedef struct _lame_internal_flags  lame_internal_flags;  /* make program mind compatible with FORTRAN 4 */
 
 /*}}}*/
 /*{{{ data direction attributes       */
@@ -158,35 +83,6 @@ typedef struct _lame_internal_flags  lame_internal_flags;  /* make program mind 
 #endif
 
 /*}}}*/
-/*{{{ bitstream object                */
-
-/*
- *  About handling of octetstreams:
- *  CHAR_BIT = 8: data points to a normal memory block which can be written to
- *                disk via fwrite
- *  CHAR_BIT > 8: On every char only the bits from 0...7 are used. Depending on the
- *                host I/O it can be possible that you must first pack the data
- *                stream before writing to disk.
- *  CHAR_BIT < 8: Not allowed by C
- */
-
-#ifdef __EXTERN__
-
-typedef struct {
-    volatile const void* volatile const   data;
-    const size_t                          length;
-    const size_t                          size;
-} octetstream_t;
-
-#else
-
-typedef struct {
-    uint8_t*   data;
-    size_t     length;
-    size_t     size;
-} octetstream_t;
-
-#endif
 
 /*
  *  Now some information how PCM data can be specified. PCM data
@@ -340,41 +236,6 @@ float_t  scalar1n_float32       ( const float32_t* p, const float32_t* q, const 
 
 /*{{{ some prototypes                 */
 
-octetstream_t*  octetstream_open   ( const size_t  size );
-int             octetstream_resize ( octetstream_t* const  os, const size_t  size );
-int             octetstream_close  ( octetstream_t* const  os );
-
-int  lame_encode_pcm (
-        lame_t* const   lame,
-        octetstream_t*  os,
-        const void*     pcm,
-        size_t          len,
-        uint32_t        flags );
-        
-int  lame_encode_pcm_flush (
-        lame_t*        const  lame,
-        octetstream_t* const  os );
-
-int  LEGACY_lame_encode_buffer (
-        void* const    gfp,
-        const int16_t  buffer_l [],
-        const int16_t  buffer_r [],
-        const size_t   nsamples,
-        void* const    mp3buf,
-        const size_t   mp3buf_size );
-        
-int  LEGACY_lame_encode_buffer_interleaved (
-        void* const    gfp,
-        const int16_t  buffer [],
-        size_t         nsamples,
-        void* const    mp3buf,
-        const size_t   mp3buf_size );
-        
-int  LEGACY_lame_encode_flush (
-        void* const    gfp,
-        void* const    mp3buf,
-        const size_t   mp3buf_size );
-        
 resample_t*  resample_open (
         OUT long double  sampfreq_in,    // [Hz]
         OUT long double  sampfreq_out,   // [Hz]
@@ -411,4 +272,3 @@ int  lame_encode_ogg_frame (             // return code, 0 for success
 /*}}}*/
 
 /* end of pcm.h */
- 
