@@ -73,8 +73,7 @@ const int SizeOfEmptyFrame[2][2]=
 	{32,17},
 };
 
-#define RH_SEEK_TABLE
-#ifdef RH_SEEK_TABLE
+
 /***********************************************************************
  *  Robert Hegemann 2001-01-17
  ***********************************************************************/
@@ -138,7 +137,7 @@ void print_seeking(unsigned char *t)
     printf("\n");
 }
 #endif
-#endif
+
 
 
 /****************************************************************************
@@ -151,7 +150,7 @@ void print_seeking(unsigned char *t)
 void AddVbrFrame(lame_global_flags *gfp)
 {
     lame_internal_flags *gfc = gfp->internal_flags;
-#ifdef RH_SEEK_TABLE
+
     int kbps = bitrate_table[gfp->version][gfc->bitrate_index];
     
     if (gfc->VBR_seek_table.bag == NULL) {
@@ -171,52 +170,6 @@ void AddVbrFrame(lame_global_flags *gfp)
     }
     addVbr(&gfc->VBR_seek_table, kbps);
     gfp->nVbrNumFrames++;
-#else
-    int nStreamPos;
-    nStreamPos = (gfc->bs.totbit/8);
-
-    /* Simple exponential growing buffer */
-    if (gfp->pVbrFrames==NULL || gfp->nVbrFrameBufferSize==0) {
-        /* Start with 100 frames */
-        const size_t buf_size = 100;
-            
-        /* Allocate them */
-        gfp->pVbrFrames = (int*) malloc (buf_size*sizeof(int));
-		
-        if (gfp->pVbrFrames != NULL)
-            gfp->nVbrFrameBufferSize = buf_size;
-        else {
-            gfp->nVbrFrameBufferSize = 0;
-            ERRORF ("Error: can't allocate VbrFrames buffer\n");
-            return;
-        }
-    }
-
-    /* Is buffer big enough to store this new frame */
-    if (gfp->nVbrNumFrames >= gfp->nVbrFrameBufferSize) {
-        /* Guess not, double the buffer size */
-        const size_t buf_size = 2*gfp->nVbrFrameBufferSize;
-        void * p;
-        
-        assert (gfp->nVbrNumFrames < 2*gfp->nVbrFrameBufferSize);
-        
-        /* Allocate new buffer */
-        p = realloc (gfp->pVbrFrames, buf_size*sizeof(int));
-		
-        if (p != NULL) {
-            gfp->nVbrFrameBufferSize = buf_size;
-            gfp->pVbrFrames          = (int*) p;
-        } else {
-            ERRORF ("Error: can't increase VbrFrames buffer\n");
-            return;
-        }
-    }
-    
-    assert (gfp->pVbrFrames != NULL);
-    
-    /* Store values */
-    gfp->pVbrFrames[gfp->nVbrNumFrames++] = nStreamPos;
-#endif
 }
 
 
@@ -466,11 +419,8 @@ int InitVbrTag(lame_global_flags *gfp)
 */
 int PutVbrTag(lame_global_flags *gfp,FILE *fpStream,int nVbrScale)
 {
-#ifdef RH_SEEK_TABLE
         lame_internal_flags * gfc = gfp->internal_flags;
-#else
-	int			i;
-#endif
+
 	long lFileSize;
 	int nStreamIndex;
 	char abyte,bbyte;
@@ -480,11 +430,7 @@ int PutVbrTag(lame_global_flags *gfp,FILE *fpStream,int nVbrScale)
         unsigned char id3v2Header[10];
         size_t id3v2TagSize;
 
-#ifdef RH_SEEK_TABLE
         if (gfc->VBR_seek_table.pos <= 0)
-#else
-	if (gfp->nVbrNumFrames==0 || gfp->pVbrFrames==NULL)
-#endif
 		return -1;
 
 
@@ -570,26 +516,8 @@ int PutVbrTag(lame_global_flags *gfp,FILE *fpStream,int nVbrScale)
 	/* Clear all TOC entries */
 	memset(btToc,0,sizeof(btToc));
 
-#ifdef RH_SEEK_TABLE
         Xing_seek_table (&gfc->VBR_seek_table, btToc);
         /* print_seeking (btToc); */
-#else
-        for (i=1;i<NUMTOCENTRIES;i++) /* Don't touch zero point... */
-        {
-                /* Calculate frame from given percentage */
-                int frameNum=(int)(floor(0.01*i*gfp->nVbrNumFrames));
-
-                /*  Calculate relative file postion, normalized to 0..256!(?) */
-                float fRelStreamPos=(float)256.0*(float)gfp->pVbrFrames[frameNum]/(float)lFileSize;
-
-                /* Just to be safe */
-                if (fRelStreamPos>255) fRelStreamPos=255;
-
-                /* Assign toc entry value */
-                btToc[i]=(u_char) fRelStreamPos;
-        }
-#endif
-
 
 	/* Start writing the tag after the zero frame */
 	nStreamIndex=gfp->nZeroStreamSize;
