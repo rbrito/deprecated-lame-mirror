@@ -1073,34 +1073,34 @@ parse_wave_header(lame_global_flags * gfp, FILE * sf)
     int     bits_per_sample = 0;
     int     samples_per_sec = 0;
     int     avg_bytes_per_sec = 0;
-	int		data_offset=0;
+    int     data_offset=0;
 
     int     is_wav = 0;
     long    data_length = 0, file_length, subSize = 0;
     int     loop_sanity = 0;
 
     file_length = Read32BitsHighLow(sf);
-	data_offset +=4;
+    data_offset +=4;
 
     if (Read32BitsHighLow(sf) != WAV_ID_WAVE)
         return 0;
-	data_offset +=4;
+    data_offset +=4;
 
     for (loop_sanity = 0; loop_sanity < 20; ++loop_sanity) {
         int     type = Read32BitsHighLow(sf);
-		data_offset+=4;
+	data_offset+=4;
 
         if (type == WAV_ID_FMT) {
             subSize = Read32BitsLowHigh(sf);
-			data_offset += 4;
+	    data_offset += 4;
 
             if (subSize < 16) {
                 /*DEBUGF(
-                   "'fmt' chunk too short (only %ld bytes)!", subSize);  */
+		  "'fmt' chunk too short (only %ld bytes)!", subSize);  */
                 return 0;
             }
 
-			data_offset += subSize;
+	    data_offset += subSize;
 
             format_tag = Read16BitsLowHigh(sf);
             subSize -= 2;
@@ -1117,28 +1117,23 @@ parse_wave_header(lame_global_flags * gfp, FILE * sf)
 
             /* DEBUGF("   skipping %d bytes\n", subSize); */
 
-            if (subSize > 0) {
-                if (fskip(sf, (long) subSize, SEEK_CUR) != 0)
-                    return 0;
-            };
-
+            if (subSize > 0 && fskip(sf, (long) subSize, SEEK_CUR) != 0)
+		return 0;
         }
         else if (type == WAV_ID_DATA) {
             subSize = Read32BitsLowHigh(sf);
-			data_offset += 4;
+	    data_offset += 4;
 
             data_length = subSize;
             is_wav = 1;
 
-			if (fskip(sf, (long) subSize, SEEK_CUR) != 0)
+	    if (fskip(sf, (long) subSize, SEEK_CUR) != 0)
                 return 0;
         }
         else if (type == WAV_ID_LIST) {
-			SetIDTagsFromRiffTags(gfp, sf);
-			// Position read ptr back to data chunk
-            if (fskip(sf, (long) data_offset, SEEK_SET) != 0)
-                return 0;
-			break;
+	    SetIDTagsFromRiffTags(gfp, sf);
+	    // Position read ptr back to data chunk
+	    break;
         }
         else {
             subSize = Read32BitsLowHigh(sf);
@@ -1147,9 +1142,8 @@ parse_wave_header(lame_global_flags * gfp, FILE * sf)
         }
     }
 
-    if (format_tag != 1) {
+    if (format_tag != 1)
 	return 0; /* oh no! non-supported format  */
-    }
 
 
     if (is_wav) {
@@ -1165,6 +1159,8 @@ parse_wave_header(lame_global_flags * gfp, FILE * sf)
         (void) lame_set_num_samples( gfp,
             data_length / (channels * ((bits_per_sample+7) / 8)) );
     }
+    if (fskip(sf, (long) data_offset, SEEK_SET) != 0)
+	return 0;
     return is_wav;
 }
 
