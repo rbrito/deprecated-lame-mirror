@@ -905,7 +905,7 @@ lame_init_params(lame_global_flags * const gfp)
         gfc->nsPsy.use = 1;
         gfc->nsPsy.safejoint = (gfp->exp_nspsytune & 2) != 0;
         for (i = 0; i < 19; i++)
-            gfc->nsPsy.pefirbuf[i] = 700;
+            gfc->nsPsy.pefirbuf[i] = 700*gfc->mode_gr*gfc->channels_out;
 
         if (gfp->ATHtype == -1)
             gfp->ATHtype = 4;

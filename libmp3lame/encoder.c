@@ -472,14 +472,6 @@ int  lame_encode_mp3_frame (				// Output
       FLOAT8  threshold1    = 0.35;
       FLOAT8  threshold2    = 0.45;
 
-      /* use m/s gfc->channels_out? */
-      gr_info *gi0 = &gfc->l3_side.tt[0][0];
-      gr_info *gi1 = &gfc->l3_side.tt[gfc->mode_gr-1][0];
-      /* make sure block type is the same in each channel */
-      if (gi0[0].block_type != gi0[1].block_type
-	  || gi1[0].block_type != gi1[1].block_type)
-	check_ms_stereo = 0;
-
       /* take an average */
       if (gfc->mode_gr==1) {
 	  /* MPEG2 - no second granule */
@@ -502,7 +494,7 @@ int  lame_encode_mp3_frame (				// Output
       if (ms_ratio_ave1 >= threshold1 || ms_ratio_ave2 >= threshold2)
 	check_ms_stereo = 0;
     }
-    if (gfc->nsPsy.use || check_ms_stereo) {
+    if (check_ms_stereo) {
       FLOAT8 sum_pe_MS = 0;
       FLOAT8 sum_pe_LR = 0;
       for ( gr = 0; gr < gfc->mode_gr; gr++ ) {
@@ -521,7 +513,7 @@ int  lame_encode_mp3_frame (				// Output
 
 
   /* bit and noise allocation */
-  if (MPG_MD_MS_LR == gfc->mode_ext) {
+  if (gfc->mode_ext == MPG_MD_MS_LR) {
       gr_info *gi0 = &gfc->l3_side.tt[0][0];
       gr_info *gi1 = &gfc->l3_side.tt[gfc->mode_gr-1][0];
       masking = &masking_MS;    /* use MS masking */
@@ -532,6 +524,19 @@ int  lame_encode_mp3_frame (				// Output
 
       if (gi1[0].mixed_block_flag != gi1[1].mixed_block_flag)
 	  gi1[0].mixed_block_flag = gi1[1].mixed_block_flag = 0;
+
+      if (gi0[0].block_type != gi0[1].block_type) {
+	  int type = gi0[0].block_type;
+	  if (type == NORM_TYPE)
+	      type = gi0[1].block_type;
+	  gi0[0].block_type = gi0[1].block_type = type;
+      }
+      if (gi1[0].block_type != gi1[1].block_type) {
+	  int type = gi1[0].block_type;
+	  if (type == NORM_TYPE)
+	      type = gi1[1].block_type;
+	  gi1[0].block_type = gi1[1].block_type = type;
+      }
   } else {
       masking = &masking_LR;    /* use LR masking */
       pe_use = &pe;
@@ -562,34 +567,31 @@ int  lame_encode_mp3_frame (				// Output
 #endif
 
   if (gfc->nsPsy.use && (gfp->VBR == vbr_off || gfp->VBR == vbr_abr)) {
-    static FLOAT fircoef[19] = {
-      -0.0207887,-0.0378413,-0.0432472,-0.031183,
-      7.79609e-18,0.0467745,0.10091,0.151365,
-      0.187098,0.2,0.187098,0.151365,
-      0.10091,0.0467745,7.79609e-18,-0.031183,
-      -0.0432472,-0.0378413,-0.0207887,
+    static FLOAT fircoef[9] = {
+	-0.0207887 *5,	-0.0378413*5,	-0.0432472*5,	-0.031183*5,
+	7.79609e-18*5,	 0.0467745*5,	 0.10091*5,	0.151365*5,
+	0.187098*5
     };
+
     int i;
     FLOAT8 f;
 
     for(i=0;i<18;i++) gfc->nsPsy.pefirbuf[i] = gfc->nsPsy.pefirbuf[i+1];
 
-    i=0;
-    gfc->nsPsy.pefirbuf[18] = 0;
+    f = 0.0;
+    for ( gr = 0; gr < gfc->mode_gr; gr++ )
+      for ( ch = 0; ch < gfc->channels_out; ch++ )
+	  f += (*pe_use)[gr][ch];
+    gfc->nsPsy.pefirbuf[18] = f;
+
+    f = gfc->nsPsy.pefirbuf[9];
+    for (i=0;i<9;i++)
+	f += (gfc->nsPsy.pefirbuf[i]+gfc->nsPsy.pefirbuf[18-i]) * fircoef[i];
+
+    f = (670*5*gfc->mode_gr*gfc->channels_out)/f;
     for ( gr = 0; gr < gfc->mode_gr; gr++ ) {
       for ( ch = 0; ch < gfc->channels_out; ch++ ) {
-	gfc->nsPsy.pefirbuf[18] += (*pe_use)[gr][ch];
-	i++;
-      }
-    }
-
-    gfc->nsPsy.pefirbuf[18] = gfc->nsPsy.pefirbuf[18] / i;
-    f = 0;
-    for(i=0;i<19;i++) f += gfc->nsPsy.pefirbuf[i] * fircoef[i];
-
-    for ( gr = 0; gr < gfc->mode_gr; gr++ ) {
-      for ( ch = 0; ch < gfc->channels_out; ch++ ) {
-	(*pe_use)[gr][ch] *= 670 / f;
+	(*pe_use)[gr][ch] *= f;
       }
     }
   }

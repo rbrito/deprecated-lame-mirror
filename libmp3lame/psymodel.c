@@ -570,22 +570,30 @@ static void convert_partition2scalefac_l(
     )
 {
     FLOAT8 enn, thmm;
-    int sb, b = -1;
+    int sb, b;
     enn = thmm = 0.0;
-    for (sb = 0; sb < SBMAX_l; sb++) {
-	while (++b < gfc->bo_l[sb]) {
+    sb = b = 0;
+    for (;;) {
+	while (b < gfc->bo_l[sb]) {
 	    enn  += eb[b];
 	    thmm += thr[b];
+	    b++;
 	}
+
+	if (sb == SBMAX_l - 1)
+	    break;
 
 	gfc->en [chn].l[sb] = enn  + 0.5 * eb [b];
 	gfc->thm[chn].l[sb] = thmm + 0.5 * thr[b];
 
-        enn  = 0.5 *  eb[b];
+	enn  = 0.5 *  eb[b];
 	thmm = 0.5 * thr[b];
+	b++;
+	sb++;
     }
-    gfc->en [chn].l[sb-1] += enn;
-    gfc->thm[chn].l[sb-1] += thmm;
+
+    gfc->en [chn].l[SBMAX_l-1] = enn;
+    gfc->thm[chn].l[SBMAX_l-1] = thmm;
 }
 
 static void
@@ -963,26 +971,17 @@ int L3psycho_anal( lame_global_flags * gfp,
 	    /* chn=0,1   L and R channels
 	       chn=2,3   S and M channels.  
 	    */
-	    if (gfc->blocktype_old[chn & 1] == SHORT_TYPE)
-		thr[b] = ecb; /* Min(ecb, rpelev*gfc->nb_1[chn][b]); */
-	    else
-		thr[b] = Min(ecb,
-			     Min(rpelev*gfc->nb_1[chn][b],
-				 rpelev2*gfc->nb_2[chn][b]));
-
-	    tbb = Max(thr[b],gfc->ATH->cb[b]);
-	    if (tbb < eb[b])
-		gfc->pe[chn] -= gfc->numlines_l[b] * FAST_LOG(tbb / eb[b]);
-
-	    if ( gfp->VBR == vbr_rh || gfp->VBR == vbr_mtrh ) {
-		thr[b] = Min(ecb, rpelev*gfc->nb_1[chn][b]);
-		if (gfc->blocktype_old[chn & 1] != SHORT_TYPE)
-		    thr[b] = Min(thr[b], rpelev2*gfc->nb_2[chn][b]);
-		thr[b] = Max( thr[b], 1e-37 );
-	    }
+	    thr[b] = Min(ecb, rpelev*gfc->nb_1[chn][b]);
+	    if (gfc->blocktype_old[chn & 1] != SHORT_TYPE
+		&& thr[b] > rpelev2*gfc->nb_2[chn][b])
+		thr[b] = rpelev2*gfc->nb_2[chn][b];
 
 	    gfc->nb_2[chn][b] = gfc->nb_1[chn][b];
 	    gfc->nb_1[chn][b] = ecb;
+
+	    ecb = Max(thr[b], gfc->ATH->cb[b]);
+	    if (ecb < eb[b])
+		gfc->pe[chn] -= gfc->numlines_l[b] * FAST_LOG(ecb / eb[b]);
 	}
 
 	/*************************************************************** 
@@ -1030,11 +1029,11 @@ int L3psycho_anal( lame_global_flags * gfp,
 
 	/* compute masking thresholds for short blocks */
 	for (sblock = 0; sblock < 3; sblock++) {
+	    FLOAT8 enn, thmm;
 	    compute_masking_s(gfc, fftenergy_s, eb, thr, chn, sblock);
-	    b = 0;
+	    b = -1;
+	    enn = thmm = 0.0;
 	    for (sb = 0; sb < SBMAX_s; sb++) {
-		FLOAT8 enn  = 0.5 * eb[b];
-		FLOAT8 thmm = 0.5 * thr[b];
 		while (++b < gfc->bo_s[sb]) {
 		    enn  += eb[b];
 		    thmm += thr[b];
@@ -1043,7 +1042,11 @@ int L3psycho_anal( lame_global_flags * gfp,
 		thmm += 0.5 * thr[b];
 		gfc->en [chn].s[sb][sblock] = enn;
 		gfc->thm[chn].s[sb][sblock] = thmm;
+		enn  = 0.5 * eb[b];
+		thmm = 0.5 * thr[b];
 	    }
+	    gfc->en [chn].s[sb-1][sblock] += enn;
+	    gfc->thm[chn].s[sb-1][sblock] += thmm;
 	}
     } /* end loop over chn */
 
@@ -1485,7 +1488,7 @@ int L3psycho_anal_ns( lame_global_flags * gfp,
 	     *          frame0, but all pre-echo was in frame1.
 	     */
 	    /* chn=0,1   L and R channels
-	       chn=2,3   S and M channels.  
+	       chn=2,3   S and M channels.
 	    */
 
 	    if (gfc->blocktype_old[chn & 1] == SHORT_TYPE)
@@ -1563,8 +1566,6 @@ int L3psycho_anal_ns( lame_global_flags * gfp,
 	}
 	if (chn < 2) {
 	  uselongblock[chn] = ns_uselongblock;
-	} else {
-	  if (!ns_uselongblock) uselongblock[0] = uselongblock[1] = 0;
 	}
 
 	/* compute masking thresholds for long blocks */
@@ -1572,11 +1573,11 @@ int L3psycho_anal_ns( lame_global_flags * gfp,
 
 	/* compute masking thresholds for short blocks */
 	for (sblock = 0; sblock < 3; sblock++) {
+	    FLOAT8 enn, thmm;
 	    compute_masking_s(gfc, fftenergy_s, eb, thr, chn, sblock);
-	    b = 0;
+	    b = -1;
 	    for (sb = 0; sb < SBMAX_s; sb++) {
-		FLOAT8 enn  = 0.5 * eb[b];
-		FLOAT8 thmm = 0.5 * thr[b];
+		enn = thmm = 0.0;
 		while (++b < gfc->bo_s[sb]) {
 		    enn  += eb[b];
 		    thmm += thr[b];
@@ -1636,10 +1637,6 @@ int L3psycho_anal_ns( lame_global_flags * gfp,
 	    }
 	    gfc->nsPsy.last_attacks[chn][sblock] = ns_attacks[sblock];
 	}
-
-	/*********************************************************************
-	 * compute the value of PE to return (one granule delay)
-	 *********************************************************************/
     } /* end loop over chn */
 
     if (gfp->interChRatio != 0.0)
@@ -1662,6 +1659,9 @@ int L3psycho_anal_ns( lame_global_flags * gfp,
      * compute estimation of the amount of bit used in the granule
      ***************************************************************/
     for (chn=0;chn<numchn;chn++) {
+	/*********************************************************************
+	 * compute the value of PE to return (one granule delay)
+	 *********************************************************************/
 	const static FLOAT8 regcoef_l[] = {
 	    10.0583,10.7484,7.29006,16.2714,6.2345,4.09743,3.05468,3.33196,
 	    2.54688, 3.68168,5.83109,2.93817,-8.03277,-10.8458,8.48777,
@@ -1691,7 +1691,7 @@ int L3psycho_anal_ns( lame_global_flags * gfp,
 	msum = 1236.28/4;
 	for(sblock=0;sblock<3;sblock++) {
 	    for ( sb = 0; sb < SBMAX_s; sb++ ) {
-		if (gfc->thm[chn].s[sb][sblock] == 0.0
+		if (gfc->thm[chn].s[sb][sblock] <= 0.0
 		    || regcoef_s[sb] == 0.0
 		    || gfc->en[chn].s[sb][sblock]
 		    <= gfc->thm[chn].s[sb][sblock] * gfc->masking_lower)
@@ -1713,12 +1713,18 @@ int L3psycho_anal_ns( lame_global_flags * gfp,
     block_type_set(gfp, uselongblock, blocktype_d, blocktype);
 
     for(chn=0;chn<numchn;chn++) {
-	FLOAT8 *ppe;
-	ppe = percep_entropy;
-	if (chn > 1)
+	FLOAT8 *ppe = percep_entropy;
+	int type;
+
+	if (chn > 1) {
 	    ppe = percep_MS_entropy - 2;
-	
-	if (blocktype_d[chn] == SHORT_TYPE) {
+	    type = NORM_TYPE;
+	    if (blocktype_d[0] == SHORT_TYPE || blocktype_d[1] == SHORT_TYPE)
+		type = SHORT_TYPE;
+	} else
+	    type = blocktype_d[chn];
+
+	if (type == SHORT_TYPE) {
 	    ppe[chn] = pe_s[chn];
 	} else {
 	    ppe[chn] = pe_l[chn];
@@ -2004,10 +2010,8 @@ int psymodel_init(lame_global_flags *gfp)
 
     /* SNR formula. short block is normalized by SNR. is it still right ? */
     for(i=0;i<gfc->npart_s;i++) {
-	double snr;
-	if (bval[i]<13)
-	    snr=-8.25;
-	else
+	double snr=-8.25;
+	if (bval[i]>=13)
 	    snr = -4.5 * (bval[i]-13)/(24.0-13.0)
 		-8.25*(bval[i]-24)/(13.0-24.0);
 
@@ -2051,5 +2055,8 @@ int psymodel_init(lame_global_flags *gfp)
 		gfc->s3ind[b][1] = gfc->npart_l-1;
     }
 
+    gfc->bo_s[SBMAX_s-1]--;
+    assert(gfc->bo_l[SBMAX_l-1] <= gfc->npart_l);
+    assert(gfc->bo_s[SBMAX_s-1] <= gfc->npart_s);
     return 0;
 }
