@@ -760,9 +760,9 @@ void amp_scalefac_bands(lame_global_flags *gfp,
     lame_internal_flags *gfc=gfp->internal_flags;
 
     if ( cod_info->scalefac_scale == 0 )
-	ifqstep34 = 1.29683955465100964055;
+      ifqstep34 = 1.29683955465100964055; /* 2**(.75*.5)*/
     else
-	ifqstep34 = 1.68179283050742922612;
+      ifqstep34 = 1.68179283050742922612;  /* 2**(.75*1) */
 
     /* distort_thresh = 0, unless all bands have distortion 
      * less than masking.  In that case, just amplify bands with distortion

@@ -438,7 +438,7 @@ VBR_quantize_granule(lame_global_flags *gfp,
 
 /************************************************************************
  *
- * VBR_noise_shapping()
+ * VBR_noise_shaping()
  *
  * compute scalefactors, l3_enc, and return number of bits needed to encode
  *
@@ -456,7 +456,7 @@ VBR_quantize_granule(lame_global_flags *gfp,
  *
  ************************************************************************/
 int
-VBR_noise_shapping
+VBR_noise_shaping
 (
  lame_global_flags *gfp,
  FLOAT8 xr[576], III_psy_ratio *ratio,
@@ -555,6 +555,7 @@ VBR_noise_shapping
     maxover=compute_scalefacs_short(vbrsf.s,cod_info,scalefac[gr][ch].s,cod_info->subblock_gain);
     assert(maxover <=0);
     {
+      /* adjust global_gain so at least 1 subblock gain = 0 */
       int minsfb=999;
       for (i=0; i<3; i++) minsfb = Min(minsfb,cod_info->subblock_gain[i]);
       minsfb = Min(cod_info->global_gain/8,minsfb);
@@ -714,7 +715,7 @@ VBR_quantize(lame_global_flags *gfp,
   lame_internal_flags *gfc=gfp->internal_flags;
   int minbits,maxbits,max_frame_bits,totbits,bits,gr,ch,i,bits_ok;
   int bitsPerFrame,mean_bits;
-  FLOAT8 quality=0;
+  FLOAT8 qadjust=0;
   III_side_info_t * l3_side;
   gr_info *cod_info;  
   int ath_over[2][2];
@@ -748,12 +749,15 @@ VBR_quantize(lame_global_flags *gfp,
   minbits=Max(minbits,.4*(mean_bits/gfc->stereo));
   maxbits=Min(maxbits,2.5*(mean_bits/gfc->stereo));
 
+  if (gfc->mode_ext==MPG_MD_MS_LR) 
+    for (gr = 0; gr < gfc->mode_gr; gr++) 
+      ms_convert(xr[gr],xr[gr]);
+
+
   do {
   
   totbits=0;
   for (gr = 0; gr < gfc->mode_gr; gr++) {
-    if (gfc->mode_ext==MPG_MD_MS_LR) 
-      ms_convert(xr[gr],xr[gr]);
     for (ch = 0; ch < gfc->stereo; ch++) { 
       int shortblock;
       cod_info = &l3_side->gr[gr].ch[ch].tt;
@@ -763,7 +767,7 @@ VBR_quantize(lame_global_flags *gfp,
       /* Adjust allowed masking based on quality setting */
       assert( gfp->VBR_q <= 9 );
       assert( gfp->VBR_q >= 0 );
-      masking_lower_db = dbQ[gfp->VBR_q] + quality;
+      masking_lower_db = dbQ[gfp->VBR_q] + qadjust;
       
       if (pe[gr][ch]>750)
       	masking_lower_db -= 4*(pe[gr][ch]-750.)/750.;
@@ -772,7 +776,7 @@ VBR_quantize(lame_global_flags *gfp,
 
       do {
 	gfc->masking_lower = pow(10.0,masking_lower_db/10);
-	VBR_noise_shapping (gfp,xr[gr][ch],&ratio[gr][ch],l3_enc,&ath_over[gr][ch],minbits,scalefac,gr,ch);
+	VBR_noise_shaping (gfp,xr[gr][ch],&ratio[gr][ch],l3_enc,&ath_over[gr][ch],minbits,scalefac,gr,ch);
 	bits = cod_info->part2_3_length;
 	if (bits>maxbits) {
 	  printf("%i masking_lower=%f  bits>maxbits. bits:  %i  %i  %i  \n",gfp->frameNum,masking_lower_db,minbits,bits,maxbits);
@@ -787,7 +791,8 @@ VBR_quantize(lame_global_flags *gfp,
   bits_ok=1;
   if (totbits>max_frame_bits) {
     printf("%i totbits>max_frame_bits   totbits=%i  maxbits=%i \n",gfp->frameNum,totbits,max_frame_bits);
-    quality += Max(.33,(totbits-max_frame_bits)/200.0);
+    qadjust += Max(.33,(totbits-max_frame_bits)/200.0);
+    printf("next masking_lower_db = %f \n",masking_lower_db + qadjust);
     bits_ok=0;
   }
 
