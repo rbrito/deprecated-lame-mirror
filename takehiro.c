@@ -548,7 +548,7 @@ static int r0_tbl[7 + 15 + 1];
 static int r1_tbl[7 + 15 + 1];
 static gr_info cod_info;
 
-inline static void
+static INLINE void
 recalc_divide_init(int gr, int ch, int *ix)
 {
     int r0, r1, bigv, r0t, r1t, bits;
@@ -583,7 +583,7 @@ recalc_divide_init(int gr, int ch, int *ix)
     }
 }
 
-inline static void
+static INLINE void
 recalc_divide_sub(int gr, int ch, gr_info *gi, int *ix)
 {
     int bits, r2, a2, bigv, r2t;
