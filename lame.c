@@ -43,8 +43,153 @@
 #include "asmstuff.h"
 #endif
 
+/* lame_init_params_ppflt_lowpass */
 
+static void
+lame_init_params_ppflt_lowpass(FLOAT8 amp_lowpass[32], float lowpass1,
+			       float lowpass2, int *lowpass_band,
+			       int *minband, int *maxband)
+{
+	int band;
+	FLOAT8 freq;
 
+	for (band = 0; band <= 31; band++) {
+		freq = band / 31.0;
+		amp_lowpass[band] = 1;
+		/* this band and above will be zeroed: */
+		if (freq >= lowpass2) {
+			*lowpass_band = Min(*lowpass_band, band);
+			amp_lowpass[band]=0;
+		}
+		if (lowpass1 < freq && freq < lowpass2) {
+			*minband = Min(*minband, band);
+			*maxband = Max(*maxband, band);
+			amp_lowpass[band] = cos((PI / 2) *
+						(lowpass1 - freq) /
+						(lowpass2 - lowpass1));
+		}
+		/*
+		DEBUGF("lowpass band=%i  amp=%f \n",
+		       band, gfc->amp_lowpass[band]);
+		*/
+	}
+}
+
+/* lame_init_params_ppflt */
+
+static void
+lame_init_params_ppflt(lame_internal_flags *gfc)
+{
+  /***************************************************************/
+  /* compute info needed for polyphase filter (filter type==0, default) */
+  /***************************************************************/
+
+	int band, maxband, minband;
+	FLOAT8 freq;
+
+	if (gfc->lowpass1 > 0) {
+		minband = 999;
+		maxband = -1;
+		lame_init_params_ppflt_lowpass(gfc->amp_lowpass,
+					       gfc->lowpass1, gfc->lowpass2,
+					       &gfc->lowpass_band, &minband,
+					       &maxband);
+		/* compute the *actual* transition band implemented by
+		 * the polyphase filter */
+		if (minband == 999) {
+			gfc->lowpass1 = (gfc->lowpass_band - .75) / 31.0;
+		} else {
+			gfc->lowpass1 = (minband - .75) / 31.0;
+		}
+		gfc->lowpass2 = gfc->lowpass_band / 31.0;
+
+		gfc->lowpass_start_band = minband;
+		gfc->lowpass_end_band = maxband;
+
+		/* as the lowpass may have changed above
+		 * calculate the amplification here again
+		 */
+		for (band = minband; band <= maxband; band++) {
+			freq = band / 31.0;
+			gfc->amp_lowpass[band] =
+				cos((PI / 2) * (gfc->lowpass1 - freq) /
+				    (gfc->lowpass2 - gfc->lowpass1));
+		}
+	} else {
+		gfc->lowpass_start_band = 0;
+		gfc->lowpass_end_band = -1;/* do not to run into for-loops */
+	}
+
+	/* make sure highpass filter is within 90% of what the effective
+	 * highpass frequency will be */
+	if (gfc->highpass2 > 0) {
+		if (gfc->highpass2 < .9 * (.75 / 31.0) ) {
+			gfc->highpass1 = 0;
+			gfc->highpass2 = 0;
+			MSGF("Warning: highpass filter disabled.  "
+			     "highpass frequency to small\n");
+		}
+	}
+
+	if (gfc->highpass2 > 0) {
+		minband = 999;
+		maxband = -1;
+		for (band = 0; band <= 31; band++) {
+			freq = band / 31.0;
+			gfc->amp_highpass[band] = 1;
+			/* this band and below will be zereod */
+			if (freq <= gfc->highpass1) {
+				gfc->highpass_band = Max(gfc->highpass_band,
+							 band);
+				gfc->amp_highpass[band] = 0;
+			}
+			if (gfc->highpass1 < freq && freq < gfc->highpass2) {
+				minband = Min(minband, band);
+				maxband = Max(maxband, band);
+				gfc->amp_highpass[band] =
+					cos((PI / 2) *
+					    (gfc->highpass2 - freq) / 
+					    (gfc->highpass2 - gfc->highpass1));
+			}
+			/*
+			DEBUGF("highpass band=%i  amp=%f \n",
+			       band, gfc->amp_highpass[band]);
+			*/
+		}
+		/* compute the *actual* transition band implemented by
+		 * the polyphase filter */
+		gfc->highpass1 = gfc->highpass_band / 31.0;
+		if (maxband == -1) {
+			gfc->highpass2 = (gfc->highpass_band + .75) / 31.0;
+		} else {
+			gfc->highpass2 = (maxband + .75) / 31.0;
+		}
+
+		gfc->highpass_start_band = minband;
+		gfc->highpass_end_band = maxband;
+
+		/* as the highpass may have changed above
+		 * calculate the amplification here again
+		 */
+		for (band = minband; band <= maxband; band++) {
+			freq = band / 31.0;
+			gfc->amp_highpass[band] =
+				cos((PI / 2) * (gfc->highpass2 - freq) /
+				    (gfc->highpass2 - gfc->highpass1));
+		}
+	} else {
+		gfc->highpass_start_band = 0;
+		gfc->highpass_end_band = -1;/* do not to run into for-loops */
+	}
+	/*
+	DEBUGF("lowpass band with amp=0:  %i \n",gfc->lowpass_band);
+	DEBUGF("highpass band with amp=0:  %i \n",gfc->highpass_band);
+	DEBUGF("lowpass band start:  %i \n",gfc->lowpass_start_band);
+	DEBUGF("lowpass band end:    %i \n",gfc->lowpass_end_band);
+	DEBUGF("highpass band start:  %i \n",gfc->highpass_start_band);
+	DEBUGF("highpass band end:    %i \n",gfc->highpass_end_band);
+	*/
+}
 
 /********************************************************************
  *   initialize internal params based on data in gf
@@ -279,116 +424,12 @@ int lame_init_params(lame_global_flags *gfp)
   /***************************************************************/
   /* compute info needed for polyphase filter (filter type==0, default)   */
   /***************************************************************/
-  {
-    int band,maxband,minband;
-
-    FLOAT8 freq;
-    if (gfc->lowpass1 > 0) {
-      minband=999;
-      maxband=-1;
-      for (band=0;  band <=31 ; ++band) { 
-	freq = band/31.0;
-	gfc->amp_lowpass[band] = 1;
-	/* this band and above will be zeroed: */
-	if (freq >= gfc->lowpass2) {
-	  gfc->lowpass_band= Min(gfc->lowpass_band,band);
-	  gfc->amp_lowpass[band]=0;
-	}
-	if (gfc->lowpass1 < freq && freq < gfc->lowpass2) {
-          minband = Min(minband,band);
-          maxband = Max(maxband,band);
-	  gfc->amp_lowpass[band] = cos((PI/2)*(gfc->lowpass1-freq)/(gfc->lowpass2-gfc->lowpass1));
-	}
-	/*
-	DEBUGF("lowpass band=%i  amp=%f \n",band,gfc->amp_lowpass[band]);
-	*/
-      }
-      /* compute the *actual* transition band implemented by the polyphase filter */
-      if (minband==999) gfc->lowpass1 = (gfc->lowpass_band-.75)/31.0;
-      else gfc->lowpass1 = (minband-.75)/31.0;
-      gfc->lowpass2 = gfc->lowpass_band/31.0;
-      
-      gfc->lowpass_start_band = minband;
-      gfc->lowpass_end_band   = maxband;
-      
-      /* as the lowpass may have changed above
-       * calculate the amplification here again
-       */
-      for (band=minband;  band <=maxband; ++band) { 
-	freq = band/31.0;
-	gfc->amp_lowpass[band] = cos((PI/2)*(gfc->lowpass1-freq)/(gfc->lowpass2-gfc->lowpass1));
-      }
-    } else {
-      gfc->lowpass_start_band = 0;
-      gfc->lowpass_end_band   = -1;  /* do not to run into for-loops */
-    }
-
-    /* make sure highpass filter is within 90% of what the effective highpass
-     * frequency will be */
-    if (gfc->highpass2 > 0) 
-      if (gfc->highpass2 <  .9*(.75/31.0) ) {
-	gfc->highpass1=0; gfc->highpass2=0;
-	MSGF("Warning: highpass filter disabled.  highpass frequency to small\n");
-      }
-    
-
-    if (gfc->highpass2 > 0) {
-      minband=999;
-      maxband=-1;
-      for (band=0;  band <=31; ++band) { 
-	freq = band/31.0;
-	gfc->amp_highpass[band] = 1;
-	/* this band and below will be zereod */
-	if (freq <= gfc->highpass1) {
-	  gfc->highpass_band = Max(gfc->highpass_band,band);
-	  gfc->amp_highpass[band]=0;
-	}
-	if (gfc->highpass1 < freq && freq < gfc->highpass2) {
-          minband = Min(minband,band);
-          maxband = Max(maxband,band);
-	  gfc->amp_highpass[band] = cos((PI/2)*(gfc->highpass2-freq)/(gfc->highpass2-gfc->highpass1));
-	}
-	/*	
-	DEBUGF("highpass band=%i  amp=%f \n",band,gfc->amp_highpass[band]);
-	*/
-      }
-      /* compute the *actual* transition band implemented by the polyphase filter */
-      gfc->highpass1 = gfc->highpass_band/31.0;
-      if (maxband==-1) gfc->highpass2 = (gfc->highpass_band+.75)/31.0;
-      else gfc->highpass2 = (maxband+.75)/31.0;
-      
-      gfc->highpass_start_band = minband;
-      gfc->highpass_end_band   = maxband;
-
-      /* as the highpass may have changed above
-       * calculate the amplification here again
-       */
-      for (band=minband;  band <=maxband; ++band) { 
-	freq = band/31.0;
-	gfc->amp_highpass[band] = cos((PI/2)*(gfc->highpass2-freq)/(gfc->highpass2-gfc->highpass1));
-      }
-    } else {
-      gfc->highpass_start_band = 0;
-      gfc->highpass_end_band   = -1;  /* do not to run into for-loops */
-    }
-    /*
-    DEBUGF("lowpass band with amp=0:  %i \n",gfc->lowpass_band);
-    DEBUGF("highpass band with amp=0:  %i \n",gfc->highpass_band);
-    DEBUGF("lowpass band start:  %i \n",gfc->lowpass_start_band);
-    DEBUGF("lowpass band end:    %i \n",gfc->lowpass_end_band);
-    DEBUGF("highpass band start:  %i \n",gfc->highpass_start_band);
-    DEBUGF("highpass band end:    %i \n",gfc->highpass_end_band);
-    */
-  }
-
+  lame_init_params_ppflt(gfc);
 
 
   /***************************************************************/
   /* compute info needed for FIR filter (filter_type==1) */
   /***************************************************************/
-
-
-
 
   gfc->mode_ext=MPG_MD_LR_LR;
   gfc->stereo = (gfp->mode == MPG_MD_MONO) ? 1 : 2;
@@ -615,7 +656,7 @@ int lame_init_params(lame_global_flags *gfp)
 #ifdef HAVEVORBIS
   if (gfp->ogg) {
     lame_encode_ogg_init(gfp);
-    gfc->filter_type=-1;   /* vorbis claims not to need filters */
+    gfc->filter_type = -1;   /* vorbis claims not to need filters */
     gfp->VBR=vbr_off;            /* ignore lame's various VBR modes */
   }
 #endif
@@ -1053,10 +1094,10 @@ char *mp3buf, int mp3buf_size)
   /* bit and noise allocation */
   if (MPG_MD_MS_LR == gfc->mode_ext) {
     masking = &masking_MS_ratio;    /* use MS masking */
-    pe_use=&pe_MS;
+    pe_use = &pe_MS;
   } else {
     masking = &masking_ratio;    /* use LR masking */
-    pe_use=&pe;
+    pe_use = &pe;
   }
 
 
@@ -1153,7 +1194,7 @@ int lame_encode_buffer(lame_global_flags *gfp,
    short int buffer_l[], short int buffer_r[],int nsamples,
    char *mp3buf, int mp3buf_size)
 {
-  int mp3size=0,ret=0,i,ch,mf_needed;
+  int mp3size = 0, ret, i, ch, mf_needed;
   lame_internal_flags *gfc=gfp->internal_flags;
   short int *mfbuf[2];
   short int *in_buffer[2];
@@ -1234,7 +1275,7 @@ int lame_encode_buffer(lame_global_flags *gfp,
 int lame_encode_buffer_interleaved(lame_global_flags *gfp,
    short int buffer[], int nsamples, char *mp3buf, int mp3buf_size)
 {
-  int mp3size=0,ret=0,i,ch,mf_needed;
+  int mp3size = 0, ret, i, ch, mf_needed;
   lame_internal_flags *gfc=gfp->internal_flags;
   short int *mfbuf[2];
 
@@ -1572,8 +1613,8 @@ int lame_init(lame_global_flags *gfp)
 
   gfp->lowpassfreq=0;
   gfp->highpassfreq=0;
-  gfp->lowpasswidth=-1;
-  gfp->highpasswidth=-1;
+  gfp->lowpasswidth = -1;
+  gfp->highpasswidth = -1;
 
   gfp->no_short_blocks=0;
   gfp->padding_type=2;
@@ -1589,7 +1630,7 @@ int lame_init(lame_global_flags *gfp)
   gfc->pcmbitwidth = 16;
   gfc->resample_ratio=1;
   gfc->lowpass_band=32;
-  gfc->highpass_band=-1;
+  gfc->highpass_band = -1;
   gfc->VBR_min_bitrate=1;
   gfc->VBR_max_bitrate=13;
 
