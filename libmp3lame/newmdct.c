@@ -447,8 +447,8 @@ window_subband(const sample_t *x1, FLOAT8 a[SBLIMIT])
     xr = a[24] - a[ 4]; a[ 4] += a[24]; a[24] = xr * wp[-6*18+7];
     xr = a[25] - a[ 5]; a[ 5] += a[25]; a[25] = xr * wp[-6*18+7];
 
-    xr = a[22] - a[ 6]; a[ 6] += a[22]; a[22] = xr * M_SQRT2;
-    xr = a[23] - a[ 7]; a[ 7] += a[23]; a[23] = xr * M_SQRT2 - a[ 7];
+    xr = a[22] - a[ 6]; a[ 6] += a[22]; a[22] = xr * SQRT2;
+    xr = a[23] - a[ 7]; a[ 7] += a[23]; a[23] = xr * SQRT2 - a[ 7];
     a[ 7] -= a[ 6];
     a[22] -= a[ 7];
     a[23] -= a[22];
@@ -467,8 +467,8 @@ window_subband(const sample_t *x1, FLOAT8 a[SBLIMIT])
     xr = a[16] - a[12]; a[12] += a[16]; a[16] = xr * wp[-14*18+7];
     xr = a[17] - a[13]; a[13] += a[17]; a[17] = xr * wp[-14*18+7];
 
-    xr =-a[20] + a[24]; a[20] += a[24]; a[24] = xr * wp[-12*18+7];
-    xr =-a[21] + a[25]; a[21] += a[25]; a[25] = xr * wp[-12*18+7];
+    xr = -a[20] + a[24]; a[20] += a[24]; a[24] = xr * wp[-12*18+7];
+    xr = -a[21] + a[25]; a[21] += a[25]; a[25] = xr * wp[-12*18+7];
 
     xr = a[ 4] - a[ 8]; a[ 4] += a[ 8]; a[ 8] = xr * wp[-12*18+7];
     xr = a[ 5] - a[ 9]; a[ 5] += a[ 9]; a[ 9] = xr * wp[-12*18+7];
@@ -476,12 +476,12 @@ window_subband(const sample_t *x1, FLOAT8 a[SBLIMIT])
     xr = a[ 0] - a[12]; a[ 0] += a[12]; a[12] = xr * wp[-4*18+7];
     xr = a[ 1] - a[13]; a[ 1] += a[13]; a[13] = xr * wp[-4*18+7];
     xr = a[16] - a[28]; a[16] += a[28]; a[28] = xr * wp[-4*18+7];
-    xr =-a[17] + a[29]; a[17] += a[29]; a[29] = xr * wp[-4*18+7];
+    xr = -a[17] + a[29]; a[17] += a[29]; a[29] = xr * wp[-4*18+7];
 
-    xr = M_SQRT2 * (a[ 2] - a[10]); a[ 2] += a[10]; a[10] = xr;
-    xr = M_SQRT2 * (a[ 3] - a[11]); a[ 3] += a[11]; a[11] = xr;
-    xr = M_SQRT2 * (-a[18] + a[26]); a[18] += a[26]; a[26] = xr - a[18];
-    xr = M_SQRT2 * (-a[19] + a[27]); a[19] += a[27]; a[27] = xr - a[19];
+    xr = SQRT2 * (a[ 2] - a[10]); a[ 2] += a[10]; a[10] = xr;
+    xr = SQRT2 * (a[ 3] - a[11]); a[ 3] += a[11]; a[11] = xr;
+    xr = SQRT2 * (-a[18] + a[26]); a[18] += a[26]; a[26] = xr - a[18];
+    xr = SQRT2 * (-a[19] + a[27]); a[19] += a[27]; a[27] = xr - a[19];
 
     xr = a[ 2]; a[19] -= a[ 3]; a[ 3] -= xr; a[ 2] = a[31] - xr; a[31] += xr;
     xr = a[ 3]; a[11] -= a[19]; a[18] -= xr; a[ 3] = a[30] - xr; a[30] += xr;
@@ -494,15 +494,15 @@ window_subband(const sample_t *x1, FLOAT8 a[SBLIMIT])
 
     xr = a[27]; a[27] = a[ 6] - xr; a[ 6] += xr;
 
-    xr = M_SQRT2 * (a[ 0] - a[ 4]); a[ 0] += a[ 4]; a[ 4] = xr;
-    xr = M_SQRT2 * (a[ 1] - a[ 5]); a[ 1] += a[ 5]; a[ 5] = xr;
-    xr = M_SQRT2 * (a[16] - a[20]); a[16] += a[20]; a[20] = xr;
-    xr = M_SQRT2 * (a[17] - a[21]); a[17] += a[21]; a[21] = xr;
+    xr = SQRT2 * (a[ 0] - a[ 4]); a[ 0] += a[ 4]; a[ 4] = xr;
+    xr = SQRT2 * (a[ 1] - a[ 5]); a[ 1] += a[ 5]; a[ 5] = xr;
+    xr = SQRT2 * (a[16] - a[20]); a[16] += a[20]; a[20] = xr;
+    xr = SQRT2 * (a[17] - a[21]); a[17] += a[21]; a[21] = xr;
 
-    xr =-M_SQRT2 * (a[ 8] - a[12]); a[ 8] += a[12]; a[12] = xr - a[ 8];
-    xr =-M_SQRT2 * (a[ 9] - a[13]); a[ 9] += a[13]; a[13] = xr - a[ 9];
-    xr =-M_SQRT2 * (a[25] - a[29]); a[25] += a[29]; a[29] = xr - a[25];
-    xr =-M_SQRT2 * (a[24] + a[28]); a[24] -= a[28]; a[28] = xr - a[24];
+    xr = -SQRT2 * (a[ 8] - a[12]); a[ 8] += a[12]; a[12] = xr - a[ 8];
+    xr = -SQRT2 * (a[ 9] - a[13]); a[ 9] += a[13]; a[13] = xr - a[ 9];
+    xr = -SQRT2 * (a[25] - a[29]); a[25] += a[29]; a[29] = xr - a[25];
+    xr = -SQRT2 * (a[24] + a[28]); a[24] -= a[28]; a[28] = xr - a[24];
 
     xr = a[24] - a[16]; a[24] = xr;
     xr = a[20] - xr;    a[20] = xr;
@@ -586,13 +586,13 @@ inline static void mdct_short(FLOAT8 *inout)
 	ts0 = inout[5*3] * win[SHORT_TYPE][0] + inout[2*3];
 	tc0 = inout[3*3] * win[SHORT_TYPE][2] + inout[0*3];
 	ts1 = ts0 + tc0;
-	ts2 =-ts0 + tc0;
+	ts2 = -ts0 + tc0;
 
 	tc0 = (inout[1*3] * win[SHORT_TYPE][1] - inout[4*3]) * 2.069978111953089e-11; /* tritab_s[1] */
 	ts0 = (inout[4*3] * win[SHORT_TYPE][1] + inout[1*3]) * 2.069978111953089e-11; /* tritab_s[1] */
 
 	inout[3*0] = tc1 * 1.907525191737280e-11 /* tritab_s[2] */ + tc0;
-	inout[3*5] =-ts1 * 1.907525191737280e-11 /* tritab_s[0] */ + ts0;
+	inout[3*5] = -ts1 * 1.907525191737280e-11 /* tritab_s[0] */ + ts0;
 
 	tc2 = tc2 * 0.86602540378443870761 * 1.907525191737281e-11 /* tritab_s[2] */;
 	ts1 = ts1 * 0.5 * 1.907525191737281e-11 + ts0;
