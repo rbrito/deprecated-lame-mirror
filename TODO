@@ -14,6 +14,12 @@ some kind of music. 1 and 2 are caused by ATH handling problem.
 
 
 
+2.
+To prevent the lower frequency uncertainness (because of FFT length),
+we should add the some highpass filter(cut < 20Hz or so) before
+psycho-analysis.
+
+
 3. Some switches to support the "BUGGY" decoders.
 --strictly-enforce-ISO is not perfect to these players.
 It seems it needs forcing coupling block type, lower IXMAX_VAL, no
@@ -27,6 +33,8 @@ short block encoding quality problem (i.e. spahm.wav)
 LAME4's block switching is better than LAME3 with nspsy,
 but the threshold calculation of short blocks is not.
 It does not support temporal masking, and so on.
+
+A temporal masking is not considered in block switching.
 
 At the high frequency region, LAME4 increases the threshold too much.
 And more the worse, there's sfb21 :(
