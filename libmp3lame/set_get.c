@@ -323,6 +323,7 @@ lame_set_decode_on_the_fly( lame_t  gfc,
                             int                 decode_on_the_fly )
 {
 #ifndef DECODE_ON_THE_FLY
+    (void) gfc; (void) decode_on_the_fly;
     return -1;
 #else
     /* default = 0 (disabled) */
@@ -1210,6 +1211,7 @@ lame_set_asm_optimizations(lame_t gfc, int optim, int mode)
 	    return optim;
     }
 #else
+    (void) gfc; (void) optim; (void) mode;
     return -1;
 #endif
 }

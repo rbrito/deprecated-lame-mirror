@@ -391,6 +391,7 @@ fft_short(lame_t  const gfc, FLOAT x[BLKSIZE_s], const sample_t *buffer)
 #if HAVE_NASM
     gfc->fft_fht(x, BLKSIZE_s/2);
 #else
+    (void)gfc;
     fht(x, BLKSIZE_s/2);
 #endif
 }
@@ -425,6 +426,7 @@ fft_long(lame_t  const gfc, FLOAT x[BLKSIZE], const sample_t *buffer)
 #if HAVE_NASM
     gfc->fft_fht(x, BLKSIZE/2); /* BLKSIZE/2 because of 3DNow! ASM routine */
 #else
+    (void)gfc;
     fht(x, BLKSIZE/2);
 #endif
 }
@@ -972,7 +974,7 @@ mp3x display               <------LONG------>
 
 	for (sb = 0; sb < 6; sb++) {
 	    /* calculate energies of each sub-shortblocks */
-	    const static FLOAT subbk_w[] = {
+	    static const FLOAT subbk_w[] = {
 		0.258819045102521,
 		0.5,
 		0.707106781186547,
