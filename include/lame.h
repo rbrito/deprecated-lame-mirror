@@ -255,6 +255,7 @@ int CDECL lame_get_extension(const lame_global_flags *);
 int CDECL lame_set_strict_ISO(lame_global_flags *, int);
 int CDECL lame_get_strict_ISO(const lame_global_flags *);
  
+void CDECL lame_set_forbid_diff_blocktype( lame_global_flags*  gfp, int val );
 
 /********************************************************************
  * quantization/noise shaping 
@@ -263,24 +264,6 @@ int CDECL lame_get_strict_ISO(const lame_global_flags *);
 /* disable the bit reservoir. For testing only. default=0 */
 int CDECL lame_set_disable_reservoir(lame_global_flags *, int);
 int CDECL lame_get_disable_reservoir(const lame_global_flags *);
-
-/* select a different "best quantization" function. default=0  */
-int CDECL lame_set_experimentalX(lame_global_flags *, int);
-int CDECL lame_get_experimentalX(const lame_global_flags *);
-
-/* another experimental option.  for testing only */
-int CDECL lame_set_experimentalY(lame_global_flags *, int);
-int CDECL lame_get_experimentalY(const lame_global_flags *);
-
-/* another experimental option.  for testing only */
-int CDECL lame_set_experimentalZ(lame_global_flags *, int);
-int CDECL lame_get_experimentalZ(const lame_global_flags *);
-
-/* set/get how to compare the quantization values */
-int CDECL lame_set_quant_comp(lame_global_flags *, int);
-int CDECL lame_set_quant_comp_short(lame_global_flags *, int);
-int CDECL lame_set_quantcomp_method(lame_global_flags *, int);
-int CDECL lame_get_quantcomp_method(const lame_global_flags *);
 
 /* Naoki's psycho acoustic model.  default=0 */
 int CDECL lame_set_exp_nspsytune(lame_global_flags *, int);

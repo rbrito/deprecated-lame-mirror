@@ -1136,6 +1136,14 @@ lame_set_msfix( lame_global_flags*  gfp, double msfix )
     gfp->internal_flags->nsPsy.msfix = msfix;
 }
 
+/* Custom msfix hack */
+void
+lame_set_forbid_diff_blocktype( lame_global_flags*  gfp, int val )
+{
+    gfp->forbid_diff_type = val;
+}
+
+
 void
 lame_set_analysis(lame_global_flags*  gfp, plotting_data *pinfo)
 {

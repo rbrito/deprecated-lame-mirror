@@ -370,7 +370,6 @@ optimum_samplefreq(int lowpassfreq, int input_samplefreq)
  *  The remaining code is much simpler - it just sets options
  *  based on the mode & compression ratio: 
  *   
- *   set allow_diff_short based on mode
  *   select lowpass filter based on compression ratio & mode
  *   set the bitrate index, and min/max bitrates for VBR modes
  *   disable VBR tag if it is not appropriate

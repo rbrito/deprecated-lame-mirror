@@ -58,6 +58,7 @@ struct lame_global_struct {
     int extension;              /* the MP3 'private extension' bit.
 				   Meaningless                            */
     int strict_ISO;             /* enforce ISO spec as much as possible   */
+    int forbid_diff_type;	/* forbid different block type */
 
     /* quantization/noise shaping */
     int disable_reservoir;      /* use bit reservoir? */

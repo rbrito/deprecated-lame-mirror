@@ -493,6 +493,8 @@ int  long_help ( const lame_global_flags* gfp, FILE* const fp, const char* Progr
               "                    (the checksum is computed correctly)\n"
               "    --nores         disable the bit reservoir\n"
               "    --strictly-enforce-ISO   comply as much as possible to ISO MPEG spec\n"
+              "    --sameblock     do not set the different block type between channel 0 and 1\n"
+              "                    This may help playback problem on some BUGGY mp3 decoders\n"
               "\n"
               "  Filter options:\n"
               "    -k              keep ALL frequencies (disables all filters),\n"
@@ -946,6 +948,10 @@ char* const inPath, char* const outPath, char **nogap_inPath, int *num_nogap)
                 T_ELIF_INTERNAL ("nores")
                     lame_set_disable_reservoir(gfp,1);
                 
+	    
+                T_ELIF ("sameblock")
+		    lame_set_forbid_diff_blocktype(gfp, 1);
+
                 T_ELIF ("strictly-enforce-ISO")
                     lame_set_strict_ISO(gfp,1);
                 
@@ -1399,14 +1405,6 @@ char* const inPath, char* const outPath, char **nogap_inPath, int *num_nogap)
                     case 'k': 
                         lame_set_lowpassfreq(gfp,1000000);
                         lame_set_highpassfreq(gfp,0);
-                        break;
-                    case 'd': 
-                        fprintf(stderr,"WARNING: -d is obsolete.\n");
-                        /*(void) lame_set_allow_diff_short( gfp, 1 );*/
-                        break;
-                    case 's': 
-                        fprintf(stderr,"WARNING: -d is obsolete.\n");
-                        /*(void) lame_set_allow_diff_short( gfp, 1 );*/
                         break;
                     case 'S': 
                         silent = 1;

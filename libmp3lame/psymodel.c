@@ -1421,7 +1421,7 @@ psycho_analysis(
     numchn = gfc->channels_out;
     if (gfp->mode == JOINT_STEREO)
 	numchn = 4;
-    for (gr=0; gr < gfc->mode_gr ; gr++) {
+    for (gr = 0; gr < gfc->mode_gr; gr++) {
 	for (ch = 0; ch < gfc->channels_out; ch++) {
 	    gr_info *gi = &gfc->l3_side.tt[gr][ch];
 	    masking_d[gr][ch] = gfc->masking_next[gr][ch + gfc->mode_ext];
@@ -1477,6 +1477,10 @@ psycho_analysis(
 	gfc->masking_next[gr][3].pe *= gfc->reduce_side;
 	gfc->blocktype_next[gr][2]
 	    = gfc->blocktype_next[gr][2] | gfc->blocktype_next[gr][3];
+	if (gfp->forbid_diff_type) {
+	    int type = gfc->blocktype_next[gr][0] | gfc->blocktype_next[gr][1];
+	    gfc->blocktype_next[gr][0] = gfc->blocktype_next[gr][1] = type;
+	}
     }
 
     /* determine MS/LR in the next frame */
