@@ -40,6 +40,13 @@
 
 #include	<assert.h>
 #include 	<stdlib.h>
+#if HAVE_INTTYPES_H
+# include <inttypes.h>
+#else
+# if HAVE_STDINT_H
+#  include <stdint.h>
+# endif
+#endif
 #include 	<string.h>
 
 #ifdef WITH_DMALLOC

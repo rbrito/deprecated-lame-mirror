@@ -1,6 +1,14 @@
 /*{{{ #defines                        */
 
 #include <limits.h>
+#if HAVE_INTTYPES_H
+# include <inttypes.h>
+#else
+# if HAVE_STDINT_H
+#  include <stdint.h>
+# endif
+#endif
+
 #include "lame.h"
 #include "util.h"
 

@@ -21,7 +21,17 @@
 
 #ifndef LAME_VRBTAG_H
 #define LAME_VRBTAG_H
+
 #include "lame.h"
+
+#if HAVE_INTTYPES_H
+# include <inttypes.h>
+#else
+# if HAVE_STDINT_H
+#  include <stdint.h>
+# endif
+#endif
+
 /* -----------------------------------------------------------
  * A Vbr header may be present in the ancillary
  * data field of the first frame of an mp3 bitstream

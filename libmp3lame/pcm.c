@@ -27,6 +27,13 @@
 #include <stddef.h>
 #include <stdio.h>
 #include <stdlib.h>
+#if HAVE_INTTYPES_H
+# include <inttypes.h>
+#else
+# if HAVE_STDINT_H
+#  include <stdint.h>
+# endif
+#endif
 #include <limits.h>
 #include <math.h>
 #include <memory.h>

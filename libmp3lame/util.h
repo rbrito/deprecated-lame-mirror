@@ -34,6 +34,14 @@
 #include "lame-analysis.h"
 #include "id3tag.h"
 
+#if HAVE_INTTYPES_H
+# include <inttypes.h>
+#else
+# if HAVE_STDINT_H
+#  include <stdint.h>
+# endif
+#endif
+
 #ifdef __cplusplus
 extern "C" {
 #endif
