@@ -15,6 +15,7 @@ struct rtpheader {      /* in network byte order */
   struct rtpbits b;
   int timestamp;        /* start: random */
   int ssrc;             /* random */
+  int iAudioHeader;	/* =0?! */
 };
 
 void initrtp(struct rtpheader *foo);
