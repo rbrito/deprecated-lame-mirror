@@ -672,7 +672,7 @@ int  calc_noise(
 
 
 
-
+#ifdef HAVE_GTK
 /************************************************************************
  *
  *  set_pinfo()
@@ -815,4 +815,5 @@ void set_frame_pinfo(
 	} /* for ch */
     }    /* for gr */
 }
+#endif /* ifdef HAVE_GTK */
 
