@@ -742,12 +742,7 @@ int L3psycho_anal( lame_global_flags *gfp,
 		tbb = exp(-LN_TO_LOG10 * ( TMN*tbb + (1-tbb)*NMT) );
 	      }
 	  }
-#ifdef RH_AMP
-        else
-          {
-            tbb = 0.4;
-          }
-#endif
+
 	/* at this point, tbb represents the amount the spreading function
 	 * will be reduced.  The smaller the value, the less masking.
 	 * minval[] = 1 (0db)     says just use tbb.
@@ -760,11 +755,7 @@ int L3psycho_anal( lame_global_flags *gfp,
 	  if (att==0) att = pow(10.0,-8.0/10);
 	  ecb *= att;
 	} else {
-#ifdef RH_AMP
-	  tbb *= gfc->minval[b]; /* always below Min(gfc->minval[b],tbb) */
-#else
 	  tbb = Min(gfc->minval[b], tbb);
-#endif
 	  ecb *= tbb;
 	}
 
@@ -903,8 +894,13 @@ int L3psycho_anal( lame_global_flags *gfp,
     for ( sb = 0; sb < SBPSY_l; sb++ )
       {
 	FLOAT8 enn,thmm;
-#if 1
-	/* additive masking */
+#if 0
+	/* note by Robert Hegemann 2000-09-11:
+         * using this code will break psychoacoustics on many pieces
+         * like VBRtest.wav (see http://www.sulaco.org)
+         */
+         
+        /* additive masking */
 	enn = gfc->w1_l[sb] * eb[gfc->bu_l[sb]] + gfc->w2_l[sb] * eb[gfc->bo_l[sb]];
 	thmm = gfc->w1_l[sb] *thr[gfc->bu_l[sb]] + gfc->w2_l[sb] * thr[gfc->bo_l[sb]];
 	for ( b = gfc->bu_l[sb]+1; b < gfc->bo_l[sb]; b++ )
@@ -913,7 +909,7 @@ int L3psycho_anal( lame_global_flags *gfp,
 	    thmm += thr[b];
 	  }
 #else
-	enn = gfc->w1_l[sb] * eb[gfc->bu_l[sb]] + gfc->w2_l[sb] * eb[gfc->bo_l[sb]];
+        enn = gfc->w1_l[sb] * eb[gfc->bu_l[sb]] + gfc->w2_l[sb] * eb[gfc->bo_l[sb]];
 	thmm = Min(thr[gfc->bu_l[sb]],thr[gfc->bo_l[sb]]);
 	for ( b = gfc->bu_l[sb]+1; b < gfc->bo_l[sb]; b++ )
 	  {
