@@ -1209,13 +1209,6 @@ lame_encode_frame(lame_global_flags * gfp,
  * return code = number of bytes output in mp3buffer.  can be 0
 */
 
-/*
- *  lame_encode_buffer_interleaved() will disaapear in this form in the next 
- *  version. It is too similar to lame_encode_buffer() and 
- *  lame_encode_buffer_interleaved(). Especially if there are multiple versions
- *   (int16, int24, int32, float) I don't want to care several times nearly the same code
- */
-
 int
 lame_encode_buffer(lame_global_flags * gfp,
                    const short int buffer_l[],
@@ -1242,8 +1235,8 @@ lame_encode_buffer(lame_global_flags * gfp,
         return -2;
     }
 
+    /* make a copy of input buffer, changing type to sample_t */
     for (i = 0; i < nsamples; i++) {
-
         in_buffer[0][i] = buffer_l[i];
         in_buffer[1][i] = buffer_r[i];
     }
@@ -1330,115 +1323,26 @@ lame_encode_buffer_interleaved(lame_global_flags * gfp,
                                int nsamples,
                                unsigned char *mp3buf, int mp3buf_size)
 {
-    int     mp3size = 0, ret, i, ch, mf_needed;
-    lame_internal_flags *gfc = gfp->internal_flags;
-    sample_t *mfbuf[2];
-
-    if (gfc->Class_ID != LAME_ID)
-        return -3;
-
-    mfbuf[0] = gfc->mfbuf[0];
-    mfbuf[1] = gfc->mfbuf[1];
-
-    /* some sanity checks */
-#if ENCDELAY < MDCTDELAY
-# error ENCDELAY is less than MDCTDELAY, see encoder.h
-#endif
-#if FFTOFFSET > BLKSIZE
-# error FFTOFFSET is greater than BLKSIZE, see encoder.h
-#endif
-
-    mf_needed = BLKSIZE + gfp->framesize - FFTOFFSET;
-    assert(MFSIZE >= mf_needed);
-
-    if (gfp->num_channels == 1) {
-        /*
-           return lame_encode_buffer(gfp,buffer,NULL,nsamples,mp3buf,mp3buf_size);
-
-           Putting NULL for the second channel causes access violation in lame_encode_buffer
-           for (i = 0; i < nsamples; i++) {
-
-           in_buffer [0] [i] = buffer_l [i];
-           in_buffer [1] [i] = buffer_r [i];  <--- right here
-           }
-
-           If we just duplicate the buffer here, everything should work fine.
-           But I don't know whether this is correct.
-         */
-        return lame_encode_buffer(gfp, buffer, buffer, nsamples, mp3buf,
-                                  mp3buf_size);
+    int ret,i;
+    short int *buffer_l;
+    short int *buffer_r;
+    
+    buffer_l = malloc(sizeof(short int) * nsamples);
+    buffer_r = malloc(sizeof(short int) * nsamples);
+    if (buffer_l == NULL || buffer_r == NULL) {
+	return -2;
     }
-
-    if (gfc->resample_ratio != 1.0) {
-        short int *buffer_l;
-        short int *buffer_r;
-
-        buffer_l = malloc(sizeof(short int) * nsamples);
-        buffer_r = malloc(sizeof(short int) * nsamples);
-        if (buffer_l == NULL || buffer_r == NULL) {
-            return -2;
-        }
-        for (i = 0; i < nsamples; i++) {
-            buffer_l[i] = buffer[2 * i];
-            buffer_r[i] = buffer[2 * i + 1];
-        }
-        ret =
-            lame_encode_buffer(gfp, buffer_l, buffer_r, nsamples, mp3buf,
-                               mp3buf_size);
-        free(buffer_l);
-        free(buffer_r);
-        return ret;
+    for (i = 0; i < nsamples; i++) {
+	buffer_l[i] = buffer[2 * i];
+	buffer_r[i] = buffer[2 * i + 1];
     }
+    ret =
+	lame_encode_buffer(gfp, buffer_l, buffer_r, nsamples, mp3buf,
+			   mp3buf_size);
+    free(buffer_l);
+    free(buffer_r);
+    return ret;
 
-    assert(gfp->num_channels == 2);
-
-    while (nsamples > 0) { /* while copying in new samples */
-        int     n_out = Min(gfp->framesize, nsamples);
-
-        /* copy data into internal buffer.  Downsample to mono by
-         * averaging L & R channels if we are encoding mono with
-         * stereo input */
-        for (i = 0; i < n_out; ++i) {
-            if (gfp->num_channels == 2 && gfc->channels_out == 1) {
-                mfbuf[0][gfc->mf_size + i] =
-                    ((int) buffer[2 * i] + (int) buffer[2 * i + 1]) / 2.0;
-                mfbuf[1][gfc->mf_size + i] = 0;
-            }
-            else {
-                mfbuf[0][gfc->mf_size + i] = buffer[2 * i];
-                mfbuf[1][gfc->mf_size + i] = buffer[2 * i + 1];
-            }
-        }
-
-
-        buffer += 2 * n_out;
-
-        nsamples -= n_out;
-        gfc->mf_size += n_out;
-        assert(gfc->mf_size <= MFSIZE);
-        gfc->mf_samples_to_encode += n_out;
-
-        if (gfc->mf_size >= mf_needed) {
-            /* encode the frame */
-            ret =
-                lame_encode_frame(gfp, mfbuf[0], mfbuf[1], mp3buf, mp3buf_size);
-            if (ret < 0) {
-                /* fatal error: mp3buffer was too small */
-                return ret;
-            }
-            mp3buf += ret;
-            mp3size += ret;
-
-            /* shift out old samples */
-            gfc->mf_size -= gfp->framesize;
-            gfc->mf_samples_to_encode -= gfp->framesize;
-            for (ch = 0; ch < gfc->channels_out; ch++)
-                for (i = 0; i < gfc->mf_size; i++)
-                    mfbuf[ch][i] = mfbuf[ch][i + gfp->framesize];
-        }
-    }
-    assert(nsamples == 0);
-    return mp3size;
 }
 
 
