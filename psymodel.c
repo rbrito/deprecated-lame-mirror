@@ -5,6 +5,10 @@
  * $Id$
  *
  * $Log$
+ * Revision 1.7  1999/12/08 05:46:52  markt
+ * avoid bounds check on xr[] for non-hq mode, from Mat.
+ * spelling error in psymodel.c fixed :-)
+ *
  * Revision 1.6  1999/12/08 03:49:15  takehiro
  * debugged possible buffer overrun.
  *
@@ -320,7 +324,7 @@ void L3psycho_anal( short int *buffer[2], int stereo,
     /* MPEG2 tables are screwed up 
      * the mapping from paritition bands to scalefactor bands will use
      * more paritition bands than we have.  
-     * So we will not compute these fictiction partition bands by reducing
+     * So we will not compute these fictitious partition bands by reducing
      * npart_l below.  */
     if (npart_l > npart_l_orig) {
       npart_l=npart_l_orig;
