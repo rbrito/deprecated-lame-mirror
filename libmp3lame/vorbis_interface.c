@@ -168,11 +168,11 @@ int lame_decode_ogg_initfile( lame_global_flags*  gfp,
     /*
     char **ptr=vc.user_comments;
     while(*ptr){
-      MSGF("%s\n",*ptr);
+      MSGF( gfc, "%s\n", *ptr );
       ++ptr;
     }
-    MSGF("\nBitstream is %d channel, %ldHz\n",vi.channels,vi.rate);
-    MSGF("Encoded by: %s\n\n",vc.vendor);
+    MSGF( gfc, "\nBitstream is %d channel, %ldHz\n", vi.channels, vi.rate );
+    MSGF( gfc, "Encoded by: %s\n\n", vc.vendor );
     */
   }
   
@@ -249,7 +249,7 @@ int lame_decode_ogg_fromfile( lame_global_flags*  gfp,
       
       /*
       if(clipflag)
-	MSGF("Clipping in frame %ld\n",vd.sequence);
+	MSGF( gfc, "Clipping in frame %ld\n", vd.sequence );
       */
       
       /* tell libvorbis how many samples we actually consumed */
@@ -359,22 +359,22 @@ int lame_encode_ogg_init(lame_global_flags *gfp)
   /* (mode 0: 44kHz stereo uncoupled, roughly 128kbps VBR) */
   if (gfp->compression_ratio < 5.01) {
     memcpy(&vi2,&info_E,sizeof(vi2));
-    MSGF("Encoding with Vorbis mode info_E \n");
+    MSGF( gfc, "Encoding with Vorbis mode info_E \n" );
   } else if (gfp->compression_ratio < 6) {
     memcpy(&vi2,&info_D,sizeof(vi2));
-    MSGF("Encoding with Vorbis mode info_D \n");
+    MSGF( gfc, "Encoding with Vorbis mode info_D \n" );
   } else if (gfp->compression_ratio < 8) {
     memcpy(&vi2,&info_C,sizeof(vi2));
-    MSGF("Encoding with Vorbis mode info_C \n");
+    MSGF( gfc, "Encoding with Vorbis mode info_C \n" );
   } else if (gfp->compression_ratio < 10) {
     memcpy(&vi2,&info_B,sizeof(vi2));
-    MSGF("Encoding with Vorbis mode info_B \n");
+    MSGF( gfc, "Encoding with Vorbis mode info_B \n" );
   } else if (gfp->compression_ratio < 12) {
     memcpy(&vi2,&info_A,sizeof(vi2));
-    MSGF("Encoding with Vorbis mode info_A \n");
+    MSGF( gfc, "Encoding with Vorbis mode info_A \n" );
   } else {
     memcpy(&vi2,&info_A,sizeof(vi2));
-    MSGF("Encoding with Vorbis mode info_A \n");
+    MSGF( gfc, "Encoding with Vorbis mode info_A \n" );
   }
 
   vi2.channels = gfc->channels_out;
