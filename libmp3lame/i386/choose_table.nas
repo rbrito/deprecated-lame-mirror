@@ -11,7 +11,6 @@
 
 	externdef	largetbl
 	externdef	table13
-	externdef	table56
 	externdef	table7B89
 	externdef	tableDxEF
 	externdef	table5967
