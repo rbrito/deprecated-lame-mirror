@@ -1665,12 +1665,7 @@ lame_bitrate_hist(const lame_global_flags * const gfp, int bitrate_count[14])
     const lame_internal_flags *gfc;
     int     i;
 
-    if (!bitrate_count)
-        return;
-    if (!gfp)
-        return;
-    gfc = gfp->internal_flags;
-    if (!gfc)
+    if (!bitrate_count || !gfp || !(gfc = gfp->internal_flags))
         return;
 
     for (i = 0; i < 14; i++)
@@ -1684,17 +1679,11 @@ lame_stereo_mode_hist(const lame_global_flags * const gfp, int stmode_count[4])
     const lame_internal_flags *gfc;
     int     i;
 
-    if (!stmode_count)
-        return;
-    if (!gfp)
-        return;
-    gfc = gfp->internal_flags;
-    if (!gfc)
+    if (!stmode_count || !gfp || !(gfc = gfp->internal_flags))
         return;
 
-    for (i = 0; i < 4; i++) {
+    for (i = 0; i < 4; i++)
         stmode_count[i] = gfc->bitrate_stereoMode_Hist[15][i];
-    }
 }
 
 
@@ -1706,12 +1695,7 @@ lame_bitrate_stereo_mode_hist(const lame_global_flags * const gfp,
     const lame_internal_flags *gfc;
     int     i, j;
 
-    if (!bitrate_stmode_count)
-        return;
-    if (!gfp)
-        return;
-    gfc = gfp->internal_flags;
-    if (!gfc)
+    if (!bitrate_stmode_count ||!gfp || !(gfc = gfp->internal_flags))
         return;
 
     for (j = 0; j < 14; j++)
@@ -1727,17 +1711,11 @@ lame_block_type_hist(const lame_global_flags * const gfp, int btype_count[6])
     const lame_internal_flags *gfc;
     int     i;
 
-    if (!btype_count)
-        return;
-    if (!gfp)
-        return;
-    gfc = gfp->internal_flags;
-    if (!gfc)
-        return;
+    if (!btype_count || !gfp || !(gfc = gfp->internal_flags))
+	return;
 
-    for (i = 0; i < 6; ++i) {
+    for (i = 0; i < 6; ++i)
         btype_count[i] = gfc->bitrate_blockType_Hist[15][i];
-    }
 }
 
 
@@ -1749,17 +1727,12 @@ lame_bitrate_block_type_hist(const lame_global_flags * const gfp,
     const lame_internal_flags * gfc;
     int     i, j;
     
-    if (!bitrate_btype_count)
-        return;
-    if (!gfp)
-        return;
-    gfc = gfp->internal_flags;
-    if (!gfc)
+    if (!bitrate_btype_count || !gfp || !(gfc = gfp->internal_flags))
         return;
         
     for (j = 0; j < 14; ++j)
-    for (i = 0; i <  6; ++i)
-        bitrate_btype_count[j][i] = gfc->bitrate_blockType_Hist[j+1][i];
+	for (i = 0; i <  6; ++i)
+	    bitrate_btype_count[j][i] = gfc->bitrate_blockType_Hist[j+1][i];
 }
 
 #endif

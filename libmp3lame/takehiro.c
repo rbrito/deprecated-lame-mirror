@@ -714,8 +714,7 @@ best_scalefac_store(
     int sfb,i,j,l;
     int recalc = 0;
 
-    for ( i = 0; i < 4; i++ )
-	l3_side->scfsi[ch][i] = 0;
+    memset(l3_side->scfsi[ch], 0, sizeof(l3_side->scfsi[ch]));
 
     if (gi->preflag < 0) /* this means sub channel of intensity stereo */
 	return;
