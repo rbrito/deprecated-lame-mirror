@@ -68,7 +68,7 @@
  *
  */
 /*#define POSTDELAY   288*/
-#define POSTDELAY   1152
+#define POSTDELAY   (gfc->mode_gr*576)
 
 /* 
  * delay of the MDCT used in mdct.c
