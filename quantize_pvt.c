@@ -880,9 +880,8 @@ set_pinfo (lame_global_flags *gfp,
     gr_info *cod_info,
     III_psy_ratio *ratio, 
     III_scalefac_t *scalefac,
-    FLOAT8 xr[576],        
-    FLOAT8 xfsf[4][SBMAX_l],
-    FLOAT8 noise[4],
+    FLOAT8 xr[576],
+    int l3_enc[576],        
     int gr,
     int ch
 )
@@ -893,6 +892,20 @@ set_pinfo (lame_global_flags *gfp,
   FLOAT8 en0,en1;
   FLOAT ifqstep = ( cod_info->scalefac_scale == 0 ) ? .5 : 1.0;
 
+
+        III_psy_xmin l3_xmin;
+        calc_noise_result noise_info;
+        FLOAT8 noise[4];
+        FLOAT8 xfsf[4][SBMAX_l];
+        FLOAT8 distort[4][SBMAX_l];
+
+        /* recompute allowed noise with no 'masking_lower' for
+         * frame analyzer */
+        gfc->masking_lower=1.0;
+        calc_xmin( gfp,xr, ratio, cod_info, &l3_xmin);
+
+        calc_noise( gfp, xr, l3_enc, cod_info, 
+                    xfsf,distort, &l3_xmin, scalefac, &noise_info);
 
   if (cod_info->block_type == SHORT_TYPE) {
     for (j=0, sfb = 0; sfb < SBMAX_s; sfb++ )  {
@@ -1045,10 +1058,10 @@ average seems to be about -147db.
   gfc->pinfo->LAMEmainbits[gr][ch] = cod_info->part2_3_length;
   gfc->pinfo->LAMEsfbits  [gr][ch] = cod_info->part2_length;
 
-  gfc->pinfo->over      [gr][ch] = noise[0];
-  gfc->pinfo->max_noise [gr][ch] = noise[1];
-  gfc->pinfo->over_noise[gr][ch] = noise[2];
-  gfc->pinfo->tot_noise [gr][ch] = noise[3];
+  gfc->pinfo->over      [gr][ch] = noise_info.over_count;
+  gfc->pinfo->max_noise [gr][ch] = noise_info.max_noise;
+  gfc->pinfo->over_noise[gr][ch] = noise_info.over_noise;
+  gfc->pinfo->tot_noise [gr][ch] = noise_info.tot_noise;
 }
 
 

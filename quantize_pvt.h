@@ -37,16 +37,17 @@ int targ_bits[2],int mean_bits, int gr);
 void reduce_side(int targ_bits[2],FLOAT8 ms_ener_ratio,int mean_bits,int max_bits);
 
 
-void outer_loop( lame_global_flags *gfp,
-                FLOAT8 xr[576],     /*vector of the magnitudees of the spectral values */
-                int bits,
-		FLOAT8 noise[4],
-                III_psy_xmin *l3_xmin, /* the allowed distortion of the scalefactor */
-                int l3_enc[576],    /* vector of quantized values ix(0..575) */
-		 III_scalefac_t *scalefac, /* scalefactors */
-		 gr_info *,
-                FLOAT8 xfsf[4][SBMAX_l],
-		int ch, FLOAT8 xrpow[576]);
+void outer_loop( 
+    lame_global_flags *gfp,
+    gr_info           *cod_info,
+    int                ch, 
+    int                bits,        /* maximum allowed bits */
+    FLOAT8             xr[576],     /* magnitudes of spectral values */
+    III_psy_xmin      *l3_xmin,     /* allowed distortion of the scalefactor */
+    III_scalefac_t    *scalefac,    /* scalefactors */
+    FLOAT8             xrpow[576],  /* coloured magnitudes of spectral values */
+    int                l3_enc[576], /* vector of quantized values ix(0..575) */
+    FLOAT8 noise[4]);
 
 
 
@@ -77,10 +78,12 @@ int calc_noise( lame_global_flags *gfp, FLOAT8 xr[576],
 
 int loop_break( III_scalefac_t *scalefac, gr_info *cod_info);
 
-void amp_scalefac_bands(lame_global_flags *gfp, FLOAT8 xrpow[576],
-			gr_info *cod_info,
-			III_scalefac_t *scalefac,
-			FLOAT8 distort[4][SBMAX_l]);
+void amp_scalefac_bands(
+    lame_global_flags *gfp, 
+    gr_info           *cod_info,
+    III_scalefac_t    *scalefac,
+    FLOAT8             xrpow[576],
+    FLOAT8             distort[4][SBMAX_l] );
 
 #ifdef ASM_QUANTIZE
 void quantize_xrpow_ASM( FLOAT8 xr[576],
@@ -119,21 +122,24 @@ void best_scalefac_store(lame_global_flags *gfp,int gr, int ch,
 			 III_side_info_t *l3_side,
 			 III_scalefac_t scalefac[2][2]);
 
-void inc_scalefac_scale(lame_global_flags *gfp,
-			III_scalefac_t *scalefac,
-			gr_info *cod_info,
-			FLOAT8 xrpow[576]);
+void inc_scalefac_scale(
+    lame_internal_flags *gfp,
+    gr_info             *cod_info,
+    III_scalefac_t      *scalefac,
+    FLOAT8               xrpow[576] );
 
-void inc_subblock_gain(lame_global_flags *gfp,
-		       III_scalefac_t *scalefac,
-		       gr_info *cod_info,
-		       FLOAT8 xrpow[576]);
+void inc_subblock_gain(
+    lame_internal_flags *gfp,
+    gr_info             *cod_info,
+    III_scalefac_t      *scalefac,
+    FLOAT8               xrpow[576] );
 
 
 int init_outer_loop(
-    lame_global_flags *gfp,
-    FLOAT8 xr[576], FLOAT8 xrpow[576],       /*  could be L/R OR MID/SIDE */
-    gr_info *cod_info);
+    gr_info        *cod_info,
+    III_scalefac_t *scalefac,
+    FLOAT8          xr[576],
+    FLOAT8          xrpow[576]); 
 
 #define LARGE_BITS 100000
 
