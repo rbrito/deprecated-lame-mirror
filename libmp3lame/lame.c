@@ -1022,17 +1022,17 @@ lame_encode_flush_nogap(lame_t gfc,
 int
 lame_encode_flush(lame_t gfc, unsigned char *mp3buf, int mp3buffer_size)
 {
-// current state
-//     |------------------LAST|.....|
-//     <----------------------------> mf_needed
-//     <--------mf_size-------X----->  mf_needed - mf_size
-//
-// after flush,
-// LAST|.....00000000000000000|00000|
-//           <---------------------->mf_size
-//     <---------------------------->mf_needed
-//     <-----> mf_needed - mf_size
-
+/* current state
+ *     |------------------LAST|.....|
+ *     <----------------------------> mf_needed
+ *     <--------mf_size-------X----->  mf_needed - mf_size
+ *
+ * after flush,
+ * LAST|.....00000000000000000|00000|
+ *           <---------------------->mf_size
+ *     <---------------------------->mf_needed
+ *     <-----> mf_needed - mf_size
+ */
     int imp3, mp3count = 0, mp3buffer_size_remaining = mp3buffer_size;
     int samples_to_encode = gfc->mf_size + gfc->framesize;
     int i = (samples_to_encode + POSTDELAY - 1) / gfc->framesize;
