@@ -991,7 +991,7 @@ int  parse_args ( lame_global_flags* gfp, int argc, char** argv, char* const inP
 		    silent = 10;    /* on a scale from 1 to 10 be very silent */
 		
                 T_ELIF ("verbose")
-		    silent = 0;    /* print a lot on screen, the default */
+		    silent = -10;    /* print a lot on screen, the default */
                     
                 T_ELIF2 ("version", "license")
 		    print_license ( gfp, stdout, ProgramName );

@@ -166,7 +166,7 @@ void timestatus_klemm ( const lame_global_flags* const gfp )
 {
     static double  last_time = 0.;
 
-    if ( !silent )
+    if ( silent <= 0 )
         if ( gfp->frameNum == 0  ||  
   	     gfp->frameNum == 9  ||
   	     GetRealTime () - last_time >= update_interval  ||

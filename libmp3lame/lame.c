@@ -1159,6 +1159,9 @@ lame_init_params(lame_global_flags * const gfp)
     gfc->adapt_thres_level_v = pow( 10.0, gfp->adapt_thres_level / -20.0 );
     
 
+    gfc->PSY->cwlimit = gfp->cwlimit <= 0 ? 8871.7f : gfp->cwlimit;
+    gfc->PSY->allow_diff_short = gfp->allow_diff_short && !gfp->force_ms;
+    
     return 0;
 }
 
@@ -1248,6 +1251,66 @@ lame_print_config(const lame_global_flags * gfp)
         }
     }
 }
+
+void 
+lame_print_internals( const lame_global_flags * gfp )
+{
+    lame_internal_flags *gfc = gfp->internal_flags;
+    const char * pc = "";
+
+    /*  compiler/processor optimizations, operational, etc.
+     */
+    MSGF( gfc, "\nmisc:\n\n" );
+    
+        /* filters and more */
+    MSGF( gfc, "\t...\n" );
+
+    /*  everything controlling the stream format 
+     */
+    MSGF( gfc, "\nstream format:\n\n" );
+    switch ( gfp->version ) {
+    case 0:  pc = "2.5"; break;
+    case 1:  pc = "1";   break;
+    case 2:  pc = "2";   break;
+    default: pc = "?";   break;
+    }
+    MSGF( gfc, "\tMPEG-%s Layer 3\n", pc );
+    switch ( gfp->mode ) {
+    case JOINT_STEREO: pc = "joint stereo"; break;
+    case STEREO      : pc = "stereo";       break;
+    case DUAL_CHANNEL: pc = "dual channel"; break;
+    default          : pc = "mono";         break;
+    }
+    MSGF( gfc, "\t%d channel - %s\n", gfc->channels_out, pc );
+    
+    if ( vbr_default == gfp->VBR )  pc = "(default)";
+    if ( gfp->free_format )         pc = "(free format)";
+    switch ( gfp->VBR ) {
+    case vbr_off : MSGF( gfc, "\tconstant bitrate - CBR %s\n",      pc ); break;
+    case vbr_abr : MSGF( gfc, "\tvariable bitrate - ABR %s\n",      pc ); break;
+    case vbr_rh  : MSGF( gfc, "\tvariable bitrate - VBR rh %s\n",   pc ); break;
+    case vbr_mt  : MSGF( gfc, "\tvariable bitrate - VBR mt %s\n",   pc ); break;
+    case vbr_mtrh: MSGF( gfc, "\tvariable bitrate - VBR mtrh %s\n", pc ); break; 
+    default      : MSGF( gfc, "\t ?? oops, some new one ?? \n" );         break;
+    }
+    MSGF( gfc, "\t...\n" );
+    
+    /*  everything controlling psychoacoustic settings, like ATH, etc.
+     */
+    MSGF( gfc, "\npsychoacoustic:\n\n" );
+    
+    MSGF( gfc, "\ttonality estimation limit: %f Hz\n", gfc->PSY->cwlimit );
+    pc = gfc->PSY->allow_diff_short ? "yes" : "no";
+    MSGF( gfc, "\tallow channels to have different block types: %s\n", pc );    
+    MSGF( gfc, "\tadjust masking: %f dB\n", gfc->VBR->mask_adjust );
+    MSGF( gfc, "\t...\n" );
+    
+    /*  that's all ?
+     */
+    MSGF( gfc, "\n" );
+    return;
+}
+
 
 
 /* int           lame_encode_frame              (lame_global_flags *gfp, sample_t inbuf_l[],sample_t inbuf_r[], char *mp3buf, int mp3buf_size)                    *//*{{{ */

@@ -192,7 +192,7 @@ int main(int argc, char **argv)
     return 1;
   }
 
-  if (silent || gf->VBR==vbr_off) {
+  if (silent > 0 || gf->VBR==vbr_off) {
     brhist = 0;  /* turn off VBR histogram */
   }
 
@@ -254,6 +254,9 @@ int main(int argc, char **argv)
 		  0.1 * (int)(10.*gf->compression_ratio + 0.5), 
 		  lame_get_quality( gf ) );
     }
+    
+    if ( silent <= -10 ) lame_print_internals( gf );
+   
     fflush ( stderr );
   }
 
@@ -275,7 +278,7 @@ int main(int argc, char **argv)
 
 
 	/********************** status display  *****************************/
-	if (!silent) {
+	if (silent <= 0) {
 	  if (update_interval>0) {
 	    timestatus_klemm(gf);
 	  }else{
@@ -319,7 +322,7 @@ int main(int argc, char **argv)
 
       }
 
-      if (!silent) {
+      if (silent <= 0) {
 #ifdef BRHIST
 	brhist_jump_back();
 #endif

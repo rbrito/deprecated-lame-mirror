@@ -587,7 +587,7 @@ void CDECL get_lame_version_numerical ( lame_version_t *const );
  */
 void CDECL lame_print_config(const lame_global_flags*  gfp);
 
-
+void CDECL lame_print_internals( const lame_global_flags *gfp);
 
 
 /*

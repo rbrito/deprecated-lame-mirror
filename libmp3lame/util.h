@@ -176,6 +176,8 @@ typedef struct
  */
 typedef struct
 {
+    char    allow_diff_short;   // more like a bool 
+    FLOAT   cwlimit;
     FLOAT8  prvTonRed[CBANDS];
 } PSY_t; 
 

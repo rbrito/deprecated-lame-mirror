@@ -891,7 +891,7 @@ int L3psycho_anal( lame_global_flags * gfp,
 
 
   if (gfc->channels_out==2) {
-    if (!gfp->allow_diff_short || gfp->force_ms) {
+    if (!gfc->PSY->allow_diff_short) {
       /* force both channels to use the same block type */
       /* this is necessary if the frame is to be encoded in ms_stereo.  */
       /* But even without ms_stereo, FhG  does this */
@@ -1752,7 +1752,7 @@ int L3psycho_anal_ns( lame_global_flags * gfp,
   }
 
   if (gfc->channels_out==2) {
-    if (!gfp->allow_diff_short || gfp->mode==JOINT_STEREO) {
+    if (!gfp->allow_diff_short) {
       /* force both channels to use the same block type */
       /* this is necessary if the frame is to be encoded in ms_stereo.  */
       /* But even without ms_stereo, FhG  does this */
@@ -2161,7 +2161,6 @@ int psymodel_init(lame_global_flags *gfp)
 {
     lame_internal_flags *gfc=gfp->internal_flags;
     int i,j,b,sb,k,samplerate;
-    FLOAT cwlimit;
 
     FLOAT8 s3_s[CBANDS][CBANDS];
     FLOAT8 s3_l[CBANDS][CBANDS];
@@ -2210,11 +2209,7 @@ int psymodel_init(lame_global_flags *gfp)
     
     /*  gfp->cwlimit = sfreq*j/1024.0;  */
     gfc->cw_lower_index=6;
-    if (gfp->cwlimit>0) 
-      cwlimit=gfp->cwlimit;
-    else
-      cwlimit=(FLOAT)8871.7;
-    gfc->cw_upper_index = cwlimit*1024.0/gfp->out_samplerate;
+    gfc->cw_upper_index = gfc->PSY->cwlimit*1024.0/gfp->out_samplerate;
     gfc->cw_upper_index=Min(HBLKSIZE-4,gfc->cw_upper_index);      /* j+3 < HBLKSIZE-1 */
     gfc->cw_upper_index=Max(6,gfc->cw_upper_index);
 
