@@ -1,0 +1,1 @@
+VbrTag.d fft.d filters.d formatBitstream.d get_audio.d gpkplotting.d gtkanal.d id3tag.d ieeefloat.d l3bitstream.d lame.d loopold.d newmdct.d portableio.d psymodel.d quantize-pvt.d quantize.d reservoir.d tables.d takehiro.d timestatus.d util.d vbrquantize.d version.d
