@@ -1087,13 +1087,15 @@ block_xr34(const lame_internal_flags * gfc, const gr_info * cod_info,
 {
     int     sfb, j = 0, sfbmax, *scalefac = cod_info->scalefac;
 
-    /* even though there is no scalefactor for sfb12
+    /* even though there is no scalefactor for sfb12/sfb21
      * subblock gain affects upper frequencies too, that's why
-     * we have to go up to SBMAX_s
+     * we have to go up to SBMAX_s/SBMAX_l
      */
     sfbmax = cod_info->psymax;
-    if (sfbmax == 35 || sfbmax == 36)
+    if (sfbmax == 35 || sfbmax == 36) /* short block / mixed? case */
 	sfbmax += 3;
+    if (sfbmax == 21) /* long block case */
+        sfbmax += 1;
 
     for (sfb = 0; sfb < sfbmax; ++sfb) {
 	FLOAT8 fac;
@@ -1128,7 +1130,6 @@ block_xr34(const lame_internal_flags * gfc, const gr_info * cod_info,
  *  Robert Hegemann 2000-10-25
  *
  ***********************************************************************/
-#define XXL 1
 int
 VBR_noise_shaping(lame_internal_flags * gfc, FLOAT8 * xr34orig, int minbits, int maxbits,
                   FLOAT8 * l3_xmin, int gr, int ch)
@@ -1156,11 +1157,12 @@ VBR_noise_shaping(lame_internal_flags * gfc, FLOAT8 * xr34orig, int minbits, int
     memcpy(vbrsf, vbrsf2, sizeof(vbrsf));
     vbrmin = vbrmin2;
     vbrmax = vbrmax2;
-#ifdef XXL
+
     M = (vbrmax - vbrmin) / 2;
     if ( M > 16 ) M = 16;
+    if ( M <  1 ) M = 1;
     count = M;
-#endif
+
     do {
         --count;
 
@@ -1197,11 +1199,7 @@ VBR_noise_shaping(lame_internal_flags * gfc, FLOAT8 * xr34orig, int minbits, int
             vbrmax = vbrmin2 + (vbrmax2 - vbrmin2) * count / M;
             vbrmin = vbrmin2;
 	    for (i = 0; i < cod_info->psymax; ++i) {
-#ifdef XXL
 		vbrsf[i] = vbrmin2 + (vbrsf2[i] - vbrmin2) * count / M;
-#else
-		vbrsf[i] = Min(vbrsf2[i], vbrmax);
-#endif
             }
         }
         else if (cod_info->part2_3_length > maxbits) {
@@ -1209,11 +1207,7 @@ VBR_noise_shaping(lame_internal_flags * gfc, FLOAT8 * xr34orig, int minbits, int
             vbrmax = vbrmax2;
             vbrmin = vbrmax2 + (vbrmin2 - vbrmax2) * count / M;
 	    for (i = 0; i < cod_info->psymax; ++i) {
-#ifdef XXL
 		vbrsf[i] = vbrmax2 + (vbrsf2[i] - vbrmax2) * count / M;
-#else
-		vbrsf[i] = Max(vbrsf2[i], vbrmin);
-#endif
             }
         }
         else
@@ -1236,7 +1230,7 @@ VBR_noise_shaping(lame_internal_flags * gfc, FLOAT8 * xr34orig, int minbits, int
     }
     assert (cod_info->global_gain < 256u);
 
-    if (cod_info->part2_3_length + cod_info->part2_length >= LARGE_BITS)
+    if (cod_info->part2_3_length + cod_info->part2_length >= LARGE_BITS) 
 	return -2; /* Houston, we have a problem */
 
     return 0;
