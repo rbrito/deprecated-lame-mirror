@@ -40,7 +40,6 @@ void reduce_side(int targ_bits[2],FLOAT8 ms_ener_ratio,int mean_bits);
 void outer_loop( FLOAT8 xr[576],     /*vector of the magnitudees of the spectral values */
                 int bits,
 		FLOAT8 noise[4],
-                FLOAT8 targ_noise[4],    /* VBR target noise info */
                 III_psy_xmin *l3_xmin, /* the allowed distortion of the scalefactor */
                 int l3_enc[576],    /* vector of quantized values ix(0..575) */
 		frame_params *fr_ps,

@@ -127,17 +127,16 @@ iteration_loop( FLOAT8 pe[2][2], FLOAT8 ms_ener_ratio[2],
 		III_side_info_t *l3_side, int l3_enc[2][2][576],
 		III_scalefac_t scalefac[2][2], frame_params *fr_ps)
 {
+  FLOAT8 xr[2][576];
+  FLOAT8 xfsf[4][SBPSY_l];
+  FLOAT8 noise[4]; /* over,max_noise,over_noise,tot_noise; */
   III_psy_xmin l3_xmin[2];
   gr_info *cod_info;
   layer *info;
   int over[2];
-  FLOAT8 noise[4]; /* over,max_noise,over_noise,tot_noise; */
-  FLOAT8 targ_noise[4]; /* over,max_noise,over_noise,tot_noise; */
   int bitsPerFrame;
   int mean_bits;
   int ch, gr, i, bit_rate;
-  FLOAT8 xr[2][576];
-  FLOAT8 xfsf[4][SBPSY_l];
 
 
   iteration_init(l3_side,l3_enc,fr_ps);
@@ -206,7 +205,7 @@ iteration_loop( FLOAT8 pe[2][2], FLOAT8 ms_ener_ratio[2],
 	else
 	{
           calc_xmin(xr_org[gr][ch], &ratio[gr][ch], cod_info, &l3_xmin[ch]);
-	  outer_loop( xr_org[gr][ch], targ_bits[ch], noise, targ_noise, 
+	  outer_loop( xr_org[gr][ch], targ_bits[ch], noise,
 		      &l3_xmin[ch], l3_enc[gr][ch], fr_ps,
 		      &scalefac[gr][ch], cod_info, xfsf, ch);
         }
@@ -478,7 +477,7 @@ VBR_iteration_loop (FLOAT8 pe[2][2], FLOAT8 ms_ener_ratio[2],
 	   */
           calc_xmin(xr[gr][ch], &ratio[gr][ch], cod_info, &l3_xmin);
 #endif
-	  outer_loop( xr[gr][ch], this_bits, noise, targ_noise,
+	  outer_loop( xr[gr][ch], this_bits, noise, 
 		      &l3_xmin, l3_enc[gr][ch], fr_ps,
 		      &scalefac[gr][ch], cod_info, xfsf,
 		      ch);
@@ -619,7 +618,7 @@ VBR_iteration_loop (FLOAT8 pe[2][2], FLOAT8 ms_ener_ratio[2],
 #endif
           calc_xmin(xr[gr][ch], &ratio[gr][ch], cod_info, &l3_xmin);
 	
-          outer_loop( xr[gr][ch], save_bits[gr][ch], noise,targ_noise,
+          outer_loop( xr[gr][ch], save_bits[gr][ch], noise,
 	 	      &l3_xmin, l3_enc[gr][ch], fr_ps, 
 		      &scalefac[gr][ch], cod_info, xfsf, ch);
 	}
@@ -653,6 +652,9 @@ VBR_iteration_loop (FLOAT8 pe[2][2], FLOAT8 ms_ener_ratio[2],
    *******************************************************************/
   for (gr = 0; gr < gf.mode_gr; gr++)
     for (ch = 0; ch < gf.stereo; ch++) {
+/*
+ * is the following code correct?
+ *
       int      *pi = &l3_enc[gr][ch][0];
 
       for (i = 0; i < 576; i++) {
@@ -660,6 +662,12 @@ VBR_iteration_loop (FLOAT8 pe[2][2], FLOAT8 ms_ener_ratio[2],
 
         if ((pr < 0) && (pi[i] > 0))
           pi[i] *= -1;
+      }
+ *
+ * or is the code used for CBR correct?
+ */
+      for ( i = 0; i < 576; i++) {
+        if (xr[gr][ch][i] < 0) l3_enc[gr][ch][i] *= -1;
       }
     }
 
@@ -771,7 +779,6 @@ void outer_loop(
     FLOAT8 xr[576],        
     int targ_bits,
     FLOAT8 best_noise[4],
-    FLOAT8 targ_noise[4],
     III_psy_xmin *l3_xmin,   /* the allowed distortion of the scalefactor */
     int l3_enc[576],         /* vector of quantized values ix(0..575) */
     frame_params *fr_ps,

@@ -1217,8 +1217,6 @@ void quantize_xrpow_ISO( FLOAT8 xr[576], int ix[576], gr_info *cod_info )
   {
     max_xrspow = Max(max_xrspow, xrspow[i]);
   }
-  max_xrspow = Min(Q_MAX, Max(0,max_xrspow));
-  
   lowerbound = 210+log10(max_xrspow/IXMAX_VAL)/(0.1875*LOG2);
  
  
