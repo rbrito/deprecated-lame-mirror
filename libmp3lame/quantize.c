@@ -102,9 +102,8 @@ static const int max_range_long[SBMAX_l] = {
  */
 
 static int
-ResvFrameBegin(lame_global_flags *gfp, int mean_bytes)
+ResvFrameBegin(lame_internal_flags *gfc, int mean_bytes)
 {
-    lame_internal_flags *gfc=gfp->internal_flags;
     III_side_info_t     *l3_side = &gfc->l3_side;
 /*
  *  Meaning of the variables:
@@ -1134,9 +1133,9 @@ ABR_iteration_loop(lame_global_flags *gfp, III_psy_ratio ratio[2][2])
 	factor *= 1.1;
 
     gfc->bitrate_index = gfc->VBR_max_bitrate;
-    max_bits = ResvFrameBegin(gfp, getframebytes(gfp)) / gfc->mode_gr;
+    max_bits = ResvFrameBegin(gfc, getframebytes(gfp)) / gfc->mode_gr;
     gfc->bitrate_index = 1;
-    min_bits = ResvFrameBegin(gfp, getframebytes(gfp)) / gfc->mode_gr;
+    min_bits = ResvFrameBegin(gfc, getframebytes(gfp)) / gfc->mode_gr;
     /* check hard limit per granule (by spec) */
     if (max_bits > MAX_BITS)
 	max_bits = MAX_BITS;
@@ -1148,7 +1147,7 @@ ABR_iteration_loop(lame_global_flags *gfp, III_psy_ratio ratio[2][2])
     gfc->bitrate_index = gfc->VBR_min_bitrate;
     do {
 	mean_bytes = getframebytes(gfp);
-	if (ResvFrameBegin(gfp, mean_bytes) >= 0)
+	if (ResvFrameBegin(gfc, mean_bytes) >= 0)
 	    break;
     } while (++gfc->bitrate_index <= gfc->VBR_max_bitrate);
     assert(gfc->bitrate_index <= gfc->VBR_max_bitrate);
@@ -1170,7 +1169,7 @@ iteration_loop(lame_global_flags *gfp, III_psy_ratio ratio[2][2])
     int gr, mean_bits = getframebytes(gfp);
     FLOAT factor;
 
-    ResvFrameBegin (gfp, mean_bits);
+    ResvFrameBegin(gfc, mean_bits);
     mean_bits *= 8/gfc->mode_gr;
     factor = (mean_bits+600)*(1.0/3000.0);
 
@@ -1572,7 +1571,7 @@ VBR_iteration_loop(lame_global_flags *gfp, III_psy_ratio ratio[2][2])
     }
 
     gfc->bitrate_index = gfc->VBR_max_bitrate;
-    max_frame_bits = ResvFrameBegin (gfp, getframebytes(gfp));
+    max_frame_bits = ResvFrameBegin(gfc, getframebytes(gfp));
 
  VBRloop_restart:
     {used_bits = 0;
@@ -1609,7 +1608,7 @@ VBR_iteration_loop(lame_global_flags *gfp, III_psy_ratio ratio[2][2])
 	gfc->bitrate_index = gfc->VBR_min_bitrate;
     do {
 	mean_bytes = getframebytes(gfp);
-	if (ResvFrameBegin (gfp, mean_bytes) >= 0)
+	if (ResvFrameBegin(gfc, mean_bytes) >= 0)
 	    break;
     } while (++gfc->bitrate_index <= gfc->VBR_max_bitrate);
     assert (gfc->bitrate_index <= gfc->VBR_max_bitrate);
