@@ -287,7 +287,11 @@ sfb21 is a huge bitrate consumer in vbr with the new ath.
 Need to reduce the lowpass to more reasonable values. This extra lowpass
 won't reduce quality over 3.87 as the previous ath was doing this lowpass
 */
-    if (f_low>18400 && gfp->VBR==vbr_rh)
+/*GB 22/05/01
+I'm also extending this to CBR as tests showed that a
+limited bandwidth is increasing quality
+*/
+    if (f_low>18400)
 	    f_low = 18400+(f_low-18400)/4;
 
 /*
