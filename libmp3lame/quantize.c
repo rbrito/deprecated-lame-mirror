@@ -1508,12 +1508,10 @@ VBR_3rd_bitalloc(lame_internal_flags *gfc, gr_info *gi, FLOAT * xmin)
 	int width = -gi->width[sfb];
 	j -= width;
 	if (calc_sfb_noise(gfc, j, width, scalefactor(gi, sfb)) < 0) {
-	    if (gi->scalefac[sfb] == 0 || r < 0)
-		r = -2;
-	    else {
-		r = -1;
-		xmin[sfb] *= 1.0029;
-	    }
+	    if (gi->scalefac[sfb] == 0)
+		return -2;
+	    r = -1;
+	    xmin[sfb] *= 1.0029;
 	}
     }
     if (r)
@@ -1620,43 +1618,36 @@ VBR_iteration_loop(lame_global_flags *gfp, III_psy_ratio ratio[2][2])
     max_frame_bits = ResvFrameBegin (gfp, &mean_bits);
 
  VBRloop_restart:
-    {
-	used_bits = 0;
-	for (gr = 0; gr < gfc->mode_gr; gr++) {
-	    for (ch = 0; ch < gfc->channels_out; ch++) {
-		gr_info *gi = &gfc->l3_side.tt[gr][ch];
-		if (!init_bitalloc(gfc, gi))
-		    continue; /* digital silence */
-
-		gi->global_gain = gfc->OldValue[ch];
-		for (;;) {
-		    int ret = VBR_noise_shaping(gfc, gi, xmin[gr][ch]);
-		    if (ret == 0)
-			break;
-		    if (ret == -2)
-			bitpressure_strategy(gi, xmin[gr][ch]);
-		}
-
-		gfc->OldValue[ch] = gi->global_gain;
-		used_bits += gi->part2_3_length + gi->part2_length;
-		if (used_bits > max_frame_bits) {
-		    for (gr = 0; gr < gfc->mode_gr; gr++) 
-			for (ch = 0; ch < gfc->channels_out; ch++) 
-			    bitpressure_strategy(&gfc->l3_side.tt[gr][ch],
-						 xmin[gr][ch]);
-		    goto VBRloop_restart;
-		}
-	    }
-	}
-    }
-
+    {used_bits = 0;
     for (gr = 0; gr < gfc->mode_gr; gr++) {
 	for (ch = 0; ch < gfc->channels_out; ch++) {
 	    gr_info *gi = &gfc->l3_side.tt[gr][ch];
+	    if (!init_bitalloc(gfc, gi))
+		continue; /* digital silence */
+
+	    gi->global_gain = gfc->OldValue[ch];
+	    for (;;) {
+		int ret = VBR_noise_shaping(gfc, gi, xmin[gr][ch]);
+		if (ret == 0)
+		    break;
+		if (ret == -2)
+		    bitpressure_strategy(gi, xmin[gr][ch]);
+	    }
+
+	    gfc->OldValue[ch] = gi->global_gain;
 	    iteration_finish_one(gfc, gr, ch);
-	    gfc->l3_side.ResvSize -= gi->part2_length + gi->part2_3_length;
+	    used_bits += gi->part2_3_length + gi->part2_length;
+	    if (used_bits > max_frame_bits) {
+		for (gr = 0; gr < gfc->mode_gr; gr++)
+		    for (ch = 0; ch < gfc->channels_out; ch++)
+			bitpressure_strategy(&gfc->l3_side.tt[gr][ch],
+					     xmin[gr][ch]);
+		goto VBRloop_restart;
+	    }
 	}
     }
+    }
+    gfc->l3_side.ResvSize -= used_bits;
 
     /*  find a bitrate which can refill the resevoir to positive size. */
     gfc->bitrate_index = 1;
