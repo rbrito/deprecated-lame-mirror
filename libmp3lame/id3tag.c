@@ -402,8 +402,18 @@ id3tag_write_v2(lame_global_flags *gfp)
             unsigned int index;
             /* calulate size of tag starting with 10-byte tag header */
             tag_size = 10;
+#if defined(__hpux) || defined(__svr4__) || defined(M_UNIX) || defined(_AIX)
+            encoder_length = sprintf(encoder,
+                            "LAME v%s", get_lame_short_version());
+#else
+#if defined(__sun__)
+            (void) sprintf(encoder, "LAME v%s", get_lame_short_version());
+            encoder_length = strlen(encoder);
+#else
             encoder_length = snprintf(encoder, sizeof(encoder),
                             "LAME v%s", get_lame_short_version());
+#endif
+#endif
             tag_size += 11 + encoder_length;
             if (title_length) {
                 /* add 10-byte frame header, 1 encoding descriptor byte ... */
