@@ -296,11 +296,22 @@ lame_init_qval(lame_global_flags * gfp)
         break;
 
     case 6:
-        gfp->quality = 5;
-    case 5:            /* the default */
         gfc->filter_type = 0;
         gfc->psymodel = 1;
         gfc->quantization = 0;
+        if (gfc->noise_shaping == 0)
+            gfc->noise_shaping = 1;
+        gfc->noise_shaping_amp = 0;
+        gfc->noise_shaping_stop = 0;
+        if (gfc->subblock_gain == -1)
+            gfc->subblock_gain = 1;
+        gfc->use_best_huffman = 0;
+        break;
+
+    case 5:
+        gfc->filter_type = 0;
+        gfc->psymodel = 1;
+        gfc->quantization = 1;
         if (gfc->noise_shaping == 0)
             gfc->noise_shaping = 1;
         gfc->noise_shaping_amp = 0;
@@ -954,13 +965,11 @@ lame_init_params(lame_global_flags * const gfp)
 
         /*  VBR needs at least the output of GPSYCHO,
          *  so we have to garantee that by setting a minimum 
-         *  quality level, actually level 5 does it.
-         *  the -v and -V x settings switch the quality to level 3
-         *  you would have to add a -q 5 to reduce the quality
-         *  down to level 5
+         *  quality level, actually level 6 does it.
+         *  down to level 6
          */
-        if (gfp->quality > 5)
-            gfp->quality = 5;
+        if (gfp->quality > 6)
+            gfp->quality = 6;
 
 
         if (gfp->quality < 0)
