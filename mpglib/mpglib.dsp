@@ -33,7 +33,7 @@ CPP=xicl.exe
 # PROP Output_Dir "Release"
 # PROP Intermediate_Dir "Release"
 # PROP Target_Dir ""
-# ADD BASE CPP /nologo /W3 /GX /O2 /D "WIN32" /D "NDEBUG" /D "_WINDOWS" /YX /FD /c
+# ADD BASE CPP /nologo /W3 /GX /O2 /D "WIN32" /D "HAVE_CONFIG_MS_H" /D "NDEBUG" /D "_WINDOWS" /YX /FD /c
 # ADD CPP /nologo /W3 /GX /Ox /Ot /Og /I "../include" /I "../libmp3lame" /D "NDEBUG" /D "HAVEMPGLIB" /D "WIN32" /D "_WINDOWS" /D "USE_LAYER_2" /D "USE_LAYER_1" /YX /FD /c
 BSC32=bscmake.exe
 # ADD BASE BSC32 /nologo
@@ -49,7 +49,7 @@ LIB32=link.exe -lib
 # PROP Output_Dir "Debug"
 # PROP Intermediate_Dir "Debug"
 # PROP Target_Dir ""
-# ADD BASE CPP /nologo /W3 /GX /Z7 /Od /D "WIN32" /D "_DEBUG" /D "_WINDOWS" /YX /FD /c
+# ADD BASE CPP /nologo /W3 /GX /Z7 /Od /D "WIN32" /D "HAVE_CONFIG_MS_H" /D "_DEBUG" /D "_WINDOWS" /YX /FD /c
 # ADD CPP /nologo /W3 /GX /Z7 /Od /I "../include" /I "../libmp3lame" /D "_DEBUG" /D "WIN32" /D "_WINDOWS" /D "USE_LAYER_2" /D "USE_LAYER_1" /D "HAVEMPGLIB" /YX /FD /c
 BSC32=bscmake.exe
 # ADD BASE BSC32 /nologo

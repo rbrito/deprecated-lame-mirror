@@ -38,8 +38,8 @@ CPP=xicl.exe
 # PROP Output_Dir "Release"
 # PROP Intermediate_Dir "Release"
 # PROP Target_Dir ""
-# ADD BASE CPP /nologo /W3 /GX /O2 /D "WIN32" /D "NDEBUG" /D "_WINDOWS" /YX /FD /c
-# ADD CPP /nologo /W3 /GX /O2 /I "../" /I "../include" /I "../mpglib" /D "NDEBUG" /D "WIN32" /D "_WINDOWS" /D "TAKEHIRO_IEEE754_HACK" /D "HAVEMPGLIB" /YX /FD /c
+# ADD BASE CPP /nologo /W3 /GX /O2 /D "WIN32" /D "HAVE_CONFIG_MS_H" /D "NDEBUG" /D "_WINDOWS" /YX /FD /c
+# ADD CPP /nologo /W3 /GX /O2 /I "../" /I "../include" /I "../mpglib" /D "NDEBUG" /D "WIN32" /D "_WINDOWS" /D "TAKEHIRO_IEEE754_HACK" /D "HAVE_MPGLIB" /YX /FD /c
 BSC32=bscmake.exe
 # ADD BASE BSC32 /nologo
 # ADD BSC32 /nologo
@@ -59,8 +59,8 @@ LIB32=link.exe -lib
 # PROP Output_Dir "Debug"
 # PROP Intermediate_Dir "Debug"
 # PROP Target_Dir ""
-# ADD BASE CPP /nologo /W3 /GX /Z7 /Od /D "WIN32" /D "_DEBUG" /D "_WINDOWS" /YX /FD /c
-# ADD CPP /nologo /W3 /GX /Z7 /Od /I "../" /I "../include" /I "../mpglib" /D "_DEBUG" /D "WIN32" /D "_WINDOWS" /D "TAKEHIRO_IEEE754_HACK" /D "HAVEMPGLIB" /YX /FD /c
+# ADD BASE CPP /nologo /W3 /GX /Z7 /Od /D "WIN32" /D "HAVE_CONFIG_MS_H" /D "_DEBUG" /D "_WINDOWS" /YX /FD /c
+# ADD CPP /nologo /W3 /GX /Z7 /Od /I "../" /I "../include" /I "../mpglib" /D "_DEBUG" /D "WIN32" /D "_WINDOWS" /D "TAKEHIRO_IEEE754_HACK" /D "HAVE_MPGLIB" /YX /FD /c
 BSC32=bscmake.exe
 # ADD BASE BSC32 /nologo
 # ADD BSC32 /nologo
