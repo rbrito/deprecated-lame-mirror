@@ -27,6 +27,7 @@
 *  Global Include Files
 *
 ***********************************************************************/
+#include "config.h"
 #include "machine.h"
 #include "encoder.h"
 #include "lame.h"
@@ -121,7 +122,9 @@ extern "C" {
 
 
 
-
+#ifndef LAME_ALIGN
+#define LAME_ALIGN(x) 
+#endif
 
 
 /***********************************************************************

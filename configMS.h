@@ -117,3 +117,7 @@ void acm_Free( void * mem);
         #endif
     #endif
 #endif
+
+#ifdef HAVE_INTRINSICS_SSE
+#define LAME_ALIGN(x) __declspec( align( x ) )
+#endif

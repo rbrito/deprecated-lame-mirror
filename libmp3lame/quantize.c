@@ -36,6 +36,7 @@
 #include "lame-analysis.h"
 #include "vbrquantize.h"
 #include "machine.h"
+#include "util.h"
 
 #ifdef WITH_DMALLOC
 #include <dmalloc.h>
@@ -213,29 +214,33 @@ void init_xrpow_core_sse(gr_info *const cod_info,
     int upper4 = (upper/4)*4;
 
 
-    int fabs_mask[4] = {0x7FFFFFFF, 0x7FFFFFFF, 0x7FFFFFFF, 0x7FFFFFFF};
-    __m128 fabs_mask_m128 = _mm_loadu_ps((float *) fabs_mask);
+    const int fabs_mask[4] = {0x7FFFFFFF, 0x7FFFFFFF, 0x7FFFFFFF, 0x7FFFFFFF};
+    const __m128 fabs_mask_m128 = _mm_loadu_ps((float *) fabs_mask);
     __m128_FLOAT _m128_xrpow_max;
+    __m128_FLOAT _m128_sum;
+
+    _mm_prefetch((char*)cod_info->xr, _MM_HINT_T0);
+    _mm_prefetch((char*)xrpow, _MM_HINT_T0);
 
     _m128_xrpow_max._m128 = _mm_set_ps1(0);
-
-    *sum = 0;
+    _m128_sum._m128 = _mm_set_ps1(0);
 
     for (i = 0; i < upper4; i+=4) {
-        __m128_FLOAT tmp128;
-        
-        tmp128._m128 = _mm_loadu_ps(&(cod_info->xr[i])); //load
-        tmp128._m128 = _mm_and_ps(tmp128._m128, fabs_mask_m128); //fabs
+        __m128 tmp128;
 
-        *sum += tmp128._FLOAT[0] + tmp128._FLOAT[1] + tmp128._FLOAT[2] + tmp128._FLOAT[3];
+        tmp128 = _mm_loadu_ps(&(cod_info->xr[i])); //load
+        tmp128 = _mm_and_ps(tmp128, fabs_mask_m128); //fabs
 
-        tmp128._m128 = _mm_sqrt_ps(_mm_mul_ps(tmp128._m128, _mm_sqrt_ps(tmp128._m128)));
+        _m128_sum._m128 = _mm_add_ps(_m128_sum._m128, tmp128);
 
-        _mm_storeu_ps(&(xrpow[i]), tmp128._m128); //store into xrpow[]
+        tmp128 = _mm_sqrt_ps(_mm_mul_ps(tmp128, _mm_sqrt_ps(tmp128)));
 
-        _m128_xrpow_max._m128 = _mm_max_ps(_m128_xrpow_max._m128, tmp128._m128); //retrieve max
+        _mm_store_ps(&(xrpow[i]), tmp128); //store into xrpow[]
+
+        _m128_xrpow_max._m128 = _mm_max_ps(_m128_xrpow_max._m128, tmp128); //retrieve max
     }
 
+    *sum = _m128_sum._FLOAT[0] + _m128_sum._FLOAT[1] + _m128_sum._FLOAT[2] + _m128_sum._FLOAT[3];
     cod_info->xrpow_max = Max(_m128_xrpow_max._FLOAT[0],
                                 Max(_m128_xrpow_max._FLOAT[1],
                                 Max(_m128_xrpow_max._FLOAT[2], _m128_xrpow_max._FLOAT[3])));
@@ -1207,7 +1212,7 @@ outer_loop (
 {
     lame_internal_flags *gfc=gfp->internal_flags;
     gr_info cod_info_w;
-    FLOAT save_xrpow[576];
+    LAME_ALIGN(16) FLOAT save_xrpow[576];
     FLOAT distort[SFBMAX];
     calc_noise_result best_noise_info;
     int huff_bits;
@@ -1782,7 +1787,7 @@ VBR_iteration_loop (
     lame_internal_flags *gfc=gfp->internal_flags;
     FLOAT l3_xmin[2][2][SFBMAX];
   
-    FLOAT    xrpow[576];
+    LAME_ALIGN(16) FLOAT    xrpow[576];
     int       bands[2][2];
     int       frameBits[15];
     int       save_bits[2][2];
@@ -2023,7 +2028,7 @@ ABR_iteration_loop(
 {
     lame_internal_flags *gfc=gfp->internal_flags;
     FLOAT    l3_xmin[SFBMAX];
-    FLOAT    xrpow[576];
+    LAME_ALIGN(16) FLOAT    xrpow[576];
     int       targ_bits[2][2];
     int       mean_bits, max_frame_bits;
     int       ch, gr, ath_over;
@@ -2100,7 +2105,7 @@ iteration_loop(
 {
     lame_internal_flags *gfc=gfp->internal_flags;
     FLOAT l3_xmin[SFBMAX];
-    FLOAT xrpow[576];
+    LAME_ALIGN(16) FLOAT xrpow[576];
     int    targ_bits[2];
     int    mean_bits, max_bits;
     int    gr, ch;
