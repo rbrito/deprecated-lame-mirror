@@ -390,7 +390,11 @@ void reduce_side(int targ_bits[2],FLOAT8 ms_ener_ratio,int mean_bits,int max_bit
       }
     }
     
-    /* dont allow to many bits per channel */  
+    /* dont allow to many bits per channel */
+    if (max_bits > 4095)
+      {
+        max_bits = 4095;
+      }   
     move_bits=targ_bits[0]+targ_bits[1];
     if (move_bits > max_bits) {
       targ_bits[0]=(max_bits*targ_bits[0])/move_bits;
