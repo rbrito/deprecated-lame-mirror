@@ -1,6 +1,6 @@
 encoding core:
 0.
-MPEG2 Layer3 encoding is completely broken.
+There's some problem in very the first frame MDCT calculation.
 
 
 1.
