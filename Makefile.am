@@ -37,7 +37,7 @@ EXTRA_DIST = \
 testcase.new.mp3: testcase.wav frontend/lame
 	frontend/lame --nores -h testcase.wav testcase.new.mp3
 
-test: frontend/lame testcase.mp3 testcase.new.mp3
+test: testcase.mp3 testcase.new.mp3
 	cmp -l testcase.new.mp3 testcase.mp3 | wc
 
 testg: frontend/lame ../test/castanets.wav
