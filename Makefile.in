@@ -377,7 +377,7 @@ gtk_obj = $(gtk_sources:.c=.o)
 
 brhist_sources = brhist.c
 
-c_sources_s =  @CONFIG_SOURCES@ \
+lib_sources = \
 	bitstream.c \
 	encoder.c \
 	fft.c \
@@ -402,14 +402,12 @@ c_sources_s =  @CONFIG_SOURCES@ \
         VbrTag.c \
         version.c
 
+c_sources = @CONFIG_SOURCES@
+lib_obj = $(lib_sources:.c=.o)
+
 OBJ = $(c_sources:.c=.o)
 DEP = $(c_sources:.c=.d)
 
-ifeq ($(UNAME),MSDOS)
-  c_sources = $(subst /,\\,$(c_sources_s))
-else
-  c_sources = $(c_sources_s)
-endif
 
 
 
@@ -437,24 +435,24 @@ ASFLAGS=-f elf -i i386/
 all: $(PGM) lib $(LIBS)
 
 $(PGM):	main.o @GTK_OBJ@ libmp3lame.a $(LIBS) $(OBJ)
-	$(CC) -o $(PGM)  main.o @GTK_OBJ@ -L. -lmp3lame $(LIBS) $(LDFLAGS)
+	$(CC) -o $(PGM)  main.o -L. -lmp3lame $(LIBS) $(LDFLAGS) $(OBJ)
 
 mp3x:	mp3x.o @GTK_OBJ@ libmp3lame.a $(LIBS) $(OBJ)
-	$(CC) -o mp3x mp3x.o @GTK_OBJ@ $(OBJ) $(LIBS) $(LDFLAGS)
+	$(CC) -o mp3x mp3x.o $(OBJ) $(LIBS) $(LDFLAGS) $(OBJ)
 
 mp3rtp:	rtp.o mp3rtp.o libmp3lame.a $(LIBS) $(OBJ)
-	$(CC) -o mp3rtp mp3rtp.o rtp.o   $(OBJ) $(LIBS) $(LDFLAGS)
+	$(CC) -o mp3rtp mp3rtp.o rtp.o   $(OBJ) $(LIBS) $(LDFLAGS) $(OBJ)
 
-libmp3lame.a:  $(OBJ) Makefile
-	$(AR) cr libmp3lame.a  $(OBJ)
+libmp3lame.a:  $(lib_obj) Makefile
+	$(AR) cr libmp3lame.a  $(lib_obj)
 	$(RANLIB) libmp3lame.a
 
 mpglib/mpglib.a:
 	cd mpglib; $(MAKE)
 
 #shared library, probably GNU specific?
-libmp3lame.so:  $(OBJ) Makefile
-	$(CC) -shared -Wl,-soname,$(SHARED_LIB_MAJOR) -o $(SHARED_LIB_MINOR) $(LIBS) $(LDFLAGS) $(OBJ)
+libmp3lame.so:  $(lib_obj) Makefile
+	$(CC) -shared -Wl,-soname,$(SHARED_LIB_MAJOR) -o $(SHARED_LIB_MINOR) $(LIBS) $(LDFLAGS) $(lib_obj)
 	@$(RM_F) $(SHARED_LIB_MAJOR)
 	$(LN_S) $(SHARED_LIB_MINOR) $(SHARED_LIB_MAJOR)
 	@$(RM_F) $(SHARED_LIB)
@@ -501,7 +499,7 @@ clean:
 	-del $(PGM)
   else
 	-$(RM_F) $(gtk_obj) $(OBJ) $(DEP) $(PGM) main.o rtp.o mp3rtp mp3rtp.o \
-         mp3x.o mp3x libmp3lame.a \
+         mp3x.o mp3x libmp3lame.a $(lib_obj) \
          $(SHARED_LIB) $(SHARED_LIB_MAJOR) $(SHARED_LIB_MINOR)
   endif
 
@@ -510,8 +508,8 @@ bla:
 
 tags: TAGS
 
-TAGS: ${c_sources} ${gtk_sources}
-	etags -T ${c_sources} ${gtk_sources}
+TAGS: @CONFIG_SOURCES@ $(lib_sources) ${gtk_sources}
+	etags -T @CONFIG_SOURCES@ $(lib_sources) ${gtk_sources}
 
 ifneq ($(MAKECMDGOALS),clean)
   -include $(DEP)
