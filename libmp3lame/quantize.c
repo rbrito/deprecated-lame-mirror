@@ -857,18 +857,17 @@ calc_sfb_noise(lame_t gfc, int j, int bw, int sf)
 	fi_union fi0, fi1;
 	fi0.f = (t0 = sfpow34 * xr34[j+bw  ] + (FLOAT)MAGIC_FLOAT);
 	fi1.f = (t1 = sfpow34 * xr34[j+bw+1] + (FLOAT)MAGIC_FLOAT);
-	assert(fi0.i <= MAGIC_INT + IXMAX_VAL
-	       && fi1.i <= MAGIC_INT + IXMAX_VAL);
+	assert(((fi0.i - MAGIC_INT - IXMAX_VAL)
+		| (fi1.i - MAGIC_INT - IXMAX_VAL)) <= 0);
 	fi0.f = t0 + (adj43asm - MAGIC_INT)[fi0.i];
 	fi1.f = t1 + (adj43asm - MAGIC_INT)[fi1.i];
 	t0 = absxr[j+bw  ] - (pow43 - MAGIC_INT)[fi0.i] * sfpow;
 	t1 = absxr[j+bw+1] - (pow43 - MAGIC_INT)[fi1.i] * sfpow;
 #else
 	FLOAT t0, t1;
-	int i0, i1;
-	i0 = (int) (t0 = sfpow34 * xr34[j+bw  ]);
-	i1 = (int) (t1 = sfpow34 * xr34[j+bw+1]);
-	assert(i0 <= IXMAX_VAL && i1 <= IXMAX_VAL);
+	int i0 = (int) (t0 = sfpow34 * xr34[j+bw  ]);
+	int i1 = (int) (t1 = sfpow34 * xr34[j+bw+1]);
+	assert(((i0 - IXMAX_VAL) | (i1 - IXMAX_VAL)) <= 0);
 
 	t0 = absxr[j+bw  ] - pow43[(int)(t0 + adj43[i0])] * sfpow;
 	t1 = absxr[j+bw+1] - pow43[(int)(t1 + adj43[i1])] * sfpow;
@@ -927,9 +926,11 @@ adjust_global_gain(lame_t gfc, gr_info *gi, FLOAT *distort, int huffbits)
 	    continue;
 	istep = (FLOAT)0.634521682242439
 	    / IPOW20(scalefactor(gi, sfb) + gi->scalefac_scale);
-	for (bw = gi->wi[sfb].width; bw < 0; bw++)
+	bw = gi->wi[sfb].width;
+	do {
 	    if (xr34[j+bw] < istep)
 		fi[j+bw].i = 0;
+	} while (++bw < 0);
     } while (++sfb < gi->psymax && j < end);
 
     if (noquant_count_bits(gfc, gi) > huffbits)
@@ -1483,31 +1484,28 @@ VBR_2nd_bitalloc(lame_t gfc, gr_info *gi, FLOAT * xmin)
     }
     for (;;) {
 	sfb = noisesfb(gfc, &gi_w, xmin, sfb);
-	if (sfb >= 0) {
-	    if (sfb >= gi->sfbmax) { /* noise in sfb21 */
-		int win = gi_w.wi[sfb].window;
-		if (win && gi_w.subblock_gain[win] < MAX_SUBBLOCK_GAIN) {
-		    sfb = inc_subblock_gain2(&gi_w, win);
-		} else {
-		    if (endflag == 2 || gi_w.global_gain == 0)
-			return 0;
-		    endflag |= 1;
-		    gi_w.global_gain--;
-		    sfb = 0;
-		}
-	    } else {
-		gi_w.scalefac[sfb]++;
-		if (IPOW20(scalefactor(&gi_w, sfb)) > gfc->maxXR[sfb]
-		    || gi_w.scalefac[sfb] > tab[sfb]
-		    || loop_break(&gi_w))
-		    return 0;
-	    }
-	} else {
+	if (sfb < 0) {
 	    gi_work_copy(gi, &gi_w);
 	    if (endflag == 1 || gi_w.global_gain >= MAX_GLOBAL_GAIN)
 		return 0;
 	    gi_w.global_gain++;
-	    endflag |= 2;
+	    endflag = 2;
+	} else if (sfb < gi->sfbmax) {
+	    gi_w.scalefac[sfb]++;
+	    if (gi_w.scalefac[sfb] > tab[sfb] || loop_break(&gi_w)
+		|| IPOW20(scalefactor(&gi_w, sfb)) > gfc->maxXR[sfb])
+		return 0;
+	} else { /* noise in sfb21 */
+	    int win = gi_w.wi[sfb].window;
+	    if (win && gi_w.subblock_gain[win] < MAX_SUBBLOCK_GAIN) {
+		sfb = inc_subblock_gain2(&gi_w, win);
+	    } else {
+		if (endflag == 2 || gi_w.global_gain == 0)
+		    return 0;
+		endflag = 1;
+		gi_w.global_gain--;
+		sfb = 0;
+	    }
 	}
     }
     gfc->scale_bitcounter(gi);
