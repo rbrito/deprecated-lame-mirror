@@ -320,7 +320,7 @@ void lame_mp3_tags_fid(lame_global_flags *,FILE* fid);
 
 
 /* REQUIRED:  final call to free all remaining buffers */
-void lame_close(lame_global_flags *);
+int  lame_close (lame_global_flags *);
 
 /* OBSOLETE:  lame_encode_finish combines lame_encode_flush
  * and lame_close in one call.  However, once this call is made,
@@ -381,7 +381,7 @@ int lame_decode1(char *mp3buf,int len,short pcm_l[],short pcm_r[]);
 int lame_decode1_headers(char *mp3buf,int len,short pcm_l[],short pcm_r[],
 mp3data_struct *mp3data);
 
-/* Also usefull for decoding is the ability to parse Xing VBR headers: */
+/* Also useful for decoding is the ability to parse Xing VBR headers: */
 #define NUMTOCENTRIES 100
 typedef struct
 {

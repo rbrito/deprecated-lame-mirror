@@ -129,11 +129,29 @@ typedef struct {
 
 
 typedef struct  {
-  /********************************************************************/
-  /* internal variables NOT set by calling program, and should not be */
-  /* modified by the calling program                                  */
-  /********************************************************************/
-  int lame_init_params_init;      /* was lame_init_params called? */
+
+  /********************************************************************
+   * internal variables NOT set by calling program, and should not be *
+   * modified by the calling program                                  *
+   ********************************************************************/
+  
+  /*  
+   * Some remarks to the Class_ID field:
+   * The Class ID is an Identifier for a pointer to this struct.
+   * It is very unlikely that a pointer to lame_global_flags has the same 32 bits 
+   * in it's structure (large and other special properties, for instance prime).
+   *
+   * To test that the structure is right and initialized, use:
+   *     if ( gfc -> Class_ID == LAME_ID ) ...
+   * Other remark:
+   *     If you set a flag to 0 for uninit data and 1 for init data, the right test
+   *     should be "if (flag == 1)" and NOT "if (flag)". Unintended modification
+   *     of this element will be otherwise misinterpreted as an init.
+   */
+  
+  #define  LAME_ID   0xFFF88E3B
+  unsigned Class_ID;
+  
   int lame_encode_frame_init;     
   int iteration_init_init;
   int fill_buffer_resample_init;
@@ -339,7 +357,10 @@ typedef struct  {
   
   unsigned crcvalue;
   
-  lame_global_flags *gfp;
+  lame_global_flags *gfp;  // lame_init_params() should copy all information 
+                           // needed from gfp to this structure, so gfp becomes
+			   // more and more unimportant in the future, and may be
+			   // sometimes gfp can removed from the LAME API. mt?
   
 } lame_internal_flags;
 

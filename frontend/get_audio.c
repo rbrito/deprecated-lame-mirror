@@ -254,7 +254,7 @@ int get_audio(lame_global_flags *gfp,short buffer[2][1152])
     assert (framesize <= 1152);
 
     /* if this flag has been set, then we are carefull to read
-     * exactly num_samples and no more.  This is usefull for .wav and .aiff
+     * exactly num_samples and no more.  This is useful for .wav and .aiff
      * files which have id3 or other tags at the end.  Note that if you
      * are using LIBSNDFILE, this is not necessary 
      */

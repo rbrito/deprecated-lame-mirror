@@ -214,15 +214,15 @@ int lame_init_params ( lame_global_flags* const gfp )
     int                  j;
     lame_internal_flags* gfc = gfp -> internal_flags;
 
-    gfc -> gfp = gfp;
-    
-    gfc -> lame_init_params_init = 0;
+    gfc -> gfp                = gfp;
+    gfc -> Class_ID           = 0;
   
     gfc -> CPU_features_i387  = has_i387  ();
     gfc -> CPU_features_3DNow = has_3DNow ();
     gfc -> CPU_features_MMX   = has_MMX   ();
     gfc -> CPU_features_SIMD  = has_SIMD  ();
     gfc -> CPU_features_SIMD2 = 0;
+    
     init_scalar_functions ( gfc );      /* Select the fastest functions for this CPU */
 
   if (gfp->num_channels == 1)
@@ -673,25 +673,27 @@ int lame_init_params ( lame_global_flags* const gfp )
         gfc->sideinfo_len += 2;
   
 
-  /* Write id3v2 tag into the bitstream */
-  /* this tag must be before the Xing VBR header */
-  /* does id3v2 and Xing header really work??? */
-  if (!gfp->ogg) {
-    id3tag_write_v2(gfp);
-  }
+    /* 
+     *  Write id3v2 tag into the bitstream.
+     *  This tag must be before the Xing VBR header.
+     *  Does id3v2 and Xing header really work ???
+     */
+     
+    if ( !gfp->ogg )
+        id3tag_write_v2 ( gfp );
 
-  /* Write initial VBR Header to bitstream */
-  if (gfp->bWriteVbrTag)
-      InitVbrTag(gfp);
+    /* Write initial VBR Header to bitstream */
+    if ( gfp->bWriteVbrTag )
+        InitVbrTag ( gfp );
 
-  gfc->sfb21_extra = (gfp->VBR==vbr_rh || gfp->VBR==vbr_mtrh || gfp->VBR==vbr_mt)
-                   &&(gfp->out_samplerate >= 32000);
+    gfc->sfb21_extra = ( gfp->VBR == vbr_rh  ||  gfp->VBR == vbr_mtrh  ||  gfp->VBR == vbr_mt )
+                    && ( gfp->out_samplerate >= 32000 );
   
     gfc->nsPsy.use = gfp->exp_nspsytune;
 
     /* estimate total frames.  */
     gfp->totalframes           = 2 + gfp->num_samples/(gfc->resample_ratio * gfp->framesize);
-    gfc->lame_init_params_init = 1;
+    gfc->Class_ID              = LAME_ID;
     
     return 0;
 }
@@ -841,7 +843,7 @@ int    lame_encode_buffer (
   sample_t* in_buffer [2];
   sample_t* fn_buffer [2];
 
-  if (!gfc->lame_init_params_init) return -3;
+  if ( gfc->Class_ID != LAME_ID ) return -3;
   
   fn_buffer [0] = in_buffer [0] = calloc ( sizeof(sample_t), nsamples );
   fn_buffer [1] = in_buffer [1] = calloc ( sizeof(sample_t), nsamples );
@@ -948,8 +950,7 @@ int    lame_encode_buffer_interleaved (
   lame_internal_flags *gfc=gfp->internal_flags;
   sample_t *mfbuf[2];
 
-
-  if (!gfc->lame_init_params_init) return -3;
+  if ( gfc->Class_ID != LAME_ID ) return -3;
 
   mfbuf[0]=gfc->mfbuf[0];
   mfbuf[1]=gfc->mfbuf[1];
@@ -1046,8 +1047,7 @@ int lame_encode (
 {
     lame_internal_flags*  gfc = gfp->internal_flags;
   
-    if ( !gfc->lame_init_params_init ) 
-        return -3;
+    if ( gfc->Class_ID != LAME_ID ) return -3;
   
     return lame_encode_buffer ( gfp, in_buffer[0], in_buffer[1], gfp->framesize, mp3buf, size );
 }
@@ -1130,10 +1130,17 @@ int    lame_encode_flush (
  *
  ***********************************************************************/
  
-void lame_close (lame_global_flags *gfp)
+int  lame_close (lame_global_flags *gfp)
 {
+    lame_internal_flags*  gfc = gfp->internal_flags;
+  
+    if ( gfc->Class_ID != LAME_ID ) return -3;
+
+    gfc->Class_ID = 0;
+    
     freegfc(gfp->internal_flags);    
     if (gfp->lame_allocated_gfp) free(gfp);
+    return 0;
 }
 
 

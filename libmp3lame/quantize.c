@@ -1819,7 +1819,7 @@ void iteration_loop
 #ifdef NORES_TEST
     /* replace ResvAdjust above with this code if you do not want
        the second granule to use bits saved by the first granule.
-       Requires using the --nores.  This is usefull for testing only */
+       Requires using the --nores.  This is useful for testing only */
     for (gr = 0; gr < gfc->mode_gr; gr++) {
         for (ch =  0; ch < gfc->stereo; ch++) {
             cod_info = &l3_side->gr[gr].ch[ch].tt;
