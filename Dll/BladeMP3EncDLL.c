@@ -445,7 +445,7 @@ __declspec(dllexport) BE_ERR	beEncodeChunk(HBE_STREAM hbeStream, DWORD nSamples,
 
 __declspec(dllexport) BE_ERR beWriteVBRHeader(LPCSTR lpszFileName)
 {
-	if (g_bWriteVbrTag)
+	if (gf.bWriteVbrTag)
 	{
 		// Calculate relative quality of VBR stream 
 		// 0=best, 100=worst
@@ -502,7 +502,7 @@ extern int force_ms;
 	OutputDebugString("Encoding configuration:\n");
 
 
-	sprintf(strTmp,"Write VBR Header=%s\n",(g_bWriteVbrTag)?"Yes":"No");
+	sprintf(strTmp,"Write VBR Header=%s\n",(gf.bWriteVbrTag)?"Yes":"No");
 	OutputDebugString(strTmp);
 	sprintf(strTmp,"info->version=%d\n",info->version);
 	OutputDebugString(strTmp);
