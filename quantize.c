@@ -87,7 +87,7 @@ iteration_loop( lame_global_flags *gfp, FLOAT8 pe[2][2],
                       xrpow);
         }
 
-      best_scalefac_store(gfp,gr, ch, l3_enc, l3_side, scalefac);
+      best_scalefac_store(gfc, gr, ch, l3_enc, l3_side, scalefac);
       if (gfc->use_best_huffman==1) {
 	best_huffman_divide(gfc, gr, ch, cod_info, l3_enc[gr][ch]);
       }
@@ -280,7 +280,7 @@ ABR_iteration_loop (lame_global_flags *gfp, FLOAT8 pe[2][2],
     for (ch = 0; ch < gfc->stereo; ch++) {
       cod_info = &l3_side->gr[gr].ch[ch].tt;
 
-      best_scalefac_store(gfp,gr, ch, l3_enc, l3_side, scalefac);
+      best_scalefac_store(gfc, gr, ch, l3_enc, l3_side, scalefac);
       if (gfc->use_best_huffman==1 ) {
         best_huffman_divide(gfc, gr, ch, cod_info, l3_enc[gr][ch]);
       }
@@ -624,7 +624,7 @@ VBR_iteration_loop (lame_global_flags *gfp, FLOAT8 pe[2][2],
       }
       /* update reservoir status after FINAL quantization/bitrate
        */
-      best_scalefac_store(gfp,gr, ch, l3_enc, l3_side, scalefac);
+      best_scalefac_store(gfc, gr, ch, l3_enc, l3_side, scalefac);
       if (gfc->use_best_huffman==1) {
         best_huffman_divide(gfc, gr, ch, cod_info, l3_enc[gr][ch]);
       }
@@ -839,7 +839,7 @@ void outer_loop(
   best_noise_info = noise_info;
 
 
-  bits_found=bin_search_StepSize2(gfp,targ_bits,gfc->OldValue[ch],
+  bits_found=bin_search_StepSize2(gfc,targ_bits,gfc->OldValue[ch],
                                   l3_enc_w,xrpow,cod_info);
   gfc->OldValue[ch] = cod_info->global_gain;
 
@@ -868,12 +868,12 @@ void outer_loop(
       if (iteration==1) {
         if(bits_found>huff_bits) {
           cod_info->global_gain++;
-          real_bits = inner_loop(gfp,xrpow, l3_enc_w, huff_bits, cod_info);
+          real_bits = inner_loop(gfc, xrpow, l3_enc_w, huff_bits, cod_info);
         } else {
           real_bits=bits_found;
         }
       } else {
-        real_bits=inner_loop(gfp,xrpow, l3_enc_w, huff_bits, cod_info);
+        real_bits=inner_loop(gfc, xrpow, l3_enc_w, huff_bits, cod_info);
       }
 
 

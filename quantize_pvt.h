@@ -5,7 +5,6 @@
 #define PRECALC_SIZE (IXMAX_VAL+2)
 
 
-extern int convert_mdct, convert_psy, reduce_sidechannel;
 extern unsigned int nr_of_sfb_block[6][3][4];
 extern int pretab[SBMAX_l];
 extern const int slen1_tab[16];
@@ -52,9 +51,7 @@ void outer_loop( lame_global_flags *gfp,
 
 void iteration_init( lame_global_flags *gfp,III_side_info_t *l3_side, int l3_enc[2][2][576]);
 
-void huffman_init( lame_global_flags *gfp );
-
-int inner_loop( lame_global_flags *gfp,FLOAT8 xrpow[576],
+int inner_loop( lame_internal_flags *gfc, FLOAT8 xrpow[576],
                 int l3_enc[576],
                 int max_bits,
                 gr_info *cod_info);
@@ -64,8 +61,6 @@ int calc_xmin( lame_global_flags *gfp,FLOAT8 xr[576],
 	            gr_info *cod_info,
                 III_psy_xmin *l3_xmin);
 
-int scale_bitcount( III_scalefac_t *scalefac, gr_info *cod_info);
-int scale_bitcount_lsf( III_scalefac_t *scalefac, gr_info *cod_info);
 int calc_noise( lame_global_flags *gfp, FLOAT8 xr[576],
                  int ix[576],
                  gr_info *cod_info,
@@ -100,24 +95,10 @@ void quantize_xrpow_ISO( FLOAT8 xr[576],
                gr_info *cod_info );
 #endif
 
-int
-new_choose_table( int ix[576],
-		  unsigned int begin,
-		  unsigned int end, int * s );
-
-int bin_search_StepSize2(lame_global_flags *gfp,int desired_rate, int start, int ix[576],
-                         FLOAT8 xrspow[576], gr_info * cod_info);
-int count_bits(lame_global_flags *gfp,int  *ix, FLOAT8 xr[576], gr_info *cod_info);
-
+int bin_search_StepSize2(lame_internal_flags *gfc, int desired_rate, int start,
+                         int ix[576], FLOAT8 xrspow[576], gr_info * cod_info);
 
 int quant_compare(int type, calc_noise_result *best_noise, calc_noise_result *noise);
-
-void best_huffman_divide(lame_internal_flags *gfc, int gr, int ch, gr_info *cod_info, int *ix);
-
-void best_scalefac_store(lame_global_flags *gfp,int gr, int ch,
-			 int l3_enc[2][2][576],
-			 III_side_info_t *l3_side,
-			 III_scalefac_t scalefac[2][2]);
 
 void inc_scalefac_scale(lame_global_flags *gfp,
 			III_scalefac_t *scalefac,
@@ -134,6 +115,27 @@ int init_outer_loop(
     lame_global_flags *gfp,
     FLOAT8 xr[576], FLOAT8 xrpow[576],       /*  could be L/R OR MID/SIDE */
     gr_info *cod_info);
+
+
+
+/* takehiro.c */
+
+int count_bits (lame_internal_flags *gfc, int  *ix, FLOAT8 xr[576],
+                gr_info *cod_info);
+
+
+void best_huffman_divide(lame_internal_flags *gfc, int gr, int ch, gr_info *cod_info, int *ix);
+
+void best_scalefac_store(lame_internal_flags *gfp, int gr, int ch,
+			 int l3_enc[2][2][576],
+			 III_side_info_t *l3_side,
+			 III_scalefac_t scalefac[2][2]);
+
+int scale_bitcount (III_scalefac_t *scalefac, gr_info *cod_info);
+
+int scale_bitcount_lsf (III_scalefac_t *scalefac, gr_info *cod_info);
+
+void huffman_init (lame_internal_flags *gfp );
 
 #define LARGE_BITS 100000
 

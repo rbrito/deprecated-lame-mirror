@@ -965,8 +965,8 @@ void lame_parse_args ( lame_global_flags* gfp, int argc, char** argv )
 
 #if !(defined HAVEVORBIS)
     if ( gfp->input_format == sf_ogg ) {
-	ERRORF("Error: libmp3lame not compiled with ogg *decoding* support \n");
-	LAME_ERROR_EXIT();
+        ERRORF("Error: LAME not compiled with Vorbis support\n");
+        LAME_ERROR_EXIT();
     }
 #endif
     /* default guess for number of channels */

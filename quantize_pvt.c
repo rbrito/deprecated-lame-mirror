@@ -181,7 +181,7 @@ iteration_init( lame_global_flags *gfp,III_side_info_t *l3_side, int l3_enc[2][2
     }
   }
 
-  huffman_init(gfp);
+  huffman_init(gfc);
 }
 
 
@@ -428,7 +428,7 @@ void reduce_side(int targ_bits[2],FLOAT8 ms_ener_ratio,int mean_bits,int max_bit
  * The code selects the best global gain for a particular set of scalefacs */
  
 int
-inner_loop( lame_global_flags *gfp,FLOAT8 xrpow[576],
+inner_loop( lame_internal_flags *gfc,FLOAT8 xrpow[576],
 	    int l3_enc[576], int max_bits,
 	    gr_info *cod_info)
 {
@@ -439,7 +439,7 @@ inner_loop( lame_global_flags *gfp,FLOAT8 xrpow[576],
     do
     {
       cod_info->global_gain++;
-      bits = count_bits(gfp,l3_enc, xrpow, cod_info);
+      bits = count_bits(gfc, l3_enc, xrpow, cod_info);
     }
     while ( bits > max_bits );
 
@@ -561,7 +561,7 @@ int calc_noise( lame_global_flags *gfp,
 {
   int start, end, j,l, i, over=0;
   u_int sfb;
-  FLOAT8 sum, osum, bw;
+  FLOAT8 sum, bw;
   lame_internal_flags *gfc=gfp->internal_flags;
   
   int count=0;
@@ -782,7 +782,7 @@ typedef enum {
 
 /*-------------------------------------------------------------------------*/
 int 
-bin_search_StepSize2 (lame_global_flags *gfp,int desired_rate, int start, int *ix, 
+bin_search_StepSize2 (lame_internal_flags *gfc,int desired_rate, int start, int *ix, 
                       FLOAT8 xrspow[576], gr_info *cod_info)
 /*-------------------------------------------------------------------------*/
 {
@@ -790,7 +790,6 @@ bin_search_StepSize2 (lame_global_flags *gfp,int desired_rate, int start, int *i
     int flag_GoneOver = 0;
     int StepSize = start;
     int CurrentStep;
-    lame_internal_flags *gfc=gfp->internal_flags;
 
     binsearchDirection_t Direction = BINSEARCH_NONE;
     assert(gfc->CurrentStep);
@@ -799,7 +798,7 @@ bin_search_StepSize2 (lame_global_flags *gfp,int desired_rate, int start, int *i
     do
     {
 	cod_info->global_gain = StepSize;
-	nBits = count_bits(gfp,ix, xrspow, cod_info);  
+	nBits = count_bits(gfc, ix, xrspow, cod_info);  
 
 	if (CurrentStep == 1 )
         {
