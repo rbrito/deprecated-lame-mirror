@@ -10,7 +10,7 @@
 ############################################################################
 
 mp3coder="lame"
-options="-h -m f -b 128"
+options="-h -d -m j -b 128"
 rmsrc=false
 
 helptext="\
@@ -53,27 +53,27 @@ for filename in "$@"; do
         ;;
     *[.][wW][aA][vV]  )
         name=${filename%[.][wW][aA][vV]}
-        if $mp3coder $options $filename ${name}.mp3 
+        if $mp3coder $options "$filename" "${name}.mp3" 
         then
             if [ $rmsrc = true ]; then
-                rm -f $filename
+                rm -f "$filename"
             fi
         fi
         ;;
     *[.][aA][iI][fF]  )
         name=${filename%[.][aA][iI][fF]}
-        if $mp3coder $options $filename ${name}.mp3 
+        if $mp3coder $options "$filename" "${name}.mp3" 
         then
             if [ $rmsrc = true ]; then
-                rm -f $filename
+                rm -f "$filename"
             fi
         fi
         ;;
     *   )
-        if $mp3coder $options $filename ${filename}.mp3 
+        if $mp3coder $options "$filename" "${filename}.mp3" 
         then
             if [ $rmsrc = true ]; then
-                rm -f $filename
+                rm -f "$filename"
             fi
         fi
         ;;
