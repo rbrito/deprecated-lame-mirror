@@ -95,7 +95,7 @@ iteration_loop( lame_global_flags *gfp,
         }
       else
 	{
-          calc_xmin(gfp,xr[gr][ch], &ratio[gr][ch], cod_info, &l3_xmin[ch]);
+          calc_xmin(gfp,xr[gr][ch], &ratio[gr][ch], cod_info, &l3_xmin[ch], gfc->masking_lower);
 	  outer_loop( gfp,xr[gr][ch], targ_bits[ch], noise,
 		      &l3_xmin[ch], l3_enc[gr][ch], 
 		      &scalefac[gr][ch], cod_info, xfsf, ch);
@@ -140,7 +140,7 @@ iteration_loop( lame_global_flags *gfp,
 }
 
 
-void 
+FLOAT8
 set_masking_lower (int VBR_q,int nbits)
 {
 	FLOAT masking_lower_db, adjust;
@@ -172,7 +172,8 @@ set_masking_lower (int VBR_q,int nbits)
 	adjust = 4*(adjust-1);
 #endif
 	masking_lower_db += adjust;
-	masking_lower = pow(10.0,masking_lower_db/10);
+	//	masking_lower = pow(10.0,masking_lower_db/10);
+	return pow(10.0,masking_lower_db/10);
 }
 
 /************************************************************************
@@ -233,7 +234,7 @@ VBR_iteration_loop (lame_global_flags *gfp,
 
 #ifdef RH_QUALITY_CONTROL
   /* with RH_QUALITY_CONTROL we have to set masking_lower only once */
-  set_masking_lower(gfp->VBR_q, 0 );
+  gfc->masking_lower=set_masking_lower(gfp->VBR_q, 0 );
 #endif      
 
   /*******************************************************************
@@ -305,11 +306,11 @@ VBR_iteration_loop (lame_global_flags *gfp,
       /*
        * has to be set before calculating l3_xmin
        */
-      set_masking_lower( gfp->VBR_q,2500 );
+      gfc->masking_lower=set_masking_lower( gfp->VBR_q,2500 );
 #endif      
       /* check for analolg silence */
       /* if energy < ATH, set min_bits = 125 */
-      if (0==calc_xmin(gfp,xr[gr][ch], &ratio[gr][ch], cod_info, &l3_xmin)) {
+      if (0==calc_xmin(gfp,xr[gr][ch], &ratio[gr][ch], cod_info, &l3_xmin, gfc->masking_lower)) {
 	  analog_silence=1;
 	  min_bits=125;
       }
@@ -368,11 +369,11 @@ VBR_iteration_loop (lame_global_flags *gfp,
 	   */
 #else
 	  /* quality setting */
-	  set_masking_lower( gfp->VBR_q,this_bits );
+	  gfc->masking_lower=set_masking_lower( gfp->VBR_q,this_bits );
           /* 
 	   * compute max allowed distortion, masking lower has changed
 	   */
-          calc_xmin(gfp,xr[gr][ch], &ratio[gr][ch], cod_info, &l3_xmin);
+          calc_xmin(gfp,xr[gr][ch], &ratio[gr][ch], cod_info, &l3_xmin, gfc->masking_lower);
 #endif
 	  outer_loop( gfp,xr[gr][ch], this_bits, noise, 
 		      &l3_xmin, l3_enc[gr][ch],
@@ -501,9 +502,9 @@ VBR_iteration_loop (lame_global_flags *gfp,
            */
 #else
           /* quality setting */
-          set_masking_lower( gfp->VBR_q,save_bits[gr][ch] );
+          gfc->masking_lower=set_masking_lower( gfp->VBR_q,save_bits[gr][ch] );
 #endif
-          calc_xmin(gfp,xr[gr][ch], &ratio[gr][ch], cod_info, &l3_xmin);
+          calc_xmin(gfp,xr[gr][ch], &ratio[gr][ch], cod_info, &l3_xmin,gfc->masking_lower);
 	
           outer_loop( gfp,xr[gr][ch], save_bits[gr][ch], noise,
 	 	      &l3_xmin, l3_enc[gr][ch], 

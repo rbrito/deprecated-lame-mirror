@@ -365,7 +365,7 @@ VBR_noise_shapping (lame_global_flags *gfp,
       }
 
       analog_silence = 
-	(0==calc_xmin( gfp,xr[gr][ch], &ratio[gr][ch], cod_info, &l3_xmin));
+	(0==calc_xmin( gfp,xr[gr][ch], &ratio[gr][ch], cod_info, &l3_xmin,gfc->masking_lower));
 
       vbrmax=-10000;
       if (shortblock) {
@@ -375,7 +375,7 @@ VBR_noise_shapping (lame_global_flags *gfp,
 	    end   = gfc->scalefac_band.s[ sfb+1 ];
 	    bw = end - start;
 	    vbrsf.s[sfb][i] = find_scalefac(&xr[gr][ch][3*start+i],&xr34[3*start+i],3,sfb,
-		   masking_lower*l3_xmin.s[sfb][i],bw);
+		   l3_xmin.s[sfb][i],bw);
 	    if (vbrsf.s[sfb][i]>vbrmax) vbrmax=vbrsf.s[sfb][i];
 	  }
 	}
@@ -385,7 +385,7 @@ VBR_noise_shapping (lame_global_flags *gfp,
 	  end   = gfc->scalefac_band.l[ sfb+1 ];
 	  bw = end - start;
 	  vbrsf.l[sfb] = find_scalefac(&xr[gr][ch][start],&xr34[start],1,sfb,
-	  		 masking_lower*l3_xmin.l[sfb],bw);
+	  		 l3_xmin.l[sfb],bw);
 	  if (vbrsf.l[sfb]>vbrmax) vbrmax = vbrsf.l[sfb];
 	}
 
@@ -594,7 +594,7 @@ VBR_quantize(lame_global_flags *gfp,
   masking_lower_db = dbQ[gfp->VBR_q];	
 
   //  masking_lower_db = 0;
-  masking_lower = pow(10.0,masking_lower_db/10);
+  gfc->masking_lower = pow(10.0,masking_lower_db/10);
 
 
   bits = VBR_noise_shapping (gfp,pe, ms_ener_ratio,

@@ -4,8 +4,6 @@
 #include "reservoir.h"
 #include "quantize-pvt.h"
 
-FLOAT masking_lower=1;
-
 
 const int slen1_tab[16] = { 0, 0, 0, 0, 3, 1, 1, 1, 2, 2, 2, 3, 3, 3, 4, 4 };
 const int slen2_tab[16] = { 0, 1, 2, 3, 0, 1, 2, 3, 1, 2, 3, 1, 2, 3, 2, 3 };
@@ -655,7 +653,7 @@ int scale_bitcount_lsf(III_scalefac_t *scalefac, gr_info *cod_info)
   returns number of sfb's with energy > ATH
 */
 int calc_xmin( lame_global_flags *gfp,FLOAT8 xr[576], III_psy_ratio *ratio,
-	       gr_info *cod_info, III_psy_xmin *l3_xmin)
+	       gr_info *cod_info, III_psy_xmin *l3_xmin, FLOAT8 masking_lower)
 {
   lame_internal_flags *gfc=gfp->internal_flags;
   int start, end, bw,l, b, ath_over=0;
