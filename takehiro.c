@@ -25,10 +25,6 @@
 #include "tables.h"
 #include "quantize-pvt.h"
 
-static unsigned int largetbl[16*16];
-static unsigned int table23[3*3];
-static unsigned int table56[4*4];
-
 struct
 {
     unsigned region0_count;
@@ -61,6 +57,21 @@ struct
 };
 
 
+unsigned int largetbl[16*16];
+unsigned int table23[3*3];
+unsigned int table56[4*4];
+
+#ifdef MMX_choose_table
+unsigned long long tableABC[16*8];
+unsigned long long tableDEF[16*16];
+#define table789 (tableABC+9)
+
+unsigned long long linbits32[13];
+unsigned short choose_table_H[13];
+
+extern int choose_table_MMX(int *ix, int *end, int *s);
+#define choose_table choose_table_MMX
+#else
 /*************************************************************************/
 /*	      ix_max							 */
 /*************************************************************************/
@@ -69,7 +80,7 @@ int ix_max(int *ix, int *end)
 {
     int max1 = 0, max2 = 0;
 
-    while (ix < end) {
+    do {
 	int x1 = *ix++;
 	int x2 = *ix++;
 	if (max1 < x1) 
@@ -77,7 +88,7 @@ int ix_max(int *ix, int *end)
 
 	if (max2 < x2) 
 	    max2 = x2;
-    }
+    } while (ix < end);
     if (max1 < max2) 
 	max1 = max2;
     return max1;
@@ -184,31 +195,6 @@ count_bit_noESC_from2(int *ix, int *end, int t1, int *s)
 }
 
 
-#ifdef MMX_choose_table
-static unsigned long long tableABC[16*8];
-static unsigned long long tableDEF[16*16];
-#define table789 (tableABC+9)
-
-extern int
-choose_table_from3_MMX(int *ix, int *end, int t1, int *s, unsigned long long *hlen);
-
-INLINE static int
-count_bit_noESC_from3(int *ix, int *end, int t1, int *s)
-{
-    /* No ESC-words */
-    unsigned long long *hlen;
-
-    if (t1 == 7)
-	hlen = table789;
-    else if (t1 == 10)
-	hlen = tableABC;
-    else
-	hlen = tableDEF;
-
-    return choose_table_from3_MMX(ix, end, t1, s, hlen);
-}
-
-#else
 INLINE static int
 count_bit_noESC_from3(int *ix, int *end, int t1, int *s)
 {
@@ -243,7 +229,6 @@ count_bit_noESC_from3(int *ix, int *end, int t1, int *s)
 
     return t;
 }
-#endif
 
 
 /*************************************************************************/
@@ -311,6 +296,7 @@ int choose_table(int *ix, int *end, int *s)
 	return count_bit_ESC(ix, end, choice, choice2, s);
     }
 }
+#endif
 
 /*************************************************************************/
 /*	      count_bit							 */
@@ -320,10 +306,6 @@ int choose_table(int *ix, int *end, int *s)
  Function: Count the number of bits necessary to code the subregion. 
 */
 
-
-static const int huf_tbl_noESC[15] = {
-    1, 2, 5, 7, 7,10,10,13,13,13,13,13,13,13,13
-};
 
 int bigv_short_ISO;
 
@@ -396,7 +378,8 @@ int count_bits_long(lame_internal_flags *gfc, int ix[576], gr_info *gi)
 
 	a1 = gfc->scalefac_band.l[gi->region0_count + 1];
 	a2 = gfc->scalefac_band.l[index + gi->region0_count + 2];
-	gi->table_select[2] = choose_table(ix + a2, ix + i, &bits);
+	if (a2 < i)
+	  gi->table_select[2] = choose_table(ix + a2, ix + i, &bits);
 
     } else {
 	gi->region0_count = 7;
@@ -410,8 +393,10 @@ int count_bits_long(lame_internal_flags *gfc, int ix[576], gr_info *gi)
     }
 
     /* Count the number of bits necessary to code the bigvalues region. */
-    gi->table_select[0] = choose_table(ix, ix + a1, &bits);
-    gi->table_select[1] = choose_table(ix + a1, ix + a2, &bits);
+    if (0 < a1)
+      gi->table_select[0] = choose_table(ix, ix + a1, &bits);
+    if (a1 < a2)
+      gi->table_select[1] = choose_table(ix + a1, ix + a2, &bits);
     return bits;
 }
 
@@ -592,9 +577,11 @@ void best_huffman_divide(lame_internal_flags *gfc, int gr, int ch, gr_info *gi, 
 	if (a1 > i) {
 	    a1 = i;
 	}
-	cod_info2.table_select[0] =
+	if (a1 > 0)
+	  cod_info2.table_select[0] =
 	    choose_table(ix, ix + a1, (int *)&cod_info2.part2_3_length);
-	cod_info2.table_select[1] =
+	if (i > a1)
+	  cod_info2.table_select[1] =
 	    choose_table(ix + a1, ix + i, (int *)&cod_info2.part2_3_length);
 	if (gi->part2_3_length > cod_info2.part2_3_length)
 	    memcpy(gi, &cod_info2, sizeof(gr_info));
@@ -785,6 +772,25 @@ void huffman_init()
 	    (((long long)ht[13].hlen[i]) << 32) +
 	    (((long long)ht[14].hlen[i]) << 16) +
 	    (((long long)ht[15].hlen[i]));
+    }
+    for (i = 0; i < 13; i++) {
+	int t1, t2;
+	for (t2 = 24; t2 < 32; t2++) {
+	    if (ht[t2].xlen > i) {
+		break;
+	    }
+	}
+	for (t1 = t2 - 8; t1 < 24; t1++) {
+	    if (ht[t1].xlen > i) {
+		break;
+	    }
+	}
+
+	choose_table_H[i] = t1+t2*256;
+
+	linbits32[i] =
+	    ((long long)ht[t1].xlen << 48) + ((long long)ht[t1].xlen << 32) +
+	    ((long long)ht[t2].xlen << 16) + ((long long)ht[t2].xlen);
     }
 #endif
 }
