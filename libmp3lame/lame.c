@@ -668,10 +668,9 @@ lame_init_params(lame_global_flags * const gfp)
         /* if the user didn't specify VBR_max_bitrate: */
         gfc->VBR_min_bitrate = 1;
         gfc->VBR_max_bitrate = 14;
-	if (gfp->mode == MONO) {
-	    gfc->VBR_min_bitrate--;
+	if (gfp->mode == MONO)
 	    gfc->VBR_max_bitrate--;
-	}
+
         if (gfp->VBR_min_bitrate_kbps) {
 	    if ((gfc->VBR_min_bitrate =
 		 BitrateIndex(gfp->VBR_min_bitrate_kbps, gfp->version,
@@ -704,9 +703,6 @@ lame_init_params(lame_global_flags * const gfp)
 
     gfc->Class_ID = LAME_ID;
 
-    if (gfp->ATHtype < 0)
-	gfp->ATHtype = 4;
-
     if (gfp->exp_nspsytune2.pointer[0])
 	gfc->nsPsy.pass1fp = gfp->exp_nspsytune2.pointer[0];
     else
@@ -720,6 +716,9 @@ lame_init_params(lame_global_flags * const gfp)
 
     gfc->sfb21_extra = 0;
     if (gfp->VBR == vbr) {
+	if (gfp->ATHtype < 0)
+	    gfp->ATHtype = 4;
+
         if (gfp->quality > 7) {
             gfp->quality = 7;     // needs psymodel
             ERRORF(gfc, "VBR needs a psymodel, switching to quality level 7\n");
@@ -733,7 +732,7 @@ lame_init_params(lame_global_flags * const gfp)
         else
             gfc->ATH.use_adjust = gfp->athaa_type;
     } else {
-        if (gfp->ATHtype == -1)
+        if (gfp->ATHtype < 0)
             gfp->ATHtype = 2;
 
         /*  automatic ATH adjustment off by default
@@ -1675,6 +1674,7 @@ lame_init_old(lame_global_flags * gfp)
 
     gfp->VBR = cbr;
     gfp->VBR_q = 4;
+    gfp->ATHcurve = 4;
     gfp->mean_bitrate_kbps = 0;
     gfp->VBR_min_bitrate_kbps = 0;
     gfp->VBR_max_bitrate_kbps = 0;
