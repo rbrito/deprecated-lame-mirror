@@ -46,7 +46,7 @@ void outer_loop( lame_global_flags *gfp,
 		 III_scalefac_t *scalefac, /* scalefactors */
 		 gr_info *,
                 FLOAT8 xfsf[4][SBMAX_l],
-		int ch);
+		int ch, FLOAT8 xrpow[576]);
 
 
 
@@ -121,7 +121,7 @@ void inc_subblock_gain(lame_global_flags *gfp,
 
 int init_outer_loop(
     lame_global_flags *gfp,
-    FLOAT8 xr[576],        /*  could be L/R OR MID/SIDE */
+    FLOAT8 xr[576], FLOAT8 xrpow[576],       /*  could be L/R OR MID/SIDE */
     gr_info *cod_info);
 
 #define LARGE_BITS 100000
