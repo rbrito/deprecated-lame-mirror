@@ -27,8 +27,8 @@ endif
 
 # generic defaults. OS specific options go in versious sections below
 PGM ?= lame
-CC = gcc
-CC_OPTS =  -O
+CC = g++
+CC_OPTS =
 AR = ar
 RANLIB = ranlib
 GTK = 
@@ -138,7 +138,9 @@ ifeq ($(UNAME),Linux)
 
 
 # suggested for gcc-2.7.x
-   CC_OPTS =  -O3 -fomit-frame-pointer -funroll-loops -ffast-math  -finline-functions -Wall
+   CC_OPTS =  -O3 -fomit-frame-pointer -funroll-loops -ffast-math  -finline-functions -Wall -Wswitch -pedantic
+#  CC_OPTS =  -O3 -fomit-frame-pointer -funroll-loops -ffast-math  -finline-functions -Wall -Wswitch
+
 #  CC_OPTS =  -O9 -fomit-frame-pointer -fno-strength-reduce -mpentiumpro -ffast-math -finline-functions -funroll-loops -Wall -malign-double -g -march=pentiumpro -mfancy-math-387 -pipe 
 
 #  for debugging:
@@ -152,7 +154,7 @@ ifeq ($(UNAME),Linux)
 #  CPP_OPTS += -DRH_AMP -DRH_VALIDATE_MS
 # these options for gcc-2.95.2 to produce fast code
 #   CC_OPTS = \
-#	-Wall -O9 -fomit-frame-pointer -march=pentium \
+#	-Wall -O9 -fomit-frame-pointer \
 #	-finline-functions -fexpensive-optimizations \
 #	-funroll-loops -funroll-all-loops -pipe -fschedule-insns2 \
 #	-fstrength-reduce \
@@ -173,7 +175,7 @@ ifeq ($(shell which ccc 2>/dev/null | grep -c ccc),0)
 # double is faster than float on Alpha
 CC_OPTS =       -O4 -Wall -fomit-frame-pointer -ffast-math -funroll-loops \
                 -mfp-regs -fschedule-insns -fschedule-insns2 \
-                -finline-functions \
+                -finline-functions -march=k6\
 #                -DFLOAT=double
 # add "-mcpu=21164a -Wa,-m21164a" to optimize for 21164a (ev56) CPU
 
@@ -398,8 +400,10 @@ endif
 # 10/99 added -D__NO_MATH_INLINES to fix a bug in *all* versions of
 # gcc 2.8+ as of 10/99.  
 
-CC_SWITCHES = -DNDEBUG -D__NO_MATH_INLINES $(CC_OPTS) $(SNDLIB) $(GTK) \
-$(BRHIST_SWITCH) $(VORBIS) 
+CC_SWITCHES = -D__NO_MATH_INLINES $(CC_OPTS) $(SNDLIB) $(GTK) $(BRHIST_SWITCH) $(VORBIS) 
+
+# CC_SWITCHES = -DNDEBUG -D__NO_MATH_INLINES $(CC_OPTS) $(SNDLIB) $(GTK) $(BRHIST_SWITCH) $(VORBIS) 
+
 c_sources_s = \
         brhist.c \
 	bitstream.c \
