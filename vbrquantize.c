@@ -927,7 +927,7 @@ VBR_quantize(lame_global_flags *gfp,
        * cos lowering quality is not enough in rare cases
        * when each granule still needs almost maxbits, it wont fit */ 
       minbits = Max(125,minbits*0.975);
-      maxbits = Min(minbits,maxbits*0.975);
+      maxbits = Max(minbits,maxbits*0.975);
       //      DEBUGF("%i totbits>max_frame_bits   totbits=%i  maxbits=%i \n",gfp->frameNum,totbits,max_frame_bits);
       //      DEBUGF("next masking_lower_db = %f \n",masking_lower_db + qadjust);
       bits_ok=0;
