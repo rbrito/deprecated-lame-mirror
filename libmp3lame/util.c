@@ -404,8 +404,8 @@ int fill_buffer_resample(
         for ( i = 0; i <= filter_l; i++ ) 
             sum += 
 	    gfc->blackfilt[j][i]  = blackman (i,offset,fcn,filter_l);
-	//        for ( i = 0; i <= filter_l; i++ ) 
-	//            gfc->blackfilt[j][i] /= sum;
+	for ( i = 0; i <= filter_l; i++ ) 
+	  gfc->blackfilt[j][i] /= sum;
     }
     gfc->fill_buffer_resample_init = 1;
   }

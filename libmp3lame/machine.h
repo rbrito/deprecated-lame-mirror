@@ -61,11 +61,11 @@
 
 
 #if    defined(_MSC_VER)  &&  !defined(INLINE)
-# define INLINE static _inline
+# define INLINE _inline
 #elif  defined(__SASC) || defined(__GNUC__)
-# define INLINE static __inline
+# define INLINE  __inline
 #else
-# define INLINE static 
+# define INLINE 
 #endif
 
 #if    defined(_MSC_VER)

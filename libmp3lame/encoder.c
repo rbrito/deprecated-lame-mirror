@@ -327,9 +327,9 @@ char *mp3buf, int mp3buf_size)
             int  sum_pe_LR = pe   [0][0] + pe   [0][1] + pe   [1][0] + pe   [1][1];
             
             /* based on PE: M/S coding would not use much more bits than L/R coding */
-            if (sum_pe_MS <= 1.07 * sum_pe_LR)
-                gfc->mode_ext = MPG_MD_MS_LR;
-	    //            gfc->mode_ext = MPG_MD_MS_LR;
+	    if (sum_pe_MS <= 1.07 * sum_pe_LR)
+	      gfc->mode_ext = MPG_MD_MS_LR;
+	    //gfc->mode_ext = MPG_MD_MS_LR;
         }
 
 
