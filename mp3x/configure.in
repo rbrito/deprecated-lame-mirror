@@ -1,0 +1,313 @@
+dnl Process this file with autoconf to produce a configure script.
+dnl
+dnl include support and option for
+dnl - GTK            done.
+dnl - VBR histogram  done.
+dnl - SNDLIB         done.
+dnl - VORBIS         done.
+dnl - decoder        done.
+dnl - disable shared done.
+dnl - shared lib version
+dnl - debugging mode
+dnl - MMX support
+dnl
+dnl todo:
+dnl - move all system-dependent entries from Makefile here
+
+AC_INIT(main.c)
+
+# increase this when the shared lib becomes totally incompatible
+LIB_MAJOR_VERSION=1
+
+# increase this when changes are made, but they are upward compatible
+# to previous versions
+LIB_MINOR_VERSION=0
+
+dnl use "/usr" as default prefix...
+AC_PREFIX_DEFAULT(/usr)
+
+dnl check host
+AC_CANONICAL_HOST
+
+dnl Checks for programs.
+cflags_save="$CFLAGS"
+AC_PROG_CC
+# because AC_PROG_CC likes to set -g
+CFLAGS="$cflags_save"
+AC_PROG_MAKE_SET
+AC_PROG_RANLIB
+AC_PROG_LN_S
+AC_PROG_INSTALL
+
+dnl These are the main configuration variables for the Makefile
+CONFIG_LIBS=
+CONFIG_OPTS=
+CONFIG_LDFLAGS=
+CPP_OPT=
+
+dnl Checks for libraries.
+
+dnl TODO: are the functions of termcap and curses the same as for ncurses ?
+AC_CHECK_LIB(termcap, initscr, HAVE_TERMCAP=termcap)
+AC_CHECK_LIB(curses, initscr, HAVE_TERMCAP=curses)
+AC_CHECK_LIB(ncurses, initscr, HAVE_TERMCAP=ncurses)
+AC_CHECK_LIB(m, cos, HAVE_LIBM=-lm)
+dnl free fast math library
+dnl AC_CHECK_LIB(ffm, cos, HAVE_LIBM=-lffm)
+dnl Compaq fast math library.
+dnl AC_CHECK_LIB(cpml, cos, HAVE_LIBM=-lcpml)
+
+AC_CHECK_LIB(sndfile, sf_open_read, HAVE_SNDFILE=yes)
+AC_CHECK_LIB(vorbis, ogg_sync_init, HAVE_VORBIS=yes)
+
+dnl configure use of features
+
+dnl libsndfile
+AC_MSG_CHECKING(use of file io)
+WARNING=
+AC_ARG_WITH(fileio, 
+  [  --with-fileio=lame          Use lame's internal file io routines [default]]
+  [             =sndfile       Use Erik de Castro Lopo's libsndfile (no stdin possible currently)]
+  [             =no            Do not use file io routines], 
+  CONFIG_FILEIO="$withval", CONFIG_FILEIO="lame")
+AC_ARG_WITH(sndfile-prefix,
+  [  --with-sndfile-prefix=DIR   Alternate location for libsndfile],
+  CONFIG_SNDFILE_PREFIX="${withval}", CONFIG_SNDFILE_PREFIX="")
+if test "$CONFIG_FILEIO" = "sndfile" ; then
+  if test ".$CONFIG_SNDFILE_PREFIX" != "." ; then 
+    # look for sndfile lib. This overrides any standard location
+    LA_SEARCH_LIB(SNDFILE_LIB_LOC, SNDFILE_INC_LOC, \
+      libsndfile.a, sndfile.h, $CONFIG_SNDFILE_PREFIX) 
+    if test ".$SNDFILE_LIB_LOC" != "." ; then
+      HAVE_SNDFILE=yes
+      CONFIG_LDFLAGS="-L$SNDFILE_LIB_LOC $CONFIG_LDFLAGS"
+      CONFIG_OPTS="-I$SNDFILE_INC_LOC $CONFIG_OPTS"
+    else
+      WARNING="sndfile lib not found in specified prefix."
+    fi
+  fi
+  if test "$HAVE_SNDFILE" = "yes" ; then
+    CONFIG_LDFLAGS="-lsndfile $CONFIG_LDFLAGS"
+    CONFIG_OPTS="-DLIBSNDFILE $CONFIG_OPTS"
+  else
+    # default
+    CONFIG_FILEIO="lame"
+    WARNING="$WARNING Could not find any sndfile lib on system."
+  fi
+fi 
+if test "$CONFIG_FILEIO" != "no" && test "$CONFIG_FILEIO" != "sndfile"; then
+  CONFIG_OPTS="-DLAMESNDFILE $CONFIG_OPTS"
+  CONFIG_FILEIO=lame
+fi
+AC_MSG_RESULT($CONFIG_FILEIO)
+if test ".$WARNING" != "." ; then
+  AC_MSG_WARN($WARNING)
+fi
+
+
+dnl vorbis
+AC_MSG_CHECKING(use of vorbis)
+WARNING=
+AC_ARG_WITH(vorbis, 
+  [  --with-vorbis               Use vorbis library for ogg files [default:yes, if installed]],
+  CONFIG_VORBIS="$withval", CONFIG_VORBIS="yes")
+AC_ARG_WITH(vorbis-prefix,
+  [  --with-vorbis-prefix=DIR    Alternate location for vorbis],
+  CONFIG_VORBIS_PREFIX="${withval}", CONFIG_VORBIS_PREFIX="")
+if test "$CONFIG_VORBIS" != "no" ; then
+  if test ".$CONFIG_VORBIS_PREFIX" != "." ; then
+    # look for vorbis lib. This overrides any standard location
+    LA_SEARCH_LIB(VORBIS_LIB_LOC, VORBIS_INC_LOC, \
+      libvorbis.a, vorbis/codec.h, $CONFIG_VORBIS_PREFIX)
+    if test ".$VORBIS_LIB_LOC" != "." ; then
+      HAVE_VORBIS=yes
+      CONFIG_LDFLAGS="-L$VORBIS_LIB_LOC $CONFIG_LDFLAGS"
+      CONFIG_OPTS="-I$VORBIS_INC_LOC $CONFIG_OPTS"
+    else
+      WARNING="vorbis lib not found in specified prefix."
+    fi
+  fi
+  if test "$HAVE_VORBIS" = "yes" ; then
+    CONFIG_LDFLAGS="-lvorbis $CONFIG_LDFLAGS"
+    CONFIG_OPTS="-DHAVEVORBIS $CONFIG_OPTS"
+  else
+    CONFIG_VORBIS="no"
+  fi
+fi
+AC_MSG_RESULT($CONFIG_VORBIS)
+if test ".$WARNING" != "." ; then
+  AC_MSG_WARN($WARNING)
+fi
+
+
+dnl mpg123 decoder
+AC_MSG_CHECKING(use of mpg123 decoder)
+AC_ARG_ENABLE(decoder, 
+  [  --enable-decoder            Include mpg123 decoder [default:yes]],
+  CONFIG_DECODER="$enableval", CONFIG_DECODER="yes")
+AC_ARG_ENABLE(decode-layer1, 
+  [  --enable-decoder-layer1     Include layer1 decoding [default:yes]],
+  CONFIG_DECODER_L1="$enableval", CONFIG_DECODER_L1="yes")
+AC_ARG_ENABLE(decode-layer1, 
+  [  --enable-decoder-layer2     Include layer2 decoding [default:yes]],
+  CONFIG_DECODER_L2="$enableval", CONFIG_DECODER_L2="yes")
+AC_MSG_RESULT($CONFIG_DECODER)
+
+if test "$CONFIG_DECODER" != "no" ; then
+  CONFIG_DECODER=yes
+  CONFIG_LIBS="../mpglib/mpglib.a $CONFIG_LIBS"
+  CONFIG_OPTS="-DHAVEMPGLIB $CONFIG_OPTS"
+fi
+
+
+dnl analyzer interface
+AC_ARG_ENABLE(analyzer, 
+    [  --enable-analyzer=yes,no    Whether to include the analyzer interface[default yes]]
+    CONFIG_ANALYZER="$enableval", CONFIG_ANALYZER="yes")
+
+if test "$CONFIG_ANALYZER" != "no" ; then
+	CPP_OPT="-DANALYSIS $CPP_OPT"
+fi
+
+
+
+
+dnl basic check for GTK...actually just for gtk-config...
+AC_PATH_PROG(GTK_CONFIG, gtk-config, no)
+AC_MSG_CHECKING(use of GTK frame analyzer)
+if test ".$GTK_CONFIG" != ".no" \
+    && test "$CONFIG_DECODER" != "no" \
+    && test "$CONFIG_FILEIO" != "no"; then
+  FA_DEFAULT=yes
+else
+  FA_DEFAULT=no
+fi
+
+dnl todo: display actual default value
+AC_ARG_ENABLE(gtkanalyzer, 
+    [  --enable-gtkanalyzer=yes,no Whether to include the GTK frame analyzer [default yes if possible]]
+    [                          It requires installed GTK, file io and the decoder.],
+    CONFIG_FA="$enableval", CONFIG_FA="$FA_DEFAULT")
+
+if test "$CONFIG_ANALYZER" != "no" && test "$FA_DEFAULT" != "no" && test "$CONFIG_FA" != "no" ; then
+  CONFIG_LDFLAGS="`$GTK_CONFIG --libs` $CONFIG_LDFLAGS"
+  CONFIG_OPTS="-DHAVEGTK `$GTK_CONFIG --cflags` $CONFIG_OPTS"
+  GTK_SOURCE="\$(gtk_sources)"
+  CONFIG_FA=yes
+  GTK_OBJ="\$(gtk_obj)"
+else
+  CONFIG_FA=no
+fi
+AC_MSG_RESULT($CONFIG_FA)
+
+
+INSTALL_TARGETS="install_program"
+
+#
+# this is from vorbis
+#
+dnl check GLIBC
+case $host in 
+*86-*-linux*)
+	# glibc < 2.1.3 has a serious FP bug in the math inline header
+	# that will cripple Vorbis.  Look to see if the magic FP stack
+	# clobber is missing in the mathinline header, thus indicating
+	# the buggy version
+
+	AC_EGREP_CPP(log10.*fldlg2.*fxch,[
+		#define __LIBC_INTERNAL_MATH_INLINES 1
+	     	#define __OPTIMIZE__
+		#include <math.h>
+		],bad=maybe,bad=no)
+
+	AC_MSG_CHECKING(glibc mathinline bug)
+	if test ${bad} = "maybe" ;then
+	      AC_EGREP_CPP(log10.*fldlg2.*fxch.*st\([[0123456789]]*\),
+				[
+				#define __LIBC_INTERNAL_MATH_INLINES 1
+			     	#define __OPTIMIZE__
+				#include <math.h>
+				],bad=no,bad=yes)
+	fi
+	AC_MSG_RESULT(${bad})
+	if test ${bad} = "yes" ;then
+ AC_MSG_WARN([                                                        ])
+ AC_MSG_WARN([********************************************************])
+ AC_MSG_WARN([* The glibc headers on this machine have a serious bug *])
+ AC_MSG_WARN([* in /usr/include/bits/mathinline.h  This bug affects  *])
+ AC_MSG_WARN([* all floating point code, not only LAME, but all code *])
+ AC_MSG_WARN([* built on this machine. Upgrading to glibc 2.1.3 is   *])
+ AC_MSG_WARN([* strongly urged to correct the problem.               *])
+ AC_MSG_WARN([*Note: that upgrading glibc will not fix any previously*])
+ AC_MSG_WARN([* built programs; this is a compile-time time bug.     *])
+ AC_MSG_WARN([* To work around the problem for this build of LAME,   *])
+ AC_MSG_WARN([* autoconf is disabling all math inlining.  This will  *])
+ AC_MSG_WARN([* hurt LAME performace but is necessary for LAME to    *])
+ AC_MSG_WARN([* work correctly.  Once glibc is upgraded, rerun       *])
+ AC_MSG_WARN([* configure and make to build with inlining.           *])
+ AC_MSG_WARN([********************************************************])
+ AC_MSG_WARN([                                                        ])
+
+	CPP_OPT="-D__NO_MATH_INLINES $CPP_OPT"
+	fi;;
+esac
+
+
+dnl configure use of VBR bitrate histogram
+dnl todo: always use yes as default, use simulation instead ?
+AC_MSG_CHECKING(use of VBR bitrate histogram)
+if test ".$HAVE_TERMCAP" != "."; then
+  BRH_DEFAULT=yes
+else
+  BRH_DEFAULT=no
+fi
+AC_ARG_ENABLE(brhist, 
+  [  --enable-brhist             Include the VBR bitrate histogram feature (default:yes if any termcap available)],
+  CONFIG_BRHIST="$enableval", CONFIG_BRHIST="$BRH_DEFAULT")
+if test "$CONFIG_BRHIST" != "no" ; then
+  BRHIST_SOURCE="\$(brhist_sources)"
+  if test "$BRH_DEFAULT" = "yes" ; then
+    CONFIG_LDFLAGS="-l$HAVE_TERMCAP $CONFIG_LDFLAGS"
+    CONFIG_OPTS="-DBRHIST $CONFIG_OPTS"
+    CONFIG_BRHIST="yes, with $HAVE_TERMCAP"
+  else
+    CONFIG_OPTS="-DBRHIST -DNOTERMCAP $CONFIG_OPTS"
+    CONFIG_BRHIST="yes, simulated termcap"
+  fi
+fi
+AC_MSG_RESULT($CONFIG_BRHIST)
+
+
+CONFIG_LDFLAGS="$HAVE_LIBM $CONFIG_LDFLAGS"
+AC_SUBST(CONFIG_OPTS)
+AC_SUBST(CONFIG_LIBS)
+AC_SUBST(CONFIG_LDFLAGS)
+
+CONFIG_SOURCES="$GTK_SOURCE $BRHIST_SOURCE"
+AC_SUBST(CONFIG_SOURCES)
+AC_SUBST(GTK_OBJ)
+AC_SUBST(CPP_OPT)
+
+AC_SUBST(INSTALL_TARGETS)
+AC_SUBST(LIB_TARGETS)
+
+AC_SUBST(LIB_MAJOR_VERSION)
+AC_SUBST(LIB_MINOR_VERSION)
+
+
+dnl Checks for header files.
+AC_HEADER_STDC
+AC_CHECK_HEADERS(fcntl.h limits.h sys/time.h unistd.h)
+
+dnl Checks for typedefs, structures, and compiler characteristics.
+AC_C_CONST
+AC_TYPE_SIZE_T
+AC_HEADER_TIME
+
+dnl Checks for library functions.
+AC_FUNC_ALLOCA
+AC_TYPE_SIGNAL
+AC_FUNC_VPRINTF
+AC_CHECK_FUNCS(gettimeofday socket strtol)
+
+AC_OUTPUT(Makefile)

@@ -1,0 +1,43 @@
+This file contains any messages produced by compilers while
+running configure, to aid debugging if configure makes a mistake.
+
+configure:586: checking host system type
+configure:611: checking for gcc
+configure:724: checking whether the C compiler (gcc  ) works
+configure:740: gcc -o conftest    conftest.c  1>&5
+configure:766: checking whether the C compiler (gcc  ) is a cross-compiler
+configure:771: checking whether we are using GNU C
+configure:799: checking whether gcc accepts -g
+configure:833: checking whether make sets ${MAKE}
+configure:862: checking for ranlib
+configure:890: checking whether ln -s works
+configure:922: checking for a BSD compatible install
+configure:982: checking for initscr in -ltermcap
+configure:1022: checking for initscr in -lcurses
+configure:1062: checking for initscr in -lncurses
+configure:1102: checking for cos in -lm
+configure:1143: checking for sf_open_read in -lsndfile
+configure:1183: checking for ogg_sync_init in -lvorbis
+configure:1225: checking use of file io
+configure:1302: checking use of vorbis
+configure:1373: checking use of mpg123 decoder
+configure:1424: checking for gtk-config
+configure:1458: checking use of GTK frame analyzer
+configure:1501: checking how to run the C preprocessor
+configure:1601: checking glibc mathinline bug
+configure:1648: checking use of VBR bitrate histogram
+configure:1694: checking for ANSI C header files
+configure:1801: checking for fcntl.h
+configure:1801: checking for limits.h
+configure:1801: checking for sys/time.h
+configure:1801: checking for unistd.h
+configure:1839: checking for working const
+configure:1914: checking for size_t
+configure:1947: checking whether time.h and sys/time.h may both be included
+configure:1985: checking for working alloca.h
+configure:2018: checking for alloca
+configure:2217: checking return type of signal handlers
+configure:2258: checking for vprintf
+configure:2365: checking for gettimeofday
+configure:2365: checking for socket
+configure:2365: checking for strtol

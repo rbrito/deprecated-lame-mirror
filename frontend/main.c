@@ -39,12 +39,6 @@
 #include "lame.h"
 #include "lame-id3tag.h"
 
-#ifdef HAVEGTK
-#include "lame-analysis.h"
-#include <gtk/gtk.h>
-#endif
-
-
 #ifdef __riscos__
 #include "asmstuff.h"
 #endif
@@ -269,16 +263,7 @@ int main(int argc, char **argv)
   }
 
 
-  if (gf.analysis) {
-
-#ifdef HAVEGTK
-    gtk_init (&argc, &argv);
-    gtkcontrol(&gf);
-#else
-    fprintf(stderr,"Error: lame not compiled with GTK support \n");
-#endif
-
-  } else if (gf.decode_only) {
+  if (gf.decode_only) {
 
     /* decode an mp3 file to a .wav */
     lame_decoder(&gf,outf,gf.encoder_delay);
