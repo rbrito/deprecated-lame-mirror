@@ -54,7 +54,11 @@ char *strchr (), *strrchr ();
 
 
 #if defined(HAVE_TERMCAP)
+#if defined(HAVE_TERMCAP_H)
 # include <termcap.h>
+#elif defined(HAVE_NCURSES_TERMCAP_H)
+# include <ncurses/termcap.h>
+#endif
 #endif
 
 #include "brhist.h"
