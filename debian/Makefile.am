@@ -6,9 +6,9 @@ EXTRA_DIST = \
 	changelog \
 	control \
 	copyright \
-	lame-dev.docs \
-	lame-dev.files \
-	lame-extras.files \
+	liblame0-dev.docs \
+	liblame0-dev.files \
+	liblame0.files \
 	lame.docs \
 	lame.files \
 	rules
