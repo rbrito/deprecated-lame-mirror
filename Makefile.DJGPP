@@ -36,13 +36,6 @@ CPP_OPTS += -DHAVEMPGLIB
 ##########################################################################
 CPP_OPTS += -DUSE_LAYER_1 -DUSE_LAYER_2
 
-##########################################################################
-# -DFLOAT8_is_float will FLOAT8 as float
-# -DFLOAT8_is_double  will FLOAT8 as double (default)
-#  NOTE: RH: 7/00:  if FLOAT8=float, it breaks resampling and VBR code 
-##########################################################################
-CPP_OPTS += -DFLOAT8_is_double
-
 
 ##########################################################################
 # Define these in the OS specific sections below to compile in support
