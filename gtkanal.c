@@ -677,8 +677,8 @@ void plot_frame(void)
 		pplot1->preflag[gr][ch]);
       }
       
-      if (gtkinfo.flag123) ggain = -(pplot1->qss[gr][ch]);
-      else ggain = -(pplot->LAMEqss[gr][ch]);
+      if (gtkinfo.flag123) ggain = (pplot1->qss[gr][ch]);
+      else ggain = (pplot->LAMEqss[gr][ch]);
 
       sprintf(title2," ggain=%i",ggain);
       strcat(label2,title2);

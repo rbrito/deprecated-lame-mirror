@@ -193,16 +193,19 @@ void lame_init_params(lame_global_flags *gfp)
 
   /* for VBR, take a guess at the compression_ratio. for example: */
   /* VBR_q           compression       like
-     0                4.4             320kbs/41khz
-     1                5.4             256kbs/41khz
-     3                7.4             192kbs/41khz
+                      4.4             320kbs/41khz
+     0-1              5.5             256kbs/41khz
+     2                7.3             192kbs/41khz
      4                8.8             160kbs/41khz
-     6                10.4            128kbs/41khz
+     6                11              128kbs/41khz
+     9                14.7             96kbs
+     for lower bitrates, downsample with --resample
   */
-  if (gfp->VBR) 
-    gfp->compression_ratio = 4.4 + gfp->VBR_q;
-  else
+  if (gfp->VBR) {
+    gfp->compression_ratio = 5.0 + gfp->VBR_q;
+  }else{
     gfp->compression_ratio = gfp->out_samplerate*16*gfc->stereo/(1000.0*gfp->brate);
+  }
 
 
 
@@ -636,9 +639,9 @@ void lame_print_config(lame_global_flags *gfp)
 	    (strcmp(gfp->inPath, "-")? gfp->inPath : "stdin"),
 	    (strcmp(gfp->outPath, "-")? gfp->outPath : "stdout"));
     if (gfp->VBR)
-      fprintf(stderr, "Encoding as %.1fkHz VBR(q=%i) %s MPEG%i LayerIII  qval=%i\n",
+      fprintf(stderr, "Encoding as %.1fkHz VBR(q=%i) %s MPEG%i LayerIII (%4.1fx estimated) qval=%i\n",
 	      gfp->out_samplerate/1000.0,
-	      gfp->VBR_q,mode_names[gfp->mode],2-gfp->version,gfp->quality);
+	      gfp->VBR_q,mode_names[gfp->mode],2-gfp->version,gfp->compression_ratio,gfp->quality);
     else {
       fprintf(stderr, "Encoding as %.1f kHz %d kbps %s MPEG%i LayerIII (%4.1fx)  qval=%i\n",
 	      gfp->out_samplerate/1000.0,gfp->brate,

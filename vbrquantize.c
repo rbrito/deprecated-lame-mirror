@@ -203,10 +203,8 @@ int find_scalefac(FLOAT8 *xr,FLOAT8 *xr34,int stride,int sfb,
   sf_ok=10000;
   for (i=0; i<7; i++) {
     delsf /= 2;
-    if (delsf >= 16)
-      xfsf = calc_sfb_noise(xr,xr34,stride,bw,sf);
-    else
-      xfsf = calc_sfb_noise_ave(xr,xr34,stride,bw,sf);
+    //      xfsf = calc_sfb_noise(xr,xr34,stride,bw,sf);
+    xfsf = calc_sfb_noise_ave(xr,xr34,stride,bw,sf);
 
     if (xfsf < 0) {
       /* scalefactors too small */
@@ -223,7 +221,7 @@ int find_scalefac(FLOAT8 *xr,FLOAT8 *xr34,int stride,int sfb,
     }
   } 
   assert(sf_ok!=10000);
-  assert(delsf==1);
+  //  assert(delsf==1);  /* when for loop goes up to 7 */
 
   return sf;
 }
@@ -462,7 +460,7 @@ VBR_noise_shaping
 (
  lame_global_flags *gfp,
  FLOAT8 xr[576], III_psy_ratio *ratio,
- int l3_enc[2][2][576], int *ath_over, int minbits,
+ int l3_enc[2][2][576], int *ath_over, int minbits, int maxbits,
  III_scalefac_t scalefac[2][2],
  int gr,int ch)
 {
@@ -685,9 +683,9 @@ VBR_noise_shaping
     if (cod_info->part2_3_length-cod_info->part2_length== 0) break;
     if (vbrmax+210 ==0 ) break;
     
-    //    printf("not enough bits, decreasing vbrmax. g_gainv=%i\n",cod_info->global_gain);
-    //    printf("%i minbits=%i   part2_3_length=%i  part2=%i\n",
-    //	   gfp->frameNum,minbits,cod_info->part2_3_length,cod_info->part2_length);
+    //        printf("not enough bits, decreasing vbrmax. g_gainv=%i\n",cod_info->global_gain);
+    //        printf("%i minbits=%i   part2_3_length=%i  part2=%i\n",
+    //    	   gfp->frameNum,minbits,cod_info->part2_3_length,cod_info->part2_length);
     --vbrmax;
     --global_gain_adjust;
     memcpy(&vbrsf,&save_sf,sizeof(III_scalefac_t));
@@ -700,12 +698,12 @@ VBR_noise_shaping
 
   } while ((cod_info->part2_3_length < minbits));
 
-  while (cod_info->part2_3_length > 4095) {
+  while (cod_info->part2_3_length > Min(maxbits,4095)) {
     /* increase global gain, keep exisiting scale factors */
     ++cod_info->global_gain;
     if (cod_info->global_gain > 255) 
       fprintf(stderr,"%i impossible to encode this frame! bits=%i\n",
-gfp->frameNum,cod_info->part2_3_length);
+	      gfp->frameNum,cod_info->part2_3_length);
     VBR_quantize_granule(gfp,xr,xr34,l3_enc,ratio,l3_xmin,scalefac,gr,ch);
     ++global_gain_adjust;
   }
@@ -732,7 +730,10 @@ VBR_quantize(lame_global_flags *gfp,
   int ath_over[2][2];
   FLOAT8 masking_lower_db;
   //  static const FLOAT8 dbQ[10]={-6.0,-4.5,-3.0,-1.5,0,0.3,0.6,1.0,1.5,2.0};
-  static const FLOAT8 dbQ[10]={-9.0,-7.5,-6.0,-4.5,-3.0,-1.5,-.5,0.3,0.6,1.0};
+  //                             0    1    2    3     4    5      6   7   8    9 
+  static const FLOAT8 dbQ[10]={-6.0,-5.0,-4.0,-3.0, -2.0, -1.0, -.25, .5, 1.25, 2.0};
+
+
 
   l3_side = &gfc->l3_side;
   gfc->ATH_lower = (4-gfp->VBR_q)*4.0; 
@@ -764,53 +765,81 @@ VBR_quantize(lame_global_flags *gfp,
     for (gr = 0; gr < gfc->mode_gr; gr++) 
       ms_convert(xr[gr],xr[gr]);
 
-
-  qadjust=0;
-  do {
-  
-  totbits=0;
   for (gr = 0; gr < gfc->mode_gr; gr++) {
     for (ch = 0; ch < gfc->stereo; ch++) { 
-      int shortblock;
       cod_info = &l3_side->gr[gr].ch[ch].tt;
-      shortblock = (cod_info->block_type == SHORT_TYPE);
-
-
-      /* Adjust allowed masking based on quality setting */
-      assert( gfp->VBR_q <= 9 );
-      assert( gfp->VBR_q >= 0 );
-      masking_lower_db = dbQ[gfp->VBR_q] + qadjust;
-      
-      if (pe[gr][ch]>750)
-      	masking_lower_db -= 4*(pe[gr][ch]-750.)/750.;
-      //      if (shortblock) masking_lower_db -= 1;
-
-
-      do {
-	gfc->masking_lower = pow(10.0,masking_lower_db/10);
-	VBR_noise_shaping (gfp,xr[gr][ch],&ratio[gr][ch],l3_enc,&ath_over[gr][ch],minbits,scalefac,gr,ch);
-	bits = cod_info->part2_3_length;
-	if (bits>maxbits) {
-	  printf("%i masking_lower=%f  bits>maxbits. bits:  %i  %i  %i  \n",gfp->frameNum,masking_lower_db,minbits,bits,maxbits);
-	  masking_lower_db  += Max(.10,(bits-maxbits)/200.0);
-	}
-
-      }	while (bits > maxbits);
-
-      totbits += bits;
+      cod_info->part2_3_length=LARGE_BITS;
     }
   }
-  bits_ok=1;
-  if (totbits>max_frame_bits) {
-    printf("%i totbits>max_frame_bits   totbits=%i  maxbits=%i \n",gfp->frameNum,totbits,max_frame_bits);
-    qadjust += Max(.10,(totbits-max_frame_bits)/200.0);
-    printf("next masking_lower_db = %f \n",masking_lower_db + qadjust);
-    bits_ok=0;
-  }
 
+
+
+  qadjust=0;
+  /* 
+   * loop over all ch,gr, encoding anything with bits > .5*(max_frame_bits/4)
+   *
+   * If a particular granule uses way too many bits, it will be re-encoded
+   * on the next iteration of the loop (with a lower quality setting).  
+   * But granules which dont use
+   * use too many bits will not be re-encoded.
+   *
+   * minbits:  minimum allowed bits for 1 granule 1 channel
+   * maxbits:  maximum allowwed bits for 1 granule 1 channel
+   * max_frame_bits:  maximum allowed bits for entire frame
+   * (max_frame_bits/4)   estimate of average bits per granule per channel
+   * 
+   */
+
+  do {
+  
+    totbits=0;
+    for (gr = 0; gr < gfc->mode_gr; gr++) {
+      for (ch = 0; ch < gfc->stereo; ch++) { 
+	int adjusted,shortblock;
+	cod_info = &l3_side->gr[gr].ch[ch].tt;
+	
+	/* ENCODE this data first pass, and on future passes unless it uses
+	 * a very small percentage of the max_frame_bits  */
+	if (cod_info->part2_3_length > (max_frame_bits/(2*gfc->stereo*gfc->mode_gr))) {
+	  
+	  shortblock = (cod_info->block_type == SHORT_TYPE);
+	  
+	  /* Adjust allowed masking based on quality setting */
+	  assert( gfp->VBR_q <= 9 );
+	  assert( gfp->VBR_q >= 0 );
+	  masking_lower_db = dbQ[gfp->VBR_q] + qadjust;
+	  
+	  if (pe[gr][ch]>750)
+	    masking_lower_db -= 4*(pe[gr][ch]-750.)/750.;
+	  //      if (shortblock) masking_lower_db -= 1;
+	  
+	  
+	  gfc->masking_lower = pow(10.0,masking_lower_db/10);
+	  adjusted = VBR_noise_shaping (gfp,xr[gr][ch],&ratio[gr][ch],l3_enc,&ath_over[gr][ch],minbits,maxbits,scalefac,gr,ch);
+	  if (adjusted>10) {
+	    /* global_gain was changed by a large amount to get bits < maxbits */
+	    /* quality is set to high.  we could set bits = LARGE_BITS
+	     * to force re-encoding.  But most likely the other channels/granules
+	     * will also use too many bits, and the entire frame will
+	     * be > max_frame_bits, forcing re-encoding below.
+	     */
+	    //	 cod_info->part2_3_bits = LARGE_BITS;
+	  }
+	}
+	totbits += cod_info->part2_3_length;
+      }
+    }
+    bits_ok=1;
+    if (totbits>max_frame_bits) {
+      qadjust += Max(.25,(totbits-max_frame_bits)/300.0);
+      //      printf("%i totbits>max_frame_bits   totbits=%i  maxbits=%i \n",gfp->frameNum,totbits,max_frame_bits);
+      //      printf("next masking_lower_db = %f \n",masking_lower_db + qadjust);
+      bits_ok=0;
+    }
+    
   } while (!bits_ok);
-
-
+  
+  
 
 
   
