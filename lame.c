@@ -1138,7 +1138,7 @@ int lame_encode_finish(lame_global_flags *gfp,char *mp3buffer, int mp3buffer_siz
 
 
   gfc->frameNum--;
-  if (!gfc->pinfo != NULL && !gfp->silent) {
+  if (gfc->pinfo == NULL && !gfp->silent) {
       timestatus(gfp->out_samplerate,gfc->frameNum,gfc->totalframes,gfc->framesize);
 #ifdef BRHIST
       if (disp_brhist)
@@ -1339,9 +1339,6 @@ int lame_init(lame_global_flags *gfp)
   gfp->VBR_q=4;
   gfp->VBR_min_bitrate_kbps=0;
   gfp->VBR_max_bitrate_kbps=0;
-
-  gfp->inPath=NULL;
-  gfp->outPath=NULL;
 
   gfc->pcmbitwidth = 16;
   gfc->resample_ratio=1;

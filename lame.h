@@ -106,8 +106,11 @@ typedef struct  {
   sound_file_format input_format;   
   FILE * musicin;             /* file pointer to input file */
   int swapbytes;              /* force byte swapping   default=0*/
-  char *inPath;               /* name of input file */
-  char *outPath;              /* name of output file. */
+#define         MAX_NAME_SIZE           1000
+  char inPath[MAX_NAME_SIZE];
+  char outPath[MAX_NAME_SIZE];
+
+
 
   /* optional id3 tags  */
   int id3tag_used;

@@ -8,10 +8,6 @@
 
 
 
-#define         MAX_NAME_SIZE           3000
-  char    inPath[MAX_NAME_SIZE];
-  char    outPath[MAX_NAME_SIZE];
-
 
 /************************************************************************
 *
@@ -237,14 +233,11 @@ void lame_parse_args(lame_global_flags *gfp,int argc, char **argv)
   int   err = 0, i = 0;
   int autoconvert=0;
   int user_quality=0;
-
   char *programName = argv[0]; 
   int track = 0;
 
-  inPath[0] = '\0';   
-  outPath[0] = '\0';
-  gfp->inPath=inPath;
-  gfp->outPath=outPath;
+  gfp->inPath[0] = '\0';   
+  gfp->outPath[0] = '\0';
 
   id3_inittag(&gfp->id3tag);
 
@@ -260,8 +253,8 @@ void lame_parse_args(lame_global_flags *gfp,int argc, char **argv)
       argUsed = 0;
       if (! *token) {
 	/* The user wants to use stdin and/or stdout. */
-	if(inPath[0] == '\0')       strncpy(inPath, argv[i],MAX_NAME_SIZE);
-	else if(outPath[0] == '\0') strncpy(outPath, argv[i],MAX_NAME_SIZE);
+	if(gfp->inPath[0] == '\0')       strncpy(gfp->inPath, argv[i],MAX_NAME_SIZE);
+	else if(gfp->outPath[0] == '\0') strncpy(gfp->outPath, argv[i],MAX_NAME_SIZE);
       } 
       if (*token == '-') {
 	/* GNU style */
@@ -708,8 +701,8 @@ void lame_parse_args(lame_global_flags *gfp,int argc, char **argv)
 	}
       }
     } else {
-      if(inPath[0] == '\0')       strncpy(inPath, argv[i], MAX_NAME_SIZE);
-      else if(outPath[0] == '\0') strncpy(outPath, argv[i], MAX_NAME_SIZE);
+      if(gfp->inPath[0] == '\0')       strncpy(gfp->inPath, argv[i], MAX_NAME_SIZE);
+      else if(gfp->outPath[0] == '\0') strncpy(gfp->outPath, argv[i], MAX_NAME_SIZE);
       else {
 	fprintf(stderr,"%s: excess arg %s\n", programName, argv[i]);
 	err = 1;
@@ -719,19 +712,19 @@ void lame_parse_args(lame_global_flags *gfp,int argc, char **argv)
 
 
 
-  if(err || inPath[0] == '\0') lame_usage(gfp,programName);  /* never returns */
-  if (inPath[0]=='-') gfp->silent=1;  /* turn off status - it's broken for stdin */
-  if(outPath[0] == '\0') {
-    if (inPath[0]=='-') {
+  if(err || gfp->inPath[0] == '\0') lame_usage(gfp,programName);  /* never returns */
+  if (gfp->inPath[0]=='-') gfp->silent=1;  /* turn off status - it's broken for stdin */
+  if(gfp->outPath[0] == '\0') {
+    if (gfp->inPath[0]=='-') {
       /* if input is stdin, default output is stdout */
-      strcpy(outPath,"-");
+      strcpy(gfp->outPath,"-");
     }else {
-      strncpy(outPath, inPath, MAX_NAME_SIZE - 4);
-      strncat(outPath, ".mp3", 4 );
+      strncpy(gfp->outPath, gfp->inPath, MAX_NAME_SIZE - 4);
+      strncat(gfp->outPath, ".mp3", 4 );
     }
   }
   /* some file options not allowed with stdout */
-  if (outPath[0]=='-') {
+  if (gfp->outPath[0]=='-') {
     gfp->bWriteVbrTag=0; /* turn off VBR tag */
     if (gfp->id3tag_used) {
       gfp->id3tag_used=0;         /* turn of id3 tagging */
@@ -742,7 +735,7 @@ void lame_parse_args(lame_global_flags *gfp,int argc, char **argv)
 
   /* if user did not explicitly specify input is mp3, check file name */
   if (gfp->input_format != sf_mp3)
-    if (!(strcmp((char *) &inPath[strlen(inPath)-4],".mp3")))
+    if (!(strcmp((char *) &gfp->inPath[strlen(gfp->inPath)-4],".mp3")))
       gfp->input_format = sf_mp3;
 
 #if !(defined HAVEMPGLIB || defined AMIGA_MPEGA)

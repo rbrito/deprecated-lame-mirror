@@ -325,7 +325,7 @@ int targ_bits[2],int mean_bits, int gr)
      ******************************************************************/
     cod_info = &l3_side->gr[gr].ch[ch].tt;
     
-    targ_bits[ch]=tbits/gfc->stereo;
+    targ_bits[ch]=Min(4095,tbits/gfc->stereo);
     
     add_bits[ch]=(pe[gr][ch]-750)/1.55;
     /* short blocks us 50% extra, no matter what the pe */
