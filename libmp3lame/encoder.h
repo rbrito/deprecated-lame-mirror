@@ -57,7 +57,19 @@
 #define ENCDELAY      576
 
 
-#define POSTDELAY   288
+
+/*
+ * make sure there is at least one complete frame after the
+ * last frame containing real data
+ *
+ * Using a value of 288 would be sufficient for a 
+ * a very sophisticated decoder that can decode granule-by-granule instead
+ * of frame by frame.  But lets not assume this, and assume the decoder  
+ * will not decode frame N unless it also has data for frame N+1
+ *
+ */
+/*#define POSTDELAY   288*/
+#define POSTDELAY   1152
 
 
 
