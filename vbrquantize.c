@@ -792,7 +792,7 @@ VBR_quantize(lame_global_flags *gfp,
       gfc->masking_lower = pow(10.0,masking_lower_db/10);
       
       /* masking thresholds */
-      over_ath = calc_xmin(gfp,xr[gr][ch],ratio[gr]+ch,cod_info,l3_xmin[gr]+ch);
+      over_ath = calc_xmin(gfp,xr[gr][ch],&ratio[gr][ch],cod_info,&l3_xmin[gr][ch]);
       
       /* if there are bands with more energy than the ATH 
        * then we say the frame is not analog silent */
