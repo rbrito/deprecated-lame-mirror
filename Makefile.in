@@ -32,6 +32,10 @@ INSTALL_PROGRAM=@INSTALL_PROGRAM@
 INSTALL_DATA=@INSTALL_DATA@
 INSTALL_SCRIPT = @INSTALL_SCRIPT@
 
+SHARED_LIB = libmp3lame.so
+SHARED_LIB_MAJOR = $(SHARED_LIB).@LIB_MAJOR_VERSION@
+SHARED_LIB_MINOR = $(SHARED_LIB_MAJOR).@LIB_MINOR_VERSION@
+
 # generic defaults. OS specific options go in versious sections below
 PGM ?= lame
 CPP_OPTS = @CPP_OPT@
@@ -463,35 +467,42 @@ libmp3lame.a:  $(OBJ) Makefile
 
 #shared library, probably GNU specific?
 libmp3lame.so:  $(OBJ) Makefile
-	$(CC) -shared -Wl,-soname,libmp3lame.so.1 -o libmp3lame.so.1.0 $(OBJ)
-	$(RM_F) libmp3lame.so.1
-	$(LN_S) libmp3lame.so.1.0 libmp3lame.so.1
-	$(RM_F) libmp3lame.so
-	$(LN_S) libmp3lame.so.1 libmp3lame.so
+	$(CC) -shared -Wl,-soname,$(SHARED_LIB_MAJOR) -o $(SHARED_LIB_MINOR) $(OBJ)
+	$(RM_F) $(SHARED_LIB_MAJOR)
+	$(LN_S) $(SHARED_LIB_MINOR) $(SHARED_LIB_MAJOR)
+	$(RM_F) $(SHARED_LIB)
+	$(LN_S) $(SHARED_LIB_MAJOR) $(SHARED_LIB)
 
 lib:  @LIB_TARGETS@
 
-install_static_lib: libmp3lame.a
+install_header:
+	mkdir -p $(INCLUDEDIR)
+	$(INSTALL_PROGRAM) lame.h $(INCLUDEDIR)
+
+install_static_lib: libmp3lame.a install_header
 	mkdir -p $(LIBDIR)
 	$(INSTALL_PROGRAM) libmp3lame.a $(LIBDIR)
-	mkdir -p $(INCLUDEDIR)
-	$(INSTALL_PROGRAM) lame.h $(INCLUDEDIR)
 
-
-install_shared_lib: libmp3lame.so
+install_shared_lib: libmp3lame.so install_header
 	mkdir -p $(LIBDIR)
-	$(INSTALL_PROGRAM) libmp3lame.so.1.0 $(LIBDIR)
-	$(RM_F) $(LIBDIR)/libmp3lame.so.1
-	(cd $(LIBDIR) && $(LN_S) libmp3lame.so.1.0 libmp3lame.so.1)
-	$(RM_F) $(LIBDIR)/libmp3lame.so
-	(cd $(LIBDIR) && $(LN_S) libmp3lame.so.1 libmp3lame.so)
-	mkdir -p $(INCLUDEDIR)
-	$(INSTALL_PROGRAM) lame.h $(INCLUDEDIR)
+	$(INSTALL_PROGRAM) $(SHARED_LIB_MINOR) $(LIBDIR)
+	$(RM_F) $(LIBDIR)/$(SHARED_LIB_MAJOR)
+	(cd $(LIBDIR) && $(LN_S) $(SHARED_LIB_MINOR) $(SHARED_LIB_MAJOR))
+	$(RM_F) $(LIBDIR)/$(SHARED_LIB)
+	(cd $(LIBDIR) && $(LN_S) $(SHARED_LIB_MAJOR) $(SHARED_LIB))
 
 install_program: $(PGM)
 	$(INSTALL_PROGRAM) $(PGM) ${BINDIR}
 
 install: @INSTALL_TARGETS@
+
+uninstall:
+	$(RM_F) $(BINDIR)/$(PGM)
+	$(RM_F) $(INCLUDEDIR)/lame.h
+	$(RM_F) $(LIBDIR)/libmp3lame.a
+	$(RM_F) $(LIBDIR)/$(SHARED_LIB)
+	$(RM_F) $(LIBDIR)/$(SHARED_LIB_MAJOR)
+	$(RM_F) $(LIBDIR)/$(SHARED_LIB_MINOR)
 
 clean:
   ifeq ($(UNAME),MSDOS)
@@ -503,9 +514,12 @@ clean:
 	-del $(PGM)
   else
 	-$(RM_F) $(gtk_obj) $(OBJ) $(DEP) $(PGM) main.o rtp.o mp3rtp mp3rtp.o \
-         mp3x.o mp3x libmp3lame.a libmp3lame.so libmp3lame.so.1 libmp3lame.so.1.0
+         mp3x.o mp3x libmp3lame.a \
+         $(SHARED_LIB) $(SHARED_LIB_MAJOR) $(SHARED_LIB_MINOR)
   endif
 
+bla:
+	echo "LIB=$(SHARED_LIB) MAJOR=$(SHARED_LIB_MAJOR) MINOR=$(SHARED_LIB_MINOR)"
 
 tags: TAGS
 
