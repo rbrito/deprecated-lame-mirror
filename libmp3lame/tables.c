@@ -76,7 +76,7 @@ const int s1_bits[] = { 0, 0, 0, 0, 3, 1, 1, 1, 2, 2, 2, 3, 3, 3, 4, 4 };
 const int s2_bits[] = { 0, 1, 2, 3, 0, 1, 2, 3, 1, 2, 3, 1, 2, 3, 2, 3 };
 
 /* Table B.6: layer3 preemphasis */
-const int  pretab [SBMAX_l] =
+const int  pretab[SBMAX_l] =
 {
     0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
     1, 1, 1, 1, 2, 2, 3, 3, 3, 2, 0
@@ -86,10 +86,8 @@ const int  pretab [SBMAX_l] =
   Here are MPEG1 Table B.8 and MPEG2 Table B.1
   -- Layer III scalefactor bands. 
   Index into this using a method such as:
-    idx  = fr_ps->header->sampling_frequency
-           + (fr_ps->header->version * 3)
+    idx  = fr_ps->header->sampling_frequency + (fr_ps->header->version * 3)
 */
-
 
 const scalefac_struct sfBandIndex[9] =
 {
