@@ -47,14 +47,6 @@ void quantize_sfb_3DN(const FLOAT *, int, int, int *);
 #define SCALEFAC_SCFSI_FLAG    (-1)
 #define SCALEFAC_ANYTHING_GOES (-2)
 
-/*********************************************************************
- * XRPOW_FTOI is a macro to convert floats to ints.
- * when converting float->int by nearest_int(x)
- *      round offset = ROUNDFAC_NEAR = -0.0946, QUANTFAC(x)=adj43asm[x]
- *
- * when converting float->int by floor(x)
- *      round offset = ROUNDFAC =  0.4054, QUANTFAC(x)=asj43[x]
- *********************************************************************/
 #define ROUNDFAC 0.4054
 
 #endif /* LAME_QUANTIZE_PVT_H */
