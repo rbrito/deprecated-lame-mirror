@@ -963,7 +963,7 @@ char* const inPath, char* const outPath, char **nogap_inPath, int *num_nogap)
                 T_ELIF ("mixedblock")
                     (void) lame_set_use_mixed_blocks( gfp, 2);
 
-                T_ELIF_INTERNAL ("shortthreshold")
+                T_ELIF_INTERNAL ("allshort")
                     (void) lame_set_short_threshold( gfp, 0.0f, 0.0f);
 
                 T_ELIF_INTERNAL ("quantcomp")
