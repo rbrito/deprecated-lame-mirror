@@ -736,7 +736,7 @@ trancate(FLOAT x)
 	float f;
 	int i;
     } fi;
-    fi.f = x + (double)(0.5+MAGIC_FLOAT);
+    fi.f = x + (0.5+MAGIC_FLOAT);
     return fi.i - MAGIC_INT - 1;
 }
 #else /* USE_IEEE754_HACK */

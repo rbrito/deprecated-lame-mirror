@@ -103,7 +103,7 @@ typedef FLOAT     sample_t;
 /* log/log10 approximations */
 #ifdef USE_IEEE754_HACK
 # define USE_FAST_LOG
-# define MAGIC_FLOAT (65536*128)
+# define MAGIC_FLOAT ((double)65536*128)
 # define MAGIC_INT 0x4b000000
 # define ROUNDFAC_NEAR (ROUNDFAC-0.5)
 #endif

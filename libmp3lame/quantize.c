@@ -814,8 +814,8 @@ calc_sfb_noise(lame_t gfc, int j, int bw, int sf)
 #ifdef USE_IEEE754_HACK
 	double t0, t1;
 	fi_union fi0, fi1;
-	fi0.f = (t0 = sfpow34 * xr34[j+bw  ] + MAGIC_FLOAT);
-	fi1.f = (t1 = sfpow34 * xr34[j+bw+1] + MAGIC_FLOAT);
+	fi0.f = (t0 = sfpow34 * xr34[j+bw  ] + (FLOAT)MAGIC_FLOAT);
+	fi1.f = (t1 = sfpow34 * xr34[j+bw+1] + (FLOAT)MAGIC_FLOAT);
 	assert(fi0.i <= MAGIC_INT + IXMAX_VAL
 	       && fi1.i <= MAGIC_INT + IXMAX_VAL);
 	fi0.f = t0 + (adj43asm - MAGIC_INT)[fi0.i];
