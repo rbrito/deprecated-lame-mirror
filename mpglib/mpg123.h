@@ -3,7 +3,11 @@
 #include        <signal.h>
 
 
-#include        <math.h>
+#if defined(__riscos__) && defined(FPA10)
+#include	"ymath.h"
+#else
+#include	<math.h>
+#endif
 
 #ifndef M_PI
 #define M_PI       3.14159265358979323846

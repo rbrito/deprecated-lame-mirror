@@ -4,7 +4,7 @@
  * Warranty Information
  * Even though Apple has reviewed this software, Apple makes no warranty
  * or representation, either express or implied, with respect to this
- * software, its quality, accuracy, merchantability, or fitness for a 
+ * software, its quality, accuracy, merchantability, or fitness for a
  * particular purpose.  As a result, this software is provided "as is,"
  * and you, its user, are assuming the entire risk as to its quality
  * and accuracy.
@@ -44,6 +44,9 @@
  * $Id$
  *
  * $Log$
+ * Revision 1.4  2000/06/07 22:56:02  sbellon
+ * added support for FPA10 hardware (RISC OS only)
+ *
  * Revision 1.3  2000/02/21 23:05:05  markt
  * some 64bit DEC Alpha patches
  *
@@ -61,7 +64,11 @@
 
 #include        <limits.h>
 #include	<stdio.h>
+#if defined(__riscos__) && defined(FPA10)
+#include	"ymath.h"
+#else
 #include	<math.h>
+#endif
 #include	"ieeefloat.h"
 
 
@@ -217,7 +224,7 @@ ConvertFromIeeeDouble(char* bytes)
 		|	((unsigned long)(bytes[5] & 0xFF) << 16)
 		|	((unsigned long)(bytes[6] & 0xFF) << 8)
 		|	 (unsigned long)(bytes[7] & 0xFF);
-	
+
 	if (first == 0 && second == 0) {
 		f = 0;
 	}
@@ -314,7 +321,7 @@ ConvertToIeeeDouble(defdouble num, char *bytes)
 			}
 		}
 	}
-	
+
 	bytes[0] = (char)(first >> 24);
 	bytes[1] = (char)(first >> 16);
 	bytes[2] = (char)(first >> 8);
@@ -337,13 +344,13 @@ ConvertFromIeeeExtended(char* bytes)
 	long	expon;
 	unsigned long hiMant, loMant;
 
-#ifdef	TEST	
+#ifdef	TEST
 printf("ConvertFromIEEEExtended(%lx,%lx,%lx,%lx,%lx,%lx,%lx,%lx,%lx,%lx\r",
-	(long)bytes[0], (long)bytes[1], (long)bytes[2], (long)bytes[3], 
-	(long)bytes[4], (long)bytes[5], (long)bytes[6], 
+	(long)bytes[0], (long)bytes[1], (long)bytes[2], (long)bytes[3],
+	(long)bytes[4], (long)bytes[5], (long)bytes[6],
 	(long)bytes[7], (long)bytes[8], (long)bytes[9]);
 #endif
-	
+
 	expon = ((bytes[0] & 0x7F) << 8) | (bytes[1] & 0xFF);
 	hiMant	=	((unsigned long)(bytes[2] & 0xFF) << 24)
 			|	((unsigned long)(bytes[3] & 0xFF) << 16)
@@ -412,7 +419,7 @@ ConvertToIeeeExtended(defdouble num, char *bytes)
 			fMant = ldexp(fMant - fsMant, 32); fsMant = floor(fMant); loMant = FloatToUnsigned(fsMant);
 		}
 	}
-	
+
 	bytes[0] = expon >> 8;
 	bytes[1] = expon;
 	bytes[2] = (char)(hiMant >> 24);
@@ -472,7 +479,7 @@ int
 GetHexValue(register int x)
 {
 	x &= 0x7F;
-	
+
 	if ('0' <= x && x <= '9')
 		x -= '0';
 	else if ('a' <= x && x <= 'f')
@@ -481,7 +488,7 @@ GetHexValue(register int x)
 		x = x - 'A' + 0xA;
 	else
 		x = 0;
-	
+
 	return(x);
 }
 
@@ -533,7 +540,7 @@ MaybeSwapBytes(char* bytes, int nBytes)
 #else
 	if (bytes, nBytes);		/* Just so it's used */
 #endif /* LITTLE_ENDIAN */
-	
+
 }
 
 
@@ -609,7 +616,7 @@ TestFromIeeeDouble(char *hex)
 	defdouble f;
 	union DParts p;
 	char bytes[8];
-	
+
 	Hex2Bytes(hex, bytes);
 	f = ConvertFromIeeeDouble(bytes);
 	p.d = f;
@@ -728,7 +735,7 @@ void SignalFPE(int i, void (*j)())
 	printf("[Floating Point Interrupt Caught.]\n", i, j);
 	signal(SIGFPE, SignalFPE);
 }
-	
+
 void
 main(void)
 {
@@ -952,5 +959,5 @@ extended(1e-4927) --> IEEE(1e-4927) [0000 80000000 00000000]
 extended(1e-4927) --> IEEE(1e-4927) [0000 00000000 00000001]
 extended(1.99111) --> IEEE(1.99111) [3FFF FEDCBA98 76543210]
 */
- 
+
 #endif /* TEST_FP */

@@ -1,6 +1,10 @@
 #include <stdio.h>
 #include <stdlib.h>
-#include <math.h>
+#if defined(__riscos__) && defined(FPA10)
+#include	"ymath.h"
+#else
+#include	<math.h>
+#endif
 #include <assert.h>
 #include "util.h"
 #include "gtkanal.h"
@@ -46,7 +50,7 @@ ResvFrameBegin(lame_global_flags *gfp,III_side_info_t *l3_side, int mean_bits, i
       gfc->pinfo->mean_bits=mean_bits/2;  /* expected bits per channel per granule */
       gfc->pinfo->resvsize=gfc->ResvSize;
     }
-    
+
     fullFrameBits = mean_bits * gfc->mode_gr + Min(gfc->ResvSize,gfc->ResvMax);
     if (gfp->strict_ISO) {
       if (fullFrameBits>maxmp3buf) fullFrameBits=maxmp3buf;
@@ -82,15 +86,15 @@ void ResvMaxBits(lame_global_flags *gfp, int mean_bits, int *targ_bits, int *ext
     *targ_bits -= .1*mean_bits;
   }
 
-  
+
   /* amount from the reservoir we are allowed to use. ISO says 6/10 */
-  *extra_bits =    
+  *extra_bits =
     (gfc->ResvSize  < (gfc->ResvMax*6)/10  ? gfc->ResvSize : (gfc->ResvMax*6)/10);
   *extra_bits -= add_bits;
-  
+
   if (*extra_bits < 0) *extra_bits=0;
 
-  
+
 }
 
 /*
@@ -115,7 +119,7 @@ mean_bits/gfc->stereo-gi->part2_3_length);
   ResvFrameEnd:
   Called after all granules in a frame have been allocated. Makes sure
   that the reservoir size is within limits, possibly by adding stuffing
-  bits. 
+  bits.
 */
 void
 ResvFrameEnd(lame_global_flags *gfp,III_side_info_t *l3_side, int mean_bits)
@@ -143,13 +147,13 @@ ResvFrameEnd(lame_global_flags *gfp,III_side_info_t *l3_side, int mean_bits)
       assert(0==(over_bits % 8 ));
       stuffingBits += over_bits;
     }
-    
+
 
 #define NEW_DRAINXX
 #ifdef NEW_DRAIN
     /* drain as many bits as possible into previous frame ancillary data
      * In particular, in VBR mode ResvMax may have changed, and we have
-     * to make sure main_data_begin does not create a reservoir bigger 
+     * to make sure main_data_begin does not create a reservoir bigger
      * than ResvMax  mt 4/00*/
   {
     int mdb_bytes = Min(l3_side->main_data_begin*8,stuffingBits)/8;
@@ -161,7 +165,7 @@ ResvFrameEnd(lame_global_flags *gfp,III_side_info_t *l3_side, int mean_bits)
 
     /* drain just enough to be byte aligned.  The remaining bits will
      * be added to the reservoir, and we will deal with them next frame.
-     * If the next frame is at a lower bitrate, it may have a larger ResvMax, 
+     * If the next frame is at a lower bitrate, it may have a larger ResvMax,
      * and we will not have to waste these bits!  mt 4/00 */
     l3_side->resvDrain_post += (stuffingBits % 8);
     gfc->ResvSize -= stuffingBits % 8;
