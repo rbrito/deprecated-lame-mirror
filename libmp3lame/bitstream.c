@@ -328,7 +328,7 @@ copy_buffer(lame_t gfc, unsigned char *buffer, int size)
 
 	/* re-synthesis to pcm.  Repeat until we get a samples_out=0 */
 	while (samples_out != 0) {
-	    samples_out = decode1_unclipped(gfc, buffer, mp3_in,pcm_buf[0],pcm_buf[1]); 
+	    samples_out = decode1_unclipped(gfc->pmp_replaygain, buffer, mp3_in,pcm_buf[0],pcm_buf[1]); 
 	    /* samples_out = 0:  need more data to decode 
              * samples_out = -1:  error.  Lets assume 0 pcm output 
              * samples_out = number of samples output */
@@ -367,7 +367,7 @@ copy_buffer(lame_t gfc, unsigned char *buffer, int size)
 		}
 		
 		if (gfc->findReplayGain)
-		    if (AnalyzeSamples(gfc->rgdata, pcm_buf[0], pcm_buf[1], samples_out, gfc->channels_out) == GAIN_ANALYSIS_ERROR)
+		    if (AnalyzeSamples(&gfc->rgdata, pcm_buf[0], pcm_buf[1], samples_out, gfc->channels_out) == GAIN_ANALYSIS_ERROR)
 			return -6;
             } /* if (samples_out>0) */
 	} /* while (samples_out!=0) */
@@ -829,6 +829,32 @@ int
 flush_bitstream(lame_t gfc, unsigned char *buffer, int size)
 {
     int dummy;
+
+    /* save the ReplayGain value */
+    if (gfc->findReplayGain) {
+	FLOAT RadioGain = (FLOAT) GetTitleGain(&gfc->rgdata);
+	assert(RadioGain != GAIN_NOT_ENOUGH_SAMPLES); 
+	gfc->RadioGain = (int) floor( RadioGain * 10.0 + 0.5 ); /* round to nearest */
+    }
+
+    /* find the gain and scale change required for no clipping */
+    if (gfc->findPeakSample) {
+	gfc->noclipGainChange
+	    = (int) ceil(log10(gfc->PeakSample / 32767.0) *20.0*10.0);  /* round up */
+
+	if (gfc->noclipGainChange > 0.0) { /* clipping occurs */
+	    if (gfc->scale == 1.0 || gfc->scale == 0.0) 
+		gfc->noclipScale = floor( (32767.0 / gfc->PeakSample) * 100.0 ) / 100.0;  /* round down */
+	    else
+		/* the user specified his own scaling factor. We could suggest 
+		 * the scaling factor of (32767.0/gfc->PeakSample)*(gfc->scale)
+		 * but it's usually very inaccurate. So we'd rather not advice
+		 * him/her on the scaling factor. */
+		gfc->noclipScale = -1;
+	}
+	else  /* no clipping */
+	    gfc->noclipScale = -1;
+    }
 
     /* we have padded out all frames with ancillary data, which is the
        same as filling the bitreservoir with ancillary data, so : */

@@ -258,7 +258,7 @@ struct lame_internal_flags {
     int RadioGain;
     int AudiophileGain;
 
-    replaygain_t *rgdata;
+    replaygain_t rgdata;
 
     int findReplayGain;         /* find the RG value? default=0		     */
     int findPeakSample;
@@ -577,10 +577,12 @@ struct lame_internal_flags {
    internal type sample_t. No more than 1152 samples 
    per channel are allowed. */
 int decode1_unclipped(
-    lame_t,
+    PMPSTR pmp,
     unsigned char*  mp3buf,
     int             len,
     sample_t        pcm_l[],
     sample_t        pcm_r[] );
+
+int decode_init_for_replaygain(lame_t gfc);
 
 #endif /* LAME_ENCODER_H */

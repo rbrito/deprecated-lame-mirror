@@ -996,7 +996,8 @@ int  parse_args (lame_t gfp, int argc, char** argv,
                     lame_set_scale_right( gfp, atof(nextArg) );
                 
                 T_ELIF ("replaygain-fast")
-                    lame_set_findReplayGain(gfp,1);
+		    lame_set_findReplayGain(gfp,1);
+
 #ifdef HAVE_MPGLIB
                 T_ELIF ("replaygain-accurate")
 		    lame_set_decode_on_the_fly(gfp,1);

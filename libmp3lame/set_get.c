@@ -348,34 +348,6 @@ lame_get_decode_on_the_fly( lame_t  gfc )
     return gfc->decode_on_the_fly;
 }
 
-/* DEPRECATED. same as lame_set_decode_on_the_fly() */
-int
-lame_set_findPeakSample( lame_t  gfc,
-                           int                 arg )
-{
-    return lame_set_decode_on_the_fly(gfc, arg);
-}
-
-int
-lame_get_findPeakSample( lame_t  gfc )
-{
-    return lame_get_decode_on_the_fly(gfc);
-}
-
-/* DEPRECATED. same as lame_set_findReplayGain() */
-int
-lame_set_ReplayGain_input( lame_t  gfc,
-                           int                 arg )
-{
-    return lame_set_findReplayGain(gfc, arg);
-}
-
-int
-lame_get_ReplayGain_input( lame_t  gfc )
-{
-    return lame_get_findReplayGain(gfc);
-}
-
 /* set and get some gapless encoding flags */
 
 int
@@ -1143,6 +1115,37 @@ int CDECL lame_get_size_mp3buffer(lame_t gfc)
     return size;
 }
 
+
+
+int
+lame_get_RadioGain(lame_t gfc)
+{
+    return gfc->RadioGain;
+}
+
+int
+lame_get_AudiophileGain(lame_t gfc)
+{
+    return gfc->AudiophileGain;
+}
+
+float
+lame_get_PeakSample(lame_t gfc)
+{
+    return (float)gfc->PeakSample;
+}
+
+int
+lame_get_noclipGainChange(lame_t gfc)
+{
+    return gfc->noclipGainChange; 
+}
+
+float
+lame_get_noclipScale(lame_t gfc)
+{
+    return gfc->noclipScale; 
+}
 
 
 /*

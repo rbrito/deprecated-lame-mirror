@@ -545,6 +545,15 @@ lame_init_params(lame_t gfc)
 	}
     }
 #endif
+    gfc->frameNum=0;
+    if (InitGainAnalysis(&gfc->rgdata, gfc->out_samplerate) == INIT_GAIN_ANALYSIS_ERROR)
+        return -6;
+
+#ifdef HAVE_MPGLIB
+    if (gfc->decode_on_the_fly && !gfc->pmp_replaygain) {
+	return decode_init_for_replaygain(gfc);
+    }
+#endif
     init_bitstream_w(gfc);
 
     gfc->Class_ID = LAME_ID;
@@ -1205,13 +1214,6 @@ lame_init_bitstream(lame_t gfc)
     memset(gfc->bitrate_blockType_Hist, 0,
 	   sizeof(gfc->bitrate_blockType_Hist));
 #endif
-    gfc->frameNum=0;
-#ifdef HAVE_MPGLIB
-    if (gfc->decode_on_the_fly && !gfc->pmp_replaygain) {
-	extern int decode_init_for_replaygain(lame_t gfc);
-	return decode_init_for_replaygain(gfc);
-    }
-#endif
     return 0;
 }
 
@@ -1779,6 +1781,13 @@ encode_buffer_sample(
 	    n_out = fill_buffer(gfc, lr_buffer[ch], nsamples, &n_in, ch);
 	    lr_buffer[ch] += n_in;
 	} while (++ch < gfc->channels_out);
+
+        /* compute ReplayGain of resampled input if requested */
+        if (gfc->findReplayGain && !gfc->decode_on_the_fly
+	    && AnalyzeSamples(&gfc->rgdata, &gfc->mfbuf[0][gfc->mf_size],
+			      &gfc->mfbuf[1][gfc->mf_size],
+			      n_out, gfc->channels_out) == GAIN_ANALYSIS_ERROR)
+	    return -6;
 
 	/* update lr_buffer counters */
 	nsamples -= n_in;

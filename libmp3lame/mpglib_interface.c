@@ -205,14 +205,14 @@ lame_decode1_headersB(lame_t gfc, unsigned char *buffer, int len,
 #define OUTSIZE_UNCLIPPED 1152*2*sizeof(FLOAT)
 
 int 
-decode1_unclipped(lame_t gfc, unsigned char *buffer, int len,
+decode1_unclipped(PMPSTR pmp, unsigned char *buffer, int len,
 		  sample_t pcm_l[], sample_t pcm_r[])
 {
     static char out[OUTSIZE_UNCLIPPED];
     mp3data_struct mp3data;
     int enc_delay,enc_padding;
 
-    return decode1_headersB_clipchoice(gfc->pmp, buffer, len, (char *)pcm_l, (char *)pcm_r, &mp3data, &enc_delay, &enc_padding, out, OUTSIZE_UNCLIPPED, sizeof(FLOAT), decodeMP3_unclipped  );
+    return decode1_headersB_clipchoice(pmp, buffer, len, (char *)pcm_l, (char *)pcm_r, &mp3data, &enc_delay, &enc_padding, out, OUTSIZE_UNCLIPPED, sizeof(FLOAT), decodeMP3_unclipped  );
 }
 
 
