@@ -76,8 +76,6 @@ const static char	VBRTag[]={"Xing"};
 const static char	VBRTag2[]={"Info"};
 
 
-//<<<<<<< VbrTag.c
-
 
 
 /* Lookup table for fast CRC computation
@@ -506,15 +504,15 @@ void ReportLameTagProgress(lame_global_flags *gfp,int nStart)
 */
 int PutLameVBR(lame_global_flags *gfp, FILE *fpStream, uint8_t *pbtStreamBuffer, uint32_t id3v2size,  uint16_t crc)
 {
-        lame_internal_flags *gfc = gfp->internal_flags;
+    lame_internal_flags *gfc = gfp->internal_flags;
 	FLOAT fVersion = LAME_MAJOR_VERSION + 0.01 * LAME_MINOR_VERSION;
 
 	int nBytesWritten = 0;
 	int nFilesize	  = 0;		//size of fpStream. Will be equal to size after process finishes.
 	int i;
 
-        int enc_delay=lame_get_encoder_delay(gfp);       // encoder delay
-        int enc_padding=lame_get_encoder_padding(gfp);   // encoder padding 
+    int enc_delay=lame_get_encoder_delay(gfp);       // encoder delay
+    int enc_padding=lame_get_encoder_padding(gfp);   // encoder padding 
 
 	//recall:	gfp->VBR_q is for example set by the switch -V 
 	//			gfp->quality by -q, -h, -f, etc
@@ -539,7 +537,7 @@ int PutLameVBR(lame_global_flags *gfp, FILE *fpStream, uint8_t *pbtStreamBuffer,
 
 	uint8_t nNoiseShaping			= gfp->internal_flags->noise_shaping;
 	uint8_t nStereoMode				= 0;
-	int		bArchival				= FALSE;
+	int		bNonOptimal				= 0;
 	uint8_t nSourceFreq				= 0;
 	uint8_t nMisc					= 0;
 	uint32_t nMusicLength			= 0;
@@ -562,7 +560,7 @@ int PutLameVBR(lame_global_flags *gfp, FILE *fpStream, uint8_t *pbtStreamBuffer,
 	
 	uint8_t  nFlags			= 0;
 
-	int nABRBitrate	= (gfp->VBR==vbr_abr)?gfp->VBR_mean_bitrate_kbps:0;
+	int nABRBitrate	= (gfp->VBR==vbr_abr)?gfp->VBR_mean_bitrate_kbps:gfp->brate;
 
 	//revision and vbr method
 	if (gfp->VBR>=0 && gfp->VBR < sizeof(vbr_type_translator))
@@ -633,30 +631,21 @@ int PutLameVBR(lame_global_flags *gfp, FILE *fpStream, uint8_t *pbtStreamBuffer,
 	else
 		nSourceFreq = 0x01;  //default is 44100Hz.
 
-	bArchival = 0;		//TODO
 
-
-	//Determine whether file is of 'Archival' quality
-	//FALSE if some stupid options have been enabled:
+	//Check if the user overrided the default LAME behaviour with some nasty options
 
 	if (gfp->short_blocks == short_block_forced 			||
 		gfp->short_blocks == short_block_dispensed 		||
 		((gfp->lowpassfreq == -1) && (gfp->highpassfreq == -1))	|| // "-k"
 		(gfp->scale_left != gfp->scale_right)			||
-		gfp->free_format		|| // "Archive" means you should be able to decode also
 		gfp->disable_reservoir		||
 		gfp->noATH			||
 		gfp->ATHonly			||
-		/*input_format	== sf_mp1	||
-		input_format	== sf_mp2	||
-		input_format	== sf_mp3	||
-		input_format	== sf_ogg	||*/
+		(nAthType == 0)    ||
 		gfp->in_samplerate <= 32000)
-		bArchival = 0;
+			bNonOptimal = 1;
 	
-	else if ((fVersion >=3.90) && 
-		(gfp->lowpassfreq >=19100 	|| gfp->lowpassfreq == 0) &&
-		(nAthType > 0 && nAthType < 5 )		&&
+/*	else if ((gfp->lowpassfreq >=19100 	|| gfp->lowpassfreq == 0) &&
 		( 
 			(gfp->brate >=256 && (gfp->mode == STEREO || (gfp->mode == JOINT_STEREO && bExpNPsyTune && bSafeJoint))) 
 			||(        (gfp->VBR_max_bitrate_kbps==320) &&
@@ -669,17 +658,14 @@ int PutLameVBR(lame_global_flags *gfp, FILE *fpStream, uint8_t *pbtStreamBuffer,
 			  )
 			)
 		)
-		bArchival = 1;
+		bArchival = 1;*/
 
 
 
 	nMisc =		nNoiseShaping
 			+	(nStereoMode << 2)
-			+	(bArchival << 5)
+			+	(bNonOptimal << 5)
 			+	(nSourceFreq << 6);
-
-
-	
 
 
 	
@@ -699,7 +685,7 @@ int PutLameVBR(lame_global_flags *gfp, FILE *fpStream, uint8_t *pbtStreamBuffer,
 	//and after this frame (i.e. where the music starts).
 	//end: before id3v1.
 	
-        nMusicCRC = gfc->nMusicCRC;
+    nMusicCRC = gfc->nMusicCRC;
 
 	/*Write all this information into the stream*/
 	
