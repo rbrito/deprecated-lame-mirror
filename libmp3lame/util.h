@@ -281,6 +281,7 @@ typedef struct  {
   FLOAT8 ATH_s[SBMAX_s];
   FLOAT8 decay;
   FLOAT8 masking_lower;
+  FLOAT8 adjust_ath;
 
   char bv_scf[576];
   
@@ -491,5 +492,9 @@ extern int lame_errorf(const char *, ...);
 #define FLUSH_MSG()	fflush(stderr)
 
 #endif
+
+
+int select_kth_int(int b[], int N, int k);
+
 
 #endif /* LAME_UTIL_H */

@@ -665,7 +665,85 @@ short_block_vbr_sf (
           III_scalefac_t * const vbrsf )
 {
     unsigned int j, sfb, b;
-    int vbrmax = -10000; /* initialize for minimum search */
+    int vbrmax = -10000; /* initialize for maximum search */
+  
+    for (j = 0, sfb = 0; sfb < SBMAX_s; sfb++) {
+        for (b = 0; b < 3; b++) {
+	    const unsigned int start = gfc->scalefac_band.s[ sfb ];
+	    const unsigned int end   = gfc->scalefac_band.s[ sfb+1 ];
+	    const unsigned int width = end - start;
+	    
+            vbrsf->s[sfb][b] = find_scalefac_ave (&xr34[j], &xr34_orig[j],
+                                              sfb, l3_xmin->s[sfb][b], width);
+            j += width;
+        }
+    }
+    
+    for (sfb = 0; sfb < SBMAX_s; sfb++) {
+        for (b = 0; b < 3; b++) {
+	    if (sfb > 0) 
+	        if (vbrsf->s[sfb][b] > vbrsf->s[sfb-1][b]+MAX_SF_DELTA)
+                    vbrsf->s[sfb][b] = vbrsf->s[sfb-1][b]+MAX_SF_DELTA;
+	    if (sfb < SBMAX_s-1) 
+	        if (vbrsf->s[sfb][b] > vbrsf->s[sfb+1][b]+MAX_SF_DELTA)
+                    vbrsf->s[sfb][b] = vbrsf->s[sfb+1][b]+MAX_SF_DELTA;
+            if (vbrmax < vbrsf->s[sfb][b])
+                vbrmax = vbrsf->s[sfb][b];
+        }
+    }
+
+    return vbrmax;
+}
+
+
+
+static int 
+long_block_vbr_sf (
+    const lame_internal_flags        * const gfc,
+    const III_psy_xmin   * const l3_xmin,
+    const FLOAT8                 xr34_orig[576],
+    const FLOAT8                 xr34     [576],
+          III_scalefac_t * const vbrsf )
+{
+    unsigned int sfb;
+    int vbrmax = -10000; /* initialize for maximum search */
+    
+    for (sfb = 0; sfb < SBMAX_l; sfb++) {
+        const unsigned int start = gfc->scalefac_band.l[ sfb ];
+        const unsigned int end   = gfc->scalefac_band.l[ sfb+1 ];
+        const unsigned int width = end - start;
+        
+        vbrsf->l[sfb] = find_scalefac_ave (&xr34[start], &xr34_orig[start],
+                                               sfb, l3_xmin->l[sfb], width);
+    }
+    
+    for (sfb = 0; sfb < SBMAX_l; sfb++) {
+        if (sfb > 0) 
+	    if (vbrsf->l[sfb] > vbrsf->l[sfb-1]+MAX_SF_DELTA)
+                vbrsf->l[sfb] = vbrsf->l[sfb-1]+MAX_SF_DELTA;
+        if (sfb < SBMAX_l-1) 
+	    if (vbrsf->l[sfb] > vbrsf->l[sfb+1]+MAX_SF_DELTA)
+                vbrsf->l[sfb] = vbrsf->l[sfb+1]+MAX_SF_DELTA;
+        if (vbrmax < vbrsf->l[sfb]) 
+            vbrmax = vbrsf->l[sfb];
+    }
+        
+    return vbrmax;
+}
+
+
+    /* a variation for vbr-mtrh */
+static int 
+short_block_sf (
+    const lame_internal_flags        * const gfc,
+    const III_psy_xmin   * const l3_xmin,
+    const FLOAT8                 xr34_orig[576],
+    const FLOAT8                 xr34     [576],
+          III_scalefac_t * const vbrsf )
+{
+    unsigned int j, sfb, b;
+    int vbrmax = -10000; /* initialize for maximum search */
+    int vbrdist, vbrmean, vbrmin = 10000; /* initialize for minimum search */
   
     for (j = 0, sfb = 0; sfb < SBMAX_s; sfb++) {
         for (b = 0; b < 3; b++) {
@@ -688,6 +766,25 @@ short_block_vbr_sf (
             j += width;
         }
     }
+    
+    vbrdist = 0;
+    for (b = 0; b < 3; b++) { 
+        int a[SBPSY_s];
+        for (sfb = 0; sfb < SBPSY_s; sfb++) 
+            a[sfb] = vbrsf->s[sfb][b];
+        
+        vbrmean = select_kth_int (a, SBPSY_s, SBMAX_s/2);
+        vbrmin = 10000;
+        for (sfb = 0; sfb < SBPSY_s; sfb++) { 
+            if (vbrmin > vbrsf->s[sfb][b])
+                vbrmin = vbrsf->s[sfb][b];
+            if (vbrsf->s[sfb][b] > vbrmean) {
+                vbrdist = Max (vbrdist, vbrsf->s[sfb][b] - vbrmean);
+            }
+        }
+        vbrsf->s[SBPSY_s][b] = Max (vbrmin-(vbrmean-vbrmin)/3, vbrsf->s[SBPSY_s][b]);
+    }
+    
     for (sfb = 0; sfb < SBMAX_s; sfb++) {
         for (b = 0; b < 3; b++) {
 	    if (sfb > 0) 
@@ -696,18 +793,18 @@ short_block_vbr_sf (
 	    if (sfb < SBMAX_s-1) 
 	        if (vbrsf->s[sfb][b] > vbrsf->s[sfb+1][b]+MAX_SF_DELTA)
                     vbrsf->s[sfb][b] = vbrsf->s[sfb+1][b]+MAX_SF_DELTA;
-	
             if (vbrmax < vbrsf->s[sfb][b])
                 vbrmax = vbrsf->s[sfb][b];
         }
     }
-    return vbrmax;
+
+    return vbrmax+vbrdist;
 }
 
 
-
+    /* a variation for vbr-mtrh */
 static int 
-long_block_vbr_sf (
+long_block_sf (
     const lame_internal_flags        * const gfc,
     const III_psy_xmin   * const l3_xmin,
     const FLOAT8                 xr34_orig[576],
@@ -715,8 +812,9 @@ long_block_vbr_sf (
           III_scalefac_t * const vbrsf )
 {
     unsigned int sfb;
-    int vbrmax = -10000; /* initialize for minimum search */
-
+    int vbrmax = -10000; /* initialize for maximum search */
+    int vbrdist, vbrmean, vbrmin = 10000; /* initialize for minimum search */
+    
     for (sfb = 0; sfb < SBMAX_l; sfb++) {
         const unsigned int start = gfc->scalefac_band.l[ sfb ];
         const unsigned int end   = gfc->scalefac_band.l[ sfb+1 ];
@@ -735,6 +833,25 @@ long_block_vbr_sf (
                                                sfb, l3_xmin->l[sfb], width);
         }
     }
+    
+    {
+    int a[SBPSY_l];
+    for (sfb = 0; sfb < SBPSY_l; sfb++)
+        a[sfb] = vbrsf->l[sfb];
+    
+    vbrmean = select_kth_int (a, SBPSY_l, SBMAX_l/2);
+    vbrmin = 10000;
+    vbrdist = 0;
+    for (sfb = 0; sfb < SBPSY_l; sfb++) {
+        if (vbrmin > vbrsf->l[sfb])
+            vbrmin = vbrsf->l[sfb];
+        if (vbrsf->l[sfb] > vbrmean) {
+            vbrdist = Max (vbrdist, vbrsf->l[sfb] - vbrmean);
+        }
+    }
+    vbrsf->l[SBPSY_l] = Max (vbrmin-(vbrmean-vbrmin)/3, vbrsf->l[SBPSY_l]);
+    }
+    
     for (sfb = 0; sfb < SBMAX_l; sfb++) {
         if (sfb > 0) 
 	    if (vbrsf->l[sfb] > vbrsf->l[sfb-1]+MAX_SF_DELTA)
@@ -742,11 +859,11 @@ long_block_vbr_sf (
         if (sfb < SBMAX_l-1) 
 	    if (vbrsf->l[sfb] > vbrsf->l[sfb+1]+MAX_SF_DELTA)
                 vbrsf->l[sfb] = vbrsf->l[sfb+1]+MAX_SF_DELTA;
-
         if (vbrmax < vbrsf->l[sfb]) 
             vbrmax = vbrsf->l[sfb];
     }
-    return vbrmax;
+        
+    return vbrmax+vbrdist;
 }
 
 
@@ -787,6 +904,20 @@ short_block_scalefacs (
                 maxover1 = v1;
         }
     }
+
+    if (vbr_mtrh == gfp->VBR)
+        /*  RH 2001-02-02:
+         *  shouldn't the following be considered too?? 
+         */
+        for (b = 0; b < 3; b++) {
+            int x = Min(vbrmax - vbrsf->s[SBPSY_s][b], 15);
+            if (maxover0 < x)
+                maxover0 = x;
+            x = Min(vbrmax - vbrsf->s[SBPSY_s][b], 30);
+            if (maxover1 < x)
+                maxover1 = x;
+        }
+
     if (gfc->noise_shaping == 2)
         /* allow scalefac_scale=1 */
         mover = Min (maxover0, maxover1);
@@ -886,6 +1017,22 @@ long_block_scalefacs (
             maxover0p = v0p;
         if (maxover1p < v1p)
             maxover1p = v1p;
+    }
+
+    if (vbr_mtrh == gfp->VBR) {
+        /*  RH 2001-02-02:
+         *  shouldn't the following be considered too?? 
+         */
+        int x = Min(vbrmax - vbrsf->l[SBPSY_l], 15);
+        if (maxover0 < x)
+            maxover0 = x;
+        if (maxover0p < x)
+            maxover0p = x;
+        x = Min(vbrmax - vbrsf->l[SBPSY_l], 30);
+        if (maxover1 < x)
+            maxover1 = x;
+        if (maxover1p < x)
+            maxover1p = x;
     }
 
     mover = Min (maxover0, maxover0p);
@@ -1202,11 +1349,11 @@ VBR_noise_shaping2 (
     shortblock = (cod_info->block_type == SHORT_TYPE);
       
     if (shortblock) {
-        vbrmax = short_block_vbr_sf (gfc, l3_xmin, xr34orig, xr, &vbrsf);  
+        vbrmax = short_block_sf (gfc, l3_xmin, xr34orig, xr, &vbrsf);  
         short_block_scalefacs (gfp, cod_info, scalefac, &vbrsf, &vbrmax);
         short_block_xr34      (gfc, cod_info, scalefac, xr34orig, xr34);
     } else {
-        vbrmax = long_block_vbr_sf (gfc, l3_xmin, xr34orig, xr, &vbrsf);  
+        vbrmax = long_block_sf (gfc, l3_xmin, xr34orig, xr, &vbrsf);  
         long_block_scalefacs (gfp, cod_info, scalefac, &vbrsf, &vbrmax);
         long_block_xr34      (gfc, cod_info, scalefac, xr34orig, xr34);
     } 
