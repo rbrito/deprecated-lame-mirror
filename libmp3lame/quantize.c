@@ -244,9 +244,9 @@ calc_noise(
     FLOAT over_noise_db = 0.0;
     FLOAT tot_noise_db  = 0.0; /*    0 dB relative to masking */
     FLOAT max_noise   = -20.0; /* -200 dB relative to masking */
-    int sfb, over=0, j=0;
+    int sfb = 0, over=0, j = 0;
 
-    for (sfb = 0; sfb < gi->psymax; sfb++) {
+    do {
 	FLOAT step
 	    = POW20(gi->global_gain
 		    - ((gi->scalefac[sfb] + (gi->preflag ? pretab[sfb] : 0))
@@ -275,7 +275,7 @@ calc_noise(
 	    over_noise_db += noise;
 	}
 	max_noise=Max(max_noise,noise);
-    }
+    } while (++sfb < gi->psymax);
 
     if (over && gi->block_type == SHORT_TYPE) {
 	distort -= sfb;
@@ -1226,11 +1226,11 @@ static const int max_range_short[SBMAX_s*3] = {
     7, 7, 7, 7, 7, 7, 7, 7, 7, 7, 7, 7, 7, 7, 7, 7, 7, 7,
     0, 0, 0 };
 
-static const int max_range_long[SBMAX_l] =
-    { 15, 15, 15, 15, 15, 15, 15, 15, 15, 15, 15, 7, 7, 7, 7, 7, 7, 7, 7, 7, 7, 0 };
+static const int max_range_long[SBMAX_l] = {
+    15, 15, 15, 15, 15, 15, 15, 15, 15, 15, 15, 7, 7, 7, 7, 7, 7, 7, 7, 7, 7, 0 };
 
-static const int max_range_long_lsf_pretab[SBMAX_l] =
-    { 7, 7, 7, 7, 7, 7, 3, 3, 3, 3, 3, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0 };
+static const int max_range_long_lsf_pretab[SBMAX_l] = {
+    7, 7, 7, 7, 7, 7, 3, 3, 3, 3, 3, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0 };
 
 /***********************************************************************
  *
@@ -1241,28 +1241,25 @@ static const int max_range_long_lsf_pretab[SBMAX_l] =
  ***********************************************************************/
 static int
 block_sf(const lame_internal_flags * gfc, const FLOAT * l3_xmin,
-	 const FLOAT * xr34_orig, int * vbrsf, gr_info *gi)
+	 const FLOAT * xr34, int * vbrsf, gr_info *gi)
 {
-    int     sfb, j, vbrmax;
-    int     scalefac_method = gfc->quantcomp_method;
-
+    int sfb, j, vbrmax, scalefac_method = gfc->quantcomp_method;
     if (gi->block_type == SHORT_TYPE)
 	scalefac_method = gfc->quantcomp_method_s;
-    j = 0;
+    sfb = j = 0;
     vbrmax = -10000;
-    for (sfb = 0; sfb < gi->psymax; sfb++) {
-        const int width = gi->width[sfb];
-	int gain;
-        if (scalefac_method >= 4) {
-            gain = 210 + (int) (9.0 * log10(l3_xmin[sfb] / width) - .5);
-	} else {
-            gain = find_scalefac(&gi->xr[j], &xr34_orig[j], l3_xmin[sfb], width);
-        }
-	j += width;
+    do {
+	int width = gi->width[sfb], gain;
+	if (scalefac_method >= 4)
+	    gain = 210 + (int) (9.0 * log10(l3_xmin[sfb] / width) - .5);
+	else {
+	    gain = find_scalefac(&gi->xr[j], &xr34[j], l3_xmin[sfb], width);
+	    j += width;
+	}
 	vbrsf[sfb] = gain;
 	if (vbrmax < gain)
 	    vbrmax = gain;
-    }
+    } while (++sfb < gi->psymax);
     return vbrmax;
 }
 
@@ -1272,18 +1269,17 @@ static void
 set_scalefactor_values(gr_info *gi, int const max_range[],
 		       int vbrmax, int vbrsf[])
 {
-    int ifqstep = 1 << (1 + gi->scalefac_scale);
-    int sfb;
-    for (sfb = 0; sfb < gi->psymax; sfb++) {
-	/* ifqstep*scalefac >= -sf[sfb], so round UP */
-	gi->scalefac[sfb]
-	    = (vbrmax - vbrsf[sfb] - gi->subblock_gain[gi->window[sfb]]*8
-	       - (gi->preflag ? pretab[sfb] * ifqstep : 0)
-	       + ifqstep - 1) >> (1 + gi->scalefac_scale);
-	if (gi->scalefac[sfb] < 0)
-	    gi->scalefac[sfb] = 0;
-	assert(gi->scalefac[sfb] <= max_range[sfb]);
-    }
+    int ifqstep = 1 << (1 + gi->scalefac_scale), sfb = 0;
+    do {
+	int s = (vbrmax - vbrsf[sfb] - gi->subblock_gain[gi->window[sfb]]*8
+		 + ifqstep - 1) >> (1 + gi->scalefac_scale);
+	if (gi->preflag)
+	    s -= pretab[sfb];
+	if (s < 0)
+	    s = 0;
+	gi->scalefac[sfb] = s;
+	assert(s <= max_range[sfb]);
+    } while (++sfb < gi->psymax);
 }
 
 /******************************************************************
