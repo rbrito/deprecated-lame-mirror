@@ -597,9 +597,11 @@ int  calc_noise(
   FLOAT8 sum;
   
   int count=0;
-  FLOAT8 noise;
+  FLOAT8 noise,noise_db;
   FLOAT8 over_noise = 1;     /*    0 dB relative to masking */
+  FLOAT8 over_noise_db = 0;
   FLOAT8 tot_noise  = 1;     /*    0 dB relative to masking */
+  FLOAT8 tot_noise_db  = 0;     /*    0 dB relative to masking */
   FLOAT8 max_noise  = 1E-20; /* -200 dB relative to masking */
   double klemm_noise = 1E-37;
 
@@ -633,17 +635,20 @@ int  calc_noise(
 	    } while (l < end);
             noise = xfsf->s[sfb][i]  = sum / l3_xmin->s[sfb][i];
 
-            /* multiplying here is adding in dB */
-	    tot_noise *= Max(noise, 1E-20);         // IISC this is nonsense, a nearly nondistorted band doesn't comp a heavly distorted one
-
-            if (noise > 1) {
-		over++;
-	        /* multiplying here is adding in dB */
-		over_noise *= noise;
-	    }
 	    max_noise    = Max(max_noise,noise);
 	    klemm_noise += penalties (noise);
 
+	    noise_db=10*log10(Max(noise,1E-20));
+            /* multiplying here is adding in dB, but will overflow */
+	    //tot_noise *= Max(noise, 1E-20); 
+	    tot_noise_db += noise_db;
+
+            if (noise > 1) {
+		over++;
+	        /* multiplying here is adding in dB, but can overflow */
+		//over_noise *= noise;
+		over_noise_db += noise_db;
+	    }
 	    count++;	    
         }
     }
@@ -670,18 +675,22 @@ int  calc_noise(
 	  temp = fabs(xr[l]) - pow43[ix[l]] * step;
 	  sum += temp * temp;
 	}
-
 	noise = xfsf->l[sfb] = sum / l3_xmin->l[sfb];
-	/* multiplying here is adding in dB */
-	tot_noise *= Max(noise, 1E-20);
-	if (noise > 1) {
-	  over++;
-	  /* multiplying here is adding in dB */
-	  over_noise *= noise;
-	}
-
 	max_noise=Max(max_noise,noise);
 	klemm_noise += penalties (noise);
+
+	noise_db=10*log10(Max(noise,1E-20));
+	/* multiplying here is adding in dB, but can overflow */
+	//tot_noise *= Max(noise, 1E-20);
+	tot_noise_db += noise_db;
+
+	if (noise > 1) {
+	  over++;
+	  /* multiplying here is adding in dB -but can overflow */
+	  //over_noise *= noise;
+	  over_noise_db += noise_db;
+	}
+
 	count++;
     }
   } /* cod_info->block_type == SHORT_TYPE */
@@ -700,8 +709,10 @@ int  calc_noise(
 
   */
 
-  res->tot_noise   = 10.*log10(Max(1e-20,tot_noise )); 
-  res->over_noise  = 10.*log10(Max(1e+00,over_noise)); 
+  //res->tot_noise   = 10.*log10(Max(1e-20,tot_noise )); 
+  //res->over_noise  = 10.*log10(Max(1e+00,over_noise)); 
+  res->tot_noise   = tot_noise_db;
+  res->over_noise  = over_noise_db;
   res->max_noise   = 10.*log10(Max(1e-20,max_noise ));
   res->klemm_noise = 10.*log10(Max(1e-20,klemm_noise));
 

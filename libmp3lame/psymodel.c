@@ -757,16 +757,14 @@ int L3psycho_anal( lame_global_flags * gfp,
 	    thr[b] = Max (1e-6, ecb);
 	  }
 
-	for ( sb = 0; sb < NBPSY_s; sb++ )
-	  {
+	for ( sb = 0; sb < NBPSY_s; sb++ ){
             FLOAT8 enn  = gfc->w1_s[sb] * eb[gfc->bu_s[sb]] + gfc->w2_s[sb] * eb[gfc->bo_s[sb]];
 	    FLOAT8 thmm = gfc->w1_s[sb] *thr[gfc->bu_s[sb]] + gfc->w2_s[sb] * thr[gfc->bo_s[sb]];
 	    
-            for ( b = gfc->bu_s[sb]+1; b < gfc->bo_s[sb]; b++ )
-	      {
+            for ( b = gfc->bu_s[sb]+1; b < gfc->bo_s[sb]; b++ ) {
 		enn  += eb[b];
 		thmm += thr[b];
-	      }
+	    }
 
 	    gfc->en [chn].s[sb][sblock] = enn;
 	    gfc->thm[chn].s[sb][sblock] = thmm;
@@ -1848,6 +1846,7 @@ int *npart_l_orig,int *npart_l,int *npart_s_orig,int *npart_s)
   int partition[HBLKSIZE]; 
   int loop, k2;
 
+#ifndef NOTABLES
   /******************************************************************/
   /* Read long block data */
   /******************************************************************/
@@ -1997,7 +1996,7 @@ int *npart_l_orig,int *npart_l,int *npart_s_orig,int *npart_s)
   /******************************************************************/
   /* done reading table data */
   /******************************************************************/
-
+#endif
 
 
 #ifdef NOTABLES
@@ -2237,10 +2236,6 @@ int *npart_l_orig,int *npart_l,int *npart_s_orig,int *npart_s)
   /* compute: */
   /* npart_l_orig   = number of partition bands before convolution */
   /* npart_l  = number of partition bands after convolution */
-
-  assert(*npart_l_orig <=CBANDS);
-  assert(*npart_s_orig<=CBANDS);
-
   
   *npart_l=bo_l[NBPSY_l-1]+1;
   *npart_s=bo_s[NBPSY_s-1]+1;
@@ -2250,6 +2245,9 @@ int *npart_l_orig,int *npart_l,int *npart_s_orig,int *npart_s)
   assert(*npart_l <= *npart_l_orig);
   assert(*npart_s <= *npart_s_orig);
 #else
+  assert(*npart_l_orig <=CBANDS);
+  assert(*npart_s_orig<=CBANDS);
+
   /* if npart_l = npart_l_orig + 1, we can fix that below.  else: */
   assert(*npart_l <= *npart_l_orig+1);
   assert(*npart_s <= *npart_s_orig+1);
