@@ -10,7 +10,12 @@
 #include "mpg123.h"
 #include "mpglib.h"
 #include "huffman.h"
+#ifdef PARENT_IS_SLASH
+#include "/gtkanal.h"
+#else
 #include "../gtkanal.h"
+#endif
+
 
 extern struct mpstr *gmp;
 

@@ -3,7 +3,7 @@
 #include "mpg123.h"
 #include "mpglib.h"
 
-#ifdef OS_AMIGAOS
+#ifdef PARENT_IS_SLASH
 #include "/lame.h"
 #include "/util.h"
 #include "/VbrTag.h"
@@ -11,7 +11,7 @@
 #include "../lame.h"
 #include "../util.h"
 #include "../VbrTag.h"
-#endif /* OS_AMIGAOS */
+#endif 
 
 #include <stdlib.h>
 

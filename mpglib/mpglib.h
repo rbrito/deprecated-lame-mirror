@@ -1,4 +1,8 @@
+#ifdef PARENT_IS_SLASH
+#include "/gtkanal.h"
+#else
 #include "../gtkanal.h"
+#endif
 extern plotting_data *mpg123_pinfo;
 
 struct buf {
