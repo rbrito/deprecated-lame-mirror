@@ -689,6 +689,11 @@ amp_scalefac_bands(
 	    trigger = distort[sfb];
     }
 
+    for (; sfb < gi->psymax; sfb++) {
+	if (trigger < distort[sfb])
+	    return 0;
+    }
+
     if (method < 2) {
 	if (trigger <= 1.0)
 	    trigger *= 0.95;
