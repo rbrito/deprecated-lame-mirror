@@ -208,7 +208,7 @@ on_pe(
     tbits /= gfc->channels_out;
     mean_bits /= gfc->channels_out;
 
-    for (bits = 0, ch = 0; ch < gfc->channels_out; ch++) {
+    for (bits = ch = 0; ch < gfc->channels_out; ch++) {
 	if (ratio[ch].ath_over == 0) {
 	    targ_bits[ch] = 126;
 	} else {
@@ -221,6 +221,7 @@ on_pe(
 	}
 	bits += targ_bits[ch];
     }
+
     if (bits > max_bits) {
 	for (ch = 0; ch < gfc->channels_out; ch++) {
 	    targ_bits[ch]
@@ -525,6 +526,7 @@ quantize_ISO(lame_internal_flags * const gfc, gr_info *gi)
     if (gfc->noise_shaping_amp >= 3) {
 	istep = istep * (0.634521682242439 / (1.0-ROUNDFAC));
 	xp = xr34;
+	fi = (fi_union *)gi->l3_enc;
 	while (xp < xend) {
 	    if (*xp++ < istep) fi[0].i = 0;
 	    if (*xp++ < istep) fi[1].i = 0;
@@ -572,14 +574,17 @@ init_global_gain(
 
     if (gi->global_gain < 0) {
 	gi->global_gain = 0;
-	count_bits(gfc, gi);
+	quantize_ISO(gfc, gi);
+	noquant_count_bits(gfc, gi);
     } else if (gi->global_gain > 255) {
 	gi->global_gain = 255;
 	gi->big_values = gi->count1 = gi->xrNumMax;
-	count_bits(gfc, gi);
+	quantize_ISO(gfc, gi);
+	noquant_count_bits(gfc, gi);
     } else if (nbits > desired_rate) {
 	gi->global_gain++;
-	count_bits(gfc, gi);
+	quantize_ISO(gfc, gi);
+	noquant_count_bits(gfc, gi);
     }
 }
 
@@ -1700,6 +1705,7 @@ VBR_iteration_loop(lame_global_flags *gfp, III_psy_ratio ratio[2][2])
 	    }
 	    iteration_finish_one(gfc, gr, ch);
 	    used_bits += gi->part2_3_length + gi->part2_length;
+
 	    if (used_bits > max_frame_bits) {
 		for (gr = 0; gr < gfc->mode_gr; gr++)
 		    for (ch = 0; ch < gfc->channels_out; ch++)
