@@ -234,20 +234,23 @@ find_scalefac(const FLOAT8 *xr, const FLOAT8 *xr34, const int sfb,
 
 
 
-static const int max_range_short[SBPSY_s]=
+static const int max_range_short[SBPSY_s] =
 {15, 15, 15, 15, 15, 15, 7, 7, 7, 7, 7, 7 };
 
-static const int max_range_short_lsf[SBPSY_s]=
-{4, 4, 4, 4, 4, 4, 3, 3, 3, 3, 3, 3 };
-
-static const int max_range_long[SBPSY_l]=
+static const int max_range_long[SBPSY_l] =
 {15, 15, 15, 15, 15, 15, 15, 15, 15, 15, 15, 7, 7, 7, 7, 7, 7, 7, 7, 7, 7};
 
+static const int max_range_short_lsf[SBPSY_s] =
+{15, 15, 15, 15, 15, 15, 7, 7, 7, 7, 7, 7 };
+
+/*static const int max_range_short_lsf_pretab[SBPSY_s] =
+{}*/
+
 static const int max_range_long_lsf[SBPSY_l] =
-{ 4,4,4,4,4,4, 4,4,4,4,4, 3,3,3,3, 3,3,3, 3,3,3 };
+{15, 15, 15, 15, 15, 15, 15, 15, 15, 15, 15, 7, 7, 7, 7, 7, 7, 7, 7, 7, 7};
 
 static const int max_range_long_lsf_pretab[SBPSY_l] =
-{ 3,3,3,3,3,3, 2,2,2,2,2, 0,0,0,0, 0,0,0, 0,0,0 };
+{ 7,7,7,7,7,7, 3,3,3,3,3, 0,0,0,0, 0,0,0, 0,0,0 };
     
 
 static int 
@@ -259,8 +262,8 @@ compute_scalefacs_short_lsf (
     int ifqstep = ( cod_info->scalefac_scale == 0 ) ? 2 : 4;
 
     maxover   = 0;
-    maxrange1 = 4;
-    maxrange2 = 3;
+    maxrange1 = max_range_short_lsf[0];
+    maxrange2 = max_range_short_lsf[6];
 
 
     for (i=0; i<3; ++i) {
@@ -720,7 +723,7 @@ long_block_scalefacs (
             maxover0 = v0;
         if (maxover1 < v1)
             maxover1 = v1;
-#if 0 /* I think this was intended, RH */ 
+#if 1 /* I think this was intended, RH */ 
         if (maxover0p < v0p)
             maxover0p = v0p;
         if (maxover1p < v1p)
