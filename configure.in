@@ -131,14 +131,31 @@ if test ".$WARNING" != "." ; then
 fi
 
 
+-DUSE_LAYER_1 -DUSE_LAYER_2
+
 dnl mpg123 decoder
 AC_MSG_CHECKING(use of mpg123 decoder)
 AC_ARG_ENABLE(decoder, 
   [  --enable-decoder            Include mpg123 decoder [default:yes]],
   CONFIG_DECODER="$enableval", CONFIG_DECODER="yes")
+AC_ARG_ENABLE(decode-layer1, 
+  [  --enable-decoder-layer1     Include layer1 decoding [default:yes]],
+  CONFIG_DECODER_L1="$enableval", CONFIG_DECODER_L1="yes")
+AC_ARG_ENABLE(decode-layer1, 
+  [  --enable-decoder-layer2     Include layer1 decoding [default:yes]],
+  CONFIG_DECODER_L2="$enableval", CONFIG_DECODER_L2="yes")
 if test "$CONFIG_DECODER" != "no" ; then
   CONFIG_OPTS="-DHAVEMPGLIB $CONFIG_OPTS"
   CONFIG_DECODER=yes
+  MPGLIB_SOURCE="\$(mpglib_sources)"
+
+  if test "$CONFIG_DECODER_L1" != "no" ; then
+    CONFIG_OPTS="-DUSE_LAYER1 $CONFIG_OPTS"
+  fi
+
+  if test "$CONFIG_DECODER_L2" != "no" ; then
+    CONFIG_OPTS="-DUSE_LAYER2 $CONFIG_OPTS"
+  fi
 fi
 AC_MSG_RESULT($CONFIG_DECODER)
 
@@ -161,11 +178,62 @@ AC_ARG_ENABLE(analyzer,
 if test "$FA_DEFAULT" != "no" && test "$CONFIG_FA" != "no" ; then
   CONFIG_LIBS="`$GTK_CONFIG --libs` $CONFIG_LIBS"
   CONFIG_OPTS="-DHAVEGTK `$GTK_CONFIG --cflags` $CONFIG_OPTS"
+  GTK_SOURCE="\$(gtk_sources)"
   CONFIG_FA=yes
 else
   CONFIG_FA=no
 fi
 AC_MSG_RESULT($CONFIG_FA)
+
+
+#
+# this is from vorbis
+#
+dnl check GLIBC
+case $host in 
+*86-*-linux*)
+	# glibc < 2.1.3 has a serious FP bug in the math inline header
+	# that will cripple Vorbis.  Look to see if the magic FP stack
+	# clobber is missing in the mathinline header, thus indicating
+	# the buggy version
+
+	AC_EGREP_CPP(log10.*fldlg2.*fxch,[
+		#define __LIBC_INTERNAL_MATH_INLINES 1
+	     	#define __OPTIMIZE__
+		#include <math.h>
+		],bad=maybe,bad=no)
+
+	AC_MSG_CHECKING(glibc mathinline bug)
+	if test ${bad} = "maybe" ;then
+	      AC_EGREP_CPP(log10.*fldlg2.*fxch.*st\([[0123456789]]*\),
+				[
+				#define __LIBC_INTERNAL_MATH_INLINES 1
+			     	#define __OPTIMIZE__
+				#include <math.h>
+				],bad=no,bad=yes)
+	fi
+	AC_MSG_RESULT(${bad})
+	if test ${bad} = "yes" ;then
+ AC_MSG_WARN([                                                        ])
+ AC_MSG_WARN([********************************************************])
+ AC_MSG_WARN([* The glibc headers on this machine have a serious bug *])
+ AC_MSG_WARN([* in /usr/include/bits/mathinline.h  This bug affects  *])
+ AC_MSG_WARN([* all floating point code, not just Ogg, built on this *])
+ AC_MSG_WARN([* machine.  Upgrading to glibc 2.1.3 is strongly urged *])
+ AC_MSG_WARN([* to correct the problem.  Note that upgrading glibc   *])
+ AC_MSG_WARN([* will not fix any previously built programs; this is  *])
+ AC_MSG_WARN([* a compile-time time bug.                             *])
+ AC_MSG_WARN([* To work around the problem for this build of Ogg,    *])
+ AC_MSG_WARN([* autoconf is disabling all math inlining.  This will  *])
+ AC_MSG_WARN([* hurt Ogg performace but is necessary for an Ogg that *])
+ AC_MSG_WARN([* will actually work.  Once glibc is upgraded, rerun   *])
+ AC_MSG_WARN([* configure and make to build with inlining.           *])
+ AC_MSG_WARN([********************************************************])
+ AC_MSG_WARN([                                                        ])
+
+	CPP_OPT="-D__NO_MATH_INLINES"
+	fi;;
+esac
 
 
 dnl configure use of VBR bitrate histogram
@@ -195,6 +263,10 @@ CONFIG_LIBS="$HAVE_LIBM $CONFIG_LIBS"
 AC_SUBST(CONFIG_OPTS)
 AC_SUBST(CONFIG_LIBS)
 AC_SUBST(CONFIG_LDFLAGS)
+
+CONFIG_SOURCES="$GTK_SOURCE $MPGLIB_SOURCE"
+AC_SUBST(CONFIG_SOURCES)
+AC_SUBST(CPP_OPT)
 
 dnl Checks for header files.
 AC_HEADER_STDC

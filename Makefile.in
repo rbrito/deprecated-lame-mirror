@@ -34,6 +34,7 @@ INSTALL_SCRIPT = @INSTALL_SCRIPT@
 
 # generic defaults. OS specific options go in versious sections below
 PGM ?= lame
+CPP_OPTS = @CPP_OPT@
 CC_OPTS = -O
 AR = ar
 RANLIB = @RANLIB@
@@ -51,7 +52,7 @@ INSTALL_TARGETS = install_program install_static_lib
 ##########################################################################
 # -DUSE_LAYER_1/2 enables Layer1 or Layer2 *decoding* abilities 
 ##########################################################################
-CPP_OPTS += -DUSE_LAYER_1 -DUSE_LAYER_2
+# hadled by configure
 
 
 ##########################################################################
@@ -376,7 +377,27 @@ endif
 
 CC_SWITCHES = -DNDEBUG -D__NO_MATH_INLINES $(CC_OPTS) $(CFLAGS) \
 $(LDFLAGS)
-c_sources_s = \
+OBJ = $(c_sources:.c=.o)
+DEP = $(c_sources:.c=.d)
+
+gtk_sources = gtkanal.c gpkplotting.c
+gtk_obj = $(gtk_sources:.c=.o)
+gtk_dep = $(gtk_sources:.c=.d)
+
+mpglib_sources = \
+        mpglib/common.c \
+        mpglib/dct64_i386.c \
+        mpglib/decode_i386.c \
+        mpglib/layer1.c \
+        mpglib/layer2.c \
+        mpglib/layer3.c \
+        mpglib/tabinit.c \
+        mpglib/interface.c \
+        mpglib/main.c 
+mpglib_obj = $(mpglib_sources:.c=.o)
+mpglib_dep = $(mpglib_sources:.c=.d)
+
+c_sources_s =  @CONFIG_SOURCES@ \
         brhist.c \
 	bitstream.c \
 	encoder.c \
@@ -400,29 +421,13 @@ c_sources_s = \
 	util.c \
 	vorbis_interface.c \
         VbrTag.c \
-        version.c \
-        mpglib/common.c \
-        mpglib/dct64_i386.c \
-        mpglib/decode_i386.c \
-        mpglib/layer1.c \
-        mpglib/layer2.c \
-        mpglib/layer3.c \
-        mpglib/tabinit.c \
-        mpglib/interface.c \
-        mpglib/main.c 
+        version.c
 
 ifeq ($(UNAME),MSDOS)
   c_sources = $(subst /,\\,$(c_sources_s))
 else
   c_sources = $(c_sources_s)
 endif
-
-OBJ = $(c_sources:.c=.o)
-DEP = $(c_sources:.c=.d)
-
-gtk_sources = gtkanal.c gpkplotting.c
-gtk_obj = $(gtk_sources:.c=.o)
-gtk_dep = $(gtk_sources:.c=.d)
 
 
 
@@ -510,7 +515,7 @@ clean:
 
 tags: TAGS
 
-TAGS: ${c_sources}
+TAGS: ${c_sources} ${mpglib_sources} ${gtk_sources}
 	etags -T ${c_sources}
 
 ifneq ($(MAKECMDGOALS),clean)
