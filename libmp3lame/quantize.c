@@ -175,8 +175,21 @@ calc_xmin(
     int sfb, gsfb, j=0;
     const FLOAT *xr = cod_info->xr;
 
+    if (gfp->ATHonly) {
+	for (gsfb = 0; gsfb < cod_info->psy_lmax; gsfb++)
+	    pxmin[gsfb]
+		= athAdjust(gfc->ATH.adjust, gfc->ATH.l[gsfb], gfc->ATH.floor);
+
+	for (sfb = cod_info->sfb_smin; gsfb < cod_info->psymax;
+	     sfb++, gsfb += 3)
+	    pxmin[gsfb] = pxmin[gsfb+1] = pxmin[gsfb+2]
+		= athAdjust(gfc->ATH.adjust, gfc->ATH.s[sfb], gfc->ATH.floor);
+
+	return;
+    }
+
     for (gsfb = 0; gsfb < cod_info->psy_lmax; gsfb++) {
-	FLOAT en0, xmin;
+	FLOAT en0, xmin, x;
 	int width, l;
 	xmin = athAdjust(gfc->ATH.adjust, gfc->ATH.l[gsfb], gfc->ATH.floor);
 
@@ -188,13 +201,11 @@ calc_xmin(
 	    en0 += xr[j] * xr[j]; j++;
 	} while (--l > 0);
 
-	if (!gfp->ATHonly) {
-	    FLOAT x = ratio->en.l[gsfb];
-	    if (x > 0.0) {
-		x = en0 * ratio->thm.l[gsfb] / x;
-		if (xmin < x)
-		    xmin = x;
-	    }
+	x = ratio->en.l[gsfb];
+	if (x > 0.0) {
+	    x = en0 * ratio->thm.l[gsfb] / x;
+	    if (xmin < x)
+		xmin = x;
 	}
 	*pxmin++ = xmin;
     }   /* end of long block loop */
@@ -213,14 +224,11 @@ calc_xmin(
 		en0 += xr[j] * xr[j]; j++;
 	    } while (--l > 0);
 
-	    xmin = tmpATH;
-	    if (!gfp->ATHonly && !gfp->ATHshort) {
-		FLOAT x = ratio->en.s[sfb][b];
-		if (x > 0.0)
-		    x = en0 * ratio->thm.s[sfb][b] / x;
-		if (xmin < x) 
-		    xmin = x;
-	    }
+	    xmin = ratio->en.s[sfb][b];
+	    if (xmin > 0.0)
+		xmin = en0 * ratio->thm.s[sfb][b] / xmin;
+	    if (xmin < tmpATH)
+		xmin = tmpATH;
 	    *pxmin++ = xmin;
 	}   /* b */
     }   /* end of short block sfb loop */
