@@ -140,23 +140,19 @@ athAdjust( FLOAT a, FLOAT x, FLOAT athFloor )
 */
 static void
 calc_xmin(
-    lame_global_flags *gfp,
+    lame_internal_flags *gfc,
     const III_psy_ratio * const ratio,
     const gr_info       * const gi, 
 	   FLOAT        * pxmin
     )
 {
-    lame_internal_flags *gfc = gfp->internal_flags;
     int sfb, gsfb, j=0;
-
     for (gsfb = 0; gsfb < gi->psy_lmax; gsfb++) {
-	FLOAT en0, xmin, x;
-	int width, l;
-	xmin = athAdjust(gfc->ATH.adjust, gfc->ATH.l[gsfb], gfc->ATH.floor);
-
-	width = gi->width[gsfb];
+	FLOAT xmin
+	    = athAdjust(gfc->ATH.adjust, gfc->ATH.l[gsfb], gfc->ATH.floor);
+	FLOAT en0 = 0.0, x;
+	int width = gi->width[gsfb], l;
 	l = width >> 1;
-	en0 = 0.0;
 	do {
 	    en0 += gi->xr[j] * gi->xr[j]; j++;
 	    en0 += gi->xr[j] * gi->xr[j]; j++;
@@ -172,11 +168,10 @@ calc_xmin(
     }   /* end of long block loop */
 
     for (sfb = gi->sfb_smin; gsfb < gi->psymax; sfb++, gsfb += 3) {
-	int width, b;
 	FLOAT tmpATH
 	    = athAdjust(gfc->ATH.adjust, gfc->ATH.s[sfb], gfc->ATH.floor);
+	int width = gi->width[gsfb], b;
 
-	width = gi->width[gsfb];
 	for (b = 0; b < 3; b++) {
 	    FLOAT en0 = 0.0, xmin;
 	    int l = width >> 1;
@@ -840,14 +835,13 @@ CBR_2nd_bitalloc(
 
 static void
 outer_loop (
-    lame_global_flags	*gfp,
+    lame_internal_flags *gfc,
     gr_info		* const gi,
     const int           ch,
     const int           targ_bits,  /* maximum allowed bits */
     const III_psy_ratio * const ratio
     )
 {
-    lame_internal_flags *gfc=gfp->internal_flags;
     calc_noise_result best_noise_info;
     gr_info gi_w;
     FLOAT distort[SFBMAX], l3_xmin[SFBMAX], xrpow[576];
@@ -869,7 +863,7 @@ outer_loop (
 
     /* compute the distortion in this quantization */
     /* coefficients and thresholds of ch0(L or Mid) or ch1(R or Side) */
-    calc_xmin (gfp, ratio, gi, l3_xmin);
+    calc_xmin (gfc, ratio, gi, l3_xmin);
     calc_noise (gi, l3_xmin, distort, &best_noise_info);
     if (gfc->noise_shaping_stop == 0 && best_noise_info.max_noise < 0.0)
 	goto quit_quantization;
@@ -1067,7 +1061,7 @@ ABR_iteration_loop(
     for (gr = 0; gr < gfc->mode_gr; gr++) {
 	for (ch = 0; ch < gfc->channels_out; ch++) {
 	    gr_info *gi = &gfc->l3_side.tt[gr][ch];
-	    outer_loop(gfp, gi, ch, targ_bits[gr][ch], &ratio[gr][ch]);
+	    outer_loop(gfc, gi, ch, targ_bits[gr][ch], &ratio[gr][ch]);
 	    iteration_finish_one(gfc, gr, ch);
 	    ResvAdjust(gfc, gi->part2_length + gi->part2_3_length);
 	}
@@ -1118,7 +1112,7 @@ iteration_loop(
 
         for (ch=0 ; ch < gfc->channels_out ; ch ++) {
 	    gr_info *gi = &gfc->l3_side.tt[gr][ch]; 
-	    outer_loop(gfp, gi, ch, targ_bits[ch], &ratio[gr][ch]);
+	    outer_loop(gfc, gi, ch, targ_bits[ch], &ratio[gr][ch]);
 	    iteration_finish_one(gfc, gr, ch);
 	    ResvAdjust(gfc,
 		       gi->part2_length + gi->part2_3_length
@@ -1492,7 +1486,7 @@ VBR_iteration_loop(lame_global_flags *gfp, III_psy_ratio ratio[2][2])
 
     for (gr = 0; gr < gfc->mode_gr; gr++) {
         for (ch = 0; ch < gfc->channels_out; ch++) {
-      	    calc_xmin (gfp, &ratio[gr][ch],
+      	    calc_xmin (gfc, &ratio[gr][ch],
 		       &gfc->l3_side.tt[gr][ch], l3_xmin[gr][ch]);
 	    ath_over += ratio[gr][ch].ath_over;
         }
@@ -1570,13 +1564,12 @@ VBR_iteration_loop(lame_global_flags *gfp, III_psy_ratio ratio[2][2])
  ************************************************************************/
 static void
 set_pinfo (
-        lame_global_flags *gfp,
-              gr_info        * const gi,
-        const III_psy_ratio  * const ratio, 
-        const int                    gr,
-        const int                    ch )
+    lame_internal_flags *gfc,
+         gr_info        * const gi,
+    const III_psy_ratio * const ratio, 
+    const int           gr,
+    const int           ch )
 {
-    lame_internal_flags *gfc=gfp->internal_flags;
     int sfb, sfb2, over = 0;
     int j,i,end,bw;
     FLOAT en0,en1,tot_noise=0.0;
@@ -1585,7 +1578,7 @@ set_pinfo (
     FLOAT l3_xmin[SFBMAX], distort[SFBMAX];
     calc_noise_result noise;
 
-    calc_xmin (gfp, ratio, gi, l3_xmin);
+    calc_xmin (gfc, ratio, gi, l3_xmin);
     calc_noise (gi, l3_xmin, distort, &noise);
 
     j = 0;
@@ -1603,7 +1596,7 @@ set_pinfo (
 	gfc->pinfo->  en[gr][ch][sfb] = en1*en0;
 	gfc->pinfo->xfsf[gr][ch][sfb] = en1*l3_xmin[sfb]*distort[sfb]/bw;
 
-	if (ratio->en.l[sfb]>0 && !gfp->ATHonly)
+	if (ratio->en.l[sfb]>0)
 	    en0 = en0/ratio->en.l[sfb];
 	else
 	    en0=0.0;
@@ -1636,7 +1629,7 @@ set_pinfo (
                 en1=1e15;  /* scaling so it shows up on FFT plot */
 		gfc->pinfo->  en_s[gr][ch][3*sfb+i] = en1*en0;
 		gfc->pinfo->xfsf_s[gr][ch][3*sfb+i] = en1*l3_xmin[sfb2]*distort[sfb2]/bw;
-		if (ratio->en.s[sfb][i]>0 && !(gfp->ATHonly || gfp->ATHshort))
+		if (ratio->en.s[sfb][i]>0)
 		    en0 = en0/ratio->en.s[sfb][i];
                 else
                     en0=0.0;
@@ -1699,7 +1692,7 @@ set_frame_pinfo(lame_global_flags *gfp, III_psy_ratio   ratio    [2][2])
 		}
 	    }
 
-	    set_pinfo (gfp, gi, &ratio[gr][ch], gr, ch);
+	    set_pinfo (gfc, gi, &ratio[gr][ch], gr, ch);
 	    memcpy(gi->scalefac, scalefac_sav, sizeof(scalefac_sav));
 	} /* for ch */
     }    /* for gr */

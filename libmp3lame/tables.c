@@ -1407,7 +1407,7 @@ int psymodel_init(lame_global_flags *gfp)
 	gfc->endlines_s[i] = numlines_s[i];
 	if (i != 0)
 	    gfc->endlines_s[i] += gfc->endlines_s[i-1];
-	if (gfp->ATHonly)
+	if (gfp->ATHonly || gfp->ATHshort)
 	    norm[i] = 1e-37;
     }
     for (i = 0; i < SBMAX_s; i++)
