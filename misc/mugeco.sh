@@ -1,5 +1,7 @@
 #!/bin/sh
 
+# $Id$
+
 # set -x
 
 my_name=$(basename $0)
