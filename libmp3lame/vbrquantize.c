@@ -500,23 +500,23 @@ calc_scalefac( FLOAT8 l3_xmin, int bw )
 
 
 
-static const int max_range_short[SBPSY_s] =
-{15, 15, 15, 15, 15, 15, 7, 7, 7, 7, 7, 7 };
+static const int max_range_short[SBMAX_s] =
+{15, 15, 15, 15, 15, 15, 7, 7, 7, 7, 7, 7, 0 };
 
-static const int max_range_long[SBPSY_l] =
-{15, 15, 15, 15, 15, 15, 15, 15, 15, 15, 15, 7, 7, 7, 7, 7, 7, 7, 7, 7, 7};
+static const int max_range_long[SBMAX_l] =
+{15, 15, 15, 15, 15, 15, 15, 15, 15, 15, 15, 7, 7, 7, 7, 7, 7, 7, 7, 7, 7, 0};
 
-static const int max_range_short_lsf[SBPSY_s] =
-{15, 15, 15, 15, 15, 15, 7, 7, 7, 7, 7, 7 };
+static const int max_range_short_lsf[SBMAX_s] =
+{15, 15, 15, 15, 15, 15, 7, 7, 7, 7, 7, 7, 0 };
 
 /*static const int max_range_short_lsf_pretab[SBPSY_s] =
 {}*/
 
-static const int max_range_long_lsf[SBPSY_l] =
-{15, 15, 15, 15, 15, 15, 15, 15, 15, 15, 15, 7, 7, 7, 7, 7, 7, 7, 7, 7, 7};
+static const int max_range_long_lsf[SBMAX_l] =
+{15, 15, 15, 15, 15, 15, 15, 15, 15, 15, 15, 7, 7, 7, 7, 7, 7, 7, 7, 7, 7, 0};
 
-static const int max_range_long_lsf_pretab[SBPSY_l] =
-{ 7,7,7,7,7,7, 3,3,3,3,3, 0,0,0,0, 0,0,0, 0,0,0 };
+static const int max_range_long_lsf_pretab[SBMAX_l] =
+{ 7,7,7,7,7,7, 3,3,3,3,3, 0,0,0,0, 0,0,0, 0,0,0, 0 };
     
 
 static int 
@@ -616,6 +616,7 @@ compute_scalefacs_long_lsf (
             }
         }
     }
+    scalefac[sfb] = 0;
 
     return maxover;
 }
@@ -632,8 +633,8 @@ compute_scalefacs_long_lsf (
 
 */
 static int 
-compute_scalefacs_short(int sf[SBPSY_s][3],gr_info *cod_info,
-int scalefac[SBPSY_s][3],int sbg[3])
+compute_scalefacs_short(int sf[][3],gr_info *cod_info,
+int scalefac[][3],int sbg[3])
 {
   int maxrange,maxrange1,maxrange2,maxover;
   int sfb,i;
@@ -679,6 +680,7 @@ int scalefac[SBPSY_s][3],int sbg[3])
 	}
       }
     }
+    scalefac[sfb][i] = 0;
   }
 
   return maxover;
@@ -694,7 +696,7 @@ int scalefac[SBPSY_s][3],int sbg[3])
 	  ol_sf -= ifqstep*pretab[sfb];
 */
 static int
-compute_scalefacs_long(int sf[SBPSY_l],gr_info *cod_info,int scalefac[SBPSY_l])
+compute_scalefacs_long(int *sf,gr_info *cod_info,int *scalefac)
 {
   int sfb;
   int maxover;
@@ -955,7 +957,7 @@ long_block_sf (
             break;
         }
     }
-    
+
     switch( gfc->VBR->smooth ) {
     default:
     case  0:
@@ -1027,7 +1029,7 @@ short_block_scalefacs (
 {
     lame_internal_flags *gfc=gfp->internal_flags;
     const int * max_range;
-     int sfb, b;
+     int sfb, maxsfb, b;
     int maxover, maxover0, maxover1, mover;
     int v0, v1;
     int minsfb;
@@ -1037,7 +1039,8 @@ short_block_scalefacs (
     
     maxover0 = 0;
     maxover1 = 0;
-    for (sfb = 0; sfb < SBPSY_s; sfb++) {
+    maxsfb = gfc->sfb21_extra ? SBMAX_s : SBPSY_s;
+    for (sfb = 0; sfb < maxsfb; sfb++) {
         for (b = 0; b < 3; b++) {
             v0 = (vbrmax - vbrsf->s[sfb][b]) - (4*14 + 2*max_range[sfb]);
             v1 = (vbrmax - vbrsf->s[sfb][b]) - (4*14 + 4*max_range[sfb]);
@@ -1076,7 +1079,7 @@ short_block_scalefacs (
     if (cod_info->global_gain > 255)
         cod_info->global_gain = 255;
 
-    for (sfb = 0; sfb < SBPSY_s; sfb++) {
+    for (sfb = 0; sfb < SBMAX_s; sfb++) {
         for (b = 0; b < 3; b++) {
             vbrsf->s[sfb][b] -= vbrmax;
         }
@@ -1127,7 +1130,7 @@ long_block_scalefacs (
     lame_internal_flags *gfc=gfp->internal_flags;
     const int * max_range;
     const int * max_rangep;
-     int sfb;
+     int sfb, maxsfb;
     int maxover, maxover0, maxover1, maxover0p, maxover1p, mover;
     int v0, v1, v0p, v1p;
     int vbrmax = *VBRmax;
@@ -1140,7 +1143,8 @@ long_block_scalefacs (
     maxover0p = 0; /* pretab */
     maxover1p = 0; /* pretab */
        
-    for ( sfb = 0; sfb < SBPSY_l; sfb++ ) {
+    maxsfb = gfc->sfb21_extra ? SBMAX_l : SBPSY_l;
+    for ( sfb = 0; sfb < maxsfb; sfb++ ) {
         v0  = (vbrmax - vbrsf->l[sfb]) - 2*max_range[sfb];
         v1  = (vbrmax - vbrsf->l[sfb]) - 4*max_range[sfb];
         v0p = (vbrmax - vbrsf->l[sfb]) - 2*(max_rangep[sfb]+pretab[sfb]);
@@ -1199,14 +1203,14 @@ long_block_scalefacs (
     if (cod_info->global_gain > 255) 
         cod_info->global_gain = 255;
     
-    for (sfb = 0; sfb < SBPSY_l; sfb++)   
+    for (sfb = 0; sfb < SBMAX_l; sfb++)   
         vbrsf->l[sfb] -= vbrmax;
-    
+
     if ( gfc->is_mpeg1 == 1 ) 
         maxover = compute_scalefacs_long (vbrsf->l, cod_info, scalefac->l);
     else
         maxover = compute_scalefacs_long_lsf (vbrsf->l, cod_info, scalefac->l);
-    
+
     assert (maxover <= 0);
     
     *VBRmax = vbrmax;
@@ -1303,11 +1307,10 @@ long_block_xr34 (
         
     ifqstep = ( cod_info->scalefac_scale == 0 ) ? 2 : 4;
     for ( sfb = 0; sfb < SBMAX_l; sfb++ ) {
-        
+
         ifac = ifqstep*scalefac->l[sfb];
         if (cod_info->preflag)
             ifac += ifqstep*pretab[sfb];
-
         fac = calc_fac( ifac );
 
         start = gfc->scalefac_band.l[ sfb ];
