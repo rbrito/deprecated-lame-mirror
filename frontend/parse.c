@@ -419,10 +419,13 @@ int  long_help ( const lame_global_flags* gfp, FILE* const fp, const char* Progr
               "                    -q 0:  Highest quality, very slow \n"
               "                    -q 9:  Poor quality, but fast \n"
               "    -h              Same as -q 2.   Recommended.\n"
-              "    -f              Same as -q 7.   Fast, ok quality\n" 
+              "    -f              Same as -q 7.   Fast, ok quality\n"
+	      "\n"
               "    --quantcomp n[,m] indicate quantization compare method\n"
 	      "                      n for long block and m for short block.\n"
-              "    --substep n     use pseudo substep noise shaping method types 0-7\n"
+              "    --substep n       use pseudo substep noise shaping method types 0-7\n"
+              "    --sfscale [n]     try to use scalefactor scale(n=1, default) or not(n=0).\n"
+              "    --sbgain [n]      try to use subblock gain (n=1, default) or not(n=0)\n"
               );
 
     wait_for ( fp, lessmode );
@@ -466,7 +469,7 @@ int  long_help ( const lame_global_flags* gfp, FILE* const fp, const char* Progr
               "    --nsmsfix <arg> M/S switching tuning\n"
               "    --interch x     adjust inter-channel masking ratio\n"
               "    --ns-bass x     adjust masking for  0 -  6 bark\n"
-              "    --ns-alto x     adjust masking for  6 - 12 bark\n"         
+              "    --ns-alto x     adjust masking for  6 - 12 bark\n"
               "    --ns-treble x   adjust masking for 12 - 18 bark\n"
               "    --ns-sfb21 x    change ns-treble by x dB for 18- bark\n"
 #if 0
@@ -1276,6 +1279,22 @@ char* const inPath, char* const outPath, char **nogap_inPath, int *num_nogap)
                 T_ELIF ("substep")
                     argUsed=1;
                     (void) lame_set_substep( gfp, atof(nextArg) );
+
+                T_ELIF ("sfscale")
+		{
+		    int i = 1;
+		    if (sscanf(nextArg, "%d", i) == 1)
+			argUsed=1;
+                    (void) lame_set_use_largescalefac( gfp, i);
+		}
+
+                T_ELIF ("sbgain")
+		{
+		    int i = 1;
+		    if (sscanf(nextArg, "%d", i) == 1)
+			argUsed=1;
+                    (void) lame_set_use_subblock_gain( gfp, i);
+		}
 
                 T_ELIF ("temporal-masking")
                     argUsed = 1;

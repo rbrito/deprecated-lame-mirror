@@ -701,6 +701,16 @@ lame_set_use_largescalefac( lame_global_flags*  gfp,
 }
 
 
+int
+lame_set_use_subblock_gain( lame_global_flags*  gfp,
+			    int                 method)
+{
+    gfp->internal_flags->use_subblock_gain = method;
+
+    return 0;
+}
+
+
 /* Naoki's psycho acoustic model. */
 int
 lame_set_exp_nspsytune( lame_global_flags*  gfp,

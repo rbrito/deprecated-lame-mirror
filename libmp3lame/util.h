@@ -335,6 +335,7 @@ struct lame_internal_flags {
   int quantization;         /* 0 = ISO formual,  1=best amplitude */
 
   int use_scalefac_scale;   /* 0 = not use  1 = use */
+  int use_subblock_gain;   /* 0 = not use  1 = use */
   int quantcomp_method;     /* how to compare the scalefactor combination */
   int quantcomp_method_s;   /* and for short block */
   int noise_shaping_amp;    /*  0 = ISO model: amplify all distorted bands

@@ -871,23 +871,16 @@ balance_noise (
     if (!status)
         return 1; /* amplified some bands not exceeding limits */
     
-    if (!gfc->use_scalefac_scale)
-	return 0;
-
-    /*  some scalefactors are too large.
-     *  lets try setting scalefac_scale=1 
-     */
-    memset(&gfc->pseudohalf, 0, sizeof(gfc->pseudohalf));
-    if (!cod_info->scalefac_scale) {
+    /*  some scalefactors are too large. */
+    if (gfc->use_scalefac_scale && !cod_info->scalefac_scale) {
+	/*  lets try setting scalefac_scale=1 */
 	inc_scalefac_scale (cod_info, xrpow);
-    } else {
-	if (cod_info->block_type == SHORT_TYPE ) {
-	    status = inc_subblock_gain (gfc, cod_info, xrpow)
-		|| loop_break (cod_info);
-	}
-	if (status)
+    } else if (gfc->use_subblock_gain && cod_info->block_type == SHORT_TYPE) {
+	/* try to use subblcok gain */
+	if (inc_subblock_gain (gfc, cod_info, xrpow) || loop_break (cod_info))
 	    return 0;
-    }
+    } else
+	return 0;
 
     if (gfc->mode_gr == 2)
 	return !scale_bitcount (cod_info);
