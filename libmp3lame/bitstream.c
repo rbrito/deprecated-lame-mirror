@@ -429,9 +429,9 @@ inline static void
 Huf_count1(bit_stream_t *bs, gr_info *gi)
 {
     int i;
-    const unsigned char * const hcode = quadcode[gi->count1table_select];
+    const unsigned char * const hcode = quadcode[gi->table_select[3]];
 
-    assert((unsigned int)gi->count1table_select < 2u);
+    assert((unsigned int)gi->table_select[3] < 2u);
     for (i = gi->big_values; i < gi->count1; i += 4) {
 	int huffbits = 0, p = 0;
 	assert((gi->l3_enc[i] | gi->l3_enc[i+1]
@@ -681,7 +681,7 @@ encodeBitStream(lame_t gfc)
 		ptr = writeTableHeader(gi, ptr, p);
 		ptr = writeheader(p,
 				  (gi->preflag > 0)*4 + gi->scalefac_scale*2
-				  + gi->count1table_select, 3, ptr);
+				  + gi->table_select[3], 3, ptr);
 		assert((unsigned int)gi->scalefac_scale < 2u);
 
 		slen = s1bits[gi->scalefac_compress];
@@ -755,8 +755,8 @@ encodeBitStream(lame_t gfc)
 	    }
 	    ptr = writeheader(p, part, 9, ptr);
 	    ptr = writeTableHeader(gi, ptr, p);
-	    ptr = writeheader(p, gi->scalefac_scale,     1, ptr);
-	    ptr = writeheader(p, gi->count1table_select, 1, ptr);
+	    ptr = writeheader(p, gi->scalefac_scale,  1, ptr);
+	    ptr = writeheader(p, gi->table_select[3], 1, ptr);
 
 	    for (partition = 0; partition < 4; partition++) {
 		int sfbend

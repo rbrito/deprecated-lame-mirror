@@ -34,48 +34,16 @@
 #include "psymodel.h"
 #include "quantize_pvt.h"
 
-/*
-  The following table is used to implement the scalefactor
-  partitioning for MPEG2 as described in section
-  2.4.3.2 of the IS. The indexing corresponds to the
-  way the tables are presented in the IS:
-
-  [table_number*3+row_in_table][column of nr_of_sfb]
-*/
-const int  nr_of_sfb_block [6*3][4] = {
-    {6, 5, 5, 5}, /* long/start/stop */
-    {9, 9, 9, 9}, /* short */
-    {6, 9, 9, 9}  /* mixed */
-    ,
-    {6, 5,  7, 3}, /* long/start/stop */
-    {9, 9, 12, 6}, /* short */
-    {6, 9, 12, 6}  /* mixed */
-    ,
-    {11, 10, 0, 0}, /* long/start/stop, preflag */
-    {18, 18, 0, 0}, /* short, preflag ? */
-    {15, 18, 0, 0}  /* mixed, preflag ? */
-    ,
-    { 7,  7,  7, 0}, /* long/start/stop, IS */
-    {12, 12, 12, 0}, /* short, IS */
-    { 6, 15, 12, 0}  /* mixed, IS */
-    ,
-    { 6,  6, 6, 3}, /* long/start/stop, IS */
-    {12,  9, 9, 6}, /* short, IS */
-    { 6, 12, 9, 6}  /* mixed, IS */
-    ,
-    { 8, 8, 5, 0}, /* long/start/stop, IS  */
-    {15,12, 9, 0}, /* short, IS */
-    { 6,18, 9, 0}  /* mixed, IS */
+const int  samplerate_table [3]  [4] = {
+    { 22050, 24000, 16000, -1 },      /* MPEG 2 */
+    { 44100, 48000, 32000, -1 },      /* MPEG 1 */
+    { 11025, 12000,  8000, -1 },      /* MPEG 2.5 */
 };
 
-
-/* MPEG1 scalefactor bits */
-const int s1bits[] = { 0, 0, 0, 0, 3, 1, 1, 1, 2, 2, 2, 3, 3, 3, 4, 4 };
-const int s2bits[] = { 0, 1, 2, 3, 0, 1, 2, 3, 1, 2, 3, 1, 2, 3, 2, 3 };
-
-/* Table B.6: layer3 preemphasis */
-const int  pretab[SBMAX_l] = {
-    0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,    1, 1, 1, 1, 2, 2, 3, 3, 3, 2, 0
+const int  bitrate_table    [3] [16] = {
+    { 0,  8, 16, 24, 32, 40, 48, 56,  64,  80,  96, 112, 128, 144, 160, -1 },
+    { 0, 32, 40, 48, 56, 64, 80, 96, 112, 128, 160, 192, 224, 256, 320, -1 },
+    { 0,  8, 16, 24, 32, 40, 48, 56,  64,  80,  96, 112, 128, 144, 160, -1 },
 };
 
 /*
@@ -126,6 +94,53 @@ static const scalefac_struct sfBandIndex[9] = {
 
 
 
+/*
+  The following table is used to implement the scalefactor
+  partitioning for MPEG2 as described in section
+  2.4.3.2 of the IS. The indexing corresponds to the
+  way the tables are presented in the IS:
+
+  [table_number*3+row_in_table][column of nr_of_sfb]
+*/
+const char nr_of_sfb_block [6*3][4] = {
+    {6, 5, 5, 5}, /* long/start/stop */
+    {9, 9, 9, 9}, /* short */
+    {6, 9, 9, 9}  /* mixed */
+    ,
+    {6, 5,  7, 3}, /* long/start/stop */
+    {9, 9, 12, 6}, /* short */
+    {6, 9, 12, 6}  /* mixed */
+    ,
+    {11, 10, 0, 0}, /* long/start/stop, preflag */
+    {18, 18, 0, 0}, /* short, preflag ? */
+    {15, 18, 0, 0}  /* mixed, preflag ? */
+    ,
+    { 7,  7,  7, 0}, /* long/start/stop, IS */
+    {12, 12, 12, 0}, /* short, IS */
+    { 6, 15, 12, 0}  /* mixed, IS */
+    ,
+    { 6,  6, 6, 3}, /* long/start/stop, IS */
+    {12,  9, 9, 6}, /* short, IS */
+    { 6, 12, 9, 6}  /* mixed, IS */
+    ,
+    { 8, 8, 5, 0}, /* long/start/stop, IS  */
+    {15,12, 9, 0}, /* short, IS */
+    { 6,18, 9, 0}  /* mixed, IS */
+};
+
+
+/* MPEG1 scalefactor bits */
+const char s1bits[] = { 0, 0, 0, 0, 3, 1, 1, 1, 2, 2, 2, 3, 3, 3, 4, 4 };
+const char s2bits[] = { 0, 1, 2, 3, 0, 1, 2, 3, 1, 2, 3, 1, 2, 3, 2, 3 };
+
+/* This is the scfsi_band table from 2.4.2.7 of the IS */
+const char scfsi_band[5] = { 0, 6, 11, 16, 21 };
+
+/* Table B.6: layer3 preemphasis */
+const char  pretab[SBMAX_l] = {
+    0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,    1, 1, 1, 1, 2, 2, 3, 3, 3, 2, 0
+};
+
 const unsigned char quadcode[2][16*2]  = {
     {
 	1+0,  4+1,  4+1,  5+2,  4+1,  6+2,  5+2,  6+3,
@@ -149,25 +164,10 @@ const char htESC_xlen[] = {
 };
 
 /* for subband filtering */
-const int mdctorder[] = {
+const unsigned char mdctorder[] = {
     0,30,15,17, 8,22, 7,25, 4,26,11,21,12,18, 3,29,
     2,28,13,19,10,20, 5,27, 6,24, 9,23,14,16, 1,31
 };
-
-const int  samplerate_table [3]  [4] = {
-    { 22050, 24000, 16000, -1 },      /* MPEG 2 */
-    { 44100, 48000, 32000, -1 },      /* MPEG 1 */
-    { 11025, 12000,  8000, -1 },      /* MPEG 2.5 */
-};
-
-const int  bitrate_table    [3] [16] = {
-    { 0,  8, 16, 24, 32, 40, 48, 56,  64,  80,  96, 112, 128, 144, 160, -1 },
-    { 0, 32, 40, 48, 56, 64, 80, 96, 112, 128, 160, 192, 224, 256, 320, -1 },
-    { 0,  8, 16, 24, 32, 40, 48, 56,  64,  80,  96, 112, 128, 144, 160, -1 },
-};
-
-/* This is the scfsi_band table from 2.4.2.7 of the IS */
-const int scfsi_band[5] = { 0, 6, 11, 16, 21 };
 
 /* for fast quantization */
 FLOAT pow20[Q_MAX+Q_MAX2];
@@ -303,8 +303,8 @@ compute_ath(lame_t gfc)
 /************************************************************************/
 static const struct
 {
-    const int region0_count;
-    const int region1_count;
+    char region0_count;
+    char region1_count;
 } subdv_table[ 23 ] =
 {
     {0, 0}, /* 0 bands */
@@ -741,7 +741,7 @@ s3_func(FLOAT bark)
    each partition band should be about DELBARK wide, but sometimes not. */
 static int
 init_numline(int *numlines, int *bo, int *bm, FLOAT *bval, FLOAT *mld,
-	     FLOAT sfreq, int blksize, int *scalepos, FLOAT deltafreq,
+	     FLOAT sfreq, int blksize, short *scalepos, FLOAT deltafreq,
 	     int sbmax)
 {
     int partition[HBLKSIZE], i, j, sfb;
@@ -788,7 +788,7 @@ init_numline(int *numlines, int *bo, int *bm, FLOAT *bval, FLOAT *mld,
 }
 
 static void
-init_numline_l2s(int *bo, FLOAT sfreq, int blksize, int *scalepos,
+init_numline_l2s(int *bo, FLOAT sfreq, int blksize, short *scalepos,
 		 FLOAT deltafreq, int sbmax)
 {
     int partition[HBLKSIZE], i, j, sfb;

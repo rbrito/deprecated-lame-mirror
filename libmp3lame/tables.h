@@ -26,16 +26,16 @@
 extern const char htESC_xlen[];
 extern const unsigned char quadcode[2][16*2];
 
-extern const int scfsi_band[5];
+extern const char scfsi_band[5];
 
 extern FLOAT window[];
 extern FLOAT window_s[];
 
-extern const int nr_of_sfb_block[6*3][4];
-extern const int pretab[SBMAX_l];
-extern const int s1bits[16], s2bits[16];
+extern const char nr_of_sfb_block[6*3][4];
+extern const char pretab[SBMAX_l];
+extern const char s1bits[16], s2bits[16];
 
-extern const int mdctorder[SBLIMIT];
+extern const unsigned char mdctorder[SBLIMIT];
 
 #define IXMAX_VAL 8206  /* ix always <= 8191+15.    see count_bits() */
 

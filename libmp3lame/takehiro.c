@@ -542,10 +542,10 @@ best_huffman_divide(lame_t gfc, gr_info * const gi)
 	a2 += quadcode[1][p];
     }
 
-    gi_w.count1table_select = 0;
+    gi_w.table_select[3] = 0;
     if (a1 > a2) {
 	a1 = a2;
-	gi_w.count1table_select = 1;
+	gi_w.table_select[3] = 1;
     }
 
     gi_w.count1bits = a1;
@@ -603,10 +603,10 @@ noquant_count_bits(lame_t gfc, gr_info * const gi)
 	a2 += quadcode[1][p];
     }
 
-    gi->count1table_select = 0;
+    gi->table_select[3] = 0;
     if (a1 > a2) {
 	a1 = a2;
-	gi->count1table_select = 1;
+	gi->table_select[3] = 1;
     }
 
     gi->part2_3_length = gi->count1bits = a1;
@@ -928,22 +928,22 @@ iteration_finish_one(lame_t gfc, int gr, int ch)
  *************************************************************************/
 
 /* 18*s1bits[i] + 18*s2bits[i] */
-static const int scale_short[16] = {
+static const char scale_short[16] = {
     0, 18, 36, 54, 54, 36, 54, 72, 54, 72, 90, 72, 90, 108, 108, 126 };
 
 /* 17*s1bits[i] + 18*s2bits[i] */
-static const int scale_mixed[16] = {
+static const char scale_mixed[16] = {
     0, 18, 36, 54, 51, 35, 53, 71, 52, 70, 88, 69, 87, 105, 104, 122 };
 
 /* 11*s1bits[i] + 10*s2bits[i] */
-static const int scale_long[16] = {
+static const char scale_long[16] = {
     0, 10, 20, 30, 33, 21, 31, 41, 32, 42, 52, 43, 53, 63, 64, 74 };
 
 int
 scale_bitcount(gr_info * const gi)
 {
     int k, sfb, s1, s2;
-    const int *tab;
+    const char *tab;
 
     /* maximum values */
     if (gi->block_type == SHORT_TYPE) {
@@ -966,15 +966,14 @@ scale_bitcount(gr_info * const gi)
 	}
     }
 
-    s1 = s2 = 0;
-    for (sfb = 0; sfb < gi->sfbdivide; sfb++)
-	if (gi->scalefac[sfb] != LARGE_BITS)
-	if (s1 < gi->scalefac[sfb])
-	    s1 = gi->scalefac[sfb];
+    s1 = (char)gi->scalefac[0];
+    for (sfb = 1; sfb < gi->sfbdivide; sfb++)
+	if (s1 < (char)gi->scalefac[sfb])
+	    s1 = (char)gi->scalefac[sfb];
+    s2 = (char)gi->scalefac[sfb++];
     for (; sfb < gi->sfbmax; sfb++)
-	if (gi->scalefac[sfb] != LARGE_BITS)
-	if (s2 < gi->scalefac[sfb])
-	    s2 = gi->scalefac[sfb];
+	if (s2 < (char)gi->scalefac[sfb])
+	    s2 = (char)gi->scalefac[sfb];
     s1 = log2tab[s1];
     s2 = log2tab[s2];
 

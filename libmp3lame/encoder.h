@@ -155,8 +155,8 @@ typedef struct {
 /* scalefactor band start/end positions */
 typedef struct 
 {
-    int l[1+SBMAX_l];
-    int s[1+SBMAX_s];
+    short l[1+SBMAX_l];
+    short s[1+SBMAX_s];
 } scalefac_struct;
 
 /* structures for psymodel */
@@ -180,24 +180,25 @@ typedef struct {
     FLOAT xr[576];
     int l3_enc[576];
     int scalefac[SFBMAX];
-    FLOAT ATHadjust;
 
     int part2_length;
     int part2_3_length;
+    int count1bits;
     int big_values;
     int count1;
-    int global_gain;
-    int scalefac_compress;
-    int block_type;
-    int mixed_block_flag;
-    int table_select[3];
-    int subblock_gain[3+1];
     int region0_count;
     int region1_count;
+    int table_select[3+1]; /* last one for count1 region */
+    int scalefac_compress;
+
+    int global_gain;
+
     int preflag;
     int scalefac_scale;
-    int count1table_select;
+    char subblock_gain[3+1];
 
+    int block_type;
+    int mixed_block_flag;
     int sfb_lmax;
     int sfb_smin;
     int psy_lmax;
@@ -206,11 +207,10 @@ typedef struct {
     int sfbdivide;
     int xrNumMax;
     winfo_t *wi;
-    int count1bits;
-    /* added for LSF */
-    int slen[4];
+    FLOAT ATHadjust;
 
-    int dummy_for_padding[3];
+    unsigned char slen[4];
+    int dummy_for_padding[1];
 } gr_info;
 
 typedef struct {
@@ -260,7 +260,7 @@ struct lame_internal_flags {
 
     replaygain_t rgdata;
 
-    int findReplayGain;         /* find the RG value? default=0		     */
+    int findReplayGain;    /* find the RG value? default=1 */
     sample_t PeakSample;
     int noclipGainChange;  /* gain change required for preventing clipping */
     FLOAT noclipScale;     /* user-specified scale factor required for preventing clipping */
@@ -356,12 +356,12 @@ struct lame_internal_flags {
 
     /* psymodel work, (for next frame data) */
     III_psy_ratio masking_next[MAX_GRANULES][MAX_CHANNELS*2];
-    int blocktype_next[MAX_GRANULES][MAX_CHANNELS*2]; /* for block type */
-    int mode_ext_next;
-    int is_start_sfb_l_next[MAX_GRANULES];
-    int is_start_sfb_s_next[MAX_GRANULES];
-    int is_start_sfb_l[MAX_GRANULES];
-    int is_start_sfb_s[MAX_GRANULES];
+    char blocktype_next[MAX_GRANULES][MAX_CHANNELS*2]; /* for block type */
+    char mode_ext_next;
+    char is_start_sfb_l_next[MAX_GRANULES];
+    char is_start_sfb_s_next[MAX_GRANULES];
+    char is_start_sfb_l[MAX_GRANULES];
+    char is_start_sfb_s[MAX_GRANULES];
 
     struct {
 	/* short block tuning */
@@ -397,16 +397,16 @@ struct lame_internal_flags {
     } ATH;
 
     /* quantization */
-    int OldValue[MAX_CHANNELS];
-    int CurrentStep[MAX_CHANNELS];
+    short OldValue[MAX_CHANNELS];
+    short CurrentStep[MAX_CHANNELS];
     scalefac_struct scalefac_band;
 
     char bv_scf[576];
-    int pseudohalf[SFBMAX];
+    char pseudohalf[SFBMAX];
 
     /* default cutoff(the max sfb where we should do noise-shaping) */
-    int cutoff_sfb_l;
-    int cutoff_sfb_s;
+    char cutoff_sfb_l;
+    char cutoff_sfb_s;
 
     /* variables for bitstream.c */
     bit_stream_t bs;
