@@ -806,16 +806,15 @@ static int  presets_set( lame_t gfp, int fast, int cbr, const char* preset_name,
 
         return 0;
     }
-    if (strcmp(preset_name, "standard2") == 0) {
-
-           lame_set_preset(gfp, STANDARD2);
-
-        return 0;
-    }
-    
     if (strcmp(preset_name, "standard3") == 0) {
 
            lame_set_preset(gfp, STANDARD3);
+
+        return 0;
+    }
+    if (strcmp(preset_name, "standard4") == 0) {
+
+           lame_set_preset(gfp, STANDARD4);
 
         return 0;
     }

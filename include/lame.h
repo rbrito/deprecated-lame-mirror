@@ -90,8 +90,8 @@ typedef enum preset_mode_e {
     DM_RADIO = 1012,
     DM_RADIO_FAST = 1013,
     STANDARD1 = 1014,
-    STANDARD2 = 1015,
-    STANDARD3 = 1016
+    STANDARD3 = 1016,
+    STANDARD4 = 1017
 } preset_mode;
 
 
