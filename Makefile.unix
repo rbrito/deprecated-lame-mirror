@@ -19,12 +19,12 @@ ifeq ($(UNAME),MSDOS)
   UNAME ?= UNKNOWN
   ARCH ?= UNKNOWN_ARCH
 else
-  UNAME ?= $(shell uname)
-  ARCH ?= $(shell uname -m)
+  UNAME = $(shell uname)
+  ARCH = $(shell uname -m)
 endif
 
 # generic defaults. OS specific options go in versious sections below
-PGM ?= lame
+PGM = lame
 CC = gcc
 CC_OPTS =  -O
 CPP_OPTS = -Iinclude -Impglib -Ifrontend -Ilibmp3lame
@@ -32,9 +32,10 @@ AR = ar
 RANLIB = ranlib
 GTK = 
 GTKLIBS = 
-SNDLIB = -DLAMESNDFILE
 LIBSNDFILE =  
 LIBS = -lm 
+MP3LIB = libmp3lame/libmp3lame.a
+MP3LIB_SHARED = libmp3lame/libmp3lame.so
 MAKEDEP = -M
 BRHIST_SWITCH = 
 LIBTERMCAP = 
@@ -79,18 +80,14 @@ CPP_OPTS += -DUSE_LAYER_1 -DUSE_LAYER_2
 ##########################################################################
 # Define these in the OS specific sections below to compile in code for:
 #
-# SNDLIB =                no file i/o 
-# SNDLIB = -DLAMESNDFILE  to use internal LAME soundfile routines 
 # SNDLIB = -DLIBSNDFILE   to use Erik de Castro Lopo's libsndfile 
-# http://www.zip.com.au/~erikd/libsndfile/
+# http://www.zip.com.au/~erikd/libsndfile/ instead of LAME's internal
+# routines.  Also set:
 #
-# Note: at present, libsndfile does not support input from stdin.  
+# LIBSNDFILE = -lsndfile
+# or
+# LIBSNDFILE = -L/location_of_libsndfile  -lsndfile
 #
-# for example:
-#  SNDLIB = -DLIBSNDFILE
-#  LIBSNDFILE=-lsndfile 
-#  if libsndfile is in a custom location, try:
-#  LIBSNDFILE=-L $(LIBSNDHOME) -lsndfile  -I $(LIBSNDHOME)
 ##########################################################################
 
 
@@ -99,7 +96,6 @@ CPP_OPTS += -DUSE_LAYER_1 -DUSE_LAYER_2
 # the GTK mp3 frame analyzer
 #
 # Requires  -DHAVEMPGLIB
-# and SNDLIB = -DLAME or -DLIBSNDFILE
 #
 # GTK = -DHAVEGTK `gtk-config --cflags`
 # GTKLIBS = `gtk-config --libs` 
@@ -320,7 +316,7 @@ ifeq ($(UNAME),OS/2)
    SHELL=sh	
    CC = gcc
    CC_OPTS = -O3
-   PGM ?= lame.exe
+   PGM = lame.exe
    LIBS =
 
 # I use the following for slightly better performance on my Pentium-II
@@ -343,7 +339,7 @@ endif
 ###########################################################################
 ifeq ($(UNAME),MSDOS)
   RM =
-  PGM ?= lame.exe
+  PGM = lame.exe
 endif
 
 ###########################################################################
@@ -398,7 +394,6 @@ $(BRHIST_SWITCH) $(VORBIS)
 frontend_sources = \
         frontend/brhist.c \
 	frontend/get_audio.c \
-        frontend/id3tag.c \
 	frontend/ieeefloat.c \
         frontend/lametime.c \
         frontend/parse.c \
@@ -409,6 +404,7 @@ lib_sources = \
 	libmp3lame/bitstream.c \
 	libmp3lame/encoder.c \
 	libmp3lame/fft.c \
+        libmp3lame/id3tag.c \
         libmp3lame/lame.c \
         libmp3lame/newmdct.c \
 	libmp3lame/psymodel.c \
@@ -434,7 +430,8 @@ lib_sources = \
 
 
 ifeq ($(UNAME),MSDOS)
-  frontend_sources = $(subst /,\\,$(c_sources))
+  frontend_sources = $(subst /,\\,$(frontend_sources))
+  lib_sources = $(subst /,\\,$(lib_sources))
 endif
 
 frontend_obj = $(frontend_sources:.c=.o)
@@ -442,7 +439,7 @@ lib_obj = $(lib_sources:.c=.o)
 
 DEP = $(frontend_sources:.c=.d) $(lib_sources:.c=.d )
 
-gtk_sources = gtkanal.c gpkplotting.c
+gtk_sources = mp3x/gtkanal.c mp3x/gpkplotting.c
 gtk_obj = $(gtk_sources:.c=.o)
 gtk_dep = $(gtk_sources:.c=.d)
 
@@ -471,25 +468,27 @@ ASFLAGS=-f elf -i i386/
 
 all: $(PGM)
 
-$(PGM):	frontend/main.o $(frontend_obj)  libmp3lame/libmp3lame.a 
+$(PGM):	frontend/main.o $(frontend_obj)  $(MP3LIB)
 	$(CC) $(CC_OPTS) -o $(PGM)  frontend/main.o $(frontend_obj) \
-        -I./frontend \
-        libmp3lame/libmp3lame.a $(LIBS) $(LIBSNDFILE) $(GTKLIBS) $(LIBTERMCAP) \
+        $(MP3LIB) $(LIBS) $(LIBSNDFILE) $(LIBTERMCAP) \
         $(VORBIS_LIB)
 
-mp3x:	mp3x/mp3x.o $(frontend_obj) $(gtk_obj) libmp3lame/libmp3lame.a
-	$(CC) -o mp3x mp3x/mp3x.o $(frontend_obj) $(gtk_obj) libmp3lame/libmp3lame.a $(LIBS) $(LIBSNDFILE) $(GTKLIBS) $(LIBTERMCAP) $(VORBIS_LIB)
+lamex:  mp3x/mp3x.o $(frontend_obj) $(gtk_obj) $(MP3LIB)
+	$(CC) -o lamex mp3x/mp3x.o $(frontend_obj) $(gtk_obj) $(MP3LIB) \
+        $(LIBS) $(LIBSNDFILE) $(GTKLIBS) $(LIBTERMCAP) $(VORBIS_LIB)
 
-mp3rtp:	frontend/rtp.o frontend/mp3rtp.o  $(frontend_obj) libmp3lame/libmp3lame.a
-	$(CC) -o mp3rtp mp3rtp.o rtp.o $(frontend_obj) libmp3lame/libmp3lame.a $(LIBS) $(LIBSNDFILE) $(GTKLIBS) $(LIBTERMCAP) $(VORBIS_LIB)
+mp3rtp:	frontend/rtp.o frontend/mp3rtp.o  $(frontend_obj) $(MP3LIB)
+	$(CC) -o mp3rtp mp3rtp.o rtp.o $(frontend_obj) $(MP3LIB) \
+        $(LIBS) $(LIBSNDFILE) $(LIBTERMCAP) $(VORBIS_LIB)
 
 libmp3lame/libmp3lame.a:  $(lib_obj)
-	$(AR) cr libmp3lame.a  $(lib_obj)
-	$(RANLIB) libmp3lame.a
+	$(AR) cr libmp3lame/libmp3lame.a  $(lib_obj)
+	$(RANLIB) libmp3lame/libmp3lame.a
 
 #shared library.  GNU specific?
 libmp3lame/libmp3lame.so:  $(lib_obj)
-	gcc -shared -Wl,-soname,libmp3lame.so -o libmp3lame/libmp3lame.so $(lib_obj)
+	cd libmp3lame
+	gcc -shared -Wl,-soname,libmp3lame/libmp3lame.so -o libmp3lame/libmp3lame.so $(lib_obj)
 
 install:  $(PGM) #libmp3lame.a
 	cp $(PGM) /usr/bin
@@ -500,15 +499,13 @@ install:  $(PGM) #libmp3lame.a
 
 clean:
   ifeq ($(UNAME),MSDOS)
-	-del *.o
-	-del *.d
-	-del *.a
-	-del mpglib\*.o
-	-del mpglib\*.d
+	-del $(frontend_obj)
+	-del $(lib_obj)
+	-del $(gtk_obj)
+	-del $(DEP)
 	-del $(PGM)
   else
-	-$(RM) $(gtk_obj) $(DEP) $(PGM) \
-         mp3x.o mp3x libmp3lame.a libmp3lame.so
+	-$(RM) $(gtk_obj) $(frontend_obj) $(lib_obj) $(DEP) $(PGM) libmp3lame/libmp3lame.a 
   endif
 
 

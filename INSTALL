@@ -22,10 +22,11 @@ these options must be set in Makefile or in the IDE.
 On unix systems, they are set via ./configure.  
 
 
-#define HAVEGTK      compile in support for the GTK based mp3 frame analyzer
 #define HAVEMPGLIB   compile in mpglib's mp3 *decoding* capibility
 #define HAVEVORBIS   compile in Vorbis decoding and encoding capibility
                      (you need libvorbis already built)
+#define NOANALYSIS   do not compile in code to collect information
+                     used for the MP3 frame analyzer.
 
 
 Options for the command line encoder:

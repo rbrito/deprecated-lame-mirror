@@ -366,6 +366,4 @@ extern void lame_errorf(const char *, ...);
 #endif
 
 
-int local_strcasecmp ( const char* s1, const char* s2 );
-
 #endif /* LAME_UTIL_H */

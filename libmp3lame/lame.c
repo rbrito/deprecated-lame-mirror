@@ -728,6 +728,7 @@ char *mp3buf, int mp3buf_size)
   } else {
     return lame_encode_mp3_frame(gfp,inbuf_l,inbuf_r,mp3buf,mp3buf_size);
   }
+  ++gfp->frameNum;
 }
 
 

@@ -61,7 +61,6 @@ FILE * musicin;             /* file pointer to input file */
 sound_file_format input_format;   
 int swapbytes;              /* force byte swapping   default=0*/
 int totalframes;                /* frames: 0..totalframes-1 (estimate)*/
-int frameNum;                   /* frame counter */
 
 /************************************************************************
 *
@@ -128,14 +127,6 @@ int main(int argc, char **argv)
   /* Now that all the options are set, lame needs to analyze them and
    * set some more internal options and check for problems
    */
-  if (outPath!=NULL && outPath[0]=='-' ) {
-    gf.bWriteVbrTag=0; /* turn off VBR tag */
-  }
-#if 0
-  if (outPath==NULL || outPath[0]=='-' ) {
-    gf.id3v1_enabled=0;       /* turn off ID3 version 1 tagging */
-  }
-#endif
   i = lame_init_params(&gf);
 
   if (gf.analysis) 
@@ -281,8 +272,8 @@ int main(int argc, char **argv)
 	    timestatus_klemm(&gf);
 	  }else{
 	    int mod = gf.version == 0 ? 100 : 50;
-	    if (frameNum % mod==0) {
-	      timestatus(gf.out_samplerate,frameNum,totalframes,gf.framesize);
+	    if (gf.frameNum % mod==0) {
+	      timestatus(gf.out_samplerate,gf.frameNum,totalframes,gf.framesize);
 #ifdef BRHIST
 	      if (brhist)
 		brhist_disp(totalframes);
@@ -294,7 +285,6 @@ int main(int argc, char **argv)
 	/* encode */
 	imp3=lame_encode_buffer(&gf,Buffer[0],Buffer[1],iread,
               mp3buffer,(int)sizeof(mp3buffer));
-	frameNum++;
 
 #ifdef BRHIST
 	/* update VBR histogram data */
@@ -322,7 +312,7 @@ int main(int argc, char **argv)
       }
 
       if (!silent) {
-	timestatus(gf.out_samplerate,frameNum,totalframes,gf.framesize);
+	timestatus(gf.out_samplerate,gf.frameNum,totalframes,gf.framesize);
 #ifdef BRHIST
 	if (brhist) {
 	  brhist_update(imp3);

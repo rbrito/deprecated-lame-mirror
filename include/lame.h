@@ -40,18 +40,6 @@ typedef enum vbr_mode_e {
 } vbr_mode;
 
 
-struct id3tag_spec
-{
-    /* private data members */
-    int flags;
-    const char *title;
-    const char *artist;
-    const char *album;
-    int year;
-    const char *comment;
-    int track;
-    int genre;
-};
 
 /* MPEG Header Definitions - Mode Values */
 
@@ -164,6 +152,7 @@ typedef struct  {
   int version;                    /* 0=MPEG2  1=MPEG1 */
   int encoder_delay;
   int framesize;                  
+  int frameNum;                   /* number of frames encoded */
 
 
   /* VBR tags */
