@@ -178,6 +178,9 @@ void timestatus_klemm ( const lame_global_flags* const gfp )
   	     gfp->frameNum == 9  ||
   	     GetRealTime () - last_time >= update_interval  ||
 	     GetRealTime () - last_time <  0 ) {
+#ifdef BRHIST
+            brhist_jump_back();
+#endif
             timestatus ( gfp->out_samplerate, gfp->frameNum, gfp->totalframes, gfp->framesize );
 #ifdef BRHIST
             if ( brhist ) {
