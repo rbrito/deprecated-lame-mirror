@@ -601,9 +601,9 @@ int PutLameVBR(lame_global_flags *gfp, FILE *fpStream, uint8_t *pbtStreamBuffer,
 	uint8_t nLowpass		= ( ((gfp->lowpassfreq / 100.0)+.5) > 255 ? 255 : (gfp->lowpassfreq / 100.0)+.5 );
 
 #ifdef DECODE_ON_THE_FLY
-	ieee754_float32_t fPeakSignalAmplitude	= (ieee754_float32_t) ( ((FLOAT8)gfc->PeakSample) / 32767.0 );
+    uint32_t nPeakSignalAmplitude = abs((int)((((FLOAT8)gfc->PeakSample) / 32767.0 ) * pow(2,23) +.5));
 #else
-	ieee754_float32_t fPeakSignalAmplitude	= 0;				
+    uint32_t nPeakSignalAmplitude = 0;
 #endif
   	uint16_t nRadioReplayGain		= 0; 
 	uint16_t nAudiophileReplayGain		= 0;
@@ -781,7 +781,7 @@ int PutLameVBR(lame_global_flags *gfp, FILE *fpStream, uint8_t *pbtStreamBuffer,
 	pbtStreamBuffer[nBytesWritten] = nLowpass;
 	nBytesWritten++;
 
-	memmove(&pbtStreamBuffer[nBytesWritten], &fPeakSignalAmplitude, 4);
+	CreateI4(&pbtStreamBuffer[nBytesWritten], nPeakSignalAmplitude);
 	nBytesWritten+=4;
 
 	CreateI2(&pbtStreamBuffer[nBytesWritten],nRadioReplayGain);
