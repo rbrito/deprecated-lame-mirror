@@ -685,6 +685,11 @@ void lame_print_config(lame_global_flags *gfp)
 	    gfc->lowpass1*out_samplerate*500,
 	    gfc->lowpass2*out_samplerate*500);
   }
+#ifdef RH_NOISE_CALC
+  if (gfp->experimentalY) {
+    MSGF("careful noise shaping, only maximum distorted band at once\n");
+  }
+#endif
 
   if (gfp->gtkflag) {
     MSGF("Analyzing %s \n",gfp->inPath);

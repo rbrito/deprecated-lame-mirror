@@ -539,9 +539,15 @@ int calc_noise( lame_global_flags *gfp,
   
   int count=0;
   FLOAT8 noise;
+#ifndef RH_NOISE_CALC
   FLOAT8 over_noise=0;
   FLOAT8 tot_noise=0;
   FLOAT8 max_noise = -999;
+#else
+  FLOAT8 over_noise = 1;     /*    0 dB relative to masking */
+  FLOAT8 tot_noise  = 1;     /*    0 dB relative to masking */
+  FLOAT8 max_noise  = 1E-20; /* -200 dB relative to masking */
+#endif
   
   if (cod_info->block_type == SHORT_TYPE) {
     int max_index = SBPSY_s;
@@ -587,13 +593,22 @@ int calc_noise( lame_global_flags *gfp,
 	    }    
 
 	    xfsf[i+1][sfb] = sum / bw;
-
 	    noise = xfsf[i+1][sfb] / l3_xmin->s[sfb][i];
+#ifndef RH_NOISE_CALC
 	    tot_noise += Max(noise, 1E-20);
+#else
+	    /* multiplying here is adding in dB */
+	    tot_noise *= Max(noise, 1E-20);
+#endif
 
             if (noise > 1) {
 		over++;
+#ifndef RH_NOISE_CALC
 		over_noise += noise;
+#else
+	        /* multiplying here is adding in dB */
+		over_noise *= noise;
+#endif
 	    }
 	    max_noise=Max(max_noise,noise);
             distort[i+1][sfb] = noise;
@@ -647,11 +662,20 @@ int calc_noise( lame_global_flags *gfp,
         xfsf[0][sfb] = sum / bw;
 
 	noise = xfsf[0][sfb] / l3_xmin->l[sfb];
+#ifndef RH_NOISE_CALC
 	tot_noise += Max(noise, 1E-20);
-
+#else
+	/* multiplying here is adding in dB */
+        tot_noise *= Max(noise, 1E-20);
+#endif
         if (noise>1) {
 	  over++;
+#ifndef RH_NOISE_CALC
 	  over_noise += noise;
+#else
+	  /* multiplying here is adding in dB */
+	  over_noise *= noise;
+#endif
 	}
 	max_noise=Max(max_noise,noise);
         distort[0][sfb] = noise;
@@ -666,11 +690,17 @@ int calc_noise( lame_global_flags *gfp,
   res->tot_count  = count;
   res->over_count = over;
 
+#ifndef RH_NOISE_CALC
   /* convert to db. DO NOT CHANGE THESE */
   res->tot_noise = 10*log10(Max(.00001,tot_noise)); 
   res->over_noise = 10*log10(Max(1.0,over_noise)); 
   res->max_noise = 10*log10(Max(.00001,max_noise));
-  
+#else
+  /* no need for dB. DO NOT CHANGE THESE */
+  res->tot_noise  = tot_noise; 
+  res->over_noise = over_noise; 
+  res->max_noise  = max_noise;
+#endif  
   return over;
 }
 
@@ -991,9 +1021,15 @@ average seems to be about -147db.
   gfc->pinfo->LAMEsfbits  [gr][ch] = cod_info->part2_length;
 
   gfc->pinfo->over      [gr][ch] = noise[0];
+#ifndef RH_NOISE_CALC
+  gfc->pinfo->max_noise [gr][ch] = noise[1];
+  gfc->pinfo->over_noise[gr][ch] = noise[2];
+  gfc->pinfo->tot_noise [gr][ch] = noise[3];
+#else
   gfc->pinfo->max_noise [gr][ch] = 10*log10(Max(1E-20,noise[1]));
   gfc->pinfo->over_noise[gr][ch] = 10*log10(Max(1.0,  noise[2]));
   gfc->pinfo->tot_noise [gr][ch] = 10*log10(Max(1E-20,noise[3]));
+#endif
 }
 
 

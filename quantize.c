@@ -636,7 +636,7 @@ VBR_iteration_loop (lame_global_flags *gfp, FLOAT8 pe[2][2],
 
 
 
-
+#ifndef RH_NOISE_CALC
 INLINE 
 int quant_compare(int experimentalX,
                   calc_noise_result *best,
@@ -718,6 +718,96 @@ int quant_compare(int experimentalX,
 
   return better;
 }
+
+#else
+
+INLINE 
+int quant_compare(int experimentalX,
+                  calc_noise_result *best,
+                  calc_noise_result *calc)
+{
+  /*
+    noise relative to masking thesholds.
+
+    over_noise:  sum of quantization noise > masking
+    tot_noise:   sum of all quantization noise
+    max_noise:   max quantization noise 
+
+   */
+  int better=0;
+  const FLOAT8 nrg_1p0dB = 0.794328234; /* -1.0 dB */
+  const FLOAT8 nrg_0p5dB = 0.891250938; /* -0.5 dB */
+  const FLOAT8 nrg1p0dB  = 1.258925412; /*  1.0 dB */
+  const FLOAT8 nrg1p5dB  = 1.412537545; /*  1.5 dB */
+  const FLOAT8 nrg2p0dB  = 1.584893192; /*  2.0 dB */
+
+  switch (experimentalX) {
+  default:
+  case 0: better =   calc->over_count  < best->over_count
+                 ||( calc->over_count == best->over_count
+                  && calc->over_noise <  best->over_noise )
+                 ||( calc->over_count == best->over_count 
+                  && calc->over_noise == best->over_noise
+		  && calc->tot_noise   < best->tot_noise  )
+	    ; break;
+
+
+  case 1: better = calc->max_noise < best->max_noise; break;
+
+  case 2: better = calc->tot_noise < best->tot_noise; break;
+  
+  case 3: better =  calc->tot_noise < best->tot_noise
+                 && calc->max_noise < best->max_noise*nrg2p0dB; break;
+  
+  case 4: better =  (
+                      (              1 >= calc->max_noise)
+                    &&(best->max_noise  > nrg2p0dB       )
+                    )
+                 || (
+                      (                        1 >= calc->max_noise)
+                    &&( best->max_noise           < 1              )
+                    &&((best->max_noise*nrg2p0dB) > calc->max_noise)
+                    &&( calc->tot_noise           < best->tot_noise)
+                    )
+                 || (
+                      (                        1 >= calc->max_noise)
+                    &&( best->max_noise           > 1              )
+                    &&((best->max_noise*nrg2p0dB) > calc->max_noise)
+                    &&( calc->tot_noise < (best->tot_noise*best->over_noise))
+                    )
+                 || (
+                      (                        1  < calc->max_noise)
+                    &&( best->max_noise           > nrg_0p5dB      )
+                    &&((best->max_noise*nrg1p0dB) > calc->max_noise)
+                    &&(  (calc->tot_noise*calc->over_noise)
+                        <(best->tot_noise*best->over_noise)        )
+                    )
+                 || (
+                      (                         1 < calc->max_noise)
+                    &&( best->max_noise           > nrg_1p0dB      )
+                    &&((best->max_noise*nrg1p5dB) > calc->max_noise)
+                    &&(  (calc->tot_noise*calc->over_noise*calc->over_noise)
+                        <(best->tot_noise*best->over_noise*best->over_noise))
+                    )
+                  ; break;
+     
+  case 5: better =   calc->over_noise  < best->over_noise
+                 ||( calc->over_noise == best->over_noise
+                  && calc->tot_noise   < best->tot_noise ); break;
+  
+  case 6: better =     calc->over_noise  < best->over_noise
+                 ||(   calc->over_noise == best->over_noise
+                  &&(  calc->max_noise   < best->max_noise
+                   ||( calc->max_noise  == best->max_noise
+                    && calc->tot_noise  <= best->tot_noise ))); break;
+  
+  case 7: better =  calc->over_count < best->over_count
+                 || calc->over_noise < best->over_noise; break;
+  }
+
+  return better;
+}
+#endif
 
 
 /************************************************************************/
@@ -1018,7 +1108,7 @@ void outer_loop(
   Amplify the scalefactor bands that violate the masking threshold.
   See ISO 11172-3 Section C.1.5.4.3.5
 */
-
+#ifndef RH_NOISE_CALC
 void amp_scalefac_bands(lame_global_flags *gfp, FLOAT8 xrpow[576], 
                         gr_info *cod_info, III_scalefac_t *scalefac,
                         FLOAT8 distort[4][SBMAX_l])
@@ -1080,7 +1170,78 @@ void amp_scalefac_bands(lame_global_flags *gfp, FLOAT8 xrpow[576],
     }
   }
 }
+#else
+void amp_scalefac_bands(lame_global_flags *gfp, FLOAT8 xrpow[576], 
+                        gr_info *cod_info, III_scalefac_t *scalefac,
+                        FLOAT8 distort[4][SBMAX_l])
+{
+  int start, end, l,i,j, max_ind[4]={0,0,0,0};
+  u_int sfb;
+  FLOAT8 ifqstep34,distort_thresh[4]={1E-20,1E-20,1E-20,1E-20};
+  lame_internal_flags *gfc=gfp->internal_flags;
 
+  if ( cod_info->scalefac_scale == 0 ) {
+    ifqstep34 = 1.29683955465100964055; /* 2**(.75*.5)*/
+  } else {
+    ifqstep34 = 1.68179283050742922612;  /* 2**(.75*1) */
+  }
+  /* distort[] = noise/masking.  Comput distort_thresh so that:
+   * distort_thresh = 1, unless all bands have distort < 1
+   * In that case, just amplify bands with distortion
+   * within 95% of largest distortion/masking ratio */
+  for ( sfb = 0; sfb < cod_info->sfb_lmax; sfb++ ) {
+    if (distort[0][sfb] > distort_thresh[0]) {
+      distort_thresh[0] = distort[0][sfb];
+      max_ind[0] = sfb;
+    }
+  }
+
+  for ( i = 1; i < 4; i++ ) {
+    for ( sfb = cod_info->sfb_smax; sfb < 12; sfb++ ) {
+      if (distort[i][sfb] > distort_thresh[i]) {
+        distort_thresh[i] = distort[i][sfb];
+        max_ind[i] = sfb;
+      }
+    }
+  }
+  
+  for ( i = 0; i < 4; i++ ) {
+    if (distort_thresh[i]>1.0)
+      distort_thresh[i] = 1.0;
+    else
+      distort_thresh[i] = pow(distort_thresh[i], 1.05);
+  }
+
+  for ( sfb = 0; sfb < cod_info->sfb_lmax; sfb++ ) {
+    if ( distort[0][sfb]>distort_thresh[0]
+     && (sfb==max_ind[0] || !gfp->experimentalY)) {
+      scalefac->l[sfb]++;
+      start = gfc->scalefac_band.l[sfb];
+      end   = gfc->scalefac_band.l[sfb+1];
+      for ( l = start; l < end; l++ ) {
+        xrpow[l] *= ifqstep34;
+      }
+    }
+  }
+    
+
+  for ( j=0,sfb = cod_info->sfb_smax; sfb < 12; sfb++ ) {
+    start = gfc->scalefac_band.s[sfb];
+    end   = gfc->scalefac_band.s[sfb+1];
+    for ( i = 0; i < 3; i++ ) {
+      int j2 = j;
+      if ( distort[i+1][sfb]>distort_thresh[i+1]
+       && (sfb==max_ind[i+1] || !gfp->experimentalY)) {
+        scalefac->s[sfb][i]++;
+        for (l = start; l < end; l++) {
+          xrpow[j2++] *= ifqstep34;
+        }
+      }
+      j += end-start;
+    }
+  }
+}
+#endif
 
 void inc_scalefac_scale(lame_global_flags *gfp, III_scalefac_t *scalefac,
                         gr_info *cod_info, FLOAT8 xrpow[576])

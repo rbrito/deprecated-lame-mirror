@@ -143,7 +143,8 @@ ifeq ($(UNAME),Linux)
 #   CC_OPTS =  -DDEBUG -UNDEBUG  -O -Wall -g -DABORTFP 
 
 
-
+#  special noise calculation
+#   FEATURES = -DRH_NOISE_CALC
 # these options for gcc-2.95.2 to produce fast code
 #   CC_OPTS = $(FEATURES)\
 #	-Wall -O9 -fomit-frame-pointer -march=pentium \
