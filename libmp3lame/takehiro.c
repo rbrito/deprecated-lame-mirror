@@ -69,7 +69,8 @@ static const struct
 /*	      ix_max							 */
 /*************************************************************************/
 
-int ix_max(int *ix, int *end)
+int 
+ix_max(const int *ix, const int *end)
 {
     int max1 = 0, max2 = 0;
 
@@ -95,7 +96,12 @@ int ix_max(int *ix, int *end)
 
 
 int
-count_bit_ESC(int *ix, int *end, int t1, int t2, int *s)
+count_bit_ESC( 
+    const int *       ix, 
+    const int * const end, 
+          int         t1,
+    const int         t2,
+          int * const s )
 {
     /* ESC-table is used */
     int linbits = ht[t1].xlen * 65536 + ht[t2].xlen;
@@ -138,7 +144,7 @@ count_bit_ESC(int *ix, int *end, int t1, int t2, int *s)
 
 
 INLINE static int
-count_bit_noESC(int *ix, int *end, int *s)
+count_bit_noESC(const int * ix, const int * const end, int * const s)
 {
     /* No ESC-words */
     int	sum1 = 0;
@@ -157,7 +163,11 @@ count_bit_noESC(int *ix, int *end, int *s)
 
 
 INLINE static int
-count_bit_noESC_from2(int *ix, int *end, int t1, int *s)
+count_bit_noESC_from2(
+    const int *       ix, 
+    const int * const end,
+          int         t1,
+          int * const s )
 {
     /* No ESC-words */
     unsigned int sum = 0, sum2;
@@ -188,7 +198,11 @@ count_bit_noESC_from2(int *ix, int *end, int t1, int *s)
 
 
 INLINE static int
-count_bit_noESC_from3(int *ix, int *end, int t1, int *s)
+count_bit_noESC_from3(
+    const int *       ix, 
+    const int * const end,
+          int         t1,
+          int * const s )
 {
     /* No ESC-words */
     int	sum1 = 0;
@@ -236,7 +250,10 @@ count_bit_noESC_from3(int *ix, int *end, int t1, int *s)
   with any arbitrary tables.
 */
 
-static int choose_table_nonMMX(int *ix, int *end, int *s)
+static int choose_table_nonMMX(
+    const int *       ix, 
+    const int * const end,
+          int * const s )
 {
     int max;
     int choice, choice2;
@@ -296,7 +313,7 @@ static int choose_table_nonMMX(int *ix, int *end, int *s)
 */
 
 
-int count_bits_long(lame_internal_flags *gfc, int ix[576], gr_info *gi)
+int count_bits_long(context * const gfc, const int ix[576], gr_info * const gi)
 {
     int i, a1, a2;
     int bits = 0;
@@ -382,7 +399,10 @@ int count_bits_long(lame_internal_flags *gfc, int ix[576], gr_info *gi)
 
 
 int count_bits(
-    lame_internal_flags *gfc, int *ix, const FLOAT8 *xr, gr_info *cod_info)  
+          context * const gfc, 
+          int     * const ix,
+    const FLOAT8  * const xr,
+          gr_info * const cod_info)  
 {
   int bits=0,i;
   /* since quantize_xrpow uses table lookup, we need to check this first: */
@@ -409,8 +429,14 @@ int count_bits(
 
 
 INLINE void
-recalc_divide_init(lame_internal_flags *gfc, gr_info cod_info, int *ix,
-int r01_bits[],int r01_div[],int r0_tbl[],int r1_tbl[])
+recalc_divide_init(
+    const context * const gfc,
+          gr_info         cod_info,
+          int     * const ix,
+          int             r01_bits[],
+          int             r01_div [],
+          int             r0_tbl  [],
+          int             r1_tbl  [] )
 {
     int r0, r1, bigv, r0t, r1t, bits;
 
@@ -445,8 +471,15 @@ int r01_bits[],int r01_div[],int r0_tbl[],int r1_tbl[])
 }
 
 INLINE void
-recalc_divide_sub(lame_internal_flags *gfc,gr_info cod_info2, gr_info *gi, int *ix,
-int r01_bits[],int r01_div[],int r0_tbl[],int r1_tbl[])
+recalc_divide_sub(
+    const context * const gfc,
+    const gr_info         cod_info2,
+          gr_info * const gi,
+    const int     * const ix,
+    const int             r01_bits[],
+    const int             r01_div [],
+    const int             r0_tbl  [],
+    const int             r1_tbl  [] )
 {
     int bits, r2, a2, bigv, r2t;
 
@@ -478,7 +511,12 @@ int r01_bits[],int r01_div[],int r0_tbl[],int r1_tbl[])
 
 
 
-void best_huffman_divide(lame_internal_flags *gfc, int gr, int ch, gr_info *gi, int *ix)
+void best_huffman_divide(
+    const context * const gfc,
+    const int             gr, 
+    const int             ch,
+          gr_info * const gi,
+          int     * const ix )
 {
     int i, a1, a2;
     gr_info cod_info2;
@@ -618,10 +656,13 @@ Find the optimal way to store the scalefactors.
 Only call this routine after final scalefactors have been
 chosen and the channel/granule will not be re-encoded.
  */
-void best_scalefac_store(lame_internal_flags *gfc,int gr, int ch,
-			 int l3_enc[2][2][576],
-			 III_side_info_t *l3_side,
-			 III_scalefac_t scalefac[2][2])
+void best_scalefac_store(
+    const context * const gfc,
+    const int             gr,
+    const int             ch,
+    const int             l3_enc[2][2][576],
+          III_side_info_t * const l3_side,
+          III_scalefac_t          scalefac[2][2] )
 {
     /* use scalefac_scale if we can */
     gr_info *gi = &l3_side->gr[gr].ch[ch].tt;
@@ -720,7 +761,8 @@ static const int scale_long[16] = {
 
 /* Also calculates the number of bits necessary to code the scalefactors. */
 
-int scale_bitcount( III_scalefac_t *scalefac, gr_info *cod_info)
+int scale_bitcount( 
+    III_scalefac_t * const scalefac, gr_info * const cod_info)
 {
     int i, k, sfb, max_slen1 = 0, max_slen2 = 0, ep = 2;
 
@@ -816,7 +858,8 @@ static const int max_range_sfac_tab[6][4] =
 /*  This is reverse-engineered from section 2.4.3.2 of the MPEG2 IS,     */
 /* "Audio Decoding Layer III"                                            */
 
-int scale_bitcount_lsf(III_scalefac_t *scalefac, gr_info *cod_info)
+int scale_bitcount_lsf(
+    const III_scalefac_t * const scalefac, gr_info * const cod_info)
 {
     int table_number, row_in_table, partition, nr_sfb, window, over;
     int i, sfb, max_sfac[ 4 ];
@@ -923,7 +966,7 @@ int scale_bitcount_lsf(III_scalefac_t *scalefac, gr_info *cod_info)
 
 
 
-void huffman_init(lame_internal_flags *gfc)
+void huffman_init(context * const gfc)
 {
     int i;
 
@@ -931,7 +974,7 @@ void huffman_init(lame_internal_flags *gfc)
     
 #ifdef MMX_choose_table
     if (gfc->CPU_features_MMX) {
-        extern int choose_table_MMX(int *ix, int *end, int *s);
+        extern int choose_table_MMX(const int *ix, const int *end, int *s);
         gfc->choose_table = choose_table_MMX;
     }
 #endif

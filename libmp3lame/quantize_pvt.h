@@ -122,16 +122,24 @@ void quantize_xrpow_ISO(
 int count_bits (context *gfc, int  *ix, const FLOAT8 xr[576], gr_info *cod_info);
 
 
-void best_huffman_divide(context *gfc, int gr, int ch, gr_info *cod_info, int *ix);
+void best_huffman_divide(
+        const context *gfc, 
+        const int      gr,
+        const int      ch,
+              gr_info *cod_info,
+              int     *ix );
 
-void best_scalefac_store(context *gfc, int gr, int ch,
-			 int l3_enc[2][2][576],
-			 III_side_info_t *l3_side,
-			 III_scalefac_t scalefac[2][2]);
+void best_scalefac_store(
+        const context         *gfc,
+        const int              gr,
+        const int              ch,
+        const int              l3_enc[2][2][576],
+              III_side_info_t *l3_side,
+              III_scalefac_t   scalefac[2][2]);
 
 int scale_bitcount (III_scalefac_t *scalefac, gr_info *cod_info);
 
-int scale_bitcount_lsf (III_scalefac_t *scalefac, gr_info *cod_info);
+int scale_bitcount_lsf (const III_scalefac_t *scalefac, gr_info *cod_info);
 
 void huffman_init (context *gfc);
 

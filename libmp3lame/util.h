@@ -331,7 +331,7 @@ typedef struct  {
   int CPU_features_SIMD2;	    // Pentium IV, K8
    
   /* functions to replace with CPU feature optimized versions in takehiro.c */
-  int (*choose_table)(int *ix, int *end, int *s);
+  int (*choose_table)(const int *ix, const int *end, int *s);
   
 
   nsPsy_t nsPsy;  /* variables used for --nspsytune */
