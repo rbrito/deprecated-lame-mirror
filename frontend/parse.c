@@ -1459,15 +1459,6 @@ char* const inPath, char* const outPath, char **nogap_inPath, int *num_nogap)
                     argUsed=1;
                     lame_set_athaa_sensitivity( gfp, atof(nextArg) );
 
-                T_ELIF ("gglower")
-                    /* experimental, needs testing
-                     * documentation outstanding
-                     * reduces(increases) global gain x-times by ~1.5 dB
-                     */
-                    extern void lame_set_gglower( lame_t gfp, int gglower );
-                    argUsed=1;
-                    lame_set_gglower( gfp, atoi(nextArg) );
-                    
                 T_ELIF ("scale")
                     argUsed=1;
                     (void) lame_set_scale( gfp, atof(nextArg) );

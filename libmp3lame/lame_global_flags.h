@@ -31,8 +31,6 @@ struct lame_global_struct {
                                    default: LAME picks best value 
                                    at least not used for MP3 decoding:
                                    Remember 44.1 kHz MP3s and AC97           */
-  int gglower;                /* lower global gain by this amount            */
-                              /* similar to scale, but easier to undo on MP3 */
   float scale;                /* scale input by this amount before encoding
                                  at least not used for MP3 decoding          */
   float scale_left;           /* scale input of channel 0 (left) by this

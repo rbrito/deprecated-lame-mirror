@@ -606,6 +606,8 @@ int  lame_encode_mp3_frame (				// Output
     iteration_loop( gfp,*pe_use,ms_ener_ratio, xr, *masking, l3_enc, scalefac);
     break;
   case vbr_mt:
+    VBR_quantize( gfp,*pe_use,ms_ener_ratio, xr, *masking, l3_enc, scalefac);
+    break;
   case vbr_rh:
   case vbr_mtrh:
     VBR_iteration_loop( gfp,*pe_use,ms_ener_ratio, xr, *masking, l3_enc, scalefac);
@@ -615,19 +617,6 @@ int  lame_encode_mp3_frame (				// Output
     break;
   }
 
-
-    /*  lower global gain to prevent clipping problems (amount specified by the user)
-     */
-    for ( gr = 0; gr < gfc->mode_gr; ++gr ) {
-        for ( ch = 0; ch < gfc->channels_out; ++ch ) {
-            gfp->internal_flags->l3_side.gr[gr].ch[ch].tt.global_gain -= gfp->gglower;
-            if (gfp->internal_flags->l3_side.gr[gr].ch[ch].tt.global_gain < 0)
-                gfp->internal_flags->l3_side.gr[gr].ch[ch].tt.global_gain = 0;
-            if (gfp->internal_flags->l3_side.gr[gr].ch[ch].tt.global_gain > 255)
-                gfp->internal_flags->l3_side.gr[gr].ch[ch].tt.global_gain = 255;
-        }
-    }
-   
   /*  write the frame to the bitstream  */
   getframebits(gfp, &bitsPerFrame, &mean_bits);
 
