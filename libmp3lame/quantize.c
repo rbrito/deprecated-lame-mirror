@@ -267,18 +267,24 @@ init_outer_loop(
     FLOAT xrpow[576] )
 {
     FLOAT tmp, sum = 0;
-    int i;
+    int i, end;
+    if (gi->block_type == SHORT_TYPE)
+	end = gfc->scalefac_band.s[gi->psymax/3]*3;
+    else
+	end = gfc->scalefac_band.l[gi->psymax];
 
     /*  check if there is some energy we have to quantize
      *  and calculate xrpow matching our fresh scalefactors
      */
-    for (i = 0; i < 576; ++i) {
+    for (i = 0; i < end; i++) {
 	tmp = fabs (gi->xr[i]);
 	sum += tmp;
 	xrpow[i] = sqrt (tmp * sqrt(tmp));
     }
-    /*  return 1 if we have something to quantize, else 0
-     */
+    for (; i < 576; i++)
+	xrpow[i] = 0.0;
+
+    /*  return 1 if we have something to quantize, else 0 */
     if (sum > (FLOAT)1E-20) {
 	int j = 0;
 	if (gfc->substep_shaping & 2)
