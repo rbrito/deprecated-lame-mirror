@@ -1,15 +1,17 @@
 0.
-./configure script
 
-things to check for:  
+./configure scripts need work
 
-   -lncurses
-   -llibsndfile      (allow user to enable)
-   -lvorbis          (allow user to disable)
-   -lGTK             (allow user to disable)
+Some options are for front end code only, but they are not passed
+to the configure script in the frontend directory.  
 
-   architecture depending optimizations (like assembler code) make depend
-   option for CC
+
+Makefile.{B32,MSVC,DJGPP,unix}
+these makefiles should only bother to build the static lib,
+and then make lame, mp3x and/or the dll.
+
+
+
 
 
 1.
@@ -46,13 +48,12 @@ Now there are 2 possibilties:
     coefficients.
 
 
+
 3. 
-Replace internal representation of PCM data to floating point
-(instead of short int).  This will help filtering (which
-has to convert back and forth) and allow lame to handle
-other than 16 bit input.   Also, modify mpglib to output
+modify mpglib to output
 floating point and have finaly quantization step a
 easy-to-change module so it can output other than 16bit.
+
 
 
 997. 

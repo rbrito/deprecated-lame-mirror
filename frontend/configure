@@ -568,6 +568,7 @@ fi
 echo $ac_n "checking host system type""... $ac_c" 1>&6
 echo "configure:570: checking host system type" >&5
 
+set echo
 host_alias=$host
 case "$host_alias" in
 NONE)
