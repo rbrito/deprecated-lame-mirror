@@ -516,7 +516,7 @@ uint16_t GetMusicCRC(lame_global_flags *gfp, FILE *fpStream, int filesize, int i
 }
 
 
-void ReportVBRProgress(lame_global_flags *gfp,int nStart)
+void ReportLameTagProgress(lame_global_flags *gfp,int nStart)
 {
 	if (!gfp->bWriteVbrTag)
 		return;
