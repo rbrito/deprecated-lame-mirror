@@ -712,19 +712,18 @@ count_bits(lame_t gfc, gr_info * const gi)
 	    istep = IPOW20(scalefactor(gi, sfb));
 	    do {
 #ifdef USE_IEEE754_HACK
-		double x0 = istep * xp[0] + MAGIC_FLOAT;
-		double x1 = istep * xp[1] + MAGIC_FLOAT;
+		int i0, i1;
+		fi[0].f = istep * xp[0] + MAGIC_FLOAT2;
+		fi[1].f = istep * xp[1] + MAGIC_FLOAT2;
 		xp += 2;
-		if (x0 > MAGIC_FLOAT + IXMAX_VAL)
-		    x0 = MAGIC_FLOAT + IXMAX_VAL;
-		if (x1 > MAGIC_FLOAT + IXMAX_VAL)
-		    x1 = MAGIC_FLOAT + IXMAX_VAL;
-		fi[0].f = x0;
-		fi[1].f = x1;
-		fi[0].f = x0 + (adj43asm - MAGIC_INT)[fi[0].i];
-		fi[1].f = x1 + (adj43asm - MAGIC_INT)[fi[1].i];
-		fi[0].i -= MAGIC_INT;
-		fi[1].i -= MAGIC_INT;
+		i0 = fi[0].i;
+		i1 = fi[1].i;
+		if (i0 > MAGIC_INT2 + (IXMAX_VAL << 9))
+		    i0 = MAGIC_INT2 + (IXMAX_VAL << 9);
+		if (i1 > MAGIC_INT2 + (IXMAX_VAL << 9))
+		    i1 = MAGIC_INT2 + (IXMAX_VAL << 9);
+		fi[0].i = (i0 + (adj43asm - (MAGIC_INT2 >> 9))[i0 >> 9]) >> 9;
+		fi[1].i = (i1 + (adj43asm - (MAGIC_INT2 >> 9))[i1 >> 9]) >> 9;
 		fi += 2;
 #else
 		FLOAT x0 = *xp++ * istep;
@@ -826,7 +825,7 @@ scfsi_calc(lame_t gfc, int ch)
   Only call this routine after final scalefactors have been
   chosen and the channel/granule will not be re-encoded.
  */
-void
+static void
 check_preflag(gr_info * const gi)
 {
     int sfb;
@@ -920,9 +919,6 @@ best_scalefac_store(lame_t gfc, int gr, int ch)
 		if (gi->scalefac[sfb] != SCALEFAC_ANYTHING_GOES)
 		    gi->scalefac[sfb] -= minsfbp-(gi->preflag>0 ? pretab[sfb]:0);
 	    gi->preflag = 0;
-	    if (gfc->mode_gr == 2) 
-		check_preflag(gi);
-
 	    gfc->scale_bitcounter(gi);
 	    if (gi->part2_length > gi_w.part2_length)
 		gi_work_copy(gi, &gi_w);
@@ -1017,7 +1013,8 @@ scale_bitcount(gr_info * const gi)
 	tab = scale_short;
 	if (gi->mixed_block_flag)
 	    tab = scale_mixed;
-    }
+    } else
+	check_preflag(gi);
 
     s1 = s2 = 0;
     for (sfb = 0; sfb < gi->sfbdivide; sfb++)

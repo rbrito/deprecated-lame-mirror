@@ -44,7 +44,7 @@ extern const unsigned char mdctorder[SBLIMIT];
 
 #ifdef USE_IEEE754_HACK
 extern FLOAT pow43[PRECALC_SIZE*3];
-# define adj43asm (&pow43[PRECALC_SIZE*2])
+# define adj43asm ((int*)&pow43[PRECALC_SIZE*2])
 #else
 extern FLOAT pow43[PRECALC_SIZE*2];
 #endif

@@ -631,14 +631,13 @@ iteration_init(lame_t gfc)
     for (i=1;i<PRECALC_SIZE;i++)
         pow43[i] = pow((FLOAT)i, 4.0/3.0);
 
-#ifdef USE_IEEE754_HACK
-    adj43asm[0] = 0.0;
-    for (i = 1; i < PRECALC_SIZE; i++)
-	adj43asm[i] = i - 0.5 - pow(0.5 * (pow(i-1.0,4.0/3.0) + pow(i,4.0/3.0)), 0.75);
-#endif
     for (i = 0; i < PRECALC_SIZE-1; i++)
 	adj43[i] = (i + 1) - pow(0.5 * (pow43[i] + pow43[i + 1]), 0.75);
     adj43[i] = 0.5;
+#ifdef USE_IEEE754_HACK
+    for (i = 0; i < PRECALC_SIZE; i++)
+	adj43asm[i] = (int)(adj43[i] * 512) - MAGIC_INT2;
+#endif
 
     for (i = 0; i < Q_MAX+Q_MAX2; i++) {
 	ipow20[i] = pow(2.0, (double)(i - 210 - Q_MAX2) * -0.1875);

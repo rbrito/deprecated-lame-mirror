@@ -782,9 +782,6 @@ amp_scalefac_bands(lame_t gfc, gr_info *const gi, FLOAT *distort,
     /* not all scalefactors have been amplified.  so these 
      * scalefacs are possibly valid.  encode them: 
      */
-    if (gfc->mode_gr == 2)
-	check_preflag(gi);
-
     bits = target_bits - gfc->scale_bitcounter(gi);
     if (bits > 0)
 	return bits; /* Ok, we will go with this scalefactor combination */
@@ -799,9 +796,6 @@ amp_scalefac_bands(lame_t gfc, gr_info *const gi, FLOAT *distort,
 	inc_scalefac_scale(gi, distort);
     else
 	return 0;
-
-    if (gfc->mode_gr == 2)
-	check_preflag(gi);
 
     return target_bits - gfc->scale_bitcounter(gi);
 }
@@ -852,22 +846,24 @@ calc_sfb_noise(lame_t gfc, int j, int bw, int sf)
     sfpow34 = IPOW20(sf); /*pow(sfpow,-3.0/4.0)=pow(2.0,-sf*0.1875) */
 
     do {
-#ifdef USE_IEEE754_HACK
-	double t0, t1;
-	fi_union fi0, fi1;
-	fi0.f = (t0 = sfpow34 * xr34[j+bw  ] + (FLOAT)MAGIC_FLOAT);
-	fi1.f = (t1 = sfpow34 * xr34[j+bw+1] + (FLOAT)MAGIC_FLOAT);
-	assert(((fi0.i - MAGIC_INT - IXMAX_VAL)
-		| (fi1.i - MAGIC_INT - IXMAX_VAL)) <= 0);
-	fi0.f = t0 + (adj43asm - MAGIC_INT)[fi0.i];
-	fi1.f = t1 + (adj43asm - MAGIC_INT)[fi1.i];
-	t0 = absxr[j+bw  ] - (pow43 - MAGIC_INT)[fi0.i] * sfpow;
-	t1 = absxr[j+bw+1] - (pow43 - MAGIC_INT)[fi1.i] * sfpow;
-#else
 	FLOAT t0, t1;
-	int i0 = (int) (t0 = sfpow34 * xr34[j+bw  ]);
-	int i1 = (int) (t1 = sfpow34 * xr34[j+bw+1]);
-	assert(((i0 - IXMAX_VAL) | (i1 - IXMAX_VAL)) <= 0);
+	int i0, i1;
+#ifdef USE_IEEE754_HACK
+	fi_union fi0, fi1;
+	fi0.f = sfpow34 * xr34[j+bw  ] + (FLOAT)MAGIC_FLOAT2;
+	fi1.f = sfpow34 * xr34[j+bw+1] + (FLOAT)MAGIC_FLOAT2;
+	i0 = fi0.i;
+	i1 = fi1.i;
+	assert(((i0 - (MAGIC_INT2 + (IXMAX_VAL<<9) + 1))
+		& (i1 - (MAGIC_INT2 + (IXMAX_VAL<<9) + 1))) < 0);
+	i0 += adj43asm[(i0 >> 9) - (MAGIC_INT2 >> 9)];
+	i1 += adj43asm[(i1 >> 9) - (MAGIC_INT2 >> 9)];
+	t0 = absxr[j+bw  ] - pow43[i0>>9] * sfpow;
+	t1 = absxr[j+bw+1] - pow43[i1>>9] * sfpow;
+#else
+	i0 = (int) (t0 = sfpow34 * xr34[j+bw  ]);
+	i1 = (int) (t1 = sfpow34 * xr34[j+bw+1]);
+	assert(i0 <= IXMAX_VAL && i1 <= IXMAX_VAL);
 
 	t0 = absxr[j+bw  ] - pow43[(int)(t0 + adj43[i0])] * sfpow;
 	t1 = absxr[j+bw+1] - pow43[(int)(t1 + adj43[i1])] * sfpow;
@@ -901,16 +897,17 @@ adjust_global_gain(lame_t gfc, gr_info *gi, FLOAT *distort, int huffbits)
 	    istep = IPOW20(scalefactor(gi, sfb));
 	    do {
 #ifdef USE_IEEE754_HACK
-		double x0 = istep * xr34[j+bw  ] + MAGIC_FLOAT;
-		double x1 = istep * xr34[j+bw+1] + MAGIC_FLOAT;
-		if (x0 > MAGIC_FLOAT + IXMAX_VAL) x0 = MAGIC_FLOAT + IXMAX_VAL;
-		if (x1 > MAGIC_FLOAT + IXMAX_VAL) x1 = MAGIC_FLOAT + IXMAX_VAL;
-		fi[j+bw  ].f = x0;
-		fi[j+bw+1].f = x1;
-		fi[j+bw  ].f = x0 + (adj43asm - MAGIC_INT)[fi[j+bw  ].i];
-		fi[j+bw+1].f = x1 + (adj43asm - MAGIC_INT)[fi[j+bw+1].i];
-		fi[j+bw  ].i -= MAGIC_INT;
-		fi[j+bw+1].i -= MAGIC_INT;
+		int i0, i1;
+		fi[j+bw  ].f = istep * xr34[j+bw  ] + MAGIC_FLOAT2;
+		fi[j+bw+1].f = istep * xr34[j+bw+1] + MAGIC_FLOAT2;
+		i0 = fi[j+bw  ].i;
+		i1 = fi[j+bw+1].i;
+		if (i0 > MAGIC_INT2 + IXMAX_VAL) i0 = MAGIC_INT2 + IXMAX_VAL;
+		if (i1 > MAGIC_INT2 + IXMAX_VAL) i1 = MAGIC_INT2 + IXMAX_VAL;
+		fi[j+bw  ].i = (i0 + adj43asm[(i0 >> 9) - (MAGIC_INT2 >> 9)])
+						  >> 9;
+		fi[j+bw+1].i = (i1 + adj43asm[(i1 >> 9) - (MAGIC_INT2 >> 9)])
+						  >> 9;
 #else
 		FLOAT x0 = istep * xr34[j+bw  ];
 		FLOAT x1 = istep * xr34[j+bw+1];
@@ -966,8 +963,6 @@ CBR_2nd_bitalloc(lame_t gfc, gr_info *gi, FLOAT distort[])
     if (!flag)
 	return;
 
-    if (gfc->mode_gr == 2)
-	check_preflag(gi);
     gfc->scale_bitcounter(&gi_w);
     if (adjust_global_gain(gfc, &gi_w, distort, gi_w.part2_3_length))
 	return;
@@ -1508,7 +1503,6 @@ VBR_2nd_bitalloc(lame_t gfc, gr_info *gi, FLOAT * xmin)
 	    }
 	}
     }
-    gfc->scale_bitcounter(gi);
 }
 
 static void
@@ -1609,8 +1603,6 @@ VBR_noise_shaping(lame_t gfc, gr_info *gi, FLOAT * xmin)
 	return -2;
 
     /* encode scalefacs */
-    if (gfc->mode_gr == 2)
-	check_preflag(gi);
     gfc->scale_bitcounter(gi);
     assert(gi->part2_length < LARGE_BITS);
 

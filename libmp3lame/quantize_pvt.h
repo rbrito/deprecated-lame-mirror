@@ -35,7 +35,6 @@
 int count_bits (lame_t gfc, gr_info * const gi);
 int noquant_count_bits (lame_t gfc, gr_info * const gi);
 int iteration_finish_one (lame_t gfc, int gr, int ch);
-void check_preflag (gr_info * const gi);
 int scale_bitcount (gr_info * const gi);
 int scale_bitcount_lsf (gr_info * const gi);
 
