@@ -480,12 +480,12 @@ int lame_init_params(lame_global_flags *gfp)
 
   /* VBR needs at least the output of GPSYCHO,
    * so we have to garantee that by setting a minimum 
-   * quality level, actually level 7 does it.
+   * quality level, actually level 5 does it.
    * the -v and -V x settings switch the quality to level 2
-   * you would have to add a -f or -q 5 to reduce the quality
-   * down to level 7 or 5
+   * you would have to add a -q 5 to reduce the quality
+   * down to level 5
    */
-  if (gfp->VBR!=vbr_off) gfp->quality=Min(gfp->quality,7);
+  if (gfp->VBR!=vbr_off) gfp->quality=Min(gfp->quality,5);
   /* dont allow forced mid/side stereo for mono output */
   if (gfp->mode == MPG_MD_MONO) gfp->force_ms=0;
 

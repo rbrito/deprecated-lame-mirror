@@ -349,7 +349,7 @@ VBR_iteration_loop (lame_global_flags *gfp, FLOAT8 pe[2][2],
    * does more harm than good when VBR encoding
    * (Robert.Hegemann@gmx.de 2000-02-18)
    */
-  if (gfc->mode_ext==MPG_MD_MS_LR && gfp->quality > 5) { 
+  if (gfc->mode_ext==MPG_MD_MS_LR && gfp->quality >= 5) { 
     reduce_s_ch=1;
   }
 
@@ -374,29 +374,19 @@ VBR_iteration_loop (lame_global_flags *gfp, FLOAT8 pe[2][2],
        */
       {
         static const FLOAT8 dbQ[10]={-4.,-3.,-2.,-1.,0,.5,1.,1.5,2.,2.5};
-        FLOAT8 masking_lower_db, adjust = 0;
+        FLOAT8 masking_lower_db, adjust;
         assert( gfp->VBR_q <= 9 );
         assert( gfp->VBR_q >= 0 );
-        masking_lower_db = dbQ[gfp->VBR_q];
-/*
- * experimental code
- *
- */
-#if 0
+        
         if (cod_info->block_type==SHORT_TYPE) {
-          adjust = 10/(1+exp(3.5-pe[gr][ch]/300.))-0.25;
-        }
-#else
-        if (cod_info->block_type==SHORT_TYPE) {
-          adjust = 5/(1+exp(3.5-pe[gr][ch]/300.))-0.25;
+          adjust = 5/(1+exp(3.5-pe[gr][ch]/300.))-0.14;
         } else {
-          adjust = 2/(1+exp(3.5-pe[gr][ch]/300.))-0.25;
+          adjust = 2/(1+exp(3.5-pe[gr][ch]/300.))-0.05;
         }
-#endif
         if (gfc->noise_shaping==2) {
           adjust = Max(1.25,adjust);
         }
-        masking_lower_db -= adjust; 
+        masking_lower_db = dbQ[gfp->VBR_q]-adjust; 
         gfc->masking_lower = pow(10.0,masking_lower_db/10);
       }
       bands[gr][ch] = calc_xmin(gfp,xr[gr][ch], &ratio[gr][ch], 
@@ -436,7 +426,7 @@ VBR_iteration_loop (lame_global_flags *gfp, FLOAT8 pe[2][2],
     if (reduce_s_ch) { num_chan=1; }  
 
     for (ch = 0; ch < num_chan; ch++) { 
-      int real_bits, min_pe_bits;
+      int real_bits, min_pe_bits, mdct_lines=0;
       
       /******************************************************************
        * find smallest number of bits for an allowable quantization
@@ -444,7 +434,11 @@ VBR_iteration_loop (lame_global_flags *gfp, FLOAT8 pe[2][2],
       cod_info = &l3_side->gr[gr].ch[ch].tt;
       min_bits = Max(125,min_mean_bits);
 
-      if (!init_outer_loop(gfp,xr[gr][ch],xrpow[0], cod_info))
+      if (gfc->mode_ext==MPG_MD_MS_LR && ch==1) { 
+        min_bits = Max(min_bits,0.2*save_bits[gr][0]);
+      }
+      mdct_lines = init_outer_loop(gfp,xr[gr][ch],xrpow[0], cod_info);
+      if (mdct_lines == 0)
       {
         /* xr contains no energy 
          * cod_info was set in init_outer_loop above
@@ -463,11 +457,15 @@ VBR_iteration_loop (lame_global_flags *gfp, FLOAT8 pe[2][2],
       memcpy( &clean_cod_info, cod_info, sizeof(gr_info) );
       
       if (cod_info->block_type==SHORT_TYPE) {
-        min_pe_bits = (pe[gr][ch]-400)*bands[gr][ch]/12;
+        /* if LAME switches to short blocks then pe is
+         * >= 1000 on medium surge
+         * >= 3000 on big surge
+         */
+        min_pe_bits = (pe[gr][ch]-350) * bands[gr][ch]/39.;
       } else {
-        min_pe_bits = (pe[gr][ch]-300)*bands[gr][ch]/22;
+        min_pe_bits = (pe[gr][ch]-350) * bands[gr][ch]/22.;
       }
-      min_pe_bits=Min(min_pe_bits,1600);
+      min_pe_bits=Min(min_pe_bits,1820);
 
       if (analog_silence && !gfp->VBR_hard_min) {
         min_bits = analog_mean_bits;
@@ -555,7 +553,6 @@ VBR_iteration_loop (lame_global_flags *gfp, FLOAT8 pe[2][2],
       
     } /* for ch */
   }  /* for gr */
-
 
   if (reduce_s_ch) {
     /* number of bits needed was found for MID channel above.  Use formula
@@ -779,7 +776,7 @@ int init_outer_loop(lame_global_flags *gfp,
     o += temp>1E-20;
   }
   
-  return o>0;
+  return o;
 }
 
 
@@ -838,7 +835,7 @@ void outer_loop(
 
   /* BEGIN MAIN LOOP */
   iteration = 0;
-  while ( notdone  ) {
+  do {
     iteration += 1;
 
 
@@ -873,11 +870,17 @@ void outer_loop(
 
       /* compute the distortion in this quantization */
       if (gfc->noise_shaping==0) {
-        over=0;
         if (gfp->gtkflag) {
           calc_noise( gfp,xr, l3_enc_w, cod_info, xfsf_w,distort,
                       l3_xmin, &scalefac_w, &noise_info);
+        } else {
+          noise_info.over_count = 0;
+          noise_info.tot_count  = 0;
+          noise_info.max_noise  = 1;
+          noise_info.tot_noise  = 1;
+          noise_info.over_noise = 1;
         }
+        over=0;
         notdone=0;
       } else {
         /* coefficients and thresholds both l/r (or both mid/side) */
@@ -982,11 +985,14 @@ void outer_loop(
         if (distort[0][SBMAX_l-1] > 1) { notdone=0; }
       }
     }
-    if (iteration>100) {
-      notdone=0; 
-    }
+    /* some quantization comparisons from our -X modes do not minimize
+     * the number of distorted bands, so it can happen in rare cases
+     * that we never get one without distorted bands. Aborting after
+     * some fixed 100 iterations will do the trick.
+     */  
+    if (iteration>100) { notdone=0; }
 
-  }    /* done with main iteration */
+  } while ( notdone );    /* done with main iteration */
 
   memcpy(cod_info,&save_cod_info,sizeof(save_cod_info));
   cod_info->part2_3_length += cod_info->part2_length;

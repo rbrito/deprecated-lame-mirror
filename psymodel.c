@@ -837,7 +837,7 @@ int L3psycho_anal( lame_global_flags *gfp,
 	if (gfc->pe[chn] > 3000) 
 	  uselongblock[chn]=0;
 	
-	if ( mx > 30*mn ) 
+	if ((mx > 30*mn) && (mn > 33)) 
 	  {/* big surge of energy - always use short blocks */
 	    uselongblock[chn] = 0;
 	  } 
