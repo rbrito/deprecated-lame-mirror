@@ -29064,7 +29064,7 @@ case $host_cpu in
 	# use internal knowledge of the IEEE 754 layout
 
 cat >>confdefs.h <<\_ACEOF
-#define TAKEHIRO_IEEE754_HACK 1
+#define USE_IEEE754_HACK 1
 _ACEOF
 
 	;;
@@ -29074,7 +29074,7 @@ dns do not set CPUTYPE="i386" because nasm does not support elf64 currently
 	# use internal knowledge of the IEEE 754 layout
 
 cat >>confdefs.h <<\_ACEOF
-#define TAKEHIRO_IEEE754_HACK 1
+#define USE_IEEE754_HACK 1
 _ACEOF
 
 	;;
