@@ -92,7 +92,8 @@ putbits2(lame_internal_flags *gfc, int val, int j)
 	    bs->buf_bit_idx = 8;
 	    bs->buf_byte_idx++;
 	    assert(bs->buf_byte_idx < BUFFER_SIZE);
-	    assert(gfc->header[gfc->w_ptr].write_timing >= bs->totbit);
+	    assert(gfc->header[gfc->w_ptr].write_timing >= bs->totbit
+		||(gfc->header[gfc->w_ptr].write_timing ^ bs->totbit) < 0);
 	    if (gfc->header[gfc->w_ptr].write_timing == bs->totbit)
 		putheader_bits(gfc,gfc->w_ptr);
 	    bs->buf[bs->buf_byte_idx] = 0;
@@ -821,16 +822,6 @@ format_bitstream(lame_global_flags *gfp)
       gfc->ResvSize = l3_side->main_data_begin*8;
     };
     assert(gfc->bs.totbit % 8 == 0);
-
-    if (gfc->bs.totbit > 1000000000  ) {
-      /* to avoid totbit overflow, (at 8h encoding at 128kbs) lets reset bit counter*/
-      int i;
-      for (i=0 ; i< MAX_HEADER_BUF ; ++i) 
-	gfc->header[i].write_timing -= gfc->bs.totbit;
-      gfc->bs.totbit=0;
-    }
-
-
     return 0;
 }
 
