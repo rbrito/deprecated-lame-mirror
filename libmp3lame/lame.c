@@ -796,7 +796,8 @@ lame_print_internals( const lame_global_flags * gfp )
     }
     MSGF( gfc, "\t%d channel - %s\n", gfc->channels_out, pc );
     if (gfp->use_istereo)
-	MSGF(gfc, "\tusing intensity stereo\n");
+	MSGF(gfc, "\t ^ using intensity stereo, the ratio is %f\n",
+	     gfc->istereo_ratio);
 
     if (gfp->free_format)    pc = "(free format)";
     else pc = "";
