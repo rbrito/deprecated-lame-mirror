@@ -626,15 +626,6 @@ void outer_loop(
 	printf("sf=%i noise=%e, allowed noise=%e,  distort=%f \n",
 	       scalefac->l[gr][ch][0],
 	       xfsf[0][0],l3_xmin->l[gr][ch][0],distort[0][0]);
-	printf("sf=%i \n",
-	       scalefac->l[gr][ch][1]);
-	printf("sf=%i \n",
-	       scalefac->l[gr][ch][2]);
-	printf("sf=%i \n",
-	       scalefac->l[gr][ch][3]);
-	printf("sf=%i \n",
-	       scalefac->l[gr][ch][4]);
-
       }
       
 
