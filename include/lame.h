@@ -119,9 +119,10 @@ typedef lame_global_flags *lame_t;
 
 /*
  * REQUIRED:
- * initialize the encoder.  sets default for all encoder paramters,
- * returns -1 if some malloc()'s failed
- * otherwise returns 0
+ * initialize the encoder.  sets default for all encoder parameters,
+ * returns NULL if some malloc()'s failed
+ * otherwise returns pointer to structure needed for all future
+ * API calls.
  */
 lame_global_flags * CDECL lame_init(void);
 /* obsolete version */
