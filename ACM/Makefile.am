@@ -6,7 +6,6 @@ SUBDIRS = ADbg ddk tinyxml
 
 EXTRA_DIST = \
 	ACM.cpp \
-	ACM.dsw \
 	ACM.h \
 	ACMStream.cpp \
 	ACMStream.h \
