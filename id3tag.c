@@ -72,7 +72,7 @@ static const char *genre_names[] =
 
 #define GENRE_NAME_COUNT ((int)(sizeof genre_names / sizeof (const char *)))
 
-static const unsigned char genre_alpha_map [] = {
+static const int genre_alpha_map [] = {
     123, 34, 74, 73, 99, 20, 40, 26, 145, 90, 116, 41, 135, 85, 96, 138, 89, 0,
     107, 132, 65, 88, 104, 102, 97, 136, 61, 141, 32, 1, 112, 128, 57, 140, 2,
     139, 58, 3, 125, 50, 22, 4, 55, 127, 122, 120, 98, 52, 48, 54, 124, 25, 84,
