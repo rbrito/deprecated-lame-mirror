@@ -204,7 +204,11 @@ int lame_decode_fromfile(FILE *fd, short pcm_l[], short pcm_r[],mp3data_struct *
 
   size=0;
   len = fread(buf,1,64,fd);
-  if (len ==0 ) return 0;
+
+  /* check for possible EOF */
+  if (len ==0 ) 
+	  return -1;
+
   ret = decodeMP3(&mp,buf,(int)len,out,FSIZE,&size);
 
   /* read more until we get a valid output frame */
