@@ -871,9 +871,26 @@ void disable_FPE(void) {
 /* extremly system dependent stuff, move to a lib to make the code readable */
 /*==========================================================================*/
 
+
+#if defined(_MSC_VER)
+    {
+   /* set affinity to a single CPU.  Fix for EAC/lame on SMP systems from
+     "Todd Richmond" <todd.richmond@openwave.com> */
+    SYSTEM_INFO si;
+    GetSystemInfo(&si);
+    SetProcessAffinityMask(GetCurrentProcess(), si.dwActiveProcessorMask);
+    }
+#endif
+
+
+
     /*
      *  Disable floating point exceptions
      */
+
+
+
+
 #if defined(__FreeBSD__) && !defined(__alpha__)
     {
         /* seet floating point mask to the Linux default */
