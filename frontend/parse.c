@@ -989,10 +989,11 @@ void parse_args ( lame_global_flags* gfp, int argc, char** argv, char *inPath, c
 		    case 'f': 
 			gfp->quality= 7;
 			break;
+#ifdef HAVEGTK
 		    case 'g': /* turn on gtk analysis */
 			gfp->analysis = 1;
 			break;
-			
+#endif			
 		    case 'e':        
 			argUsed = 1;
 			
