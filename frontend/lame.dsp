@@ -19,13 +19,14 @@ CFG=lame - Win32 Release
 !MESSAGE 
 !MESSAGE "lame - Win32 Release" (based on "Win32 (x86) Console Application")
 !MESSAGE "lame - Win32 Debug" (based on "Win32 (x86) Console Application")
+!MESSAGE "lame - Win32 Release NASM" (based on\
+ "Win32 (x86) Console Application")
 !MESSAGE 
 
 # Begin Project
-# PROP AllowPerConfigDependencies 0
 # PROP Scc_ProjName ""
 # PROP Scc_LocalPath ""
-CPP=cl.exe
+CPP=xicl.exe
 RSC=rc.exe
 
 !IF  "$(CFG)" == "lame - Win32 Release"
@@ -49,7 +50,7 @@ RSC=rc.exe
 BSC32=bscmake.exe
 # ADD BASE BSC32 /nologo
 # ADD BSC32 /nologo
-LINK32=link.exe
+LINK32=xilink.exe
 # ADD BASE LINK32 kernel32.lib user32.lib gdi32.lib winspool.lib comdlg32.lib advapi32.lib shell32.lib ole32.lib oleaut32.lib uuid.lib odbc32.lib odbccp32.lib /nologo /subsystem:console /machine:I386
 # ADD LINK32 kernel32.lib user32.lib gdi32.lib winspool.lib comdlg32.lib advapi32.lib shell32.lib ole32.lib oleaut32.lib uuid.lib odbc32.lib odbccp32.lib /nologo /subsystem:console /machine:I386
 # SUBTRACT LINK32 /profile /map
@@ -68,15 +69,44 @@ LINK32=link.exe
 # PROP Ignore_Export_Lib 0
 # PROP Target_Dir ""
 # ADD BASE CPP /nologo /W3 /Gm /GX /Zi /Od /D "HAVE_CONFIG_H" /D "WIN32" /D "_DEBUG" /D "_CONSOLE" /D "_MBCS" /YX /FD /c
-# ADD CPP /nologo /W3 /Gm /GX /ZI /Od /I "../" /I "../mp3x" /I "../frontend" /I "../include" /I ".." /D "_DEBUG" /D "LAMEPARSE" /D "_CONSOLE" /D "_MBCS" /D "HAVEMPGLIB" /D "LAMESNDFILE" /D "BRHIST" /D "WIN32" /D "HAVE_CONFIG_H" /YX /FD /c
+# ADD CPP /nologo /W3 /GX /Od /I "../" /I "../mp3x" /I "../frontend" /I "../include" /I ".." /D "_DEBUG" /D "LAMEPARSE" /D "_CONSOLE" /D "_MBCS" /D "HAVEMPGLIB" /D "LAMESNDFILE" /D "BRHIST" /D "WIN32" /D "HAVE_CONFIG_H" /YX /FD /ZI /c
 # ADD BASE RSC /l 0x409 /d "_DEBUG"
 # ADD RSC /l 0x409 /d "_DEBUG"
 BSC32=bscmake.exe
 # ADD BASE BSC32 /nologo
 # ADD BSC32 /nologo
-LINK32=link.exe
+LINK32=xilink.exe
 # ADD BASE LINK32 kernel32.lib user32.lib gdi32.lib winspool.lib comdlg32.lib advapi32.lib shell32.lib ole32.lib oleaut32.lib uuid.lib odbc32.lib odbccp32.lib /nologo /subsystem:console /debug /machine:I386 /pdbtype:sept
 # ADD LINK32 kernel32.lib user32.lib gdi32.lib winspool.lib comdlg32.lib advapi32.lib shell32.lib ole32.lib oleaut32.lib uuid.lib odbc32.lib odbccp32.lib /nologo /subsystem:console /debug /machine:I386 /pdbtype:sept
+
+!ELSEIF  "$(CFG)" == "lame - Win32 Release NASM"
+
+# PROP BASE Use_MFC 0
+# PROP BASE Use_Debug_Libraries 0
+# PROP BASE Output_Dir "lame___W"
+# PROP BASE Intermediate_Dir "lame___W"
+# PROP BASE Ignore_Export_Lib 0
+# PROP BASE Target_Dir ""
+# PROP Use_MFC 0
+# PROP Use_Debug_Libraries 0
+# PROP Output_Dir "Release_NASM"
+# PROP Intermediate_Dir "Release_NASM"
+# PROP Ignore_Export_Lib 0
+# PROP Target_Dir ""
+# ADD BASE CPP /nologo /W3 /O2 /I "./WinGTK/gtk-plus" /I "./WinGTK/glib-1.2" /I "../" /I "../mp3x" /I "../frontend" /I "../include" /I ".." /D "NDEBUG" /D "LAMEPARSE" /D "_CONSOLE" /D "_MBCS" /D "HAVE_MPGLIB" /D "LAMESNDFILE" /D "BRHIST" /D "WIN32" /D "HAVE_CONFIG_H" /FD /c
+# SUBTRACT BASE CPP /YX
+# ADD CPP /nologo /W3 /O2 /I "./WinGTK/gtk-plus" /I "./WinGTK/glib-1.2" /I "../" /I "../mp3x" /I "../frontend" /I "../include" /I ".." /D "NDEBUG" /D "LAMEPARSE" /D "_CONSOLE" /D "_MBCS" /D "HAVE_MPGLIB" /D "LAMESNDFILE" /D "BRHIST" /D "WIN32" /D "HAVE_CONFIG_H" /FD /c
+# SUBTRACT CPP /YX
+# ADD BASE RSC /l 0x409 /d "NDEBUG"
+# ADD RSC /l 0x409 /d "NDEBUG"
+BSC32=bscmake.exe
+# ADD BASE BSC32 /nologo
+# ADD BSC32 /nologo
+LINK32=xilink.exe
+# ADD BASE LINK32 kernel32.lib user32.lib gdi32.lib winspool.lib comdlg32.lib advapi32.lib shell32.lib ole32.lib oleaut32.lib uuid.lib odbc32.lib odbccp32.lib /nologo /subsystem:console /machine:I386
+# SUBTRACT BASE LINK32 /profile /map
+# ADD LINK32 kernel32.lib user32.lib gdi32.lib winspool.lib comdlg32.lib advapi32.lib shell32.lib ole32.lib oleaut32.lib uuid.lib odbc32.lib odbccp32.lib /nologo /subsystem:console /machine:I386
+# SUBTRACT LINK32 /profile /map
 
 !ENDIF 
 
@@ -84,6 +114,7 @@ LINK32=link.exe
 
 # Name "lame - Win32 Release"
 # Name "lame - Win32 Debug"
+# Name "lame - Win32 Release NASM"
 # Begin Group "Source"
 
 # PROP Default_Filter "c"
@@ -126,29 +157,6 @@ SOURCE=.\brhist.h
 # Begin Source File
 
 SOURCE=..\configMS.h
-
-!IF  "$(CFG)" == "lame - Win32 Release"
-
-# Begin Custom Build
-InputPath=..\configMS.h
-
-"..\config.h" : $(SOURCE) "$(INTDIR)" "$(OUTDIR)"
-	copy ..\configMS.h ..\config.h
-
-# End Custom Build
-
-!ELSEIF  "$(CFG)" == "lame - Win32 Debug"
-
-# Begin Custom Build
-InputPath=..\configMS.h
-
-"..\config.h" : $(SOURCE) "$(INTDIR)" "$(OUTDIR)"
-	copy ..\configMS.h ..\config.h
-
-# End Custom Build
-
-!ENDIF 
-
 # End Source File
 # Begin Source File
 

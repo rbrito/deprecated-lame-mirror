@@ -35,7 +35,7 @@
 #define _RELEASEDEBUG 0
 
 const int MAJORVERSION=1;
-const int MINORVERSION=20;
+const int MINORVERSION=21;
 
 
 // Local variables
@@ -549,7 +549,15 @@ __declspec(dllexport) BE_ERR	beEncodeChunk(HBE_STREAM hbeStream, DWORD nSamples,
 	if (gf.num_channels==1 && nSamples == 2304)
 	  dwSamples/=2;
 
-	*pdwOutput=lame_encode_buffer_interleaved(&gf,pSamples,dwSamples,pOutput,0);
+
+	if (gf.num_channels==1 )
+	{
+		*pdwOutput=lame_encode_buffer(&gf,pSamples,pSamples,dwSamples,pOutput,0);
+	}
+	else
+	{
+		*pdwOutput=lame_encode_buffer_interleaved(&gf,pSamples,dwSamples,pOutput,0);
+	}
 
 
 	if (*pdwOutput<0) {
