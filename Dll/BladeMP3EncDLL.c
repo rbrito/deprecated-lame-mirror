@@ -21,10 +21,13 @@
 
 #include "BladeMP3EncDLL.h"
 #include <assert.h>
+// This DLL should be a wrapper around libmp3lame, and thus only need to 
+// include 'lame.h'.  However, the DLL provides better version information
+// that is currently available via libmp3lame and thus needs version.h
 #include "version.h"  
 #include "lame.h"
-#include "util.h"
-#include "VbrTag.h"
+//#include "util.h"
+//#include "VbrTag.h"
 
 
 #define _RELEASEDEBUG 0
@@ -368,8 +371,9 @@ __declspec(dllexport) BE_ERR	beInitStream(PBE_CONFIG pbeConfig, PDWORD dwSamples
 			// calculate to kbps
 			gf.VBR_mean_bitrate_kbps = ( lameConfig.format.LHV1.dwVbrAbr_bps + 500 ) / 1000;
 			// limit range
-			gf.VBR_mean_bitrate_kbps = Min(gf.VBR_mean_bitrate_kbps,320); 
-			gf.VBR_mean_bitrate_kbps = Max(gf.VBR_mean_bitrate_kbps,8); 
+			if(gf.VBR_mean_bitrate_kbps>320) gf.VBR_mean_bitrate_kbps = 320;
+			if(gf.VBR_mean_bitrate_kbps<8) gf.VBR_mean_bitrate_kbps = 8;
+
 		}
 
 	}
