@@ -41,12 +41,16 @@ End If
 
 For i = 0 To args.Count-1
   infile = args(i)
+  outfile = Left(infile,Instr(infile,"."))
+  outfile = outfile & "mp3"
+
   ' check input file
   If Not fs.FileExists(infile) Then
     wsh.Popup "Error opening input-file" & Chr(13) & "'" & infile & "'", , "Error", 16
   Else
     ' run lame
-    ret = wsh.Run(lame & Chr(32) & opts & Chr(32) & Chr(34) & infile & Chr(34), 1, True)
+    ret = wsh.Run(lame & """" & opts & " """ & infile & """ """ & outfile & """", 1, True)
+
 
     ' diagnostics
     Select Case ret
