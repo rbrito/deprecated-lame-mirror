@@ -19,15 +19,13 @@
  * Boston, MA 02111-1307, USA.
  */
 
-
 #ifndef LAME_BRHIST_H
 #define LAME_BRHIST_H
 
 #include "lame.h"
 
-int brhist_init(lame_global_flags *gf, int br_min, int br_max);
-void brhist_disp(lame_global_flags *gf);
-void brhist_disp_total(lame_global_flags *gf);
+int   brhist_init       ( const lame_global_flags *gf, int bitrate_kbps_min, int bitrate_kbps_max );
+void  brhist_disp       ( const lame_global_flags *gf, int jump_back );
+void  brhist_disp_total ( const lame_global_flags *gf );
 
 #endif /* LAME_BRHIST_H */
-

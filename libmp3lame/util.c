@@ -505,3 +505,54 @@ void updateStats( lame_internal_flags *gfc )
     }
 }
 
+#ifdef KLEMM_02
+
+# ifdef _WIN32        /* needed to set stdin to binary on windoze machines */
+#  include <io.h>
+#  include <fcntl.h>
+# else
+#  include <unistd.h>
+# endif
+
+int  lame_set_stream_binary_mode ( FILE* const fp )
+{
+# if   defined __EMX__
+    _fsetmode ( fp, "b" );
+# elif defined __BORLANDC__
+    setmode   (_fileno(fp),  O_BINARY );
+# elif defined __CYGWIN__
+    setmode   ( fileno(fp), _O_BINARY );
+# elif defined _WIN32
+    _setmode  (_fileno(fp), _O_BINARY );
+# endif
+    return 0;
+}
+
+# ifdef __riscos__
+#  include <kernel.h>
+#  include <sys/swis.h>
+# endif
+
+off_t  lame_get_file_size ( const char* const filename )
+{
+    struct stat       sb;
+# ifdef __riscos__
+    _kernel_swi_regs  reg;
+# endif
+
+# ifndef __riscos__
+    if ( 0 == stat ( filename, &sb ) )
+        return sb.st_size;
+# else
+    reg.r [0] = 17;
+    reg.r [1] = (int) filename;
+    _kernel_swi ( OS_File, &reg, &reg );
+    if ( reg.r [0] == 1 )
+        return (off_t) reg.r [4];
+# endif
+    return (off_t) -1;
+}
+
+#endif
+
+/* end of util.c */

@@ -21,14 +21,34 @@
 
 #include <stdlib.h>
 #include <string.h>
-#include <assert.h>
 #include "brhist.h"
 
+/* ///
+ * Sorry for not using KLEMM_03, but the code was really unreadable with so much #ifdefs
+ * and finally I was not sure not to unintentionally have modified the original code ...
+ *
+ * remove after reading (such remarks I mark with a "///")
+ * changed:
+ *   not all bitrates are display, only min <= x <= max and outside this range the used bitrates
+ *   cursor stays at the end of the screen, so ^C works right and nice (fflush moved two lines up)
+ *   WINDOWS not tested, problems may be at the line marked with "$$$" if counting the lines is wrong for Windows
+ *   No cache array for bit rate string representations, printed immediately with %3u from the int array
+ *   Renaming of br_min to br_kbps_min (I trapped into the pitfall that br_min in 3.87 was the index and now without renaming it was the data rate in kbps)
+ *   A "bug" is that brhist_disp_line has too many arguments
+ *   assert.h removed, not used
+ *   some minor changes, "%#5.4g" for percentages of LR/MS, a spell error in "BRHIST_WIDTH" (last two letters were wrong), and things like that
+ *   some unsigned long => int stuff
+ *   brhist_disp have a second arg to select to jump back or not
+ *
+ * Why not adding to the cvs comments:
+ *   commenting must be done while transmission (costs money, 4.8 Pf/min)
+ *   I have 3 minutes time, otherwise the modem cancels the connection and the comments are lost (cvs have problems with this case)
+ *   comments can be added at the right place
+ */
 
-
-static char str_up[10]={"\033[A"};
-static char str_clreoln[10]={'\0',};
-static char stderr_buff[1024];
+static char  str_up        [10] = "\033[A";
+static char  str_clreoln   [10];  /// static data is always zeroed, only auto data needs this, but may be a " \b" is better
+static char  stderr_buff [1024];
 
 #ifndef NOTERMCAP
 #   include <termcap.h>
@@ -36,10 +56,10 @@ static char stderr_buff[1024];
 
 
 #ifndef BRHIST_BARMAX
-#   define  BRHIST_BARMAX 50
+#   define BRHIST_BARMAX   50
 #endif
-#ifndef BRHIST_WIDHT
-#   define  BRHIST_WIDTH 14
+#ifndef BRHIST_WIDTH
+#   define BRHIST_WIDTH    14
 #endif
 
 static struct
@@ -47,8 +67,8 @@ static struct
     long count_max;
     int  vbrmin;
     int  vbrmax;
-    char kbps[BRHIST_WIDTH][4];
-    char bar[BRHIST_BARMAX + 1];
+    int  kbps [BRHIST_WIDTH];
+    char bar  [BRHIST_BARMAX + 1];
 } brhist;
 
 
@@ -59,11 +79,19 @@ static struct
   CONSOLE_SCREEN_BUFFER_INFO CSBI;
 #endif
 
-int brhist_init(lame_global_flags *gf, int br_min, int br_max)
+static size_t  calculate_index ( const int* const array, const size_t len, const int value )
 {
-    int    i;
-    int br_hist[14];
-    int br_kbps[14];
+    size_t  i;
+    
+    for ( i = 0; i < len; i++ )
+        if ( array [i] == value )
+	    return i;
+    return -1;
+}
+
+int  brhist_init ( const lame_global_flags* const gf, const int bitrate_kbps_min, const int bitrate_kbps_max )
+{
+    int    unused [BRHIST_WIDTH];
 
 #ifndef NOTERMCAP
     char term_buff[1024];
@@ -72,22 +100,17 @@ int brhist_init(lame_global_flags *gf, int br_min, int br_max)
     char tc[10];
 #endif
 
-    lame_bitrate_hist( gf, br_hist, br_kbps );
+    lame_bitrate_hist ( gf, unused, brhist.kbps );
     
-    if (br_min >= br_max) {
-	fprintf(stderr, "internal error... VBR max %d <= VBR min %d!?\n",
-		br_min, br_max);
+    if ( bitrate_kbps_min > bitrate_kbps_max ) {
+	fprintf (stderr, "lame internal error: VBR min %d kbps > VBR max %d kbps !?\n", bitrate_kbps_min, bitrate_kbps_max );
 	return -1;
     }
 
     /* initialize histogramming data structure */
-    brhist.vbrmin = 0;
-    brhist.vbrmax = 13;
+    brhist.vbrmin    = calculate_index ( brhist.kbps, BRHIST_WIDTH, bitrate_kbps_min );
+    brhist.vbrmax    = calculate_index ( brhist.kbps, BRHIST_WIDTH, bitrate_kbps_max );
     brhist.count_max = 0;
-
-    for (i = 0; i < BRHIST_WIDTH; i++) {
-	sprintf(brhist.kbps[i], "%3d", br_kbps[i]);
-    }
 
     memset (brhist.bar, '*', sizeof (brhist.bar)-1 );
 
@@ -123,20 +146,47 @@ int brhist_init(lame_global_flags *gf, int br_min, int br_max)
 }
 
 
+static void  brhist_disp_line ( const lame_global_flags* const gf, int i, int br_hist, int full, int frames )
+{
+    char    brppt [16];
+    int     barlen;
+    int     ppt  = 0;
+    
+    barlen  = (br_hist*BRHIST_BARMAX + full-1 ) / full;      /* round up */
+    if (frames > 0)
+        ppt = (1000lu * br_hist + frames/2) / frames;        /* round nearest */
 
-void brhist_disp(lame_global_flags *gf)
+    if ( br_hist == 0 )
+        sprintf ( brppt,  " [   ]" );
+    else if ( ppt < br_hist/10000 )
+        sprintf ( brppt," [%%..]" );
+    else if ( ppt <  10 )
+        sprintf ( brppt," [%%.%1u]", ppt );
+    else if ( ppt < 995 )
+        sprintf ( brppt, " [%2u%%]", (ppt+5)/10 );
+    else
+        sprintf ( brppt, "[%3u%%]", (ppt+5)/10 );
+          
+    if ( str_clreoln [0] ) /* ClearEndOfLine available */
+        fprintf ( stderr, "\n%3d%s%.*s%s", brhist.kbps [i], brppt, 
+                  barlen, brhist.bar, str_clreoln );
+    else
+        fprintf ( stderr, "\n%3d%s%.*s%*s ", brhist.kbps [i], brppt, 
+                  barlen, brhist.bar, BRHIST_BARMAX - barlen, "" );
+}
+
+void  brhist_disp ( const lame_global_flags* const gf, const int jump_back )
 {
     int   i;
-    int   ppt=0;
-    unsigned long  full = 0;
-    int     barlen;
-    char    brppt [16];
-    int br_hist[14];
-    int br_kbps[14];
-    int frames = 0;
+    int   br_hist [BRHIST_WIDTH];
+    int   br_kbps [BRHIST_WIDTH];
+    int   frames;
+    int   full;
+    int   lines_on_screen = 0;
     
     lame_bitrate_hist(gf, br_hist, br_kbps);
     
+    frames = full = 0;
     for (i = 0; i < BRHIST_WIDTH; i++) {
         frames += br_hist[i];
         if (full < br_hist[i]) full = br_hist[i];
@@ -147,81 +197,75 @@ void brhist_disp(lame_global_flags *gf)
     full =
 	full < 1  ?  1 : full;
 
-    for (i = 0; i < BRHIST_WIDTH; i++) {
-        barlen  = (br_hist[i]*BRHIST_BARMAX + full - 1) / full; /* round up */
-        if (frames)
-	    ppt = (1000lu * br_hist[i] + frames/2) / frames;	/* round nearest */
-
-        if ( br_hist [i] == 0 )
-            sprintf ( brppt,  " [   ]" );
-        else if ( ppt < br_hist[i]/10000 )
-            sprintf ( brppt," [%%..]" );
-        else if ( ppt < 10 )
-            sprintf ( brppt," [%%.%1u]", ppt%10 );
-        else if ( ppt < 995 )
-            sprintf ( brppt, " [%2u%%]", (ppt+5)/10 );
-        else
-            sprintf ( brppt, "[%3u%%]", (ppt+5)/10 );
-          
-        if ( str_clreoln [0] ) /* ClearEndOfLine available */
-            fprintf ( stderr, "\n%s%s%.*s%s", brhist.kbps [i], brppt, 
-                      barlen, brhist.bar, str_clreoln );
-        else
-            fprintf ( stderr, "\n%s%s%.*s%*s ", brhist.kbps [i], brppt, 
-                      barlen, brhist.bar, BRHIST_BARMAX - barlen, "" );
+    i = 0;
+    for (; i < brhist.vbrmin; i++) 
+        if ( br_hist [i] ) {
+            brhist_disp_line ( gf, i, br_hist [i], full, frames );
+    	    lines_on_screen++;
+	}
+    for (; i <= brhist.vbrmax; i++) {
+        brhist_disp_line ( gf, i, br_hist [i], full, frames );
+	lines_on_screen++;
     }
+    for (; i < BRHIST_WIDTH; i++)
+        if ( br_hist [i] ) {
+            brhist_disp_line ( gf, i, br_hist [i], full, frames );
+	    lines_on_screen++;
+	}
+    
 #if defined(_WIN32) && !defined(__CYGWIN__) 
     /* fflush is not needed */
     if (GetFileType(CH)!= FILE_TYPE_PIPE){
 	  GetConsoleScreenBufferInfo(CH, &CSBI);
-	  Pos.Y= CSBI.dwCursorPosition.Y-(BRHIST_WIDTH)- 1;
+	  Pos.Y= CSBI.dwCursorPosition.Y - lines_on_screen - 1;  /* $$$ */
 	  Pos.X= 0;
 	  SetConsoleCursorPosition(CH, Pos);
     }
 #else
-    fputc  ( '\r', stderr );
-    for ( i = 0; i < BRHIST_WIDTH; i++ )
-        fputs ( str_up, stderr );
+    fputs ( "\r", stderr );
     fflush ( stderr );
+    if ( jump_back )
+        while ( lines_on_screen-- > 0 )
+            fputs ( str_up, stderr );
 #endif
 }
 
 
-void brhist_disp_total(lame_global_flags *gf)
+void  brhist_disp_total ( const lame_global_flags* const gf )
 {
     int i;
-    double ave;
-    int br_hist[14];
-    int br_kbps[14];
-    int st_mode[4], st_frames = 0;
-    int frames = 0;
+    double sum;
+    int br_hist [BRHIST_WIDTH];
+    int br_kbps [BRHIST_WIDTH];
+    int st_mode [4];
+    int st_frames = 0;
+    int br_frames = 0;
     
-    lame_stereo_mode_hist(gf, st_mode);
+    lame_stereo_mode_hist(gf, st_mode);    /// is this information only a summary, or is this available for every framesize ?
     lame_bitrate_hist(gf, br_hist, br_kbps);
     
     for (i = 0; i < BRHIST_WIDTH; i++) 
-        frames += br_hist[i];
+        br_frames += br_hist[i];
 
-    for(i = brhist.vbrmin; i <= brhist.vbrmax; i++)
-	fputc('\n', stderr);
-
-    ave=0;
-    for(i = 0; i < BRHIST_WIDTH; i++) {
-	ave += br_kbps[i] * br_hist[i];
+    sum=0;
+    for (i = 0; i < BRHIST_WIDTH; i++) {
+	sum += br_kbps[i] * br_hist[i];
     }
 
     for (i = 0; i < 4; i++) {
         st_frames += st_mode[i];
     }
 
-    fprintf ( stderr, "\naverage: %5.1f kbps", ave / frames);
+    fprintf ( stderr, "\naverage: %5.1f kbps", sum / br_frames);
 
     if (st_frames > 0) {
         double lr = st_mode[0] * 100. / st_frames;
         double ms = st_mode[2] * 100. / st_frames;
-        fprintf ( stderr, "   LR: %5.1f%%   MS: %5.1f%%\n", lr, ms );
+        fprintf ( stderr, "   LR: %#5.4g%%   MS: %#5.4g%%\n", lr, ms );
     }
     
     fflush(stderr);
     
 }
+
+/* end of brhist.c */

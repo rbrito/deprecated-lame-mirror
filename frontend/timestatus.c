@@ -268,7 +268,7 @@ void timestatus_klemm(lame_global_flags *gfp)
 		   gfp -> framesize );
 #ifdef BRHIST
       if ( brhist )
-	brhist_disp ( gfp->totalframes );
+	brhist_disp ( gfp->totalframes, 1 /* flash back */ );
 #endif
       last_time = GetRealTime ();  /* from now! disp_time seconds */
     }
@@ -326,12 +326,3 @@ void decoder_progress_finish ( lame_global_flags* gfp )
 {
     fprintf ( stderr, "\n" );
 }
-
-
-
-
-
-
-
-
-

@@ -219,7 +219,7 @@ int main(int argc, char **argv)
 	      timestatus(gf.out_samplerate,gf.frameNum,gf.totalframes,gf.framesize);
 #ifdef BRHIST
 	      if (brhist)
-		brhist_disp(&gf);
+		brhist_disp(&gf,1 /* flash back */);
 #endif
 	    }
 	  }
@@ -253,7 +253,7 @@ int main(int argc, char **argv)
 	timestatus(gf.out_samplerate,gf.frameNum,gf.totalframes,gf.framesize);
 #ifdef BRHIST
 	if (brhist) {
-	  brhist_disp(&gf);
+	  brhist_disp(&gf,0 /* no flash back */);
 	  brhist_disp_total(&gf);
 	}
 #endif
