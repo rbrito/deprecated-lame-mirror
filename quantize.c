@@ -430,7 +430,7 @@ void init_outer_loop(
       /* pick gain so that 2^(2gain)*en[0] = 1  */
       /* gain = .5* log( 1/en[0] )/log(2) = -.5*log(en[])/log(2) */
       for (b=0; b<3; b++) {
-	cod_info->subblock_gain[b]=nint2(-.5*log(en[b])/log(2.0));
+	cod_info->subblock_gain[b] = (int)(-.5*log(en[b])/log(2.0) + 0.5);
 	if (cod_info->subblock_gain[b] > 2) 
 	  cod_info->subblock_gain[b]=2;
 	if (cod_info->subblock_gain[b] < 0) 
@@ -765,7 +765,7 @@ void outer_loop(
 #endif
   }      
   /* finish up */
-  cod_info->global_gain = nint2( cod_info->quantizerStepSize + 210.0 );
+  cod_info->global_gain = cod_info->quantizerStepSize + 210.0;
   assert( cod_info->global_gain < 256 );
 
   best_noise[0]=best_over;

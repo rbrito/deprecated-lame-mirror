@@ -111,7 +111,7 @@ void init_outer_loop_dual(
       /* pick gain so that 2^(2gain)*en[0] = 1  */
       /* gain = .5* log( 1/en[0] )/log(2) = -.5*log(en[])/log(2) */
       for (b=0; b<3; b++) {
-	cod_info->subblock_gain[b]=nint2(-.5*log(en[b])/log(2.0));
+	cod_info->subblock_gain[b] = (int) (-.5*log(en[b])/log(2.0) + 0.5);
 	if (cod_info->subblock_gain[b] > 2) 
 	  cod_info->subblock_gain[b]=2;
 	if (cod_info->subblock_gain[b] < 0) 
@@ -473,7 +473,7 @@ void outer_loop_dual(
   
   /* restore some data */
   for (ch=0 ; ch < stereo ; ch ++ ) {
-    if (count[ch] ) {
+    if (count[ch]) {
       for ( sfb = 0; sfb < SBPSY_l; sfb++ ) {
 	scalefac->l[gr][ch][sfb] = scalesave_l[ch][sfb];    
       }
@@ -483,19 +483,8 @@ void outer_loop_dual(
 	  scalefac->s[gr][ch][sfb][i] = scalesave_s[ch][sfb][i];    
 	}
 
-      { 
-	memcpy(l3_enc[gr][ch],save_l3_enc[ch],sizeof(l3_enc[gr][ch]));   
-	memcpy(cod_info[ch],&save_cod_info[ch],sizeof(save_cod_info[ch]));
-	
-	if ( fr_ps->header->version == 1 )
-	  status[ch] = scale_bitcount( scalefac, cod_info[ch], gr, ch );
-	else
-	  status[ch] = scale_bitcount_lsf( scalefac, cod_info[ch], gr, ch );
-	if (status[ch]) {
-	  fprintf(stderr,"Error recomputing scalefac_compress...this should not happen");
-	  exit(-10);
-	}
-      }
+      memcpy(l3_enc[gr][ch],save_l3_enc[ch],sizeof(l3_enc[gr][ch]));   
+      memcpy(cod_info[ch],&save_cod_info[ch],sizeof(save_cod_info[ch]));
       cod_info[ch]->part2_3_length += cod_info[ch]->part2_length;
 
 #ifdef HAVEGTK
@@ -508,7 +497,7 @@ void outer_loop_dual(
   /* finish up */
   for (ch=0 ; ch < stereo ; ch ++ ) {
     ResvAdjust( fr_ps, cod_info[ch], l3_side, mean_bits );
-    cod_info[ch]->global_gain = nint2( cod_info[ch]->quantizerStepSize + 210.0 );
+    cod_info[ch]->global_gain = cod_info[ch]->quantizerStepSize + 210.0;
     assert( cod_info[ch]->global_gain < 256 );
   }
 }

@@ -1429,8 +1429,8 @@ void lame_getmp3info(lame_mp3info *mp3info)
   mp3info->encoder_delay = ENCDELAY;
   mp3info->framesize = (fr_ps.header->version==0) ? 576 : 1152;
   mp3info->output_channels = fr_ps.stereo;
-  mp3info->output_samplerate = nint2(
-     1000*s_freq[fr_ps.header->version][fr_ps.header->sampling_frequency]);  
+  mp3info->output_samplerate = (int)
+     1000*s_freq[fr_ps.header->version][fr_ps.header->sampling_frequency];
 }
 
 

@@ -31,17 +31,6 @@ enum byte_order NativeByteOrder = order_unknown;
 *
 ***********************************************************************/
 
-int nint2( FLOAT8 in )
-{
-    int    temp;
-
-    if( in < 0 )  temp = (int)(in - 0.5);
-    else    temp = (int)(in + 0.5);
-
-    return(temp);
-}
-
-
 
 /***********************************************************************
  * compute bitsperframe and mean_bits for a layer III frame 

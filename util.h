@@ -173,7 +173,6 @@ extern void SwapBytesInWords( short *loc, int words );
 
 extern void 
 getframebits(layer *info, int stereo, int *bitsPerFrame, int *mean_bits);
-int nint2( FLOAT8 in );
 
 void timestatus(layer *info,long frameNum,long totalframes);
 #endif
