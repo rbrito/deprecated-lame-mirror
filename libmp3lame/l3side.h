@@ -64,7 +64,6 @@ typedef struct {
     int count1;
     int global_gain;
     int scalefac_compress;
-    int window_switching_flag;
     int block_type;
     int mixed_block_flag;
     int table_select[3];

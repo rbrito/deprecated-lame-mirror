@@ -91,7 +91,6 @@ init_outer_loop(
     cod_info->count1              = 0;
     cod_info->global_gain         = 210;
     cod_info->scalefac_compress   = 0;
-    /* window_switching_flag was set in psymodel.c? */
     /* block_type            was set in psymodel.c? */
     /* mixed_block_flag      would be set in ^      */
     cod_info->table_select [0]    = 0;

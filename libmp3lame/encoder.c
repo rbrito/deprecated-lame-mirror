@@ -445,10 +445,6 @@ int  lame_encode_mp3_frame (				// Output
     for ( ch = 0; ch < gfc->channels_out; ch++ ) {
       gr_info *cod_info = &gfc->l3_side.tt[gr][ch];
       cod_info->mixed_block_flag = 0;     /* never used by this model */
-      if (cod_info->block_type == NORM_TYPE )
-	cod_info->window_switching_flag = 0;
-      else
-	cod_info->window_switching_flag = 1;
     }
   }
 

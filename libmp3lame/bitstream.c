@@ -296,9 +296,9 @@ encodeSideInfo2(lame_global_flags *gfp,int bitsPerFrame)
 		writeheader(gfc,gi->big_values / 2,        9);
 		writeheader(gfc,gi->global_gain,           8);
 		writeheader(gfc,gi->scalefac_compress,     4);
-		writeheader(gfc,gi->window_switching_flag, 1);
 
-		if (gi->window_switching_flag) {
+		if (gi->block_type != NORM_TYPE) {
+		    writeheader(gfc, 1, 1); // window_switching_flag
 		    writeheader(gfc,gi->block_type,       2);
 		    writeheader(gfc,gi->mixed_block_flag, 1);
 
@@ -313,7 +313,7 @@ encodeSideInfo2(lame_global_flags *gfp,int bitsPerFrame)
 		    writeheader(gfc,gi->subblock_gain[1], 3);
 		    writeheader(gfc,gi->subblock_gain[2], 3);
 		} else {
-		    assert(gi->block_type == NORM_TYPE);
+		    writeheader(gfc, 0, 1); // window_switching_flag
 		    if (gi->table_select[0] == 14)
 			gi->table_select[0] = 16;
 		    writeheader(gfc,gi->table_select[0], 5);
@@ -347,9 +347,9 @@ encodeSideInfo2(lame_global_flags *gfp,int bitsPerFrame)
 	    writeheader(gfc,gi->big_values / 2,        9);
 	    writeheader(gfc,gi->global_gain,           8);
 	    writeheader(gfc,gi->scalefac_compress,     9);
-	    writeheader(gfc,gi->window_switching_flag, 1);
 
-	    if (gi->window_switching_flag) {
+	    if (gi->block_type != NORM_TYPE) {
+		writeheader(gfc, 1, 1); // window_switching_flag
 		writeheader(gfc,gi->block_type,       2);
 		writeheader(gfc,gi->mixed_block_flag, 1);
 
@@ -364,6 +364,7 @@ encodeSideInfo2(lame_global_flags *gfp,int bitsPerFrame)
 		writeheader(gfc,gi->subblock_gain[1], 3);
 		writeheader(gfc,gi->subblock_gain[2], 3);
 	    } else {
+		writeheader(gfc, 0, 1); // window_switching_flag
 		if (gi->table_select[0] == 14)
 		    gi->table_select[0] = 16;
 		writeheader(gfc,gi->table_select[0], 5);
