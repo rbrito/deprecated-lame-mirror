@@ -594,7 +594,6 @@ struct lame_internal_flags {
 *  Global Function Prototype Declarations
 *
 ***********************************************************************/
-void	freegfc(const lame_t gfc);
 int	BitrateIndex(int, int);
 void	disable_FPE(void);
 
