@@ -312,7 +312,11 @@ int default_channels)
 {
   input_bitrate=0;
   if (input_format==sf_mp3) {
+#ifdef AMIGA_ASYNCIO
+	if ((musicin = OpenAsync(lpszFileName, MODE_READ, AmigaReadBuffer)) == NULL) {
+#else
     if ((musicin = fopen(lpszFileName, "rb")) == NULL) {
+#endif
       fprintf(stderr, "Could not find \"%s\".\n", lpszFileName);
       exit(1);
     }
@@ -500,9 +504,19 @@ int default_channels)
 #elif (defined _WIN32)
     _setmode(_fileno(stdin), _O_BINARY);
 #endif
+
+#ifdef AMIGA_ASYNCIO
+	fprintf(stderr,"Sorry, reading from stdin is not supported!");
+	exit(1);
+#else
     musicin = stdin;
+#endif
   } else {
+#ifdef AMIGA_ASYNCIO
+	if ((musicin = OpenAsync(inPath, MODE_READ, AmigaReadBuffer)) == NULL) {
+#else
     if ((musicin = fopen(inPath, "rb")) == NULL) {
+#endif
       fprintf(stderr, "Could not find \"%s\".\n", inPath);
       exit(1);
     }

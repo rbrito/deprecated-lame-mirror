@@ -1,6 +1,11 @@
 #include "mpg123.h"
 #include "mpglib.h"
 
+#ifdef AMIGA_ASYNCIO
+ #undef BOOL
+ #include "/util.h"
+#endif
+
 #ifdef OS_AMIGAOS
 #include "/lame.h"
 #include "/util.h"

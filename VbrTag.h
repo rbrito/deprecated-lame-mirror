@@ -38,6 +38,10 @@
  * e.g. half duration seek point = (toc[50]/256.0) * total_bitstream_bytes
  */
 
+#ifdef AMIGA_ASYNCIO
+ #undef AMIGA_ASYNCIO
+#endif
+
 #include "l3bitstream.h"
 
 #define FRAMES_FLAG     0x0001
