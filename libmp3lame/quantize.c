@@ -1297,7 +1297,8 @@ short_block_scalefacs(gr_info * gi, int vbrmax)
 	int sbg = (vbrmax - maxov[gi->scalefac_scale][b] + 7) >> 3;
 	if (sbg < 0)
 	    sbg = 0;
-	assert(sbg <= 7);
+	if (sbg > 7)
+	    sbg = 7;
 	gi->subblock_gain[b+1] = sbg;
     }
 
