@@ -1,3 +1,4 @@
+/* $Id$ */
 /*
  * Known bugs (sorted by importance): 
  *     - human delay (ca. 200 ms or more???) and buffering delay (341 ms @48 kHz/64 KByte)
@@ -9,6 +10,10 @@
  *     - +/- handling via mouse (do you have code?) in a dark room
  *     - ENTER as direction change
  */
+
+#ifdef HAVE_CONFIG_H
+# include <config.h>
+#endif
 
 #include <assert.h>
 #include <stdio.h>
@@ -25,8 +30,15 @@
 #include <sys/time.h>
 #include <sys/types.h>
 #include <sys/stat.h>
-#include <linux/soundcard.h>
-     
+
+#ifdef HAVE_SYS_SOUNDCARD_H
+# include <sys/soundcard.h>
+#elif defined(HAVE_LINUX_SOUNDCARD_H)
+# include <linux/soundcard.h>
+#else
+# error no soundcard include
+#endif
+
 
 #define AUDIO_DEVICE       "/dev/dsp"
 //#define COOLEDIT_FILE      "/mnt/dosd/cooledit.wav"

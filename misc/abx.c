@@ -1,3 +1,4 @@
+/* $Id$ */
 /*
  * Usage: abx original_file test_file
  * Ask you as long as the probability is below the given percentage
@@ -19,6 +20,10 @@
  *          
  */
 
+#ifdef HAVE_CONFIG_H
+# include <config.h>
+#endif
+
 #include <stdio.h>
 #include <stdlib.h>
 #include <termios.h>
@@ -33,8 +38,14 @@
 #include <math.h>
 #include <sys/mman.h>
 #include <sys/ioctl.h>
-#include <linux/soundcard.h>
 
+#ifdef HAVE_SYS_SOUNDCARD_H
+# include <sys/soundcard.h>
+#elif defined(HAVE_LINUX_SOUNDCARD_H)
+# include <linux/soundcard.h>
+#else
+# error no soundcard include
+#endif
 
 #define BF   4410
 
