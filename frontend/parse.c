@@ -366,6 +366,42 @@ int  long_help ( const lame_global_flags* gfp, FILE* const fp, const char* Progr
     return 0;
 }
 
+int  extra_help ( const lame_global_flags* gfp, FILE* const fp, const char* ProgramName, int lessmode )  /* print long syntax help */
+{
+    lame_version_print ( fp );
+    fprintf ( fp,
+              "Expert options (if you really know what you are doing)\n"
+              "\nATH related:\n"
+              "--noath               turns ATH down to a flat noise floor\n"
+              "--athshort            ignore GPSYCHO for short blocks, use ATH only\n"
+              "--athonly             ignore GPSYCHO completely, use ATH only\n"
+              "--athtype n           selects between different ATH types [0-5]\n"
+              "--athlower x          lowers ATH by x dB\n"
+              "--ath-adjust n        ATH auto adjust types 1-3, else no adjustment\n"
+              "--adapt-thres-type n  n=1 total energy or n=2 approximated loudness\n"
+              "--adapt-thres-level x ??\n"
+              "-Y                    different ATH adjust method\n"
+              "\nPSY related:\n"
+              "--temporal-masking n  use temporal masking effect i=0:no i=1:yes\n"
+              "--notemp              disable temporal masking effect\n"
+              "--nspsytune           experimental PSY tunings by Naoki Shibata\n"
+              "--nssafejoint         M/S switching criterion\n"
+              "--ns-bass x           used by above\n"
+              "--ns-alto x           used by above\n"         
+              "--ns-treble x         used by above\n"
+            );
+
+    wait_for ( fp, lessmode );  
+
+    fprintf ( fp,
+              "\nmisc:\n"
+              "--nores               disables the use of the bitreservoir\n" 
+            );
+
+    wait_for ( fp, lessmode );  
+
+    return 0;
+}
 
 static void  display_bitrate ( FILE* const fp, const char* const version, const int div, const int index )
 {
@@ -709,7 +745,12 @@ int  parse_args ( lame_global_flags* gfp, int argc, char** argv, char* const inP
             (void) lame_set_ATHtype( gfp, 3 );
             gfp->VBR_min_bitrate_kbps=112;
 		
-		T_ELIF ("remix")
+		
+                /**
+                 *  please, do *not* DOCUMENT this one
+                 *  it is a developers only switch (rh)
+                 */
+                T_ELIF ("remix")
             gfp->VBR = vbr_mtrh; 
             gfp->VBR_q = 3;
             (void) lame_set_quality( gfp, 2 );
@@ -718,6 +759,7 @@ int  parse_args ( lame_global_flags* gfp, int argc, char** argv, char* const inP
             (void) lame_set_ATHtype( gfp, 3 );
             gfp->VBR_min_bitrate_kbps=112;
 		
+                
 		T_ELIF ("abr")
 		    argUsed=1;
 		    gfp->VBR = vbr_abr; 
@@ -810,8 +852,8 @@ int  parse_args ( lame_global_flags* gfp, int argc, char** argv, char* const inP
 		    argUsed=1;
 		    (void) lame_set_ATHtype( gfp, atoi( nextArg ) );
 
-		T_ELIF ("ath-adjust")
-		    argUsed=1;
+		T_ELIF ("ath-adjust")   //  switch for developing, no DOCU
+		    argUsed=1;          //  1:Gaby, 2:Robert, 3:Jon, else:off
 		    lame_set_adjust_type( gfp, atoi(nextArg) );
 
 		T_ELIF ("adapt-thres-type")
@@ -1021,6 +1063,10 @@ int  parse_args ( lame_global_flags* gfp, int argc, char** argv, char* const inP
 		
 		T_ELIF ("longhelp")
 		    long_help ( gfp, stdout, ProgramName, 0 /* lessmode=NO */ );
+		    return -2;
+		    
+		T_ELIF ("extrahelp")
+		    extra_help ( gfp, stdout, ProgramName, 0 /* lessmode=NO */ );
 		    return -2;
 		    
 		T_ELIF ("?")

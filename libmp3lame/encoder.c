@@ -106,9 +106,7 @@ adjust_ATH( lame_global_flags* const  gfp,
     /*  adjust ATH depending on range of maximum value
      */
     switch ( gfc->ATH->use_adjust ) {
-    default:
 
-#ifdef OLD_ATH_AUTO_ADJUST
     case  1:    /* by Gabriel Bouvigne */
         if      (0.5 < max_val / 32768) {       /* value above 50 % */
                 gfc->ATH->adjust = 1.0;         /* do not reduce ATH */
@@ -124,7 +122,6 @@ adjust_ATH( lame_global_flags* const  gfp,
                     gfc->ATH->adjust = 0.01;
         }
         break;
-#endif /* OLD_ATH_AUTO_ADJUST */
 
     case  2:    /* by Robert Hegemann */
       {
@@ -188,6 +185,10 @@ adjust_ATH( lame_global_flags* const  gfp,
             gfc->ATH->adjust_limit = adj_lim_new;
         }
       }
+        break;
+        
+    default:
+        gfc->ATH->adjust = 1.0;	/* no adjustment */
         break;
     }   /* switch */
 }
