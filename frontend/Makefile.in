@@ -1,4 +1,4 @@
-# Makefile.in generated automatically by automake 1.4a from Makefile.am
+# Makefile.in generated automatically by automake 1.4 from Makefile.am
 
 # Copyright (C) 1994, 1995-8, 1999 Free Software Foundation, Inc.
 # This Makefile.in is free software; the Free Software Foundation
@@ -46,10 +46,9 @@ AUTOMAKE = @AUTOMAKE@
 AUTOHEADER = @AUTOHEADER@
 
 INSTALL = @INSTALL@
-INSTALL_PROGRAM = @INSTALL_PROGRAM@
+INSTALL_PROGRAM = @INSTALL_PROGRAM@ $(AM_INSTALL_PROGRAM_FLAGS)
 INSTALL_DATA = @INSTALL_DATA@
 INSTALL_SCRIPT = @INSTALL_SCRIPT@
-INSTALL_STRIP_FLAG =
 transform = @program_transform_name@
 
 NORMAL_INSTALL = :
@@ -103,7 +102,8 @@ EXTRA_PROGRAMS = mp3rtp mp3x
 
 brhist_sources = brhist.c brhist.h
 
-EXTRA_DIST = $(brhist_sources) mp3x.dsp mp3x.dsw amiga_mpega.c
+EXTRA_DIST =  	$(brhist_sources) 	console.c 	console.h 	lame.dsp 	lame.dsw 	mp3x.dsp 	mp3x.dsw 	amiga_mpega.c
+
 
 DEFS = @DEFS@ @CONFIG_DEFS@
 
@@ -118,8 +118,8 @@ EXTRA_mp3rtp_SOURCES = $(brhist_sources)
 EXTRA_mp3x_SOURCES = $(brhist_sources)
 @WITH_BRHIST_TRUE@lame_SOURCES = main.c $(common_sources) $(brhist_sources)
 @WITH_BRHIST_FALSE@lame_SOURCES = main.c $(common_sources)
-@WITH_BRHIST_TRUE@mp3rtp_SOURCES = mp3rtp.c rtp.c $(common_sources) $(brhist_sources)
-@WITH_BRHIST_FALSE@mp3rtp_SOURCES = mp3rtp.c rtp.c $(common_sources)
+@WITH_BRHIST_TRUE@mp3rtp_SOURCES = mp3rtp.c rtp.c rtp.h $(common_sources) $(brhist_sources)
+@WITH_BRHIST_FALSE@mp3rtp_SOURCES = mp3rtp.c rtp.c rtp.h $(common_sources)
 @WITH_BRHIST_TRUE@mp3x_SOURCES = mp3x.c gtkanal.c gpkplotting.c 	$(common_sources) $(brhist_sources)
 @WITH_BRHIST_FALSE@mp3x_SOURCES = mp3x.c gtkanal.c gpkplotting.c $(common_sources)
 
@@ -180,7 +180,7 @@ DIST_COMMON =  Makefile.am Makefile.in
 
 DISTFILES = $(DIST_COMMON) $(SOURCES) $(HEADERS) $(TEXINFOS) $(EXTRA_DIST)
 
-TAR = gtar
+TAR = tar
 GZIP_ENV = --best
 DEP_FILES =  .deps/brhist.P .deps/get_audio.P .deps/gpkplotting.P \
 .deps/gtkanal.P .deps/lametime.P .deps/main.P .deps/mp3rtp.P \
@@ -214,8 +214,8 @@ install-binPROGRAMS: $(bin_PROGRAMS)
 	$(mkinstalldirs) $(DESTDIR)$(bindir)
 	@list='$(bin_PROGRAMS)'; for p in $$list; do \
 	  if test -f $$p; then \
-	    echo " $(LIBTOOL)  --mode=install $(INSTALL_PROGRAM) $(INSTALL_STRIP_FLAG) $$p $(DESTDIR)$(bindir)/`echo $$p|sed 's/$(EXEEXT)$$//'|sed '$(transform)'|sed 's/$$/$(EXEEXT)/'`"; \
-	    $(LIBTOOL)  --mode=install $(INSTALL_PROGRAM) $(INSTALL_STRIP_FLAG) $$p $(DESTDIR)$(bindir)/`echo $$p|sed 's/$(EXEEXT)$$//'|sed '$(transform)'|sed 's/$$/$(EXEEXT)/'`; \
+	    echo " $(LIBTOOL)  --mode=install $(INSTALL_PROGRAM) $$p $(DESTDIR)$(bindir)/`echo $$p|sed 's/$(EXEEXT)$$//'|sed '$(transform)'|sed 's/$$/$(EXEEXT)/'`"; \
+	    $(LIBTOOL)  --mode=install $(INSTALL_PROGRAM) $$p $(DESTDIR)$(bindir)/`echo $$p|sed 's/$(EXEEXT)$$//'|sed '$(transform)'|sed 's/$$/$(EXEEXT)/'`; \
 	  else :; fi; \
 	done
 
@@ -416,7 +416,7 @@ uninstall: uninstall-am
 all-am: Makefile $(PROGRAMS) $(HEADERS)
 all-redirect: all-am
 install-strip:
-	$(MAKE) $(AM_MAKEFLAGS) INSTALL_STRIP_FLAG=-s install
+	$(MAKE) $(AM_MAKEFLAGS) AM_INSTALL_PROGRAM_FLAGS=-s install
 installdirs:
 	$(mkinstalldirs)  $(DESTDIR)$(bindir)
 

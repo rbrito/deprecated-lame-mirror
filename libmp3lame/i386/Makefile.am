@@ -39,4 +39,4 @@ EXTRA_DIST = \
 NASM = @NASM@
 NASMFLAGS=@NASM_FORMAT@ -i $(top_srcdir)/libmp3lame/@CPUTYPE@/
 .nas.o:
-	$(NASM) $(NASMFLAGS) $< -o $@ -l $<.lst
+	$(NASM) $(NASMFLAGS) $< -o $@ -l $@.lst

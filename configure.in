@@ -796,4 +796,4 @@ AC_SUBST(CPUTYPE)
 
 AC_SUBST(CONFIG_DEFS)
 
-AC_OUTPUT(Makefile libmp3lame/Makefile libmp3lame/i386/Makefile frontend/Makefile mpglib/Makefile doc/Makefile doc/html/Makefile doc/man/Makefile include/Makefile Dll/Makefile misc/Makefile dshow/Makefile lame.spec)
+AC_OUTPUT(Makefile libmp3lame/Makefile libmp3lame/i386/Makefile frontend/Makefile mpglib/Makefile doc/Makefile doc/html/Makefile doc/man/Makefile include/Makefile Dll/Makefile misc/Makefile debian/Makefile dshow/Makefile lame.spec)

@@ -2,7 +2,7 @@
 
 AUTOMAKE_OPTIONS = foreign $(top_srcdir)/ansi2knr
 
-EXTRA_DIST = 
+EXTRA_DIST = \
 	Encoder.cpp \
 	Encoder.h \
 	Mpegac.cpp \
@@ -20,4 +20,5 @@ EXTRA_DIST =
 	dshow.dsp \
 	dshow.dsw \
 	iaudioprops.h \
-	resource.h 
+	resource.h
+

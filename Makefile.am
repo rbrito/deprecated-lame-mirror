@@ -1,20 +1,24 @@
 ## $Id$
 
-SUBDIRS = mpglib libmp3lame frontend Dll doc include misc dshow
+SUBDIRS = mpglib libmp3lame frontend Dll debian doc include misc dshow
 
 CLEANFILES = testcase.new.mp3
 AUTOMAKE_OPTIONS = foreign ansi2knr
 
 EXTRA_DIST = \
-	API HACKING \
+	API \
+	DEFINES \
+	HACKING \
 	INSTALL.configure \
 	LICENSE \
 	Makefile.B32 \
 	Makefile.DJGPP \
 	Makefile.MSVC \
+	Makefile.unix \
 	PRESETS.draft \
 	README.B32 \
 	README.DJGPP \
+	README.WINGTK \
 	STYLEGUIDE \
 	USAGE \
 	configMS.h \
