@@ -113,6 +113,15 @@ ResvFrameBegin(lame_global_flags *gfp,III_side_info_t *l3_side, int mean_bits, i
 
     /* maximum allowed frame size */
     maxmp3buf = (gfp->strict_ISO) ? 8*960 : 8*2047;
+    if (gfp->strict_ISO) {
+        if (gfp->version==1)
+            maxmp3buf=8*((int)(320000/(gfp->out_samplerate / (FLOAT8)1152)/8 +.5));
+        else
+            maxmp3buf=8*((int)(160000/(gfp->out_samplerate / (FLOAT8)576)/8 +.5));
+    } else
+        maxmp3buf=8*1440; /*size of a 320kpbs 32kHz frame*/
+
+
 
     if ( frameLength > maxmp3buf ||  gfp->disable_reservoir ) {
 	gfc->ResvMax = 0;
