@@ -19,7 +19,7 @@
  * Boston, MA 02111-1307, USA.
  */
 
-
+#include <assert.h>
 #include "util.h"
 #include "l3side.h"
 #include "tables.h"
@@ -633,6 +633,9 @@ void best_huffman_divide(int gr, int ch, gr_info *gi, int *ix)
     /* Determines the number of bits to encode the quadruples. */
     i = (cod_info.count1 += 2);
     a1 = a2 = 0;
+    
+    assert(i <= 576);
+    
     for (; i > cod_info.big_values; i -= 4) {
 	int p = ((ix[i-4] * 2 + ix[i-3]) * 2 + ix[i-2]) * 2 + ix[i-1];
 	a1 += ht[32].hlen[p];
