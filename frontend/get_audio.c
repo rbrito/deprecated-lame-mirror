@@ -1528,41 +1528,6 @@ lame_decode_initfile(FILE * fd, mp3data_struct * mp3data)
     }
 
 
-#if 0
-    /* buffer 48 bytes so we can check for Xing header */
-    len2 = fread(&buf[len], 1, 48 - len, fd);
-    if (len2 != 48 - len)
-        return -1;
-    len = 48;
-
-    /* check first 48 bytes for Xing header */
-    xing_header = GetVbrTag(&pTagData, (unsigned char *) buf);
-
-    if (xing_header && pTagData.headersize >= 48) {
-        num_frames = pTagData.frames;
-        fprintf(stderr,
-                "\rXing VBR header dectected.  MP3 file has %i frames\n",
-                num_frames);
-
-        // skip the rest of the Xing header.  LAME decoder ignores TOC data    
-        fskip(fd, pTagData.headersize - 48, SEEK_CUR);
-        // buffer a few more bytes for next header check:  
-        len = fread(buf, 1, 4, fd);
-
-    }
-    else {
-        /* we have read 48 bytes, but did not find a Xing header */
-        /* lets try and rewind the stream:  */
-        if (fseek(fd, -44, SEEK_CUR) != 0) {
-            /* backwards fseek failed.  input is probably a pipe */
-            /* keep 'len' unchanged */
-        }
-        else {
-            len -= 44;
-        }
-    }
-#endif
-
     // now parse the current buffer looking for MP3 headers 
     // we dont want to feed too much data to lame_decode1_headers -  
     // we dont want it to actually decode the first frame
@@ -1584,19 +1549,12 @@ lame_decode_initfile(FILE * fd, mp3data_struct * mp3data)
     }
 
 
-#if 1
     if (mp3data->totalframes > 0) {
         /* mpglib found a Xing VBR header and computed nsamp & totalframes */
     }
     else {
         mp3data->nsamp = MAX_U_32_NUM;
     }
-#else
-    mp3data->nsamp = MAX_U_32_NUM;
-    if (xing_header && num_frames) {
-        mp3data->nsamp = mp3data->framesize * num_frames;
-    }
-#endif
 
 
     /*

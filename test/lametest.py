@@ -184,6 +184,7 @@ while line:
         print "options:         ",line
         print "input:           ",input_file 
         print "reference output:",name2
+        print cmd
         os.system(cmd)
         num_ok = num_ok+compare(name1,name2,decode)
     elif (lame2=='makeref'):
