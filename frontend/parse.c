@@ -192,10 +192,11 @@ int  usage ( const lame_global_flags* gfp, FILE* const fp, const char* ProgramNa
               "\n"
               "    <infile> and/or <outfile> can be \"-\", which means stdin/stdout.\n"
               "\n"
-              "Try  \"%s --help\"     for more information\n" 
+              "Try  \"%s --help\"          for more information\n" 
+              "  or \"%s --preset help\"   about suggested predefined settings\n"
               "  or \"%s --longhelp\"\n"
-              "  or \"%s -?\"         for a complete options list\n\n",
-              ProgramName, ProgramName, ProgramName, ProgramName ); 
+              "  or \"%s -?\"              for a complete options list\n\n",
+              ProgramName, ProgramName, ProgramName, ProgramName, ProgramName ); 
     return 0;
 }
 
@@ -432,9 +433,10 @@ int  extra_help ( const lame_global_flags* gfp, FILE* const fp, const char* Prog
               "--notemp              disable temporal masking effect\n"
               "--nspsytune           experimental PSY tunings by Naoki Shibata\n"
               "--nssafejoint         M/S switching criterion\n"
-              "--ns-bass x           used by above\n"
-              "--ns-alto x           used by above\n"         
-              "--ns-treble x         used by above\n"
+              "--ns-bass x           adjust masking for sfbs  0 -  6 (long)  0 -  5 (short)\n"
+              "--ns-alto x           adjust masking for sfbs  7 - 13 (long)  6 - 10 (short)\n"         
+              "--ns-treble x         adjust masking for sfbs 14 - 21 (long) 11 - 12 (short)\n"
+              "--ns-sfb21 x          change ns-treble by x dB for sfb21\n"
             );
 
     wait_for ( fp, lessmode );  
@@ -473,6 +475,11 @@ int  display_bitrates ( FILE* const fp )
 }
 
 
+/*  note: for presets it would be better to externalize them in a file.
+    suggestion:  lame --preset <file-name> ...
+            or:  lame --preset my-setting  ... and my-setting is defined in lame.ini
+ */
+ 
 /************************************************************************
 *
 * usage
@@ -606,6 +613,16 @@ static int  presets_info ( const lame_global_flags* gfp, FILE* const fp, const c
     fprintf ( fp, "    equal to: -mj -b112 --resample 32 --lowpass 15 --lowpass-width 0\n");
     fprintf ( fp, " b) -v --preset studio\n");
     fprintf ( fp, "    equals to: -h -ms -V0 -b160 -B320\n");
+    
+    fprintf ( fp, "\n\n"
+              "VBR presets highly tuned for quality can be activated via:\n"
+              "--dm-preset standard\n"
+              "--dm-preset xtreme\n"
+              "--dm-preset insane\n"
+              "\n"
+              "ABR preset optimized for lower file size and good quality can be activated via:\n"
+              "--dm-preset metal\n"
+              "\n");
  
     return 0;
 }
@@ -635,6 +652,112 @@ static int  presets_setup ( lame_global_flags* gfp, const char* preset_name, con
         }
 
     presets_info ( gfp, stderr, ProgramName );
+    return -1;
+}
+
+/*  some presets thanks to Dibrom
+ */
+static int  dm_presets( lame_t gfp, const char* preset_name )
+{
+    double  d;
+    int     k;
+        	
+    // Standard Preset == --nspsytune -V2 -mj -h --lowpass 19.5 -b112 --nssafejoint --athtype 4 --ns-sfb21 3" 
+    if (strcmp(preset_name, "standard") == 0) {
+        /* nspsytune stuff */
+        lame_set_exp_nspsytune(gfp, lame_get_exp_nspsytune(gfp) | 1);
+        lame_set_experimentalZ(gfp,1);
+        lame_set_experimentalX(gfp,1);
+        /* nspsytune stuff end */
+        lame_set_VBR(gfp,vbr_rh); 
+        lame_set_VBR_q(gfp,2);
+        lame_set_quality( gfp, 2 );
+        lame_set_lowpassfreq(gfp,19500);
+        lame_set_mode( gfp, JOINT_STEREO );
+        /* safejoint start */
+        lame_set_exp_nspsytune(gfp,lame_get_exp_nspsytune(gfp) | 2);
+        /* safejoint end*/
+        lame_set_ATHtype( gfp, 4 );
+        lame_set_VBR_min_bitrate_kbps(gfp,112);					
+        /* high freq */
+        d = 3;      // modify sfb21 by 3 dB plus ns-treble=0                 
+        k = (int)(d * 4);
+        if (k < -32) k = -32;
+        if (k >  31) k =  31;
+        if (k < 0) k += 64;
+        lame_set_exp_nspsytune(gfp, lame_get_exp_nspsytune(gfp) | (k << 20));
+        return 0;
+    }
+    
+    // Xtreme Preset == --nspsytune -V2 -mj -h --lowpass 19.5 -b112 --nssafejoint --athtype 2 --ns-sfb21 3"
+    else if (strcmp(preset_name, "xtreme") == 0){
+        /* nspsytune stuff */
+        lame_set_exp_nspsytune(gfp, lame_get_exp_nspsytune(gfp) | 1);
+        lame_set_experimentalZ(gfp,1);
+        lame_set_experimentalX(gfp,1);
+        /* nspsytune stuff end */
+        lame_set_VBR(gfp,vbr_rh); 
+        lame_set_VBR_q(gfp,2);
+        lame_set_quality( gfp, 2 );
+        lame_set_lowpassfreq(gfp,19500);
+        lame_set_mode( gfp, JOINT_STEREO );
+        /* safejoint start */
+        lame_set_exp_nspsytune(gfp,lame_get_exp_nspsytune(gfp) | 2);
+        /* safejoint end*/
+        lame_set_ATHtype( gfp, 2 );
+        lame_set_VBR_min_bitrate_kbps(gfp,112);
+        /* high freq */
+        d = 3;      // modify sfb21 by 3 dB plus ns-treble=0                 
+        k = (int)(d * 4);
+        if (k < -32) k = -32;
+        if (k >  31) k =  31;
+        if (k < 0) k += 64;
+        lame_set_exp_nspsytune(gfp, lame_get_exp_nspsytune(gfp) | (k << 20));
+        return 0;
+    }
+    					
+    // Insane Preset == --nspsytune -V0 -mj -h --lowpass 19.5 -b128 --nssafejoint --athtype 2 -Z"
+    else if (strcmp(preset_name, "insane") == 0){
+        /* nspsytune stuff */
+        lame_set_exp_nspsytune(gfp, lame_get_exp_nspsytune(gfp) | 1);
+        lame_set_experimentalX(gfp,1);
+        /* nspsytune end stuff */
+        lame_set_VBR(gfp,vbr_rh); 
+        lame_set_VBR_q(gfp,0);
+        lame_set_quality( gfp, 2 );
+        lame_set_lowpassfreq(gfp,19500);
+        lame_set_mode( gfp, JOINT_STEREO );
+        /* safejoint start */
+        lame_set_exp_nspsytune(gfp,lame_get_exp_nspsytune(gfp) | 2);
+        /* safejoint end*/
+        lame_set_ATHtype( gfp, 2 );
+        lame_set_VBR_min_bitrate_kbps(gfp,128);
+        return 0;
+    }	
+
+    // Metal Preset == "--nspsytune --abr 192 -h -mj -b128 --lowpass 19.5 --nssafejoint --athtype 2"
+    else if (strcmp(preset_name, "metal") == 0){
+        /* nspsytune stuff */
+        lame_set_exp_nspsytune(gfp, lame_get_exp_nspsytune(gfp) | 1);
+        lame_set_experimentalZ(gfp,1);
+        lame_set_experimentalX(gfp,1);					
+        /* nspsytune stuff end */
+        lame_set_VBR(gfp,vbr_abr); 
+        lame_set_VBR_mean_bitrate_kbps(gfp, 192);
+        lame_set_VBR_mean_bitrate_kbps(gfp,Min(lame_get_VBR_mean_bitrate_kbps(gfp), 320)); 
+        lame_set_VBR_mean_bitrate_kbps(gfp,Max(lame_get_VBR_mean_bitrate_kbps(gfp),8)); 
+        lame_set_quality( gfp, 2 );
+        lame_set_lowpassfreq(gfp,19500);
+        lame_set_mode( gfp, JOINT_STEREO );
+        /* safejoint start */
+        lame_set_exp_nspsytune(gfp,lame_get_exp_nspsytune(gfp) | 2);
+        /* safejoint end*/
+        lame_set_ATHtype( gfp, 2 );
+        lame_set_VBR_min_bitrate_kbps(gfp,128);
+        return 0;
+    }
+
+    fprintf(stderr,"ERROR: You must specify a profile with --dm-preset\n\nAvailable profiles are:\n\nstandard\nxtreme\ninsane\nmetal\n");
     return -1;
 }
 
@@ -1117,6 +1240,21 @@ char* const inPath, char* const outPath, char **nogap_inPath, int *num_nogap)
                       lame_set_exp_nspsytune(gfp, lame_get_exp_nspsytune(gfp) | (k << 14));
                     }
                 
+                T_ELIF ("ns-sfb21")
+                    /*  to be compatible with Naoki's original code, 
+                     *  ns-sfb21 specifies how to change ns-treble for sfb21 */
+                    argUsed=1;
+                    {
+                      double d;
+                      int k;
+                      d = atof( nextArg );
+                      k = (int)(d * 4);
+                      if (k < -32) k = -32;
+                      if (k >  31) k =  31;
+                      if (k < 0) k += 64;
+                      lame_set_exp_nspsytune(gfp, lame_get_exp_nspsytune(gfp) | (k << 20));
+                    }
+                
                 /* some more GNU-ish options could be added
                  * brief         => few messages on screen (name, status report)
                  * o/output file => specifies output filename
@@ -1159,6 +1297,11 @@ char* const inPath, char* const outPath, char **nogap_inPath, int *num_nogap)
                 T_ELIF ("preset")
                     argUsed = 1;
                     if (presets_setup ( gfp, nextArg, ProgramName ) < 0)
+                        return -1;
+                    
+                T_ELIF ("dm-preset")
+                    argUsed = 1;
+                    if (dm_presets ( gfp, nextArg ) < 0)
                         return -1;
                     
                 T_ELIF ("disptime")

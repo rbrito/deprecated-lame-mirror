@@ -572,7 +572,8 @@ int calc_xmin(
             else {
                 if      (sfb <=  6) xmin *= gfc->nsPsy.bass;
                 else if (sfb <= 13) xmin *= gfc->nsPsy.alto;
-                else                xmin *= gfc->nsPsy.treble;
+                else if (sfb <= 20) xmin *= gfc->nsPsy.treble;
+                else                xmin *= gfc->nsPsy.sfb21;
                 if ((gfp->VBR == vbr_off || gfp->VBR == vbr_abr) && gfp->quality <= 1)
                     xmin *= 0.001;
             }

@@ -130,7 +130,7 @@ typedef struct {
   int   last_attacks[4][3];
   FLOAT pe_l[4],pe_s[4];
   FLOAT pefirbuf[19];
-  FLOAT bass,alto,treble;
+  FLOAT bass,alto,treble,sfb21;
 } nsPsy_t;
 
 

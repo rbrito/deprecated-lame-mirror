@@ -995,7 +995,7 @@ lame_init_params(lame_global_flags * const gfp)
 
 
     if (gfp->exp_nspsytune & 1) {
-        int     i;
+        int     i,j;
 
         gfc->nsPsy.use = 1;
         gfc->nsPsy.safejoint = (gfp->exp_nspsytune & 2) != 0;
@@ -1024,6 +1024,12 @@ lame_init_params(lame_global_flags * const gfp)
         if (i >= 32)
             i -= 64;
         gfc->nsPsy.treble = pow(10, i / 4.0 / 10.0);
+        /*  to be compatible with Naoki's original code, the next 6 bits
+         *  define only the amount of changing treble for sfb21 */
+        j = (gfp->exp_nspsytune >> 20) & 63;
+        if (j >= 32)
+            j -= 64;
+        gfc->nsPsy.sfb21 = pow(10, i+j / 4.0 / 10.0);
     }
 
     assert( gfp->VBR_q <= 9 );
