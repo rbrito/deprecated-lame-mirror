@@ -27,9 +27,6 @@
 # define TERMCAP_AVAILABLE
 #endif
 
-#ifndef BRHIST_BARMAX
-# define BRHIST_BARMAX   50
-#endif
 #ifndef BRHIST_WIDTH
 # define BRHIST_WIDTH    14
 #endif
@@ -38,13 +35,10 @@
 
 #include <stdlib.h>
 #include <string.h>
+#include "brhist.h"
 
 #if defined(TERMCAP_AVAILABLE)
 # include <termcap.h>
-#endif
-
-#if defined(_WIN32)  &&  !defined(__CYGWIN__)
-# include <windows.h>
 #endif
 
 #include "brhist.h"
@@ -85,7 +79,7 @@ static struct {
     int     vbr_bitrate_min_index;
     int     vbr_bitrate_max_index;
     int     kbps [BRHIST_WIDTH];
-    char    bar  [BRHIST_BARMAX + 1];	/* buffer filled up with a lot of '*' to print a bar     */
+    char    bar  [512 + 1];	/* buffer filled up with a lot of '*' to print a bar     */
 } brhist;
 
 static size_t  calculate_index ( const int* const array, const size_t len, const int value )
@@ -101,72 +95,84 @@ static size_t  calculate_index ( const int* const array, const size_t len, const
 int  brhist_init ( const lame_global_flags* const gf, const int bitrate_kbps_min, const int bitrate_kbps_max )
 {
 #ifdef TERMCAP_AVAILABLE
-    char   term_buff [1024];
-    char*  termname;
-    char*  tp;
-    char   tc [10];
+    char         term_buff [2048];  // see 1)
+    const char*  term_name;
+    char*        tp;
+    char         tc [10];
+    int          val;
 #endif
-    
-    /* some internal checks */
-    if ( bitrate_kbps_min > bitrate_kbps_max ) {
-	fprintf (stderr, "lame internal error: VBR min %d kbps > VBR max %d kbps.\n", bitrate_kbps_min, bitrate_kbps_max );
-	return -1;
-    }
-    if ( bitrate_kbps_min < 8  ||  bitrate_kbps_max > 320 ) {
-	fprintf (stderr, "lame internal error: VBR min %d kbps or VBR max %d kbps out of range.\n", bitrate_kbps_min, bitrate_kbps_max );
-	return -1;
-    }
-    
+
     /* setup basics of brhist I/O channels */
-    Console_IO.Console_fp = stderr;
-    /* buffer != BLKSIZ must be set via setvbuf */
+    Console_IO.disp_width  = 80;
+    Console_IO.disp_height = 25;
+    Console_IO.Console_fp  = stderr;
+    Console_IO.Error_fp    = stderr;
+    Console_IO.Report_fp   = stderr;
+
     setvbuf ( Console_IO.Console_fp, Console_IO.Console_buff, _IOFBF, sizeof (Console_IO.Console_buff) );
+//  setvbuf ( Console_IO.Error_fp  , NULL                   , _IONBF, 0                                );
 
 #if defined(_WIN32)  &&  !defined(__CYGWIN__) 
     Console_IO.Console_Handle = GetStdHandle (STD_ERROR_HANDLE);
 #endif
+
+    strcpy ( Console_IO.str_up, "\033[A" );
+    
+    /* some internal checks */
+    if ( bitrate_kbps_min > bitrate_kbps_max ) {
+	fprintf ( Console_IO.Error_fp, "lame internal error: VBR min %d kbps > VBR max %d kbps.\n", bitrate_kbps_min, bitrate_kbps_max );
+	return -1;
+    }
+    if ( bitrate_kbps_min < 8  ||  bitrate_kbps_max > 320 ) {
+	fprintf ( Console_IO.Error_fp, "lame internal error: VBR min %d kbps or VBR max %d kbps out of range.\n", bitrate_kbps_min, bitrate_kbps_max );
+	return -1;
+    }
 
     /* initialize histogramming data structure */
     lame_bitrate_hist ( gf, NULL, brhist.kbps );
     brhist.vbr_bitrate_min_index = calculate_index ( brhist.kbps, BRHIST_WIDTH, bitrate_kbps_min );
     brhist.vbr_bitrate_max_index = calculate_index ( brhist.kbps, BRHIST_WIDTH, bitrate_kbps_max );
 
-    if ( brhist.vbr_bitrate_min_index == -1  ||  brhist.vbr_bitrate_max_index == -1 ) {
-	fprintf (stderr, "lame internal error: VBR min %d kbps or VBR max %d kbps not allowed.\n", bitrate_kbps_min, bitrate_kbps_max );
+    if ( (unsigned)brhist.vbr_bitrate_min_index >= BRHIST_WIDTH  ||  
+         (unsigned)brhist.vbr_bitrate_max_index >= BRHIST_WIDTH ) {
+	fprintf ( Console_IO.Error_fp, "lame internal error: VBR min %d kbps or VBR max %d kbps not allowed.\n", bitrate_kbps_min, bitrate_kbps_max );
 	return -1;
     }
 
     memset (brhist.bar, '*', sizeof (brhist.bar)-1 );
 
-    /* try to catch additional information about special console sequences */
-
-    strcpy ( Console_IO.str_up, "\033[A" );
-
 #ifdef TERMCAP_AVAILABLE
+    /* try to catch additional information about special console sequences */
     
-    if ((termname = getenv("TERM")) == NULL) {
-	fprintf(stderr,"can't get TERM environment string.\n");
+    if ((term_name = getenv("TERM")) == NULL) {
+	fprintf ( Console_IO.Error_fp, "LAME: Can't get \"TERM\" environment string.\n" );
 	return -1;
     }
-
-    if (tgetent(term_buff, termname) != 1) {
-	fprintf(stderr,"can't find termcap entry: %s\n", termname);
+    if ( tgetent (term_buff, term_name) != 1 ) {
+	fprintf ( Console_IO.Error_fp, "LAME: Can't find termcap entry for terminal \"%s\"\n", term_name );
 	return -1;
     }
     
+    val = tgetnum ("co");
+    if ( val >= 40  &&  val <= 512 )
+        Console_IO.disp_width   = val;
+    val = tgetnum ("li");
+    if ( val >= 16  &&  val <= 256 )
+        Console_IO.disp_height  = val;
+        
     *(tp = tc) = '\0';
     tp = tgetstr ("up", &tp);
-    if (tp)
+    if (tp != NULL)
         strcpy ( Console_IO.str_up, tp );
 
     *(tp = tc) = '\0';
     tp = tgetstr ("ce", &tp);
-    if (tp)
+    if (tp != NULL)
         strcpy ( Console_IO.str_clreoln, tp );
 
 #endif /* TERMCAP_AVAILABLE */
 
-    return 0; /* success */
+    return 0;
 }
 
 
@@ -176,7 +182,7 @@ static void  brhist_disp_line ( const lame_global_flags* const gf, int i, int br
     int     barlen;
     int     ppt  = 0;
     
-    barlen  = full  ?  (br_hist*BRHIST_BARMAX + full-1 ) / full  :  0;  /* round up */
+    barlen  = full  ?  (br_hist*(Console_IO.disp_width-30) + full-1 ) / full  :  0;  /* round up */
     if (frames > 0)
         ppt = (1000lu * br_hist + frames/2) / frames;                   /* round nearest */
 
@@ -196,7 +202,7 @@ static void  brhist_disp_line ( const lame_global_flags* const gf, int i, int br
                   barlen, brhist.bar, Console_IO.str_clreoln );
     else
         fprintf ( Console_IO.Console_fp, "\n%3d%s %.*s%*s ", brhist.kbps [i], brppt, 
-                  barlen, brhist.bar, BRHIST_BARMAX - barlen, "" );
+                  barlen, brhist.bar, Console_IO.disp_width - 30 - barlen, "" );
 }
 
 void  brhist_disp ( const lame_global_flags* const gf, const int jump_back )
@@ -205,7 +211,7 @@ void  brhist_disp ( const lame_global_flags* const gf, const int jump_back )
     int   br_hist [BRHIST_WIDTH];   /* how often a frame size was used */
     int   br_kbps [BRHIST_WIDTH];   /* related bitrates in kbps of this frame sizes */
     int   frames;                   /* total number of encoded frames */
-    int   full;                     /* usage count of the most often used frame size, but not smaller than BRHIST_BARMAX (makes this sense?) and 1 */
+    int   full;                     /* usage count of the most often used frame size, but not smaller than Console_IO.disp_width-30 (makes this sense?) and 1 */
     int   printed_lines = 0;        /* printed number of lines for the brhist functionality, used to skip back the right number of lines */
     
     lame_bitrate_hist(gf, br_hist, br_kbps);
@@ -217,8 +223,7 @@ void  brhist_disp ( const lame_global_flags* const gf, const int jump_back )
     }
 
 #ifndef KLEMM_05
-    full =
-	full < BRHIST_BARMAX  ?  BRHIST_BARMAX : full;  /* makes this sense? */
+    full = full < Console_IO.disp_width - 30  ?  Console_IO.disp_width - 30 : full;  /* makes this sense? */
 #endif
 
 #ifdef KLEMM_05
@@ -275,8 +280,8 @@ void  brhist_disp_total ( const lame_global_flags* const gf )
     int br_frames = 0;
     double sum = 0.;
     
-    lame_stereo_mode_hist(gf, st_mode);    /// is this information only a summary, or is this available for every framesize ?
-    lame_bitrate_hist(gf, br_hist, br_kbps);
+    lame_stereo_mode_hist ( gf, st_mode );
+    lame_bitrate_hist     ( gf, br_hist, br_kbps );
     
     for (i = 0; i < BRHIST_WIDTH; i++) {
         br_frames += br_hist[i];
@@ -290,13 +295,27 @@ void  brhist_disp_total ( const lame_global_flags* const gf )
     fprintf ( Console_IO.Console_fp, "\naverage: %5.1f kbps", sum / br_frames);
 
     if (st_frames > 0) {
-        double lr = st_mode[0] * 100. / st_frames;
-        double ms = st_mode[2] * 100. / st_frames;
-        fprintf ( Console_IO.Console_fp, "   LR: %d (%#5.4g%%)   MS: %d (%#5.4g%%)", 
-                  st_mode[0], lr, st_mode[2], ms );
+        if ( st_mode[0] > 0 )
+            fprintf ( Console_IO.Console_fp, "   LR: %d (%#5.4g%%)", st_mode[0], 100. * st_mode[0] / st_frames );
+        else
+            fprintf ( Console_IO.Console_fp, "                 " );
+        if ( st_mode[2] > 0 )
+            fprintf ( Console_IO.Console_fp, "   MS: %d (%#5.4g%%)", st_mode[2], 100. * st_mode[2] / st_frames );
     }
     fprintf ( Console_IO.Console_fp, "\n" );
     fflush  ( Console_IO.Console_fp );
 }
+
+/* 
+ * 1)
+ *
+ * Taken from Termcap_Manual.html:
+ *
+ * With the Unix version of termcap, you must allocate space for the description yourself and pass
+ * the address of the space as the argument buffer. There is no way you can tell how much space is
+ * needed, so the convention is to allocate a buffer 2048 characters long and assume that is
+ * enough.  (Formerly the convention was to allocate 1024 characters and assume that was enough.
+ * But one day, for one kind of terminal, that was not enough.)
+ */
 
 /* end of brhist.c */

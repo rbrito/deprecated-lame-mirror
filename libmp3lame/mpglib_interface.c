@@ -27,8 +27,8 @@ static int is_syncword(char *header)
 #ifdef KLEMM_08
     const unsigned char* p = header;
     
-    int mpeg1  = header[0] == 0xFF  &&  (header[1] & 0xF0) == 0xF0;
-    int mpeg25 = header[0] == 0xFF  &&  (header[1] & 0xF0) == 0xE0;
+    int mpeg1  = p[0] == 0xFF  &&  (p[1] & 0xF0) == 0xF0;
+    int mpeg25 = p[0] == 0xFF  &&  (p[1] & 0xF0) == 0xE0;
   
     return mpeg1 | mpeg25;
     

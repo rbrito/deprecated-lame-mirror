@@ -319,9 +319,10 @@ typedef struct  {
   plotting_data *pinfo;
   
   /* CPU features */
-  int CPU_features_3DNow;
-  int CPU_features_MMX;
-  int CPU_features_SIMD;
+  int CPU_features_3DNow;           // K6-2, K6-III, Athlon
+  int CPU_features_MMX;		    // Pentium MMX, Pentium II...IV, K6, K6-2, K6-III, Athlon
+  int CPU_features_SIMD;	    // Pentium III, Pentium IV
+  int CPU_features_SIMD2;	    // Pentium IV, K8
    
   /* functions to replace with CPU feature optimized versions in takehiro.c */
   int (*choose_table)(int *ix, int *end, int *s);

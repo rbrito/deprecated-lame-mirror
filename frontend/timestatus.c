@@ -119,7 +119,7 @@ void timestatus ( const int samp_rate,
     ts_calc_times ( &proc_time, samp_rate, frameNum, totalframes, framesize );
 
     if ( frameNum < totalframes  ) {
-        percent = (int) (100. * frameNum / (totalframes + 0.5 ));
+        percent = (int) (100. * frameNum / totalframes + 0.5 );
     } else {
         percent = 100;
     }

@@ -63,8 +63,8 @@ Edited version of the Linux Kernel Style Guide:
 
 Respect the indentation of the author of the original function.
 If the indentation is not consistent, don't change it.  If
-you are so anal-retentive about these things and you cant
-bare to even look at code with poor indentation, change it to 3.
+you are so anal-retentive about these things and you can't
+bare to even look at code with poor indentation, change it to 4.
 
 
                 Chapter 2: Placing Braces

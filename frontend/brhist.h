@@ -38,6 +38,8 @@ typedef struct {
 #if defined(_WIN32)  &&  !defined(__CYGWIN__) 
     HANDLE  Console_Handle;
 #endif
+    int     disp_width;
+    int     disp_height;
     char    str_up         [10];
     char    str_clreoln    [10];
     char    Console_buff [1024];

@@ -1,3 +1,4 @@
+/* -*- mode: C; mode: fold -*- */
 /*
  *	LAME MP3 encoding engine
  *
@@ -36,16 +37,7 @@
 #include "asmstuff.h"
 #endif
 
-/************************************************************************
-*
-* license
-*
-* PURPOSE:  Writes version and license to the file specified by #stdout#
-*
-************************************************************************/
-
-
-/* lame_init_params_ppflt_lowpass */
+/* static void   lame_init_params_ppflt_lowpass (FLOAT8 amp_lowpass[32], float lowpass1, float lowpass2, int *lowpass_band, int *minband, int *maxband)           *//*{{{*/
 
 static void
 lame_init_params_ppflt_lowpass(FLOAT8 amp_lowpass[32], float lowpass1,
@@ -71,13 +63,16 @@ lame_init_params_ppflt_lowpass(FLOAT8 amp_lowpass[32], float lowpass1,
 						(lowpass2 - lowpass1));
 		}
 		/*
-		DEBUGF("lowpass band=%i  amp=%f \n",
-		       band, gfc->amp_lowpass[band]);
-		*/
+		 * DEBUGF("lowpass band=%i  amp=%f \n",
+		 *      band, gfc->amp_lowpass[band]);
+		 */
 	}
 }
 
 /* lame_init_params_ppflt */
+
+/*}}}*/
+/* static void   lame_init_params_ppflt         (lame_internal_flags *gfc)                                                                                        *//*{{{*/
 
 static void
 lame_init_params_ppflt(lame_internal_flags *gfc)
@@ -193,6 +188,9 @@ lame_init_params_ppflt(lame_internal_flags *gfc)
 	*/
 }
 
+/*}}}*/
+/* int           lame_init_params               (lame_global_flags *gfp)                                                                                          *//*{{{*/
+
 /********************************************************************
  *   initialize internal params based on data in gf
  *   (globalflags struct filled in by calling program)
@@ -200,27 +198,36 @@ lame_init_params_ppflt(lame_internal_flags *gfc)
  ********************************************************************/
 int lame_init_params(lame_global_flags *gfp)
 {
-  int i;
-  lame_internal_flags *gfc=gfp->internal_flags;
-  gfc->lame_init_params_init=1;
+    /* A third dbQ table */
+    /* Can all dbQ setup can be done here using a switch statement? */
+    static const FLOAT8 dbQ [] = { -5.0, -3.75, -2.5, -1.25, 0, +0.4, +0.8, +1.2, +1.6, +2.0 };
+    static const int    atQ [] = { -16,  -12,   -8,   -4,    0, +4,   +8,   +12,  +16,  +20  };
+    int i;
+    lame_internal_flags *gfc=gfp->internal_flags;
+
+    gfc->lame_init_params_init = 0; /* Den Morgen nicht vor dem Abend loben */
+  
 
   gfc->CPU_features_3DNow = has_3DNow();
   gfc->CPU_features_MMX   = has_MMX();
   gfc->CPU_features_SIMD  = has_SIMD();
+  gfc->CPU_features_SIMD2 = 0;
 
-  if (gfp->num_channels==1) {
-    gfp->mode = MPG_MD_MONO;
-  }
-  gfc->stereo=2;
-  if (gfp->mode == MPG_MD_MONO) gfc->stereo=1;
+  if (gfp->num_channels == 1)
+      gfp->mode = MPG_MD_MONO;
+  
+  if (gfp->mode == MPG_MD_MONO) 
+      gfc->stereo = 1;  /* malicious variable name, really */
+  else
+      gfc->stereo = 2;
 
   if (gfp->VBR!=vbr_off) {
-    gfp->free_format=0;  /* VBR cant mix with free format */
+    gfp->free_format=0;  /* VBR can't be mixed with free format */
   }
 
   if (gfp->VBR==vbr_off && gfp->brate==0) {
-    /* no bitrate or compression ratio specified, use 11 */
-    if (gfp->compression_ratio==0) gfp->compression_ratio=11;
+    /* no bitrate or compression ratio specified, use 11.025 */
+    if (gfp->compression_ratio==0) gfp->compression_ratio=11.025;   /* rate to compress a CD down to exactly 128000 bps */
   }
 
 
@@ -228,7 +235,7 @@ int lame_init_params(lame_global_flags *gfp)
   if (gfp->VBR==vbr_off && gfp->compression_ratio > 0) {
     
     if (gfp->out_samplerate==0) 
-      gfp->out_samplerate=map2MP3Frequency(gfp->in_samplerate);   
+      gfp->out_samplerate = map2MP3Frequency (0.97 * gfp->in_samplerate); /* round up with a margin of 3% */
     
     /* choose a bitrate for the output samplerate which achieves
      * specifed compression ratio 
@@ -250,6 +257,7 @@ int lame_init_params(lame_global_flags *gfp)
      samplerate = input sample rate
      resamplerate = ouput sample rate
   */
+    
   if (gfp->out_samplerate==0) {
     /* user did not specify output sample rate */
     gfp->out_samplerate=gfp->in_samplerate;   /* default */
@@ -337,6 +345,7 @@ int lame_init_params(lame_global_flags *gfp)
   /****************************************************************/
   /* if a filter has not been enabled, see if we should add one: */
   /****************************************************************/
+
   if (gfp->lowpassfreq == 0) {
     /* If the user has not selected their own filter, add a lowpass
      * filter based on the compression ratio.  Formula based on
@@ -354,17 +363,31 @@ int lame_init_params(lame_global_flags *gfp)
 
 
     /* Should we use some lowpass filters? */
-    int band = 1+floor(.5 + 14-18*log(gfp->compression_ratio/16.0));
+    double band = floor (15.5 - 18*log (gfp->compression_ratio/16.) );
     if (gfc->resample_ratio != 1) {
-      /* resampling.  if we are resampling, add lowpass at least 90% */
-      band = Min(band,29);
+      /* resampling.  if we are resampling, add lowpass at least 90.6% (29/32) */
+      if (band > 29.)
+          band = 29.;
     }
 
+#ifdef KLEMM_01
+    assert ( gfp->out_samplerate >= 8000  &&  gfp->out_samplerate <= 48000 
+	     &&  gfp->out_samplerate != 44000 );
+
+    if ( gfp->out_samplerate == 44100 )
+        if ( band > 24.5 )
+            band = 24.5;
+    if ( gfp->out_samplerate == 48000 )
+        if ( band > 22.5 )
+            band = 22.5;
+#endif  
+      
     if (band < 31) {
       gfc->lowpass1 = band/31.0;
       gfc->lowpass2 = band/31.0;
     }
   }
+  
 
   /****************************************************************/
   /* apply user driven filters*/
@@ -456,18 +479,19 @@ int lame_init_params(lame_global_flags *gfp)
     {
       /* A third dbQ table */
       /* Can all dbQ setup can be done here using a switch statement? */
-      static const FLOAT8 dbQ[10]={-5.0,-3.75,-2.5,-1.25,0,0.4,0.8,1.2,1.6,2.0};
-      FLOAT8 masking_lower_db;
-      assert( gfp->VBR_q <= 9 );
-      assert( gfp->VBR_q >= 0 );
-      masking_lower_db = dbQ[gfp->VBR_q];
+	FLOAT8 masking_lower_db;
+	assert( (unsigned)gfp->VBR_q < sizeof(dbQ)/sizeof(*dbQ) );
+	assert( (unsigned)gfp->VBR_q < sizeof(atQ)/sizeof(*atQ) );
+
+      masking_lower_db = dbQ [gfp->VBR_q];
       gfc->masking_lower = pow(10.0,masking_lower_db/10);
-      gfc->ATH_vbrlower = (4-gfp->VBR_q)*4.0; 
+	gfc->ATH_vbrlower = atQ [gfp->VBR_q];
     }
     
     if (gfp->VBR == vbr_rh || gfp->VBR == vbr_mtrh)
     {
-      gfc->ATH_vbrlower = (4-gfp->VBR_q)*4.0;     
+	assert( (unsigned)gfp->VBR_q < sizeof(atQ)/sizeof(*atQ) );
+	gfc->ATH_vbrlower = atQ [gfp->VBR_q];
     } 
     
     // At low levels VBR currently switches to 32 kbps.
@@ -519,79 +543,77 @@ int lame_init_params(lame_global_flags *gfp)
   /* set internal feature flags.  USER should not access these since
    * some combinations will produce strange results */
 
-  /* no psymodel, no noise shaping */
-  if (gfp->quality==9) {
-    gfc->filter_type=0;
-    gfc->psymodel=0;
-    gfc->quantization=0;
-    gfc->noise_shaping=0;
-    gfc->noise_shaping_stop=0;
-    gfc->use_best_huffman=0;
-  }
 
-  if (gfp->quality==8) gfp->quality=7;
+    switch ( gfp->quality ) {
+    case 9: /* no psymodel, no noise shaping */
+	gfc->filter_type        = 0;
+	gfc->psymodel           = 0;
+	gfc->quantization       = 0;
+	gfc->noise_shaping      = 0;
+	gfc->noise_shaping_stop = 0;
+	gfc->use_best_huffman   = 0;
+        break;
+	
+    case 8:
+	gfp->quality = 7;
+    case 7: /* use psymodel (for short block and m/s switching), but no noise shapping */
+	gfc->filter_type        = 0;
+	gfc->psymodel           = 1; /**/
+	gfc->quantization       = 0;
+	gfc->noise_shaping      = 0;
+	gfc->noise_shaping_stop = 0;
+	gfc->use_best_huffman   = 0;
+	break;
 
-  /* use psymodel (for short block and m/s switching), but no noise shapping */
-  if (gfp->quality==7) {
-    gfc->filter_type=0;
-    gfc->psymodel=1;
-    gfc->quantization=0;
-    gfc->noise_shaping=0;
-    gfc->noise_shaping_stop=0;
-    gfc->use_best_huffman=0;
-  }
+    case 6:
+	gfp->quality = 5;
+    case 5: /* the default */
+	gfc->filter_type        = 0;
+	gfc->psymodel           = 1;
+	gfc->quantization       = 0;
+	gfc->noise_shaping      = 1; /**/
+	gfc->noise_shaping_stop = 0;
+	gfc->use_best_huffman   = 0;
+	break;
 
-  if (gfp->quality==6) gfp->quality=5;
+    case 4:
+	gfp->quality = 3;
+    case 3:
+	gfc->filter_type        = 0;
+	gfc->psymodel           = 1;
+	gfc->quantization       = 1; /**/
+	gfc->noise_shaping      = 1;
+	gfc->noise_shaping_stop = 0;
+	gfc->use_best_huffman   = 1; /**/
+	break;
 
-  if (gfp->quality==5) {
-    /* the default */
-    gfc->filter_type=0;
-    gfc->psymodel=1;
-    gfc->quantization=0;
-    gfc->noise_shaping=1;
-    gfc->noise_shaping_stop=0;
-    gfc->use_best_huffman=0;
-  }
+    case 2:
+	gfc->filter_type        = 0;
+	gfc->psymodel           = 1;
+	gfc->quantization       = 1;
+	gfc->noise_shaping      = 1;
+	gfc->noise_shaping_stop = 0;
+	gfc->use_best_huffman   = 1;
+	break;
 
-  if (gfp->quality==4) gfp->quality=3;
+    case 1:
+	gfc->filter_type        = 0;
+	gfc->psymodel           = 1;
+	gfc->quantization       = 1;
+	gfc->noise_shaping      = 2; /**/
+	gfc->noise_shaping_stop = 0;
+	gfc->use_best_huffman   = 1;
+	break;
 
-  if (gfp->quality==3) {
-    gfc->filter_type=0;
-    gfc->psymodel=1;
-    gfc->quantization=1;
-    gfc->noise_shaping=1;
-    gfc->noise_shaping_stop=0;
-    gfc->use_best_huffman=1;
-  }
-
-  if (gfp->quality==2) {
-    gfc->filter_type=0;
-    gfc->psymodel=1;
-    gfc->quantization=1;
-    gfc->noise_shaping=1;
-    gfc->noise_shaping_stop=0;
-    gfc->use_best_huffman=1;
-  }
-
-  if (gfp->quality==1) {
-    gfc->filter_type=0;
-    gfc->psymodel=1;
-    gfc->quantization=1;
-    gfc->noise_shaping=2;
-    gfc->noise_shaping_stop=0;
-    gfc->use_best_huffman=1;
-  }
-
-  if (gfp->quality==0) {
-    /* 0..1 quality */
-    gfc->filter_type=1;         /* not yet coded */
-    gfc->psymodel=1;
-    gfc->quantization=1;
-    gfc->noise_shaping=3;       /* not yet coded */
-    gfc->noise_shaping_stop=2;  /* not yet coded */
-    gfc->use_best_huffman=2;   /* not yet coded */
-    return -2;
-  }
+    case 0: /* 0..1 quality */
+	gfc->filter_type        = 1; /**/ /* not yet coded */
+	gfc->psymodel           = 1;
+	gfc->quantization       = 1;
+	gfc->noise_shaping      = 3; /**/ /* not yet coded */
+	gfc->noise_shaping_stop = 2; /**/ /* not yet coded */
+	gfc->use_best_huffman   = 2; /**/ /* not yet coded */
+	return -2;
+    }
 
 
   for (i = 0; i < SBMAX_l + 1; i++) {
@@ -610,14 +632,14 @@ int lame_init_params(lame_global_flags *gfp)
   gfc->sideinfo_len = 4;
   if ( gfp->version == 1 )
     {   /* MPEG 1 */
-      if ( gfc->stereo == 1 )
+      if ( gfc->stereo == 1 )      // This is mono
 	gfc->sideinfo_len += 17;
       else
 	gfc->sideinfo_len += 32;
     }
   else
     {   /* MPEG 2 */
-      if ( gfc->stereo == 1 )
+      if ( gfc->stereo == 1 )      // This is mono
 	gfc->sideinfo_len += 9;
       else
 	gfc->sideinfo_len += 17;
@@ -645,81 +667,90 @@ int lame_init_params(lame_global_flags *gfp)
 
 
   /* estimate total frames.  */
-  gfp->totalframes=0;
-  gfp->totalframes = 2+ gfp->num_samples/(gfc->resample_ratio * gfp->framesize);
+  gfp->totalframes = 0;                    /* is this intended ??? */
+  gfp->totalframes = 2 + gfp->num_samples/(gfc->resample_ratio * gfp->framesize);
 
   
-  return 0;
+    gfc->lame_init_params_init = 1;
+    return 0;
 }
 
+/*}}}*/
+/* void          lame_print_config              (lame_global_flags *gfp)                                                                                          *//*{{{*/
 
-
-
-
-
-
-
-
-/************************************************************************
+/*
+ *  print_config
  *
- * print_config
- *
- * PURPOSE:  Prints the encoding parameters used
- *
- ************************************************************************/
-void lame_print_config(lame_global_flags *gfp)
+ *  Prints some selected information about the coding parameters via 
+ *  the macro command MSGF(), which is currently mapped to lame_errorf 
+ *  (reports via a error function?), which is a printf-like function 
+ *  for <stderr>.
+ */
+
+void lame_print_config ( const lame_global_flags* gfp )
 {
-  lame_internal_flags *gfc=gfp->internal_flags;
+    lame_internal_flags* gfc = gfp->internal_flags;
+    double    out_samplerate = gfp->out_samplerate;
+    double    in_samplerate  = gfp->out_samplerate * gfc->resample_ratio;
 
-  FLOAT out_samplerate=gfp->out_samplerate/1000.0;
-  FLOAT in_samplerate = gfc->resample_ratio*out_samplerate;
+    MSGF ( "LAME version %s    (%s)\n", get_lame_version (), LAME_URL );
 
-  MSGF("LAME version %s    (http://www.mp3dev.org) \n", get_lame_version() );
+    if ( gfc->CPU_features_MMX  ||  gfc->CPU_features_3DNow  ||  gfc->CPU_features_SIMD  ||  gfc->CPU_features_SIMD2 ) {
+        MSGF ("CPU features:"); 
 
+        if ( gfc->CPU_features_MMX )
 #ifdef MMX_choose_table
-  if (gfc->CPU_features_MMX) {
-    MSGF("using MMX features\n");
-  }
-#endif
-  if (gfc->CPU_features_3DNow) {
-    MSGF("CPU features 3DNow, not using\n");
-  }
-  if (gfc->CPU_features_SIMD) {
-    MSGF("CPU features SIMD, not using\n");
-  }
-  if (gfp->num_channels==2 && gfc->stereo==1) {
-    MSGF("Autoconverting from stereo to mono. Setting encoding to mono mode.\n");
-  }
-  if (gfc->resample_ratio!=1) {
-    MSGF("Resampling:  input=%.1fkHz  output=%.1fkHz\n",
-	    in_samplerate,out_samplerate);
-  }
-  if (gfc->filter_type==0) {
-    if (gfc->highpass2>0.0)
-      MSGF("Using polyphase highpass filter, transition band: %5.0f Hz - %5.0f Hz\n", 
-           gfc->highpass1*out_samplerate*500, gfc->highpass2*out_samplerate*500);
-    if (gfc->lowpass1>0.0)
-      MSGF("Using polyphase lowpass  filter, transition band: %5.0f Hz - %5.0f Hz\n", 
-           gfc->lowpass1*out_samplerate*500, gfc->lowpass2*out_samplerate*500);
-    else
-      MSGF("polyphase lowpass filter disabled\n");
-  } else {
-    MSGF("polyphase filters disabled\n");
-  }
-#ifdef RH_AMP
-  if (gfp->experimentalY) {
-    MSGF("careful noise shaping, only maximum distorted band at once\n");
-  }
-#endif
-  if (gfp->free_format) {
-    MSGF("Warning: many decoders cannot handle free format bitstreams\n");
-    if (gfp->brate>320) {
-      MSGF("Warning: many decoders cannot handle free format bitrates > 320 kbps\n");
+            MSGF (" MMX (used)" );
+#else
+	    MSGF (" MMX (unused)" );
+#endif            
+        if ( gfc->CPU_features_3DNow )
+            MSGF (", 3DNow! (unused)");
+        if ( gfc->CPU_features_SIMD )
+            MSGF (", SIMD (unused)");
+        if ( gfc->CPU_features_SIMD2 )
+            MSGF (", SIMD2 (unused)");
+        MSGF ("\n");  
     }
-  }
+  
+    if ( gfp->num_channels==2  &&  gfc->stereo==1 /* mono */ ) {
+	MSGF ("Autoconverting from stereo to mono. Setting encoding to mono mode.\n");
+    }
+    
+    if (gfc->resample_ratio != 1.) {
+	MSGF ("Resampling:  input=%g kHz  output=%g kHz\n", 1.e-3 * in_samplerate, 1.e-3 * out_samplerate );
+    }
+    
+    if (gfc->filter_type == 0) {
+	if (gfc->highpass2 > 0.)
+	    MSGF ("Using polyphase highpass filter, transition band: %5.0f Hz - %5.0f Hz\n",  
+		 0.5 * gfc->highpass1 * out_samplerate, 0.5 * gfc->highpass2 * out_samplerate );
+	if (gfc->lowpass1 > 0.) {
+	    MSGF ("Using polyphase lowpass  filter, transition band: %5.0f Hz - %5.0f Hz\n", 
+		 0.5 * gfc->lowpass1 * out_samplerate, 0.5 * gfc->lowpass2 * out_samplerate );
+	} else {
+	    MSGF ("polyphase lowpass filter disabled\n");
+	}
+    } else {
+	MSGF ("polyphase filters disabled\n");
+    }
+    
+#ifdef RH_AMP
+    if (gfp->experimentalY) {
+	MSGF ("careful noise shaping, only maximum distorted band at once\n");
+    }
+#endif
+    
+    if ( gfp->free_format ) {
+	MSGF ("Warning: many decoders cannot handle free format bitstreams\n");
+	if ( gfp->brate > 320 ) {
+	    MSGF ("Warning: many decoders cannot handle free format bitrates >320 kbps (see documentation)\n");
+	}
+    }
 }
 
-
+/*}}}*/
+/* void          lame_id3v2_tag                 (lame_global_flags *gfp,FILE *outf)                                                                               *//*{{{*/
 
 /*****************************************************************/
 /* write ID3 version 2 tag to output file, if asked for          */
@@ -735,8 +766,8 @@ void lame_id3v2_tag(lame_global_flags *gfp,FILE *outf)
 
 }
 
-
-
+/*}}}*/
+/* int           lame_encode_frame              (lame_global_flags *gfp, sample_t inbuf_l[],sample_t inbuf_r[], char *mp3buf, int mp3buf_size)                    *//*{{{*/
 
 /* routine to feed exactly one frame (gfp->framesize) worth of data to the 
 encoding engine.  All buffering, resampling, etc, handled by calling
@@ -763,7 +794,8 @@ char *mp3buf, int mp3buf_size)
   return ret;
 }
 
-
+/*}}}*/
+/* int           lame_encode_buffer             (lame_global_flags* gfp, short int buffer_l[], short int buffer_r[], int nsamples, char* mp3buf, int mp3buf_size )*//*{{{*/
 
 
 
@@ -882,6 +914,7 @@ int    lame_encode_buffer_interleaved (
   int mp3size = 0, ret, i, ch, mf_needed;
   lame_internal_flags *gfc=gfp->internal_flags;
   sample_t *mfbuf[2];
+    signed short int* p;
 
   if (!gfc->lame_init_params_init) return -3;
 
@@ -917,12 +950,28 @@ int    lame_encode_buffer_interleaved (
     return ret;
   }
 
+  assert (gfp->num_channels == 2);
+  
+  while (nsamples > 0) {         /* while copying in new samples */
+    int n_out = Min (gfp->framesize,nsamples);
+    
+#ifdef KLEMM_09  /* only a try to understand the code */
 
-
-  while (nsamples > 0) {
-    int n_out;
-    /* copy in new samples */
-    n_out = Min(gfp->framesize,nsamples);
+    assert (gfp->num_channels == 2);
+    p = buffer;
+    if ( gfc->stereo == 1 /* mono, although true */ )
+        for (i = 0; i < n_out; i++, p += 2 ) {
+	    mfbuf [0] [gfc->mf_size + i] = 0.5 * ((sample_t)p[0] + (sample_t)p[1]);
+	    mfbuf [1] [gfc->mf_size + i] = 0.;
+        }
+    else
+        for (i = 0; i < n_out; i++, p += 2) {
+	    mfbuf [0] [gfc->mf_size + i] = p[0];
+	    mfbuf [1] [gfc->mf_size + i] = p[1];
+        }
+      
+#else 
+   
     for (i=0; i<n_out; ++i) {
       if (gfp->num_channels==2  && gfc->stereo==1) {
 	mfbuf[0][gfc->mf_size+i]=((int)buffer[2*i]+(int)buffer[2*i+1])/2.0;
@@ -932,6 +981,9 @@ int    lame_encode_buffer_interleaved (
 	mfbuf[1][gfc->mf_size+i]=buffer[2*i+1];
       }
     }
+      
+#endif
+      
     buffer += 2*n_out;
 
     nsamples -= n_out;
@@ -962,8 +1014,10 @@ int    lame_encode_buffer_interleaved (
 }
 
 
+/*}}}*/
+/* int           lame_encode                    (lame_global_flags* gfp, short int in_buffer[2][1152], char* mp3buf, int size )                                   *//*{{{*/
 
-
+    
 /* old LAME interface.  use lame_encode_buffer instead */
 
 int lame_encode (lame_global_flags* gfp,
@@ -978,7 +1032,9 @@ int lame_encode (lame_global_flags* gfp,
   return imp3;
 }
 
-
+/*}}}*/
+/* int           lame_encode_flush              (lame_global_flags* gfp, char* mp3buffer, int mp3buffer_size )                                                    *//*{{{*/
+    
 /*****************************************************************/
 /* flush internal mp3 buffers,                                   */
 /*****************************************************************/
@@ -992,7 +1048,7 @@ int    lame_encode_flush (
     int imp3 = 0, mp3count, mp3buffer_size_remaining;
     lame_internal_flags *gfc = gfp->internal_flags;
 
-    memset((char *)buffer, 0, sizeof(buffer));
+    memset ( buffer, 0, sizeof(buffer) );
     mp3count = 0;
 
     while (gfc->mf_samples_to_encode > 0) {
@@ -1043,8 +1099,9 @@ int    lame_encode_flush (
     return mp3count;
 }
 
-
-
+/*}}}*/
+/* void          lame_close                     (lame_global_flags *gfp)                                                                                          *//*{{{*/
+    
 /***********************************************************************
  *
  *      lame_close ()
@@ -1060,7 +1117,10 @@ void lame_close (lame_global_flags *gfp)
 }
 
 
+/*}}}*/
+/* int           lame_encode_finish             (lame_global_flags* gfp, char* mp3buffer, int mp3buffer_size )                                                    *//*{{{*/
 
+    
 /*****************************************************************/
 /* flush internal mp3 buffers, and free internal buffers         */
 /*****************************************************************/
@@ -1077,8 +1137,9 @@ int    lame_encode_finish (
     return ret;
 }
 
-
-
+/*}}}*/
+/* void          lame_mp3_tags_fid              (lame_global_flags *gfp,FILE *fpStream)                                                                           *//*{{{*/
+    
 /*****************************************************************/
 /* write VBR Xing header, and ID3 version 1 tag, if asked for    */
 /*****************************************************************/
@@ -1097,7 +1158,8 @@ void lame_mp3_tags_fid(lame_global_flags *gfp,FILE *fpStream)
 
 
 }
-
+/*}}}*/
+/* lame_global_flags *lame_init                 (void)                                                                                                            *//*{{{*/
 
 lame_global_flags *lame_init(void)
 {
@@ -1113,7 +1175,9 @@ lame_global_flags *lame_init(void)
 
 }
 
-
+/*}}}*/
+/* int           lame_init_old                  (lame_global_flags *gfp)                                                                                          *//*{{{*/
+    
 /* initialize mp3 encoder */
 int lame_init_old(lame_global_flags *gfp)
 {
@@ -1264,7 +1328,7 @@ int lame_init_old(lame_global_flags *gfp)
   return 0;
 }
 
-
+/*}}}*/
 
 /***********************************************************************
  *
@@ -1322,3 +1386,4 @@ void lame_stereo_mode_hist( lame_global_flags *gfp, int stmode_count[4] )
         stmode_count[i] = gfc->stereoModeHist[i]; 
 }
 
+/* end of lame.c */

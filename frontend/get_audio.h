@@ -59,7 +59,7 @@ int lame_decoder(lame_global_flags *gfp,FILE *outf,int skip, char *inPath, char 
 
 
 enum byte_order { order_unknown, order_bigEndian, order_littleEndian };
-enum byte_order NativeByteOrder;
+extern enum byte_order NativeByteOrder;
 enum byte_order DetermineByteOrder(void);
 void SwapBytesInWords( short *loc, int words );
 

@@ -77,7 +77,10 @@ float update_interval;      /* to use Frank's time status display */
 
 int main(int argc, char **argv)
 {
-  static const char *mode_names[4] = { "stereo", "j-stereo", "dual-ch", "single-ch" };
+    static const char *mode_names [2] [4] = { 
+        { "stereo", "j-stereo", "dual-ch", "single-ch" },
+        { "stereo", "force-ms", "dual-ch", "single-ch" }
+    };
 
   char mp3buffer[LAME_MAXMP3BUFFER];
   short int Buffer[2][1152];
@@ -98,8 +101,10 @@ int main(int argc, char **argv)
     fprintf(stderr,"fatal error during initialization\n");
     exit(-1);
   }
-  if(argc==1)
-    usage(&gf,argv[0]);  /* no command-line args, print usage, exit  */
+  if (argc <= 1) {
+      usage ( &gf, stderr, argv[0] );  /* no command-line args, print usage, exit  */
+      exit (1);
+  }
 
   /* parse the command line arguments, setting various flags in the
    * struct 'gf'.  If you want to parse your own arguments,
@@ -176,20 +181,20 @@ int main(int argc, char **argv)
       if (gf.VBR==vbr_mt || gf.VBR==vbr_rh || gf.VBR==vbr_mtrh)
 	fprintf(stderr,"Encoding as %.1f kHz VBR(q=%i) %s MPEG-%g LayerIII (%4.1fx estimated) qval=%i\n",
 		gf.out_samplerate/1000.0,
-		gf.VBR_q,mode_names[gf.mode],
+		gf.VBR_q,mode_names[gf.force_ms][gf.mode],
 		2-gf.version+0.5*(gf.out_samplerate<16000),
 		gf.compression_ratio, gf.quality);
       else
 	if (gf.VBR==vbr_abr)
 	  fprintf(stderr,"Encoding as %.1f kHz average %d kbps %s MPEG-%g LayerIII (%4.1fx) qval=%i\n",
 		  gf.out_samplerate/1000.0,
-		  gf.VBR_mean_bitrate_kbps,mode_names[gf.mode],
+		  gf.VBR_mean_bitrate_kbps,mode_names[gf.force_ms][gf.mode],
 		  2-gf.version+0.5*(gf.out_samplerate<16000),
 		  gf.compression_ratio,gf.quality);
 	else {
 	  fprintf(stderr,"Encoding as %.1f kHz %d kbps %s MPEG-%g LayerIII (%4.1fx)  qval=%i\n",
 		  gf.out_samplerate/1000.0,gf.brate,
-		  mode_names[gf.mode],
+		  mode_names[gf.force_ms][gf.mode],
 		  2-gf.version+0.5*(gf.out_samplerate<16000),
 		  gf.compression_ratio,gf.quality);
 	}

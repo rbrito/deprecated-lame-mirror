@@ -1,6 +1,11 @@
-void print_config(lame_global_flags* gfp);
-void usage(lame_global_flags *, const char *);
-void help(lame_global_flags *, const char *);
-void short_help(lame_global_flags *, const char *);
+
+int  print_license    ( const lame_global_flags* gfp, FILE* const fp, const char* ProgramName );
+int  usage            ( const lame_global_flags* gfp, FILE* const fp, const char* ProgramName );
+int  short_help       ( const lame_global_flags* gfp, FILE* const fp, const char* ProgramName );
+int  long_help        ( const lame_global_flags* gfp, FILE* const fp, const char* ProgramName, int lessmode );
+int  display_bitrates (                               FILE* const fp );
+
 void parse_args(lame_global_flags* gfp, int argc, char** argv, char *, char *);
-void display_bitrates(FILE *out_fh);
+void print_config(lame_global_flags* gfp);
+
+/* end of parse.h */
