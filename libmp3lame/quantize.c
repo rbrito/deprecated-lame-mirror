@@ -240,8 +240,7 @@ calc_xmin(
  *************************************************************************/
 static FLOAT
 calc_noise(
-    lame_t gfc,
-    const gr_info * const gi, const FLOAT rxmin[], FLOAT distort[])
+    lame_t gfc, const gr_info * const gi, const FLOAT rxmin[], FLOAT distort[])
 {
     FLOAT max_noise = 1e-20;
     int sfb = 0, j = 0, l;
@@ -1644,7 +1643,7 @@ VBR_iteration_loop(lame_t gfc, III_psy_ratio ratio[2][2])
 static void
 set_pinfo (
     lame_t gfc,
-         gr_info        * const gi,
+          gr_info       * const gi,
     const III_psy_ratio * const ratio, 
     const int           gr,
     const int           ch )

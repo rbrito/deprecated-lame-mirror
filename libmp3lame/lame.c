@@ -397,7 +397,7 @@ optimum_samplefreq(int lowpassfreq, int input_samplefreq)
  *
  ********************************************************************/
 int
-lame_init_params(lame_t const gfc)
+lame_init_params(const lame_t gfc)
 {
     int gr, ch;
 
