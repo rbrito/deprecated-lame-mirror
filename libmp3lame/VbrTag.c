@@ -513,6 +513,8 @@ int PutLameVBR(lame_global_flags *gfp, FILE *fpStream, uint8_t *pbtStreamBuffer,
 	int nFilesize	  = 0;		//size of fpStream. Will be equal to size after process finishes.
 	int i;
 
+        int enc_delay=lame_get_encoder_delay(gfp);       // encoder delay
+        int enc_padding=lame_get_encoder_padding(gfp);   // encoder padding 
 
 	//recall:	gfp->VBR_q is for example set by the switch -V 
 	//			gfp->quality by -q, -h, -f, etc
@@ -723,12 +725,10 @@ int PutLameVBR(lame_global_flags *gfp, FILE *fpStream, uint8_t *pbtStreamBuffer,
 		pbtStreamBuffer[nBytesWritten] = nABRBitrate;
 	nBytesWritten++;
 
-        {
-            int enc_delay=lame_get_encoder_delay(gfp);       // encoder delay
-            int enc_padding=lame_get_encoder_padding(gfp);   // encoder padding 
-        }
+        pbtStreamBuffer[nBytesWritten   ] = enc_delay >> 4; // works for win32, does it for unix?
+        pbtStreamBuffer[nBytesWritten +1] = (enc_delay << 4) + (enc_padding >> 8);
+        pbtStreamBuffer[nBytesWritten +2] = enc_padding;
 
-	memset(pbtStreamBuffer+nBytesWritten,0, 3);		//encoder delay stuff..TODO
 	nBytesWritten+=3;
 
 	pbtStreamBuffer[nBytesWritten] = nMisc;
