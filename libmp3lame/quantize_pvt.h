@@ -95,9 +95,9 @@ void    set_frame_pinfo (lame_global_flags *gfp, FLOAT8 xr[2][2][576],
                          III_scalefac_t scalefac[2][2]);
 
 
-void    quantize_xrpow (const FLOAT8 xr[576], int ix[576], FLOAT8 istep);
+void    quantize_xrpow (const FLOAT8 *xr, int *ix, FLOAT8 istep);
 
-void    quantize_xrpow_ISO (const FLOAT8 xr[576], int ix[576], FLOAT8 istep);
+void    quantize_xrpow_ISO (const FLOAT8 *xr, int *ix, FLOAT8 istep);
 
 
 
@@ -107,7 +107,7 @@ int     count_bits (lame_internal_flags * gfc, int *ix, const FLOAT8 xr[576],
                     gr_info * cod_info);
 
 
-void    best_huffman_divide (const lame_internal_flags * gfc, int gr, int ch,
+void    best_huffman_divide (const lame_internal_flags * gfc, 
                              gr_info * cod_info, int *ix);
 
 void    best_scalefac_store (const lame_internal_flags * gfc, int gr, int ch,

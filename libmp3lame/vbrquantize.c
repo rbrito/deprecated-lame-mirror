@@ -279,8 +279,7 @@ calc_sfb_noise_ave(const FLOAT8 *xr, const FLOAT8 *xr34, const int bw, const int
 
 
 static int
-find_scalefac(const FLOAT8 *xr, const FLOAT8 *xr34, const int sfb,
-		     const FLOAT8 l3_xmin, const int bw)
+find_scalefac(const FLOAT8 *xr, const FLOAT8 *xr34, FLOAT8 l3_xmin, int bw)
 {
   FLOAT8 xfsf;
   int i,sf,sf_ok,delsf;
@@ -318,8 +317,7 @@ find_scalefac(const FLOAT8 *xr, const FLOAT8 *xr34, const int sfb,
 }
 
 static int
-find_scalefac_ave(const FLOAT8 *xr, const FLOAT8 *xr34, const int sfb,
-		     const FLOAT8 l3_xmin, const int bw)
+find_scalefac_ave(const FLOAT8 *xr, const FLOAT8 *xr34, FLOAT8 l3_xmin, int bw)
 {
   FLOAT8 xfsf; 
   int i,sf,sf_ok,delsf;
@@ -621,7 +619,6 @@ VBR_quantize_granule(
           lame_global_flags *gfp,
           FLOAT8                 xr34[576], 
           int                    l3_enc[576],
-    const III_psy_ratio  * const ratio,  
           III_scalefac_t * const scalefac, 
     const int gr, 
     const int ch)
@@ -651,7 +648,7 @@ VBR_quantize_granule(
 
 
   if (gfc->use_best_huffman==1) {
-    best_huffman_divide(gfc, gr, ch, cod_info, l3_enc);
+    best_huffman_divide(gfc, cod_info, l3_enc);
   }
   return 0;
 }
@@ -698,7 +695,7 @@ short_block_sf (
             case 3:
                 /*  the faster and sloppier mode to use at lower quality
                  */
-                vbrsf->s[sfb][b] = find_scalefac (&xr34[j], &xr34_orig[j], sfb,
+                vbrsf->s[sfb][b] = find_scalefac (&xr34[j], &xr34_orig[j], 
                                               l3_xmin->s[sfb][b], width);
                 break;
             case 2:
@@ -707,7 +704,7 @@ short_block_sf (
                 /*  the slower and better mode to use at higher quality
                  */
                 vbrsf->s[sfb][b] = find_scalefac_ave (&xr34[j], &xr34_orig[j],
-                                              sfb, l3_xmin->s[sfb][b], width);
+                                                    l3_xmin->s[sfb][b], width);
                 break;
             }
             j += width;
@@ -806,7 +803,7 @@ long_block_sf (
             /*  the faster and sloppier mode to use at lower quality
              */
             vbrsf->l[sfb] = find_scalefac (&xr34[start], &xr34_orig[start], 
-                                           sfb, l3_xmin->l[sfb], width);
+                                           l3_xmin->l[sfb], width);
             break;
         case 2:
         case 1:
@@ -814,7 +811,7 @@ long_block_sf (
             /*  the slower and better mode to use at higher quality
              */
             vbrsf->l[sfb] = find_scalefac_ave (&xr34[start], &xr34_orig[start],
-                                               sfb, l3_xmin->l[sfb], width);
+                                               l3_xmin->l[sfb], width);
             break;
         }
     }
@@ -1226,7 +1223,6 @@ VBR_noise_shaping (
     lame_global_flags *gfp,
     FLOAT8             xr       [576], 
     FLOAT8             xr34orig [576],
-    III_psy_ratio     *ratio,
     int                l3_enc   [576], 
     int                digital_silence, 
     int                minbits,
@@ -1266,7 +1262,7 @@ VBR_noise_shaping (
             long_block_scalefacs (gfp, cod_info, scalefac, &vbrsf, &vbrmax);
             long_block_xr34      (gfc, cod_info, scalefac, xr34orig, xr34);
         } 
-        VBR_quantize_granule (gfp, xr34, l3_enc, ratio, scalefac, gr, ch);
+        VBR_quantize_granule (gfp, xr34, l3_enc, scalefac, gr, ch);
 
         
         /* decrease noise until we use at least minbits
@@ -1293,7 +1289,7 @@ VBR_noise_shaping (
             ERRORF (gfc,"%ld impossible to encode ??? frame! bits=%d\n",
                     //  gfp->frameNum, cod_info->part2_3_length);
                              -1,       cod_info->part2_3_length);
-        VBR_quantize_granule (gfp, xr34, l3_enc, ratio, scalefac, gr, ch);
+        VBR_quantize_granule (gfp, xr34, l3_enc, scalefac, gr, ch);
 
         ++global_gain_adjust;
     }
@@ -1318,9 +1314,7 @@ VBR_noise_shaping2 (
     lame_global_flags        *gfp,
     FLOAT8                 xr       [576], 
     FLOAT8                 xr34orig [576],
-    III_psy_ratio  * const ratio,
     int                    l3_enc   [576], 
-    int                    digital_silence, 
     int                    minbits,
     int                    maxbits,
     III_scalefac_t * const scalefac,
@@ -1350,7 +1344,7 @@ VBR_noise_shaping2 (
     
     gfc->use_best_huffman = 0; /* we will do it later */
  
-    ret = VBR_quantize_granule (gfp, xr34, l3_enc, ratio, scalefac, gr, ch);
+    ret = VBR_quantize_granule (gfp, xr34, l3_enc, scalefac, gr, ch);
     
     gfc->use_best_huffman = best_huffman;
 
@@ -1575,7 +1569,7 @@ VBR_quantize(lame_global_flags *gfp,
            * but this can be optimized later on
            */
           adjusted = VBR_noise_shaping (gfp,xr[gr][ch],xr34[gr][ch],
-                                        ratio[gr]+ch,l3_enc[gr][ch],
+                                        l3_enc[gr][ch],
                                         digital_silence[gr][ch],
                                         minbits_lr[ch],
                                         maxbits,scalefac[gr]+ch,

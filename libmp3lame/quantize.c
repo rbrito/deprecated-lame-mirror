@@ -255,7 +255,7 @@ loop_break(
     const gr_info        * const cod_info,
     const III_scalefac_t * const scalefac ) 
 {
-    unsigned int i, sfb;
+    int i, sfb;
 
     for (sfb = 0; sfb < cod_info->sfb_lmax; sfb++)
         if (scalefac->l[sfb] == 0)
@@ -596,7 +596,7 @@ inc_subblock_gain (
             i = gfc->scalefac_band.s[sfb] * 3 + width * window;
             amp = IPOW20(210 + (s << (cod_info->scalefac_scale + 1)));
             for (l = 0; l < width; l++) {
-                xrpow[l] *= amp;
+                xrpow[i++] *= amp;
             }
         }
     }
@@ -720,13 +720,12 @@ outer_loop (
     calc_noise_result best_noise_info;
     int l3_enc_w[576]; 
     int iteration = 0;
-    int bits_found = 0;
+    int bits_found;
     int huff_bits;
     int real_bits;
     int better;
-    int over=0;
+    int over;
 
-    int notdone = 1;
     int copy = 0;
     int age = 0;
 
@@ -785,7 +784,6 @@ outer_loop (
         else {
             /* fast mode, no noise shaping, we are ready */
             best_noise_info = noise_info;
-            over = 0;
             copy = 0;
             memcpy(l3enc, l3_enc_w, sizeof(int)*576);
             break;
@@ -855,9 +853,7 @@ outer_loop (
             }
         }
             
-        notdone = balance_noise (gfp, cod_info, scalefac, &distort, xrpow);
-        
-        if (notdone == 0) 
+        if (balance_noise (gfp, cod_info, scalefac, &distort, xrpow) == 0) 
             break;
     }
     while (1); /* main iteration loop, breaks adjusted */
@@ -899,7 +895,6 @@ iteration_finish (
     lame_internal_flags *gfc,
     FLOAT8          xr      [2][2][576],
     int             l3_enc  [2][2][576],
-    III_psy_ratio   ratio   [2][2],  
     III_scalefac_t  scalefac[2][2],
     const int       mean_bits )
 {
@@ -917,7 +912,7 @@ iteration_finish (
             /*  best huffman_divide may save some bits too
              */
             if (gfc->use_best_huffman == 1) 
-                best_huffman_divide (gfc, gr, ch, cod_info, l3_enc[gr][ch]);
+                best_huffman_divide (gfc, cod_info, l3_enc[gr][ch]);
             
             /*  update reservoir status after FINAL quantization/bitrate
              */
@@ -1214,7 +1209,7 @@ VBR_prepare (
     lame_internal_flags *gfc=gfp->internal_flags;
     
     
-    FLOAT8   masking_lower_db, adjust = 0.0;
+    FLOAT8   masking_lower_db, adjust;
     int      gr, ch;
     int      used_bits = 0, bits;
     int      analog_silence = 1;
@@ -1388,8 +1383,7 @@ VBR_iteration_loop (
             }
       
             if (gfp->VBR == vbr_mtrh) {
-                ret = VBR_noise_shaping2 (gfp, xr[gr][ch], xrpow, 
-                                        &ratio[gr][ch], l3_enc[gr][ch], 0, 
+                ret = VBR_noise_shaping2 (gfp, xr[gr][ch], xrpow, l3_enc[gr][ch],  
                                         min_bits[gr][ch], max_bits[gr][ch], 
                                         &scalefac[gr][ch],
                                         &l3_xmin[gr][ch], gr, ch );
@@ -1481,7 +1475,7 @@ VBR_iteration_loop (
         } /* ch */
     }  /* gr */
 
-    iteration_finish (gfc, xr, l3_enc, ratio, scalefac, mean_bits);
+    iteration_finish (gfc, xr, l3_enc, scalefac, mean_bits);
 }
 
 
@@ -1620,7 +1614,7 @@ ABR_iteration_loop(
     int       bitsPerFrame, mean_bits, totbits, max_frame_bits;
     int       ch, gr, ath_over, ret;
     int       analog_silence_bits;
-    gr_info             *cod_info = NULL;
+    gr_info             *cod_info;
     III_side_info_t     *l3_side  = &gfc->l3_side;
 
     calc_target_bits (gfp, pe, ms_ener_ratio, targ_bits, 
@@ -1677,7 +1671,7 @@ ABR_iteration_loop(
     }
     assert (gfc->bitrate_index <= gfc->VBR_max_bitrate);
 
-    iteration_finish (gfc, xr, l3_enc, ratio, scalefac, mean_bits);
+    iteration_finish (gfc, xr, l3_enc, scalefac, mean_bits);
 }
 
 
@@ -1710,12 +1704,11 @@ iteration_loop(
     FLOAT8 xrpow[576];
     int    targ_bits[2];
     int    bitsPerFrame;
-    int    mean_bits, max_bits, bit_rate;
+    int    mean_bits, max_bits;
     int    gr, ch, i;
     III_side_info_t     *l3_side = &gfc->l3_side;
     gr_info             *cod_info;
 
-    bit_rate = bitrate_table [gfp->version] [gfc->bitrate_index];
     getframebits (gfp, &bitsPerFrame, &mean_bits);
     ResvFrameBegin (gfp, l3_side, mean_bits, bitsPerFrame );
 
@@ -1763,7 +1756,7 @@ iteration_loop(
             /*  best huffman_divide may save some bits too
              */
             if (gfc->use_best_huffman == 1) 
-                best_huffman_divide (gfc, gr, ch, cod_info, l3_enc[gr][ch]);
+                best_huffman_divide (gfc, cod_info, l3_enc[gr][ch]);
             
             /*  update reservoir status after FINAL quantization/bitrate
              */
