@@ -171,8 +171,7 @@ calc_noise(
               FLOAT             * distort,
               calc_noise_result * const res )
 {
-    FLOAT over_noise_db = 0.0;
-    FLOAT max_noise   = -20.0; /* -200 dB relative to masking */
+    FLOAT over_noise_db = 0.0, max_noise   = -20.0;
     int sfb = 0, j = 0;
 
     do {
@@ -1639,7 +1638,7 @@ set_frame_pinfo(lame_internal_flags *gfc, III_psy_ratio   ratio    [2][2])
 
 	    /* reconstruct the scalefactors in case SCFSI was used 
 	     */
-            if (gr == 1) {
+	    if (gr == 1) {
 		int sfb;
 		for (sfb = 0; sfb < gi->sfb_lmax; sfb++) {
 		    if (gi->scalefac[sfb] < 0) /* scfsi */

@@ -243,7 +243,7 @@ struct {
     double narrow_stereo;
 } switch_map [] = {
     /*  scalefac_s   lowpass       scale     athlower  short-th   narrow-st */
-    /* kbps    qantcomp   reduceside   athcurve  inter-ch     is-ratio */
+    /* kbps    quantcomp   reduceside   athcurve  inter-ch     is-ratio */
     {   8,  1,    1,  2000,  0.7,   0.90, 11,  -4, 0.0012, 1e3, 0.5, 0.6},
     {  16,  1,    1,  3700,  0.7,   0.90, 11,  -4, 0.0010, 1e3, 0.5, 0.6},
     {  24,  1,    1,  3900,  0.7,   0.90, 11,  -4, 0.0010, 20., 0.5, 0.6},

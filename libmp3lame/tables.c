@@ -1297,7 +1297,7 @@ int psymodel_init(lame_global_flags *gfp)
     int numlines_s[CBANDS];
     FLOAT eql_balance;
 
-    for (i=0; i<4; ++i) {
+    for (i=0; i<MAX_CHANNELS*2; ++i) {
 	for (j=0; j<CBANDS; ++j) {
 	    gfc->nb_1[i][j]=1e20;
 	}
@@ -1317,8 +1317,7 @@ int psymodel_init(lame_global_flags *gfp)
 	}
 	for (j=0;j<6;j++)
 	    gfc->nsPsy.subbk_ene[i][j] = 1.0;
-	gfc->blocktype_next[0][i] = NORM_TYPE;
-	gfc->blocktype_next[1][i] = NORM_TYPE;
+	gfc->blocktype_next[0][i] = gfc->blocktype_next[1][i] = NORM_TYPE;
     }
 
     gfc->masking_lower = db2pow(gfp->VBR_q - 8 - 4);
