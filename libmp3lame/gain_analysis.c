@@ -216,7 +216,8 @@ ResetSampleFrequency (replaygain_t* rgData, long samplefreq ) {
     }
 
 #if defined (__GNUC__)
-    /* workaround for the GCC ceil() bug when compiled with optimizations */
+    /* workaround for the floating-point trouble with x86's extended 
+       precision when compiled by GCC with optimizations */
     rgData->sampleWindow = (long) ceil ((float)((double)samplefreq * (double)RMS_WINDOW_TIME));
 #else
     rgData->sampleWindow = (long) ceil (samplefreq * RMS_WINDOW_TIME);
