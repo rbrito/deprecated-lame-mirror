@@ -501,8 +501,9 @@ bin_search_StepSize(
  *
  ************************************************************************/
 static int
-float8compare(const FLOAT8 *a, const FLOAT8 *b)
+float8compare(const void * v1, const void * v2)
 {
+    const FLOAT8 *a = v1, *b = v2;
     if (*a > *b) return 1;
     if (*a == *b) return 0;
     return -1;

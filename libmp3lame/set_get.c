@@ -969,8 +969,8 @@ lame_set_VBR_q( lame_global_flags*  gfp,
         return -1;  /* Unknown VBR quality level! */
 
     gfp->VBR_q = VBR_q;
-//    lame_set_ATHcurve(gfp, VBR_q);
-
+/*    lame_set_ATHcurve(gfp, VBR_q);
+*/
     return 0;
 }
 

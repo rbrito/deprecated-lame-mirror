@@ -262,15 +262,18 @@ int  print_license ( const lame_global_flags* gfp, FILE* const fp, const char* P
               "can include a compiled version of the LAME library (for example,\n"
               "lame.dll) with a commercial program.  Some notable requirements of\n"
               "the LGPL:\n"
-              "\n"
+              "\n" );
+    fprintf ( fp, 
               "1. In your program, you cannot include any source code from LAME, with\n"
               "   the exception of files whose only purpose is to describe the library\n"
               "   interface (such as lame.h).\n"
-              "\n"
+              "\n" );
+    fprintf ( fp, 
               "2. Any modifications of LAME must be released under the LGPL.\n"
               "   The LAME project (www.mp3dev.org) would appreciate being\n"
               "   notified of any modifications.\n"
-              "\n"
+              "\n" );
+    fprintf ( fp, 
               "3. You must give prominent notice that your program is:\n"
               "      A. using LAME (including version number)\n"
               "      B. LAME is under the LGPL\n"
@@ -279,11 +282,13 @@ int  print_license ( const lame_global_flags* gfp, FILE* const fp, const char* P
               "         source can be obtained (such as www.mp3dev.org)\n"
               "   An example of prominent notice would be an \"About the LAME encoding engine\"\n"
               "   button in some pull down menu within the executable of your program.\n"
-              "\n"
+              "\n" );
+    fprintf ( fp, 
               "4. If you determine that distribution of LAME requires a patent license,\n"
               "   you must obtain such license.\n"
               "\n"
-              "\n"
+              "\n" );
+    fprintf ( fp, 
               "*** IMPORTANT NOTE ***\n"
               "\n"
               "The decoding functions provided in LAME use the mpglib decoding engine which\n"
@@ -341,7 +346,8 @@ int  short_help ( const lame_global_flags* gfp, FILE* const fp, const char* Prog
               "\n"
               "RECOMMENDED:\n"
               "    lame -h input.wav output.mp3\n"
-              "\n"
+              "\n", ProgramName );
+    fprintf ( fp, 
               "OPTIONS:\n"
               "    -b bitrate      set the bitrate, default 128 kbps\n"
               "    -f              fast mode (lower quality)\n"
@@ -349,13 +355,15 @@ int  short_help ( const lame_global_flags* gfp, FILE* const fp, const char* Prog
               "    -m mode         (s)tereo, (j)oint, (m)ono\n"
               "                    default is (j) or (s) depending on bitrate\n"
               "    -V n            quality setting for VBR.  default n=%i\n"
-              "\n"
+              "\n", lame_get_VBR_q(gfp) );
+    fprintf ( fp, 
               "    --preset type   type must be \"medium\", \"standard\", \"extreme\", \"insane\",\n"
               "                    or a value for an average desired bitrate and depending\n"                       
               "                    on the value specified, appropriate quality settings will\n"
               "                    be used.\n"
               "                    \"--preset help\" gives more info on these\n"
-              "\n"
+              "\n" );
+    fprintf ( fp, 
 #if defined(WIN32)
               "    --priority type  sets the process priority\n"
               "                     0,1 = Low priority\n"
@@ -373,8 +381,7 @@ int  short_help ( const lame_global_flags* gfp, FILE* const fp, const char* Prog
               "\n"
 #endif
               "    --longhelp      full list of options\n"
-              "\n",
-              ProgramName, lame_get_VBR_q(gfp) );
+              "\n" );
  
     return 0;
 }
@@ -408,7 +415,8 @@ int  long_help ( const lame_global_flags* gfp, FILE* const fp, const char* Progr
               "\n"
               "RECOMMENDED:\n"
               "    lame -h input.wav output.mp3\n"
-              "\n"
+              "\n", ProgramName );
+    fprintf ( fp,
               "OPTIONS:\n"
               "  Input options:\n"
               "    -r              input is raw pcm\n"
@@ -421,6 +429,8 @@ int  long_help ( const lame_global_flags* gfp, FILE* const fp, const char* Progr
               "    --little-endian input is little-endian (default from host)\n"
               "    --big-endian    input is big-endian (default from host)\n"
 #endif
+               );
+    fprintf ( fp,
               "    --mp1input      input file is a MPEG Layer I   file\n"
               "    --mp2input      input file is a MPEG Layer II  file\n"
               "    --mp3input      input file is a MPEG Layer III file\n"
@@ -429,7 +439,7 @@ int  long_help ( const lame_global_flags* gfp, FILE* const fp, const char* Progr
  	      "    --nogapout <dir>\n"
  	      "                    output dir for gapless encoding (must precede --nogap)\n"
  	      "    --nogaptags     allow the use of VBR tags in gapless encoding"
-              , ProgramName );
+               );
 
     wait_for ( fp, lessmode );
     fprintf ( fp,
@@ -441,15 +451,21 @@ int  long_help ( const lame_global_flags* gfp, FILE* const fp, const char* Progr
               "    --freeformat    produce a free format bitstream\n"
               "    --decode        input=mp3 file, output=wav\n"
               "    -t              disable writing wav header when using --decode\n"
+              );
+    fprintf ( fp,
               "    --comp  <arg>   choose bitrate to achive a compression ratio of <arg>\n"
               "    --scale <arg>   scale input (multiply PCM data) by <arg>\n"
               "    --scale-l <arg> scale channel 0 (left) input (multiply PCM data) by <arg>\n"
               "    --scale-r <arg> scale channel 1 (right) input (multiply PCM data) by <arg>\n"
+              );
 #ifdef DECODE_ON_THE_FLY
+    fprintf ( fp,
               "    --replaygain-accurate   compute RG more accurately and find the peak sample\n"
               "    --clipdetect    enable --replaygain-accurate and print a message whether\n"
               "                    clipping occurs and how far the waveform is from full scale\n"
+              );
 #endif
+    fprintf ( fp,
               "    --preset type   type must be \"medium\", \"standard\", \"extreme\", \"insane\",\n"
               "                    or a value for an average desired bitrate and depending\n"                       
               "                    on the value specified, appropriate quality settings will\n"
@@ -467,7 +483,8 @@ int  long_help ( const lame_global_flags* gfp, FILE* const fp, const char* Progr
               "    --quiet         don't print anything on screen\n"
               "    --brief         print more useful information\n"
               "    --verbose       print a lot of useful information\n"
-              "\n"
+              "\n" );
+    fprintf ( fp,
               "  Noise shaping & psycho acoustic algorithms:\n"
               "    -q <arg>        <arg> = 0...9.  Default  -q 5 \n"
               "                    -q 0:  Highest quality, very slow \n"
@@ -484,20 +501,23 @@ int  long_help ( const lame_global_flags* gfp, FILE* const fp, const char* Progr
               "\n"
               "  ABR options:\n"
               "    --abr <bitrate> specify average bitrate desired (instead of quality)\n"
-              "\n"
+              "\n" );
+    fprintf ( fp,
               "  VBR options:\n"
               "    -v              use variable bitrate (VBR) (--vbr-old)\n"
               "    --vbr-old       use old variable bitrate (VBR) routine\n"
               "    --vbr-new       use new variable bitrate (VBR) routine\n"
               "    -V n            quality setting for VBR.  default n=%i\n"
               "                    0=high quality,bigger files. 9=smaller files\n"
+              , lame_get_VBR_q(gfp) );
+    fprintf ( fp,
               "    -b <bitrate>    specify minimum allowed bitrate, default  32 kbps\n"
               "    -B <bitrate>    specify maximum allowed bitrate, default 320 kbps\n"
               "    -F              strictly enforce the -b option, for use with players that\n"
               "                    do not support low bitrate mp3\n"
               "    -t              disable writing LAME Tag\n"
               "    -T              enable and force writing LAME Tag\n"
-              , lame_get_VBR_q(gfp) );
+              );
   
     wait_for ( fp, lessmode );  
     fprintf ( fp,
@@ -507,10 +527,13 @@ int  long_help ( const lame_global_flags* gfp, FILE* const fp, const char* Progr
               "    --athonly       ignore GPSYCHO completely, use ATH only\n"
               "    --athtype n     selects between different ATH types [0-4]\n"
               "    --athlower x    lowers ATH by x dB\n"
+              );
+    fprintf ( fp,
               "    --athaa-type n  ATH auto adjust types 1-3, else no adjustment\n"
               "    --athaa-loudapprox n   n=1 total energy or n=2 equal loudness curve\n"
               "    --athaa-sensitivity x  activation offset in -/+ dB for ATH auto-adjustment\n" 
-              "\n"
+              "\n" );
+    fprintf ( fp,
               "  PSY related:\n"
               "    --short         use short blocks when appropriate\n"
               "    --noshort       do not use short blocks\n"
@@ -520,6 +543,8 @@ int  long_help ( const lame_global_flags* gfp, FILE* const fp, const char* Progr
 /* this is redundant, we already have --notemp */
               "    --temporal-masking n  use temporal masking effect n=0:no n=1:yes\n"
 #endif
+            );
+    fprintf ( fp,
               "    --notemp        disable temporal masking effect\n"
               "    --nssafejoint   M/S switching criterion\n"
               "    --nsmsfix <arg> M/S switching tuning [effective 0-3.5]\n"
@@ -527,6 +552,8 @@ int  long_help ( const lame_global_flags* gfp, FILE* const fp, const char* Progr
               "    --ns-bass x     adjust masking for sfbs  0 -  6 (long)  0 -  5 (short)\n"
               "    --ns-alto x     adjust masking for sfbs  7 - 13 (long)  6 - 10 (short)\n"         
               "    --ns-treble x   adjust masking for sfbs 14 - 21 (long) 11 - 12 (short)\n"
+            );
+    fprintf ( fp,
               "    --ns-sfb21 x    change ns-treble by x dB for sfb21\n"
               "    --shortthreshold x,y  short block switching threshold, x for L/R/M channel, y for S channel\n"
               "  Noise Shaping related:\n"
@@ -555,7 +582,8 @@ int  long_help ( const lame_global_flags* gfp, FILE* const fp, const char* Progr
               "                    (the checksum is computed correctly)\n"
               "    --nores         disable the bit reservoir\n"
               "    --strictly-enforce-ISO   comply as much as possible to ISO MPEG spec\n"
-              "\n"
+              "\n" );
+    fprintf ( fp,
               "  Filter options:\n"
               "    -k              keep ALL frequencies (disables all filters),\n"
               "                    Can cause ringing and twinkling\n"
@@ -563,6 +591,8 @@ int  long_help ( const lame_global_flags* gfp, FILE* const fp, const char* Progr
               "  --lowpass-width <freq>  frequency(kHz) - default 15%% of lowpass freq\n"
               "  --highpass <freq>       frequency(kHz), highpass filter cutoff below freq\n"
               "  --highpass-width <freq> frequency(kHz) - default 15%% of highpass freq\n"
+            );
+    fprintf ( fp,
               "  --resample <sfreq>  sampling frequency of output file(kHz)- default=automatic\n"
                );
   
@@ -576,6 +606,8 @@ int  long_help ( const lame_global_flags* gfp, FILE* const fp, const char* Progr
               "    --tc <comment>  user-defined text (max 30 chars for v1 tag, 28 for v1.1)\n"
               "    --tn <track>    audio/song track number (1 to 255, creates v1.1 tag)\n"
               "    --tg <genre>    audio/song genre (name or number in list)\n"
+              );
+    fprintf ( fp,
               "    --add-id3v2     force addition of version 2 tag\n"
               "    --id3v1-only    add only a version 1 tag\n"
               "    --id3v2-only    add only a version 2 tag\n"
@@ -583,7 +615,8 @@ int  long_help ( const lame_global_flags* gfp, FILE* const fp, const char* Progr
               "    --pad-id3v2     pad version 2 tag with extra 128 bytes\n"
               "    --genre-list    print alphabetically sorted ID3 genre list and exit\n"
               "    --ignore-tag-errors  ignore errors in values passed for tags\n"
-              "\n"
+              "\n" );
+    fprintf ( fp,
               "    Note: A version 2 tag will NOT be added unless one of the input fields\n"
               "    won't fit in a version 1 tag (e.g. the title string is longer than 30\n"
               "    characters), or the '--add-id3v2' or '--id3v2-only' options are used,\n"
@@ -680,14 +713,20 @@ static void  presets_longinfo_dm ( FILE* msgfp )
         "They have for the most part been subject to and tuned via rigorous double blind\n"
         "listening tests to verify and achieve this objective.\n"
         "\n"
+        );
+        fprintf ( msgfp,
         "These are continually updated to coincide with the latest developments that\n"
         "occur and as a result should provide you with nearly the best quality\n"
         "currently possible from LAME.\n"
-        "\n"
+        "\n" 
+        );
+        fprintf ( msgfp,
         "To activate these presets:\n"
         "\n"
         "   For VBR modes (generally highest quality):\n"
         "\n"
+        );
+        fprintf ( msgfp,
         "     \"--preset medium\" This preset should provide near transparency\n"
         "                             to most people on most music.\n"
         "\n"
@@ -695,11 +734,15 @@ static void  presets_longinfo_dm ( FILE* msgfp )
         "                             to most people on most music and is already\n"
         "                             quite high in quality.\n"
         "\n"
+        );
+        fprintf ( msgfp,
         "     \"--preset extreme\" If you have extremely good hearing and similar\n"
         "                             equipment, this preset will generally provide\n"
         "                             slightly higher quality than the \"standard\"\n"
         "                             mode.\n"
         "\n"
+        );
+        fprintf ( msgfp,
         "   For CBR 320kbps (highest quality possible from the --preset switches):\n"
         "\n"
         "     \"--preset insane\"  This preset will usually be overkill for most\n"
@@ -707,16 +750,22 @@ static void  presets_longinfo_dm ( FILE* msgfp )
         "                             have the absolute highest quality with no\n"
         "                             regard to filesize, this is the way to go.\n"
         "\n"
+        );
+        fprintf ( msgfp,
         "   For ABR modes (high quality per given bitrate but not as high as VBR):\n"
         "\n"
         "     \"--preset <kbps>\"  Using this preset will usually give you good\n"
         "                             quality at a specified bitrate. Depending on the\n"
         "                             bitrate entered, this preset will determine the\n"
+        );
+        fprintf ( msgfp,
         "                             optimal settings for that particular situation.\n"
         "                             While this approach works, it is not nearly as\n"
         "                             flexible as VBR, and usually will not attain the\n"
         "                             same level of quality as VBR at higher bitrates.\n"  
         "\n"
+        );
+        fprintf ( msgfp,
         "The following options are also available for the corresponding profiles:\n"
         "\n"
         "   <fast>        standard\n"
@@ -727,11 +776,15 @@ static void  presets_longinfo_dm ( FILE* msgfp )
         "                      \"--preset 185\" activates this\n"
         "                      preset and uses 185 as an average kbps.\n" 
         "\n"
+        );
+        fprintf ( msgfp,
         "   \"fast\" - Enables the new fast VBR for a particular profile. The\n"
         "            disadvantage to the speed switch is that often times the\n"
         "            bitrate will be slightly higher than with the normal mode\n"
         "            and quality may be slightly lower also.\n"
         "\n"
+        );
+        fprintf ( msgfp,
         "   \"cbr\"  - If you use the ABR mode (read above) with a significant\n"
         "            bitrate such as 80, 96, 112, 128, 160, 192, 224, 256, 320,\n"
         "            you can use the \"cbr\" option to force CBR mode encoding\n"
@@ -739,6 +792,8 @@ static void  presets_longinfo_dm ( FILE* msgfp )
         "            quality but CBR may be useful in situations such as when\n"
         "            streaming an mp3 over the internet may be important.\n"
         "\n"
+        );
+        fprintf ( msgfp,
         "    For example:\n"
         "\n"
         "    \"--preset fast standard <input file> <output file>\"\n"
@@ -747,6 +802,8 @@ static void  presets_longinfo_dm ( FILE* msgfp )
         " or \"--preset extreme <input file> <output file>\"\n"
         "\n"
         "\n"
+        );
+        fprintf ( msgfp,
         "A few aliases are available for ABR mode:\n"
         "phone => 16kbps/mono        phon+/lw/mw-eu/sw => 24kbps/mono\n"
         "mw-us => 40kbps/mono        voice => 56kbps/mono\n"
@@ -892,6 +949,8 @@ static int  presets_set( lame_t gfp, int fast, int cbr, const char* preset_name,
                    "                             \"--preset 185\" activates this\n"
                    "                             preset and uses 185 as an average kbps.\n" 
                    "\n"
+        );
+        fprintf ( stderr,
                    "    Some examples:\n"
                    "\n"
                    " or \"%s --preset fast standard <input file> <output file>\"\n"

@@ -137,8 +137,8 @@ bitrate is more balanced according to the -V value.*/
 
   f /= 1000;  /* convert to khz */
   f  = Max(0.01, f);
-//  f  = Min(21.0, f);
-
+/*  f  = Min(21.0, f);
+*/
   ath =    3.640 * pow(f,-0.8)
          - 6.800 * exp(-0.6*pow(f-3.4,2.0))
          + 6.000 * exp(-0.15*pow(f-8.7,2.0))
@@ -229,7 +229,7 @@ int nearestBitrateFullIndex(const int bitrate)
 {
     /* borrowed from DM abr presets*/    
 
-    int index; // resolved range
+    int index; /* resolved range */
 
     const int bitrate_table[] = {8, 16, 24, 32, 40, 48, 56, 64, 80, 96, 112, 128, 160, 192, 224, 256, 320};
 
@@ -241,25 +241,26 @@ int nearestBitrateFullIndex(const int bitrate)
     int b;
 
 
-    // We assume specified bitrate will be 320kbps
+    /* We assume specified bitrate will be 320kbps */
     upper_range_kbps = bitrate_table[16];
     upper_range = 16;
     lower_range_kbps = bitrate_table[16];
     lower_range = 16;
  
-    // Determine which significant bitrates the value specified falls between,
-    // if loop ends without breaking then we were correct above that the value was 320
+    /* Determine which significant bitrates the value specified falls between,
+     * if loop ends without breaking then we were correct above that the value was 320
+     */
     for (b = 0; b < 16; b++) {
         if ((Max(bitrate, bitrate_table[b+1])) != bitrate) {
               upper_range_kbps = bitrate_table[b+1];
               upper_range = b+1;
               lower_range_kbps = bitrate_table[b];
               lower_range = (b);
-              break; // We found upper range 
+              break; /* We found upper range */
         }
     }
 
-    // Determine which range the value specified is closer to
+    /* Determine which range the value specified is closer to */
     if ((upper_range_kbps - bitrate) > (bitrate - lower_range_kbps))
         index = lower_range;
     else

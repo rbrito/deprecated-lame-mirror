@@ -939,7 +939,7 @@ int PutVbrTag(lame_global_flags *gfp,FILE *fpStream,int nVbrScale)
 
 	if (gfp->error_protection) {
 	  /* (jo) error_protection: add crc16 information to header */
-	  CRC_writeheader(gfc, pbtStreamBuffer);
+	  CRC_writeheader(gfc, (char*)pbtStreamBuffer);
 	}
 
 
