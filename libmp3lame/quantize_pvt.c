@@ -648,8 +648,6 @@ FLOAT calc_noise_core_c( const gr_info * const cod_info,
     int j = *startline;
     const int *ix = cod_info->l3_enc;
 
-    assert(cod_info->count1 != 0);
-
     if (j> cod_info->count1) {
 	    while (l--) {
             FLOAT temp;
