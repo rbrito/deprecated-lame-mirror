@@ -149,152 +149,6 @@ bitrate is more balanced according to the -V value.*/
 }
 
 
-/* 
- *  Klemm 1994 and 1997. Experimental data. Sorry, data looks a little bit
- *  dodderly. Data below 30 Hz is extrapolated from other material, above 18
- *  kHz the ATH is limited due to the original purpose (too much noise at
- *  ATH is not good even if it's theoretically inaudible).
- */
-
-FLOAT8  ATHformula_Frank( FLOAT8 freq )
-{
-    /*
-     * one value per 100 cent = 1
-     * semitone = 1/4
-     * third = 1/12
-     * octave = 1/40 decade
-     * rest is linear interpolated, values are currently in decibel rel. 20 µPa
-     */
-    static FLOAT tab [] = {
-        /*    10.0 */  96.69, 96.69, 96.26, 95.12,
-        /*    12.6 */  93.53, 91.13, 88.82, 86.76,
-        /*    15.8 */  84.69, 82.43, 79.97, 77.48,
-        /*    20.0 */  74.92, 72.39, 70.00, 67.62,
-        /*    25.1 */  65.29, 63.02, 60.84, 59.00,
-        /*    31.6 */  57.17, 55.34, 53.51, 51.67,
-        /*    39.8 */  50.04, 48.12, 46.38, 44.66,
-        /*    50.1 */  43.10, 41.73, 40.50, 39.22,
-        /*    63.1 */  37.23, 35.77, 34.51, 32.81,
-        /*    79.4 */  31.32, 30.36, 29.02, 27.60,
-        /*   100.0 */  26.58, 25.91, 24.41, 23.01,
-        /*   125.9 */  22.12, 21.25, 20.18, 19.00,
-        /*   158.5 */  17.70, 16.82, 15.94, 15.12,
-        /*   199.5 */  14.30, 13.41, 12.60, 11.98,
-        /*   251.2 */  11.36, 10.57,  9.98,  9.43,
-        /*   316.2 */   8.87,  8.46,  7.44,  7.12,
-        /*   398.1 */   6.93,  6.68,  6.37,  6.06,
-        /*   501.2 */   5.80,  5.55,  5.29,  5.02,
-        /*   631.0 */   4.75,  4.48,  4.22,  3.98,
-        /*   794.3 */   3.75,  3.51,  3.27,  3.22,
-        /*  1000.0 */   3.12,  3.01,  2.91,  2.68,
-        /*  1258.9 */   2.46,  2.15,  1.82,  1.46,
-        /*  1584.9 */   1.07,  0.61,  0.13, -0.35,
-        /*  1995.3 */  -0.96, -1.56, -1.79, -2.35,
-        /*  2511.9 */  -2.95, -3.50, -4.01, -4.21,
-        /*  3162.3 */  -4.46, -4.99, -5.32, -5.35,
-        /*  3981.1 */  -5.13, -4.76, -4.31, -3.13,
-        /*  5011.9 */  -1.79,  0.08,  2.03,  4.03,
-        /*  6309.6 */   5.80,  7.36,  8.81, 10.22,
-        /*  7943.3 */  11.54, 12.51, 13.48, 14.21,
-        /* 10000.0 */  14.79, 13.99, 12.85, 11.93,
-        /* 12589.3 */  12.87, 15.19, 19.14, 23.69,
-        /* 15848.9 */  33.52, 48.65, 59.42, 61.77,
-        /* 19952.6 */  63.85, 66.04, 68.33, 70.09,
-        /* 25118.9 */  70.66, 71.27, 71.91, 72.60,
-    };
-    FLOAT8    freq_log;
-    unsigned  index;
-    
-    if (freq < -.3)
-        freq=3758;
-
-    if ( freq <    10. ) freq =    10.;
-    if ( freq > 29853. ) freq = 29853.;
-    
-    freq_log = 40. * log10 (0.1 * freq);   /* 4 steps per third, starting at 10 Hz */
-    index    = (unsigned) freq_log;
-    assert ( index < sizeof(tab)/sizeof(*tab) );
-    return tab [index] * (1 + index - freq_log) + tab [index+1] * (freq_log - index);
-}
-
-
-
-/* ATHformula_jd - Compute ATH at a given frequency from experimental data.
-                   Below 15000 Hz, this ATH curve is based on data merged from
-                   various existing sources.  New experimental data covers
-                   frequencies above 15000 Hz.  -jd
-     in: freq    (Hz)
-returns: ATH value at freq in dB, or minimum ATH value if input freq is -1
-design notes:
-   Above 15000 Hz, my data indicates roughly 10 dB between the edge of
-   ready detection, and statistical indistinguishability.  To provide a
-   balance between my data, and ATH data from other sources, roughly 5 dB
-   is added above 15000 Hz, except at frequencies above 20500 Hz.  The ATH
-   of 21000+ Hz frequencies is decreased by 5 dB, to reduce the possibility
-   of extra distortion that some output systems exhibit when given a contrived
-   sample with an intense, but hardly audible frequency.
-*/
-FLOAT8
-ATHformula_jd( FLOAT8 freq )
-{
-  int i;
-  int ifreq;
-  int at_i;
-  int tstep;
-  int xtrans;
-  FLOAT coeff[3];
-  FLOAT8 rval;
-
-  const FLOAT ath_lt100[]       /* 20 - 120 Hz (for computing 0 - 100 Hz) */
-    = { 74.0, 47.9, 35.2, 28.1, 23.5,    20.4 };
-
-  const FLOAT ath_lt500[]       /* 100 - 600 Hz (for 100 - 500 Hz) */
-    = { 23.5, 13.4, 9.4, 6.9, 5.9,    5.0 };
-
-  const FLOAT ath_gt500[]       /* 500 Hz and above */
-    = { /*   500 */        5.9,  3.2,  1.6, -0.7,
-        /*  2500 */ -2.7, -4.5, -5.2, -4.8, -3.7,
-        /*  5000 */ -1.6,  1.5,  3.8,  5.3,  6.8,
-        /*  7500 */  8.2,  9.5, 10.5, 11.3, 11.8,
-        /* 10000 */ 12.1, 12.2, 12.4, 12.4, 12.4,
-        /* 12500 */ 12.8, 13.5, 14.9, 16.8, 19.0,
-        /* 15000 */ 23.0, 27.0, 33.0, 36.5, 39.5,
-        /* 17500 */ 43.5, 51.5, 58.5, 65.0, 71.5,
-        /* 20000 */ 78.0, 79.5, 80.0, 80.5, 80.5,    80.5 };
-
-  const FLOAT *ath_table[4];
-  const int ath_table_step[4] =     {   20,  100,   500,   500 };
-  const FLOAT ath_table_xratio[4] = { 0.05, 0.01, 0.002, 0.002 };
-
-  ath_table[0] = ath_lt100;
-  ath_table[1] = ath_lt500;
-  ath_table[3] = ath_gt500;
-
-  if( freq >= -0.5 && freq < 22000 ) {
-      ifreq = (int) freq;
-      at_i = ( (((99 - ifreq) >> (sizeof(int) * 8 - 1)) & 0x1)
-               | (((499 - ifreq) >> (sizeof(int) * 8 - 2)) & 0x3) );
-      tstep = ath_table_step[at_i];
-      
-      i = (ifreq / tstep);
-      i -= 2;
-      if( i >= 0 ) {
-          qinterp_cf_42( ath_table[at_i] + i, coeff );
-          xtrans = (i + 2) * tstep;
-      } else {                  /* leading edge */
-          qinterp_cf_3( ath_table[at_i], coeff );
-          xtrans = tstep;
-      }
-      rval = qinterp_eval( coeff, freq, (FLOAT)xtrans, ath_table_xratio[at_i]);
-      return(rval);
-  } else if( freq < 0 ) {
-      return(-5.2);             /* minimum value from table */
-  } else {
-      return( ath_gt500[ 22000 / 500 - 1 ] ); /* 22kHz ATH used for 22kHz+ */
-  }
-}
-
-
 
 FLOAT8 ATHformula(FLOAT8 f,lame_global_flags *gfp)
 {
@@ -303,7 +157,7 @@ FLOAT8 ATHformula(FLOAT8 f,lame_global_flags *gfp)
     case 0:
       return ATHformula_GB(f, 9);
     case 1:
-      return ATHformula_Frank(f);
+        return ATHformula_GB(f, -1); /*over sensitive, should probably be removed*/
     case 2:
       return ATHformula_GB(f, 0);
     case 3:
@@ -311,8 +165,6 @@ FLOAT8 ATHformula(FLOAT8 f,lame_global_flags *gfp)
     case 4:
       if (!(gfp->VBR == vbr_off || gfp->VBR == vbr_abr)) /*this case should be used with true vbr only*/
         return ATHformula_GB(f,gfp->VBR_q);
-    case 5:
-      return ATHformula_jd(f);
     }
 
   return ATHformula_GB(f, 0);
