@@ -28,6 +28,7 @@ EXTRA_DIST = \
 	configMS.h \
 	lame.bat \
 	lame.spec.in \
+	lame_projects_vc6.dsp \
 	lame_vc6.dsw \
 	testcase.mp3 \
 	testcase.wav
