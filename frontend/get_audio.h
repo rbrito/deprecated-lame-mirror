@@ -46,8 +46,7 @@ int get_audio(lame_global_flags * const gfp, int buffer[2][1152]);
 int get_audio16(lame_global_flags * const gfp, short buffer[2][1152]);
 int WriteWaveHeader(FILE * const fp, const int pcmbytes,
 		    const int freq, const int channels, const int bits);
-
-
+extern int id3v2taglen;
 
 /* the simple lame decoder */
 /* After calling lame_init(), lame_init_params() and
@@ -99,8 +98,6 @@ extern int            aiff_write_headers(FILE*, IFF_AIFF*);
 extern int parse_wavheader(void);
 extern int parse_aiff(const char fn[]);
 extern void   aiff_check(const char*, IFF_AIFF*, int*);
-
-extern int id3v2taglen;
 
 #endif	/* ifdef LIBSNDFILE */
 #endif	/* ifndef LAME_GET_AUDIO_H */
