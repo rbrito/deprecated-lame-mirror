@@ -1570,8 +1570,8 @@ set_pinfo (
 	gfc->pinfo->LAMEsfb[gr][ch][sfb2] = 0;
 	if (gi->preflag && sfb2>=11)
 	    gfc->pinfo->LAMEsfb[gr][ch][sfb2] = -ifqstep*pretab[sfb2];
-	gfc->pinfo->LAMEsfb[gr][ch][sfb2] -= ifqstep*gi->scalefac[sfb2];
-	assert(gi->scalefac[sfb2]>=0); /* should be decoded by the caller*/
+	if (gi->scalefac[sfb2]>=0)
+	    gfc->pinfo->LAMEsfb[gr][ch][sfb2] -= ifqstep*gi->scalefac[sfb2];
     } /* for sfb */
 
     for (sfb = gi->sfb_smin; sfb2 < gi->psymax; sfb++) {
