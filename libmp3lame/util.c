@@ -44,40 +44,6 @@
 ***********************************************************************/
 /*empty and close mallocs in gfc */
 
-void
-freegfc(const lame_t gfc)   /* bit stream structure */
-{
-    int  i;
-
-    for ( i = 0 ; i <= 2*BPC; i++ )
-        if ( gfc->blackfilt[i] != NULL ) {
-            free ( gfc->blackfilt[i] );
-	    gfc->blackfilt[i] = NULL;
-	}
-    if ( gfc->inbuf_old[0] ) { 
-        free ( gfc->inbuf_old[0] );
-	gfc->inbuf_old[0] = NULL;
-    }
-    if ( gfc->inbuf_old[1] ) { 
-        free ( gfc->inbuf_old[1] );
-	gfc->inbuf_old[1] = NULL;
-    }
-
-    if ( gfc->VBR_seek_table.bag ) {
-        free ( gfc->VBR_seek_table.bag );
-        gfc->VBR_seek_table.bag=NULL;
-        gfc->VBR_seek_table.size=0;
-    }
-    if ( gfc->s3_ll ) {
-        free ( gfc->s3_ll );
-    }
-    if ( gfc->s3_ss ) {
-        free ( gfc->s3_ss );
-    }
-}
-
-
-
 int
 BitrateIndex(
     int bRate,        /* legal rates from 32 to 448 kbps */
