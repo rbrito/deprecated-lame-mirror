@@ -70,7 +70,6 @@ typedef struct {
   double tot_noise[2][2];
   double max_noise[2][2];
   double over_noise[2][2];
-  double var_noise[2][2];
   int over_SSD[2][2];
   int blocktype[2][2];
   int scalefac_scale[2][2];
