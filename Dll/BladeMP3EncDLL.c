@@ -866,7 +866,7 @@ static void dump_config( 	lame_global_flags*	gfp )
 	DebugPrintf("Padding Type           =%d\n", lame_get_padding_type( gfp ) );
 	DebugPrintf("Disable Reservoir      =%d\n", lame_get_disable_reservoir( gfp ) );
 	DebugPrintf("Allow diff-short       =%d\n", lame_get_allow_diff_short( gfp ) );
-	DebugPrintf("Interchannel masking   =%d\n", lame_get_interChRatio( gfp ) );
+	DebugPrintf("Interchannel masking   =%f\n", lame_get_interChRatio( gfp ) );
 	DebugPrintf("Strict ISO Encoding    =%s\n", ( lame_get_strict_ISO( gfp ) ) ?"Yes":"No");
 	DebugPrintf("Scale                  =%5.2f\n", lame_get_scale( gfp ) );
 
@@ -898,10 +898,10 @@ static void dump_config( 	lame_global_flags*	gfp )
 	DebugPrintf("ATH short              =%d\n", lame_get_ATHshort( gfp ) );
 	DebugPrintf("ATH no                 =%d\n", lame_get_noATH( gfp ) );
 	DebugPrintf("ATH type               =%d\n", lame_get_ATHtype( gfp ) );
-	DebugPrintf("ATH lower              =%d\n", lame_get_ATHlower( gfp ) );
+	DebugPrintf("ATH lower              =%f\n", lame_get_ATHlower( gfp ) );
 	DebugPrintf("ATH aa                 =%d\n", lame_get_athaa_type( gfp ) );
 	DebugPrintf("ATH aa  loudapprox     =%d\n", lame_get_athaa_loudapprox( gfp ) );
-	DebugPrintf("ATH aa  sensitivity    =%d\n", lame_get_athaa_sensitivity( gfp ) );
+	DebugPrintf("ATH aa  sensitivity    =%f\n", lame_get_athaa_sensitivity( gfp ) );
 
 	DebugPrintf("Experimental nspsytune =%d\n", lame_get_exp_nspsytune( gfp ) );
 	DebugPrintf("Experimental X         =%d\n", lame_get_experimentalX( gfp ) );
