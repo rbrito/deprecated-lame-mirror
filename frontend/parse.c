@@ -535,8 +535,9 @@ static int local_strcasecmp ( const char* s1, const char* s2 )
 }
 
 
-// buggy: Should analyze file contents instead of directory contents (file name)
-
+// LAME is a simple frontend which just uses the file extension
+// to determine the file type.  Trying to analyze the file
+// contents is well beyond the scope of LAME and should not be added.
 static int filename_to_type ( const char* FileName )
 {
     size_t len = strlen (FileName);

@@ -379,6 +379,7 @@ int fill_buffer_resample(
   fcn = .90/gfc->resample_ratio;
   if (fcn>.90) fcn=.90;
   filter_l = gfp->quality < 7 ? 31 : 7;
+  filter_l = 19;
   if (0==filter_l % 2 ) --filter_l;  /* must be odd */
 
   /* if resample_ratio = int, filter_l should be even */
@@ -403,8 +404,8 @@ int fill_buffer_resample(
         for ( i = 0; i <= filter_l; i++ ) 
             sum += 
 	    gfc->blackfilt[j][i]  = blackman (i,offset,fcn,filter_l);
-        for ( i = 0; i <= filter_l; i++ ) 
-            gfc->blackfilt[j][i] /= sum;
+	//        for ( i = 0; i <= filter_l; i++ ) 
+	//            gfc->blackfilt[j][i] /= sum;
     }
     gfc->fill_buffer_resample_init = 1;
   }

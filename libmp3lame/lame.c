@@ -843,6 +843,7 @@ int    lame_encode_buffer (
   sample_t* fn_buffer [2];
 
   if ( gfc->Class_ID != LAME_ID ) return -3;
+  if (nsamples==0) return 0;
   
   fn_buffer [0] = in_buffer [0] = calloc ( sizeof(sample_t), nsamples );
   fn_buffer [1] = in_buffer [1] = calloc ( sizeof(sample_t), nsamples );
