@@ -1,8 +1,10 @@
-; new count bit routine
+; ix_max()
 ;	part of this code is origined from
 ;	new GOGO-no-coda (1999, 2000)
 ;	Copyright (C) 1999 shigeo
 ;	modified by Keiichi SAKAI
+
+;	Copyright 2004 Takehiro TOMINAGA/LAME Project
 
 %include "nasm.h"
 
@@ -10,15 +12,14 @@
 ; int ix_max_MMX(int *ix, int *end)
 ;
 	segment_code
-proc	ix_max_MMX
-
+	proc	ix_max_MMX
 	mov	ecx, [esp+4]	;ecx = begin
 	mov	edx, [esp+8]	;edx = end
 
 	sub	ecx, edx	;ecx = begin-end(should be minus)
 	test	ecx, 8
- 	pxor	mm0, mm0	;mm0=[0:0]
-	movq	mm1, [edx+ecx]
+ 	pxor	mm1, mm1	;mm1=[0:0]
+	movq	mm0, [edx+ecx]
 	jz	.lp
 
 	add	ecx,8
@@ -38,10 +39,10 @@ proc	ix_max_MMX
 	paddw	mm0, mm4
 	paddw	mm1, mm5
 	jnz	.lp
-.exit:
+
 	psubusw	mm1, mm0
 	paddw	mm0, mm1
-
+.exit:
 	movq	mm4, mm0
 	punpckhdq	mm4, mm4
 	psubusw	mm4, mm0
