@@ -1104,6 +1104,7 @@ outer_loop (
     int over;
     int age;
     calc_noise_data prev_noise;
+    int best_part2_3_length = 9999999;
 
     bin_search_StepSize (gfc, cod_info, targ_bits, ch, xrpow);
 
@@ -1125,14 +1126,21 @@ outer_loop (
     /* BEGIN MAIN LOOP */
     do {
 	calc_noise_result noise_info;
-	/******************************************************************/
-	/* stopping criterion */
-	/******************************************************************/
-	/* if no bands with distortion and -X0, we are done */
-	if (0==gfc->noise_shaping_stop && 
-	    0==gfp->quant_comp &&
-	    (over == 0 || best_noise_info.over_count == 0) )
-	    break;
+    int search_limit;
+
+    /* When quantization with no distorted bands is found,
+     * allow up to X new unsuccesful tries in serial. This
+     * gives us more possibilities for different quant_compare modes.
+     * Much more than 3 makes not a big difference, it is only slower.
+     */
+
+    if (gfc->substep_shaping & 2) {
+	    search_limit = 20;
+    }else {
+	    search_limit = 3;
+    }
+
+
 
 	/* Check if the last scalefactor band is distorted.
 	 * in VBR mode we can't get rid of the distortion, so quit now
@@ -1154,14 +1162,14 @@ outer_loop (
 	if (balance_noise (gfp, &cod_info_w, distort, xrpow) == 0)
 	    break;
 
-        /* inner_loop starts with the initial quantization step computed above
-         * and slowly increases until the bits < huff_bits.
-         * Thus it is important not to start with too large of an inital
-         * quantization step.  Too small is ok, but inner_loop will take longer
-         */
-        huff_bits = targ_bits - cod_info_w.part2_length;
-        if (huff_bits <= 0)
-            break;
+    /* inner_loop starts with the initial quantization step computed above
+     * and slowly increases until the bits < huff_bits.
+     * Thus it is important not to start with too large of an inital
+     * quantization step.  Too small is ok, but inner_loop will take longer
+     */
+    huff_bits = targ_bits - cod_info_w.part2_length;
+    if (huff_bits <= 0)
+        break;
 
 	/*  increase quantizer stepsize until needed bits are below maximum
 	 */
@@ -1187,28 +1195,33 @@ outer_loop (
 	better = quant_compare(better, gfc, &best_noise_info, &noise_info,
 			       &cod_info_w, distort);
 
+
+    if (best_noise_info.over_count == 0) {
+        /*
+            If no distorted bands, only use this quantization
+            if it is better, and if it uses less bits.
+            Unfortunately, part2_3_length is sometimes a poor
+            estimator of the final size at low bitrates.
+        */
+        better = better &&
+                cod_info->part2_3_length <= best_part2_3_length;
+    }
+
         /* save data so we can restore this quantization later */
 	if (better) {
+        best_part2_3_length = cod_info->part2_3_length;
 	    best_noise_info = noise_info;
 	    *cod_info = cod_info_w;
 	    age = 0;
 	    /* save data so we can restore this quantization later */
 	    if (gfp->VBR == vbr_rh || gfp->VBR == vbr_mtrh) {
-		/* store for later reuse */
-		memcpy(save_xrpow, xrpow, sizeof(FLOAT)*576);
+		    /* store for later reuse */
+		    memcpy(save_xrpow, xrpow, sizeof(FLOAT)*576);
 	    }
-        }
-        else {
-	    /* allow up to 3 unsuccesful tries in serial, then stop 
-	     * if our best quantization so far had no distorted bands. This
-	     * gives us more possibilities for different quant_compare modes.
-	     * Much more than 3 makes not a big difference, it is only slower.
-	     */
-        if (gfc->substep_shaping & 2) {
-	        if (++age > 20 && best_noise_info.over_count == 0)
-		        break;
-        }else {
-	        if (++age > 3 && best_noise_info.over_count == 0)
+    } else {
+        /* early stop? */
+        if (gfc->full_outer_loop == 0) {
+	        if (++age > search_limit && best_noise_info.over_count == 0)
 		        break;
         }
 	}

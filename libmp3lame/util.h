@@ -348,7 +348,7 @@ struct lame_internal_flags {
   int subblock_gain;        /*  0 = no, 1 = yes */
   int use_best_huffman;     /* 0 = no.  1=outside loop  2=inside loop(slow) */
 
-
+  int full_outer_loop;      /* 0 = stop early after 0 distortion found. 1 = full search */
 
 
   /* variables used by lame.c */
