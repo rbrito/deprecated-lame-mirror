@@ -105,6 +105,7 @@ Quality related:
 --voice        experimental voice encoding mode
 --noshort      disable short blocks
 
+
 Variable Bit Rate (VBR)
 -v             VBR
 -V n           VBR quality setting  (0=highest quality, 9=lowest)
@@ -146,6 +147,14 @@ id3 tagging:
 --tc "comment"   additional info (max 30 chars)
 --tg "genre"     genre of song (name or number)
 
+
+
+options not yet described:
+--nores          disable bit reservoir
+--lowpass
+--lowpass-width
+--highpass
+--highpass-width
 
 
 

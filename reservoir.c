@@ -5,8 +5,13 @@
  * $Id$
  *
  * $Log$
- * Revision 1.1  1999/11/24 08:43:39  markt
- * Initial revision
+ * Revision 1.2  1999/12/17 04:24:07  markt
+ * added the --nores option to disable the bitreservoir.  only usefull
+ * in special circumstances
+ *
+ * Revision 1.1.1.1  1999/11/24 08:43:39  markt
+ * initial checkin of LAME
+ * Starting with LAME 3.57beta with some modifications
  *
  * Revision 1.1  1996/02/14 04:04:23  rowlands
  * Initial revision
@@ -56,6 +61,7 @@ ResvFrameBegin( frame_params *fr_ps, III_side_info_t *l3_side, int mean_bits, in
       ResvSize=0;
     }
 
+
     info = fr_ps->header;
     if ( info->version == 1 )
     {
@@ -73,6 +79,7 @@ ResvFrameBegin( frame_params *fr_ps, III_side_info_t *l3_side, int mean_bits, in
       expected value for the next call -- this should
       agree with our reservoir size
     */
+
     expectedResvSize = l3_side->main_data_begin * 8;
 #ifdef DEBUG
     fprintf( stderr, ">>> ResvSize = %d\n", ResvSize );
@@ -88,6 +95,8 @@ ResvFrameBegin( frame_params *fr_ps, III_side_info_t *l3_side, int mean_bits, in
 	ResvMax = 0;
     else
 	ResvMax = 7680 - frameLength;
+    if (disable_reservoir) ResvMax=0;
+
 
     /*
       limit max size to resvLimit bits because
@@ -116,8 +125,6 @@ ResvFrameBegin( frame_params *fr_ps, III_side_info_t *l3_side, int mean_bits, in
 void ResvMaxBits2(int mean_bits, int *targ_bits, int *extra_bits, int gr)
 {
   int add_bits;
-
-
   *targ_bits = mean_bits ;
   /* extra bits if the reservoir is almost full */
   if (ResvSize > ((ResvMax * 9) / 10)) {
@@ -165,11 +172,10 @@ ResvAdjust( frame_params *fr_ps, gr_info *gi, III_side_info_t *l3_side, int mean
 void
 ResvFrameEnd( frame_params *fr_ps, III_side_info_t *l3_side, int mean_bits )
 {
-    int stereo, ancillary_pad, stuffingBits;
+    int stereo, stuffingBits;
     int over_bits;
 
     stereo = fr_ps->stereo;
-    ancillary_pad = 0;
 
 #if 1
     /* just in case mean_bits is odd, this is necessary... */
@@ -182,7 +188,7 @@ ResvFrameEnd( frame_params *fr_ps, III_side_info_t *l3_side, int mean_bits )
 	over_bits = 0;
     
     ResvSize -= over_bits;
-    stuffingBits = over_bits + ancillary_pad;
+    stuffingBits = over_bits;
 
     /* we must be byte aligned */
     if ( (over_bits = ResvSize % 8) )

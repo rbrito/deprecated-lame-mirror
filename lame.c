@@ -47,6 +47,7 @@
 int allow_diff_short;
 int ATHonly;
 int autoconvert;
+int disable_reservoir;
 int experimentalX;
 int experimentalY;
 int experimentalZ;
@@ -148,6 +149,7 @@ void lame_usage(char *name)  /* print syntax & exit */
   fprintf(stderr,"    -d              allow channels to have different blocktypes\n");
   fprintf(stderr,"  --athonly         only use the ATH for masking\n");
   fprintf(stderr,"  --noshort         do not use short blocks\n");
+  fprintf(stderr,"  --nores           disable the bit reservoir\n");
   fprintf(stderr,"\n");
   fprintf(stderr,"    -r              input is raw pcm\n");
   fprintf(stderr,"    -x              force byte-swapping of input\n");
@@ -284,6 +286,9 @@ void lame_parse_args(int argc, char **argv)
 	}
 	else if (strcmp(token, "noshort")==0) {
 	  no_short_blocks=1;
+	}
+	else if (strcmp(token, "nores")==0) {
+	  disable_reservoir=1;
 	}
 	else if (strcmp(token, "athonly")==0) {
 	  ATHonly=1;
@@ -1468,6 +1473,7 @@ void lame_init(int nowrite)
   allow_diff_short=0;
   ATHonly=0;
   autoconvert=FALSE;
+  disable_reservoir=0;
   experimentalX = 0;
   experimentalY = 0;
   experimentalZ = 0;
