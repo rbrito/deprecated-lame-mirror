@@ -595,10 +595,8 @@ trancate_smallspectrums(lame_t gfc, gr_info* const gi, const FLOAT* const xmin)
 		gi->l3_enc[j + width] = 0;
 	} while (++width < 0);
     } while (++sfb < gi->psymax);
-
     noquant_count_bits(gfc, gi);
 }
-
 
 /*************************************************************************
  *
@@ -1185,9 +1183,9 @@ iteration_loop(lame_t gfc, III_psy_ratio ratio[MAX_GRANULES][MAX_CHANNELS])
     for (gr = 0; gr < gfc->mode_gr; gr++) {
 	/*  calculate needed bits */
 	int min_bits = mean_bits, max_bits = gfc->l3_side.ResvSize;
+	gfc->substep_shaping &= 0x7f;
 	if (max_bits*10 >= gfc->l3_side.ResvMax*6) {
 	    int add_bits = 0;
-	    gfc->substep_shaping &= 0x7f;
 	    if (max_bits*10 >= gfc->l3_side.ResvMax*9)
 		gfc->substep_shaping |= 0x80;
 	    if (max_bits*10 >= gfc->l3_side.ResvMax*9
@@ -1200,7 +1198,7 @@ iteration_loop(lame_t gfc, III_psy_ratio ratio[MAX_GRANULES][MAX_CHANNELS])
 	    /* ISO says 60%, but we can tune it */
 	    max_bits = (gfc->l3_side.ResvMax*6)/10 - add_bits;
 	    if (max_bits < 0) max_bits = 0;
-	} else {
+	} else if (!(gfc->substep_shaping & 1)) {
 	    /* build up reservoir.  this builds the reservoir a little slower
 	     * than FhG.  It could simple be mean_bits/15, but this was rigged
 	     * to always produce 100 (the old value) at 128kbs */
