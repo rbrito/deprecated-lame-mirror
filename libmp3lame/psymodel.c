@@ -452,21 +452,22 @@ calc_interchannel_masking(
 {
     lame_internal_flags *gfc=gfp->internal_flags;
     FLOAT ratio = gfp->interChRatio;
+    III_psy_ratio *mr = &gfc->masking_next[gr][0];
 
     int sb, sblock;
     FLOAT l, r;
     for ( sb = 0; sb < SBMAX_l; sb++ ) {
-	l = gfc->masking_next[gr][0].thm.l[sb];
-	r = gfc->masking_next[gr][1].thm.l[sb];
-	gfc->masking_next[gr][0].thm.l[sb] += r*ratio;
-	gfc->masking_next[gr][1].thm.l[sb] += l*ratio;
+	l = mr[0].thm.l[sb];
+	r = mr[1].thm.l[sb];
+	mr[0].thm.l[sb] += r*ratio;
+	mr[1].thm.l[sb] += l*ratio;
     }
-    for ( sb = 0; sb < SBMAX_s; sb++ ) {
-	for ( sblock = 0; sblock < 3; sblock++ ) {
-	    l = gfc->masking_next[gr][0].thm.s[sb][sblock];
-	    r = gfc->masking_next[gr][1].thm.s[sb][sblock];
-	    gfc->masking_next[gr][0].thm.s[sb][sblock] += r*ratio;
-	    gfc->masking_next[gr][1].thm.s[sb][sblock] += l*ratio;
+    for (sb = 0; sb < SBMAX_s; sb++) {
+	for (sblock = 0; sblock < 3; sblock++) {
+	    l = mr[0].thm.s[sb][sblock];
+	    r = mr[1].thm.s[sb][sblock];
+	    mr[0].thm.s[sb][sblock] += r*ratio;
+	    mr[1].thm.s[sb][sblock] += l*ratio;
 	}
     }
 }
@@ -484,41 +485,39 @@ msfix1(
 {
     int sb, sblock;
     FLOAT rside,rmid,mld;
-    for ( sb = 0; sb < SBMAX_l; sb++ ) {
-	/* use this fix if L & R masking differs by 2db or less */
-	/* if db = 10*log10(x2/x1) < 2 */
-	/* if (x2 < 1.58*x1) { */
-	if (gfc->masking_next[gr][0].thm.l[sb] > 1.58*gfc->masking_next[gr][1].thm.l[sb]
-	 || gfc->masking_next[gr][1].thm.l[sb] > 1.58*gfc->masking_next[gr][0].thm.l[sb])
+    III_psy_ratio *mr = &gfc->masking_next[gr][0];
+    for (sb = 0; sb < SBMAX_l; sb++) {
+	/* use this fix if L & R masking differs by 2db (*1.58) or less */
+	if (mr[0].thm.l[sb] > 1.58*mr[1].thm.l[sb]
+	 || mr[1].thm.l[sb] > 1.58*mr[0].thm.l[sb])
 	    continue;
 
-	mld = gfc->mld_l[sb]*gfc->masking_next[gr][3].en.l[sb];
-	rmid = Max(gfc->masking_next[gr][2].thm.l[sb],
-		   Min(gfc->masking_next[gr][3].thm.l[sb], mld));
+	mld = gfc->mld_l[sb] * mr[3].en.l[sb];
+	rmid = Max(mr[2].thm.l[sb], Min(mr[3].thm.l[sb], mld));
 
-	mld = gfc->mld_l[sb]*gfc->masking_next[gr][2].en.l[sb];
-	rside = Max(gfc->masking_next[gr][3].thm.l[sb],
-		    Min(gfc->masking_next[gr][2].thm.l[sb], mld));
-	gfc->masking_next[gr][2].thm.l[sb]=rmid;
-	gfc->masking_next[gr][3].thm.l[sb]=rside;
+	mld = gfc->mld_l[sb] * mr[2].en.l[sb];
+	rside = Max(mr[3].thm.l[sb], Min(mr[2].thm.l[sb], mld));
+
+	mr[2].thm.l[sb] = rmid;
+	mr[3].thm.l[sb] = rside;
     }
 
-    for ( sb = 0; sb < SBMAX_s; sb++ ) {
-	for ( sblock = 0; sblock < 3; sblock++ ) {
-	    if (gfc->masking_next[gr][0].thm.s[sb][sblock] > 1.58*gfc->masking_next[gr][1].thm.s[sb][sblock]
-	     || gfc->masking_next[gr][1].thm.s[sb][sblock] > 1.58*gfc->masking_next[gr][0].thm.s[sb][sblock])
+    for (sb = 0; sb < SBMAX_s; sb++) {
+	for (sblock = 0; sblock < 3; sblock++) {
+	    if (mr[0].thm.s[sb][sblock] > 1.58 * mr[1].thm.s[sb][sblock]
+	     || mr[1].thm.s[sb][sblock] > 1.58 * mr[0].thm.s[sb][sblock])
 		continue;
 
-	    mld = gfc->mld_s[sb] * gfc->masking_next[gr][3].en.s[sb][sblock];
-	    rmid = Max(gfc->masking_next[gr][2].thm.s[sb][sblock],
-		       Min(gfc->masking_next[gr][3].thm.s[sb][sblock],mld));
+	    mld = gfc->mld_s[sb] * mr[3].en.s[sb][sblock];
+	    rmid = Max(mr[2].thm.s[sb][sblock],
+		       Min(mr[3].thm.s[sb][sblock], mld));
 
-	    mld = gfc->mld_s[sb] * gfc->masking_next[gr][2].en.s[sb][sblock];
-	    rside = Max(gfc->masking_next[gr][3].thm.s[sb][sblock],
-			Min(gfc->masking_next[gr][2].thm.s[sb][sblock],mld));
+	    mld = gfc->mld_s[sb] * mr[2].en.s[sb][sblock];
+	    rside = Max(mr[3].thm.s[sb][sblock],
+			Min(mr[2].thm.s[sb][sblock],mld));
 
-	    gfc->masking_next[gr][2].thm.s[sb][sblock]=rmid;
-	    gfc->masking_next[gr][3].thm.s[sb][sblock]=rside;
+	    mr[2].thm.s[sb][sblock] = rmid;
+	    mr[3].thm.s[sb][sblock] = rside;
 	}
     }
 }
@@ -531,19 +530,19 @@ static void
 ns_msfix(
     lame_internal_flags *gfc,
     FLOAT msfix,
-    int gr
+    III_psy_ratio *mr
     )
 {
     int sb, sblock;
     FLOAT msfix2 = gfc->presetTune.ms_maskadjust;
 
     for ( sb = 0; sb < SBMAX_l; sb++ ) {
-	FLOAT thmL,thmR,thmM,thmS,ath;
-	ath  = gfc->ATH.l_avg[sb] * gfc->ATH.adjust;
-	thmL = Max(gfc->masking_next[gr][0].thm.l[sb], ath);
-	thmR = Max(gfc->masking_next[gr][1].thm.l[sb], ath);
-	thmM = Max(gfc->masking_next[gr][2].thm.l[sb], ath);
-	thmS = Max(gfc->masking_next[gr][3].thm.l[sb], ath);
+	FLOAT thmL, thmR, thmM, thmS;
+	thmL = thmR = thmM = thmS = gfc->ATH.l_avg[sb] * gfc->ATH.adjust;
+	thmL = Max(mr[0].thm.l[sb], thmL);
+	thmR = Max(mr[1].thm.l[sb], thmR);
+	thmM = Max(mr[2].thm.l[sb], thmM);
+	thmS = Max(mr[3].thm.l[sb], thmS);
 
 	if (thmL*msfix < thmM+thmS) {
 	    FLOAT f = thmL * msfix2 / (thmM+thmS);
@@ -555,18 +554,20 @@ ns_msfix(
 	    thmM *= f;
 	    thmS *= f;
 	}
-	gfc->masking_next[gr][2].thm.l[sb] = Min(thmM,gfc->masking_next[gr][2].thm.l[sb]);
-	gfc->masking_next[gr][3].thm.l[sb] = Min(thmS,gfc->masking_next[gr][3].thm.l[sb]);
+	if (mr[2].thm.l[sb] > thmM)
+	    mr[2].thm.l[sb] = thmM;
+	if (mr[3].thm.l[sb] > thmS)
+	    mr[3].thm.l[sb] = thmS;
     }
 
-    for ( sb = 0; sb < SBMAX_s; sb++ ) {
-	for ( sblock = 0; sblock < 3; sblock++ ) {
-	    FLOAT thmL,thmR,thmM,thmS,ath;
-	    ath  = gfc->ATH.s_avg[sb] * gfc->ATH.adjust;
-	    thmL = Max(gfc->masking_next[gr][0].thm.s[sb][sblock], ath);
-	    thmR = Max(gfc->masking_next[gr][1].thm.s[sb][sblock], ath);
-	    thmM = Max(gfc->masking_next[gr][2].thm.s[sb][sblock], ath);
-	    thmS = Max(gfc->masking_next[gr][3].thm.s[sb][sblock], ath);
+    for (sb = 0; sb < SBMAX_s; sb++) {
+	for (sblock = 0; sblock < 3; sblock++) {
+	    FLOAT thmL, thmR, thmM, thmS;
+	    thmL = thmR = thmM = thmS = gfc->ATH.s_avg[sb] * gfc->ATH.adjust;
+	    thmL = Max(mr[0].thm.s[sb][sblock], thmL);
+	    thmR = Max(mr[1].thm.s[sb][sblock], thmR);
+	    thmM = Max(mr[2].thm.s[sb][sblock], thmM);
+	    thmS = Max(mr[3].thm.s[sb][sblock], thmS);
 
 	    if (thmL*msfix < thmM+thmS) {
 		FLOAT f = thmL*msfix / (thmM+thmS);
@@ -578,8 +579,10 @@ ns_msfix(
 		thmM *= f;
 		thmS *= f;
 	    }
-	    gfc->masking_next[gr][2].thm.s[sb][sblock] = Min(gfc->masking_next[gr][2].thm.s[sb][sblock],thmM);
-	    gfc->masking_next[gr][3].thm.s[sb][sblock] = Min(gfc->masking_next[gr][3].thm.s[sb][sblock],thmS);
+	    if (mr[2].thm.s[sb][sblock] > thmM)
+		mr[2].thm.s[sb][sblock] = thmM;
+	    if (mr[3].thm.s[sb][sblock] > thmS)
+		mr[3].thm.s[sb][sblock] = thmS;
 	}
     }
 }
@@ -588,14 +591,13 @@ static void
 compute_masking_s(
     lame_internal_flags *gfc,
     FLOAT fft_s[BLKSIZE_s],
-    FLOAT *eb,
-    FLOAT *thr,
-    int useshort_old,
-    int chn
+    III_psy_ratio *mr,
+    int sblock
     )
 {
-    int j, b;
-    FLOAT ecb;
+    int j, b, sb;
+    FLOAT eb[CBANDS];
+    FLOAT ecb, enn, thmm;
 
     ecb = fft_s[0] * fft_s[0] * 2.0f;
     j = 1;
@@ -611,12 +613,27 @@ compute_masking_s(
 	ecb = 0.0;
     }
 
-    for (j = b = 0; b < gfc->npart_s; b++) {
+    enn = thmm = 0.0;
+    sb = j = b = 0;
+    for (;;b++) {
 	int kk = gfc->s3ind_s[b][0];
 	FLOAT ecb = gfc->s3_ss[j++] * eb[kk++];
 	while (kk <= gfc->s3ind_s[b][1])
 	    ecb += gfc->s3_ss[j++] * eb[kk++];
-	thr[b] = ecb;
+	enn  += eb[b];
+	thmm += ecb;
+	if (b != gfc->bo_s[sb])
+	    continue;
+
+	enn  -= eb[b] * 0.5;
+	thmm -= ecb * 0.5;
+	mr->en .s[sb][sblock] = enn;
+	mr->thm.s[sb][sblock] = thmm;
+	enn  = eb[b] * 0.5;
+	thmm = ecb * 0.5;
+	sb++;
+	if (sb == SBMAX_s)
+	    break;
     }
 }
 
@@ -835,7 +852,7 @@ pecalc_s(
     int sb, sblock;
 
     pe_s = 1236.28/4;
-    for(sblock=0;sblock<3;sblock++) {
+    for (sblock=0;sblock<3;sblock++) {
 	for ( sb = 0; sb < SBMAX_s; sb++ ) {
 	    FLOAT x = mr->thm.s[sb][sblock];
 	    if (x < gfc->ATH.s_avg[sb] * gfc->ATH.adjust)
@@ -1025,7 +1042,6 @@ psycho_analysis_short(
 
     for (chn=0; chn<numchn; chn++) {
 	/* convolution   */
-	FLOAT eb[CBANDS], thr[CBANDS];
 	FLOAT enn, thmm;
 	if (chn < 2)
 	    fft_short( gfc, wsamp_S[chn], chn, buffer);
@@ -1040,23 +1056,8 @@ psycho_analysis_short(
 		}
 	    }
 
-	    compute_masking_s(gfc, wsamp_S[chn&1][sblock], eb, thr,
-			      useshort_old[chn], chn);
-	    b = -1;
-	    enn = thmm = 0.0;
-	    for (sb = 0; sb < SBMAX_s; sb++) {
-		while (++b < gfc->bo_s[sb]) {
-		    enn  += eb[b];
-		    thmm += thr[b];
-		}
-		b++;
-		enn  += 0.5 * eb[b];
-		thmm += 0.5 * thr[b];
-		gfc->masking_next[gr][chn].en.s[sb][sblock] = enn;
-		gfc->masking_next[gr][chn].thm.s[sb][sblock] = thmm;
-		enn  = 0.5 * eb[b];
-		thmm = 0.5 * thr[b];
-	    }
+	    compute_masking_s(gfc, wsamp_S[chn&1][sblock],
+			      &gfc->masking_next[gr][chn], sblock);
 	}
 	gfc->nsPsy.last_attacks[chn] = ns_attacks[chn][2];
     } /* end loop over chn */
@@ -1304,9 +1305,11 @@ adjust_ATH(
     case 1:
                                 /* flat approximation for loudness (squared) */
         max_pow = 0;
-        for ( gr = 0; gr < gfc->mode_gr; ++gr ) 
-            for ( channel = 0; channel < gfc->channels_out; ++channel ) 
-                max_pow = Max( max_pow, gfc->tot_ener_next[gr][channel] );
+        for ( gr = 0; gr < gfc->mode_gr; ++gr ) {
+	    max_pow = Max( max_pow, gfc->tot_ener_next[gr][0] );
+	    if (gfc->channels_out == 2 && max_pow < gfc->tot_ener_next[gr][1])
+                max_pow = gfc->tot_ener_next[gr][1];
+	}
         max_pow *= 0.25/ 5.6e13; /* scale to 0..1 (5.6e13), and tune (0.25) */
         break;
     
@@ -1515,7 +1518,7 @@ psycho_analysis(
 		msfix = gfc->nsPsy.athadjust_msfix;
 
 	    if (msfix != 0.0)
-		ns_msfix(gfc, msfix, gr);
+		ns_msfix(gfc, msfix, &gfc->masking_next[gr][0]);
 
 	    numchn = 4;
 	}
