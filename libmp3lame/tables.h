@@ -23,7 +23,7 @@
 #define LAME_TABLES_H
 
 #include "machine.h"
-extern const FLOAT8 psy_data [];
+extern const FLOAT psy_data [];
 
 #define HTN	34
  

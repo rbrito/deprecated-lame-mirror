@@ -59,6 +59,7 @@ extern scalar_t   scalar8;
 extern scalar_t   scalar12;
 extern scalar_t   scalar16;
 extern scalar_t   scalar20;
+extern scalar_t   scalar24;
 extern scalar_t   scalar64;
 extern scalarn_t  scalar;
 
@@ -109,3 +110,5 @@ float_t  scalar20_float32_SIMD  ( const float32_t* p, const float32_t* q );
 float_t  scalar24_float32_SIMD  ( const float32_t* p, const float32_t* q );
 float_t  scalar4n_float32_SIMD  ( const float32_t* p, const float32_t* q, const size_t len );
 float_t  scalar1n_float32_SIMD  ( const float32_t* p, const float32_t* q, const size_t len );
+
+/* end of resample.h */

@@ -494,19 +494,18 @@ RH */
 
 #ifdef LAME_STD_PRINT
 
-int  lame_errorf ( const char* format, ... )
+void
+lame_errorf(const char * s, ...)
 {
-    va_list  args;
-    int      ret;
-    
-    va_start ( args, format );
-    ret = vfprintf ( stderr, format, args );
-    va_end   ( args );
-    fflush   ( stderr );        // a error function should flush immediately
-    return ret;			// if this function is used for normal reporting, this is quite dirty
+  va_list args;
+  va_start(args, s);
+  vfprintf(stderr, s, args);
+  va_end(args);
 }
 
 #endif
+
+
 
 /***********************************************************************
  *
@@ -517,40 +516,31 @@ int  lame_errorf ( const char* format, ... )
  *
  ***********************************************************************/
 
-int  has_i387 ( void )
+int has_3DNow (void)
 {
 #ifdef HAVE_NASM 
-    return 1;
+    extern int has_3DNow_nasm(void);
+    return has_3DNow_nasm();
 #else
     return 0;   /* don't know, assume not */
 #endif
 }    
 
-int  has_MMX ( void )
+int has_MMX (void)
 {
 #ifdef HAVE_NASM 
-    extern int has_MMX_nasm ( void );
-    return has_MMX_nasm ();
+    extern int has_MMX_nasm(void);
+    return has_MMX_nasm();
 #else
     return 0;   /* don't know, assume not */
 #endif
 }    
 
-int  has_3DNow ( void )
+int has_SIMD (void)
 {
 #ifdef HAVE_NASM 
-    extern int has_3DNow_nasm ( void );
-    return has_3DNow_nasm ();
-#else
-    return 0;   /* don't know, assume not */
-#endif
-}    
-
-int  has_SIMD ( void )
-{
-#ifdef HAVE_NASM 
-    extern int has_SIMD_nasm ( void );
-    return has_SIMD_nasm ();
+    extern int has_SIMD_nasm(void);
+    return has_SIMD_nasm();
 #else
     return 0;   /* don't know, assume not */
 #endif

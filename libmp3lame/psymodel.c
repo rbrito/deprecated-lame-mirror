@@ -1296,7 +1296,7 @@ int *npart_l_orig,int *npart_l,int *npart_s_orig,int *npart_s)
   FLOAT8 freq_tp;
   FLOAT8 bval_l[CBANDS], bval_s[CBANDS];
   int   cbmax=0, cbmax_tp;
-  FLOAT8 *p = (FLOAT8 *)psy_data;
+  const FLOAT* p = psy_data;
   int  sbmax ;
   int  i,j,k2,loop;
   int freq_scale=1;

@@ -218,6 +218,7 @@ int lame_init_params ( lame_global_flags* const gfp )
     
     gfc -> lame_init_params_init = 0;
   
+    gfc -> CPU_features_i387  = has_i387  ();
     gfc -> CPU_features_3DNow = has_3DNow ();
     gfc -> CPU_features_MMX   = has_MMX   ();
     gfc -> CPU_features_SIMD  = has_SIMD  ();
@@ -553,26 +554,6 @@ int lame_init_params ( lame_global_flags* const gfp )
 	default:
 	    break;
 	}
-	
-    
-    // At low levels VBR currently switches to 32 kbps.
-    // instead of filling this minimum data rate with useful data, it often
-    // happens that LAME thinks all is below ATH and don't use this minimum
-    // data rate to have at least a bad quality at this level instead of
-    // heavy switch muting. Such switching is very conspicuous.
-    
-    // The absolute threshold of hearing is so a sharp border so it is
-    // senseful to use a SWITCH ON/OFF muting. See delta script, they have a width
-    // of 5...7 dB
-    // Delta scripts are SPL/freq plots. Frequency slowly increases (1 Terz/minute).
-    // SPL raises slowly. The listener have to report the arise of the tone.
-    // 0...10 seconds after this report the SPL falls. The listener have the disapperance
-    // to report. The SPL still falls for a random 0...10 seconds, then the SPL raises ...
-
-    // this is not the right way to fix this problem.    
-    //if ( gfp -> VBR_q < 2 )
-    //       gfp -> noATH = 1;
-
   }
 
   /* VBR needs at least the output of GPSYCHO,
@@ -738,18 +719,20 @@ void lame_print_config ( const lame_global_flags* gfp )
     if ( gfc->CPU_features_MMX  ||  gfc->CPU_features_3DNow  ||  gfc->CPU_features_SIMD  ||  gfc->CPU_features_SIMD2 ) {
         MSGF ("CPU features:"); 
 
+        if ( gfc->CPU_features_i387 )
+            MSGF (" i387");
         if ( gfc->CPU_features_MMX )
 #ifdef MMX_choose_table
-            MSGF (" MMX (used)" );
+            MSGF (", MMX (ASM used)" );
 #else
-	    MSGF (" MMX (unused)" );
+	    MSGF (", MMX" );
 #endif            
         if ( gfc->CPU_features_3DNow )
-            MSGF (", 3DNow! (unused)");
+            MSGF (", 3DNow!");
         if ( gfc->CPU_features_SIMD )
-            MSGF (", SIMD (unused)");
+            MSGF (", SIMD");
         if ( gfc->CPU_features_SIMD2 )
-            MSGF (", SIMD2 (unused)");
+            MSGF (", SIMD2");
         MSGF ("\n");  
     }
   
@@ -1198,18 +1181,23 @@ void lame_mp3_tags_fid(lame_global_flags *gfp,FILE *fpStream)
 /*}}}*/
 /* lame_global_flags *lame_init                 (void)                                                                                                            *//*{{{*/
 
-lame_global_flags *lame_init(void)
+lame_global_flags*  lame_init ( void )
 {
-  lame_global_flags *gfp;
-  int ret;
-  gfp = malloc(sizeof(lame_global_flags));
-  if (NULL==gfp) return NULL;
+    lame_global_flags*  gfp;
+    int                 ret;
 
-  ret = lame_init_old(gfp);
-  gfp->lame_allocated_gfp=1;
-  if (0!=ret) return NULL;
-  return gfp;
+    gfp = calloc ( 1, sizeof(lame_global_flags) );
+    if ( gfp == NULL ) 
+        return NULL;
 
+    ret = lame_init_old ( gfp );
+    if ( ret != 0 ) {
+        free ( gfp );
+        return NULL;
+    }
+    
+    gfp->lame_allocated_gfp = 1;
+    return gfp;
 }
 
 /*}}}*/
@@ -1332,7 +1320,7 @@ int lame_init_old(lame_global_flags *gfp)
   gfc->lowpass_band=32;
   gfc->highpass_band = -1;
   gfc->VBR_min_bitrate=1;
-  gfc->VBR_max_bitrate=13;
+  gfc->VBR_max_bitrate=13; /* not 14 ????? */
 
   gfc->OldValue[0]=180;
   gfc->OldValue[1]=180;

@@ -423,6 +423,9 @@ proc	scalar1n_float32_i387
 .ret2
 endproc
 
+;
+;  Should be replaced by optimized versions
+;
 
 proc	scalar04_float32_3DNow
 	jmp	scalar04_float32_i387

@@ -325,6 +325,7 @@ typedef struct  {
   plotting_data *pinfo;
 
   /* CPU features */
+  int CPU_features_i387;            // FPU is a normal Intel CPU
   int CPU_features_3DNow;           // K6-2, K6-III, Athlon
   int CPU_features_MMX;		    // Pentium MMX, Pentium II...IV, K6, K6-2, K6-III, Athlon
   int CPU_features_SIMD;	    // Pentium III, Pentium IV
@@ -381,9 +382,10 @@ int  fill_buffer_resample (
         const int        channels );
 
 
-extern int has_3DNow (void);
-extern int has_MMX   (void);
-extern int has_SIMD  (void);
+extern int  has_i387  ( void );
+extern int  has_MMX   ( void );
+extern int  has_3DNow ( void );
+extern int  has_SIMD  ( void );
 
 
 extern void updateStats (lame_internal_flags *gfc);
@@ -399,7 +401,7 @@ extern void updateStats (lame_internal_flags *gfc);
 #define LAME_STD_PRINT
 
 #ifdef LAME_STD_PRINT
-extern void lame_errorf(const char *, ...);
+extern int lame_errorf(const char *, ...);
 
 #define DEBUGF	printf
 #define ERRORF	lame_errorf

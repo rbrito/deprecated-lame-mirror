@@ -104,7 +104,7 @@ putbits2(lame_global_flags *gfp, int val, int j)
     }
 }
 
-/*write j bits into the bit stream, ignoreing frame headers */
+/*write j bits into the bit stream, ignoring frame headers */
 static INLINE void
 putbits_noheaders(lame_global_flags *gfp, int val, int j)
 {
