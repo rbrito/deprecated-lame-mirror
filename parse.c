@@ -191,27 +191,25 @@ void lame_presets_info(lame_global_flags *gfp,char *name)  /* print syntax & exi
   fprintf(stdout,"Presets are some shortcuts for common settings.\n");
   fprintf(stdout,"They can be combined with -v if you want VBR MP3s.\n");
   fprintf(stdout,"\n");
-  fprintf(stdout,"                 phone voice   sw     am     fm  radio  tape  hifi  cd studio\n");
+  fprintf(stdout,"                 phone   sw     am    fm  voice radio  tape  hifi   cd studio\n");
   fprintf(stdout,"=============================================================================\n");
-  fprintf(stdout,"--resample        8.00 32.00 11.025 16.000 22.05                             \n");
-  fprintf(stdout,"--highpass        0.11        0.055  0.055                                   \n");
-  fprintf(stdout,"--highpass-width  0.44        0.110  0.110                                   \n");
-  fprintf(stdout,"--lowpass         3.52 12.76  4.400  7.480 10.56  15.0 17.60 20.24           \n");
-  fprintf(stdout,"--lowpass-width   0.88  1.32  0.440  0.660  0.88   0.0  1.76  2.20           \n");
-  fprintf(stdout,"--noshort         yes   yes   yes                                            \n");
-  fprintf(stdout,"-h                                                            yes  yes   yes \n");
-  fprintf(stdout,"-m                  m     m     m      m      j      j    j     j    s     s \n");
-  fprintf(stdout,"-b                 16    56    24     32     64    112  128   160  192   256 \n");
+  fprintf(stdout,"--resample        8.0  11.025 16.0  22.05 32.0                               \n");
+  fprintf(stdout,"--lowpass         3.2   4.800  7.2   9.95 12.3  15.0  18.5  20.24            \n");
+  fprintf(stdout,"--lowpass-width   1.0   0.500  0.5   0.88  2.0   0.0   2.0   2.20            \n");
+  fprintf(stdout,"--noshort         yes                      yes                               \n");
+  fprintf(stdout,"-h                                                           yes   yes   yes \n");
+  fprintf(stdout,"-m                  m     m      m     j     m     j     j     j     s     s \n");
+  fprintf(stdout,"-b                 16    24     32    64    56   112   128   160   192   256 \n");
   fprintf(stdout,"-- PLUS WITH -v -------------------------------------------------------------\n");
-  fprintf(stdout,"-V                  6     4     5      5      5      4    4     3    2     0 \n");
-  fprintf(stdout,"-b                  8    32     8      8      8     32   64    80   96   112 \n");
-  fprintf(stdout,"-B                 40   128    56     80    144    160  192   224  256   320 \n");
+  fprintf(stdout,"-V                  6     5      5     5     4     4     4     3     2     0 \n");
+  fprintf(stdout,"-b                  8     8     16    24    32    64    96   112   128   160 \n");
+  fprintf(stdout,"-B                 56    64    128   160   128   256   320   320   320   320 \n");
   fprintf(stdout,"\n");
   fprintf(stdout,"EXAMPLES:\n");
   fprintf(stdout," a) --preset fm\n");
-  fprintf(stdout,"    equals: --resample 22.05 --lowpass 10.56 --lowpass-width 0.88 -mj -b 64\n");
+  fprintf(stdout,"    equals: --resample 22.05 --lowpass 9.95 --lowpass-width 0.88 -mj -b 64\n");
   fprintf(stdout," b) -v --preset studio\n");
-  fprintf(stdout,"    equals: -h -m s -V 0 -b 112 -B 320\n");
+  fprintf(stdout,"    equals: -h -m s -V 0 -b 160 -B 320\n");
   fprintf(stdout,"\n");
 
   exit(0);
@@ -432,10 +430,8 @@ void lame_parse_args(lame_global_flags *gfp,int argc, char **argv)
 	  if (strcmp(nextArg,"phone")==0)
 	  { /* when making changes, please update help text too */
 	    gfp->out_samplerate =  8000;
-	    gfp->highpassfreq=110;
-            gfp->highpasswidth=440; 
-	    gfp->lowpassfreq=3520;
-	    gfp->lowpasswidth=880;
+	    gfp->lowpassfreq=3200;
+	    gfp->lowpasswidth=1000;
 	    gfp->no_short_blocks=1;
 	    gfp->quality = 5;
 	    gfp->mode = MPG_MD_MONO; 
@@ -443,57 +439,52 @@ void lame_parse_args(lame_global_flags *gfp,int argc, char **argv)
 	    gfp->brate = 16; 
 	    gfp->VBR_q=6;
 	    gfp->VBR_min_bitrate_kbps=8;
-	    gfp->VBR_max_bitrate_kbps=40;
+	    gfp->VBR_max_bitrate_kbps=56;
 	  }
 	  else if (strcmp(nextArg,"sw")==0)
 	  { /* when making changes, please update help text too */
 	    gfp->out_samplerate =  11025;
-	    gfp->highpassfreq=55;
-            gfp->highpasswidth=110; 
-	    gfp->lowpassfreq=4400;
-	    gfp->lowpasswidth=440;
-	    gfp->no_short_blocks=1;
+	    gfp->lowpassfreq=4800;
+	    gfp->lowpasswidth=500;
 	    gfp->quality = 5;
 	    gfp->mode = MPG_MD_MONO; 
 	    gfp->mode_fixed = 1; 
 	    gfp->brate = 24; 
 	    gfp->VBR_q=5;
 	    gfp->VBR_min_bitrate_kbps=8;
-	    gfp->VBR_max_bitrate_kbps=56;
+	    gfp->VBR_max_bitrate_kbps=64;
 	  }
 	  else if (strcmp(nextArg,"am")==0)
 	  { /* when making changes, please update help text too */
 	    gfp->out_samplerate =  16000;
-	    gfp->highpassfreq=55;
-            gfp->highpasswidth=110; 
-	    gfp->lowpassfreq=7480;
-	    gfp->lowpasswidth=660;
+	    gfp->lowpassfreq=7200;
+	    gfp->lowpasswidth=500;
 	    gfp->quality = 5;
 	    gfp->mode = MPG_MD_MONO; 
 	    gfp->mode_fixed = 1; 
 	    gfp->brate = 32; 
 	    gfp->VBR_q=5;
-	    gfp->VBR_min_bitrate_kbps=8;
-	    gfp->VBR_max_bitrate_kbps=80;
+	    gfp->VBR_min_bitrate_kbps=16;
+	    gfp->VBR_max_bitrate_kbps=128;
 	  }
 	  else if (strcmp(nextArg,"fm")==0)
 	  { /* when making changes, please update help text too */
 	    gfp->out_samplerate =  22050; 
-            gfp->lowpassfreq=10560;
+            gfp->lowpassfreq=9950;
             gfp->lowpasswidth=880;
 	    gfp->quality = 5;
 	    gfp->mode = MPG_MD_JOINT_STEREO; 
 	    gfp->mode_fixed = 1; 
 	    gfp->brate = 64; 
 	    gfp->VBR_q=5;
-	    gfp->VBR_min_bitrate_kbps=8;
-	    gfp->VBR_max_bitrate_kbps=144;
+	    gfp->VBR_min_bitrate_kbps=24;
+	    gfp->VBR_max_bitrate_kbps=160;
 	  }
 	  else if (strcmp(nextArg,"voice")==0)
 	  { /* when making changes, please update help text too */
 	    gfp->out_samplerate =  32000; 
-	    gfp->lowpassfreq=12760;
-	    gfp->lowpasswidth=1320;
+	    gfp->lowpassfreq=12300;
+	    gfp->lowpasswidth=2000;
 	    gfp->no_short_blocks=1;
 	    gfp->quality = 5;
 	    gfp->mode = MPG_MD_MONO; 
@@ -512,20 +503,20 @@ void lame_parse_args(lame_global_flags *gfp,int argc, char **argv)
 	    gfp->mode_fixed = 1; 
 	    gfp->brate = 112; 
 	    gfp->VBR_q=4;
-	    gfp->VBR_min_bitrate_kbps=32;
-	    gfp->VBR_max_bitrate_kbps=160;
+	    gfp->VBR_min_bitrate_kbps=64;
+	    gfp->VBR_max_bitrate_kbps=256;
 	  }
 	  else if (strcmp(nextArg,"tape")==0)
 	  { /* when making changes, please update help text too */
-            gfp->lowpassfreq=17600;
-            gfp->lowpasswidth=1760;
+            gfp->lowpassfreq=18500;
+            gfp->lowpasswidth=2000;
 	    gfp->quality = 5;
 	    gfp->mode = MPG_MD_JOINT_STEREO; 
 	    gfp->mode_fixed = 1; 
 	    gfp->brate = 128; 
 	    gfp->VBR_q=4;
-	    gfp->VBR_min_bitrate_kbps=64;
-	    gfp->VBR_max_bitrate_kbps=192;
+	    gfp->VBR_min_bitrate_kbps=96;
+	    gfp->VBR_max_bitrate_kbps=320;
 	  }
 	  else if (strcmp(nextArg,"hifi")==0)
 	  { /* when making changes, please update help text too */
@@ -536,8 +527,8 @@ void lame_parse_args(lame_global_flags *gfp,int argc, char **argv)
 	    gfp->mode_fixed = 1; 
 	    gfp->brate = 160;            
 	    gfp->VBR_q=3;
-	    gfp->VBR_min_bitrate_kbps=80;
-	    gfp->VBR_max_bitrate_kbps=224;
+	    gfp->VBR_min_bitrate_kbps=112;
+	    gfp->VBR_max_bitrate_kbps=320;
 	  }
 	  else if (strcmp(nextArg,"cd")==0)
 	  { /* when making changes, please update help text too */
@@ -548,8 +539,8 @@ void lame_parse_args(lame_global_flags *gfp,int argc, char **argv)
 	    gfp->mode_fixed = 1; 
 	    gfp->brate = 192;  
 	    gfp->VBR_q=2;
-	    gfp->VBR_min_bitrate_kbps=96;
-	    gfp->VBR_max_bitrate_kbps=256;
+	    gfp->VBR_min_bitrate_kbps=128;
+	    gfp->VBR_max_bitrate_kbps=320;
 	  }
 	  else if (strcmp(nextArg,"studio")==0)
 	  { /* when making changes, please update help text too */
@@ -560,7 +551,7 @@ void lame_parse_args(lame_global_flags *gfp,int argc, char **argv)
 	    gfp->mode_fixed = 1; 
 	    gfp->brate = 256; 
 	    gfp->VBR_q=0;
-	    gfp->VBR_min_bitrate_kbps=112;
+	    gfp->VBR_min_bitrate_kbps=160;
 	    gfp->VBR_max_bitrate_kbps=320;
 	  }
 	  else if (strcmp(nextArg,"help")==0)
