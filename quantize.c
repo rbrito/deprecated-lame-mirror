@@ -1077,6 +1077,16 @@ int over,FLOAT8 tot_noise, FLOAT8 over_noise, FLOAT8 max_noise)
     better =   (over_noise <  best_over_noise)
       || ((over_noise == best_over_noise)&&(tot_noise < best_tot_noise));
   }
+  if (experimentalX==6) {
+    better = (over_noise < best_over_noise)
+           ||( (over_noise == best_over_noise)
+             &&( (max_noise < best_max_noise)
+               ||( (max_noise == best_max_noise)
+                 &&(tot_noise <= best_tot_noise)
+                 )
+               ) 
+	     );
+  }
 
   return better;
 }

@@ -483,8 +483,10 @@ case 't':  /* dont write VBR tag */
 	    { experimentalX=4; }
 	  else if (*arg == '5')
 	    { experimentalX=5; }
+	  else if (*arg == '6')
+	    { experimentalX=6; }
 	  else {
-	    fprintf(stderr,"%s: -X n must be 0-5 not %s\n",
+	    fprintf(stderr,"%s: -X n must be 0-6 not %s\n",
 		    programName, arg);
 	    err = 1;
 	  }
