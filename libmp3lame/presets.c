@@ -494,8 +494,6 @@ int apply_preset(lame_global_flags*  gfp, int preset, int enforce)
             return preset;
         }
         default: {
-            SET_OPTION(VBR_min_bitrate_kbps, 128, 0); /*ideally, we should get rid of this*/
-
             SET_OPTION(short_threshold_lrm, 5.6f, -1);
             SET_OPTION(short_threshold_s, 125.0f, -1);
             SET_OPTION(quant_comp, 0, -1);
@@ -537,8 +535,6 @@ int apply_preset(lame_global_flags*  gfp, int preset, int enforce)
             return preset;
         }
         default: {
-            SET_OPTION(VBR_min_bitrate_kbps, 128, 0);
-
             SET_OPTION(short_threshold_lrm, 5.3f, -1);
             SET_OPTION(short_threshold_s, 125.0f, -1);
             SET_OPTION(quant_comp, 0, -1);
@@ -580,8 +576,6 @@ int apply_preset(lame_global_flags*  gfp, int preset, int enforce)
             return preset;
         }
         default: {
-            SET_OPTION(VBR_min_bitrate_kbps, 128, 0);
-
             SET_OPTION(short_threshold_lrm, 5.2f, -1);
             SET_OPTION(short_threshold_s, 125.0f, -1);
             SET_OPTION(quant_comp, 0, -1);
