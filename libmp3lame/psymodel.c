@@ -1215,14 +1215,14 @@ psycho_anal_ns(lame_t gfc, int gr, int numchn)
 		    loudness = ATHAdjustLimit;
 	    }
 	    gfc->ATH.adjust[ch] = loudness;
-	    for (i = 0; i < gfc->npart_l; i++)
-		adjATH[i] = gfc->ATH.cb[i] * loudness;
+	    for (b = 0; b < gfc->npart_l; b++)
+		adjATH[b] = gfc->ATH.cb[b] * loudness;
 	} else {
-	    /* M/S channels use the larger one of adjustment values for L/R */
+	    /* M/S channels use the lesser one of adjustment values for L/R */
 	    if (ch == 2) {
 		FLOAT loudness = Min(gfc->ATH.adjust[0], gfc->ATH.adjust[1]);
-		for (i = 0; i < gfc->npart_l; i++)
-		    adjATH[i] = gfc->ATH.cb[i] * loudness;
+		for (b = 0; b < gfc->npart_l; b++)
+		    adjATH[b] = gfc->ATH.cb[b] * loudness;
 		gfc->ATH.adjust[2] = gfc->ATH.adjust[3] = loudness;
 	    }
 	}
