@@ -82,12 +82,23 @@ void amp_scalefac_bands(lame_global_flags *gfp, FLOAT8 xrpow[576],
 			III_scalefac_t *scalefac,
 			FLOAT8 distort[4][SBMAX_l], FLOAT8 dt);
 
+#ifdef ASM_QUANTIZE
+void quantize_xrpow_ASM( FLOAT8 xr[576],
+               int  ix[576],
+               int );
+
+void quantize_xrpow_ISO_ASM( FLOAT8 xr[576],
+               int  ix[576],
+               int);
+#else
 void quantize_xrpow( FLOAT8 xr[576],
                int  ix[576],
                gr_info *cod_info );
+
 void quantize_xrpow_ISO( FLOAT8 xr[576],
                int  ix[576],
                gr_info *cod_info );
+#endif
 
 int
 new_choose_table( int ix[576],

@@ -62,11 +62,11 @@ unsigned int table23[3*3];
 unsigned int table56[4*4];
 
 #ifdef MMX_choose_table
-unsigned long long tableABC[16*8];
-unsigned long long tableDEF[16*16];
+unsigned int64 tableABC[16*8];
+unsigned int64 tableDEF[16*16];
 #define table789 (tableABC+9)
 
-unsigned long long linbits32[13];
+unsigned int64 linbits32[13];
 unsigned short choose_table_H[13];
 
 extern int choose_table_MMX(int *ix, int *end, int *s);
@@ -725,9 +725,9 @@ void huffman_init()
 	int j;
 	for (j = 0; j < 6; j++) {
 	    table789[i*16+j] =
-		(((long long)ht[7].hlen[i*6+j]) << 32) +
-		(((long long)ht[8].hlen[i*6+j]) << 16) +
-		(((long long)ht[9].hlen[i*6+j]));
+		(((int64)ht[7].hlen[i*6+j]) << 32) +
+		(((int64)ht[8].hlen[i*6+j]) << 16) +
+		(((int64)ht[9].hlen[i*6+j]));
 	}
     }
 
@@ -735,17 +735,17 @@ void huffman_init()
 	int j;
 	for (j = 0; j < 8; j++) {
 	    tableABC[i*16+j] =
-		(((long long)ht[10].hlen[i*8+j]) << 32) +
-		(((long long)ht[11].hlen[i*8+j]) << 16) +
-		(((long long)ht[12].hlen[i*8+j]));
+		(((int64)ht[10].hlen[i*8+j]) << 32) +
+		(((int64)ht[11].hlen[i*8+j]) << 16) +
+		(((int64)ht[12].hlen[i*8+j]));
 	}
     }
 
     for (i = 0; i < 16*16; i++) {
 	tableDEF[i] =
-	    (((long long)ht[13].hlen[i]) << 32) +
-	    (((long long)ht[14].hlen[i]) << 16) +
-	    (((long long)ht[15].hlen[i]));
+	    (((int64)ht[13].hlen[i]) << 32) +
+	    (((int64)ht[14].hlen[i]) << 16) +
+	    (((int64)ht[15].hlen[i]));
     }
     for (i = 0; i < 13; i++) {
 	int t1, t2;
@@ -763,8 +763,8 @@ void huffman_init()
 	choose_table_H[i] = t1+t2*256;
 
 	linbits32[i] =
-	    ((long long)ht[t1].xlen << 48) + ((long long)ht[t1].xlen << 32) +
-	    ((long long)ht[t2].xlen << 16) + ((long long)ht[t2].xlen);
+	    ((int64)ht[t1].xlen << 48) + ((int64)ht[t1].xlen << 32) +
+	    ((int64)ht[t2].xlen << 16) + ((int64)ht[t2].xlen);
     }
 #endif
 }

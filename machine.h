@@ -133,4 +133,16 @@
 
 
 
+#if defined _WIN32 && !defined __CYGWIN__
+typedef unsigned __int64 int64;
+#elif defined __DECALPHA__
+/* do nothing */
+#elif defined OS_AMIGAOS
+/* do nothing */
+#elif defined __DJGPP__
+typedef unsigned long long int64;
+#elif !defined __GNUC__ || defined __STRICT_ANSI__
+typedef unsigned long long int64;
+#endif
+
 #endif

@@ -2,14 +2,59 @@
 ;	Copyright (C) 1999 URURI
 
 ;	nasm用マクロ
-;	99/08/21(うるり) 作成
+;	1999/08/21 作成
+;	1999/10/10 幾つか追加
+;	1999/10/27 aout対応
+;	1999/11/07 pushf, popf のNASMのバグ対応
+;	1999/12/02 for BCC ( Thanks to Miquel )
 
-;単精度浮動小数点演算
+; for Windows Visual C++        -> define WIN32
+;             Borland or cygwin ->        WIN32 and COFF
+; for FreeBSD 2.x               ->        AOUT
+; for TownsOS                   ->        __tos__
+; otherwise                     ->   none
 
-%define F_PTR	dword
+;名前の付け方
+
+BITS 32
+
+%ifdef WIN32
+	%define _NAMING
+	%define segment_code segment .text align=16 class=CODE use32
+	%define segment_data segment .data align=16 class=DATA use32
+%ifdef __BORLANDC__
+	%define segment_bss  segment .data align=16 class=DATA use32
+%else
+	%define segment_bss  segment .bss align=16 class=DATA use32
+%endif
+%elifdef AOUT
+	%define _NAMING
+	%define segment_code segment .text
+	%define segment_data segment .data
+	%define segment_bss  segment .bss
+%else
+	%define segment_code segment .text align=16 class=CODE use32
+	%define segment_data segment .data align=16 class=DATA use32
+	%define segment_bss  segment .bss align=16 class=DATA use32
+%endif
+
+%ifdef __tos__
+group CGROUP text
+group DGROUP data
+%endif
+
+;単精度浮動小数点形式
+
 %idefine float dword
 %idefine fsize 4
 %idefine fsizen(a) (fsize*(a))
+
+;ワード形式
+
+%idefine wsize 2
+%idefine wsizen(a) (wsize*(a))
+%idefine dwsize 4
+%idefine dwsizen(a) (dwsize*(a))
 
 ;REG
 
@@ -29,6 +74,8 @@
 
 %define pupldq	punpckldq
 %define puphdq	punpckhdq
+%define puplwd	punpcklwd
+%define puphwd	punpckhwd
 
 %define xm0 xmm0
 %define xm1 xmm1
@@ -126,11 +173,6 @@ _%1:
 	%endrep
 %endmacro
 
-%ifdef __tos__
-group CGROUP text
-group DGROUP data
-%endif
-
-%ifdef WIN32
-	%define _NAMING
-%endif
+; bug of NASM-0.98
+%define pushf db 0x66, 0x9C
+%define popf  db 0x66, 0x9D
