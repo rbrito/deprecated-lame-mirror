@@ -796,8 +796,8 @@ calc_sfb_noise(lame_t gfc, int j, int bw, int sf)
 	return calc_sfb_noise_3DN(gfc, j, bw, sf);
 #endif
     xfsf = 0.0;
-    sfpow = POW20(sf);  /*pow(2.0,sf/4.0); */
-    sfpow34 = IPOW20(sf); /*pow(sfpow,-3.0/4.0); */
+    sfpow = POW20(sf);  /*pow(2.0,sf/4.0) */
+    sfpow34 = IPOW20(sf); /*pow(sfpow,-3.0/4.0)=pow(2.0,-sf*0.1875) */
 
     do {
 #ifdef TAKEHIRO_IEEE754_HACK
@@ -1194,19 +1194,14 @@ bitpressure_strategy(gr_info *gi, FLOAT *xmin)
  * introduce as much noise as allowed (= as less bits as possible). */
 inline static int
 find_scalefac(lame_t gfc, int j, FLOAT xmin, int bw, FLOAT maxXR,
-	      int shortflag, int sf)
+	      int sfmin, int sf)
 {
-    int sf_ok = 10000, delsf = 8, sfmin = -7*4, endflag = 0;
-    /* search range of sf.
-       on shoft blocks, it is large because of subblock_gain */
-    if (shortflag)
-	sfmin = -7*8-7*4;
+    int sf_ok = 10000, delsf = 8, endflag = 0;
 
-    sf -= 12;
     assert(sf >= sfmin);
     do {
 	FLOAT xfsf;
-	if (IPOW20(sf) > maxXR)
+	if (IPOW20(sf) > maxXR) /* pow(sf,0.1875) < maxXR / IXMAX */
 	    goto illegal_sf;
 #ifdef HAVE_NASM
 	if (gfc->CPU_features.AMD_3DNow)
@@ -1258,7 +1253,7 @@ short_block_scalefacs(gr_info * gi, int vbrmax)
 
     for (sfb = 0; sfb < gi->psymax; ) {
 	for (b = 0; b < 3; b++, sfb++) {
-	    if (gi->scalefac[sfb] == LARGE_BITS)
+	    if (gi->scalefac[sfb] > 255)
 		continue;
 	    maxov[0][b] = Min(gi->scalefac[sfb] + 2*max_range_short[sfb],
 			      maxov[0][b]);
@@ -1319,7 +1314,7 @@ long_block_scalefacs(lame_t gfc, gr_info * gi, int vbrmax)
        (which wants the largest scalefactor value)
        to largest possible range */
     for (sfb = 0; sfb < gi->psymax; ++sfb) {
-	if (gi->scalefac[sfb] == LARGE_BITS)
+	if (gi->scalefac[sfb] > 255)
 	    continue;
 	maxov0  = Min(gi->scalefac[sfb] + 2*max_range_long[sfb], maxov0);
 	maxov1  = Min(gi->scalefac[sfb] + 4*max_range_long[sfb], maxov1);
@@ -1474,10 +1469,16 @@ VBR_3rd_bitalloc(lame_t gfc, gr_info *gi, FLOAT * xmin)
 static int
 VBR_noise_shaping(lame_t gfc, gr_info *gi, FLOAT * xmin)
 {
-    int vbrmax, sfb, j, gain;
+    int vbrmax, sfb, j, gain, sfmin;
     sfb = j = 0;
     vbrmax = -10000;
-    gain = gi->global_gain;
+    gain = gi->global_gain - 10;
+
+    /* search range of sf.
+       on shoft blocks, it is large because of subblock_gain */
+    sfmin = -7*4;
+    if (gi->block_type == SHORT_TYPE)
+	sfmin = -7*8-7*4;
     do {
 	FLOAT maxXR = 0.0;
 	int i = gi->width[sfb];
@@ -1492,13 +1493,14 @@ VBR_noise_shaping(lame_t gfc, gr_info *gi, FLOAT * xmin)
 	if (maxXR != 0.0) {
 	    gfc->maxXR[sfb] = (maxXR = IXMAX_VAL / maxXR);
 	    gain = find_scalefac(gfc, j, xmin[sfb], gi->width[sfb], maxXR,
-				 gi->block_type == SHORT_TYPE, gain);
+				 sfmin, gain);
 	    if (gain <= 255 && vbrmax < gain)
 		vbrmax = gain;
+	    gi->scalefac[sfb] = gain;
 	} else {
 	    gfc->maxXR[sfb] = FLOAT_MAX;
+	    gi->scalefac[sfb] = 256;
 	}
-	gi->scalefac[sfb] = gain;
     } while (++sfb < gi->psymax);
     assert(vbrmax != -10000);
 
