@@ -736,7 +736,7 @@ lame_get_highpasswidth(lame_t gfc)
 int
 lame_set_maskingadjust(lame_t gfc, float adjust)
 {
-    gfc->masking_lower = db2pow(adjust);
+    gfc->masklower_base = gfc->masking_lower = db2pow(adjust);
     return 0;
 }
 
