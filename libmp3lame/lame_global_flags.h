@@ -76,7 +76,6 @@ struct lame_global_struct {
   int experimentalZ;
   int exp_nspsytune;
 
-  double newmsfix;
   int preset_expopts;
   int preset;
 
