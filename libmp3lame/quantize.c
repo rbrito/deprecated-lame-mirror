@@ -246,7 +246,7 @@ static void
 calc_xmin(
     lame_internal_flags *gfc,
     const III_psy_ratio * const ratio,
-    const gr_info       * const gi, 
+    const gr_info       * const gi,
 	   FLOAT        * xmin
     )
 {
@@ -258,14 +258,14 @@ calc_xmin(
 	j += l;
 	if (x > 0.0) {
 	    x = ratio->thm.l[gsfb] / x;
+	    l = -l;
 #ifdef HAVE_NASM
 	    if (gfc->CPU_features.AMD_3DNow)
-		sumofsqr_3DN(&gi->xr[j-l], l, &x);
+		sumofsqr_3DN(&gi->xr[j], l, &x);
 	    else
 #endif
 	    {
 		FLOAT en0 = 0.0;
-		l = -l;
 		do {
 		    en0 += gi->xr[j+l  ] * gi->xr[j+l  ];
 		    en0 += gi->xr[j+l+1] * gi->xr[j+l+1];
@@ -287,14 +287,14 @@ calc_xmin(
 	    j += l;
 	    if (x > 0.0) {
 		x = ratio->thm.s[sfb][b] / x;
+		l = -l;
 #ifdef HAVE_NASM
 		if (gfc->CPU_features.AMD_3DNow)
-		    sumofsqr_3DN(&gi->xr[j-l], l, &x);
+		    sumofsqr_3DN(&gi->xr[j], l, &x);
 		else
 #endif
 		{
 		    FLOAT en0 = 0.0;
-		    l = -l;
 		    do {
 			en0 += gi->xr[j+l  ] * gi->xr[j+l  ];
 			en0 += gi->xr[j+l+1] * gi->xr[j+l+1];
@@ -374,7 +374,7 @@ calc_noise(
 #ifdef HAVE_NASM
 	    if (gfc->CPU_features.AMD_3DNow) {
 		noise = *rxmin;
-		sumofsqr_3DN(&absxr[j+l], -l, &noise);
+		sumofsqr_3DN(&absxr[j], l, &noise);
 	    } else
 #endif
 	    {

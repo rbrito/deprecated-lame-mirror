@@ -173,7 +173,6 @@ proc	pow075_SSE
 
 proc	sumofsqr_3DN
 %assign _P 0
-	femms
 	mov	eax, [esp+_P+4]		; eax = xr
 	mov	ecx, [esp+_P+8]		; edx = n
 	mov	edx, [esp+_P+12]	; edx = psum
@@ -181,22 +180,17 @@ proc	sumofsqr_3DN
 	pxor	mm0, mm0		; mm0 = sum0
 	pxor	mm1, mm1		; mm1 = sum1
 	test	ecx, 2
-	jz	.even
-	movq	mm0, [eax]
-	add	eax, 8
-	sub	ecx, 2
+	jz	.lp
+	movq	mm0, [eax+ecx*4]
+	add	ecx, 2
 	pfmul	mm0, mm0
-.even:
-	shl	ecx, 2
-	add	eax, ecx
-	neg	ecx
 	loopalign 16
 .lp:
-	movq	mm2, [eax+ecx+ 0]
-	movq	mm3, [eax+ecx+ 8]
+	movq	mm2, [eax+ecx*4+ 0]
+	movq	mm3, [eax+ecx*4+ 8]
 	pfmul	mm2, mm2
 	pfmul	mm3, mm3
-	add	ecx, 16
+	add	ecx, 4
 	pfadd	mm0, mm2
 	pfadd	mm1, mm3
 	jnz near	.lp
