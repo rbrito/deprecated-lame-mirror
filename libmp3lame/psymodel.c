@@ -919,22 +919,20 @@ pecalc_s(
     sb = SBMAX_s - 1;
     if (!gfc->sfb21_extra)
 	sb--;
+
     do {
 	for (sblock=0;sblock<3;sblock++) {
 	    FLOAT x = mr->thm.s[sb][sblock];
 	    if (mr->en.s[sb][sblock] <= x)
 		continue;
 
+	    mr->ath_over++;
 	    if (mr->en.s[sb][sblock] > x*1e10)
 		pe_s += regcoef_s[sb] * (10.0 * LOG10);
 	    else
 		pe_s += regcoef_s[sb] * FAST_LOG10(mr->en.s[sb][sblock] / x);
 	}
     } while (--sb >= 0);
-
-    mr->ath_over = 0;
-    if (pe_s != 1236.28/4)
-	mr->ath_over = 1;
 
     return pe_s;
 }
@@ -980,15 +978,13 @@ pecalc_l(
 	if (mr->en.l[sb] <= x)
 	    continue;
 
+	mr->ath_over++;
+
 	if (mr->en.l[sb] > x*1e10)
 	    pe_l += regcoef_l[sb] * (10.0 * LOG10);
 	else
 	    pe_l += regcoef_l[sb] * FAST_LOG10(mr->en.l[sb] / x);
     } while (--sb >= 0);
-
-    mr->ath_over = 0;
-    if (pe_l != 1124.23/4)
-	mr->ath_over = 1;
 
     return pe_l;
 }
@@ -1148,6 +1144,7 @@ psycho_analysis_short(
 
     if (current_is_short & 12)
 	gfc->useshort_next[gr][2] = gfc->useshort_next[gr][3] = SHORT_TYPE;
+
     return;
 }
 
@@ -1188,7 +1185,7 @@ partially_convert_l2s(
 //	printf("%e %e %e -> %e",
 //	       mr->thm.s[sfb][0], mr->thm.s[sfb][1], mr->thm.s[sfb][2], x);
 	if (x < gfc->ATH.s_avg[sfb] * gfc->ATH.adjust)
-	    x = gfc->ATH.s_avg[sfb] * gfc->ATH.adjust;
+	    continue;
 //	printf("(%e)\n", gfc->ATH.s_avg[sfb] * gfc->ATH.adjust);
 //	printf("%e %e %e\n",
 //	       mr->en.s[sfb][0], mr->en.s[sfb][1], mr->en.s[sfb][2]);
@@ -1728,6 +1725,7 @@ psycho_analysis(
 	 *********************************************************************/
 	for (ch=0;ch<numchn;ch++) {
 	    III_psy_ratio *mr = &gfc->masking_next[gr][ch];
+	    mr->ath_over = 0;
 	    if (gfc->useshort_next[gr][ch])
 		mr->pe = pecalc_s(gfc, mr);
 	    else
