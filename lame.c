@@ -732,7 +732,7 @@ char *mp3buf, int mp3buf_size)
 
 
   /********************** status display  *****************************/
-  if (gfc->pinfo == NULL && !gfp->silent) {
+  if (!gfp->gtkflag && !gfp->silent) {
     int mod = gfp->version == 0 ? 100 : 50;
     if (gfc->frameNum%mod==0) {
       timestatus(gfp->out_samplerate,gfc->frameNum,gfc->totalframes,gfc->framesize);
@@ -815,7 +815,7 @@ char *mp3buf, int mp3buf_size)
 
 
 
-  if (gfc->pinfo != NULL) {
+  if (gfp->gtkflag && gfc->pinfo != NULL) {
     int j;
     plotting_data *pinfo=gfc->pinfo;
     for ( gr = 0; gr < gfc->mode_gr; gr++ ) {
@@ -862,6 +862,7 @@ char *mp3buf, int mp3buf_size)
   }
 
 
+  /* update VBR histogram data */
   brhist_add_count(gfc->bitrate_index);
 
   /*  write the frame to the bitstream  */
@@ -878,7 +879,7 @@ char *mp3buf, int mp3buf_size)
   if (gfp->bWriteVbrTag) AddVbrFrame(gfp);
 
 
-  if (gfc->pinfo != NULL) {
+  if (gfp->gtkflag && gfc->pinfo != NULL) {
     int j;
     plotting_data *pinfo=gfc->pinfo;
     for ( ch = 0; ch < gfc->stereo; ch++ ) {
@@ -1126,7 +1127,7 @@ int lame_encode_finish(lame_global_flags *gfp,char *mp3buffer, int mp3buffer_siz
 
 
   gfc->frameNum--;
-  if (gfc->pinfo == NULL && !gfp->silent) {
+  if (!gfp->gtkflag && !gfp->silent) {
       timestatus(gfp->out_samplerate,gfc->frameNum,gfc->totalframes,gfc->framesize);
 
       if (gfp->brhist_disp)
@@ -1321,7 +1322,7 @@ int lame_init(lame_global_flags *gfp)
   gfp->no_short_blocks=0;
   gfp->padding_type=2;
   gfp->swapbytes=0;
-  gfp->silent=0;
+  gfp->silent=1;
   gfp->VBR=0;
   gfp->VBR_q=4;
   gfp->VBR_min_bitrate_kbps=0;

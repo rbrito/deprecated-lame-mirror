@@ -341,7 +341,7 @@ void L3psycho_anal( lame_global_flags *gfp,
     }
 
 
-  if(gfc->pinfo != NULL) {
+  if(gfp->gtkflag) {
     plotting_data *pinfo=gfc->pinfo;
     for (j=0; j<HBLKSIZE ; j++) {
       pinfo->energy[gr_out][chn][j]=gfc->energy_save[chn][j];
@@ -656,7 +656,7 @@ void L3psycho_anal( lame_global_flags *gfp,
     }
 
 
-    if (gfc->pinfo != NULL) {
+    if (gfp->gtkflag) {
       plotting_data *pinfo=gfc->pinfo;
       FLOAT mn,mx,ma=0,mb=0,mc=0;
 

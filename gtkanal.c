@@ -131,6 +131,7 @@ int gtkmakeframe(void)
       if (mpglag == MAXMPGLAG) {
 	fprintf(stderr,"READ_AHEAD set too low - not enough frame buffering.\n");
 	fprintf(stderr,"MP3x display of input and output PCM data out of sync.\n");
+	fflush(stderr);
       }
       else mpglag++; 
       pinfo->frameNum123=-1;  /* no frame output */

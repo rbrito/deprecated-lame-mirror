@@ -32,10 +32,6 @@ s1 = (unsigned char) header[1] ;
 printf(" syncword:  %2X   %2X   \n ",s0, s1);
 */
 
-/*
-printf(" integer  %i \n",(int) ( header[0] == (char) 0xFF));
-printf(" integer  %i \n",(int) ( (header[1] & (char) 0xF0) == (char) 0xF0));
-*/
   int mpeg1=((int) ( header[0] == (char) 0xFF)) &&
     ((int) ( (header[1] & (char) 0xF0) == (char) 0xF0));
   
@@ -69,25 +65,35 @@ unsigned long *num_samples)
     buf[0]=buf[1]; 
     if (fread(&buf[1],1,1,fd) == 0) return -1;  /* failed */
   }
-
-  /* read the rest of header */
+  
+  /* read the rest of header and enough bytes to check for Xing header */
   len = fread(&buf[2],1,46,fd);
   if (len ==0 ) return -1;
   len +=2;
-
+  
   /* check for Xing header */
   xing_header = GetVbrTag(&pTagData,(unsigned char*)buf);
   if (xing_header) {
     num_frames=pTagData.frames;
   }
-
+  
+  /* rewind file.  we would like to only send 4 bytes to decodeMP3 */
+  if (fseek(fd, -44, SEEK_CUR) != 0) {
+    /* backwards fseek failed.  input is probably a pipe */
+  } else {
+    len=4;
+  }
+  
   size=0;
   ret = decodeMP3(&mp,buf,len,out,FSIZE,&size);
   if (ret==MP3_OK && size>0 && !xing_header) {
     fprintf(stderr,"Opps: first frame of mpglib output will be lost \n");
   }
-
+  
   if (ret==MP3_ERR) 
+    return -1;
+  
+  if (!mp.header_parsed) 
     return -1;
 
   *stereo = mp.fr.stereo;
@@ -95,6 +101,7 @@ unsigned long *num_samples)
   *bitrate = tabsel_123[mp.fr.lsf][mp.fr.lay-1][mp.fr.bitrate_index];
   framesize = (mp.fr.lsf == 0) ? 1152 : 576;
   *num_samples=MAX_U_32_NUM;
+  
   if (xing_header && num_frames) {
     *num_samples=framesize * num_frames;
   }

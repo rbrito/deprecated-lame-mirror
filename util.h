@@ -239,17 +239,25 @@ typedef struct  {
   FLOAT8 mm[16][SBLIMIT - 1];
 
   /* variables for bitstream.c */
-#define MAX_HEADER_BUF 32 /* 511 / 21 = 24, 255/13 = 19 */
+  /* mpeg1: buffer=511 bytes  smallest frame: 96-38(sideinfo)=58
+   * max number of frames in reservoir:  8 
+   * mpeg2: buffer=255 bytes.  smallest frame: 24-23bytes=1
+   * with VBR, if you are encoding all silence, it is possible to
+   * have 8kbs/24khz frames with 1byte of data each, which means we need
+   * to buffer up to 255 headers! */
+  /* also, max_header_buf has to be a power of two */
+#define MAX_HEADER_BUF 256
 #define MAX_HEADER_LEN 40 /* max size of header is 38 */
-struct {
+  struct {
     int write_timing;
     int ptr;
     char buf[MAX_HEADER_LEN];
-} header[MAX_HEADER_BUF];
-     int h_ptr;
-     int w_ptr;
-  int ancillary_flag;
+  } header[MAX_HEADER_BUF];
 
+  int h_ptr;
+  int w_ptr;
+  int ancillary_flag;
+  
 
   /* variables for reservoir.c */
   int ResvSize; /* in bits */

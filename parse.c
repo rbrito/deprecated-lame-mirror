@@ -239,8 +239,8 @@ void lame_parse_args(lame_global_flags *gfp,int argc, char **argv)
 
   gfp->inPath[0] = '\0';   
   gfp->outPath[0] = '\0';
-  /* default=0 (off).  will also be turned off if --nohist specified, 
-   * if VBR mode is not used, or if -s "silent" is specified  */
+  /* turn on display options. user settings may turn them off below */
+  gfp->silent=0;
   gfp->brhist_disp = 1;
   id3_inittag(&gfp->id3tag);
 

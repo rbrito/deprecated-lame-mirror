@@ -101,7 +101,7 @@ iteration_loop( lame_global_flags *gfp,
 	best_huffman_divide(gfc, gr, ch, cod_info, l3_enc[gr][ch]);
       }
       assert((int)cod_info->part2_3_length < 4096);
-      if (gfc->pinfo != NULL)
+      if (gfp->gtkflag)
 	set_pinfo (gfp, cod_info, &ratio[gr][ch], &scalefac[gr][ch], xr[gr][ch], xfsf, noise, gr, ch);
 
 /*#define NORES_TEST */
@@ -256,7 +256,7 @@ VBR_iteration_loop (lame_global_flags *gfp,
         memset(&scalefac[gr][ch],0,sizeof(III_scalefac_t));
         memset(l3_enc[gr][ch],0,576*sizeof(int));
         save_bits[gr][ch] = 0;
-	if (gfc->pinfo != NULL) {
+	if (gfp->gtkflag) {
 	  memset(xfsf,0,sizeof(xfsf));
 	  set_pinfo(gfp, cod_info, &ratio[gr][ch], &scalefac[gr][ch], xr[gr][ch], xfsf, noise, gr, ch);
 	}
@@ -329,7 +329,7 @@ VBR_iteration_loop (lame_global_flags *gfp,
 	  better=VBR_compare((int)targ_noise[0],targ_noise[3],targ_noise[2],
 			     targ_noise[1],(int)noise[0],noise[3],noise[2],
 			     noise[1]);
-	  if (gfc->pinfo != NULL)
+	  if (gfp->gtkflag)
 	    set_pinfo(gfp, cod_info, &ratio[gr][ch], &scalefac[gr][ch], xr[gr][ch], xfsf, noise, gr, ch);
 	  if (better) {
 	      /* 
@@ -343,7 +343,7 @@ VBR_iteration_loop (lame_global_flags *gfp,
               memcpy( &bst_scalefac, &scalefac[gr][ch], sizeof(III_scalefac_t)  );
               memcpy(  bst_l3_enc,    l3_enc  [gr][ch], sizeof(int)*576         );
               memcpy( &bst_cod_info,  cod_info,         sizeof(gr_info)         );
-              if (gfc->pinfo != NULL) {
+              if (gfp->gtkflag) {
 		plotting_data *pinfo=gfc->pinfo;
                 memcpy( &bst_pinfo, pinfo, sizeof(plotting_data) );
 	      }
@@ -366,7 +366,7 @@ VBR_iteration_loop (lame_global_flags *gfp,
         memcpy(  cod_info,         &bst_cod_info, sizeof(gr_info)        );
         memcpy( &scalefac[gr][ch], &bst_scalefac, sizeof(III_scalefac_t) );
         memcpy(  l3_enc  [gr][ch],  bst_l3_enc,   sizeof(int)*576        );
-        if (gfc->pinfo != NULL) {
+        if (gfp->gtkflag) {
 	  plotting_data *pinfo=gfc->pinfo;
           memcpy( pinfo, &bst_pinfo, sizeof(plotting_data) );
 	}
@@ -445,7 +445,7 @@ VBR_iteration_loop (lame_global_flags *gfp,
 	 	      &l3_xmin, l3_enc[gr][ch], 
 		      &scalefac[gr][ch], cod_info, xfsf, ch);
 	}
-	if (gfc->pinfo != NULL) 
+	if (gfp->gtkflag) 
 	  set_pinfo(gfp, cod_info, &ratio[gr][ch], &scalefac[gr][ch], xr[gr][ch], xfsf, noise, gr, ch);
       }
     }
@@ -461,7 +461,7 @@ VBR_iteration_loop (lame_global_flags *gfp,
       if (gfc->use_best_huffman==1 && cod_info->block_type != SHORT_TYPE) {
 	best_huffman_divide(gfc, gr, ch, cod_info, l3_enc[gr][ch]);
       }
-      if (gfc->pinfo != NULL) {
+      if (gfp->gtkflag) {
 	plotting_data *pinfo=gfc->pinfo;
 	pinfo->LAMEmainbits[gr][ch]=cod_info->part2_3_length;
       }
@@ -696,7 +696,7 @@ void outer_loop(
 	memcpy(l3_enc,l3_enc_w,sizeof(int)*576);
 	memcpy(&save_cod_info,cod_info,sizeof(save_cod_info));
 
-	if (gfc->pinfo != NULL) {
+	if (gfp->gtkflag) {
 	  memcpy(xfsf, xfsf_w, sizeof(xfsf_w));
 	}
       }

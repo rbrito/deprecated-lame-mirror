@@ -265,9 +265,6 @@ int decodeMP3(struct mpstr *mp,char *in,int isize,char *out,
 	if(!mp->header_parsed) {
 
 	        bytes=sync_buffer(mp,0);
-		if (bytes!=0)
-		  fprintf(stderr,"bitstream problem: resyncing...\n");
-
 		if (bytes<0) return MP3_NEED_MORE;
 		if (bytes>0) {
 		  /* bitstream problem, but we are now resynced 
@@ -276,6 +273,7 @@ int decodeMP3(struct mpstr *mp,char *in,int isize,char *out,
 		   * to make sure we do not overflow buffer
 		  */
 		  int size;
+		  fprintf(stderr,"bitstream problem: resyncing...\n");
 		  mp->old_free_format=0;
 		  size = (int) (wordpointer - mp->bsspace[mp->bsnum]+512);
 		  if ((size + bytes) < MAXFRAMESIZE) {

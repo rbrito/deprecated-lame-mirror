@@ -78,7 +78,7 @@ putbits2(lame_global_flags *gfp, unsigned int val, int j)
     assert(j <= MAX_LENGTH);
     if (j<MAX_LENGTH)
       assert(val < (1 << j));  /* 1 << 32 wont work on 32 bit machines */
-    
+
     while (j > 0) {
 	int k;
 	if (bs->buf_bit_idx == 0) {
@@ -93,6 +93,7 @@ putbits2(lame_global_flags *gfp, unsigned int val, int j)
 	}
 
 	k = Min(j, bs->buf_bit_idx);
+
 	bs->buf[bs->buf_byte_idx]
 	    |= ((val >> (j-k)) & pmask[k - 1]) << (bs->buf_bit_idx - k);
 	bs->buf_bit_idx -= k;
@@ -101,6 +102,67 @@ putbits2(lame_global_flags *gfp, unsigned int val, int j)
     }
 }
 
+/*
+  Some combinations of bitrate, Fs, and stereo make it impossible to stuff
+  out a frame using just main_data, due to the limited number of bits to
+  indicate main_data_length. In these situations, we put stuffing bits into
+  the ancillary data...
+*/
+
+static INLINE void
+drain_into_ancillary(lame_global_flags *gfp,int remainingBits)
+{
+    lame_internal_flags *gfc=gfp->internal_flags;
+    int i,bits;
+    assert(remainingBits >= 0);
+#ifdef DEBUG
+    printf("remain %d\n",remainingBits);
+    hoge += remainingBits;
+    hogege += remainingBits;
+#endif
+
+    if (remainingBits >= 8) {
+      putbits2(gfp,0x4c,8);
+      remainingBits -= 8;
+    }
+    if (remainingBits >= 8) {
+      putbits2(gfp,0x41,8);
+      remainingBits -= 8;
+    }
+    if (remainingBits >= 8) {
+      putbits2(gfp,0x4d,8);
+      remainingBits -= 8;
+    }
+    if (remainingBits >= 8) {
+      putbits2(gfp,0x45,8);
+      remainingBits -= 8;
+    }
+      
+    if (remainingBits >= 32) {
+      char * version;
+      version = get_lame_version();
+      if (remainingBits >= 32) 
+	for (i=0; i<strlen(version) && remainingBits >=8 ; ++i) {
+	  remainingBits -= 8;
+	  putbits2(gfp,(unsigned int)version[i],8);
+	}
+    }
+
+
+    bits = remainingBits & (MAX_LENGTH - 1);
+    for (i=0; i<bits; ++i) {
+      putbits2(gfp,gfc->ancillary_flag,1);
+      gfc->ancillary_flag = 1-gfc->ancillary_flag;
+    }
+
+    remainingBits /= MAX_LENGTH;
+    for (; remainingBits > 0; remainingBits--) {
+      if (gfc->ancillary_flag)
+	putbits2(gfp,0xAAAAAAAA, MAX_LENGTH);
+      else
+	putbits2(gfp,0x55555555, MAX_LENGTH);
+    }
+}
 
 /*write N bits into the header */
 static INLINE void
@@ -268,71 +330,16 @@ encodeSideInfo2(lame_global_flags *gfp,int bitsPerFrame)
 	gfc->h_ptr = (old + 1) & (MAX_HEADER_BUF - 1);
 	gfc->header[gfc->h_ptr].write_timing =
 	    gfc->header[old].write_timing + bitsPerFrame;
-    }
-}
 
-
-/*
-  Some combinations of bitrate, Fs, and stereo make it impossible to stuff
-  out a frame using just main_data, due to the limited number of bits to
-  indicate main_data_length. In these situations, we put stuffing bits into
-  the ancillary data...
-*/
-
-static INLINE void
-drain_into_ancillary(lame_global_flags *gfp,int remainingBits)
-{
-    lame_internal_flags *gfc=gfp->internal_flags;
-    int i,bits;
-    assert(remainingBits >= 0);
-#ifdef DEBUG
-    printf("remain %d\n",remainingBits);
-    hoge += remainingBits;
-    hogege += remainingBits;
-#endif
-
-    if (remainingBits >= 8) {
-      putbits2(gfp,0x4c,8);
-      remainingBits -= 8;
-    }
-    if (remainingBits >= 8) {
-      putbits2(gfp,0x41,8);
-      remainingBits -= 8;
-    }
-    if (remainingBits >= 8) {
-      putbits2(gfp,0x4d,8);
-      remainingBits -= 8;
-    }
-    if (remainingBits >= 8) {
-      putbits2(gfp,0x45,8);
-      remainingBits -= 8;
-    }
-      
-    if (remainingBits >= 32) {
-      char * version;
-      version = get_lame_version();
-      if (remainingBits >= 32) 
-	for (i=0; i<strlen(version) && remainingBits >=8 ; ++i) {
-	  remainingBits -= 8;
-	  putbits2(gfp,(unsigned int)version[i],8);
+	if (gfc->h_ptr == gfc->w_ptr) {
+	  /* yikes! we are out of header buffer space */
+	  fprintf(stderr,"Error: MAX_HEADER_BUF too small in bitstream.c \n");
 	}
-    }
 
-
-    bits = remainingBits & (MAX_LENGTH - 1);
-    for (i=0; i<bits; ++i) {
-      putbits2(gfp,gfc->ancillary_flag,1);
-      gfc->ancillary_flag = 1-gfc->ancillary_flag;
-    }
-
-    remainingBits /= MAX_LENGTH;
-    for (; remainingBits > 0; remainingBits--) {
-      if (gfc->ancillary_flag)
-	putbits2(gfp,0xAAAAAAAA, MAX_LENGTH);
-      else
-	putbits2(gfp,0x55555555, MAX_LENGTH);
     }
 }
+
+
 
 static INLINE int
 huffman_coder_count1(lame_global_flags *gfp,int *ix, gr_info *gi)
@@ -667,7 +674,7 @@ flush_bitstream(lame_global_flags *gfp)
   int last_ptr,first_ptr;
   first_ptr=gfc->w_ptr;           /* first header to add to bitstream */
   last_ptr = gfc->h_ptr - 1;   /* last header to add to bitstream */
-  if (last_ptr==-1) last_ptr=31;   
+  if (last_ptr==-1) last_ptr=MAX_HEADER_BUF-1;   
 
   /* add this many bits to bitstream so we can flush all headers */
   flushbits = gfc->header[last_ptr].write_timing - gfc->bs.totbit;
