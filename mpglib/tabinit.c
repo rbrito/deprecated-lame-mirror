@@ -85,7 +85,7 @@ void make_decode_tables(long scaleval)
     kr=0x10>>i; divv=0x40>>i;
     costab = pnts[i];
     for(k=0;k<kr;k++)
-      costab[k] = 1.0 / (2.0 * cos(M_PI * ((double) k * 2.0 + 1.0) / (double) divv));
+      costab[k] = (real)( 1.0 / (2.0 * cos(M_PI * ((double) k * 2.0 + 1.0) / (double) divv)) );
   }
 
   table = decwin;
@@ -93,7 +93,7 @@ void make_decode_tables(long scaleval)
   for(i=0,j=0;i<256;i++,j++,table+=32)
   {
     if(table < decwin+512+16)
-      table[16] = table[0] = (double) dewin[j] * (double) scaleval;
+      table[16] = table[0] = (real)( dewin[j] * scaleval );
     if(i % 32 == 31)
       table -= 1023;
     if(i % 64 == 63)
@@ -103,7 +103,7 @@ void make_decode_tables(long scaleval)
   for( /* i=256 */ ;i<512;i++,j--,table+=32)
   {
     if(table < decwin+512+16)
-      table[16] = table[0] = (double) dewin[j] * (double) scaleval;
+      table[16] = table[0] = (real) ( dewin[j] * scaleval );
     if(i % 32 == 31)
       table -= 1023;
     if(i % 64 == 63)
