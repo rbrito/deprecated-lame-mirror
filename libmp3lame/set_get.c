@@ -1307,22 +1307,6 @@ lame_set_no_short_blocks( lame_global_flags*  gfp,
     return 0;
 }
 
-/* Use mixed block. */
-int
-lame_set_use_mixed_blocks( lame_global_flags*  gfp,
-			   int                 use_mixed_blocks )
-{
-    /* 0 ... not use the mixed block
-       1 ... use all short block as mixed block
-       2 ... mixed/not mixed is determined by PE (not implemented yet)
-    */
-    if (!(0 <= use_mixed_blocks && use_mixed_blocks <= 2))
-        return -1;
-
-    gfp->mixed_blocks = use_mixed_blocks;
-    return 0;
-}
-
 int
 lame_get_no_short_blocks( const lame_global_flags*  gfp )
 {
@@ -1523,7 +1507,7 @@ lame_set_preset_expopts( lame_global_flags*  gfp, int preset_expopts )
 
     /* default = 0 (disabled) */
     gfp->preset_expopts = preset_expopts;
-    gfc->nsPsy.attackthre   =  8.0;
+    gfc->nsPsy.attackthre   =  3.5;
     gfc->nsPsy.attackthre_s = 15.0;
 
     switch (preset_expopts)

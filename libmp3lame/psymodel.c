@@ -495,37 +495,6 @@ ns_msfix(
     }
 }
 
-static FLOAT8 calc_mixed_ratio(
-    lame_internal_flags *gfc,
-    int chn
-    )
-{
-    int sb;
-    FLOAT8 m0 = 1.0;
-    for (sb = 0; sb < 8; sb++) {
-	if (gfc->en[chn].l[sb] > gfc->thm[chn].l[sb]
-	    && gfc->thm[chn].l[sb] > 0.0) {
-	    m0 *= gfc-> en[chn].l[sb] / gfc->thm[chn].l[sb];
-	}
-    }
-
-    for (sb = 0; sb < 3; sb++) {
-	if (gfc->en[chn].s[sb][0] > gfc->thm[chn].s[sb][0]
-	    && gfc->thm[chn].s[sb][0] > 0.0) {
-	    m0 *= gfc->thm[chn].s[sb][0] / gfc-> en[chn].s[sb][0];
-	}
-	if (gfc->en[chn].s[sb][1] > gfc->thm[chn].s[sb][1]
-	    && gfc->thm[chn].s[sb][1] > 0.0) {
-	    m0 *= gfc->thm[chn].s[sb][1] / gfc-> en[chn].s[sb][1];
-	}
-	if (gfc->en[chn].s[sb][2] > gfc->thm[chn].s[sb][2]
-	    && gfc->thm[chn].s[sb][2] > 0.0) {
-	    m0 *= gfc->thm[chn].s[sb][2] / gfc-> en[chn].s[sb][2];
-	}
-    }
-    return m0;
-}
-
 /* longblock threshold calculation (part 2) */
 static void convert_partition2scalefac_l(
     lame_internal_flags *gfc,
@@ -632,12 +601,7 @@ block_type_set(
 	    /* attack : use short blocks */
 	    blocktype[chn] = SHORT_TYPE;
 	    if (gfc->blocktype_old[chn] == NORM_TYPE) {
-		int oldblocktype = START_TYPE;
-		if (calc_mixed_ratio(gfc, chn) > 1000) {
-		    blocktype[chn] = -SHORT_TYPE;
-		    oldblocktype = -oldblocktype;
-		}
-		gfc->blocktype_old[chn] = oldblocktype;
+		gfc->blocktype_old[chn] = START_TYPE;
 	    }
 	    if (gfc->blocktype_old[chn] == STOP_TYPE)
 		gfc->blocktype_old[chn] = SHORT_TYPE;
@@ -1958,7 +1922,6 @@ int psymodel_init(lame_global_flags *gfp)
 	for (k=0; k < gfc->numlines_l[i]; k++, j++) {
 	    FLOAT8  freq = sfreq*j/(1000.0*BLKSIZE);
 	    FLOAT8  level;
-	    assert( freq <= 24 );              // or only '<'
 	    //	freq = Min(.1,freq);       // ATH below 100 Hz constant, not further climbing
 	    level  = ATHformula (freq*1000, gfp) - 20;   // scale to FFT units; returned value is in dB
 	    level  = pow ( 10., 0.1*level );   // convert from dB -> energy

@@ -252,10 +252,10 @@ updateStats( lame_internal_flags * const gfc )
             int bt = gfc->l3_side.tt[gr][ch].block_type;
             int mf = gfc->l3_side.tt[gr][ch].mixed_block_flag;
             if (mf) bt = 4;
-            gfc->bitrate_blockType_Hist [gfc->bitrate_index] [bt] ++;        
-            gfc->bitrate_blockType_Hist [gfc->bitrate_index] [ 5] ++;
-            gfc->bitrate_blockType_Hist [15] [bt] ++;        
-            gfc->bitrate_blockType_Hist [15] [ 5] ++;
+            gfc->bitrate_blockType_Hist [gfc->bitrate_index] [bt] ++;
+	    gfc->bitrate_blockType_Hist [gfc->bitrate_index] [ 5] ++;
+            gfc->bitrate_blockType_Hist [15] [bt] ++;
+	    gfc->bitrate_blockType_Hist [15] [ 5] ++;
         }
     }
 }
@@ -421,14 +421,6 @@ int  lame_encode_mp3_frame (				// Output
 	  gr_info *cod_info = &gfc->l3_side.tt[gr][ch];
 	  cod_info->block_type=blocktype[ch];
 	  cod_info->mixed_block_flag = 0;
-	  if (cod_info->block_type != NORM_TYPE) {
-	      if (gfp->mixed_blocks == 1
-		  || (gfp->mixed_blocks == 2 && cod_info->block_type < 0))
-		  cod_info->mixed_block_flag = 1;
-
-	      if (cod_info->block_type < 0)
-		  cod_info->block_type = -cod_info->block_type;
-	  }
       }
     }
   }else{
@@ -514,37 +506,20 @@ change the following to
 */
       /* based on PE: M/S coding would not use much more bits than L/R */
       if ((!gfc->nsPsy.use && sum_pe_MS <= 1.07 * sum_pe_LR)
-	  || (gfc->nsPsy.use && sum_pe_MS <= 1.00 * sum_pe_LR))
-	gfc->mode_ext = MPG_MD_MS_LR;
+	  || (gfc->nsPsy.use && sum_pe_MS <= 1.00 * sum_pe_LR)) {
+	  gr_info *gi0 = &gfc->l3_side.tt[0][0];
+	  gr_info *gi1 = &gfc->l3_side.tt[gfc->mode_gr-1][0];
+	  if (gi0[0].block_type == gi0[1].block_type
+	      && gi1[0].block_type == gi1[1].block_type)
+	      gfc->mode_ext = MPG_MD_MS_LR;
+      }
     }
   }
 
-
   /* bit and noise allocation */
   if (gfc->mode_ext == MPG_MD_MS_LR) {
-      gr_info *gi0 = &gfc->l3_side.tt[0][0];
-      gr_info *gi1 = &gfc->l3_side.tt[gfc->mode_gr-1][0];
       masking = &masking_MS;    /* use MS masking */
       pe_use = &pe_MS;
-
-      if (gi0[0].mixed_block_flag != gi0[1].mixed_block_flag)
-	  gi0[0].mixed_block_flag = gi0[1].mixed_block_flag = 0;
-
-      if (gi1[0].mixed_block_flag != gi1[1].mixed_block_flag)
-	  gi1[0].mixed_block_flag = gi1[1].mixed_block_flag = 0;
-
-      if (gi0[0].block_type != gi0[1].block_type) {
-	  int type = gi0[0].block_type;
-	  if (type == NORM_TYPE)
-	      type = gi0[1].block_type;
-	  gi0[0].block_type = gi0[1].block_type = type;
-      }
-      if (gi1[0].block_type != gi1[1].block_type) {
-	  int type = gi1[0].block_type;
-	  if (type == NORM_TYPE)
-	      type = gi1[1].block_type;
-	  gi1[0].block_type = gi1[1].block_type = type;
-      }
   } else {
       masking = &masking_LR;    /* use LR masking */
       pe_use = &pe;
