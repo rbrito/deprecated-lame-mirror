@@ -495,7 +495,7 @@ main(int argc, char **argv)
     lame_global_flags *gf;
     char    outPath[MAX_NAME_SIZE];
     char    inPath[MAX_NAME_SIZE];
-#define MAX_NOGAP 20
+#define MAX_NOGAP 40
     int     max_nogap = MAX_NOGAP;
     char   *nogap_inPath[MAX_NOGAP];
     int     i;
