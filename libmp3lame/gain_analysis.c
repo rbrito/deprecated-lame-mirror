@@ -137,8 +137,6 @@ static const Float_t ABButter[9][2*BUTTER_ORDER + 1] = {
 static void
 filterYule (const Float_t* input, Float_t* output, size_t nSamples, const Float_t* kernel)
 {
-    /*register double  y;*/
-
     while (nSamples--) {
         *output =  input [0]  * kernel[0]
          - output[-1] * kernel[1]
@@ -311,7 +309,7 @@ AnalyzeSamples (replaygain_t* rgData, const Float_t* left_samples, const Float_t
         cursamplepos += cursamples;
         rgData->totsamp      += cursamples;
         if ( rgData->totsamp == rgData->sampleWindow ) {  /* Get the Root Mean Square (RMS) for this set of samples */
-            double  val  = STEPS_per_dB * 10. * log10 ( (rgData->lsum+rgData->rsum) / rgData->totsamp * 0.5 + 1.e-37 );
+            FLOAT  val  = STEPS_per_dB * 10. * log10 ( (rgData->lsum+rgData->rsum) / rgData->totsamp * 0.5 + 1.e-37 );
             int     ival = (int) val;
             if (ival < 0)
 		ival = 0;
