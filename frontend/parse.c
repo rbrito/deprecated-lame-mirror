@@ -1283,7 +1283,7 @@ char* const inPath, char* const outPath, char **nogap_inPath, int *num_nogap)
                 T_ELIF ("sfscale")
 		{
 		    int i = 1;
-		    if (sscanf(nextArg, "%d", i) == 1)
+		    if (sscanf(nextArg, "%d", &i) == 1)
 			argUsed=1;
                     (void) lame_set_use_largescalefac( gfp, i);
 		}
@@ -1291,7 +1291,7 @@ char* const inPath, char* const outPath, char **nogap_inPath, int *num_nogap)
                 T_ELIF ("sbgain")
 		{
 		    int i = 1;
-		    if (sscanf(nextArg, "%d", i) == 1)
+		    if (sscanf(nextArg, "%d", &i) == 1)
 			argUsed=1;
                     (void) lame_set_use_subblock_gain( gfp, i);
 		}
