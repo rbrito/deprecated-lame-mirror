@@ -216,6 +216,9 @@ typedef struct  {
   /* variables used by quantize.c */
   int OldValue[2];
   int CurrentStep;
+  FLOAT8 ATH_l[SBPSY_l];
+  FLOAT8 ATH_s[SBPSY_s];
+
 
   /* variables used by util.c */
 #define BLACKSIZE 30

@@ -145,8 +145,6 @@ FLOAT8 pow43[PRECALC_SIZE];
 /* initialized in first call to iteration_init */
 FLOAT8 adj43[PRECALC_SIZE];
 FLOAT8 adj43asm[PRECALC_SIZE];
-static FLOAT8 ATH_l[SBPSY_l];
-static FLOAT8 ATH_s[SBPSY_l];
 
 
 /************************************************************************/
@@ -165,7 +163,7 @@ iteration_init( lame_global_flags *gfp,III_side_info_t *l3_side, int l3_enc[2][2
     gfc->iteration_init_init=1;
 
     l3_side->main_data_begin = 0;
-    compute_ath(gfp,ATH_l,ATH_s);
+    compute_ath(gfp,gfc->ATH_l,gfc->ATH_s);
 
     for(i=0;i<PRECALC_SIZE;i++)
         pow43[i] = pow((FLOAT8)i, 4.0/3.0);
@@ -282,7 +280,7 @@ FLOAT8 ATHformula(lame_global_flags *gfp,FLOAT8 f)
 }
  
 
-void compute_ath(lame_global_flags *gfp,FLOAT8 ATH_l[SBPSY_l],FLOAT8 ATH_s[SBPSY_l])
+void compute_ath(lame_global_flags *gfp,FLOAT8 ATH_l[SBPSY_l],FLOAT8 ATH_s[SBPSY_s])
 {
   lame_internal_flags *gfc=gfp->internal_flags;
   int sfb,i,start,end;
@@ -699,9 +697,9 @@ int calc_xmin( lame_global_flags *gfp,FLOAT8 xr[576], III_psy_ratio *ratio,
     if (gfp->ATHonly) {    
       for ( sfb = cod_info->sfb_smax; sfb < SBPSY_s; sfb++ )
 	  for ( b = 0; b < 3; b++ )
-	      l3_xmin->s[sfb][b]=ATH_s[sfb];
+	      l3_xmin->s[sfb][b]=gfc->ATH_s[sfb];
       for ( sfb = 0; sfb < cod_info->sfb_lmax; sfb++ )
-	  l3_xmin->l[sfb]=ATH_l[sfb];
+	  l3_xmin->l[sfb]=gfc->ATH_l[sfb];
 
     }else{
 
@@ -721,9 +719,9 @@ int calc_xmin( lame_global_flags *gfp,FLOAT8 xr[576], III_psy_ratio *ratio,
 	  if (xmin > 0.0)
 	    xmin = en0 * ratio->thm.s[sfb][b] * masking_lower / xmin;
 
-	  l3_xmin->s[sfb][b] = Max(ATH_s[sfb], xmin);
+	  l3_xmin->s[sfb][b] = Max(gfc->ATH_s[sfb], xmin);
 
-	  if (en0 > ATH_s[sfb]) ath_over++;
+	  if (en0 > gfc->ATH_s[sfb]) ath_over++;
 	}
       }
 
@@ -742,9 +740,9 @@ int calc_xmin( lame_global_flags *gfp,FLOAT8 xr[576], III_psy_ratio *ratio,
 	if (xmin > 0.0)
 	  xmin = en0 * ratio->thm.l[sfb] * masking_lower / xmin;
 
-	l3_xmin->l[sfb]=Max(ATH_l[sfb], xmin);
+	l3_xmin->l[sfb]=Max(gfc->ATH_l[sfb], xmin);
 
-	if (en0 > ATH_l[sfb]) ath_over++;
+	if (en0 > gfc->ATH_l[sfb]) ath_over++;
       }
     }
     return ath_over;
