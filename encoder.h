@@ -49,7 +49,7 @@ Most decoders, including the one we use,  have a delay of 528 samples.
 #define         SBLIMIT                 32
 
 /* parition bands bands */
-#define CBANDS          63
+#define CBANDS          64
 
 /* number of critical bands/scale factor bands where masking is computed*/
 #define SBPSY_l 21

@@ -34,15 +34,16 @@
 #endif
 
 
-void L3para_read( FLOAT8 sfreq, int numlines[CBANDS],int numlines_s[CBANDS], int partition_l[HBLKSIZE],
+void L3para_read( FLOAT8 sfreq, int numlines[CBANDS],int numlines_s[CBANDS], 
 		  FLOAT8 minval[CBANDS], 
-		  FLOAT8 s3_l[CBANDS + 1][CBANDS + 1],
-		  FLOAT8 s3_s[CBANDS + 1][CBANDS + 1],
+		  FLOAT8 s3_l[CBANDS][CBANDS],
+		  FLOAT8 s3_s[CBANDS][CBANDS],
 		  FLOAT8 SNR_s[CBANDS],
 		  int bu_l[SBPSY_l], int bo_l[SBPSY_l],
 		  FLOAT8 w1_l[SBPSY_l], FLOAT8 w2_l[SBPSY_l],
 		  int bu_s[SBPSY_s], int bo_s[SBPSY_s],
-		  FLOAT8 w1_s[SBPSY_s], FLOAT8 w2_s[SBPSY_s] );
+		  FLOAT8 w1_s[SBPSY_s], FLOAT8 w2_s[SBPSY_s],
+		  int *, int *, int *, int *);
 									
 
 
@@ -105,7 +106,6 @@ void L3psycho_anal( lame_global_flags *gfp,
 
   if(gfc->psymodel_init==0) {
     FLOAT8	SNR_s[CBANDS];
-    int	partition_l[HBLKSIZE];
     gfc->psymodel_init=1;
 
 
@@ -175,45 +175,17 @@ void L3psycho_anal( lame_global_flags *gfp,
       gfc->mld_l[sb] = pow(10.0,mld);
     }
     
-    for (i=0;i<HBLKSIZE;i++) partition_l[i]=-1;
 
     L3para_read( (FLOAT8) samplerate,gfc->numlines_l,gfc->numlines_s,
-          partition_l,gfc->minval,gfc->s3_l,gfc->s3_s,SNR_s,gfc->bu_l,
+          gfc->minval,gfc->s3_l,gfc->s3_s,SNR_s,gfc->bu_l,
           gfc->bo_l,gfc->w1_l,gfc->w2_l, gfc->bu_s,gfc->bo_s,
-          gfc->w1_s,gfc->w2_s );
+          gfc->w1_s,gfc->w2_s,&gfc->npart_l_orig,&gfc->npart_l,
+          &gfc->npart_s_orig,&gfc->npart_s );
     
-    
+
+
     /* npart_l_orig   = number of partition bands before convolution */
     /* npart_l  = number of partition bands after convolution */
-    gfc->npart_l_orig=0; gfc->npart_s_orig=0;
-    for (i=0;i<HBLKSIZE;i++) 
-      if (partition_l[i]>gfc->npart_l_orig) gfc->npart_l_orig=partition_l[i];
-    gfc->npart_l_orig++;
-
-    for (i=0;gfc->numlines_s[i]>=0;i++)
-      ;
-    gfc->npart_s_orig = i;
-    
-    gfc->npart_l=gfc->bo_l[SBPSY_l-1]+1;
-    gfc->npart_s=gfc->bo_s[SBPSY_s-1]+1;
-
-    /* MPEG2 tables are screwed up 
-     * the mapping from paritition bands to scalefactor bands will use
-     * more paritition bands than we have.  
-     * So we will not compute these fictitious partition bands by reducing
-     * npart_l below.  */
-    if (gfc->npart_l > gfc->npart_l_orig) {
-      gfc->npart_l=gfc->npart_l_orig;
-      gfc->bo_l[SBPSY_l-1]=gfc->npart_l-1;
-      gfc->w2_l[SBPSY_l-1]=1.0;
-    }
-    if (gfc->npart_s > gfc->npart_s_orig) {
-      gfc->npart_s=gfc->npart_s_orig;
-      gfc->bo_s[SBPSY_s-1]=gfc->npart_s-1;
-      gfc->w2_s[SBPSY_s-1]=1.0;
-    }
-    
-    
     
     for (i=0; i<gfc->npart_l; i++) {
       for (j = 0; j < gfc->npart_l_orig; j++) {
@@ -964,17 +936,18 @@ void L3psycho_anal( lame_global_flags *gfp,
 
 
 
-void L3para_read(FLOAT8 sfreq, int *numlines_l,int *numlines_s, int *partition_l, FLOAT8 *minval,
-FLOAT8 s3_l[64][64], FLOAT8 s3_s[CBANDS + 1][CBANDS + 1],
+void L3para_read(FLOAT8 sfreq, int *numlines_l,int *numlines_s, 
+FLOAT8 *minval,
+FLOAT8 s3_l[CBANDS][CBANDS], FLOAT8 s3_s[CBANDS][CBANDS],
 FLOAT8 *SNR, 
 int *bu_l, int *bo_l, FLOAT8 *w1_l, FLOAT8 *w2_l, 
-int *bu_s, int *bo_s, FLOAT8 *w1_s, FLOAT8 *w2_s)
+int *bu_s, int *bo_s, FLOAT8 *w1_s, FLOAT8 *w2_s,
+int *npart_l_orig,int *npart_l,int *npart_s_orig,int *npart_s)
 {
   FLOAT8 freq_tp;
   FLOAT8 bval_l[CBANDS], bval_s[CBANDS];
   int   cbmax=0, cbmax_tp;
   FLOAT8 *p = psy_data;
-
   int  sbmax ;
   int  i,j,k,k2,loop, part_max ;
   int freq_scale=1;
@@ -991,6 +964,7 @@ int *bu_s, int *bo_s, FLOAT8 *w1_s, FLOAT8 *w2_s)
       if (sfreq == freq_tp/freq_scale )
 	{
 	  cbmax = cbmax_tp;
+	  *npart_l_orig = cbmax_tp;  
 	  for(i=0,k2=0;i<cbmax_tp;i++)
 	    {
 	      j = (int) *p++;
@@ -998,22 +972,20 @@ int *bu_s, int *bo_s, FLOAT8 *w1_s, FLOAT8 *w2_s)
 	      minval[i] = exp(-((*p++) ) * LN_TO_LOG10);
 	      /* qthr_l[i] = *p++ */ p++;
 	      /* norm_l[i] = *p++*/ p++;
-	      bval_l[i] = *p++;
+	      /* bval_l[i] = *p++; */ p++;
 	      if (j!=i)
 		{
 		  fprintf(stderr,"1. please check \"psy_data\"");
 		  exit(-1);
 		}
-	      for(k=0;k<numlines_l[i];k++)
-		partition_l[k2++] = i ;
 	    }
+	  numlines_l[i]=-1;
 	}
       else
 	p += cbmax_tp * 6;
     }
 
-#undef NEWBARK
-#ifdef NEWBARK
+
   /* compute bark values of each critical band */
   j = 0;
   for(i=0;i<cbmax;i++)
@@ -1027,14 +999,13 @@ int *bu_s, int *bo_s, FLOAT8 *w1_s, FLOAT8 *w2_s)
       ji = j + (numlines_l[i]-1);
       freq = sfreq*ji/1024000.0;
       bark = .5*(bark + 13*atan(.76*freq) + 3.5*atan(freq*freq/(7.5*7.5)));
-
-
-
+      /*
       printf("%i %i bval_l table=%f  f=%f  formaula=%f \n",i,j,bval_l[i],freq,bark);
+      */
       bval_l[i]=bark;
       j += numlines_l[i];
     }
-#endif
+
 
   /************************************************************************
    * Now compute the spreading function, s[j][i], the value of the spread-*
@@ -1082,10 +1053,10 @@ int *bu_s, int *bo_s, FLOAT8 *w1_s, FLOAT8 *w2_s)
       freq_tp = *p++;
       cbmax_tp = (int) *p++;
       cbmax_tp++;
-
       if (sfreq == freq_tp/freq_scale )
 	{
 	  cbmax = cbmax_tp;
+	  *npart_s_orig = cbmax_tp;  
 	  for(i=0,k2=0;i<cbmax_tp;i++)
 	    {
 	      j = (int) *p++;
@@ -1093,7 +1064,7 @@ int *bu_s, int *bo_s, FLOAT8 *w1_s, FLOAT8 *w2_s)
 	      /* qthr_s[i] = *p++*/  p++;         
 	      /* norm_s[i] =*p++ */ p++;         
 	      SNR[i] = *p++;            
-	      bval_s[i] = *p++;
+	      /* bval_s[i] = *p++ */ p++;
 	      if (j!=i)
 		{
 		  fprintf(stderr,"3. please check \"psy_data\"");
@@ -1107,7 +1078,7 @@ int *bu_s, int *bo_s, FLOAT8 *w1_s, FLOAT8 *w2_s)
     }
 
 
-#ifdef NEWBARK
+
   /* compute bark values of each critical band */
   j = 0;
   for(i=0;i<cbmax;i++)
@@ -1120,13 +1091,12 @@ int *bu_s, int *bo_s, FLOAT8 *w1_s, FLOAT8 *w2_s)
       ji = j + numlines_s[i] -1;
       freq = sfreq*ji/256000.0;
       bark = .5*(bark + 13*atan(.76*freq) + 3.5*atan(freq*freq/(7.5*7.5)));
-
-
+      /*
       printf("%i %i bval_s = %f  %f  numlines=%i  formula=%f \n",i,j,bval_s[i],freq,numlines_s[i],bark);
+      */
       bval_s[i]=bark;
       j += numlines_s[i];
     }
-#endif
 
 
 
@@ -1233,5 +1203,37 @@ int *bu_s, int *bo_s, FLOAT8 *w1_s, FLOAT8 *w2_s)
       else
 	p += sbmax * 6;
     }
+
+
+
+  /* compute: */
+  /* npart_l_orig   = number of partition bands before convolution */
+  /* npart_l  = number of partition bands after convolution */
+
+  assert(*npart_l_orig <=CBANDS);
+  assert(*npart_s_orig<=CBANDS);
+
+  
+  *npart_l=bo_l[SBPSY_l-1]+1;
+  *npart_s=bo_s[SBPSY_s-1]+1;
+  
+
+  /* MPEG2 tables are screwed up 
+   * the mapping from paritition bands to scalefactor bands will use
+   * more paritition bands than we have.  
+   * So we will not compute these fictitious partition bands by reducing
+   * npart_l below.  */
+  if (*npart_l > *npart_l_orig) {
+    *npart_l=*npart_l_orig;
+    bo_l[SBPSY_l-1]=(*npart_l)-1;
+    w2_l[SBPSY_l-1]=1.0;
+  }
+
+  if (*npart_s > *npart_s_orig) {
+    *npart_s=*npart_s_orig;
+    bo_s[SBPSY_s-1]=(*npart_s)-1;
+    w2_s[SBPSY_s-1]=1.0;
+  }
+  
 
 }

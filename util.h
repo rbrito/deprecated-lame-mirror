@@ -273,8 +273,8 @@ typedef struct  {
 /* the second index is the "age" of the data.                             */
   FLOAT8	minval[CBANDS];
   FLOAT8	nb_1[4][CBANDS], nb_2[4][CBANDS];
-  FLOAT8 s3_s[CBANDS + 1][CBANDS + 1];
-  FLOAT8 s3_l[CBANDS + 1][CBANDS + 1];
+  FLOAT8 s3_s[CBANDS][CBANDS];
+  FLOAT8 s3_l[CBANDS][CBANDS];
 
   III_psy_xmin thm[4];
   III_psy_xmin en[4];
@@ -307,8 +307,9 @@ typedef struct  {
   int	s3ind[CBANDS][2];
   int	s3ind_s[CBANDS][2];
 
-  int	numlines_s[CBANDS] ;
-  int	numlines_l[CBANDS];
+  /* dimension 1 extra because the end is marked with a -1 */
+  int	numlines_s[CBANDS+1];
+  int	numlines_l[CBANDS+1];
   
   /* frame analyzer    */
   FLOAT energy_save[4][HBLKSIZE];
