@@ -13,6 +13,7 @@ use a 32kbs frame even if min VBR bandwidth is larger.
 
 3.
 User specified min & max bandwidth (scalefactor bands)
+(or maybe a user specified lowpass and high pass filter)
 
 4.
 Does stdin work when LAME is compiled to use libsndfile? 

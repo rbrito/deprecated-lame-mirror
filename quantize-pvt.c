@@ -604,6 +604,10 @@ int scale_bitcount_lsf( III_scalefac_t *scalefac, gr_info *cod_info,
     return over;
 }
 
+
+
+
+
 /*************************************************************************/
 /*            calc_xmin                                                  */
 /*************************************************************************/
@@ -612,12 +616,14 @@ int scale_bitcount_lsf( III_scalefac_t *scalefac, gr_info *cod_info,
   Calculate the allowed distortion for each scalefactor band,
   as determined by the psychoacoustic model.
   xmin(sb) = ratio(sb) * en(sb) / bw(sb)
+
+  returns number of sfb's with energy > ATH
 */
-void calc_xmin( FLOAT8 xr[2][2][576], III_psy_ratio *ratio,
+int calc_xmin( FLOAT8 xr[2][2][576], III_psy_ratio *ratio,
 	   gr_info *cod_info, III_psy_xmin *l3_xmin,
 	   int gr, int ch )
 {
-    int start, end, sfb, l, b;
+    int start, end, sfb, l, b, over=0;
     FLOAT8 en0, bw, ener;
 
     D192_3 *xr_s;
@@ -641,8 +647,10 @@ void calc_xmin( FLOAT8 xr[2][2][576], III_psy_ratio *ratio,
 	    ener = (*xr_s)[l][b] * (*xr_s)[l][b];
 	    en0 += ener;
 	  }
-	  l3_xmin->s[gr][ch][sfb][b] = masking_lower*ratio->s[gr][ch][sfb][b] * en0/bw;
+	  en0 /= bw;
+	  l3_xmin->s[gr][ch][sfb][b]=masking_lower*ratio->s[gr][ch][sfb][b]*en0;
 	  l3_xmin->s[gr][ch][sfb][b]=Max(ATH_s[sfb],l3_xmin->s[gr][ch][sfb][b]);
+	  if (en0 > ATH_s[sfb]) over++;
 	}
       }
       
@@ -656,12 +664,19 @@ void calc_xmin( FLOAT8 xr[2][2][576], III_psy_ratio *ratio,
 	  ener = xr[gr][ch][l] * xr[gr][ch][l];
 	  en0 += ener;
 	}
-	
-        l3_xmin->l[gr][ch][sfb] =masking_lower*ratio->l[gr][ch][sfb] * en0/bw;
+	en0 /= bw;
+        l3_xmin->l[gr][ch][sfb] =masking_lower*ratio->l[gr][ch][sfb] * en0;
 	l3_xmin->l[gr][ch][sfb]=Max(ATH_l[sfb],l3_xmin->l[gr][ch][sfb]);
+	if (en0 > ATH_l[sfb]) over++;
       }
     }
+    return over;
 }
+
+
+
+
+
 
 
 

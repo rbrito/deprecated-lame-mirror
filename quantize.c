@@ -147,7 +147,7 @@ VBR_iteration_loop (FLOAT8 pe[2][2], FLOAT8 ms_ener_ratio[2],
   int       bits;
   int       mean_bits;
   int       stereo = fr_ps->stereo;
-  int       i,ch, gr, mode_gr;
+  int       i,ch, gr, mode_gr, analog_silence;
   FLOAT8    xr[2][2][576];
   FLOAT8 xr_save[576];
   FLOAT8 masking_lower_db;
@@ -160,12 +160,13 @@ VBR_iteration_loop (FLOAT8 pe[2][2], FLOAT8 ms_ener_ratio[2],
   /*******************************************************************
    * how many bits are available for each bitrate?
    *******************************************************************/
-  for( info->bitrate_index = VBR_min_bitrate;
+  for( info->bitrate_index = 1;
        info->bitrate_index <= VBR_max_bitrate;
        info->bitrate_index++    ) {
     getframebits (info, stereo, &bitsPerFrame, &mean_bits);
     if (info->bitrate_index == VBR_min_bitrate) {
       /* always use at least this many bits per granule per channel */
+      /* unless we detect analog silence, see below */
       min_mean_bits=mean_bits/stereo;
     }
     frameBits[info->bitrate_index]=
@@ -178,6 +179,7 @@ VBR_iteration_loop (FLOAT8 pe[2][2], FLOAT8 ms_ener_ratio[2],
   /*******************************************************************
    * how many bits would we use of it?
    *******************************************************************/
+  analog_silence=0;
   for (gr = 0; gr < mode_gr; gr++) {
     int num_chan=stereo;
     /* determine quality based on mid channel only */
@@ -187,10 +189,6 @@ VBR_iteration_loop (FLOAT8 pe[2][2], FLOAT8 ms_ener_ratio[2],
     if (convert_mdct) ms_convert(xr[gr],xr_org[gr]);
     else memcpy(xr[gr],xr_org[gr],sizeof(FLOAT8)*2*576);   
 
-    
-
-
-
     for (ch = 0; ch < num_chan; ch++) { 
       /******************************************************************
        * find smallest number of bits for an allowable quantization
@@ -198,6 +196,14 @@ VBR_iteration_loop (FLOAT8 pe[2][2], FLOAT8 ms_ener_ratio[2],
       memcpy(xr_save,xr[gr][ch],sizeof(FLOAT8)*576);   
       cod_info = &l3_side->gr[gr].ch[ch].tt;
       min_bits = Max(125,min_mean_bits);
+
+      /* check for analolg silence */
+      /* if energy < ATH, set min_bits = 125 */
+      if (0==calc_xmin( xr, ratio, cod_info, &l3_xmin, gr, ch )) {
+	analog_silence=1;
+      	min_bits=125;
+      }
+
       if (cod_info->block_type==SHORT_TYPE) {
 	min_bits += Max(1100,pe[gr][ch]);
 	min_bits=Min(min_bits,1800);
@@ -226,9 +232,9 @@ VBR_iteration_loop (FLOAT8 pe[2][2], FLOAT8 ms_ener_ratio[2],
 	/* db_lower varies from -10 to +8 db */
 	masking_lower_db = -10 + 2*VBR_q;
 	/* adjust by -6(min)..0(max) depending on bitrate */
-	//	fac=(FLOAT8)(this_bits-125)/(FLOAT8)(2500-125);
-	//	fac = 6*(fac-1);
-	//	masking_lower_db += fac;
+	fac=(FLOAT8)(this_bits-125)/(FLOAT8)(2500-125);
+	fac = 6*(fac-1);
+	masking_lower_db += fac;
 
 	masking_lower = pow(10.0,masking_lower_db/10);
 
@@ -265,8 +271,8 @@ VBR_iteration_loop (FLOAT8 pe[2][2], FLOAT8 ms_ener_ratio[2],
       } while (dbits>10) ;
       used_bits += save_bits[gr][ch];
       
-    } /* for */
-  } /* for */
+    } /* for ch */
+  } /* for gr */
 
 
   if (reduce_sidechannel) {
@@ -275,19 +281,18 @@ VBR_iteration_loop (FLOAT8 pe[2][2], FLOAT8 ms_ener_ratio[2],
     for (gr = 0; gr < mode_gr; gr++) {
       FLOAT8 fac = .33*(.5-ms_ener_ratio[gr])/.5;
       save_bits[gr][1]=((1-fac)/(1+fac))*save_bits[gr][0];
+      save_bits[gr][1]=Max(75,save_bits[gr][1]);
       used_bits += save_bits[gr][1];
     }
   }
 
-  
   /******************************************************************
    * find lowest bitrate able to hold used bits
    ******************************************************************/
-  for( info->bitrate_index = VBR_min_bitrate;
+  for( info->bitrate_index =   (analog_silence ? 1 : VBR_min_bitrate );
        info->bitrate_index < VBR_max_bitrate;
        info->bitrate_index++    )
     if( used_bits <= frameBits[info->bitrate_index] ) break;
-
 
   /*******************************************************************
    * calculate quantization for this bitrate

@@ -769,7 +769,7 @@ case 't':  /* dont write VBR tag */
 #ifdef BRHIST
   if (VBR) {
     if (disp_brhist)
-      brhist_init(VBR_min_bitrate, VBR_max_bitrate);
+      brhist_init(1, 14);
   } else
     disp_brhist = 0;
 #endif

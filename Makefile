@@ -281,6 +281,9 @@ test20: $(PGM)
 test20h: $(PGM)
 	./lame  -h  ../test/castanets.wav
 	cmp -l ../test/castanets.wav.mp3 ../test/castanets.ref20h.mp3 | head
+testv: $(PGM)
+	./lame  -v  ../test/castanets.wav
+	cmp -l ../test/castanets.wav.mp3 ../test/castanets.refv.mp3 | head
 testg: $(PGM)
 	./lame -h -g ../test/castanets.wav
 

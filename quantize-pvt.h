@@ -72,7 +72,7 @@ int inner_loop( FLOAT8 xr[2][2][576], FLOAT8 xrpow[576],
                 gr_info *cod_info,
                 int gr,
                 int ch );
-void calc_xmin( FLOAT8 xr[2][2][576],
+int calc_xmin( FLOAT8 xr[2][2][576],
                III_psy_ratio *ratio,
                gr_info *cod_info,
                III_psy_xmin *l3_xmin,
