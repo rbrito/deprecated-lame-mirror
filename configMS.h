@@ -74,6 +74,7 @@
 #define uint8_t unsigned char
 #define uint16_t unsigned short
 #define uint32_t unsigned int
+#define int32_t int
 #define uint64_t unsigned long long
 #endif
 
@@ -82,7 +83,7 @@ typedef double      ieee754_float64_t;
 typedef float       ieee754_float32_t;
 
 #ifdef LAME_ACM
-// memory hacking for driver purposes
+/* memory hacking for driver purposes */
 #define calloc(x,y) acm_Calloc(x,y)
 #define free(x)     acm_Free(x)
 #define malloc(x)   acm_Malloc(x)
@@ -91,6 +92,6 @@ typedef float       ieee754_float32_t;
 void *acm_Calloc( size_t num, size_t size );
 void *acm_Malloc( size_t size );
 void acm_Free( void * mem);
-#endif // LAME_ACM
+#endif /* LAME_ACM */
 
 #define LAME_LIBRARY_BUILD
