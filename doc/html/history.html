@@ -26,8 +26,24 @@
     black = usability, portability, other     
 <hr>
           
-<h3>LAME 3.93alpha (CVS)</h3>
-   
+<h3>LAME 3.94alpha (CVS)</h3>
+<ul>
+  <li>Takehiro Tominaga:
+     <ul>
+       <li><font color="#ff0000">fixed block switching of nspsytune</font></li>
+       <li><font color="#ff0000">best huffman divide in the inner loop.</font>
+	    This should improve the quality, but PAINFULLY slow.
+	    So it is not enabled by default. Use -h to use it.</li>
+       <li>Changed -q option mapping. "-q2" until version 3.93 is now "-q3".</li>
+       <li><font color="#ff0000">saving bits by better scalefactor storing</font></li>
+     </ul>
+  <li>Darin Morrison:
+     <ul>
+       <li><font color="#ff0000">new preset, "portable", "radio", "dm-medium", and their fast mode</font></li>
+     </ul>
+</ul>
+<br>
+<h3>LAME 3.93</h3>
 <ul>
   <li>Takehiro Tominaga:
      <ul>
@@ -36,7 +52,7 @@
       <li><font color="#3366ff">optimizations by changing data structure</font></li>
       <li><font color="#ff0000">noise shaping model 2 fix</font></li>
       <li><font color="#3366ff">nspsytune FIR filter clean up</font></li>
-      <li><font color="#ff0000">fix small psymodel bugs</font></li>
+      <li><font color="#ff0000">fix small psymodel bugs(DC current estimation, preecho detection of non-VBR mode, and nspsymode initialization)</font></li>
       <li>portability fixes for Tru64 UNIX</li>
      </ul>
   </li>
@@ -47,6 +63,7 @@
      <ul>
       <li>some tag related fixes in the direct show filter and in the ACM codec</li>
       <li><font color="#3366ff">fixed a mono encoding bug found by Justin Schoeman</font></li>
+      <li>fatal calc_noise bug fix</li>
       <li>other fixes</li>
      </ul>
   </li>
@@ -56,22 +73,28 @@
       <li>Akos Maroy: determine gcc version even with gcc 3.1</li>
       <li>Andrew Bachmann: compile shared libs on BeOS (and perhaps other arches)</li>
       <li>ultrasparc switches for gcc 3.1</li>
-      <li>portability fixes for SunOS 4.x</li>
+      <li>fixes for SunOS 4.x</li>
+      <li>fixes for 64bit arches</li>
+      <li>CFLAGS fix for IRIX</li>
+      <li>don't override CFLAGS if exptopt isn't requested</li>
      </ul>
   </li>
   <li>Robert Hegeman:
      <ul>
       <li><font color="#3366ff">some fixes</font></li>
-      <li><font color="#ff0000">some fixes for VBR</font></li>
+      <li><font color="#ff0000">some fixes for VBR(mainly for --vbr-mrth)</font></li>
+      <li><font color="#3366ff">added side channel sparsing</font></li>
+      <li>block type histgram</li>
      </ul>
   </li>
   <li>Gabriel Bouvigne:
      <ul>
       <li>--noasm switch. Might help Cyrix/Via users</li>
       <li><font color="#ff0000">presets and alt-presets merged</font></li>
+      <li><font color="#ff0000">new preset mode "medium" and "fast medium"</font></li>
+      <li>added <a href="doc/html/presets.html">documentation of presets</a></li>
      </ul>
   </li>
-  <li><br></li>
 </ul>
 <br>
 <h3>LAME 3.92 &nbsp; &nbsp;April 14 2002</h3> 
