@@ -27,19 +27,11 @@
 #ifdef WITH_DMALLOC
 # include <dmalloc.h>
 #endif
-#include <assert.h>
-#include <stdarg.h>
 
-#ifdef HAVE_ERRNO_H
-# include <errno.h>
-#endif
 #ifdef HAVE_FCNTL_H
 # include <fcntl.h>
 #endif
 
-#if defined(__FreeBSD__) && !defined(__alpha__)
-#include <floatingpoint.h>
-#endif
 #ifdef __riscos__
 #include "asmstuff.h"
 #endif
@@ -47,31 +39,13 @@
 #include "encoder.h"
 #include "util.h"
 
-/***********************************************************************
-*
-*  Global Function Definitions
-*
-***********************************************************************/
-int
-BitrateIndex(
-    int bRate,        /* legal rates from 32 to 448 kbps */
-    int version       /* MPEG-1 or MPEG-2/2.5 LSF */
-    )
-{
-    int  i;
-    for (i = 0; i <= 14; i++)
-	if (bitrate_table[version][i] == bRate)
-	    return i;
-
-    return -1;
-}
-
 /*
  *  Disable floating point exceptions
  *  extremly system dependent stuff, move to a lib to make the code readable
  */
 void disable_FPE(void) {
 #if defined(__FreeBSD__) && !defined(__alpha__)
+#include <floatingpoint.h>
     {
         /* seet floating point mask to the Linux default */
         fp_except_t mask;

@@ -30,7 +30,6 @@
 #include <assert.h>
 
 #include "encoder.h"
-#include "util.h"
 #include "tables.h"
 #include "psymodel.h"
 #include "quantize_pvt.h"

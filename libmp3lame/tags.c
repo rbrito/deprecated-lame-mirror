@@ -563,9 +563,8 @@ id3tag_write_v1(lame_t gfc, unsigned char *buf, int size)
 #define LAMEHEADERSIZE (VBRHEADERSIZE + 9 + 1 + 1 + 8 + 1 + 1 + 3 + 1 + 1 + 2 + 4 + 2 + 2)
 
 /* the size of the Xing header (MPEG1 and MPEG2) in kbps */
-#define XING_BITRATE1 128
-#define XING_BITRATE2  64
-#define XING_BITRATE25 32
+#define XING_BITRATE1_INDEX  9
+#define XING_BITRATE2_INDEX  8
 
 static const char	VBRTag[]={"Xing"};
 static const char	VBRTag2[]={"Info"};
@@ -642,21 +641,20 @@ InitVbrTag(lame_t gfc)
      * let's always embed Xing header inside a 64kbs layer III frame.
      * this gives us enough room for a LAME version string too.
      * size determined by sampling frequency (MPEG1)
-     * 32kHz:    216 bytes@48kbs    288bytes@ 64kbs
-     * 44.1kHz:  156 bytes          208bytes@64kbs     (+1 if padding = 1)
-     * 48kHz:    144 bytes          192
+     * 32kHz:    216 bytes@48kbs  288 bytes@64kbs
+     * 44.1kHz:  156              208        (+1 if padding = 1)
+     * 48kHz:    144              192
      *
      * MPEG 2 values are the same since the framesize and samplerate
      * are each reduced by a factor of 2.
      */
     bitrate = gfc->mean_bitrate_kbps;
     if (gfc->VBR != cbr) {
-	bitrate = XING_BITRATE1;
+	bitrate = XING_BITRATE1_INDEX;
 	if (gfc->version != 1) {
-	    bitrate = XING_BITRATE2;
-	    if (gfc->out_samplerate < 16000)
-		bitrate = XING_BITRATE25;
+	    bitrate = XING_BITRATE2_INDEX;
 	}
+	bitrate = bitrate_table[gfc->version][bitrate];
     }
 
     gfc->TotalFrameSize
@@ -862,14 +860,12 @@ PutVbrTag(lame_t gfc, FILE *fpStream)
     /* but sampling freq, mode andy copyright/copy protection taken */
     /* from first valid frame */
     if (gfc->VBR != cbr) {
-	bitrate = XING_BITRATE1;
+	bitrate = XING_BITRATE1_INDEX;
 	if (gfc->version != 1) {
-	    bitrate = XING_BITRATE2;
-	    if (gfc->out_samplerate < 16000)
-		bitrate = XING_BITRATE25;
+	    bitrate = XING_BITRATE2_INDEX;
 	}
 	assert(gfc->free_format == 0);
-	buf[2] = (BitrateIndex(bitrate, gfc->version) << 4) | (buf[2] & 0x0d);
+	buf[2] = (bitrate << 4) | (buf[2] & 0x0d);
     }
     /* note! Xing header specifies that Xing data goes in the
      * ancillary data with NO ERROR PROTECTION.  If error protecton

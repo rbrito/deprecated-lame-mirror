@@ -22,9 +22,6 @@
 #ifndef LAME_UTIL_H
 #define LAME_UTIL_H
 
-#include "lame.h"
-
-int	BitrateIndex(int, int);
 void	disable_FPE(void);
 uint16_t calculateCRC(unsigned char *p, int size, uint16_t crc);
 

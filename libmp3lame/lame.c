@@ -146,17 +146,25 @@ FindNearestBitrate(
 static int
 SmpFrqIndex (int sample_freq)
 {
-    switch ( sample_freq ) {
-    case 44100: case 22050: case 11025:
-	return  0;
-    case 48000: case 24000: case 12000:
-	return  1;
-    case 32000: case 16000: case  8000:
-	return  2;
+    switch (sample_freq) {
+    case 44100: case 22050: case 11025:	return  0;
+    case 48000: case 24000: case 12000:	return  1;
+    case 32000: case 16000: case  8000:	return  2;
     }
     return -1;
 }
 
+
+static int
+BitrateIndex(int bRate, int version)
+{
+    int  i;
+    for (i = 0; i <= 14; i++)
+	if (bitrate_table[version][i] == bRate)
+	    return i;
+
+    return -1;
+}
 
 static int
 get_bitrate(lame_t gfc)
@@ -1018,40 +1026,24 @@ lame_encode_flush(lame_t gfc, unsigned char *mp3buf, int mp3buffer_size)
 {
     int imp3, mp3count = 0, mp3buffer_size_remaining = mp3buffer_size;
     sample_t buffer[2*1152] = {0};
-
-    /* The reason for
-     *       int mf_samples_to_encode = ENCDELAY + POSTDELAY;
-     * ENCDELAY = internal encoder delay. And then we have to add POSTDELAY=288
-     * because of the 50% MDCT overlap.  A 576 MDCT granule decodes to
-     * 1152 samples.  To synthesize the 576 samples centered under this granule
-     * we need the previous granule for the first 288 samples (no problem), and
-     * the next granule for the next 288 samples (not possible if this is last
-     * granule).  So we need to pad with 288 samples to make sure we can
-     * encode the 576 samples we are interested in.
-     */
-    int mf_samples_to_encode = gfc->mf_size + ENCDELAY + POSTDELAY;
+    int samples_to_encode = gfc->mf_size + ENCDELAY;
+    int i = (samples_to_encode + POSTDELAY - 1) / gfc->framesize;
 
     if (gfc->Class_ID != LAME_ID)
         return -3;
 
-    do {
-	/* send in a frame of 0 padding until all internal sample buffers
-	 * are flushed
-	 */
-	imp3 = encode_buffer_sample(gfc, buffer, gfc->framesize,
-				    mp3buf, mp3buffer_size_remaining);
-	if (imp3 < 0) return imp3;
-
-	if (mp3buffer_size)
-	    mp3buffer_size_remaining -= imp3;
-	mp3buf += imp3;
-	mp3count += imp3;
-    } while ((mf_samples_to_encode -= gfc->framesize) > 0);
-
-    /* we always add POSTDELAY=288 padding to make sure granule with real
-     * data can be complety decoded (because of 50% overlap with next granule)
+    /* send in a frame of 0 padding until all internal sample buffers
+     * are flushed
      */
-    gfc->encoder_padding = POSTDELAY - mf_samples_to_encode;
+    gfc->encoder_padding = i * gfc->framesize - samples_to_encode;
+    imp3 = encode_buffer_sample(gfc, buffer, i * gfc->framesize,
+				mp3buf, mp3buffer_size_remaining);
+    if (imp3 < 0) return imp3;
+
+    if (mp3buffer_size)
+	mp3buffer_size_remaining -= imp3;
+    mp3buf += imp3;
+    mp3count += imp3;
 
     /* mp3 related stuff.  bit buffer might still contain some mp3 data */
     imp3 = flush_bitstream(gfc, mp3buf, mp3buffer_size_remaining);
