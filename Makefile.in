@@ -58,12 +58,8 @@ POST_INSTALL = :
 NORMAL_UNINSTALL = :
 PRE_UNINSTALL = :
 POST_UNINSTALL = :
-build_alias = @build_alias@
-build_triplet = @build@
 host_alias = @host_alias@
 host_triplet = @host@
-target_alias = @target_alias@
-target_triplet = @target@
 AMTAR = @AMTAR@
 AS = @AS@
 AWK = @AWK@
@@ -108,7 +104,7 @@ install_sh = @install_sh@
 
 AUTOMAKE_OPTIONS = 1.5 foreign $(top_srcdir)/ansi2knr
 
-SUBDIRS = mpglib libmp3lame frontend Dll debian doc include misc dshow ACM
+SUBDIRS = mpglib libmp3lame frontend Dll debian doc include misc dshow ACM mac
 
 CLEANFILES = testcase.new.mp3
 
@@ -149,9 +145,9 @@ RECURSIVE_TARGETS = info-recursive dvi-recursive install-info-recursive \
 	install-exec-recursive installdirs-recursive install-recursive \
 	uninstall-recursive check-recursive installcheck-recursive
 DIST_COMMON = README ./stamp-h.in COPYING ChangeLog INSTALL Makefile.am \
-	Makefile.in TODO acconfig.h acinclude.m4 aclocal.m4 \
-	config.guess config.h.in config.sub configure configure.in \
-	depcomp install-sh lame.spec.in ltconfig ltmain.sh missing \
+	Makefile.in TODO acinclude.m4 aclocal.m4 config.guess \
+	config.h.in config.sub configure configure.in depcomp \
+	install-sh lame.spec.in ltconfig ltmain.sh missing \
 	mkinstalldirs
 DIST_SUBDIRS = $(SUBDIRS)
 all: config.h
@@ -199,7 +195,7 @@ $(srcdir)/config.h.in: @MAINTAINER_MODE_TRUE@ $(srcdir)/./stamp-h.in
 		rm -f $(srcdir)/./stamp-h.in; \
 		$(MAKE) $(srcdir)/./stamp-h.in; \
 	else :; fi
-$(srcdir)/./stamp-h.in: $(top_srcdir)/configure.in $(ACLOCAL_M4) $(top_srcdir)/acconfig.h
+$(srcdir)/./stamp-h.in: $(top_srcdir)/configure.in $(ACLOCAL_M4) 
 	@rm -f $(srcdir)/./stamp-h.in $(srcdir)/./stamp-h.inT
 	@echo timestamp > $(srcdir)/./stamp-h.inT 2> /dev/null
 	cd $(top_srcdir) && $(AUTOHEADER)
