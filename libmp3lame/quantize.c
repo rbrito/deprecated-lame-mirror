@@ -33,6 +33,7 @@
 #include "reservoir.h"
 #include "quantize_pvt.h"
 #include "lame-analysis.h"
+#include "vbrquantize.h"
 
 #ifdef WITH_DMALLOC
 #include <dmalloc.h>

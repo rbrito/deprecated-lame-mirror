@@ -28,16 +28,14 @@
 #include <assert.h>
 #include "util.h"
 #include "l3side.h"
-#include "quantize.h"
 #include "reservoir.h"
 #include "quantize_pvt.h"
-#include "lame-analysis.h"
+#include "vbrquantize.h"
 
 #ifdef WITH_DMALLOC
 #include <dmalloc.h>
 #endif
 
-#undef MAXQUANTERROR
 
 
 typedef union {
@@ -167,64 +165,36 @@ FLOAT8 select_kth(FLOAT8 a[], int N, int k)
 
 
 static FLOAT8
-calc_sfb_noise(const FLOAT8 *xr, const FLOAT8 *xr34, const int bw, const int sf)
+calc_sfb_noise(const FLOAT8 *xr, const FLOAT8 *xr34, int bw, int sf)
 {
-  int j;
-  fi_union fi; 
-  FLOAT8 temp;
-  FLOAT8 xfsf=0;
-  FLOAT8 sfpow,sfpow34;
+    int j;
+    fi_union fi; 
+    FLOAT8 temp;
+    FLOAT8 xfsf = 0;
+    FLOAT8 sfpow, sfpow34;
 
-  sfpow = POW20(sf+210); /*pow(2.0,sf/4.0); */
-  sfpow34  = IPOW20(sf+210); /*pow(sfpow,-3.0/4.0);*/
+    sfpow   =  POW20(sf+210); /*pow(2.0,sf/4.0); */
+    sfpow34 = IPOW20(sf+210); /*pow(sfpow,-3.0/4.0);*/
 
-  for ( j=0; j < bw ; ++j) {
-#if 0
-    int ix;
-    if (xr34[j]*sfpow34 > IXMAX_VAL) return -1;
-    ix=floor( xr34[j]*sfpow34);
-    temp = fabs(xr[j])- pow43[ix]*sfpow;
-    temp *= temp;
-
-    if (ix < IXMAX_VAL) {
-      temp2 = fabs(xr[j])- pow43[ix+1]*sfpow;
-      temp2 *=temp2;
-      if (temp2<temp) {
-	temp=temp2;
-	++ix;
-      }
-    }
-#else
-    if (xr34[j]*sfpow34 > IXMAX_VAL) return -1;
+    for ( j = 0; j < bw ; ++j ) {
+        if ( xr34[j]*sfpow34 > IXMAX_VAL ) return -1;
 
 #ifdef TAKEHIRO_IEEE754_HACK
-    temp   = sfpow34*xr34[j];
-    temp  += MAGIC_FLOAT; 
-    fi.f  = temp;
-    fi.f  = temp + (adj43asm - MAGIC_INT)[fi.i];
-    fi.i -= MAGIC_INT;
+        temp   = sfpow34*xr34[j];
+        temp  += MAGIC_FLOAT; 
+        fi.f  = temp;
+        fi.f  = temp + (adj43asm - MAGIC_INT)[fi.i];
+        fi.i -= MAGIC_INT;
 #else
-    temp = xr34[j]*sfpow34;
-    XRPOW_FTOI(temp, fi.i);
-    XRPOW_FTOI(temp + QUANTFAC(fi.i), fi.i);
+        temp = xr34[j]*sfpow34;
+        XRPOW_FTOI(temp, fi.i);
+        XRPOW_FTOI(temp + QUANTFAC(fi.i), fi.i);
 #endif
 
-    temp = fabs(xr[j])- pow43[fi.i]*sfpow;
-    temp *= temp;
-    
-#endif
-    
-#ifdef MAXQUANTERROR
-    xfsf = Max(xfsf,temp);
-#else
-    xfsf += temp;
-#endif
-  }
-#ifdef MAXQUANTERROR
-  return xfsf;
-#else
-  return xfsf;//bw;
-#endif
+        temp = fabs(xr[j])- pow43[fi.i]*sfpow;
+        xfsf += temp*temp;
+    }
+    return xfsf;
 }
 
 
@@ -234,20 +204,20 @@ static FLOAT8
 calc_sfb_noise_mq( const FLOAT8 *xr, const FLOAT8 *xr34, int bw, int sf, 
                    int mq, FLOAT8 *scratch )
 {
-    int j,k;
+    int j, k;
     fi_union fi; 
     FLOAT8 temp;
-    FLOAT8 sfpow,sfpow34, xfsfm = 0, xfsf = 0;
+    FLOAT8 sfpow, sfpow34, xfsfm = 0, xfsf = 0;
 
-    sfpow = POW20(sf+210); /*pow(2.0,sf/4.0); */
-    sfpow34  = IPOW20(sf+210); /*pow(sfpow,-3.0/4.0);*/
+    sfpow   =  POW20(sf+210); /*pow(2.0,sf/4.0); */
+    sfpow34 = IPOW20(sf+210); /*pow(sfpow,-3.0/4.0);*/
 
-    for ( j=0; j < bw ; ++j) {
-        if (xr34[j]*sfpow34 > IXMAX_VAL) return -1;
+    for ( j = 0; j < bw; ++j ) {
+        if ( xr34[j]*sfpow34 > IXMAX_VAL ) return -1;
 
 #ifdef TAKEHIRO_IEEE754_HACK
-        temp   = sfpow34*xr34[j];
-        temp  += MAGIC_FLOAT; 
+        temp  = sfpow34*xr34[j];
+        temp += MAGIC_FLOAT; 
         fi.f  = temp;
         fi.f  = temp + (adj43asm - MAGIC_INT)[fi.i];
         fi.i -= MAGIC_INT;
@@ -337,27 +307,15 @@ calc_sfb_noise_ave(const FLOAT8 *xr, const FLOAT8 *xr34, int bw, int sf)
         xm = fabs(xr[j])- pow43[fi[0].i]*sfpow_m1;
         xm *= xm;
 
-#ifdef MAXQUANTERROR
-        xfsf_eq = Max(xfsf,xm);
-        xfsf_p1 = Max(xfsf_p1,xp);
-        xfsf_m1 = Max(xfsf_m1,xm);
-#else
         xfsf_eq += xe;
         xfsf_p1 += xp;
         xfsf_m1 += xm;
-#endif
     }
 #endif
 
-    if (xfsf_eq < xfsf_p1) 
-        xfsf_eq = xfsf_p1;
-    if (xfsf_eq < xfsf_m1) 
-        xfsf_eq = xfsf_m1;
-#ifdef MAXQUANTERROR
+    if ( xfsf_eq < xfsf_p1 ) xfsf_eq = xfsf_p1;
+    if ( xfsf_eq < xfsf_m1 ) xfsf_eq = xfsf_m1;
     return xfsf_eq;
-#else
-    return xfsf_eq;//bw;
-#endif
 }
 
 
@@ -392,10 +350,6 @@ find_scalefac( const FLOAT8 *xr, const FLOAT8 *xr34, FLOAT8 l3_xmin, int bw )
             }
         }
     } 
-    //assert( sf_ok != 10000 );
-#if 0
-    assert( delsf==1 );  /* when for loop goes up to 7 */
-#endif
 
     /*  returning a scalefac without distortion, if possible
      */
@@ -433,10 +387,6 @@ find_scalefac_mq( const FLOAT8 *xr, const FLOAT8 *xr34, FLOAT8 l3_xmin,
             }
         }
     } 
-    //assert( sf_ok != 10000 );
-#if 0
-    assert( delsf == 1 );  /* when for loop goes up to 7 */
-#endif
 
     /*  returning a scalefac without distortion, if possible
      */
@@ -473,10 +423,6 @@ find_scalefac_ave( const FLOAT8 *xr, const FLOAT8 *xr34, FLOAT8 l3_xmin, int bw 
             }
         }
     } 
-    //assert( sf_ok != 10000 );
-#if 0
-    assert( delsf == 1 );  /* when for loop goes up to 7 */
-#endif
 
     /*  returning a scalefac without distortion, if possible
      */
@@ -494,12 +440,6 @@ calc_scalefac( FLOAT8 l3_xmin, int bw )
     FLOAT8 const c = 5.799142446;   // 10 * 10^(2/3) * log10(4/3)
     return (int)(c*log10(l3_xmin/bw)-.5);
 }
-
-
-
-/*  ???
-        How do the following tables look like for MPEG-2-LSF
-                                                            ??? */
 
 
 
@@ -681,12 +621,11 @@ compute_scalefacs_long( int *sf, const gr_info * cod_info, int *scalefac )
 
 static int
 VBR_quantize_granule( 
-          lame_internal_flags *  gfc,
-          FLOAT8                 xr34[576], 
-          int                    l3_enc[576],
-          III_scalefac_t * const scalefac, 
-    const int gr, 
-    const int ch)
+          lame_internal_flags * gfc,
+          FLOAT8              * xr34, 
+          int                 * l3_enc,
+          III_scalefac_t      * scalefac, 
+          int gr, int ch )
 {
     int status;
     III_side_info_t * l3_side  = & gfc->l3_side;
@@ -731,8 +670,8 @@ static void
 short_block_sf (
     const lame_internal_flags * gfc,
     const III_psy_xmin   * l3_xmin,
-    const FLOAT8           xr34_orig[576],
-    const FLOAT8           xr34     [576],
+    const FLOAT8         * xr34_orig,
+    const FLOAT8         * xr34,
           III_scalefac_t * vbrsf,
           int            * vbrmin,
           int            * vbrmax )
@@ -768,13 +707,18 @@ short_block_sf (
                                                     l3_xmin->s[sfb][b], width);
                 break;
             case 1:
+                /*  maxnoise mode to use at higher quality
+                 */
+                vbrsf->s[sfb][b] = find_scalefac_mq (&xr34[j], &xr34_orig[j], 
+                                              l3_xmin->s[sfb][b], width,
+                                              1, gfc->VBR->scratch);
+                break;
             case 0:
                 /*  maxnoise mode to use at higher quality
                  */
                 vbrsf->s[sfb][b] = find_scalefac_mq (&xr34[j], &xr34_orig[j], 
                                               l3_xmin->s[sfb][b], width,
-                                              gfc->VBR->quality,
-                                              gfc->VBR->scratch);
+                                              0, gfc->VBR->scratch);
                 break;
             }
             j += width;
@@ -805,12 +749,6 @@ short_block_sf (
             /*  find median value, take it as mean 
              */
             vbrmean = select_kth_int (sf_cache, SBMAX_s, (SBMAX_s+1)/2);
-
-            /*  patch sfb12
-            vbrsf->s[SBPSY_s][b] = Min (vbrsf->s[SBPSY_s][b], vbrmean);
-            vbrsf->s[SBPSY_s][b] = Max (vbrsf->s[SBPSY_s][b], vbrmin-(vbrmean-vbrmin));
-            no more necessary?
-             */
 
             /*  cut peaks
              */
@@ -849,8 +787,8 @@ static void
 long_block_sf (
     const lame_internal_flags * gfc,
     const III_psy_xmin   * l3_xmin,
-    const FLOAT8           xr34_orig[576],
-    const FLOAT8           xr34     [576],
+    const FLOAT8         * xr34_orig,
+    const FLOAT8         * xr34,
           III_scalefac_t * vbrsf,
           int            * vbrmin,
           int            * vbrmax )
@@ -885,13 +823,18 @@ long_block_sf (
                                                l3_xmin->l[sfb], width);
             break;
         case 1:
+            /*  maxnoise mode to use at higher quality
+             */
+            vbrsf->l[sfb] = find_scalefac_mq (&xr34[start], &xr34_orig[start], 
+                                           l3_xmin->l[sfb], width, 
+                                           1, gfc->VBR->scratch);
+            break;
         case 0:
             /*  maxnoise mode to use at higher quality
              */
             vbrsf->l[sfb] = find_scalefac_mq (&xr34[start], &xr34_orig[start], 
                                            l3_xmin->l[sfb], width, 
-                                           gfc->VBR->quality,
-                                           gfc->VBR->scratch);
+                                           0, gfc->VBR->scratch);
             break;
         }
     }
@@ -912,12 +855,6 @@ long_block_sf (
         /*  find median value, take it as mean 
          */
         vbrmean = select_kth_int (sf_cache, SBMAX_l, (SBMAX_l+1)/2);
-
-        /*  patch sfb21
-        vbrsf->l[SBPSY_l] = Min (vbrsf->l[SBPSY_l], vbrmean);
-        vbrsf->l[SBPSY_l] = Max (vbrsf->l[SBPSY_l], vbrmin-(vbrmean-vbrmin));
-        no more necessary?
-         */
 
         /*  cut peaks
          */
@@ -959,11 +896,11 @@ long_block_sf (
 
 static void 
 short_block_scalefacs (
-    const lame_internal_flags *  gfc,
-          gr_info        * const cod_info,
-          III_scalefac_t * const scalefac,
-          III_scalefac_t * const vbrsf,
-          int            * const VBRmax )
+    const lame_internal_flags * gfc,
+          gr_info             * cod_info,
+          III_scalefac_t      * scalefac,
+          III_scalefac_t      * vbrsf,
+          int                 * VBRmax )
 {
     int sfb, maxsfb, b;
     int maxover, maxover0, maxover1, mover;
@@ -1049,11 +986,11 @@ short_block_scalefacs (
 
 static void 
 long_block_scalefacs (
-    const lame_internal_flags *  gfc,
-          gr_info        * const cod_info,
-          III_scalefac_t * const scalefac,
-          III_scalefac_t * const vbrsf,
-          int            * const VBRmax )
+    const lame_internal_flags * gfc,
+          gr_info             * cod_info,
+          III_scalefac_t      * scalefac,
+          III_scalefac_t      * vbrsf,
+          int                 * VBRmax )
 {
     const int * max_rangep;
     int sfb, maxsfb;
@@ -1122,7 +1059,7 @@ long_block_scalefacs (
     if (cod_info->global_gain < 0) {
         cod_info->global_gain = 0; 
     }
-    
+    else
     if (cod_info->global_gain > 255) 
         cod_info->global_gain = 255;
     
@@ -1155,11 +1092,11 @@ long_block_scalefacs (
 
 static void
 short_block_xr34 ( 
-    const lame_internal_flags * const gfc,
-    const gr_info        * const cod_info,
-    const III_scalefac_t * const scalefac, 
-    const FLOAT8                 xr34_orig[576],
-          FLOAT8                 xr34     [576] )
+    const lame_internal_flags * gfc,
+    const gr_info             * cod_info,
+    const III_scalefac_t      * scalefac, 
+    const FLOAT8              * xr34_orig,
+          FLOAT8              * xr34 )
 {
     int    sfb, l, j, b;
     int    ifac, ifqstep, start, end;
@@ -1219,11 +1156,11 @@ short_block_xr34 (
 
 static void 
 long_block_xr34 ( 
-    const lame_internal_flags * const gfc,
-    const gr_info        * const cod_info,
-    const III_scalefac_t * const scalefac, 
-    const FLOAT8                 xr34_orig[576],
-          FLOAT8                 xr34     [576] )
+    const lame_internal_flags * gfc,
+    const gr_info             * cod_info,
+    const III_scalefac_t      * scalefac, 
+    const FLOAT8              * xr34_orig,
+          FLOAT8              * xr34 )
 { 
     int    sfb, l, j;
     int    ifac, ifqstep, start, end;
@@ -1297,16 +1234,16 @@ long_block_xr34 (
  
 int
 VBR_noise_shaping2 (
-    lame_global_flags    * gfp,
-    FLOAT8                 xr       [576], 
-    FLOAT8                 xr34orig [576],
-    int                    l3_enc   [576], 
-    int                    minbits,
-    int                    maxbits,
-    III_scalefac_t * const scalefac,
-    III_psy_xmin   * const l3_xmin,
-    int                    gr,
-    int                    ch )
+    lame_global_flags * gfp,
+    FLOAT8            * xr, 
+    FLOAT8            * xr34orig,
+    int               * l3_enc, 
+    int                 minbits,
+    int                 maxbits,
+    III_scalefac_t    * scalefac,
+    III_psy_xmin      * l3_xmin,
+    int                 gr,
+    int                 ch )
 {
     lame_internal_flags *gfc = gfp->internal_flags;
     III_scalefac_t vbrsf;

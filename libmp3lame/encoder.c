@@ -35,6 +35,7 @@
 #include "quantize_pvt.h"
 #include "bitstream.h"
 #include "VbrTag.h"
+#include "vbrquantize.h"
 
 #ifdef WITH_DMALLOC
 #include <dmalloc.h>
