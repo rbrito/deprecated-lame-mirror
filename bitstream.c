@@ -411,7 +411,7 @@ encodeSideInfo2(lame_global_flags *gfp,int bitsPerFrame)
 
     {
 	int old = gfc->h_ptr;
-	assert(gfc->header[old].ptr == (int)(gfc->sideinfo_len * 8));
+	assert(gfc->header[old].ptr == gfc->sideinfo_len * 8);
 
 	gfc->h_ptr = (old + 1) & (MAX_HEADER_BUF - 1);
 	gfc->header[gfc->h_ptr].write_timing =
@@ -531,7 +531,7 @@ HuffmanCode(lame_global_flags *gfp, int table_select, int x, int y)
 	/* use ESC-words */
 	if (x > 14) {
 	    int linbitsx = x - 15;
-	    assert(linbitsx <= (int)h->linmax);
+	    assert(linbitsx <= h->linmax);
 	    ext |= linbitsx << 1;
 	    xbits = linbits;
 	    x = 15;
@@ -539,7 +539,7 @@ HuffmanCode(lame_global_flags *gfp, int table_select, int x, int y)
 
 	if (y > 14) {
 	    int linbitsy = y - 15;
-	    assert(linbitsy <= (int)h->linmax);
+	    assert(linbitsy <= h->linmax);
 	    ext <<= linbits;
 	    ext |= linbitsy;
 	    xbits += linbits;
@@ -608,7 +608,7 @@ ShortHuffmancodebits(lame_global_flags *gfp,int *ix, gr_info *gi)
     int region1Start;
     
     region1Start=3*gfc->scalefac_band.s[3];
-    if (region1Start > (int)gi->big_values) 	region1Start = gi->big_values;
+    if (region1Start > gi->big_values) 	region1Start = gi->big_values;
 
     /* short blocks do not have a region2 */
     bits  = Huffmancodebits(gfp,gi->table_select[0], 0, region1Start, ix);
@@ -705,8 +705,8 @@ writeMainData(lame_global_flags *gfp,
 		DEBUGF("<%ld> ", gfc->bs.totbit-hogege);
 #endif
 		/* does bitcount in quantize.c agree with actual bit count?*/
-		assert(data_bits==(int)gi->part2_3_length-(int)gi->part2_length);
-		assert(scale_bits==(int)gi->part2_length);
+		assert(data_bits==gi->part2_3_length-gi->part2_length);
+		assert(scale_bits==gi->part2_length);
 		tot_bits += scale_bits + data_bits;
 
 	    } /* for ch */
@@ -749,8 +749,8 @@ writeMainData(lame_global_flags *gfp,
 	    data_bits +=huffman_coder_count1(gfp,l3_enc[gr][ch], gi);
 
 	    /* does bitcount in quantize.c agree with actual bit count?*/
-	    assert(data_bits==(int)gi->part2_3_length-(int)gi->part2_length);
-	    assert(scale_bits==(int)gi->part2_length);
+	    assert(data_bits==gi->part2_3_length-gi->part2_length);
+	    assert(scale_bits==gi->part2_length);
 	    tot_bits += scale_bits + data_bits;
 	} /* for ch */
     } /* for gf */

@@ -1119,7 +1119,7 @@ void VBR_encode_granule
         memcpy( scalefac, &bst_scalefac, sizeof(III_scalefac_t) );
         memcpy( l3_enc,    bst_l3_enc,   sizeof(int)*576        );
     }
-    assert((int)cod_info->part2_3_length <= Max_bits);
+    assert(cod_info->part2_3_length <= Max_bits);
 }
 
 
@@ -1723,7 +1723,7 @@ void iteration_loop
                             &scalefac[gr][ch], xrpow, l3_enc[gr][ch],
                             ch, targ_bits[ch], noise);
             }
-            assert ((int)cod_info->part2_3_length < 4096);
+            assert (cod_info->part2_3_length < 4096);
 
             /*  update the frame analyzer information
              *  it looks like scfsi will not be handled correct:

@@ -274,9 +274,9 @@ void WriteWav(FILE *f,long bytes,int srate,int ch){
 int lame_decoder(lame_global_flags *gfp,FILE *outf,int skip)
 {
     short int   Buffer [2] [1152];
-    size_t    iread;
+    int         iread;
     double      wavsize;
-    size_t      i;
+    int         i;
     void        (*WriteFunction) (FILE* fp, char *p, int n);
 
     MSGF ( "\rinput:  %s%s(%g kHz, %i channel%s, ", 
@@ -346,7 +346,7 @@ int lame_decoder(lame_global_flags *gfp,FILE *outf,int skip)
 	if ( ! gfp -> silent )
             decoder_progress ( gfp );
 	    
-	skip -= (i = skip<(int)iread ? skip : iread);  /* 'i' samples are to skip in this frame */
+	skip -= (i = skip<iread ? skip : iread);  /* 'i' samples are to skip in this frame */
 
         for ( ; i < iread; i++ ) {
     	    if ( gfp -> disable_waveheader ) {
