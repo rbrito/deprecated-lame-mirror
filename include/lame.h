@@ -245,6 +245,7 @@ int CDECL lame_set_compression_ratio(lame_global_flags *, float);
 float CDECL lame_get_compression_ratio(const lame_global_flags *);
 
 
+int CDECL lame_set_preset_notune( lame_global_flags*  gfp, int);
 int CDECL lame_set_preset( lame_global_flags*  gfp, int );
 int CDECL lame_set_asm_optimizations( lame_global_flags*  gfp, int, int );
 
