@@ -148,7 +148,6 @@ typedef struct  {
   int mdct_sub48_init;
   int psymodel_init;
 
-
   int padding;                    /* padding for the current frame? */
   int mode_gr;                    /* granules per frame */
   int stereo;                     /* number of channels */

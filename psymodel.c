@@ -34,7 +34,7 @@
 #endif
 
 
-void L3para_read( lame_global_flags *gfp,
+int L3para_read( lame_global_flags *gfp,
 		  FLOAT8 sfreq, int numlines[CBANDS],int numlines_s[CBANDS], 
 		  FLOAT8 minval[CBANDS], 
 		  FLOAT8 s3_l[CBANDS][CBANDS],
@@ -48,7 +48,7 @@ void L3para_read( lame_global_flags *gfp,
 									
 
 
-void L3psycho_anal( lame_global_flags *gfp,
+int L3psycho_anal( lame_global_flags *gfp,
                     short int *buffer[2],int gr_out , 
                     FLOAT8 *ms_ratio,
                     FLOAT8 *ms_ratio_next,
@@ -122,8 +122,8 @@ void L3psycho_anal( lame_global_flags *gfp,
     case 11025: samplerate *= 2; break;
     case 12000: samplerate *= 2; break;
     default:    fprintf(stderr,"error, invalid sampling frequency: %d Hz\n",
-            gfp->out_samplerate);
-      exit(-1);
+			gfp->out_samplerate);
+    return -1;
     }
 
     gfc->ms_ener_ratio_old=.25;
@@ -177,11 +177,12 @@ void L3psycho_anal( lame_global_flags *gfp,
     }
     
 
-    L3para_read( gfp,(FLOAT8) samplerate,gfc->numlines_l,gfc->numlines_s,
+    i=L3para_read( gfp,(FLOAT8) samplerate,gfc->numlines_l,gfc->numlines_s,
           gfc->minval,gfc->s3_l,gfc->s3_s,SNR_s,gfc->bu_l,
           gfc->bo_l,gfc->w1_l,gfc->w2_l, gfc->bu_s,gfc->bo_s,
           gfc->w1_s,gfc->w2_s,&gfc->npart_l_orig,&gfc->npart_l,
           &gfc->npart_s_orig,&gfc->npart_s );
+    if (i!=0) return -1;
     
 
 
@@ -932,7 +933,8 @@ void L3psycho_anal( lame_global_flags *gfp,
   } else
     /* we didn't compute ms_ener_ratios */
     *ms_ener_ratio = 0;
- 
+
+  return 0;
 }
 
 
@@ -940,7 +942,7 @@ void L3psycho_anal( lame_global_flags *gfp,
 
 
 
-void L3para_read(lame_global_flags *gfp, FLOAT8 sfreq, int *numlines_l,int *numlines_s, 
+int L3para_read(lame_global_flags *gfp, FLOAT8 sfreq, int *numlines_l,int *numlines_s, 
 FLOAT8 *minval,
 FLOAT8 s3_l[CBANDS][CBANDS], FLOAT8 s3_s[CBANDS][CBANDS],
 FLOAT8 *SNR, 
@@ -981,7 +983,7 @@ int *npart_l_orig,int *npart_l,int *npart_s_orig,int *npart_s)
 	      if (j!=i)
 		{
 		  fprintf(stderr,"1. please check \"psy_data\"");
-		  exit(-1);
+		  return -1;
 		}
 	    }
 	}
@@ -1011,7 +1013,7 @@ int *npart_l_orig,int *npart_l,int *npart_s_orig,int *npart_s)
 	      if (j!=i)
 		{
 		  fprintf(stderr,"3. please check \"psy_data\"");
-		  exit(-1);
+		  return -1;
 		}
 	    }
 	}
@@ -1044,7 +1046,7 @@ int *npart_l_orig,int *npart_l,int *npart_s_orig,int *npart_s)
 	      w2_l[i] = (FLOAT8) *p++;
 	      if (j!=i)
 		{ fprintf(stderr,"30:please check \"psy_data\"\n");
-		exit(-1);
+		return -1;
 		}
 
 	      if (i!=0)
@@ -1052,7 +1054,7 @@ int *npart_l_orig,int *npart_l,int *npart_s_orig,int *npart_s)
 		  {
 		    fprintf(stderr,"31l: please check \"psy_data.\"\n");
                   fprintf(stderr,"w1,w2: %f %f \n",w1_l[i],w2_l[i-1]);
-		    exit(-1);
+		    return -1;
 		  }
 	    }
 	}
@@ -1081,7 +1083,7 @@ int *npart_l_orig,int *npart_l,int *npart_s_orig,int *npart_s)
 	      w2_s[i] = *p++;
 	      if (j!=i)
 		{ fprintf(stderr,"30:please check \"psy_data\"\n");
-		exit(-1);
+		return -1;
 		}
 
 	      if (i!=0)
@@ -1089,7 +1091,7 @@ int *npart_l_orig,int *npart_l,int *npart_s_orig,int *npart_s)
 		  { 
                   fprintf(stderr,"31s: please check \"psy_data.\"\n");
                   fprintf(stderr,"w1,w2: %f %f \n",w1_s[i],w2_s[i-1]);
-		  exit(-1);
+		  return -1;
 		  }
 	    }
 	}
@@ -1389,5 +1391,5 @@ i,*npart_s_orig,freq,numlines_s[i],j2-j,j,j2-1,bark1,bark2);
     w2_s[SBPSY_s-1]=1.0;
   }
   
-
+  return 0;
 }

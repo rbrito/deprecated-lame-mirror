@@ -237,6 +237,9 @@ void lame_print_config(lame_global_flags *);
  *                 -1:  mp3buffer was too small
  *                 -2:  malloc() problem
  *                 -3:  lame_init_params() not called
+ *                 -4:  psycho acoustic problems 
+ *                 -5:  ogg cleanup encoding error
+ *                 -6:  ogg frame encoding error
  *
  * The required mp3buffer_size can be computed from num_samples, 
  * samplerate and encoding rate, but here is a worst case estimate:

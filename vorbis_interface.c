@@ -401,7 +401,7 @@ int lame_encode_ogg_finish(lame_global_flags *gfp,
 	/* check if mp3buffer is big enough for the output */
 	bytes += og.header_len + og.body_len;
 	if (bytes > mp3buf_size && mp3buf_size>0)
-	  return -1;
+	  return -5;
 	
 	memcpy(mp3buf,og.header,og.header_len);
 	memcpy(mp3buf+og.header_len,og.body,og.body_len);
@@ -471,7 +471,7 @@ int lame_encode_ogg_frame(lame_global_flags *gfp,
       bytes += og.header_len + og.body_len;
       printf("\n\n*********\ndecoded bytes=%i  %i \n",bytes,mp3buf_size);
       if (bytes > mp3buf_size && mp3buf_size>0)
-	return -1;
+	return -6;
       
       /*
 	fwrite(og.header,1,og.header_len,stdout);

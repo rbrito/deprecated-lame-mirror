@@ -887,6 +887,7 @@ char *mp3buf, int mp3buf_size)
      * psy model has a 1 granule (576) delay that we must compensate for
      * (mt 6/99).
      */
+    int ret;
     short int *bufp[2];  /* address of beginning of left & right granule */
     int blocktype[2];
 
@@ -896,10 +897,11 @@ char *mp3buf, int mp3buf_size)
       for ( ch = 0; ch < gfc->stereo; ch++ )
 	bufp[ch] = &inbuf[ch][576 + gr*576-FFTOFFSET];
 
-      L3psycho_anal( gfp,bufp, gr, 
+      ret=L3psycho_anal( gfp,bufp, gr, 
 		     &gfc->ms_ratio[gr],&ms_ratio_next,&gfc->ms_ener_ratio[gr],
 		     masking_ratio, masking_MS_ratio,
 		     pe[gr],pe_MS[gr],blocktype);
+      if (ret!=0) return -4;
 
       for ( ch = 0; ch < gfc->stereo; ch++ )
 	gfc->l3_side.gr[gr].ch[ch].tt.block_type=blocktype[ch];
@@ -1042,7 +1044,7 @@ char *mp3buf, int mp3buf_size)
 #ifdef HAVEVORBIS
     return lame_encode_ogg_frame(gfp,inbuf_l,inbuf_r,mp3buf,mp3buf_size);
 #else
-    return -1; /* wanna encode ogg without vorbis */
+    return -5; /* wanna encode ogg without vorbis */
 #endif
   } else {
     return lame_encode_mp3_frame(gfp,inbuf_l,inbuf_r,mp3buf,mp3buf_size);
@@ -1223,9 +1225,9 @@ int lame_encode_buffer_interleaved(lame_global_flags *gfp,
     if (gfc->mf_size >= mf_needed) {
       /* encode the frame */
       ret = lame_encode_frame(gfp,mfbuf[0],mfbuf[1],mp3buf,mp3buf_size);
-      if (ret == -1) {
+      if (ret < 0) {
 	/* fatel error: mp3buffer was too small */
-	return -1;
+	return ret;
       }
       mp3buf += ret;
       mp3size += ret;

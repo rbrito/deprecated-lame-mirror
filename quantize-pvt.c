@@ -640,7 +640,6 @@ int scale_bitcount_lsf(III_scalefac_t *scalefac, gr_info *cod_info)
 
 	  default:
 	    fprintf( stderr, "intensity stereo not implemented yet\n" );
-	    exit( EXIT_FAILURE );
 	    break;
 	}
     }
