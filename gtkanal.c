@@ -115,6 +115,8 @@ int gtkmakeframe(void)
 	 */
 	MSGF("Warning: lame_readframe is returning too much data.\n");
       }
+      if (0==iread) break; /* eof */
+
       mp3count=lame_encode_buffer(gfp,Buffer[0],Buffer[1],iread,
 				  mp3buffer,(int)sizeof(mp3buffer));
       

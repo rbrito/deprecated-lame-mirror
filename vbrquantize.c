@@ -691,7 +691,7 @@ VBR_noise_shaping
   if (cod_info->part2_3_length < minbits) {
     /* decrease global gain, recompute scale factors */
     if (*ath_over==0) break;  
-    if (cod_info->part2_3_length-cod_info->part2_length== 0) break;
+    //    if (cod_info->part2_3_length-cod_info->part2_length== 0) break;
     if (vbrmax+210 ==0 ) break;
     
 

@@ -844,19 +844,16 @@ void outer_loop(
     }
 
 
-    /* if no bands with distortion, we are done */
-    if (!gfp->experimentalX) {
-        if (gfc->noise_shaping_stop==0 && over==0)
+    /* if no bands with distortion and -X0, we are done */
+    if (0==gfp->experimentalX && 0==over) 
           notdone=0;
-    } else {
-        /* do at least 7 tries and stop 
-         * if our best quantization so far had no distorted bands
-         * this gives us more possibilities for our different quant_compare modes
-         */
-        if (iteration>7 && gfc->noise_shaping_stop==0 && best_noise_info.over_count==0)
-          notdone=0;
-    }
 
+    /* do at least 7 tries and stop 
+     * if our best quantization so far had no distorted bands
+     * this gives us more possibilities for our different quant_compare modes
+     */
+    if (iteration>7 && best_noise_info.over_count==0)
+          notdone=0;
 
 
     if (notdone) {

@@ -810,13 +810,13 @@ int calc_noise( lame_global_flags *gfp,
 
 	    /* max -30db noise below threshold */
 	    noise = 10*log10(Max(.001,xfsf[i+1][sfb] / l3_xmin->s[sfb][i] ));
+	    tot_noise += xfsf[i+1][sfb] / l3_xmin->s[sfb][i];
 
             distort[i+1][sfb] = noise;
             if (noise > 0) {
 		over++;
 		over_noise += noise;
 	    }
-	    tot_noise += noise;
 	    max_noise=Max(max_noise,noise);
 	    count++;	    
         }
@@ -868,13 +868,13 @@ int calc_noise( lame_global_flags *gfp,
 
 	/* max -30db noise below threshold */
 	noise = 10*log10(Max(.001,xfsf[0][sfb] / l3_xmin->l[sfb]));
+	tot_noise += xfsf[0][sfb] / l3_xmin->l[sfb];
 
         distort[0][sfb] = noise;
         if (noise>0) {
 	  over++;
 	  over_noise += noise;
 	}
-	tot_noise += noise;
 	max_noise=Max(max_noise,noise);
 	count++;
 
@@ -882,10 +882,12 @@ int calc_noise( lame_global_flags *gfp,
 
   }
 
+  /* normalization at this point by "count" is not necessary, since
+   * the values are only used to compare with previous values */
   res->tot_count = count;
   res->over_count = over;
-  res->tot_noise = tot_noise / count;
-  res->over_noise = over_noise / count;
+  res->tot_noise = 10*log10(tot_noise);  /* convert to db */
+  res->over_noise = over_noise; 
   res->max_noise = max_noise;
   
   return over;

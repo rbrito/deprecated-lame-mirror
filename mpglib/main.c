@@ -85,7 +85,7 @@ int lame_decode_initfile(FILE *fd, mp3data_struct *mp3data)
     len = fread(&buf[2],1,2,fd);
     if (len ==0 ) return -1;
     len +=2;
-    
+
 
   } else {
     /* rewind file back what we read looking for Xing headers */
@@ -95,18 +95,29 @@ int lame_decode_initfile(FILE *fd, mp3data_struct *mp3data)
       len=4;
     }
   }
-  
+
+  /* parse the buffer that was read looking for Xing header above */  
   size=0;
   ret = decodeMP3(&mp,buf,(int)len,out,FSIZE,&size);
-  if (ret==MP3_OK && size>0 && !xing_header) {
-    fprintf(stderr,"Oops: first frame of mpglib output will be lost \n");
-  }
-  
   if (ret==MP3_ERR) 
     return -1;
+  if (ret==MP3_OK && size>0 && !xing_header) 
+    fprintf(stderr,"Oops: first frame of mpglib output will be lost \n"); 
+
   
-  if (!mp.header_parsed) 
-    return -1;
+
+  /* repeat until we decode a valid mp3 header */
+  while (!mp.header_parsed) {
+    len = fread(buf,1,2,fd);
+    if (len ==0 ) return -1;
+    ret = decodeMP3(&mp,buf,(int)len,out,FSIZE,&size);
+    if (ret==MP3_ERR) 
+      return -1;
+    if (ret==MP3_OK && !mp.header_parsed)
+      fprintf(stderr,"Oops: strange error in lame_decode_initfile \n");
+  }
+
+
 
   mp3data->stereo = mp.fr.stereo;
   mp3data->samplerate = freqs[mp.fr.sampling_frequency];
