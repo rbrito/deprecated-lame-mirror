@@ -1299,8 +1299,9 @@ int L3psycho_anal_ns( lame_global_flags * gfp,
 
     if (gfp->VBR==vbr_off) pcfact = gfc->ResvMax == 0 ? 0 : ((FLOAT)gfc->ResvSize)/gfc->ResvMax*0.5;
     else if (gfp->VBR == vbr_rh  ||  gfp->VBR == vbr_mtrh  ||  gfp->VBR == vbr_mt) {
-	static const FLOAT pcQns[10]={1.0,1.0,1.0,0.8,0.6,0.5,0.4,0.3,0.2,0.1};
-	pcfact = pcQns[gfp->VBR_q];
+	    /*static const FLOAT pcQns[10]={1.0,1.0,1.0,0.8,0.6,0.5,0.4,0.3,0.2,0.1};
+	    pcfact = pcQns[gfp->VBR_q];*/
+	    pcfact = 0.6;
     } else pcfact = 1.0;
 
     /**********************************************************************
