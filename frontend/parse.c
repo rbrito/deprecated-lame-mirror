@@ -64,6 +64,14 @@ char *strchr (), *strrchr ();
 #endif
 
 
+#if defined DEBUG || _DEBUG
+#define INTERNAL_OPTS 1
+#else
+#define INTERNAL_OPTS LAME_ALPHA_VERSION
+#endif
+
+
+
 /* GLOBAL VARIABLES.  set by parse_args() */
 /* we need to clean this up */
 sound_file_format input_format;   
@@ -960,6 +968,7 @@ static int resample_rate ( double freq )
 
 #define T_IF(str)          if ( 0 == local_strcasecmp (token,str) ) {
 #define T_ELIF(str)        } else if ( 0 == local_strcasecmp (token,str) ) {
+#define T_ELIF_INTERNAL(str)        } else if (INTERNAL_OPTS && (0 == local_strcasecmp (token,str)) ) {
 #define T_ELIF2(str1,str2) } else if ( 0 == local_strcasecmp (token,str1)  ||  0 == local_strcasecmp (token,str2) ) {
 #define T_ELSE             } else {
 #define T_END              }
@@ -1033,26 +1042,55 @@ char* const inPath, char* const outPath, char **nogap_inPath, int *num_nogap)
                 T_ELIF ("r3mix")
 		    lame_set_preset(gfp, R3MIX);
                                     
-                /**
-                 *  please, do *not* DOCUMENT this one
-                 *  it is a developers only switch (rh)
-                 */
-                T_ELIF ("tune")
+                T_ELIF_INTERNAL ("tune")
                     argUsed=1;
                     {extern void lame_set_tune(lame_t gfp, float val);
-                    lame_set_tune(gfp,atof(nextArg));} 
-                T_ELIF ("ms-sparsing")
+                    lame_set_tune(gfp,atof(nextArg));}
+                    
+                T_ELIF_INTERNAL ("ms-sparsing")
                     argUsed=1;
                     {extern void lame_set_ms_sparsing(lame_t gfp, int val);
-                    lame_set_ms_sparsing(gfp,atoi(nextArg));}                    
-                T_ELIF ("ms-sparse-low")
+                    lame_set_ms_sparsing(gfp,atoi(nextArg));} 
+                    
+                T_ELIF_INTERNAL ("ms-sparse-low")
                     argUsed=1;
                     {extern void lame_set_ms_sparse_low(lame_t gfp, float val);
                     lame_set_ms_sparse_low(gfp,atof(nextArg));}
-                T_ELIF ("ms-sparse-high")
+
+                T_ELIF_INTERNAL ("ms-sparse-high")
                     argUsed=1;
                     {extern void lame_set_ms_sparse_high(lame_t gfp, float val);
                     lame_set_ms_sparse_high(gfp,atof(nextArg));}
+
+                T_ELIF_INTERNAL ("shortthreshold")
+                {
+                    float x,y;
+                    int i;
+                    argUsed=1;
+                    i = sscanf(nextArg, "%f,%f", &x, &y);
+                    if (i == 1)
+                        y = x;
+                    (void) lame_set_short_threshold( gfp, x, y);
+                }
+
+                T_ELIF_INTERNAL ("maskingadjust")
+                    argUsed=1;
+                    (void) lame_set_maskingadjust( gfp, atof( nextArg ) );
+                
+                T_ELIF_INTERNAL ("maskingadjustshort")
+                    argUsed=1;
+                    (void) lame_set_maskingadjust_short( gfp, atof( nextArg ) );
+                
+                T_ELIF_INTERNAL ("athcurve")
+                    argUsed=1;
+                    (void) lame_set_ATHcurve( gfp, atof( nextArg ) );
+
+                T_ELIF_INTERNAL ("no-preset-tune")
+                    (void) lame_set_preset_notune( gfp, 0 );					
+
+                T_ELIF_INTERNAL ("substep")
+                    argUsed=1;
+                    (void) lame_set_substep( gfp, atof(nextArg) );
                        
                     
                 T_ELIF ("abr")
@@ -1133,16 +1171,6 @@ char* const inPath, char* const outPath, char **nogap_inPath, int *num_nogap)
                 T_ELIF ("allshort")
                     (void) lame_set_force_short_blocks( gfp, 1 );
                 
-                T_ELIF ("shortthreshold")
-		{
-		    float x,y;
-		    int i;
-		    argUsed=1;
-		    i = sscanf(nextArg, "%f,%f", &x, &y);
-		    if (i == 1)
-			y = x;
-                    (void) lame_set_short_threshold( gfp, x, y);
-		}
                 
                 T_ELIF ("decode")
                     (void) lame_set_decode_only( gfp, 1 );
@@ -1168,21 +1196,9 @@ char* const inPath, char* const outPath, char **nogap_inPath, int *num_nogap)
                     argUsed=1;
                     (void) lame_set_ATHlower( gfp, atof( nextArg ) );
                 
-                T_ELIF ("maskingadjust")
-                    argUsed=1;
-                    (void) lame_set_maskingadjust( gfp, atof( nextArg ) );
-                
-                T_ELIF ("maskingadjustshort")
-                    argUsed=1;
-                    (void) lame_set_maskingadjust_short( gfp, atof( nextArg ) );
-                
                 T_ELIF ("athtype")
                     argUsed=1;
                     (void) lame_set_ATHtype( gfp, atoi( nextArg ) );
-
-                T_ELIF ("athcurve")
-                    argUsed=1;
-                    (void) lame_set_ATHcurve( gfp, atof( nextArg ) );
 
                 T_ELIF ("athaa-type")   /*  switch for developing, no DOCU */
                     argUsed=1;          /*  1:Gaby, 2:Robert, 3:Jon, else:off */
@@ -1352,19 +1368,12 @@ char* const inPath, char* const outPath, char **nogap_inPath, int *num_nogap)
                     }
                     lame_set_compression_ratio(gfp,val);
                 
-                T_ELIF ("no-preset-tune")
-                    (void) lame_set_preset_notune( gfp, 0 );					
-
                 T_ELIF ("notemp")
                     (void) lame_set_useTemporal( gfp, 0 );
 
                 T_ELIF ("interch")
                     argUsed=1;
                     (void) lame_set_interChRatio( gfp, atof(nextArg ) );
-
-                T_ELIF ("substep")
-                    argUsed=1;
-                    (void) lame_set_substep( gfp, atof(nextArg) );
 
                 T_ELIF ("temporal-masking")
                     argUsed = 1;
