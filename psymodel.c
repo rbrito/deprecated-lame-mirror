@@ -1193,7 +1193,7 @@ int *npart_l_orig,int *npart_l,int *npart_s_orig,int *npart_s)
   int  sbmax ;
   int  i,j,k2,loop;
   int freq_scale=1;
-  int partition[HBLKSIZE];
+/*  int partition[HBLKSIZE]; */
 
   /******************************************************************/
   /* Read long block data */
@@ -1414,7 +1414,8 @@ i,*npart_l_orig,freq,numlines_l[i],j2-j,j,j2-1,bark1,bark2);
   j=0;
   for(i=0;i<*npart_l_orig;i++)
     {
-      FLOAT8 ji, freq, mval, bark;
+      FLOAT8 ji,bark;
+	  /* FLOAT8 mval,freq; */
       int k;
 
       ji = j;
@@ -1568,7 +1569,9 @@ i,*npart_s_orig,freq,numlines_s[i],j2-j,j,j2-1,bark1,bark2);
   j = 0;
   for(i=0;i<*npart_s_orig;i++)
     {
-      FLOAT8 ji, bark, freq, snr;
+      FLOAT8 ji, bark;
+	  /* FLOAT8 freq, snr;*/
+
       ji = j;
       bark = freq2bark(sfreq*ji/BLKSIZE_s);
 

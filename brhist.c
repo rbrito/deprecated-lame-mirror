@@ -33,13 +33,15 @@ CONSOLE_SCREEN_BUFFER_INFO CSBI;
 void brhist_init(lame_global_flags *gfp,int br_min, int br_max)
 {
   int i;
-#ifndef NOTERMCAP
-  char term_buff[1024];
-  char *termname;
-  char *tp;
-  char tc[10];
-#endif
 
+#ifdef BRHIST
+  #ifndef NOTERMCAP
+    char term_buff[1024];
+    char *termname;
+    char *tp;
+    char tc[10];
+  #endif
+#endif
 
   for(i = 0; i < 15; i++)
     {
@@ -100,13 +102,13 @@ void brhist_add_count(int i)
 
 void brhist_disp ( long totalframes )
 {
+#ifdef BRHIST
     unsigned       i;
     unsigned       ppt;
     unsigned long  full;
     int            barlen;
     char           brppt [16];
     
-#ifdef BRHIST
     full = brhist_count_max < BRHIST_BARMAX  ?  BRHIST_BARMAX  :  brhist_count_max;
 
     for ( i = brhist_vbrmin; i <= brhist_vbrmax; i++ ) {
@@ -151,7 +153,7 @@ void brhist_disp ( long totalframes )
 
 void brhist_disp_total(lame_global_flags *gfp)
 {
-  int i;
+  unsigned int i;
   FLOAT ave;
   /*  lame_internal_flags *gfc=gfp->internal_flags;*/
 

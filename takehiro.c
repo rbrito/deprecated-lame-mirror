@@ -340,7 +340,7 @@ int count_bits_long(lame_internal_flags *gfc, int ix[576], gr_info *gi)
 
     if (gi->block_type == SHORT_TYPE) {
       a1=3*gfc->scalefac_band.s[3];
-      if (a1 > gi->big_values) a1 = gi->big_values;
+      if (a1 > (int)gi->big_values) a1 = gi->big_values;
       a2 = gi->big_values;
 
     }else if (gi->block_type == NORM_TYPE) {
@@ -469,11 +469,11 @@ int r01_bits[],int r01_div[],int r0_tbl[],int r1_tbl[])
 	    break;
 
 	bits = r01_bits[r2 - 2] + cod_info2.count1bits;
-	if (gi->part2_3_length <= bits)
+	if (gi->part2_3_length <= (u_int)bits)
 	    break;
 
 	r2t = choose_table(ix + a2, ix + bigv, &bits);
-	if (gi->part2_3_length <= bits)
+	if (gi->part2_3_length <= (u_int)bits)
 	    continue;
 
 	memcpy(gi, &cod_info2, sizeof(gr_info));
@@ -526,7 +526,7 @@ void best_huffman_divide(lame_internal_flags *gfc, int gr, int ch, gr_info *gi, 
 
     assert(i <= 576);
     
-    for (; i > cod_info2.big_values; i -= 4) {
+    for (; i > (int)cod_info2.big_values; i -= 4) {
 	int p = ((ix[i-4] * 2 + ix[i-3]) * 2 + ix[i-2]) * 2 + ix[i-1];
 	a1 += t32l[p];
 	a2 += t33l[p];

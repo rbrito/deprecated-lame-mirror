@@ -557,7 +557,7 @@ int calc_noise( lame_global_flags *gfp,
         distort[2][SBMAX_s-1] =
         distort[3][SBMAX_s-1] = 0;
       }
-    for ( j=0, sfb = 0; sfb < max_index; sfb++ ) {
+    for ( j=0, sfb = 0; sfb < (u_int)max_index; sfb++ ) {
          start = gfc->scalefac_band.s[ sfb ];
          end   = gfc->scalefac_band.s[ sfb+1 ];
          bw = end - start;
@@ -607,7 +607,7 @@ int calc_noise( lame_global_flags *gfp,
       {
         distort[0][SBMAX_l-1] = 0;
       }
-    for ( sfb = 0; sfb < max_index; sfb++ ) {
+    for ( sfb = 0; sfb < (u_int)max_index; sfb++ ) {
 	FLOAT8 step;
 	int s = scalefac->l[sfb];
 
