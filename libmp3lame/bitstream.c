@@ -454,7 +454,7 @@ huffman_coder_count1(lame_internal_flags *gfc, gr_info *gi)
 	int huffbits = 0, p = 0;
 
 	if (gi->l3_enc[index  ]) {
-	    p += 8;
+	    p = 8;
 	    if (gi->xr[index  ] < 0)
 		huffbits++;
 	}
@@ -479,8 +479,8 @@ huffman_coder_count1(lame_internal_flags *gfc, gr_info *gi)
 	    if (gi->xr[index+3] < 0)
 		huffbits++;
 	}
-	putbits2(gfc, huffbits + hcode[p+16], hcode[p]);
 	bits += hcode[p];
+	putbits2(gfc, huffbits + hcode[p+16], hcode[p]);
     }
 
     assert(gi->count1bits == bits); assert(index == gi->count1);
