@@ -2,7 +2,7 @@
 
 AUTOMAKE_OPTIONS = foreign $(top_srcdir)/ansi2knr
 
-DEFS = @DEFS@ @CONFIG_DEFS@ @ENCODER_DEFS@
+DEFS = @DEFS@ @CONFIG_DEFS@
 
 noinst_LTLIBRARIES = liblameasmroutines.la
 
