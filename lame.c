@@ -857,10 +857,10 @@ char *mp3buf, int mp3buf_size)
   }
 
 
-  /*
+#if 0
   VBR_noise_shapping( gfp,*pe_use, gfc->ms_ener_ratio, xr, *masking, l3_enc,
   	  scalefac);
-  */
+#else
   if (gfp->VBR) {
     VBR_iteration_loop( gfp,*pe_use, gfc->ms_ener_ratio, xr, *masking, l3_enc,
 			scalefac);
@@ -868,7 +868,7 @@ char *mp3buf, int mp3buf_size)
     iteration_loop( gfp,*pe_use, gfc->ms_ener_ratio, xr, *masking, l3_enc,
 		    scalefac);
   }
-
+#endif
 
 #ifdef BRHIST
   brhist_temp[gfc->bitrate_index]++;
