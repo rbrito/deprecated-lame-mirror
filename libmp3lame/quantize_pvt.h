@@ -23,7 +23,7 @@
 #define LAME_QUANTIZE_PVT_H
 
 #include "l3side.h"
-#define IXMAX_VAL 8206 /* ix always <= 8191+15.    see count_bits() */
+#define IXMAX_VAL 8206  /* ix always <= 8191+15.    see count_bits() */
 
 /* buggy Winamp decoder cannot handle values > 8191 */
 /* #define IXMAX_VAL 8191 */
@@ -31,10 +31,10 @@
 #define PRECALC_SIZE (IXMAX_VAL+2)
 
 
-extern const int     nr_of_sfb_block [6] [3] [4];
-extern const char             pretab [SBMAX_l];
-extern const char             slen1_tab [16];
-extern const char             slen2_tab [16];
+extern const int nr_of_sfb_block[6][3][4];
+extern const char pretab[SBMAX_l];
+extern const char slen1_tab[16];
+extern const char slen2_tab[16];
 
 extern const scalefac_struct sfBandIndex[9];
 
@@ -48,102 +48,76 @@ extern FLOAT8 pow20[Q_MAX];
 extern FLOAT8 ipow20[Q_MAX];
 
 typedef struct calc_noise_result_t {
-	int over_count;		/* number of quantization noise > masking */
-	int tot_count;		/* all */
-	FLOAT8 over_noise;	/* sum of quantization noise > masking */
-	FLOAT8 tot_noise;	/* sum of all quantization noise */
-	FLOAT8 max_noise;	/* max quantization noise */
+    int     over_count;      /* number of quantization noise > masking */
+    int     tot_count;       /* all */
+    FLOAT8  over_noise;      /* sum of quantization noise > masking */
+    FLOAT8  tot_noise;       /* sum of all quantization noise */
+    FLOAT8  max_noise;       /* max quantization noise */
 } calc_noise_result;
 
-void compute_ath(lame_global_flags *gfp,FLOAT8 ATH_l[SBPSY_l],FLOAT8 ATH_s[SBPSY_l]);
-void ms_convert(FLOAT8 xr[2][576],FLOAT8 xr_org[2][576]);
-int on_pe(context *gfc, FLOAT8 pe[2][2], III_side_info_t *l3_side,
-int targ_bits[2],int mean_bits, int gr);
-void reduce_side(int targ_bits[2],FLOAT8 ms_ener_ratio,int mean_bits,int max_bits);
+void    compute_ath (lame_global_flags * gfp, FLOAT8 ATH_l[SBPSY_l],
+                     FLOAT8 ATH_s[SBPSY_l]);
+
+void    ms_convert (FLOAT8 xr[2][576], FLOAT8 xr_org[2][576]);
+
+int     on_pe (context * gfc, FLOAT8 pe[2][2], III_side_info_t * l3_side,
+               int targ_bits[2], int mean_bits, int gr);
+
+void    reduce_side (int targ_bits[2], FLOAT8 ms_ener_ratio, int mean_bits,
+                     int max_bits);
 
 
-int bin_search_StepSize (         
-          context * const gfc,
-          gr_info * const cod_info,
-    const int             desired_rate, 
-    const int             start, 
-    const FLOAT8          xrpow [576],
-          int             l3enc [576] );
-    
-int inner_loop (
-          context * const gfc,
-          gr_info * const cod_info,
-    const int             max_bits,
-    const FLOAT8          xrpow [576],
-          int             l3enc [576] );
+int     bin_search_StepSize (context * gfc, gr_info * cod_info,
+                             int desired_rate, int start,
+                             const FLOAT8 xrpow[576], int l3enc[576]);
 
-void iteration_init( context *gfc );
+int     inner_loop (context * gfc, gr_info * cod_info, int max_bits,
+                    const FLOAT8 xrpow[576], int l3enc[576]);
+
+void    iteration_init (context * gfc);
 
 
-int calc_xmin( 
-        const context       * const gfc,
-        const FLOAT8                xr [576],
-        const III_psy_ratio * const ratio,
-	const gr_info       * const cod_info, 
-              III_psy_xmin  * const l3_xmin );
-               
-int calc_noise( 
-        const context           * const gfc,
-        const FLOAT8                    xr [576],
-        const int                       ix [576],
-        const gr_info           * const cod_info,
-        const III_psy_xmin      * const l3_xmin, 
-        const III_scalefac_t    * const scalefac,
-              FLOAT8                    distort [4][SBMAX_l],
-              calc_noise_result *       res );
-              
-void set_frame_pinfo( 
-        context * const gfc,
-        FLOAT8          xr       [2][2][576],
-        III_psy_ratio   ratio    [2][2],  
-        int             l3_enc   [2][2][576],
-        III_scalefac_t  scalefac [2][2] );
+int     calc_xmin (const context * gfc, const FLOAT8 xr[576],
+                   const III_psy_ratio * ratio, const gr_info * cod_info,
+                   III_psy_xmin * l3_xmin);
+
+int     calc_noise (const context * gfc, const FLOAT8 xr[576],
+                    const int ix[576], const gr_info * cod_info,
+                    const III_psy_xmin * l3_xmin,
+                    const III_scalefac_t * scalefac,
+                    FLOAT8 distort[4][SBMAX_l], calc_noise_result * res);
+
+void    set_frame_pinfo (context * gfc, FLOAT8 xr[2][2][576],
+                         III_psy_ratio ratio[2][2], int l3_enc[2][2][576],
+                         III_scalefac_t scalefac[2][2]);
 
 
-void quantize_xrpow( 
-        const FLOAT8 xr[576],
-              int    ix[576],
-              FLOAT8 istep );
+void    quantize_xrpow (const FLOAT8 xr[576], int ix[576], FLOAT8 istep);
 
-void quantize_xrpow_ISO( 
-        const FLOAT8 xr[576],
-              int    ix[576],
-              FLOAT8 istep );
+void    quantize_xrpow_ISO (const FLOAT8 xr[576], int ix[576], FLOAT8 istep);
 
 
 
 /* takehiro.c */
 
-int count_bits (context *gfc, int  *ix, const FLOAT8 xr[576], gr_info *cod_info);
+int     count_bits (context * gfc, int *ix, const FLOAT8 xr[576],
+                    gr_info * cod_info);
 
 
-void best_huffman_divide(
-        const context *gfc, 
-        const int      gr,
-        const int      ch,
-              gr_info *cod_info,
-              int     *ix );
+void    best_huffman_divide (const context * gfc, int gr, int ch,
+                             gr_info * cod_info, int *ix);
 
-void best_scalefac_store(
-        const context         *gfc,
-        const int              gr,
-        const int              ch,
-              int              l3_enc[2][2][576],
-              III_side_info_t *l3_side,
-              III_scalefac_t   scalefac[2][2]);
+void    best_scalefac_store (const context * gfc, int gr, int ch,
+                             int l3_enc[2][2][576], III_side_info_t * l3_side,
+                             III_scalefac_t scalefac[2][2]);
 
-int scale_bitcount (III_scalefac_t *scalefac, gr_info *cod_info);
+int     scale_bitcount (III_scalefac_t * scalefac, gr_info * cod_info);
 
-int scale_bitcount_lsf (const III_scalefac_t *scalefac, gr_info *cod_info);
+int     scale_bitcount_lsf (const III_scalefac_t * scalefac,
+                            gr_info * cod_info);
 
-void huffman_init (context *gfc);
+void    huffman_init (context * gfc);
 
 #define LARGE_BITS 100000
 
 #endif /* LAME_QUANTIZE_PVT_H */
-
