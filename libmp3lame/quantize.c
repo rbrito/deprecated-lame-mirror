@@ -854,8 +854,8 @@ calc_sfb_noise(lame_t gfc, int j, int bw, int sf)
 	fi1.f = sfpow34 * xr34[j+bw+1] + (FLOAT)MAGIC_FLOAT2;
 	i0 = fi0.i;
 	i1 = fi1.i;
-	assert(((i0 - (MAGIC_INT2 + (IXMAX_VAL<<9) + 1))
-		& (i1 - (MAGIC_INT2 + (IXMAX_VAL<<9) + 1))) < 0);
+	assert(((i0 - (MAGIC_INT2 + (IXMAX_VAL<<FIXEDPOINT) + 1))
+		& (i1 - (MAGIC_INT2 + (IXMAX_VAL<<FIXEDPOINT) + 1))) < 0);
 	i0 += adj43asm[(i0 >> FIXEDPOINT) - (MAGIC_INT2 >> FIXEDPOINT)];
 	i1 += adj43asm[(i1 >> FIXEDPOINT) - (MAGIC_INT2 >> FIXEDPOINT)];
 	t0 = absxr[j+bw  ] - pow43[i0 >> FIXEDPOINT] * sfpow;
