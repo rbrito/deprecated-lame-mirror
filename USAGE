@@ -74,6 +74,9 @@ bach script:  mlame     Run "mlame -?" for instructions.
 sh script:    auenc     Run auenc for instructions
 sh script:    mugeco.sh
 
+Pearl script which will re-encode mp3 files and preserve id3 tags:
+lameid3.pl 
+
 Windows scripts:
 lame4dos.bat  
 Lame.vbs   (and an HTML frontend: LameGUI.html)
