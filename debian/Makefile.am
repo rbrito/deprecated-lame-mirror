@@ -12,3 +12,7 @@ EXTRA_DIST = \
 	lame.docs \
 	lame.files \
 	rules
+
+dist-hook:
+	chmod +x $(distdir)/rules
+
