@@ -24,6 +24,13 @@
 
 # include <stdio.h>
 
+/* 
+ * To make a string from a token, use the # operator:
+ *
+ * #define __STR(x)  #x
+ * #define STR(x)    __STR(x)
+ */
+
 # define LAME_URL              "http://www.mp3dev.org/"
 
 # define LAME_MAJOR_VERSION      3      /* Major version number */

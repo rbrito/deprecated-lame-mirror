@@ -29,6 +29,7 @@
      
 
 #define AUDIO_DEVICE       "/dev/dsp"
+#define COOLEDIT_FILE      "/mnt/dosd/cooledit.wav"
 #define DELAY_UNTIL_XCHG   2.5
 #define TURN_STEPS	   2400
 
@@ -122,6 +123,13 @@ int  open_soundcard (
 int  play_soundcard    ( soundcard_t* const k, stereo_t* samples, size_t length )
 {
     size_t  bytes = length * sizeof (*samples);
+    
+#ifdef COOLEDIT_FILE
+    static int fd = -1;
+    if ( fd < 0 ) fd = open ( COOLEDIT_FILE, O_WRONLY | O_CREAT );
+    write ( fd, samples, bytes );
+#endif    
+    
     return write ( k->fd, samples, bytes ) == bytes  ?  0  :  -1;
 }
 

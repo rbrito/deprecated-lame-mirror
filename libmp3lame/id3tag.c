@@ -324,14 +324,13 @@ id3tag_set_genre(lame_global_flags *gfp, const char *genre)
 }
 
 static unsigned char *
-set_4_byte_value(unsigned char *bytes, unsigned long value)
+set_4_byte_value ( unsigned char *bytes, const unsigned long value)
 {
-    int index;
-    for (index = 3; index >= 0; --index) {
-        bytes[index] = value & 0xff;
-        value >>= 8;
-    }
-    return bytes + 4;
+    *bytes++ = (value >> 24) & 0xff;
+    *bytes++ = (value >> 16) & 0xff;
+    *bytes++ = (value >>  8) & 0xff;
+    *bytes++ = (value >>  0) & 0xff;
+    return bytes;
 }
 
 #define FRAME_ID(a, b, c, d) \
@@ -424,13 +423,11 @@ id3tag_write_v2(lame_global_flags *gfp)
                 tag_size += 11 + album_length;
             }
             if (spec->year) {
-                sprintf(year, "%d", spec->year);
-                year_length = strlen(year);
+                year_length = sprintf ( year, "%d", spec->year );
                 tag_size += 11 + year_length;
             }
             if (spec->track) {
-                sprintf(track, "%d", spec->track);
-                track_length = strlen(track);
+                track_length = sprintf ( track, "%d", spec->track );
                 tag_size += 11 + track_length;
             }
             if (spec->genre != GENRE_NUM_UNKNOWN) {
@@ -529,6 +526,8 @@ id3tag_write_v1(lame_global_flags *gfp)
         unsigned char *p = tag;
         int pad = (spec->flags & SPACE_V1_FLAG) ? ' ' : 0;
         char year[5];
+	int i;
+	
         /* set tag identifier */
         *p++ = 'T'; *p++ = 'A'; *p++ = 'G';
         /* set each field in tag */
@@ -545,39 +544,11 @@ id3tag_write_v1(lame_global_flags *gfp)
             *p++ = spec->track;
         }
         *p++ = spec->genre;
-	{ int i;
 	for (i=0; i<128; ++i)
 	  add_dummy_byte(gfp,tag[i]);
-	}
 	return 128;
     }
     return 0;
 }
-
-
-
-
-
-#if 0
-
-/* would use real "strcasecmp" but it isn't portable */
-int local_strcasecmp ( const char* s1, const char* s2 )  /* Move to frontend */
-{
-    unsigned char c1;
-    unsigned char c2;
-    
-    do {
-        c1 = tolower(*s1);
-        c2 = tolower(*s2);
-        if (!c1) {
-            break;
-        }
-        ++s1;
-        ++s2;
-    } while (c1 == c2);
-    return c1 - c2;
-}
-
-#endif
 
 /* end of id3tag.c */
