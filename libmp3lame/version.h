@@ -24,7 +24,7 @@
 
 # include <stdio.h>
 
-/* Please regularly increment version number, for alpha/beta versions at least once a week */
+#define LAME_URL    "http://www.mp3dev.org/"
 
 # define LAME_MAJOR_VERSION      3      /* Major version number */
 # define LAME_MINOR_VERSION     88      /* Minor version number */
