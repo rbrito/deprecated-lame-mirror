@@ -26,16 +26,71 @@ black = usability, portability, other
 <h3> </h3>
 <h3>LAME 3.90alpha (CVS)</h3>
 <ul>
+  <li><font color="#ff0000">Many small improvements and bug fixes not added to history</font></li>
   <li><font color="#ff0000">John Dahlstrom:&nbsp; more fine tuning on the auto adjustment of the ATH</font></li>
   <li><font color="#3366ff">Robert Hegemann:&nbsp; small speed and quality improvements for the old
 VBR code (--vbr-old).</font>
+  <li><font color="#ff0000">Robert Hegemann:&nbsp; some short block bug fixes</font>
   </li>
-  <li>Darin Morrison:&nbsp; some very good VBR and ABR presets,
-  	now available with <font color="#007f00">--dm-preset {standard,xtreme,insane,metal}</font> 
+  <li><font color="#ff0000">Robert Hegemann:&nbsp; Big improvements to --vbr-mtrh, now encodes much more frequencies over 16khz</font>
+  </li>
+  <li><font color="#ff0000">Robert Hegemann:&nbsp; --vbr-new code disabled (outdated and lower quality) and replaced with --vbr-mtrh (Both --vbr-new and --vbr-mtrh now default to mtrh)</font>
+  </li>
+  <li>Robert Hegemann:&nbsp; reordering of --longhelp to give more information, --extrahelp dropped
+  </li>
+  <li>Darin Morrison:&nbsp; Totally revamped and extremely high quality unified preset system and other general quality improvements now available with --alt-presets:</font> 
+
+  <ul>
+ 
+    <li> <font color="#ff0000">some improvements to psychoacoustics (vast improvements over default L.A.M.E. modes) when --alt-preset is used including:</font></li>
+  
+
+         <ul>
+ 
+           <li> <font color="#ff0000">Improved tuning of short block usage.</font></li>
+   
+           <li> <font color="#ff0000">Improved quantization selection usage (the -X modes), now adapts between appropriate modes on the fly.  Also helps on "dropout" problems and with pre-echo cases.</font></li>
+
+           <li> <font color="#ff0000">Improved joint stereo usage.  Thresholds are better tuned now and fix some "dropout" problems L.A.M.E. suffers from on clips like serioustrouble.</font></li>
+
+           <li> <font color="#ff0000">Improved noise shaping usage.  Now switches between noise shaping modes on the fly (toggles -Z on and off when appropriate) which allows lower bitrates but without the quality compromise.</font></li>
+
+           <li> <font color="#ff0000">Clips vastly improved over default L.A.M.E. modes (vbr/cbr/abr, including --r3mix): castanets, florida_seq, death2, fatboy, spahm, gbtinc, ravebase, short, florida_seq, hihat, bassdrum, 2nd_vent_clip, serioustrouble, bloodline, and others.  No degraded clips known.</font></li>
+
+           <li> VBR bitrates are now more "stable" with less fluctuation -- not dipping too low on some music and not increasing too high unnecessarily on other music.  "--alt-preset standard" provides bitrates roughly within the range of 180-220kbps, often averaging close to 192kbps.</li>
+
+
+         </ul>
+
+    <li> --alt-presets replace the --dm-presets and "metal" preset is removed and replaced with generic abr and cbr presets.</li>
+ 
+    <li> --alt-preset extreme (note the 'e') replaces xtreme to help eliminate some confusion</li>
+
+    <li> --alt-preset vbr modes now have a fast option which offers almost no compromise in speed.</li>
+
+    <li> --alt-preset standard (and "fast standard") are now much lower in bitrate, matching --r3mix with an overall average, though offering higher quality especially on difficult test samples.</li>
+
+    <li> --alt-presets are no longer just "presets" as in a collection of switches, instead they are now quality "modes" because of special code level tunings (those mentioned above).</li>
+
+    <li> Use --alt-preset help for more information.</li>
+
+  </ul>
+
+
   </li>
   <li>Roel VdB:&nbsp; more tuning on the <font color="#007f00">--r3mix</font> preset
   </li>
-  <li>Jon Dee, Roel VdB: INFO tag<br>
+  <li>Jon Dee, Roel VdB:&nbsp; INFO tag<br>
+  </li>
+  <li>Alexander Leidinger, mp3gain@hotmail.com:&nbsp; added --scale-l and --scale-r to scale stereo channels independantly<br>
+  </li>
+  <li>Takehiro Tominaga:&nbsp; new noise shaping mode, offering more "cutting edge" shaping according to masking, enabled via -q1<br>
+  </li>
+  <li>Mark Taylor:&nbsp; More work on --nogap<br>
+  </li>
+  <li>Gabriel Bouvigne:&nbsp; Small changes to abr code for more accurate final bitrate<br>
+  </li>
+  <li>Gabriel Bouvigne, mp3gain@hotmail.com:&nbsp; Preliminary <A HREF="http://www.replaygain.org">ReplayGain</A> analysis code added (not functional yet)<br>
   </li>
 </ul>
 <br>
