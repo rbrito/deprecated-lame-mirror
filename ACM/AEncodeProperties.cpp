@@ -47,6 +47,10 @@
 #include "ACM.h"
 //#include "AParameters/AParameters.h"
 
+#ifndef TTS_BALLOON
+#define TTS_BALLOON            0x40
+#endif // TTS_BALLOON
+
 const unsigned int AEncodeProperties::the_Bitrates[18] = {320, 256, 224, 192, 160, 144, 128, 112, 96, 80, 64, 56, 48, 40, 32, 24, 16, 8 };
 const unsigned int AEncodeProperties::the_MPEG1_Bitrates[14] = {320, 256, 224, 192, 160, 128, 112, 96, 80, 64, 56, 48, 40, 32 };
 const unsigned int AEncodeProperties::the_MPEG2_Bitrates[14] = {160, 144, 128, 112, 96, 80, 64, 56, 48, 40, 32, 24, 16, 8};

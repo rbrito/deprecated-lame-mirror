@@ -53,6 +53,10 @@
 
 #include "ACM.h"
 
+#ifndef IDC_HAND
+#define IDC_HAND            MAKEINTRESOURCE(32649)
+#endif // IDC_HAND
+
 char ACM::VersionString[20];
 
 const char ACM_VERSION[] = "0.9.0";
