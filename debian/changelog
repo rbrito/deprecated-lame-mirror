@@ -1,0 +1,9 @@
+lame (3.86-1) unstable; urgency=low
+
+  * Initial Release.
+
+ -- Stefan Karrmann <S.Karrmann@gmx.net>  Thu, 31 Aug 2000 22:15:07 +0200
+
+Local variables:
+mode: debian-changelog
+End:

@@ -166,7 +166,6 @@ void SwapBytesInWords ( short* loc, size_t words )
 }
 
 
-
 /*****************************************************************************
 *
 *  Routines to determine byte order and swap bytes
@@ -175,24 +174,18 @@ void SwapBytesInWords ( short* loc, size_t words )
 
 enum byte_order DetermineByteOrder(void)
 {
-    char s[ sizeof(long) + 1 ];
-    union
-    {
-        long longval;
-        char charval[ sizeof(long) ];
-    } probe;
-    probe.longval = 0x41424344L;  /* ABCD in ASCII */
-    strncpy( s, probe.charval, sizeof(long) );
-    s[ sizeof(long) ] = '\0';
-    /* fprintf( stderr, "byte order is %s\n", s ); */
-    if ( strcmp(s, "ABCD") == 0 )
+    static unsigned char  test [8] = { 1, 2, 3, 4, 5, 6, 7, 8 };
+    unsigned long         t        = *(unsigned long*) test;
+
+    if ( t == 0x04030201  ||  t == 0x0807060504030201 )
+        return order_littleEndian;
+    if ( t == 0x01020304  ||  t == 0x0102030405060708 )
         return order_bigEndian;
-    else
-        if ( strcmp(s, "DCBA") == 0 )
-            return order_littleEndian;
-        else
-            return order_unknown;
+        
+    return order_unknown;
 }
+
+
 
 
 
@@ -824,7 +817,7 @@ int read_samples_pcm(FILE *musicin,short sample_buffer[2304], int frame_size,int
 	      exit(1);
 	    }
 	}
-      /* intel=littleEndian */
+      /* intel=littleEndian.  wav files are always little endian */
       if (!iswav && ( NativeByteOrder == order_littleEndian ))
 	SwapBytesInWords( sample_buffer, samples_read );
       

@@ -137,7 +137,7 @@ int main(int argc, char **argv)
    * struct 'gf'.  If you want to parse your own arguments,
    * or call libmp3lame from a program which uses a GUI to set arguments,
    * skip this call and set the values of interest in the gf struct.
-   * (see lame.h for documentation about these parameters)
+   * (see the file API and lame.h for documentation about these parameters)
    */
     parse_args_from_string ( &gf, getenv("LAMEOPT"), inPath, outPath );
     ret = parse_args ( &gf, argc, argv, inPath, outPath );
@@ -158,7 +158,7 @@ int main(int argc, char **argv)
   }
 
   /* open the wav/aiff/raw pcm or mp3 input file.  This call will
-   * open the file with name gf.inFile, try to parse the headers and
+   * open the file, try to parse the headers and
    * set gf.samplerate, gf.num_channels, gf.num_samples.
    * if you want to do your own file input, skip this call and set
    * samplerate, num_channels and num_samples yourself.
@@ -192,8 +192,6 @@ int main(int argc, char **argv)
       brhist = 0;
     }
   }
-#endif
-#ifdef KLEMM_13
   else {
     brhist_init(&gf, 128, 128 );   // Dirty hack
   }
@@ -305,19 +303,14 @@ int main(int argc, char **argv)
 
       if (!silent) {
 #ifdef BRHIST
-    brhist_jump_back();
+	brhist_jump_back();
 #endif
 	timestatus(gf.out_samplerate,gf.frameNum,gf.totalframes,gf.framesize);
 #ifdef BRHIST
 	if (brhist) {
 	  brhist_disp(&gf);
-#ifndef KLEMM_13	  
-	  brhist_disp_total(&gf);
-#endif	  
 	}
-#ifdef KLEMM_13	
-	  brhist_disp_total(&gf);
-#endif	  
+	brhist_disp_total(&gf);
 #endif
 	timestatus_finish();
       }

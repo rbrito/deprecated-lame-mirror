@@ -115,8 +115,8 @@ int  brhist_init ( const lame_global_flags* gf, const int bitrate_kbps_min, cons
     brhist.vbr_bitrate_min_index = calculate_index ( brhist.kbps, BRHIST_WIDTH, bitrate_kbps_min );
     brhist.vbr_bitrate_max_index = calculate_index ( brhist.kbps, BRHIST_WIDTH, bitrate_kbps_max );
 
-    if ( (unsigned)brhist.vbr_bitrate_min_index >= BRHIST_WIDTH  ||  
-         (unsigned)brhist.vbr_bitrate_max_index >= BRHIST_WIDTH ) {
+    if ( brhist.vbr_bitrate_min_index >= BRHIST_WIDTH  ||  
+         brhist.vbr_bitrate_max_index >= BRHIST_WIDTH ) {
 	fprintf ( Console_IO.Error_fp, "lame internal error: VBR min %d kbps or VBR max %d kbps not allowed.\n", bitrate_kbps_min, bitrate_kbps_max );
 	return -1;
     }

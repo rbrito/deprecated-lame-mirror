@@ -1,0 +1,1 @@
+shlibs:Depends=libc6 (>= 2.1.2), libglib1.2 (>= 1.2.0), libgtk1.2 (>= 1.2.8-1), libncurses5, xlib6g (>= 3.3.6-4)
