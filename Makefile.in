@@ -371,12 +371,11 @@ endif
 
 
 
-
+# ** handled by configure **
 # 10/99 added -D__NO_MATH_INLINES to fix a bug in *all* versions of
 # gcc 2.8+ as of 10/99.  
 
-CC_SWITCHES = -DNDEBUG -D__NO_MATH_INLINES $(CC_OPTS) $(CFLAGS) \
-$(LDFLAGS)
+CC_SWITCHES = -DNDEBUG $(CC_OPTS) $(CFLAGS) $(LDFLAGS)
 OBJ = $(c_sources:.c=.o)
 DEP = $(c_sources:.c=.d)
 
