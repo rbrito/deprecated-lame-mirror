@@ -49,13 +49,17 @@
  * $Id$
  *
  * $Log$
+ * Revision 1.2.4.2  2002/10/27 12:19:32  robert
+ * do we need logging of cvs commits in source files?
+ * small fixes in comments due to cvs log entries
+ *
  * Revision 1.2.4.1  2002/10/26 20:41:27  robert
  * changed C++ comments into C style comments for
  * configMS.h
- * include/*.h
- * frontend/*.[ch]
- * mpglib/*.[ch]
- * libmp3lame/*.[ch]
+ * include/ *.h
+ * frontend/ *.[ch]
+ * mpglib/ *.[ch]
+ * libmp3lame/ *.[ch]
  *
  * Revision 1.2  2000/11/18 04:24:06  markt
  * Removed ieeefloat.*
