@@ -214,7 +214,6 @@ AC_CHECK_LIB(cpml, cos, USE_LIBM="-lcpml")
 CONFIG_MATH_LIB="${USE_LIBM}"
 
 AC_CHECK_LIB(sndfile, sf_open_read, HAVE_SNDFILE="yes")
-AC_CHECK_LIB(vorbis, ogg_sync_init, HAVE_VORBIS="yes")
 
 
 dnl configure use of features
@@ -344,12 +343,11 @@ AC_MSG_RESULT($CONFIG_DECODER)
 
 
 dnl vorbis
-AC_MSG_CHECKING(use of vorbis)
 WARNING=
 AC_ARG_WITH(vorbis, 
   [  --with-vorbis              Use vorbis library for ogg files]
-  [                           [default: yes, if installed]],
-  CONFIG_VORBIS="${withval}", CONFIG_VORBIS="yes")
+  [                           [default: no]],
+  CONFIG_VORBIS="${withval}", CONFIG_VORBIS="no")
 AC_ARG_WITH(vorbis-prefix,
   [  --with-vorbis-prefix=DIR   Alternate location for vorbis],
   CONFIG_VORBIS_PREFIX="${withval}", CONFIG_VORBIS_PREFIX="")
@@ -366,6 +364,9 @@ if test "${CONFIG_VORBIS}" != "no" ; then
       WARNING="vorbis lib not found in specified prefix."
     fi
   fi
+
+  AC_CHECK_LIB(vorbis, ogg_sync_init, HAVE_VORBIS="yes")
+
   if test "${HAVE_VORBIS}" = "yes" ; then
     FRONTEND_LDFLAGS="-lvorbis ${FRONTEND_LDFLAGS}"
     AC_DEFINE(HAVE_VORBIS, 1, build with vorbis support)
@@ -373,6 +374,7 @@ if test "${CONFIG_VORBIS}" != "no" ; then
     CONFIG_VORBIS="no"
   fi
 fi
+AC_MSG_CHECKING(use of vorbis)
 AC_MSG_RESULT(${CONFIG_VORBIS})
 if test "x${WARNING}" != "x" ; then
   AC_MSG_WARN($WARNING)
