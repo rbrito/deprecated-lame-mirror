@@ -75,7 +75,7 @@ INLINE FLOAT8 mask_add(double m1,double m2,int k,int b,lame_internal_flags *gfc)
   if (b < 0) b = -b;
 
   i = 10*log10(m2 / m1)/10*16;
-  m = 10*log10((m1+m2)/(gfc->ATH_partitionbands[k]/2.43e+06));
+  m = 10*log10((m1+m2)/gfc->ATH_partitionbands[k]);
 
   if (i < 0) i = -i;
 
