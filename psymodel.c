@@ -27,9 +27,6 @@
 #define         LN_TO_LOG10             0.2302585093
 #endif
 
-#define maximum(x,y) ( (x>y) ? x : y )
-#define minimum(x,y) ( (x<y) ? x : y )
-
 
 void L3para_read( FLOAT8 sfreq, int numlines[CBANDS],int numlines_s[CBANDS], int partition_l[HBLKSIZE],
 		  FLOAT8 minval[CBANDS], FLOAT8 qthr_l[CBANDS], 
@@ -65,7 +62,7 @@ void L3psycho_anal( short int *buffer[2],
   static FLOAT8 pe[4]={0,0,0,0};
   static FLOAT8 ms_ratio_s_old=0,ms_ratio_l_old=0;
   static FLOAT8 ms_ener_ratio_old=.25;
-  FLOAT8 tot_ener[4]={0,0,0,0};
+  FLOAT tot_ener[4]={0,0,0,0};
   
 #ifdef HAVEGTK
   static FLOAT energy_save[4][HBLKSIZE];
@@ -161,8 +158,8 @@ void L3psycho_anal( short int *buffer[2],
     else
       cwlimit=8.8717;
     cw_upper_index = cwlimit*1000.0*1024.0/sfreq;
-    cw_upper_index=minimum(HBLKSIZE-4,cw_upper_index);      /* j+3 < HBLKSIZE-1 */
-    cw_upper_index=maximum(6,cw_upper_index);
+    cw_upper_index=Min(HBLKSIZE-4,cw_upper_index);      /* j+3 < HBLKSIZE-1 */
+    cw_upper_index=Max(6,cw_upper_index);
 
     for ( j = 0; j < HBLKSIZE; j++ )
       cw[j] = 0.4;
@@ -356,16 +353,26 @@ void L3psycho_anal( short int *buffer[2],
     /**********************************************************************
      *  compute energies
      **********************************************************************/
+    
+    tot_ener[chn]=0; /* also summing total energy at nearly no extra cost */
+    
     for (j=1; j < BLKSIZE/2; j++)
     {
       FLOAT re = (*wsamp_l)[BLKSIZE/2-j];
       FLOAT im = (*wsamp_l)[BLKSIZE/2+j];
       energy[BLKSIZE/2-j] = (re * re + im * im) * 0.5;
+      
+      tot_ener[chn] += energy[BLKSIZE/2-j];
     }
     energy[0]  = (*wsamp_l)[0];
     energy[0] *= energy[0];
+    
+    tot_ener[chn] += energy[0];
+    
     energy[BLKSIZE/2]  = (*wsamp_l)[BLKSIZE/2];
     energy[BLKSIZE/2] *= energy[BLKSIZE/2];
+    
+    tot_ener[chn] += energy[BLKSIZE/2];
       
     for (b = 0; b < 3; b++)
     {
@@ -381,15 +388,6 @@ void L3psycho_anal( short int *buffer[2],
       energy_s[b][BLKSIZE_s/2] *=  energy_s [b][BLKSIZE_s/2];
     }
 
-
-
-    if (check_ms_stereo) {
-      /* used for MS stereo criterion */
-      tot_ener[chn]=0;
-      for (j=0; j<HBLKSIZE ; j++) {
-	tot_ener[chn] += energy[j];
-      }
-    }
 
 #ifdef HAVEGTK
   if(gf.gtkflag) {
@@ -645,13 +643,13 @@ void L3psycho_anal( short int *buffer[2],
 	      }
 	  }
 
-	tbb = minimum(minval[b], tbb);
+	tbb = Min(minval[b], tbb);
 	ecb *= tbb;
 
 	/* pre-echo control */
 	/* rpelev=2.0, rpelev2=16.0 */
-	temp_1 = minimum(ecb, minimum(rpelev*nb_1[chn][b],rpelev2*nb_2[chn][b]) );
-	thr[b] = maximum( qthr_l[b], temp_1 ); 
+	temp_1 = Min(ecb, Min(rpelev*nb_1[chn][b],rpelev2*nb_2[chn][b]) );
+	thr[b] = Max( qthr_l[b], temp_1 ); 
 	nb_2[chn][b] = nb_1[chn][b];
 	nb_1[chn][b] = ecb;
 
@@ -698,10 +696,10 @@ void L3psycho_anal( short int *buffer[2],
 	for ( j = HBLKSIZE_s/2; j < HBLKSIZE_s; j ++)
 	  estot[chn][sblock]+=energy_s[sblock][j];
       }
-      mn = minimum(estot[chn][0],estot[chn][1]);
-      mn = minimum(mn,estot[chn][2]);
-      mx = maximum(estot[chn][0],estot[chn][1]);
-      mx = maximum(mx,estot[chn][2]);
+      mn = Min(estot[chn][0],estot[chn][1]);
+      mn = Min(mn,estot[chn][2]);
+      mx = Max(estot[chn][0],estot[chn][1]);
+      mx = Max(mx,estot[chn][2]);
       
       pinfo->ers[gr_out][chn]=ers_save[chn];
       ers_save[chn]=mx/(1e-12+mn);
@@ -726,10 +724,10 @@ void L3psycho_anal( short int *buffer[2],
 	for ( j = HBLKSIZE_s/2; j < HBLKSIZE_s; j ++)
 	  for (sblock=0; sblock < 3; sblock++)
 	    estot[chn][sblock]+=energy_s[sblock][j];
-	mn = minimum(estot[chn][0],estot[chn][1]);
-	mn = minimum(mn,estot[chn][2]);
-	mx = maximum(estot[chn][0],estot[chn][1]);
-	mx = maximum(mx,estot[chn][2]);
+	mn = Min(estot[chn][0],estot[chn][1]);
+	mn = Min(mn,estot[chn][2]);
+	mx = Max(estot[chn][0],estot[chn][1]);
+	mx = Max(mx,estot[chn][2]);
 	
 	uselongblock[chn] = 1;
 
@@ -768,7 +766,7 @@ void L3psycho_anal( short int *buffer[2],
 	      {
 		ecb += s3_s[b][k] * eb[k];
 	      }
-	    thr[b] = maximum (qthr_s[b], ecb);
+	    thr[b] = Max (qthr_s[b], ecb);
 	  }
 
 	for ( sb = 0; sb < SBPSY_s; sb++ )
@@ -837,8 +835,8 @@ void L3psycho_anal( short int *buffer[2],
     /* use ms_stereo (ms_ratio < .35) if average thresh. diff < 5 db */
     FLOAT8 db,x1,x2,sidetot=0,tot=0;
     for (sb= SBPSY_l/4 ; sb< SBPSY_l; sb ++ ) {
-      x1 = minimum(thm[0].l[sb],thm[1].l[sb]);
-      x2 = maximum(thm[0].l[sb],thm[1].l[sb]);
+      x1 = Min(thm[0].l[sb],thm[1].l[sb]);
+      x2 = Max(thm[0].l[sb],thm[1].l[sb]);
       /* thresholds difference in db */
       if (x2 >= 1000*x1)  db=3;
       else db = log10(x2/x1);  
@@ -852,8 +850,8 @@ void L3psycho_anal( short int *buffer[2],
     sidetot=0; tot=0;
     for ( sblock = 0; sblock < 3; sblock++ )
       for ( sb = SBPSY_s/4; sb < SBPSY_s; sb++ ) {
-	x1 = minimum(thm[0].s[sb][sblock],thm[1].s[sb][sblock]);
-	x2 = maximum(thm[0].s[sb][sblock],thm[1].s[sb][sblock]);
+	x1 = Min(thm[0].s[sb][sblock],thm[1].s[sb][sblock]);
+	x2 = Max(thm[0].s[sb][sblock],thm[1].s[sb][sblock]);
 	/* thresholds difference in db */
 	if (x2 >= 1000*x1)  db=3;
 	else db = log10(x2/x1);  
@@ -946,13 +944,11 @@ void L3psycho_anal( short int *buffer[2],
     *ms_ener_ratio = *ms_ratio;
 
   {
-    FLOAT8 tmp = tot_ener[3]+tot_ener[2];
+    FLOAT tmp = tot_ener[3]+tot_ener[2];
     ms_ener_ratio_old=0;
     if (tmp>0) ms_ener_ratio_old=tot_ener[3]/tmp;
   }
-
-
-  
+ 
 }
 
 
