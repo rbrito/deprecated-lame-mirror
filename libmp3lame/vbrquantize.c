@@ -23,7 +23,7 @@
 /* $Id$ */
 
 #ifdef HAVE_CONFIG_H
-# include <config.h>
+#  include <config.h>
 #endif
 
 #include <assert.h>
@@ -33,8 +33,9 @@
 #include "vbrquantize.h"
 
 #ifdef WITH_DMALLOC
-#include <dmalloc.h>
+#  include <dmalloc.h>
 #endif
+
 
 
 struct algo_s;
@@ -56,6 +57,7 @@ struct algo_s {
 };
 
 
+
 /*  Remarks on optimizing compilers:
  *
  *  the MSVC compiler may get into aliasing problems when accessing
@@ -66,9 +68,9 @@ struct algo_s {
  */
 
 #ifdef _MSC_VER
-#define VOLATILE volatile
+#  define VOLATILE volatile
 #else
-#define VOLATILE
+#  define VOLATILE
 #endif
 
 typedef VOLATILE union {
@@ -77,11 +79,41 @@ typedef VOLATILE union {
 } fi_union;
 
 
+
+#define DOUBLEX double
+
+#define MAGIC_FLOAT_def (65536*(128))
+#define MAGIC_INT_def    0x4b000000
+
+#ifdef TAKEHIRO_IEEE754_HACK
+#  define ROUNDFAC_def -0.0946f
+#else
+/*********************************************************************
+ * XRPOW_FTOI is a macro to convert floats to ints.
+ * if XRPOW_FTOI(x) = nearest_int(x), then QUANTFAC(x)=adj43asm[x]
+ *                                         ROUNDFAC= -0.0946
+ *
+ * if XRPOW_FTOI(x) = floor(x), then QUANTFAC(x)=asj43[x]
+ *                                   ROUNDFAC=0.4054
+ *********************************************************************/
+#  define QUANTFAC(rx)  adj43[rx]
+#  define ROUNDFAC_def 0.4054f
+#  define XRPOW_FTOI(src,dest) ((dest) = (int)(src))
+#endif
+
+static int const MAGIC_INT = MAGIC_INT_def;
+static DOUBLEX const ROUNDFAC = ROUNDFAC_def;
+static DOUBLEX const MAGIC_FLOAT = (65536 * (128));
+static DOUBLEX const ROUNDFAC_plus_MAGIC_FLOAT = ROUNDFAC_def + MAGIC_FLOAT_def;
+
+
+
 static int
 valid_sf(int sf)
 {
     return (sf >= 0 ? (sf <= 255 ? sf : 255) : 0);
 }
+
 
 
 static  FLOAT
@@ -92,24 +124,31 @@ max_x34(const FLOAT * xr34, unsigned int bw)
     int     remaining = j % 2;
     assert(bw >= 0);
     for (j >>= 1; j > 0; --j) {
-        if (xfsf < xr34[0])
+        if (xfsf < xr34[0]) {
             xfsf = xr34[0];
-        if (xfsf < xr34[1])
+        }
+        if (xfsf < xr34[1]) {
             xfsf = xr34[1];
-        if (xfsf < xr34[2])
+        }
+        if (xfsf < xr34[2]) {
             xfsf = xr34[2];
-        if (xfsf < xr34[3])
+        }
+        if (xfsf < xr34[3]) {
             xfsf = xr34[3];
+        }
         xr34 += 4;
     }
     if (remaining) {
-        if (xfsf < xr34[0])
+        if (xfsf < xr34[0]) {
             xfsf = xr34[0];
-        if (xfsf < xr34[1])
+        }
+        if (xfsf < xr34[1]) {
             xfsf = xr34[1];
+        }
     }
     return xfsf;
 }
+
 
 
 static int
@@ -133,37 +172,6 @@ find_lowest_scalefac(const FLOAT xr34)
     }
     return sf;
 }
-
-
-#define DOUBLEX double
-
-#define MAGIC_FLOAT_def (65536*(128))
-#define MAGIC_INT_def    0x4b000000
-
-
-#ifdef TAKEHIRO_IEEE754_HACK
-#   define ROUNDFAC_def -0.0946f
-#else
-
-/*********************************************************************
- * XRPOW_FTOI is a macro to convert floats to ints.
- * if XRPOW_FTOI(x) = nearest_int(x), then QUANTFAC(x)=adj43asm[x]
- *                                         ROUNDFAC= -0.0946
- *
- * if XRPOW_FTOI(x) = floor(x), then QUANTFAC(x)=asj43[x]
- *                                   ROUNDFAC=0.4054
- *********************************************************************/
-#  define QUANTFAC(rx)  adj43[rx]
-#  define ROUNDFAC_def 0.4054f
-#  define XRPOW_FTOI(src,dest) ((dest) = (int)(src))
-
-
-#endif
-
-static int const MAGIC_INT = MAGIC_INT_def;
-static DOUBLEX const ROUNDFAC = ROUNDFAC_def;
-static DOUBLEX const MAGIC_FLOAT = (65536 * (128));
-static DOUBLEX const ROUNDFAC_plus_MAGIC_FLOAT = ROUNDFAC_def + MAGIC_FLOAT_def;
 
 
 
@@ -207,6 +215,8 @@ k_34_4(DOUBLEX x[4], int l3[4])
 #endif
 }
 
+
+
 static void
 k_34_2(DOUBLEX x[2], int l3[2])
 {
@@ -232,6 +242,8 @@ k_34_2(DOUBLEX x[2], int l3[2])
     XRPOW_FTOI(x[1], l3[1]);
 #endif
 }
+
+
 
 static void
 k_iso_4(DOUBLEX x[4], int l3[4])
@@ -260,6 +272,8 @@ k_iso_4(DOUBLEX x[4], int l3[4])
 #endif
 }
 
+
+
 static void
 k_iso_2(DOUBLEX x[2], int l3[2])
 {
@@ -278,6 +292,7 @@ k_iso_2(DOUBLEX x[2], int l3[2])
     l3[1] = x[1] + ROUNDFAC;
 #endif
 }
+
 
 
 /*  do call the calc_sfb_noise_* functions only with sf values
@@ -328,6 +343,7 @@ calc_sfb_noise_x34(const FLOAT * xr, const FLOAT * xr34, unsigned int bw, int sf
 }
 
 
+
 static  FLOAT
 calc_sfb_noise_ISO(const FLOAT * xr, const FLOAT * xr34, unsigned int bw, int sf)
 {
@@ -373,6 +389,7 @@ calc_sfb_noise_ISO(const FLOAT * xr, const FLOAT * xr34, unsigned int bw, int sf
 }
 
 
+
 /* the find_scalefac* routines calculate
  * a quantization step size which would
  * introduce as much noise as is allowed.
@@ -383,7 +400,6 @@ calc_sfb_noise_ISO(const FLOAT * xr, const FLOAT * xr34, unsigned int bw, int sf
  * differences in quantization step sizes
  * per band (shaping the noise).
  */
-
 
 static int
 find_scalefac_x34(const FLOAT * xr, const FLOAT * xr34, FLOAT l3_xmin, int bw, int sf_min)
@@ -414,6 +430,7 @@ find_scalefac_x34(const FLOAT * xr, const FLOAT * xr34, FLOAT l3_xmin, int bw, i
     }
     return sf;
 }
+
 
 
 static int
@@ -447,6 +464,7 @@ find_scalefac_ISO(const FLOAT * xr, const FLOAT * xr34, FLOAT l3_xmin, int bw, i
 }
 
 
+
 /***********************************************************************
  *
  *      calc_short_block_vbr_sf()
@@ -468,10 +486,8 @@ block_sf(const algo_t * that, const FLOAT l3_xmin[576], int vbrsf[SFBMAX], int v
     const int psymax = that->cod_info->psymax;
     const int max_nonzero_coeff = that->cod_info->max_nonzero_coeff;
     int     maxsf = 0;
-    int     w, ow = 0, sfb, j = 0;
+    int     w, ow = 0, sfb = 0, j = 0;
 
-    sfb = 0;
-    j = 0;
     while (sfb < psymax && j < max_nonzero_coeff) {
         w = ow = width[sfb];
         if (j + w > max_nonzero_coeff) {
@@ -495,7 +511,6 @@ block_sf(const algo_t * that, const FLOAT l3_xmin[576], int vbrsf[SFBMAX], int v
 
 
 
-
 /***********************************************************************
  *
  *  quantize xr34 based on scalefactors
@@ -512,7 +527,7 @@ quantize_x34(const algo_t * that)
 {
     DOUBLEX x[4];
     const FLOAT *xr34_orig = that->xr34orig;
-    const gr_info *cod_info = that->cod_info;
+    gr_info *cod_info = that->cod_info;
     int    *l3 = cod_info->l3_enc;
     int     j = 0, sfb;
     const int max_nonzero_coeff = cod_info->max_nonzero_coeff;
@@ -521,7 +536,7 @@ quantize_x34(const algo_t * that)
         const int s = ((cod_info->scalefac[sfb] + (cod_info->preflag ? pretab[sfb] : 0))
                        << (cod_info->scalefac_scale + 1))
             + cod_info->subblock_gain[cod_info->window[sfb]] * 8;
-        const int sfac = valid_sf(cod_info->global_gain-s);
+        const int sfac = valid_sf(cod_info->global_gain - s);
         const FLOAT sfpow34 = IPOW20(sfac);
         int     remaining;
         int     l = cod_info->width[sfb];
@@ -556,12 +571,14 @@ quantize_x34(const algo_t * that)
     }
 }
 
+
+
 static void
 quantize_ISO(const algo_t * that)
 {
     DOUBLEX x[4];
     const FLOAT *xr34_orig = that->xr34orig;
-    const gr_info *cod_info = that->cod_info;
+    gr_info *cod_info = that->cod_info;
     int    *l3 = cod_info->l3_enc;
     int     j = 0, sfb;
     const int max_nonzero_coeff = cod_info->max_nonzero_coeff;
@@ -570,7 +587,7 @@ quantize_ISO(const algo_t * that)
         const int s = ((cod_info->scalefac[sfb] + (cod_info->preflag ? pretab[sfb] : 0))
                        << (cod_info->scalefac_scale + 1))
             + cod_info->subblock_gain[cod_info->window[sfb]] * 8;
-        const int sfac = valid_sf(cod_info->global_gain-s);
+        const int sfac = valid_sf(cod_info->global_gain - s);
         const FLOAT sfpow34 = IPOW20(sfac);
         int     remaining;
         int     l = cod_info->width[sfb];
@@ -632,10 +649,10 @@ static const int max_range_long_lsf_pretab[SBMAX_l] =
     ol_sf =  (cod_info->global_gain-210.0);
     ol_sf -= 8*cod_info->subblock_gain[i];
     ol_sf -= ifqstep*scalefac[gr][ch].s[sfb][i];
-
 */
+
 static void
-set_subblock_gain(const gr_info * cod_info, const int *vbrsfmin, int sf[])
+set_subblock_gain(gr_info * cod_info, const int *vbrsfmin, int sf[])
 {
     const int maxrange1 = 15, maxrange2 = 7;
     const int ifqstepShift = (cod_info->scalefac_scale == 0) ? 1 : 2;
@@ -653,21 +670,27 @@ set_subblock_gain(const gr_info * cod_info, const int *vbrsfmin, int sf[])
         /* see if we should use subblock gain */
         for (sfb = i; sfb < psydiv; sfb += 3) { /* part 1 */
             int     v = -sf[sfb];
-            if (maxsf1 < v)
+            if (maxsf1 < v) {
                 maxsf1 = v;
-            if (maxsfmin < vbrsfmin[sfb])
+            }
+            if (maxsfmin < vbrsfmin[sfb]) {
                 maxsfmin = vbrsfmin[sfb];
-            if (minsf > v)
+            }
+            if (minsf > v) {
                 minsf = v;
+            }
         }
         for (; sfb < psymax; sfb += 3) { /* part 2 */
             int     v = -sf[sfb];
-            if (maxsf2 < v)
+            if (maxsf2 < v) {
                 maxsf2 = v;
-            if (maxsfmin < vbrsfmin[sfb])
+            }
+            if (maxsfmin < vbrsfmin[sfb]) {
                 maxsfmin = vbrsfmin[sfb];
-            if (minsf > v)
+            }
+            if (minsf > v) {
                 minsf = v;
+            }
         }
 
         /* boost subblock gain as little as possible so we can
@@ -694,8 +717,9 @@ set_subblock_gain(const gr_info * cod_info, const int *vbrsfmin, int sf[])
         if (sbg[i] > 0 && maxsfmin > (cod_info->global_gain - sbg[i] * 8)) {
             sbg[i] = (cod_info->global_gain - maxsfmin) >> 3;
         }
-        if (sbg[i] > 7)
+        if (sbg[i] > 7) {
             sbg[i] = 7;
+        }
     }
     sbg0 = sbg[0] << 3;
     sbg1 = sbg[1] << 3;
@@ -708,6 +732,7 @@ set_subblock_gain(const gr_info * cod_info, const int *vbrsfmin, int sf[])
 }
 
 
+
 /*
 	  ifqstep = ( cod_info->scalefac_scale == 0 ) ? 2 : 4;
 	  ol_sf =  (cod_info->global_gain-210.0);
@@ -716,7 +741,7 @@ set_subblock_gain(const gr_info * cod_info, const int *vbrsfmin, int sf[])
 	  ol_sf -= ifqstep*pretab[sfb];
 */
 static void
-set_scalefacs(const gr_info * cod_info, const int *vbrsfmin, int sf[], const int *max_range)
+set_scalefacs(gr_info * cod_info, const int *vbrsfmin, int sf[], const int *max_range)
 {
     const int ifqstep = (cod_info->scalefac_scale == 0) ? 2 : 4;
     const int ifqstepShift = (cod_info->scalefac_scale == 0) ? 1 : 2;
@@ -726,9 +751,10 @@ set_scalefacs(const gr_info * cod_info, const int *vbrsfmin, int sf[], const int
     int    *window = cod_info->window;
     int     preflag = cod_info->preflag;
 
-    if (cod_info->preflag) {
-        for (sfb = 11; sfb < sfbmax; ++sfb)
+    if (preflag) {
+        for (sfb = 11; sfb < sfbmax; ++sfb) {
             sf[sfb] += pretab[sfb] << ifqstepShift;
+        }
     }
     for (sfb = 0; sfb < sfbmax; ++sfb) {
         int     gain = cod_info->global_gain - (sbg[window[sfb]] << 3)
@@ -739,9 +765,9 @@ set_scalefacs(const gr_info * cod_info, const int *vbrsfmin, int sf[], const int
             /* ifqstep*scalefac >= -sf[sfb], so round UP */
             scalefac[sfb] = (ifqstep - 1 - sf[sfb]) >> ifqstepShift;
 
-            if (scalefac[sfb] > max_range[sfb])
+            if (scalefac[sfb] > max_range[sfb]) {
                 scalefac[sfb] = max_range[sfb];
-
+            }
             if (scalefac[sfb] > 0 && (scalefac[sfb] << ifqstepShift) > m) {
                 scalefac[sfb] = m >> ifqstepShift;
             }
@@ -754,6 +780,7 @@ set_scalefacs(const gr_info * cod_info, const int *vbrsfmin, int sf[], const int
         scalefac[sfb] = 0; /* sfb21 */
     }
 }
+
 
 
 static int
@@ -806,24 +833,28 @@ short_block_constrain(const algo_t * that, int vbrsf[SFBMAX],
     int     psymax = cod_info->psymax;
 
     for (sfb = 0; sfb < psymax; ++sfb) {
-        if (vbrsf[sfb] < vbrsfmin[sfb])
+        if (vbrsf[sfb] < vbrsfmin[sfb]) {
             vbrsf[sfb] = vbrsfmin[sfb];
+        }
         v0 = (vbrmax - vbrsf[sfb]) - (4 * 14 + 2 * max_range_short[sfb]);
         v1 = (vbrmax - vbrsf[sfb]) - (4 * 14 + 4 * max_range_short[sfb]);
-        if (maxover0 < v0)
+        if (maxover0 < v0) {
             maxover0 = v0;
-        if (maxover1 < v1)
+        }
+        if (maxover1 < v1) {
             maxover1 = v1;
-        if (maxminsfb < vbrsfmin[sfb])
+        }
+        if (maxminsfb < vbrsfmin[sfb]) {
             maxminsfb = vbrsfmin[sfb];
+        }
     }
-
-    if (gfc->noise_shaping == 2)
+    if (gfc->noise_shaping == 2) {
         /* allow scalefac_scale=1 */
         mover = Min(maxover0, maxover1);
-    else
+    }
+    else {
         mover = maxover0;
-
+    }
     vbrmax -= mover;
     maxover0 -= mover;
     maxover1 -= mover;
@@ -834,10 +865,9 @@ short_block_constrain(const algo_t * that, int vbrsf[SFBMAX],
     else if (maxover1 == 0) {
         cod_info->scalefac_scale = 1;
     }
-
-    if (vbrmax < maxminsfb)
+    if (vbrmax < maxminsfb) {
         vbrmax = maxminsfb;
-
+    }
     cod_info->global_gain = vbrmax;
 
     if (cod_info->global_gain < 0) {
@@ -849,7 +879,6 @@ short_block_constrain(const algo_t * that, int vbrsf[SFBMAX],
     for (sfb = 0; sfb < SFBMAX; ++sfb) {
         vbrsf[sfb] -= vbrmax;
     }
-    assert(cod_info->global_gain < 256);
     set_subblock_gain(cod_info, vbrsfmin, vbrsf);
     set_scalefacs(cod_info, vbrsfmin, vbrsf, max_range_short);
     assert(checkScalefactor(cod_info, vbrsfmin));
@@ -883,22 +912,28 @@ long_block_constrain(const algo_t * that, int vbrsf[SFBMAX], const int vbrsfmin[
     maxover1p = 0;      /* pretab */
 
     for (sfb = 0; sfb < psymax; ++sfb) {
-        if (vbrsf[sfb] < vbrsfmin[sfb])
+        if (vbrsf[sfb] < vbrsfmin[sfb]) {
             vbrsf[sfb] = vbrsfmin[sfb];
+        }
         v0 = (vbrmax - vbrsf[sfb]) - 2 * max_range_long[sfb];
         v1 = (vbrmax - vbrsf[sfb]) - 4 * max_range_long[sfb];
         v0p = (vbrmax - vbrsf[sfb]) - 2 * (max_rangep[sfb] + pretab[sfb]);
         v1p = (vbrmax - vbrsf[sfb]) - 4 * (max_rangep[sfb] + pretab[sfb]);
-        if (maxover0 < v0)
+        if (maxover0 < v0) {
             maxover0 = v0;
-        if (maxover1 < v1)
+        }
+        if (maxover1 < v1) {
             maxover1 = v1;
-        if (maxover0p < v0p)
+        }
+        if (maxover0p < v0p) {
             maxover0p = v0p;
-        if (maxover1p < v1p)
+        }
+        if (maxover1p < v1p) {
             maxover1p = v1p;
-        if (maxminsfb < vbrsfmin[sfb])
+        }
+        if (maxminsfb < vbrsfmin[sfb]) {
             maxminsfb = vbrsfmin[sfb];
+        }
     }
     if (vm0p == 1) {
         int     gain = vbrmax - maxover0p;
@@ -927,11 +962,12 @@ long_block_constrain(const algo_t * that, int vbrsf[SFBMAX], const int vbrsfmin[
             }
         }
     }
-    if (vm0p == 0)
+    if (vm0p == 0) {
         maxover0p = maxover0;
-    if (vm1p == 0)
+    }
+    if (vm1p == 0) {
         maxover1p = maxover1;
-
+    }
     if (gfc->noise_shaping != 2) {
         maxover1 = maxover0;
         maxover1p = maxover0p;
@@ -974,9 +1010,9 @@ long_block_constrain(const algo_t * that, int vbrsf[SFBMAX], const int vbrsfmin[
     if (cod_info->global_gain < 0) {
         cod_info->global_gain = 0;
     }
-    else if (cod_info->global_gain > 255)
+    else if (cod_info->global_gain > 255) {
         cod_info->global_gain = 255;
-
+    }
     for (sfb = 0; sfb < SFBMAX; ++sfb) {
         vbrsf[sfb] -= vbrmax;
     }
@@ -984,8 +1020,6 @@ long_block_constrain(const algo_t * that, int vbrsf[SFBMAX], const int vbrsfmin[
     assert(checkScalefactor(cod_info, vbrsfmin));
     return checkScalefactor(cod_info, vbrsfmin);
 }
-
-
 
 
 
@@ -1001,6 +1035,7 @@ bitcount(const algo_t * that)
 }
 
 
+
 static int
 quantizeAndCountBits(const algo_t * that)
 {
@@ -1008,6 +1043,7 @@ quantizeAndCountBits(const algo_t * that)
     that->cod_info->part2_3_length = noquant_count_bits(that->gfc, that->cod_info);
     return that->cod_info->part2_3_length;
 }
+
 
 
 static int
@@ -1019,20 +1055,26 @@ tryScalefacColor(const algo_t * that, int vbrsf[SFBMAX],
 
     for (vbrmax = 0, i = 0; i < psymax; ++i) {
         vbrsf[i] = target + (vbrsf2[i] - target) * I / M;
-        if (vbrsf[i] < vbrsfmin[i])
+        if (vbrsf[i] < vbrsfmin[i]) {
             vbrsf[i] = vbrsfmin[i];
-        if (vbrsf[i] > 255)
+        }
+        if (vbrsf[i] > 255) {
             vbrsf[i] = 255;
-        if (vbrmax < vbrsf[i])
+        }
+        if (vbrmax < vbrsf[i]) {
             vbrmax = vbrsf[i];
+        }
     }
-    if (!that->alloc(that, vbrsf, vbrsfmin, vbrmax))
+    if (!that->alloc(that, vbrsf, vbrsfmin, vbrmax)) {
         return LARGE_BITS;
+    }
     bitcount(that);
     nbits = quantizeAndCountBits(that);
     that->cod_info->xrpow_max = xrpow_max;
     return nbits;
 }
+
+
 
 static void
 searchScalefacColorMax(const algo_t * that, int sfwork[SFBMAX],
@@ -1041,16 +1083,18 @@ searchScalefacColorMax(const algo_t * that, int sfwork[SFBMAX],
     gr_info *cod_info = that->cod_info;
     int     nbits, last, i, ok = -1, l = 0, r, vbrmin = 255, vbrmax = 0, M, target;
     for (i = 0; i < cod_info->psymax; ++i) {
-        if (vbrmin > sfcalc[i])
+        if (vbrmin > sfcalc[i]) {
             vbrmin = sfcalc[i];
-        if (vbrmax < sfcalc[i])
+        }
+        if (vbrmax < sfcalc[i]) {
             vbrmax = sfcalc[i];
+        }
     }
     M = vbrmax - vbrmin;
 
-    if (M == 0)
+    if (M == 0) {
         return;
-
+    }
     target = vbrmax;
     for (l = 0, r = M, last = i = M / 2; l <= r; i = (l + r) / 2) {
         nbits = tryScalefacColor(that, sfwork, sfcalc, vbrsfmin, i, M, target);
@@ -1064,11 +1108,13 @@ searchScalefacColorMax(const algo_t * that, int sfwork[SFBMAX],
         last = i;
     }
     if (last != ok) {
-        if (ok == -1)
+        if (ok == -1) {
             ok = 0;
+        }
         nbits = tryScalefacColor(that, sfwork, sfcalc, vbrsfmin, ok, M, target);
     }
 }
+
 
 #if 0
 static void
@@ -1078,16 +1124,18 @@ searchScalefacColorMin(const algo_t * that, int sfwork[SFBMAX],
     gr_info *cod_info = that->cod_info;
     int     nbits, last, i, ok = -1, l = 0, r, vbrmin = 255, vbrmax = 0, M, target;
     for (i = 0; i < cod_info->psymax; ++i) {
-        if (vbrmin > sfcalc[i])
+        if (vbrmin > sfcalc[i]) {
             vbrmin = sfcalc[i];
-        if (vbrmax < sfcalc[i])
+        }
+        if (vbrmax < sfcalc[i]) {
             vbrmax = sfcalc[i];
+        }
     }
     M = vbrmax - vbrmin;
 
-    if (M == 0)
+    if (M == 0) {
         return;
-
+    }
     target = vbrmin;
     for (l = 0, r = M, last = i = M / 2; l <= r; i = (l + r) / 2) {
         nbits = tryScalefacColor(that, sfwork, sfcalc, vbrsfmin, i, M, target);
@@ -1101,12 +1149,14 @@ searchScalefacColorMin(const algo_t * that, int sfwork[SFBMAX],
         last = i;
     }
     if (last != ok) {
-        if (ok == -1)
+        if (ok == -1) {
             ok = 0;
+        }
         nbits = tryScalefacColor(that, sfwork, sfcalc, vbrsfmin, ok, M, target);
     }
 }
 #endif
+
 
 static int
 tryGlobalStepsize(const algo_t * that, const int sfwork[SFBMAX],
@@ -1117,20 +1167,26 @@ tryGlobalStepsize(const algo_t * that, const int sfwork[SFBMAX],
     int     sftemp[SFBMAX], vbrmax, i, nbits;
     for (vbrmax = 0, i = 0; i < cod_info->psymax; ++i) {
         sftemp[i] = sfwork[i] + delta;
-        if (sftemp[i] < vbrsfmin[i])
+        if (sftemp[i] < vbrsfmin[i]) {
             sftemp[i] = vbrsfmin[i];
-        if (sftemp[i] > 255)
+        }
+        if (sftemp[i] > 255) {
             sftemp[i] = 255;
-        if (vbrmax < sftemp[i])
+        }
+        if (vbrmax < sftemp[i]) {
             vbrmax = sftemp[i];
+        }
     }
-    if (!that->alloc(that, sftemp, vbrsfmin, vbrmax))
+    if (!that->alloc(that, sftemp, vbrsfmin, vbrmax)) {
         return LARGE_BITS;
+    }
     bitcount(that);
     nbits = quantizeAndCountBits(that);
     cod_info->xrpow_max = xrpow_max;
     return nbits;
 }
+
+
 
 static void
 searchGlobalStepsizeMax(const algo_t * that, const int sfwork[SFBMAX],
@@ -1141,13 +1197,9 @@ searchGlobalStepsizeMax(const algo_t * that, const int sfwork[SFBMAX],
     int     curr = gain;
     int     gain_ok = 1024;
     int     nbits = LARGE_BITS;
-
-    int     l, r;
+    int     l = gain, r = 512;
 
     assert(gain >= 0);
-
-    r = 512;
-    l = gain;
     while (l <= r) {
         curr = (l + r) >> 1;
         nbits = tryGlobalStepsize(that, sfwork, vbrsfmin, curr - gain);
@@ -1161,8 +1213,9 @@ searchGlobalStepsizeMax(const algo_t * that, const int sfwork[SFBMAX],
         }
         else {
             l = curr + 1;
-            if (gain_ok == 1024)
+            if (gain_ok == 1024) {
                 gain_ok = curr;
+            }
         }
     }
     if (gain_ok != curr) {
@@ -1181,13 +1234,9 @@ searchGlobalStepsizeMin(const algo_t * that, const int sfwork[SFBMAX],
     int     curr = gain;
     int     gain_ok = 1024;
     int     nbits = LARGE_BITS;
-
-    int     l, r;
+    int     l = 0, r = gain;
 
     assert(gain >= 0);
-
-    r = gain;
-    l = 0;
     while (l <= r) {
         curr = (l + r) >> 1;
         nbits = tryGlobalStepsize(that, sfwork, vbrsfmin, curr - gain);
@@ -1197,8 +1246,9 @@ searchGlobalStepsizeMin(const algo_t * that, const int sfwork[SFBMAX],
         }
         if (nbits + cod_info->part2_length < target) {
             l = curr + 1;
-            if (gain_ok == 1024)
+            if (gain_ok == 1024) {
                 gain_ok = curr;
+            }
         }
         else {
             r = curr - 1;
@@ -1222,9 +1272,10 @@ searchGlobalStepsizeMin(const algo_t * that, const int sfwork[SFBMAX],
  *  Robert Hegemann 2000-10-25
  *
  ***********************************************************************/
+
 int
-VBR_noise_shaping(lame_internal_flags * gfc, FLOAT * xr34orig, int minbits,
-                  int maxbits, FLOAT * l3_xmin, int gr, int ch)
+VBR_noise_shaping(lame_internal_flags * gfc, const FLOAT xr34orig[576],
+                  const FLOAT l3_xmin[576], int maxbits, int gr, int ch)
 {
     int     sfwork[SFBMAX];
     int     sfcalc[SFBMAX];
@@ -1259,6 +1310,7 @@ VBR_noise_shaping(lame_internal_flags * gfc, FLOAT * xr34orig, int minbits,
     if (0 != bitcount(&that)) {
         /*  this should not happen due to the way the scalefactors are selected
          */
+        cod_info->part2_3_length = LARGE_BITS;
         return -1;
     }
     quantizeAndCountBits(&that);
@@ -1274,6 +1326,7 @@ VBR_noise_shaping(lame_internal_flags * gfc, FLOAT * xr34orig, int minbits,
     assert(cod_info->global_gain < 256u);
 
     if (cod_info->part2_3_length + cod_info->part2_length >= LARGE_BITS) {
+        cod_info->part2_3_length = LARGE_BITS;
         return -2;      /* Houston, we have a problem */
     }
     return 0;

@@ -1729,11 +1729,8 @@ VBR_iteration_loop (
             }
 
             if (gfp->VBR == vbr_mtrh) {
-                ret = VBR_noise_shaping (gfc, xrpow,
-					 min_bits[gr][ch], max_bits[gr][ch], 
-					 l3_xmin[gr][ch], gr, ch );
-                if (ret < 0)
-                    cod_info->part2_3_length = 100000;
+                VBR_noise_shaping (gfc, xrpow, l3_xmin[gr][ch],
+                                   max_bits[gr][ch], gr, ch );
             } 
             else
 	        VBR_encode_granule (gfp, cod_info, l3_xmin[gr][ch], xrpow,
