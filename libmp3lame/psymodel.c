@@ -580,17 +580,15 @@ ns_msfix(
 
     for ( sb = 0; sb < SBMAX_l; sb++ ) {
 	FLOAT thmLR, thmM, thmS, x;
-	thmM = thmS = gfc->ATH.l_avg[sb] * gfc->ATH.adjust;
 	thmLR = Min(mr[0].thm.l[sb], mr[1].thm.l[sb]);
-	thmLR = Max(thmLR, thmM);
-	thmM = Max(mr[2].thm.l[sb], thmM);
-	thmS = Max(mr[3].thm.l[sb], thmS);
+	thmM = mr[2].thm.l[sb];
+	thmS = mr[3].thm.l[sb];
 	x = thmM + thmS;
 
 	if (thmLR*msfix < x) {
-	    FLOAT f = thmLR * msfix2 / x;
-	    thmM *= f;
-	    thmS *= f;
+	    x = thmLR * msfix2 / x;
+	    thmM *= x;
+	    thmS *= x;
 	    if (mr[2].thm.l[sb] > thmM)
 		mr[2].thm.l[sb] = thmM;
 	    if (mr[3].thm.l[sb] > thmS)
@@ -601,21 +599,15 @@ ns_msfix(
     for (sb = 0; sb < SBMAX_s; sb++) {
 	for (sblock = 0; sblock < 3; sblock++) {
 	    FLOAT thmLR, thmM, thmS, x;
-	    thmM = thmS = gfc->ATH.s_avg[sb] * gfc->ATH.adjust;
 	    thmLR = Min(mr[0].thm.s[sb][sblock], mr[1].thm.s[sb][sblock]);
-	    thmLR = Max(thmLR, thmM);
-	    thmM = Max(mr[2].thm.s[sb][sblock], thmM);
-	    thmS = Max(mr[3].thm.s[sb][sblock], thmS);
+	    thmM = mr[2].thm.s[sb][sblock];
+	    thmS = mr[3].thm.s[sb][sblock];
 	    x = thmM + thmS;
 
 	    if (thmLR*msfix < x) {
-		FLOAT f = thmLR*msfix / x;
-		thmM *= f;
-		thmS *= f;
-		if (mr[2].thm.s[sb][sblock] > thmM)
-		    mr[2].thm.s[sb][sblock] = thmM;
-		if (mr[3].thm.s[sb][sblock] > thmS)
-		    mr[3].thm.s[sb][sblock] = thmS;
+		x = thmLR * msfix / x;
+		mr[2].thm.s[sb][sblock] = thmM*x;
+		mr[3].thm.s[sb][sblock] = thmS*x;
 	    }
 	}
     }
@@ -661,8 +653,10 @@ compute_masking_s(
 
 	enn  -= eb[b] * 0.5;
 	thmm -= ecb * 0.5;
+	if (enn < gfc->ATH.s_avg[sb] * gfc->ATH.adjust)
+	    enn = gfc->ATH.s_avg[sb] * gfc->ATH.adjust;
 	mr->en .s[sb][sblock] = enn;
-	mr->thm.s[sb][sblock] = thmm;
+	mr->thm.s[sb][sblock] = thmm * gfc->masking_lower;
 	enn  = eb[b] * 0.5;
 	thmm = ecb * 0.5;
 	sb++;
@@ -913,9 +907,6 @@ pecalc_s(
     for (sblock=0;sblock<3;sblock++) {
 	for ( sb = 0; sb < SBMAX_s; sb++ ) {
 	    FLOAT x = mr->thm.s[sb][sblock];
-	    if (x < gfc->ATH.s_avg[sb] * gfc->ATH.adjust)
-		x = gfc->ATH.s_avg[sb] * gfc->ATH.adjust;
-
 	    if (regcoef_s[sb] == 0.0 || mr->en.s[sb][sblock] <= x)
 		continue;
 
@@ -945,9 +936,6 @@ pecalc_l(
     pe_l = 1124.23/4;
     for ( sb = 0; sb < SBMAX_l; sb++ ) {
 	FLOAT x = mr->thm.l[sb];
-	if (x < gfc->ATH.l_avg[sb] * gfc->ATH.adjust)
-	    x = gfc->ATH.l_avg[sb] * gfc->ATH.adjust;
-
 	if (mr->en.l[sb] <= x)
 	    continue;
 
@@ -1347,6 +1335,8 @@ L3psycho_anal_ns(
 	    enn  -= .5*eb[b];
 	    thmm -= .5*tmp;
 	    thmm *= 0.158489319246111 * gfc->masking_lower; // pow(10,-0.8)
+	    if (enn < gfc->ATH.l_avg[j] * gfc->ATH.adjust)
+		enn = gfc->ATH.l_avg[j] * gfc->ATH.adjust;
 	    gfc->masking_next[gr][chn].en .l[j] = enn;
 	    gfc->masking_next[gr][chn].thm.l[j] = thmm;
 
@@ -1356,6 +1346,8 @@ L3psycho_anal_ns(
 	}
 
 	thmm *= 0.158489319246111 * gfc->masking_lower; // pow(10,-0.8)
+	if (enn < gfc->ATH.l_avg[SBMAX_l-1] * gfc->ATH.adjust)
+	    enn = gfc->ATH.l_avg[SBMAX_l-1] * gfc->ATH.adjust;
 	gfc->masking_next[gr][chn].en .l[SBMAX_l-1] = enn;
 	gfc->masking_next[gr][chn].thm.l[SBMAX_l-1] = thmm;
     }
