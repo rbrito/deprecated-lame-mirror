@@ -1113,10 +1113,11 @@ long_block_scalefacs(const lame_internal_flags * gfc, gr_info * cod_info,
  *
  ***********************************************************************/
 
-static void
+static FLOAT8
 block_xr34(const lame_internal_flags * gfc,  gr_info * const cod_info,
 	   const FLOAT8 * xr34_orig, FLOAT8 * xr34)
 {
+    FLOAT8  xrpow_max = cod_info->xrpow_max;
     int     sfb, j = 0, sfbmax, *scalefac = cod_info->scalefac;
 
     /* even though there is no scalefactor for sfb12/sfb21
@@ -1125,31 +1126,35 @@ block_xr34(const lame_internal_flags * gfc,  gr_info * const cod_info,
      */
     sfbmax = cod_info->psymax;
     if (sfbmax == 35 || sfbmax == 36) /* short block / mixed? case */
-	sfbmax += 3;
+        sfbmax += 3;
     if (sfbmax == 21) /* long block case */
         sfbmax += 1;
 
     for (sfb = 0; sfb < sfbmax; ++sfb) {
-	FLOAT8 fac;
-	int s =
-	    (((*scalefac++) + (cod_info->preflag ? pretab[sfb] : 0))
-	     << (cod_info->scalefac_scale + 1))
-	    + cod_info->subblock_gain[cod_info->window[sfb]] * 8;
-	int l = cod_info->width[sfb];
+        FLOAT8 fac;
+        int s =  ((scalefac[sfb] + (cod_info->preflag ? pretab[sfb] : 0))
+                 << (cod_info->scalefac_scale + 1))
+                 + cod_info->subblock_gain[cod_info->window[sfb]] * 8;
+        int l = cod_info->width[sfb];
 
-	if (s == 0) {/* just copy */
-	    memcpy(&xr34[j], &xr34_orig[j], sizeof(FLOAT8)*l);
-	    j += l;
-	    continue;
-	}
+        if (s == 0) {/* just copy */
+            memcpy(&xr34[j], &xr34_orig[j], sizeof(FLOAT8)*l);
+            j += l;
+            continue;
+        }
 
-	fac = IIPOW20(s);
-	l >>= 1;
-	do {
-	    xr34[j] = xr34_orig[j] * fac; ++j;
-	    xr34[j] = xr34_orig[j] * fac; ++j;
-	} while (--l > 0);
+        fac = IIPOW20(s);
+        l >>= 1;
+        do {
+            xr34[j] = xr34_orig[j] * fac;
+            if ( xrpow_max < xr34[j] ) xrpow_max = xr34[j];
+            ++j;
+            xr34[j] = xr34_orig[j] * fac;
+            if ( xrpow_max < xr34[j] ) xrpow_max = xr34[j];
+            ++j;
+        } while (--l > 0);
     }
+    return xrpow_max;
 }
 
 
@@ -1170,12 +1175,14 @@ VBR_noise_shaping(lame_internal_flags * gfc, FLOAT8 * xr34orig, int minbits, int
     int vbrsf2[SFBMAX];
     gr_info *cod_info;
     FLOAT8  xr34[576];
+    FLOAT8  xrpow_max;
     int     shortblock, ret;
     int     vbrmin, vbrmax, vbrmin2, vbrmax2;
     int     M = 6;
     int     count = M;
 
     cod_info = &gfc->l3_side.tt[gr][ch];
+    xrpow_max = cod_info->xrpow_max;
     shortblock = (cod_info->block_type == SHORT_TYPE);
 
     block_sf(gfc, l3_xmin, xr34orig, vbrsf2, cod_info);
@@ -1205,24 +1212,24 @@ VBR_noise_shaping(lame_internal_flags * gfc, FLOAT8 * xr34orig, int minbits, int
             long_block_scalefacs(gfc, cod_info, vbrsf, &vbrmax);
         }
 
-	/* encode scalefacs */
-	if (gfc->mode_gr == 2)
-	    ret = scale_bitcount(cod_info);
-	else
-	    ret = scale_bitcount_lsf(gfc, cod_info);
+        /* encode scalefacs */
+        if (gfc->mode_gr == 2)
+            ret = scale_bitcount(cod_info);
+        else
+            ret = scale_bitcount_lsf(gfc, cod_info);
 
-	if (ret != 0) {
-	    ret = -1;
-	} else {
-	    /* quantize xr34 */
-	    block_xr34(gfc, cod_info, xr34orig, xr34);
-	    cod_info->part2_3_length = count_bits(gfc, xr34, cod_info, 0);
+        if (ret != 0) {
+            ret = -1;
+        } else {
+            /* quantize xr34 */
+            cod_info->xrpow_max = block_xr34(gfc, cod_info, xr34orig, xr34);            
+            cod_info->part2_3_length = count_bits(gfc, xr34, cod_info, 0);
 
-	    if (cod_info->part2_3_length >= LARGE_BITS)
-		ret = -2;
-	    else if (gfc->use_best_huffman == 2)
-		best_huffman_divide(gfc, cod_info);
-	}
+            if (cod_info->part2_3_length >= LARGE_BITS)
+               	ret = -2;
+            else if (gfc->use_best_huffman == 2)
+        		best_huffman_divide(gfc, cod_info);
+        }
 
         if (vbrmin == vbrmax)
             break;
@@ -1230,17 +1237,19 @@ VBR_noise_shaping(lame_internal_flags * gfc, FLOAT8 * xr34orig, int minbits, int
             int     i;
             vbrmax = vbrmin2 + (vbrmax2 - vbrmin2) * count / M;
             vbrmin = vbrmin2;
-	    for (i = 0; i < cod_info->psymax; ++i) {
-		vbrsf[i] = vbrmin2 + (vbrsf2[i] - vbrmin2) * count / M;
+            for (i = 0; i < cod_info->psymax; ++i) {
+                vbrsf[i] = vbrmin2 + (vbrsf2[i] - vbrmin2) * count / M;
             }
+            cod_info->xrpow_max = xrpow_max;
         }
         else if (cod_info->part2_3_length > maxbits) {
             int     i;
             vbrmax = vbrmax2;
             vbrmin = vbrmax2 + (vbrmin2 - vbrmax2) * count / M;
-	    for (i = 0; i < cod_info->psymax; ++i) {
-		vbrsf[i] = vbrmax2 + (vbrsf2[i] - vbrmax2) * count / M;
+            for (i = 0; i < cod_info->psymax; ++i) {
+            	vbrsf[i] = vbrmax2 + (vbrsf2[i] - vbrmax2) * count / M;
             }
+            cod_info->xrpow_max = xrpow_max;
         }
         else
             break;
