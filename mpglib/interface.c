@@ -303,7 +303,6 @@ int decodeMP3(struct mpstr *mp,char *in,int isize,char *out,
 
 		mp->bsnum = 1-mp->bsnum; /* toggle buffer */
 		wordpointer = mp->bsspace[mp->bsnum] + 512;
-		//		mp->bsnum = (mp->bsnum + 1) & 0x1;
 		bitindex = 0;
 	}
 

@@ -532,7 +532,7 @@ void L3psycho_anal( lame_global_flags *gfp,
      *    calculation partitions                                           *
      **********************************************************************/
     b = 0;
-    for (j = 0; j < gfc->cw_upper_index;)
+    for (j = 0; j < gfc->cw_upper_index && gfc->numlines_l[b]; )
       {
 	FLOAT8 ebb, cbb;
 	int i;
@@ -540,6 +540,7 @@ void L3psycho_anal( lame_global_flags *gfp,
 	ebb = gfc->energy[j];
 	cbb = gfc->energy[j] * gfc->cw[j];
 	j++;
+
 
 	for (i = gfc->numlines_l[b] - 1; i > 0; i--)
 	  {
@@ -556,7 +557,7 @@ void L3psycho_anal( lame_global_flags *gfp,
       {
 	int i;
 	FLOAT8 ebb = gfc->energy[j++];
-
+	assert(gfc->numlines_l[b]);
 	for (i = gfc->numlines_l[b] - 1; i > 0; i--)
 	  {
 	    ebb += gfc->energy[j++];
@@ -727,7 +728,7 @@ void L3psycho_anal( lame_global_flags *gfp,
 	gfc->thm[chn].l[sb] = thmm;
       }
     
-    
+
     /* threshold calculation for short blocks */
     for ( sblock = 0; sblock < 3; sblock++ )
       {
@@ -766,6 +767,7 @@ void L3psycho_anal( lame_global_flags *gfp,
 	    gfc->thm[chn].s[sb][sblock] = thmm;
 	  }
       }
+
   } /* end loop over chn */
 
 

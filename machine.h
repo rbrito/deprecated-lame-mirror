@@ -98,7 +98,9 @@ typedef double FLOAT8;
 	typedef unsigned short	u_short;
 	typedef unsigned char	u_char;
 #elif defined __DECALPHA__
-#       do nothing
+/*       do nothing */
+#elif defined OS_AMIGAOS
+/*       do nothing */
 #elif defined __DJGPP__
 	typedef unsigned long	u_long;
 	typedef unsigned int	u_int;

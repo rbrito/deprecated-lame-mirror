@@ -39,8 +39,10 @@ tgetstr(char id[2], char **area)
 void brhist_init(lame_global_flags *gfp,int br_min, int br_max)
 {
   int i;
+#ifndef NOTERMCAP
   char term_buff[1024];
   char *termname;
+#endif /* !NOTERMCAP */
   char *tp;
   char tc[10];
 
