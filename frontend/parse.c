@@ -356,8 +356,8 @@ int  long_help ( const lame_global_flags* gfp, FILE* const fp, const char* Progr
               "    -r              input is raw pcm\n"
               "    -x              force byte-swapping of input\n"
               "    -s sfreq        sampling frequency of input file (kHz) - default 44.1 kHz\n"
-#ifdef LIBSNDFILE
               "    --bitwidth w    input bit width is w (default 16)\n"
+#ifdef LIBSNDFILE
               "    --signed        input is signed (default)\n"
               "    --unsigned      input is unsigned\n"
               "    --little-endian input is little-endian (default from host)\n"

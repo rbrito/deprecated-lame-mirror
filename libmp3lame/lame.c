@@ -1650,6 +1650,7 @@ lame_encode_buffer_int(lame_global_flags * gfp,
     free(in_buffer[0]);
     free(in_buffer[1]);
     return ret;
+
 }
 
 

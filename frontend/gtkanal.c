@@ -138,7 +138,7 @@ int gtkmakeframe(void)
     for ( ch = 0; ch < channels_out; ch++ ) {
       for ( j = 0; j < framesize-DECDELAY; j++ )
 	pinfo->pcmdata2[ch][j] = pinfo->pcmdata2[ch][j+framesize];
-      for ( j = 0; j < framesize; j++ )
+      for ( j = 0; j < framesize; j++ ) /*rescale from int to short int */
 	pinfo->pcmdata2[ch][j+framesize-DECDELAY] = Buffer[ch][j];
     }
 

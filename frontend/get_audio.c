@@ -182,7 +182,7 @@ init_infile(lame_global_flags * gfp, char *inPath)
     /* open the input file */
     count_samples_carefully = 0;
     num_samples_read=0;
-    pcmbitwidth = 16;
+    pcmbitwidth=in_bitwidth;
     musicin = OpenSndFile(gfp, inPath);
 }
 
@@ -379,10 +379,9 @@ get_audio_common( lame_global_flags * const gfp,
 	}
     }
 
+    /* LAME mp3 and ogg output 16bit -  convert to int, if necessary */
     if( input_format == sf_mp1 || input_format == sf_mp2 || 
         input_format == sf_mp3 || input_format == sf_ogg ) {
-				/* LAME mp3 and ogg input routines currently */
-				/*  only accept up to 16 bit samples */
 	if( buffer != NULL ) {
 	    for( i = samples_read; --i >= 0; )
 		buffer[0][i] = buf_tmp16[0][i] << (8 * sizeof(int) - 16);
@@ -925,11 +924,15 @@ unpack_read_samples( const int samples_to_read, const int bytes_per_sample,
 	    *--op = ip[i]<<(b-16) | ip[i+1]<<(b-8); 
 	GA_URS_IFLOOP( 3 )
 	    *--op = ip[i]<<(b-24) | ip[i+1]<<(b-16) | ip[i+2]<<(b-8);
+	GA_URS_IFLOOP( 4 )
+	    *--op = ip[i]<<(b-32) | ip[i+1]<<(b-24) | ip[i+2]<<(b-16) | ip[i+3] << (b-8);
     } else {
 	GA_URS_IFLOOP( 2 )
 	    *--op = ip[i]<<(b-8) | ip[i+1]<<(b-16); 
 	GA_URS_IFLOOP( 3 )
 	    *--op = ip[i]<<(b-8) | ip[i+1]<<(b-16) | ip[i+2]<<(b-24);
+	GA_URS_IFLOOP( 4 )
+	    *--op = ip[i]<<(b-8) | ip[i+1]<<(b-16) | ip[i+2]<<(b-24) | ip[i+3]<<(b-32);
     }
 #undef GA_URS_IFLOOP
     return( samples_read );
@@ -957,16 +960,13 @@ read_samples_pcm(FILE * musicin, int sample_buffer[2304], int frame_size,
     int     iswav = (input_format == sf_wave);
     int     hi_lo_order;	/* byte order of input stream */
 
-    if( (24 == pcmbitwidth) || (16 == pcmbitwidth) ) {
+    if( (32 == pcmbitwidth) || (24 == pcmbitwidth) || (16 == pcmbitwidth) ) {
 				/* assume only recognized wav files are */
 				/*  in little endian byte order */
 	hi_lo_order = (!iswav == !swapbytes);
-	if( 16 == pcmbitwidth )
-	    samples_read = unpack_read_samples(samples_to_read, 2, hi_lo_order,
-					       sample_buffer, musicin );
-	else			/* ( 24 == pcmbitwidth ) */
-	    samples_read = unpack_read_samples(samples_to_read, 3, hi_lo_order,
-					       sample_buffer, musicin );
+        samples_read = unpack_read_samples(samples_to_read, pcmbitwidth/8, 
+                                           hi_lo_order,sample_buffer, musicin );
+       
     } else if( 8 == pcmbitwidth ) {
 	samples_read = unpack_read_samples( samples_to_read, 1, 0,
 					    sample_buffer, musicin );
