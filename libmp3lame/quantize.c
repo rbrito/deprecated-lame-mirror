@@ -854,7 +854,7 @@ inc_subblock_gain (
 	{
 	    FLOAT8 amp = IPOW20(210 - 8);
 	    j += cod_info->width[sfb];
-	    for (l = -width; l < 0; l++)
+	    for (l = -cod_info->width[sfb]; l < 0; l++)
 		xrpow[j+l] *= amp;
         }
     }
