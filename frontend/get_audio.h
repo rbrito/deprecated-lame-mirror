@@ -46,37 +46,11 @@ extern int id3v2taglen;
 extern FILE *musicin;
 
 #ifdef LIBSNDFILE
-
-#include "sndfile.h"
-
-
+# include "sndfile.h"
 #else
 /*****************************************************************
  * LAME/ISO built in audio file I/O routines 
  *******************************************************************/
-#include "portableio.h"
-
-
-typedef struct  blockAlign_struct {
-    unsigned long   offset;
-    unsigned long   blockSize;
-} blockAlign;
-
-typedef struct  IFF_AIFF_struct {
-    short           numChannels;
-    unsigned long   numSampleFrames;
-    short           sampleSize;
-    double          sampleRate;
-    unsigned long   sampleType;
-    blockAlign      blkAlgn;
-} IFF_AIFF;
-
-extern int aiff_read_headers(FILE*, IFF_AIFF*);
-extern int aiff_seek_to_sound_data(FILE*);
-extern int aiff_write_headers(FILE*, IFF_AIFF*);
-extern int parse_wavheader(void);
-extern int parse_aiff(const char fn[]);
-extern void aiff_check(const char*, IFF_AIFF*, int*);
-
+# include "portableio.h"
 #endif	/* ifdef LIBSNDFILE */
 #endif	/* ifndef LAME_GET_AUDIO_H */

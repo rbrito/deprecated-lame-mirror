@@ -994,6 +994,20 @@ parse_wave_header(lame_t gfp, FILE * sf)
 *	        returns 0 on success, 1 on errors
 ************************************************************************/
 
+typedef struct  blockAlign_struct {
+    unsigned long   offset;
+    unsigned long   blockSize;
+} blockAlign;
+
+typedef struct  IFF_AIFF_struct {
+    short           numChannels;
+    unsigned long   numSampleFrames;
+    short           sampleSize;
+    double          sampleRate;
+    unsigned long   sampleType;
+    blockAlign      blkAlgn;
+} IFF_AIFF;
+
 static int
 aiff_check2(const char *file_name, IFF_AIFF * const pcm_aiff_data)
 {
@@ -1115,7 +1129,7 @@ parse_aiff_header(lame_t gfp, FILE * sf)
     /* DEBUGF("Parsed AIFF %d\n", is_aiff); */
     if (is_aiff) {
         /* make sure the header is sane */
-        if (0 != aiff_check2("name" /*???????????? */ , &aiff_info))
+        if (aiff_check2(inPath, &aiff_info))
             return 0;
         if( -1 == lame_set_num_channels( gfp, aiff_info.numChannels ) ) {
             fprintf( stderr,

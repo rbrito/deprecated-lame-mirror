@@ -1,5 +1,3 @@
-#ifndef LAME_PORTABLEIO_H
-#define LAME_PORTABLEIO_H
 /* Copyright (C) 1988-1991 Apple Computer, Inc.
  * All Rights Reserved.
  *
@@ -49,24 +47,20 @@
  * $Id$
  */
 
+#ifndef LAME_PORTABLEIO_H
+#define LAME_PORTABLEIO_H
 #include	<stdio.h>
 
-#ifndef	__cplusplus
-# define	CLINK	
-#else
-# define	CLINK "C"
-#endif
-
-extern CLINK int Read16BitsLowHigh(FILE *fp);
-extern CLINK int Read16BitsHighLow(FILE *fp);
-extern CLINK void Write16BitsLowHigh(FILE *fp, int i);
-extern CLINK int Read32Bits(FILE *fp);
-extern CLINK int Read32BitsHighLow(FILE *fp);
-extern CLINK void Write32BitsLowHigh(FILE *fp, int i);
-extern CLINK void ReadBytes(FILE *fp, char *p, int n);
-extern CLINK void WriteBytes(FILE *fp, char *p, int n);
-extern CLINK void WriteBytesSwapped(FILE *fp, char *p, int n);
-extern CLINK double ReadIeeeExtendedHighLow(FILE *fp);
+extern int Read16BitsLowHigh(FILE *fp);
+extern int Read16BitsHighLow(FILE *fp);
+extern void Write16BitsLowHigh(FILE *fp, int i);
+extern int Read32Bits(FILE *fp);
+extern int Read32BitsHighLow(FILE *fp);
+extern void Write32BitsLowHigh(FILE *fp, int i);
+extern void ReadBytes(FILE *fp, char *p, int n);
+extern void WriteBytes(FILE *fp, char *p, int n);
+extern void WriteBytesSwapped(FILE *fp, char *p, int n);
+extern double ReadIeeeExtendedHighLow(FILE *fp);
 
 #define	Read32BitsLowHigh(f)	Read32Bits(f)
 #define WriteString(f,s)	fwrite(s,strlen(s),sizeof(char),f)
