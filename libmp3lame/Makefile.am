@@ -28,6 +28,7 @@ DEFS = @DEFS@ @CONFIG_DEFS@
 EXTRA_DIST = \
 	debugscalefac.c \
 	libmp3lame.dsp \
+	libmp3lame_vc6.dsp \
 	lameerror.h \
 	tools.c \
 	tools.h \
