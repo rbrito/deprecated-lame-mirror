@@ -676,7 +676,7 @@ encodeBitStream(lame_t gfc)
 	    for (ch = 0; ch < gfc->channels_out; ch++) {
 		gr_info *gi = &gfc->tt[gr][ch];
 #ifndef NDEBUG
-		int data_bits = gfc->bs.bitidx + gi->part2_length;
+		int headerbits = gfc->bs.bitidx + gi->part2_length;
 #endif
 		int slen, sfb;
 		ptr = writeheader(p, gi->part2_3_length+gi->part2_length,
@@ -700,7 +700,7 @@ encodeBitStream(lame_t gfc)
 		    for (sfb = gi->sfbdivide; sfb < gi->sfbmax; sfb++)
 			if (gi->scalefac[sfb] != -1)
 			    putbits24(&gfc->bs, Max(gi->scalefac[sfb],0), slen);
-		assert(data_bits == gfc->bs.bitidx);
+		assert(headerbits == gfc->bs.bitidx);
 		Huffmancodebits(gfc, gi);
 	    } /* for ch */
 	} /* for gr */
@@ -711,7 +711,7 @@ encodeBitStream(lame_t gfc)
 	    gr_info *gi = &gfc->tt[0][ch];
 	    int partition, sfb = 0, part;
 #ifndef NDEBUG
-	    int data_bits = gfc->bs.bitidx + gi->part2_length;
+	    int headerbits = gfc->bs.bitidx + gi->part2_length;
 #endif
 	    ptr = writeheader(p, gi->part2_3_length+gi->part2_length, 12, ptr);
 	    ptr = writeheader(p, gi->big_values / 2,        9, ptr);
@@ -773,7 +773,7 @@ encodeBitStream(lame_t gfc)
 			putbits24(&gfc->bs, Max(gi->scalefac[sfb], 0), slen);
 		sfb = sfbend;
 	    }
-	    assert(data_bits == gfc->bs.bitidx);
+	    assert(headerbits == gfc->bs.bitidx);
 	    Huffmancodebits(gfc, gi);
 	} /* for ch */
     } /* for MPEG version */
