@@ -188,8 +188,26 @@ blocktype_d[2]        block type to use for previous granule
 FLOAT
 psycho_loudness_approx( FLOAT *energy, lame_global_flags *gfp );
 
+#ifdef NON_LINEAR_PSY
 
+static const float non_linear_psy_constant = .3;
 
+#define NON_LINEAR_SCALE_ITEM(x)   pow((x), non_linear_psy_constant)
+#define NON_LINEAR_SCALE_SUM(x)    pow((x), 1/non_linear_psy_constant)
+
+#if 0
+#define NON_LINEAR_SCALE_ENERGY(x) pow(10, (x)/10)
+#else
+#define NON_LINEAR_SCALE_ENERGY(x) (x)
+#endif
+
+#else
+
+#define NON_LINEAR_SCALE_ITEM(x)   (x)
+#define NON_LINEAR_SCALE_SUM(x)    (x)
+#define NON_LINEAR_SCALE_ENERGY(x) (x)
+
+#endif
 
 
 /*
@@ -339,16 +357,17 @@ int L3psycho_anal( lame_global_flags * gfp,
     
     
     
-    gfc->energy[0]  = (*wsamp_l)[0];
+    gfc->energy[0]  = NON_LINEAR_SCALE_ENERGY((*wsamp_l)[0]);
     gfc->energy[0] *= gfc->energy[0];
     
-    gfc->tot_ener[chn] = gfc->energy[0]; /* sum total energy at nearly no extra cost */
+    /* sum total energy at nearly no  extra cost */
+    gfc->tot_ener[chn] = NON_LINEAR_SCALE_ENERGY(gfc->energy[0]);
     
     for (j=BLKSIZE/2-1; j >= 0; --j)
     {
       FLOAT re = (*wsamp_l)[BLKSIZE/2-j];
       FLOAT im = (*wsamp_l)[BLKSIZE/2+j];
-      gfc->energy[BLKSIZE/2-j] = (re * re + im * im) * (FLOAT)0.5;
+      gfc->energy[BLKSIZE/2-j] = NON_LINEAR_SCALE_ENERGY((re * re + im * im) * (FLOAT)0.5);
 
       if (BLKSIZE/2-j > 10)
 	gfc->tot_ener[chn] += gfc->energy[BLKSIZE/2-j];
@@ -361,7 +380,7 @@ int L3psycho_anal( lame_global_flags * gfp,
       {
         FLOAT re = (*wsamp_s)[b][BLKSIZE_s/2-j];
         FLOAT im = (*wsamp_s)[b][BLKSIZE_s/2+j];
-        gfc->energy_s[b][BLKSIZE_s/2-j] = (re * re + im * im) * (FLOAT)0.5;
+        gfc->energy_s[b][BLKSIZE_s/2-j] = NON_LINEAR_SCALE_ENERGY((re * re + im * im) * (FLOAT)0.5);
       }
     }
 
@@ -537,31 +556,34 @@ int L3psycho_anal( lame_global_flags * gfp,
       {
 	FLOAT8 ebb, cbb;
 
-	ebb = gfc->energy[j];
-	cbb = gfc->energy[j] * gfc->cw[j];
+        ebb = NON_LINEAR_SCALE_ITEM(gfc->energy[j]);
+	cbb = NON_LINEAR_SCALE_ITEM(gfc->energy[j] * gfc->cw[j]);
 	j++;
 
 	for (i = gfc->numlines_l[b] - 1; i > 0; i--)
 	  {
-	    ebb += gfc->energy[j];
-	    cbb += gfc->energy[j] * gfc->cw[j];
+	    ebb += NON_LINEAR_SCALE_ITEM(gfc->energy[j]);
+	    /* XXX: should "* gfc->cw[j])" be outside of the scaling? */
+	    cbb += NON_LINEAR_SCALE_ITEM(gfc->energy[j] * gfc->cw[j]);
 	    j++;
 	  }
-	eb[b] = ebb;
-	cb[b] = cbb;
+	eb[b] = NON_LINEAR_SCALE_SUM(ebb);
+	cb[b] = NON_LINEAR_SCALE_SUM(cbb);
 	b++;
       }
 
     for (; b < gfc->npart_l_orig; b++ )
       {
-	FLOAT8 ebb = gfc->energy[j++];
+	FLOAT8 ebb = NON_LINEAR_SCALE_ITEM(gfc->energy[j++]);
+
 	assert(gfc->numlines_l[b]);
 	for (i = gfc->numlines_l[b] - 1; i > 0; i--)
 	  {
-	    ebb += gfc->energy[j++];
+	    ebb += NON_LINEAR_SCALE_ITEM(gfc->energy[j++]);
 	  }
-	eb[b] = ebb;
-	cb[b] = ebb * 0.4;
+	eb[b] = NON_LINEAR_SCALE_SUM(ebb);
+	/* XXX: should the "* .4" be outside of the scaling? */
+	cb[b] = NON_LINEAR_SCALE_SUM(ebb * 0.4);
       }
 
     /**********************************************************************
@@ -1285,7 +1307,8 @@ int L3psycho_anal_ns( lame_global_flags * gfp,
     gfc->energy[0]  = (*wsamp_l)[0];
     gfc->energy[0] *= gfc->energy[0];
     
-    gfc->tot_ener[chn] = gfc->energy[0]; /* sum total energy at nearly no extra cost */
+    /* sum total energy at nearly no extra cost */
+    gfc->tot_ener[chn] = gfc->energy[0];
     
     for (j=BLKSIZE/2-1; j >= 0; --j)
     {
@@ -1344,23 +1367,22 @@ int L3psycho_anal_ns( lame_global_flags * gfp,
 
     for (b=0, j=0; b<gfc->npart_l_orig; b++)
       {
-	FLOAT8 ebb,m,a;
+	FLOAT8 ebb,m;
   
 	ebb = gfc->energy[j];
-	m = a = gfc->energy[j];
+	m = gfc->energy[j];
 	j++;
   
 	for (i = gfc->numlines_l[b] - 1; i > 0; i--)
 	  {
 	    FLOAT8 el = gfc->energy[j];
 	    ebb += gfc->energy[j];
-	    a += el;
 	    m = m < el ? el : m;
 	    j++;
 	  }
 	eb[b] = ebb;
 	max[b] = m;
-	avg[b] = a / gfc->numlines_l[b];
+	avg[b] = ebb / gfc->numlines_l[b];
       }
   
     j = 0;
@@ -2531,8 +2553,9 @@ psycho_loudness_approx( FLOAT *energy, lame_global_flags *gfp )
 
   loudness_power = 0.0;
   for( i = 0; i < BLKSIZE/2; ++i ) { /* apply weights to power in freq. bands*/
-    loudness_power += energy[i] * eql_w[i];
+    loudness_power += NON_LINEAR_SCALE_ITEM(energy[i]) * eql_w[i];
   }
+  loudness_power = NON_LINEAR_SCALE_SUM(loudness_power);
   loudness_power /= (BLKSIZE/2);
   loudness_power *= vo_scale * vo_scale;
 
