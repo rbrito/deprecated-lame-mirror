@@ -152,6 +152,7 @@ ABR_iteration_loop (lame_global_flags *gfp,
   int       bit_rate,bitsPerFrame, mean_bits,totbits,max_frame_bits;
   int       i,ch, gr, ath_over;
   int       analog_silence_bits;
+  FLOAT8    res_factor;
   gr_info  *cod_info = NULL;
   lame_internal_flags *gfc=gfp->internal_flags;
   III_side_info_t *l3_side = &gfc->l3_side;
@@ -174,15 +175,20 @@ ABR_iteration_loop (lame_global_flags *gfp,
   mean_bits = (bitsPerFrame - 8*gfc->sideinfo_len) / gfc->mode_gr;
 
 
+  res_factor = .90 + .10*(11.0- gfp->compression_ratio)/(11.0-5.5);
+  if (res_factor < .90) res_factor=.90;
+  if (res_factor > 1.00) res_factor = 1.00;
+
+
+
   for(gr = 0; gr < gfc->mode_gr; gr++) {
     for(ch = 0; ch < gfc->stereo; ch++) {
-      if (pe[gr][ch]<750) {
-	targ_bits[gr][ch]=.95*(mean_bits/gfc->stereo);
-      }else{
-	int add_bits=(pe[gr][ch]-750)/1.4;
+      targ_bits[gr][ch]=res_factor*(mean_bits/gfc->stereo);
+      if (pe[gr][ch]>700) {
+	int add_bits=(pe[gr][ch]-700)/1.4;
 	
 	cod_info = &l3_side->gr[gr].ch[ch].tt;
-	targ_bits[gr][ch]=.95*(mean_bits/gfc->stereo);
+	targ_bits[gr][ch]=res_factor*(mean_bits/gfc->stereo);
 	
 	/* short blocks use a little extra, no matter what the pe */
 	if (cod_info->block_type==SHORT_TYPE) {
