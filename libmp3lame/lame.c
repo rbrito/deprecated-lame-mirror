@@ -181,25 +181,6 @@ FindNearestBitrate(
 }
 
 
-/* map frequency to a valid MP3 sample frequency
- *
- * Robert.Hegemann@gmx.de 2000-07-01
- */
-static int
-map2MP3Frequency(int freq)
-{
-    if (freq <=  8000) return  8000;
-    if (freq <= 11025) return 11025;
-    if (freq <= 12000) return 12000;
-    if (freq <= 16000) return 16000;
-    if (freq <= 22050) return 22050;
-    if (freq <= 24000) return 24000;
-    if (freq <= 32000) return 32000;
-    if (freq <= 44100) return 44100;
-    
-    return 48000;
-}
-
 /* convert samp freq in Hz to index */
 
 static int
@@ -221,7 +202,7 @@ static int
 get_bitrate(lame_global_flags * gfp)
 {
     /* assume 16bit linear PCM input */
-    return gfp->out_samplerate * 16 * gfp->internal_flags->channels_out
+    return gfp->in_samplerate * 16 * gfp->internal_flags->channels_in
 	/ (1.e3 * gfp->compression_ratio);
 }
 
@@ -264,7 +245,7 @@ set_compression_ratio(lame_global_flags * gfp)
 	gfp->compression_ratio = cmp[gfp->VBR_q];
     } else {
         gfp->compression_ratio
-	    = gfp->out_samplerate * 16 * gfp->internal_flags->channels_out
+	    = gfp->in_samplerate * 16 * gfp->internal_flags->channels_in
 	    / (1.e3 * gfp->mean_bitrate_kbps);
     }
 }
@@ -386,6 +367,50 @@ static int apply_preset(lame_global_flags*  gfp, int preset, vbr_mode mode)
 }
 
 
+static int
+optimum_samplefreq(int lowpassfreq, int input_samplefreq)
+{
+/*
+ * Rules:
+ *  - if possible, sfb21 should NOT be used
+ *
+ */
+    int suggested_samplefreq = 48000;
+    if (lowpassfreq <= 15960)
+        suggested_samplefreq = 44100;
+    if (lowpassfreq <= 15250)
+        suggested_samplefreq = 32000;
+    if (lowpassfreq <= 11220)
+        suggested_samplefreq = 24000;
+    if (lowpassfreq <= 9970)
+        suggested_samplefreq = 22050;
+    if (lowpassfreq <= 7230)
+        suggested_samplefreq = 16000;
+    if (lowpassfreq <= 5420)
+        suggested_samplefreq = 12000;
+    if (lowpassfreq <= 4510)
+        suggested_samplefreq = 11025;
+    if (lowpassfreq <= 3970)
+        suggested_samplefreq = 8000;
+
+    if (suggested_samplefreq > input_samplefreq)
+	suggested_samplefreq = input_samplefreq;
+
+    if (suggested_samplefreq <=  8000) return  8000;
+    if (suggested_samplefreq <= 11025) return 11025;
+    if (suggested_samplefreq <= 12000) return 12000;
+    if (suggested_samplefreq <= 16000) return 16000;
+    if (suggested_samplefreq <= 22050) return 22050;
+    if (suggested_samplefreq <= 24000) return 24000;
+    if (suggested_samplefreq <= 32000) return 32000;
+    if (suggested_samplefreq <= 44100) return 44100;
+    return 48000;
+}
+
+
+
+
+
 
 
 
@@ -494,9 +519,6 @@ lame_init_params(lame_global_flags * const gfp)
 	/* automatic output sampling rate decision.
 	   round up with a margin of 3% */
 	if (gfp->mean_bitrate_kbps == 0) {
-	    if (gfp->out_samplerate == 0)
-		gfp->out_samplerate
-		    = map2MP3Frequency( (int)( 0.97 * gfp->in_samplerate ) );
 	    /* no bitrate or compression ratio specified,
 	       use default compression ratio of 11.025,
 	       which is the rate to compress a CD down to exactly 128000 bps */
@@ -507,25 +529,19 @@ lame_init_params(lame_global_flags * const gfp)
 	     * specified compression ratio 
 	     */
 	    gfp->mean_bitrate_kbps = get_bitrate(gfp);
-	} else if (gfp->out_samplerate == 0) {
-	    /* CBR and bitrate is given but output fs is not given.
-	       check if user specified bitrate requires downsampling.
-	       if compression ratio is > 13, choose a new samplerate to
-	       get the ratio down to about 10 */
-	    if (gfp->out_samplerate == 0)
-		gfp->out_samplerate
-		    = map2MP3Frequency( (int)( 0.97 * gfp->in_samplerate ) );
-	    set_compression_ratio(gfp);
-	    if (gfp->compression_ratio > 13.) {
-		gfp->out_samplerate = map2MP3Frequency(
-		    (int)(gfp->out_samplerate * 10 / gfp->compression_ratio));
-	    }
-	}
-    } else {
-	if (gfp->out_samplerate == 0)
-	    gfp->out_samplerate
-		= map2MP3Frequency( (int)( 0.97 * gfp->in_samplerate ) );
     }
+    set_compression_ratio(gfp);
+
+    /****************************************************************/
+    /* if a filter has not been enabled, see if we should add one: */
+    /****************************************************************/
+    apply_preset(gfp,
+		 (int)(gfp->in_samplerate * 16 * gfc->channels_out
+		       / (gfp->compression_ratio * 1000)), gfp->VBR);
+
+    if (gfp->out_samplerate == 0)
+	gfp->out_samplerate
+	    = optimum_samplefreq(gfp->lowpassfreq, gfp->in_samplerate);
 
     gfp->version = gfp->out_samplerate <= 24000 ? 0 : 1;
     gfc->mode_gr = gfp->out_samplerate <= 24000 ? 1 : 2;
@@ -548,13 +564,6 @@ lame_init_params(lame_global_flags * const gfp)
     gfc->samplerate_index = SmpFrqIndex(gfp->out_samplerate);
     if (gfc->samplerate_index < 0)
         return -1;
-
-    /****************************************************************/
-    /* if a filter has not been enabled, see if we should add one: */
-    /****************************************************************/
-    apply_preset(gfp,
-		 (int)(gfp->out_samplerate * 16 * gfc->channels_out
-		       / (gfp->compression_ratio * 1000)), gfp->VBR);
 
     /* apply user driven high pass filter */
     if (gfp->highpassfreq > 0) {
@@ -712,11 +721,7 @@ lame_print_config(const lame_global_flags * gfp)
         if (gfc->CPU_features.i387)
             MSGF(gfc, " i387");
         if (gfc->CPU_features.MMX)
-#ifdef MMX_choose_table
             MSGF(gfc, ", MMX (ASM used)");
-#else
-            MSGF(gfc, ", MMX");
-#endif
         if (gfc->CPU_features.AMD_3DNow)
             MSGF(gfc, ", 3DNow! (ASM used)");
         if (gfc->CPU_features.SIMD)
