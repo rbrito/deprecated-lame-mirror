@@ -306,7 +306,7 @@ init_outer_loop(
     cod_info->slen[2]             = 0;
     cod_info->slen[3]             = 0;
     
-    cod_info->max_nonzero_coeff = 0;
+    cod_info->max_nonzero_coeff = 575;
 
     /*  fresh scalefactors are all zero
      */
