@@ -481,10 +481,10 @@ lame_init_params(lame_t gfc)
 
     gfc->mode_gr = gfc->version+1;
     gfc->framesize = 576 * gfc->mode_gr;
-    gfc->mf_needed = ENCDELAY + FFTOFFSET + gfc->framesize + 480 - 1;
+    gfc->mf_needed = ENCDELAY + FFTOFFSET + gfc->framesize + 480;
     gfc->mf_size = gfc->mf_needed - 576 + MDCTDELAY;
     gfc->resample.ratio = (double) gfc->in_samplerate / gfc->out_samplerate;
-    assert(gfc->mf_needed < MFSIZE);
+    assert(gfc->mf_needed <= MFSIZE);
     /* at 160 kbps (MPEG-2/2.5)/ 320 kbps (MPEG-1) only
        Free format or CBR are possible, no ABR */
     if (gfc->mean_bitrate_kbps > 160 * gfc->mode_gr) {
