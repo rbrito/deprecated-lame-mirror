@@ -21,8 +21,6 @@
 #ifndef GET_AUDIO_H_INCLUDED
 #define GET_AUDIO_H_INCLUDED
 
-#include "machine.h"
-
 #if (defined LIBSNDFILE || defined LAMESNDFILE)
 
 
@@ -30,7 +28,7 @@
 void CloseSndFile(sound_file_format, FILE *);
 FILE * OpenSndFile(lame_global_flags *gfp);
 
-int get_audio(lame_global_flags *gfp, sample_t buffer [2] [1152],int stereo);
+int get_audio(lame_global_flags *gfp,short buffer[2][1152],int stereo);
 
 
 

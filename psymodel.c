@@ -47,35 +47,35 @@ int L3para_read( lame_global_flags *gfp,
 		  int *, int *, int *, int *);
 
 /* addition of simultaneous masking   Naoki Shibata 2000/7 */
-INLINE FLOAT8 mask_add(FLOAT8 m1,FLOAT8 m2,int k,int b,lame_internal_flags *gfc)
+INLINE FLOAT8 mask_add(double m1,double m2,int k,int b,lame_internal_flags *gfc)
 {
-  static const FLOAT8 table1 [] = {
+  static double table1[] = {
     3.3246 *3.3246 ,3.23837*3.23837,3.15437*3.15437,3.00412*3.00412,2.86103*2.86103,2.65407*2.65407,2.46209*2.46209,2.284  *2.284  ,
     2.11879*2.11879,1.96552*1.96552,1.82335*1.82335,1.69146*1.69146,1.56911*1.56911,1.46658*1.46658,1.37074*1.37074,1.31036*1.31036,
     1.25264*1.25264,1.20648*1.20648,1.16203*1.16203,1.12765*1.12765,1.09428*1.09428,1.0659 *1.0659 ,1.03826*1.03826,1.01895*1.01895,
     1
   };
 
-  static const FLOAT8 table2 [] = {
+  static double table2[] = {
     1.33352*1.33352,1.35879*1.35879,1.38454*1.38454,1.39497*1.39497,1.40548*1.40548,1.3537 *1.3537 ,1.30382*1.30382,1.22321*1.22321,
     1.14758*1.14758
   };
 
-  static const FLOAT8 table3 [] = {
+  static double table3[] = {
     2.35364*2.35364,2.29259*2.29259,2.23313*2.23313,2.12675*2.12675,2.02545*2.02545,1.87894*1.87894,1.74303*1.74303,1.61695*1.61695,
     1.49999*1.49999,1.39148*1.39148,1.29083*1.29083,1.19746*1.19746,1.11084*1.11084,1.03826*1.03826
   };
 
 
   int i;
-  FLOAT8 m;
+  double m;
 
   if (m1 == 0) return m2;
 
   if (b < 0) b = -b;
 
   i = 10*log10(m2 / m1)/10*16;
-  m = 10*log10((m1+m2)/gfc->ATH_partitionbands[k]);
+  m = 10*log10((m1+m2)/(gfc->ATH_partitionbands[k]/2.43e+06));
 
   if (i < 0) i = -i;
 
@@ -85,15 +85,15 @@ INLINE FLOAT8 mask_add(FLOAT8 m1,FLOAT8 m2,int k,int b,lame_internal_flags *gfc)
   }
 
   if (m<15) {
-    if (m > 5) {
-      FLOAT8 f=1.0,r;
+    if (m > 0) {
+      double f=1.0,r;
       if (i > 24) return m1+m2;
       if (i > 13) f = 1; else f = table3[i];
-      r = (m-5)/10;
-      return (m1+m2)*table1[i]*pow(f/table1[i],r);
+      r = (m-0)/15;
+      return (m1+m2)*(table1[i]*r+f*(1-r));
     }
-    if (m < 0 || i > 13) return m1+m2;
-    return (m1+m2)*pow(table3[i],m/5);
+    if (i > 13) return m1+m2;
+    return (m1+m2)*table3[i];
   }
 
   if (i > 24) return m1+m2;
@@ -101,7 +101,7 @@ INLINE FLOAT8 mask_add(FLOAT8 m1,FLOAT8 m2,int k,int b,lame_internal_flags *gfc)
 }
 
 int L3psycho_anal( lame_global_flags *gfp,
-                    sample_t *buffer[2],int gr_out , 
+                    short int *buffer[2],int gr_out , 
                     FLOAT8 *ms_ratio,
                     FLOAT8 *ms_ratio_next,
 		    FLOAT8 *ms_ener_ratio,
@@ -317,7 +317,7 @@ int L3psycho_anal( lame_global_flags *gfp,
 
   
   
-  numchn = gfc->channels;
+  numchn = gfc->stereo;
   /* chn=2 and 3 = Mid and Side channels */
   if (gfp->mode == MPG_MD_JOINT_STEREO) numchn=4;
   for (chn=0; chn<numchn; chn++) {
@@ -630,20 +630,20 @@ int L3psycho_anal( lame_global_flags *gfp,
 	{
 	  /* This table is tuned for fs=44.1KHz. */
 	  static FLOAT8 tab[7][20] = {
-	    {  0,  0,  0,  0,2.0,6.0,6.0,6.0,6.0,6.0,9.0,9.0,9.0,9.0,9.0,9.0,9.0,9.0,9.0,9.0},
-	    {  0,  0,  0,  0,2.0,6.0,6.0,6.0,6.0,6.0,9.0,9.0,9.0,9.0,9.0,9.0,9.0,9.0,9.0,9.0},
-	    {  0,  0,  0,  0,2.0,6.0,6.0,6.0,6.0,6.0,9.0,9.0,9.0,9.0,9.0,9.0,9.0,9.0,9.0,9.0},
-	    {  0,  0,  0,  0,2.0,6.0,6.0,6.0,6.0,9.0,9.0,9.0,9.0,9.0,9.0,9.0,9.0,9.0,9.0,9.0},
-	    {  0,  0,  0,  0,3.0,6.0,6.0,9.0,9.0,9.0,9.0,9.0,9.0,9.0,9.0,9.0,9.0,9.0,9.0,9.0},
-	    {  0,  0,  0,  0,9.0,9.0,9.0,9.0,9.0,9.0,9.0,9.0,9.0,9.0,9.0,9.0,9.0,9.0,9.0,9.0},
-	    {  0,  0,  0,  0,9.0,9.0,9.0,9.0,9.0,9.0,9.0,9.0,9.0,9.0,9.0,9.0,9.0,9.0,9.0,9.0},
+	    {  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0},
+	    {  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0},
+	    {  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  1,  1,  1,  1,  1,  1,  1},
+	    {  0,  0,  0,  0,  0,  0,  0,  0,  0,  1,  1,  1,  1,  1,  1,  1,  1,  1,  1,  1},
+	    {  0,  0,  0,  0,  3,  3,  3,  4,  4,  4,  4,  5,  5,  5,  5,  5,  5,  5,  5,  5},
+	    {  0,  0,  0,9.5,9.5,9.5,9.5,9.5,9.5,9.5,9.5,9.5,9.5,9.5,9.5,9.5,9.5,9.5,9.5,9.5},
+	    {  0,  0,  0,9.5,9.5,9.5,9.5,9.5,9.5,9.5,9.5,9.5,9.5,9.5,9.5,9.5,9.5,9.5,9.5,9.5},
 	  };
-	  //eb2[b] = eb[b] * (pow(10.0,-tab[b/10][(int)(20*tonality2[b])]/10.0));
+	  //eb2[b] = eb[b] * (pow(10,-tab[b/10][(int)(20*tonality2[b])]/10.0));
 	  if (tab[0][0] == 0) {
 	    int i,j;
 	    for(i=0;i<7;i++)
 	      for(j=0;j<20;j++)
-		tab[i][j] = pow(10.0,-tab[i][j]/10.0);
+		tab[i][j] = pow(10,-tab[i][j]/10.0);
 	  }
 	  eb2[b] = eb[b] * tab[b/10][(int)(20*tonality2[b])];
 	}
@@ -755,7 +755,7 @@ int L3psycho_anal( lame_global_flags *gfp,
 
 	if (gfp->exp_nspsytune) {
 	  static FLOAT8 att=0;
-	  if (att==0) att = pow(10.0,-8.0/10);
+	  if (att==0) att = pow(10.0,-8.5/10);
 	  ecb *= att;
 	} else {
 #ifdef RH_AMP
@@ -1047,12 +1047,12 @@ int L3psycho_anal( lame_global_flags *gfp,
    * determin final block type
    ***************************************************************/
 
-  for (chn=0; chn<gfc->channels; chn++) {
+  for (chn=0; chn<gfc->stereo; chn++) {
     blocktype[chn] = NORM_TYPE;
   }
 
 
-  if (gfc->channels==2) {
+  if (gfc->stereo==2) {
     if (!gfp->allow_diff_short || gfp->mode==MPG_MD_JOINT_STEREO) {
       /* force both channels to use the same block type */
       /* this is necessary if the frame is to be encoded in ms_stereo.  */
@@ -1069,7 +1069,7 @@ int L3psycho_anal( lame_global_flags *gfp,
   
   /* update the blocktype of the previous granule, since it depends on what
    * happend in this granule */
-  for (chn=0; chn<gfc->channels; chn++) {
+  for (chn=0; chn<gfc->stereo; chn++) {
     if ( uselongblock[chn])
       {				/* no attack : use long blocks */
 	switch( gfc->blocktype_old[chn] ) 
@@ -1147,7 +1147,7 @@ int *npart_l_orig,int *npart_l,int *npart_s_orig,int *npart_s)
   FLOAT8 freq_tp;
   FLOAT8 bval_l[CBANDS], bval_s[CBANDS];
   int   cbmax=0, cbmax_tp;
-  const FLOAT8 *p = psy_data;
+  FLOAT8 *p = psy_data;
   int  sbmax ;
   int  i,j,k2,loop;
   int freq_scale=1;

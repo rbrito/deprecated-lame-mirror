@@ -62,7 +62,7 @@ int main(int argc, char **argv)
   lame_global_flags gf;
   int iread,imp3;
   FILE *outf;
-  sample_t Buffer [2] [1152];
+  short int Buffer[2][1152];
 
   if(argc<=2) {
     rtp_usage();
@@ -109,14 +109,22 @@ int main(int argc, char **argv)
    * skip this call and set the values of interest in the gf struct.  
    * (see lame.h for documentation about these parameters)
    */
-//  for (i=1; i<argc-1; i++)  /* remove first argument, it was for rtp */
-//    argv[i]=argv[i+1];
-
-  lame_parse_args(&gf,--argc, ++argv); 
+  for (i=1; i<argc-1; i++)  /* remove first argument, it was for rtp */
+    argv[i]=argv[i+1];
+  lame_parse_args(&gf,argc-1, argv); 
 
   /* open the output file.  Filename parsed into gf.inPath */
-  if ( 0 == strcmp(gf.outPath, "-") ) {
-    SetStreamBinary (outf = stdout);
+  if (!strcmp(gf.outPath, "-")) {
+#ifdef __EMX__
+    _fsetmode(stdout,"b");
+#elif (defined  __BORLANDC__)
+    setmode(_fileno(stdout), O_BINARY);
+#elif (defined  __CYGWIN__)
+    setmode(fileno(stdout), _O_BINARY);
+#elif (defined _WIN32)
+    _setmode(_fileno(stdout), _O_BINARY);
+#endif
+    outf = stdout;
   } else {
     if ((outf = fopen(gf.outPath, "wb+")) == NULL) {
       fprintf(stderr,"Could not create \"%s\".\n", gf.outPath);
@@ -162,3 +170,4 @@ int main(int argc, char **argv)
   lame_close_infile(&gf);             /* close the sound input file */
   return 0;
 }
+

@@ -32,8 +32,8 @@ extern struct mpstr *gmp;
 
 int synth_1to1_mono(real *bandPtr,unsigned char *samples,int *pnt)
 {
-  sample_t  samples_tmp[64];
-  sample_t* tmp1 = samples_tmp;
+  short samples_tmp[64];
+  short *tmp1 = samples_tmp;
   int i,ret;
   int pnt1 = 0;
 
@@ -41,7 +41,7 @@ int synth_1to1_mono(real *bandPtr,unsigned char *samples,int *pnt)
   samples += *pnt;
 
   for(i=0;i<32;i++) {
-    *( (sample_t *) samples) = *tmp1;
+    *( (short *) samples) = *tmp1;
     samples += 2;
     tmp1 += 2;
   }
@@ -55,7 +55,7 @@ int synth_1to1(real *bandPtr,int channel,unsigned char *out,int *pnt)
 {
   static const int step = 2;
   int bo;
-  sample_t *samples = (sample_t *) (out + *pnt);
+  short *samples = (short *) (out + *pnt);
 
   real *b0,(*buf)[0x110];
   int clip = 0;

@@ -47,7 +47,7 @@
 #  define QUANTFAC(rx)  adj43asm[rx]
 #  define ROUNDFAC -0.0946
 #  define XRPOW_FTOI(src, dest) \
-     __asm__ ("fistpl %0 " : "=m"(dest) : "t"(src) : "st")
+     asm ("fistpl %0 " : "=m"(dest) : "t"(src) : "st")
 #elif defined (USE_MSC_ASM)
 #  define QUANTFAC(rx)  adj43asm[rx]
 #  define ROUNDFAC -0.0946
@@ -366,22 +366,22 @@ VBR_quantize_granule(lame_global_flags *gfp,
 
   /* encode scalefacs */
   if ( gfp->version == 1 ) 
-    status=scale_bitcount(cod_info, scalefac);
+    status=scale_bitcount(scalefac, cod_info);
   else
-    status=scale_bitcount_lsf(cod_info, scalefac);
+    status=scale_bitcount_lsf(scalefac, cod_info);
 
   if (status!=0) {
     return;
   }
   
   /* quantize xr34 */
-  cod_info->part2_3_length = count_bits (gfc, cod_info, xr34,l3_enc);
+  cod_info->part2_3_length = count_bits(gfp,l3_enc,xr34,cod_info);
   if (cod_info->part2_3_length >= LARGE_BITS) return;
   cod_info->part2_3_length += cod_info->part2_length;
 
 
   if (gfc->use_best_huffman==1) {
-    best_huffman_divide(gfc, cod_info, l3_enc, gr, ch);
+    best_huffman_divide(gfc, gr, ch, cod_info, l3_enc);
   }
   return;
 }
@@ -764,7 +764,7 @@ VBR_quantize(lame_global_flags *gfp,
     if (gfc->mode_ext==MPG_MD_MS_LR) {
       ms_convert(xr[gr],xr[gr]);
     }
-    for (ch = 0; ch < gfc->channels; ch++) {
+    for (ch = 0; ch < gfc->stereo; ch++) {
       /* if in the following sections the quality would not be adjusted
        * then we would only have to call calc_xmin once here and
        * could drop subsequently calls (rh 2000/07/17)
@@ -809,27 +809,27 @@ VBR_quantize(lame_global_flags *gfp,
     gfc->bitrate_index=gfc->VBR_min_bitrate;
   }
   getframebits(gfp,&bitsPerFrame, &mean_bits);
-  minbits = (mean_bits/gfc->channels);
+  minbits = (mean_bits/gfc->stereo);
 
   /* compute maximum allowed bits from max allowed bitrate */
   gfc->bitrate_index=gfc->VBR_max_bitrate;
   getframebits(gfp,&bitsPerFrame, &mean_bits);
   max_frame_bits = ResvFrameBegin(gfp,l3_side, mean_bits, bitsPerFrame);
-  maxbits=2.5*(mean_bits/gfc->channels);
+  maxbits=2.5*(mean_bits/gfc->stereo);
 
   {
   /* compute a target  mean_bits based on compression ratio 
    * which was set based on VBR_q  
    */
-  int bit_rate = gfp->out_samplerate*16*gfc->channels/(1000.0*gfp->compression_ratio);
+  int bit_rate = gfp->out_samplerate*16*gfc->stereo/(1000.0*gfp->compression_ratio);
   bitsPerFrame = (bit_rate*gfp->framesize*1000)/gfp->out_samplerate;
   mean_bits = (bitsPerFrame - 8*gfc->sideinfo_len) / gfc->mode_gr;
   }
 
 
   minbits = Max(minbits,125);
-  minbits=Max(minbits,.40*(mean_bits/gfc->channels));
-  maxbits=Min(maxbits,2.5*(mean_bits/gfc->channels));
+  minbits=Max(minbits,.40*(mean_bits/gfc->stereo));
+  maxbits=Min(maxbits,2.5*(mean_bits/gfc->stereo));
 
 
 
@@ -872,13 +872,13 @@ VBR_quantize(lame_global_flags *gfp,
 #endif
 
 
-      for (ch = 0; ch < gfc->channels; ch++) { 
+      for (ch = 0; ch < gfc->stereo; ch++) { 
         int adjusted,shortblock;
         cod_info = &l3_side->gr[gr].ch[ch].tt;
         
         /* ENCODE this data first pass, and on future passes unless it uses
          * a very small percentage of the max_frame_bits  */
-        if (cod_info->part2_3_length > (max_frame_bits/(2*gfc->channels*gfc->mode_gr))) {
+        if (cod_info->part2_3_length > (max_frame_bits/(2*gfc->stereo*gfc->mode_gr))) {
   
           shortblock = (cod_info->block_type == SHORT_TYPE);
   
@@ -939,26 +939,44 @@ VBR_quantize(lame_global_flags *gfp,
    * might enable scfsi which breaks the interation loops */
   totbits=0;
   for (gr = 0; gr < gfc->mode_gr; gr++) {
-    for (ch = 0; ch < gfc->channels; ch++) {
-      best_scalefac_store(gfc, l3_side, scalefac, l3_enc, gr, ch);
+    for (ch = 0; ch < gfc->stereo; ch++) {
+      best_scalefac_store(gfp,gr, ch, l3_enc, l3_side, scalefac);
       totbits += l3_side->gr[gr].ch[ch].tt.part2_3_length;
     }
   }
 
 
 
+  
   if (gfp->gtkflag) {
     for (gr = 0; gr < gfc->mode_gr; gr++) {
-      for (ch = 0; ch < gfc->channels; ch++) {
+      for (ch = 0; ch < gfc->stereo; ch++) {
+        III_psy_xmin l3_xmin;
+        calc_noise_result noise_info;
+        FLOAT8 noise[4];
+        FLOAT8 xfsf[4][SBMAX_l];
+        FLOAT8 distort[4][SBMAX_l];
+
         cod_info = &l3_side->gr[gr].ch[ch].tt;
 
         /* recompute allowed noise with no 'masking_lower' for
          * frame analyzer */
         gfc->masking_lower=1.0;
-        set_pinfo (gfp, cod_info, &ratio[gr][ch], &scalefac[gr][ch], xr[gr][ch], l3_enc[gr][ch], gr, ch);
+        cod_info = &l3_side->gr[gr].ch[ch].tt;
+        calc_xmin( gfp,xr[gr][ch], &ratio[gr][ch], cod_info, &l3_xmin);
+
+        calc_noise( gfp, xr[gr][ch], l3_enc[gr][ch], cod_info, 
+                    xfsf,distort, &l3_xmin, &scalefac[gr][ch], &noise_info);
+        noise[0] = noise_info.over_count;
+        noise[1] = noise_info.max_noise;
+        noise[2] = noise_info.over_noise;
+        noise[3] = noise_info.tot_noise;
+
+        set_pinfo (gfp, cod_info, &ratio[gr][ch], &scalefac[gr][ch], xr[gr][ch], xfsf, noise, gr, ch);
       }
     }
   }
+
 
   
 
@@ -981,7 +999,7 @@ VBR_quantize(lame_global_flags *gfp,
   //  DEBUGF("%i total_bits=%i max_frame_bits=%i index=%i  \n",gfp->frameNum,totbits,max_frame_bits,gfc->bitrate_index);
 
   for (gr = 0; gr < gfc->mode_gr; gr++) {
-    for (ch = 0; ch < gfc->channels; ch++) {
+    for (ch = 0; ch < gfc->stereo; ch++) {
       cod_info = &l3_side->gr[gr].ch[ch].tt;
 
 

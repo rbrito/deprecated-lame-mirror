@@ -21,32 +21,30 @@
 #define TABLES_H_INCLUDED
 #include "encoder.h"
 #include "machine.h"
-
-extern const FLOAT8  psy_data [];
+extern FLOAT8 psy_data[];
 
 #define HUFFBITS unsigned long int
 #define HTN	34
  
 struct huffcodetab {
-    size_t                 xlen; 	/*max. x-index+			      	*/ 
-    size_t                 linmax;	/*max number to be stored in linbits	*/
-    const HUFFBITS*        table;	/*pointer to array[xlen][ylen]		*/
-    const unsigned char*   hlen;	/*pointer to array[xlen][ylen]		*/
+  unsigned int xlen; 	/*max. x-index+			      	*/ 
+  unsigned int linmax;	/*max number to be stored in linbits	*/
+  HUFFBITS *table;	/*pointer to array[xlen][ylen]		*/
+  unsigned char *hlen;	/*pointer to array[xlen][ylen]		*/
 };
 
-extern const struct huffcodetab  ht [HTN];/* global memory block		*/
+extern struct huffcodetab ht[HTN];/* global memory block		*/
 				/* array of all huffcodtable headers	*/
 				/* 0..31 Huffman code table 0..31	*/
 				/* 32,33 count1-tables			*/
 
 
-extern const struct huffcodetab  ht_takehiro [HTN];/* global memory block		*/
+extern struct huffcodetab ht_takehiro[HTN];/* global memory block		*/
 				/* array of all huffcodtable headers	*/
 				/* 0..31 Huffman code table 0..31	*/
 				/* 32,33 count1-tables			*/
 
 
-extern const unsigned char t32l [];
-extern const unsigned char t33l [];
+extern unsigned char t32l[], t33l[];
 
 #endif

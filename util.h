@@ -93,7 +93,7 @@
 *
 ***********************************************************************/
 
-extern int index_to_bitrate [2] [16];
+extern int      bitrate_table[2][15];
 
 
 
@@ -112,7 +112,7 @@ typedef struct {
     unsigned int    quant;
 } sb_alloc, *alloc_ptr;
 
-typedef sb_alloc        al_table [SBLIMIT] [16]; 
+typedef sb_alloc        al_table[SBLIMIT][16]; 
 
 
 
@@ -150,10 +150,10 @@ typedef struct  {
 
   int padding;                    /* padding for the current frame? */
   int mode_gr;                    /* granules per frame */
-  int channels;                   /* number of channels */
+  int stereo;                     /* number of channels */
   int VBR_min_bitrate;            /* min bitrate index */
   int VBR_max_bitrate;            /* max bitrate index */
-  long double resample_ratio;     /* input_samp_rate/output_samp_rate */
+  float resample_ratio;           /* input_samp_rate/output_samp_rate */
   int bitrate_index;
   int samplerate_index;
   int mode_ext;
@@ -205,7 +205,7 @@ typedef struct  {
 #define MFSIZE (3*1152+ENCDELAY-MDCTDELAY)
   int mf_size;
   int mf_samples_to_encode;
-  sample_t mfbuf [2] [MFSIZE];
+  short int mfbuf[2][MFSIZE];
   FLOAT8 ms_ener_ratio[2];
   FLOAT8 ms_ratio[2];
   /* used for padding */
@@ -226,12 +226,12 @@ typedef struct  {
   /* variables used by util.c */
 #define BLACKSIZE 30
 #define BPC 16
-  sample_t inbuf_old [2] [BLACKSIZE];
+  short int inbuf_old[2][BLACKSIZE];
   FLOAT blackfilt[2*BPC+1][BLACKSIZE];
   FLOAT8 itime[2];
 #define OLDBUFSIZE 5
   FLOAT8 upsample_itime[2];
-  sample_t upsample_inbuf_old [2] [OLDBUFSIZE];
+  short int upsample_inbuf_old[2][OLDBUFSIZE];
   unsigned int sideinfo_len;
 
   /* variables for newmdct.c */
@@ -340,19 +340,15 @@ typedef struct  {
 *  Global Function Prototype Declarations
 *
 ***********************************************************************/
-extern int            isMPEGfile               ( sound_file_format sf );
-extern int            fskip                    ( FILE* fp, off_t bytes, int whence );
-extern void           display_bitrates         ( FILE* fp );
-extern int            BitrateIndex             ( unsigned int rate, unsigned int version, unsigned long samplerate );
-extern int            FindNearestBitrateIndex  ( unsigned int rate, unsigned int version, unsigned long samplerate );
-extern unsigned int   FindNearestBitrate       ( unsigned int rate, unsigned int version, unsigned long samplerate );
-extern long           RoundSampleRateToNearest ( long samplerate );
-extern long           RoundSampleRateUp        ( long samplerate );
-
-extern int            SmpFrqIndex(long, MPEG_version_t*);
+extern int            fskip(FILE *sf,long num_bytes,int dummy);
+extern void           display_bitrates(FILE *out_fh);
+extern int            BitrateIndex(int, int,int);
+extern int            FindNearestBitrate(int,int,int);
+extern long           validSamplerate(long samplerate);
+extern int            SmpFrqIndex(long, int*);
 extern int            copy_buffer(char *buffer,int buffer_size,Bit_stream_struc *bs);
 extern void           init_bit_stream_w(lame_internal_flags *gfc);
-extern void           alloc_buffer(Bit_stream_struc*, size_t);
+extern void           alloc_buffer(Bit_stream_struc*, unsigned int);
 extern void           freegfc(lame_internal_flags *gfc);
 extern FLOAT8         ATHformula(FLOAT8 f);
 extern FLOAT8         freq2bark(FLOAT8 freq);
@@ -363,13 +359,13 @@ extern void freorder(int scalefac_band[],FLOAT8 ix_orig[576]);
 extern void fun_reorder(int scalefac_band[],FLOAT8 ix_orig[576]);
 
 extern enum byte_order DetermineByteOrder(void);
-extern void SwapBytesInWords( short *loc, size_t words );
+extern void SwapBytesInWords( short *loc, int words );
 
-extern int fill_buffer_downsample(lame_global_flags *gfp, sample_t* outbuf,int desired_len,
-	 sample_t* inbuf,int len,int *num_used,int ch);
+extern int fill_buffer_downsample(lame_global_flags *gfp,short int *outbuf,int desired_len,
+	 short int *inbuf,int len,int *num_used,int ch);
 
-extern int fill_buffer_upsample(lame_global_flags *gfp, sample_t* outbuf,int desired_len,
-	 sample_t* inbuf,int len,int *num_used,int ch);
+extern int fill_buffer_upsample(lame_global_flags *gfp,short int *outbuf,int desired_len,
+	 short int *inbuf,int len,int *num_used,int ch);
 
 extern void 
 getframebits(lame_global_flags *gfp,int *bitsPerFrame, int *mean_bits);

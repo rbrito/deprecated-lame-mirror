@@ -7,11 +7,11 @@
 
 #ifdef AMIGA_MPEGA
 
-#define __USE_SYSBASE
 #include "lame.h"
 #include "util.h"
 #include <stdio.h>
 #include <stdlib.h>
+#define __USE_SYSBASE
 
 /* We need a small workaround here so GCC doesn't fail upon redefinition. :P */
 #define FLOAT _FLOAT
@@ -78,10 +78,10 @@ int lame_decode_initfile(const char *fullname, mp3data_struct *mp3data)
 #endif
 	atexit(exit_cleanup);
 
-	mstream=MPEGA_open((char *)fullname, &mctrl);
+	mstream=MPEGA_open(fullname, &mctrl);
 	if(!mstream) { return (-1); }
 
-	mp3data->channels   = mstream->dec_channels;
+	mp3data->stereo     = mstream->dec_channels;
 	mp3data->samplerate = mstream->dec_frequency;
 	mp3data->bitrate    = mstream->bitrate;
 	mp3data->nsamp      = (FLOAT)mstream->ms_duration/1000 * mstream->dec_frequency;
@@ -89,18 +89,18 @@ int lame_decode_initfile(const char *fullname, mp3data_struct *mp3data)
 	return 0;
 }
 
-int lame_decode_fromfile(FILE *fd, sample_t pcm_l[], sample_t pcm_r[], mp3data_struct *mp3data)
+int lame_decode_fromfile(FILE *fd, short pcm_l[],short pcm_r[],mp3data_struct *mp3data)
 {
 	int outsize=0;
 	WORD *b[MPEGA_MAX_CHANNELS];
 
-	b[0] = pcm_l;
-	b[1] = pcm_r;
+	b[0]=pcm_l;
+	b[1]=pcm_r;
 
 	while ((outsize == 0) || (outsize == MPEGA_ERR_BADFRAME))	/* Skip bad frames */
 		outsize = MPEGA_decode_frame(mstream, b);
 
-	mp3data->channels   = mstream->dec_channels;
+	mp3data->stereo     = mstream->dec_channels;
 	mp3data->samplerate = mstream->dec_frequency;
 	mp3data->bitrate    = mstream->bitrate;
 	mp3data->nsamp      = (FLOAT)mstream->ms_duration/1000 * mstream->dec_frequency;

@@ -314,12 +314,12 @@ INLINE static void idct32(FLOAT8 a[])
     }
 }
 
-INLINE static void window_subband(sample_t* x1, FLOAT8 a[SBLIMIT])
+INLINE static void window_subband(short *x1, FLOAT8 a[SBLIMIT])
 {
     int i;
     FLOAT8 const *wp = enwindow;
 
-    sample_t *x2 = &x1[238-14-286];
+    short *x2 = &x1[238-14-286];
 
     for (i = -15; i < 0; i++) {
 	FLOAT8 w, s, t;
@@ -574,12 +574,12 @@ void mdct_init48(lame_global_flags *gfp)
 }
 
 void mdct_sub48(lame_global_flags *gfp,
-    sample_t *w0, sample_t *w1,
+    short *w0, short *w1,
     FLOAT8 mdct_freq[2][2][576],
     III_side_info_t *l3_side)
 {
     int gr, k, ch;
-    sample_t *wk;
+    short *wk;
     static int init = 0;
     lame_internal_flags *gfc=gfp->internal_flags;
 
@@ -593,7 +593,7 @@ void mdct_sub48(lame_global_flags *gfp,
 
     wk = w0 + 286;
     /* thinking cache performance, ch->gr loop is better than gr->ch loop */
-    for (ch = 0; ch < gfc->channels; ch++) {
+    for (ch = 0; ch < gfc->stereo; ch++) {
 	for (gr = 0; gr < gfc->mode_gr; gr++) {
 	    int	band;
 	    FLOAT8 *mdct_enc = &mdct_freq[gr][ch][0];

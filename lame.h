@@ -17,80 +17,41 @@
  * along with this program; see the file COPYING.  If not, write to
  * the Free Software Foundation, 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-
 #ifndef LAME_H_INCLUDE
-# define LAME_H_INCLUDE
+#define LAME_H_INCLUDE
+#include <stdio.h>
+#if defined(__cplusplus)
+extern "C" {
+#endif
 
-// Macros to mark memory transfers for RPC functions
-// size_t fread  ( INOUT char* buffer, IN size_t count, IN size_t size, INOUT FILE* fp );
-// size_t fwrite ( OUT   char* buffer, IN size_t count, IN size_t size, INOUT FILE* fp );
-// void   memset ( IN    void* buffer, IN int fill, IN size_t size );
 
-#define IN		/* Object is transfered from RPC system, no data is taken from the origin */
-#define OUT    const    /* Object is transfered only to the RPC system and therefore never changed */
-#define INOUT           /* before remote execution data is transfered to remote host and after the
-                           operation the (maybe) modified data is transfered back */
-
-# include <stdio.h>
 
 /* maximum size of mp3buffer needed if you encode at most 1152 samples for
    each call to lame_encode_buffer.  see lame_encode_buffer() below  
    (LAME_MAXMP3BUFFER is now obsolete)  */
+#define LAME_MAXMP3BUFFER 16384
 
-# define LAME_MAXMP3BUFFER   16384
-
-# ifdef FILENAME_MAX 
-#  define MAX_NAME_SIZE        FILENAME_MAX
-# else
-#  define MAX_NAME_SIZE        256
-# endif
-
-# if defined(__cplusplus)
-extern "C" {
-# endif
-
-/* Type which holds one PCM sample, should be moved to 32 bit float */
-
-typedef signed short int       sample_t;
-typedef long double            freq_t;
-typedef sample_t               mono_t;
-typedef sample_t               stereo_t [2];
-typedef unsigned char*         string;
-typedef const unsigned char*   cstring;
 
 typedef enum sound_file_format_e {
-    sf_unknown, 
-    sf_mp1,  		/* MPEG Layer 1, aka mpg */
-    sf_mp2,  		/* MPEG Layer 2 */
-    sf_mp3,  		/* MPEG Layer 3 */
-    sf_ogg,
-    sf_raw, 
-    sf_wave, 
-    sf_aiff,
-    sf_wave_szip,  	// see http://www.compressconsult.com/szip/
-    sf_aiff_szip   	// compressing -o4 -i -r4 (for 16 bit stereo)
+  sf_unknown, 
+  sf_raw, 
+  sf_wave, 
+  sf_aiff, 
+  sf_mp1,  /* MPEG Layer 1, aka mpg */
+  sf_mp2,  /* MPEG Layer 2 */
+  sf_mp3,  /* MPEG Layer 3 */
+  sf_ogg 
 } sound_file_format;
 
+
 typedef enum vbr_mode_e {
-    vbr_off,
-    vbr_mt,
-    vbr_rh,
-    vbr_abr,
-    vbr_default = vbr_rh  /* change this to change the default VBR mode of LAME */ 
+  vbr_off=0,
+  vbr_mt=1,
+  vbr_rh=2,
+  vbr_abr=3,
+  vbr_default=vbr_rh  /* change this to change the default VBR mode of LAME */ 
 } vbr_mode;
 
-typedef enum {
-    ch_stereo  = 0,
-    ch_jstereo = 1,
-    ch_dual    = 2,
-    ch_mono    = 3
-} channel_mode_t;
-
-typedef enum {
-    MPEG_1   = 1,
-    MPEG_2   = 0,
-    MPEG_2_5 = 0
-} MPEG_version_t;
 
 struct id3tag_spec
 {
@@ -105,6 +66,9 @@ struct id3tag_spec
     int genre;
 };
 
+
+
+
 /***********************************************************************
 *
 *  Control Parameters set by User
@@ -115,7 +79,6 @@ struct id3tag_spec
 *
 *
 ***********************************************************************/
-
 typedef struct  {
   /* input file description */
   unsigned long num_samples;  /* number of samples. default=2^32-1    */
@@ -174,10 +137,12 @@ typedef struct  {
 
   /* I/O - not used if calling program does the i/o */
   sound_file_format input_format;   
-  FILE * musicin;              /* file pointer to input file */
-  int swapbytes;               /* force byte swapping   default=0*/
-  char inPath  [MAX_NAME_SIZE];
-  char outPath [MAX_NAME_SIZE];  /* Note: outPath must be set if you want Xing VBR or ID3 version 1 tags written */
+  FILE * musicin;             /* file pointer to input file */
+  int swapbytes;              /* force byte swapping   default=0*/
+#define         MAX_NAME_SIZE           1000
+  char inPath[MAX_NAME_SIZE];
+  /* Note: outPath must be set if you want Xing VBR or ID3 version 1 tags written */
+  char outPath[MAX_NAME_SIZE];
 
 
 
@@ -203,7 +168,7 @@ typedef struct  {
   /************************************************************************/
   /* internal variables, do not set... */
   /************************************************************************/
-  MPEG_version_t version;         /* MPEG-1 or MPEG-2 */
+  int version;                /* 0=MPEG2  1=MPEG1 */
   long int frameNum;              /* frame counter */
   long totalframes;               /* frames: 0..totalframes-1 (estimate)*/
   int encoder_delay;
@@ -221,7 +186,7 @@ typedef struct  {
   /************************************************************************/
   /* more internal variables, which will not exist after lame_encode_finish() */
   /************************************************************************/
-  void* internal_flags;
+  void *internal_flags;
 
   float display_update_interval;
   
@@ -232,15 +197,11 @@ typedef struct  {
 
 
 
-/*********************************************************************
- *********************************************************************
- *********************************************************************
- ******                                                         ******
- ******            The  LAME  Application  Interface            ******
- ******                                                         ******
- *********************************************************************
- *********************************************************************
- *********************************************************************/
+/*
+
+The LAME API
+
+ */
 
 
 /* REQUIRED: initialize the encoder.  sets default for all encoder paramters,
@@ -248,15 +209,10 @@ typedef struct  {
  * otherwise returns 0
  * 
  */
-int    lame_init ( lame_global_flags* gfp );
+int lame_init(lame_global_flags *);
 
 
-/*
- * Disable File CRLF Translation, so binary data can be read
- * needed for reading/writing from/to stdin/stdout.
- */
- 
-int    SetStreamBinary ( FILE* fp ); 
+
 
 /*********************************************************************
  * command line argument parsing & option setting.  Only supported
@@ -265,21 +221,21 @@ int    SetStreamBinary ( FILE* fp );
 /* OPTIONAL: call this to print an error with a brief command line usage guide and quit 
  * only supported if libmp3lame compiled with LAMEPARSE defined.  
  */
-void   lame_usage ( lame_global_flags *gfp, const char* ProgramName );
+void lame_usage(lame_global_flags *, const char *);
 
 /* OPTIONAL: call this to print a command line interface usage guide and quit   */
-void   lame_help ( lame_global_flags *gfp, const char* ProgramName );
+void lame_help(lame_global_flags *, const char *);
 
 /* OPTIONAL: get the version number, in a string. of the form:  "3.63 (beta)" or 
    just "3.63".  Max allows length is 20 characters  */
-void   lame_version ( lame_global_flags *gfp, char* ResultString );
+void lame_version(lame_global_flags *, char *);
 
 
 /* OPTIONAL: set internal options via command line argument parsing 
  * You can skip this call if you like the default values, or if
  * set the encoder parameters your self 
  */
-void   lame_parse_args ( lame_global_flags *gfp, int argc, char** argv );
+void lame_parse_args(lame_global_flags *, int argc, char **argv);
 
 
 
@@ -288,16 +244,16 @@ void   lame_parse_args ( lame_global_flags *gfp, int argc, char** argv );
 /* REQUIRED:  sets more internal configuration based on data provided
  * above.  returns -1 if something failed.
  */
-int    lame_init_params ( lame_global_flags *gfp);
+int lame_init_params(lame_global_flags *);
 
 
 /* OPTONAL:  print internal lame configuration on stderr*/
-void   lame_print_config ( lame_global_flags *gfp);
+void lame_print_config(lame_global_flags *);
 
 
 
 /* OPTONAL:  add ID3 version 2 tag to output file */
-void   lame_id3v2_tag ( lame_global_flags *gfp, FILE *fp);
+void lame_id3v2_tag(lame_global_flags *,FILE *);
 
 
 
@@ -339,31 +295,16 @@ void   lame_id3v2_tag ( lame_global_flags *gfp, FILE *fp);
  * This will overwrite the data in leftpcm[] and rightpcm[].
  * 
 */
-int    lame_encode_buffer ( 
-		lame_global_flags* gfp, 
-    		sample_t           leftpcm  [], 
-		sample_t           rightpcm [], 
-		size_t             num_samples,
-                char*              mp3buffer, 
-		size_t             mp3buffer_size );
+int lame_encode_buffer(lame_global_flags *,short int leftpcm[], short int rightpcm[],int num_samples,
+char *mp3buffer,int  mp3buffer_size);
 
 /* as above, but input has L & R channel data interleaved.  Note: 
  * num_samples = number of samples in the L (or R)
- * channel, not the total number of samples in pcm []  
- *
- * Note: This function has an patch around for 1 channel data.
- *       Then this function calls secretly and quietly lame_encode_buffer(),
- *       and the pcm[] data then is handled as mono signal
- *       so the data type of pcm[] depends on the contents of
- *       gfp. So a variant record for pcm is the only right type
- *       for it.
+ * channel, not the total number of samples in pcm[]  
  */
-int    lame_encode_buffer_interleaved (
-                lame_global_flags* gfp,
-		stereo_t           pcm [], 
-                size_t             num_samples, 
-		char*              mp3buffer, 
-		size_t             mp3buffer_size );
+int lame_encode_buffer_interleaved(lame_global_flags *,short int pcm[], 
+int num_samples, char *mp3buffer,int  mp3buffer_size);
+
 
 
 /* input 1 pcm frame, output (maybe) 1 mp3 frame.  
@@ -372,11 +313,7 @@ int    lame_encode_buffer_interleaved (
  * declair mp3buffer with:  char mp3buffer[LAME_MAXMP3BUFFER] 
  * if return code = -1:  mp3buffer was too small 
  */
-int    lame_encode ( 
-		lame_global_flags* gfp,
-		sample_t           Buffer [2] [1152],
-		char*              mp3buffer, 
-		size_t             mp3buffer_size );
+int lame_encode(lame_global_flags *,short int Buffer[2][1152],char *mp3buffer,int mp3buffer_size);
 
 
 
@@ -385,10 +322,7 @@ int    lame_encode (
  *
  * return code = number of bytes output to mp3buffer.  can be 0
  */
-int    lame_encode_finish ( 
-		lame_global_flags* gfp,
-		char*              mp3buffer,
-		size_t             mp3buffer_size );
+int lame_encode_finish(lame_global_flags *,char *mp3buffer, int size);
 
 
 /* OPTIONAL:  lame_mp3_tags_fid will append ID3 version 1 and Xing VBR tags to
@@ -397,9 +331,7 @@ backwards seeks, so make sure fid is a real file.
 Note: if VBR and ID3 version 1 tags are turned off by the user, or turned off
 by LAME because the output is not a regular file, this call does nothing
 */
-void   lame_mp3_tags_fid (
-		lame_global_flags* gfp,
-		FILE*              fp );
+void lame_mp3_tags_fid(lame_global_flags *,FILE* fid);
 
 /* OPTIONAL (and outdated, use lame_mp3_tags_fid):  lame_mp3_tags  
 This will append ID3 version 1 and Xing VBR tags to
@@ -407,7 +339,7 @@ the mp3 file with name given by gf->outPath.  These calls open the file,
 write tags, and close the file, so make sure the the encoding is finished
 before calling these routines.  
 */
-void   lame_mp3_tags ( lame_global_flags* gfp );
+void lame_mp3_tags(lame_global_flags *);
 
 
 
@@ -420,18 +352,16 @@ void   lame_mp3_tags ( lame_global_flags* gfp );
 /* OPTIONAL: open the input file, and parse headers if possible 
  * you can skip this call if you will do your own PCM input 
  */
-void   lame_init_infile ( lame_global_flags* gfp );
+void lame_init_infile(lame_global_flags *);
 
 /* OPTIONAL:  read one frame of PCM data from audio input file opened by 
  * lame_init_infile.  Input file can be wav, aiff, raw pcm, anything
  * supported by libsndfile, or an mp3 file
  */
-int    lame_readframe ( 
-		lame_global_flags* gfp,
-		sample_t           Buffer [2] [1152] );
+int lame_readframe(lame_global_flags *,short int Buffer[2][1152]);
 
 /* OPTIONAL: close the sound input file if lame_init_infile() was used */
-void   lame_close_infile ( lame_global_flags* gfp );
+void lame_close_infile(lame_global_flags *);
 
 
 
@@ -444,55 +374,32 @@ void   lame_close_infile ( lame_global_flags* gfp );
  * lame_decode return code:  -1: error.  0: need more data.  n>0: size of pcm output
  *********************************************************************/
 typedef struct {
-    int            channels;    /* number of channels */
-    int            samplerate;  /* sample rate */
-    int            bitrate;     /* bitrate */
-    unsigned long  nsamp;       /* number of samples in mp3 file, estimated */
+  int stereo;      /* number of channels */
+  int samplerate;  /* sample rate */
+  int bitrate;     /* bitrate */
+  unsigned long nsamp;    /* number of samples in mp3 file, estimated */
 } mp3data_struct;
 
 
-int    lame_decode_init ( void );
-
-int    lame_decode (
-		char*     mp3buf,
-		size_t    len,
-		sample_t  pcm_l [],
-		sample_t  pcm_r [] );
+int lame_decode_init(void);
+int lame_decode(char *mp3buf,int len,short pcm_l[],short pcm_r[]);
 
 /* same as lame_decode, but returns at most one frame */
-int    lame_decode1 (
-		char*     mp3buf,
-		size_t    len,
-		sample_t  pcm_l [],
-		sample_t  pcm_r [] );
+int lame_decode1(char *mp3buf,int len,short pcm_l[],short pcm_r[]);
 
 
 /* read mp3 file until mpglib returns one frame of PCM data */
-int    lame_decode_initfile (
-# ifdef AMIGA_MPEGA
-		const char*     fullname,
-# else
-		FILE*           fp,
-# endif
-		mp3data_struct* mp3data );
-
-int    lame_decode_fromfile (
-		FILE*           fp,
-		sample_t        pcm_l [], 
-		sample_t        pcm_r [],
-		mp3data_struct* mp3data );
-
+#ifdef AMIGA_MPEGA
+int lame_decode_initfile(const char *fullname,mp3data_struct *mp3data);
+int lame_decode_fromfile(FILE *fd,short int pcm_l[], short int pcm_r[],mp3data_struct *mp3data);
+#else
+int lame_decode_initfile(FILE *fd,mp3data_struct *mp3data);
+int lame_decode_fromfile(FILE *fd,short int pcm_l[],short int pcm_r[],mp3data_struct *mp3data);
+#endif
 
 /* and for Vorbis: */
-int    lame_decode_ogg_initfile (
-		FILE*            fp,
-		mp3data_struct*  mp3data );
-		
-int    lame_decode_ogg_fromfile ( 
-		FILE*            fp,
-		sample_t         pcm_l [],
-		sample_t         pcm_r [],
-		mp3data_struct*  mp3data );
+int lame_decode_ogg_initfile(FILE *fd,mp3data_struct *mp3data);
+int lame_decode_ogg_fromfile(FILE *fd,short int pcm_l[],short int pcm_r[],mp3data_struct *mp3data);
 
 /* the simple lame decoder (interface to above routines) */
 /* After calling lame_init(), lame_init_params() and
@@ -502,15 +409,12 @@ int    lame_decode_ogg_fromfile (
  * represent the mpglib delay (and are all 0).  skip = number of additional
  * samples to skip, to (for example) compensate for the encoder delay,
  * only used when decoding mp3 */
-int    lame_decoder (
-		lame_global_flags* gfp,
-		FILE*              outf,
-		int                skip );
+int lame_decoder(lame_global_flags *gfp,FILE *outf,int skip);
 
 
-# if defined(__cplusplus)
+#if defined(__cplusplus)
 }
-# endif
+#endif
 
 
-#endif /* LAME_H_INCLUDE */
+#endif

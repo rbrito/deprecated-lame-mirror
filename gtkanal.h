@@ -58,7 +58,7 @@ typedef struct {
   int sfbits[2][2];
   int LAMEmainbits[2][2];
   int LAMEsfbits[2][2];
-  int framesize,channels,js,ms_stereo,i_stereo,emph,bitrate,sampfreq,maindata;
+  int framesize,stereo,js,ms_stereo,i_stereo,emph,bitrate,sampfreq,maindata;
   int crc,padding;
   int scfsi[2],mean_bits,resvsize;
   int totbits;
@@ -74,8 +74,9 @@ set_pinfo (lame_global_flags *gfp,
     gr_info *cod_info,
     III_psy_ratio *ratio, 
     III_scalefac_t *scalefac,
-    FLOAT8 xr[576], 
-    int l3enc[576],       
+    FLOAT8 xr[576],        
+    FLOAT8 xfsf[4][SBMAX_l],
+    FLOAT8 noise[4],
     int gr,
     int ch
 	   );

@@ -2,11 +2,6 @@
 #include        <string.h>
 #include        <signal.h>
 
-#ifdef PARENT_IS_SLASH
-#include "/util.h"
-#else
-#include "../util.h"
-#endif
 
 #if defined(__riscos__) && defined(FPA10)
 #include	"ymath.h"
@@ -72,7 +67,7 @@
 #define AUSHIFT (3)
 
 struct frame {
-    int channels;
+    int stereo;
     int jsbound;
     int single;
     int lsf;
@@ -94,14 +89,9 @@ struct frame {
 	/* AF: ADDED FOR LAYER1/LAYER2 */
 #if defined(USE_LAYER_2) || defined(USE_LAYER_1)
     int II_sblimit;
-    
-#ifdef __cplusplus    
-    al_table* alloc;
-#else
     struct al_table *alloc;
-#endif    
-    int down_sample_sblimit;
-    int	down_sample;
+	int down_sample_sblimit;
+	int	down_sample;
 
 #endif
 

@@ -70,11 +70,11 @@ int gtkmakeframe(void)
   int iread = 0;
   static int init=0;
   static int mpglag;
-  static sample_t Buffer [2] [1152];
+  static short int Buffer[2][1152];
   int ch,j;
   int mp3count = 0;
   int mp3out = 0;
-  sample_t  mpg123pcm [2] [1152];
+  short mpg123pcm[2][1152];
   char mp3buffer[LAME_MAXMP3BUFFER];
   extern plotting_data *mpg123_pinfo;  
 
@@ -88,11 +88,13 @@ int gtkmakeframe(void)
   pinfo->frameNum = gfp->frameNum;
   pinfo->sampfreq=gfp->out_samplerate;
   pinfo->framesize=576*gfc->mode_gr;
-  pinfo->channels = gfc->channels;
+  pinfo->stereo = gfc->stereo;
 
   gfc->pinfo = pinfo;
   mpg123_pinfo = pinfo;
-  if ( isMPEGfile (gfp->input_format) ) {
+  if (gfp->input_format == sf_mp1 ||
+      gfp->input_format == sf_mp2 ||
+      gfp->input_format == sf_mp3) {
     iread=lame_readframe(gfp,Buffer);
     gfp->frameNum++;
   }else {
@@ -136,7 +138,7 @@ int gtkmakeframe(void)
        * add a delay of framesize-DECDELAY, which will make the total delay
        * exactly one frame */
       pinfo->frameNum123=pinfo->frameNum-mpglag;
-      for ( ch = 0; ch < pinfo->channels; ch++ ) {
+      for ( ch = 0; ch < pinfo->stereo; ch++ ) {
 	for ( j = 0; j < pinfo->framesize-DECDELAY; j++ )
 	  pinfo->pcmdata2[ch][j] = pinfo->pcmdata2[ch][j+pinfo->framesize];
 	for ( j = 0; j < pinfo->framesize; j++ ) {
@@ -167,13 +169,12 @@ void plot_frame(void)
   double *data,*data2,*data3;
   char title2[80];
   char label[80],label2[80];
-  const char* title;
+  char *title;
   plotting_data *pplot1;
   plotting_data *pplot2 = NULL;
 
   double en,samp;
-  int sampindex;
-  MPEG_version_t version = MPEG_2;
+  int sampindex,version=0;
   int barthick;
   static int firstcall=1;
   static GdkColor *barcolor,*color,*grcolor[2];
@@ -234,16 +235,16 @@ void plot_frame(void)
 
   ch = gtkinfo.chflag;
   
-  headbits = 32 + ((pplot1->channels==2) ? 256 : 136);
-  gtkinfo.approxbits = (pplot1->bitrate*1000*1152/samp) - headbits;
-  sprintf(title2,"%g kHz  %i kbps",samp/1000,pplot1->bitrate);
+  headbits = 32 + ((pplot1->stereo==2) ? 256 : 136);
+  gtkinfo.approxbits = (pplot1->bitrate*1000*1152.0/samp) - headbits;
+  sprintf(title2,"%3.1fkHz %ikbs ",samp/1000,pplot1->bitrate);
   gtk_text_freeze (GTK_TEXT(headerbox));
   gtk_text_backward_delete(GTK_TEXT(headerbox),
 			    gtk_text_get_length(GTK_TEXT(headerbox)));
   gtk_text_set_point(GTK_TEXT(headerbox),0);
   gtk_text_insert(GTK_TEXT(headerbox),NULL,&oncolor,NULL,title2, -1);
   title = " mono ";
-  if (2==pplot1->channels) title = pplot1->js ? " js " : " s ";
+  if (2==pplot1->stereo) title = pplot1->js ? " js " : " s ";
   gtk_text_insert (GTK_TEXT(headerbox), NULL, &oncolor, NULL,title, -1);
   color = pplot1->ms_stereo ? &oncolor : &offcolor ; 
   gtk_text_insert (GTK_TEXT(headerbox), NULL, color, NULL,"ms ", -1);
@@ -287,8 +288,8 @@ void plot_frame(void)
    * draw the PCM data *
    *******************************************************************/
   n = 1600;  /* PCM frame + FFT window:   224 + 1152 + 224  */
-  xcord = (gdouble*) g_malloc ( n * sizeof(gdouble) );
-  ycord = (gdouble*) g_malloc ( n * sizeof(gdouble) );
+  xcord = g_malloc(n*sizeof(gdouble));
+  ycord = g_malloc(n*sizeof(gdouble));
 
 
   if (gtkinfo.msflag) 
@@ -1156,18 +1157,8 @@ static void text_window (GtkWidget *widget, gpointer data)
            "<LastBranch>"     -> create a right justified branch 
 */
 
-
-/*
-  gchar *path;
-  gchar *accelerator;
-  GtkItemFactoryCallback callback;
-  guint                  callback_action;
-  gchar          *item_type;
-*/                                                
-
-static GtkItemFactoryEntry menu_items [] = {
+static GtkItemFactoryEntry menu_items[] = {
   {"/_File",         NULL,         NULL, 0, "<Branch>"},
-  
   /*
   {"/File/_New",     "<control>N", print_hello, 0, NULL},
   {"/File/_Open",    "<control>O", print_hello, 0, NULL},
@@ -1176,35 +1167,35 @@ static GtkItemFactoryEntry menu_items [] = {
   {"/File/sep1",     NULL,         NULL, 0, "<Separator>"},
   {"/File/Quit",     "<control>Q", gtk_main_quit, 0, NULL}, 
   */
-  
-  {"/File/_Quit",     "<control>Q", (GtkItemFactoryCallback) delete_event, 0, NULL}, 
+  {"/File/_Quit",     "<control>Q", delete_event, 0, NULL}, 
+
   {"/_Plotting",            NULL,         NULL,   0,    "<Branch>"},
-  {"/Plotting/_While advancing" ,  NULL,  (GtkItemFactoryCallback) spec_option, 5, NULL},
-  {"/Plotting/_After advancing",  NULL,  (GtkItemFactoryCallback) spec_option, 6, NULL},
-  {"/Plotting/Toggle SFB lines",       NULL,  (GtkItemFactoryCallback) spec_option, 7, NULL},
-  {"/Plotting/Toggle orig-diff" ,  NULL,  (GtkItemFactoryCallback) spec_option, 8, NULL},
+  {"/Plotting/_While advancing" ,  NULL,  spec_option, 5, NULL},
+  {"/Plotting/_After advancing",  NULL,  spec_option, 6, NULL},
+  {"/Plotting/Toggle SFB lines",       NULL,  spec_option, 7, NULL},
+  {"/Plotting/Toggle orig-diff" ,  NULL,  spec_option, 8, NULL},
 
   {"/_Channel",            NULL,         NULL,   0,    "<Branch>"},
-  {"/Channel/show _Left" ,  NULL,  (GtkItemFactoryCallback) channel_option, 1, NULL},
-  {"/Channel/show _Right",  NULL,  (GtkItemFactoryCallback) channel_option, 2, NULL},
-  {"/Channel/show _Mid" ,   NULL,  (GtkItemFactoryCallback) channel_option, 3, NULL},
-  {"/Channel/show _Side",   NULL,  (GtkItemFactoryCallback) channel_option, 4, NULL},
+  {"/Channel/show _Left" ,  NULL,  channel_option, 1, NULL},
+  {"/Channel/show _Right",  NULL,  channel_option, 2, NULL},
+  {"/Channel/show _Mid" ,   NULL,  channel_option, 3, NULL},
+  {"/Channel/show _Side",   NULL,  channel_option, 4, NULL},
 
   {"/_Spectrum",                   NULL,  NULL, 0, "<Branch>"},
-  {"/Spectrum/_Scalefactor bands",  NULL,  (GtkItemFactoryCallback) spec_option, 1, NULL},
-  {"/Spectrum/_Wave number",        NULL,  (GtkItemFactoryCallback) spec_option, 2, NULL},
+  {"/Spectrum/_Scalefactor bands",  NULL,  spec_option, 1, NULL},
+  {"/Spectrum/_Wave number",        NULL,  spec_option, 2, NULL},
 
   {"/_MDCT",                         NULL,  NULL, 0, "<Branch>"},
-  {"/MDCT/_Original",               NULL,  (GtkItemFactoryCallback) spec_option, 3, NULL},
-  {"/MDCT/_Compressed",             NULL,  (GtkItemFactoryCallback) spec_option, 4, NULL},
-  {"/MDCT/_Toggle SFB lines",       NULL,  (GtkItemFactoryCallback) spec_option, 7, NULL},
+  {"/MDCT/_Original",               NULL,  spec_option, 3, NULL},
+  {"/MDCT/_Compressed",             NULL,  spec_option, 4, NULL},
+  {"/MDCT/_Toggle SFB lines",       NULL,  spec_option, 7, NULL},
 
   {"/_Stats",                         NULL,  NULL, 0, "<Branch>"},
-  {"/Stats/_Show",               NULL,  (GtkItemFactoryCallback) text_window, 2, NULL},
+  {"/Stats/_Show",               NULL,  text_window, 2, NULL},
 
   {"/_Help",         NULL,         NULL, 0, "<LastBranch>"},
-  {"/_Help/_Documentation",   NULL,   (GtkItemFactoryCallback) text_window, 0, NULL},
-  {"/_Help/_About",           NULL,   (GtkItemFactoryCallback) text_window, 1, NULL},
+  {"/_Help/_Documentation",   NULL,   text_window, 0, NULL},
+  {"/_Help/_About",           NULL,   text_window, 1, NULL},
 };
 
 
@@ -1273,14 +1264,18 @@ int gtkcontrol(lame_global_flags *gfp2)
     graphy = 95;
 
     gfp=gfp2;
-    gfc=(lame_internal_flags*) gfp->internal_flags;
+    gfc=gfp->internal_flags;
 
     /* set some global defaults/variables */
-    gtkinfo.filetype = isMPEGfile (gfp->input_format);
+    gtkinfo.filetype = (gfp->input_format == sf_mp1 ||
+                        gfp->input_format == sf_mp2 ||
+                        gfp->input_format == sf_mp3);
     gtkinfo.msflag=0;
     gtkinfo.chflag=0;
     gtkinfo.kbflag=0;
-    gtkinfo.flag123 = isMPEGfile (gfp->input_format);
+    gtkinfo.flag123 = (gfp->input_format == sf_mp1 ||
+                       gfp->input_format == sf_mp2 ||
+                       gfp->input_format == sf_mp3); /* MP3 file=use mpg123 output */
     gtkinfo.pupdate=0;
     gtkinfo.avebits = 0;
     gtkinfo.maxbits = 0;

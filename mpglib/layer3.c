@@ -112,7 +112,7 @@ static unsigned int get1bit(void)
   wordpointer += (bitindex>>3);
   bitindex &= 7;
 
-  return (unsigned int)rval>>7;
+  return rval>>7;
 }
 
 
@@ -317,26 +317,26 @@ void init_layer3(int down_sample_sblimit)
  * read additional side information
  */
 #ifdef MPEG1 
-static void III_get_side_info_1(struct III_sideinfo *si,int channels,
+static void III_get_side_info_1(struct III_sideinfo *si,int stereo,
  int ms_stereo,long sfreq,int single)
 {
    int ch, gr;
    int powdiff = (single == 3) ? 4 : 0;
 
    si->main_data_begin = getbits(9);
-   if (channels == 1)
+   if (stereo == 1)
      si->private_bits = getbits_fast(5);
    else 
      si->private_bits = getbits_fast(3);
 
-   for (ch=0; ch<channels; ch++) {
+   for (ch=0; ch<stereo; ch++) {
        si->ch[ch].gr[0].scfsi = -1;
        si->ch[ch].gr[1].scfsi = getbits_fast(4);
    }
 
    for (gr=0; gr<2; gr++) 
    {
-     for (ch=0; ch<channels; ch++) 
+     for (ch=0; ch<stereo; ch++) 
      {
        register struct gr_info_s *gr_infos = &(si->ch[ch].gr[gr]);
 
@@ -410,7 +410,7 @@ static void III_get_side_info_1(struct III_sideinfo *si,int channels,
 /*
  * Side Info for MPEG 2.0 / LSF
  */
-static void III_get_side_info_2(struct III_sideinfo *si,int channels,
+static void III_get_side_info_2(struct III_sideinfo *si,int stereo,
  int ms_stereo,long sfreq,int single)
 {
    int ch;
@@ -418,12 +418,12 @@ static void III_get_side_info_2(struct III_sideinfo *si,int channels,
 
    si->main_data_begin = getbits(8);
 
-   if (channels == 1)
+   if (stereo == 1)
      si->private_bits = get1bit();
    else 
      si->private_bits = getbits_fast(2);
 
-   for (ch=0; ch<channels; ch++) 
+   for (ch=0; ch<stereo; ch++) 
    {
        register struct gr_info_s *gr_infos = &(si->ch[ch].gr[0]);
        unsigned int qss;
@@ -1514,14 +1514,14 @@ struct III_sideinfo sideinfo;
 
 int do_layer3_sideinfo(struct frame *fr)
 {
-  int channels = fr->channels;
+  int stereo = fr->stereo;
   int single = fr->single;
   int ms_stereo;
   int sfreq = fr->sampling_frequency;
   int granules;
   int ch,gr,databits;
 
-  if(channels == 1) { /* stream is mono */
+  if(stereo == 1) { /* stream is mono */
     single = 0;
   }
 
@@ -1534,12 +1534,12 @@ int do_layer3_sideinfo(struct frame *fr)
 
   if(fr->lsf) {
     granules = 1;
-    III_get_side_info_2(&sideinfo,channels,ms_stereo,sfreq,single);
+    III_get_side_info_2(&sideinfo,stereo,ms_stereo,sfreq,single);
   }
   else {
     granules = 2;
 #ifdef MPEG1
-    III_get_side_info_1(&sideinfo,channels,ms_stereo,sfreq,single);
+    III_get_side_info_1(&sideinfo,stereo,ms_stereo,sfreq,single);
 #else
     fprintf(stderr,"Not supported\n");
 #endif
@@ -1547,12 +1547,12 @@ int do_layer3_sideinfo(struct frame *fr)
 
   databits=0;
   for (gr=0 ; gr < granules ; ++gr) {
-    for (ch=0; ch < channels ; ++ch) {
+    for (ch=0; ch < stereo ; ++ch) {
       struct gr_info_s *gr_infos = &(sideinfo.ch[ch].gr[gr]);
       databits += gr_infos->part2_3_length;
     }
   }
-  return (int)((databits-8)*sideinfo.main_data_begin);
+  return databits-8*sideinfo.main_data_begin;
 }
 
 
@@ -1562,23 +1562,23 @@ int do_layer3(struct frame *fr,unsigned char *pcm_sample,int *pcm_point)
   int gr, ch, ss,clip=0;
   int scalefacs[2][39]; /* max 39 for short[13][3] mode, mixed: 38, long: 22 */
   //  struct III_sideinfo sideinfo;
-  int channels = fr->channels;
+  int stereo = fr->stereo;
   int single = fr->single;
   int ms_stereo,i_stereo;
   int sfreq = fr->sampling_frequency;
-  int channels1,granules;
+  int stereo1,granules;
 
   if(set_pointer((int)sideinfo.main_data_begin) == MP3_ERR)
     return 0;
 
-  if(channels == 1) { /* stream is mono */
-    channels1 = 1;
+  if(stereo == 1) { /* stream is mono */
+    stereo1 = 1;
     single = 0;
   }
   else if(single >= 0) /* stream is stereo, but force to mono */
-    channels1 = 1;
+    stereo1 = 1;
   else
-    channels1 = 2;
+    stereo1 = 2;
 
   if(fr->mode == MPG_MD_JOINT_STEREO) {
     ms_stereo = fr->mode_ext & 0x2;
@@ -1625,7 +1625,7 @@ int do_layer3(struct frame *fr,unsigned char *pcm_sample,int *pcm_point)
       if(III_dequantize_sample(hybridIn[0], scalefacs[0],gr_infos,sfreq,part2bits))
         return clip;
     }
-    if(channels == 2) {
+    if(stereo == 2) {
       struct gr_info_s *gr_infos = &(sideinfo.ch[1].gr[gr]);
       long part2bits;
       if(fr->lsf) 
@@ -1700,13 +1700,13 @@ int do_layer3(struct frame *fr,unsigned char *pcm_sample,int *pcm_point)
     mpg123_pinfo->emph = fr->emphasis;
     mpg123_pinfo->crc = fr->error_protection;
     mpg123_pinfo->padding = fr->padding;
-    mpg123_pinfo->channels = fr->channels;
+    mpg123_pinfo->stereo = fr->stereo;
     mpg123_pinfo->js =   (fr->mode == MPG_MD_JOINT_STEREO);
     mpg123_pinfo->ms_stereo = ms_stereo;
     mpg123_pinfo->i_stereo = i_stereo;
     mpg123_pinfo->maindata = sideinfo.main_data_begin;
 
-    for(ch=0;ch<channels1;ch++) {
+    for(ch=0;ch<stereo1;ch++) {
       struct gr_info_s *gr_infos = &(sideinfo.ch[ch].gr[gr]);
       mpg123_pinfo->big_values[gr][ch]=gr_infos->big_values;
       mpg123_pinfo->scalefac_scale[gr][ch]=gr_infos->scalefac_scale;
@@ -1718,7 +1718,7 @@ int do_layer3(struct frame *fr,unsigned char *pcm_sample,int *pcm_point)
     }
 
 
-    for (ch=0;ch<channels1;ch++) {
+    for (ch=0;ch<stereo1;ch++) {
       struct gr_info_s *gr_infos = &(sideinfo.ch[ch].gr[gr]);
       ifqstep = ( mpg123_pinfo->scalefac_scale[gr][ch] == 0 ) ? .5 : 1.0;
       if (2==gr_infos->block_type) {
@@ -1747,7 +1747,7 @@ int do_layer3(struct frame *fr,unsigned char *pcm_sample,int *pcm_point)
 
 
     
-    for(ch=0;ch<channels1;ch++) { 
+    for(ch=0;ch<stereo1;ch++) { 
       int j=0;
       for (sb=0;sb<SBLIMIT;sb++)
 	for(ss=0;ss<SSLIMIT;ss++,j++) 
@@ -1756,7 +1756,7 @@ int do_layer3(struct frame *fr,unsigned char *pcm_sample,int *pcm_point)
   }
 
 
-    for(ch=0;ch<channels1;ch++) {
+    for(ch=0;ch<stereo1;ch++) {
       struct gr_info_s *gr_infos = &(sideinfo.ch[ch].gr[gr]);
       III_antialias(hybridIn[ch],gr_infos);
       III_hybrid(hybridIn[ch], hybridOut[ch], ch,gr_infos);

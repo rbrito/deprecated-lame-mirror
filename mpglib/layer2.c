@@ -16,6 +16,8 @@ static int grp_3tab[32 * 3] = { 0, };   /* used: 27 */
 static int grp_5tab[128 * 3] = { 0, };  /* used: 125 */
 static int grp_9tab[1024 * 3] = { 0, }; /* used: 729 */
 
+real muls[27][64];	/* also used by layer 1 */
+
 void init_layer2(void)
 {
   static double mulmul[27] = {
@@ -61,14 +63,11 @@ void init_layer2(void)
 
 void II_step_one(unsigned int *bit_alloc,int *scale,struct frame *fr)
 {
-    int stereo = fr->channels-1;
+    int stereo = fr->stereo-1;
     int sblimit = fr->II_sblimit;
     int jsbound = fr->jsbound;
     int sblimit2 = fr->II_sblimit<<stereo;
-#ifndef __cplusplus    
-	struct
-#endif
-    al_table *alloc1 = fr->alloc;
+    struct al_table *alloc1 = fr->alloc;
     int i;
     static unsigned int scfsi_buf[64];
     unsigned int *scfsi,*bita;
@@ -138,20 +137,17 @@ void II_step_one(unsigned int *bit_alloc,int *scale,struct frame *fr)
 void II_step_two(unsigned int *bit_alloc,real fraction[2][4][SBLIMIT],int *scale,struct frame *fr,int x1)
 {
     int i,j,k,ba;
-    int channels = fr->channels;
+    int stereo = fr->stereo;
     int sblimit = fr->II_sblimit;
     int jsbound = fr->jsbound;
-#ifndef __cplusplus    
-	struct
-#endif
-    al_table *alloc2,*alloc1 = fr->alloc;
+    struct al_table *alloc2,*alloc1 = fr->alloc;
     unsigned int *bita=bit_alloc;
     int d1,step;
 
     for (i=0;i<jsbound;i++,alloc1+=(1<<step))
     {
       step = alloc1->bits;
-      for (j=0;j<channels;j++)
+      for (j=0;j<stereo;j++)
       {
         if ( (ba=*bita++) ) 
         {
@@ -228,7 +224,7 @@ void II_step_two(unsigned int *bit_alloc,real fraction[2][4][SBLIMIT],int *scale
 //    sblimit = fr->down_sample_sblimit;
 
   for(i=sblimit;i<SBLIMIT;i++)
-    for (j=0;j<channels;j++)
+    for (j=0;j<stereo;j++)
       fraction[j][0][i] = fraction[j][1][i] = fraction[j][2][i] = 0.0;
 
 }
@@ -244,18 +240,14 @@ static void II_select_table(struct frame *fr)
        { 0,3,3,0,0,0,1,1,1,1,1,1,1,1,1,0 } } };
 
   int table,sblim;
-  static
-#ifndef __cplusplus    
-	struct
-#endif
-	al_table *tables[5] =
+  static struct al_table *tables[5] =
        { alloc_0, alloc_1, alloc_2, alloc_3 , alloc_4 };
   static int sblims[5] = { 27 , 30 , 8, 12 , 30 };
 
   if(fr->lsf)
     table = 4;
   else
-    table = translate[fr->sampling_frequency][2-fr->channels][fr->bitrate_index];
+    table = translate[fr->sampling_frequency][2-fr->stereo][fr->bitrate_index];
   sblim = sblims[table];
 
   fr->alloc      = tables[table];
@@ -268,7 +260,7 @@ int do_layer2(struct frame *fr,unsigned char *pcm_sample,int *pcm_point)
 {
   int clip=0;
   int i,j;
-  int channels = fr->channels;
+  int stereo = fr->stereo;
   real fraction[2][4][SBLIMIT]; /* pick_table clears unused subbands */
   unsigned int bit_alloc[64];
   int scale[192];
@@ -278,7 +270,7 @@ int do_layer2(struct frame *fr,unsigned char *pcm_sample,int *pcm_point)
   fr->jsbound = (fr->mode == MPG_MD_JOINT_STEREO) ?
      (fr->mode_ext<<2)+4 : fr->II_sblimit;
 
-  if(channels == 1 || single == 3)
+  if(stereo == 1 || single == 3)
     single = 0;
 
   II_step_one(bit_alloc, scale, fr);
