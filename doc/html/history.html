@@ -35,10 +35,15 @@ black = usability, portability, other
 </li>
   <li>Robert Hegemann:
   <ul>
-    <li><font color="#ff0000">fixed an out of array access in psychoacoustic models</font></li>
+    <li>added standard ISO quantization for vbr-new, used at lower quality settings</li>
     <li><font color="#3366ff">faster count_bits for vbr-new</font></li>
-    <li>fixed some array addressing bugs</li>
-    <li>fixed an error on silent scalefactor bands with mpeg-1</li>
+    <li><font color="#3366ff">faster find_scalefac_ave function for vbr-new</font></li>
+    <li><font color="#ff0000">fixed an out of array access in psychoacoustic models;
+        this bug could make some psy calculations worthless and sometimes let lame crash</font></li>
+    <li><font color="#ff0000">fixed an error on silent scalefactor bands;
+        this bug resulted in huffman data overrun problems while decoding,
+        resulting in audible glitches</font></li>
+    <li>fixed a freeformat decoding bug</li> 
 </ul>
   <li>Gabriel Bouvigne:
   <ul>
@@ -53,6 +58,7 @@ black = usability, portability, other
 </li>
   <li>Goran Markovic: fixed some decoding bugs
 </li>
+  <li>John Edwards: fixed a too small buffer in ReplayGain code</li>
 </ul>
 <br>
 <h3>LAME 3.95.1 &nbsp; &nbsp;January 12 2004</h3>
