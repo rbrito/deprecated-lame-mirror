@@ -431,8 +431,8 @@ int  lame_encode_mp3_frame (				// Output
 	    if (gfp->use_istereo) {
 		gfc->mode_ext |= 1;
 		for (; i < 576;) {
-		    end = i + gi->width[sfb];
 		    FLOAT lsum = 1e-30, rsum = 1e-30;
+		    end = i + gi->width[sfb];
 		    do {
 			FLOAT l = gi[0].xr[i];
 			FLOAT r = gi[1].xr[i];
