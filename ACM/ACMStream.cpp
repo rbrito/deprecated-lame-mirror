@@ -351,6 +351,9 @@ my_debug->OutPut(DEBUG_LEVEL_FUNC_DEBUG, "ACMStream::ConvertBuffer result = %d (
 
 unsigned int ACMStream::GetOutputSampleRate(int samples_per_sec, int bitrate, int channels)
 {
+    if (bitrate==0)
+        bitrate = (64000*channels)/8;
+
 	/// \todo pass through the same LAME routine
 	unsigned int OutputFrequency;
 	double compression_ratio = double(samples_per_sec * 16 * channels / (bitrate * 8));

@@ -327,11 +327,9 @@ ACM::ACM( HMODULE hModule )
 	}
 
 #if   LAME_ALPHA_VERSION > 0
-	wsprintf(VersionString,"%s - %d.%d (alpha %d)", ACM_VERSION, LAME_MAJOR_VERSION, LAME_MINOR_VERSION,LAME_PATCH_VERSION);
+	wsprintf(VersionString,"%s - %d.%d (alpha %d)", ACM_VERSION, LAME_MAJOR_VERSION, LAME_MINOR_VERSION,LAME_ALPHA_VERSION);
 #elif LAME_BETA_VERSION > 0
-	wsprintf(VersionString,"%s - %d.%d (beta %d)", ACM_VERSION, LAME_MAJOR_VERSION, LAME_MINOR_VERSION, LAME_PATCH_VERSION);
-#elif LAME_PATCH_VERSION > 0
-	wsprintf(VersionString,"%s - %d.%d.%d (stable)", ACM_VERSION, LAME_MAJOR_VERSION, LAME_MINOR_VERSION, LAME_PATCH_VERSION);
+	wsprintf(VersionString,"%s - %d.%d (beta %d)", ACM_VERSION, LAME_MAJOR_VERSION, LAME_MINOR_VERSION, LAME_BETA_VERSION);
 #else
 	wsprintf(VersionString,"%s - %d.%d (stable)", ACM_VERSION, LAME_MAJOR_VERSION, LAME_MINOR_VERSION);
 #endif
@@ -826,8 +824,7 @@ my_debug.OutPut(DEBUG_LEVEL_FUNC_CODE, "Suggest succeed C");
 			//			a_FormatSuggest->pwfxDst->nBlockAlign = FORMAT_BLOCK_ALIGN;
 			a_FormatSuggest->pwfxDst->nBlockAlign = a_FormatSuggest->pwfxDst->nChannels * a_FormatSuggest->pwfxDst->wBitsPerSample / 8;
 			
-			/// \todo this value must be a correct one !
-//			a_FormatSuggest->pwfxDst->nAvgBytesPerSec = a_FormatSuggest->pwfxDst->nSamplesPerSec * a_FormatSuggest->pwfxDst->nChannels * a_FormatSuggest->pwfxDst->wBitsPerSample / 8;
+			a_FormatSuggest->pwfxDst->nAvgBytesPerSec = a_FormatSuggest->pwfxDst->nChannels * 64000 / 8;
 
 			my_debug.OutPut(DEBUG_LEVEL_FUNC_CODE, "Suggest succeed");
 			Result = MMSYSERR_NOERROR;
@@ -1222,6 +1219,8 @@ inline DWORD ACM::OnStreamConvert(LPACMDRVSTREAMINSTANCE a_StreamInstance, LPACM
 void ACM::GetMP3FormatForIndex(const DWORD the_Index, WAVEFORMATEX & the_Format, unsigned short the_String[ACMFORMATDETAILS_FORMAT_CHARS]) const
 {
 	int Block_size;
+    char temp[ACMFORMATDETAILS_FORMAT_CHARS];
+
 
 	if (the_Index < bitrate_table.size())
 	{
@@ -1251,13 +1250,15 @@ void ACM::GetMP3FormatForIndex(const DWORD the_Index, WAVEFORMATEX & the_Format,
 		tmpFormat->nFramesPerBlock = 1;
 		tmpFormat->nCodecDelay     = 0; // 0x0571 on FHG
 	
-		/// \todo : generate the string with the appropriate stereo mode
-		if (bitrate_table[the_Index].mode == vbr_abr)
-			wsprintfW( the_String, L"%d Hz, %d kbps ABR, %s", the_Format.nSamplesPerSec, the_Format.nAvgBytesPerSec * 8 / 1000, (the_Format.nChannels == 1)?L"Mono":L"Stereo");
-		else
-			wsprintfW( the_String, L"%d Hz, %d kbps CBR, %s", the_Format.nSamplesPerSec, the_Format.nAvgBytesPerSec * 8 / 1000, (the_Format.nChannels == 1)?L"Mono":L"Stereo");
-	}
-}
+         /// \todo : generate the string with the appropriate stereo mode
+         if (bitrate_table[the_Index].mode == vbr_abr)
+             wsprintfA( temp, "%d Hz, %d kbps ABR, %s", the_Format.nSamplesPerSec, the_Format.nAvgBytesPerSec * 8 / 1000, (the_Format.nChannels == 1)?"Mono":"Stereo");
+         else
+             wsprintfA( temp, "%d Hz, %d kbps CBR, %s", the_Format.nSamplesPerSec, the_Format.nAvgBytesPerSec * 8 / 1000, (the_Format.nChannels == 1)?"Mono":"Stereo");
+
+         MultiByteToWideChar(CP_ACP, MB_PRECOMPOSED, temp, -1, the_String, ACMFORMATDETAILS_FORMAT_CHARS);
+     }
+ }
 
 void ACM::GetPCMFormatForIndex(const DWORD the_Index, WAVEFORMATEX & the_Format, unsigned short the_String[ACMFORMATDETAILS_FORMAT_CHARS]) const
 {
