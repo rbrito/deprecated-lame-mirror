@@ -128,10 +128,6 @@ static const Float_t ABButter[9][2*BUTTER_ORDER + 1] = {
 };
 
 
-#ifdef WIN32
-#pragma warning ( default : 4305 )
-#endif
-
 /* When calling this procedure, make sure that ip[-order] and op[-order] point to real data! */
 
 static void
