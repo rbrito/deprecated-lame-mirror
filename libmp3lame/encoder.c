@@ -144,7 +144,7 @@ adjust_ATH( lame_global_flags* const  gfp,
         break;
 
     case  3:
-      {                         /* jd - 2001 feb 27, mar 12, 20, jun 30 */
+      {                         /* jd - 2001 feb27, mar12,20, jun30, jul22 */
                                 /* continuous curves based on approximation */
                                 /* to GB's original values. */
         FLOAT8 adj_lim_new;
@@ -154,7 +154,7 @@ adjust_ATH( lame_global_flags* const  gfp,
                                 /* For a loudness decrease, reduce ATH adjust*/
                                 /* towards adjust_limit gradually. */
                                 /* max_pow is a loudness squared or a power. */
-        if( max_pow > 0.03125) { /* ((1 - 0.01)/ 31.68) from curve below */
+        if( max_pow > 0.03125) { /* ((1 - 0.000625)/ 31.98) from curve below */
             if( gfc->ATH->adjust >= 1.0) {
                 gfc->ATH->adjust = 1.0;
             } else {
@@ -167,8 +167,8 @@ adjust_ATH( lame_global_flags* const  gfp,
             }
             gfc->ATH->adjust_limit = 1.0;
         } else {                /* adjustment curve */
-                                /* 20 dB maximum adjust (0.01) */
-            adj_lim_new = 31.68 * max_pow + 0.01;
+                                /* about 32 dB maximum adjust (0.000625) */
+            adj_lim_new = 31.98 * max_pow + 0.000625;
             if( gfc->ATH->adjust >= adj_lim_new) { /* descend gradually */
                 gfc->ATH->adjust *= adj_lim_new * 0.075 + 0.925;
                 if( gfc->ATH->adjust < adj_lim_new) { /* stop descent */
