@@ -118,20 +118,29 @@ nasm_sources = \
 
 @HAVE_NASM_TRUE@noinst_LTLIBRARIES = @HAVE_NASM_TRUE@liblameasmroutines.la
 @HAVE_NASM_TRUE@liblameasmroutines_la_SOURCES = @HAVE_NASM_TRUE@$(nasm_sources)
+@HAVE_NASM_TRUE@am_liblameasmroutines_la_OBJECTS = @HAVE_NASM_TRUE@\
+@HAVE_NASM_TRUE@	choose_table$U.lo \
+@HAVE_NASM_TRUE@	cpu_feat$U.lo \
+@HAVE_NASM_TRUE@	fft3dn$U.lo \
+@HAVE_NASM_TRUE@	scalar$U.lo
 
 noinst_HEADERS = nasm.h
 
 INCLUDES = @INCLUDES@ -I$(top_srcdir)/libmp3lame/@CPUTYPE@
 
-SUFFIXES = .nas
+SUFFIXES = .nas .lo
 
 EXTRA_liblameasmroutines_la_SOURCES = $(nasm_sources)
 
 CLEANFILES = \
 	choose_table.o.lst \
+	choose_table.lo.lst \
 	cpu_feat.o.lst \
+	cpu_feat.lo.lst \
 	fft3dn.o.lst \
-	scalar.o.lst
+	fft3dn.lo.lst \
+	scalar.o.lst \
+	scalar.lo.lst
 
 
 EXTRA_DIST = \
@@ -155,8 +164,6 @@ LIBS = @LIBS@
 ANSI2KNR = $(top_srcdir)/ansi2knr
 liblameasmroutines_la_LDFLAGS = 
 liblameasmroutines_la_LIBADD = 
-@HAVE_NASM_TRUE@am_liblameasmroutines_la_OBJECTS =  choose_table.o \
-@HAVE_NASM_TRUE@cpu_feat.o fft3dn.o scalar.o
 liblameasmroutines_la_OBJECTS =  $(am_liblameasmroutines_la_OBJECTS)
 CFLAGS = @CFLAGS@
 COMPILE = $(CC) $(DEFS) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS)
@@ -178,7 +185,7 @@ OBJECTS = $(am_liblameasmroutines_la_OBJECTS)
 
 all: all-am
 .SUFFIXES:
-.SUFFIXES: .nas .c .lo .o
+.SUFFIXES: .nas .lo .c .o
 $(srcdir)/Makefile.in: @MAINTAINER_MODE_TRUE@ Makefile.am $(top_srcdir)/configure.in $(ACLOCAL_M4) 
 	cd $(top_srcdir) && $(AUTOMAKE) --foreign libmp3lame/i386/Makefile
 
@@ -342,6 +349,9 @@ mostlyclean-am: mostlyclean-compile mostlyclean-generic mostlyclean-kr \
 
 
 .nas.o: $< nasm.h
+	$(NASM) $(NASMFLAGS) $< -o $@ -l $@.lst
+
+.nas.lo: $< nasm.h
 	$(NASM) $(NASMFLAGS) $< -o $@ -l $@.lst
 
 #$(OBJECTS): libtool
