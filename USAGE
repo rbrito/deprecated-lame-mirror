@@ -160,7 +160,7 @@ ID3 tagging:
 --tl <album>    audio/song album (max 30 chars for version 1 tag)
 --ty <year>     audio/song year of issue (1 to 9999)
 --tc <comment>  user-defined text (max 30 chars for v1 tag, 28 for v1.1)
---tn <track>    audio/song track number (1 to 99, creates v1.1 tag)
+--tn <track>    audio/song track number (1 to 255, creates v1.1 tag)
 --tg <genre>    audio/song genre (name or number in list)
 --add-id3v2     force addition of version 2 tag
 --id3v1-only    add only a version 1 tag
