@@ -49,13 +49,13 @@ static const int log2tab[] = {
 /*   for (i = 0; i < 2*2; i++)
  *       table13[i] = ((ht[1].hlen[i]) << 16) + ht[3].hlen[(i&1) + (i&2)*2];
  */
-const unsigned int table13[2*2] = {
+static const unsigned int table13[2*2] = {
     0x010002, 0x040003,
     0x030004, 0x050004
 };
 
 /* ixmax=3 (select table from 5, 9, 6, 7) */
-const uint64_t table5967[] = {
+static const uint64_t table5967[] = {
     u64const(0x03000100030001), u64const(0x04000400040004), u64const(0x06000700060007), u64const(0x08000900070008),
     u64const(0x04000400040004), u64const(0x04000600050005), u64const(0x06000800060008), u64const(0x07000900070009),
     u64const(0x05000700050007), u64const(0x06000700060008), u64const(0x07000900070009), u64const(0x08000a0008000a),
@@ -63,7 +63,7 @@ const uint64_t table5967[] = {
 };
 
 /* ixmax=4,5 (select table from 7, 11, 8, 9) */
-const uint64_t table7B89[] = {
+static const uint64_t table7B89[] = {
     u64const(0x02000300020001), u64const(0x04000400040004), u64const(0x07000600060007), u64const(0x09000700080009),
     u64const(0x09000900090009), u64const(0x0a000a000a000a), u64const(0xff006300630063), u64const(0xff006300630063),
 /* here starts tableAFBC, ixmax=6,7 (select table from 10, 15, 11, 12 */
@@ -103,7 +103,7 @@ const uint64_t table7B89[] = {
 };
 
 /* ixmax=8,9,...,15 (select table from 13, 14=16, 15) */
-const uint64_t tableDxEF[] = {
+static const uint64_t tableDxEF[] = {
     u64const(0x01000300630001), u64const(0x05000500630005), u64const(0x07000600630007), u64const(0x09000800630008),
     u64const(0x0a000800630009), u64const(0x0a00090063000a), u64const(0x0b000a0063000a), u64const(0x0b000a0063000b),
     u64const(0x0c000a0063000a), u64const(0x0c000b0063000b), u64const(0x0c000b0063000c), u64const(0x0d000c0063000c),
