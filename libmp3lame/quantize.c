@@ -1463,8 +1463,8 @@ calc_min_bits (
 static int 
 VBR_prepare (
           lame_global_flags *gfp,
-          FLOAT8          pe            [2][2],
-          FLOAT8          ms_ener_ratio [2], 
+          FLOAT           pe            [2][2],
+          FLOAT           ms_ener_ratio [2], 
           III_psy_ratio   ratio         [2][2], 
           FLOAT8	  l3_xmin       [2][2][SFBMAX],
           int             frameBits     [16],
@@ -1477,7 +1477,7 @@ VBR_prepare (
     lame_internal_flags *gfc=gfp->internal_flags;
     
     
-    FLOAT8  masking_lower_db, adjust = 0.0;
+    FLOAT  masking_lower_db, adjust = 0.0;
     int     gr, ch;
     int     analog_silence = 1;
     int     avg, mxb, bits = 0;
@@ -1580,8 +1580,8 @@ bitpressure_strategy(
 void 
 VBR_iteration_loop (
     lame_global_flags *gfp,
-    FLOAT8             pe           [2][2],
-    FLOAT8             ms_ener_ratio[2],
+    FLOAT             pe           [2][2],
+    FLOAT             ms_ener_ratio[2],
     III_psy_ratio ratio[2][2])
 {
     lame_internal_flags *gfc=gfp->internal_flags;
@@ -1701,8 +1701,8 @@ VBR_iteration_loop (
 static void 
 calc_target_bits (
     lame_global_flags * gfp,
-    FLOAT8               pe            [2][2],
-    FLOAT8               ms_ener_ratio [2],
+    FLOAT                pe            [2][2],
+    FLOAT                ms_ener_ratio [2],
     int                  targ_bits     [2][2],
     int                 *analog_silence_bits,
     int                 *max_frame_bits )
@@ -1825,8 +1825,8 @@ calc_target_bits (
 void 
 ABR_iteration_loop(
     lame_global_flags *gfp,
-    FLOAT8             pe           [2][2],
-    FLOAT8             ms_ener_ratio[2], 
+    FLOAT             pe           [2][2],
+    FLOAT             ms_ener_ratio[2], 
     III_psy_ratio      ratio        [2][2])
 {
     lame_internal_flags *gfc=gfp->internal_flags;
@@ -1902,8 +1902,8 @@ ABR_iteration_loop(
 void 
 iteration_loop(
     lame_global_flags *gfp, 
-    FLOAT8             pe           [2][2],
-    FLOAT8             ms_ener_ratio[2],
+    FLOAT             pe           [2][2],
+    FLOAT             ms_ener_ratio[2],
     III_psy_ratio      ratio        [2][2])
 {
     lame_internal_flags *gfc=gfp->internal_flags;

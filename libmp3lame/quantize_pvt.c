@@ -179,10 +179,10 @@ ATH = ATH * 2.5e-10      (ener)
 
 */
 
-static FLOAT8 ATHmdct( lame_global_flags *gfp, FLOAT8 f )
+static FLOAT ATHmdct( lame_global_flags *gfp, FLOAT f )
 {
     lame_internal_flags *gfc = gfp->internal_flags;
-    FLOAT8 ath;
+    FLOAT ath;
   
     ath = ATHformula( f , gfp );
 	  
@@ -199,21 +199,21 @@ static FLOAT8 ATHmdct( lame_global_flags *gfp, FLOAT8 f )
 
 static void compute_ath( lame_global_flags *gfp )
 {
-    FLOAT8 *ATH_l = gfp->internal_flags->ATH->l;
-    FLOAT8 *ATH_psfb21 = gfp->internal_flags->ATH->psfb21;
-    FLOAT8 *ATH_s = gfp->internal_flags->ATH->s;
-    FLOAT8 *ATH_psfb12 = gfp->internal_flags->ATH->psfb12;
+    FLOAT *ATH_l = gfp->internal_flags->ATH->l;
+    FLOAT *ATH_psfb21 = gfp->internal_flags->ATH->psfb21;
+    FLOAT *ATH_s = gfp->internal_flags->ATH->s;
+    FLOAT *ATH_psfb12 = gfp->internal_flags->ATH->psfb12;
     lame_internal_flags *gfc = gfp->internal_flags;
     int sfb, i, start, end;
-    FLOAT8 ATH_f;
-    FLOAT8 samp_freq = gfp->out_samplerate;
+    FLOAT ATH_f;
+    FLOAT samp_freq = gfp->out_samplerate;
 
     for (sfb = 0; sfb < SBMAX_l; sfb++) {
         start = gfc->scalefac_band.l[ sfb ];
         end   = gfc->scalefac_band.l[ sfb+1 ];
-        ATH_l[sfb]=FLOAT8_MAX;
+        ATH_l[sfb]=FLOAT_MAX;
         for (i = start ; i < end; i++) {
-            FLOAT8 freq = i*samp_freq/(2*576);
+            FLOAT freq = i*samp_freq/(2*576);
             ATH_f = ATHmdct( gfp, freq );  /* freq in kHz */
             ATH_l[sfb] = Min( ATH_l[sfb], ATH_f );
         }
@@ -225,9 +225,9 @@ static void compute_ath( lame_global_flags *gfp )
     for (sfb = 0; sfb < PSFB21; sfb++) {
         start = gfc->scalefac_band.psfb21[ sfb ];
         end = gfc->scalefac_band.psfb21[ sfb+1 ];
-        ATH_psfb21[sfb]=FLOAT8_MAX;
+        ATH_psfb21[sfb]=FLOAT_MAX;
         for (i = start ; i < end; i++) {
-            FLOAT8 freq = i*samp_freq/(2*576);
+            FLOAT freq = i*samp_freq/(2*576);
             ATH_f = ATHmdct( gfp, freq );  /* freq in kHz */
             ATH_psfb21[sfb] = Min( ATH_psfb21[sfb], ATH_f );
         }
@@ -236,9 +236,9 @@ static void compute_ath( lame_global_flags *gfp )
     for (sfb = 0; sfb < SBMAX_s; sfb++){
         start = gfc->scalefac_band.s[ sfb ];
         end   = gfc->scalefac_band.s[ sfb+1 ];
-        ATH_s[sfb] = FLOAT8_MAX;
+        ATH_s[sfb] = FLOAT_MAX;
         for (i = start ; i < end; i++) {
-            FLOAT8 freq = i*samp_freq/(2*192);
+            FLOAT freq = i*samp_freq/(2*192);
             ATH_f = ATHmdct( gfp, freq );    /* freq in kHz */
             ATH_s[sfb] = Min( ATH_s[sfb], ATH_f );
         }
@@ -249,9 +249,9 @@ static void compute_ath( lame_global_flags *gfp )
     for (sfb = 0; sfb < PSFB12; sfb++) {
         start = gfc->scalefac_band.psfb12[ sfb ];
         end = gfc->scalefac_band.psfb12[ sfb+1 ];
-        ATH_psfb12[sfb]=FLOAT8_MAX;
+        ATH_psfb12[sfb]=FLOAT_MAX;
         for (i = start ; i < end; i++) {
-            FLOAT8 freq = i*samp_freq/(2*192);
+            FLOAT freq = i*samp_freq/(2*192);
             ATH_f = ATHmdct( gfp, freq );  /* freq in kHz */
             ATH_psfb12[sfb] = Min( ATH_psfb12[sfb], ATH_f );
         }
@@ -398,7 +398,7 @@ iteration_init( lame_global_flags *gfp)
  * mt 6/99
  * bugfixes rh 8/01: often allocated more than the allowed 4095 bits
  ************************************************************************/
-int on_pe( lame_global_flags *gfp, FLOAT8 pe[][2], III_side_info_t *l3_side,
+int on_pe( lame_global_flags *gfp, FLOAT pe[][2], III_side_info_t *l3_side,
            int targ_bits[2], int mean_bits, int gr, int cbr )
 {
     lame_internal_flags * gfc = gfp->internal_flags;

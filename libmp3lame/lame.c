@@ -77,7 +77,7 @@ lame_init_params_ppflt(lame_global_flags * gfp)
     /***************************************************************/
 
     int     band, maxband, minband;
-    FLOAT8  freq;
+    FLOAT   freq;
     int lowpass_band = 32;
     int highpass_band = -1;
 

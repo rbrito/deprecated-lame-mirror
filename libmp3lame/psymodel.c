@@ -413,13 +413,13 @@ msfix1(
 static void
 ns_msfix(
     lame_internal_flags *gfc,
-    FLOAT8 msfix,
-    FLOAT8 athadjust
+    FLOAT msfix,
+    FLOAT athadjust
     )
 {
     int sb, sblock;
-    FLOAT8 msfix2 = msfix;
-    FLOAT8 athlower = pow(10, athadjust);
+    FLOAT msfix2 = msfix;
+    FLOAT athlower = pow(10, athadjust);
 
     msfix *= 2.0;
     msfix2 *= 2.0;
@@ -581,11 +581,11 @@ block_type_set(
 
 int L3psycho_anal( lame_global_flags * gfp,
                     const sample_t *buffer[2], int gr_out, 
-                    FLOAT8 *ms_ratio,
-                    FLOAT8 *ms_ratio_next,
+                    FLOAT *ms_ratio,
+                    FLOAT *ms_ratio_next,
 		    III_psy_ratio masking_ratio[2][2],
 		    III_psy_ratio masking_MS_ratio[2][2],
-		    FLOAT8 percep_entropy[2],FLOAT8 percep_MS_entropy[2], 
+		    FLOAT percep_entropy[2],FLOAT percep_MS_entropy[2], 
                     FLOAT8 energy[4],
                     int blocktype_d[2])
 {
@@ -1168,7 +1168,7 @@ static void nsPsy2dataRead(
 static FLOAT
 pecalc_s(
     III_psy_ratio *mr,
-    FLOAT8 masking_lower
+    FLOAT masking_lower
     )
 {
     FLOAT8 pe_s;
@@ -1212,7 +1212,7 @@ pecalc_s(
 static FLOAT
 pecalc_l(
     III_psy_ratio *mr,
-    FLOAT8 masking_lower
+    FLOAT masking_lower
     )
 {
     FLOAT8 pe_l;
@@ -1264,11 +1264,11 @@ pecalc_l(
 
 int L3psycho_anal_ns( lame_global_flags * gfp,
                     const sample_t *buffer[2], int gr_out, 
-                    FLOAT8 *ms_ratio,
-                    FLOAT8 *ms_ratio_next,
+                    FLOAT *ms_ratio,
+                    FLOAT *ms_ratio_next,
 		    III_psy_ratio masking_ratio[2][2],
 		    III_psy_ratio masking_MS_ratio[2][2],
-		    FLOAT8 percep_entropy[2],FLOAT8 percep_MS_entropy[2], 
+		    FLOAT percep_entropy[2],FLOAT percep_MS_entropy[2], 
 		    FLOAT8 energy[4], 
                     int blocktype_d[2])
 {
@@ -1620,7 +1620,7 @@ int L3psycho_anal_ns( lame_global_flags * gfp,
 	calc_interchannel_masking(gfp, gfp->interChRatio);
 
     if (gfp->mode == JOINT_STEREO) {
-	FLOAT8 msfix;
+	FLOAT msfix;
 	msfix1(gfc);
 	msfix = gfp->msfix;
 	if (msfix != 0.0)
@@ -1636,7 +1636,7 @@ int L3psycho_anal_ns( lame_global_flags * gfp,
      * compute the value of PE to return ... no delay and advance
      *********************************************************************/
     for(chn=0;chn<numchn;chn++) {
-	FLOAT8 *ppe;
+	FLOAT *ppe;
 	int type;
 	III_psy_ratio *mr;
 
@@ -1960,7 +1960,7 @@ int psymodel_init(lame_global_flags *gfp)
     gfc->decay = exp(-1.0*LOG10/(temporalmask_sustain_sec*sfreq/192.0));
 
     if (gfp->psymodel == PSY_NSPSYTUNE) {
-        FLOAT8 msfix;
+        FLOAT msfix;
         msfix = NS_MSFIX;
         if (gfp->exp_nspsytune & 2) msfix = 1.0;
         if (gfp->msfix != 0.0) msfix = gfp->msfix;

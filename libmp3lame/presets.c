@@ -42,13 +42,13 @@ int apply_abr_preset(lame_global_flags*  gfp, int preset, int enforce)
         int    quant_comp;
         int    quant_comp_s;
         int    safejoint;
-        double nsmsfix;
-        double st_lrm; /*short threshold*/
-        double st_s;
-        double nsbass;
-        double scale;
-        double ath_curve;
-        double interch;
+        FLOAT  nsmsfix;
+        FLOAT  st_lrm; /*short threshold*/
+        FLOAT  st_s;
+        FLOAT  nsbass;
+        FLOAT  scale;
+        FLOAT  ath_curve;
+        FLOAT  interch;
     } abr_presets_t;
 
 

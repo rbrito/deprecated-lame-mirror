@@ -189,16 +189,16 @@ typedef struct
     FLOAT   aa_sensitivity_p;    /* factor for tuning the (sample power)
                                     point below which adaptive threshold
                                     of hearing adjustment occurs */
-    FLOAT8  adjust;         /* lowering based on peak volume, 1 = no lowering */
-    FLOAT8  adjust_limit;   /* limit for dynamic ATH adjust */
-    FLOAT8  decay;          /* determined to lower x dB each second */
-    FLOAT8  floor;          /* lowest ATH value */
-    FLOAT8  l[SBMAX_l];     /* ATH for sfbs in long blocks */
-    FLOAT8  s[SBMAX_s];     /* ATH for sfbs in short blocks */
-    FLOAT8  psfb21[PSFB21]; /* ATH for partitionned sfb21 in long blocks */
-    FLOAT8  psfb12[PSFB12]; /* ATH for partitionned sfb12 in short blocks */
-    FLOAT8  cb[CBANDS];     /* ATH for convolution bands */
-    FLOAT eql_w[BLKSIZE/2];/* equal loudness weights (based on ATH) */
+    FLOAT   adjust;         /* lowering based on peak volume, 1 = no lowering */
+    FLOAT   adjust_limit;   /* limit for dynamic ATH adjust */
+    FLOAT   decay;          /* determined to lower x dB each second */
+    FLOAT   floor;          /* lowest ATH value */
+    FLOAT   l[SBMAX_l];     /* ATH for sfbs in long blocks */
+    FLOAT   s[SBMAX_s];     /* ATH for sfbs in short blocks */
+    FLOAT   psfb21[PSFB21]; /* ATH for partitionned sfb21 in long blocks */
+    FLOAT   psfb12[PSFB12]; /* ATH for partitionned sfb12 in short blocks */
+    FLOAT   cb[CBANDS];     /* ATH for convolution bands */
+    FLOAT   eql_w[BLKSIZE/2];/* equal loudness weights (based on ATH) */
 } ATH_t;
 
 /**
@@ -215,11 +215,11 @@ typedef struct
  */
 typedef struct
 {
-    FLOAT8  mask_adjust;    /* the dbQ stuff */
-    FLOAT8  mask_adjust_short;    /* the dbQ stuff */
+    FLOAT  mask_adjust;    /* the dbQ stuff */
+    FLOAT  mask_adjust_short;    /* the dbQ stuff */
     int     tonalityPatch;      /* temporaly needed by VBR */
     FLOAT   cwlimit;
-    FLOAT8  prvTonRed[CBANDS];
+    FLOAT  prvTonRed[CBANDS];
 } PSY_t; 
 
 
@@ -229,9 +229,9 @@ typedef struct
 typedef struct {
     unsigned long  Class_ID;        /* Class ID to recognize a resample_t
                                        object */
-    FLOAT8   sample_freq_in;  /* Input sample frequency in Hz */
-    FLOAT8   sample_freq_out; /* requested Output sample frequency in Hz */
-    FLOAT8   lowpass_freq;    /* lowpass frequency, this is the -6 dB
+    FLOAT   sample_freq_in;  /* Input sample frequency in Hz */
+    FLOAT   sample_freq_out; /* requested Output sample frequency in Hz */
+    FLOAT   lowpass_freq;    /* lowpass frequency, this is the -6 dB
                                        point */
     int            scale_in;        /* the resampling is actually done by
                                        scale_out: */
@@ -298,8 +298,8 @@ struct lame_internal_flags {
   int channels_out;     /* number of channels in the output data stream (not used for decoding) */
   resample_t*  resample_in;   /* context for coding (PCM=>MP3) resampling */
   resample_t*  resample_out;	/* context for decoding (MP3=>PCM) resampling */
-  FLOAT8  samplefreq_in;
-  FLOAT8  samplefreq_out;
+  FLOAT  samplefreq_in;
+  FLOAT  samplefreq_out;
   FLOAT resample_ratio;           /* input_samp_rate/output_samp_rate */
 
   size_t       frame_size;    /* size of one frame in samples per channel */
@@ -317,8 +317,8 @@ struct lame_internal_flags {
 
 
   /* lowpass and highpass filter control */
-  FLOAT8 lowpass1,lowpass2;   /* normalized frequency bounds of passband */
-  FLOAT8 highpass1,highpass2; /* normalized frequency bounds of passband */
+  FLOAT lowpass1,lowpass2;   /* normalized frequency bounds of passband */
+  FLOAT highpass1,highpass2; /* normalized frequency bounds of passband */
 
   int filter_type;          /* 0=polyphase filter, 1= FIR filter 2=MDCT filter(bad)*/
   int quantization;         /* 0 = ISO formual,  1=best amplitude */
@@ -355,7 +355,7 @@ struct lame_internal_flags {
   /* variables used by lame.c */
   Bit_stream_struc   bs;
   III_side_info_t l3_side;
-  FLOAT8 ms_ratio[2];
+  FLOAT ms_ratio[2];
   /* used for padding */
   int frac_SpF;
   int slot_lag;
@@ -370,7 +370,7 @@ struct lame_internal_flags {
   int OldValue[2];
   int CurrentStep[2];
 
-  FLOAT8 masking_lower;
+  FLOAT masking_lower;
   char bv_scf[576];
   int pseudohalf[SFBMAX];
 
@@ -428,7 +428,7 @@ struct lame_internal_flags {
   FLOAT8	nb_s1[4][CBANDS], nb_s2[4][CBANDS];
   FLOAT     *s3_ss;
   FLOAT     *s3_ll;
-  FLOAT8 decay;
+  FLOAT decay;
 
   III_psy_xmin thm[4];
   III_psy_xmin en[4];
@@ -464,9 +464,9 @@ struct lame_internal_flags {
   FLOAT rnumlines_l[CBANDS];
 
   /* ratios  */
-  FLOAT8 pe[4];
-  FLOAT8 ms_ratio_s_old,ms_ratio_l_old;
-  FLOAT8 ms_ener_ratio_old;
+  FLOAT pe[4];
+  FLOAT ms_ratio_s_old,ms_ratio_l_old;
+  FLOAT ms_ener_ratio_old;
 
   /* block type */
   int	blocktype_old[2];
