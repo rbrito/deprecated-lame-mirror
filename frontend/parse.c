@@ -575,17 +575,17 @@ static int  presets_setup ( lame_global_flags* gfp, const char* preset_name, con
             if ( Presets[i].resample >= 0 )
 	        (void) lame_set_out_samplerate( gfp, Presets[i].resample );
 	    if ( Presets[i].highpass_freq >= 0 )
-	        gfp -> highpassfreq     = Presets[i].highpass_freq,
-	        gfp -> highpasswidth    = 0;
-	    gfp -> lowpassfreq          = Presets[i].lowpass_freq;
-	    gfp -> lowpasswidth         = Presets[i].lowpass_width;
-	    (void) lame_set_no_short_blocks( gfp, Presets[i].no_short_blocks );
-	    (void) lame_set_quality        ( gfp, Presets[i].quality         );
-	    (void) lame_set_mode           ( gfp, Presets[i].mode            );
-	    gfp -> brate                = Presets[i].cbr;
-	    gfp -> VBR_q                = Presets[i].vbr_mode;
-	    gfp -> VBR_min_bitrate_kbps = Presets[i].vbr_min;
-	    gfp -> VBR_max_bitrate_kbps = Presets[i].vbr_max;
+	        lame_set_highpassfreq(gfp,Presets[i].highpass_freq),
+	        lame_set_highpasswidth(gfp,0);
+	    lame_set_lowpassfreq(gfp,Presets[i].lowpass_freq);
+	    lame_set_lowpasswidth(gfp,Presets[i].lowpass_width);
+	    lame_set_no_short_blocks( gfp, Presets[i].no_short_blocks );
+	    lame_set_quality        ( gfp, Presets[i].quality         );
+	    lame_set_mode           ( gfp, Presets[i].mode            );
+	    lame_set_brate(gfp,Presets[i].cbr);
+	    lame_set_VBR_q(gfp,Presets[i].vbr_mode);
+	    lame_set_VBR_min_bitrate_kbps(gfp,Presets[i].vbr_min);
+	    lame_set_VBR_max_bitrate_kbps(gfp,Presets[i].vbr_max);
 	    return 0;
 	}
 
@@ -742,13 +742,13 @@ char* const inPath, char* const outPath, char **nogap_inPath, int *num_nogap)
 		    lame_set_VBR(gfp,vbr_mtrh); 
 
 		T_ELIF ("r3mix")
-		    gfp->VBR = vbr_rh; 
-		    gfp->VBR_q = 1;
-		    (void) lame_set_quality( gfp, 2 );
-		    gfp->lowpassfreq = 19500;
-		    (void) lame_set_mode( gfp, JOINT_STEREO );
-		    (void) lame_set_ATHtype( gfp, 3 );
-		    gfp->VBR_min_bitrate_kbps=112;
+		    lame_set_VBR(gfp,vbr_rh); 
+		    lame_set_VBR_q(gfp,1);
+		    lame_set_quality( gfp, 2 );
+		    lame_set_lowpassfreq(gfp,19500);
+		    lame_set_mode( gfp, JOINT_STEREO );
+		    lame_set_ATHtype( gfp, 3 );
+		    lame_set_VBR_min_bitrate_kbps(gfp,112);
 		    
 		
                 /**
@@ -756,24 +756,25 @@ char* const inPath, char* const outPath, char **nogap_inPath, int *num_nogap)
                  *  it is a developers only switch (rh)
                  */
                 T_ELIF ("remix")
-		    gfp->VBR = vbr_mtrh; 
-		    gfp->VBR_q = 3;
-		    (void) lame_set_quality( gfp, 2 );
-		    gfp->lowpassfreq = 19500;
-		    (void) lame_set_mode( gfp, JOINT_STEREO );
-		    (void) lame_set_ATHtype( gfp, 3 );
-		    gfp->VBR_min_bitrate_kbps=112;
+		    lame_set_VBR(gfp,vbr_mtrh); 
+		    lame_set_VBR_q(gfp,3);
+		    lame_set_quality( gfp, 2 );
+		    lame_set_lowpassfreq(gfp,19500);
+		    lame_set_mode( gfp, JOINT_STEREO );
+		    lame_set_ATHtype( gfp, 3 );
+		    lame_set_VBR_min_bitrate_kbps(gfp,112);
 		    
 		    
 		T_ELIF ("abr")
 		    argUsed=1;
-		    gfp->VBR = vbr_abr; 
-		    gfp->VBR_mean_bitrate_kbps = atoi(nextArg);
+		    lame_set_VBR(gfp,vbr_abr); 
+		    lame_set_VBR_mean_bitrate_kbps(gfp,atoi(nextArg));
 		    /* values larger than 8000 are bps (like Fraunhofer), so it's strange to get 320000 bps MP3 when specifying 8000 bps MP3 */
-		    if ( gfp -> VBR_mean_bitrate_kbps >= 8000 )
-			gfp -> VBR_mean_bitrate_kbps = ( gfp -> VBR_mean_bitrate_kbps + 500 ) / 1000;
-		    gfp->VBR_mean_bitrate_kbps = Min(gfp->VBR_mean_bitrate_kbps, 320); 
-		    gfp->VBR_mean_bitrate_kbps = Max(gfp->VBR_mean_bitrate_kbps,   8); 
+		    if ( lame_get_VBR_mean_bitrate_kbps(gfp) >= 8000 )
+			lame_set_VBR_mean_bitrate_kbps(gfp,( lame_get_VBR_mean_bitrate_kbps(gfp) + 500 ) / 1000);
+
+		    lame_set_VBR_mean_bitrate_kbps(gfp,Min(lame_get_VBR_mean_bitrate_kbps(gfp), 320)); 
+		    lame_set_VBR_mean_bitrate_kbps(gfp,Max(lame_get_VBR_mean_bitrate_kbps(gfp),8)); 
 		
 		T_ELIF ("mp1input")
 		    input_format=sf_mp1;
@@ -840,11 +841,11 @@ char* const inPath, char* const outPath, char **nogap_inPath, int *num_nogap)
 		    (void) lame_set_noATH( gfp, 1 );
 		
 		T_ELIF ("nores")
-		    gfp->disable_reservoir=1;
-		    gfp->padding_type=0;
+		    lame_set_disable_reservoir(gfp,1);
+		    lame_set_padding_type(gfp,0);
 		
 		T_ELIF ("strictly-enforce-ISO")
-		    gfp->strict_ISO=1;
+		    lame_set_strict_ISO(gfp,1);
 		
 		T_ELIF ("athonly")
 		    (void) lame_set_ATHonly( gfp, 1 );
@@ -874,7 +875,7 @@ char* const inPath, char* const outPath, char **nogap_inPath, int *num_nogap)
 		    (void) lame_set_scale( gfp, atof(nextArg) );
 		
 		T_ELIF ("freeformat")
-		    gfp->free_format=1;
+		    lame_set_free_format(gfp,1);
 		
 		T_ELIF ("athshort")
 		    (void) lame_set_ATHshort( gfp, 1 );
@@ -937,37 +938,39 @@ char* const inPath, char* const outPath, char **nogap_inPath, int *num_nogap)
 		    val     = atof( nextArg );
 		    argUsed = 1;
 		    /* useful are 0.001 kHz...50 kHz, 50 Hz...50000 Hz */
-		    gfp -> lowpassfreq = val * (val < 50. ? 1.e3 : 1.e0 ) + 0.5;
 		    if ( val < 0.001 || val > 50000. ) {
 			fprintf(stderr,"Must specify lowpass with --lowpass freq, freq >= 0.001 kHz\n");
 			return -1;
 		    }
+		    lame_set_lowpassfreq(gfp,val * (val < 50. ? 1.e3 : 1.e0 ) + 0.5);
 		
 		T_ELIF ("lowpass-width")
 		    argUsed=1;
-		    gfp->lowpasswidth =  1000.0 * atof( nextArg ) + 0.5;
-		    if (gfp->lowpasswidth  < 0) {
+                    val = 1000.0 * atof( nextArg ) + 0.5;
+		    if (val  < 0) {
 			fprintf(stderr,"Must specify lowpass width with --lowpass-width freq, freq >= 0 kHz\n");
 			return -1;
 		    }
+		    lame_set_lowpasswidth(gfp,val); 
 		
 		T_ELIF ("highpass")
 		    val = atof( nextArg );
 		    argUsed=1;
 		    /* useful are 0.001 kHz...16 kHz, 16 Hz...50000 Hz */
-		    gfp->highpassfreq =  val * (val < 16. ? 1.e3 : 1.e0 ) + 0.5;
 		    if ( val < 0.001 || val > 50000. ) {
 			fprintf(stderr,"Must specify highpass with --highpass freq, freq >= 0.001 kHz\n");
 			return -1;
 		    }
+		    lame_set_highpassfreq(gfp, val * (val < 16. ? 1.e3 : 1.e0 ) + 0.5);
 		
 		T_ELIF ("highpass-width")
 		    argUsed=1;
-		    gfp->highpasswidth =  1000.0 * atof( nextArg ) + 0.5;
-		    if (gfp->highpasswidth  < 0) {
+                    val = 1000.0 * atof( nextArg ) + 0.5;
+		    if (val   < 0) {
 			fprintf(stderr,"Must specify highpass width with --highpass-width freq, freq >= 0 kHz\n");
 			return -1;
 		    }
+		    lame_set_highpasswidth(gfp,val);
 		
 		T_ELIF ("cwlimit")
 		    val = atof (nextArg);
@@ -985,11 +988,12 @@ char* const inPath, char* const outPath, char **nogap_inPath, int *num_nogap)
 		 
 		T_ELIF ("comp")
 		    argUsed=1;
-		    gfp->compression_ratio =  atof( nextArg );
-		    if (gfp->compression_ratio < 1.0 ) {
+		    val = atof( nextArg );
+		    if (val  < 1.0 ) {
 			fprintf(stderr,"Must specify compression ratio >= 1.0\n");
 			return -1;
 		    }
+		    lame_set_compression_ratio(gfp,val);
 		
 		T_ELIF ("notemp")
 		    (void) lame_set_useTemporal( gfp, 0 );
@@ -999,12 +1003,12 @@ char* const inPath, char* const outPath, char **nogap_inPath, int *num_nogap)
 		    (void) lame_set_useTemporal( gfp, atoi(nextArg)?1:0 );
 
 		T_ELIF ("nspsytune")
-		    gfp->exp_nspsytune |= 1;
-		    gfp->experimentalZ = 1;
-		    gfp->experimentalX = 1;
+		    lame_set_exp_nspsytune(gfp, lame_get_exp_nspsytune(gfp) | 1);
+		    lame_set_experimentalZ(gfp,1);
+		    lame_set_experimentalX(gfp,1);
 		
 		T_ELIF ("nssafejoint")
-		    gfp->exp_nspsytune |= 2;
+		    lame_set_exp_nspsytune(gfp,lame_get_exp_nspsytune(gfp) | 2);
 		
 		T_ELIF ("ns-bass")
 		    argUsed=1;
@@ -1016,7 +1020,7 @@ char* const inPath, char* const outPath, char **nogap_inPath, int *num_nogap)
 		      if (k < -32) k = -32;
 		      if (k >  31) k =  31;
 		      if (k < 0) k += 64;
-		      gfp->exp_nspsytune |= (k << 2);
+		      lame_set_exp_nspsytune(gfp, lame_get_exp_nspsytune(gfp) | (k << 2));
 		    }
 		
 		T_ELIF ("ns-alto")
@@ -1029,7 +1033,7 @@ char* const inPath, char* const outPath, char **nogap_inPath, int *num_nogap)
 		      if (k < -32) k = -32;
 		      if (k >  31) k =  31;
 		      if (k < 0) k += 64;
-		      gfp->exp_nspsytune |= (k << 8);
+		      lame_set_exp_nspsytune(gfp, lame_get_exp_nspsytune(gfp) | (k << 8));
 		    }
 		
 		T_ELIF ("ns-treble")
@@ -1042,7 +1046,7 @@ char* const inPath, char* const outPath, char **nogap_inPath, int *num_nogap)
 		      if (k < -32) k = -32;
 		      if (k >  31) k =  31;
 		      if (k < 0) k += 64;
-		      gfp->exp_nspsytune |= (k << 14);
+		      lame_set_exp_nspsytune(gfp, lame_get_exp_nspsytune(gfp) | (k << 14));
 		    }
 		
 		/* some more GNU-ish options could be added
@@ -1119,7 +1123,7 @@ char* const inPath, char* const outPath, char **nogap_inPath, int *num_nogap)
                                            "  may not be what you expect\n",
                                            ProgramName );
                                   break;
-			case 'f': gfp->force_ms = 1;
+			case 'f': lame_set_force_ms(gfp,1);
                                  /* FALLTHROUGH */
 			case 'j': (void) lame_set_mode( gfp, JOINT_STEREO );
                                   break;
@@ -1137,15 +1141,15 @@ char* const inPath, char* const outPath, char **nogap_inPath, int *num_nogap)
 	    
 		    case 'V':        argUsed = 1;
 			/* to change VBR default look in lame.h */
-			if (gfp->VBR == vbr_off) gfp->VBR = vbr_default;  
-			gfp->VBR_q = atoi(arg);
-			if (gfp->VBR_q <0) gfp->VBR_q=0;
-			if (gfp->VBR_q >9) gfp->VBR_q=9;
+			if (lame_get_VBR(gfp) == vbr_off) lame_set_VBR(gfp,vbr_default);  
+			lame_set_VBR_q(gfp,atoi(arg));
+			if (lame_get_VBR_q(gfp) <0) lame_set_VBR_q(gfp,0);
+			if (lame_get_VBR_q(gfp) >9) lame_set_VBR_q(gfp,9);
 			break;
 		    case 'v': 
 			/* to change VBR default look in lame.h */
-			if (gfp->VBR == vbr_off)
-                            gfp->VBR = vbr_default; 
+			if (lame_get_VBR(gfp) == vbr_off)
+                            lame_set_VBR(gfp,vbr_default); 
 			break;
 
 		    case 'q':        argUsed = 1;
@@ -1174,15 +1178,15 @@ char* const inPath, char* const outPath, char **nogap_inPath, int *num_nogap)
 			break;
 		    case 'b':        
 			argUsed = 1;
-			gfp->brate = atoi(arg); 
-			gfp->VBR_min_bitrate_kbps=gfp->brate;
+			lame_set_brate(gfp,atoi(arg)); 
+			lame_set_VBR_min_bitrate_kbps(gfp,lame_get_brate(gfp));
 			break;
 		    case 'B':        
 			argUsed = 1;
-			gfp->VBR_max_bitrate_kbps=atoi(arg); 
+			lame_set_VBR_max_bitrate_kbps(gfp,atoi(arg)); 
 			break;	
 		    case 'F':        
-			gfp->VBR_hard_min=1;
+			lame_set_VBR_hard_min(gfp,1);
 			break;	
 		    case 't':  /* dont write VBR tag */
 			(void) lame_set_bWriteVbrTag( gfp, 0 );
@@ -1206,8 +1210,8 @@ char* const inPath, char* const outPath, char **nogap_inPath, int *num_nogap)
 			(void) lame_set_mode( gfp, MONO );
 			break;
 		    case 'k': 
-			gfp->lowpassfreq=-1;
-			gfp->highpassfreq=-1;
+			lame_set_lowpassfreq(gfp,-1);
+			lame_set_highpassfreq(gfp,-1);
 			break;
 		    case 'd': 
 			(void) lame_set_allow_diff_short( gfp, 1 );

@@ -148,7 +148,7 @@ int gtkmakeframe(void)
   }else {
 
     /* feed data to encoder until encoder produces some output */
-    while (gfp->frameNum == pinfo->frameNum) {
+    while (lame_get_frameNum(gfp) == pinfo->frameNum) {
       
       if (!init) {
 	init=1;
@@ -170,11 +170,11 @@ int gtkmakeframe(void)
       mp3count=lame_encode_buffer(gfp,Buffer[0],Buffer[1],iread,
 				  mp3buffer,(int)sizeof(mp3buffer));
 
-      assert( !(mp3count > 0 && gfp->frameNum == pinfo->frameNum));
+      assert( !(mp3count > 0 && lame_get_frameNum(gfp) == pinfo->frameNum));
       /* not possible to produce mp3 data without encoding at least 
-       * one frame of data which would increment gfp->frameNum */
+       * one frame of data which would increment frameNum */
     }
-    frameNum = gfp->frameNum;  /* use the internal MP3 frame counter */
+    frameNum = lame_get_frameNum(gfp);  /* use the internal MP3 frame counter */
 
     
     /* decode one frame of output */
