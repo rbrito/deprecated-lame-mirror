@@ -904,7 +904,6 @@ int L3psycho_anal( lame_global_flags *gfp,
 	      thmm += thr[b];
 	    }
 	} else {
-#if 1
           /*  SMR: signal to mask ratio
            *
            *  a) for this subband calculate the integral below the signal curve
@@ -925,8 +924,8 @@ int L3psycho_anal( lame_global_flags *gfp,
            *
            *  Robert Hegemann 2000-09-12
            */
-	  FLOAT8 enM  = enn;
-          FLOAT8 thmM = thmm;
+	  FLOAT8 enM  = enn  / (gfc->w1_l[sb] + gfc->w2_l[sb]);
+          FLOAT8 thmM = thmm / (gfc->w1_l[sb] + gfc->w2_l[sb]);
           
           for ( b = gfc->bu_l[sb]+1; b < gfc->bo_l[sb]; b++ )
 	    {
@@ -941,7 +940,6 @@ int L3psycho_anal( lame_global_flags *gfp,
           
           enn  = enn  + (enM -enn)  * gfp->raiseSMR;
           thmm = thmm + (thmM-thmm) * gfp->raiseSMR;
-#endif
 	}
 
 	gfc->en [chn].l[sb] = enn;
@@ -985,8 +983,8 @@ int L3psycho_anal( lame_global_flags *gfp,
 		    thmm += thr[b];
 	          }
             } else {
-                FLOAT8 enM  = enn;
-                FLOAT8 thmM = thmm;
+                FLOAT8 enM  = enn  / (gfc->w1_s[sb] + gfc->w2_s[sb]);
+                FLOAT8 thmM = thmm / (gfc->w1_s[sb] + gfc->w2_s[sb]);
                 for ( b = gfc->bu_s[sb]+1; b < gfc->bo_s[sb]; b++ )
                   {
                     enn  += eb[b];
