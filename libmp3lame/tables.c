@@ -1200,8 +1200,6 @@ psymodel_init(lame_global_flags *gfp)
 	gfc->ATH.adjust[i] = 0.0;
     }
 
-    gfc->masking_lower = db2pow(gfp->VBR_q - 8 - 4);
-
     /*************************************************************************
      * now compute the psychoacoustic model specific constants
      ************************************************************************/

@@ -188,7 +188,7 @@ set_compression_ratio(lame_global_flags * gfp)
 	return;
 
     if (gfp->VBR == vbr) {
-	FLOAT  cmp[] = { 5.7, 6.5, 7.3, 8.2, 10, 11.9, 13, 14, 15, 16.5 };
+	FLOAT  cmp[] = { 5.7, 6.5, 7.3, 8.2, 10, 11.9, 14, 16, 18, 20 };
 	if (gfp->VBR_q < 10)
 	    gfp->compression_ratio = cmp[gfp->VBR_q];
 	else
@@ -202,37 +202,38 @@ set_compression_ratio(lame_global_flags * gfp)
 
 /* Switch mappings for target bitrate */
 struct {
-    int    abr_kbps;
+    int    kbps;
     int    large_scalefac;
     int    lowpass;
+    double mask_lower;
     double reduce_side;
     double scale;
-    int ath_curve;
-    int ath_lower;
+    int    ath_curve;
+    int    ath_lower;
     double interch;
     double shortthreshold;
     double istereo_ratio;
     double narrow_stereo;
 } switch_map [] = {
-    /*  scalefac_s lowpass       scale     athlower  short-th   narrow-st */
-    /* kbps              reduceside   athcurve  inter-ch     is-ratio */
-    {   8,  1,      2000,  0.7,   0.90, 11,  -4, 0.0012, 20., 0.99, 0.6},
-    {  16,  1,      3700,  0.7,   0.90, 11,  -4, 0.0010, 20., 0.99, 0.6},
-    {  24,  1,      3900,  0.7,   0.90, 11,  -4, 0.0010, 20., 0.99, 0.6},
-    {  32,  1,      5500,  0.7,   0.90, 11,  -4, 0.0010, 20., 0.99, 0.6},
-    {  40,  1,      7000,  0.7,   0.90, 11,  -3, 0.0009, 20., 0.99, 0.6},
-    {  48,  1,      7500,  0.7,   0.90, 11,  -3, 0.0009, 20., 0.99, 0.6},
-    {  56,  1,     10000,  0.7,   0.90, 11,  -3, 0.0008, 5.0, 0.99, 0.5},
-    {  64,  1,     12000,  0.4,   0.90, 10,  -2, 0.0008, 3.0, 0.99, 0.4},
-    {  80,  1,     14500,  0.4,   0.93,  8,  -2, 0.0007, 3.0, 0.9, 0.3},
-    {  96,  1,     15300,  0.2,   0.93,  8,  -2, 0.0006, 2.5, 0.6, 0.2},
-    { 112,  1,     16000,  0.2,   0.93,  7,  -2, 0.0005, 2.5, 0.3, 0.1},
-    { 128,  1,     17500,  0.0,   0.93,  5,  -1, 0.0002, 2.5, 0.0, 0.0},
-    { 160,  1,     18000,  0.0,   0.95,  4,   0, 0.0000, 1.8, 0.0, 0.0},
-    { 192,  1,     19500,  0.0,   0.97,  3,   0, 0.0000, 1.8, 0.0, 0.0},
-    { 224,  1,     20000,  0.0,   0.98,  2,   1, 0.0000, 1.8, 0.0, 0.0},
-    { 256,  0,     20500,  0.0,   1.00,  1,   1, 0.0000, 1.8, 0.0, 0.0},
-    { 320,  0,     21000,  0.0,   1.00,  0,   1, 0.0000, 1.8, 0.0, 0.0}
+    /*  scalefac_s  masklower     scale    athlower   short-th   narrow-st */
+    /* kbps  lowpass     reduceside   athcurve  inter-ch     is-ratio */
+    {   8, 1,  2000,  -1.0, 0.7,   0.90, 11,  -4, 0.0012, 20., 0.99, 0.6},
+    {  16, 1,  3700,  -1.0, 0.7,   0.90, 11,  -4, 0.0010, 20., 0.99, 0.6},
+    {  24, 1,  3900,  -1.0, 0.7,   0.90, 11,  -4, 0.0010, 20., 0.99, 0.6},
+    {  32, 1,  5500,  -1.0, 0.7,   0.90, 11,  -4, 0.0010, 20., 0.99, 0.6},
+    {  40, 1,  7000,  -1.0, 0.7,   0.90, 11,  -3, 0.0009, 20., 0.99, 0.6},
+    {  48, 1,  7500,  -1.0, 0.7,   0.90, 11,  -3, 0.0009, 20., 0.99, 0.6},
+    {  56, 1, 10000,  -1.0, 0.7,   0.90, 11,  -3, 0.0008, 5.0, 0.99, 0.5},
+    {  64, 1, 12000,  -3.0, 0.4,   0.90, 10,  -2, 0.0008, 3.0, 0.99, 0.4},
+    {  80, 1, 14500,  -4.5, 0.4,   0.93,  8,  -2, 0.0007, 3.0, 0.9, 0.3},
+    {  96, 1, 15300,  -6.0, 0.2,   0.93,  8,  -2, 0.0006, 2.5, 0.6, 0.2},
+    { 112, 1, 16000,  -7.0, 0.2,   0.93,  7,  -2, 0.0005, 2.5, 0.3, 0.1},
+    { 128, 1, 17500,  -8.0, 0.0,   0.93,  5,  -1, 0.0002, 2.5, 0.0, 0.0},
+    { 160, 1, 18000,  -9.0, 0.0,   0.95,  4,   0, 0.0000, 1.8, 0.0, 0.0},
+    { 192, 1, 19500, -10.0, 0.0,   0.97,  3,   0, 0.0000, 1.8, 0.0, 0.0},
+    { 224, 1, 20000, -11.0, 0.0,   0.98,  2,   1, 0.0000, 1.8, 0.0, 0.0},
+    { 256, 0, 20500, -12.0, 0.0,   1.00,  1,   1, 0.0000, 1.8, 0.0, 0.0},
+    { 320, 0, 21000, -13.0, 0.0,   1.00,  0,   1, 0.0000, 1.8, 0.0, 0.0}
 };
 
 static int apply_preset(lame_global_flags*  gfp, int bitrate, vbr_mode mode)
@@ -241,12 +242,12 @@ static int apply_preset(lame_global_flags*  gfp, int bitrate, vbr_mode mode)
     int r, b;
 
     for (b = 1; b < sizeof(switch_map)/sizeof(switch_map[0])-1
-	     && bitrate > switch_map[b].abr_kbps; b++)
+	     && bitrate > switch_map[b].kbps; b++)
 	;
 
-    upper_range_kbps = switch_map[b].abr_kbps;
+    upper_range_kbps = switch_map[b].kbps;
     upper_range = b;
-    lower_range_kbps = switch_map[b-1].abr_kbps;
+    lower_range_kbps = switch_map[b-1].kbps;
     lower_range = (b-1);
 
     /* Determine which range the value specified is closer to */
@@ -298,6 +299,9 @@ static int apply_preset(lame_global_flags*  gfp, int bitrate, vbr_mode mode)
 
     if (gfp->internal_flags->narrowStereo < 0.0)
 	lame_set_narrowenStereo(gfp, switch_map[r].narrow_stereo);
+
+    if (gfp->internal_flags->masking_lower < 0.0)
+	gfp->internal_flags->masking_lower = db2pow(switch_map[r].mask_lower);
 
     return bitrate;
 }
@@ -1452,6 +1456,7 @@ lame_init_old(lame_global_flags * gfp)
     gfc->reduce_side = -1.0;
     gfc->nsPsy.msfix = NS_MSFIX*SQRT2;
     gfc->interChRatio = -1.0;
+    gfc->masking_lower = -1.0;
 
     gfp->ATHcurve = 4;
 
