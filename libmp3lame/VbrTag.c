@@ -560,8 +560,8 @@ int PutLameVBR(lame_global_flags *gfp, FILE *fpStream, uint8_t *pbtStreamBuffer,
 	
 	uint8_t  nFlags			= 0;
 
-	// if ABR, {store bitrate <=255} else { use 4 low bits to store bitrateindex so "-b" for VBR(/CBR) is known. 0F for freeformat}
-	int nABRBitrate	= (gfp->VBR==vbr_abr)?gfp->VBR_mean_bitrate_kbps:(gfp->free_format)?15:BitrateIndex(gfp->VBR_min_bitrate_kbps, gfp->version, gfp->out_samplerate);
+	// if ABR, {store bitrate <=255} else { store "-b"}
+	int nABRBitrate	= (gfp->VBR==vbr_abr)?gfp->VBR_mean_bitrate_kbps:gfp->brate;
 
 	//revision and vbr method
 	if (gfp->VBR>=0 && gfp->VBR < sizeof(vbr_type_translator))
