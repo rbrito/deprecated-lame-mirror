@@ -693,7 +693,7 @@ int  parse_args ( lame_global_flags* gfp, int argc, char** argv, char* const inP
 		
 		T_ELIF ("vbr-mtrh")
 		    gfp->VBR = vbr_mtrh; 
-		    gfp->quality = 2;
+		    gfp->quality = 3;
 		
 		T_ELIF ("abr")
 		    argUsed=1;
@@ -780,7 +780,7 @@ int  parse_args ( lame_global_flags* gfp, int argc, char** argv, char* const inP
 		
 		T_ELIF ("athlower")
 		    argUsed=1;
-		    gfp->ATHlower = atoi(nextArg);
+		    gfp->ATHlower = atof(nextArg);
 		
 		T_ELIF ("athtype")
 		    argUsed=1;
