@@ -1114,7 +1114,7 @@ psycho_analysis_short(
 	/* initialize the flag representing
 	 * "short block may be needed but not calculated"
 	 */
-	gfc->masking_next[gr][chn].en.s[0][sblock] = -1.0;
+	gfc->masking_next[gr][chn].en.s[0][0] = -1.0;
     }
 
     if (!current_is_short)
