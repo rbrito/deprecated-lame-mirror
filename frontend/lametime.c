@@ -58,6 +58,12 @@ double GetCPUTime ( void )
 #else
     t = clock ();
 #endif    
+
+    /*
+fprintf(stderr,"clock_t t = %lli \n\n",(int64_t) t);
+fprintf(stderr,"output: %f \n\n",t/(double)CLOCKS_PER_SEC);
+    */
+
     return t / (double) CLOCKS_PER_SEC;
 }
 

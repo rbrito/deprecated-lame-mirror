@@ -55,8 +55,8 @@
 #endif
 
 typedef struct {
-    double  start_time;			  // start time of converting [s]
-    double  elapsed_time;		  // current time - start time [s]
+    double  last_time;			  // result of last call to clock
+    double  elapsed_time;		  // total time
     double  estimated_time;		  // estimated total duration time [s]
     double  speed_index;		  // speed relative to realtime coding [100%]
 } timestatus_t;
@@ -112,15 +112,26 @@ void timestatus ( const int samp_rate,
     static timestatus_t  proc_time;
     int                  percent;
     static int           init = 0; /* What happens here? A work around instead of a bug fix ??? */
+    double               tmx,delta;
 
 
     if ( frameNum == 0 ) {
-        real_time.start_time = GetRealTime ();
-        proc_time.start_time = GetCPUTime  ();
+        real_time.last_time = GetRealTime ();
+        proc_time.last_time = GetCPUTime  ();
     }
-    
-    real_time.elapsed_time = GetRealTime () - real_time.start_time;
-    proc_time.elapsed_time = GetCPUTime  () - proc_time.start_time;
+
+    tmx=GetRealTime();
+    delta=tmx-real_time.last_time;
+    if (delta<0) delta=0;  // ignore, clock has rolled over
+    real_time.elapsed_time += delta;
+    real_time.last_time     = tmx;
+
+
+    tmx=GetCPUTime();
+    delta=tmx-proc_time.last_time;
+    if (delta<0) delta=0;  // ignore, clock has rolled over
+    proc_time.elapsed_time += delta;
+    proc_time.last_time     = tmx;
 
     if ( frameNum == 0 && init == 0 ) {
         fprintf ( stderr,
