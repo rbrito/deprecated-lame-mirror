@@ -360,7 +360,10 @@ int choose_table_nonMMX(
 
     default:
 	/* try tables with linbits */
-	assert(max <= IXMAX_VAL);
+	if (max > IXMAX_VAL) {
+	    *s = LARGE_BITS;
+	    return -1;
+	}
 	max -= 15;
 	for (choice2 = 24; choice2 < 32; choice2++) {
 	    if (ht[choice2].linmax >= max) {
