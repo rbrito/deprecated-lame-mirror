@@ -154,10 +154,6 @@ int CDECL lame_get_out_samplerate(const lame_global_flags *);
 /********************************************************************
  *  general control parameters
  ***********************************************************************/
-/* 1=cause LAME to collect data for an MP3 frame analyzer. default=0 */
-int CDECL lame_set_analysis(lame_global_flags *, int);
-int CDECL lame_get_analysis(const lame_global_flags *);
-
 /*
   1 = write a Xing VBR header frame.
   default = 1

@@ -50,8 +50,6 @@ int main(int argc, char **argv)
   if (ret < 0)
     return ret == -2 ? 0 : 1;
   
-  (void) lame_set_analysis( gf, 1 );
-
   init_infile(gf,inPath);
   lame_init_params(gf);
   lame_print_config(gf);
