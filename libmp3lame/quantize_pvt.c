@@ -476,10 +476,10 @@ int calc_xmin(
 	    tmpATH = ATH->adjust * ATH->l[gsfb];
 
 	width = cod_info->width[gsfb];
-	l = width;
+	l = width >> 1;
 	do {
-	    en0 += xr[j] * xr[j];
-	    j++;
+	    en0 += xr[j] * xr[j]; j++;
+	    en0 += xr[j] * xr[j]; j++;
 	} while (--l > 0);
 
 	/* why is it different from short blocks <?> */
@@ -520,10 +520,10 @@ int calc_xmin(
 	width = cod_info->width[gsfb];
 	for ( b = 0; b < 3; b++ ) {
 	    FLOAT en0 = 0.0;
-	    int l = width;
+	    int l = width >> 1;
 	    do {
-		en0 += xr[j] * xr[j];
-		j++;
+		en0 += xr[j] * xr[j]; j++;
+		en0 += xr[j] * xr[j]; j++;
 	    } while (--l > 0);
 	    en0 /= width;
 
@@ -628,11 +628,13 @@ int  calc_noise(
 	FLOAT8 step = POW20(s);
 	FLOAT8 noise = 0.0;
 
-	l = cod_info->width[sfb];
+	l = cod_info->width[sfb] >> 1;
 	do {
-	    FLOAT8 temp = fabs(cod_info->xr[j]) - pow43[ix[j]] * step;
+	    FLOAT8 temp;
+	    temp = fabs(cod_info->xr[j]) - pow43[ix[j]] * step; j++;
 	    noise += temp * temp;
-	    j++;
+	    temp = fabs(cod_info->xr[j]) - pow43[ix[j]] * step; j++;
+	    noise += temp * temp;
 	} while (--l > 0);
 	noise = *distort++ = noise / *l3_xmin++;
 	max_noise=Max(max_noise,noise);

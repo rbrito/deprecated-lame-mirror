@@ -42,17 +42,17 @@ extern FLOAT8 pow43[PRECALC_SIZE];
 extern FLOAT8 adj43[PRECALC_SIZE];
 extern FLOAT8 adj43asm[PRECALC_SIZE];
 
-#define Q_MAX 330
+#define Q_MAX 256
 
 extern FLOAT8 pow20[Q_MAX+128];
 extern FLOAT8 ipow20[Q_MAX];
 extern FLOAT8 *iipow20_;
 
 typedef struct calc_noise_result_t {
-    int     over_count;      /* number of quantization noise > masking */
     FLOAT8  over_noise;      /* sum of quantization noise > masking */
     FLOAT8  tot_noise;       /* sum of all quantization noise */
     FLOAT8  max_noise;       /* max quantization noise */
+    int     over_count;      /* number of quantization noise > masking */
 } calc_noise_result;
 
 int     on_pe (lame_global_flags *gfp, FLOAT8 pe[2][2], III_side_info_t * l3_side,

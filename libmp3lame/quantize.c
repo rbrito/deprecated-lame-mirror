@@ -544,6 +544,7 @@ amp_scalefac_bands(
 	cod_info->scalefac[sfb]++;
 	for (l = -width; l < 0; l++)
 	    xrpow[j+l] *= ifqstep34;
+
 	if (gfc->noise_shaping_amp==2)
 	    return;
     }
