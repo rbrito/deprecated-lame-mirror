@@ -145,7 +145,7 @@ BOOL SetPriorityClassMacro(DWORD p)
     return SetPriorityClass(op,p);
 }
 
-static void setWin32Priority( lame_t  gfp, int Priority )
+static void setWin32Priority(int Priority)
 {
     if (Priority > 3) {
 	SetPriorityClassMacro(HIGH_PRIORITY_CLASS);
@@ -160,7 +160,7 @@ static void setWin32Priority( lame_t  gfp, int Priority )
 
 #if defined(__OS2__)
 /* OS/2 priority functions */
-static int setOS2Priority( lame_t  gfp, int Priority )
+static int setOS2Priority(int Priority)
 {
     int rc;
 
@@ -242,7 +242,7 @@ void lame_version_print ( FILE* const fp )
 
 /* print version & license */
 static int
-print_license (const lame_t gfc, FILE* const fp, const char* ProgramName )
+print_license (FILE* const fp, const char* ProgramName )
 {
     fprintf ( fp, 
               "Can I use LAME in my commercial program?\n"
@@ -319,7 +319,7 @@ usage(FILE* const fp, const char* ProgramName )
 ************************************************************************/
 
 static int
-short_help (const lame_t gfp, FILE* const fp, const char* ProgramName )  /* print short syntax help */
+short_help (lame_t gfp, FILE* const fp, const char* ProgramName )  /* print short syntax help */
 {
     fprintf ( fp,
               "usage: %s [options] <infile> [outfile]\n"
@@ -363,7 +363,7 @@ static void  wait_for ( FILE* const fp, int lessmode )
 }
 
 static int
-long_help (const lame_t gfc, FILE* const fp, const char* ProgramName, int lessmode )  /* print long syntax help */
+long_help (lame_t gfc, FILE* const fp, const char* ProgramName, int lessmode )  /* print long syntax help */
 {
     fprintf ( fp,
               "usage: %s [options] <infile> [outfile]\n"
@@ -621,10 +621,6 @@ static void  presets_longinfo_dm ( FILE* msgfp )
 	      "  --preset cd       => --abr 192\n"
 	      "  --preset studio   => --abr 256\n");
 }
-
-
-extern void lame_set_msfix( lame_t gfp, double msfix );
-
 
 
 /*  some presets thanks to Dibrom
@@ -1009,12 +1005,12 @@ int  parse_args (lame_t gfp, int argc, char** argv,
 #if defined(__OS2__)
       		T_ELIF ("priority")
       		    argUsed=1;
-      		    setOS2Priority(gfp, atoi(nextArg));
+      		    setOS2Priority(atoi(nextArg));
 #endif
 #if defined(WIN32)
       		T_ELIF ("priority")
       		    argUsed=1;
-      		    setWin32Priority(gfp, atoi(nextArg));
+      		    setWin32Priority(atoi(nextArg));
 #endif
 
                 /* options for ID3 tag */
@@ -1253,7 +1249,7 @@ int  parse_args (lame_t gfp, int argc, char** argv,
                     ignore_tag_errors = 1;
                     
                 T_ELIF2 ("version", "license")
-                    print_license ( gfp, stdout, ProgramName );
+                    print_license (stdout, ProgramName );
                     return -2;
                 
                 T_ELIF2 ("help", "usage")

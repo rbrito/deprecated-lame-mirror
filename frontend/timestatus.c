@@ -171,31 +171,33 @@ void timestatus ( const int samp_rate,
     fflush  ( stderr );
 }
 
-void timestatus_finish ( void )
+void
+timestatus_finish(void)
 {
     fprintf ( stderr, "\n" );
     fflush  ( stderr );
 }
 
-void timestatus_klemm (const lame_t gfc )
+void
+timestatus_klemm(lame_t gfp)
 {
     static double  last_time = 0.;
 
     if ( silent <= 0 )
-        if ( lame_get_frameNum(gfc) == 0  ||  
-  	     lame_get_frameNum(gfc) == 9  ||
+        if ( lame_get_frameNum(gfp) == 0  ||  
+  	     lame_get_frameNum(gfp) == 9  ||
   	     GetRealTime () - last_time >= update_interval  ||
 	     GetRealTime () - last_time <  0 ) {
 #ifdef BRHIST
             brhist_jump_back();
 #endif
-            timestatus ( lame_get_out_samplerate( gfc ),
-                         lame_get_frameNum(gfc),
-                         lame_get_totalframes(gfc),
-                         lame_get_framesize(gfc) );
+            timestatus ( lame_get_out_samplerate(gfp),
+                         lame_get_frameNum(gfp),
+                         lame_get_totalframes(gfp),
+                         lame_get_framesize(gfp) );
 #ifdef BRHIST
             if ( brhist ) {
-	        brhist_disp ( gfc );
+	        brhist_disp ( gfp );
 	    }
 #endif
             last_time = GetRealTime ();  /* from now! disp_time seconds */

@@ -94,7 +94,8 @@ static int calculate_index ( const int* const array, const int len, const int va
     return -1;
 }
 
-int  brhist_init ( const lame_t gf, const int bitrate_kbps_min, const int bitrate_kbps_max )
+int
+brhist_init(lame_t gfp, const int bitrate_kbps_min, const int bitrate_kbps_max)
 {
 #ifdef HAVE_TERMCAP
     char         term_buff [2048];  /* see 1) */
@@ -132,7 +133,7 @@ int  brhist_init ( const lame_t gf, const int bitrate_kbps_min, const int bitrat
     }
 
     /* initialize histogramming data structure */
-    lame_bitrate_kbps ( gf, brhist.kbps );
+    lame_bitrate_kbps (gfp, brhist.kbps );
     brhist.vbr_bitrate_min_index = calculate_index ( brhist.kbps, BRHIST_WIDTH, bitrate_kbps_min );
     brhist.vbr_bitrate_max_index = calculate_index ( brhist.kbps, BRHIST_WIDTH, bitrate_kbps_max );
 
@@ -260,7 +261,8 @@ brhist_disp_line (int i, int br_hist_TOT, int br_hist_LR, int full, int frames)
 #define LR  0
 #define MS  2
 
-void  brhist_disp ( const lame_t  gf )
+void
+brhist_disp(lame_t gfp)
 {
     int   i;
     int   br_hist [BRHIST_WIDTH];       /* how often a frame size was used */
@@ -270,8 +272,8 @@ void  brhist_disp ( const lame_t  gf )
     
     brhist.hist_printed_lines = 0;  /* printed number of lines for the brhist functionality, used to skip back the right number of lines */
 	
-    lame_bitrate_hist             ( gf, br_hist    );
-    lame_bitrate_stereo_mode_hist ( gf, br_sm_hist );
+    lame_bitrate_hist             (gfp, br_hist    );
+    lame_bitrate_stereo_mode_hist (gfp, br_sm_hist );
 
     frames = most_often = 0;
     for (i = 0; i < BRHIST_WIDTH; i++) {
@@ -306,7 +308,8 @@ void brhist_jump_back( void )
 }
 
 
-void  brhist_disp_total ( const lame_t gf )
+void
+brhist_disp_total(lame_t gfp)
 {
     int i;
     int br_hist [BRHIST_WIDTH];
@@ -317,9 +320,9 @@ void  brhist_disp_total ( const lame_t gf )
     double sum = 0.;
     extern int silent;
     
-    lame_stereo_mode_hist ( gf, st_mode );
-    lame_bitrate_hist     ( gf, br_hist );
-    lame_block_type_hist  ( gf, bl_type );
+    lame_stereo_mode_hist (gfp, st_mode );
+    lame_bitrate_hist     (gfp, br_hist );
+    lame_block_type_hist  (gfp, bl_type );
     
     for (i = 0; i < BRHIST_WIDTH; i++) {
         br_frames += br_hist[i];

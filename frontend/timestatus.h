@@ -21,7 +21,7 @@
 
 #ifndef LAME_TIMESTATUS_H
 #define LAME_TIMESTATUS_H
-void timestatus_klemm(const lame_t gfc);
+void timestatus_klemm(lame_t gfc);
 
 void timestatus ( const int samp_rate, 
                   const int frameNum, 

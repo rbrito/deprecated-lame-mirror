@@ -35,8 +35,7 @@
 #include "gtkanal.h"
 #include "gpkplotting.h"
 
-/* this file should be removed. The few data items accessed in 'gfc'
-   should be made accessable by writing a lame_set_variable() function */
+/* analyzer needs to access the internal flags and we need this header */
 #include "util.h"
 
 #ifdef WITH_DMALLOC
@@ -106,7 +105,7 @@ static struct gtkinfostruct {
 } gtkinfo;
 
 
-static lame_t global_gfc;
+static lame_t global_gfp;
 
 /**********************************************************************
  * read one frame and encode it 
@@ -126,25 +125,25 @@ gtkmakeframe(void)
   char mp3buffer[LAME_MAXMP3BUFFER];
   extern plotting_data *mpg123_pinfo;
   static int frameNum=0;
-  int framesize = lame_get_framesize(global_gfc);
+  int framesize = lame_get_framesize(global_gfp);
 
-  channels_out = (lame_get_mode(global_gfc)==MONO) ? 1 : 2;
+  channels_out = (lame_get_mode(global_gfp)==MONO) ? 1 : 2;
 
   pinfo->frameNum = frameNum;
-  pinfo->sampfreq = lame_get_out_samplerate (global_gfc);
+  pinfo->sampfreq = lame_get_out_samplerate (global_gfp);
   pinfo->framesize= framesize;
   pinfo->channels = channels_out;
 
-  /* If the analsys code is enabled, lame will writes data into global_gfc->pinfo,
+  /* If the analsys code is enabled, lame will writes data into global_gfp->pinfo,
    * and mpg123 will write data into mpg123_pinfo.  Set these so
    * the libraries put this data in the right place: */
-  global_gfc->pinfo = pinfo;
+  global_gfp->pinfo = pinfo;
   mpg123_pinfo = pinfo;
 
   if (input_format == sf_mp1 ||
       input_format == sf_mp2 ||
       input_format == sf_mp3) {
-    iread = get_audio16(global_gfc, Buffer);
+    iread = get_audio16(global_gfp, Buffer);
 
 
     /* add a delay of framesize-DECDELAY, which will make the total delay
@@ -162,15 +161,15 @@ gtkmakeframe(void)
   }else {
 
     /* feed data to encoder until encoder produces some output */
-    while (lame_get_frameNum(global_gfc) == pinfo->frameNum) {
+    while (lame_get_frameNum(global_gfp) == pinfo->frameNum) {
       
       if (!init) {
 	init=1;
 	mpglag=1;
-	lame_decode_init(global_gfc);
+	lame_decode_init(global_gfp);
       }
       
-      iread = get_audio16(global_gfc, Buffer);
+      iread = get_audio16(global_gfp, Buffer);
       if (iread > framesize) {
 	/* NOTE: frame analyzer requires that we encode one frame 
 	 * for each pass through this loop.  If lame_encode_buffer()
@@ -181,18 +180,18 @@ gtkmakeframe(void)
       }
       if (0==iread) break; /* eof */
 
-      mp3count=lame_encode_buffer(global_gfc,Buffer[0],Buffer[1],iread,
+      mp3count=lame_encode_buffer(global_gfp,Buffer[0],Buffer[1],iread,
 				  mp3buffer,(int)sizeof(mp3buffer));
 
-      assert( !(mp3count > 0 && lame_get_frameNum(global_gfc) == pinfo->frameNum));
+      assert( !(mp3count > 0 && lame_get_frameNum(global_gfp) == pinfo->frameNum));
       /* not possible to produce mp3 data without encoding at least 
        * one frame of data which would increment frameNum */
     }
-    frameNum = lame_get_frameNum(global_gfc);  /* use the internal MP3 frame counter */
+    frameNum = lame_get_frameNum(global_gfp);  /* use the internal MP3 frame counter */
 
     
     /* decode one frame of output */
-    mp3out=lame_decode1(global_gfc, mp3buffer,mp3count,mpg123pcm[0],mpg123pcm[1]); /* re-synthesis to pcm */
+    mp3out=lame_decode1(global_gfp, mp3buffer,mp3count,mpg123pcm[0],mpg123pcm[1]); /* re-synthesis to pcm */
     /* mp3out = 0:  need more data to decode */
     /* mp3out = -1:  error.  Lets assume 0 pcm output */
     /* mp3out = number of samples output */
@@ -549,11 +548,11 @@ plot_frame(void)
       if (blocktype[gr][ch]==SHORT_TYPE) {
 	nsfb=SBMAX_s;
 	fac=3;
-	scalefac = global_gfc->scalefac_band.s;
+	scalefac = global_gfp->scalefac_band.s;
       }else{
 	nsfb=SBMAX_l;
 	fac=1;
-	scalefac = global_gfc->scalefac_band.l;
+	scalefac = global_gfp->scalefac_band.l;
       }
       for (i=nsfb-7 ; i<nsfb; i++) {
 	ycord[0] = .8*ymx;  ycord[1] = ymn;
@@ -793,7 +792,7 @@ static void update_progress(void)
 {    
   char label[80];
 
-  int tf = lame_get_totalframes(global_gfc);
+  int tf = lame_get_totalframes(global_gfp);
   if (gtkinfo.totalframes>0) tf=gtkinfo.totalframes;
 
   sprintf(label,"Frame:%4i/%4i  %6.2fs",
@@ -1340,7 +1339,7 @@ static void get_main_menu(GtkWidget *windows, GtkWidget ** menubar) {
 
 
 
-int gtkcontrol(lame_t gfc, char *inPath)
+int gtkcontrol(lame_t gfp, char *inPath)
 {
     /* GtkWidget is the storage type for widgets */
     GtkWidget *button;
@@ -1358,7 +1357,7 @@ int gtkcontrol(lame_t gfc, char *inPath)
     graphx = 600;  /* minimum allowed size of pixmap */
     graphy = 95;
 
-    global_gfc=gfc;
+    global_gfp=gfp;
 
     /* set some global defaults/variables */
     gtkinfo.filetype = (input_format == sf_mp1 ||
@@ -1442,7 +1441,7 @@ int gtkcontrol(lame_t gfc, char *inPath)
     gtk_widget_show(framecounter);
     gtk_box_pack_start(GTK_BOX (box2),framecounter, FALSE, TRUE, 0);
 
-    adj = (GtkAdjustment *) gtk_adjustment_new (0, 0,(gint) lame_get_totalframes(global_gfc)-1, 0, 0, 0);
+    adj = (GtkAdjustment *) gtk_adjustment_new (0, 0,(gint) lame_get_totalframes(global_gfp)-1, 0, 0, 0);
     frameprogress = gtk_progress_bar_new_with_adjustment (adj);
     /* Set the format of the string that can be displayed in the
      * trough of the progress bar:
