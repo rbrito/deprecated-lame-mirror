@@ -89,11 +89,6 @@ typedef struct {
 
 extern plotting_data *pinfo;
 
-#if defined(HAVE_GTK)
-void    set_frame_pinfo (lame_global_flags *gfp,
-                         III_psy_ratio ratio[2][2]);
-#endif
-
 
 
 
