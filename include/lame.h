@@ -388,7 +388,6 @@ int CDECL lame_get_VBR_hard_min(const lame_global_flags *);
 
 /* for preset */
 int CDECL lame_set_preset_expopts(lame_global_flags *, int);
-int CDECL lame_set_preset_notune(lame_global_flags *, int);
 
 
 /********************************************************************
@@ -414,14 +413,6 @@ int CDECL lame_get_highpasswidth(const lame_global_flags *);
  * unless you know what you are doing
  ***********************************************************************/
 
-int CDECL lame_set_vbr_smooth( lame_global_flags *, int);
-int CDECL lame_get_vbr_smooth( const lame_global_flags *);
-
-int CDECL lame_set_maskingadjust( lame_global_flags *, float);
-float CDECL lame_get_maskingadjust( const lame_global_flags *);
-int CDECL lame_set_maskingadjust_short( lame_global_flags *, float);
-float CDECL lame_get_maskingadjust_short( const lame_global_flags *);
-
 /* only use ATH for masking */
 int CDECL lame_set_ATHonly(lame_global_flags *, int);
 int CDECL lame_get_ATHonly(const lame_global_flags *);
@@ -437,10 +428,6 @@ int CDECL lame_get_noATH(const lame_global_flags *);
 /* select ATH formula */
 int CDECL lame_set_ATHtype(lame_global_flags *, int);
 int CDECL lame_get_ATHtype(const lame_global_flags *);
-
-/* select ATH formula 4 shape */
-int CDECL lame_set_ATHcurve(lame_global_flags *, float);
-int CDECL lame_get_ATHcurve(const lame_global_flags *);
 
 /* lower ATH by this many db */
 int CDECL lame_set_ATHlower(lame_global_flags *, float);
@@ -477,24 +464,9 @@ int CDECL lame_get_useTemporal(const lame_global_flags *);
 int CDECL lame_set_interChRatio(lame_global_flags *, float);
 float CDECL lame_get_interChRatio(const lame_global_flags *);
 
-/* substep shaping method */
-int CDECL lame_set_substep(lame_global_flags *, int);
-int CDECL lame_get_substep(const lame_global_flags *);
-
-/* scalefactors scale */
-int CDECL lame_set_sfscale(lame_global_flags *, int);
-int CDECL lame_get_sfscale(const lame_global_flags *);
-
-/* subblock gain */
-int CDECL lame_set_subblock_gain(lame_global_flags *, int);
-int CDECL lame_get_subblock_gain(const lame_global_flags *);
-
 /* disable short blocks */
 int CDECL lame_set_no_short_blocks(lame_global_flags *, int);
 int CDECL lame_get_no_short_blocks(const lame_global_flags *);
-
-/* disable short blocks */
-int CDECL lame_set_short_threshold(lame_global_flags *, float, float);
 
 /* force short blocks */
 int CDECL lame_set_force_short_blocks(lame_global_flags *, int);
