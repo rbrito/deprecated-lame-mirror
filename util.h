@@ -34,21 +34,6 @@
  #endif
 #endif
 
-#ifdef M_PI_2
- #define        PI2                     M_PI_2
-#else
- #define        PI2                     1.57079632679489661923
-#endif
-
-#ifdef M_PI_4
- #define        PI4                     M_PI_4
-#else
- #define        PI4                     0.78539816339744830962
-#endif
-
-#define         PI12                    0.26179938779914943654
-#define         PI36                    0.08726646259971647885
-#define         PI64                    0.04908738521234051935
 
 #ifdef M_LN2
  #define        LOG2                    M_LN2
