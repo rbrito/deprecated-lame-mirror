@@ -155,6 +155,7 @@ typedef struct  {
   int noATH;                      /* disable ATH                          */
   int ATHtype;                    /* select ATH formula                   */
   float ATHlower;                 /* lower ATH by this many db            */
+  int adapt_thres_type;           /* select ATH auto-level adjust formula */
   int cwlimit;                    /* predictability limit                 */
   int allow_diff_short;           /* allow blocktypes to differ between
                                      channels?                            */

@@ -183,6 +183,9 @@ blocktype_d[2]        block type to use for previous granule
 #define         LN_TO_LOG10             0.2302585093
 #endif
 
+FLOAT
+psycho_loudness_approx( FLOAT *energy, lame_global_flags *gfp );
+
 
 
 
@@ -355,14 +358,26 @@ int L3psycho_anal( lame_global_flags * gfp,
       }
     }
 
-
-  if (gfp->analysis) {
-    for (j=0; j<HBLKSIZE ; j++) {
-      gfc->pinfo->energy[gr_out][chn][j]=gfc->energy_save[chn][j];
-      gfc->energy_save[chn][j]=gfc->energy[j];
+    if (gfp->analysis) {
+      for (j=0; j<HBLKSIZE ; j++) {
+        gfc->pinfo->energy[gr_out][chn][j]=gfc->energy_save[chn][j];
+        gfc->energy_save[chn][j]=gfc->energy[j];
+      }
     }
-  }
-    
+
+
+
+    /**********************************************************************
+     * compute loudness approximation (used for adaptive ATH adjust) 
+     **********************************************************************/
+    if( chn < 2 ) {		/* no loudness for mid and side channels */
+      gfc->loudness_sq[gr_out][chn] = gfc->loudness_sq_save[chn];
+      gfc->loudness_sq_save[chn]
+	= psycho_loudness_approx( gfc->energy, gfp);
+    }
+
+
+
     /**********************************************************************
      *    compute unpredicatability of first six spectral lines            * 
      **********************************************************************/
@@ -2107,14 +2122,6 @@ int *npart_l_orig,int *npart_l,int *npart_s_orig,int *npart_s)
 
 
 
-
-
-
-
-
-
-
-
 int psymodel_init(lame_global_flags *gfp)
 {
     lame_internal_flags *gfc=gfp->internal_flags;
@@ -2263,6 +2270,14 @@ int psymodel_init(lame_global_flags *gfp)
 #endif
     }
 
+
+
+				/* init. for loudness approx. -jd 2001 mar 27*/
+    gfc->loudness_sq_save[0] = 0.0;
+    gfc->loudness_sq_save[1] = 0.0;
+
+
+
     return 0;
 }
 
@@ -2270,4 +2285,58 @@ int psymodel_init(lame_global_flags *gfp)
 
 
 
+/* psycho_loudness_approx
+   jd - 2001 mar 12
+in:  energy   - BLKSIZE/2 elements of frequency magnitudes ^ 2
+     gfp      - uses out_samplerate, ATHtype (also needed for ATHformula)
+returns: loudness^2 approximation, a positive value roughly tuned for a value
+         of 1.0 for signals near clipping.
+notes:   When calibrated, feeding this function binary white noise at sample
+         values +32767 or -32768 should return values that approach 2.
+         ATHformula is used to approximate an equal loudness curve.
+future:  Data indicates that the shape of the equal loudness curve varies
+         with intensity.  This function might be improved by using an equal
+         loudness curve shaped for typical playback levels (instead of the
+         ATH, that is shaped for the threshold).  A flexible realization might
+         simply bend the existing ATH curve to achieve the desired shape.
+         However, the potential gain may not be enough to justify an effort.
+*/
+FLOAT
+psycho_loudness_approx( FLOAT *energy, lame_global_flags *gfp )
+{
+  int i;
+  static int eql_type = -1;
+  static FLOAT eql_w[BLKSIZE/2];/* equal loudness weights (based on ATH) */
+  const FLOAT vo_scale= 1./( 18085 ); /* tuned for output level */
+				      /* (sensitive to energy scale) */
+  FLOAT loudness_power;
 
+  if( eql_type != gfp->ATHtype ) { 
+				/* compute equal loudness weights (eql_w) */
+    FLOAT freq;
+    FLOAT freq_inc = gfp->out_samplerate / (BLKSIZE);
+    FLOAT eql_balance = 0.0;
+    eql_type = gfp->ATHtype;
+    freq = 0.0;
+    for( i = 0; i < BLKSIZE/2; ++i ) {
+      freq += freq_inc;
+				/* convert ATH dB to relative power (not dB) */
+				/*  to determine eql_w */
+      eql_w[i] = 1. / pow( 10, ATHformula( freq, gfp ) / 10 );
+      eql_balance += eql_w[i];
+    }
+    eql_balance = 1 / eql_balance;
+    for( i = BLKSIZE/2; --i >= 0; ) { /* scale weights */
+      eql_w[i] *= eql_balance;
+    }
+  }
+
+  loudness_power = 0.0;
+  for( i = 0; i < BLKSIZE/2; ++i ) { /* apply weights to power in freq. bands*/
+    loudness_power += energy[i] * eql_w[i];
+  }
+  loudness_power /= (BLKSIZE/2);
+  loudness_power *= vo_scale * vo_scale;
+
+  return( loudness_power );
+}

@@ -1738,6 +1738,8 @@ lame_init_old(lame_global_flags * gfp)
     gfc->masking_lower = 1;
 
     gfp->ATHtype = -1;  /* default = -1 = set in lame_init_params */
+    gfp->adapt_thres_type = 1;	/* 1 = adaptive threshold, with flat */
+				/*     approximation for loudness.   */
     gfp->useTemporal = 1;
 
     /* The reason for

@@ -798,7 +798,11 @@ int  parse_args ( lame_global_flags* gfp, int argc, char** argv, char* const inP
 		T_ELIF ("athtype")
 		    argUsed=1;
 		    gfp->ATHtype = atoi(nextArg);
-		
+
+		T_ELIF ("adapt-thres-type")
+		    argUsed=1;
+		    gfp->adapt_thres_type = atoi(nextArg);
+
 		T_ELIF ("scale")
 		    argUsed=1;
 		    (void) lame_set_scale( gfp, atof(nextArg) );
