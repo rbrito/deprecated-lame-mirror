@@ -1317,9 +1317,11 @@ L3psycho_anal_ns(
 	III_psy_ratio *mr = &gfc->masking_next[gr][chn];
 #define eb2 fftenergy
 	static const FLOAT tab[] = {
-	    1.0    /0.11749,
 	    1.0    /0.11749, 0.79433/0.11749, 0.63096/0.11749, 0.63096/0.11749,
 	    0.63096/0.11749, 0.63096/0.11749, 0.63096/0.11749, 0.25119/0.11749
+	};
+	static const FLOAT tab2[] = {
+	    1.0/0.11749, 0.79433/0.11749, 0.63096/0.11749, 0.25119/0.11749
 	};
 	int b, i, j;
 	if (chn < 2)
@@ -1384,8 +1386,8 @@ L3psycho_anal_ns(
 		a *= 3.0/2.0;
 		m = (m-a) / a * gfc->rnumlines_ls[0];
 		a = eb[0];
-		if (m < sizeof(tab)/sizeof(tab[0]) + 7)
-		    a *= tab[trancate(m) + 9];
+		if (m < sizeof(tab2)/sizeof(tab2[0]))
+		    a *= tab2[trancate(m)];
 	    }
 	    eb2[0] = a;
 
@@ -1395,10 +1397,10 @@ L3psycho_anal_ns(
 		    m = max[b-1];
 		    if (m < max[b  ]) m = max[b];
 		    if (m < max[b+1]) m = max[b+1];
-		    m = (m-a) / a * gfc->rnumlines_ls[b] + 9 - b/4;
+		    m = (m-a) / a * gfc->rnumlines_ls[b];
 		    a = eb[b];
-		    if (m < sizeof(tab)/sizeof(tab[0]))
-			a *= tab[trancate(m)];
+		    if (m < sizeof(tab2)/sizeof(tab2[0]))
+			a *= tab2[trancate(m)];
 		}
 		eb2[b] = a;
 	    }
