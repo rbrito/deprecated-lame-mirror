@@ -642,7 +642,7 @@ set_istereo_sfb(lame_internal_flags *gfc, int gr)
 
 	    if (x1*gfc->istereo_ratio > x2 || x2*gfc->istereo_ratio > x1)
 		break;
-	} while (--sb >= 0);
+	} while (--sb > 0);
     }
     gfc->is_start_sfb_l_next[gr] = ++sb;
     for (; sb < gfc->cutoff_sfb_l; sb++) {
@@ -671,7 +671,7 @@ set_istereo_sfb(lame_internal_flags *gfc, int gr)
 	}
 	if (sblock != 3)
 	    break;
-    } while (--sb >= 0);
+    } while (--sb > 0);
     gfc->is_start_sfb_s_next[gr] = ++sb;
     for (; sb < gfc->cutoff_sfb_s; sb++) {
 	mr[0].en .s[sb][0] = mr[2].en .s[sb][0];
