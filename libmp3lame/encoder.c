@@ -432,12 +432,8 @@ encode_mp3_frame(lame_t gfc, unsigned char* mp3buf, int mp3buf_size)
     }
 
 #ifndef NOANALYSIS
-    if (gfc->pinfo) {
-	const sample_t *inbuf[MAX_CHANNELS];
-	inbuf[0]=gfc->mfbuf[0];
-	inbuf[1]=gfc->mfbuf[1];
-	set_frame_pinfo(gfc, masking, inbuf);
-    }
+    if (gfc->pinfo)
+	set_frame_pinfo(gfc, masking);
 #endif
 
 #ifdef BRHIST

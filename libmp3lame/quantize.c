@@ -1748,7 +1748,7 @@ set_pinfo (
  *
  ************************************************************************/
 void
-set_frame_pinfo(lame_t gfc, III_psy_ratio ratio[2][2], const sample_t *inbuf[])
+set_frame_pinfo(lame_t gfc, III_psy_ratio ratio[2][2])
 {
     int gr, ch;
 
@@ -1767,7 +1767,7 @@ set_frame_pinfo(lame_t gfc, III_psy_ratio ratio[2][2], const sample_t *inbuf[])
 	    gfc->pinfo->pcmdata[ch][j]
 		= gfc->pinfo->pcmdata[ch][j+gfc->framesize];
 	for (j = FFTOFFSET; j < 1600; j++)
-	    gfc->pinfo->pcmdata[ch][j] = inbuf[ch][j-FFTOFFSET];
+	    gfc->pinfo->pcmdata[ch][j] = gfc->mfbuf[ch][j-FFTOFFSET];
 	gfc->pinfo->athadjust[ch] = gfc->l3_side.tt[0][ch].ATHadjust;
     }
 
