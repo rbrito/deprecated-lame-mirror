@@ -112,39 +112,39 @@ lame_init_qval(lame_global_flags * gfp)
         gfc->use_best_huffman = 1;
         break;
 
-    case 3:	/* aliased -h */
+    case 3:
         gfc->filter_type = 0;
         gfc->psymodel = 2;
         gfc->quantization = 1;
-        gfc->noise_shaping_amp = 2;
+        gfc->noise_shaping_amp = 3;
         gfc->noise_shaping_stop = 1;
         gfc->use_best_huffman = 1;
         break;
 
-    case 2:
+    case 2:	/* aliased -h */
         gfc->filter_type = 0;
         gfc->psymodel = 2;
         gfc->quantization = 1;
-        gfc->noise_shaping_amp = 2;
+        gfc->noise_shaping_amp = 3;
         gfc->noise_shaping_stop = 1;
         gfc->use_best_huffman = 2; /* inner loop, PAINFULLY SLOW */
         break;
 
-    case 1:	/* some "dangerous" setting */
+    case 1:	/* same with -q 2 */
         gfc->filter_type = 0;
-        gfc->psymodel = 2;
-        gfc->quantization = 1;
-        gfc->noise_shaping_amp = 2;
-        gfc->noise_shaping_stop = 1;
-        gfc->use_best_huffman = 2;
-        break;
-
-    case 0:	/* some "dangerous" setting */
-        gfc->filter_type = 0; /* 1 not yet coded */
         gfc->psymodel = 2;
         gfc->quantization = 1;
         gfc->noise_shaping_amp = 3;
         gfc->noise_shaping_stop = 1; /* 2 not yet coded */
+        gfc->use_best_huffman = 2;
+        break;
+
+    case 0:	/* same with -q 2 */
+        gfc->filter_type = 0; /* 1 not yet coded */
+        gfc->psymodel = 2;
+        gfc->quantization = 1;
+        gfc->noise_shaping_amp = 3;
+        gfc->noise_shaping_stop = 1;
         gfc->use_best_huffman = 2;
         break;
     }
