@@ -229,8 +229,8 @@ int check_vbr_header(PMPSTR mp,int bytes)
   for (i=0; i<XING_HEADER_SIZE; ++i) {
     while(pos >= buf->size) {
       buf  = buf->next;
-      pos = buf->pos;
       if(!buf) 	return -1; /* fatal error */
+      pos = buf->pos;
     }
     xing[i] = buf->pnt[pos];
     ++pos;
