@@ -2,7 +2,7 @@
 ;
 ; 	assembler routines to detect CPU-features
 ;
-;	MMX / 3DNow! / SIMD / SIMD2
+;	MMX / 3DNow! / SSE / SSE2
 ;
 ;	for the LAME project
 ;	Frank Klemm, Robert Hegemann 2000-10-12
@@ -12,8 +12,8 @@
 
 	globaldef	has_MMX_nasm
 	globaldef	has_3DNow_nasm
-	globaldef	has_SIMD_nasm
-	globaldef	has_SIMD2_nasm
+	globaldef	has_SSE_nasm
+	globaldef	has_SSE2_nasm
 
         segment_code
 
@@ -45,34 +45,34 @@ has_MMX_nasm:
 	jmp	return1		; MMX support
         
 ;---------------------------------------
-;	int  has_SIMD_nasm (void)
+;	int  has_SSE_nasm (void)
 ;---------------------------------------
 
-has_SIMD_nasm:
+has_SSE_nasm:
         pushad
 	call	testCPUID
-	jz	return0		; no CPUID command, so no SIMD
+	jz	return0		; no CPUID command, so no SSE
         
 	mov	eax,0x1
 	CPUID
 	test	edx,0x02000000
-	jz	return0		; no SIMD support
-	jmp	return1		; SIMD support
+	jz	return0		; no SSE support
+	jmp	return1		; SSE support
         
 ;---------------------------------------
-;	int  has_SIMD2_nasm (void)
+;	int  has_SSE2_nasm (void)
 ;---------------------------------------
 
-has_SIMD2_nasm:
+has_SSE2_nasm:
         pushad
 	call	testCPUID
-	jz	return0		; no CPUID command, so no SIMD2
+	jz	return0		; no CPUID command, so no SSE2
         
 	mov	eax,0x1
 	CPUID
 	test	edx,0x04000000
-	jz	return0		; no SIMD2 support
-	jmp	return1		; SIMD2 support
+	jz	return0		; no SSE2 support
+	jmp	return1		; SSE2 support
         
 ;---------------------------------------
 ;	int  has_3DNow_nasm (void)

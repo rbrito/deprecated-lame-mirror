@@ -281,7 +281,7 @@ void init_fft(lame_internal_flags * const gfc)
     } else 
 #endif
 #ifdef USE_FFTSSE
-    if (gfc->CPU_features.SIMD) {
+    if (gfc->CPU_features.SSE) {
         extern void fht_SSE(FLOAT *fz, int n);
         gfc->fft_fht = fht_SSE;
     } else 
