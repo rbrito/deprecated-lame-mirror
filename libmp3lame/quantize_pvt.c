@@ -232,20 +232,8 @@ FLOAT8 ATHmdct( lame_global_flags *gfp, FLOAT8 f )
         ath -= 114;
     }
     
-    /*  the user wishes to modify the MDCT scaling for the ATH
-     */
+    /*  modify the MDCT scaling for the ATH  */
     ath -= gfp->ATHlower;
-
-    /* purpose of RH_QUALITY_CONTROL:
-     * at higher quality lower ATH masking abilities   => needs more bits
-     * at lower quality increase ATH masking abilities => needs less bits
-     * works together with adjusted masking lowering of GPSYCHO thresholds
-     * (Robert.Hegemann@gmx.de 2000-01-30)
-     */
-    if (gfp->VBR != vbr_off) {
-        ath -= gfc->ATH_vbrlower;
-    }
-    
     ath = pow( 10.0, ath/10.0 );
     return ath;
 }

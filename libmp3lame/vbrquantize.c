@@ -1223,8 +1223,8 @@ VBR_quantize(lame_global_flags *gfp,
   qadjust=0;   /* start with -1 db quality improvement over quantize.c VBR */
 
   l3_side = &gfc->l3_side;
-  gfc->ATH_vbrlower = (4-gfp->VBR_q)*4.0; 
-  if (gfc->ATH_vbrlower < 0) gfc->ATH_vbrlower=0;
+  //gfc->ATHlower += (4-gfp->VBR_q)*4.0; 
+  //if (gfc->ATHlower < 0) gfc->ATHlower=0;
 
 
   /* now find out: if the frame can be considered analog silent

@@ -1163,7 +1163,7 @@ int L3psycho_anal( lame_global_flags * gfp,
     for ( sb = 0; sb < SBPSY_l; sb++ )
       {
 	FLOAT8 thmL,thmR,thmM,thmS,ath;
-	ath  = (gfc->ATH_partitionbands[(gfc->bu_l[sb] + gfc->bo_l[sb])/2])*pow(10,-gfc->ATH_vbrlower/10.0);
+	ath  = (gfc->ATH_partitionbands[(gfc->bu_l[sb] + gfc->bo_l[sb])/2])*pow(10,-gfp->ATHlower/10.0);
 	thmL = Max(gfc->thm[0].l[sb],ath);
 	thmR = Max(gfc->thm[1].l[sb],ath);
 	thmM = Max(gfc->thm[2].l[sb],ath);
@@ -1187,7 +1187,7 @@ int L3psycho_anal( lame_global_flags * gfp,
     for ( sb = 0; sb < SBPSY_s; sb++ ) {
       for ( sblock = 0; sblock < 3; sblock++ ) {
 	FLOAT8 thmL,thmR,thmM,thmS,ath;
-	ath  = (gfc->ATH_partitionbands[(gfc->bu_s[sb] + gfc->bo_s[sb])/2])*pow(10,-gfc->ATH_vbrlower/10.0);
+	ath  = (gfc->ATH_partitionbands[(gfc->bu_s[sb] + gfc->bo_s[sb])/2])*pow(10,-gfp->ATHlower/10.0);
 	thmL = Max(gfc->thm[0].s[sb][sblock],ath);
 	thmR = Max(gfc->thm[1].s[sb][sblock],ath);
 	thmM = Max(gfc->thm[2].s[sb][sblock],ath);

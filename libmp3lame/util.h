@@ -276,7 +276,6 @@ typedef struct  {
   FLOAT8 ATH_l[SBMAX_l];
   FLOAT8 ATH_s[SBMAX_s];
   FLOAT8 masking_lower;
-  FLOAT8 ATH_vbrlower;
 
   char bv_scf[576];
   

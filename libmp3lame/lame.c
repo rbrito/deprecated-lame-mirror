@@ -397,12 +397,6 @@ static int  optimum_samplefreq ( int lowpassfreq, int input_samplefreq )
  ********************************************************************/
 int lame_init_params ( lame_global_flags* const gfp )
 {
-    /* A third dbQ table */
-    /* Can all dbQ setup can be done here using a switch statement? */
-    static const FLOAT8  dbQ [] = { -5.0, -3.75, -2.5, -1.25, 0, +0.4, +0.8, +1.2, +1.6, +2.0 };
-    static const int     atQ [] = { +16,  +12,   +8,   +4,    0, -4,   -8,   -12,  -16,  -20  };
-    static const FLOAT8  cmp [] = {   5,    6,    7,    8,    9, 10,   11,    12,   13,   14  };
-
     
     int                  i;
     int                  j;
@@ -511,12 +505,7 @@ int lame_init_params ( lame_global_flags* const gfp )
      *     16              16               16.0
      *     16              24               10.667
      *
-     *  compression ratio (???)
-     *     11                     0.70 ?
-     *     12        sox resample 0.66
-     *     14.7      sox resample 0.45
      */
-
     /* 
      *  For VBR, take a guess at the compression_ratio. 
      *  For example:
@@ -536,7 +525,10 @@ int lame_init_params ( lame_global_flags* const gfp )
     case vbr_mt:
     case vbr_rh:
     case vbr_mtrh:
-        gfp->compression_ratio = cmp [ gfp->VBR_q ];
+        {  
+            FLOAT8 cmp[]={5,6,7,8,9, 10,11,12,13,14};
+            gfp->compression_ratio = cmp[ gfp->VBR_q ]; 
+	}
 	break;
     case vbr_abr:
         gfp->compression_ratio = gfp->out_samplerate * 16 * gfc->channels_out / (1.e3 * gfp->VBR_mean_bitrate_kbps);
@@ -750,30 +742,21 @@ int lame_init_params ( lame_global_flags* const gfp )
 
     gfp->VBR_mean_bitrate_kbps = Min ( bitrate_table [gfp->version] [gfc->VBR_max_bitrate], gfp->VBR_mean_bitrate_kbps );
     gfp->VBR_mean_bitrate_kbps = Max ( bitrate_table [gfp->version] [gfc->VBR_min_bitrate], gfp->VBR_mean_bitrate_kbps );
-    
-    /* Note: ABR mode should normally be used without a -V n setting,
-     * (or with the default value of 4)
-     * but the code below allows us to test how adjusting the maskings
-     * effects CBR encodings.  Lowering the maskings will make LAME
-     * work harder to get over=0 and may give better noise shaping?
-     */
 
-     
-        switch ( gfp->VBR ) {
-	case vbr_abr:
-	    assert( (unsigned)gfp->VBR_q < sizeof(dbQ)/sizeof(*dbQ) );
-	    assert( (unsigned)gfp->VBR_q < sizeof(atQ)/sizeof(*atQ) );
-            gfc->masking_lower = pow (10., 0.1 * dbQ [gfp->VBR_q] );
-            gfc->ATH_vbrlower  = atQ [ gfp->VBR_q ];
-            break;
-        case vbr_rh:
-        case vbr_mtrh:
-	    assert( (unsigned)gfp->VBR_q < sizeof(atQ)/sizeof(*atQ) );
-	    gfc->ATH_vbrlower  = atQ [ gfp->VBR_q ];
-            break;
-	default:
-	    break;
-	}
+
+    
+    switch ( gfp->VBR ) {
+    case vbr_abr:
+    case vbr_rh:
+    case vbr_mtrh:
+      // disabled because of new ATH.  use --athlower to set this manualy
+      //gfc->ATHlower += 4*(4-gfp->VBR_q);
+      break;
+    default:
+      break;
+    }
+    
+    
   }
 
   /* VBR needs at least the output of GPSYCHO,
@@ -1611,7 +1594,7 @@ int lame_init_old(lame_global_flags *gfp)
   gfc->CurrentStep=4;
   gfc->masking_lower=1;
 
-  gfp->ATHtype = -1;
+  gfp->ATHtype = -1;  /* default = -1 = set in lame_init_params */
 
 //  memset(&gfc->bs, 0, sizeof(Bit_stream_struc));
 //  memset(&gfc->l3_side,0x00,sizeof(III_side_info_t));
