@@ -296,8 +296,8 @@ void fht(FLOAT *fz, int n)
 	s1 = tri[1];
 	for (i = 1; i < kx; i++) {
 	    FLOAT c2,s2;
-	    c2 = (FLOAT)1.0 - (2*s1)*s1;
-	    s2 = (2*s1)*c1;
+	    c2 = (FLOAT)1.0 - (s1+s1)*s1;
+	    s2 = (s1+s1)*c1;
 	    fi = fz + i;
 	    gi = fz + k1 - i;
 	    do {
@@ -847,7 +847,7 @@ pecalc_s(III_psy_ratio *mr, int sb)
 	FLOAT xx = (FLOAT)0.0;
 	for (sblock=0;sblock<3;sblock++) {
 	    FLOAT x = mr->thm.s[sb][sblock], en = fabs(mr->en.s[sb][sblock]);
-	    FLOAT f = 0.9 + (sblock*0.1);
+	    FLOAT f = (FLOAT)0.9 + (sblock*(FLOAT)0.1);
 	    if (en <= x)
 		continue;
 
@@ -879,7 +879,7 @@ pecalc_l(III_psy_ratio *mr, int sb)
 	    continue;
 
 	ath_over++;
-	if (en > x*1e10)
+	if (en > x*(FLOAT)1e10)
 	    pe_l += regcoef_l[sb] * (FLOAT)(10.0 * LOG10);
 	else
 	    pe_l += regcoef_l[sb] * FAST_LOG10(en / x);

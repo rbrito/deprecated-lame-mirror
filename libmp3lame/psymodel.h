@@ -23,17 +23,17 @@
 #define LAME_PSYMODEL_H
 
 /* size of each partition band, in barks */
-#define DELBARK (1.0/3.0)
-#define FREQ_BOUND 1.35
+#define DELBARK ((FLOAT)(1.0/3.0))
+#define FREQ_BOUND ((FLOAT)1.35)
 
-#define ATHAdjustLimit 0.001
+#define ATHAdjustLimit ((FLOAT)0.001)
 
-#define TEMPORALMASK_SUSTAIN_SEC 0.01
+#define TEMPORALMASK_SUSTAIN_SEC ((FLOAT)0.01)
 
 /* FFT -> MDCT conversion factor */
-#define FFT2MDCT (32768.0*32768*1024)
+#define FFT2MDCT ((FLOAT)(32768.0*32768*1024))
 
-#define NS_MSFIX 4.0
+#define NS_MSFIX ((FLOAT)4.0)
 
 void psycho_analysis(lame_t gfc,
 		     III_psy_ratio masking[MAX_GRANULES][MAX_CHANNELS],

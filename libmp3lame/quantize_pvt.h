@@ -47,6 +47,6 @@ void quantize_sfb_3DN(const FLOAT *, int, int, int *);
 #define SCALEFAC_SCFSI_FLAG    (-1)
 #define SCALEFAC_ANYTHING_GOES (-2)
 
-#define ROUNDFAC 0.4054
+#define ROUNDFAC ((FLOAT)0.4054)
 
 #endif /* LAME_QUANTIZE_PVT_H */

@@ -441,7 +441,7 @@ quantize_ISO(lame_t gfc, gr_info *gi)
 	    (fi++)->i = (int)(*xp++ * istep + ROUNDFAC);
 #endif
 	}
-	istep = (1.0-ROUNDFAC) / istep;
+	istep = (FLOAT)(1.0-ROUNDFAC) / istep;
 	xend = &xr34[gi->count1];
 	while (xp < xend) {
 	    (fi++)->i = *xp++ > istep ? 1:0;
@@ -449,7 +449,7 @@ quantize_ISO(lame_t gfc, gr_info *gi)
 	}
     }
     if (gfc->noise_shaping_amp >= 3) {
-	istep = 0.634521682242439 / IPOW20(gi->global_gain);
+	istep = (FLOAT)0.634521682242439 / IPOW20(gi->global_gain);
 	xp = xr34;
 	fi = (fi_union *)gi->l3_enc;
 	while (xp < xend) {
@@ -884,7 +884,7 @@ adjust_global_gain(lame_t gfc, gr_info *gi, FLOAT *distort, int huffbits)
 
 	if (!gfc->pseudohalf[sfb])
 	    continue;
-	istep = 0.634521682242439
+	istep = (FLOAT)0.634521682242439
 	    / IPOW20(scalefactor(gi, sfb) + gi->scalefac_scale);
 	for (bw = gi->wi[sfb].width; bw < 0; bw++)
 	    if (xr34[j+bw] < istep)
@@ -1086,12 +1086,12 @@ CBR_bitalloc(
 	    bits = (int)(ratio[ch].pe*factor);
 	if ((gi->block_type == SHORT_TYPE && (gfc->substep_shaping & 2))
 	 || (gi->block_type != SHORT_TYPE && (gfc->substep_shaping & 1)))
-	    bits *= 1.1;
+	    bits *= (FLOAT)1.1;
 
 	/* START/STOP block cannot use "huffman block division hack" to
 	 * improve coding efficiency. */
 	if (gi->block_type == START_TYPE || gi->block_type == STOP_TYPE)
-	    bits *= 1.1;
+	    bits *= (FLOAT)1.1;
 
 	adjustBits += (targ_bits[ch] = ++bits); /* avoid zero division */
     }
@@ -1191,11 +1191,11 @@ bitpressure_strategy(gr_info *gi, FLOAT *xmin)
 {
     int sfb;
     for (sfb = 0; sfb < gi->psy_lmax; sfb++) 
-	*xmin++ *= 1.+(.029/(SBMAX_l*SBMAX_l))*(sfb*sfb+1);
+	*xmin++ *= (FLOAT)1.+(FLOAT)(.029/(SBMAX_l*SBMAX_l))*(sfb*sfb+1);
 
     if (sfb != gi->psymax) {
 	for (sfb = gi->sfb_smin; sfb < gi->psymax; sfb += 3) {
-	    FLOAT x = 1.+(.029/(SBMAX_s*SBMAX_s*9))*(sfb*sfb+1);
+	    FLOAT x = (FLOAT)1.+(FLOAT)(.029/(SBMAX_s*SBMAX_s*9))*(sfb*sfb+1);
 	    *xmin++ *= x;
 	    *xmin++ *= x;
 	    *xmin++ *= x;
@@ -1688,7 +1688,7 @@ set_pinfo(lame_t gfc, gr_info *gi, const III_psy_ratio *ratio, int gr, int ch)
 {
     int i, j, end, sfb, sfb2, over;
     FLOAT en0, en1, tot_noise=(FLOAT)0.0, over_noise=(FLOAT)0.0, max_noise;
-    FLOAT ifqstep = 0.5 * (1+gi->scalefac_scale);
+    FLOAT ifqstep = (FLOAT)0.5 * (1+gi->scalefac_scale);
     FLOAT xmin[SFBMAX], distort[SFBMAX], dummy[SFBMAX];
 
     init_bitalloc(gfc, gi);
@@ -1738,7 +1738,8 @@ set_pinfo(lame_t gfc, gr_info *gi, const III_psy_ratio *ratio, int gr, int ch)
 	    tot_noise += distort[sfb2];
 
 	    gfc->pinfo->LAMEsfb_s[gr][ch][3*sfb+i]
-		= -2.0*gi->subblock_gain[1+i] - ifqstep*gi->scalefac[sfb2];
+		= (FLOAT)-2.0*gi->subblock_gain[1+i]
+		- ifqstep*gi->scalefac[sfb2];
 	}
     } /* block type short */
 
