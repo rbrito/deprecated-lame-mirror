@@ -893,19 +893,16 @@ set_pinfo (lame_global_flags *gfp,
   FLOAT ifqstep = ( cod_info->scalefac_scale == 0 ) ? .5 : 1.0;
 
 
-        III_psy_xmin l3_xmin;
-        calc_noise_result noise_info;
-        FLOAT8 noise[4];
-        FLOAT8 xfsf[4][SBMAX_l];
-        FLOAT8 distort[4][SBMAX_l];
+  III_psy_xmin l3_xmin;
+  calc_noise_result noise_info;
+  FLOAT8 noise[4];
+  FLOAT8 xfsf[4][SBMAX_l];
+  FLOAT8 distort[4][SBMAX_l];
 
-        /* recompute allowed noise with no 'masking_lower' for
-         * frame analyzer */
-        gfc->masking_lower=1.0;
-        calc_xmin( gfp,xr, ratio, cod_info, &l3_xmin);
+  calc_xmin( gfp,xr, ratio, cod_info, &l3_xmin);
 
-        calc_noise( gfp, xr, l3_enc, cod_info, 
-                    xfsf,distort, &l3_xmin, scalefac, &noise_info);
+  calc_noise( gfp, xr, l3_enc, cod_info, 
+              xfsf,distort, &l3_xmin, scalefac, &noise_info);
 
   if (cod_info->block_type == SHORT_TYPE) {
     for (j=0, sfb = 0; sfb < SBMAX_s; sfb++ )  {
