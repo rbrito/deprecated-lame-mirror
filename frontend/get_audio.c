@@ -76,6 +76,7 @@ char   *strchr(), *strrchr();
 /* global data for get_audio.c. */
 int     count_samples_carefully;
 int     pcmbitwidth;
+int     pcmswapbytes = 0;
 unsigned int num_samples_read;
 FILE   *musicin;
 
@@ -177,6 +178,7 @@ init_infile(lame_global_flags * gfp, char *inPath)
     count_samples_carefully = 0;
     num_samples_read=0;
     pcmbitwidth=in_bitwidth;
+    pcmswapbytes=swapbytes;
     musicin = OpenSndFile(gfp, inPath);
 }
 
@@ -557,7 +559,7 @@ OpenSndFile(lame_global_flags * gfp, char *inPath)
         (void) lame_set_num_samples( gfp, mp3input_data.nsamp );
     }
     else if (input_format == sf_ogg) {
-        fprintf(stderr, "sorry, vorbis support in LAME is desperated.\n");
+        fprintf(stderr, "sorry, vorbis support in LAME is deprecated.\n");
         exit(1);
     }
     else {
@@ -891,7 +893,7 @@ read_samples_pcm(FILE * musicin, int sample_buffer[2304], int frame_size,
     if( (32 == pcmbitwidth) || (24 == pcmbitwidth) || (16 == pcmbitwidth) ) {
 				/* assume only recognized wav files are */
 				/*  in little endian byte order */
-	hi_lo_order = (!iswav == !swapbytes);
+	hi_lo_order = (!iswav == !pcmswapbytes);
         samples_read = unpack_read_samples(samples_to_read, pcmbitwidth/8, 
                                            hi_lo_order,sample_buffer, musicin );
        
@@ -1121,9 +1123,11 @@ parse_aiff_header(lame_global_flags * gfp, FILE * sf)
                     (dataType != IFF_ID_2CBE) &&
                     (dataType != IFF_ID_NONE))
                     return 0;
-                    
+
                 if (aiff_info.sampleSize == 16)
-                    swapbytes = (!swapbytes == (dataType == IFF_ID_2CLE));
+                  pcmswapbytes = (!swapbytes == (dataType == IFF_ID_2CLE));
+
+                fprintf(stderr, "swapbytes: %d\n", pcmswapbytes);
             }
             
             if (fskip(sf, (long) subSize, SEEK_CUR) != 0)
@@ -1306,6 +1310,7 @@ OpenSndFile(lame_global_flags * gfp, char *inPath)
                 fprintf(stderr, " : Forcing byte-swapping\n");
             else
                 fprintf(stderr, "\n");
+            pcmswapbytes = swapbytes;
         }
     }
 

@@ -79,7 +79,6 @@ int mp3_delay_set;          /* user specified the value of the mp3 encoder
 int enc_delay;
 int enc_padding;
 int disable_wav_header;
-int nogap_tags=0;           /* use VBR tags even in NOGAP mode */
 mp3data_struct mp3input_data; /* used by MP3 */
 
 int in_signed=1;
@@ -451,6 +450,7 @@ int  long_help ( const lame_global_flags* gfp, FILE* const fp, const char* Progr
               "    -F              strictly enforce the -b option, for use with players that\n"
               "                    do not support low bitrate mp3\n"
               "    -t              disable writing LAME Tag\n"
+              "    -T              enable and force writing LAME Tag\n"
               , lame_get_VBR_q(gfp) );
   
     wait_for ( fp, lessmode );  
@@ -971,6 +971,7 @@ char* const inPath, char* const outPath, char **nogap_inPath, int *num_nogap)
     int         autoconvert  = 0;
     double      val;
     int         nogap=0;
+    int         nogap_tags=0;  /* set to 1 to use VBR tags in NOGAP mode */
     const char* ProgramName  = argv[0]; 
     int count_nogap=0;
 
@@ -1598,6 +1599,11 @@ char* const inPath, char* const outPath, char **nogap_inPath, int *num_nogap)
                         (void) lame_set_bWriteVbrTag( gfp, 0 );
                         disable_wav_header=1;
                         break;
+                    case 'T':  /* do write VBR tag */
+                        (void) lame_set_bWriteVbrTag( gfp, 1 );
+                        nogap_tags=1;
+                        disable_wav_header=0;
+                        break;
                     case 'r':  /* force raw pcm input file */
 #if defined(LIBSNDFILE)
                         fprintf(stderr,"WARNING: libsndfile may ignore -r and perform fseek's on the input.\n"
@@ -1737,6 +1743,12 @@ char* const inPath, char* const outPath, char **nogap_inPath, int *num_nogap)
         }
     }
     
+    /* disable VBR tags with nogap unless the VBR tags are forced */
+    if (nogap && lame_get_bWriteVbrTag(gfp) && nogap_tags==0) {
+      fprintf(stderr,"Note: Disabling VBR Xing/Info tag since it interferes with --nogap\n");
+      lame_set_bWriteVbrTag( gfp, 0 );
+    }
+
     /* some file options not allowed with stdout */
     if (outPath[0]=='-') {
         (void) lame_set_bWriteVbrTag( gfp, 0 ); /* turn off VBR tag */
