@@ -103,6 +103,9 @@ void lame_help(char *name)  /* print syntax & exit */
   fprintf(stdout,"     --tl \"album\"     album where it came from (max 30 chars)\n");
   fprintf(stdout,"     --ty \"year\"      year in which the song/album was made (max 4 chars)\n");
   fprintf(stdout,"     --tc \"comment\"   additional info (max 30 chars)\n");
+  fprintf(stdout,"                      (or max 28 chars if using the \"track\" option)\n");
+  fprintf(stdout,"     --tn \"track\"     track number of the song on the CD (1 to 99)\n");
+  fprintf(stdout,"                      (using this option will add an ID3v1.1 tag)\n");
   fprintf(stdout,"     --tg \"genre\"     genre of song (name or number)\n");
   fprintf(stdout,"\n");
 #ifdef HAVEGTK
@@ -228,6 +231,8 @@ void lame_parse_args(int argc, char **argv)
 
   char *programName = argv[0]; 
 
+  int track = 0;
+
   inPath[0] = '\0';   
   outPath[0] = '\0';
   gf.inPath=inPath;
@@ -311,6 +316,13 @@ void lame_parse_args(int argc, char **argv)
  	else if (strcmp(token, "tc")==0) {
  		id3tag.used=1; argUsed = 1;
   		strncpy(id3tag.comment, nextArg, 30);
+ 		}
+ 	else if (strcmp(token, "tn")==0) {
+ 		id3tag.used=1; argUsed = 1;
+  		track = atoi(nextArg);
+  		if (track < 1) { track = 1; }
+  		if (track > 99) { track = 99; }
+  		id3tag.track = track;
  		}
  	else if (strcmp(token, "tg")==0) {
 		argUsed = strtol (nextArg, &token, 10);

@@ -12,6 +12,7 @@ typedef struct
 	char comment[31];
 	char tagtext[128];
 	char genre[1];
+	unsigned char track;
 
 }   ID3TAGDATA;
 

@@ -35,6 +35,7 @@ void id3_inittag(ID3TAGDATA *tag) {
 	strcpy( tag->year, "");    
 	strcpy( tag->comment, "");
 	strcpy( tag->genre, "ÿ");	/* unset genre */
+	tag->track = 0;
 
 	tag->valid = 0;		/* not ready for writing*/
 	}
@@ -53,7 +54,10 @@ void id3_buildtag(ID3TAGDATA *tag) {
 	id3_pad( tag->comment, 30); strncat( tag->tagtext, tag->comment,30);
 	id3_pad( tag->genre, 1);    strncat( tag->tagtext, tag->genre,1);
 
-	strncat( tag->tagtext, "ÿ", 1);
+	if( tag->track != 0 ) {
+		tag->tagtext[125] = '\0';
+		tag->tagtext[126] = tag->track;
+	}
 	tag->valid = 1;		/* ready for writing*/
 	}
 

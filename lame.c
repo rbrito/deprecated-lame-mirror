@@ -260,6 +260,7 @@ void lame_init_params(void)
     gf.lowpass1 = Min( 1, gf.lowpass1 );
     gf.lowpass2 = Min( 1, gf.lowpass2 );
   }
+
   
   /* dont use cutoff filter and lowpass filter */
   if ( gf.lowpass1>0 ) gf.sfb21 = 0;
@@ -392,6 +393,8 @@ void lame_init_params(void)
     gf.use_best_huffman=2;   /* not yet coded */
     exit(-99);  
   }
+
+  gf.filter_type=2;
 
   /* best_quant algorithms not based on over=0 require this: */
   if (gf.experimentalX) gf.noise_shaping_stop=1;
@@ -697,7 +700,7 @@ int lame_encode_frame(short int inbuf_l[],short int inbuf_r[],int mf_size,char *
   mdct_sub48(inbuf[0], inbuf[1], xr, &l3_side);
 
   /* lowpass MDCT filtering */
-  if (gf.sfb21 || gf.lowpass1>0 || gf.highpass2>0) 
+  if (gf.sfb21 || (gf.filter_type==2 && gf.lowpass1>0) || (gf.filter_type==2 && gf.highpass2>0)) 
     filterMDCT(xr, &l3_side);
 
   if (check_ms_stereo) {
@@ -1103,6 +1106,8 @@ lame_global_flags * lame_init(void)
   gf.gtkflag=0;
   gf.quality=5;
   gf.input_format=sf_unknown;
+
+  gf.filter_type=0;
   gf.lowpassfreq=0;
   gf.highpassfreq=0;
   gf.lowpasswidth=-1;
@@ -1111,6 +1116,7 @@ lame_global_flags * lame_init(void)
   gf.lowpass2=0;
   gf.highpass1=0;
   gf.highpass2=0;
+
   gf.no_short_blocks=0;
   gf.resample_ratio=1;
   gf.padding=2;

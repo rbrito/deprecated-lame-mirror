@@ -118,10 +118,13 @@ typedef struct  {
   int VBR_min_bitrate;            /* min bitrate index */
   int VBR_max_bitrate;            /* max bitrate index */
   float resample_ratio;           /* input_samp_rate/output_samp_rate */
-  float lowpass1,lowpass2;        /* internal filter settings */
-  float highpass1,highpass2;
 
-  int filter_type;          /* 0=MDCT filter, 1= (expensive) filters */
+  float lowpass1,lowpass2;        /* normalized frequency bounds of passband */
+  float highpass1,highpass2;      /* normalized frequency bounds of passband */
+                                  /* for the above, 0 = disabled */
+
+
+  int filter_type;          /* 0=polyphase filter, 1= FIR filter 2=MDCT filter(bad)*/
   int quantization;         /* 0 = ISO formual,  1=best amplitude */
   int noise_shaping;        /* 0 = none 
                                1 = ISO AAC model
