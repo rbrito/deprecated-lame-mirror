@@ -489,37 +489,6 @@ trancate_smallspectrums(
 }
 
 
-/*************************************************************************** 
- *
- *         inner_loop ()                                                     
- *
- *  author/date??
- *
- *  The code selects the best global gain for a particular set of scalefacs 
- *
- ***************************************************************************/ 
-
-static void
-inner_loop(
-          lame_internal_flags * const gfc,
-          gr_info * const cod_info,
-    const int             max_bits,
-    const FLOAT8          xrpow [576])
-{
-    int bits;
-    assert(max_bits >= 0);
-
-    /*  increase quantizer stepsize until needed bits are below maximum
-     */
-    while ((bits=count_bits(gfc, xrpow, cod_info)) > max_bits
-	   && cod_info->global_gain < 255u)
-        cod_info->global_gain++;
-
-    cod_info->part2_3_length = bits;
-}
-
-
-
 /*************************************************************************
  *
  *      loop_break()                                               
@@ -1057,7 +1026,15 @@ outer_loop (
         if (huff_bits <= 0)
             break;
 
-	inner_loop (gfc, &cod_info_w, huff_bits, xrpow);
+	/*  increase quantizer stepsize until needed bits are below maximum
+	 */
+	while ((cod_info_w.part2_3_length
+		= count_bits(gfc, xrpow, &cod_info_w)) > huff_bits
+	       && cod_info_w.global_gain < 255u)
+	    cod_info_w.global_gain++;
+
+	if (cod_info_w.global_gain == 255)
+	    break;
 
         /* compute the distortion in this quantization */
 	over = calc_noise (gfc, &cod_info_w, l3_xmin, distort, &noise_info);
@@ -1099,7 +1076,6 @@ outer_loop (
     while (cod_info_w.global_gain < 255u);
 
     assert (cod_info->global_gain < 256);
-
     /*  finish up
      */
     if (gfp->VBR == vbr_rh || gfp->VBR == vbr_mtrh)
@@ -1867,9 +1843,10 @@ iteration_loop(
                 calc_xmin (gfp, &ratio[gr][ch], cod_info, l3_xmin);
                 outer_loop (gfp, cod_info, l3_xmin, xrpow, ch, targ_bits[ch]);
             }
-            assert (cod_info->part2_3_length <= MAX_BITS);
 
 	    iteration_finish_one(gfc, gr, ch);
+            assert (cod_info->part2_3_length <= MAX_BITS);
+            assert (cod_info->part2_3_length <= targ_bits[ch]);
         } /* for ch */
     }    /* for gr */
 
