@@ -747,7 +747,7 @@ VBR_quantize(lame_global_flags *gfp,
   /* from quantize.c VBR algorithm */
   static const FLOAT8 dbQ[10]={-5.0,-3.75,-2.5,-1.25,  0,  0.4,  0.8, 1.2, 1.6,2.0};
 
-  qadjust=-2.5;   /* start with -1 db quality improvement over quantize.c VBR */
+  qadjust=-1.0;   /* start with -1 db quality improvement over quantize.c VBR */
 
   l3_side = &gfc->l3_side;
   gfc->ATH_lower = (4-gfp->VBR_q)*4.0; 

@@ -608,6 +608,7 @@ int L3psycho_anal( lame_global_flags *gfp,
 	 * frame2:  regular frame.  looks like pre-echo when compared to 
 	 *          frame0, but all pre-echo was in frame1.
 	 */
+	//	ecb = Max(ecb,gfc->ATH_partitionbands[b]);
 	if (gfc->blocktype_old[chn] == SHORT_TYPE )
 	  thr[b] = ecb; /* Min(ecb, rpelev*gfc->nb_1[chn][b]); */
 	else
@@ -618,7 +619,6 @@ int L3psycho_anal( lame_global_flags *gfp,
 
 	{
 	  FLOAT8 thrpe;
-	  /*thrpe = Max(thr[b],1e-6);*/
 	  thrpe = Max(thr[b],gfc->ATH_partitionbands[b]);
 	  /*
 	    printf("%i thr=%e   ATH=%e  \n",b,thr[b],gfc->ATH_partitionbands[b]);
@@ -715,13 +715,13 @@ int L3psycho_anal( lame_global_flags *gfp,
 	  }
 #else
 	FLOAT8 enn = gfc->w1_l[sb] * eb[gfc->bu_l[sb]] + gfc->w2_l[sb] * eb[gfc->bo_l[sb]];
-	FLOAT8 thmm = thr[gfc->bu_l[sb]];
+	FLOAT8 thmm = Min(thr[gfc->bu_l[sb]],thr[gfc->bo_l[sb]]);
 	for ( b = gfc->bu_l[sb]+1; b < gfc->bo_l[sb]; b++ )
 	  {
 	    enn  += eb[b];
 	    thmm = Min(thr[b],thmm);
 	  }
-	thmm=(1+gfc->bo_l[sb]-gfc->bu_l[sb])*Min(thr[b],thmm);
+	thmm*=(1+gfc->bo_l[sb]-gfc->bu_l[sb]);
 #endif
 	gfc->en[chn].l[sb] = enn;
 	gfc->thm[chn].l[sb] = thmm;
@@ -1191,10 +1191,11 @@ i,*npart_l_orig,freq,numlines_l[i],j2-j,j,j2-1,bark1,bark2);
       for (k=0; k < numlines_l[i]; ++k) {
 	FLOAT8 freq = sfreq*j/(1000.0*BLKSIZE);
 	assert( freq < 25 );
-	freq = Min(.1,freq);    /* ignore ATH below 100hz */
+	//	freq = Min(.1,freq);    /* ignore ATH below 100hz */
 	freq= ATHformula(freq);  
-	freq += -114 + 150; /* MDCT scaling, followed by MDCT->FFT scaling*/
+	freq += -20; /* scale to FFT units */
 	freq = pow( 10.0, freq/10.0 );  /* convert from db -> energy */
+	freq *= numlines_l[i];
 	gfc->ATH_partitionbands[i]=Min(gfc->ATH_partitionbands[i],freq);
 	++j;
       }
