@@ -38,7 +38,7 @@ print_usage() {
 }
 
 # processing options
-args=$(getopt vn: $*)
+args=$(getopt vg: $*)
 if [ $? != 0 ]; then
 	print_usage
 	exit 1
