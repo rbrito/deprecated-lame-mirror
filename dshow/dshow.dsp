@@ -23,6 +23,7 @@ CFG=LAME DShow - Win32 Release
 
 # Begin Project
 # PROP AllowPerConfigDependencies 0
+# PROP Scc_ProjName ""
 # PROP Scc_LocalPath "."
 CPP=xicl6.exe
 MTL=midl.exe
@@ -54,7 +55,7 @@ BSC32=bscmake.exe
 # SUBTRACT BSC32 /nologo
 LINK32=xilink6.exe
 # ADD BASE LINK32 kernel32.lib user32.lib gdi32.lib winspool.lib comdlg32.lib advapi32.lib shell32.lib ole32.lib oleaut32.lib uuid.lib odbc32.lib odbccp32.lib /nologo /subsystem:windows /dll /machine:I386
-# ADD LINK32 strmbase.lib msvcrt.lib vfw32.lib winmm.lib kernel32.lib advapi32.lib version.lib largeint.lib Comdlg32.lib user32.lib gdi32.lib comctl32.lib ole32.lib oleaut32.lib uuid.lib quartz.lib measure.lib ../lamelib/Release/lamelib.lib /base:"0x1c400000" /version:0.3 /entry:"DllEntryPoint@12" /subsystem:windows /dll /pdb:none /machine:I386 /nodefaultlib /out:"..\mpeg2ac.ax"
+# ADD LINK32 strmbase.lib msvcrt.lib vfw32.lib winmm.lib kernel32.lib advapi32.lib version.lib largeint.lib Comdlg32.lib user32.lib gdi32.lib comctl32.lib ole32.lib oleaut32.lib uuid.lib quartz.lib measure.lib /base:"0x1c400000" /version:0.3 /entry:"DllEntryPoint@12" /subsystem:windows /dll /pdb:none /machine:I386 /nodefaultlib /out:"..\lame_dshow.ax"
 # SUBTRACT LINK32 /nologo
 
 !ELSEIF  "$(CFG)" == "LAME DShow - Win32 Debug"
@@ -81,7 +82,7 @@ BSC32=bscmake.exe
 # ADD BSC32 /nologo
 LINK32=xilink6.exe
 # ADD BASE LINK32 kernel32.lib user32.lib gdi32.lib winspool.lib comdlg32.lib advapi32.lib shell32.lib ole32.lib oleaut32.lib uuid.lib odbc32.lib odbccp32.lib /nologo /subsystem:windows /dll /debug /machine:I386
-# ADD LINK32 strmbasD.lib msvcrt.lib vfw32.lib winmm.lib kernel32.lib advapi32.lib version.lib largeint.lib Comdlg32.lib user32.lib gdi32.lib comctl32.lib ole32.lib oleaut32.lib uuid.lib quartz.lib measure.lib ../lamelib/Debug/lamelib.lib /nologo /base:"0x1c400000" /entry:"DllEntryPoint@12" /subsystem:windows /dll /incremental:no /debug /machine:I386 /nodefaultlib /out:"..\mpeg2ac.ax"
+# ADD LINK32 strmbasD.lib msvcrt.lib vfw32.lib winmm.lib kernel32.lib advapi32.lib version.lib largeint.lib Comdlg32.lib user32.lib gdi32.lib comctl32.lib ole32.lib oleaut32.lib uuid.lib quartz.lib measure.lib /nologo /base:"0x1c400000" /entry:"DllEntryPoint@12" /subsystem:windows /dll /incremental:no /debug /machine:I386 /nodefaultlib /out:"..\lame_dshow.ax"
 # SUBTRACT LINK32 /pdb:none
 
 !ENDIF 

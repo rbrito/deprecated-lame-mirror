@@ -42,25 +42,21 @@ LONGLONG MakePTS(REFERENCE_TIME rt)
 //////////////////////////////////////////////////////////////////////
 // Construction/Destruction
 //////////////////////////////////////////////////////////////////////
-CEncoder::CEncoder():	m_bInitialized(false),
-						m_bInpuTypeSet(false),
-						m_bOutpuTypeSet(false),
-						m_rtLast(0),
-						m_bLast(false),
-						//m_bPES(false),
-						m_nCounter(0),
-						m_nPos(0),
-						m_pPos(NULL)
-
+CEncoder::CEncoder() :
+	m_bInpuTypeSet(FALSE),
+	m_bOutpuTypeSet(FALSE),
+	m_rtLast(0),
+	m_bLast(FALSE),
+	m_nCounter(0),
+	m_nPos(0),
+	m_pPos(NULL),
+	pgf(NULL)
 {
 }
 
 CEncoder::~CEncoder()
 {
-	// Close encoder and free mpa32.dll
-	if(m_bInitialized)
-		Close();
-//	AUDIO_Destroy(m_hAudio);
+	Close();
 }
 
 //////////////////////////////////////////////////////////////////////
@@ -82,8 +78,6 @@ HRESULT CEncoder::SetInputType(LPWAVEFORMATEX lpwfex)
 				lpwfex->nSamplesPerSec		== 22050 ||
 				lpwfex->nSamplesPerSec		== 16000 ) 
 			{
-//				if (lpwfex->wBitsPerSample		== 16	 ||
-//					lpwfex->wBitsPerSample		== 8	 )
 				if (lpwfex->wBitsPerSample		== 16)
 				{
 					memcpy(&m_wfex, lpwfex, sizeof(WAVEFORMATEX));
@@ -135,7 +129,7 @@ HRESULT CEncoder::Init()
 {
 	CAutoLock l(this);
 
-	if(!m_bInitialized)
+	if(!pgf)
 	{
 		if (!m_bInpuTypeSet || !m_bOutpuTypeSet)
 			return E_UNEXPECTED;
@@ -144,48 +138,46 @@ HRESULT CEncoder::Init()
 		// note: newer, safer interface which doesn't 
 		// allow or require direct access to 'gf' struct is being written
 		// see the file 'API' included with LAME.
-		lame_init_old(&gf);
+		pgf = lame_init();
 
-		gf.num_channels = m_wfex.nChannels;
-		gf.in_samplerate = m_wfex.nSamplesPerSec;
-		gf.out_samplerate = m_mabsi.dwSampleRate;
-		gf.brate = m_mabsi.dwBitrate;
+		pgf->num_channels = m_wfex.nChannels;
+		pgf->in_samplerate = m_wfex.nSamplesPerSec;
+		pgf->out_samplerate = m_mabsi.dwSampleRate;
+		pgf->brate = m_mabsi.dwBitrate;
 
-		gf.VBR = m_mabsi.vmVariable;
-		gf.VBR_min_bitrate_kbps = m_mabsi.dwVariableMin;
-		gf.VBR_max_bitrate_kbps = m_mabsi.dwVariableMax;
+		pgf->VBR = m_mabsi.vmVariable;
+		pgf->VBR_min_bitrate_kbps = m_mabsi.dwVariableMin;
+		pgf->VBR_max_bitrate_kbps = m_mabsi.dwVariableMax;
 
-		gf.copyright = m_mabsi.bCopyright;
-		gf.original = m_mabsi.bOriginal;
-		gf.error_protection = m_mabsi.bCRCProtect;
+		pgf->copyright = m_mabsi.bCopyright;
+		pgf->original = m_mabsi.bOriginal;
+		pgf->error_protection = m_mabsi.bCRCProtect;
 
-		gf.no_short_blocks = m_mabsi.dwNoShortBlock;
-		gf.bWriteVbrTag = m_mabsi.dwXingTag;
-		gf.strict_ISO = m_mabsi.dwStrictISO;
-		gf.VBR_hard_min = m_mabsi.dwEnforceVBRmin;
-		gf.force_ms = m_mabsi.dwForceMS;
-		gf.mode = m_mabsi.dwChMode;
-		gf.mode_fixed = m_mabsi.dwModeFixed;
+		pgf->no_short_blocks = m_mabsi.dwNoShortBlock;
+		pgf->bWriteVbrTag = m_mabsi.dwXingTag;
+		pgf->strict_ISO = m_mabsi.dwStrictISO;
+		pgf->VBR_hard_min = m_mabsi.dwEnforceVBRmin;
+		pgf->force_ms = m_mabsi.dwForceMS;
+		pgf->mode = m_mabsi.dwChMode;
+		pgf->mode_fixed = m_mabsi.dwModeFixed;
 
 		if (m_mabsi.dwVoiceMode != 0)
 		{
-			gf.lowpassfreq = 12000;
-			gf.VBR_max_bitrate_kbps = 160;
-			gf.no_short_blocks = 1;
+			pgf->lowpassfreq = 12000;
+			pgf->VBR_max_bitrate_kbps = 160;
+			pgf->no_short_blocks = 1;
 		}
 
 		if (m_mabsi.dwKeepAllFreq != 0)
 		{
-			gf.lowpassfreq = -1;
-			gf.highpassfreq = -1;
+			pgf->lowpassfreq = -1;
+			pgf->highpassfreq = -1;
 		}
 
-		gf.quality = m_mabsi.dwQuality;
-		gf.VBR_q = m_mabsi.dwVBRq;
+		pgf->quality = m_mabsi.dwQuality;
+		pgf->VBR_q = m_mabsi.dwVBRq;
 
-		lame_init_params(&gf);
-
-		m_bInitialized = true;
+		lame_init_params(pgf);
 	}
 
 	return S_OK;
@@ -198,11 +190,9 @@ HRESULT CEncoder::Close()
 {
 	CAutoLock l(this);
 
-	if(m_bInitialized) {
-		BYTE temp_buffer[OUTPUT_BUFF_SIZE];
-		LONG lData = OUTPUT_BUFF_SIZE;
-		lData = lame_encode_finish(&gf,(char*)temp_buffer,lData);
-		m_bInitialized = false;		// the flags are cleaned in finish
+	if(pgf) {
+		lame_close(pgf);
+		pgf = NULL;
 	}
 	return S_OK;
 }
@@ -224,7 +214,7 @@ HRESULT CEncoder::Encode(LPVOID pSrc, DWORD dwSrcSize, LPVOID pDst, LPDWORD lpdw
 
 	int nsamples = dwSrcSize/(m_wfex.wBitsPerSample*m_wfex.nChannels/8);
 
-	lData = lame_encode_buffer_interleaved(&gf,(short*)pSrc,nsamples,(char*)pData,lData);
+	lData = lame_encode_buffer_interleaved(pgf,(short*)pSrc,nsamples,(char*)pData,lData);
 
 	if(m_mabsi.dwPES && lData > 0)
 	{
@@ -260,9 +250,8 @@ HRESULT CEncoder::Finish(LPVOID pDst, LPDWORD lpdwDstSize)
 	LONG lData = OUTPUT_BUFF_SIZE;
 
 #pragma message (REMIND("Finish encoding right!"))
-	if (m_bInitialized) {
-		lData = lame_encode_finish(&gf,(char*)pData,lData);
-		m_bInitialized = false;		// the flags are cleaned in finish
+	if (pgf) {
+		lData = lame_encode_flush(pgf,(char*)pData,lData);
 
 		if(m_mabsi.dwPES && lData > 0)
 		{

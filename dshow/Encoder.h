@@ -135,16 +135,15 @@ protected:
 	MPEG_ENCODER_CONFIG m_mabsi;
 
 	// Compressor private data
-	lame_global_flags gf;
+	lame_global_flags *pgf;
 
 	// Compressor miscelaneous state
-	bool	m_bInitialized;
-	bool	m_bInpuTypeSet;
-	bool	m_bOutpuTypeSet;
+	BOOL	m_bInpuTypeSet;
+	BOOL	m_bOutpuTypeSet;
 
 	// Refrence times of media samples
 	REFERENCE_TIME		m_rtLast;
-	bool				m_bLast;
+	BOOL				m_bLast;
 
 	// PES headers routine
 	int			m_nPos;
