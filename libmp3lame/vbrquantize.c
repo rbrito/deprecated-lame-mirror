@@ -188,7 +188,7 @@ calc_sfb_noise(const FLOAT8 *xr, const FLOAT8 *xr34, const int bw, const int sf)
 #ifdef MAXQUANTERROR
   return xfsf;
 #else
-  return xfsf/bw;
+  return xfsf;//bw;
 #endif
 }
 
@@ -272,7 +272,7 @@ calc_sfb_noise_ave(const FLOAT8 *xr, const FLOAT8 *xr34, const int bw, const int
 #ifdef MAXQUANTERROR
     return xfsf_eq;
 #else
-    return xfsf_eq/bw;
+    return xfsf_eq;//bw;
 #endif
 }
 
