@@ -962,13 +962,11 @@ char *mp3buf, size_t mp3buf_size)
       for (i=0, j=0; i<286+576*(1+gfc->mode_gr); ++i) {
 	if (i<576*gfc->mode_gr) {
 	  primebuff0[i]=0;
-	  fprintf (stderr, "Check for bug here! %u pfk@uni-jena.de", gfc->channels);
-	  if (gfc->channels) 
+	  if (gfc->channels==2) 
 	    primebuff1[i]=0;
 	}else{
 	  primebuff0[i]=inbuf[0][j];
-	  fprintf (stderr, "Check for bug here! %u pfk@uni-jena.de", gfc->channels);
-	  if (gfc->channels) 
+	  if (gfc->channels==2) 
 	    primebuff1[i]=inbuf[1][j];
 	  ++j;
 	}
