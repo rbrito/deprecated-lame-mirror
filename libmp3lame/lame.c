@@ -1016,7 +1016,7 @@ lame_encode_flush(lame_t gfc, unsigned char *mp3buf, int mp3buffer_size)
 //     <-----> mf_needed - mf_size
 
     int imp3, mp3count = 0, mp3buffer_size_remaining = mp3buffer_size;
-    sample_t buffer[2*2*(1152+ENCDELAY)];
+    sample_t *buf;
     int samples_to_encode = gfc->mf_size + gfc->framesize;
     int i = (samples_to_encode + POSTDELAY - 1) / gfc->framesize;
 
@@ -1027,8 +1027,12 @@ lame_encode_flush(lame_t gfc, unsigned char *mp3buf, int mp3buffer_size)
      * are flushed
      */
     gfc->encoder_padding = i * gfc->framesize - samples_to_encode;
-    imp3 = encode_buffer_sample(gfc, buffer, i * gfc->framesize,
+    if (!(buf = calloc(sizeof(sample_t), gfc->channels_in*i*gfc->framesize)))
+        return LAME_NOMEM;
+
+    imp3 = encode_buffer_sample(gfc, buf, i * gfc->framesize,
 				mp3buf, mp3buffer_size_remaining);
+    free(buf);
     if (imp3 < 0) return imp3;
 
     if (mp3buffer_size)
