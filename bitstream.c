@@ -719,8 +719,7 @@ void add_dummy_vbrframe(lame_global_flags *gfp,int bitsPerFrame)
 
   gfc->header[gfc->h_ptr].ptr = 0;
   memset(gfc->header[gfc->h_ptr].buf, 0, gfc->sideinfo_len);
-  /* vbr header frames never have CRC */
-  bits = bitsPerFrame-8*gfc->sideinfo_len - 16*gfp->error_protection;
+  bits = bitsPerFrame-8*gfc->sideinfo_len;
 
   /* add one byte, cause header to be written */
   putbits2(gfp,0,8);   

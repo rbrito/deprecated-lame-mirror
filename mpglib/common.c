@@ -122,7 +122,6 @@ int decode_header(struct frame *fr,unsigned long newhead)
     if(!fr->bitrate_index)
     {
       fprintf(stderr,"Free format not supported.\n");
-      return (0);
     }
 
     switch(fr->lay)
@@ -173,7 +172,6 @@ int decode_header(struct frame *fr,unsigned long newhead)
         fprintf(stderr,"Sorry, unknown layer type.\n"); 
         return (0);
     }
-
     /*    print_header(fr); */
 
     return 1;

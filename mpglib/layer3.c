@@ -1504,18 +1504,66 @@ static void III_hybrid(real fsIn[SBLIMIT][SSLIMIT],real tsOut[SSLIMIT][SBLIMIT],
 /*
  * main layer3 handler
  */
+struct III_sideinfo sideinfo;
+
+int do_layer3_sideinfo(struct frame *fr)
+{
+  int stereo = fr->stereo;
+  int single = fr->single;
+  int ms_stereo;
+  int sfreq = fr->sampling_frequency;
+  int granules;
+  int ch,gr,databits;
+
+  if(stereo == 1) { /* stream is mono */
+    single = 0;
+  }
+
+  if(fr->mode == MPG_MD_JOINT_STEREO) {
+    ms_stereo = fr->mode_ext & 0x2;
+  }
+  else
+    ms_stereo = 0;
+
+
+  if(fr->lsf) {
+    granules = 1;
+    III_get_side_info_2(&sideinfo,stereo,ms_stereo,sfreq,single);
+  }
+  else {
+    granules = 2;
+#ifdef MPEG1
+    III_get_side_info_1(&sideinfo,stereo,ms_stereo,sfreq,single);
+#else
+    fprintf(stderr,"Not supported\n");
+#endif
+  }
+
+  databits=0;
+  for (gr=0 ; gr < granules ; ++gr) {
+    for (ch=0; ch < stereo ; ++ch) {
+      struct gr_info_s *gr_info = &(sideinfo.ch[ch].gr[gr]);
+      databits += gr_info->part2_3_length;
+    }
+  }
+  return databits-8*sideinfo.main_data_begin;
+}
+
+
+
 int do_layer3(struct frame *fr,unsigned char *pcm_sample,int *pcm_point)
 {
   int gr, ch, ss,clip=0;
   int scalefacs[2][39]; /* max 39 for short[13][3] mode, mixed: 38, long: 22 */
-  struct III_sideinfo sideinfo;
+  //  struct III_sideinfo sideinfo;
   int stereo = fr->stereo;
   int single = fr->single;
   int ms_stereo,i_stereo;
   int sfreq = fr->sampling_frequency;
   int stereo1,granules;
 
-
+  if(set_pointer(sideinfo.main_data_begin) == MP3_ERR)
+    return 0;
 
   if(stereo == 1) { /* stream is mono */
     stereo1 = 1;
@@ -1536,19 +1584,10 @@ int do_layer3(struct frame *fr,unsigned char *pcm_sample,int *pcm_point)
 
   if(fr->lsf) {
     granules = 1;
-    III_get_side_info_2(&sideinfo,stereo,ms_stereo,sfreq,single);
   }
   else {
     granules = 2;
-#ifdef MPEG1
-    III_get_side_info_1(&sideinfo,stereo,ms_stereo,sfreq,single);
-#else
-    fprintf(stderr,"Not supported\n");
-#endif
   }
-
-  if(set_pointer(sideinfo.main_data_begin) == MP3_ERR)
-    return 0; 
 
 
   for (gr=0;gr<granules;gr++) 
@@ -1559,6 +1598,7 @@ int do_layer3(struct frame *fr,unsigned char *pcm_sample,int *pcm_point)
     {
       struct gr_info_s *gr_info = &(sideinfo.ch[0].gr[gr]);
       long part2bits;
+
       if(fr->lsf)
         part2bits = III_get_scale_factors_2(scalefacs[0],gr_info,0);
       else {
@@ -1568,11 +1608,13 @@ int do_layer3(struct frame *fr,unsigned char *pcm_sample,int *pcm_point)
 	fprintf(stderr,"Not supported\n");
 #endif
       }
+
       if (mpg123_pinfo!=NULL) {
 	int i;
 	for (i=0; i<39; i++) 
 	  mpg123_pinfo->sfb_s[gr][0][i]=scalefacs[0][i];
       }
+
       if(III_dequantize_sample(hybridIn[0], scalefacs[0],gr_info,sfreq,part2bits))
         return clip;
     }

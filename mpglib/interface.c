@@ -15,6 +15,11 @@ BOOL InitMP3(struct mpstr *mp)
 	memset(mp,0,sizeof(struct mpstr));
 
 	mp->framesize = 0;
+	mp->header_parsed=0;
+	mp->side_parsed=0;
+	mp->data_parsed=0;
+	mp->ssize = 0;
+	mp->dsize=0;
 	mp->fsizeold = -1;
 	mp->bsize = 0;
 	mp->head = mp->tail = NULL;
@@ -129,11 +134,41 @@ static void read_head(struct mpstr *mp)
 	mp->header = head;
 }
 
+
+
+
+void copy_mp(struct mpstr *mp,int size,char *ptr) 
+{
+  int len = 0;
+  while(len < size) {
+    int nlen;
+    int blen = mp->tail->size - mp->tail->pos;
+    if( (size - len) <= blen) {
+      nlen = size-len;
+    }
+    else {
+      nlen = blen;
+    }
+    memcpy(ptr+len,mp->tail->pnt+mp->tail->pos,nlen);
+    len += nlen;
+    mp->tail->pos += nlen;
+    mp->bsize -= nlen;
+    if(mp->tail->pos == mp->tail->size) {
+      remove_buf(mp);
+    }
+  }
+}
+
+
+
+
+
+
+
 int decodeMP3(struct mpstr *mp,char *in,int isize,char *out,
 		int osize,int *done)
 {
-	int len;
-
+	int iret,bits;
 	gmp = mp;
 
 	if(osize < 4608) {
@@ -149,58 +184,88 @@ int decodeMP3(struct mpstr *mp,char *in,int isize,char *out,
 
 
 	/* First decode header */
-	if(mp->framesize == 0) {
+	if(!mp->header_parsed) {
+		mp->ssize=0;
 		if(mp->bsize < 4) {
 			return MP3_NEED_MORE;
 		}
+
 		read_head(mp);
 		decode_header(&mp->fr,mp->header);
 		mp->framesize = mp->fr.framesize;
+
+		if (mp->fr.error_protection) 
+		  mp->ssize += 2;
+		if(mp->fr.lsf)
+		  mp->ssize += (mp->fr.stereo == 1) ? 9 : 17;
+		else
+		  mp->ssize += (mp->fr.stereo == 1) ? 17 : 32;
+		mp->header_parsed=1;
 	}
 
-	/*	  printf(" fr.framesize = %i \n",mp->fr.framesize);
-		  printf(" bsize        = %i \n",mp->bsize);
-	*/
+	/* now decode side information */
+	if (!mp->side_parsed ) {
+                if (mp->bsize < mp->ssize) 
+		  return MP3_NEED_MORE;
 
-	if(mp->fr.framesize > mp->bsize) {
-	  return MP3_NEED_MORE;
+		wordpointer = mp->bsspace[mp->bsnum] + 512;
+		mp->bsnum = (mp->bsnum + 1) & 0x1;
+		bitindex = 0;
+		copy_mp(mp,mp->ssize,wordpointer);
+
+		if(mp->fr.error_protection)
+		  getbits(16);
+		bits=do_layer3_sideinfo(&mp->fr);
+		/* bits = actual number of bits needed to parse this frame */
+		/* can be negative, if all bits needed are in the reservoir */
+		if (bits<0) bits=0;
+
+		/* read just as many bytes as necessary before decoding */
+		/*		mp->dsize = (bits+7)/8;*/
+
+		/* this will force mpglib to read entire frame before decoding */
+		mp->dsize= mp->framesize - mp->ssize;
+
+		mp->side_parsed=1;
 	}
-	wordpointer = mp->bsspace[mp->bsnum] + 512;
-	mp->bsnum = (mp->bsnum + 1) & 0x1;
-	bitindex = 0;
 
-	len = 0;
-	while(len < mp->framesize) {
-		int nlen;
-		int blen = mp->tail->size - mp->tail->pos;
-		if( (mp->framesize - len) <= blen) {
-                  nlen = mp->framesize-len;
+	/* now decode main data */
+	iret=MP3_NEED_MORE;
+	if (!mp->data_parsed) {
+	        if(mp->dsize > mp->bsize) {
+		  return MP3_NEED_MORE;
 		}
-		else {
-                  nlen = blen;
-                }
-		memcpy(wordpointer+len,mp->tail->pnt+mp->tail->pos,nlen);
-                len += nlen;
-                mp->tail->pos += nlen;
-		mp->bsize -= nlen;
-                if(mp->tail->pos == mp->tail->size) {
-                   remove_buf(mp);
-                }
+		copy_mp(mp,mp->dsize,wordpointer);
+		*done = 0;
+		do_layer3(&mp->fr,(unsigned char *) out,done);
+		mp->data_parsed=1;
+		iret=MP3_OK;
 	}
 
-	*done = 0;
-	if(mp->fr.error_protection)
-           getbits(16);
-	do_layer3(&mp->fr,(unsigned char *) out,done);
 
+	/* remaining bits are ancillary data, or reservoir for next frame */
+	bits = mp->framesize-(mp->ssize+mp->dsize);
+	if (bits > mp->bsize) {
+	  return iret;
+	}
+	if (bits>0) {
+	  char *p = mp->bsspace[1-mp->bsnum] + 512 + mp->ssize + mp->dsize;
+	  copy_mp(mp,bits,p);
+	}
+	
 	mp->fsizeold = mp->framesize;
-	mp->framesize = 0;
-	return MP3_OK;
+	mp->framesize =0;
+	mp->header_parsed=0;
+	mp->side_parsed=0;
+	mp->data_parsed=0;
+	return iret;
 }
 
+	
 int set_pointer(long backstep)
 {
   unsigned char *bsbufold;
+
   if(gmp->fsizeold < 0 && backstep > 0) {
     fprintf(stderr,"Can't step back %ld!\n",backstep);
     return MP3_ERR; 

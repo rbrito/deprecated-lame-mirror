@@ -89,6 +89,7 @@ extern int bitindex;
 
 extern void make_decode_tables(long scaleval);
 extern int do_layer3(struct frame *fr,unsigned char *,int *);
+extern int do_layer3_sideinfo(struct frame *fr);
 extern int decode_header(struct frame *fr,unsigned long newhead);
 
 

@@ -18,8 +18,13 @@ struct framebuf {
 
 struct mpstr {
 	struct buf *head,*tail;
+        int header_parsed;
+        int side_parsed;  
+        int data_parsed;  
 	int bsize;
 	int framesize;
+	int ssize;
+	int dsize;
         int fsizeold;
 	struct frame fr;
         unsigned char bsspace[2][MAXFRAMESIZE+512]; /* MAXFRAMESIZE */
