@@ -203,9 +203,9 @@ LTLIBRARIES = $(lib_LTLIBRARIES)
 @HAVE_NASM_TRUE@@LIB_WITH_DECODER_FALSE@libmp3lame_la_DEPENDENCIES = \
 @HAVE_NASM_TRUE@@LIB_WITH_DECODER_FALSE@	$(top_builddir)/libmp3lame/@CPUTYPE@/liblameasmroutines.la
 am_libmp3lame_la_OBJECTS = VbrTag$U.lo bitstream$U.lo encoder$U.lo \
-	fft$U.lo id3tag$U.lo lame$U.lo newmdct$U.lo pcm$U.lo \
-	presets$U.lo psymodel$U.lo quantize$U.lo quantize_pvt$U.lo \
-	reservoir$U.lo set_get$U.lo tables$U.lo takehiro$U.lo util$U.lo \
+	fft$U.lo id3tag$U.lo lame$U.lo newmdct$U.lo presets$U.lo \
+	psymodel$U.lo quantize$U.lo quantize_pvt$U.lo reservoir$U.lo \
+	set_get$U.lo tables$U.lo takehiro$U.lo util$U.lo \
 	vbrquantize$U.lo version$U.lo mpglib_interface$U.lo \
 	vorbis_interface$U.lo
 libmp3lame_la_OBJECTS = $(am_libmp3lame_la_OBJECTS)
@@ -218,9 +218,8 @@ depcomp = $(SHELL) $(top_srcdir)/depcomp
 @AMDEP_TRUE@	$(DEPDIR)/encoder$U.Plo $(DEPDIR)/fft$U.Plo \
 @AMDEP_TRUE@	$(DEPDIR)/id3tag$U.Plo $(DEPDIR)/lame$U.Plo \
 @AMDEP_TRUE@	$(DEPDIR)/mpglib_interface$U.Plo \
-@AMDEP_TRUE@	$(DEPDIR)/newmdct$U.Plo $(DEPDIR)/pcm$U.Plo \
-@AMDEP_TRUE@	$(DEPDIR)/presets$U.Plo $(DEPDIR)/psymodel$U.Plo \
-@AMDEP_TRUE@	$(DEPDIR)/quantize$U.Plo \
+@AMDEP_TRUE@	$(DEPDIR)/newmdct$U.Plo $(DEPDIR)/presets$U.Plo \
+@AMDEP_TRUE@	$(DEPDIR)/psymodel$U.Plo $(DEPDIR)/quantize$U.Plo \
 @AMDEP_TRUE@	$(DEPDIR)/quantize_pvt$U.Plo \
 @AMDEP_TRUE@	$(DEPDIR)/reservoir$U.Plo $(DEPDIR)/set_get$U.Plo \
 @AMDEP_TRUE@	$(DEPDIR)/tables$U.Plo $(DEPDIR)/takehiro$U.Plo \
@@ -310,7 +309,6 @@ mostlyclean-kr:
 @AMDEP_TRUE@@am__include@ @am__quote@$(DEPDIR)/lame$U.Plo@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@$(DEPDIR)/mpglib_interface$U.Plo@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@$(DEPDIR)/newmdct$U.Plo@am__quote@
-@AMDEP_TRUE@@am__include@ @am__quote@$(DEPDIR)/pcm$U.Plo@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@$(DEPDIR)/presets$U.Plo@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@$(DEPDIR)/psymodel$U.Plo@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@$(DEPDIR)/quantize$U.Plo@am__quote@
@@ -388,14 +386,14 @@ vorbis_interface_.c: vorbis_interface.c $(ANSI2KNR)
 VbrTag_.$(OBJEXT) VbrTag_.lo bitstream_.$(OBJEXT) bitstream_.lo \
 encoder_.$(OBJEXT) encoder_.lo fft_.$(OBJEXT) fft_.lo id3tag_.$(OBJEXT) \
 id3tag_.lo lame_.$(OBJEXT) lame_.lo mpglib_interface_.$(OBJEXT) \
-mpglib_interface_.lo newmdct_.$(OBJEXT) newmdct_.lo pcm_.$(OBJEXT) \
-pcm_.lo presets_.$(OBJEXT) presets_.lo psymodel_.$(OBJEXT) psymodel_.lo \
-quantize_.$(OBJEXT) quantize_.lo quantize_pvt_.$(OBJEXT) \
-quantize_pvt_.lo reservoir_.$(OBJEXT) reservoir_.lo set_get_.$(OBJEXT) \
-set_get_.lo tables_.$(OBJEXT) tables_.lo takehiro_.$(OBJEXT) \
-takehiro_.lo util_.$(OBJEXT) util_.lo vbrquantize_.$(OBJEXT) \
-vbrquantize_.lo version_.$(OBJEXT) version_.lo \
-vorbis_interface_.$(OBJEXT) vorbis_interface_.lo : $(ANSI2KNR)
+mpglib_interface_.lo newmdct_.$(OBJEXT) newmdct_.lo presets_.$(OBJEXT) \
+presets_.lo psymodel_.$(OBJEXT) psymodel_.lo quantize_.$(OBJEXT) \
+quantize_.lo quantize_pvt_.$(OBJEXT) quantize_pvt_.lo \
+reservoir_.$(OBJEXT) reservoir_.lo set_get_.$(OBJEXT) set_get_.lo \
+tables_.$(OBJEXT) tables_.lo takehiro_.$(OBJEXT) takehiro_.lo \
+util_.$(OBJEXT) util_.lo vbrquantize_.$(OBJEXT) vbrquantize_.lo \
+version_.$(OBJEXT) version_.lo vorbis_interface_.$(OBJEXT) \
+vorbis_interface_.lo : $(ANSI2KNR)
 uninstall-info-am:
 
 # This directory's subdirectories are mostly independent; you can cd
