@@ -280,12 +280,12 @@ test23: $(PGM)
 test23h: $(PGM)
 	./lame  -h  ../test/castanets.wav
 	cmp -l ../test/castanets.wav.mp3 ../test/castanets.ref23h.mp3 | head
-test22: $(PGM)
+test24: $(PGM)
 	./lame  ../test/castanets.wav
-	cmp -l ../test/castanets.wav.mp3 ../test/castanets.ref22.mp3 | head
-test22h: $(PGM)
+	cmp -l ../test/castanets.wav.mp3 ../test/castanets.ref24.mp3 | head
+test24h: $(PGM)
 	./lame  -h  ../test/castanets.wav
-	cmp -l ../test/castanets.wav.mp3 ../test/castanets.ref22h.mp3 | head
+	cmp -l ../test/castanets.wav.mp3 ../test/castanets.ref24h.mp3 | head
 
 testr: $(PGM)
 	./lame  --nores -h  ../test/castanets.wav

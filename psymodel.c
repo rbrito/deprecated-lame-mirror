@@ -5,6 +5,9 @@
  * $Id$
  *
  * $Log$
+ * Revision 1.14  2000/01/05 06:20:46  markt
+ * norm_l, norm_s table data replaced by formulas.
+ *
  * Revision 1.13  1999/12/22 17:38:18  markt
  * AAC NMT/TMN values (commented out)
  *
@@ -98,10 +101,10 @@
 static FLOAT8 s3_l[CBANDS][CBANDS]; /* needed global static by sprdngfs */
 
 void L3para_read( FLOAT8 sfreq, int numlines[CBANDS],int numlines_s[CBANDS], int partition_l[HBLKSIZE],
-		  FLOAT8 minval[CBANDS], FLOAT8 qthr_l[CBANDS], FLOAT8 norm_l[CBANDS],
+		  FLOAT8 minval[CBANDS], FLOAT8 qthr_l[CBANDS], 
 		  FLOAT8 s3_l[CBANDS][CBANDS],  FLOAT8 s3_s[CBANDS][CBANDS], 
                   int partition_s[HBLKSIZE_s], FLOAT8 qthr_s[CBANDS],
-		  FLOAT8 norm_s[CBANDS], FLOAT8 SNR_s[CBANDS],
+		  FLOAT8 SNR_s[CBANDS],
 		  int bu_l[SBPSY_l], int bo_l[SBPSY_l],
 		  FLOAT8 w1_l[SBPSY_l], FLOAT8 w2_l[SBPSY_l],
 		  int bu_s[SBPSY_s], int bo_s[SBPSY_s],
@@ -233,8 +236,8 @@ void L3psycho_anal( short int *buffer[2], int stereo,
     memset (norm_l,0, sizeof(norm_l));
     memset (norm_s,0, sizeof(norm_s));
     
-    L3para_read( sfreq,numlines_l,numlines_s,partition_l,minval,qthr_l,norm_l,s3_l,s3_s,
-		 partition_s,qthr_s,norm_s,SNR_s,
+    L3para_read( sfreq,numlines_l,numlines_s,partition_l,minval,qthr_l,s3_l,s3_s,
+		 partition_s,qthr_s,SNR_s,
 		 bu_l,bo_l,w1_l,w2_l, bu_s,bo_s,w1_s,w2_s );
     
     
@@ -307,8 +310,6 @@ void L3psycho_anal( short int *buffer[2], int stereo,
 
 #define AACS3XX
 #define NEWS3XX
-#define NEWNORMXX
-#ifdef NEWNORM
     
     /* compute norm_l, norm_s instead of relying on table data */
     for ( b = 0;b < npart_l; b++ ) {
@@ -329,7 +330,6 @@ void L3psycho_anal( short int *buffer[2], int stereo,
       norm_s[b] = 1/norm;
       /*printf("%i  norm=%f  norm_s=%f \n",b,1/norm,norm_l[b]);*/
     }
-#endif
     
     /* MPEG1 SNR_s data is given in db, convert to energy */
     if (info->version == MPEG_AUDIO_ID) {
@@ -931,8 +931,8 @@ void L3psycho_anal( short int *buffer[2], int stereo,
 
 
 void L3para_read(FLOAT8 sfreq, int *numlines_l,int *numlines_s, int *partition_l, FLOAT8 *minval,
-FLOAT8 *qthr_l, FLOAT8 *norm_l, FLOAT8 (*s3_l)[63], FLOAT8 s3_s[CBANDS][CBANDS],
-int *partition_s, FLOAT8 *qthr_s, FLOAT8 *norm_s, FLOAT8 *SNR, 
+FLOAT8 *qthr_l, FLOAT8 (*s3_l)[63], FLOAT8 s3_s[CBANDS][CBANDS],
+int *partition_s, FLOAT8 *qthr_s, FLOAT8 *SNR, 
 int *bu_l, int *bo_l, FLOAT8 *w1_l, FLOAT8 *w2_l, 
 int *bu_s, int *bo_s, FLOAT8 *w1_s, FLOAT8 *w2_s)
 {
@@ -970,7 +970,7 @@ int *bu_s, int *bo_s, FLOAT8 *w1_s, FLOAT8 *w2_s)
 	      numlines_l[i] = (int) *p++;
 	      minval[i] = *p++;
 	      qthr_l[i] = *p++;
-	      norm_l[i] = *p++;
+	      /* norm_l[i] = */ *p++;
 	      bval_l[i] = *p++;
 	      if (j!=i)
 		{
@@ -1060,7 +1060,7 @@ int *bu_s, int *bo_s, FLOAT8 *w1_s, FLOAT8 *w2_s)
 	      j = (int) *p++;
 	      numlines_s[i] = (int) *p++;
 	      qthr_s[i] = *p++;         
-	      norm_s[i] = *p++;         
+	      /* norm_s[i] =*/ *p++;         
 	      SNR[i] = *p++;            
 	      bval_s[i] = *p++;
 	      if (j!=i)
