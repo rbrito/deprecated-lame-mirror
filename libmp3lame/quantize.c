@@ -271,7 +271,7 @@ inner_loop(
     while (bits > max_bits) {
         cod_info->global_gain++;
         bits = count_bits (gfc, xrpow, cod_info);
-    } 
+    }
 
     cod_info->part2_3_length = bits;
 }
@@ -789,8 +789,7 @@ outer_loop (
 
     /* compute the distortion in this quantization */
     /* coefficients and thresholds both l/r (or both mid/side) */
-    over = calc_noise (gfc, cod_info->l3_enc, cod_info, l3_xmin, 
-		       &cod_info->scalefac, &distort, &best_noise_info);
+    over = calc_noise (gfc, cod_info, l3_xmin, &distort, &best_noise_info);
     cod_info_w = *cod_info;
     age = 0;
 
@@ -839,8 +838,7 @@ outer_loop (
 	inner_loop (gfc, &cod_info_w, huff_bits, xrpow);
 
         /* compute the distortion in this quantization */
-	over = calc_noise (gfc, cod_info_w.l3_enc, &cod_info_w, l3_xmin, 
-			   &cod_info_w.scalefac, &distort, &noise_info);
+	over = calc_noise (gfc, &cod_info_w, l3_xmin, &distort, &noise_info);
 
         /* check if this quantization is better
          * than our saved quantization */

@@ -80,9 +80,8 @@ int     calc_xmin (lame_global_flags *gfp,
                    III_psy_xmin * const l3_xmin);
 
 int     calc_noise (const lame_internal_flags * const gfc,
-                    const int ix[576], const gr_info * const cod_info,
+                    const gr_info * const cod_info,
                     const III_psy_xmin * const l3_xmin,
-                    const III_scalefac_t * const scalefac,
                     III_psy_xmin * distort, calc_noise_result * const res);
 
 void    set_frame_pinfo (lame_global_flags *gfp,

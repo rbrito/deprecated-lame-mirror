@@ -607,10 +607,8 @@ double penalties ( double noise )
 
 int  calc_noise( 
         const lame_internal_flags           * const gfc,
-        const int                       ix [576],
         const gr_info           * const cod_info,
         const III_psy_xmin      * const l3_xmin, 
-        const III_scalefac_t    * const scalefac,
               III_psy_xmin      * xfsf,
               calc_noise_result * const res )
 {
@@ -620,6 +618,8 @@ int  calc_noise(
     FLOAT8 max_noise  = 1E-20; /* -200 dB relative to masking */
     double klemm_noise = 1E-37;
     int j = 0;
+    const int *ix = cod_info->l3_enc;
+    const III_scalefac_t * const scalefac = &cod_info->scalefac;
 
     for (sfb = 0; sfb < cod_info->psy_lmax; sfb++) {
 	int s =
@@ -722,7 +722,6 @@ void set_pinfo (
         lame_global_flags *gfp,
               gr_info        * const cod_info,
         const III_psy_ratio  * const ratio, 
-        const III_scalefac_t * const scalefac,
         const int                    gr,
         const int                    ch )
 {
@@ -731,6 +730,7 @@ void set_pinfo (
     int j,i,l,start,end,bw;
     FLOAT8 en0,en1;
     FLOAT ifqstep = ( cod_info->scalefac_scale == 0 ) ? .5 : 1.0;
+    const III_scalefac_t * const scalefac = &cod_info->scalefac;
 
 
     III_psy_xmin l3_xmin;
@@ -738,8 +738,7 @@ void set_pinfo (
     III_psy_xmin xfsf;
 
     calc_xmin (gfp, ratio, cod_info, &l3_xmin);
-    calc_noise (gfc, cod_info->l3_enc, cod_info,
-		&l3_xmin, scalefac, &xfsf, &noise);
+    calc_noise (gfc, cod_info, &l3_xmin, &xfsf, &noise);
 
     if (cod_info->block_type == SHORT_TYPE) {
         for (j=0, sfb = 0; sfb < SBMAX_s; sfb++ )  {
@@ -914,45 +913,34 @@ void set_frame_pinfo(
         III_psy_ratio   ratio    [2][2])
 {
     lame_internal_flags *gfc=gfp->internal_flags;
-    unsigned int          sfb;
     int                   ch;
     int                   gr;
-    III_scalefac_t        act_scalefac [2];
-    int scsfi[2] = {0,0};
-    
-    
+
     gfc->masking_lower = 1.0;
-    
-    /* reconstruct the scalefactors in case SCSFI was used 
-     */
-    for (ch = 0; ch < gfc->channels_out; ch ++) {
-        for (sfb = 0; sfb < SBMAX_l; sfb ++) {
-            gr_info *cod_info = &gfc->l3_side.tt[0][ch];
-            if (gfc->l3_side.tt[1][ch].scalefac.l[sfb] == -1) {/* scfsi */
-                act_scalefac[ch].l[sfb] = cod_info->scalefac.l[sfb];
-                scsfi[ch] = 1;
-            } else {
-                act_scalefac[ch].l[sfb] = gfc->l3_side.tt[1][ch].scalefac.l[sfb];
-            }
-        }
-    }
-    
+
     /* for every granule and channel patch l3_enc and set info
      */
     for (gr = 0; gr < gfc->mode_gr; gr ++) {
         for (ch = 0; ch < gfc->channels_out; ch ++) {
             gr_info *cod_info = &gfc->l3_side.tt[gr][ch];
-            
-            if (gr == 1 && scsfi[ch]) 
-                set_pinfo (gfp, cod_info, &ratio[gr][ch], &act_scalefac[ch],
-			   gr, ch);
-            else
-                set_pinfo (gfp, cod_info, &ratio[gr][ch], &cod_info->scalefac,
-			   gr, ch);
-        } /* for ch */
+	    III_scalefac_t        scalefac_sav = cod_info->scalefac;
+
+	    /* reconstruct the scalefactors in case SCFSI was used 
+	     */
+            if (gr == 1) {
+		int sfb;
+		for (sfb = 0; sfb < cod_info->sfb_lmax; sfb++) {
+		    if (cod_info->scalefac.l[sfb] == -1) /* scfsi */
+			cod_info->scalefac.l[sfb] = cod_info[-1].scalefac.l[sfb];
+		}
+	    }
+
+	    set_pinfo (gfp, cod_info, &ratio[gr][ch], gr, ch);
+	    cod_info->scalefac = scalefac_sav;
+	} /* for ch */
     }    /* for gr */
 }
-        
+
 
 
 
