@@ -246,7 +246,7 @@ void timestatus_finish(void)
 void timestatus_klemm(lame_global_flags *gfp)
 {
   /* variables used for the status display */
-  double  last_time;
+  static double  last_time = 0.0;
 
   if (! gfp -> silent) {
     if ( frameNum ==  0  ||  
