@@ -844,7 +844,7 @@ else
   echo "configure: warning: ${am_backtick}missing' script is too old or missing" 1>&2
 fi
 
-for ac_prog in mawk gawk nawk awk
+for ac_prog in gawk mawk nawk awk
 do
 # Extract the first word of "$ac_prog", so it can be a program name with args.
 set dummy $ac_prog; ac_word=$2
@@ -4577,7 +4577,7 @@ else
   ;;
   *)
   IFS="${IFS= 	}"; ac_save_ifs="$IFS"; IFS=":"
-  ac_dummy="no"
+  ac_dummy="$PATH"
   for ac_dir in $ac_dummy; do 
     test -z "$ac_dir" && ac_dir=.
     if test -f $ac_dir/$ac_word; then
@@ -4586,7 +4586,7 @@ else
     fi
   done
   IFS="$ac_save_ifs"
-  test -z "$ac_cv_path_GTK_CONFIG" && ac_cv_path_GTK_CONFIG="gtk12-config"
+  test -z "$ac_cv_path_GTK_CONFIG" && ac_cv_path_GTK_CONFIG="no"
   ;;
 esac
 fi
@@ -5454,7 +5454,8 @@ fi
 
 if test "x$GCC" = "xyes"; then
 	# gcc defaults. OS specific options go in versious sections below
-	CFLAGS="-pedantic -Wall -pipe ${CFLAGS}"
+        # from the gcc man pages:  "there is no reason to use -pedantic"
+	CFLAGS="-Wall -pipe ${CFLAGS}"
 
 	OPTIMIZATION="-O3 -fomit-frame-pointer -ffast-math -funroll-loops"
 
@@ -5510,7 +5511,7 @@ fi
 
 
 echo $ac_n "checking for debug options""... $ac_c" 1>&6
-echo "configure:5514: checking for debug options" >&5
+echo "configure:5515: checking for debug options" >&5
 # Check whether --enable-debug or --disable-debug was given.
 if test "${enable_debug+set}" = set; then
   enableval="$enable_debug"
