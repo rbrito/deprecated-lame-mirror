@@ -621,6 +621,24 @@ void outer_loop(
 			  xfsf,distort, l3_xmin,gr,ch, &over_noise, 
 			  &tot_noise, &max_noise, scalefac);
       }
+
+      if (gf.frameNum==4 && gr==0 && ch==0) {
+	printf("sf=%i noise=%e, allowed noise=%e,  distort=%f \n",
+	       scalefac->l[gr][ch][0],
+	       xfsf[0][0],l3_xmin->l[gr][ch][0],distort[0][0]);
+	printf("sf=%i \n",
+	       scalefac->l[gr][ch][1]);
+	printf("sf=%i \n",
+	       scalefac->l[gr][ch][2]);
+	printf("sf=%i \n",
+	       scalefac->l[gr][ch][3]);
+	printf("sf=%i \n",
+	       scalefac->l[gr][ch][4]);
+
+      }
+      
+
+
       /* check if this quantization is better the our saved quantization */
       if (iteration == 1) better=1;
       else 
