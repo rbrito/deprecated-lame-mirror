@@ -75,16 +75,16 @@ void    reduce_side (int targ_bits[2], FLOAT8 ms_ener_ratio, int mean_bits,
 
 
 int     bin_search_StepSize (lame_internal_flags * const gfc, gr_info * const cod_info,
-                             const int desired_rate, const int ch,
+                             int desired_rate, const int ch,
                              const FLOAT8 xrpow[576]);
 
 void    iteration_init (lame_global_flags *gfp);
 
 
 int     calc_xmin (lame_global_flags *gfp,
-                   const III_psy_ratio * const ratio,
-		   const gr_info * const cod_info,
-                   FLOAT8 * const l3_xmin);
+                    const III_psy_ratio * const ratio,
+                    const gr_info * const cod_info,
+                    FLOAT8 * l3_xmin);
 
 int     calc_noise (const lame_internal_flags * const gfc,
                     const gr_info * const cod_info,

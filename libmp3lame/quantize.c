@@ -334,7 +334,7 @@ int
 bin_search_StepSize(
           lame_internal_flags * const gfc,
           gr_info * const cod_info,
-	  int             desired_rate,
+	 int             desired_rate,
     const int             ch,
     const FLOAT8          xrpow [576] ) 
 {
@@ -403,7 +403,7 @@ bin_search_StepSize(
  *
  ************************************************************************/
 static int
-float8compare(FLOAT8 *a, FLOAT8 *b)
+float8compare(const FLOAT8 *a, const FLOAT8 *b)
 {
     if (*a > *b) return 1;
     if (*a == *b) return 0;

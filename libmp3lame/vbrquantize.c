@@ -37,6 +37,14 @@
 #endif
 
 
+extern void
+trancate_smallspectrums(
+    lame_internal_flags *gfc,
+    gr_info	* const gi,
+    const FLOAT8* const l3_xmin,
+    FLOAT8* work);
+
+
 
 typedef union {
     float   f;

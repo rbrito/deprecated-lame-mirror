@@ -516,8 +516,8 @@ static FLOAT8 athAdjust( FLOAT8 a, FLOAT8 x, FLOAT8 athFloor )
 int calc_xmin( 
         lame_global_flags *gfp,
         const III_psy_ratio * const ratio,
-	const gr_info       * const cod_info, 
-	      FLOAT8        * pxmin
+	    const gr_info       * const cod_info, 
+	    FLOAT8 * pxmin
     )
 {
     lame_internal_flags *gfc = gfp->internal_flags;
