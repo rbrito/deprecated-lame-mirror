@@ -1020,7 +1020,31 @@ psycho_analysis_short(
     for (chn=0; chn<numchn; chn++) {
 	FLOAT attack_intensity[3];
 	FLOAT attackThreshold;
+/*
+  use subband filtered samples to determine block type switching.
 
+  1 character = 1 sample (in subband)
+
+                                          =============stop=============
+                  ===short====      ===short====
+            ===short====      ===short====
+      ===short====      ===short====
+<----------------><----------------><----------------><---------------->
+================long================
+                  ================long================
+
+
+                                          =============stop=============
+                                    ===short====
+                              ===short====
+                        ===short====
+=============start============
+
+
+                                    ================long================
+                        =============stop=============
+=============start============
+*/
 	if (chn < 2) {
 	    for (i = 0; i < 3; i++) {
 		FLOAT x, y = 1.0;
@@ -1086,14 +1110,15 @@ psycho_analysis_short(
 		current_is_short |= 1 << chn;
 	    }
 	}
+
+	/* initialize the flag representing
+	 * "short block may be needed but not calculated"
+	 */
+	gfc->masking_next[gr][chn].en.s[0][sblock] = -1.0;
     }
 
-    if (!current_is_short) {
-	for (chn=0; chn<numchn; chn++) {
-	    gfc->masking_next[gr][chn].en.s[0][0] = -1.0;
-	}
+    if (!current_is_short)
 	return;
-    }
 
     for (chn=0; chn<numchn; chn++) {
 	/* fft and energy calculation   */
@@ -1113,11 +1138,8 @@ psycho_analysis_short(
 		}
 	    }
 
-	    if (!gfc->useshort_next[gr][chn]) {
-		/* flag for "short block may be needed but not calculated" */
-		gfc->masking_next[gr][chn].en.s[0][sblock] = -1.0;
+	    if (!gfc->useshort_next[gr][chn])
 		continue;
-	    }
 
 	    compute_masking_s(gfc, wsamp_S[chn&1][sblock],
 			      &gfc->masking_next[gr][chn], sblock);
@@ -1773,46 +1795,3 @@ psycho_analysis(
 	    == gfc->l3_side.tt[gfc->mode_gr-1][1].block_type);
     }
 }
-
-#if 0
-/*
-  use subband filtered samples to determine block type switching.
-
-  1 character = 1 sample (in subband)
-
-                                          =============stop=============
-                  ===short====      ===short====
-            ===short====      ===short====
-      ===short====      ===short====
-<----------------><----------------><----------------><---------------->
-================long================
-                  ================long================
-
-
-                                          =============stop=============
-                                    ===short====
-                              ===short====
-                        ===short====
-=============start============
-
-
-                                    ================long================
-                        =============stop=============
-=============start============
-*/
-    for (k = 0; k < gfc->mode_gr; k++) {
-	int band, ii,jj;
-	for (ii = 0; ii < 3; ii++) {
-	    FLOAT x, y = 0.1;
-	    for (jj = 0; jj < 6; jj++) {
-		k = ii*6+jj;
-		x = 0.0;
-		for (band = 10; band < 32; band++)
-		    x += fabs(sbsmpl[ch][gr*576+k*32+mdctorder[band]]);
-		if (y < x)
-		    y = x;
-	    }
-	    printf("%f\n", y);
-	}
-    }
-#endif

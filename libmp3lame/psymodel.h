@@ -22,7 +22,6 @@
 #ifndef LAME_PSYMODEL_H
 #define LAME_PSYMODEL_H
 
-#define NSFIRLEN 21
 #define rpelev 2
 #define rpelev2 16
 
