@@ -111,7 +111,13 @@ EXTRA_DIST = BladeMP3EncDLL.c \
 	Example.dsp \
 	Example.dsw \
 	Example_vc6.dsp \
-	Example_vc6.dsw
+	Example_vc6.dsw \
+	LameDLLInterface.htm \
+	LameDll_vc6.dsp \
+	MP3EncDll.dsp \
+	MP3EncDll.dsw \
+	MP3export.pas \
+	Makefile.mingw32
 
 subdir = Dll
 mkinstalldirs = $(SHELL) $(top_srcdir)/mkinstalldirs
@@ -240,12 +246,6 @@ uninstall-am: uninstall-info-am
 
 
 # end global section
-	LameDLLInterface.htm \
-	LameDll_vc6.dsp \
-	MP3EncDll.dsp \
-	MP3EncDll.dsw \
-	MP3export.pas \
-	Makefile.mingw32
 # Tell versions [3.59,3.63) of GNU make to not export all variables.
 # Otherwise a system limit (for SysV at least) may be exceeded.
 .NOEXPORT:
