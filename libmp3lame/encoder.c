@@ -450,34 +450,6 @@ int  lame_encode_mp3_frame (				// Output
     }
 #endif
 
-    if (gfp->VBR != vbr) {
-	static const FLOAT fircoef[9] = {
-	    -0.0207887 *5,	-0.0378413*5,	-0.0432472*5,	-0.031183*5,
-	    7.79609e-18*5,	 0.0467745*5,	 0.10091*5,	0.151365*5,
-	    0.187098*5
-	};
-	int i;
-	FLOAT f = 0.0;
-	for (i=0;i<18;i++)
-	    gfc->nsPsy.pefirbuf[i] = gfc->nsPsy.pefirbuf[i+1];
-	for (gr = 0; gr < gfc->mode_gr; gr++)
-	    for ( ch = 0; ch < gfc->channels_out; ch++ )
-		f += masking[gr][ch].pe;
-	gfc->nsPsy.pefirbuf[18] = f;
-
-	f = gfc->nsPsy.pefirbuf[9];
-	for (i=0;i<9;i++)
-	    f += (gfc->nsPsy.pefirbuf[i]+gfc->nsPsy.pefirbuf[18-i])
-		* fircoef[i];
-
-	f = (670*5*gfc->mode_gr*gfc->channels_out)/f;
-	for ( gr = 0; gr < gfc->mode_gr; gr++ ) {
-	    for ( ch = 0; ch < gfc->channels_out; ch++ ) {
-		masking[gr][ch].pe *= f;
-	    }
-	}
-    }
-
     switch (gfp->VBR){ 
     default:
     case cbr:

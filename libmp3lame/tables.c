@@ -1024,9 +1024,6 @@ iteration_init( lame_global_flags *gfp)
     for (i = 0; i < SBMAX_s + 1; i++)
         gfc->scalefac_band.s[i] = sfBandIndex[j].s[i];
 
-    for (i = 0; i < 19; i++)
-	gfc->nsPsy.pefirbuf[i] = 700*gfc->mode_gr*gfc->channels_out;
-
     l3_side->main_data_begin = 0;
     compute_ath(gfp);
 #ifdef USE_FAST_LOG

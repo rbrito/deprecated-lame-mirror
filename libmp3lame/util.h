@@ -402,8 +402,6 @@ struct lame_internal_flags {
 
     /* variables used for psymodel */
     struct {
-	FLOAT pefirbuf[19];
-
 	/* short block tuning */
 	FLOAT	attackthre;
 	FLOAT	attackthre_s;
