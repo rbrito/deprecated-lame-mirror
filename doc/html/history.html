@@ -23,10 +23,23 @@ black = usability, portability, other
 <hr>
 <h3>LAME 3.97 alpha (CVS)</h3>
 <ul>
+  <li>Robert Hegemann: 
+    <ul>
+      <li><font color="#ff0000">Fixed and out of array access</font></li>
+      <li><font color="#ff0000">Fixed some small rounding problem in vbr-new quantization routines</font></li>
+      <li><font color="#ff0000">Updated scalefactors allocation scheme in vbr-new</font></li>
+      <li>Fixed mingw32 configure problems</li>
+      <li>Resolved some compiler warnings</li>
+    </ul>
+  </li>
   <li>Gabriel Bouvigne: 
     <ul>
-      <li>Changed FLOAT8 to FLOAT</li>
+      <li>Changed some FLOAT8 to FLOAT</li>
       <li><font color="#ff0000">Reworked -q1 and -q0</font></li>
+      <li><font color="#ff0000">Updated presets</font></li>
+      <li><font color="#ff0000">Fixed an error in ISO quantization on systems not using the IEEE754 hack</font></li>
+      <li><font color="#3366ff">Faster quantization</font></li>
+      <li><font color="#3366ff">SSE version of init_xrpow</font></li>
     </ul>
   </li>
 </ul>
