@@ -1546,8 +1546,8 @@ int L3psycho_anal_ns( lame_global_flags * gfp,
 	    }
 	  }
  
-  if(a) tonality2[b] = (m*c1-a) / (a*(c2-1));
-    else  tonality2[b] = 0;
+	tonality2[b] = 0;
+	if (a) tonality2[b] = (m*c1-a) / (a*(c2-1));
       }
 
     if (gfc->nsPsy.use2) {
@@ -1579,30 +1579,17 @@ int L3psycho_anal_ns( lame_global_flags * gfp,
 	  eb2[b] = eb2[b] * eb[b];
 	}
     } else {
-      for (b=0; b < gfc->npart_l_orig; b++ )
-	{
-#if 0
-	  static FLOAT8 tab[20] =
-	  {  0,  1,  2,  2,  2,  2,  2,  6,9.3,9.3,9.3,9.3,9.3,9.3,9.3,9.3,9.3,9.3,9.3,9.3};
+	for (b=0; b < gfc->npart_l_orig; b++ ) {
+	    static FLOAT8 tab[] = {
+		1.0,
+		0.79433, 0.63096, 0.63096, 0.63096, 0.63096, 0.63096, 0.25119,
+		0.11749
+	    };
 
-	  static int init = 1;
-	  if (init) {
-	    int j;
-	    for(j=0;j<20;j++) {
-	      tab[j] = pow(10.0,-tab[j]/10.0);
-	    }
-	    init = 0;
-	  }
-#else
-	  static FLOAT8 tab[20] = {
-	    1,0.79433,0.63096,0.63096,0.63096,0.63096,0.63096,0.25119,0.11749,0.11749,
-	    0.11749,0.11749,0.11749,0.11749,0.11749,0.11749,0.11749,0.11749,0.11749,0.11749
-	  };
-#endif
-
-	  int t = 20*tonality2[b];
-	  if (t > 19) t = 19;
-	  eb2[b] = eb[b] * tab[t];
+	    int t = 20*tonality2[b];
+	    if (t > sizeof(tab)/sizeof(tab[0]) - 1)
+		t = sizeof(tab)/sizeof(tab[0]) - 1;
+	    eb2[b] = eb[b] * tab[t];
 	}
     }
 
@@ -1618,30 +1605,12 @@ int L3psycho_anal_ns( lame_global_flags * gfp,
 
 	/****   convolve the partitioned energy with the spreading function   ****/
 
-	ecb = 0;
-
-#if 1
 	k = gfc->s3ind[b][0]; 
-    ecb = gfc->s3_ll[kk++] * eb2[k];
-
-    for ( k = k+1; k <= gfc->s3ind[b][1]; k++ ) 
-    {
-	    ecb = mask_add(ecb,gfc->s3_ll[kk++] * eb2[k],k,k-b,gfc);
-    }
+	ecb = gfc->s3_ll[kk++] * eb2[k];
+	while (++k <= gfc->s3ind[b][1])
+	    ecb = mask_add(ecb, gfc->s3_ll[kk++] * eb2[k], k, k-b, gfc);
 
 	ecb *= 0.158489319246111; // pow(10,-0.8)
-
-
-#else
-    ecb = 0;
-
-	for ( k = gfc->s3ind[b][0]; k <= gfc->s3ind[b][1]; k++ )
-	  {
-	    ecb += gfc->s3_ll[kk++] * eb2[k];
-	  }
-
-	ecb *= 0.223872113856834; // pow(10,-0.65);
-#endif
 
 	/****   long block pre-echo control   ****/
 
@@ -1667,6 +1636,7 @@ int L3psycho_anal_ns( lame_global_flags * gfp,
 	gfc->nb_1[chn][b] = ecb;
       }
     }
+
 
     /*************************************************************** 
      * determine the block type (window type)
@@ -1784,7 +1754,6 @@ int L3psycho_anal_ns( lame_global_flags * gfp,
 	gfc->en [chn].l[sb] = enn;
 	gfc->thm[chn].l[sb] = thmm;
       }
-    
 
     /*************************************************************** 
      * compute masking thresholds for short blocks
@@ -1925,9 +1894,13 @@ int L3psycho_anal_ns( lame_global_flags * gfp,
   /*************************************************************** 
    * compute M/S thresholds from Johnston & Ferreira 1992 ICASSP paper
    ***************************************************************/
+
+#define NS_MSFIX 3.5
+  
   if ( numchn==4 /* mid/side and r/l */) {
     FLOAT8 rside,rmid,mld;
     int chmid=2,chside=3; 
+    FLOAT msfix;
     for ( sb = 0; sb < NBPSY_l; sb++ ) {
       /* use this fix if L & R masking differs by 2db or less */
       /* if db = 10*log10(x2/x1) < 2 */
@@ -1961,22 +1934,15 @@ int L3psycho_anal_ns( lame_global_flags * gfp,
 	}
       }
     }
-  }
 
-
-  /* Naoki Shibata 2000 */
-
-#define NS_MSFIX 3.5
-  
-  if (numchn == 4) {
-    FLOAT msfix = NS_MSFIX;
-    if (gfc->nsPsy.safejoint) msfix = 1;
+    msfix = NS_MSFIX;
+    if (gfc->nsPsy.safejoint) msfix = 1.0;
     if (gfp->msfix) msfix = gfp->msfix;
 
-    if (gfc->presetTune.use && gfc->ATH->adjust >=
-		                       gfc->presetTune.athadjust_switch_level && 
-							   gfc->presetTune.athadjust_msfix > 0)
-		msfix = gfc->presetTune.athadjust_msfix;
+    if (gfc->presetTune.use
+	&& gfc->ATH->adjust >= gfc->presetTune.athadjust_switch_level
+	&& gfc->presetTune.athadjust_msfix > 0)
+	msfix = gfc->presetTune.athadjust_msfix;
     
     for ( sb = 0; sb < NBPSY_l; sb++ )
       {
@@ -2048,11 +2014,10 @@ int L3psycho_anal_ns( lame_global_flags * gfp,
 	int sb;
 
 	for ( sb = 0; sb < NBPSY_l; sb++ ) {
-	    if (gfc->en[chn].l[sb] <= gfc->thm[chn].l[sb]*gfc->masking_lower)
+	    if (gfc->thm[chn].l[sb] == 0.0
+	     || gfc->en[chn].l[sb] <= gfc->thm[chn].l[sb]*gfc->masking_lower)
 		continue;
 
-	    /* when thm[] == 0.0, en[] should be 0.0 */
-	    assert(gfc->thm[chn].l[sb] != 0.0);
 	    msum += regcoef[sb+1] * 
 		log(gfc->en[chn].l[sb]/(gfc->thm[chn].l[sb]*gfc->masking_lower));
 	}
@@ -2070,7 +2035,6 @@ int L3psycho_anal_ns( lame_global_flags * gfp,
 
 	for(sblock=0;sblock<3;sblock++) {
 	    for ( sb = 0; sb < NBPSY_s; sb++ ) {
-		FLOAT8 t;
 		if (gfc->en[chn].s[sb][sblock]
 		    <= gfc->thm[chn].s[sb][sblock] * gfc->masking_lower)
 		    continue;
