@@ -44,12 +44,12 @@ int apply_abr_preset(lame_global_flags*  gfp, int preset)
         double scale;
         double ath_curve;
         double interch;
-    } dm_abr_presets_t;
+    } abr_presets_t;
 
 
 
     /* Switch mappings for ABR mode */
-    const dm_abr_presets_t abr_switch_map [] = {
+    const abr_presets_t abr_switch_map [] = {
         /* kbps Z  quant safejoint nsmsfix st_lrm  st_s  ns-bass scale ath4_curve, interch */
         {   8,  1, 3,    0,        0   ,    4.50, 30   ,  0,      0.95,        11,  0.0012 }, /*   8, impossible to use in stereo */
         {  16,  1, 3,    0,        0   ,    4.50, 30   ,  0,      0.95,        11,  0.0010 }, /*  16 */
@@ -282,11 +282,7 @@ int apply_preset(lame_global_flags*  gfp, int preset)
 	    return preset;
     }
     case INSANE: {
-	    lame_set_brate(gfp, 320);
-	    lame_set_quality(gfp, 3);
-	    lame_set_mode(gfp, JOINT_STEREO);
-	    lame_set_lowpassfreq(gfp, 20500);
-	    return preset;
+        return apply_abr_preset(gfp, 320);
     }
     case R3MIX: {
 	    lame_set_exp_nspsytune(gfp, lame_get_exp_nspsytune(gfp) | 1); /*nspsytune*/
