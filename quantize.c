@@ -334,7 +334,7 @@ VBR_iteration_loop (lame_global_flags *gfp,
   FLOAT8    xfsf[4][SBMAX_l];
   int       this_bits, dbits;
   int       used_bits=0;
-  int       min_bits,max_bits,min_mean_bits=0;
+  int       min_bits,max_bits,min_mean_bits=0,Max_bits;
   int       frameBits[15];
   int       bitsPerFrame;
   int       bits;
@@ -428,41 +428,44 @@ VBR_iteration_loop (lame_global_flags *gfp,
         assert( gfp->VBR_q <= 9 );
         assert( gfp->VBR_q >= 0 );
         masking_lower_db = dbQ[gfp->VBR_q];
+#if 0
         if (cod_info->block_type==SHORT_TYPE) 
           masking_lower_db -= 10/(1+exp(3.5-pe[gr][ch]/300.))-0.25;
+#else
+        if (cod_info->block_type==SHORT_TYPE) 
+          masking_lower_db -= 5/(1+exp(3.5-pe[gr][ch]/300.))-0.25;
+        else
+          masking_lower_db -= 2/(1+exp(3.5-pe[gr][ch]/300.))-0.25;
+#endif
         gfc->masking_lower = pow(10.0,masking_lower_db/10);
       }
+      i = calc_xmin(gfp,xr[gr][ch], &ratio[gr][ch], cod_info, &l3_xmin);
+#if 1
+      if (cod_info->block_type==SHORT_TYPE)
+        min_bits = Max(min_bits,(pe[gr][ch]-400)*i/12);
+      else
+        min_bits = Max(min_bits,(pe[gr][ch]-400)*i/22);
+      min_bits=Min(min_bits,1000);
+#endif
       /* disable analog_silence if *any* of the granules != silence */
       /* if energy < ATH, set min_bits = 125 */
-      i = calc_xmin(gfp,xr[gr][ch], &ratio[gr][ch], cod_info, &l3_xmin);
       if (i) {
-	analog_silence=0;
+        analog_silence=0;
       }else{
-	if (!gfp->VBR_hard_min) min_bits=125;
+        if (!gfp->VBR_hard_min) min_bits=125;
       }
 
       max_bits = 1200 + frameBits[gfc->VBR_max_bitrate]/(gfc->stereo*gfc->mode_gr);
       max_bits=Min(max_bits,2500);
-      max_bits=Max(max_bits,min_bits);
+      Max_bits=max_bits=Max(max_bits,min_bits);
 
-      dbits = (max_bits-min_bits)/4;
-      this_bits = (max_bits+min_bits)/2;
+      this_bits = min_bits+(max_bits-min_bits)/2;
       real_bits = max_bits+1;
 
-      /* bin search to within +/- 10 bits of optimal */
+      /* bin search to within +/- 40 bits of optimal */
       do {
 	  assert(this_bits>=min_bits);
 	  assert(this_bits<=max_bits);
-
-	  if( this_bits >= real_bits ){
-	      /* 
-	       * we already found a quantization with fewer bits
-	       * so we can skip this try
-	       */
-	      this_bits -= dbits;
-	      dbits /= 2;
-	      continue; /* skips the rest of this do-while loop */
-	  }
 
 	  /*
 	   *  OK, start with a fresh setting
@@ -496,17 +499,18 @@ VBR_iteration_loop (lame_global_flags *gfp,
 	      /*
 	       * try with fewer bits
 	       */
-	      this_bits -= dbits;
+              max_bits = real_bits-32;
 	  } else {
 	      /*
 	       * try with more bits
 	       */
-	      this_bits += dbits;
+              min_bits = this_bits+32;
 	  }
-	  dbits /= 2;
-      } while (dbits>10) ;
-      
-      if (real_bits <= max_bits)
+          dbits = max_bits-min_bits;
+          this_bits = min_bits+dbits/2;
+      } while (dbits>8) ;
+
+      if (real_bits <= Max_bits)
       {
         /* restore best quantization found */
         memcpy(  cod_info,         &bst_cod_info, sizeof(gr_info)        );
