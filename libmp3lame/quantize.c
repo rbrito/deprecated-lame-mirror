@@ -920,11 +920,11 @@ iteration_finish (
             
             /*  update reservoir status after FINAL quantization/bitrate
              */
-            ResvAdjust (gfc, cod_info, l3_side, mean_bits);
-      } /* for ch */
+            ResvAdjust (gfc, cod_info, mean_bits);
+	} /* for ch */
     }    /* for gr */
     
-    ResvFrameEnd (gfc, l3_side, mean_bits);
+    ResvFrameEnd (gfc, mean_bits);
 }
 
 
@@ -1066,7 +1066,7 @@ get_framebits (
     for (i = 1; i <= gfc->VBR_max_bitrate; i++) {
         gfc->bitrate_index = i;
         getframebits (gfp, &bitsPerFrame, &mean_bits);
-        frameBits[i] = ResvFrameBegin (gfp, l3_side, mean_bits, bitsPerFrame);
+        frameBits[i] = ResvFrameBegin (gfp, mean_bits, bitsPerFrame);
     }
 }
 
@@ -1188,7 +1188,7 @@ VBR_prepare (
   
     gfc->bitrate_index = gfc->VBR_max_bitrate;
     getframebits (gfp, &bpf, &avg);
-    avg = ResvFrameBegin (gfp, &gfc->l3_side, avg, bpf ) / gfc->mode_gr;
+    avg = ResvFrameBegin (gfp, avg, bpf ) / gfc->mode_gr;
     
     get_framebits (gfp, analog_mean_bits, min_mean_bits, frameBits);
     
@@ -1382,7 +1382,7 @@ VBR_iteration_loop (
     }
 
     getframebits (gfp, &bitsPerFrame, &mean_bits);
-    bits = ResvFrameBegin (gfp, l3_side, mean_bits, bitsPerFrame);
+    bits = ResvFrameBegin (gfp, mean_bits, bitsPerFrame);
     
     if (used_bits <= bits) break;
 
@@ -1432,7 +1432,7 @@ calc_target_bits (
     
     gfc->bitrate_index = gfc->VBR_max_bitrate;
     getframebits (gfp, &bitsPerFrame, &mean_bits);
-    *max_frame_bits = ResvFrameBegin (gfp, l3_side, mean_bits, bitsPerFrame);
+    *max_frame_bits = ResvFrameBegin (gfp, mean_bits, bitsPerFrame);
 
     gfc->bitrate_index = 1;
     getframebits (gfp, &bitsPerFrame, &mean_bits);
@@ -1596,7 +1596,7 @@ ABR_iteration_loop(
          gfc->bitrate_index <= gfc->VBR_max_bitrate;
          gfc->bitrate_index++    ) {
         getframebits (gfp, &bitsPerFrame, &mean_bits);
-        max_frame_bits = ResvFrameBegin (gfp, l3_side, mean_bits, bitsPerFrame);
+        max_frame_bits = ResvFrameBegin (gfp, mean_bits, bitsPerFrame);
         if (totbits <= max_frame_bits) break; 
     }
     assert (gfc->bitrate_index <= gfc->VBR_max_bitrate);
@@ -1637,7 +1637,7 @@ iteration_loop(
     gr_info             *cod_info;
 
     getframebits (gfp, &bitsPerFrame, &mean_bits);
-    ResvFrameBegin (gfp, l3_side, mean_bits, bitsPerFrame );
+    ResvFrameBegin (gfp, mean_bits, bitsPerFrame );
 
     /* quantize! */
     for (gr = 0; gr < gfc->mode_gr; gr++) {
@@ -1680,7 +1680,7 @@ iteration_loop(
              */
 #undef  NORES_TEST
 #ifndef NORES_TEST
-            ResvAdjust (gfc, cod_info, l3_side, mean_bits);
+            ResvAdjust (gfc, cod_info, mean_bits);
 #endif      
         } /* for ch */
     }    /* for gr */
@@ -1692,12 +1692,12 @@ iteration_loop(
     for (gr = 0; gr < gfc->mode_gr; gr++) {
         for (ch =  0; ch < gfc->channels_out; ch++) {
             cod_info = &l3_side->tt[gr][ch];
-            ResvAdjust (gfc, cod_info, l3_side, mean_bits);
+            ResvAdjust (gfc, cod_info, mean_bits);
         }
     }
 #endif
 
-    ResvFrameEnd (gfc, l3_side, mean_bits);
+    ResvFrameEnd (gfc, mean_bits);
 }
 
 

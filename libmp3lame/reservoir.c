@@ -76,12 +76,13 @@
  */
 
 int
-ResvFrameBegin(lame_global_flags *gfp,III_side_info_t *l3_side, int mean_bits, int frameLength )
+ResvFrameBegin(lame_global_flags *gfp, int mean_bits, int frameLength )
 {
     lame_internal_flags *gfc=gfp->internal_flags;
     int fullFrameBits;
     int resvLimit;
     int maxmp3buf;
+    III_side_info_t     *l3_side = &gfc->l3_side;
 
 /*
  *  Meaning of the variables:
@@ -211,13 +212,13 @@ void ResvMaxBits(lame_global_flags *gfp, int mean_bits, int *targ_bits, int *ext
   the reservoir to reflect the granule's usage.
 */
 void
-ResvAdjust(lame_internal_flags *gfc,gr_info *gi, III_side_info_t *l3_side, int mean_bits )
+ResvAdjust(lame_internal_flags *gfc,gr_info *gi, int mean_bits )
 {
-  gfc->ResvSize += (mean_bits / gfc->channels_out) - gi->part2_3_length;
+    gfc->ResvSize += (mean_bits / gfc->channels_out) - gi->part2_3_length;
 #if 0
-  printf("part2_3_length:  %i  avg=%i  incres: %i  resvsize=%i\n",gi->part2_3_length,
-	 mean_bits/gfc->channels_out,
-mean_bits/gfc->channels_out-gi->part2_3_length,gfc->ResvSize);
+    printf("part2_3_length:  %i  avg=%i  incres: %i  resvsize=%i\n",gi->part2_3_length,
+	   mean_bits/gfc->channels_out,
+	   mean_bits/gfc->channels_out-gi->part2_3_length,gfc->ResvSize);
 #endif
 }
 
@@ -229,10 +230,11 @@ mean_bits/gfc->channels_out-gi->part2_3_length,gfc->ResvSize);
   bits.
 */
 void
-ResvFrameEnd(lame_internal_flags *gfc, III_side_info_t *l3_side, int mean_bits)
+ResvFrameEnd(lame_internal_flags *gfc, int mean_bits)
 {
     int stuffingBits;
     int over_bits;
+    III_side_info_t     *l3_side = &gfc->l3_side;
 
 
     /* just in case mean_bits is odd, this is necessary... */
