@@ -1,10 +1,3 @@
-/**********************************************************************
- * ISO MPEG Audio Subgroup Software Simulation Group (1996)
- * ISO 13818-3 MPEG-2 Audio Encoder - Lower Sampling Frequency Extension
- *
- **********************************************************************/
-
-
 #ifndef RESERVOIR_H
 #define RESERVOIR_H
 

@@ -1,16 +1,3 @@
-/**********************************************************************
- * ISO MPEG Audio Subgroup Software Simulation Group (1996)
- * ISO 13818-3 MPEG-2 Audio Encoder - Lower Sampling Frequency Extension
- *
- **********************************************************************/
-/*
-  Revision History:
-
-  Date        Programmer                Comment
-  ==========  ========================= ===============================
-  1995/09/06  mc@fivebats.com           created
-
-*/
 #include <stdio.h>
 #include <stdlib.h>
 #include <math.h>
@@ -70,8 +57,9 @@ ResvFrameBegin(lame_global_flags *gfp,III_side_info_t *l3_side, int mean_bits, i
 
 
 /*
-  ResvMaxBits2:
-  As above, but now it *really* is bits per granule (both channels).  
+  ResvMaxBits
+  returns targ_bits:  target number of bits to use for 1 granule
+         extra_bits:  amount extra available from reservoir
   Mark Taylor 4/99
 */
 void ResvMaxBits(lame_global_flags *gfp, int mean_bits, int *targ_bits, int *extra_bits)

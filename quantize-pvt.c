@@ -56,7 +56,7 @@ unsigned nr_of_sfb_block[6][3][4] =
 
 
 /* Table B.6: layer3 preemphasis */
-int  pretab[22] =
+int  pretab[SBMAX_l] =
 {
     0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
     1, 1, 1, 1, 2, 2, 3, 3, 3, 2, 0

@@ -686,9 +686,9 @@ void outer_loop(
 	}
 	notdone = !status;
     }
-    /* check to see if the last scalefactor band is distorted
-     * in VBR mode we can't get rid of the distortion, we
-     * don't have a scalefactor to color it
+    /* Check if the last scalefactor band is distorted.
+     * in VBR mode we can't get rid of the distortion, so quit now
+     * and VBR mode will try again with more bits.  
      * (makes a 10% speed increase, the files I tested were
      * binary identical, 2000/05/20 Robert.Hegemann@gmx.de)
      */

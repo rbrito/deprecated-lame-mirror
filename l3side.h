@@ -1,11 +1,3 @@
-/**********************************************************************
- *   date   programmers                comment                        *
- * 25. 6.92  Toshiyuki Ishino          Ver 1.0                        *
- * 29.10.92  Masahiro Iwadare          Ver 2.0                        *
- * 17. 4.93  Masahiro Iwadare          Updated for IS Modification    *
- *                                                                    *
- *********************************************************************/
-
 #ifndef L3_SIDE_H
 #define L3_SIDE_H
 #include "encoder.h"

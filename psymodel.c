@@ -1,13 +1,23 @@
-/**********************************************************************
- *   date   programmers         comment                               *
- * 2/25/91  Davis Pan           start of version 1.0 records          *
- * 5/10/91  W. Joseph Carter    Ported to Macintosh and Unix.         *
- * 7/10/91  Earle Jennings      Ported to MsDos.                      *
- *                              replace of floats with FLOAT          *
- * 2/11/92  W. Joseph Carter    Fixed mem_alloc() arg for "absthr".   *
- * 3/16/92  Masahiro Iwadare	Modification for Layer III            *
- * 17/4/93  Masahiro Iwadare    Updated for IS Modification           *
- **********************************************************************/
+/*
+ *	psymodel.c
+ *
+ *	Copyright (c) 1999 Mark Taylor
+ *
+ * This library is free software; you can redistribute it and/or
+ * modify it under the terms of the GNU Library General Public
+ * License as published by the Free Software Foundation; either
+ * version 2 of the License, or (at your option) any later version.
+ *
+ * This library is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.	 See the GNU
+ * Library General Public License for more details.
+ *
+ * You should have received a copy of the GNU Library General Public
+ * License along with this library; if not, write to the
+ * Free Software Foundation, Inc., 59 Temple Place - Suite 330,
+ * Boston, MA 02111-1307, USA.
+ */
 
 #include "util.h"
 #include "encoder.h"
@@ -36,13 +46,6 @@ void L3para_read( FLOAT8 sfreq, int numlines[CBANDS],int numlines_s[CBANDS], int
 		  FLOAT8 w1_s[SBPSY_s], FLOAT8 w2_s[SBPSY_s] );
 									
 
-
-
-
-
-
-
- 
 
 void L3psycho_anal( lame_global_flags *gfp,
                     short int *buffer[2],int gr_out , 
@@ -233,10 +236,9 @@ void L3psycho_anal( lame_global_flags *gfp,
     */
     
 
-#define AACS3
-#define NEWS3XX
 
-#ifdef AACS3
+    /* #define NEWS3     use a simplified spreading function */
+#if 1
     /* AAC values, results in more masking over MP3 values */
 # define TMN 18
 # define NMT 6
@@ -1020,14 +1022,8 @@ int *bu_s, int *bo_s, FLOAT8 *w1_s, FLOAT8 *w2_s)
       FLOAT8 tempx,x,tempy,temp;
       for(j=0;j<part_max;j++)
 	{
-	  /*tempx = (bval_l[i] - bval_l[j])*1.05;*/
-	  if (j>=i) tempx = (bval_l[i] - bval_l[j])*3.0;
-	  else    tempx = (bval_l[i] - bval_l[j])*1.5;
-
-#ifdef AACS3	
           if (i>=j) tempx = (bval_l[i] - bval_l[j])*3.0;
 	  else    tempx = (bval_l[i] - bval_l[j])*1.5; 
-#endif
 
 	  if(tempx>=0.5 && tempx<=2.5)
 	    {
@@ -1113,13 +1109,9 @@ int *bu_s, int *bo_s, FLOAT8 *w1_s, FLOAT8 *w2_s)
       FLOAT8 tempx,x,tempy,temp;
       for(j=0;j<part_max;j++)
 	{
-	  /* tempx = (bval_s[i] - bval_s[j])*1.05;*/
-	  if (j>=i) tempx = (bval_s[i] - bval_s[j])*3.0;
-	  else    tempx = (bval_s[i] - bval_s[j])*1.5;
-#ifdef AACS3
           if (i>=j) tempx = (bval_s[i] - bval_s[j])*3.0;
 	  else    tempx = (bval_s[i] - bval_s[j])*1.5; 
-#endif
+
 	  if(tempx>=0.5 && tempx<=2.5)
 	    {
 	      temp = tempx - 0.5;

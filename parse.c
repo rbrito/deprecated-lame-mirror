@@ -112,7 +112,7 @@ void lame_help(lame_global_flags *gfp,char *name)  /* print syntax & exit */
   fprintf(stdout,"  --lowpass-width <freq>  frequency(kHz) - default 15%% of lowpass freq\n");
   fprintf(stdout,"  --highpass <freq>       frequency(kHz), highpass filter cutoff below freq\n");
   fprintf(stdout,"  --highpass-width <freq> frequency(kHz) - default 15%% of highpass freq\n");
-  fprintf(stdout,"  --resample <sfreq>  sampling frequency of output file(kHz)- default=input sfreq\n");
+  fprintf(stdout,"  --resample <sfreq>  sampling frequency of output file(kHz)- default=automatic\n");
   fprintf(stdout,"  --cwlimit <freq>    compute tonality up to freq (in kHz) default 8.8717\n");
   fprintf(stdout,"\n");
   fprintf(stdout,"  Operational options:\n");
