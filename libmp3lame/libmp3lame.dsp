@@ -121,10 +121,6 @@ SOURCE=.\encoder.c
 # End Source File
 # Begin Source File
 
-SOURCE=.\fft.c
-# End Source File
-# Begin Source File
-
 SOURCE=.\id3tag.c
 # End Source File
 # Begin Source File
@@ -228,10 +224,6 @@ InputPath=..\configMS.h
 # Begin Source File
 
 SOURCE=.\encoder.h
-# End Source File
-# Begin Source File
-
-SOURCE=.\fft.h
 # End Source File
 # Begin Source File
 
@@ -421,26 +413,6 @@ SOURCE=.\i386\ffttbl.nas
 !ENDIF 
 
 # End Source File
-# Begin Source File
-
-SOURCE=.\i386\scalar.nas
-
-!IF  "$(CFG)" == "libmp3lame - Win32 Release"
-
-!ELSEIF  "$(CFG)" == "libmp3lame - Win32 Debug"
-
-!ELSEIF  "$(CFG)" == "libmp3lame - Win32 Release NASM"
-
-# Begin Custom Build - Assembling
-InputDir=.\i386
-OutDir=.\Release_NASM
-InputPath=.\i386\scalar.nas
-InputName=scalar
-
-"$(OutDir)/$(InputName).obj" : $(SOURCE) "$(INTDIR)" "$(OUTDIR)"
-	nasmw -f win32 -i $(InputDir)/ -DWIN32 $(InputPath) -o   $(OutDir)/$(InputName).obj
-
-# End Custom Build
 
 !ENDIF 
 

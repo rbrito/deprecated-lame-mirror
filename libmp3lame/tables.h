@@ -24,50 +24,8 @@
 
 #include "machine.h"
 
-typedef struct {
-    unsigned char  no;
-    unsigned char  width;
-    unsigned char  minval_2;
-    float          quiet_thr;
-    float          norm;
-    float          bark;
-} type1_t;
-
-typedef struct {
-    unsigned char  no;
-    unsigned char  width;
-    float          quiet_thr;
-    float          norm;
-    float          SNR;
-    float          bark;
-} type2_t;
-
-typedef struct {
-    unsigned int  no     :  5;
-    unsigned int  cbw    :  3;
-    unsigned int  bu     :  6;
-    unsigned int  bo     :  6;
-    unsigned int  w1_576 : 10;
-    unsigned int  w2_576 : 10;
-} type34_t;
-
-typedef struct {
-    size_t                 len1;
-    const type1_t*  const  tab1;
-    size_t                 len2;
-    const type2_t*  const  tab2;
-    size_t                 len3;
-    const type34_t* const  tab3;
-    size_t                 len4;
-    const type34_t* const  tab4;
-} type5_t;
-
-extern const type5_t  table5 [6];
-
-
-
 #define HTN	34
- 
+
 struct huffcodetab {
     const int    xlen; 	        /* max. x-index+			*/ 
     const int    linmax;	/* max number to be stored in linbits	*/
@@ -89,5 +47,38 @@ extern const unsigned int   table23       [3*3];
 extern const unsigned int   table56       [4*4];
 
 extern const int scfsi_band[5];
+
+extern FLOAT window[];
+extern FLOAT window_s[];
+
+#define IXMAX_VAL 8206  /* ix always <= 8191+15.    see count_bits() */
+
+/* buggy Winamp decoder cannot handle values > 8191 */
+/* #define IXMAX_VAL 8191 */
+
+#define PRECALC_SIZE (IXMAX_VAL+2)
+
+extern FLOAT8 pow43[PRECALC_SIZE];
+#ifdef TAKEHIRO_IEEE754_HACK
+extern FLOAT8 adj43asm[PRECALC_SIZE];
+#else
+extern FLOAT8 adj43[PRECALC_SIZE];
+#endif
+
+#define Q_MAX (256+1)
+#define Q_MAX2 116 /* minimam possible number of
+		      -cod_info->global_gain
+		      + ((scalefac[] + (cod_info->preflag ? pretab[sfb] : 0))
+		      << (cod_info->scalefac_scale + 1))
+		      + cod_info->subblock_gain[cod_info->window[sfb]] * 8;
+
+		      for long block, 0+((15+3)<<2) = 18*4 = 72
+		      for short block, 0+(15<<2)+7*8 = 15*4+56 = 116
+		   */
+
+extern FLOAT8 pow20[Q_MAX+Q_MAX2];
+extern FLOAT8 ipow20[Q_MAX];
+extern FLOAT8 iipow20[Q_MAX2];
+
 
 #endif /* LAME_TABLES_H */

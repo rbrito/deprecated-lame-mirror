@@ -35,41 +35,6 @@
 #include <dmalloc.h>
 #endif
 
-static const struct
-{
-    const int region0_count;
-    const int region1_count;
-} subdv_table[ 23 ] =
-{
-{0, 0}, /* 0 bands */
-{0, 0}, /* 1 bands */
-{0, 0}, /* 2 bands */
-{0, 0}, /* 3 bands */
-{0, 0}, /* 4 bands */
-{0, 1}, /* 5 bands */
-{1, 1}, /* 6 bands */
-{1, 1}, /* 7 bands */
-{1, 2}, /* 8 bands */
-{2, 2}, /* 9 bands */
-{2, 3}, /* 10 bands */
-{2, 3}, /* 11 bands */
-{3, 4}, /* 12 bands */
-{3, 4}, /* 13 bands */
-{3, 4}, /* 14 bands */
-{4, 5}, /* 15 bands */
-{4, 5}, /* 16 bands */
-{4, 6}, /* 17 bands */
-{5, 6}, /* 18 bands */
-{5, 6}, /* 19 bands */
-{5, 7}, /* 20 bands */
-{6, 7}, /* 21 bands */
-{6, 7}, /* 22 bands */
-};
-
-
-
-
-
 /*********************************************************************
  * nonlinear quantization of xr 
  * More accurate formula than the ISO formula.  Takes into account
@@ -439,7 +404,7 @@ count_bit_noESC_from3(
   with any arbitrary tables.
 */
 
-static int choose_table_nonMMX(
+int choose_table_nonMMX(
     const int *       ix, 
     const int * const end,
           int * const s )
@@ -1126,50 +1091,4 @@ int scale_bitcount_lsf(const lame_internal_flags *gfc,
 	cod_info->part2_length += cod_info->slen[partition] * cod_info->sfb_partition_table[partition];
     }
     return over;
-}
-
-
-
-void huffman_init(lame_internal_flags * const gfc)
-{
-    int i;
-
-    gfc->choose_table = choose_table_nonMMX;
-    
-#ifdef MMX_choose_table
-    if (gfc->CPU_features.MMX) {
-        extern int choose_table_MMX(const int *ix, const int *end, int *s);
-        gfc->choose_table = choose_table_MMX;
-    }
-#endif
-
-    for (i = 2; i <= 576; i += 2) {
-	int scfb_anz = 0, index;
-	while (gfc->scalefac_band.l[++scfb_anz] < i)
-	    ;
-
-	index = subdv_table[scfb_anz].region0_count;
-	while (gfc->scalefac_band.l[index + 1] > i)
-	    index--;
-
-	if (index < 0) {
-	  /* this is an indication that everything is going to
-	     be encoded as region0:  bigvalues < region0 < region1
-	     so lets set region0, region1 to some value larger
-	     than bigvalues */
-	  index = subdv_table[scfb_anz].region0_count;
-	}
-
-	gfc->bv_scf[i-2] = index;
-
-	index = subdv_table[scfb_anz].region1_count;
-	while (gfc->scalefac_band.l[index + gfc->bv_scf[i-2] + 2] > i)
-	    index--;
-
-	if (index < 0) {
-	    index = subdv_table[scfb_anz].region1_count;
-	}
-
-	gfc->bv_scf[i-1] = index;
-    }
 }

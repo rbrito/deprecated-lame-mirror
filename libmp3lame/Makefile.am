@@ -36,7 +36,6 @@ libmp3lame_la_SOURCES = \
         VbrTag.c \
 	bitstream.c \
 	encoder.c \
-	fft.c \
         id3tag.c \
         lame.c \
         newmdct.c \
@@ -58,7 +57,6 @@ noinst_HEADERS= \
 	VbrTag.h \
 	bitstream.h \
 	encoder.h \
-	fft.h \
 	id3tag.h \
 	l3side.h \
 	lame-analysis.h \

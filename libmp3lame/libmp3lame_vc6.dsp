@@ -125,10 +125,6 @@ SOURCE=.\encoder.c
 # End Source File
 # Begin Source File
 
-SOURCE=.\fft.c
-# End Source File
-# Begin Source File
-
 SOURCE=.\id3tag.c
 # End Source File
 # Begin Source File
@@ -437,21 +433,6 @@ SOURCE=.\i386\fftsse.nas
 # Begin Source File
 
 SOURCE=.\i386\ffttbl.nas
-
-!IF  "$(CFG)" == "libmp3lame - Win32 Release"
-
-!ELSEIF  "$(CFG)" == "libmp3lame - Win32 Debug"
-
-!ELSEIF  "$(CFG)" == "libmp3lame - Win32 Release NASM"
-
-# PROP Exclude_From_Build 1
-
-!ENDIF 
-
-# End Source File
-# Begin Source File
-
-SOURCE=.\i386\scalar.nas
 
 !IF  "$(CFG)" == "libmp3lame - Win32 Release"
 

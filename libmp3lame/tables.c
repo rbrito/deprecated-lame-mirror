@@ -32,6 +32,116 @@
 #include <dmalloc.h>
 #endif
 
+#include <assert.h>
+#include <psymodel.h>
+
+#ifdef M_LN10
+#define		LN_TO_LOG10		(M_LN10/10)
+#else
+#define         LN_TO_LOG10             0.2302585093
+#endif
+
+/*
+  The following table is used to implement the scalefactor
+  partitioning for MPEG2 as described in section
+  2.4.3.2 of the IS. The indexing corresponds to the
+  way the tables are presented in the IS:
+
+  [table_number][row_in_table][column of nr_of_sfb]
+*/
+const int  nr_of_sfb_block [6] [3] [4] =
+{
+  {
+    {6, 5, 5, 5},
+    {9, 9, 9, 9},
+    {6, 9, 9, 9}
+  },
+  {
+    {6, 5, 7, 3},
+    {9, 9, 12, 6},
+    {6, 9, 12, 6}
+  },
+  {
+    {11, 10, 0, 0},
+    {18, 18, 0, 0},
+    {15,18,0,0}
+  },
+  {
+    {7, 7, 7, 0},
+    {12, 12, 12, 0},
+    {6, 15, 12, 0}
+  },
+  {
+    {6, 6, 6, 3},
+    {12, 9, 9, 6},
+    {6, 12, 9, 6}
+  },
+  {
+    {8, 8, 5, 0},
+    {15,12,9,0},
+    {6,18,9,0}
+  }
+};
+
+
+/* Table B.6: layer3 preemphasis */
+const int  pretab [SBMAX_l] =
+{
+    0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
+    1, 1, 1, 1, 2, 2, 3, 3, 3, 2, 0
+};
+
+/*
+  Here are MPEG1 Table B.8 and MPEG2 Table B.1
+  -- Layer III scalefactor bands. 
+  Index into this using a method such as:
+    idx  = fr_ps->header->sampling_frequency
+           + (fr_ps->header->version * 3)
+*/
+
+
+const scalefac_struct sfBandIndex[9] =
+{
+  { /* Table B.2.b: 22.05 kHz */
+    {0,6,12,18,24,30,36,44,54,66,80,96,116,140,168,200,238,284,336,396,464,522,576},
+    {0,4,8,12,18,24,32,42,56,74,100,132,174,192}
+  },
+  { /* Table B.2.c: 24 kHz */                 /* docs: 332. mpg123(broken): 330 */
+    {0,6,12,18,24,30,36,44,54,66,80,96,114,136,162,194,232,278, 332, 394,464,540,576},
+    {0,4,8,12,18,26,36,48,62,80,104,136,180,192}
+  },
+  { /* Table B.2.a: 16 kHz */
+    {0,6,12,18,24,30,36,44,54,66,80,96,116,140,168,200,238,284,336,396,464,522,576},
+    {0,4,8,12,18,26,36,48,62,80,104,134,174,192}
+  },
+  { /* Table B.8.b: 44.1 kHz */
+    {0,4,8,12,16,20,24,30,36,44,52,62,74,90,110,134,162,196,238,288,342,418,576},
+    {0,4,8,12,16,22,30,40,52,66,84,106,136,192}
+  },
+  { /* Table B.8.c: 48 kHz */
+    {0,4,8,12,16,20,24,30,36,42,50,60,72,88,106,128,156,190,230,276,330,384,576},
+    {0,4,8,12,16,22,28,38,50,64,80,100,126,192}
+  },
+  { /* Table B.8.a: 32 kHz */
+    {0,4,8,12,16,20,24,30,36,44,54,66,82,102,126,156,194,240,296,364,448,550,576},
+    {0,4,8,12,16,22,30,42,58,78,104,138,180,192}
+  },
+  { /* MPEG-2.5 11.025 kHz */
+    {0,6,12,18,24,30,36,44,54,66,80,96,116,140,168,200,238,284,336,396,464,522,576},
+    {0/3,12/3,24/3,36/3,54/3,78/3,108/3,144/3,186/3,240/3,312/3,402/3,522/3,576/3}
+  },
+  { /* MPEG-2.5 12 kHz */
+    {0,6,12,18,24,30,36,44,54,66,80,96,116,140,168,200,238,284,336,396,464,522,576},
+    {0/3,12/3,24/3,36/3,54/3,78/3,108/3,144/3,186/3,240/3,312/3,402/3,522/3,576/3}
+  },
+  { /* MPEG-2.5 8 kHz */
+    {0,12,24,36,48,60,72,88,108,132,160,192,232,280,336,400,476,566,568,570,572,574,576},
+    {0/3,24/3,48/3,72/3,108/3,156/3,216/3,288/3,372/3,480/3,486/3,492/3,498/3,576/3}
+  }
+};
+
+
+
 static const short      t1HB[]   = {
   1, 1, 
   1, 0};
@@ -508,5 +618,657 @@ const unsigned  header_word [3] = { 0xFFF00000, 0xFFF80000, 0xFFE00000 };
 
 /* This is the scfsi_band table from 2.4.2.7 of the IS */
 const int scfsi_band[5] = { 0, 6, 11, 16, 21 };
+
+/* for fast quantization */
+FLOAT8 pow20[Q_MAX+Q_MAX2];
+FLOAT8 ipow20[Q_MAX];
+FLOAT8 iipow20[Q_MAX2];
+FLOAT8 pow43[PRECALC_SIZE];
+/* initialized in first call to iteration_init */
+#ifdef TAKEHIRO_IEEE754_HACK
+FLOAT8 adj43asm[PRECALC_SIZE];
+#else
+FLOAT8 adj43[PRECALC_SIZE];
+#endif
+
+/* psymodel window */
+FLOAT window[BLKSIZE], window_s[BLKSIZE_s/2];
+
+
+/* 
+compute the ATH for each scalefactor band 
+cd range:  0..96db
+
+Input:  3.3kHz signal  32767 amplitude  (3.3kHz is where ATH is smallest = -5db)
+longblocks:  sfb=12   en0/bw=-11db    max_en0 = 1.3db
+shortblocks: sfb=5           -9db              0db
+
+Input:  1 1 1 1 1 1 1 -1 -1 -1 -1 -1 -1 -1 (repeated)
+longblocks:  amp=1      sfb=12   en0/bw=-103 db      max_en0 = -92db
+            amp=32767   sfb=12           -12 db                 -1.4db 
+
+Input:  1 1 1 1 1 1 1 -1 -1 -1 -1 -1 -1 -1 (repeated)
+shortblocks: amp=1      sfb=5   en0/bw= -99                    -86 
+            amp=32767   sfb=5           -9  db                  4db 
+
+
+MAX energy of largest wave at 3.3kHz = 1db
+AVE energy of largest wave at 3.3kHz = -11db
+Let's take AVE:  -11db = maximum signal in sfb=12.  
+Dynamic range of CD: 96db.  Therefor energy of smallest audible wave 
+in sfb=12  = -11  - 96 = -107db = ATH at 3.3kHz.  
+
+ATH formula for this wave: -5db.  To adjust to LAME scaling, we need
+ATH = ATH_formula  - 103  (db)
+ATH = ATH * 2.5e-10      (ener)
+
+*/
+
+#define NSATHSCALE 100 // Assuming dynamic range=96dB, this value should be 92
+
+static FLOAT8 ATHmdct( lame_global_flags *gfp, FLOAT8 f )
+{
+    FLOAT8 ath = ATHformula( f , gfp ) - NSATHSCALE;
+
+    /* modify the MDCT scaling for the ATH and convert to energy */
+    return pow( 10.0, ath/10.0 + gfp->ATHlower);
+}
+
+static void compute_ath( lame_global_flags *gfp )
+{
+    FLOAT8 *ATH_l = gfp->internal_flags->ATH.l;
+    FLOAT8 *ATH_s = gfp->internal_flags->ATH.s;
+    lame_internal_flags *gfc = gfp->internal_flags;
+    int sfb, i, start, end;
+    FLOAT8 ATH_f;
+    FLOAT8 samp_freq = gfp->out_samplerate;
+
+    for (sfb = 0; sfb < SBMAX_l; sfb++) {
+        start = gfc->scalefac_band.l[ sfb ];
+        end   = gfc->scalefac_band.l[ sfb+1 ];
+        ATH_l[sfb]=FLOAT8_MAX;
+        for (i = start ; i < end; i++) {
+            FLOAT8 freq = i*samp_freq/(2*576);
+            ATH_f = ATHmdct( gfp, freq );  /* freq in kHz */
+            ATH_l[sfb] = Min( ATH_l[sfb], ATH_f );
+        }
+    }
+
+    for (sfb = 0; sfb < SBMAX_s; sfb++){
+        start = gfc->scalefac_band.s[ sfb ];
+        end   = gfc->scalefac_band.s[ sfb+1 ];
+        ATH_s[sfb] = FLOAT8_MAX;
+        for (i = start ; i < end; i++) {
+            FLOAT8 freq = i*samp_freq/(2*192);
+            ATH_f = ATHmdct( gfp, freq );    /* freq in kHz */
+            ATH_s[sfb] = Min( ATH_s[sfb], ATH_f );
+        }
+	ATH_s[sfb] *=
+	    (gfc->scalefac_band.s[sfb+1] - gfc->scalefac_band.s[sfb]);
+    }
+
+    /*  no-ATH mode:
+     *  reduce ATH to -200 dB
+     */
+    
+    if (gfp->noATH) {
+        for (sfb = 0; sfb < SBMAX_l; sfb++) {
+            ATH_l[sfb] = 1E-37;
+        }
+        for (sfb = 0; sfb < SBMAX_s; sfb++) {
+            ATH_s[sfb] = 1E-37;
+        }
+    }
+    
+    /*  work in progress, don't rely on it too much
+     */
+    gfc->ATH.floor = 10. * log10( ATHmdct( gfp, -1. ) );
+    
+    /*
+    {   FLOAT8 g=10000, t=1e30, x;
+        for ( f = 100; f < 10000; f++ ) {
+            x = ATHmdct( gfp, f );
+            if ( t > x ) t = x, g = f;
+        }
+        printf("min=%g\n", g);
+    }*/
+}
+
+
+/************************************************************************/
+/*  initialization for iteration_loop */
+/************************************************************************/
+static const struct
+{
+    const int region0_count;
+    const int region1_count;
+} subdv_table[ 23 ] =
+{
+{0, 0}, /* 0 bands */
+{0, 0}, /* 1 bands */
+{0, 0}, /* 2 bands */
+{0, 0}, /* 3 bands */
+{0, 0}, /* 4 bands */
+{0, 1}, /* 5 bands */
+{1, 1}, /* 6 bands */
+{1, 1}, /* 7 bands */
+{1, 2}, /* 8 bands */
+{2, 2}, /* 9 bands */
+{2, 3}, /* 10 bands */
+{2, 3}, /* 11 bands */
+{3, 4}, /* 12 bands */
+{3, 4}, /* 13 bands */
+{3, 4}, /* 14 bands */
+{4, 5}, /* 15 bands */
+{4, 5}, /* 16 bands */
+{4, 6}, /* 17 bands */
+{5, 6}, /* 18 bands */
+{5, 6}, /* 19 bands */
+{5, 7}, /* 20 bands */
+{6, 7}, /* 21 bands */
+{6, 7}, /* 22 bands */
+};
+
+
+
+static void
+huffman_init(lame_internal_flags * const gfc)
+{
+    int i;
+    extern int choose_table_nonMMX(const int *ix, const int *end, int *s);
+
+    gfc->choose_table = choose_table_nonMMX;
+
+#ifdef MMX_choose_table
+    if (gfc->CPU_features.MMX) {
+        extern int choose_table_MMX(const int *ix, const int *end, int *s);
+        gfc->choose_table = choose_table_MMX;
+    }
+#endif
+
+    for (i = 2; i <= 576; i += 2) {
+	int scfb_anz = 0, index;
+	while (gfc->scalefac_band.l[++scfb_anz] < i)
+	    ;
+
+	index = subdv_table[scfb_anz].region0_count;
+	while (gfc->scalefac_band.l[index + 1] > i)
+	    index--;
+
+	if (index < 0) {
+	  /* this is an indication that everything is going to
+	     be encoded as region0:  bigvalues < region0 < region1
+	     so lets set region0, region1 to some value larger
+	     than bigvalues */
+	  index = subdv_table[scfb_anz].region0_count;
+	}
+
+	gfc->bv_scf[i-2] = index;
+
+	index = subdv_table[scfb_anz].region1_count;
+	while (gfc->scalefac_band.l[index + gfc->bv_scf[i-2] + 2] > i)
+	    index--;
+
+	if (index < 0) {
+	    index = subdv_table[scfb_anz].region1_count;
+	}
+
+	gfc->bv_scf[i-1] = index;
+    }
+}
+
+void
+iteration_init( lame_global_flags *gfp)
+{
+  lame_internal_flags *gfc=gfp->internal_flags;
+  III_side_info_t * const l3_side = &gfc->l3_side;
+  int i;
+
+  if ( gfc->iteration_init_init==0 ) {
+    FLOAT8 bass, alto, treble, sfb21;
+    gfc->iteration_init_init=1;
+
+    l3_side->main_data_begin = 0;
+    compute_ath(gfp);
+
+    pow43[0] = 0.0;
+    for(i=1;i<PRECALC_SIZE;i++)
+        pow43[i] = pow((FLOAT8)i, 4.0/3.0);
+
+#ifdef TAKEHIRO_IEEE754_HACK
+    adj43asm[0] = 0.0;
+    for (i = 1; i < PRECALC_SIZE; i++)
+      adj43asm[i] = i - 0.5 - pow(0.5 * (pow43[i - 1] + pow43[i]),0.75);
+#else
+    for (i = 0; i < PRECALC_SIZE-1; i++)
+	adj43[i] = (i + 1) - pow(0.5 * (pow43[i] + pow43[i + 1]), 0.75);
+    adj43[i] = 0.5;
+#endif
+    for (i = 0; i < Q_MAX; i++)
+	ipow20[i] = pow(2.0, (double)(i - 210) * -0.1875);
+    for (i = 0; i < Q_MAX+Q_MAX2; i++)
+	pow20[i] = pow(2.0, (double)(i - 210 - Q_MAX2) * 0.25);
+    for (i = 0; i < Q_MAX2; i++)
+        iipow20[i] = pow(2.0, (double)i * 0.1875);
+
+    huffman_init(gfc);
+
+    i = (gfp->exp_nspsytune >> 2) & 63;
+    if (i >= 32)
+	i -= 64;
+    bass = pow(10, i / 4.0 / 10.0);
+
+    i = (gfp->exp_nspsytune >> 8) & 63;
+    if (i >= 32)
+	i -= 64;
+    alto = pow(10, i / 4.0 / 10.0);
+
+    i = (gfp->exp_nspsytune >> 14) & 63;
+    if (i >= 32)
+	i -= 64;
+    treble = pow(10, i / 4.0 / 10.0);
+
+    /*  to be compatible with Naoki's original code, the next 6 bits
+     *  define only the amount of changing treble for sfb21 */
+    i = (gfp->exp_nspsytune >> 20) & 63;
+    if (i >= 32)
+	i -= 64;
+    sfb21 = treble * pow(10, i / 4.0 / 10.0);
+
+    for (i = 0; i < SBMAX_l; i++) {
+	FLOAT8 f;
+	if      (i <=  6) f = bass;
+	else if (i <= 13) f = alto;
+	else if (i <= 20) f = treble;
+	else              f = sfb21;
+	if ((gfp->VBR == vbr_off || gfp->VBR == vbr_abr) && gfp->quality <= 1)
+	    f *= 0.001;
+
+	gfc->nsPsy.longfact[i] = f;
+    }
+    for (i = 0; i < SBMAX_s; i++) {
+	FLOAT8 f;
+	if      (i <=  5) f = bass;
+	else if (i <= 10) f = alto;
+	else              f = treble;
+	if ((gfp->VBR == vbr_off || gfp->VBR == vbr_abr) && gfp->quality <= 1)
+	    f *= 0.001;
+
+	gfc->nsPsy.shortfact[i] = f;
+    }
+  }
+}
+
+
+
+
+
+/* 
+ *   The spreading function.  Values returned in units of energy
+ */
+static FLOAT8 s3_func(FLOAT8 bark) {
+    FLOAT8 tempx,x,tempy,temp;
+    tempx = bark;
+    if (tempx>=0) tempx *= 3;
+    else tempx *=1.5; 
+
+    if (tempx>=0.5 && tempx<=2.5)
+      {
+	temp = tempx - 0.5;
+	x = 8.0 * (temp*temp - 2.0 * temp);
+      }
+    else x = 0.0;
+    tempx += 0.474;
+    tempy = 15.811389 + 7.5*tempx - 17.5*sqrt(1.0+tempx*tempx);
+
+    if (tempy <= -60.0) return  0.0;
+
+    tempx = exp( (x + tempy)*LN_TO_LOG10 ); 
+
+    /* Normalization.  The spreading function should be normalized so that:
+         +inf
+           /
+           |  s3 [ bark ]  d(bark)   =  1
+           /
+         -inf
+    */
+    tempx /= .6609193;
+    return tempx;
+}
+
+static int
+init_numline(
+    int *numlines, int *bo, int *bm,
+    FLOAT8 *bval, FLOAT8 *bval_width, FLOAT8 *mld,
+
+    FLOAT8 sfreq, int blksize, int *scalepos,
+    FLOAT8 deltafreq, int sbmax
+    )
+{
+    int partition[HBLKSIZE];
+    int i, j, k;
+    int sfb;
+
+    sfreq /= blksize;
+    j = 0;
+    /* compute numlines, the number of spectral lines in each partition band */
+    /* each partition band should be about DELBARK wide. */
+    for (i=0;i<CBANDS;i++) {
+	FLOAT8 bark1;
+	int j2;
+	bark1 = freq2bark(sfreq*j);
+	for (j2 = j; freq2bark(sfreq*j2) - bark1 < DELBARK && j2 <= blksize/2;
+	     j2++)
+	    ;
+
+	numlines[i] = j2 - j;
+	while (j<j2)
+	    partition[j++]=i;
+	if (j > blksize/2) break;
+    }
+
+    for ( sfb = 0; sfb < sbmax; sfb++ ) {
+	int i1,i2,start,end;
+	FLOAT8 arg;
+	start = scalepos[sfb];
+	end   = scalepos[sfb+1];
+
+	i1 = floor(.5 + deltafreq*(start-.5));
+	if (i1<0) i1=0;
+	i2 = floor(.5 + deltafreq*(end-.5));
+	if (i2>blksize/2) i2=blksize/2;
+
+	bm[sfb] = (partition[i1]+partition[i2])/2;
+	bo[sfb] = partition[i2];
+
+	/* setup stereo demasking thresholds */
+	/* formula reverse enginerred from plot in paper */
+	arg = freq2bark(sfreq*scalepos[sfb]*deltafreq);
+	arg = (Min(arg, 15.5)/15.5);
+
+	mld[sfb] = pow(10.0, 1.25*(1-cos(PI*arg))-2.5);
+    }
+
+    /* compute bark values of each critical band */
+    j = 0;
+    for (k = 0; k < i+1; k++) {
+	int w = numlines[k];
+	FLOAT8  bark1,bark2;
+
+	bark1 = freq2bark (sfreq*(j    ));
+	bark2 = freq2bark (sfreq*(j+w-1));
+	bval[k] = .5*(bark1+bark2);
+
+	bark1 = freq2bark (sfreq*(j  -.5));
+	bark2 = freq2bark (sfreq*(j+w-.5));
+	bval_width[k] = bark2-bark1;
+	j += w;
+    }
+
+    return i+1;
+}
+
+static int
+init_s3_values(
+    lame_internal_flags *gfc,
+    FLOAT8 **p,
+    int (*s3ind)[2],
+    int npart,
+    FLOAT8 *bval,
+    FLOAT8 *bval_width,
+    FLOAT8 *norm
+    )
+{
+    FLOAT8 s3[CBANDS][CBANDS];
+    int i, j, k;
+    int numberOfNoneZero = 0;
+
+    /* s[j][i], the value of the spreading function,
+     * centered at band j, for band i
+     *
+     * i.e.: sum over j to spread into signal barkval=i
+     * NOTE: i and j are used opposite as in the ISO docs
+     */
+    for (i = 0; i < npart; i++)
+	for (j = 0; j < npart; j++)
+	    s3[i][j] = s3_func(bval[i] - bval[j]) * bval_width[j] * norm[i];
+
+    for (i = 0; i < npart; i++) {
+	for (j = 0; j < npart; j++) {
+	    if (s3[i][j] != 0.0)
+		break;
+	}
+	s3ind[i][0] = j;
+
+	for (j = npart - 1; j > 0; j--) {
+	    if (s3[i][j] != 0.0)
+		break;
+	}
+	s3ind[i][1] = j;
+	numberOfNoneZero += (s3ind[i][1] - s3ind[i][0] + 1);
+    }
+    *p = malloc(sizeof(FLOAT8)*numberOfNoneZero);
+    if (!*p)
+	return -1;
+
+    k = 0;
+    for (i = 0; i < npart; i++)
+	for (j = s3ind[i][0]; j <= s3ind[i][1]; j++)
+	    (*p)[k++] = s3[i][j];
+
+    return 0;
+}
+
+int psymodel_init(lame_global_flags *gfp)
+{
+    lame_internal_flags *gfc=gfp->internal_flags;
+    int i,j,b,sb,k;
+
+    FLOAT8 bval[CBANDS];
+    FLOAT8 bval_width[CBANDS];
+    FLOAT8 norm[CBANDS];
+    FLOAT8 sfreq = gfp->out_samplerate;
+
+    gfc->ms_ener_ratio_old=.25;
+    gfc->blocktype_old[0] = gfc->blocktype_old[1] = SHORT_TYPE;
+
+    for (i=0; i<4; ++i) {
+	for (j=0; j<CBANDS; ++j) {
+	    gfc->nb_1[i][j]=1e20;
+	    gfc->nb_2[i][j]=1e20;
+	    gfc->nb_s1[i][j] = gfc->nb_s2[i][j] = 1.0;
+	}
+	for ( sb = 0; sb < SBMAX_l; sb++ ) {
+	    gfc->en[i].l[sb] = 1e20;
+	    gfc->thm[i].l[sb] = 1e20;
+	}
+	for (j=0; j<3; ++j) {
+	    for ( sb = 0; sb < SBMAX_s; sb++ ) {
+		gfc->en[i].s[sb][j] = 1e20;
+		gfc->thm[i].s[sb][j] = 1e20;
+	    }
+	    gfc->nsPsy.last_attacks[i] = 0;
+	}
+	for(j=0;j<9;j++)
+	    gfc->nsPsy.last_en_subshort[i][j] = 10.;
+    }
+
+
+
+    /* init. for loudness approx. -jd 2001 mar 27*/
+    gfc->loudness_sq_save[0] = gfc->loudness_sq_save[1] = 0.0;
+
+
+
+
+    /*************************************************************************
+     * now compute the psychoacoustic model specific constants
+     ************************************************************************/
+    /* compute numlines, bo, bm, bval, bval_width, mld */
+    gfc->npart_l
+	= init_numline(gfc->numlines_l, gfc->bo_l, gfc->bm_l,
+		       bval, bval_width, gfc->mld_l,
+		       sfreq, BLKSIZE, 
+		       gfc->scalefac_band.l, BLKSIZE/(2.0*576), SBMAX_l);
+    assert(gfc->npart_l <= CBANDS);
+    /* compute the spreading function */
+    for(i=0;i<gfc->npart_l;i++) {
+	norm[i]=1.0;
+	gfc->rnumlines_l[i] = 1.0 / gfc->numlines_l[i];
+    }
+    i = init_s3_values(gfc, &gfc->s3_ll, gfc->s3ind,
+		       gfc->npart_l, bval, bval_width, norm);
+    if (i)
+	return i;
+
+    /* compute long block specific values, ATH */
+    j = 0;
+    for ( i = 0; i < gfc->npart_l; i++ ) {
+	double x;
+
+	/* ATH */
+	x = FLOAT_MAX;
+	for (k=0; k < gfc->numlines_l[i]; k++, j++) {
+	    FLOAT8  freq = sfreq*j/(1000.0*BLKSIZE);
+	    FLOAT8  level;
+	    assert( freq <= 24 );              // or only '<'
+	    //	freq = Min(.1,freq);       // ATH below 100 Hz constant, not further climbing
+	    level  = ATHformula (freq*1000, gfp) - 20;   // scale to FFT units; returned value is in dB
+	    level  = pow ( 10., 0.1*level );   // convert from dB -> energy
+	    level *= gfc->numlines_l [i];
+	    if (x > level)
+		x = level;
+	}
+	gfc->ATH.cb[i] = x;
+    }
+
+
+    /************************************************************************
+     * do the same things for short blocks
+     ************************************************************************/
+    gfc->npart_s
+	= init_numline(gfc->numlines_s, gfc->bo_s, gfc->bm_s,
+		       bval, bval_width, gfc->mld_s,
+		       sfreq, BLKSIZE_s,
+		       gfc->scalefac_band.s, BLKSIZE_s/(2.0*192), SBMAX_s);
+    assert(gfc->npart_s <= CBANDS);
+
+    /* SNR formula. short block is normalized by SNR. is it still right ? */
+    for(i=0;i<gfc->npart_s;i++) {
+	double snr=-8.25;
+	if (bval[i]>=13)
+	    snr = -4.5 * (bval[i]-13)/(24.0-13.0)
+		-8.25*(bval[i]-24)/(13.0-24.0);
+
+	norm[i]=pow(10.0,snr/10.0);
+    }
+    i = init_s3_values(gfc, &gfc->s3_ss, gfc->s3ind_s,
+		       gfc->npart_s, bval, bval_width, norm);
+    if (i)
+	return i;
+
+
+    if (gfp->ATHtype != -1) { 
+	/* compute equal loudness weights */
+	FLOAT freq;
+	FLOAT freq_inc = gfp->out_samplerate / (BLKSIZE);
+	FLOAT eql_balance = 0.0;
+	freq = 0.0;
+	for( i = 0; i < BLKSIZE/2; ++i ) {
+	    freq += freq_inc;
+				/* convert ATH dB to relative power (not dB) */
+				/*  to determine eql_w */
+	    gfc->ATH.eql_w[i] = 1. / pow( 10, ATHformula( freq, gfp ) / 10 );
+	    eql_balance += gfc->ATH.eql_w[i];
+	}
+	eql_balance = 1.0 / eql_balance;
+	for( i = BLKSIZE/2; --i >= 0; ) { /* scale weights */
+	    gfc->ATH.eql_w[i] *= eql_balance;
+	}
+    }
+
+
+    init_mask_add_max_values();
+
+    /* setup temporal masking */
+#define temporalmask_sustain_sec 0.01
+    gfc->decay = exp(-1.0*LOG10/(temporalmask_sustain_sec*sfreq/192.0));
+
+    {
+	FLOAT8 msfix;
+
+#define NS_MSFIX 3.5
+#define NSATTACKTHRE 15
+#define NSATTACKTHRE_S 30
+
+	msfix = NS_MSFIX;
+	if (gfp->exp_nspsytune & 2) msfix = 1.0;
+	if (gfp->msfix != 0.0) msfix = gfp->msfix;
+	gfp->msfix = msfix;
+	if (!gfc->presetTune.use || gfc->nsPsy.athadjust_msfix <= 0.0)
+	    gfc->nsPsy.athadjust_msfix = gfp->msfix;
+
+	if (!gfc->presetTune.use) {
+	    gfc->nsPsy.attackthre   = NSATTACKTHRE;
+	    gfc->nsPsy.attackthre_s = NSATTACKTHRE_S;
+	}
+
+	/* spread only from npart_l bands.  Normally, we use the spreading
+	 * function to convolve from npart_l down to npart_l bands 
+	 */
+	for (b=0;b<gfc->npart_l;b++)
+	    if (gfc->s3ind[b][1] > gfc->npart_l-1)
+		gfc->s3ind[b][1] = gfc->npart_l-1;
+    }
+
+    /*  prepare for ATH auto adjustment:
+     *  we want to decrease the ATH by 12 dB per second
+     */
+    {
+        FLOAT8 frame_duration = 576. * gfc->mode_gr / sfreq;
+        gfc->ATH.decay = pow(10., -12./10. * frame_duration);
+        gfc->ATH.adjust = 0.01; /* minimum, for leading low loudness */
+        gfc->ATH.adjust_limit = 1.0; /* on lead, allow adjust up to maximum */
+    }
+
+    gfc->bo_s[SBMAX_s-1]--;
+    assert(gfc->bo_l[SBMAX_l-1] <= gfc->npart_l);
+    assert(gfc->bo_s[SBMAX_s-1] <= gfc->npart_s);
+
+    // The type of window used here will make no real difference, but
+    // in the interest of merging nspsytune stuff - switch to blackman window
+    for (i = 0; i < BLKSIZE ; i++)
+      /* blackman window */
+      window[i] = 0.42-0.5*cos(2*PI*(i+.5)/BLKSIZE)+
+	0.08*cos(4*PI*(i+.5)/BLKSIZE);
+
+    for (i = 0; i < BLKSIZE_s/2 ; i++)
+	window_s[i] = 0.5 * (1.0 - cos(2.0 * PI * (i + 0.5) / BLKSIZE_s));
+
+    {
+        extern void fht(FLOAT *fz, int n);
+        gfc->fft_fht = fht;
+    }
+#ifdef HAVE_NASM
+    if (gfc->CPU_features.AMD_3DNow) {
+        extern void fht_3DN(FLOAT *fz, int n);
+        gfc->fft_fht = fht_3DN;
+    } else 
+#endif
+#ifdef USE_FFTSSE
+    if (gfc->CPU_features.SIMD) {
+        extern void fht_SSE(FLOAT *fz, int n);
+        gfc->fft_fht = fht_SSE;
+    } else 
+#endif
+#ifdef USE_FFTFPU
+    if (gfc->CPU_features.i387) {
+        extern void fht_FPU(FLOAT *fz, int n);
+        gfc->fft_fht = fht_FPU;
+    }
+#endif
+
+    return 0;
+}
 
 /* end of tables.c */

@@ -1154,20 +1154,18 @@ lame_get_athaa_sensitivity( const lame_global_flags*  gfp )
 }
 
 
-/* Predictability limit (ISO tonality formula) */
+/* just for backward compatibility */
 int
 lame_set_cwlimit( lame_global_flags*  gfp,
                   int                 cwlimit )
 {
-    gfp->cwlimit = cwlimit;
-
     return 0;
 }
 
 int
 lame_get_cwlimit( const lame_global_flags*  gfp )
 {
-    return gfp->cwlimit;
+    return 0;
 }
 
 
@@ -1530,7 +1528,7 @@ lame_set_preset_expopts( lame_global_flags*  gfp, int preset_expopts )
              gfc->presetTune.quantcomp_type_s = 4;
              gfc->presetTune.quantcomp_alt_type = 0;
              gfc->presetTune.athadjust_safe_noiseshaping_thre = 0.0;
-	     gfc->presetTune.athadjust_safe_athaasensitivity = 8.0;
+	     gfc->presetTune.athadjust_safe_athaasensitivity = pow(10., -.8);
           }
           else {
              lame_set_experimentalX(gfp, 3);
@@ -1562,7 +1560,7 @@ lame_set_preset_expopts( lame_global_flags*  gfp, int preset_expopts )
 	     gfc->presetTune.quantcomp_alt_type = 0;
              (void) lame_set_ATHlower( gfp, -2 );
              gfc->presetTune.athadjust_safe_noiseshaping_thre = 0.0;
-	     gfc->presetTune.athadjust_safe_athaasensitivity = 8.0;
+	     gfc->presetTune.athadjust_safe_athaasensitivity = pow(10., -.8);
           }
           else {
              gfc->presetTune.quantcomp_type_s = 3;

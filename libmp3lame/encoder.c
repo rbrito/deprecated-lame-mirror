@@ -59,8 +59,8 @@ adjust_ATH( lame_global_flags* const  gfp,
     FLOAT max_pow, max_pow_alt;
     FLOAT8 max_val;
 
-    if (gfc->ATH->use_adjust == 0 || gfp->athaa_loudapprox == 0) {
-        gfc->ATH->adjust = 1.0;	/* no adjustment */
+    if (gfc->ATH.use_adjust == 0 || gfp->athaa_loudapprox == 0) {
+        gfc->ATH.adjust = 1.0;	/* no adjustment */
         return;
     }
     
@@ -100,13 +100,13 @@ adjust_ATH( lame_global_flags* const  gfp,
                                 /* jd - 2001 mar 31, jun 30 */
                                 /* user tuning of ATH adjustment region */
     max_pow_alt = max_pow;
-    max_pow *= gfc->athaa_sensitivity_p;
+    max_pow *= gfc->ATH.aa_sensitivity_p;
     if (gfc->presetTune.use)
-        max_pow_alt *= pow( 10.0, gfc->presetTune.athadjust_safe_athaasensitivity / -10.0 );
+        max_pow_alt *= gfc->presetTune.athadjust_safe_athaasensitivity;
 
     /*  adjust ATH depending on range of maximum value
      */
-    switch ( gfc->ATH->use_adjust ) {
+    switch ( gfc->ATH.use_adjust ) {
 
     case  1:
         max_val = sqrt( max_pow ); /* GB's original code requires a maximum */
@@ -114,17 +114,17 @@ adjust_ATH( lame_global_flags* const  gfp,
 
                                 /* by Gabriel Bouvigne */
         if      (0.5 < max_val / 32768) {       /* value above 50 % */
-                gfc->ATH->adjust = 1.0;         /* do not reduce ATH */
+                gfc->ATH.adjust = 1.0;         /* do not reduce ATH */
         }
         else if (0.3 < max_val / 32768) {       /* value above 30 % */
-                gfc->ATH->adjust *= 0.955;      /* reduce by ~0.2 dB */
-                if (gfc->ATH->adjust < 0.3)     /* but ~5 dB in maximum */
-                    gfc->ATH->adjust = 0.3;            
+                gfc->ATH.adjust *= 0.955;      /* reduce by ~0.2 dB */
+                if (gfc->ATH.adjust < 0.3)     /* but ~5 dB in maximum */
+                    gfc->ATH.adjust = 0.3;            
         }
         else {                                  /* value below 30 % */
-                gfc->ATH->adjust *= 0.93;       /* reduce by ~0.3 dB */
-                if (gfc->ATH->adjust < 0.01)    /* but 20 dB in maximum */
-                    gfc->ATH->adjust = 0.01;
+                gfc->ATH.adjust *= 0.93;       /* reduce by ~0.3 dB */
+                if (gfc->ATH.adjust < 0.01)    /* but 20 dB in maximum */
+                    gfc->ATH.adjust = 0.01;
         }
         break;
 
@@ -138,9 +138,9 @@ adjust_ATH( lame_global_flags* const  gfp,
         //x = Max (640, 320*(int)(max_val/320));
         x = Max (32, 32*(int)(max_val/32));
         x = x/32768;
-        gfc->ATH->adjust *= gfc->ATH->decay;
-        if (gfc->ATH->adjust < x)       /* but not more than f(x) dB */
-            gfc->ATH->adjust = x;
+        gfc->ATH.adjust *= gfc->ATH.decay;
+        if (gfc->ATH.adjust < x)       /* but not more than f(x) dB */
+            gfc->ATH.adjust = x;
       }
         break;
 
@@ -156,8 +156,8 @@ adjust_ATH( lame_global_flags* const  gfp,
                                 /* towards adjust_limit gradually. */
                                 /* max_pow is a loudness squared or a power. */
         if( max_pow > 0.03125) { /* ((1 - 0.000625)/ 31.98) from curve below */
-            if( gfc->ATH->adjust >= 1.0) {
-                gfc->ATH->adjust = 1.0;
+            if( gfc->ATH.adjust >= 1.0) {
+                gfc->ATH.adjust = 1.0;
                 if (gfc->presetTune.use) {
 		        if (max_pow_alt > gfc->presetTune.athadjust_safe_noiseshaping_thre)
 			      gfc->presetTune.athadjust_safe_noiseshaping = 1;
@@ -168,8 +168,8 @@ adjust_ATH( lame_global_flags* const  gfp,
                                 /* preceding frame has lower ATH adjust; */
                                 /* ascend only to the preceding adjust_limit */
                                 /* in case there is leading low volume */
-                if( gfc->ATH->adjust < gfc->ATH->adjust_limit) {
-                    gfc->ATH->adjust = gfc->ATH->adjust_limit;
+                if( gfc->ATH.adjust < gfc->ATH.adjust_limit) {
+                    gfc->ATH.adjust = gfc->ATH.adjust_limit;
                     if (gfc->presetTune.use) {
                         if (max_pow_alt > gfc->presetTune.athadjust_safe_noiseshaping_thre)
                             gfc->presetTune.athadjust_safe_noiseshaping = 1;
@@ -178,26 +178,26 @@ adjust_ATH( lame_global_flags* const  gfp,
                     }
                 }
             }
-            gfc->ATH->adjust_limit = 1.0;
+            gfc->ATH.adjust_limit = 1.0;
         } else {                /* adjustment curve */
                                 /* about 32 dB maximum adjust (0.000625) */
             adj_lim_new = 31.98 * max_pow + 0.000625;
-            if( gfc->ATH->adjust >= adj_lim_new) { /* descend gradually */
-                gfc->ATH->adjust *= adj_lim_new * 0.075 + 0.925;
-                if( gfc->ATH->adjust < adj_lim_new) { /* stop descent */
-                    gfc->ATH->adjust = adj_lim_new;
+            if( gfc->ATH.adjust >= adj_lim_new) { /* descend gradually */
+                gfc->ATH.adjust *= adj_lim_new * 0.075 + 0.925;
+                if( gfc->ATH.adjust < adj_lim_new) { /* stop descent */
+                    gfc->ATH.adjust = adj_lim_new;
                 }
             } else {            /* ascend */
-                if( gfc->ATH->adjust_limit >= adj_lim_new) {
-                    gfc->ATH->adjust = adj_lim_new;
+                if( gfc->ATH.adjust_limit >= adj_lim_new) {
+                    gfc->ATH.adjust = adj_lim_new;
                 } else {        /* preceding frame has lower ATH adjust; */
                                 /* ascend only to the preceding adjust_limit */
-                    if( gfc->ATH->adjust < gfc->ATH->adjust_limit) {
-                        gfc->ATH->adjust = gfc->ATH->adjust_limit;
+                    if( gfc->ATH.adjust < gfc->ATH.adjust_limit) {
+                        gfc->ATH.adjust = gfc->ATH.adjust_limit;
                     }
                 }
             }
-            gfc->ATH->adjust_limit = adj_lim_new;
+            gfc->ATH.adjust_limit = adj_lim_new;
         }
       }
         break;
@@ -309,11 +309,11 @@ int  lame_encode_mp3_frame (				// Output
   if (gfc->lame_encode_frame_init==0 ) {
       /* prime the MDCT/polyphase filterbank with a short block */
       int i,j;
-      sample_t primebuff0[286+1152+576];
-      sample_t primebuff1[286+1152+576];
+      sample_t primebuff0[1152+576];
+      sample_t primebuff1[1152+576];
       gfc->lame_encode_frame_init=1;
-      for (i=0, j=0; i<286+576*(1+gfc->mode_gr); ++i) {
-	  if (i<576*gfc->mode_gr) {
+      for (i=0, j=0; i<576*(1+gfc->mode_gr); ++i) {
+	  if (i<576*gfc->mode_gr-286) {
 	      primebuff0[i]=0;
 	      if (gfc->channels_out==2) 
 		  primebuff1[i]=0;
@@ -372,21 +372,14 @@ int  lame_encode_mp3_frame (				// Output
 
     ms_ratio_prev=gfc->ms_ratio[gfc->mode_gr-1];
     for (gr=0; gr < gfc->mode_gr ; gr++) {
-
       for ( ch = 0; ch < gfc->channels_out; ch++ )
 	bufp[ch] = &inbuf[ch][576 + gr*576-FFTOFFSET];
 
-      if (gfc->nsPsy.use) {
-	ret=L3psycho_anal_ns( gfp, bufp, gr, 
-			      &gfc->ms_ratio[gr],&ms_ratio_next,
-			      masking_LR, masking_MS,
-			      pe[gr],pe_MS[gr],tot_ener[gr],blocktype);
-      } else {
-	ret=L3psycho_anal( gfp, bufp, gr, 
-			   &gfc->ms_ratio[gr],&ms_ratio_next,
-			   masking_LR, masking_MS,
-			   pe[gr],pe_MS[gr],tot_ener[gr],blocktype);
-      }
+      ret=L3psycho_anal_ns( gfp, bufp, gr, 
+			    &gfc->ms_ratio[gr],&ms_ratio_next,
+			    masking_LR, masking_MS,
+			    pe[gr],pe_MS[gr],tot_ener[gr],blocktype);
+
       if (ret!=0) return -4;
 
       if (gfp->mode == JOINT_STEREO) {
@@ -429,7 +422,7 @@ int  lame_encode_mp3_frame (				// Output
 
 
   /* polyphase filtering / mdct */
-  mdct_sub48(gfc, inbuf[0], inbuf[1]);
+  mdct_sub48(gfc, inbuf_l, inbuf_r);
 
   /* Here will be selected MS or LR coding of the 2 stereo channels */
   gfc->mode_ext = MPG_MD_LR_LR;
@@ -437,47 +430,17 @@ int  lame_encode_mp3_frame (				// Output
   if (gfp->force_ms) {
     gfc->mode_ext = MPG_MD_MS_LR;
   } else if (gfp->mode == JOINT_STEREO) {
-    int check_ms_stereo = 1;
-    /* ms_ratio = is scaled, for historical reasons, to look like
-       a ratio of side_channel / total.
-       0 = signal is 100% mono
-       .5 = L & R uncorrelated
-    */
+      /* ms_ratio = is scaled, for historical reasons, to look like
+	 a ratio of side_channel / total.
+	 0 = signal is 100% mono
+	 .5 = L & R uncorrelated
+      */
 
-    /* [0] and [1] are the results for the two granules in MPEG-1,
-     * in MPEG-2 it's only a faked averaging of the same value
-     * _prev is the value of the last granule of the previous frame
-     * _next is the value of the first granule of the next frame
-     */
-    if (!gfc->nsPsy.use) {
-      FLOAT8  ms_ratio_ave1;
-      FLOAT8  ms_ratio_ave2;
-      FLOAT8  threshold1    = 0.35;
-      FLOAT8  threshold2    = 0.45;
-
-      /* take an average */
-      if (gfc->mode_gr==1) {
-	  /* MPEG2 - no second granule */
-	  ms_ratio_ave1 = 0.33 * ( gfc->ms_ratio[0] + ms_ratio_prev + ms_ratio_next );
-	  ms_ratio_ave2 = gfc->ms_ratio[0];
-      }else{
-	  ms_ratio_ave1 = 0.25 * ( gfc->ms_ratio[0] + gfc->ms_ratio[1] + ms_ratio_prev + ms_ratio_next );
-	  ms_ratio_ave2 = 0.50 * ( gfc->ms_ratio[0] + gfc->ms_ratio[1] );
-      }
-      
-      if (gfp->mode_automs && gfp->compression_ratio < 11.025 )
-	{
-	  /* 11.025 => 1, 6.3 => 0 */
-	  double thr = (gfp->compression_ratio - 6.3) / (11.025 - 6.3);
-	  if (thr<0) thr=0;
-	  threshold1   *= thr;
-	  threshold2   *= thr;
-	}
-
-      if (ms_ratio_ave1 >= threshold1 || ms_ratio_ave2 >= threshold2)
-	check_ms_stereo = 0;
-    }
-    if (check_ms_stereo) {
+      /* [0] and [1] are the results for the two granules in MPEG-1,
+       * in MPEG-2 it's only a faked averaging of the same value
+       * _prev is the value of the last granule of the previous frame
+       * _next is the value of the first granule of the next frame
+       */
       FLOAT8 sum_pe_MS = 0;
       FLOAT8 sum_pe_LR = 0;
       for ( gr = 0; gr < gfc->mode_gr; gr++ ) {
@@ -488,10 +451,8 @@ int  lame_encode_mp3_frame (				// Output
       }
 
       /* based on PE: M/S coding would not use much more bits than L/R */
-      if ((!gfc->nsPsy.use && sum_pe_MS <= 1.07 * sum_pe_LR)
-	  || (gfc->nsPsy.use && sum_pe_MS <= 1.00 * sum_pe_LR))
-	gfc->mode_ext = MPG_MD_MS_LR;
-    }
+      if (sum_pe_MS <= sum_pe_LR)
+	  gfc->mode_ext = MPG_MD_MS_LR;
   }
 
 
@@ -537,19 +498,12 @@ int  lame_encode_mp3_frame (				// Output
 	gfc->pinfo->pe[gr][ch]=(*pe_use)[gr][ch];
 	memcpy(gfc->pinfo->xr[gr][ch], &gfc->l3_side.tt[gr][ch].xr,
 	       sizeof(FLOAT8)*576);
-	/* in psymodel, LR and MS data was stored in pinfo.  
-	   switch to MS data: */
-	if (gfc->mode_ext==MPG_MD_MS_LR) {
-	  gfc->pinfo->ers[gr][ch]=gfc->pinfo->ers[gr][ch+2];
-	  memcpy(gfc->pinfo->energy[gr][ch],gfc->pinfo->energy[gr][ch+2],
-		 sizeof(gfc->pinfo->energy[gr][ch]));
-	}
       }
     }
   }
 #endif
 
-  if (gfc->nsPsy.use && (gfp->VBR == vbr_off || gfp->VBR == vbr_abr)) {
+  if (gfp->VBR == vbr_off || gfp->VBR == vbr_abr) {
     static FLOAT fircoef[9] = {
 	-0.0207887 *5,	-0.0378413*5,	-0.0432472*5,	-0.031183*5,
 	7.79609e-18*5,	 0.0467745*5,	 0.10091*5,	0.151365*5,

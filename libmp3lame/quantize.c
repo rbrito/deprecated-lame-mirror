@@ -36,10 +36,326 @@
 #include "lame-analysis.h"
 #include "vbrquantize.h"
 #include "machine.h"
+#include "tables.h"
 
 #ifdef WITH_DMALLOC
 #include <dmalloc.h>
 #endif
+
+
+/************************************************************************
+ * allocate bits among 2 channels based on PE
+ * mt 6/99
+ * bugfixes rh 8/01: often allocated more than the allowed 4095 bits
+ ************************************************************************/
+static int
+on_pe( lame_global_flags *gfp, FLOAT8 pe[][2], III_side_info_t *l3_side,
+       int targ_bits[2], int mean_bits, int gr, int cbr )
+{
+    lame_internal_flags * gfc = gfp->internal_flags;
+    gr_info *   cod_info;
+    int     extra_bits, tbits, bits;
+    int     add_bits[2]; 
+    int     max_bits;  /* maximum allowed bits for this granule */
+    int     ch;
+
+    /* allocate targ_bits for granule */
+    ResvMaxBits( gfp, mean_bits, &tbits, &extra_bits, cbr);
+    max_bits = tbits + extra_bits;
+    if (max_bits > MAX_BITS) /* hard limit per granule */
+        max_bits = MAX_BITS;
+    
+    for ( bits = 0, ch = 0; ch < gfc->channels_out; ++ch ) {
+        /******************************************************************
+         * allocate bits for each channel 
+         ******************************************************************/
+        cod_info = &l3_side->tt[gr][ch];
+    
+        targ_bits[ch] = Min( MAX_BITS, tbits/gfc->channels_out );
+	add_bits[ch] = targ_bits[ch] * pe[gr][ch] / 700.0 - targ_bits[ch];
+
+        /* at most increase bits by 1.5*average */
+        if (add_bits[ch] > mean_bits*3/4) 
+            add_bits[ch] = mean_bits*3/4;
+        if (add_bits[ch] < 0) 
+            add_bits[ch] = 0;
+
+        if (add_bits[ch]+targ_bits[ch] > MAX_BITS) 
+	    add_bits[ch] = Max( 0, MAX_BITS-targ_bits[ch] );
+
+        bits += add_bits[ch];
+    }
+    if (bits > extra_bits) {
+        for ( ch = 0; ch < gfc->channels_out; ++ch ) {
+            add_bits[ch] = extra_bits * add_bits[ch] / bits;
+        }
+    }
+
+    for ( ch = 0; ch < gfc->channels_out; ++ch ) {
+        targ_bits[ch] += add_bits[ch];
+        extra_bits    -= add_bits[ch];
+        assert( targ_bits[ch] <= MAX_BITS );
+    }
+    assert( max_bits <= MAX_BITS );
+    return max_bits;
+}
+
+
+
+
+static void
+reduce_side(int targ_bits[2],FLOAT8 ms_ener_ratio,int mean_bits,int max_bits)
+{
+  int move_bits;
+  FLOAT fac;
+
+
+  /*  ms_ener_ratio = 0:  allocate 66/33  mid/side  fac=.33  
+   *  ms_ener_ratio =.5:  allocate 50/50 mid/side   fac= 0 */
+  /* 75/25 split is fac=.5 */
+  /* float fac = .50*(.5-ms_ener_ratio[gr])/.5;*/
+  fac = .33*(.5-ms_ener_ratio)/.5;
+  if (fac<0) fac=0;
+  if (fac>.5) fac=.5;
+  
+    /* number of bits to move from side channel to mid channel */
+    /*    move_bits = fac*targ_bits[1];  */
+    move_bits = fac*.5*(targ_bits[0]+targ_bits[1]);  
+
+    if (move_bits > MAX_BITS - targ_bits[0]) {
+        move_bits = MAX_BITS - targ_bits[0];
+    }
+    if (move_bits<0) move_bits=0;
+    
+    if (targ_bits[1] >= 125) {
+      /* dont reduce side channel below 125 bits */
+      if (targ_bits[1]-move_bits > 125) {
+
+	/* if mid channel already has 2x more than average, dont bother */
+	/* mean_bits = bits per granule (for both channels) */
+	if (targ_bits[0] < mean_bits)
+	  targ_bits[0] += move_bits;
+	targ_bits[1] -= move_bits;
+      } else {
+	targ_bits[0] += targ_bits[1] - 125;
+	targ_bits[1] = 125;
+      }
+    }
+    
+    move_bits=targ_bits[0]+targ_bits[1];
+    if (move_bits > max_bits) {
+      targ_bits[0]=(max_bits*targ_bits[0])/move_bits;
+      targ_bits[1]=(max_bits*targ_bits[1])/move_bits;
+    }
+    assert (targ_bits[0] <= MAX_BITS);
+    assert (targ_bits[1] <= MAX_BITS);
+}
+
+
+/**
+ *  Robert Hegemann 2001-04-27:
+ *  this adjusts the ATH, keeping the original noise floor
+ *  affects the higher frequencies more than the lower ones
+ */
+
+static FLOAT8 athAdjust( FLOAT8 a, FLOAT8 x, FLOAT8 athFloor )
+{
+    /*  work in progress
+     */
+    FLOAT8 const o = 90.30873362;
+    FLOAT8 const p = 94.82444863;
+    FLOAT8 u = 10. * FAST_LOG10(x); 
+    FLOAT8 v = a*a;
+    FLOAT8 w = 0.0;   
+    u -= athFloor;                                  // undo scaling
+    if ( v > 1E-20 ) w = 1. + 10. * FAST_LOG10(v) / o;
+    if ( w < 0  )    w = 0.; 
+    u *= w; 
+    u += athFloor + o-p;                            // redo scaling
+
+    return pow( 10., 0.1*u );
+}
+
+
+/*************************************************************************/
+/*            calc_xmin                                                  */
+/*************************************************************************/
+
+/*
+  Calculate the allowed distortion for each scalefactor band,
+  as determined by the psychoacoustic model.
+  xmin(sb) = ratio(sb) * en(sb) / bw(sb)
+
+  returns number of sfb's with energy > ATH
+*/
+int calc_xmin( 
+        lame_global_flags *gfp,
+        const III_psy_ratio * const ratio,
+	const gr_info       * const cod_info, 
+	      FLOAT8        * pxmin
+    )
+{
+    lame_internal_flags *gfc = gfp->internal_flags;
+    int sfb, gsfb, j=0, ath_over=0;
+    const FLOAT8 *xr = cod_info->xr;
+
+    for (gsfb = 0; gsfb < cod_info->psy_lmax; gsfb++) {
+	FLOAT8 en0, xmin;
+	int width, l;
+	if (gfp->VBR == vbr_rh || gfp->VBR == vbr_mtrh)
+	    xmin = athAdjust(gfc->ATH.adjust, gfc->ATH.l[gsfb], gfc->ATH.floor);
+	else
+	    xmin = gfc->ATH.adjust * gfc->ATH.l[gsfb];
+
+	width = cod_info->width[gsfb];
+	l = width >> 1;
+	en0 = 0.0;
+	do {
+	    en0 += xr[j] * xr[j]; j++;
+	    en0 += xr[j] * xr[j]; j++;
+	} while (--l > 0);
+	if (en0 > xmin) ath_over++;
+
+	if (!gfp->ATHonly) {
+	    FLOAT8 x = ratio->en.l[gsfb];
+	    if (x > 0.0) {
+		x = en0 * ratio->thm.l[gsfb] * gfc->masking_lower / x;
+		if (xmin < x)
+		    xmin = x;
+	    }
+	}
+	*pxmin++ = xmin * gfc->nsPsy.longfact[gsfb];
+    }   /* end of long block loop */
+
+    for (sfb = cod_info->sfb_smin; gsfb < cod_info->psymax; sfb++, gsfb += 3) {
+	int width, b;
+	FLOAT8 tmpATH;
+	if ( gfp->VBR == vbr_rh || gfp->VBR == vbr_mtrh )
+	    tmpATH = athAdjust(gfc->ATH.adjust, gfc->ATH.s[sfb], gfc->ATH.floor);
+	else
+	    tmpATH = gfc->ATH.adjust * gfc->ATH.s[sfb];
+
+	width = cod_info->width[gsfb];
+	for ( b = 0; b < 3; b++ ) {
+	    FLOAT8 en0 = 0.0, xmin;
+	    int l = width >> 1;
+	    do {
+		en0 += xr[j] * xr[j]; j++;
+		en0 += xr[j] * xr[j]; j++;
+	    } while (--l > 0);
+	    if (en0 > tmpATH) ath_over++;
+
+	    xmin = tmpATH;
+	    if (!gfp->ATHonly && !gfp->ATHshort) {
+		FLOAT8 x = ratio->en.s[sfb][b];
+		if (x > 0.0)
+		    x = en0 * ratio->thm.s[sfb][b] * gfc->masking_lower / x;
+		if (xmin < x) 
+		    xmin = x;
+	    }
+	    *pxmin++ = xmin * gfc->nsPsy.shortfact[sfb];
+	}   /* b */
+	if (gfp->useTemporal) {
+	    if (pxmin[-3] > pxmin[-3+1])
+		pxmin[-3+1] += (pxmin[-3] - pxmin[-3+1]) * gfc->decay;
+	    if (pxmin[-3+1] > pxmin[-3+2])
+		pxmin[-3+2] += (pxmin[-3+1] - pxmin[-3+2]) * gfc->decay;
+        }
+    }   /* end of short block sfb loop */
+
+    return ath_over;
+}
+
+
+
+
+
+
+
+/*************************************************************************/
+/*            calc_noise                                                 */
+/*************************************************************************/
+
+// -oo dB  =>  -1.00
+// - 6 dB  =>  -0.97
+// - 3 dB  =>  -0.80
+// - 2 dB  =>  -0.64
+// - 1 dB  =>  -0.38
+//   0 dB  =>   0.00
+// + 1 dB  =>  +0.49
+// + 2 dB  =>  +1.06
+// + 3 dB  =>  +1.68
+// + 6 dB  =>  +3.69
+// +10 dB  =>  +6.45
+
+/*  mt 5/99:  Function: Improved calc_noise for a single channel   */
+int  calc_noise( 
+        const lame_internal_flags * const gfc,
+        const gr_info             * const cod_info,
+        const FLOAT8              * l3_xmin, 
+              FLOAT8              * distort,
+              calc_noise_result   * const res )
+{
+    int sfb, l, over=0;
+    FLOAT8 over_noise_db = 0;
+    FLOAT8 tot_noise_db  = 0; /*    0 dB relative to masking */
+    FLOAT8 max_noise = -20.0; /* -200 dB relative to masking */
+    int j = 0;
+    const int *ix = cod_info->l3_enc;
+    const int *scalefac = cod_info->scalefac;
+
+    for (sfb = 0; sfb < cod_info->psymax; sfb++) {
+	int s =
+	    cod_info->global_gain
+	    - (((*scalefac++) + (cod_info->preflag ? pretab[sfb] : 0))
+	       << (cod_info->scalefac_scale + 1))
+	    - cod_info->subblock_gain[cod_info->window[sfb]] * 8;
+	FLOAT8 step = POW20(s);
+	FLOAT8 noise = 0.0;
+
+	l = cod_info->width[sfb] >> 1;
+	do {
+	    FLOAT8 temp;
+	    temp = fabs(cod_info->xr[j]) - pow43[ix[j]] * step; j++;
+	    noise += temp * temp;
+	    temp = fabs(cod_info->xr[j]) - pow43[ix[j]] * step; j++;
+	    noise += temp * temp;
+	} while (--l > 0);
+	noise = *distort++ = noise / *l3_xmin++;
+
+	noise = FAST_LOG10(Max(noise,1E-20));
+	/* multiplying here is adding in dB, but can overflow */
+	//tot_noise *= Max(noise, 1E-20);
+	tot_noise_db += noise;
+
+	if (noise > 0.0) {
+	    over++;
+	    /* multiplying here is adding in dB -but can overflow */
+	    //over_noise *= noise;
+	    over_noise_db += noise;
+	}
+	max_noise=Max(max_noise,noise);
+    }
+
+    res->over_count = over;
+    res->tot_noise   = tot_noise_db;
+    res->over_noise  = over_noise_db;
+    res->max_noise   = max_noise;
+
+    return over;
+}
+
+
+
+
+
+
+
+
+
+
+
+
 
 
 /* convert from L/R <-> Mid/Side */
@@ -441,8 +757,6 @@ loop_break(
 
 
 
-/*  mt 5/99:  Function: Improved calc_noise for a single channel   */
-
 /*************************************************************************
  *
  *      quant_compare()                                               
@@ -452,24 +766,6 @@ loop_break(
  *  several different codes to decide which quantization is better
  *
  *************************************************************************/
-
-static double penalties ( double noise )
-{
-    return FAST_LOG10( 0.368 + 0.632 * noise * noise * noise );
-}
-
-static double get_klemm_noise(
-    const FLOAT8  * distort,
-    const gr_info * const gi
-    )
-{
-    int sfb;
-    double klemm_noise = 1E-37;
-    for (sfb = 0; sfb < gi->psymax; sfb++)
-	klemm_noise += penalties(distort[sfb]);
-
-    return Max(1e-20, klemm_noise);
-}
 
 inline 
 static int 
@@ -504,7 +800,6 @@ quant_compare(
 	    break;
 
         case 8:
-	    calc->max_noise = get_klemm_noise(distort, gi);
 	    /* pass through */
         case 1:
 	    better = calc->max_noise < best->max_noise; 
@@ -833,7 +1128,7 @@ balance_noise (
      */
     if (gfc->noise_shaping > 1
 	&& (!gfc->presetTune.use
-	    || gfc->ATH->adjust >= gfc->presetTune.athadjust_switch_level)) {
+	    || gfc->ATH.adjust >= gfc->presetTune.athadjust_switch_level)) {
 	memset(&gfc->pseudohalf, 0, sizeof(gfc->pseudohalf));
 	if (!cod_info->scalefac_scale) {
 	    inc_scalefac_scale (cod_info, xrpow);
@@ -960,7 +1255,7 @@ outer_loop (
 	if (gfc->presetTune.use) {
 	    if (cod_info->block_type != NORM_TYPE)
 		better = gfc->presetTune.quantcomp_type_s;
-	    else if (gfc->ATH->adjust >= gfc->presetTune.athadjust_switch_level
+	    else if (gfc->ATH.adjust >= gfc->presetTune.athadjust_switch_level
 		     && gfc->presetTune.quantcomp_alt_type >= 0)
 		better = gfc->presetTune.quantcomp_alt_type;
 	}
@@ -1183,75 +1478,6 @@ get_framebits (
 
 
 
-/************************************************************************
- *
- *      calc_min_bits()   
- *
- *  Robert Hegemann 2000-09-04
- *
- *  determine minimal bit skeleton
- *
- ************************************************************************/
-inline
-static int 
-calc_min_bits (
-    lame_global_flags *gfp,
-    const gr_info * const cod_info,
-    const int             pe,
-    const FLOAT8          ms_ener_ratio, 
-    const int             bands,    
-    const int             mch_bits,
-    const int             analog_mean_bits,
-    const int             min_mean_bits,
-    const int             analog_silence,
-    const int             ch )
-{
-    lame_internal_flags *gfc=gfp->internal_flags;
-    int min_bits, min_pe_bits;
-    
-    if (gfc->nsPsy.use) return 126;
-                    /*  changed minimum from 1 to 126 bits
-                     *  the iteration loops require a minimum of bits
-                     *  for each granule to start with; robert 2001-07-02 */
-
-    /*  base amount of minimum bits
-     */
-    min_bits = Max (126, min_mean_bits);
-
-    if (gfc->mode_ext == MPG_MD_MS_LR && ch == 1)  
-        min_bits = Max (min_bits, mch_bits/5);
-
-    /*  bit skeleton based on PE
-     */
-    if (cod_info->block_type == SHORT_TYPE) 
-        /*  if LAME switches to short blocks then pe is
-         *  >= 1000 on medium surge
-         *  >= 3000 on big surge
-         */
-        min_pe_bits = (pe-350) * bands/(cod_info->sfbmax+3);
-    else 
-        min_pe_bits = (pe-350) * bands/(cod_info->sfbmax+1);
-    
-    if (gfc->mode_ext == MPG_MD_MS_LR && ch == 1) {
-        /*  side channel will use a lower bit skeleton based on PE
-         */ 
-        FLOAT8 fac  = .33 * (.5 - ms_ener_ratio) / .5;
-        min_pe_bits = (int)(min_pe_bits * ((1-fac)/(1+fac)));
-    }
-    min_pe_bits = Min (min_pe_bits, (1820 * gfp->out_samplerate / 44100));
-
-    /*  determine final minimum bits
-     */
-    if (analog_silence && !gfp->VBR_hard_min) 
-        min_bits = analog_mean_bits;
-    else 
-        min_bits = Max (min_bits, min_pe_bits);
-    
-    return min_bits;
-}
-
-
-
 /*********************************************************************
  *
  *      VBR_prepare()
@@ -1311,13 +1537,13 @@ VBR_prepare (
         for (ch = 0; ch < gfc->channels_out; ++ch) {
             gr_info *cod_info = &gfc->l3_side.tt[gr][ch];
       
-            if (gfc->nsPsy.use && gfp->VBR == vbr_rh) {
-            if (cod_info->block_type == NORM_TYPE) 
-                adjust = 1.28/(1+exp(3.5-pe[gr][ch]/300.))-0.05;
-            else 
-                adjust = 2.56/(1+exp(3.5-pe[gr][ch]/300.))-0.14;
+            if (gfp->VBR == vbr_rh) {
+		if (cod_info->block_type == NORM_TYPE) 
+		    adjust = 1.28/(1+exp(3.5-pe[gr][ch]/300.))-0.05;
+		else 
+		    adjust = 2.56/(1+exp(3.5-pe[gr][ch]/300.))-0.14;
             }
-            masking_lower_db   = gfc->VBR->mask_adjust - adjust; 
+            masking_lower_db   = gfc->VBR.mask_adjust - adjust; 
             gfc->masking_lower = pow (10.0, masking_lower_db * 0.1);
       
             init_outer_loop(gfc, cod_info);
@@ -1326,11 +1552,7 @@ VBR_prepare (
             if (bands[gr][ch]) 
                 analog_silence = 0;
 
-            min_bits[gr][ch] = calc_min_bits (gfp, cod_info, (int)pe[gr][ch],
-                                      ms_ener_ratio[gr], bands[gr][ch],
-                                      0, *analog_mean_bits, 
-                                      *min_mean_bits, analog_silence, ch);
-      
+            min_bits[gr][ch] = 126;
             bits += max_bits[gr][ch];
         }
     }
@@ -1764,6 +1986,3 @@ iteration_loop(
 
     ResvFrameEnd (gfc, mean_bits);
 }
-
-
-

@@ -31,6 +31,7 @@
 #include "reservoir.h"
 #include "quantize_pvt.h"
 #include "vbrquantize.h"
+#include "tables.h"
 
 #ifdef WITH_DMALLOC
 #include <dmalloc.h>
@@ -666,12 +667,12 @@ block_sf(const lame_internal_flags * gfc, const FLOAT8 * l3_xmin,
     int     sfb, j;
     int     scalefac_criteria;
 
-    scalefac_criteria = gfc->VBR->quality;
+    scalefac_criteria = gfc->VBR.quality;
     if (gfc->presetTune.use) {
         /* map experimentalX settings to internal selections */
 	if (gi->block_type != NORM_TYPE)
 	    scalefac_criteria = gfc->presetTune.quantcomp_type_s;
-	else if (gfc->ATH->adjust >= gfc->presetTune.athadjust_switch_level
+	else if (gfc->ATH.adjust >= gfc->presetTune.athadjust_switch_level
 		 && gfc->presetTune.quantcomp_alt_type >= 0)
 	    scalefac_criteria = gfc->presetTune.quantcomp_alt_type;
     }
@@ -726,7 +727,7 @@ short_block_sf(const lame_internal_flags * gfc, const FLOAT8 * l3_xmin,
     for (b = 0; b < 3; ++b) {
         /*  smoothing
          */
-        switch (gfc->VBR->smooth) {
+        switch (gfc->VBR.smooth) {
         default:
         case 0:
             /*  get max value
@@ -813,7 +814,7 @@ long_block_sf(const lame_internal_flags * gfc, const FLOAT8 * l3_xmin,
     int     vbrmean, vbrmn, vbrmx, vbrclip;
     int     sf_cache[SBMAX_l];
 
-    switch (gfc->VBR->smooth) {
+    switch (gfc->VBR.smooth) {
     default:
     case 0:
         /*  get max value
@@ -916,7 +917,7 @@ short_block_scalefacs(const lame_internal_flags * gfc, gr_info * cod_info,
 
     if (gfc->noise_shaping == 2 && gfc->presetTune.use
 	&& !gfc->presetTune.athadjust_safe_noiseshaping
-	&& gfc->ATH->adjust >= 1.0)
+	&& gfc->ATH.adjust >= 1.0)
         /* allow scalefac_scale=1 */
         mover = Min(maxover0, maxover1);
     else
@@ -1013,7 +1014,7 @@ long_block_scalefacs(const lame_internal_flags * gfc, gr_info * cod_info,
     mover = Min(maxover0, maxover0p);
     if (gfc->noise_shaping == 2 && gfc->presetTune.use
 	&& !gfc->presetTune.athadjust_safe_noiseshaping
-	&& gfc->ATH->adjust >= 1.0) {
+	&& gfc->ATH.adjust >= 1.0) {
         /* allow scalefac_scale=1 */
         mover = Min(mover, maxover1);
         mover = Min(mover, maxover1p);

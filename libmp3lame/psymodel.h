@@ -24,14 +24,26 @@
 
 #include "l3side.h"
 
-int L3psycho_anal( lame_global_flags *gfc,
-                    const sample_t *buffer[2], int gr, 
-		    FLOAT8 *ms_ratio, 
-		    FLOAT8 *ms_ratio_next, 
-		    III_psy_ratio ratio[2][2],
-		    III_psy_ratio MS_ratio[2][2],
-		   FLOAT8 pe[2], FLOAT8 pe_MS[2], FLOAT8 ener[2],
-                    int blocktype_d[2]); 
+#define NSFIRLEN 21
+#define rpelev 2
+#define rpelev2 16
+#define rpelev_s 2
+#define rpelev2_s 16
+
+/* size of each partition band, in barks: */
+#define DELBARK .34
+#define CW_LOWER_INDEX 6
+
+
+#if 1
+    /* AAC values, results in more masking over MP3 values */
+# define TMN 18
+# define NMT 6
+#else
+    /* MP3 values */
+# define TMN 29
+# define NMT 6
+#endif
 
 int L3psycho_anal_ns( lame_global_flags *gfc,
 		      const sample_t *buffer[2], int gr, 
@@ -41,7 +53,6 @@ int L3psycho_anal_ns( lame_global_flags *gfc,
 		      III_psy_ratio MS_ratio[2][2],
 		      FLOAT8 pe[2], FLOAT8 pe_MS[2], FLOAT8 ener[2],
 		      int blocktype_d[2]); 
-
 
 int psymodel_init(lame_global_flags *gfp);
 

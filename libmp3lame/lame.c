@@ -497,22 +497,6 @@ lame_init_params(lame_global_flags * const gfp)
     }
 
 
-    if (NULL == gfc->ATH)
-        gfc->ATH = calloc(1, sizeof(ATH_t));
-
-    if (NULL == gfc->ATH)
-        return -2;  // maybe error codes should be enumerated in lame.h ??
-
-    if (NULL == gfc->VBR)
-        gfc->VBR = calloc(1, sizeof(VBR_t));
-    if (NULL == gfc->VBR)
-        return -2;
-        
-    if (NULL == gfc->PSY)
-        gfc->PSY = calloc(1, sizeof(PSY_t));
-    if (NULL == gfc->PSY)
-        return -2;
-        
 #ifdef KLEMM_44
     /* Select the fastest functions for this CPU */
     init_scalar_functions(gfc);
@@ -844,9 +828,8 @@ lame_init_params(lame_global_flags * const gfp)
 
     init_bit_stream_w(gfc);
 
-    j =
-        gfc->samplerate_index + (3 * gfp->version) + 6 * (gfp->out_samplerate <
-                                                          16000);
+    j = gfc->samplerate_index
+	+ (3 * gfp->version) + 6 * (gfp->out_samplerate < 16000);
     for (i = 0; i < SBMAX_l + 1; i++)
         gfc->scalefac_band.l[i] = sfBandIndex[j].l[i];
     for (i = 0; i < SBMAX_s + 1; i++)
@@ -865,10 +848,10 @@ lame_init_params(lame_global_flags * const gfp)
 
     gfc->Class_ID = LAME_ID;
 
-    if (gfp->exp_nspsytune & 1) {
-        int     i,j;
+    {
+	/* always use nspsytune */
+	int     i;
 
-        gfc->nsPsy.use = 1;
         for (i = 0; i < 19; i++)
             gfc->nsPsy.pefirbuf[i] = 700*gfc->mode_gr*gfc->channels_out;
 
@@ -884,8 +867,6 @@ lame_init_params(lame_global_flags * const gfp)
     assert( gfp->VBR_q <= 9 );
     assert( gfp->VBR_q >= 0 );
     
-    gfc->PSY->tonalityPatch = 0;
-  
     switch (gfp->VBR) {
 
     case vbr_mt:
@@ -900,61 +881,55 @@ lame_init_params(lame_global_flags * const gfp)
             ERRORF( gfc, "VBR needs a psymodel, switching to quality level 7\n");
         }
 
-        /*  tonality
-         */
-        if (gfp->cwlimit <= 0) gfp->cwlimit = 0.42 * gfp->out_samplerate;
-        gfc->PSY->tonalityPatch = 1;
-
         switch ( gfp->experimentalX ) {
         default:
         case 0: {
                 static const float dbQ[10]={-2.,-1.0,-.66,-.33,0.,0.33,.66,1.0,1.33,1.66};
-                gfc->VBR->quality = 0;
-                gfc->VBR->mask_adjust = dbQ[gfp->VBR_q];
-                gfc->VBR->smooth = 1;
+                gfc->VBR.quality = 0;
+                gfc->VBR.mask_adjust = dbQ[gfp->VBR_q];
+                gfc->VBR.smooth = 1;
             } 
             break;        
         case 1: {
                 static float const dbQ[10] = { -2., -1.4, -.7, 0, .7, 1.5, 2.3, 3.1, 4., 5 };
-                gfc->VBR->quality = 1;
-                gfc->VBR->mask_adjust = dbQ[gfp->VBR_q];
-                gfc->VBR->smooth = 0;    
+                gfc->VBR.quality = 1;
+                gfc->VBR.mask_adjust = dbQ[gfp->VBR_q];
+                gfc->VBR.smooth = 0;    
             } 
             break;        
         case 2: {
                 static float const dbQ[10] = { -1., -.6, -.3, 0, 1, 2, 3, 4, 5, 6};
-                gfc->VBR->quality = 2;
-                gfc->VBR->mask_adjust = dbQ[gfp->VBR_q];
-                gfc->VBR->smooth = 0;    
-                gfc->PSY->tonalityPatch = 0;
+                gfc->VBR.quality = 2;
+                gfc->VBR.mask_adjust = dbQ[gfp->VBR_q];
+                gfc->VBR.smooth = 0;    
             } 
             break;        
         case 3: {
                 static const float dbQ[10]={-2.,-1.0,-.66,-.33,0.,0.33,.66,1.0,1.33,1.66};
-                gfc->VBR->quality = 3;
-                gfc->VBR->mask_adjust = dbQ[gfp->VBR_q];
-                gfc->VBR->smooth = 1;
+                gfc->VBR.quality = 3;
+                gfc->VBR.mask_adjust = dbQ[gfp->VBR_q];
+                gfc->VBR.smooth = 1;
             } 
             break;        
         case 4: {
                 static float const dbQ[10] = { -6,-4.75,-3.5,-2.25,-1,.25,1.5,2.75,4,5.25 };
-                gfc->VBR->quality = 4;
-                gfc->VBR->mask_adjust = dbQ[gfp->VBR_q];
-                gfc->VBR->smooth = 1;   // not finally
+                gfc->VBR.quality = 4;
+                gfc->VBR.mask_adjust = dbQ[gfp->VBR_q];
+                gfc->VBR.smooth = 1;   // not finally
             }
             break;        
         case 5: {
                 static const float dbQ[10]={-2.,-1.0,-.66,-.33,0.,0.33,.66,1.0,1.33,1.66};
-                gfc->VBR->quality = 0;
-                gfc->VBR->mask_adjust = dbQ[gfp->VBR_q];
-                gfc->VBR->smooth = 2;
+                gfc->VBR.quality = 0;
+                gfc->VBR.mask_adjust = dbQ[gfp->VBR_q];
+                gfc->VBR.smooth = 2;
             } 
             break;        
         case 9: {
                 static float const dbQ[10] = { -6,-4.75,-3.5,-2.25,-1,.25,1.5,2.75,4,5.25 };
-                gfc->VBR->quality = 4;
-                gfc->VBR->mask_adjust = dbQ[gfp->VBR_q];
-                gfc->VBR->smooth = 0;   // not finally
+                gfc->VBR.quality = 4;
+                gfc->VBR.mask_adjust = dbQ[gfp->VBR_q];
+                gfc->VBR.smooth = 0;   // not finally
             }
             break;        
         }
@@ -965,9 +940,9 @@ lame_init_params(lame_global_flags * const gfp)
             gfc->sfb21_extra = (gfp->out_samplerate > 36000);
         
         if ( gfp->athaa_type < 0 )
-            gfc->ATH->use_adjust = 3;
+            gfc->ATH.use_adjust = 3;
         else
-            gfc->ATH->use_adjust = gfp->athaa_type;
+            gfc->ATH.use_adjust = gfp->athaa_type;
         
         break;
         
@@ -975,15 +950,10 @@ lame_init_params(lame_global_flags * const gfp)
     case vbr_rh:
 
         if (gfp->VBR == vbr_rh) /* because of above fall thru */
-        {   static const FLOAT8 dbQ[10]={-2.,-1.0,-.66,-.33,0.,0.33,.66,1.0,1.33,1.66};
+        {
             static const FLOAT8 dbQns[10]={- 4,- 3,-2,-1,0,0.7,1.4,2.1,2.8,3.5};
             /*static const FLOAT8 atQns[10]={-16,-12,-8,-4,0,  1,  2,  3,  4,  5};*/
-            if ( gfc->nsPsy.use )
-                gfc->VBR->mask_adjust = dbQns[gfp->VBR_q];
-            else {
-                gfc->PSY->tonalityPatch = 1;
-                gfc->VBR->mask_adjust = dbQ[gfp->VBR_q]; 
-            }
+	    gfc->VBR.mask_adjust = dbQns[gfp->VBR_q];
         }
         
         /*  use Gabriel's adaptative ATH shape for VBR by default
@@ -994,9 +964,9 @@ lame_init_params(lame_global_flags * const gfp)
         /*  automatic ATH adjustment on, VBR modes need it
          */
         if ( gfp->athaa_type < 0 )
-            gfc->ATH->use_adjust = 3;
+            gfc->ATH.use_adjust = 3;
         else
-            gfc->ATH->use_adjust = gfp->athaa_type;
+            gfc->ATH.use_adjust = gfp->athaa_type;
 
         /*  sfb21 extra only with MPEG-1 at higher sampling rates
          */
@@ -1005,7 +975,7 @@ lame_init_params(lame_global_flags * const gfp)
         else 
             gfc->sfb21_extra = (gfp->out_samplerate > 44000);
 
-        /*  VBR needs at least the output of GPSYCHO,
+        /*  VBR needs at least the output of psychomodel,
          *  so we have to garantee that by setting a minimum 
          *  quality level, actually level 5 does it.
          *  the -v and -V x settings switch the quality to level 3
@@ -1030,9 +1000,9 @@ lame_init_params(lame_global_flags * const gfp)
          *  not so important for CBR code?
          */
         if ( gfp->athaa_type < 0 )
-            gfc->ATH->use_adjust = 0;
+            gfc->ATH.use_adjust = 0;
         else
-            gfc->ATH->use_adjust = gfp->athaa_type;
+            gfc->ATH.use_adjust = gfp->athaa_type;
 
 
         /*  no sfb21 extra with CBR code
@@ -1045,7 +1015,7 @@ lame_init_params(lame_global_flags * const gfp)
         break;
     }
     /*  just another daily changing developer switch  */
-    if ( gfp->tune ) gfc->VBR->mask_adjust = gfp->tune_value_a;
+    if ( gfp->tune ) gfc->VBR.mask_adjust = gfp->tune_value_a;
 
     /* initialize internal qval settings */
     lame_init_qval(gfp);
@@ -1060,18 +1030,16 @@ lame_init_params(lame_global_flags * const gfp)
 #endif
 
     /* initialize internal adaptive ATH settings  -jd */
-    gfc->athaa_sensitivity_p = pow( 10.0, gfp->athaa_sensitivity / -10.0 );
+    gfc->ATH.aa_sensitivity_p = pow( 10.0, gfp->athaa_sensitivity / -10.0 );
 
 
-    gfc->PSY->cwlimit = gfp->cwlimit <= 0 ? 8871.7f : gfp->cwlimit;
-    
     if (gfp->short_blocks == short_block_not_set) {
         gfp->short_blocks =  short_block_allowed;
     }
     if (gfp->short_blocks == short_block_allowed && gfp->mode == JOINT_STEREO) {
         gfp->short_blocks =  short_block_coupled;
-    }    
-    
+    }
+
     if ( gfp->athaa_loudapprox < 0 ) gfp->athaa_loudapprox = 2;
     
     if (gfp->useTemporal < 0 ) gfp->useTemporal = 1;  // on by default
@@ -1266,7 +1234,6 @@ lame_print_internals( const lame_global_flags * gfp )
      */
     MSGF( gfc, "\npsychoacoustic:\n\n" );
     
-    MSGF( gfc, "\ttonality estimation limit: %f Hz\n", gfc->PSY->cwlimit );
     switch ( gfp->short_blocks ) {
     default:
     case short_block_not_set:   pc = "?";               break;
@@ -1276,7 +1243,7 @@ lame_print_internals( const lame_global_flags * gfp )
     case short_block_forced:    pc = "forced";          break;
     }
     MSGF( gfc, "\tusing short blocks: %s\n", pc );    
-    MSGF( gfc, "\tadjust masking: %f dB\n", gfc->VBR->mask_adjust );
+    MSGF( gfc, "\tadjust masking: %f dB\n", gfc->VBR.mask_adjust );
     MSGF( gfc, "\tpsymodel: %d\n", gfc->psymodel );
     MSGF( gfc, "\tnoise shaping: %d\n", gfc->noise_shaping );
     MSGF( gfc, "\t ^ amplification: %d\n", gfc->noise_shaping_amp );
@@ -1288,17 +1255,14 @@ lame_print_internals( const lame_global_flags * gfp )
     if ( gfp->noATH    ) pc = "not used";
     MSGF( gfc, "\tATH: %s\n", pc );
     MSGF( gfc, "\t ^ type: %d\n", gfp->ATHtype );
-    MSGF( gfc, "\t ^ adjust type: %d\n", gfc->ATH->use_adjust );
+    MSGF( gfc, "\t ^ adjust type: %d\n", gfc->ATH.use_adjust );
     MSGF( gfc, "\t ^ adapt threshold type: %d\n", gfp->athaa_loudapprox );
-    
-    if ( gfc->nsPsy.use ) {
-	MSGF(gfc, "\texperimental psy tunings by Naoki Shibata\n" );
-	MSGF(gfc, "\t   adjust masking bass=%g dB, alto=%g dB, treble=%g dB, sfb21=%g dB\n", 
-	     10*log10(gfc->nsPsy.longfact[ 0]),
-	     10*log10(gfc->nsPsy.longfact[ 7]),
-	     10*log10(gfc->nsPsy.longfact[14]),
-	     10*log10(gfc->nsPsy.longfact[21]));
-    }
+
+    MSGF(gfc, "\tpsy tunings by Naoki Shibata\n" );
+    MSGF(gfc, "\t   adjust masking bass=%g dB, alto=%g dB, treble=%g dB, sfb21=%g dB\n", 
+	 10*log10(gfc->nsPsy.longfact[ 0]), 10*log10(gfc->nsPsy.longfact[ 7]),
+	 10*log10(gfc->nsPsy.longfact[14]), 10*log10(gfc->nsPsy.longfact[21]));
+
     pc = gfp->useTemporal ? "yes" : "no";
     MSGF( gfc, "\tusing temporal masking effect: %s\n", pc );
     MSGF( gfc, "\tinterchannel masking ratio: %f\n", gfp->interChRatio );
@@ -1905,8 +1869,8 @@ lame_close(lame_global_flags * gfp)
         return -3;
 
     if (gfp->exp_nspsytune2.pointer[0]) {
-      fclose((FILE *)gfp->exp_nspsytune2.pointer[0]);
-      gfp->exp_nspsytune2.pointer[0] = NULL;
+	fclose((FILE *)gfp->exp_nspsytune2.pointer[0]);
+	gfp->exp_nspsytune2.pointer[0] = NULL;
     }
 
     gfc->Class_ID = 0;

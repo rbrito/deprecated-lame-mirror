@@ -149,7 +149,6 @@ typedef struct  bit_stream_struc {
 /* variables used for --nspsytune */
 typedef struct {
     /* variables for nspsytune */
-    int   use; /* indicates the use of nspsytune */
     FLOAT last_en_subshort[4][9];
     int   last_attacks[4];
     FLOAT pefirbuf[19];
@@ -182,7 +181,6 @@ typedef struct {
                                        // such as high athadjust values, or long blocks, etc
 
   // tunings reliant upon athadjust
-//FLOAT8  athadjust_max_val;           // maximum value of athadjust before limit is applied
   FLOAT8  athadjust_switch_level;      // level of athadjust at which to apply tunings at
                                        // x <= 0 == never switch, x >= 1 == always switch
   int     athadjust_safe_noiseshaping; // if 0, noise shaping 2 will not be used no matter what
@@ -202,43 +200,6 @@ typedef struct
     int size;   // size of our bag
     int *bag;   // pointer to our bag
 } VBR_seek_info_t;
-
-
-/**
- *  ATH related stuff, if something new ATH related has to be added,
- *  please plugg it here into the ATH_t struct
- */
-typedef struct
-{
-    int     use_adjust;     // method for the auto adjustment 
-    FLOAT8  adjust;         // lowering based on peak volume, 1 = no lowering
-    FLOAT8  adjust_limit;   // limit for dynamic ATH adjust
-    FLOAT8  decay;          // determined to lower x dB each second
-    FLOAT8  floor;          // lowest ATH value
-    FLOAT8  l[SBMAX_l];     // ATH for sfbs in long blocks
-    FLOAT8  s[SBMAX_s];     // ATH for sfbs in short blocks
-    FLOAT8  cb[CBANDS];     // ATH for convolution bands
-} ATH_t;
-
-/**
- *  VBR related stuff
- */
-typedef struct
-{
-    FLOAT8  mask_adjust;    // the dbQ stuff
-    int     quality;
-    int     smooth;         // 0=no, 1=peaks, 2=+-4
-} VBR_t;
-
-/**
- *  PSY Model related stuff
- */
-typedef struct
-{
-    int     tonalityPatch;      // temporaly needed by VBR
-    FLOAT   cwlimit;
-    FLOAT8  prvTonRed[CBANDS];
-} PSY_t; 
 
 
 /* Guest structure, only temporarly here */
@@ -453,7 +414,6 @@ struct lame_internal_flags {
 /* to be remembered for the unpredictability measure.  For "r" and        */
 /* "phi_sav", the first index from the left is the channel select and     */
 /* the second index is the "age" of the data.                             */
-  FLOAT8	minval[CBANDS];
   FLOAT8	nb_1[4][CBANDS], nb_2[4][CBANDS];
   FLOAT8	nb_s1[4][CBANDS], nb_s2[4][CBANDS];
   FLOAT8  *s3_ss;
@@ -463,26 +423,12 @@ struct lame_internal_flags {
   III_psy_xmin thm[4];
   III_psy_xmin en[4];
   
-  /* unpredictability calculation
-   */
-  int cw_upper_index;
-  FLOAT ax_sav[4][2][HBLKSIZE];
-  FLOAT bx_sav[4][2][HBLKSIZE];
-  FLOAT rx_sav[4][2][HBLKSIZE];
-  FLOAT cw[HBLKSIZE];
-
-
   /* fft and energy calculation    */
   FLOAT tot_ener[4];
 
   /* loudness calculation (for adaptive threshold of hearing) */
   FLOAT loudness_sq[2][2];  /* loudness^2 approx. per granule and channel */
   FLOAT loudness_sq_save[2];/* account for granule delay of L3psycho_anal */
-
-  /* factor for tuning the (sample power) point below which adaptive threshold
-     of hearing adjustment occurs 
-   */
-  FLOAT athaa_sensitivity_p;
 
   /* Scale Factor Bands    */
   FLOAT8 mld_l[SBMAX_l],mld_s[SBMAX_s];
@@ -523,13 +469,38 @@ struct lame_internal_flags {
   nsPsy_t nsPsy;  /* variables used for --nspsytune */
   presetTune_t presetTune;  /* variables used for --alt-preset */
   
-  unsigned crcvalue;
+  unsigned int crcvalue;
   
   VBR_seek_info_t VBR_seek_table; // used for Xing VBR header
   
-  ATH_t *ATH;   // all ATH related stuff
-  VBR_t *VBR;
-  PSY_t *PSY;
+    /**
+     *  ATH related stuff, if something new ATH related has to be added,
+     *  please plugg it here into the ATH_t struct
+     */
+    struct {
+	int use_adjust;     // method for the auto adjustment 
+	FLOAT8  adjust;     // lowering based on peak volume, 1 = no lowering
+	FLOAT8  adjust_limit;   // limit for dynamic ATH adjust
+	FLOAT8  decay;          // determined to lower x dB each second
+	FLOAT8  floor;          // lowest ATH value
+	FLOAT8  l[SBMAX_l];     // ATH for sfbs in long blocks
+	FLOAT8  s[SBMAX_s];     // ATH for sfbs in short blocks
+	FLOAT8  cb[CBANDS];     // ATH for convolution bands
+	FLOAT eql_w[BLKSIZE/2];/* equal loudness weights (based on ATH) */
+	/* factor for tuning the (sample power) point below which adaptive
+	 * threshold of hearing adjustment occurs 
+	 */
+	FLOAT aa_sensitivity_p;
+    } ATH;
+
+    /**
+     *  VBR related stuff
+     */
+    struct {
+	FLOAT8  mask_adjust;    // the dbQ stuff
+	int     quality;
+	int     smooth;         // 0=no, 1=peaks, 2=+-4
+    } VBR;
 
   int nogap_total;
   int nogap_current;  

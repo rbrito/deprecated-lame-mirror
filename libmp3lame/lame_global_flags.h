@@ -117,14 +117,10 @@ struct lame_global_struct {
   int athaa_type;                 /* select ATH auto-adjust scheme        */
   int athaa_loudapprox;           /* select ATH auto-adjust loudness calc */
   float athaa_sensitivity;        /* dB, tune active region of auto-level */
-  int cwlimit;                    /* predictability limit                 */
   short_block_t short_blocks;
   int mixed_blocks;
-/*  int allow_diff_short;            allow blocktypes to differ between
-                                     channels?                            */
   int useTemporal;                /* use temporal masking effect          */
   float interChRatio;
-/*  int no_short_blocks;             disable short blocks                 */
   int emphasis;                   /* Input PCM is emphased PCM (for
                                      instance from one of the rarely
                                      emphased CDs), it is STRONGLY not
