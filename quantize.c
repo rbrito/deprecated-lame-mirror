@@ -20,6 +20,7 @@
  */
 
 
+#include <math.h>
 #include <assert.h>
 #include "util.h"
 #include "l3side.h"
@@ -93,9 +94,8 @@ int init_outer_loop
     for (i = 0; i < 576; i++) {
         FLOAT8 temp = fabs (xr[i]);
         xrpow[i] = sqrt (temp * sqrt(temp));
-        o += temp > 1E-20;
+        o += (temp > 1E-20);
     }
-  
    /*  return 1 if we have something to quantize, else 0
     */
    return o > 0;
