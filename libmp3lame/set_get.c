@@ -811,9 +811,7 @@ int
 lame_set_quant_comp_short( lame_global_flags*  gfp,
                         int                 quant_type )
 {
-	gfp->internal_flags->presetTune.quantcomp_alt_type
-	= gfp->quant_comp_short
-	= quant_type;
+	gfp->quant_comp_short = quant_type;
 
     return 0;
 }
@@ -1759,98 +1757,12 @@ int
 lame_set_preset_expopts( lame_global_flags*  gfp, int preset_expopts )
 {
 
-    lame_internal_flags *gfc = gfp->internal_flags;
-
-    gfc->presetTune.use = 1;
-
-    /* default = 0 (disabled) */
-    gfp->preset_expopts = preset_expopts;
-    lame_set_short_threshold(gfp, 3.5f, 15.0f);
-
-    switch (preset_expopts)
-    {
-        case 1:
-
-          lame_set_exp_nspsytune(gfp, lame_get_exp_nspsytune(gfp) | 1);
-          lame_set_exp_nspsytune(gfp, lame_get_exp_nspsytune(gfp) | 2); /* safejoint */
-          lame_set_ATHtype(gfp, 2);
-
-          gfc->presetTune.ms_maskadjust = .5;
-          lame_set_quant_comp(gfp, 3);
-          lame_set_quant_comp_short(gfp, 3);
-          gfc->presetTune.quantcomp_alt_type = 3;
-
-          break;
-
-        case 2:
-
-          if (gfp->VBR == vbr_mtrh) {
-             lame_set_quant_comp(gfp, 2);
-             lame_set_quant_comp_short(gfp, 4);
-             gfc->presetTune.quantcomp_adjust_mtrh = 9;
-             gfc->presetTune.quantcomp_alt_type = 0;
-             gfc->presetTune.athadjust_safe_noiseshaping_thre = 0.0;
-	         gfc->presetTune.athadjust_safe_athaasensitivity = 8.0;
-          }
-          else {
-             lame_set_quant_comp(gfp, 3);
-             lame_set_quant_comp_short(gfp, 3);
-             gfc->presetTune.quantcomp_adjust_rh_tot = 60;
-	         gfc->presetTune.quantcomp_adjust_rh_max = 6;
-             gfc->presetTune.quantcomp_alt_type = 1;
-          }
-
-          lame_set_exp_nspsytune(gfp, lame_get_exp_nspsytune(gfp) | 1);
-          lame_set_experimentalZ(gfp, 1);
-          lame_set_VBR_q(gfp, 2);
-          lame_set_exp_nspsytune(gfp, lame_get_exp_nspsytune(gfp) | 2); /* safejoint */
-          lame_set_ATHtype(gfp, 2);				
-          /* modify sfb21 by 3 dB plus ns-treble=0                  */
-          lame_set_exp_nspsytune(gfp, lame_get_exp_nspsytune(gfp) | (12 << 20));
-
-          gfc->presetTune.ms_maskadjust = .5;
-          break;
-
-        case 3:
-
-          if (gfp->VBR == vbr_mtrh) {
-             lame_set_quant_comp_short(gfp, 4);
-             gfc->presetTune.quantcomp_adjust_mtrh = 9;
-	         gfc->presetTune.quantcomp_alt_type = 0;
-             (void) lame_set_ATHlower( gfp, -2 );
-             gfc->presetTune.athadjust_safe_noiseshaping_thre = 0.0;
-	         gfc->presetTune.athadjust_safe_athaasensitivity = 8.0;
-          }
-          else {
-             lame_set_quant_comp_short(gfp, 3);
-             gfc->presetTune.quantcomp_adjust_rh_tot = 60;
-	         gfc->presetTune.quantcomp_adjust_rh_max = 6;
-             (void) lame_set_ATHlower( gfp, -1 );
-          }
-
-          lame_set_exp_nspsytune(gfp, lame_get_exp_nspsytune(gfp) | 1);
-          lame_set_quant_comp(gfp, 1);
-          lame_set_VBR_q(gfp, 2);
-          lame_set_exp_nspsytune(gfp, lame_get_exp_nspsytune(gfp) | 2); /* safejoint */
-	      (void) lame_set_msfix( gfp, 2.13 );
-          lame_set_ATHtype(gfp, 4);
-          /* modify sfb21 by 3.75 dB plus ns-treble=0                  */
-          lame_set_exp_nspsytune(gfp, lame_get_exp_nspsytune(gfp) | (15 << 20));
-          gfc->presetTune.ms_maskadjust = .5;
-          break;
-    default:
-	assert(0);
-    }
     return 0;
 }
 
 int
 lame_set_preset_notune( lame_global_flags*  gfp, int preset_notune )
 {
-    lame_internal_flags *gfc = gfp->internal_flags;
-
-    gfc->presetTune.use = 0;  /* Turn off specialized preset tunings */
-
     return 0;
 }
 

@@ -418,8 +418,6 @@ ns_msfix(
     int sb, sblock;
     FLOAT8 msfix2 = msfix;
     FLOAT8 athlower = pow(10, athadjust);
-    if (gfc->presetTune.use)
-	msfix2 = gfc->presetTune.ms_maskadjust;
 
     msfix *= 2.0;
     msfix2 *= 2.0;

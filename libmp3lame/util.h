@@ -168,30 +168,6 @@ typedef struct {
     FILE *pass1fp;
 } nsPsy_t;
 
-/* variables used for --alt-preset */
-typedef struct {
-  /* indicates the use of alt-preset */
-  int     use;
-
-  /* adjustment to joint stereo */
-  FLOAT8  ms_maskadjust;
-
-  /* adjustments to quantization selection */
-  FLOAT8  quantcomp_adjust_rh_tot;    /* adjustments for tot_noise with vbr-old */
-  FLOAT8  quantcomp_adjust_rh_max;    /* adjustments for max_noise with vbr-old */
-  FLOAT8  quantcomp_adjust_mtrh;      /* adjustments for calc_scalefac "c" with vbr-mtrh */
-  int     quantcomp_alt_type;          /* third quantization comparison to use for special cases */
-                                       /* such as high athadjust values, or long blocks, etc */
-
-  /* tunings reliant upon athadjust */
-/*FLOAT8  athadjust_max_val;           // maximum value of athadjust before limit is applied */
-  int     athadjust_safe_noiseshaping; /* if 0, noise shaping 2 will not be used no matter what */
-                                       /* the noise shaping type would normally be set to */
-  FLOAT8  athadjust_safe_noiseshaping_thre; /* value which max_pow_alt must be greater than */
-                                            /* for noise shaping 2 to be used "safely"                                                      */
-  FLOAT8  athadjust_safe_athaasensitivity; /* used for second determination if it is safe to switch */
-	                                      /* to noise shaping 2 */
-} presetTune_t;
 
 typedef struct 
 {
@@ -510,7 +486,6 @@ struct lame_internal_flags {
   void (*fft_fht)(FLOAT *, int);
 
   nsPsy_t nsPsy;  /* variables used for --nspsytune */
-  presetTune_t presetTune;  /* variables used for --alt-preset */
   
   unsigned crcvalue;
   

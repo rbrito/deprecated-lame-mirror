@@ -130,7 +130,6 @@ int apply_preset(lame_global_flags*  gfp, int preset)
     case DM_RADIO: {
 	    lame_set_VBR(gfp, vbr_rh);
 
-	    lame_set_preset_expopts(gfp, 3);
 	    lame_set_quality(gfp, 3);
 	    lame_set_lowpassfreq(gfp, 19000);
 	    lame_set_mode(gfp, JOINT_STEREO);
@@ -147,7 +146,6 @@ int apply_preset(lame_global_flags*  gfp, int preset)
     case DM_RADIO_FAST: {
 	    lame_set_VBR(gfp, vbr_mtrh);
 
-	    lame_set_preset_expopts(gfp, 3);
 	    lame_set_quality(gfp, 3);
 	    lame_set_lowpassfreq(gfp, 19000);
 	    lame_set_mode(gfp, JOINT_STEREO);
@@ -213,7 +211,6 @@ int apply_preset(lame_global_flags*  gfp, int preset)
     case PORTABLE_FAST: {
 	    lame_set_VBR(gfp, vbr_mtrh);
 
-	    lame_set_preset_expopts(gfp, 3);
 	    lame_set_quality(gfp, 3);
 	    lame_set_lowpassfreq(gfp, 19000);
 	    lame_set_mode(gfp, JOINT_STEREO);
@@ -228,7 +225,6 @@ int apply_preset(lame_global_flags*  gfp, int preset)
     case DM_MEDIUM: {
 	    lame_set_VBR(gfp, vbr_rh);
 
-	    lame_set_preset_expopts(gfp, 3);
 	    lame_set_quality(gfp, 3);
 	    lame_set_lowpassfreq(gfp, 19000);
 	    lame_set_mode(gfp, JOINT_STEREO);
@@ -242,7 +238,6 @@ int apply_preset(lame_global_flags*  gfp, int preset)
     case DM_MEDIUM_FAST: {
 	    lame_set_VBR(gfp, vbr_mtrh);
 
-	    lame_set_preset_expopts(gfp, 3);
 	    lame_set_quality(gfp, 3);
 	    lame_set_lowpassfreq(gfp, 19000);
 	    lame_set_mode(gfp, JOINT_STEREO);
@@ -281,7 +276,6 @@ int apply_preset(lame_global_flags*  gfp, int preset)
     case MEDIUM_FAST: {
 	    lame_set_VBR(gfp, vbr_mtrh);
 
-	    lame_set_preset_expopts(gfp, 3);
 	    lame_set_quality(gfp, 3);
 	    lame_set_lowpassfreq(gfp, 18000);
 	    lame_set_mode(gfp, JOINT_STEREO);
@@ -319,7 +313,6 @@ int apply_preset(lame_global_flags*  gfp, int preset)
     case STANDARD_FAST: {
 	    lame_set_VBR(gfp, vbr_mtrh);
 
-	    lame_set_preset_expopts(gfp, 3);
 	    lame_set_quality(gfp, 3);
 	    lame_set_lowpassfreq(gfp, 19000);
 	    lame_set_mode(gfp, JOINT_STEREO);
@@ -353,7 +346,6 @@ int apply_preset(lame_global_flags*  gfp, int preset)
     case EXTREME_FAST: {
 	    lame_set_VBR(gfp, vbr_mtrh);
 
-	    lame_set_preset_expopts(gfp, 2);
 	    lame_set_quality(gfp, 3);
 	    lame_set_lowpassfreq(gfp, 19500);
 	    lame_set_mode(gfp, JOINT_STEREO);
@@ -362,7 +354,6 @@ int apply_preset(lame_global_flags*  gfp, int preset)
 	    return preset;
     }
     case INSANE: {
-	    lame_set_preset_expopts(gfp, 1);
 	    lame_set_brate(gfp, 320);
 	    lame_set_quality(gfp, 3);
 	    lame_set_mode(gfp, JOINT_STEREO);

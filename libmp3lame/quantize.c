@@ -651,10 +651,6 @@ quant_compare(
 	    better = calc->tot_noise < best->tot_noise; 
 	    break;
         case 3:
-	    if (gfc->presetTune.use && gi->block_type != NORM_TYPE)
-		better = (calc->tot_noise < best->tot_noise - gfc->presetTune.quantcomp_adjust_rh_tot)
-		    && (calc->max_noise < best->max_noise - gfc->presetTune.quantcomp_adjust_rh_max);
-	    else 
 		better = (calc->tot_noise < best->tot_noise)
 		    &&   (calc->max_noise < best->max_noise);
 	    break;
