@@ -447,11 +447,11 @@ lame_init_params(lame_global_flags * const gfp)
         gfc->CPU_features.MMX = 0;
 
     if (gfp->asm_optimizations.sse ) {
-        gfc->CPU_features.SIMD = has_SIMD();
-        gfc->CPU_features.SIMD2 = has_SIMD2();
+        gfc->CPU_features.SSE = has_SSE();
+        gfc->CPU_features.SSE2 = has_SSE2();
     } else {
-        gfc->CPU_features.SIMD = 0;
-        gfc->CPU_features.SIMD2 = 0;
+        gfc->CPU_features.SSE = 0;
+        gfc->CPU_features.SSE2 = 0;
     }
 #endif
 
@@ -667,7 +667,7 @@ lame_print_config(const lame_global_flags * gfp)
 
 #ifdef HAVE_NASM
     if (gfc->CPU_features.MMX || gfc->CPU_features.AMD_3DNow
-        || gfc->CPU_features.SIMD || gfc->CPU_features.SIMD2) {
+        || gfc->CPU_features.SSE || gfc->CPU_features.SSE2) {
         MSGF(gfc, "CPU features:");
 
         if (gfc->CPU_features.i387)
@@ -676,10 +676,10 @@ lame_print_config(const lame_global_flags * gfp)
             MSGF(gfc, ", MMX (ASM used)");
         if (gfc->CPU_features.AMD_3DNow)
             MSGF(gfc, ", 3DNow! (ASM used)");
-        if (gfc->CPU_features.SIMD)
-            MSGF(gfc, ", SIMD (ASM used)");
-        if (gfc->CPU_features.SIMD2)
-            MSGF(gfc, ", SIMD2");
+        if (gfc->CPU_features.SSE)
+            MSGF(gfc, ", SSE (ASM used)");
+        if (gfc->CPU_features.SSE2)
+            MSGF(gfc, ", SSE2");
         MSGF(gfc, "\n");
     }
 #endif

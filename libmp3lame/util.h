@@ -505,8 +505,8 @@ struct lame_internal_flags {
 	unsigned int  MMX       : 1; /* Pentium MMX, Pentium II...IV, K6, K6-2,
                                     K6-III, Athlon */
 	unsigned int  AMD_3DNow : 1; /* K6-2, K6-III, Athlon      */
-	unsigned int  SIMD      : 1; /* Pentium III, Pentium 4    */
-	unsigned int  SIMD2     : 1; /* Pentium 4, K8             */
+	unsigned int  SSE      : 1; /* Pentium III, Pentium 4    */
+	unsigned int  SSE2     : 1; /* Pentium 4, K8             */
     } CPU_features;
 #endif
 
@@ -565,8 +565,8 @@ int lame_decode1_unclipped(
 extern int  has_i387  ( void );
 extern int  has_MMX   ( void );
 extern int  has_3DNow ( void );
-extern int  has_SIMD  ( void );
-extern int  has_SIMD2 ( void );
+extern int  has_SSE   ( void );
+extern int  has_SSE2  ( void );
 
 
 

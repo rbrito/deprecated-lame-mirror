@@ -444,7 +444,7 @@ init_bitalloc(lame_internal_flags *gfc, gr_info *const gi)
     /*  check if there is some energy we have to quantize
      *  and calculate xr34(gfc->xrwork[0]) matching our fresh scalefactors */
 #ifdef HAVE_NASM
-    if (gfc->CPU_features.SIMD) {
+    if (gfc->CPU_features.SSE) {
 	extern void pow075_SSE(float *, float *, int, float*);
 	if (end) {
 	    end = (end + 7) & (~7);
