@@ -533,7 +533,7 @@ void plot_frame(void)
       for (en=0 , j=0; j<BLKSIZE ; j++) 
 	en += pplot->energy[gr][ch][j];
 
-      sprintf(title2,"FFT%1i  pe=%4.1fK  en=%5.2e ",gr,
+      sprintf(title2,"FFT%1i  pe=%5.2fK  en=%5.2e ",gr,
 	      pplot->pe[gr][ch]/1000,en);
 
       ymn = 3;
@@ -578,7 +578,7 @@ void plot_frame(void)
       /* en = max energy difference amoung the 3 short FFTs for this granule */
       en = pplot->ers[gr][ch];
       if (en>999) en=999;
-      sprintf(title2,"FFT%1i pe=%4.1fK/%3.1f n=%i/%3.1f/%3.1f/%3.1f",gr,
+      sprintf(title2,"FFT%1i pe=%5.2fK/%3.1f n=%i/%3.1f/%3.1f/%3.1f",gr,
 	      pplot->pe[gr][ch]/1000,en,pplot->over[gr][ch],
 	      pplot->max_noise[gr][ch],
 	      pplot->over_noise[gr][ch],

@@ -808,9 +808,8 @@ char *mp3buf, int mp3buf_size)
     /*     ms_ratio_ave = .5*(ms_ratio[0] + ms_ratio[1]);*/
     ms_ratio_ave = .25*(gfc->ms_ratio[0] + gfc->ms_ratio[1]+
 			 ms_ratio_prev + ms_ratio_next);
-    if ( (ms_ratio_ave <.35) &&  
-         (gfc->ms_ratio[0]<.45) &&
-         (gfc->ms_ratio[1]<.45) )  gfc->mode_ext = MPG_MD_MS_LR;
+    if ( (ms_ratio_ave <.35) && (.5*(gfc->ms_ratio[0]+gfc->ms_ratio[1])<.45) )
+         gfc->mode_ext = MPG_MD_MS_LR;
   }
   if (gfp->force_ms) gfc->mode_ext = MPG_MD_MS_LR;
 

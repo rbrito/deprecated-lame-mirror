@@ -327,10 +327,10 @@ int targ_bits[2],int mean_bits, int gr)
     
     targ_bits[ch]=Min(4095,tbits/gfc->stereo);
     
-    add_bits[ch]=(pe[gr][ch]-750)/1.55;
-    /* short blocks us 50% extra, no matter what the pe */
+    add_bits[ch]=(pe[gr][ch]-750)/1.4;
+    /* short blocks us a little extra, no matter what the pe */
     if (cod_info->block_type==SHORT_TYPE) {
-      if (add_bits[ch]<mean_bits/4) add_bits[ch]=mean_bits/4;
+      if (add_bits[ch]<mean_bits/4) add_bits[ch]=.20*mean_bits;
     }
 
     /* at most increase bits by 1.5*average */
@@ -362,10 +362,6 @@ void reduce_side(int targ_bits[2],FLOAT8 ms_ener_ratio,int mean_bits,int max_bit
   int move_bits;
   FLOAT fac;
 
-  /* mid channel already has 2x more than average, dont bother */
-  /* mean_bits = bits per granule (for both channels) */
-  if (targ_bits[0] > mean_bits)
-    return;
 
   /*  ms_ener_ratio = 0:  allocate 66/33  mid/side  fac=.33  
    *  ms_ener_ratio =.5:  allocate 50/50 mid/side   fac= 0 */
@@ -382,7 +378,11 @@ void reduce_side(int targ_bits[2],FLOAT8 ms_ener_ratio,int mean_bits,int max_bit
     if (targ_bits[1] >= 125) {
       /* dont reduce side channel below 125 bits */
       if (targ_bits[1]-move_bits > 125) {
-	targ_bits[0] += move_bits;
+
+	/* if mid channel already has 2x more than average, dont bother */
+	/* mean_bits = bits per granule (for both channels) */
+	if (targ_bits[0] < mean_bits)
+	  targ_bits[0] += move_bits;
 	targ_bits[1] -= move_bits;
       } else {
 	targ_bits[0] += targ_bits[1] - 125;

@@ -325,7 +325,7 @@ void L3psycho_anal( lame_global_flags *gfp,
       FLOAT im = (*wsamp_l)[BLKSIZE/2+j];
       gfc->energy[BLKSIZE/2-j] = (re * re + im * im) * (FLOAT)0.5;
 
-      //      if (BLKSIZE/2-j > 25)
+      if (BLKSIZE/2-j > 10)
 	tot_ener[chn] += gfc->energy[BLKSIZE/2-j];
     }
     for (b = 2; b >= 0; --b)
@@ -609,6 +609,54 @@ void L3psycho_anal( lame_global_flags *gfp,
       }
 
 
+    
+    /*************************************************************** 
+     * determine the block type (window type) based on L & R channels
+     * 
+     ***************************************************************/
+    if (1 || chn<2) {
+      FLOAT mn,mx,ma=0,mb=0,mc=0;
+      
+      for ( j = HBLKSIZE_s/2; j < HBLKSIZE_s; j ++)
+	{
+	  ma += gfc->energy_s[0][j];
+	  mb += gfc->energy_s[1][j];
+	  mc += gfc->energy_s[2][j];
+	}
+      mn = Min(ma,mb);
+      mn = Min(mn,mc);
+      mx = Max(ma,mb);
+      mx = Max(mx,mc);
+      
+      /* bit allocation is based on pe.  */
+      if (mx>mn) {
+	FLOAT8 tmp = 400*log(mx/(1e-12+mn));
+	if (tmp>gfc->pe[chn]) gfc->pe[chn]=tmp;
+      }
+      
+      if (chn<2) {
+	uselongblock[chn] = 1;
+	
+	/* tuned for t1.wav.  doesnt effect most other samples */
+	if (gfc->pe[chn] > 3000) 
+	  uselongblock[chn]=0;
+	
+	if ( mx > 30*mn ) 
+	  {/* big surge of energy - always use short blocks */
+	    uselongblock[chn] = 0;
+	  } 
+	else if ((mx > 10*mn) && (gfc->pe[chn] > 1000))
+	  {/* medium surge, medium pe - use short blocks */
+	    uselongblock[chn] = 0;
+	  }
+	
+	/* disable short blocks */
+	if (gfp->no_short_blocks)
+	  uselongblock[chn]=1;
+      }
+    }
+
+
     if (gfc->pinfo != NULL) {
       plotting_data *pinfo=gfc->pinfo;
       FLOAT mn,mx,ma=0,mb=0,mc=0;
@@ -625,50 +673,10 @@ void L3psycho_anal( lame_global_flags *gfp,
       mx = Max(mx,mc);
 
       pinfo->ers[gr_out][chn]=gfc->ers_save[chn];
-      gfc->ers_save[chn]=mx/(1e-12+mn);
+      gfc->ers_save[chn]=(mx/(1e-12+mn));
       pinfo->pe[gr_out][chn]=gfc->pe_save[chn];
       gfc->pe_save[chn]=gfc->pe[chn];
     }
-    
-    /*************************************************************** 
-     * determine the block type (window type) based on L & R channels
-     * 
-     ***************************************************************/
-    if (chn<2) {
-      if (gfp->no_short_blocks){
-	uselongblock[chn]=1;
-      } else {
-	/* tuned for t1.wav.  doesnt effect most other samples */
-	if (gfc->pe[chn] > 3000) {
-	  uselongblock[chn]=0;
-	} else { 
-	  FLOAT mn,mx,ma=0,mb=0,mc=0;
-	
-	  for ( j = HBLKSIZE_s/2; j < HBLKSIZE_s; j ++)
-	  {
-	      ma += gfc->energy_s[0][j];
-	      mb += gfc->energy_s[1][j];
-	      mc += gfc->energy_s[2][j];
-	  }
-	  mn = Min(ma,mb);
-	  mn = Min(mn,mc);
-	  mx = Max(ma,mb);
-	  mx = Max(mx,mc);
-
-	  uselongblock[chn] = 1;
-	  
-	  if ( mx > 30*mn ) 
-	  {/* big surge of energy - always use short blocks */
-	    uselongblock[chn] = 0;
-	  } 
-	  else if ((mx > 10*mn) && (gfc->pe[chn] > 1000))
-	  {/* medium surge, medium pe - use short blocks */
-	    uselongblock[chn] = 0;
-	  }
-	} 
-      }
-    }
-
 
 
     /*************************************************************** 

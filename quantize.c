@@ -274,7 +274,7 @@ VBR_iteration_loop (lame_global_flags *gfp,
       }
 
       if (cod_info->block_type==SHORT_TYPE) {
-	  min_bits += Max(1100,pe[gr][ch]);
+	  min_bits += Max(1000,pe[gr][ch]);
 	  min_bits=Min(min_bits,1800);
       }
 
