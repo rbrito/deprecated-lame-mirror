@@ -84,7 +84,7 @@ Other usefull configure options:
 
 
   --with-vorbis                Enable Ogg Vorbis encoding/decoding support
-  --with-vorbos-prefix = PATH  specify where to find Vorbis libs
+  --with-vorbis-prefix = PATH  specify where to find Vorbis libs
 
 
 Some more advanced ways to influence the build procedure

@@ -23,6 +23,9 @@ easy-to-change module so it can output other than 16bit.
 (replace mpglib with MAD?  MAD has agreed to write a call back
 which will return all data needed by the frame analyzer)
 
+3.1  mgplib has bugs with i-stereo.  flag denoting invalid
+i-stereo value (= frame is m/s stereo) is not correct.  
+
 4.
 Clipping detection.  Compute statistics for input near 2^15, 
 (should be done in fill_buffer() in util.c).  Have command
