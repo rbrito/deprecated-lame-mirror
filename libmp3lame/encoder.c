@@ -373,7 +373,7 @@ int  lame_encode_mp3_frame (				/* Output */
    *
    * note: there is no padding for the very first frame
    *
-   * Robert.Hegemann@gmx.de 2000-06-22
+   * Robert Hegemann 2000-06-22
    */
   gfc->padding = FALSE;
   if ((gfc->slot_lag -= gfc->frac_SpF) < 0) {

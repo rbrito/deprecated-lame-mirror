@@ -12,7 +12,6 @@ rem    encode all your wave files to mp3
 rem     "lame.bat *.wav"
 rem  ---------------------------------------------
 rem                         C2000  Robert Hegemann
-rem                         Robert.Hegemann@gmx.de
 rem  ---------------------------------------------
 rem  please set LAME and LAMEOPTS
 rem  LAME - where the executeable is

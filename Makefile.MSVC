@@ -1,6 +1,6 @@
-#	Makefile.MSVC: MSVC Makefile for LAME 3.92
+#	Makefile.MSVC: MSVC Makefile for LAME 
 #
-#	2000-11-21 Robert Hegemann  e-mail: Robert.Hegemann@gmx.de
+#	2000-11-21 Robert Hegemann
 #	dedicated to the LAME project http://www.mp3dev.org
 ###############################################################################
 

@@ -1050,7 +1050,7 @@ lame_init_params(lame_global_flags * const gfp)
      *
      * note: there is no padding for the very first frame
      *
-     * Robert.Hegemann@gmx.de 2000-06-22
+     * Robert Hegemann 2000-06-22
      */
     gfc->slot_lag = gfc->frac_SpF = 0;
     if (gfp->VBR == vbr_off && !gfp->disable_reservoir)

@@ -277,7 +277,7 @@ int nearestBitrateFullIndex(const int bitrate)
 
 /* map frequency to a valid MP3 sample frequency
  *
- * Robert.Hegemann@gmx.de 2000-07-01
+ * Robert Hegemann 2000-07-01
  */
 int map2MP3Frequency(int freq)
 {

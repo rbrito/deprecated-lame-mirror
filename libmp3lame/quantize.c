@@ -1001,7 +1001,7 @@ outer_loop (
 	 * in VBR mode we can't get rid of the distortion, so quit now
 	 * and VBR mode will try again with more bits.  
 	 * (makes a 10% speed increase, the files I tested were
-	 * binary identical, 2000/05/20 Robert.Hegemann@gmx.de)
+	 * binary identical, 2000/05/20 Robert Hegemann)
 	 * distort[] > 1 means noise > allowed noise
 	 */
 	if (gfc->sfb21_extra) {
