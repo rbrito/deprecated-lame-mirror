@@ -687,22 +687,22 @@ void mdct_init48(lame_global_flags *gfp)
     }
 
     for (i = 0; i < NL; i++) {
-	win[0][i] *= cos((NL/4+0.5+i%9)*M_PI/NL) / SCALE/(NL/4);
-	win[1][i] *= cos((NL/4+0.5+i%9)*M_PI/NL) / SCALE/(NL/4);
-	win[3][i] *= cos((NL/4+0.5+i%9)*M_PI/NL) / SCALE/(NL/4);
+	win[0][i] *= cos((NL/4+0.5+i%9)*PI/NL) / SCALE/(NL/4);
+	win[1][i] *= cos((NL/4+0.5+i%9)*PI/NL) / SCALE/(NL/4);
+	win[3][i] *= cos((NL/4+0.5+i%9)*PI/NL) / SCALE/(NL/4);
     }
 
     for (i = 0; i < NL/4; i++)
-	tantab_l[i] = tan((NL/4+0.5+i)*M_PI/NL);
+	tantab_l[i] = tan((NL/4+0.5+i)*PI/NL);
 
     /* type 2(short)*/
     for (i = 0; i < NS / 4; i++) {
-	win[SHORT_TYPE][i] = tan(M_PI / NS * (i + 0.5));
+	win[SHORT_TYPE][i] = tan(PI / NS * (i + 0.5));
     }
 
     for (i = 0; i < NS / 4; i++) {
-	FLOAT8 w2 = cos(M_PI / NS * (i + 0.5)) * (4.0/NS) / SCALE;
-	tritab_s[i*2  ] = cos((0.5+2-i)*M_PI/NS) * w2;
-	tritab_s[i*2+1] = sin((0.5+2-i)*M_PI/NS) * w2;
+	FLOAT8 w2 = cos(PI / NS * (i + 0.5)) * (4.0/NS) / SCALE;
+	tritab_s[i*2  ] = cos((0.5+2-i)*PI/NS) * w2;
+	tritab_s[i*2+1] = sin((0.5+2-i)*PI/NS) * w2;
     }
 }
