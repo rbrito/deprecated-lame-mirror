@@ -208,8 +208,65 @@ init_xrpow(
     return 0;
 }
 
+
+
+
+
+extern FLOAT8 athAdjust( FLOAT8 a, FLOAT8 x, FLOAT8 athFloor );
+
+
+
+/*
+GB feb 2003
+Analog silence detection in partitionned sfb21.
+
+From top to bottom of sfb21, is changes to 0
+coeffs which are below ath. It stops on the first
+coeff higher than ath.
+
+It should help reducing bitrate,
+but real gain is only about 2kbps at max,
+and sometimes it even increases bitrate.
+*/
+void psfb21_analogsilence(
+        lame_global_flags *gfp,
+        lame_internal_flags *gfc,
+	    gr_info *const cod_info
+    )
+{
+    int gsfb, j=0;
+    ATH_t * ATH = gfc->ATH;
+    FLOAT8 *xr = cod_info->xr;
+
+    if (cod_info->block_type == NORM_TYPE) {
+        int stop=0;
+        for (gsfb = PSFB21-1; gsfb>=0 && !stop; gsfb--) {
+            int start = gfc->scalefac_band.psfb21[ gsfb ];
+            int end = gfc->scalefac_band.psfb21[ gsfb+1 ];
+            int j;
+            FLOAT8 ath21;
+            if (gfp->VBR == vbr_rh || gfp->VBR == vbr_mtrh)
+                ath21 = athAdjust(ATH->adjust, ATH->psfb21[gsfb], ATH->floor);
+            else
+                ath21 = ATH->adjust * ATH->psfb21[gsfb];
+
+            for (j = end-1; j>=start && !stop; j--) {
+                if ( fabs(xr[j]) < ath21)
+                    xr[j] = 0;
+                else
+                    stop = 1;
+            }
+        }
+    }
+}
+                         
+
+
+
+
 static void
 init_outer_loop(
+    lame_global_flags *gfp,
     lame_internal_flags *gfc,
     gr_info *const cod_info)
 {
@@ -311,6 +368,8 @@ init_outer_loop(
     /*  fresh scalefactors are all zero
      */
     memset(cod_info->scalefac, 0, sizeof(cod_info->scalefac));
+
+    psfb21_analogsilence(gfp, gfc, cod_info);
 }
 
 
@@ -1414,7 +1473,7 @@ VBR_prepare (
             masking_lower_db   = gfc->VBR->mask_adjust - adjust; 
             gfc->masking_lower = pow (10.0, masking_lower_db * 0.1);
       
-            init_outer_loop(gfc, cod_info);
+            init_outer_loop(gfp, gfc, cod_info);
 	    bands[gr][ch] = calc_xmin (gfp, &ratio[gr][ch], 
                                        cod_info, l3_xmin[gr][ch]);
             if (bands[gr][ch]) 
@@ -1763,7 +1822,7 @@ ABR_iteration_loop(
 
             /*  cod_info, scalefac and xrpow get initialized in init_outer_loop
              */
-            init_outer_loop(gfc, cod_info);
+            init_outer_loop(gfp, gfc, cod_info);
             if (init_xrpow(gfc, cod_info, xrpow)) {
                 /*  xr contains energy we will have to encode 
                  *  calculate the masking abilities
@@ -1843,7 +1902,7 @@ iteration_loop(
 
             /*  init_outer_loop sets up cod_info, scalefac and xrpow 
              */
-            init_outer_loop(gfc, cod_info);
+            init_outer_loop(gfp, gfc, cod_info);
             if (init_xrpow(gfc, cod_info, xrpow)) {
                 /*  xr contains energy we will have to encode 
                  *  calculate the masking abilities
@@ -1861,7 +1920,4 @@ iteration_loop(
 
     ResvFrameEnd (gfc, mean_bits);
 }
-
-
-
 

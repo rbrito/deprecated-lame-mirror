@@ -200,6 +200,7 @@ static FLOAT8 ATHmdct( lame_global_flags *gfp, FLOAT8 f )
 static void compute_ath( lame_global_flags *gfp )
 {
     FLOAT8 *ATH_l = gfp->internal_flags->ATH->l;
+    FLOAT8 *ATH_psfb21 = gfp->internal_flags->ATH->psfb21;
     FLOAT8 *ATH_s = gfp->internal_flags->ATH->s;
     lame_internal_flags *gfc = gfp->internal_flags;
     int sfb, i, start, end;
@@ -218,6 +219,17 @@ static void compute_ath( lame_global_flags *gfp )
 	if (!gfc->nsPsy.use)
 	    ATH_l[sfb] *=
 		(gfc->scalefac_band.l[sfb+1] - gfc->scalefac_band.l[sfb]);
+    }
+
+    for (sfb = 0; sfb < PSFB21; sfb++) {
+        start = gfc->scalefac_band.psfb21[ sfb ];
+        end = gfc->scalefac_band.psfb21[ sfb+1 ];
+        ATH_psfb21[sfb]=FLOAT8_MAX;
+        for (i = start ; i < end; i++) {
+            FLOAT8 freq = i*samp_freq/(2*576);
+            ATH_f = ATHmdct( gfp, freq );  /* freq in kHz */
+            ATH_psfb21[sfb] = Min( ATH_psfb21[sfb], ATH_f );
+        }
     }
 
     for (sfb = 0; sfb < SBMAX_s; sfb++){
@@ -240,6 +252,9 @@ static void compute_ath( lame_global_flags *gfp )
     if (gfp->noATH) {
         for (sfb = 0; sfb < SBMAX_l; sfb++) {
             ATH_l[sfb] = 1E-37;
+        }
+        for (sfb = 0; sfb < PSFB21; sfb++) {
+            ATH_psfb21[sfb] = 1E-37;
         }
         for (sfb = 0; sfb < SBMAX_s; sfb++) {
             ATH_s[sfb] = 1E-37;
@@ -483,7 +498,7 @@ void reduce_side(int targ_bits[2],FLOAT8 ms_ener_ratio,int mean_bits,int max_bit
  *  affects the higher frequencies more than the lower ones
  */
 
-static FLOAT8 athAdjust( FLOAT8 a, FLOAT8 x, FLOAT8 athFloor )
+FLOAT8 athAdjust( FLOAT8 a, FLOAT8 x, FLOAT8 athFloor )
 {
     /*  work in progress
      */
@@ -500,6 +515,7 @@ static FLOAT8 athAdjust( FLOAT8 a, FLOAT8 x, FLOAT8 athFloor )
 
     return pow( 10., 0.1*u );
 }
+
 
 
 /*************************************************************************/
@@ -555,11 +571,15 @@ int calc_xmin(
     }   /* end of long block loop */
 
 
+
+
     /*use this function to determine the highest non-zero coeff*/
     max_nonzero = 575;
-    k = 576;
-    while (k-- && !xr[k]){
-        max_nonzero = k;
+    if (cod_info->block_type == NORM_TYPE) {
+        k = 576;
+        while (k-- && !xr[k]){
+            max_nonzero = k;
+        }
     }
     cod_info->max_nonzero_coeff = max_nonzero;
 

@@ -102,6 +102,7 @@
 /* total number of scalefactor bands encoded */
 #define SBMAX_l       22
 #define SBMAX_s       13
+#define PSFB21         6
 
 
 

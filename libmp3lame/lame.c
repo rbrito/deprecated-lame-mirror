@@ -841,6 +841,14 @@ lame_init_params(lame_global_flags * const gfp)
 	+ (3 * gfp->version) + 6 * (gfp->out_samplerate < 16000);
     for (i = 0; i < SBMAX_l + 1; i++)
         gfc->scalefac_band.l[i] = sfBandIndex[j].l[i];
+
+    for (i = 0; i < PSFB21 + 1; i++){
+        int size = (gfc->scalefac_band.l[ 22 ] - gfc->scalefac_band.l[ 21 ])/PSFB21;
+        int start = gfc->scalefac_band.l[ 21 ] + i*size;
+        gfc->scalefac_band.psfb21[i] = start;
+    }
+    gfc->scalefac_band.psfb21[PSFB21] = 576;
+
     for (i = 0; i < SBMAX_s + 1; i++)
         gfc->scalefac_band.s[i] = sfBandIndex[j].s[i];
 

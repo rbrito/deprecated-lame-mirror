@@ -134,7 +134,7 @@ bitrate is more balanced according to the -V value.*/
 
   f /= 1000;  /* convert to khz */
   f  = Max(0.01, f);
-  f  = Min(18.0, f);
+//  f  = Min(21.0, f);
 
   ath =    3.640 * pow(f,-0.8)
          - 6.800 * exp(-0.6*pow(f-3.4,2.0))
