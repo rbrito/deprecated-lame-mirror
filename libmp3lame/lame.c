@@ -813,6 +813,7 @@ lame_print_internals( const lame_global_flags * gfp )
     if ( gfp->noATH    ) pc = "not used";
     MSGF( gfc, "\tATH: %s\n", pc );
     MSGF( gfc, "\t ^ shape: %g\n", gfp->ATHcurve);
+    MSGF( gfc, "\t ^ level adjustement: %f (dB)\n", gfp->ATHlower );
     MSGF( gfc, "\t ^ adjust type: %d\n", gfc->ATH.use_adjust );
     MSGF( gfc, "\t ^ adjust sensitivity power: %d\n", gfc->ATH.aa_sensitivity_p );
     MSGF( gfc, "\t ^ adapt threshold type: %d\n", gfp->athaa_loudapprox );
