@@ -44,7 +44,7 @@ static const FLOAT costab[TRI_SIZE*2] = {
   9.999811752826011e-01, 6.135884649154475e-03
 };
 
-static INLINE void fht(lame_internal_flags *gfc, FLOAT *fz, int n)
+static INLINE void fht(FLOAT *fz, int n)
 {
     const FLOAT *tri = costab;
     int           k4;
@@ -205,7 +205,7 @@ void fft_short( lame_internal_flags *gfc,
 	  x[BLKSIZE_s / 2 + 3] = f1 - f3;
 	} while (--j >= 0);
 
-	fht(gfc, x, BLKSIZE_s);
+	fht(x, BLKSIZE_s);
     }
 }
 
@@ -239,7 +239,7 @@ void fft_long( lame_internal_flags *gfc,
       x[BLKSIZE / 2 + 3] = f1 - f3;
     } while (--jj >= 0);
 
-    fht(gfc, x, BLKSIZE);
+    fht(x, BLKSIZE);
 }
 
 

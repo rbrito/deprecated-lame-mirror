@@ -44,7 +44,7 @@
 #endif
 
 #ifndef TRUE
-#define         TRUE                    1
+#define         TRUE                    (!FALSE)
 #endif
 
 #ifdef UINT_MAX
@@ -277,8 +277,6 @@ typedef struct  {
 
   
   /* fft.c    */
-#define TRI_SIZE (5-1) /* 1024 =  4**5 */
-  FLOAT costab[TRI_SIZE*2];
   FLOAT window[BLKSIZE], window_s[BLKSIZE_s/2];
   
   
@@ -316,7 +314,7 @@ typedef struct  {
 
   /* used by the frame analyzer */
   plotting_data *pinfo;
-  
+
   /* CPU features */
   int CPU_features_3DNow;           // K6-2, K6-III, Athlon
   int CPU_features_MMX;		    // Pentium MMX, Pentium II...IV, K6, K6-2, K6-III, Athlon
