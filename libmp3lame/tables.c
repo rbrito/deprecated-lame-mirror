@@ -1365,26 +1365,20 @@ void init_bit_stream_w(lame_global_flags *gfp)
 	    = ((gfp->version+1)*72000L*gfp->mean_bitrate_kbps)
 	    % gfp->out_samplerate;
 
-    /* resv. size */
-    if (gfp->free_format) {
-        /* in freeformat the buffer is constant*/
-	gfc->l3_side.maxmp3buf
-	    = ((int)((gfp->mean_bitrate_kbps*1000 * 1152/8)
-		     /gfp->out_samplerate +.5));
-    } else {
-        /* maximum allowed frame size.  dont use more than this number of
-           bits, even if the frame has the space for them: */
-        /* Bouvigne suggests this more lax interpretation of the ISO doc 
-           instead of using 8*960. */
-
-	/*all mp3 decoders should have enough buffer to handle this value: size of a 320kbps 32kHz frame*/
+    gfc->l3_side.maxmp3buf = 0;
+    /* we cannot use reservoir over 320kbp or when indicated not to use */
+    if (gfp->mean_bitrate_kbps < 320 && gfp->disable_reservoir) {
+	/* all mp3 decoders should have enough buffer to handle 1440byte:
+	 * size of a 320kbps 32kHz frame
+	 * Bouvigne suggests this more lax interpretation of the ISO doc 
+	 * instead of using 8*960.
+	 */
 	gfc->l3_side.maxmp3buf = 1440;
-
-        if (gfp->strict_ISO)
+	if (gfp->strict_ISO)
+	    /* maximum allowed frame size.  dont use more than this number of
+	       bits, even if the frame has the space for them: */
 	    gfc->l3_side.maxmp3buf
 		= (320000*1152 / gfp->out_samplerate + 7) >> 3;
-	if (gfp->disable_reservoir)
-	    gfc->l3_side.maxmp3buf = 0;
+	gfc->l3_side.maxmp3buf -= gfc->l3_side.sideinfo_len;
     }
-    gfc->l3_side.maxmp3buf -= gfc->l3_side.sideinfo_len;
 }
