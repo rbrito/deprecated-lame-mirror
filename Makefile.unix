@@ -500,7 +500,6 @@ CC_SWITCHES += -DMMX_choose_table
 lib_obj += libmp3lame/i386/choose_table.o
 
 ## use 3DNow! extension. you need nasm and 3DNow! supported CPU.
-CC_SWITCHES += -DUSE_FFT3DN
 lib_obj += libmp3lame/i386/fft3dn.o
 
 ## not yet coded
