@@ -965,7 +965,7 @@ fi
 
 # Define the identity of the package.
 PACKAGE=lame
-VERSION=3.90
+VERSION=3.91
 cat >> confdefs.h <<EOF
 #define PACKAGE "$PACKAGE"
 EOF
@@ -4630,7 +4630,7 @@ else
     fi
   done
   IFS="$ac_save_ifs"
-  test -z "$ac_cv_path_GTK_CONFIG" && ac_cv_path_GTK_CONFIG="gtk12-config"
+  test -z "$ac_cv_path_GTK_CONFIG" && ac_cv_path_GTK_CONFIG="gtk-config"
   ;;
 esac
 fi
