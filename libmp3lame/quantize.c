@@ -973,6 +973,8 @@ VBR_prepare (
 {
     lame_internal_flags *gfc=gfp->internal_flags;
     static const FLOAT8 dbQ[10]={-2.,-1.0,-.66,-.33,0.,0.33,.66,1.0,1.33,1.66};
+    static const FLOAT8 dbQns[10]={- 4,- 3,-2,-1,0,0.7,1.4,2.1,2.8,3.5};
+    static const FLOAT8 atQns[10]={-16,-12,-8,-4,0,  2,  4,  6,  8, 10};
 
     
     FLOAT8   masking_lower_db, adjust;
@@ -994,7 +996,12 @@ VBR_prepare (
             else 
                 adjust = 2/(1+exp(3.5-pe[gr][ch]/300.))-0.05;
       
-            masking_lower_db   = dbQ[gfp->VBR_q] - adjust; 
+	    if (gfc->nsPsy.use && gfp->ATHtype == 0) {
+	      masking_lower_db   = dbQns[gfp->VBR_q] - adjust; 
+	      gfp->ATHlower     += atQns[gfp->VBR_q];
+	    } else {
+	      masking_lower_db   = dbQ[gfp->VBR_q] - adjust; 
+	    }
             gfc->masking_lower = pow (10.0, masking_lower_db * 0.1);
       
             bands[gr][ch] = calc_xmin (gfp, xr[gr][ch], ratio[gr]+ch, 

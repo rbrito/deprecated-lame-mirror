@@ -1156,7 +1156,10 @@ int L3psycho_anal_ns( lame_global_flags * gfp,
   if (gfp->mode == MPG_MD_JOINT_STEREO) numchn=4;
 
   if (gfp->VBR==vbr_off) pcfact = gfc->ResvMax == 0 ? 0 : ((FLOAT)gfc->ResvSize)/gfc->ResvMax*0.5;
-  else pcfact = 1;
+  else if (gfp->VBR == vbr_rh  ||  gfp->VBR == vbr_mtrh  ||  gfp->VBR == vbr_mt) {
+    static const FLOAT8 pcQns[10]={1.0,1.0,1.0,0.8,0.6,0.5,0.4,0.3,0.2,0.1};
+    pcfact = pcQns[gfp->VBR_q];
+  } else pcfact = 1;
 
   /**********************************************************************
    *  Apply HPF of fs/4 to the input signal.
