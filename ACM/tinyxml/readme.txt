@@ -65,6 +65,14 @@ included soon. Namely:
 	&apos;	‘
 @endverbatim
 
+<b> Changes between version 1 and 2 </b>
+
+The Print operator has been changed from using the C style FILE streams to
+the C++ ostream. TiXmlDocument has methods to support both the C and C++
+streams. However, the other classes only support the ostream in their
+Print() methods. Normally, this isn't a problem, since you generally 
+don't call the Print methods of other classes directly.
+
 <b> Using and Installing </b>
 
 To Compile and Run xmltest:

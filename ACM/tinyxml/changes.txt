@@ -56,7 +56,26 @@ Changes in version 1.2.4
 - ReplaceChild() was almost guarenteed to fail. Should be fixed,
   thanks to Joe Smith. Joe also pointed out that the Print() functions
   should take stream references: I agree, and would like to overload
-  the Print() method to take either format, but Idon't want to do 
+  the Print() method to take either format, but I don't want to do 
   this in a dot release.
 - Some compilers seem to need an extra <ctype.h> include. Thanks
   to Steve Lhomme for that.
+
+Changes in version 2.0.0
+- Made the ToXXX() casts safe if 'this' is null. 
+  When "LoadFile" is called with a filename, the value will correctly get set.
+  Thanks to Brian Yoder.
+- Fixed bug where isalpha() and isalnum() would get called with a negative value for 
+  high ascii numbers. Thanks to Alesky Aksenov.
+- Fixed some errors codes that were not getting set.
+- Made methods "const" that were not.
+- Added a switch to enable or disable the ignoring of white space. ( TiXmlDocument::SetIgnoreWhiteSpace() )
+- Greater standardization and code re-use in the parser.
+- Added a stream out operator.
+- Added a stream in operator.
+- Entity support.
+
+TODO
+CDATA.
+Support for "generic entity" #xxx thing.
+

@@ -120,29 +120,31 @@ depend:
 
 tinyxml.o: tinyxml.h /usr/include/stdio.h /usr/include/features.h
 tinyxml.o: /usr/include/sys/cdefs.h /usr/include/gnu/stubs.h
-tinyxml.o: /usr/lib/gcc-lib/i586-mandrake-linux/2.95.3/include/stddef.h
-tinyxml.o: /usr/lib/gcc-lib/i586-mandrake-linux/2.95.3/include/stdarg.h
-tinyxml.o: /usr/include/bits/types.h /usr/include/libio.h
-tinyxml.o: /usr/include/_G_config.h /usr/include/bits/stdio_lim.h
-tinyxml.o: /usr/include/assert.h
+tinyxml.o: /usr/include/bits/types.h /usr/include/bits/pthreadtypes.h
+tinyxml.o: /usr/include/bits/sched.h /usr/include/libio.h
+tinyxml.o: /usr/include/_G_config.h /usr/include/wchar.h
+tinyxml.o: /usr/include/bits/wchar.h /usr/include/gconv.h
+tinyxml.o: /usr/include/bits/stdio_lim.h /usr/include/assert.h
 tinyxmlparser.o: tinyxml.h /usr/include/stdio.h /usr/include/features.h
 tinyxmlparser.o: /usr/include/sys/cdefs.h /usr/include/gnu/stubs.h
-tinyxmlparser.o: /usr/lib/gcc-lib/i586-mandrake-linux/2.95.3/include/stddef.h
-tinyxmlparser.o: /usr/lib/gcc-lib/i586-mandrake-linux/2.95.3/include/stdarg.h
-tinyxmlparser.o: /usr/include/bits/types.h /usr/include/libio.h
-tinyxmlparser.o: /usr/include/_G_config.h /usr/include/bits/stdio_lim.h
-tinyxmlparser.o: /usr/include/assert.h
+tinyxmlparser.o: /usr/include/bits/types.h /usr/include/bits/pthreadtypes.h
+tinyxmlparser.o: /usr/include/bits/sched.h /usr/include/libio.h
+tinyxmlparser.o: /usr/include/_G_config.h /usr/include/wchar.h
+tinyxmlparser.o: /usr/include/bits/wchar.h /usr/include/gconv.h
+tinyxmlparser.o: /usr/include/bits/stdio_lim.h /usr/include/assert.h
+tinyxmlparser.o: /usr/include/ctype.h /usr/include/endian.h
+tinyxmlparser.o: /usr/include/bits/endian.h
 xmltest.o: tinyxml.h /usr/include/stdio.h /usr/include/features.h
 xmltest.o: /usr/include/sys/cdefs.h /usr/include/gnu/stubs.h
-xmltest.o: /usr/lib/gcc-lib/i586-mandrake-linux/2.95.3/include/stddef.h
-xmltest.o: /usr/lib/gcc-lib/i586-mandrake-linux/2.95.3/include/stdarg.h
-xmltest.o: /usr/include/bits/types.h /usr/include/libio.h
-xmltest.o: /usr/include/_G_config.h /usr/include/bits/stdio_lim.h
-xmltest.o: /usr/include/assert.h
+xmltest.o: /usr/include/bits/types.h /usr/include/bits/pthreadtypes.h
+xmltest.o: /usr/include/bits/sched.h /usr/include/libio.h
+xmltest.o: /usr/include/_G_config.h /usr/include/wchar.h
+xmltest.o: /usr/include/bits/wchar.h /usr/include/gconv.h
+xmltest.o: /usr/include/bits/stdio_lim.h /usr/include/assert.h
 tinyxmlerror.o: tinyxml.h /usr/include/stdio.h /usr/include/features.h
 tinyxmlerror.o: /usr/include/sys/cdefs.h /usr/include/gnu/stubs.h
-tinyxmlerror.o: /usr/lib/gcc-lib/i586-mandrake-linux/2.95.3/include/stddef.h
-tinyxmlerror.o: /usr/lib/gcc-lib/i586-mandrake-linux/2.95.3/include/stdarg.h
-tinyxmlerror.o: /usr/include/bits/types.h /usr/include/libio.h
-tinyxmlerror.o: /usr/include/_G_config.h /usr/include/bits/stdio_lim.h
-tinyxmlerror.o: /usr/include/assert.h
+tinyxmlerror.o: /usr/include/bits/types.h /usr/include/bits/pthreadtypes.h
+tinyxmlerror.o: /usr/include/bits/sched.h /usr/include/libio.h
+tinyxmlerror.o: /usr/include/_G_config.h /usr/include/wchar.h
+tinyxmlerror.o: /usr/include/bits/wchar.h /usr/include/gconv.h
+tinyxmlerror.o: /usr/include/bits/stdio_lim.h /usr/include/assert.h
