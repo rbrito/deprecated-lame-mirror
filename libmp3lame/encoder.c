@@ -246,6 +246,59 @@ updateStats( lame_internal_flags * const gfc )
 #endif
 
 
+
+
+static
+void lame_encode_frame_init(lame_global_flags* const gfp, const sample_t *inbuf[2])
+{
+    lame_internal_flags *gfc=gfp->internal_flags;
+
+    int ch,gr;
+
+    if (gfc->lame_encode_frame_init==0 ) {
+        /* prime the MDCT/polyphase filterbank with a short block */
+        int i,j;
+        sample_t primebuff0[286+1152+576];
+        sample_t primebuff1[286+1152+576];
+        gfc->lame_encode_frame_init=1;
+        for (i=0, j=0; i<286+576*(1+gfc->mode_gr); ++i) {
+            if (i<576*gfc->mode_gr) {
+                primebuff0[i]=0;
+                if (gfc->channels_out==2) 
+                    primebuff1[i]=0;
+            }else{
+                primebuff0[i]=inbuf[0][j];
+                if (gfc->channels_out==2) 
+                    primebuff1[i]=inbuf[1][j];
+                ++j;
+            }
+        }
+        /* polyphase filtering / mdct */
+        for ( gr = 0; gr < gfc->mode_gr; gr++ ) {
+            for ( ch = 0; ch < gfc->channels_out; ch++ ) {
+                gfc->l3_side.tt[gr][ch].block_type=SHORT_TYPE;
+            }
+        }
+        mdct_sub48(gfc, primebuff0, primebuff1);
+
+        /* check FFT will not use a negative starting offset */
+        #if 576 < FFTOFFSET
+        # error FFTOFFSET greater than 576: FFT uses a negative offset
+        #endif
+        /* check if we have enough data for FFT */
+        assert(gfc->mf_size>=(BLKSIZE+gfp->framesize-FFTOFFSET));
+        /* check if we have enough data for polyphase filterbank */
+        assert(gfc->mf_size>=(512+gfp->framesize-32));
+    }
+
+}
+
+
+
+
+
+
+
 /************************************************************************
 *
 * encodeframe()           Layer 3
@@ -306,6 +359,7 @@ FFT's                    <---------1024---------->
 
 typedef FLOAT chgrdata[2][2];
 
+
 int  lame_encode_mp3_frame (				/* Output */
 	lame_global_flags* const  gfp,			/* Context */
 	sample_t*                 inbuf_l,              /* Input */
@@ -313,144 +367,128 @@ int  lame_encode_mp3_frame (				/* Output */
 	unsigned char*            mp3buf, 		/* Output */
 	int                    mp3buf_size )		/* Output */
 {
-  int mp3count;
-  III_psy_ratio masking_LR[2][2];    /*LR masking & energy */
-  III_psy_ratio masking_MS[2][2]; /*MS masking & energy */
-  III_psy_ratio (*masking)[2][2];  /*pointer to selected maskings*/
-  const sample_t *inbuf[2];
-  lame_internal_flags *gfc=gfp->internal_flags;
+    int mp3count;
+    III_psy_ratio masking_LR[2][2];    /*LR masking & energy */
+    III_psy_ratio masking_MS[2][2]; /*MS masking & energy */
+    III_psy_ratio (*masking)[2][2];  /*pointer to selected maskings*/
+    const sample_t *inbuf[2];
+    lame_internal_flags *gfc=gfp->internal_flags;
 
-  FLOAT tot_ener[2][4];
-  FLOAT ms_ener_ratio[2]={.5,.5};
-  chgrdata pe,pe_MS;
-  chgrdata *pe_use;
+    FLOAT tot_ener[2][4];
+    FLOAT ms_ener_ratio[2]={.5,.5};
+    chgrdata pe,pe_MS;
+    chgrdata *pe_use;
 
-  int ch,gr;
+    int ch,gr;
 
-  FLOAT ms_ratio_next = 0.;
-  FLOAT ms_ratio_prev = 0.;
-
-
-  inbuf[0]=inbuf_l;
-  inbuf[1]=inbuf_r;
-
-  if (gfc->lame_encode_frame_init==0 ) {
-      /* prime the MDCT/polyphase filterbank with a short block */
-      int i,j;
-      sample_t primebuff0[286+1152+576];
-      sample_t primebuff1[286+1152+576];
-      gfc->lame_encode_frame_init=1;
-      for (i=0, j=0; i<286+576*(1+gfc->mode_gr); ++i) {
-	  if (i<576*gfc->mode_gr) {
-	      primebuff0[i]=0;
-	      if (gfc->channels_out==2) 
-		  primebuff1[i]=0;
-	  }else{
-	      primebuff0[i]=inbuf[0][j];
-	      if (gfc->channels_out==2) 
-		  primebuff1[i]=inbuf[1][j];
-	      ++j;
-	  }
-      }
-      /* polyphase filtering / mdct */
-      for ( gr = 0; gr < gfc->mode_gr; gr++ ) {
-	  for ( ch = 0; ch < gfc->channels_out; ch++ ) {
-	      gfc->l3_side.tt[gr][ch].block_type=SHORT_TYPE;
-	  }
-      }
-      mdct_sub48(gfc, primebuff0, primebuff1);
-
-      /* check FFT will not use a negative starting offset */
-#if 576 < FFTOFFSET
-# error FFTOFFSET greater than 576: FFT uses a negative offset
-#endif
-      /* check if we have enough data for FFT */
-      assert(gfc->mf_size>=(BLKSIZE+gfp->framesize-FFTOFFSET));
-      /* check if we have enough data for polyphase filterbank */
-      assert(gfc->mf_size>=(512+gfp->framesize-32));
-  }
+    FLOAT ms_ratio_next = 0.;
+    FLOAT ms_ratio_prev = 0.;
 
 
-  /********************** padding *****************************/
-  /* padding method as described in 
-   * "MPEG-Layer3 / Bitstream Syntax and Decoding"
-   * by Martin Sieler, Ralph Sperschneider
-   *
-   * note: there is no padding for the very first frame
-   *
-   * Robert Hegemann 2000-06-22
-   */
-  gfc->padding = FALSE;
-  if ((gfc->slot_lag -= gfc->frac_SpF) < 0) {
-      gfc->slot_lag += gfp->out_samplerate;
-      gfc->padding = TRUE;
-  }
+    inbuf[0]=inbuf_l;
+    inbuf[1]=inbuf_r;
+
+    if (gfc->lame_encode_frame_init==0 ) {
+        /*first run? */
+        lame_encode_frame_init(gfp, inbuf);
+
+    }
 
 
-  if (gfc->psymodel) {
-    /* psychoacoustic model
-     * psy model has a 1 granule (576) delay that we must compensate for
-     * (mt 6/99).
-     */
-    int ret;
-    const sample_t *bufp[2];  /* address of beginning of left & right granule */
-    int blocktype[2];
+    /********************** padding *****************************/
+    /* padding method as described in 
+    * "MPEG-Layer3 / Bitstream Syntax and Decoding"
+    * by Martin Sieler, Ralph Sperschneider
+    *
+    * note: there is no padding for the very first frame
+    *
+    * Robert Hegemann 2000-06-22
+    */
+    gfc->padding = FALSE;
+    if ((gfc->slot_lag -= gfc->frac_SpF) < 0) {
+        gfc->slot_lag += gfp->out_samplerate;
+        gfc->padding = TRUE;
+    }
 
-    ms_ratio_prev=gfc->ms_ratio[gfc->mode_gr-1];
-    for (gr=0; gr < gfc->mode_gr ; gr++) {
 
-    for ( ch = 0; ch < gfc->channels_out; ch++ )
-        bufp[ch] = &inbuf[ch][576 + gr*576-FFTOFFSET];
 
-    if (gfp->psymodel == PSY_NSPSYTUNE) {
-        ret=L3psycho_anal_ns( gfp, bufp, gr, 
-                            &gfc->ms_ratio[gr],&ms_ratio_next,
-                            masking_LR, masking_MS,
-                            pe[gr],pe_MS[gr],tot_ener[gr],blocktype);
+    /****************************************
+    *   Stage 1: psychoacoustic model       *
+    ****************************************/
+
+    if (gfc->psymodel) {
+        /* psychoacoustic model
+         * psy model has a 1 granule (576) delay that we must compensate for
+         * (mt 6/99).
+         */
+        int ret;
+        const sample_t *bufp[2];  /* address of beginning of left & right granule */
+        int blocktype[2];
+
+        ms_ratio_prev=gfc->ms_ratio[gfc->mode_gr-1];
+        for (gr=0; gr < gfc->mode_gr ; gr++) {
+
+            for ( ch = 0; ch < gfc->channels_out; ch++ )
+                bufp[ch] = &inbuf[ch][576 + gr*576-FFTOFFSET];
+
+            if (gfp->psymodel == PSY_NSPSYTUNE) {
+                ret=L3psycho_anal_ns( gfp, bufp, gr, 
+                                    &gfc->ms_ratio[gr],&ms_ratio_next,
+                                    masking_LR, masking_MS,
+                                    pe[gr],pe_MS[gr],tot_ener[gr],blocktype);
+            } else {
+                ret=L3psycho_anal( gfp, bufp, gr, 
+                                    &gfc->ms_ratio[gr],&ms_ratio_next,
+                                    masking_LR, masking_MS,
+                                    pe[gr],pe_MS[gr],tot_ener[gr],blocktype);
+            }
+            if (ret!=0) return -4;
+
+            if (gfp->mode == JOINT_STEREO) {
+                ms_ener_ratio[gr] = tot_ener[gr][2]+tot_ener[gr][3];
+                if (ms_ener_ratio[gr]>0)
+                    ms_ener_ratio[gr] = tot_ener[gr][3]/ms_ener_ratio[gr];
+            }
+
+            /* block type flags */
+            for ( ch = 0; ch < gfc->channels_out; ch++ ) {
+                gr_info *cod_info = &gfc->l3_side.tt[gr][ch];
+                cod_info->block_type=blocktype[ch];
+                cod_info->mixed_block_flag = 0;
+            }
+        }
     } else {
-        ret=L3psycho_anal( gfp, bufp, gr, 
-                            &gfc->ms_ratio[gr],&ms_ratio_next,
-                            masking_LR, masking_MS,
-                            pe[gr],pe_MS[gr],tot_ener[gr],blocktype);
+        /*no psy model*/
+        memset((char *) masking_LR, 0, sizeof(masking_LR));
+        memset((char *) masking_MS, 0, sizeof(masking_MS));
+        for (gr=0; gr < gfc->mode_gr ; gr++)
+            for ( ch = 0; ch < gfc->channels_out; ch++ ) {
+                gfc->l3_side.tt[gr][ch].block_type=NORM_TYPE;
+                gfc->l3_side.tt[gr][ch].mixed_block_flag=0;
+                pe_MS[gr][ch]=pe[gr][ch]=700;
+            }
     }
-    if (ret!=0) return -4;
-
-      if (gfp->mode == JOINT_STEREO) {
-	  ms_ener_ratio[gr] = tot_ener[gr][2]+tot_ener[gr][3];
-	  if (ms_ener_ratio[gr]>0)
-	      ms_ener_ratio[gr] = tot_ener[gr][3]/ms_ener_ratio[gr];
-      }
-
-      /* block type flags */
-      for ( ch = 0; ch < gfc->channels_out; ch++ ) {
-	  gr_info *cod_info = &gfc->l3_side.tt[gr][ch];
-	  cod_info->block_type=blocktype[ch];
-	  cod_info->mixed_block_flag = 0;
-      }
-    }
-  }else{
-    memset((char *) masking_LR, 0, sizeof(masking_LR));
-    memset((char *) masking_MS, 0, sizeof(masking_MS));
-    for (gr=0; gr < gfc->mode_gr ; gr++)
-      for ( ch = 0; ch < gfc->channels_out; ch++ ) {
-	gfc->l3_side.tt[gr][ch].block_type=NORM_TYPE;
-	gfc->l3_side.tt[gr][ch].mixed_block_flag=0;
-	pe_MS[gr][ch]=pe[gr][ch]=700;
-      }
-  }
 
 
 
-  /* auto-adjust of ATH, useful for low volume */
-  adjust_ATH( gfp, tot_ener );
+    /* auto-adjust of ATH, useful for low volume */
+    adjust_ATH( gfp, tot_ener );
 
 
+    /****************************************
+    *   Stage 2: MDCT                       *
+    ****************************************/
 
-  /* polyphase filtering / mdct */
-  mdct_sub48(gfc, inbuf[0], inbuf[1]);
+    /* polyphase filtering / mdct */
+    mdct_sub48(gfc, inbuf[0], inbuf[1]);
 
-  /* Here will be selected MS or LR coding of the 2 stereo channels */
-  gfc->mode_ext = MPG_MD_LR_LR;
+
+    /****************************************
+    *   Stage 3: MS/LR decision             *
+    ****************************************/
+
+    /* Here will be selected MS or LR coding of the 2 stereo channels */
+    gfc->mode_ext = MPG_MD_LR_LR;
   
   if (gfp->force_ms) {
     gfc->mode_ext = MPG_MD_MS_LR;
@@ -468,50 +506,50 @@ int  lame_encode_mp3_frame (				/* Output */
      * _next is the value of the first granule of the next frame
      */
     if (gfp->psymodel == PSY_GPSYCHO) {
-      FLOAT  ms_ratio_ave1;
-      FLOAT  ms_ratio_ave2;
-      FLOAT  threshold1    = 0.35;
-      FLOAT  threshold2    = 0.45;
+        FLOAT  ms_ratio_ave1;
+        FLOAT  ms_ratio_ave2;
+        FLOAT  threshold1    = 0.35;
+        FLOAT  threshold2    = 0.45;
 
-      /* take an average */
-      if (gfc->mode_gr==1) {
-	  /* MPEG2 - no second granule */
-	  ms_ratio_ave1 = 0.33 * ( gfc->ms_ratio[0] + ms_ratio_prev + ms_ratio_next );
-	  ms_ratio_ave2 = gfc->ms_ratio[0];
-      }else{
-	  ms_ratio_ave1 = 0.25 * ( gfc->ms_ratio[0] + gfc->ms_ratio[1] + ms_ratio_prev + ms_ratio_next );
-	  ms_ratio_ave2 = 0.50 * ( gfc->ms_ratio[0] + gfc->ms_ratio[1] );
-      }
-      
+        /* take an average */
+        if (gfc->mode_gr==1) {
+            /* MPEG2 - no second granule */
+            ms_ratio_ave1 = 0.33 * ( gfc->ms_ratio[0] + ms_ratio_prev + ms_ratio_next );
+            ms_ratio_ave2 = gfc->ms_ratio[0];
+        }else{
+            ms_ratio_ave1 = 0.25 * ( gfc->ms_ratio[0] + gfc->ms_ratio[1] + ms_ratio_prev + ms_ratio_next );
+            ms_ratio_ave2 = 0.50 * ( gfc->ms_ratio[0] + gfc->ms_ratio[1] );
+        }
 
-      if (ms_ratio_ave1 >= threshold1 || ms_ratio_ave2 >= threshold2)
-	check_ms_stereo = 0;
+
+        if (ms_ratio_ave1 >= threshold1 || ms_ratio_ave2 >= threshold2)
+            check_ms_stereo = 0;
     }
-    if (check_ms_stereo) {
-      FLOAT sum_pe_MS = 0;
-      FLOAT sum_pe_LR = 0;
-      for ( gr = 0; gr < gfc->mode_gr; gr++ ) {
-	for ( ch = 0; ch < gfc->channels_out; ch++ ) {
-	  sum_pe_MS += pe_MS[gr][ch];
-	  sum_pe_LR += pe[gr][ch];
-	}
-      }
-/*2DO rh 20021015 
-change the following to
-      if (sum_pe_MS <= sum_pe_LR)
-	gfc->mode_ext = MPG_MD_MS_LR;
-*/
-      /* based on PE: M/S coding would not use much more bits than L/R */
-      if (((gfp->psymodel == PSY_GPSYCHO) && sum_pe_MS <= 1.07 * sum_pe_LR)
-	  || ((gfp->psymodel == PSY_NSPSYTUNE) && sum_pe_MS <= 1.00 * sum_pe_LR)) {
-	      gr_info *gi0 = &gfc->l3_side.tt[0][0];
-	      gr_info *gi1 = &gfc->l3_side.tt[gfc->mode_gr-1][0];
-	      
-          if (gi0[0].block_type == gi0[1].block_type
-	          && gi1[0].block_type == gi1[1].block_type)
-	          gfc->mode_ext = MPG_MD_MS_LR;
-      }
-    }
+
+        if (check_ms_stereo) {
+            FLOAT sum_pe_MS = 0;
+            FLOAT sum_pe_LR = 0;
+            for ( gr = 0; gr < gfc->mode_gr; gr++ ) {
+                for ( ch = 0; ch < gfc->channels_out; ch++ ) {
+                    sum_pe_MS += pe_MS[gr][ch];
+                    sum_pe_LR += pe[gr][ch];
+                }
+            }
+
+            /* based on PE: M/S coding would not use much more bits than L/R */
+            if (((gfp->psymodel == PSY_GPSYCHO) && sum_pe_MS <= 1.07 * sum_pe_LR) ||
+                ((gfp->psymodel == PSY_NSPSYTUNE) && sum_pe_MS <= 1.00 * sum_pe_LR)) {
+
+                gr_info *gi0 = &gfc->l3_side.tt[0][0];
+                gr_info *gi1 = &gfc->l3_side.tt[gfc->mode_gr-1][0];
+
+                if (gi0[0].block_type == gi0[1].block_type &&
+                    gi1[0].block_type == gi1[1].block_type) {
+
+                    gfc->mode_ext = MPG_MD_MS_LR;
+                }
+            }
+        }
   }
 
   /* bit and noise allocation */
@@ -546,6 +584,11 @@ change the following to
     }
   }
 #endif
+
+
+    /****************************************
+    *   Stage 4: quantization loop          *
+    ****************************************/
 
   if (gfp->psymodel == PSY_NSPSYTUNE) {
       if (gfp->VBR == vbr_off || gfp->VBR == vbr_abr) {
@@ -594,11 +637,18 @@ change the following to
     break;
   }
 
-  /*  write the frame to the bitstream  */
-  format_bitstream(gfp);
 
-  /* copy mp3 bit buffer into array */
-  mp3count = copy_buffer(gfc,mp3buf,mp3buf_size,1);
+
+    /****************************************
+    *   Stage 5: bitstream formatting       *
+    ****************************************/
+
+
+    /*  write the frame to the bitstream  */
+    format_bitstream(gfp);
+
+    /* copy mp3 bit buffer into array */
+    mp3count = copy_buffer(gfc,mp3buf,mp3buf_size,1);
 
 
 
