@@ -95,21 +95,35 @@ CC_SWITCHES = $(CC_OPTS) $(DISTRIB) $(SNDLIB) $(GTK) \
               /DBS_FORMAT=BINARY $(TIMER_SWITCH) $(BRHIST_SWITCH) $(VORBIS)
 LN_SWITCHES = $(LN_OPTS)
 
-c_sources = \
-        frontend/main.c \
-        frontend/brhist.c \
+lame_sources = \
+	frontend/main.c \
+	frontend/brhist.c \
 	frontend/get_audio.c \
 	frontend/ieeefloat.c \
-        frontend/lametime.c \
-        frontend/parse.c \
+	frontend/lametime.c \
+	frontend/parse.c \
 	frontend/portableio.c \
-	frontend/timestatus.c \
+	frontend/timestatus.c 
+
+mpx_sources = \
+	analyzer/gpkplotting.c \
+	analyzer/gtkanal.c \
+	analyzer/mp3x.c \
+	frontend/brhist.c \
+	frontend/get_audio.c \
+	frontend/ieeefloat.c \
+	frontend/lametime.c \
+	frontend/parse.c \
+	frontend/portableio.c \
+	frontend/timestatus.c 
+
+lib_sources = \
 	libmp3lame/bitstream.c \
 	libmp3lame/encoder.c \
 	libmp3lame/fft.c \
-        libmp3lame/id3tag.c \
-        libmp3lame/lame.c \
-        libmp3lame/newmdct.c \
+	libmp3lame/id3tag.c \
+	libmp3lame/lame.c \
+	libmp3lame/newmdct.c \
 	libmp3lame/psymodel.c \
 	libmp3lame/quantize.c \
 	libmp3lame/quantize_pvt.c \
@@ -120,19 +134,21 @@ c_sources = \
 	libmp3lame/util.c \
 	libmp3lame/vorbis_interface.c \
 	libmp3lame/mpglib_interface.c \
-        libmp3lame/VbrTag.c \
-        libmp3lame/version.c \
-        mpglib/common.c \
-        mpglib/dct64_i386.c \
-        mpglib/decode_i386.c \
-        mpglib/layer1.c \
-        mpglib/layer2.c \
-        mpglib/layer3.c \
-        mpglib/tabinit.c \
-        mpglib/interface.c 
+	libmp3lame/VbrTag.c \
+	libmp3lame/version.c \
+	mpglib/common.c \
+	mpglib/dct64_i386.c \
+	mpglib/decode_i386.c \
+	mpglib/layer1.c \
+	mpglib/layer2.c \
+	mpglib/layer3.c \
+	mpglib/tabinit.c \
+	mpglib/interface.c 
 
-OBJ = $(c_sources:.c=.obj)
-all : $(PGM).exe
+LIB_OBJ = $(lib_sources:.c=.obj)
+LAME_OBJ = $(lame_sources:.c=.obj)
+MPX_OBJ = $(mpx_sources:.c=.obj)
+all : lame.exe mpx.exe
 
 
 
@@ -141,28 +157,37 @@ all : $(PGM).exe
 #	uncomment the following if you have NASM and a processor with MMX 
 #	NASM: Netwide Assembler
 #
-i386/choose_table.obj: i386/choose_table.nas
+libmp3lame/i386/choose_table.obj: libmp3lame/i386/choose_table.nas
 	@echo assemble MMX featured choose table, using NASM the Netwide Assembler
-	@nasmw -f win32 -i i386/ -DWIN32 i386/choose_table.nas -o i386/choose_table.obj
+	@nasmw -f win32 -i libmp3lame/i386/ -DWIN32 libmp3lame/i386/choose_table.nas \
+	       -o libmp3lame/i386/choose_table.obj
 
 CC_SWITCHES = $(CC_SWITCHES) /DMMX_choose_table
-OBJ = $(OBJ) i386/choose_table.obj
+LIB_OBJ = $(LIB_OBJ) libmp3lame/i386/choose_table.obj
 #======================================================================= MMX ==
 
 
 
-.c.obj:
- 	@$(CC) $(CC_SWITCHES) $(CPP_OPTS) /c $< /Fo$@
+.c.obj: 
+ 	@$(CC) $(CC_SWITCHES) $(CPP_OPTS) -Iinclude -Impglib -Ilibmp3lame -Ifrontend /c $< /Fo$@
 
-$(PGM).exe: $(OBJ) Makefile.MSVC
-	@echo $(PGM).exe
- 	@$(LN) $(LN_SWITCHES) $(OBJ) $(LIBS) $(LIBSNDFILE) $(GTKLIBS) $(VORBISLIB) \
-   		$(LIBTERMCAP) /out:$(PGM).exe /map:$(PGM).map
+lame.exe: $(LIB_OBJ) $(LAME_OBJ) Makefile.MSVC
+        @echo lame.exe
+        @$(LN) $(LN_SWITCHES) $(LIB_OBJ) $(LAME_OBJ) $(LIBS) $(LIBSNDFILE) $(GTKLIBS) $(VORBISLIB) \
+                $(LIBTERMCAP) /out:lame.exe /map:lame.map
+
+mpx.exe: $(LIB_OBJ) $(MPX_OBJ) Makefile.MSVC
+        @echo mpx.exe
+        @$(LN) $(LN_SWITCHES) $(LIB_OBJ) $(MPX_OBJ) $(LIBS) $(LIBSNDFILE) $(GTKLIBS) $(VORBISLIB) \
+                $(LIBTERMCAP) /out:mpx.exe /map:mpx.map
 
 clean:
  	@-del *.obj
+ 	@-del analyzer\*.obj
+ 	@-del frontend\*.obj
+ 	@-del libmp3lame\*.obj
  	@-del dll\*.obj
  	@-del mpglib\*.obj
 
-rebuild: clean $(PGM).exe
+rebuild: clean lame.exe mpx.exe
 

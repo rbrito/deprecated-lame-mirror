@@ -399,6 +399,7 @@ lame_errorf(const char * s, ...)
 
 int has_3DNow (void)
 {
+#if (defined(__GNUC__) && defined(__i386__)) 
     __asm__ (
         "pushal \n"
         "pushfl \n"                             
@@ -432,10 +433,14 @@ int has_3DNow (void)
     "return1: \n"    
     );
     return;
+#else
+    return 0;
+#endif
 }    
 
 int has_MMX (void)
 {
+#if (defined(__GNUC__) && defined(__i386__)) 
     __asm__ (
         "pushal \n"
         "pushfl \n"                             
@@ -463,10 +468,14 @@ int has_MMX (void)
     "return2: \n"    
     );
     return;
+#else
+    return 0;
+#endif
 }    
 
 int has_SIMD (void)
 {
+#if (defined(__GNUC__) && defined(__i386__)) 
     __asm__ (
         "pushal \n"
         "pushfl \n"                             
@@ -494,4 +503,7 @@ int has_SIMD (void)
     "return3: \n"    
     );
     return;
+#else
+    return 0;
+#endif
 }    
