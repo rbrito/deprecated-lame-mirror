@@ -333,19 +333,9 @@ int nowrite             /* =1 to disable output */)
 #elif (defined _WIN32)
       _setmode(_fileno(stdout), _O_BINARY);
 #endif
-
-#ifdef AMIGA_ASYNCIO
-	fprintf(stderr,"Sorry, writing to stdout is not supported!");
-	exit(1);
-#else
       bs->pt = stdout;
-#endif
     } else {
-#ifdef AMIGA_ASYNCIO
-	if ((bs->pt = OpenAsync(bs_filenam, MODE_WRITE, AmigaWriteBuffer)) == NULL) {
-#else
       if ((bs->pt = fopen(bs_filenam, "wb")) == NULL) {
-#endif
 	fprintf(stderr,"Could not create \"%s\".\n", bs_filenam);
 	exit(1);
       }

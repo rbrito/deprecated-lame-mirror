@@ -36,42 +36,6 @@
 #include		<errno.h>
 
 
-#ifdef AMIGA_ASYNCIO
- #include <proto/dos.h>
- #include <proto/exec.h>
- #include <proto/asyncio.h>
-
- #undef SEEK_SET
- #define SEEK_SET MODE_START
- #undef SEEK_CUR
- #define SEEK_CUR MODE_CURRENT
- #undef SEEK_END
- #define SEEK_END MODE_END
-
- #define fclose(file)				((int) CloseAsync(file))
- #define fread(buf,size,num,file)	((size_t) (ReadAsync(file,buf,size*num)/size))
- #define fwrite(buf,size,num,file)	((size_t) (WriteAsync(file,buf,size*num)/size))
- #define fseek(file,pos,mode)		((int) SeekAsync(file,pos,mode))
- #define ftell(file)				((long) SeekAsync(file,0L,MODE_CURRENT))
- #undef feof
- #define feof(file)					((int) (IoErr() == EOF))
- #undef ferror
- #define ferror(file)				((int) (IoErr() != 0))
- #undef clearerr
- #define clearerr(file)				((void) SetIoErr(0L))
-
- typedef AsyncFile FILE;
-
- #ifdef __PPC__
-  #define AmigaReadBuffer 400000
-  #define AmigaWriteBuffer 65536
- #else
-  #define AmigaReadBuffer 200000
-  #define AmigaWriteBuffer 32768
- #endif
-#endif
-
-
 #if ( defined(_MSC_VER) && !defined(INLINE))
 	#define INLINE _inline
 #else
