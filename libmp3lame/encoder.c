@@ -438,15 +438,8 @@ int  lame_encode_mp3_frame (				/* Output */
 #ifndef NOANALYSIS
     /* copy data for MP3 frame analyzer */
     if (gfc->pinfo) {
-	for ( gr = 0; gr < gfc->mode_gr; gr++ ) {
-	    for ( ch = 0; ch < gfc->channels_out; ch++ ) {
-		gfc->pinfo->blocktype[gr][ch]
-		    =gfc->l3_side.tt[gr][ch].block_type;
-		gfc->pinfo->pe[gr][ch]=masking[gr][ch].pe;
-		memcpy(gfc->pinfo->xr[gr][ch], &gfc->l3_side.tt[gr][ch].xr,
-		       sizeof(gfc->pinfo->xr[gr][ch]));
-	    }
-	    if (gfp->mode == JOINT_STEREO) {
+	if (gfp->mode == JOINT_STEREO) {
+	    for ( gr = 0; gr < gfc->mode_gr; gr++ ) {
 		gfc->pinfo->ms_ratio[gr] = gfc->pinfo->ms_ratio_next[gr];
 		gfc->pinfo->ms_ratio_next[gr]
 		    = gfc->masking_next[gr][2].pe

@@ -112,8 +112,8 @@
 
 #define NORM_TYPE     0
 #define SHORT_TYPE    3 /* in the spec, 2 */
-/*#define START_TYPE    1 */
-/*#define STOP_TYPE     2 // in the spec, 3 */
+#define START_TYPE    1
+#define STOP_TYPE     2 /* in the spec, 3 */
 
 /* 
  * Mode Extention:

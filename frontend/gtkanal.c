@@ -43,6 +43,7 @@
 #include <dmalloc.h>
 #endif
 
+static const int blockConv[] = {0, 1, 3, 2};
 
 /*! Stringify \a x.*/
 #define STR(x)   #x
@@ -340,7 +341,7 @@ void plot_frame(void)
    *******************************************************************/
   for (gr = 0 ; gr < mode_gr ; gr ++) 
     if (gtkinfo.flag123) 
-      blocktype[gr][ch]=pplot1->mpg123blocktype[gr][ch];
+      blocktype[gr][ch]=blockConv[pplot1->mpg123blocktype[gr][ch]];
     else blocktype[gr][ch]=pplot->blocktype[gr][ch]; 
 
   
@@ -502,10 +503,10 @@ void plot_frame(void)
     int bits,bits2;
     char *blockname="";
     switch (blocktype[gr][ch]) {
-    case 0: blockname = "normal"; 	break;
-    case 1:  	blockname = "start";	break;
-    case 2: 	blockname = "short"; 	break;
-    case 3: 	blockname = "end"; 	break;
+    case  NORM_TYPE: blockname = "normal"; 	break;
+    case START_TYPE: blockname = "start";	break;
+    case SHORT_TYPE: blockname = "short"; 	break;
+    case  STOP_TYPE: blockname = "stop"; 	break;
     }
     strcpy(label,blockname);
     if (pplot1->mixed[gr][ch]) strcat(label,"(mixed)");

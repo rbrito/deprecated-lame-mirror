@@ -1762,9 +1762,14 @@ set_frame_pinfo(lame_internal_flags *gfc, III_psy_ratio   ratio    [2][2])
 
     for (gr = 0; gr < gfc->mode_gr; gr ++) {
         for (ch = 0; ch < gfc->channels_out; ch ++) {
-            gr_info *gi = &gfc->l3_side.tt[gr][ch];
+	    gr_info *gi = &gfc->l3_side.tt[gr][ch];
 	    int scalefac_sav[SFBMAX];
 	    memcpy(scalefac_sav, gi->scalefac, sizeof(scalefac_sav));
+
+	    gfc->pinfo->blocktype[gr][ch] = gi->block_type;
+	    gfc->pinfo->pe[gr][ch] = ratio[gr][ch].pe;
+	    memcpy(gfc->pinfo->xr[gr][ch], gi->xr,
+		   sizeof(gfc->pinfo->xr[gr][ch]));
 
 	    /* reconstruct the scalefactors in case SCFSI was used */
 	    if (gr == 1) {
