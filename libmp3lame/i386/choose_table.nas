@@ -6,14 +6,13 @@
 
 %include "nasm.h"
 
-	globaldef	ix_max_MMX
-
-	segment_text
+	segment_code
 ;
 ; use MMX
 ;
+	globaldef	ix_max_MMX
 	align	16
-; int choose_table(int *ix, int *end, int *s)
+; int ix_max_MMX(int *ix, int *end)
 ix_max_MMX:
 	mov	ecx, [esp+4]	;ecx = begin
 	mov	edx, [esp+8]	;edx = end
