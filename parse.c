@@ -102,7 +102,7 @@ void lame_short_help ( lame_global_flags* gfp, const char* ProgramName )  /* pri
   PRINTF1("\n<infile> and/or <outfile> can be \"-\", which means stdin/stdout.\n");
   PRINTF1("\n");
   PRINTF1("RECOMMENDED :  ");
-  PRINTF1("lame -h input.mp3 output.wav\n");
+  PRINTF1("lame -h input.wav output.mp3\n");
   PRINTF1("\n");
   PRINTF1("OPTIONS :\n");
   PRINTF1("    -b bitrate      set the bitrate, default 128 kbps\n");
