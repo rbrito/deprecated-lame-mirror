@@ -10,16 +10,16 @@
  *
  * This library is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.	 See the GNU
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.	See the GNU
  * Library General Public License for more details.
  *
  * You should have received a copy of the GNU Library General Public
  * License along with this library; if not, write to the
  * Free Software Foundation, Inc., 59 Temple Place - Suite 330,
  * Boston, MA 02111-1307, USA.
+ *
+ * $Id$
  */
-
-/* $Id$ */
 
 #ifdef HAVE_CONFIG_H
 # include <config.h>
@@ -236,11 +236,15 @@ init_gr_info(lame_t gfc, int gr, int ch)
  encode_mp3_frame()
    encode a single frame for Layer3
 
-mfbuf:               |--------576-------|--------576-------|--------576-------|
+gfc->mfbuf: |---------------------- mf_needed --------------------------|
 
+FFT's       |--------------1024--------------|
+                               |--------------1024--------------|
+
+            <--------> FFTOFFSET = 272
   |-------(pre.b)576+480----------|
 subband in           |---------(a)576+480------------|
-                                        |-----------(b)576+480----------|
+                     <------- 576 ----->|-----------(b)576+480----------|
 
                      <-------> PQF delay = 240
 
@@ -251,25 +255,11 @@ MDCT in   |----------------1152-----------------|
                              |----------------1152-----------------|
 MDCT out:          |--------576-------|--------576-------|
 
-                   <-> 288-240 = 48 = MDCTDELAY
+                   <-> 576/2-240 = 48 = MDCTDELAY
             <------> (1024-576)/2 = 224
-            <--------> FFTOFFSET = 272
 
-FFT's       |--------------1024--------------|
-                               |--------------1024--------------|
-
-            <---------------------- mf_needed -------------------------->
-
-    gfc->mfbuf = buffer of PCM data
-    encoder acts on mfbuf[ch][0], but output is delayed by MDCTDELAY
-    so the MDCT coefficints are from inbuf[ch][-MDCTDELAY]
-
-    psy-model FFT has a 1 frame delay, so we feed it data for the next frame.
-    FFT is centered over granule:  224+576+224
-    So FFT starts at:   framesize-224-MDCTDELAY = 1152(or 576)-224-48
-
-    MPEG1: subband ends at:  272+576*2+480 = 1904
-    MPEG2: subband ends at:  272+576  +480 = 1328
+    MPEG1: subband ends at:  FFTOFFSET+576*2+480 = 1904 = mf_needed
+    MPEG2: subband ends at:  FFTOFFSET+576  +480 = 1328 = mf_needed
 *************************************************************************/
 
 static int
@@ -457,8 +447,9 @@ fill_buffer_resample(lame_t gfc, sample_t *outbuf, sample_t *inbuf, int len,
 	    y = (j2<0) ? inbuf_old[filter_l+1+j2] : inbuf[j2];
 	    xvalue += y * filter_coef[i];
 	}
-	outbuf[k] = xvalue;
-    } while (++k < gfc->framesize);
+	*outbuf++ = xvalue;
+	k++;
+    } while (outbuf < &gfc->mfbuf[ch][gfc->mf_needed]);
     /* k = number of samples added to outbuf */
     /* last k sample used data from [j-filter_l/2,j+filter_l-filter_l/2]  */
 
@@ -471,12 +462,13 @@ fill_buffer_resample(lame_t gfc, sample_t *outbuf, sample_t *inbuf, int len,
     gfc->resample.itime[ch] += *num_used - k*gfc->resample_ratio;
 
     /* save the last BLACKSIZE samples into the inbuf_old buffer */
-    if (*num_used >= filter_l+1) {
-	inbuf += *num_used - filter_l - 1;
+    j = *num_used-filter_l-1;
+    if (j >= 0) {
+	inbuf += j;
 	j = 0;
     } else {
 	/* shift in *num_used samples into inbuf_old  */
-	j = filter_l+1-*num_used;  /* number of samples to shift */
+	j = -j;
 
 	/* shift j samples by *num_used, to make room for the
 	 * num_used new samples */
@@ -499,7 +491,7 @@ fill_buffer(lame_t gfc, sample_t *in_buffer, int nsamples, int *n_in, int ch)
 				     in_buffer, nsamples, n_in, ch);
     }
     else {
-	*n_in = n_out = Min(gfc->framesize, nsamples);
+	*n_in = n_out = Min(gfc->mf_needed - gfc->mf_size, nsamples);
 	memcpy(&gfc->mfbuf[ch][gfc->mf_size], in_buffer,
 	       sizeof(sample_t) * n_out);
     }

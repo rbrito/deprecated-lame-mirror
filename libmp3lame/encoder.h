@@ -63,7 +63,7 @@
 #define HBLKSIZE      (BLKSIZE/2 + 1)
 #define BLKSIZE_s     256
 
-#define MFSIZE  (FFTOFFSET + 576*2*2 + 480 + ENCDELAY)
+#define MFSIZE  (FFTOFFSET + 576*2 + 512 - SBLIMIT + ENCDELAY)
 
 /*
  * make sure there is at least one complete frame after the
