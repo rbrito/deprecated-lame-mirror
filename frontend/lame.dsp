@@ -44,7 +44,7 @@ RSC=rc.exe
 # PROP Ignore_Export_Lib 0
 # PROP Target_Dir ""
 # ADD BASE CPP /nologo /W3 /GX /O2 /D "WIN32" /D "NDEBUG" /D "_CONSOLE" /D "_MBCS" /YX /FD /c
-# ADD CPP /nologo /W3 /GX /Ox /Ot /Og /I "./WinGTK/gtk-plus" /I "./WinGTK/glib-1.2" /I "../include" /I "../" /D "NDEBUG" /D "LAMEPARSE" /D "WIN32" /D "_CONSOLE" /D "_MBCS" /D "HAVEMPGLIB" /D "LAMESNDFILE" /D "BRHIST" /D "NOTERMCAP" /D "TAKEHIRO_IEEE754_HACK" /YX /FD /c
+# ADD CPP /nologo /W3 /GX /Ox /Ot /Og /I "./WinGTK/gtk-plus" /I "./WinGTK/glib-1.2" /I "../include" /I "../" /I "../mp3x" /I "../frontend" /D "NDEBUG" /D "LAMEPARSE" /D "WIN32" /D "_CONSOLE" /D "_MBCS" /D "HAVEMPGLIB" /D "LAMESNDFILE" /D "BRHIST" /D "NOTERMCAP" /D "TAKEHIRO_IEEE754_HACK" /YX /FD /c
 # ADD BASE RSC /l 0x409 /d "NDEBUG"
 # ADD RSC /l 0x409 /d "NDEBUG"
 BSC32=bscmake.exe
@@ -68,7 +68,7 @@ LINK32=xilink.exe
 # PROP Ignore_Export_Lib 0
 # PROP Target_Dir ""
 # ADD BASE CPP /nologo /W3 /Gm /GX /Zi /Od /D "WIN32" /D "_DEBUG" /D "_CONSOLE" /D "_MBCS" /YX /FD /c
-# ADD CPP /nologo /W3 /Gm /GX /Zi /Od /I "../include" /I "../" /D "_DEBUG" /D "LAMEPARSE" /D "WIN32" /D "_CONSOLE" /D "_MBCS" /D "HAVEMPGLIB" /D "LAMESNDFILE" /D "BRHIST" /D "NOTERMCAP" /D "TAKEHIRO_IEEE754_HACK" /YX /FD /c
+# ADD CPP /nologo /W3 /Gm /GX /Zi /Od /I "../include" /I "../" /I "../mp3x" /I "../frontend" /D "_DEBUG" /D "LAMEPARSE" /D "WIN32" /D "_CONSOLE" /D "_MBCS" /D "HAVEMPGLIB" /D "LAMESNDFILE" /D "BRHIST" /D "NOTERMCAP" /D "TAKEHIRO_IEEE754_HACK" /YX /FD /c
 # ADD BASE RSC /l 0x409 /d "_DEBUG"
 # ADD RSC /l 0x409 /d "_DEBUG"
 BSC32=bscmake.exe
@@ -93,7 +93,7 @@ LINK32=xilink.exe
 # PROP Ignore_Export_Lib 0
 # PROP Target_Dir ""
 # ADD BASE CPP /nologo /Zp4 /W3 /Gm /GX /Zi /Od /I "../WinGTK/gtk-plus" /I "../WinGTK/glib-1.2" /D "_DEBUG" /D "WIN32" /D "_CONSOLE" /D "_MBCS" /D "HAVEGTK" /YX /FD /c
-# ADD CPP /nologo /W3 /Gm /GX /Zi /Od /I "./WinGTK/src/gtk+" /I "./WinGTK/src/glib" /I "./WinGTK/src/gtk+/gdk" /I "../include" /I "../" /D "_DEBUG" /D "HAVEGTK" /D "WIN32" /D "_CONSOLE" /D "_MBCS" /D "HAVEMPGLIB" /D "LAMESNDFILE" /D "BRHIST" /D "NOTERMCAP" /D "TAKEHIRO_IEEE754_HACK" /YX /FD /c
+# ADD CPP /nologo /W3 /Gm /GX /Zi /Od /I "./WinGTK/src/gtk+" /I "./WinGTK/src/glib" /I "./WinGTK/src/gtk+/gdk" /I "../include" /I "../" /I "../mp3x" /I "../frontend" /D "_DEBUG" /D "HAVEGTK" /D "WIN32" /D "_CONSOLE" /D "_MBCS" /D "HAVEMPGLIB" /D "LAMESNDFILE" /D "BRHIST" /D "NOTERMCAP" /D "TAKEHIRO_IEEE754_HACK" /YX /FD /c
 # ADD BASE RSC /l 0x409 /d "_DEBUG"
 # ADD RSC /l 0x409 /d "_DEBUG"
 BSC32=bscmake.exe
@@ -118,7 +118,7 @@ LINK32=xilink.exe
 # PROP Ignore_Export_Lib 0
 # PROP Target_Dir ""
 # ADD BASE CPP /nologo /W3 /GX /O2 /I "../WinGTK/gtk-plus" /I "../WinGTK/glib-1.2" /D "NDEBUG" /D "WIN32" /D "_CONSOLE" /D "_MBCS" /D "HAVEGTK" /YX /FD /c
-# ADD CPP /nologo /W3 /GX /O2 /I "./WinGTK/src/gtk+" /I "./WinGTK/src/glib" /I "./WinGTK/src/gtk+/gdk" /I "../include" /I "../" /D "NDEBUG" /D "LAMEPARSE" /D "HAVEGTK" /D "WIN32" /D "_CONSOLE" /D "_MBCS" /D "HAVEMPGLIB" /D "LAMESNDFILE" /D "BRHIST" /D "NOTERMCAP" /D "TAKEHIRO_IEEE754_HACK" /YX /FD /c
+# ADD CPP /nologo /W3 /GX /O2 /I "./WinGTK/src/gtk+" /I "./WinGTK/src/glib" /I "./WinGTK/src/gtk+/gdk" /I "../include" /I "../" /I "../mp3x" /I "../frontend" /D "NDEBUG" /D "LAMEPARSE" /D "HAVEGTK" /D "WIN32" /D "_CONSOLE" /D "_MBCS" /D "HAVEMPGLIB" /D "LAMESNDFILE" /D "BRHIST" /D "NOTERMCAP" /D "TAKEHIRO_IEEE754_HACK" /YX /FD /c
 # ADD BASE RSC /l 0x409 /d "NDEBUG"
 # ADD RSC /l 0x409 /d "NDEBUG"
 BSC32=bscmake.exe
@@ -149,11 +149,11 @@ SOURCE=.\get_audio.c
 # End Source File
 # Begin Source File
 
-SOURCE=.\gpkplotting.c
+SOURCE=..\mp3x\gpkplotting.c
 # End Source File
 # Begin Source File
 
-SOURCE=.\gtkanal.c
+SOURCE=..\mp3x\gtkanal.c
 # End Source File
 # Begin Source File
 
@@ -179,10 +179,6 @@ SOURCE=.\portableio.c
 
 SOURCE=.\timestatus.c
 # End Source File
-# Begin Source File
-
-SOURCE=.\vorbis_interface.c
-# End Source File
 # End Group
 # Begin Group "Include"
 
@@ -197,7 +193,7 @@ SOURCE=.\get_audio.h
 # End Source File
 # Begin Source File
 
-SOURCE=.\gpkplotting.h
+SOURCE=..\mp3x\gpkplotting.h
 # End Source File
 # Begin Source File
 

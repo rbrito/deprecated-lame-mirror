@@ -132,10 +132,6 @@ SOURCE=.\layer3.c
 # End Source File
 # Begin Source File
 
-SOURCE=.\main.c
-# End Source File
-# Begin Source File
-
 SOURCE=.\tabinit.c
 # End Source File
 # End Group

@@ -41,7 +41,7 @@ CPP=xicl.exe
 # PROP Intermediate_Dir "Release"
 # PROP Target_Dir ""
 # ADD BASE CPP /nologo /W3 /GX /O2 /D "WIN32" /D "NDEBUG" /D "_WINDOWS" /YX /FD /c
-# ADD CPP /nologo /W3 /GX /O2 /I "./include" /D "WIN32" /D "NDEBUG" /D "_WINDOWS" /YX /FD /c
+# ADD CPP /nologo /W3 /GX /O2 /I "./include" /I "./mpglib" /D "WIN32" /D "NDEBUG" /D "_WINDOWS" /YX /FD /c
 BSC32=bscmake.exe
 # ADD BASE BSC32 /nologo
 # ADD BSC32 /nologo
@@ -62,7 +62,7 @@ LIB32=link.exe -lib
 # PROP Intermediate_Dir "Debug"
 # PROP Target_Dir ""
 # ADD BASE CPP /nologo /W3 /GX /Z7 /Od /D "WIN32" /D "_DEBUG" /D "_WINDOWS" /YX /FD /c
-# ADD CPP /nologo /W3 /GX /Z7 /Od /I "./include" /D "WIN32" /D "_DEBUG" /D "_WINDOWS" /YX /FD /c
+# ADD CPP /nologo /W3 /GX /Z7 /Od /I "./include" /I "./mpglib" /D "WIN32" /D "_DEBUG" /D "_WINDOWS" /YX /FD /c
 BSC32=bscmake.exe
 # ADD BASE BSC32 /nologo
 # ADD BSC32 /nologo
@@ -83,7 +83,7 @@ LIB32=link.exe -lib
 # PROP Intermediate_Dir "DebugGTK"
 # PROP Target_Dir ""
 # ADD BASE CPP /nologo /W3 /GX /Z7 /Od /I "./include" /D "WIN32" /D "_DEBUG" /D "_WINDOWS" /YX /FD /c
-# ADD CPP /nologo /W3 /GX /Z7 /Od /I "./include" /D "WIN32" /D "_DEBUG" /D "_WINDOWS" /D "HAVEGTK" /YX /FD /c
+# ADD CPP /nologo /W3 /GX /Z7 /Od /I "./include" /I "./mpglib" /D "WIN32" /D "_DEBUG" /D "_WINDOWS" /D "HAVEGTK" /YX /FD /c
 BSC32=bscmake.exe
 # ADD BASE BSC32 /nologo
 # ADD BSC32 /nologo
@@ -104,7 +104,7 @@ LIB32=link.exe -lib
 # PROP Intermediate_Dir "ReleaseGTK"
 # PROP Target_Dir ""
 # ADD BASE CPP /nologo /W3 /GX /O2 /I "./include" /D "WIN32" /D "NDEBUG" /D "_WINDOWS" /YX /FD /c
-# ADD CPP /nologo /W3 /GX /O2 /I "./include" /D "WIN32" /D "NDEBUG" /D "_WINDOWS" /D "HAVEGTK" /YX /FD /c
+# ADD CPP /nologo /W3 /GX /O2 /I "./include" /I "./mpglib" /D "WIN32" /D "NDEBUG" /D "_WINDOWS" /D "HAVEGTK" /YX /FD /c
 BSC32=bscmake.exe
 # ADD BASE BSC32 /nologo
 # ADD BSC32 /nologo
@@ -142,6 +142,10 @@ SOURCE=.\id3tag.c
 # Begin Source File
 
 SOURCE=.\lame.c
+# End Source File
+# Begin Source File
+
+SOURCE=.\mpglib_interface.c
 # End Source File
 # Begin Source File
 
@@ -186,6 +190,10 @@ SOURCE=.\VbrTag.c
 # Begin Source File
 
 SOURCE=.\version.c
+# End Source File
+# Begin Source File
+
+SOURCE=.\vorbis_interface.c
 # End Source File
 # End Group
 # Begin Group "Include"
