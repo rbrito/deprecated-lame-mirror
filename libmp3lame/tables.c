@@ -1406,6 +1406,9 @@ int psymodel_init(lame_global_flags *gfp)
     if (i)
 	return i;
 
+    /* long/short switching, use subbandded sample in f > 7kHz */
+    i = (int) (7000.0 / (sfreq / 2.0 / 32.0) + 0.5);
+    gfc->nsPsy.switching_band = Min(i, 30);
 
     /* compute equal loudness weights */
     eql_balance = 0.0;

@@ -405,7 +405,7 @@ struct lame_internal_flags {
 	FLOAT	attackthre;
 	FLOAT	attackthre_s;
 	FLOAT	subbk_ene[MAX_CHANNELS*2][6];
-	int	switching_highpass;
+	int	switching_band;
 
 	/* adjustment of Mid/Side maskings from LR maskings */
 	FLOAT msfix;

@@ -1068,8 +1068,8 @@ mp3x display               <------LONG------>
 		for (j = 0; j < 6; j++) {
 		    int k = i*6+j, band;
 		    FLOAT x0 = 0.0, x1 = 0.0;
-// for (band = gfc->nsPsy.switching_highpass; ...
-		    for (band = 10; band < SBLIMIT; band++) {
+		    for (band = gfc->nsPsy.switching_band;
+			 band < SBLIMIT; band++) {
 			FLOAT l = sbsmpl[0][gr*576+k*32+mdctorder[band]];
 			FLOAT r = sbsmpl[1][gr*576+k*32+mdctorder[band]];
 			x0 += fabs(l + r);
