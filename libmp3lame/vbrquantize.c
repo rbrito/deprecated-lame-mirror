@@ -54,7 +54,8 @@ struct algo_s {
     const FLOAT *xr34orig;
     lame_internal_flags *gfc;
     gr_info *cod_info;
-    int maxminsf;
+    int mingain_l;
+    int mingain_s[3];
 };
 
 
@@ -477,17 +478,22 @@ find_scalefac_ISO(const FLOAT * xr, const FLOAT * xr34, FLOAT l3_xmin, int bw, i
  ***********************************************************************/
 
 /* a variation for vbr-mtrh */
-static void
-block_sf(const algo_t * that, const FLOAT l3_xmin[576], int vbrsf[SFBMAX], int vbrsfmin[SFBMAX], int maxmin[2])
+static int
+block_sf(algo_t * that, const FLOAT l3_xmin[576], int vbrsf[SFBMAX], int vbrsfmin[SFBMAX])
 {
     FLOAT   max_xr34;
     const FLOAT *xr = &that->cod_info->xr[0];
     const FLOAT *xr34_orig = &that->xr34orig[0];
     const int *width = &that->cod_info->width[0];
     const int max_nonzero_coeff = that->cod_info->max_nonzero_coeff;
-    int     maxsf = 0, maxminsf = 0;
-    int     sfb = 0, j = 0;
+    int     maxsf = 0;
+    int     sfb = 0, j = 0, i = 0;
+    int const psymax = that->cod_info->psymax;
 
+    that->mingain_l = 0;
+    that->mingain_s[0] = 0;
+    that->mingain_s[1] = 0;
+    that->mingain_s[2] = 0;
     while (j <= max_nonzero_coeff) {
         int l, w = l = width[sfb];
         int m = max_nonzero_coeff - j + 1, m1, m2;
@@ -497,17 +503,32 @@ block_sf(const algo_t * that, const FLOAT l3_xmin[576], int vbrsf[SFBMAX], int v
         max_xr34 = max_x34(&xr34_orig[j], l);
         
         m1 = find_lowest_scalefac(max_xr34);
-        if (maxminsf < m1) {
-            maxminsf = m1;
-        }
         vbrsfmin[sfb] = m1;
-        
-        m2 = that->find(&xr[j], &xr34_orig[j], l3_xmin[sfb], l, m1);
-        if (maxsf < m2) {
-            maxsf = m2;
+        if (that->mingain_l < m1) {
+            that->mingain_l = m1;
+        }
+        if (that->mingain_s[i] < m1) {
+            that->mingain_s[i] = m1;
+        }
+        if (i < 2) {
+            ++i;
+        }
+        else {
+            i = 0;
+        }
+        if (sfb < psymax) {
+            m2 = that->find(&xr[j], &xr34_orig[j], l3_xmin[sfb], l, m1);
+            if (maxsf < m2) {
+                maxsf = m2;
+            }
+        }
+        else {
+            if (maxsf < m1) {
+                maxsf = m1;
+            }
+            m2 = maxsf;
         }
         vbrsf[sfb] = m2;
-        
         ++sfb;
         j += w;
     }
@@ -515,8 +536,7 @@ block_sf(const algo_t * that, const FLOAT l3_xmin[576], int vbrsf[SFBMAX], int v
         vbrsf[sfb] = maxsf;
         vbrsfmin[sfb] = 0;
     }
-    maxmin[0] = maxsf;
-    maxmin[1] = maxminsf;
+    return maxsf;
 }
 
 
@@ -664,7 +684,7 @@ static const int max_range_long_lsf_pretab[SBMAX_l] =
 */
 
 static void
-set_subblock_gain(gr_info * cod_info, const int *vbrsfmin, int sf[])
+set_subblock_gain(gr_info * cod_info, const int mingain_s[3], int sf[])
 {
     const int maxrange1 = 15, maxrange2 = 7;
     const int ifqstepShift = (cod_info->scalefac_scale == 0) ? 1 : 2;
@@ -678,15 +698,12 @@ set_subblock_gain(gr_info * cod_info, const int *vbrsfmin, int sf[])
         psydiv = psymax;
     }
     for (i = 0; i < 3; ++i) {
-        int     maxsf1 = 0, maxsf2 = 0, minsf = 1000, maxsfmin = 0;
+        int     maxsf1 = 0, maxsf2 = 0, minsf = 1000;
         /* see if we should use subblock gain */
         for (sfb = i; sfb < psydiv; sfb += 3) { /* part 1 */
             int     v = -sf[sfb];
             if (maxsf1 < v) {
                 maxsf1 = v;
-            }
-            if (maxsfmin < vbrsfmin[sfb]) {
-                maxsfmin = vbrsfmin[sfb];
             }
             if (minsf > v) {
                 minsf = v;
@@ -696,9 +713,6 @@ set_subblock_gain(gr_info * cod_info, const int *vbrsfmin, int sf[])
             int     v = -sf[sfb];
             if (maxsf2 < v) {
                 maxsf2 = v;
-            }
-            if (maxsfmin < vbrsfmin[sfb]) {
-                maxsfmin = vbrsfmin[sfb];
             }
             if (minsf > v) {
                 minsf = v;
@@ -726,8 +740,8 @@ set_subblock_gain(gr_info * cod_info, const int *vbrsfmin, int sf[])
             int     m2 = (maxsf1 + 7) >> 3;
             sbg[i] = Max(m1, m2);
         }
-        if (sbg[i] > 0 && maxsfmin > (cod_info->global_gain - sbg[i] * 8)) {
-            sbg[i] = (cod_info->global_gain - maxsfmin) >> 3;
+        if (sbg[i] > 0 && mingain_s[i] > (cod_info->global_gain - sbg[i] * 8)) {
+            sbg[i] = (cod_info->global_gain - mingain_s[i]) >> 3;
         }
         if (sbg[i] > 7) {
             sbg[i] = 7;
@@ -838,7 +852,7 @@ short_block_constrain(const algo_t * that, int vbrsf[SFBMAX],
 {
     gr_info *cod_info = that->cod_info;
     lame_internal_flags *gfc = that->gfc;
-    int const maxminsfb = that->maxminsf;
+    int const maxminsfb = that->mingain_l;
     int     mover, maxover0 = 0, maxover1 = 0, delta = 0;
     int     v, v0, v1;
     int     sfb;
@@ -893,7 +907,7 @@ short_block_constrain(const algo_t * that, int vbrsf[SFBMAX],
     for (sfb = 0; sfb < SFBMAX; ++sfb) {
         vbrsf[sfb] -= vbrmax;
     }
-    set_subblock_gain(cod_info, vbrsfmin, vbrsf);
+    set_subblock_gain(cod_info, &that->mingain_s[0], vbrsf);
     set_scalefacs(cod_info, vbrsfmin, vbrsf, max_range_short);
     assert(checkScalefactor(cod_info, vbrsfmin));
     return checkScalefactor(cod_info, vbrsfmin);
@@ -913,7 +927,7 @@ long_block_constrain(const algo_t * that, int vbrsf[SFBMAX], const int vbrsfmin[
     gr_info *cod_info = that->cod_info;
     lame_internal_flags *gfc = that->gfc;
     const int *max_rangep;
-    int const maxminsfb = that->maxminsf;
+    int const maxminsfb = that->mingain_l;
     int     sfb;
     int     maxover0, maxover1, maxover0p, maxover1p, mover, delta = 0;
     int     v, v0, v1, v0p, v1p, vm0p = 1, vm1p = 1;
@@ -1300,7 +1314,6 @@ VBR_noise_shaping(lame_internal_flags * gfc, const FLOAT xr34orig[576],
     int     sfwork[SFBMAX];
     int     sfcalc[SFBMAX];
     int     vbrsfmin[SFBMAX];
-    int     maxmin[2];
     algo_t  that;
     int     vbrmax;
     gr_info *cod_info = &gfc->l3_side.tt[gr][ch];
@@ -1325,9 +1338,7 @@ VBR_noise_shaping(lame_internal_flags * gfc, const FLOAT xr34orig[576],
 
     memset(cod_info->l3_enc, 0, 576 * sizeof(int));
 
-    block_sf(&that, l3_xmin, sfcalc, vbrsfmin, maxmin);
-    vbrmax = maxmin[0];
-    that.maxminsf = maxmin[1];
+    vbrmax = block_sf(&that, l3_xmin, sfcalc, vbrsfmin);
     memcpy(sfwork, sfcalc, SFBMAX * sizeof(int));
     that.alloc(&that, sfwork, vbrsfmin, vbrmax);
     if (0 != bitcount(&that)) {
