@@ -942,6 +942,14 @@ static int  dm_presets( lame_t gfp, int fast, int cbr, const char* preset_name, 
     // Switch mappings for ABR mode
     const dm_abr_presets_t abr_switch_map [] = {
         // kbps Z  X  lowpass safejoint nsmsfix ns-bass scale
+        {   8,  1, 6,  2000,  0,        0   ,   -3,      0.85 }, //   8 //impossible to use in stereo
+        {  16,  1, 6,  3700,  0,        0   ,   -3,      0.85 }, //  16
+        {  24,  1, 1,  3900,  0,        0   ,   -3,      0.85 }, //  24
+        {  32,  1, 1,  5500,  0,        0   ,   -3,      0.85 }, //  32
+        {  40,  1, 1,  7000,  0,        0   ,   -3,      0.85 }, //  40
+        {  48,  1, 1,  7500,  0,        0   ,   -3,      0.85 }, //  48
+        {  56,  1, 1, 10000,  0,        0   ,   -3,      0.85 }, //  56
+        {  64,  1, 1, 11000,  0,        0   ,   -3,      0.85 }, //  64
         {  80,  1, 1, 13500,  0,        0   ,   -3,      0.85 }, //  80
         {  96,  1, 1, 15300,  0,        0   ,   -4,      0.85 }, //  96
         { 112,  1, 1, 16000,  0,        0   ,   -5,      0.87 }, // 112
@@ -1086,17 +1094,17 @@ static int  dm_presets( lame_t gfp, int fast, int cbr, const char* preset_name, 
 
     // Generic ABR Preset
     if (((atoi(preset_name)) > 0) &&  (fast < 1)) {
-        if ((atoi(preset_name)) >= 80 && (atoi(preset_name)) <= 320) {
+        if ((atoi(preset_name)) >= 8 && (atoi(preset_name)) <= 320) {
 
             // We assume specified bitrate will be 320kbps
-            upper_range_kbps = abr_switch_map[8].abr_kbps;
-            upper_range = 8;
-            lower_range_kbps = abr_switch_map[8].abr_kbps;
-            lower_range = 8;
+            upper_range_kbps = abr_switch_map[16].abr_kbps;
+            upper_range = 16;
+            lower_range_kbps = abr_switch_map[16].abr_kbps;
+            lower_range = 16;
  
             // Determine which significant bitrates the value specified falls between,
             // if loop ends without breaking then we were correct above that the value was 320
-            for (b = 1; b < 9; b++) {
+            for (b = 1; b < 17; b++) {
                 if ((Max(actual_bitrate, abr_switch_map[b].abr_kbps)) != actual_bitrate) {
                       upper_range_kbps = abr_switch_map[b].abr_kbps;
                       upper_range = b;
