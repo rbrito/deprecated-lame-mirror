@@ -119,10 +119,8 @@ static const FLOAT8 enwindow[] =
 #define NS 12
 #define NL 36
 
-static const int all[] = {0,2,3,5,6,8,9,11,12,14,15,17};
 static FLOAT8 ca[8], cs[8];
 static FLOAT8 cos_s[NS / 2][NS / 2];
-static FLOAT8 cos_l[(NL / 2) * 12 + (NL / 6) * 4 + (NL / 18) * 2];
 static FLOAT8 win[4][36];
 
 /************************************************************************
@@ -390,74 +388,65 @@ static void mdct_short(FLOAT8 *out, FLOAT8 *in)
     }
 }
 
-static void mdct_long(FLOAT8 *out, FLOAT8 *in)
+INLINE static void mdct_long(FLOAT8 *out, FLOAT8 *in)
 {
-    FLOAT8 s0, s1, s2, s3, s4, s5;
-    int j = sizeof(all) / sizeof(int) - 1;
-    FLOAT8 *cos_l0 = cos_l;
-    do {
-	out[all[j]] =
-	    in[ 0] * cos_l0[ 0] +
-	    in[ 1] * cos_l0[ 1] +
-	    in[ 2] * cos_l0[ 2] +
-	    in[ 3] * cos_l0[ 3] +
-	    in[ 4] * cos_l0[ 4] +
-	    in[ 5] * cos_l0[ 5] +
-	    in[ 6] * cos_l0[ 6] +
-	    in[ 7] * cos_l0[ 7] +
-	    in[ 8] * cos_l0[ 8] +
-	    in[ 9] * cos_l0[ 9] +
-	    in[10] * cos_l0[10] +
-	    in[11] * cos_l0[11] +
-	    in[12] * cos_l0[12] +
-	    in[13] * cos_l0[13] +
-	    in[14] * cos_l0[14] +
-	    in[15] * cos_l0[15] +
-	    in[16] * cos_l0[16] +
-	    in[17] * cos_l0[17];
-	cos_l0 += 18;
-    } while (--j >= 0);
+#define inc(x) in[17-(x)]
+#define ins(x) -in[8-(x)]
 
-    s0 = in[0] + in[ 5] + in[15];
-    s1 = in[1] + in[ 4] + in[16];
-    s2 = in[2] + in[ 3] + in[17];
-    s3 = in[6] - in[ 9] + in[14];
-    s4 = in[7] - in[10] + in[13];
-    s5 = in[8] - in[11] + in[12];
+    const FLOAT c0=0.98480775301220802032, c1=0.64278760968653936292, c2=0.34202014332566882393;
+    const FLOAT c3=0.93969262078590842791, c4=-0.17364817766693030343, c5=-0.76604444311897790243;
+    FLOAT tc1 = inc(0)-inc(8),tc2 = (inc(1)-inc(7))*0.86602540378443870761, tc3 = inc(2)-inc(6), tc4 = inc(3)-inc(5);
+    FLOAT tc5 = inc(0)+inc(8),tc6 = (inc(1)+inc(7))*0.5,                    tc7 = inc(2)+inc(6), tc8 = inc(3)+inc(5);
+    FLOAT ts1 = ins(0)-ins(8),ts2 = (ins(1)-ins(7))*0.86602540378443870761, ts3 = ins(2)-ins(6), ts4 = ins(3)-ins(5);
+    FLOAT ts5 = ins(0)+ins(8),ts6 = (ins(1)+ins(7))*0.5,                    ts7 = ins(2)+ins(6), ts8 = ins(3)+ins(5);
+    FLOAT ct,st;
 
-    /* 16 */
-    out[16] =
-	s0 * cos_l0[0] + s1 * cos_l0[1] + s2 * cos_l0[2] +
-	s3 * cos_l0[3] + s4 * cos_l0[4] + s5 * cos_l0[5];
-    cos_l0 += 6;
+    ct = tc5+tc7+tc8+inc(1)+inc(4)+inc(7);
+    out[0] = ct;
 
-    /* 10 */
-    out[10] =
-	s0 * cos_l0[0] + s1 * cos_l0[1] + s2 * cos_l0[2] +
-	s3 * cos_l0[3] + s4 * cos_l0[4] + s5 * cos_l0[5];
-    cos_l0 += 6;
+    ct = tc1*c0 + tc2 + tc3*c1 + tc4*c2;
+    st = -ts5*c4 + ts6 - ts7*c5 + ts8*c3 + ins(4);
+    out[1] = ct+st;
+    out[2] = ct-st;
 
-    /* 7 */
-    out[7] =
-	s0 * cos_l0[0] + s1 * cos_l0[1] + s2 * cos_l0[2] +
-	s3 * cos_l0[3] + s4 * cos_l0[4] + s5 * cos_l0[5];
-    cos_l0 += 6;
+    ct =  tc5*c3 + tc6 + tc7*c4 + tc8*c5 - inc(4);
+    st = ts1*c2 + ts2 + ts3*c0 + ts4*c1;
+    out[3] = ct+st;
+    out[4] = ct-st;
 
-    /* 1 */
-    out[1] =
-	s0 * cos_l0[0] + s1 * cos_l0[1] + s2 * cos_l0[2] +
-	s3 * cos_l0[3] + s4 * cos_l0[4] + s5 * cos_l0[5];
-    cos_l0 += 6;
+    ct = (tc1-tc3-tc4)*0.86602540378443870761;
+    st = (ts5+ts7-ts8)*0.5+ins(1)-ins(4)+ins(7);
+    out[5] = ct+st;
+    out[6] = ct-st;
 
-    s0 = s0 - s1 + s5;
-    s2 = s2 - s3 - s4;
-    /* 13 */
-    out[13] = s0 * cos_l0[0] + s2 * cos_l0[1];
+    ct = -tc5*c5 - tc6 - tc7*c3 - tc8*c4 + inc(4);
+    st = ts1*c1 + ts2 - ts3*c2 - ts4*c0;
+    out[7] = ct+st;
+    out[8] = ct-st;
 
-    /* 4 */
-    out[4] = s0 * cos_l0[2] + s2 * cos_l0[3];
+    ct = tc1*c1 - tc2 - tc3*c2 + tc4*c0;
+    st = -ts5*c5 + ts6 - ts7*c3 + ts8*c4 + ins(4);
+    out[ 9] = ct+st;
+    out[10] = ct-st;
+
+    ct = (tc5+tc7+tc8)*0.5-inc(1)-inc(4)-inc(7);
+    st = (ts1-ts3+ts4)*0.86602540378443870761;
+    out[11] = ct+st;
+    out[12] = ct-st;
+
+    ct = tc1*c2 - tc2 + tc3*c0 - tc4*c1;
+    st =  ts5*c3 - ts6 + ts7*c4 - ts8*c5 - ins(4);
+    out[13] = ct+st;
+    out[14] = ct-st;
+
+    ct = -tc5*c4 - tc6 - tc7*c5 - tc8*c3 + inc(4);
+    st = ts1*c0 - ts2 + ts3*c1 - ts4*c2;
+    out[15] = ct+st;
+    out[16] = ct-st;
+
+    st = ts5+ts7-ts8-ins(1)+ins(4)-ins(7);
+    out[17] = st;
 }
-
 
 static const int order[] = {
     0,  16,  8, 24,  4,  20,  12,  28,
@@ -586,14 +575,26 @@ void mdct_sub48(lame_global_flags *gfp,
 		    }
 		    mdct_short(mdct_enc, gfc->mdct_work);
 		  } else {
-		    for (k = 8; k >= 0; --k) {
-		      gfc->mdct_work[k] =
-			win[type][k  ] * gfc->sb_sample[ch][gr][k   ][band_swapped]
-			- win[type][k+9] * gfc->sb_sample[ch][gr][17-k][band_swapped];
-		      
-		      gfc->mdct_work[9+k] =
-			win[type][k+18] * gfc->sb_sample[ch][1-gr][k   ][band_swapped]
-			+ win[type][k+27] * gfc->sb_sample[ch][1-gr][17-k][band_swapped];
+		    static const FLOAT ctab[] = {
+			0.73727733681012397327,0.67559020761566024316,
+			0.79335334029123516508,0.60876142900872065589,
+			0.84339144581288572056,0.53729960834682388704,
+			0.8870108331782217137 ,0.4617486132350339112,
+			0.92387953251128673848,0.38268343236508978178,
+			0.95371695074822693261,0.3007057995042731191,
+			0.97629600711993336226,0.21643961393810287608,
+			0.99144486137381038215,0.1305261922200515734,
+			0.99904822158185779823,0.043619387365336000084,
+		    };
+
+		    for (k = -9; k < 0; k++) {
+			FLOAT8 a, b;
+			a = win[type][k+27] * gfc->sb_sample[ch][1-gr][k+9][band_swapped]
+			  + win[type][k+36] * gfc->sb_sample[ch][1-gr][8-k][band_swapped];
+			b = win[type][k+ 9] * gfc->sb_sample[ch][gr][k+9][band_swapped]
+			  - win[type][k+18] * gfc->sb_sample[ch][gr][8-k][band_swapped];
+			gfc->mdct_work[k+ 9] =  a*ctab[k*2+19] + b*ctab[k*2+18];
+			gfc->mdct_work[k+18] = -a*ctab[k*2+18] + b*ctab[k*2+19];
 		    }
 		    mdct_long(mdct_enc, gfc->mdct_work);
 		  }
@@ -661,48 +662,6 @@ void mdct_init48(lame_global_flags *gfp)
     for (i = 0; i < 36; i++)
 	win[3][i] = win[1][35 - i];
 
-    sq = 4.0 / NL;
-    {
-	FLOAT8 *cos_l0 = cos_l;
-	static const int d3[] = {1,7,10,16};
-	static const int d9[] = {4,13};
-
-	int j = sizeof(all) / sizeof(int) - 1;
-	do {
-	    m = all[j];
-	    for (k = 0; k < NL / 4; k++) {
-		*cos_l0++ = sq *
-		    cos((PI / (4 * NL)) * (2 * m + 1) * (4 * k + 2 + NL));
-	    }
-	    for (k = 0; k < NL / 4; k++) {
-		*cos_l0++ = sq *
-		    cos((PI / (4 * NL)) * (2 * m + 1) * (4 * k + 2 + NL * 3));
-	    }
-	} while (--j >= 0);
-
-	j = sizeof(d3) / sizeof(int) - 1;
-	do {
-	    m = d3[j];
-	    for (k = 0; k < 3; k++) {
-		*cos_l0++ = sq *
-		    cos((PI / (4 * NL)) * (2 * m + 1) * (4 * k + 2 + NL));
-	    }
-	    for (k = 6; k < 9; k++) {
-		*cos_l0++ = sq *
-		    cos((PI / (4 * NL)) * (2 * m + 1) * (4 * k + 2 + NL));
-	    }
-	} while (--j >= 0);
-
-	j = sizeof(d9) / sizeof(int) - 1;
-	do {
-	    m = d9[j];
-	    *cos_l0++ = sq *
-		cos((PI / (4 * NL)) * (2 * m + 1) * (2 + NL));
-	    *cos_l0++ = sq *
-		cos((PI / (4 * NL)) * (2 * m + 1) * (4 * 2 + 2 + NL));
-	} while (--j >= 0);
-    }
-
     /* swap window data*/
     for (k = 0; k < 4; k++) {
 	FLOAT8 a;
@@ -733,9 +692,9 @@ void mdct_init48(lame_global_flags *gfp)
     }
 
     for (i = 0; i < 36; i++) {
-	win[0][i] /= SCALE;
-	win[1][i] /= SCALE;
-	win[3][i] /= SCALE;
+	win[0][i] /= SCALE * NL / 4.0;
+	win[1][i] /= SCALE * NL / 4.0;
+	win[3][i] /= SCALE * NL / 4.0;
     }
 
     /* type 2(short)*/
