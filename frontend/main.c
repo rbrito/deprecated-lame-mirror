@@ -505,7 +505,7 @@ main(int argc, char **argv)
     argc = ccommand(&argv);
 #endif
 
-/*
+#if 0
 This works only on NT.  we need a #ifdef that distinguishes between 
 NT and 95/98/me before we can use this:
 
@@ -518,7 +518,7 @@ NT and 95/98/me before we can use this:
     SetProcessAffinityMask(GetCurrentProcess(), si.dwActiveProcessorMask);
     }
 #endif
-*/
+#endif
 
 
 
