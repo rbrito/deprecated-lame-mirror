@@ -195,7 +195,7 @@ VBR_iteration_loop (lame_global_flags *gfp,
    *   limits ends up in very annoying artefacts
    */
   {
-    static const FLOAT8 dbQ[10]={-6.0,-4.5,-3.0,-1.5,0,0.3,0.6,1.0,1.5,2.0};
+    static const FLOAT8 dbQ[10]={-5.0,-3.75,-2.5,-1.25,0,0.4,0.8,1.2,1.6,2.0};
     FLOAT8 masking_lower_db;
     assert( gfp->VBR_q <= 9 );
     assert( gfp->VBR_q >= 0 );

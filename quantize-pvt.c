@@ -217,17 +217,19 @@ FLOAT8 ATHformula(lame_global_flags *gfp,FLOAT8 f)
 {
   lame_internal_flags *gfc=gfp->internal_flags;
   FLOAT8 ath;
-  f  = Max(0.02, f);
+  
+  f  = Max(0.01, f);
+
   /* from Painter & Spanias, 1997 */
   /* minimum: (i=77) 3.3kHz = -5db */
-  ath=(3.640 * pow(f,-0.8)
-       -  6.500 * exp(-0.6*pow(f-3.3,2.0))
-       +  0.001 * pow(f,4.0));
+  ath =    3.640 * pow(f,-0.8)
+         - 6.500 * exp(-0.6*pow(f-3.3,2.0))
+         + 0.001 * pow(f,4.0);
+	  
   /* convert to energy */
   if (gfp->noATH)
     ath -= 200; /* disables ATH */
   else {
-      /*      ath -= 109;*/
     ath -= 114;    /* MDCT scaling.  From tests by macik and MUS420 code */
   }
 
@@ -237,8 +239,12 @@ FLOAT8 ATHformula(lame_global_flags *gfp,FLOAT8 f)
    * works together with adjusted masking lowering of GPSYCHO thresholds
    * (Robert.Hegemann@gmx.de 2000-01-30)
    */
-  if (gfp->VBR) ath -= gfc->ATH_lower;
-
+  if (gfp->VBR) 
+    {
+      ath -= gfc->ATH_lower;
+      ath = Min(gfp->VBR_q-62,ath);
+    }
+    
   ath = pow( 10.0, ath/10.0 );
   return ath;
 }
@@ -262,8 +268,8 @@ void compute_ath(lame_global_flags *gfp,FLOAT8 ATH_l[],FLOAT8 ATH_s[])
     /*
     printf("sfb=%i %f  ATH=%f %f  %f   \n",sfb,samp_freq*start/(2*576),
 10*log10(ATH_l[sfb]),
-10*log10( ATHformula(samp_freq*start/(2*576)))  ,
-10*log10(ATHformula(samp_freq*end/(2*576))));
+10*log10( ATHformula(gfp,samp_freq*start/(2*576)))  ,
+10*log10(ATHformula(gfp,samp_freq*end/(2*576))));
     */
   }
 
