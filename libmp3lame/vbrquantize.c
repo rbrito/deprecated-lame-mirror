@@ -566,7 +566,7 @@ compute_scalefacs_long(int sf[SBPSY_l],gr_info *cod_info,int scalefac[SBPSY_l])
 
 static int
 VBR_quantize_granule( 
-          lame_global_flags *gfp,
+          lame_internal_flags *gfc,
           FLOAT8                 xr34[576], 
           int                    l3_enc[576],
     const III_psy_ratio  * const ratio,  
@@ -574,7 +574,6 @@ VBR_quantize_granule(
     const int gr, 
     const int ch)
 {
-  lame_internal_flags *gfc=gfp->internal_flags;
   int status;
   gr_info *cod_info;  
   III_side_info_t * l3_side;
@@ -583,7 +582,7 @@ VBR_quantize_granule(
 
 
   /* encode scalefacs */
-  if ( gfp->version == 1 ) 
+  if (gfc->is_mpeg1) 
     status=scale_bitcount(scalefac, cod_info);
   else
     status=scale_bitcount_lsf(scalefac, cod_info);
@@ -698,13 +697,12 @@ long_block_vbr_sf (
 
 static void 
 short_block_scalefacs (
-       lame_global_flags *gfp,
+    const lame_internal_flags * const gfc,
           gr_info        * const cod_info,
           III_scalefac_t * const scalefac,
           III_scalefac_t * const vbrsf,
           int            * const VBRmax )
 {
-    lame_internal_flags *gfc=gfp->internal_flags;
     const int * max_range;
     unsigned int sfb, b;
     int maxover, maxover0, maxover1, mover;
@@ -712,7 +710,7 @@ short_block_scalefacs (
     int minsfb;
     int vbrmax = *VBRmax;
     
-    max_range = gfp->version ? max_range_short : max_range_short_lsf;
+    max_range = gfc->is_mpeg1 ? max_range_short : max_range_short_lsf;
     
     maxover0 = 0;
     maxover1 = 0;
@@ -753,7 +751,7 @@ short_block_scalefacs (
             vbrsf->s[sfb][b] -= vbrmax;
         }
     }
-    if ( gfp->version == 1 ) 
+    if (gfc->is_mpeg1) 
         maxover = compute_scalefacs_short (vbrsf->s, cod_info, scalefac->s,
                                            cod_info->subblock_gain);
     else
@@ -790,13 +788,12 @@ short_block_scalefacs (
 
 static void 
 long_block_scalefacs (
-    lame_global_flags *gfp,
+    const lame_internal_flags * const gfc,
           gr_info        * const cod_info,
           III_scalefac_t * const scalefac,
           III_scalefac_t * const vbrsf,
           int            * const VBRmax )
 {
-    lame_internal_flags *gfc=gfp->internal_flags;
     const int * max_range;
     const int * max_rangep;
     unsigned int sfb;
@@ -804,8 +801,8 @@ long_block_scalefacs (
     int v0, v1, v0p, v1p;
     int vbrmax = *VBRmax;
 
-    max_range  = gfp->version ? max_range_long : max_range_long_lsf;
-    max_rangep = gfp->version ? max_range_long : max_range_long_lsf_pretab;
+    max_range  = gfc->is_mpeg1 ? max_range_long : max_range_long_lsf;
+    max_rangep = gfc->is_mpeg1 ? max_range_long : max_range_long_lsf_pretab;
     
     maxover0  = 0;
     maxover1  = 0;
@@ -867,7 +864,7 @@ long_block_scalefacs (
     for (sfb = 0; sfb < SBPSY_l; sfb++)   
         vbrsf->l[sfb] -= vbrmax;
     
-    if ( gfp->version == 1 ) 
+    if (gfc->is_mpeg1) 
         maxover = compute_scalefacs_long (vbrsf->l, cod_info, scalefac->l);
     else
         maxover = compute_scalefacs_long_lsf (vbrsf->l, cod_info, scalefac->l);
@@ -1062,13 +1059,13 @@ VBR_noise_shaping (
         memset (scalefac, 0, sizeof(III_scalefac_t));
         
         if (shortblock) {
-            short_block_scalefacs (gfp, cod_info, scalefac, &vbrsf, &vbrmax);
+            short_block_scalefacs (gfc, cod_info, scalefac, &vbrsf, &vbrmax);
             short_block_xr34      (gfc, cod_info, scalefac, xr34orig, xr34);
         } else {
-            long_block_scalefacs (gfp, cod_info, scalefac, &vbrsf, &vbrmax);
+            long_block_scalefacs (gfc, cod_info, scalefac, &vbrsf, &vbrmax);
             long_block_xr34      (gfc, cod_info, scalefac, xr34orig, xr34);
         } 
-        VBR_quantize_granule (gfp, xr34, l3_enc, ratio, scalefac, gr, ch);
+        VBR_quantize_granule (gfc, xr34, l3_enc, ratio, scalefac, gr, ch);
 
         
         /* decrease noise until we use at least minbits
@@ -1095,7 +1092,7 @@ VBR_noise_shaping (
             ERRORF ("%ld impossible to encode ??? frame! bits=%d\n",
                     //  gfp->frameNum, cod_info->part2_3_length);
                              -1,       cod_info->part2_3_length);
-        VBR_quantize_granule (gfp, xr34, l3_enc, ratio, scalefac, gr, ch);
+        VBR_quantize_granule (gfc, xr34, l3_enc, ratio, scalefac, gr, ch);
 
         ++global_gain_adjust;
     }
@@ -1117,7 +1114,7 @@ VBR_noise_shaping (
  
 int
 VBR_noise_shaping2 (
-    lame_global_flags        *gfp,
+    lame_internal_flags *const gfc,
     FLOAT8                 xr       [576], 
     FLOAT8                 xr34orig [576],
     III_psy_ratio  * const ratio,
@@ -1130,7 +1127,6 @@ VBR_noise_shaping2 (
     int                    gr,
     int                    ch )
 {
-    lame_internal_flags *gfc=gfp->internal_flags;
     III_scalefac_t vbrsf;
     gr_info *cod_info;  
     FLOAT8 xr34[576];
@@ -1142,17 +1138,17 @@ VBR_noise_shaping2 (
       
     if (shortblock) {
         vbrmax = short_block_vbr_sf (gfc, l3_xmin, xr34orig, xr, &vbrsf);  
-        short_block_scalefacs (gfp, cod_info, scalefac, &vbrsf, &vbrmax);
+        short_block_scalefacs (gfc, cod_info, scalefac, &vbrsf, &vbrmax);
         short_block_xr34      (gfc, cod_info, scalefac, xr34orig, xr34);
     } else {
         vbrmax = long_block_vbr_sf (gfc, l3_xmin, xr34orig, xr, &vbrsf);  
-        long_block_scalefacs (gfp, cod_info, scalefac, &vbrsf, &vbrmax);
+        long_block_scalefacs (gfc, cod_info, scalefac, &vbrsf, &vbrmax);
         long_block_xr34      (gfc, cod_info, scalefac, xr34orig, xr34);
     } 
     
     gfc->use_best_huffman = 0; /* we will do it later */
  
-    ret = VBR_quantize_granule (gfp, xr34, l3_enc, ratio, scalefac, gr, ch);
+    ret = VBR_quantize_granule (gfc, xr34, l3_enc, ratio, scalefac, gr, ch);
     
     gfc->use_best_huffman = best_huffman;
 

@@ -613,13 +613,12 @@ inc_subblock_gain (
 inline
 static int 
 balance_noise (
-    lame_global_flags  *gfp,
+    lame_internal_flags * const gfc,
     gr_info        * const cod_info,
     III_scalefac_t * const scalefac, 
     calc_noise_result * noise_info,
     FLOAT8                 xrpow[576] )
 {
-    lame_internal_flags *gfc=gfp->internal_flags;
     int status;
     
     amp_scalefac_bands ( gfc, cod_info, scalefac, noise_info, xrpow);
@@ -637,7 +636,7 @@ balance_noise (
     /* not all scalefactors have been amplified.  so these 
      * scalefacs are possibly valid.  encode them: 
      */
-    if (gfp->version == 1)
+    if (gfc->is_mpeg1)
         status = scale_bitcount (scalefac, cod_info);
     else 
         status = scale_bitcount_lsf (scalefac, cod_info);
@@ -656,7 +655,7 @@ balance_noise (
 #ifdef RH_AMP
          && gfc->noise_shaping > 0)
 #else
-         && gfp->experimentalZ && gfc->noise_shaping > 1)
+         && gfc->noise_shaping > 1)
 #endif
         {
             status = inc_subblock_gain (gfc, cod_info, scalefac, xrpow)
@@ -664,7 +663,7 @@ balance_noise (
         }
     }
     if (!status) {
-        if (gfp->version == 1) 
+        if (gfc->is_mpeg1) 
             status = scale_bitcount (scalefac, cod_info);
         else 
             status = scale_bitcount_lsf (scalefac, cod_info);
@@ -864,7 +863,7 @@ outer_loop (
             }
         }
             
-        notdone = balance_noise (gfp, cod_info, scalefac, &noise_info, xrpow);
+        notdone = balance_noise (gfc, cod_info, scalefac, &noise_info, xrpow);
         
         if (notdone == 0) 
             break;
@@ -1322,7 +1321,7 @@ VBR_iteration_loop (
       
             /*  init_outer_loop sets up cod_info, scalefac and xrpow 
              */
-            ret = init_outer_loop(cod_info, &scalefac[gr][ch], gfp->version,
+            ret = init_outer_loop(cod_info, &scalefac[gr][ch], gfc->is_mpeg1,
                                   xr[gr][ch], xrpow);
             if (ret == 0) {
                 /*  xr contains no energy 
@@ -1341,12 +1340,12 @@ VBR_iteration_loop (
             max_bits = calc_max_bits (gfc, frameBits, min_bits);
             
             if (gfp->VBR == vbr_mtrh) {
-                ret = VBR_noise_shaping2 (gfp, xr[gr][ch], xrpow, 
+                ret = VBR_noise_shaping2 (gfc, xr[gr][ch], xrpow, 
                                         &ratio[gr][ch], l3_enc[gr][ch], 0, 
                                         min_bits, max_bits, &scalefac[gr][ch],
                                         &l3_xmin[gr][ch], gr, ch );
                 if (ret < 0) {
-                    init_outer_loop (cod_info, &scalefac[gr][ch], gfp->version,
+                    init_outer_loop (cod_info, &scalefac[gr][ch], gfc->is_mpeg1,
                                      xr[gr][ch], xrpow);
                     VBR_encode_granule (gfp, cod_info, xr[gr][ch], 
                                         &l3_xmin[gr][ch], &scalefac[gr][ch],
@@ -1416,7 +1415,7 @@ VBR_iteration_loop (
             }
             /*  init_outer_loop sets up cod_info, scalefac and xrpow 
              */
-            ret = init_outer_loop(cod_info, &scalefac[gr][ch], gfp->version,
+            ret = init_outer_loop(cod_info, &scalefac[gr][ch], gfc->is_mpeg1,
                                   xr[gr][ch], xrpow);
             if (ret == 0) 
             {
@@ -1594,7 +1593,7 @@ ABR_iteration_loop(
 
             /*  cod_info, scalefac and xrpow get initialized in init_outer_loop
              */
-            ret = init_outer_loop(cod_info, &scalefac[gr][ch], gfp->version,
+            ret = init_outer_loop(cod_info, &scalefac[gr][ch], gfc->is_mpeg1,
                                   xr[gr][ch], xrpow);
             if (ret == 0) {
                 /*  xr contains no energy 
@@ -1691,7 +1690,7 @@ iteration_loop(
 
             /*  init_outer_loop sets up cod_info, scalefac and xrpow 
              */
-            i = init_outer_loop(cod_info, &scalefac[gr][ch], gfp->version, 
+            i = init_outer_loop(cod_info, &scalefac[gr][ch], gfc->is_mpeg1, 
                                 xr[gr][ch], xrpow);
             if (i == 0) {
                 /*  xr contains no energy, l3_enc will be quantized to zero

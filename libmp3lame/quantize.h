@@ -62,7 +62,7 @@ void VBR_quantize(
     /*  used by VBR_iteration_loop() */ 
 
 int VBR_noise_shaping2(
-                    lame_global_flags        *gfp,
+                    lame_internal_flags *gfc,
                     FLOAT8           xr       [576], 
                     FLOAT8           xr34orig [576], 
                     III_psy_ratio  * ratio,
