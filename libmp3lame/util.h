@@ -105,8 +105,18 @@ extern "C" {
 #define         Min(A, B)       ((A) < (B) ? (A) : (B))
 #define         Max(A, B)       ((A) > (B) ? (A) : (B))
 
+/* log/log10 approximations */
+#ifdef TAKEHIRO_IEEE754_HACK
+//#define USE_FAST_LOG
+#endif
 
-
+#ifdef USE_FAST_LOG
+#define         FAST_LOG10(x)       (fast_log2(x)*(LOG2/LOG10))
+#define         FAST_LOG(x)         (fast_log2(x)*LOG2)
+#else
+#define         FAST_LOG10(x)       log10(x)
+#define         FAST_LOG(x)         log(x)
+#endif
 
 
 /***********************************************************************
@@ -585,6 +595,11 @@ extern FLOAT8         ATHformula(FLOAT8 f,lame_global_flags *gfp);
 extern FLOAT8         freq2bark(FLOAT8 freq);
 extern FLOAT8         freq2cbw(FLOAT8 freq);
 void disable_FPE(void);
+
+/* log/log10 approximations */
+extern void init_log_table(void);
+extern ieee754_float32_t fast_log2(ieee754_float32_t x);
+
 
 extern void 
 getframebits( const lame_global_flags *gfp, int *bitsPerFrame, int *mean_bits);

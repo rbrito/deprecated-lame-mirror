@@ -967,4 +967,73 @@ void disable_FPE(void) {
 }
 
 
+
+
+
+#ifdef USE_FAST_LOG
+/***********************************************************************
+ *
+ * Fast Log Approximation for log2, used to approximate every other log
+ * (log10 and log)
+ * maximum absolute error for log10 is around 10-6
+ * maximum *relative* error can be high when x is almost 1 because error/log10(x) tends toward x/e
+ *
+ * use it if typical RESULT values are > 1e-5 (for example if x>1.00001 or x<0.99999)
+ * or if the relative precision in the domain around 1 is not important (result in 1 is exact and 0)
+ *
+ ***********************************************************************/
+
+
+#define LOG2_SIZE       (512)
+#define LOG2_SIZE_L2    (9)
+
+static ieee754_float32_t log_table[LOG2_SIZE+1];
+
+
+
+void init_log_table(void)
+{
+  int j;
+  static int init = 0;
+
+  /* Range for log2(x) over [1,2[ is [0,1[ */
+  assert((1<<LOG2_SIZE_L2)==LOG2_SIZE);
+  
+  if(!init) {
+    for(j=0; j<LOG2_SIZE+1; j++)
+      log_table[j] = log(1.0f+j/(ieee754_float32_t)LOG2_SIZE)/log(2.0f);
+  }
+  init = 1;
+}
+
+
+
+ieee754_float32_t fast_log2(ieee754_float32_t x)
+{
+  int i = *(int*)&x;
+  ieee754_float32_t log2val;
+  int mantisse = i & 0x7FFFFF;
+  int exponent = i & 0x7F800000;
+  ieee754_float32_t partial = (mantisse & ((1<<(23-LOG2_SIZE_L2))-1)) * (1.0f/((1<<(23-LOG2_SIZE_L2))));
+
+
+  mantisse >>= (23-LOG2_SIZE_L2);
+  log2val = (exponent>>23)-0x7f;
+
+  /* log2val += log_table[mantisse];  without interpolation the results are not good */
+  log2val += log_table[mantisse] * (1.0f-partial) + log_table[mantisse+1]*partial;
+
+  return log2val;
+}
+
+#else /* Don't use FAST_LOG */
+
+
+void init_log_table(void)
+{
+}
+
+
+#endif
+
 /* end of util.c */
