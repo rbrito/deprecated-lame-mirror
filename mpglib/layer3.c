@@ -574,7 +574,7 @@ static int III_get_scale_factors_1(int *scf,struct gr_info_s *gr_info)
           numbits += num1 * 5;
         }
         else {
-          *scf += 5;
+          scf += 5;
         }
 
         if(!(scfsi & 0x1)) {
