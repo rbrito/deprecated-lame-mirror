@@ -66,6 +66,7 @@ typedef struct calc_noise_result_t {
     FLOAT  max_noise;       /* max quantization noise */
     int    over_count;      /* number of quantization noise > masking */
     int    over_SSD;       /* SSD-like cost of distorted bands */
+    int    bits;
 } calc_noise_result;
 
 

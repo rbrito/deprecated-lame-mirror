@@ -675,7 +675,9 @@ quant_compare(
         case 9: {
             if (best->over_count > 0 ) {
                 /* there are distorted sfb*/
-	            better = calc->over_SSD < best->over_SSD;
+	            better = calc->over_SSD <= best->over_SSD;
+                if (calc->over_SSD == best->over_SSD)
+                    better = calc->bits < best->bits;
             } else {
                 /* no distorted sfb*/
                 better = calc->max_noise <= best->max_noise;
@@ -743,6 +745,19 @@ quant_compare(
                    ||  calc->over_noise < best->over_noise; 
 	    break;
     }   
+
+
+    if (best->over_count == 0) {
+        /*
+            If no distorted bands, only use this quantization
+            if it is better, and if it uses less bits.
+            Unfortunately, part2_3_length is sometimes a poor
+            estimator of the final size at low bitrates.
+        */
+        better = better &&
+                calc->bits < best->bits;
+    }
+
 
     return better;
 }
@@ -1121,6 +1136,8 @@ outer_loop (
     /* compute the distortion in this quantization */
     /* coefficients and thresholds both l/r (or both mid/side) */
     over = calc_noise (gfc, cod_info, l3_xmin, distort, &best_noise_info, &prev_noise);
+    best_noise_info.bits = cod_info->part2_3_length;
+
     cod_info_w = *cod_info;
     age = 0;
    /* if (gfp->VBR == vbr_rh || gfp->VBR == vbr_mtrh)*/
@@ -1198,6 +1215,7 @@ outer_loop (
                 
                 /* compute the distortion in this quantization */
 	        over = calc_noise (gfc, &cod_info_w, l3_xmin, distort, &noise_info, &prev_noise);
+            noise_info.bits = cod_info_w.part2_3_length;
 
                 /* check if this quantization is better
                  * than our saved quantization */
@@ -1211,18 +1229,7 @@ outer_loop (
 			               &cod_info_w, distort);
 
 
-            if (best_noise_info.over_count == 0) {
-                /*
-                    If no distorted bands, only use this quantization
-                    if it is better, and if it uses less bits.
-                    Unfortunately, part2_3_length is sometimes a poor
-                    estimator of the final size at low bitrates.
-                */
-                better = better &&
-                        cod_info->part2_3_length <= best_part2_3_length;
-            }
-
-                /* save data so we can restore this quantization later */
+            /* save data so we can restore this quantization later */
 	        if (better) {
                 best_part2_3_length = cod_info->part2_3_length;
 	            best_noise_info = noise_info;
