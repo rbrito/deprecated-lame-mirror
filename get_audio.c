@@ -992,6 +992,7 @@ FILE * OpenSndFile(lame_global_flags *gfp)
   const char* inPath = gfp->inPath;
   FILE * musicin;
   struct stat sb;
+  mp3data_struct mp3data;
 
   /* set the defaults from info incase we cannot determine them from file */
   gfp->num_samples=MAX_U_32_NUM;
