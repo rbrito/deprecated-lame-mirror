@@ -488,13 +488,10 @@ int fill_buffer_resample(
   filter_l = 31;
   if (0==filter_l % 2 ) --filter_l;  /* must be odd */
 
-
-
   /* if resample_ratio = int, filter_l should be even */
   filter_l += intratio;
 
   BLACKSIZE = filter_l+1;  /* size of data needed for FIR */
-  assert(len > BLACKSIZE);
   
   if ( gfc->fill_buffer_resample_init == 0 ) {
     gfc->inbuf_old[0]=calloc(BLACKSIZE,sizeof(gfc->inbuf_old[0][0]));
@@ -562,9 +559,27 @@ int fill_buffer_resample(
   //  *num_used = Min(len,j+filter_l/2);
   *num_used = Min(len,filter_l+j-filter_l/2);
   gfc->itime[ch] += *num_used - k*gfc->resample_ratio;
-  for (i=0;i<BLACKSIZE;i++)
-    inbuf_old[i]=inbuf[*num_used + i -BLACKSIZE];
-  return k;
+
+  /* save the last BLACKSIZE samples into the inbuf_old buffer */
+  if (*num_used >= BLACKSIZE) {
+      for (i=0;i<BLACKSIZE;i++)
+	  inbuf_old[i]=inbuf[*num_used + i -BLACKSIZE];
+  }else{
+      /* shift in *num_used samples into inbuf_old  */
+       int n_shift = BLACKSIZE-*num_used;  /* number of samples to shift */
+
+       /* shift n_shift samples by *num_used, to make room for the
+	* num_used new samples */
+       for (i=0; i<n_shift; ++i ) 
+	   inbuf_old[i] = inbuf_old[i+ *num_used];
+
+       /* shift in the *num_used samples */
+       for (j=0; i<BLACKSIZE; ++i, ++j ) 
+	   inbuf_old[i] = inbuf[j];
+
+       assert(j==*num_used);
+  }
+  return k;  /* return the number samples created at the new samplerate */
 }
 
 
