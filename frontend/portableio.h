@@ -49,6 +49,9 @@
  * $Id$
  *
  * $Log$
+ * Revision 1.2  2000/11/18 04:24:06  markt
+ * Removed ieeefloat.*
+ *
  * Revision 1.1  2000/09/28 16:36:53  takehiro
  * moved frontend staffs into frontend/
  * Need to debug vorbis/mpglib/analyzer/bitrate histgram.
@@ -74,7 +77,6 @@
  */
 
 #include	<stdio.h>
-#include	"ieeefloat.h"
 
 #ifndef	__cplusplus
 # define	CLINK	
@@ -98,18 +100,18 @@ extern CLINK void ReadBytes(FILE *fp, char *p, int n);
 extern CLINK void ReadBytesSwapped(FILE *fp, char *p, int n);
 extern CLINK void WriteBytes(FILE *fp, char *p, int n);
 extern CLINK void WriteBytesSwapped(FILE *fp, char *p, int n);
-extern CLINK defdouble ReadIeeeFloatHighLow(FILE *fp);
-extern CLINK defdouble ReadIeeeFloatLowHigh(FILE *fp);
-extern CLINK defdouble ReadIeeeDoubleHighLow(FILE *fp);
-extern CLINK defdouble ReadIeeeDoubleLowHigh(FILE *fp);
-extern CLINK defdouble ReadIeeeExtendedHighLow(FILE *fp);
-extern CLINK defdouble ReadIeeeExtendedLowHigh(FILE *fp);
-extern CLINK void WriteIeeeFloatLowHigh(FILE *fp, defdouble num);
-extern CLINK void WriteIeeeFloatHighLow(FILE *fp, defdouble num);
-extern CLINK void WriteIeeeDoubleLowHigh(FILE *fp, defdouble num);
-extern CLINK void WriteIeeeDoubleHighLow(FILE *fp, defdouble num);
-extern CLINK void WriteIeeeExtendedLowHigh(FILE *fp, defdouble num);
-extern CLINK void WriteIeeeExtendedHighLow(FILE *fp, defdouble num);
+extern CLINK double ReadIeeeFloatHighLow(FILE *fp);
+extern CLINK double ReadIeeeFloatLowHigh(FILE *fp);
+extern CLINK double ReadIeeeDoubleHighLow(FILE *fp);
+extern CLINK double ReadIeeeDoubleLowHigh(FILE *fp);
+extern CLINK double ReadIeeeExtendedHighLow(FILE *fp);
+extern CLINK double ReadIeeeExtendedLowHigh(FILE *fp);
+extern CLINK void WriteIeeeFloatLowHigh(FILE *fp, double num);
+extern CLINK void WriteIeeeFloatHighLow(FILE *fp, double num);
+extern CLINK void WriteIeeeDoubleLowHigh(FILE *fp, double num);
+extern CLINK void WriteIeeeDoubleHighLow(FILE *fp, double num);
+extern CLINK void WriteIeeeExtendedLowHigh(FILE *fp, double num);
+extern CLINK void WriteIeeeExtendedHighLow(FILE *fp, double num);
 
 #define	Read32BitsLowHigh(f)	Read32Bits(f)
 #define WriteString(f,s)	fwrite(s,strlen(s),sizeof(char),f)

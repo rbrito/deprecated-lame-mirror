@@ -104,7 +104,7 @@ EXTRA_DIST = $(brhist_sources) README.Win32 mp3x.dsp mp3x.dsw amiga_mpega.c
 
 DEFS = @DEFS@ @CONFIG_DEFS@
 
-common_sources =  	get_audio.c 	ieeefloat.c 	lametime.c 	parse.c 	portableio.c 	timestatus.c
+common_sources =  	get_audio.c 	lametime.c 	parse.c 	portableio.c 	timestatus.c
 
 
 noinst_HEADERS = get_audio.h 	gtkanal.h 	gpkplotting.h 	ieeefloat.h 	lametime.h 	main.h 	parse.h 	portableio.h 	timestatus.h
@@ -142,27 +142,25 @@ CPPFLAGS = @CPPFLAGS@
 LIBS = @LIBS@
 ANSI2KNR = $(top_srcdir)/ansi2knr
 @WITH_BRHIST_FALSE@mp3rtp_OBJECTS =  mp3rtp$U.o rtp$U.o get_audio$U.o \
-@WITH_BRHIST_FALSE@ieeefloat$U.o lametime$U.o parse$U.o portableio$U.o \
-@WITH_BRHIST_FALSE@timestatus$U.o
+@WITH_BRHIST_FALSE@lametime$U.o parse$U.o portableio$U.o timestatus$U.o
 @WITH_BRHIST_TRUE@mp3rtp_OBJECTS =  mp3rtp$U.o rtp$U.o get_audio$U.o \
-@WITH_BRHIST_TRUE@ieeefloat$U.o lametime$U.o parse$U.o portableio$U.o \
-@WITH_BRHIST_TRUE@timestatus$U.o brhist$U.o
+@WITH_BRHIST_TRUE@lametime$U.o parse$U.o portableio$U.o timestatus$U.o \
+@WITH_BRHIST_TRUE@brhist$U.o
 mp3rtp_LDADD = $(LDADD)
 mp3rtp_DEPENDENCIES =  $(top_srcdir)/libmp3lame/libmp3lame.la
 mp3rtp_LDFLAGS = 
 @WITH_BRHIST_FALSE@mp3x_OBJECTS =  mp3x$U.o gtkanal$U.o gpkplotting$U.o \
-@WITH_BRHIST_FALSE@get_audio$U.o ieeefloat$U.o lametime$U.o parse$U.o \
-@WITH_BRHIST_FALSE@portableio$U.o timestatus$U.o
+@WITH_BRHIST_FALSE@get_audio$U.o lametime$U.o parse$U.o portableio$U.o \
+@WITH_BRHIST_FALSE@timestatus$U.o
 @WITH_BRHIST_TRUE@mp3x_OBJECTS =  mp3x$U.o gtkanal$U.o gpkplotting$U.o \
-@WITH_BRHIST_TRUE@get_audio$U.o ieeefloat$U.o lametime$U.o parse$U.o \
-@WITH_BRHIST_TRUE@portableio$U.o timestatus$U.o brhist$U.o
+@WITH_BRHIST_TRUE@get_audio$U.o lametime$U.o parse$U.o portableio$U.o \
+@WITH_BRHIST_TRUE@timestatus$U.o brhist$U.o
 mp3x_DEPENDENCIES =  $(top_srcdir)/libmp3lame/libmp3lame.la
 mp3x_LDFLAGS = 
-@WITH_BRHIST_FALSE@lame_OBJECTS =  main$U.o get_audio$U.o ieeefloat$U.o \
-@WITH_BRHIST_FALSE@lametime$U.o parse$U.o portableio$U.o timestatus$U.o
-@WITH_BRHIST_TRUE@lame_OBJECTS =  main$U.o get_audio$U.o ieeefloat$U.o \
-@WITH_BRHIST_TRUE@lametime$U.o parse$U.o portableio$U.o timestatus$U.o \
-@WITH_BRHIST_TRUE@brhist$U.o
+@WITH_BRHIST_FALSE@lame_OBJECTS =  main$U.o get_audio$U.o lametime$U.o \
+@WITH_BRHIST_FALSE@parse$U.o portableio$U.o timestatus$U.o
+@WITH_BRHIST_TRUE@lame_OBJECTS =  main$U.o get_audio$U.o lametime$U.o \
+@WITH_BRHIST_TRUE@parse$U.o portableio$U.o timestatus$U.o brhist$U.o
 lame_LDADD = $(LDADD)
 lame_DEPENDENCIES =  $(top_srcdir)/libmp3lame/libmp3lame.la
 lame_LDFLAGS = 
@@ -177,12 +175,12 @@ DIST_COMMON =  Makefile.am Makefile.in
 
 DISTFILES = $(DIST_COMMON) $(SOURCES) $(HEADERS) $(TEXINFOS) $(EXTRA_DIST)
 
-TAR = tar
+TAR = gtar
 GZIP_ENV = --best
 DEP_FILES =  .deps/brhist.P .deps/get_audio.P .deps/gpkplotting.P \
-.deps/gtkanal.P .deps/ieeefloat.P .deps/lametime.P .deps/main.P \
-.deps/mp3rtp.P .deps/mp3x.P .deps/parse.P .deps/portableio.P \
-.deps/rtp.P .deps/timestatus.P
+.deps/gtkanal.P .deps/lametime.P .deps/main.P .deps/mp3rtp.P \
+.deps/mp3x.P .deps/parse.P .deps/portableio.P .deps/rtp.P \
+.deps/timestatus.P
 SOURCES = $(mp3rtp_SOURCES) $(EXTRA_mp3rtp_SOURCES) $(mp3x_SOURCES) $(EXTRA_mp3x_SOURCES) $(lame_SOURCES) $(EXTRA_lame_SOURCES)
 OBJECTS = $(mp3rtp_OBJECTS) $(mp3x_OBJECTS) $(lame_OBJECTS)
 
@@ -288,8 +286,6 @@ gpkplotting_.c: gpkplotting.c $(ANSI2KNR)
 	$(CPP) $(DEFS) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) `if test -f $(srcdir)/gpkplotting.c; then echo $(srcdir)/gpkplotting.c; else echo gpkplotting.c; fi` | sed 's/^# \([0-9]\)/#line \1/' | $(ANSI2KNR) > gpkplotting_.c
 gtkanal_.c: gtkanal.c $(ANSI2KNR)
 	$(CPP) $(DEFS) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) `if test -f $(srcdir)/gtkanal.c; then echo $(srcdir)/gtkanal.c; else echo gtkanal.c; fi` | sed 's/^# \([0-9]\)/#line \1/' | $(ANSI2KNR) > gtkanal_.c
-ieeefloat_.c: ieeefloat.c $(ANSI2KNR)
-	$(CPP) $(DEFS) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) `if test -f $(srcdir)/ieeefloat.c; then echo $(srcdir)/ieeefloat.c; else echo ieeefloat.c; fi` | sed 's/^# \([0-9]\)/#line \1/' | $(ANSI2KNR) > ieeefloat_.c
 lametime_.c: lametime.c $(ANSI2KNR)
 	$(CPP) $(DEFS) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) `if test -f $(srcdir)/lametime.c; then echo $(srcdir)/lametime.c; else echo lametime.c; fi` | sed 's/^# \([0-9]\)/#line \1/' | $(ANSI2KNR) > lametime_.c
 main_.c: main.c $(ANSI2KNR)
@@ -307,10 +303,10 @@ rtp_.c: rtp.c $(ANSI2KNR)
 timestatus_.c: timestatus.c $(ANSI2KNR)
 	$(CPP) $(DEFS) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) `if test -f $(srcdir)/timestatus.c; then echo $(srcdir)/timestatus.c; else echo timestatus.c; fi` | sed 's/^# \([0-9]\)/#line \1/' | $(ANSI2KNR) > timestatus_.c
 brhist_.o brhist_.lo get_audio_.o get_audio_.lo gpkplotting_.o \
-gpkplotting_.lo gtkanal_.o gtkanal_.lo ieeefloat_.o ieeefloat_.lo \
-lametime_.o lametime_.lo main_.o main_.lo mp3rtp_.o mp3rtp_.lo mp3x_.o \
-mp3x_.lo parse_.o parse_.lo portableio_.o portableio_.lo rtp_.o rtp_.lo \
-timestatus_.o timestatus_.lo : $(ANSI2KNR)
+gpkplotting_.lo gtkanal_.o gtkanal_.lo lametime_.o lametime_.lo main_.o \
+main_.lo mp3rtp_.o mp3rtp_.lo mp3x_.o mp3x_.lo parse_.o parse_.lo \
+portableio_.o portableio_.lo rtp_.o rtp_.lo timestatus_.o \
+timestatus_.lo : $(ANSI2KNR)
 
 tags: TAGS
 
@@ -354,7 +350,7 @@ distdir: $(DISTFILES)
 	@for file in $(DISTFILES); do \
 	  d=$(srcdir); \
 	  if test -d $$d/$$file; then \
-	    cp -pr $$d/$$file $(distdir)/$$file; \
+	    cp -pr $$/$$file $(distdir)/$$file; \
 	  else \
 	    test -f $(distdir)/$$file \
 	    || ln $$d/$$file $(distdir)/$$file 2> /dev/null \

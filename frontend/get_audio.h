@@ -76,7 +76,6 @@ void SwapBytesInWords( short *loc, size_t words );
  * LAME/ISO built in audio file I/O routines 
  *******************************************************************/
 #include "portableio.h"
-#include "ieeefloat.h"
 
 
 typedef struct  blockAlign_struct {

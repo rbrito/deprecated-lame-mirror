@@ -13,7 +13,6 @@ DEFS = @DEFS@ @CONFIG_DEFS@
 
 common_sources = \
 	get_audio.c \
-	ieeefloat.c \
 	lametime.c \
 	parse.c \
 	portableio.c \

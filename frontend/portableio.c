@@ -46,6 +46,9 @@
  * $Id$
  *
  * $Log$
+ * Revision 1.3  2000/11/18 04:24:06  markt
+ * Removed ieeefloat.*
+ *
  * Revision 1.2  2000/10/29 12:45:54  aleidinger
  * support for config.h
  *
@@ -270,7 +273,87 @@ void WriteBytesSwapped(FILE *fp, char *p, int n)
 		putc(*p--, fp);
 }
 
-defdouble
+
+
+/****************************************************************
+ * The following two routines make up for deficiencies in many
+ * compilers to convert properly between unsigned integers and
+ * floating-point.  Some compilers which have this bug are the
+ * THINK_C compiler for the Macintosh and the C compiler for the
+ * Silicon Graphics MIPS-based Iris.
+ ****************************************************************/
+
+#ifdef applec	/* The Apple C compiler works */
+# define FloatToUnsigned(f)	((unsigned long)(f))
+# define UnsignedToFloat(u)	((double)(u))
+#else /* applec */
+# define FloatToUnsigned(f)	((unsigned long)(((long)((f) - 2147483648.0)) + 2147483647L + 1))
+# define UnsignedToFloat(u)	(((double)((long)((u) - 2147483647L - 1))) + 2147483648.0)
+#endif /* applec */
+/****************************************************************
+ * Extended precision IEEE floating-point conversion routines
+ ****************************************************************/
+
+double
+ConvertFromIeeeExtended(char* bytes)
+{
+	double	f;
+	long	expon;
+	unsigned long hiMant, loMant;
+
+#ifdef	TEST
+printf("ConvertFromIEEEExtended(%lx,%lx,%lx,%lx,%lx,%lx,%lx,%lx,%lx,%lx\r",
+	(long)bytes[0], (long)bytes[1], (long)bytes[2], (long)bytes[3],
+	(long)bytes[4], (long)bytes[5], (long)bytes[6],
+	(long)bytes[7], (long)bytes[8], (long)bytes[9]);
+#endif
+
+	expon = ((bytes[0] & 0x7F) << 8) | (bytes[1] & 0xFF);
+	hiMant	=	((unsigned long)(bytes[2] & 0xFF) << 24)
+			|	((unsigned long)(bytes[3] & 0xFF) << 16)
+			|	((unsigned long)(bytes[4] & 0xFF) << 8)
+			|	((unsigned long)(bytes[5] & 0xFF));
+	loMant	=	((unsigned long)(bytes[6] & 0xFF) << 24)
+			|	((unsigned long)(bytes[7] & 0xFF) << 16)
+			|	((unsigned long)(bytes[8] & 0xFF) << 8)
+			|	((unsigned long)(bytes[9] & 0xFF));
+
+	if (expon == 0 && hiMant == 0 && loMant == 0) {
+		f = 0;
+	}
+	else {
+		if (expon == 0x7FFF) {	/* Infinity or NaN */
+			f = HUGE_VAL;
+		}
+		else {
+			expon -= 16383;
+			f  = ldexp(UnsignedToFloat(hiMant), (int) (expon -= 31));
+			f += ldexp(UnsignedToFloat(loMant), (int) (expon -= 32));
+		}
+	}
+
+	if (bytes[0] & 0x80)
+		return -f;
+	else
+		return f;
+}
+
+
+
+
+
+double
+ReadIeeeExtendedHighLow(FILE *fp)
+{
+	char	bits[10];
+
+	ReadBytes(fp, bits, 10);
+	return ConvertFromIeeeExtended(bits);
+}
+
+#if 0
+
+double
 ReadIeeeFloatHighLow(FILE *fp)
 {
 	char	bits[kFloatLength];
@@ -279,7 +362,8 @@ ReadIeeeFloatHighLow(FILE *fp)
 	return ConvertFromIeeeSingle(bits);
 }
 
-defdouble
+
+double
 ReadIeeeFloatLowHigh(FILE *fp)
 {
 	char	bits[kFloatLength];
@@ -288,7 +372,7 @@ ReadIeeeFloatLowHigh(FILE *fp)
 	return ConvertFromIeeeSingle(bits);
 }
 
-defdouble
+double
 ReadIeeeDoubleHighLow(FILE *fp)
 {
 	char	bits[kDoubleLength];
@@ -297,7 +381,7 @@ ReadIeeeDoubleHighLow(FILE *fp)
 	return ConvertFromIeeeDouble(bits);
 }
 
-defdouble
+double
 ReadIeeeDoubleLowHigh(FILE *fp)
 {
 	char	bits[kDoubleLength];
@@ -306,16 +390,8 @@ ReadIeeeDoubleLowHigh(FILE *fp)
 	return ConvertFromIeeeDouble(bits);
 }
 
-defdouble
-ReadIeeeExtendedHighLow(FILE *fp)
-{
-	char	bits[kExtendedLength];
 
-	ReadBytes(fp, bits, kExtendedLength);
-	return ConvertFromIeeeExtended(bits);
-}
-
-defdouble
+double
 ReadIeeeExtendedLowHigh(FILE *fp)
 {
 	char	bits[kExtendedLength];
@@ -325,7 +401,7 @@ ReadIeeeExtendedLowHigh(FILE *fp)
 }
 
 void
-WriteIeeeFloatLowHigh(FILE *fp, defdouble num)
+WriteIeeeFloatLowHigh(FILE *fp, double num)
 {
 	char	bits[kFloatLength];
 
@@ -334,7 +410,7 @@ WriteIeeeFloatLowHigh(FILE *fp, defdouble num)
 }
 
 void
-WriteIeeeFloatHighLow(FILE *fp, defdouble num)
+WriteIeeeFloatHighLow(FILE *fp, double num)
 {
 	char	bits[kFloatLength];
 
@@ -343,7 +419,7 @@ WriteIeeeFloatHighLow(FILE *fp, defdouble num)
 }
 
 void
-WriteIeeeDoubleLowHigh(FILE *fp, defdouble num)
+WriteIeeeDoubleLowHigh(FILE *fp, double num)
 {
 	char	bits[kDoubleLength];
 
@@ -352,7 +428,7 @@ WriteIeeeDoubleLowHigh(FILE *fp, defdouble num)
 }
 
 void
-WriteIeeeDoubleHighLow(FILE *fp, defdouble num)
+WriteIeeeDoubleHighLow(FILE *fp, double num)
 {
 	char	bits[kDoubleLength];
 
@@ -361,7 +437,7 @@ WriteIeeeDoubleHighLow(FILE *fp, defdouble num)
 }
 
 void
-WriteIeeeExtendedLowHigh(FILE *fp, defdouble num)
+WriteIeeeExtendedLowHigh(FILE *fp, double num)
 {
 	char	bits[kExtendedLength];
 
@@ -371,7 +447,7 @@ WriteIeeeExtendedLowHigh(FILE *fp, defdouble num)
 
 
 void
-WriteIeeeExtendedHighLow(FILE *fp, defdouble num)
+WriteIeeeExtendedHighLow(FILE *fp, double num)
 {
 	char	bits[kExtendedLength];
 
@@ -380,3 +456,4 @@ WriteIeeeExtendedHighLow(FILE *fp, defdouble num)
 }
 
 
+#endif
