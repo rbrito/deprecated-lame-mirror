@@ -801,9 +801,8 @@ int loop_break( III_scalefac_t *scalefac, gr_info *cod_info)
 
 #if (defined(__GNUC__) && defined(__i386__))
 #define USE_GNUC_ASM
+//#define USE_GNUC_ASM_OLD
 #endif
-
-
 
 #ifdef USE_GNUC_ASM
 #  define QUANTFAC(rx)  adj43asm[rx]
@@ -837,34 +836,73 @@ int loop_break( III_scalefac_t *scalefac, gr_info *cod_info)
  *    Acy Stapp <AStapp@austin.rr.com> 11/1999
  *    Takehiro Tominaga <tominaga@isoternet.org> 11/1999
  *********************************************************************/
+
 void quantize_xrpow(FLOAT8 xr[576], int ix[576], gr_info *cod_info) {
   /* quantize on xr^(3/4) instead of xr */
   const FLOAT8 istep = IPOW20(cod_info->global_gain);
 
-#ifndef _MSC_VER
+#if defined (USE_GNUC_ASM) && !defined (USE_GNUC_ASM_OLD)
   {
-      FLOAT8 x;
-      int j, rx;
-      for (j = 576 / 4; j > 0; --j) {
-          x = *xr++ * istep;
-          XRPOW_FTOI(x, rx);
-          XRPOW_FTOI(x + QUANTFAC(rx), *ix++);
+      int rx[4];
+      __asm__ __volatile__(
+        "\n\nloop1:\n\t"
 
-          x = *xr++ * istep;
-          XRPOW_FTOI(x, rx);
-          XRPOW_FTOI(x + QUANTFAC(rx), *ix++);
+        "fldl (%1)\n\t"
+        "fldl 8(%1)\n\t"
+        "fldl 16(%1)\n\t"
+        "fldl 24(%1)\n\t"
 
-          x = *xr++ * istep;
-          XRPOW_FTOI(x, rx);
-          XRPOW_FTOI(x + QUANTFAC(rx), *ix++);
+        "fxch %%st(3)\n\t"
+        "fmul %%st(4)\n\t"
+        "fxch %%st(2)\n\t"
+        "fmul %%st(4)\n\t"
+        "fxch %%st(1)\n\t"
+        "fmul %%st(4)\n\t"
+        "fxch %%st(3)\n\t"
+        "fmul %%st(4)\n\t"
 
-          x = *xr++ * istep;
-          XRPOW_FTOI(x, rx);
-          XRPOW_FTOI(x + QUANTFAC(rx), *ix++);
-      }
+        "addl $32, %1\n\t"
+        "addl $16, %3\n\t"
+
+        "fxch %%st(2)\n\t"
+        "fistl %5\n\t"
+        "fxch %%st(1)\n\t"
+        "fistl 4+%5\n\t"
+        "fxch %%st(3)\n\t"
+        "fistl 8+%5\n\t"
+        "fxch %%st(2)\n\t"
+        "fistl 12+%5\n\t"
+
+        "dec %4\n\t"
+
+        "movl %5, %%eax\n\t"
+        "movl 4+%5, %%ebx\n\t"
+        "fxch %%st(1)\n\t"
+        "faddl (%2,%%eax,8)\n\t"
+        "fxch %%st(3)\n\t"
+        "faddl (%2,%%ebx,8)\n\t"
+
+        "movl 8+%5, %%eax\n\t"
+        "movl 12+%5, %%ebx\n\t"
+        "fxch %%st(2)\n\t"
+        "faddl (%2,%%eax,8)\n\t"
+        "fxch %%st(1)\n\t"
+        "faddl (%2,%%ebx,8)\n\t"
+
+        "fxch %%st(3)\n\t"
+        "fistpl -16(%3)\n\t"
+        "fxch %%st(1)\n\t"
+        "fistpl -12(%3)\n\t"
+        "fistpl -8(%3)\n\t"
+        "fistpl -4(%3)\n\t"
+
+        "jnz loop1\n\n"
+        : /* no outputs */
+        : "t" (istep), "r" (xr), "r" (adj43asm), "r" (ix), "r" (576 / 4), "m" (rx)
+        : "%eax", "%ebx", "memory", "cc"
+      );
   }
-#else
-/* def _MSC_VER */
+#elif defined (_MSC_VER)
   {
       /* asm from Acy Stapp <AStapp@austin.rr.com> */
       int rx[4];
@@ -931,6 +969,28 @@ void quantize_xrpow(FLOAT8 xr[576], int ix[576], gr_info *cod_info) {
           fstp st(0)
       }
   }
+#else
+  {
+      FLOAT8 x;
+      int j, rx;
+      for (j = 576 / 4; j > 0; --j) {
+          x = *xr++ * istep;
+          XRPOW_FTOI(x, rx);
+          XRPOW_FTOI(x + QUANTFAC(rx), *ix++);
+
+          x = *xr++ * istep;
+          XRPOW_FTOI(x, rx);
+          XRPOW_FTOI(x + QUANTFAC(rx), *ix++);
+
+          x = *xr++ * istep;
+          XRPOW_FTOI(x, rx);
+          XRPOW_FTOI(x + QUANTFAC(rx), *ix++);
+
+          x = *xr++ * istep;
+          XRPOW_FTOI(x, rx);
+          XRPOW_FTOI(x + QUANTFAC(rx), *ix++);
+      }
+  }
 #endif
 }
 
@@ -939,20 +999,69 @@ void quantize_xrpow(FLOAT8 xr[576], int ix[576], gr_info *cod_info) {
 void quantize_xrpow_ISO( FLOAT8 xr[576], int ix[576], gr_info *cod_info )
 {
   /* quantize on xr^(3/4) instead of xr */
-  register int j;
-  FLOAT8 istep;
-#ifdef USE_GNUC_ASM
-#elif defined (_MSC_VER)
-  FLOAT8 temp0;
-#else
-  FLOAT8 compareval0;
-#endif
-
-  istep = IPOW20(cod_info->global_gain);
+  const FLOAT8 istep = IPOW20(cod_info->global_gain);
   
-#if defined(_MSC_VER)
+#if defined(USE_GNUC_ASM)
+   {
+#ifndef USE_GNUC_ASM_OLD
+      __asm__ __volatile__ (
+        "\n\nloop0:\n\t"
+
+        "fldl (%3)\n\t"
+        "fldl 8(%3)\n\t"
+        "fldl 16(%3)\n\t"
+        "fldl 24(%3)\n\t"
+
+        "addl $32, %3\n\t"
+        "addl $16, %4\n\t"
+
+        "fxch %%st(3)\n\t"
+        "fmul %%st(4)\n\t"
+        "fxch %%st(2)\n\t"
+        "fmul %%st(4)\n\t"
+        "fxch %%st(1)\n\t"
+        "fmul %%st(4)\n\t"
+        "fxch %%st(3)\n\t"
+        "fmul %%st(4)\n\t"
+
+        "dec %0\n\t"
+
+        "fxch %%st(2)\n\t"
+        "fadd %%st(5)\n\t"
+        "fxch %%st(1)\n\t"
+        "fadd %%st(5)\n\t"
+        "fxch %%st(3)\n\t"
+        "fadd %%st(5)\n\t"
+        "fxch %%st(2)\n\t"
+        "fadd %%st(5)\n\t"
+
+        "fxch %%st(1)\n\t"
+        "fistpl -16(%4)\n\t"
+        "fxch %%st(2)\n\t"
+        "fistpl -12(%4)\n\t"
+        "fistpl -8(%4)\n\t"
+        "fistpl -4(%4)\n\t"
+
+        "jnz loop0\n\n"
+
+        : /* no outputs */
+        : "r" (576 / 4), "u" ((FLOAT)(0.4054 - 0.5)), "t" (istep), "r" (xr), "r" (ix)
+        : "memory", "cc"
+      );
+#else
+      register int j;
+      for (j=576/4;j>0;j--) {
+         XRPOW_FTOI(istep * (*xr++) - 0.0946, *ix++);
+         XRPOW_FTOI(istep * (*xr++) - 0.0946, *ix++);
+         XRPOW_FTOI(istep * (*xr++) - 0.0946, *ix++);
+         XRPOW_FTOI(istep * (*xr++) - 0.0946, *ix++);
+      }
+#endif
+  }
+#elif defined(_MSC_VER)
+  {
       /* asm from Acy Stapp <AStapp@austin.rr.com> */
-      temp0 = 0.4054 - 0.5;
+      const FLOAT8 temp0 = 0.4054 - 0.5;
       _asm {
           mov ecx, 576/4;
           fld qword ptr [temp0];
@@ -977,6 +1086,8 @@ void quantize_xrpow_ISO( FLOAT8 xr[576], int ix[576], gr_info *cod_info )
           fxch st(3); // 3 1 0 2
           fmul st(0), st(4);
 
+          dec ecx;
+
           fxch st(2); // 0 1 3 2
           fadd st(0), st(5);
           fxch st(1); // 1 0 3 2
@@ -993,22 +1104,18 @@ void quantize_xrpow_ISO( FLOAT8 xr[576], int ix[576], gr_info *cod_info )
           fistp dword ptr [edx-8];
           fistp dword ptr [edx-4];
 
-          loop loop0;
+          jnz loop0;
 
           mov dword ptr [xr], eax;
           mov dword ptr [ix], edx;
           fstp st(0);
           fstp st(0);
       }
-#elif defined(USE_GNUC_ASM)
-      for (j=576/4;j>0;j--) {
-         XRPOW_FTOI(istep * (*xr++) - 0.0946, *ix++);
-         XRPOW_FTOI(istep * (*xr++) - 0.0946, *ix++);
-         XRPOW_FTOI(istep * (*xr++) - 0.0946, *ix++);
-         XRPOW_FTOI(istep * (*xr++) - 0.0946, *ix++);
-      }
+  }
 #else
-      compareval0 = (1.0 - 0.4054)/istep;
+  {
+      register int j;
+      const FLOAT8 compareval0 = (1.0 - 0.4054)/istep;
       /* depending on architecture, it may be worth calculating a few more compareval's.
          eg.  compareval1 = (2.0 - 0.4054/istep); 
               .. and then after the first compare do this ...
@@ -1029,6 +1136,7 @@ void quantize_xrpow_ISO( FLOAT8 xr[576], int ix[576], gr_info *cod_info )
           } else
             *(ix++) = (int)( istep*(*(xr++))  + 0.4054);
         }
+  }
 #endif
 }
 
