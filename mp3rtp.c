@@ -8,11 +8,12 @@
 
 /*
 
+mp3rtp  ip:port:ttl  [lame encoding options]  infile outfile
+
 example:
 
-arecord -b 16 -s 22050 -w | ./rtpx --rtp 224.17.23.42:5004:2 -b 56 - /dev/null
+arecord -b 16 -s 22050 -w | ./mp3rtp 224.17.23.42:5004:2 -b 56 - /dev/null
 
-fprintf(stderr,"    --rtp ip:port:ttl     send MPEG stream via RTP\n");
 
 */
 
@@ -93,78 +94,48 @@ int makeframe(void)
 
 int main(int argc, char **argv)
 {
-  int i,err;
+
+  int port,ttl;
+  char *tmp,*Arg;
+
+  if(argc<=2) {
+    fprintf(stderr,"usage: mp3rtp ip:port:ttl  [encoder options] <infile> <outfile>\n");
+    exit(1);
+  }
+
   lame_init(0);
-  if(argc==1) lame_usage(argv[0]);  /* no command-line args  */
-
-
-
-
-  /*
-parse args and setup RTP stuff.
-The add (kludge) to remove these options from argv[] before
-calling lame_parse_args
-  */
-
 
   /* process args */
-  i=0; err=0;
-  while(++i<argc && err == 0) {
-    char *token, *nextArg;
-    int  argUsed;
-    
-    token = argv[i];
-    if(*token++ == '-') {
-      if(i+1 < argc) nextArg = argv[i+1];
-      else           nextArg = "";
-      argUsed = 0;
-      if (*token == '-') {
-	/* GNU style */
-	token++;
+  Arg = argv[1];
+  tmp=strchr(Arg,':');
 
-	if (strcmp(token, "rtp")==0) {
-	  char *tmp=strchr(nextArg,':');
-	  int port,ttl;
-	  if (!tmp) {
-	    fprintf(stderr,"usage: mp3rtp --rtp ip:port:ttl\n");
-	    exit(1);
-	  }
-	  *tmp++=0;
-	  port=atoi(tmp);
-	  if (port<=0) {
-	    fprintf(stderr,"usage: mp3rtp --rtp ip:port:ttl\n");
-	    exit(1);
-	  }
-	  tmp=strchr(tmp,':');
-	  if (!tmp) {
-	    fprintf(stderr,"usage: mp3rtp --rtp ip:port:ttl\n");
-	    exit(1);
-	  }
-	  *tmp++=0;
-	  ttl=atoi(tmp);
-	  if (tmp<=0) {
-	    fprintf(stderr,"usage: mp3rtp --rtp ip:port:ttl\n");
-	    exit(1);
-	  }
-	  rtpsocket=makesocket(nextArg,port,ttl,&rtpsi);
-	  srand(getpid() ^ time(0));
-	  initrtp(&RTPheader);
-	  argUsed=1;
-	}
-	else
-	  {
-	    fprintf(stderr,"unrec option\n");
-	  }
-	i += argUsed;
-	
-      }
-    }
-  }  /* loop over args */
+  if (!tmp) {
+    fprintf(stderr,"usage: mp3rtp ip:port:ttl\n");
+    exit(1);
+  }
+  *tmp++=0;
+  port=atoi(tmp);
+  if (port<=0) {
+    fprintf(stderr,"usage: mp3rtp  ip:port:ttl\n");
+    exit(1);
+  }
+  tmp=strchr(tmp,':');
+  if (!tmp) {
+    fprintf(stderr,"usage: mp3rtp ip:port:ttl\n");
+    exit(1);
+  }
+  *tmp++=0;
+  ttl=atoi(tmp);
+  if (tmp<=0) {
+    fprintf(stderr,"usage: mp3rtp ip:port:ttl\n");
+    exit(1);
+  }
+  rtpsocket=makesocket(Arg,port,ttl,&rtpsi);
+  srand(getpid() ^ time(0));
+  initrtp(&RTPheader);
 
 
-
-
-  lame_parse_args(argc, argv); 
+  lame_parse_args(argc-1, &argv[1]); 
   lame_print_config();
   lame_getmp3info(&mp3info);
 
