@@ -1684,6 +1684,7 @@ psycho_analysis(
 		    gi[1].block_type = SHORT_TYPE;
 	    }
 	} else {
+	    gfc->mode_ext_next = MPG_MD_LR_LR;
 	    if ((gfc->mode_ext_next ^ gfc->mode_ext) & 2
 		&& (gfc->useshort_next[0][0] != gfc->useshort_next[0][1])) {
 		if (gfc->useshort_next[0][0] != SHORT_TYPE)
