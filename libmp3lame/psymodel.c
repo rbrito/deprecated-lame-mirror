@@ -1051,9 +1051,7 @@ int L3psycho_anal( lame_global_flags * gfp,
 #define MLIMIT  15  /* as in if(m<15) */ 
 
 static FLOAT8 ma_max_i1;
-static FLOAT8 ma_min_i1;
 static FLOAT8 ma_max_i2;
-static FLOAT8 ma_min_i2;
 static FLOAT8 ma_max_m;
 
 
@@ -1061,9 +1059,7 @@ static FLOAT8 ma_max_m;
 static void init_mask_add_max_values(void)
 {
     ma_max_i1 = pow(10,(I1LIMIT+1)/16.0);
-    ma_min_i1 = pow(10,-(I1LIMIT+1)/16.0);
     ma_max_i2 = pow(10,(I2LIMIT+1)/16.0);
-    ma_min_i2 = pow(10,-(I2LIMIT+1)/16.0);
     ma_max_m  = pow(10,(MLIMIT)/10.0);
 }
 
@@ -1101,9 +1097,10 @@ inline static FLOAT8 mask_add(FLOAT8 m1,FLOAT8 m2,int k,int b, lame_internal_fla
 
   if (m1 == 0) return m2;
 
-  ratio = m2/m1;
-
-  if (b < 0) b = -b;
+  if (m2 > m1)
+      ratio = m2/m1;
+  else
+      ratio = m1/m2;
 
   /*i = abs(10*log10(m2 / m1)/10*16);
   m = 10*log10((m1+m2)/gfc->ATH->cb[k]);*/
@@ -1115,60 +1112,50 @@ inline static FLOAT8 mask_add(FLOAT8 m1,FLOAT8 m2,int k,int b, lame_internal_fla
   assert(gfc->ATH->cb[k]>=0);
 
 
-  if (b <= 3) {  /* approximately, 1 bark = 3 partitions */
-    /* 65% of the cases */
+  m1 += m2;
+  if ((unsigned int)(b+3) <= 3+3) {  /* approximately, 1 bark = 3 partitions */
+      /* 65% of the cases */
+      /* originally 'if(i > 8)' */
+      if (ratio >= ma_max_i1) {
+	  /* 43% of the total */
+	  return m1;
+      }
 
-    /* originally 'if(i > 8)' */
-    if(ratio>=ma_max_i1 || ratio <=ma_min_i1) {
-      /* 43% of the total */
-      return m1+m2;
-    }
-
-    /* 22% of the total */
-    i = fabs(FAST_LOG10_X(ratio,16.0));
-    return (m1+m2)*table2[i];
+      /* 22% of the total */
+      i = FAST_LOG10_X(ratio,16.0);
+      return m1*table2[i];
   }
-
 
   /* m<15 equ log10((m1+m2)/gfc->ATH->cb[k])<1.5
    * equ (m1+m2)/gfc->ATH->cb[k]<10^1.5
    * equ (m1+m2)<10^1.5 * gfc->ATH->cb[k]
    */
 
-  if((m1+m2)<ma_max_m*gfc->ATH->cb[k])  {
-    /* 3% of the total */
-    i = fabs(FAST_LOG10_X(ratio, 16.0));
+  if (ratio >= ma_max_i2)
+      return m1;
 
-    /* Originally if (m > 0) { */
-    if(m1+m2>gfc->ATH->cb[k]) {
-      FLOAT8 f=1.0,r;
+  i = FAST_LOG10_X(ratio, 16.0);
+  if (m1 < ma_max_m*gfc->ATH->cb[k])  {
+      /* 3% of the total */
+      /* Originally if (m > 0) { */
+      if (m1 > gfc->ATH->cb[k]) {
+	  FLOAT8 f, r;
 
-      if (i > 24) return m1+m2;
+	  f = 1.0;
+	  if (i <= 13) f = table3[i];
 
-      if (i > 13) f = 1; else f = table3[i];
+	  r = FAST_LOG10_X(m1 / gfc->ATH->cb[k], 10.0/15.0);
+	  return m1 * ((table1[i]-f)*r+f);
+      }
 
-      m = FAST_LOG10_X((m1+m2)/gfc->ATH->cb[k], 10.0);
-      r = (m-0)/15;
+      if (i > 13) return m1;
 
-      return (m1+m2)*(table1[i]*r+f*(1-r));
-    }
-
-    if (i > 13) return m1+m2;
-
-    return (m1+m2)*table3[i];
+      return m1*table3[i];
   }
 
 
-  /* orginally 'if (i > 24) {' */
-  if(ratio>=ma_max_i2 || ratio <=ma_min_i2) {
-    /* 22% of total */
-    return m1+m2;
-  }
-
-  
   /* 10% of total */
-  i = fabs(FAST_LOG10_X(ratio, 16.0));
-  return (m1+m2)*table1[i];
+  return m1*table1[i];
 }
 
 
