@@ -100,11 +100,6 @@ On some machines, 64bit will be faster than 32bit.  Also, some math
 routines require 64bit float, so setting FLOAT=float will result in a
 lot of conversions.
 
-   MH: the x86 asm quantization routines in quantize-pvt.c
-   are designed to work only with 8-byte doubles or 4-byte
-   floats. if you use a different type (e.g. 10-byte extended
-   precision long doubles, as supported by ICL), you will need
-   to disable the ASM routines (or fix them :) 
 */
 
 /* NOTE: RH: 7/00:  if FLOAT8=float, it breaks resampling and VBR code */
