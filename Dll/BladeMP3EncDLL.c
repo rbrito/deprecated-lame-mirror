@@ -664,22 +664,27 @@ __declspec(dllexport) BE_ERR	beDeinitStream(HBE_STREAM hbeStream, PBYTE pOutput,
 	{
 		*pdwOutput = nOutputSamples;
 	}
-
-    
-	// lame will be close in VbrWriteTag function
-	if ( !lame_get_bWriteVbrTag( gfp ) )
-	{
-		// clean up of allocated memory
-		lame_close( gfp );
-	}
-
+  
 	return BE_ERR_SUCCESSFUL;
 }
 
 
 __declspec(dllexport) BE_ERR	beCloseStream(HBE_STREAM hbeStream)
 {
-	gfp_save = (lame_global_flags*)hbeStream;
+	lame_global_flags*	gfp = (lame_global_flags*)hbeStream;
+
+	// lame will be close in VbrWriteTag function
+	if ( !lame_get_bWriteVbrTag( gfp ) )
+	{
+		// clean up of allocated memory
+		lame_close( gfp );
+
+		gfp_save = NULL;
+	}
+	else
+	{
+		gfp_save = (lame_global_flags*)hbeStream;
+	}
 
 	// DeInit encoder
 	return BE_ERR_SUCCESSFUL;
