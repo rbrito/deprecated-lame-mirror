@@ -596,9 +596,10 @@ int count_bits(
     int *const ix = gi->l3_enc;
     /* since quantize_xrpow uses table lookup, we need to check this first: */
     FLOAT8 w = (IXMAX_VAL) / IPOW20(gi->global_gain);
-    for ( i = 0; i < 576; i++ )  {
-	if (xr[i] > w)
-	    return LARGE_BITS;
+    int max_coeff = gi->max_nonzero_coeff;
+    for ( i = 0; i <= max_coeff; i++ )  {
+	    if (xr[i] > w)
+	        return LARGE_BITS;
     }
 
     if (gfc->quantization) 

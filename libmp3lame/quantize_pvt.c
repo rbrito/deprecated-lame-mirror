@@ -516,14 +516,15 @@ static FLOAT8 athAdjust( FLOAT8 a, FLOAT8 x, FLOAT8 athFloor )
 int calc_xmin( 
         lame_global_flags *gfp,
         const III_psy_ratio * const ratio,
-	    const gr_info       * const cod_info, 
+	    gr_info       *  const cod_info, 
 	    FLOAT8 * pxmin
     )
 {
     lame_internal_flags *gfc = gfp->internal_flags;
-    int sfb, gsfb, j=0, ath_over=0;
+    int sfb, gsfb, j=0, ath_over=0, k;
     ATH_t * ATH = gfc->ATH;
     const FLOAT8 *xr = cod_info->xr;
+    int max_nonzero;
 
     for (gsfb = 0; gsfb < cod_info->psy_lmax; gsfb++) {
 	FLOAT8 en0, xmin;
@@ -552,6 +553,17 @@ int calc_xmin(
 	}
 	*pxmin++ = xmin * gfc->nsPsy.longfact[gsfb];
     }   /* end of long block loop */
+
+
+    /*use this function to determine the highest non-zero coeff*/
+    max_nonzero = 575;
+    k = 576;
+    while (k-- && !xr[k]){
+        max_nonzero = k;
+    }
+    cod_info->max_nonzero_coeff = max_nonzero;
+
+
 
     for (sfb = cod_info->sfb_smin; gsfb < cod_info->psymax; sfb++, gsfb += 3) {
 	int width, b;
@@ -628,7 +640,6 @@ int  calc_noise(
     int j = 0;
     const int *ix = cod_info->l3_enc;
     const int *scalefac = cod_info->scalefac;
-//    FLOAT8 *xr = cod_info->xr;
 
 
     for (sfb = 0; sfb < cod_info->psymax; sfb++) {
@@ -641,13 +652,20 @@ int  calc_noise(
 	FLOAT8 noise = 0.0;
 
 	l = cod_info->width[sfb] >> 1;
+
+    if ((j+cod_info->width[sfb])>cod_info->max_nonzero_coeff) {
+        int usefullsize;
+        usefullsize = cod_info->max_nonzero_coeff - j +1;
+        l = usefullsize >> 1;
+    }
+
 	do {
         FLOAT8 temp;
-        temp = fabs(cod_info->xr[j]) - pow43[ix[j]] * step; j++;
+        temp = fabs(cod_info->xr[j]) - pow43[ix[j]] * step;j++;
 	    noise += temp * temp;
-	    temp = fabs(cod_info->xr[j]) - pow43[ix[j]] * step; j++;
+	    temp = fabs(cod_info->xr[j]) - pow43[ix[j]] * step;j++;
 	    noise += temp * temp;
-	} while (--l > 0);
+ 	} while (--l > 0);
 	noise = *distort++ = noise / *l3_xmin++;
 
 /*

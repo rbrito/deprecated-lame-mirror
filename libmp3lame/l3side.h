@@ -79,6 +79,8 @@ typedef struct {
     /* added for LSF */
     const int *sfb_partition_table;
     int slen[4];
+
+    int max_nonzero_coeff;
 } gr_info;
 
 typedef struct {
