@@ -263,7 +263,7 @@ rtp_socket
     PHOSTENT host ;
     SOCKET s ;
     SOCKADDR_IN source, dest ;
-/*
+#if 0
     int s = socket (AF_INET, SOCK_DGRAM, 0) ;
     if (s < 0)
     {
@@ -290,8 +290,7 @@ sizeof(int));
         iRet = setsockopt(s, IPPROTO_IP, IP_MULTICAST_TTL, &cTTL, 
 sizeof(char));
         if (iRet < 0) {
-            fprintf(stderr,"setsockopt IP_MULTICAST_TTL failed.    multicast 
-in kernel?\n");
+            fprintf(stderr,"setsockopt IP_MULTICAST_TTL failed.    multicast in kernel?\n");
             exit(1);
         }
 
@@ -300,12 +299,11 @@ in kernel?\n");
 		            &cLoop, sizeof(char));
         if (iRet < 0)
         {
-            fprintf(stderr,"setsockopt IP_MULTICAST_LOOP failed.    
-multicast in kernel?\n");
+            fprintf(stderr,"setsockopt IP_MULTICAST_LOOP failed.    multicast in kernel?\n");
             exit(1);
         }
     }
-*/
+#endif
     source.sin_family = AF_INET ;
     source.sin_addr.s_addr = htonl (INADDR_ANY) ;
     source.sin_port = htons (0) ;
