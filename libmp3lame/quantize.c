@@ -1320,12 +1320,12 @@ VBR_iteration_loop (
     lame_internal_flags *gfc=gfp->internal_flags;
     III_psy_xmin l3_xmin[2][2];
   
-    FLOAT8    xrpow[576], lower = 1.0;
+    FLOAT8    xrpow[576];
     int       bands[2][2];
     int       frameBits[15];
     int       bitsPerFrame;
     int       save_bits[2][2];
-    int       used_bits;
+    int       used_bits, used_bits2;
     int       bits;
     int       min_bits[2][2], max_bits[2][2];
     int       analog_mean_bits, min_mean_bits;
@@ -1359,7 +1359,8 @@ VBR_iteration_loop (
      */
     
     used_bits = 0;
-    
+    used_bits2 = 0;
+   
     for (gr = 0; gr < gfc->mode_gr; gr++) {
         for (ch = 0; ch < num_chan; ch++) {
             int ret; 
@@ -1381,8 +1382,6 @@ VBR_iteration_loop (
             if (gfc->mode_ext == MPG_MD_MS_LR && ch == 1)  
                 min_bits[gr][ch] = Max (min_bits[gr][ch], save_bits[gr][0]/5);
 #endif
-            min_bits[gr][ch] = Max(min_mean_bits, min_bits[gr][ch]*lower);
-            max_bits[gr][ch] = Max(min_mean_bits, max_bits[gr][ch]*lower);
       
             if (gfp->VBR == vbr_mtrh) {
                 ret = VBR_noise_shaping2 (gfp, xr[gr][ch], xrpow, 
@@ -1398,7 +1397,9 @@ VBR_iteration_loop (
                                     &scalefac[gr][ch], xrpow, l3_enc[gr][ch],
                                     ch, min_bits[gr][ch], max_bits[gr][ch] );
 
-            used_bits += save_bits[gr][ch] = cod_info->part2_3_length;
+            used_bits += cod_info->part2_3_length;
+            save_bits[gr][ch] = Min(MAX_BITS, cod_info->part2_3_length);
+            used_bits2 += Min(MAX_BITS, cod_info->part2_3_length);
         } /* for ch */
     }    /* for gr */
 
@@ -1434,21 +1435,34 @@ VBR_iteration_loop (
     
     if (used_bits > bits){
         //printf("# %d used %d have %d\n",gfp->frameNum,used_bits,bits);
-        lower = 0.9;
-        for (gr = 0; gr < gfc->mode_gr; gr++) {
-            for (ch = 0; ch < gfc->channels_out; ch++) {
-                int sfb;
-                cod_info = &l3_side->gr[gr].ch[ch].tt;
-                if (cod_info->block_type == SHORT_TYPE) {
-                    for (sfb = 0; sfb < SBMAX_s; sfb++) {
-                        l3_xmin[gr][ch].s[sfb][0] *= 1.+.029*sfb*sfb/SBMAX_s/SBMAX_s;
-                        l3_xmin[gr][ch].s[sfb][1] *= 1.+.029*sfb*sfb/SBMAX_s/SBMAX_s;
-                        l3_xmin[gr][ch].s[sfb][2] *= 1.+.029*sfb*sfb/SBMAX_s/SBMAX_s;
-                    }
+        if(gfp->VBR == vbr_mtrh) {        
+            for (gr = 0; gr < gfc->mode_gr; gr++) {
+                for (ch = 0; ch < gfc->channels_out; ch++) {
+                    max_bits[gr][ch] = save_bits[gr][ch];
+                    max_bits[gr][ch] *= frameBits[gfc->bitrate_index];
+                    max_bits[gr][ch] /= used_bits2;
+                    max_bits[gr][ch] = Max(min_bits[gr][ch],max_bits[gr][ch]);
                 }
-                else {
-                    for (sfb = 0; sfb < SBMAX_l; sfb++) 
-                        l3_xmin[gr][ch].l[sfb] *= 1.+.029*sfb*sfb/SBMAX_l/SBMAX_l;
+            }
+        }
+        else {
+            for (gr = 0; gr < gfc->mode_gr; gr++) {
+                for (ch = 0; ch < gfc->channels_out; ch++) {
+                    int sfb;
+                    cod_info = &l3_side->gr[gr].ch[ch].tt;
+                    if (cod_info->block_type == SHORT_TYPE) {
+                        for (sfb = 0; sfb < SBMAX_s; sfb++) {
+                            l3_xmin[gr][ch].s[sfb][0] *= 1.+.029*sfb*sfb/SBMAX_s/SBMAX_s;
+                            l3_xmin[gr][ch].s[sfb][1] *= 1.+.029*sfb*sfb/SBMAX_s/SBMAX_s;
+                            l3_xmin[gr][ch].s[sfb][2] *= 1.+.029*sfb*sfb/SBMAX_s/SBMAX_s;
+                        }
+                    }
+                    else {
+                        for (sfb = 0; sfb < SBMAX_l; sfb++) 
+                            l3_xmin[gr][ch].l[sfb] *= 1.+.029*sfb*sfb/SBMAX_l/SBMAX_l;
+                    }
+//                  min_bits[gr][ch] = Max(min_mean_bits, 0.9*min_bits[gr][ch]);
+                    max_bits[gr][ch] = Max(min_mean_bits, 0.9*max_bits[gr][ch]);
                 }
             }
         }

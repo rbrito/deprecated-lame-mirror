@@ -290,18 +290,21 @@ void compute_ath( lame_global_flags *gfp, FLOAT8 ATH_l[], FLOAT8 ATH_s[] )
      *  for that band
      */
     
-    if (vbr_mtrh == gfp->VBR) {
-       ATH_l[SBPSY_l] = ATH_s[SBPSY_s] = ATH_f = 5.82E-12;
-    }
-    else
-        ATH_f = 1E-20;
-
-    if (gfp->noATH || vbr_mtrh == gfp->VBR) {
+    if (gfp->noATH) {
         for (sfb = 0; sfb < SBMAX_l-1; sfb++) {
-            ATH_l[sfb] = ATH_f;
+            ATH_l[sfb] = 1E-20;
         }
         for (sfb = 0; sfb < SBMAX_s-1; sfb++) {
-            ATH_s[sfb] = ATH_f;
+            ATH_s[sfb] = 1E-20;
+        }
+    }
+    
+    if (vbr_mtrh == gfp->VBR) {
+        for (sfb = 0; sfb < SBMAX_l-1; sfb++) {
+            ATH_l[sfb] = Max(ATH_l[sfb], 5.82E-12);
+        }
+        for (sfb = 0; sfb < SBMAX_s-1; sfb++) {
+            ATH_s[sfb] = Max(ATH_s[sfb], 5.82E-12);
         }
     }
 }
