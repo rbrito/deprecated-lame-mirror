@@ -312,48 +312,33 @@ init_outer_loop(
  *  used by outer_loop to get a quantizer step size to start with
  *
  ************************************************************************/
-
-typedef enum {
-    BINSEARCH_NONE,
-    BINSEARCH_UP, 
-    BINSEARCH_DOWN
-} binsearchDirection_t;
-
 static int 
 bin_search_StepSize(
           lame_internal_flags * const gfc,
           gr_info * const gi,
-	  int             desired_rate,
+	  int desired_rate,
 	  int CurrentStep,
-	  int start,
-    const FLOAT          xrpow [576] ) 
+    const FLOAT          xrpow [576] )
 {
     int nBits, flag_GoneOver = 0;
-    binsearchDirection_t Direction = BINSEARCH_NONE;
-    gi->global_gain = start;
-
     assert(CurrentStep);
     do {
-        nBits = count_bits(gfc, xrpow, gi);  
+	nBits = count_bits(gfc, xrpow, gi);
 
         if (CurrentStep == 1 || nBits == desired_rate)
 	    break; /* nothing to adjust anymore */
 
         if (nBits > desired_rate) {  
 	    /* increase Quantize_StepSize */
-            if (Direction == BINSEARCH_DOWN)
-                flag_GoneOver = 1;
+	    flag_GoneOver |= 1;
 
-	    if (flag_GoneOver) CurrentStep /= 2;
-            Direction = BINSEARCH_UP;
+	    if (flag_GoneOver==3) CurrentStep >>= 1;
 	    gi->global_gain += CurrentStep;
         } else {
             /* decrease Quantize_StepSize */
-            if (Direction == BINSEARCH_UP)
-                flag_GoneOver = 1;
+	    flag_GoneOver |= 2;
 
-	    if (flag_GoneOver) CurrentStep /= 2;
-            Direction = BINSEARCH_DOWN;
+	    if (flag_GoneOver==3) CurrentStep >>= 1;
 	    gi->global_gain -= CurrentStep;
         }
     } while (gi->global_gain < 256u);
@@ -824,8 +809,9 @@ outer_loop (
     if (!init_outer_loop(gfc, gi, xrpow) || gi->psymax == 0)
 	return; /* digital silence */
 
+    gi->global_gain = gfc->OldValue[ch];
     bin_search_StepSize (gfc, gi, targ_bits - gi->part2_length,
-			 gfc->CurrentStep[ch], gfc->OldValue[ch], xrpow);
+			 gfc->CurrentStep[ch], xrpow);
 
     gfc->CurrentStep[ch]
 	= (gfc->OldValue[ch] - gi->global_gain) >= 4 ? 4 : 2;
