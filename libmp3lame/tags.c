@@ -321,6 +321,7 @@ id3tag_set_genre(lame_t gfc, const char *genre)
 #define TRACK_FRAME_ID FRAME_ID('T', 'R', 'C', 'K')
 #define GENRE_FRAME_ID FRAME_ID('T', 'C', 'O', 'N')
 #define ENCODER_FRAME_ID FRAME_ID('T', 'S', 'S', 'E')
+#define TITLE_LENGTH_ID FRAME_ID('T', 'L', 'E', 'N')
 
 static unsigned char *
 set_frame(unsigned char *frame, unsigned long id, const char *text,
@@ -361,8 +362,7 @@ set_frame(unsigned char *frame, unsigned long id, const char *text,
 int
 id3tag_write_v2(lame_t gfc, unsigned char *buf, size_t size)
 {
-    if ((gfc->tag_spec.flags & CHANGED_FLAG)
-	&& !(gfc->tag_spec.flags & V1_ONLY_FLAG)) {
+    if (!(gfc->tag_spec.flags & V1_ONLY_FLAG)) {
         /* calculate length of four fields which may not fit in verion 1 tag */
         size_t title_length = gfc->tag_spec.title
             ? strlen(gfc->tag_spec.title) : 0;
@@ -380,6 +380,7 @@ id3tag_write_v2(lame_t gfc, unsigned char *buf, size_t size)
 	    || gfc->tag_spec.track > 255 || gfc->tag_spec.totaltrack > 0) {
             size_t adjusted_tag_size, tag_size;
             char encoder[20];
+            char tlen[20];
             size_t encoder_length;
             char year[5];
             size_t year_length;
@@ -414,6 +415,9 @@ id3tag_write_v2(lame_t gfc, unsigned char *buf, size_t size)
             } else {
                 year_length = 0;
             }
+	    tag_size += 11 + sprintf(tlen, "%u",
+				     (unsigned int)(1000.0*gfc->num_samples
+						    /gfc->out_samplerate));
             if (comment_length) {
                 /* add 10-byte frame header, 1 encoding descriptor byte,
                  * 3-byte language descriptor, 1 content descriptor byte ... */
@@ -476,6 +480,7 @@ id3tag_write_v2(lame_t gfc, unsigned char *buf, size_t size)
             /* set each frame in tag */
             p = set_frame(p, ENCODER_FRAME_ID, encoder, encoder_length);
             p = set_frame(p, TITLE_FRAME_ID, gfc->tag_spec.title, title_length);
+            p = set_frame(p, TITLE_LENGTH_ID, tlen, strlen(tlen));
             p = set_frame(p, ARTIST_FRAME_ID, gfc->tag_spec.artist,
                     artist_length);
             p = set_frame(p, ALBUM_FRAME_ID, gfc->tag_spec.album, album_length);
