@@ -312,7 +312,7 @@ int InitVbrTag(lame_global_flags *gfp)
         // are each reduced by a factor of 2.
 	*/
 	{
-	int bitrate,tot;
+	int i,bitrate,tot;
 	if (1==gfp->version) {
 	  bitrate = XING_BITRATE1;
 	} else {
@@ -325,22 +325,10 @@ int InitVbrTag(lame_global_flags *gfp)
 	  ((gfp->version+1)*72000*bitrate) / gfp->out_samplerate;
 	tot = (gfp->nZeroStreamSize+VBRHEADERSIZE);
 	tot += 20;  /* extra 20 bytes for LAME & version string */
-#if 1
+
 	assert(gfp->TotalFrameSize >= tot );
 	assert(gfp->TotalFrameSize <= MAXFRAMESIZE );
-#else
-	if (gfp->TotalFrameSize < tot ) {
-	  ERRORF("Xing VBR header problem 1...use -t\n");
-	  LAME_ERROR_EXIT();
-	}
-	if (gfp->TotalFrameSize > MAXFRAMESIZE ) {
-	  ERRORF("Xing VBR header problem 2...use -t\n");
-	  LAME_ERROR_EXIT();
-	}
-#endif
-	}
 
-	{ int i;
 	for (i=0; i<gfp->TotalFrameSize; ++i)
 	  add_dummy_byte(gfp,0);
 	}

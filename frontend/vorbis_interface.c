@@ -5,7 +5,7 @@
 #include "vorbis/codec.h"
 #include "vorbis/modes.h"
 #include "lame.h"
-#include "util.h"
+//#include "util.h"
 
 short int convbuffer[4096]; /* take 8k out of the data segment, not the stack */
 int convsize;

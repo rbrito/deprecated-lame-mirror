@@ -630,11 +630,10 @@ int lame_init_params(lame_global_flags *gfp)
   
 
   /* Write id3v2 tag into the bitstream */
-  /* Can not have a id3v2 tag and a Xing VBR header */
+  /* this tag must be before the Xing VBR header */
+  /* does id3v2 and Xing header really work??? */
   if (!gfp->ogg) {
     int ret = id3tag_write_v2(gfp,&gfp->tag_spec);
-    if (ret > 0) 
-      gfp->bWriteVbrTag = 0;
   }
 
   /* Write initial VBR Header to bitstream */
