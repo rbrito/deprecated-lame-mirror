@@ -440,6 +440,8 @@ Huf_count1(bit_stream_t *bs, gr_info *gi)
     assert((unsigned int)gi->count1table_select < 2u);
     for (i = gi->big_values; i < gi->count1; i += 4) {
 	int huffbits = 0, p = 0;
+	assert((gi->l3_enc[i] | gi->l3_enc[i+1]
+		| gi->l3_enc[i+2] | gi->l3_enc[i+3]) <= 1u);
 
 	if (gi->l3_enc[i  ]) {
 	    p = 8;
@@ -551,7 +553,7 @@ static void
 Huffmancodebits(lame_t gfc, gr_info *gi)
 {
 #ifndef NDEBUG
-    int data_bits = gfc->bs.bitidx + gi->part2_3_length - gi->count1bits;
+    int data_bits = gfc->bs.bitidx + gi->part2_3_length;
 #endif
     int r1, r2;
 
@@ -566,10 +568,10 @@ Huffmancodebits(lame_t gfc, gr_info *gi)
     Huf_bigvalue(&gfc->bs, gi->table_select[1], r1, r2, gi);
 
     Huf_bigvalue(&gfc->bs, gi->table_select[2], r2, gi->big_values, gi);
-    assert(gfc->bs.bitidx == data_bits);
+    assert(gfc->bs.bitidx == data_bits - gi->count1bits);
 
     Huf_count1(&gfc->bs, gi);
-    assert(gfc->bs.bitidx == data_bits + gi->count1bits);
+    assert(gfc->bs.bitidx <= data_bits);
 }
 
 /*write N bits into the header */

@@ -532,6 +532,7 @@ best_huffman_divide(lame_t gfc, gr_info * const gi)
     if (i > 576)
 	return;
 
+    ix[i-2] = ix[i-1] = 0; /* this may not satisfied in some case */
     gi_w = *gi;
     gi_w.count1 = i;
     gi_w.big_values -= 2;
