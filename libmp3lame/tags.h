@@ -3,7 +3,7 @@
  *
  * Copyright (C) 1999 A.L. Faber
  *           (C) 2000 Don Melton.
- *           (c) 2004 Takehiro TOMINAGA
+ *           (C) 2004 Takehiro TOMINAGA
  *
  * This library is free software; you can redistribute it and/or
  * modify it under the terms of the GNU Library General Public
@@ -25,10 +25,9 @@
 #define LAME_TAGS_H
 
 int InitVbrTag(lame_t gfc);
-int PutVbrTag(lame_t gfc, FILE *fid);
 void AddVbrFrame(lame_t gfc);
 
-/* write tag into stream at current position */
+/* write tag into "buf" */
 int id3tag_write_v2(lame_t gfc, unsigned char *buf, int size);
 int id3tag_write_v1(lame_t gfc, unsigned char *buf, int size);
 

@@ -27,10 +27,6 @@
 #ifdef WITH_DMALLOC
 # include <dmalloc.h>
 #endif
-#ifdef __sun__
-/* woraround for SunOS 4.x, it has SEEK_* defined here */
-# include <unistd.h>
-#endif
 #include <assert.h>
 
 #include "encoder.h"
@@ -1024,9 +1020,20 @@ lame_encode_flush_nogap(lame_t gfc,
 int
 lame_encode_flush(lame_t gfc, unsigned char *mp3buf, int mp3buffer_size)
 {
+// current state
+//     |------------------LAST|.....|
+//     <----------------------------> mf_needed
+//     <--------mf_size-------X----->  mf_needed - mf_size
+//
+// after flush,
+// LAST|.....00000000000000000|00000|
+//           <---------------------->mf_size
+//     <---------------------------->mf_needed
+//     <-----> mf_needed - mf_size
+
     int imp3, mp3count = 0, mp3buffer_size_remaining = mp3buffer_size;
-    sample_t buffer[2*1152] = {0};
-    int samples_to_encode = gfc->mf_size + ENCDELAY;
+    sample_t buffer[2*(1152+ENCDELAY)] = {0};
+    int samples_to_encode = gfc->mf_size + gfc->framesize;
     int i = (samples_to_encode + POSTDELAY - 1) / gfc->framesize;
 
     if (gfc->Class_ID != LAME_ID)
@@ -1103,17 +1110,6 @@ lame_close(lame_t gfc)
     free((unsigned char*)gfc - gfc->alignment);
 
     return 0;
-}
-
-/*****************************************************************/
-/* write VBR Xing header, and ID3 version 1 tag, if asked for    */
-/*****************************************************************/
-void
-lame_mp3_tags_fid(lame_t gfc, FILE * fpStream)
-{
-    /* Write Xing header again */
-    if (gfc->bWriteVbrTag && fpStream && !fseek(fpStream, 0, SEEK_SET))
-	PutVbrTag(gfc, fpStream);
 }
 
 /****************************************************************/

@@ -816,7 +816,7 @@ PutLameVBR(lame_t gfc, size_t nMusicLength, uint8_t *p, uint8_t *p0)
  * Paramters:
  *			fpStream: pointer to output file stream
  ***********************************************************************/
-int
+static int
 PutVbrTag(lame_t gfc, FILE *fpStream)
 {
     uint8_t buf[MAXFRAMESIZE] = {0}, *p, id3v2Header[10];
@@ -905,4 +905,15 @@ PutVbrTag(lame_t gfc, FILE *fpStream)
     if (fwrite(buf, gfc->TotalFrameSize, 1, fpStream) != 1)
 	return -1;
     return 0;
+}
+
+/*****************************************************************/
+/* write VBR Xing header, and ID3 version 1 tag, if asked for    */
+/*****************************************************************/
+void
+lame_mp3_tags_fid(lame_t gfc, FILE * fpStream)
+{
+    /* Write Xing header again */
+    if (gfc->bWriteVbrTag && fpStream && !fseek(fpStream, 0, SEEK_SET))
+	PutVbrTag(gfc, fpStream);
 }

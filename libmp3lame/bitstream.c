@@ -31,7 +31,6 @@
 
 #include "encoder.h"
 #include "bitstream.h"
-#include "tags.h"
 #include "util.h"
 #include "tables.h"
 
@@ -561,9 +560,9 @@ void
 CRC_writeheader(char *header, int len)
 {
     uint16_t crc = 0xffff; /* (jo) init crc16 for error_protection */
+
     crc = calculateCRC(&header[2], 2, crc);
     crc = calculateCRC(&header[6], len - 6, crc);
-
     header[4] = crc >> 8;
     header[5] = crc & 255;
 }
