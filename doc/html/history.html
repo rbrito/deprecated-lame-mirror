@@ -36,7 +36,7 @@
       <li><font color="#3366ff">optimizations by changing data structure</font></li>
       <li><font color="#ff0000">noise shaping model 2 fix</font></li>
       <li><font color="#3366ff">nspsytune FIR filter clean up</font></li>
-      <li><font color="#ff0000">fix small psymodel bugs</font></li>
+      <li><font color="#ff0000">fix small psymodel bugs(DC current estimation, preecho detection of non-VBR mode, and nspsymode initialization)</font></li>
       <li>portability fixes for Tru64 UNIX</li>
      </ul>
   </li>
@@ -47,6 +47,7 @@
      <ul>
       <li>some tag related fixes in the direct show filter and in the ACM codec</li>
       <li><font color="#3366ff">fixed a mono encoding bug found by Justin Schoeman</font></li>
+      <li>calc_noise bug fix</li>
       <li>other fixes</li>
      </ul>
   </li>
@@ -56,7 +57,10 @@
       <li>Akos Maroy: determine gcc version even with gcc 3.1</li>
       <li>Andrew Bachmann: compile shared libs on BeOS (and perhaps other arches)</li>
       <li>ultrasparc switches for gcc 3.1</li>
-      <li>portability fixes for SunOS 4.x</li>
+      <li>fixes for SunOS 4.x</li>
+      <li>fixes for 64bit arches</li>
+      <li>CFLAGS fix for IRIX</li>
+      <li>don't override CFLAGS if exptopt isn't requested</li>
      </ul>
   </li>
   <li>Robert Hegeman:
