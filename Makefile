@@ -12,7 +12,7 @@ ARCH = $(shell uname -m)
 # defaults:
 PGM = lame
 CC = gcc
-CC_OPTS =  -O9 -fomit-frame-pointer -fno-strength-reduce -mpentiumpro -ffast-math -finline-functions -funroll-loops -Wall -malign-double -g -march=pentiumpro -mfancy-math-387 -pipe -UNDEBUG
+CC_OPTS =  -O
 GTK = 
 GTKLIBS = 
 SNDLIB = 
@@ -64,21 +64,16 @@ ifeq ($(UNAME),Linux)
    LIBTERMCAP = -lncurses
 
 # suggested for gcc-2.7.x
-   CC_OPTS =  -O3 -fomit-frame-pointer -funroll-loops -ffast-math \
-                    -finline-functions 
+   CC_OPTS =  -O3 -fomit-frame-pointer -funroll-loops -ffast-math  -finline-functions 
+#  CC_OPTS =  -O9 -fomit-frame-pointer -fno-strength-reduce -mpentiumpro -ffast-math -finline-functions -funroll-loops -Wall -malign-double -g -march=pentiumpro -mfancy-math-387 -pipe -UNDEBUG
 
 #  for debugging:
    CC_OPTS =  -UNDEBUG -O -Wall -g -DABORTFP 
 
-
 #  for lots of debugging:
-#   CC_OPTS =  -DDEBUG -UNDEBUG  -O -Wall -g -DABORTFP -DNO_LEONID
+#   CC_OPTS =  -DDEBUG -UNDEBUG  -O -Wall -g -DABORTFP 
 
 
-# these options were suggested with egcs-990524
-#   CC = egcs   #egcc for Debian systems
-#   CC_OPTS =    -O9 -fomit-frame-pointer -march=pentium \
-#                   -ffast-math -funroll-loops 
 
 # The following features are experimental code, 
 # so don't use them if you don't know exactly what you do! (RH 2000-01-30)
@@ -86,12 +81,6 @@ ifeq ($(UNAME),Linux)
 #   FEATURES += -DRH_QUALITY_CONTROL=2  # tuned VBR quality control
 #   FEATURES += -DRH_SIDE_VBR           # turns side channel reduction off (VBR)
 #   FEATURES += -DRH_SIDE_CBR           # turns side channel reduction off (CBR)
-# these options were suggested with gcc-2.95.2
-#   CC_OPTS = $(FEATURES) -Wall -O9 -fomit-frame-pointer -march=pentium \
-#	-fno-strength-reduce -finline-functions \
-#	-ffast-math -malign-double -mfancy-math-387 \
-#	-funroll-loops 
-
 
 
 ##########################################################################

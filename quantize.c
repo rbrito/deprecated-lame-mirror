@@ -356,8 +356,6 @@ VBR_iteration_loop (FLOAT8 pe[2][2], FLOAT8 ms_ener_ratio[2],
        if (better) {
 	  save_bits[gr][ch] = this_bits;
           this_bits -= dbits;
-	  /* because of the sloppy mode we have to sum this */
-	  real_bits  = cod_info->part2_3_length + cod_info->part2_length;
         } else {
           this_bits += dbits;
         }
@@ -606,14 +604,20 @@ void outer_loop(
 
   cod_info = &l3_side->gr[gr].ch[ch].tt;
   init_outer_loop(xr,l3_xmin, &scalefac_w,gr,l3_side,ratio,ch);  
-  best_over = 100;
   count=0;
   for (i=0; i<576; i++) {
     if ( fabs(xr[i]) > 0 ) count++; 
   }
   if (count==0) {
-    best_over=0;
-    notdone = 0;
+    /* set cod_info  (done in init_outer_loop above) */
+    memset(scalefac, 0, sizeof(III_scalefac_t));
+    memset(l3_enc, 0, sizeof(int)*576);
+    
+    best_noise[0]=0;
+    best_noise[1]=0;
+    best_noise[2]=0;
+    best_noise[3]=0;
+    return;
   }
   
 
@@ -687,79 +691,74 @@ void outer_loop(
 	best_over_noise=over_noise;
 	best_tot_noise=tot_noise;
 	
-        /* we need not save the quantization when in sloppy mode, so skip
-         */ 
-        if (!sloppy) {
-	  memcpy(scalefac, &scalefac_w, sizeof(III_scalefac_t));
-	  memcpy(l3_enc,l3_enc_w,sizeof(int)*576);
-	  memcpy(&save_cod_info,cod_info,sizeof(save_cod_info));
-
+	memcpy(scalefac, &scalefac_w, sizeof(III_scalefac_t));
+	memcpy(l3_enc,l3_enc_w,sizeof(int)*576);
+	memcpy(&save_cod_info,cod_info,sizeof(save_cod_info));
 #ifdef HAVEGTK
-	  if (gf.gtkflag) {
-	    int sfb;
-	    FLOAT ifqstep;
-	    int l,start,end,bw;
-	    FLOAT8 en0;
-	    D192_3 *xr_s = (D192_3 *)xr;
-	    ifqstep = ( cod_info->scalefac_scale == 0 ) ? .5 : 1.0;
-
-	    if (cod_info->block_type == SHORT_TYPE) {
-	      for ( i = 0; i < 3; i++ ) {
-		for ( sfb = 0; sfb < SBPSY_s; sfb++ )  {
-		  start = scalefac_band.s[ sfb ];
-		  end   = scalefac_band.s[ sfb + 1 ];
-		  bw = end - start;
-		  for ( en0 = 0.0, l = start; l < end; l++ ) 
-		    en0 += (*xr_s)[l][i] * (*xr_s)[l][i];
-		  en0=Max(en0/bw,1e-20);
-
-		  /* conversion to FFT units */
-		  en0 = ratio->en.s[sfb][i]/en0;
-
-		  pinfo->xfsf_s[gr][ch][3*sfb+i] =  xfsf[i+1][sfb]*en0;
-		  pinfo->thr_s[gr][ch][3*sfb+i] = ratio->thm.s[sfb][i];
-		  pinfo->en_s[gr][ch][3*sfb+i] = ratio->en.s[sfb][i]; 
-
-		  pinfo->LAMEsfb_s[gr][ch][3*sfb+i]=
-		    -2*cod_info->subblock_gain[i]-ifqstep*scalefac_w.s[sfb][i];
-		}
-	      }
-	    }else{
-	      for ( sfb = 0; sfb < SBPSY_l; sfb++ )   {
-		start = scalefac_band.l[ sfb ];
-		end   = scalefac_band.l[ sfb+1 ];
+	if (gf.gtkflag) {
+	  int sfb;
+	  FLOAT ifqstep;
+	  int l,start,end,bw;
+	  FLOAT8 en0;
+	  D192_3 *xr_s = (D192_3 *)xr;
+	  ifqstep = ( cod_info->scalefac_scale == 0 ) ? .5 : 1.0;
+	  
+	  if (cod_info->block_type == SHORT_TYPE) {
+	    for ( i = 0; i < 3; i++ ) {
+	      for ( sfb = 0; sfb < SBPSY_s; sfb++ )  {
+		start = scalefac_band.s[ sfb ];
+		end   = scalefac_band.s[ sfb + 1 ];
 		bw = end - start;
 		for ( en0 = 0.0, l = start; l < end; l++ ) 
-		  en0 += xr[l] * xr[l];
+		  en0 += (*xr_s)[l][i] * (*xr_s)[l][i];
 		en0=Max(en0/bw,1e-20);
-		/*
-		  printf("diff  = %f \n",10*log10(Max(ratio[gr][ch].en.l[sfb],1e-20))
-		  -(10*log10(en0)+150));
-		  */
-
-		/* convert to FFT units */
-		en0 =   ratio->en.l[sfb]/en0;
-	
-		pinfo->xfsf[gr][ch][sfb] =  xfsf[0][sfb]*en0;
-		pinfo->thr[gr][ch][sfb] = ratio->thm.l[sfb];
-		pinfo->en[gr][ch][sfb] = ratio->en.l[sfb];
-
-		pinfo->LAMEsfb[gr][ch][sfb]=-ifqstep*scalefac_w.l[sfb];
-		if (cod_info->preflag && sfb>=11) 
-		  pinfo->LAMEsfb[gr][ch][sfb]-=ifqstep*pretab[sfb];
+		
+		/* conversion to FFT units */
+		en0 = ratio->en.s[sfb][i]/en0;
+		
+		pinfo->xfsf_s[gr][ch][3*sfb+i] =  xfsf[i+1][sfb]*en0;
+		pinfo->thr_s[gr][ch][3*sfb+i] = ratio->thm.s[sfb][i];
+		pinfo->en_s[gr][ch][3*sfb+i] = ratio->en.s[sfb][i]; 
+		
+		pinfo->LAMEsfb_s[gr][ch][3*sfb+i]=
+		  -2*cod_info->subblock_gain[i]-ifqstep*scalefac_w.s[sfb][i];
 	      }
 	    }
-	    pinfo->LAMEqss[gr][ch] = cod_info->global_gain;
-	    pinfo->over[gr][ch]=over;
-	    pinfo->max_noise[gr][ch]=max_noise;
-	    pinfo->tot_noise[gr][ch]=tot_noise;
-	    pinfo->over_noise[gr][ch]=over_noise;
+	  }else{
+	    for ( sfb = 0; sfb < SBPSY_l; sfb++ )   {
+	      start = scalefac_band.l[ sfb ];
+	      end   = scalefac_band.l[ sfb+1 ];
+	      bw = end - start;
+	      for ( en0 = 0.0, l = start; l < end; l++ ) 
+		en0 += xr[l] * xr[l];
+	      en0=Max(en0/bw,1e-20);
+	      /*
+		printf("diff  = %f \n",10*log10(Max(ratio[gr][ch].en.l[sfb],1e-20))
+		-(10*log10(en0)+150));
+	      */
+	      
+	      /* convert to FFT units */
+	      en0 =   ratio->en.l[sfb]/en0;
+	      
+	      pinfo->xfsf[gr][ch][sfb] =  xfsf[0][sfb]*en0;
+	      pinfo->thr[gr][ch][sfb] = ratio->thm.l[sfb];
+	      pinfo->en[gr][ch][sfb] = ratio->en.l[sfb];
+	      
+	      pinfo->LAMEsfb[gr][ch][sfb]=-ifqstep*scalefac_w.l[sfb];
+	      if (cod_info->preflag && sfb>=11) 
+		pinfo->LAMEsfb[gr][ch][sfb]-=ifqstep*pretab[sfb];
+	    }
 	  }
+	  pinfo->LAMEqss[gr][ch] = cod_info->global_gain;
+	  pinfo->over[gr][ch]=over;
+	  pinfo->max_noise[gr][ch]=max_noise;
+	  pinfo->tot_noise[gr][ch]=tot_noise;
+	  pinfo->over_noise[gr][ch]=over_noise;
+	}
 #endif
-        } /* end of sloppy skipping */
       }
     }
-
+    
     /* if no bands with distortion, we are done */
     if (gf.noise_shaping_stop==0)
       if (over==0) notdone=0;
@@ -805,14 +804,9 @@ void outer_loop(
     }
   }    /* done with main iteration */
 
-  /* in sloppy mode we don´t need to restore the quantization, 
-   * cos we didn´t saved it and we don´t need it, as we only want
-   * to know if we can do better
-   */
-  if (!sloppy && count) {
-    memcpy(cod_info,&save_cod_info,sizeof(save_cod_info));
-    cod_info->part2_3_length += cod_info->part2_length;
-  }
+  memcpy(cod_info,&save_cod_info,sizeof(save_cod_info));
+  cod_info->part2_3_length += cod_info->part2_length;
+
   /* finish up */
   assert( cod_info->global_gain < 256 );
 

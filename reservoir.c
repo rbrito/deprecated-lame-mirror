@@ -5,6 +5,10 @@
  * $Id$
  *
  * $Log$
+ * Revision 1.7  2000/02/11 17:21:52  markt
+ * fixed scalefac not-initialized problem.  This would happen when
+ * xr = 0 and outer_loop() was skipped.
+ *
  * Revision 1.6  2000/01/13 16:26:50  takehiro
  * moved info.stereo into gf.stereo
  *
@@ -71,7 +75,7 @@ ResvFrameBegin( frame_params *fr_ps, III_side_info_t *l3_side, int mean_bits, in
 {
     layer *info;
     int fullFrameBits;
-    int expectedResvSize, resvLimit;
+    int resvLimit;
 
     if (gf.frameNum==0) {
       ResvSize=0;
@@ -94,11 +98,11 @@ ResvFrameBegin( frame_params *fr_ps, III_side_info_t *l3_side, int mean_bits, in
       agree with our reservoir size
     */
 
-    expectedResvSize = l3_side->main_data_begin * 8;
 #ifdef DEBUG
     fprintf( stderr, ">>> ResvSize = %d\n", ResvSize );
 #endif
-    assert( expectedResvSize == ResvSize );
+    /* check expected resvsize */
+    assert( (l3_side->main_data_begin * 8) == ResvSize );
     fullFrameBits = mean_bits * gf.mode_gr + ResvSize;
 
     /*
