@@ -1355,3 +1355,13 @@ lame_get_totalframes( const lame_global_flags*  gfp )
 
     return totalframes;
 }
+
+
+/*
+ *  just another daily changing developer switch  
+ */
+void lame_set_tune( lame_global_flags* gfp, float val ) 
+{
+    gfp->tune_value_a = val;
+    gfp->tune = 1;
+}

@@ -809,7 +809,10 @@ char* const inPath, char* const outPath, char **nogap_inPath, int *num_nogap)
                     lame_set_mode( gfp, JOINT_STEREO );
                     lame_set_ATHtype( gfp, 3 );
                     lame_set_VBR_min_bitrate_kbps(gfp,32);
-                    
+                T_ELIF ("tune")
+                    argUsed=1;
+                    {extern void lame_set_tune(lame_t gfp, float val);
+                    lame_set_tune(gfp,atof(nextArg));}    
                     
                 T_ELIF ("abr")
                     argUsed=1;

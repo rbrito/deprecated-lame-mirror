@@ -319,60 +319,68 @@ void ms_convert(FLOAT8 dst[2][576], FLOAT8 src[2][576])
 /************************************************************************
  * allocate bits among 2 channels based on PE
  * mt 6/99
+ * bugfixes rh 8/01: often allocated more than the allowed 4095 bits
  ************************************************************************/
-int on_pe(lame_global_flags *gfp,FLOAT8 pe[2][2],III_side_info_t *l3_side,
-int targ_bits[2],int mean_bits, int gr)
+int on_pe( lame_global_flags *gfp, FLOAT8 pe[][2], III_side_info_t *l3_side,
+           int targ_bits[2], int mean_bits, int gr )
 {
-  lame_internal_flags *gfc=gfp->internal_flags;
-  gr_info *cod_info;
-  int extra_bits,tbits,bits;
-  int add_bits[2]; 
-  int ch;
-  int max_bits;  /* maximum allowed bits for this granule */
+    lame_internal_flags * gfc = gfp->internal_flags;
+    gr_info *   cod_info;
+    int     extra_bits, tbits, bits;
+    int     add_bits[2]; 
+    int     max_bits;  /* maximum allowed bits for this granule */
+    int     ch;
 
-  /* allocate targ_bits for granule */
-  ResvMaxBits (gfp, mean_bits, &tbits, &extra_bits);
-  max_bits=tbits+extra_bits;
-
-  bits=0;
-
-  for (ch=0 ; ch < gfc->channels_out ; ch ++) {
-    /******************************************************************
-     * allocate bits for each channel 
-     ******************************************************************/
-    cod_info = &l3_side->gr[gr].ch[ch].tt;
+    /* allocate targ_bits for granule */
+    ResvMaxBits( gfp, mean_bits, &tbits, &extra_bits );
+    max_bits = tbits + extra_bits;
+    if (max_bits > MAX_BITS) /* hard limit per granule */
+        max_bits = MAX_BITS;
     
-    targ_bits[ch]=Min(MAX_BITS, tbits/gfc->channels_out);
+    for ( bits = 0, ch = 0; ch < gfc->channels_out; ++ch ) {
+        /******************************************************************
+         * allocate bits for each channel 
+         ******************************************************************/
+        cod_info = &l3_side->gr[gr].ch[ch].tt;
     
-    if (gfc->nsPsy.use) {
-      add_bits[ch] = targ_bits[ch]*pe[gr][ch]/700.0-targ_bits[ch];
-    } else {
-      add_bits[ch]=(pe[gr][ch]-750)/1.4;
-      /* short blocks us a little extra, no matter what the pe */
-      if (cod_info->block_type==SHORT_TYPE) {
-	if (add_bits[ch]<mean_bits/4) add_bits[ch]=mean_bits/4;
-      }
+        targ_bits[ch] = Min( MAX_BITS, tbits/gfc->channels_out );
+    
+        if (gfc->nsPsy.use) {
+            add_bits[ch] = targ_bits[ch] * pe[gr][ch] / 700.0 - targ_bits[ch];
+        } 
+        else {
+            add_bits[ch] = (pe[gr][ch]-750) / 1.4;
+            /* short blocks us a little extra, no matter what the pe */
+            if ( cod_info->block_type == SHORT_TYPE ) {
+	        if (add_bits[ch] < mean_bits/4) 
+                    add_bits[ch] = mean_bits/4;
+            }
+        }
 
-      /* at most increase bits by 1.5*average */
-      if (add_bits[ch] > .75*mean_bits) add_bits[ch]=mean_bits*.75;
-      if (add_bits[ch] < 0) add_bits[ch]=0;
+        /* at most increase bits by 1.5*average */
+        if (add_bits[ch] > mean_bits*3/4) 
+            add_bits[ch] = mean_bits*3/4;
+        if (add_bits[ch] < 0) 
+            add_bits[ch] = 0;
 
-      if ((targ_bits[ch]+add_bits[ch]) > MAX_BITS) 
-	add_bits[ch]=Max(0, MAX_BITS-targ_bits[ch]);
+        if (add_bits[ch]+targ_bits[ch] > MAX_BITS) 
+	    add_bits[ch] = Max( 0, MAX_BITS-targ_bits[ch] );
+
+        bits += add_bits[ch];
+    }
+    if (bits > extra_bits) {
+        for ( ch = 0; ch < gfc->channels_out; ++ch ) {
+            add_bits[ch] = extra_bits * add_bits[ch] / bits;
+        }
     }
 
-    bits += add_bits[ch];
-  }
-  if (bits > extra_bits)
-    for (ch=0 ; ch < gfc->channels_out ; ch ++) {
-      add_bits[ch] = (extra_bits*add_bits[ch])/bits;
+    for ( ch = 0; ch < gfc->channels_out; ++ch ) {
+        targ_bits[ch] += add_bits[ch];
+        extra_bits    -= add_bits[ch];
+        assert( targ_bits[ch] <= MAX_BITS );
     }
-
-  for (ch=0 ; ch < gfc->channels_out ; ch ++) {
-    targ_bits[ch] = targ_bits[ch] + add_bits[ch];
-    extra_bits -= add_bits[ch];
-  }
-  return max_bits;
+    assert( max_bits <= MAX_BITS );
+    return max_bits;
 }
 
 
@@ -421,6 +429,8 @@ void reduce_side(int targ_bits[2],FLOAT8 ms_ener_ratio,int mean_bits,int max_bit
       targ_bits[0]=(max_bits*targ_bits[0])/move_bits;
       targ_bits[1]=(max_bits*targ_bits[1])/move_bits;
     }
+    assert (targ_bits[0] <= MAX_BITS);
+    assert (targ_bits[1] <= MAX_BITS);
 }
 
 

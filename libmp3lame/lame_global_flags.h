@@ -127,6 +127,7 @@ struct lame_global_struct {
 				     and last but not least many decoders
                                      don't care about these bits          */
 
+  int   tune;               /* 0 off, 1 on */
   float tune_value_a;       /* used to pass values for debugging and stuff
                              */
   
