@@ -463,14 +463,15 @@ int calc_xmin(
       en0 /= bw;
       
       if (gfp->ATHonly || gfp->ATHshort) {
-        l3_xmin->s[sfb][b]=gfc->ATH_s[sfb];
+        xmin = gfc->ATH_s[sfb];
       } else {
         xmin = ratio->en.s[sfb][b];
         if (xmin > 0.0)
           xmin = en0 * ratio->thm.s[sfb][b] * gfc->masking_lower / xmin;
-        l3_xmin->s[sfb][b] = Max(gfc->ATH_s[sfb], xmin);
+        xmin = Max(gfc->ATH_s[sfb], xmin);
       }
-      
+      l3_xmin->s[sfb][b] = xmin * bw;
+
       if (gfc->nsPsy.use) {
 	if (sfb <= 5) {
 	  l3_xmin->s[sfb][b] *= gfc->nsPsy.bass;
@@ -492,7 +493,6 @@ int calc_xmin(
       for ( sfb = 0; sfb < SBMAX_l; sfb++ ){
 	start = gfc->scalefac_band.l[ sfb ];
 	end   = gfc->scalefac_band.l[ sfb+1 ];
-	bw = end - start;
     
 	for (en0 = 0.0, l = start; l < end; l++ ) {
 	  ener = xr[l] * xr[l];
@@ -500,13 +500,14 @@ int calc_xmin(
 	}
     
 	if (gfp->ATHonly) {
-	  l3_xmin->l[sfb]=gfc->ATH_l[sfb];
+	  xmin=gfc->ATH_l[sfb];
 	} else {
 	  xmin = ratio->en.l[sfb];
 	  if (xmin > 0.0)
 	    xmin = en0 * ratio->thm.l[sfb] * gfc->masking_lower / xmin;
-	  l3_xmin->l[sfb]=Max(gfc->ATH_l[sfb], xmin);
+	  xmin=Max(gfc->ATH_l[sfb], xmin);
 	}
+	l3_xmin->l[sfb]=xmin;
 
 	if (sfb <= 6) {
 	  l3_xmin->l[sfb] *= gfc->nsPsy.bass;
@@ -533,13 +534,14 @@ int calc_xmin(
 	en0 /= bw;
     
 	if (gfp->ATHonly) {
-	  l3_xmin->l[sfb]=gfc->ATH_l[sfb];
+	  xmin=gfc->ATH_l[sfb];
 	} else {
 	  xmin = ratio->en.l[sfb];
 	  if (xmin > 0.0)
 	    xmin = en0 * ratio->thm.l[sfb] * gfc->masking_lower / xmin;
-	  l3_xmin->l[sfb]=Max(gfc->ATH_l[sfb], xmin);
+	  xmin=Max(gfc->ATH_l[sfb], xmin);
 	}
+	l3_xmin->l[sfb]=xmin*bw;
 	if (en0 > gfc->ATH_l[sfb]) ath_over++;
       }
     }
@@ -587,7 +589,7 @@ int  calc_noise(
               calc_noise_result * const res )
 {
   int sfb,start, end, j,l, i, over=0;
-  FLOAT8 sum, bw;
+  FLOAT8 sum;
   
   int count=0;
   FLOAT8 noise;
@@ -602,7 +604,6 @@ int  calc_noise(
     for ( j=0, sfb = 0; sfb < max_index; sfb++ ) {
          start = gfc->scalefac_band.s[ sfb ];
          end   = gfc->scalefac_band.s[ sfb+1 ];
-         bw = end - start;
          for ( i = 0; i < 3; i++ ) {
 	    FLOAT8 step;
 	    int s;
@@ -626,8 +627,7 @@ int  calc_noise(
 	      l++;
 	    } while (l < end);
 
-	    xfsf->s[sfb][i]  = sum / bw;
-            xfsf->s[sfb][i] /= l3_xmin->s[sfb][i];
+	    xfsf->s[sfb][i]  = sum / l3_xmin->s[sfb][i];
             
             noise = xfsf->s[sfb][i];
 	    
@@ -662,7 +662,6 @@ int  calc_noise(
 
 	start = gfc->scalefac_band.l[ sfb ];
         end   = gfc->scalefac_band.l[ sfb+1 ];
-        bw = end - start;
 
 	for ( sum = 0.0, l = start; l < end; l++ ) {
 	  FLOAT8 temp;
@@ -670,15 +669,7 @@ int  calc_noise(
 	  sum += temp * temp;
 	}
 
-	if (gfc->nsPsy.use) {
-	  xfsf->l[sfb] = sum;
-	  sum /= bw;
-	} else {
-	  xfsf->l[sfb] = sum / bw;
-	}
-
-        xfsf->l[sfb] /= l3_xmin->l[sfb];
-	noise = xfsf->l[sfb];
+	noise = xfsf->l[sfb] = sum / l3_xmin->l[sfb];
 	/* multiplying here is adding in dB */
 	tot_noise *= Max(noise, 1E-20);
 	if (noise > 1) {
