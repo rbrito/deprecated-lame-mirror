@@ -1593,7 +1593,7 @@ calc_target_bits (
                 else
                 if (add_bits < 0) 
                     add_bits = 0;
- 
+
                 targ_bits[gr][ch] += add_bits;
             }
         }/* for ch */

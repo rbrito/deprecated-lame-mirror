@@ -167,7 +167,8 @@ iteration_init( lame_internal_flags * const gfc )
     l3_side->main_data_begin = 0;
     compute_ath(gfc->gfp,gfc->ATH_l,gfc->ATH_s);
 
-    for(i=0;i<PRECALC_SIZE;i++)
+    pow43[0] = 0.0;
+    for(i=1;i<PRECALC_SIZE;i++)
         pow43[i] = pow((FLOAT8)i, 4.0/3.0);
 
     adj43asm[0] = 0.0;
@@ -570,7 +571,6 @@ int calc_noise(
   FLOAT8 tot_noise  = 1;     /*    0 dB relative to masking */
   FLOAT8 max_noise  = 1E-20; /* -200 dB relative to masking */
 
-  
   if (cod_info->block_type == SHORT_TYPE) {
     int max_index = gfc->sfb21_extra ? SBMAX_s : SBPSY_s;
 
@@ -589,13 +589,17 @@ int calc_noise(
 	    assert(s<Q_MAX);
 	    assert(s>=0);
 	    step = POW20(s);
-
-	    for ( sum = 0.0, l = start; l < end; l++ ) {
+	    sum = 0.0;
+	    l = start;
+	    do {
 	      FLOAT8 temp;
-	      temp = fabs(xr[j]) - pow43[ix[j]] * step;
+	      temp = pow43[ix[j]];
+	      temp *= step;
+	      temp -= fabs(xr[j]);
 	      ++j;
 	      sum += temp * temp;
-	    }   
+	      l++;
+	    } while (l < end);
 
 	    xfsf[i+1][sfb]  = sum / bw;
             xfsf[i+1][sfb] /= l3_xmin->s[sfb][i];

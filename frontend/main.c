@@ -152,14 +152,14 @@ int main(int argc, char **argv)
     brhist = 0;  /* turn of VBR historgram */
   }
 
-  if (brhist) {
 #ifdef BRHIST
+  if (brhist) {
     if (brhist_init(&gf, gf.VBR_min_bitrate_kbps,gf.VBR_max_bitrate_kbps)) {
       /* fall to initialize */
       brhist = 0;
     }
-#endif
   }
+#endif
 #ifdef KLEMM_13
   else {
     brhist_init(&gf, 128, 128 );
@@ -267,6 +267,7 @@ int main(int argc, char **argv)
 	if (imp3==-1) fprintf(stderr,"mp3 buffer is not big enough... \n");
 	else fprintf(stderr,"mp3 internal error:  error code=%i\n",imp3);
 	return 1;
+
       }
 
       if (!silent) {

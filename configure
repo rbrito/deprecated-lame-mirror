@@ -3971,7 +3971,7 @@ fi
 
 
 if test "x$GCC" = "xyes"; then
-	DEBUF_NORM_OPT="-O -g"
+	DEBUG_NORM_OPT="-O -g"
 
 	case "${CONFIG_DEBUG}" in
 	no)

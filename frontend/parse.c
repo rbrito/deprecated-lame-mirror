@@ -30,6 +30,7 @@
 #include <string.h>
 #include <assert.h>
 #include "lame.h"
+#include "version.h"
 
 #include "brhist.h"
 #include "parse.h"

@@ -622,13 +622,13 @@ INLINE static void mdct_short(FLOAT8 *inout)
 	inout[3*0] = tc1 * 1.907525191737280e-11 /* tritab_s[2] */ + tc0;
 	inout[3*5] =-ts1 * 1.907525191737280e-11 /* tritab_s[0] */ + ts0;
 
-	tc2 = tc2 * 0.86602540378443870761 * 1.907525191737280e-11 /* tritab_s[2] */;
-	ts1 = ts1 * 0.5 * 1.907525191737280e-11 + ts0;
+	tc2 = tc2 * 0.86602540378443870761 * 1.907525191737281e-11 /* tritab_s[2] */;
+	ts1 = ts1 * 0.5 * 1.907525191737281e-11 + ts0;
 	inout[3*1] = tc2-ts1;
 	inout[3*2] = tc2+ts1;
 
-	tc1 = tc1 * 0.5 * 1.907525191737280e-11 - tc0;
-	ts2 = ts2 * 0.86602540378443870761 * 1.907525191737280e-11 /* tritab_s[0] */;
+	tc1 = tc1 * 0.5 * 1.907525191737281e-11 - tc0;
+	ts2 = ts2 * 0.86602540378443870761 * 1.907525191737281e-11 /* tritab_s[0] */;
 	inout[3*3] = tc1+ts2;
 	inout[3*4] = tc1-ts2;
 
@@ -650,8 +650,8 @@ INLINE static void mdct_long(FLOAT8 *out, FLOAT8 *in)
     ts7 = in[ 2]+in[ 6];
     ts8 = in[ 3]+in[ 5];
 
-    out[17] = (ts5+ts7-ts8)-ts6+in[4];
-    st = (ts5+ts7-ts8)*cx[7]+ts6-in[4];
+    out[17] = (ts5+ts7-ts8)-(ts6-in[4]);
+    st = (ts5+ts7-ts8)*cx[7]+(ts6-in[4]);
     ct = (tc1-tc3-tc4)*cx[6];
     out[5] = ct+st;
     out[6] = ct-st;
@@ -684,8 +684,8 @@ INLINE static void mdct_long(FLOAT8 *out, FLOAT8 *in)
     tc7 = in[15]+in[11];
     tc8 = in[14]+in[12];
 
-    out[0]  = (tc5+tc7+tc8)+tc6+in[13];
-    ct = (tc5+tc7+tc8)*cx[7]-tc6-in[13];
+    out[0]  = (tc5+tc7+tc8)+(tc6+in[13]);
+    ct = (tc5+tc7+tc8)*cx[7]-(tc6+in[13]);
     st = (ts1-ts3+ts4)*cx[6];
     out[11] = ct+st;
     out[12] = ct-st;
