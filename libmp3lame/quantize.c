@@ -1129,15 +1129,18 @@ bitpressure_strategy(gr_info *gi, FLOAT *pxmin)
  * per band (shaping the noise).
  */
 inline static int
-find_scalefac(const FLOAT * xr, const FLOAT * xr34, FLOAT l3_xmin, int bw)
+find_scalefac(const FLOAT * xr, const FLOAT * xr34, FLOAT l3_xmin, int bw,
+	      int shortflag)
 {
     int sf, sf_ok, delsf;
 
-    /* search will range from sf:  -209 -> 45  */
-    /* from the spec, we can use -321 -> 45 */
-    sf = 128;
+    /* search range of sf: (long) -209 -> 45, (short) -321 -> 45 */
+    sf = 128; delsf = 64;
+    if (shortflag) {
+	sf = 72; delsf = 80;
+    }
     sf_ok = 10000;
-    for (delsf = 64; delsf != 0; delsf >>= 1) {
+    for (; delsf != 0; delsf >>= 1) {
 	FLOAT xfsf = calc_sfb_noise_fast(xr, xr34, bw, sf);
 
 	if (xfsf > l3_xmin) {
@@ -1267,6 +1270,22 @@ long_block_scalefacs(const lame_internal_flags *gfc, gr_info * gi, int vbrmax)
     gi->global_gain = vbrmax;
 }
 
+static void
+set_scalefactor_values(gr_info *gi)
+{
+    int ifqstep = (1 << (1 + gi->scalefac_scale)) - 1, sfb = 0;
+    do {
+	int s = (gi->global_gain - gi->scalefac[sfb]
+		 - gi->subblock_gain[gi->window[sfb]]*8 + ifqstep)
+		     >> (1 + gi->scalefac_scale);
+	if (gi->preflag)
+	    s -= pretab[sfb];
+	if (s < 0)
+	    s = 0;
+	gi->scalefac[sfb] = s;
+    } while (++sfb < gi->psymax);
+}
+
 
 static int
 noisesfb(gr_info *gi, FLOAT * xr34, FLOAT * l3_xmin, int startsfb)
@@ -1285,22 +1304,6 @@ noisesfb(gr_info *gi, FLOAT * xr34, FLOAT * l3_xmin, int startsfb)
 	j += width;
     }
     return -1;
-}
-
-static void
-set_scalefactor_values(gr_info *gi)
-{
-    int ifqstep = 1 << (1 + gi->scalefac_scale), sfb = 0;
-    do {
-	int s = (gi->global_gain - gi->scalefac[sfb]
-		 - gi->subblock_gain[gi->window[sfb]]*8
-		 + ifqstep - 1) >> (1 + gi->scalefac_scale);
-	if (gi->preflag)
-	    s -= pretab[sfb];
-	if (s < 0)
-	    s = 0;
-	gi->scalefac[sfb] = s;
-    } while (++sfb < gi->psymax);
 }
 
 static void
@@ -1394,7 +1397,8 @@ VBR_noise_shaping(
     vbrmax = -10000;
     do {
 	int width = gi->width[sfb], gain;
-	gain = find_scalefac(&gi->xr[j], &xr34[j], l3_xmin[sfb], width);
+	gain = find_scalefac(&gi->xr[j], &xr34[j], l3_xmin[sfb], width,
+			     gi->block_type == SHORT_TYPE);
 	j += width;
 	gi->scalefac[sfb] = gain;
 	if (vbrmax < gain)
