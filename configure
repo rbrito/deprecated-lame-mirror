@@ -11030,7 +11030,7 @@ do
 done
 done
 
-  test -z "$ac_cv_path_GTK_CONFIG" && ac_cv_path_GTK_CONFIG="gtk-config"
+  test -z "$ac_cv_path_GTK_CONFIG" && ac_cv_path_GTK_CONFIG="gtk12-config"
   ;;
 esac
 fi
@@ -12061,26 +12061,29 @@ if test "x$GCC" = "xyes"; then
         	# optimizations
         	OPTIMIZATION="-O -fomit-frame-pointer -ffast-math \
 			-funroll-loops"
+		OPTIMIZATION_FULL="-fmove-all-movables -freduce-all-givs \
+			-fsched-interblock -fbranch-count-reg -fforce-addr \
+			-fforce-mem"
         	;;
 	3.0*)
 		# -funroll-loops seems to produce buggy code with gcc 3.0.3
 		OPTIMIZATION="-O -fomit-frame-pointer -ffast-math \
 			-funroll-loops"
+		OPTIMIZATION_FULL="-fmove-all-movables -freduce-all-givs \
+			-fbranch-count-reg -fforce-addr -fforce-mem"
 		;;
 	*)
 		# default
 		OPTIMIZATION="-O3 -fomit-frame-pointer -ffast-math \
 			-funroll-loops"
+		OPTIMIZATION_FULL="-fmove-all-movables -freduce-all-givs \
+				-fbranch-count-reg -fforce-addr -fforce-mem"
 		;;
 	esac
 
 
 	# GCC version independend generic options
 	OPTIMIZATION_NORM="-fschedule-insns2"
-
-	OPTIMIZATION_FULL="-fmove-all-movables -freduce-all-givs \
-			-fsched-interblock -fbranch-count-reg -fforce-addr \
-			-fforce-mem"
 
 
 	# generic CPU specific options
@@ -12332,27 +12335,6 @@ alpha*-dec-osf*)
 		OPTIMIZATION="-fast -O3 -std -g3 -non_shared"
 	fi
 ;; #OSF
-
-##########################################################################
-# BeOS
-##########################################################################
-*-*-beos*) # todo:is this the right string ?
-	if test CC = "\$(BE_C_COMPILER)"; then
-		case $host in
-		bepc*-*-*)
-		 # todo: is this right architecture ? was: if ($(ARCH),BePC)
-	   		OPTIMIZATION="-O9 -fomit-frame-pointer -march=pentium \
-				-mcpu=pentium -ffast-math -funroll-loops \
-				-fprofile-arcs -fbranch-probabilities"
-		;;
-   		*) OPTIMIZATION="-opt all"
-		   MAKEDEP="-make"
-{ echo "$as_me:$LINENO: WARNING: Please contact lame@lists.sourceforge.net with the output of the configure run and the file config.cache. Thank you for your cooperation." >&5
-echo "$as_me: WARNING: Please contact lame@lists.sourceforge.net with the output of the configure run and the file config.cache. Thank you for your cooperation." >&2;}
-		;;
-		esac
-	fi
-;; #BeOS
 esac
 
 # todo: include the following tests in the case-list
