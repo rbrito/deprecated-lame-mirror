@@ -1429,7 +1429,7 @@ int psymodel_init(lame_global_flags *gfp)
 	gfc->ATH.eql_w[i] = db2pow(-ATHformula( freq, gfp ));
 	eql_balance += gfc->ATH.eql_w[i];
     }
-    eql_balance =  (vo_scale * vo_scale / (BLKSIZE/2)) / eql_balance;
+    eql_balance =  (vo_scale * vo_scale / (BLKSIZE/2)) / eql_balance * 0.5;
     for( i = BLKSIZE/2; --i >= 0; ) { /* scale weights */
 	gfc->ATH.eql_w[i] *= eql_balance;
     }

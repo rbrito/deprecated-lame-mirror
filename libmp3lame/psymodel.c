@@ -1353,7 +1353,7 @@ L3psycho_anal_ns(
 	 *********************************************************************/
 	if (chn < 2) /*no loudness for mid/side ch*/
 	    gfc->loudness_next[gr][chn]
-		= psycho_loudness_approx(fftenergy, gfc) * .5f;
+		= psycho_loudness_approx(fftenergy, gfc);
 
 	/* total energy */
 	enn = 0.0;
