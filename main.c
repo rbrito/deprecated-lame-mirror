@@ -110,14 +110,21 @@ int main(int argc, char **argv)
 	/* read in 'iread' samples */
 	iread=lame_readframe(&gf,Buffer);
 
-	/* check to make sure mp3buffer is big enough */
-	if (LAME_MAXMP3BUFFER < 1.25*iread + 7200) 
-	  fprintf(stderr,"mp3 buffer is not big enough. \n");
 
 	/* encode */
 	imp3=lame_encode_buffer(&gf,Buffer[0],Buffer[1],iread,
               mp3buffer,(int)sizeof(mp3buffer)); 
-	fwrite(mp3buffer,1,imp3,outf);       /* write the MP3 output  */
+
+	/* was our output buffer big enough? */
+	if (imp3==-1) {
+	  fprintf(stderr,"mp3 buffer is not big enough... \n");
+	  exit(1);
+	}
+
+	if (fwrite(mp3buffer,1,imp3,outf) != imp3) {
+	  fprintf(stderr,"Error writing mp3 output");
+	  exit(1);
+	}
       } while (iread);
     }
 

@@ -79,31 +79,37 @@
 #else
 	typedef float FLOAT;
 #endif
-typedef double FLOAT8;
-/* NOTE: the ASM versions of quantize_xrpow() assume FLOAT8=double. 
-   so if you redefine this as float, disable the ASM routines for 
-   quantize_xrpow() and quantize_xrpow_iso().   
-*/
+
+
+/* MH: the x86 asm quantization routines in quantize-pvt.c
+   are designed to work only with 8-byte doubles or 4-byte
+   floats. if you use a different type (e.g. 10-byte extended
+   precision long doubles, as supported by ICL), you will need
+   to disable the ASM routines (or fix them :) */
+
+#define FLOAT8_is_double
+typedef double FLOAT8;  
+
+/*#define FLOAT8_is_float*/
+/*typedef float FLOAT8;  */
+
+
 
 
 #if defined _WIN32 && !defined __CYGWIN__
-#	define M_PI       3.14159265358979323846
-#	define M_SQRT2	1.41421356237309504880
 	typedef unsigned long	u_long;
 	typedef unsigned int	u_int;
 	typedef unsigned short	u_short;
 	typedef unsigned char	u_char;
+#elif defined __DECALPHA__
+#       do nothing
+#elif !defined __GNUC__ || defined __STRICT_ANSI__
+	typedef unsigned long	u_long;
+	typedef unsigned int	u_int;
+	typedef unsigned short	u_short;
+	typedef unsigned char	u_char;
+#endif
 
-#	include <fcntl.h>
-#	include <io.h>
-#else
-#if !defined __GNUC__ || defined __STRICT_ANSI__
-	typedef unsigned long	u_long;
-	typedef unsigned int	u_int;
-	typedef unsigned short	u_short;
-	typedef unsigned char	u_char;
-#endif
-#endif
 #ifdef __CYGWIN__
 #include <io.h>
 #endif

@@ -58,7 +58,7 @@ You may or may not need one or both of the "-x" (swap bytes) option in Sox.
 =======================================================================
 
 For more options, just type:
-% lame
+% lame --help
 
 Scripts are included to run lame on multiple files:
 
@@ -76,14 +76,17 @@ These options are explained in detail below.
 Quality related:
 
 -m m/s/j/f     mode selection
--f             disable psycho-acoustics.  Encoding much faster but lower quality
 -k             disable all filtering
 -d             allow block types to differ between channels
--h             higher quality but slower
--b  n          set bitrate (8,16,24,...,320)
 --athonly      ignore psy-model output, only use masking from the ATH
 --voice        experimental voice encoding mode
 --noshort      disable short blocks
+
+
+Constant Bit Rate (CBR)
+-b  n          set bitrate (8,16,24,...,320)
+-h             higher quality but slower
+-f             disable psycho-acoustics.  Encoding much faster but lower quality
 
 
 Variable Bit Rate (VBR)
@@ -313,8 +316,11 @@ mono is the default mode for mono input files.  If "-m m" is specified
 for a stereo input file, the two channels will be averaged into a mono
 signal.  
 
-jstereo is the default mode for stereo files with VBR or fixed bitrates
-of 160kbs or less.  At higher fixed bitrates, the default is stereo.  
+jstereo is the default mode for stereo files with fixed bitrates of
+128kbs or less.  At higher fixed bitrates, the default is stereo.
+For VBR encoding, jstereo is the default for VBR_q >4, and stereo
+is the default for VBR_q <=4.  You can override all of these defaults
+by specifing the mode on the command line.  
 
 jstereo means the encoder can use (on a frame by frame bases) either
 regular stereo (just encode left and right channels independently)

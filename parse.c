@@ -70,9 +70,6 @@ void lame_help(lame_global_flags *gfp,char *name)  /* print syntax & exit */
   fprintf(stdout,"    -m mode         (s)tereo, (j)oint, (f)orce or (m)ono  (default j)\n");
   fprintf(stdout,"                    force = force ms_stereo on all frames. Faster\n");
   fprintf(stdout,"    -a              downmix from stereo to mono file for mono encoding\n");
-  fprintf(stdout,"    -b bitrate      set the bitrate, default 128kbps\n");
-  fprintf(stdout,"    -h              higher quality, but a little slower\n");
-  fprintf(stdout,"    -f              fast mode (very low quality)\n");
   fprintf(stdout,"    -d              allow channels to have different blocktypes\n");
   fprintf(stdout,"    -S              don't print progress report, VBR histograms\n");
   fprintf(stdout,"    --athonly       only use the ATH for masking\n");
@@ -81,6 +78,11 @@ void lame_help(lame_global_flags *gfp,char *name)  /* print syntax & exit */
   fprintf(stdout,"    --voice         experimental voice mode\n");
   fprintf(stdout,"    --preset type   type must be phone, voice, fm, tape, hifi, cd or studio\n");
   fprintf(stdout,"                    help gives some more infos on these\n");
+  fprintf(stdout,"\n");
+  fprintf(stdout,"  CBR (constant bitrate, the default) options:\n");
+  fprintf(stdout,"    -h              higher quality, but a little slower.  Recommended.\n");
+  fprintf(stdout,"    -f              fast mode (very low quality)\n");
+  fprintf(stdout,"    -b bitrate      set the bitrate, default 128kbps\n");
   fprintf(stdout,"\n");
   fprintf(stdout,"  VBR options:\n");
   fprintf(stdout,"    -v              use variable bitrate (VBR)\n");

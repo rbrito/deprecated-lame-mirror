@@ -798,6 +798,98 @@ int loop_break( III_scalefac_t *scalefac, gr_info *cod_info)
 
 
 
+
+/*
+ ----------------------------------------------------------------------
+  if someone wants to try to find a faster step search function,
+  here is some code which gives a lower bound for the step size:
+  
+  for (max_xrspow = 0, i = 0; i < 576; ++i)
+  {
+    max_xrspow = Max(max_xrspow, xrspow[i]);
+  }
+  lowerbound = 210+log10(max_xrspow/IXMAX_VAL)/(0.1875*LOG2);
+ 
+ 
+                                                 Robert.Hegemann@gmx.de
+ ----------------------------------------------------------------------
+*/
+
+
+typedef enum {
+    BINSEARCH_NONE,
+    BINSEARCH_UP, 
+    BINSEARCH_DOWN
+} binsearchDirection_t;
+
+/*-------------------------------------------------------------------------*/
+int 
+bin_search_StepSize2 (lame_global_flags *gfp,int desired_rate, int start, int *ix, 
+                      FLOAT8 xrspow[576], gr_info *cod_info)
+/*-------------------------------------------------------------------------*/
+{
+    static int CurrentStep = 4;
+    int nBits;
+    int flag_GoneOver = 0;
+    int StepSize = start;
+    binsearchDirection_t Direction = BINSEARCH_NONE;
+
+    do
+    {
+	cod_info->global_gain = StepSize;
+	nBits = count_bits(gfp,ix, xrspow, cod_info);  
+
+	if (CurrentStep == 1 )
+        {
+	    break; /* nothing to adjust anymore */
+	}
+	if (flag_GoneOver)
+	{
+	    CurrentStep /= 2;
+	}
+	if (nBits > desired_rate)  /* increase Quantize_StepSize */
+	{
+	    if (Direction == BINSEARCH_DOWN && !flag_GoneOver)
+	    {
+		flag_GoneOver = 1;
+		CurrentStep /= 2; /* late adjust */
+	    }
+	    Direction = BINSEARCH_UP;
+	    StepSize += CurrentStep;
+	    if (StepSize > 255) break;
+	}
+	else if (nBits < desired_rate)
+	{
+	    if (Direction == BINSEARCH_UP && !flag_GoneOver)
+	    {
+		flag_GoneOver = 1;
+		CurrentStep /= 2; /* late adjust */
+	    }
+	    Direction = BINSEARCH_DOWN;
+	    StepSize -= CurrentStep;
+	    if (StepSize < 0) break;
+	}
+	else break; /* nBits == desired_rate;; most unlikely to happen.*/
+    } while (1); /* For-ever, break is adjusted. */
+
+    CurrentStep = abs(start - StepSize);
+    
+    if (CurrentStep >= 4) {
+	CurrentStep = 4;
+    } else {
+	CurrentStep = 2;
+    }
+
+    return nBits;
+}
+
+
+
+
+
+
+
+
 #if (defined(__GNUC__) && defined(__i386__))
 #define USE_GNUC_ASM
 #endif
@@ -838,7 +930,33 @@ int loop_break( III_scalefac_t *scalefac, gr_info *cod_info)
 #  define XRPOW_FTOI(src,dest) ((dest) = (int)(src))
 #endif
 
+#ifdef USE_MSC_ASM
+/* define F8type and F8size according to type of FLOAT8 */
+# if defined FLOAT8_is_double
+#  define F8type qword
+#  define F8size 8
+# elif defined FLOAT8_is_float
+#  define F8type dword
+#  define F8size 4
+# else
+/* only float and double supported */
+#  error invalid FLOAT8 type for USE_MSC_ASM
+# endif
+#endif
 
+#ifdef USE_GNUC_ASM
+/* define F8type and F8size according to type of FLOAT8 */
+# if defined FLOAT8_is_double
+#  define F8type "l"
+#  define F8size "8"
+# elif defined FLOAT8_is_float
+#  define F8type "s"
+#  define F8size "4"
+# else
+/* only float and double supported */
+#  error invalid FLOAT8 type for USE_GNUC_ASM
+# endif
+#endif
 
 /*********************************************************************
  * nonlinear quantization of xr 
@@ -863,10 +981,10 @@ void quantize_xrpow(FLOAT8 xr[576], int ix[576], gr_info *cod_info) {
       __asm__ __volatile__(
         "\n\nloop1:\n\t"
 
-        "fldl (%1)\n\t"
-        "fldl 8(%1)\n\t"
-        "fldl 16(%1)\n\t"
-        "fldl 24(%1)\n\t"
+        "fld" F8type " 0*" F8size "(%1)\n\t"
+        "fld" F8type " 1*" F8size "(%1)\n\t"
+        "fld" F8type " 2*" F8size "(%1)\n\t"
+        "fld" F8type " 3*" F8size "(%1)\n\t"
 
         "fxch %%st(3)\n\t"
         "fmul %%st(4)\n\t"
@@ -877,7 +995,7 @@ void quantize_xrpow(FLOAT8 xr[576], int ix[576], gr_info *cod_info) {
         "fxch %%st(3)\n\t"
         "fmul %%st(4)\n\t"
 
-        "addl $32, %1\n\t"
+        "addl $4*" F8size ", %1\n\t"
         "addl $16, %3\n\t"
 
         "fxch %%st(2)\n\t"
@@ -894,16 +1012,16 @@ void quantize_xrpow(FLOAT8 xr[576], int ix[576], gr_info *cod_info) {
         "movl %5, %%eax\n\t"
         "movl 4+%5, %%ebx\n\t"
         "fxch %%st(1)\n\t"
-        "faddl (%2,%%eax,8)\n\t"
+        "fadd" F8type " (%2,%%eax," F8size ")\n\t"
         "fxch %%st(3)\n\t"
-        "faddl (%2,%%ebx,8)\n\t"
+        "fadd" F8type " (%2,%%ebx," F8size ")\n\t"
 
         "movl 8+%5, %%eax\n\t"
         "movl 12+%5, %%ebx\n\t"
         "fxch %%st(2)\n\t"
-        "faddl (%2,%%eax,8)\n\t"
+        "fadd" F8type " (%2,%%eax," F8size ")\n\t"
         "fxch %%st(1)\n\t"
-        "faddl (%2,%%ebx,8)\n\t"
+        "fadd" F8type " (%2,%%ebx," F8size ")\n\t"
 
         "fxch %%st(3)\n\t"
         "fistpl -16(%3)\n\t"
@@ -923,17 +1041,16 @@ void quantize_xrpow(FLOAT8 xr[576], int ix[576], gr_info *cod_info) {
       /* asm from Acy Stapp <AStapp@austin.rr.com> */
       int rx[4];
       _asm {
-          fld qword ptr [istep]
+          fld F8type ptr [istep]
           mov esi, dword ptr [xr]
           lea edi, dword ptr [adj43asm]
           mov edx, dword ptr [ix]
           mov ecx, 576/4
       } loop1: _asm {
-          fld qword ptr [esi]         // 0
-          fld qword ptr [esi+8]       // 1 0
-          fld qword ptr [esi+16]      // 2 1 0
-          fld qword ptr [esi+24]      // 3 2 1 0
-
+          fld F8type ptr [esi+(0*F8size)] // 0
+          fld F8type ptr [esi+(1*F8size)] // 1 0
+          fld F8type ptr [esi+(2*F8size)] // 2 1 0
+          fld F8type ptr [esi+(3*F8size)] // 3 2 1 0
           fxch st(3)                  // 0 2 1 3
           fmul st(0), st(4)
           fxch st(2)                  // 1 2 0 3
@@ -943,7 +1060,7 @@ void quantize_xrpow(FLOAT8 xr[576], int ix[576], gr_info *cod_info) {
           fxch st(3)                  // 3 1 0 2
           fmul st(0), st(4)
 
-          add esi, 32
+          add esi, 4*F8size
           add edx, 16
 
           fxch st(2)                  // 0 1 3 2
@@ -960,17 +1077,16 @@ void quantize_xrpow(FLOAT8 xr[576], int ix[576], gr_info *cod_info) {
           mov eax, dword ptr [rx]
           mov ebx, dword ptr [rx+4]
           fxch st(1)                  // 0 3 2 1
-          fadd qword ptr [edi+eax*8]
+          fadd F8type ptr [edi+eax*F8size]
           fxch st(3)                  // 1 3 2 0
-          fadd qword ptr [edi+ebx*8]
+          fadd F8type ptr [edi+ebx*F8size]
 
           mov eax, dword ptr [rx+8]
           mov ebx, dword ptr [rx+12]
           fxch st(2)                  // 2 3 1 0
-          fadd qword ptr [edi+eax*8]
+          fadd F8type ptr [edi+eax*F8size]
           fxch st(1)                  // 3 2 1 0
-          fadd qword ptr [edi+ebx*8]
-
+          fadd F8type ptr [edi+ebx*F8size]
           fxch st(3)                  // 0 2 1 3
           fistp dword ptr [edx-16]    // 2 1 3
           fxch st(1)                  // 1 2 3
@@ -1069,12 +1185,12 @@ void quantize_xrpow_ISO( FLOAT8 xr[576], int ix[576], gr_info *cod_info )
       __asm__ __volatile__ (
         "\n\nloop0:\n\t"
 
-        "fldl (%3)\n\t"
-        "fldl 8(%3)\n\t"
-        "fldl 16(%3)\n\t"
-        "fldl 24(%3)\n\t"
+        "fld" F8type " 0*" F8size "(%3)\n\t"
+        "fld" F8type " 1*" F8size "(%3)\n\t"
+        "fld" F8type " 2*" F8size "(%3)\n\t"
+        "fld" F8type " 3*" F8size "(%3)\n\t"
 
-        "addl $32, %3\n\t"
+        "addl $4*" F8size ", %3\n\t"
         "addl $16, %4\n\t"
 
         "fxch %%st(3)\n\t"
@@ -1107,7 +1223,7 @@ void quantize_xrpow_ISO( FLOAT8 xr[576], int ix[576], gr_info *cod_info )
         "jnz loop0\n\n"
 
         : /* no outputs */
-        : "r" (576 / 4), "u" ((FLOAT)(0.4054 - 0.5)), "t" (istep), "r" (xr), "r" (ix)
+        : "r" (576 / 4), "u" ((FLOAT8)(0.4054 - 0.5)), "t" (istep), "r" (xr), "r" (ix)
         : "memory", "cc"
       );
   }
@@ -1117,17 +1233,17 @@ void quantize_xrpow_ISO( FLOAT8 xr[576], int ix[576], gr_info *cod_info )
       const FLOAT8 temp0 = 0.4054 - 0.5;
       _asm {
           mov ecx, 576/4;
-          fld qword ptr [temp0];
-          fld qword ptr [istep];
+          fld F8type ptr [temp0];
+          fld F8type ptr [istep];
           mov eax, dword ptr [xr];
           mov edx, dword ptr [ix];
       } loop0: _asm {
-          fld qword ptr [eax]; // 0
-          fld qword ptr [eax+8]; // 1 0
-          fld qword ptr [eax+16]; // 2 1 0
-          fld qword ptr [eax+24]; // 3 2 1 0
+          fld F8type ptr [eax+0*F8size]; // 0
+          fld F8type ptr [eax+1*F8size]; // 1 0
+          fld F8type ptr [eax+2*F8size]; // 2 1 0
+          fld F8type ptr [eax+3*F8size]; // 3 2 1 0
 
-          add eax, 32;
+          add eax, 4*F8size;
           add edx, 16;
 
           fxch st(3); // 0 2 1 3
@@ -1203,90 +1319,3 @@ void quantize_xrpow_ISO( FLOAT8 xr[576], int ix[576], gr_info *cod_info )
   }
 #endif
 }
-
-
-
-/*
- ----------------------------------------------------------------------
-  if someone wants to try to find a faster step search function,
-  here is some code which gives a lower bound for the step size:
-  
-  for (max_xrspow = 0, i = 0; i < 576; ++i)
-  {
-    max_xrspow = Max(max_xrspow, xrspow[i]);
-  }
-  lowerbound = 210+log10(max_xrspow/IXMAX_VAL)/(0.1875*LOG2);
- 
- 
-                                                 Robert.Hegemann@gmx.de
- ----------------------------------------------------------------------
-*/
-
-
-typedef enum {
-    BINSEARCH_NONE,
-    BINSEARCH_UP, 
-    BINSEARCH_DOWN
-} binsearchDirection_t;
-
-/*-------------------------------------------------------------------------*/
-int 
-bin_search_StepSize2 (lame_global_flags *gfp,int desired_rate, int start, int *ix, 
-                      FLOAT8 xrspow[576], gr_info *cod_info)
-/*-------------------------------------------------------------------------*/
-{
-    static int CurrentStep = 4;
-    int nBits;
-    int flag_GoneOver = 0;
-    int StepSize = start;
-    binsearchDirection_t Direction = BINSEARCH_NONE;
-
-    do
-    {
-	cod_info->global_gain = StepSize;
-	nBits = count_bits(gfp,ix, xrspow, cod_info);  
-
-	if (CurrentStep == 1 )
-        {
-	    break; /* nothing to adjust anymore */
-	}
-	if (flag_GoneOver)
-	{
-	    CurrentStep /= 2;
-	}
-	if (nBits > desired_rate)  /* increase Quantize_StepSize */
-	{
-	    if (Direction == BINSEARCH_DOWN && !flag_GoneOver)
-	    {
-		flag_GoneOver = 1;
-		CurrentStep /= 2; /* late adjust */
-	    }
-	    Direction = BINSEARCH_UP;
-	    StepSize += CurrentStep;
-	    if (StepSize > 255) break;
-	}
-	else if (nBits < desired_rate)
-	{
-	    if (Direction == BINSEARCH_UP && !flag_GoneOver)
-	    {
-		flag_GoneOver = 1;
-		CurrentStep /= 2; /* late adjust */
-	    }
-	    Direction = BINSEARCH_DOWN;
-	    StepSize -= CurrentStep;
-	    if (StepSize < 0) break;
-	}
-	else break; /* nBits == desired_rate;; most unlikely to happen.*/
-    } while (1); /* For-ever, break is adjusted. */
-
-    CurrentStep = abs(start - StepSize);
-    
-    if (CurrentStep >= 4) {
-	CurrentStep = 4;
-    } else {
-	CurrentStep = 2;
-    }
-
-    return nBits;
-}
-

@@ -55,7 +55,6 @@
 /* Global variable definitions for lame.c */
 static Bit_stream_struc   bs;
 static III_side_info_t l3_side;
-static int target_bitrate;
 #define MFSIZE (1152+1152+ENCDELAY-MDCTDELAY)
 static short int mfbuf[2][MFSIZE];
 static int mf_size;
@@ -536,11 +535,11 @@ void lame_print_config(lame_global_flags *gfp)
 	    (strcmp(gfp->inPath, "-")? gfp->inPath : "stdin"),
 	    (strcmp(gfp->outPath, "-")? gfp->outPath : "stdout"));
     if (gfp->VBR)
-      fprintf(stderr, "Encoding as %.1fkHz VBR(q=%i) %s MPEG%i LayerIII  qual=%i\n",
+      fprintf(stderr, "Encoding as %.1fkHz VBR(q=%i) %s MPEG%i LayerIII  qval=%i\n",
 	      gfp->out_samplerate/1000.0,
 	      gfp->VBR_q,mode_names[gfp->mode],2-gfp->version,gfp->quality);
     else
-      fprintf(stderr, "Encoding as %.1f kHz %d kbps %s MPEG%i LayerIII (%4.1fx)  qual=%i\n",
+      fprintf(stderr, "Encoding as %.1f kHz %d kbps %s MPEG%i LayerIII (%4.1fx)  qval=%i\n",
 	      gfp->out_samplerate/1000.0,gfp->brate,
 	      mode_names[gfp->mode],2-gfp->version,compression,gfp->quality);
   }
