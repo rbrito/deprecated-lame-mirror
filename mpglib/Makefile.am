@@ -48,3 +48,7 @@ lclint.txt: ${libmpgdecoder_la_SOURCES} ${noinst_HEADERS}
 
 lclint: lclint.txt
 	more lclint.txt
+
+#$(OBJECTS): libtool
+#libtool: $(LIBTOOL_DEPS)
+#	$(SHELL) $(top_builddir)/config.status --recheck
