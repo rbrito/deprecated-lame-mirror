@@ -46,8 +46,9 @@
  * $Id$
  *
  * $Log$
- * Revision 1.1  1999/11/24 08:43:35  markt
- * Initial revision
+ * Revision 1.1.1.1  1999/11/24 08:43:35  markt
+ * initial checkin of LAME
+ * Starting with LAME 3.57beta with some modifications
  *
  * Revision 2.6  91/04/30  17:06:02  malcolm
  */
