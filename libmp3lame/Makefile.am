@@ -30,6 +30,7 @@ EXTRA_DIST = libmp3lame_vc6.dsp
 
 libmp3lame_la_SOURCES = \
 	bitstream.c \
+	gain_analysis.c \
         tags.c \
         lame.c \
         newmdct.c \
@@ -45,6 +46,7 @@ libmp3lame_la_SOURCES = \
 noinst_HEADERS= \
 	tags.h \
 	bitstream.h \
+	gain_analysis.h \
 	encoder.h \
 	lame-analysis.h \
 	machine.h \
