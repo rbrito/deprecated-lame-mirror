@@ -1487,7 +1487,7 @@ VBR_noise_shaping(lame_internal_flags * gfc, const FLOAT8 * xr34orig, int minbit
         }
         else
             break;
-    } while (1 && ret != -1);
+    } while (ret != -1);
 
     if (ret == -1)      /* Houston, we have a problem */
         return -1;
@@ -1497,6 +1497,9 @@ VBR_noise_shaping(lame_internal_flags * gfc, const FLOAT8 * xr34orig, int minbit
         bits = bin_search_StepSize(gfc, cod_info, huffbits, gfc->OldValue[ch], xr34);
         gfc->OldValue[ch] = cod_info->global_gain;
         cod_info->part2_3_length = bits + cod_info->part2_length;
+        if (gfc->use_best_huffman == 1) {
+            best_huffman_divide(gfc, cod_info);
+        }
     }
     if (cod_info->part2_3_length > maxbits) {
         huffbits = maxbits - cod_info->part2_length;
@@ -1512,6 +1515,9 @@ VBR_noise_shaping(lame_internal_flags * gfc, const FLOAT8 * xr34orig, int minbit
         if (bits >= LARGE_BITS) /* Houston, we have a problem */
             return -2;
         cod_info->part2_3_length += cod_info->part2_length;
+        if (gfc->use_best_huffman == 1) {
+            best_huffman_divide(gfc, cod_info);
+        }
     }
 
     if (cod_info->part2_length >= LARGE_BITS) /* Houston, we have a problem */

@@ -966,9 +966,10 @@ outer_loop (
 
 static void 
 iteration_finish (
-    lame_internal_flags *gfc,
+    lame_t gfp,
     const int       mean_bits )
 {
+    lame_internal_flags *gfc = gfp->internal_flags;
     III_side_info_t *l3_side = &gfc->l3_side;
     int gr, ch;
     
@@ -982,7 +983,8 @@ iteration_finish (
             
             /*  best huffman_divide may save some bits too
              */
-            if (gfc->use_best_huffman == 1) 
+            if (gfc->use_best_huffman == 1 && 
+                gfp->VBR != vbr_mt && gfp->VBR != vbr_mtrh)
                 best_huffman_divide (gfc, cod_info);
             
             /*  update reservoir status after FINAL quantization/bitrate
@@ -1441,7 +1443,7 @@ VBR_iteration_loop (
     }   /* breaks adjusted */
     /*--------------------------------------*/
     
-    iteration_finish (gfc, mean_bits);
+    iteration_finish (gfp, mean_bits);
 }
 
 
@@ -1644,7 +1646,7 @@ ABR_iteration_loop(
     }
     assert (gfc->bitrate_index <= gfc->VBR_max_bitrate);
 
-    iteration_finish (gfc, mean_bits);
+    iteration_finish (gfp, mean_bits);
 }
 
 
