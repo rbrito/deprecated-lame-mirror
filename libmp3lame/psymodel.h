@@ -23,7 +23,7 @@
 #define LAME_PSYMODEL_H
 
 /* size of each partition band, in barks: */
-#define DELBARK .34
+#define DELBARK .25
 
 #define ATHAdjustLimit 0.01
 

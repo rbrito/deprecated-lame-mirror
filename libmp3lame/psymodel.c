@@ -1152,9 +1152,6 @@ L3psycho_anal_ns(
 	    5.00/0.11749, 4.00/0.11749, 3.15/0.11749, 3.15/0.11749,
 	    3.15/0.11749, 3.15/0.11749, 3.15/0.11749, 1.25/0.11749,
 	};
-	static const FLOAT tab2[] = {
-	    .500/0.11749, .400/0.11749, .315/0.11749, .125/0.11749
-	};
 	int b, i, j;
 	if (ch < 2)
 	    fft_long ( gfc, wsamp_L[ch], buffer[ch]);
@@ -1236,28 +1233,12 @@ L3psycho_anal_ns(
 		a *= 3.0/2.0;
 		m = (m-a) / a * gfc->rnumlines_ls[0];
 		a = eb[0];
-		if (m < sizeof(tab2)/sizeof(tab2[0]))
-		    a *= tab2[trancate(m)];
+		if (m < sizeof(tab)/sizeof(tab[0]))
+		    a *= tab[trancate(m)];
 	    }
 	    eb2[0] = a;
 
-	    for (b = 1; b < 12*2; b++) {
-		a = avg[b-1] + avg[b] + avg[b+1];
-		if (a != 0.0) {
-		    m = max[b-1];
-		    if (m < max[b  ]) m = max[b];
-		    if (m < max[b+1]) m = max[b+1];
-		    m = (m-a) / a * gfc->rnumlines_ls[b];
-		    a = eb[b];
-		    if (m < sizeof(tab2)/sizeof(tab2[0]))
-			a *= tab2[trancate(m)];
-		    else if (m > 8)
-			a *= 0.1;
-		}
-		eb2[b] = a;
-	    }
-
-	    for (; b < gfc->npart_l-1; b++) {
+	    for (b = 1; b < gfc->npart_l-1; b++) {
 		a = avg[b-1] + avg[b] + avg[b+1];
 		if (a != 0.0) {
 		    m = max[b-1];

@@ -1106,10 +1106,13 @@ init_numline(
     for (i = j = 0; i < CBANDS; i++) {
 	FLOAT bark1 = freq2bark(sfreq*j);
 	int j2;
-	for (j2 = j; freq2bark(sfreq*j2) - bark1 < DELBARK && j2 <= blksize/2;
+	for (j2 = j+4;
+	     freq2bark(sfreq*j2) - bark1 < DELBARK && j2 <= blksize/2;
 	     j2++)
 	    ;
 
+	if (j2 > blksize/2+1)
+	    j2 = blksize/2+1;
 	bval[i] = freq2bark(sfreq*(j+j2)*0.5);
 	numlines[i] = j2 - j;
 	while (j<j2)
@@ -1122,8 +1125,8 @@ init_numline(
 	int i1 = (int)(.5 + deltafreq*scalepos[sfb]);
 	int i2 = (int)(.5 + deltafreq*scalepos[sfb+1]);
 
-	if (i2>blksize/2)
-	    i2=blksize/2;
+	if (i2 > blksize/2)
+	    i2 = blksize/2;
 
 	bo[sfb] = partition[i2];
 	bm[sfb] = (partition[i1]+partition[i2])/2;
@@ -1148,10 +1151,13 @@ init_numline_l2s(
     for (i = j = 0; i < CBANDS; i++) {
 	FLOAT bark1 = freq2bark(sfreq*j);
 	int j2;
-	for (j2 = j; freq2bark(sfreq*j2) - bark1 < DELBARK && j2 <= blksize/2;
+	for (j2 = j+4;
+	     freq2bark(sfreq*j2) - bark1 < DELBARK && j2 <= blksize/2;
 	     j2++)
 	    ;
 
+	if (j2 > blksize/2+1)
+	    j2 = blksize/2+1;
 	while (j<j2)
 	    partition[j++]=i;
 	if (j > blksize/2) break;
@@ -1359,8 +1365,8 @@ psymodel_init(const lame_t gfc)
 	return i;
 
     assert(gfc->bo_l[SBMAX_l-1] <= gfc->npart_l);
-    assert(gfc->bo_l2s[SBMAX_s-1] <= gfc->npart_l);
     assert(gfc->bo_s[SBMAX_s-1] <= gfc->npart_s);
+    assert(gfc->bo_l2s[SBMAX_s-1] <= gfc->npart_l);
 
     init_mask_add_max_values(gfc);
 

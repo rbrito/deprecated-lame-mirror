@@ -247,7 +247,7 @@ struct lame_internal_flags {
     /* intensity stereo threshold */
     FLOAT istereo_ratio;
 
-    /* psymodel */
+    /* psymodel constants */
     FLOAT *s3_ss;
     FLOAT *s3_ll;
 
@@ -266,7 +266,7 @@ struct lame_internal_flags {
     FLOAT masking_lower_short;
     FLOAT interChRatio;
 
-    /* for next frame data */
+    /* psymodel work, (for next frame data) */
     III_psy_ratio masking_next[2][MAX_CHANNELS*2];
     int blocktype_next[2][MAX_CHANNELS*2]; /* for block type */
     int mode_ext_next;
