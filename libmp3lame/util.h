@@ -108,16 +108,18 @@ extern "C" {
 # define         FAST_LOG10_X(x,y)   (fast_log2(x)*(LOG2/LOG10*(y)))
 # define         FAST_LOG_X(x,y)     (fast_log2(x)*(LOG2*(y)))
 
-union ffi {
-    ieee754_float32_t f;
-    int i;
-};
 extern ieee754_float32_t log_table[LOG2_SIZE*2];
-static inline ieee754_float32_t fast_log2(union ffi x)
+static inline ieee754_float32_t fast_log2(ieee754_float32_t xx)
 {
     ieee754_float32_t log2val;
-    int mantisse = x.i & 0x7FFFFF, i;
+    int mantisse, i;
+    union {
+	ieee754_float32_t f;
+	int i;
+    } x;
 
+    x.f = xx;
+    mantisse = x.i & 0x7FFFFF;
 //  assert(i > 0);
     log2val = x.i >> 23;
     i = mantisse >> (23-LOG2_SIZE_L2);
