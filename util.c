@@ -528,7 +528,7 @@ int fill_buffer_downsample(lame_global_flags *gfp,short int *outbuf,int desired_
       int j2 = i+j-filter_l/2;
       int y;
       y = (j2<0) ? inbuf_old[BLACKSIZE+j2] : inbuf[j2];
-#undef PRECOMPUTE
+#define PRECOMPUTE
 #ifdef PRECOMPUTE
       xvalue += y*gfc->blackfilt[joff][i];
 #else
