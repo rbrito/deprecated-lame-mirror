@@ -1,7 +1,6 @@
 encoding core:
 0.
-Sometime LAME goes into infinite loop, when lower quality VBR.
-This is completely fatal bug.
+MPEG2 Layer3 encoding is completely broken.
 
 
 1.
@@ -30,6 +29,12 @@ scfsi, no scalefact_scale, and so on.
 
 
 4.
+There're some sound quality regression compared with LAME3.x
+- short block problem (i.e. spahm.wav)
+- white noise problem (i.e. dr4.wav)
+
+
+5.
 Better intensity stereo.
 And LAME4 should support it when MPEG2 Layer3 (currently not).
 
@@ -38,13 +43,13 @@ have bugs in the intensity stereo decoding.  Bugs have been there
 for years since there are very few intensity stereo mp3's out there.
 
 
-5.
+6.
 Threshold calculation on short blocks. LAME4's block switching is
 better than LAME3 with nspsy, but threshold calculation is not.
 It does not support temporal masking, and so on.
 
 
-6.
+7.
 LAME has problems with test signals.
 1. pure DC input.(i.e. a square wave with a frequency well below 20 Hz)
 2. sin sweep signal (i.e. 20Hz->22kHz in 60sec)
@@ -54,7 +59,7 @@ some kind of music. 1 and 2 are caused by ATH handling problem.
 3 is by short block threshold problem.
 
 
-7.
+8.
 Tuning resorvoir handling (especially for low bitrates); CBR/ABR arround
 90kbps (-b 90) is much worse than VBR quality 9 (-V 9). This is probabry
 because of poor resorvoir handling.
@@ -66,38 +71,32 @@ And sometimes it drains too much bits. That's should be fixed.
 
 
 
-8.
+9.
 We should rewrite all the documentation, such as PRESET, INSTALL, README*,...
 
 
-9.
+10.
 Clipping detection and replaygain tag:
 LAME 3.x supports this, but LAME4 does not.
 
 
-10. 
+15. 
 LAME has a 31 point FIR filter used for resampling, which
 can also be used as a lowpass.  When resampling is done, 
 use that filter to also lowpass instead of the polyphase filter.
 
 
-11.
+16.
 Even when resampling is not needed, should we use an FIR filter
 for the lowpass?  If it is not too much slower, yes.  If it
 is slower, then it should be an option since it will produce
 higher quality.  
 
 
-12.
+17.
 better highpass/lowpass filter:
 We need to first replace the polyphase filter with an FIR filter.
 And setting highpass filtering to enhance the playback frequency range.
-
-
-15.
-There're some sound quality regression compared with LAME3.x
-- short block problem (i.e. spahm.wav)
-- white noise problem (i.e. dr4.wav)
 
 
 20.
