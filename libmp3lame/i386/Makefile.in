@@ -1,7 +1,6 @@
-# Makefile.in generated automatically by automake 1.4b from Makefile.am
+# Makefile.in generated automatically by automake 1.4 from Makefile.am
 
-# Copyright 1994, 1995, 1996, 1997, 1998, 1999, 2000
-# Free Software Foundation, Inc.
+# Copyright (C) 1994, 1995-8, 1999 Free Software Foundation, Inc.
 # This Makefile.in is free software; the Free Software Foundation
 # gives unlimited permission to copy and/or distribute it,
 # with or without modifications, as long as this notice is preserved.
@@ -10,6 +9,7 @@
 # but WITHOUT ANY WARRANTY, to the extent permitted by law; without
 # even the implied warranty of MERCHANTABILITY or FITNESS FOR A
 # PARTICULAR PURPOSE.
+
 
 SHELL = @SHELL@
 
@@ -32,6 +32,8 @@ mandir = @mandir@
 includedir = @includedir@
 oldincludedir = /usr/include
 
+DESTDIR =
+
 pkgdatadir = $(datadir)/@PACKAGE@
 pkglibdir = $(libdir)/@PACKAGE@
 pkgincludedir = $(includedir)/@PACKAGE@
@@ -44,10 +46,9 @@ AUTOMAKE = @AUTOMAKE@
 AUTOHEADER = @AUTOHEADER@
 
 INSTALL = @INSTALL@
-INSTALL_PROGRAM = @INSTALL_PROGRAM@
+INSTALL_PROGRAM = @INSTALL_PROGRAM@ $(AM_INSTALL_PROGRAM_FLAGS)
 INSTALL_DATA = @INSTALL_DATA@
 INSTALL_SCRIPT = @INSTALL_SCRIPT@
-INSTALL_STRIP_FLAG =
 transform = @program_transform_name@
 
 NORMAL_INSTALL = :
@@ -56,8 +57,6 @@ POST_INSTALL = :
 NORMAL_UNINSTALL = :
 PRE_UNINSTALL = :
 POST_UNINSTALL = :
-
-@SET_MAKE@
 build_alias = @build_alias@
 build_triplet = @build@
 host_alias = @host_alias@
@@ -92,7 +91,6 @@ LN_S = @LN_S@
 MAINT = @MAINT@
 MAKEDEP = @MAKEDEP@
 MAKEINFO = @MAKEINFO@
-NASM = @NASM@
 NASM_FORMAT = @NASM_FORMAT@
 OBJDUMP = @OBJDUMP@
 PACKAGE = @PACKAGE@
@@ -103,7 +101,6 @@ VERSION = @VERSION@
 WITH_MP3RTP = @WITH_MP3RTP@
 WITH_MP3X = @WITH_MP3X@
 install_sh = @install_sh@
-
 
 AUTOMAKE_OPTIONS = foreign $(top_srcdir)/ansi2knr
 
@@ -119,32 +116,19 @@ SUFFIXES = .nas
 
 EXTRA_liblameasmroutines_la_SOURCES = $(nasm_sources)
 
-nasm_sources = \
-	choose_table.nas \
-	cpu_feat.nas \
-	fft3dn.nas \
-	scalar.nas
+nasm_sources =  	choose_table.nas 	cpu_feat.nas 	fft3dn.nas 	scalar.nas
 
 
-CLEANFILES = \
-	choose_table.lst \
-	cpu_feat.lst \
-	fft3dn.lst \
-	scalar.lst
+CLEANFILES =  	choose_table.lst 	cpu_feat.lst 	fft3dn.lst 	scalar.lst
 
 
-@HAVE_NASM_TRUE@liblameasmroutines_la_SOURCES = @HAVE_NASM_TRUE@$(nasm_sources)
+@HAVE_NASM_TRUE@liblameasmroutines_la_SOURCES = $(nasm_sources)
 
-EXTRA_DIST = \
-	fft.nas \
-	fftfpu.nas \
-	fftsse.nas \
-	ffttbl.nas
+EXTRA_DIST =  	fft.nas 	fftfpu.nas 	fftsse.nas 	ffttbl.nas
 
 
 NASM = @NASM@
 NASMFLAGS = @NASM_FORMAT@ -i $(top_srcdir)/libmp3lame/@CPUTYPE@/
-subdir = ./libmp3lame/i386
 mkinstalldirs = $(SHELL) $(top_srcdir)/mkinstalldirs
 CONFIG_HEADER = ../../config.h
 CONFIG_CLEAN_FILES = 
@@ -156,34 +140,34 @@ LIBS = @LIBS@
 ANSI2KNR = $(top_srcdir)/ansi2knr
 liblameasmroutines_la_LDFLAGS = 
 liblameasmroutines_la_LIBADD = 
-@HAVE_NASM_TRUE@am_liblameasmroutines_la_OBJECTS =  choose_table.o \
+@HAVE_NASM_TRUE@liblameasmroutines_la_OBJECTS =  choose_table.o \
 @HAVE_NASM_TRUE@cpu_feat.o fft3dn.o scalar.o
-liblameasmroutines_la_OBJECTS =  $(am_liblameasmroutines_la_OBJECTS)
 CFLAGS = @CFLAGS@
 COMPILE = $(CC) $(DEFS) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS)
 LTCOMPILE = $(LIBTOOL) --mode=compile $(CC) $(DEFS) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS)
 CCLD = $(CC)
-LINK = $(LIBTOOL) --mode=link $(CCLD) $(AM_CFLAGS) $(CFLAGS) $(AM_LDFLAGS) $(LDFLAGS) -o $@
-DIST_SOURCES =  $(liblameasmroutines_la_SOURCES) \
-$(EXTRA_liblameasmroutines_la_SOURCES)
+LINK = $(LIBTOOL) --mode=link $(CCLD) $(AM_CFLAGS) $(CFLAGS) $(LDFLAGS) -o $@
 HEADERS =  $(noinst_HEADERS)
 
-DIST_COMMON =  $(noinst_HEADERS) Makefile.am Makefile.in
+DIST_COMMON =  Makefile.am Makefile.in
 
 
-DISTFILES = $(DIST_COMMON) $(DIST_SOURCES) $(TEXINFOS) $(EXTRA_DIST)
+DISTFILES = $(DIST_COMMON) $(SOURCES) $(HEADERS) $(TEXINFOS) $(EXTRA_DIST)
 
+TAR = gtar
 GZIP_ENV = --best
+DEP_FILES =  .deps/choose_table.P .deps/cpu_feat.P .deps/fft3dn.P \
+.deps/scalar.P
 SOURCES = $(liblameasmroutines_la_SOURCES) $(EXTRA_liblameasmroutines_la_SOURCES)
-OBJECTS = $(am_liblameasmroutines_la_OBJECTS)
+OBJECTS = $(liblameasmroutines_la_OBJECTS)
 
 all: all-redirect
 .SUFFIXES:
-.SUFFIXES: .nas .c .lo .o
+.SUFFIXES: .S .c .lo .nas .o .s
 $(srcdir)/Makefile.in: @MAINTAINER_MODE_TRUE@ Makefile.am $(top_srcdir)/configure.in $(ACLOCAL_M4) 
-	cd $(top_srcdir) && $(AUTOMAKE) --foreign ./libmp3lame/i386/Makefile
+	cd $(top_srcdir) && $(AUTOMAKE) --foreign libmp3lame/i386/Makefile
 
-Makefile: $(srcdir)/Makefile.in  $(top_builddir)/config.status
+Makefile: $(srcdir)/Makefile.in  $(top_builddir)/config.status $(BUILT_SOURCES)
 	cd $(top_builddir) \
 	  && CONFIG_FILES=$(subdir)/$@ CONFIG_HEADERS= $(SHELL) ./config.status
 
@@ -197,6 +181,12 @@ distclean-noinstLTLIBRARIES:
 
 maintainer-clean-noinstLTLIBRARIES:
 
+.s.o:
+	$(COMPILE) -c $<
+
+.S.o:
+	$(COMPILE) -c $<
+
 mostlyclean-compile:
 	-rm -f *.o core *.core
 
@@ -206,6 +196,12 @@ distclean-compile:
 	-rm -f *.tab.c
 
 maintainer-clean-compile:
+
+.s.lo:
+	$(LIBTOOL) --mode=compile $(COMPILE) -c $<
+
+.S.lo:
+	$(LIBTOOL) --mode=compile $(COMPILE) -c $<
 
 mostlyclean-libtool:
 	-rm -f *.lo
@@ -237,32 +233,23 @@ liblameasmroutines.la: $(liblameasmroutines_la_OBJECTS) $(liblameasmroutines_la_
 
 tags: TAGS
 
-ID: $(HEADERS) $(SOURCES) $(LISP) $(TAGS_FILES)
-	list='$(SOURCES) $(HEADERS) $(TAGS_FILES)'; \
-	unique=`for i in $$list; do \
-	    if test -f "$$i"; then echo $$i; else echo $(srcdir)/$$i; fi; \
-	  done | \
-	  $(AWK) '    { files[$$0] = 1; } \
+ID: $(HEADERS) $(SOURCES) $(LISP)
+	list='$(SOURCES) $(HEADERS)'; \
+	unique=`for i in $$list; do echo $$i; done | \
+	  awk '    { files[$$0] = 1; } \
 	       END { for (i in files) print i; }'`; \
-	mkid -fID $$unique $(LISP)
+	here=`pwd` && cd $(srcdir) \
+	  && mkid -f$$here/ID $$unique $(LISP)
 
-TAGS:  $(HEADERS) $(SOURCES)  $(TAGS_DEPENDENCIES) \
-		$(TAGS_FILES) $(LISP)
+TAGS:  $(HEADERS) $(SOURCES)  $(TAGS_DEPENDENCIES) $(LISP)
 	tags=; \
 	here=`pwd`; \
-	list='$(SOURCES) $(HEADERS) $(TAGS_FILES)'; \
-	unique=`for i in $$list; do \
-	    if test -f "$$i"; then echo $$i; else echo $(srcdir)/$$i; fi; \
-	  done | \
-	  $(AWK) '    { files[$$0] = 1; } \
+	list='$(SOURCES) $(HEADERS)'; \
+	unique=`for i in $$list; do echo $$i; done | \
+	  awk '    { files[$$0] = 1; } \
 	       END { for (i in files) print i; }'`; \
 	test -z "$(ETAGS_ARGS)$$unique$(LISP)$$tags" \
-	  || etags $(ETAGS_ARGS) $$tags  $$unique $(LISP)
-
-GTAGS:
-	here=`CDPATH=: && cd $(top_builddir) && pwd` \
-	  && cd $(top_srcdir) \
-	  && gtags -i $$here
+	  || (cd $(srcdir) && etags $(ETAGS_ARGS) $$tags  $$unique $(LISP) -o $$here/TAGS)
 
 mostlyclean-tags:
 
@@ -275,18 +262,56 @@ maintainer-clean-tags:
 
 distdir = $(top_builddir)/$(PACKAGE)-$(VERSION)/$(subdir)
 
+subdir = libmp3lame/i386
+
 distdir: $(DISTFILES)
+	here=`cd $(top_builddir) && pwd`; \
+	top_distdir=`cd $(top_distdir) && pwd`; \
+	distdir=`cd $(distdir) && pwd`; \
+	cd $(top_srcdir) \
+	  && $(AUTOMAKE) --include-deps --build-dir=$$here --srcdir-name=$(top_srcdir) --output-dir=$$top_distdir --foreign libmp3lame/i386/Makefile
 	@for file in $(DISTFILES); do \
 	  d=$(srcdir); \
 	  if test -d $$d/$$file; then \
-	    cp -pR $$d/$$file $(distdir) \
-	    || exit 1; \
+	    cp -pr $$/$$file $(distdir)/$$file; \
 	  else \
 	    test -f $(distdir)/$$file \
-	    || cp -p $$d/$$file $(distdir)/$$file \
-	    || exit 1; \
+	    || ln $$d/$$file $(distdir)/$$file 2> /dev/null \
+	    || cp -p $$d/$$file $(distdir)/$$file || :; \
 	  fi; \
 	done
+
+DEPS_MAGIC := $(shell mkdir .deps > /dev/null 2>&1 || :)
+
+-include $(DEP_FILES)
+
+mostlyclean-depend:
+
+clean-depend:
+
+distclean-depend:
+	-rm -rf .deps
+
+maintainer-clean-depend:
+
+%.o: %.c
+	@echo '$(COMPILE) -c $<'; \
+	$(COMPILE) -Wp,-MD,.deps/$(*F).pp -c $<
+	@-cp .deps/$(*F).pp .deps/$(*F).P; \
+	tr ' ' '\012' < .deps/$(*F).pp \
+	  | sed -e 's/^\\$$//' -e '/^$$/ d' -e '/:$$/ d' -e 's/$$/ :/' \
+	    >> .deps/$(*F).P; \
+	rm .deps/$(*F).pp
+
+%.lo: %.c
+	@echo '$(LTCOMPILE) -c $<'; \
+	$(LTCOMPILE) -Wp,-MD,.deps/$(*F).pp -c $<
+	@-sed -e 's/^\([^:]*\)\.o[ 	]*:/\1.lo \1.o :/' \
+	  < .deps/$(*F).pp > .deps/$(*F).P; \
+	tr ' ' '\012' < .deps/$(*F).pp \
+	  | sed -e 's/^\\$$//' -e '/^$$/ d' -e '/:$$/ d' -e 's/$$/ :/' \
+	    >> .deps/$(*F).P; \
+	rm -f .deps/$(*F).pp
 info-am:
 info: info-am
 dvi-am:
@@ -309,7 +334,7 @@ uninstall: uninstall-am
 all-am: Makefile $(LTLIBRARIES) $(HEADERS)
 all-redirect: all-am
 install-strip:
-	$(MAKE) $(AM_MAKEFLAGS) INSTALL_STRIP_FLAG=-s install
+	$(MAKE) $(AM_MAKEFLAGS) AM_INSTALL_PROGRAM_FLAGS=-s install
 installdirs:
 
 
@@ -323,21 +348,20 @@ distclean-generic:
 	-rm -f config.cache config.log stamp-h stamp-h[0-9]*
 
 maintainer-clean-generic:
-	-rm -f Makefile.in
 mostlyclean-am:  mostlyclean-noinstLTLIBRARIES mostlyclean-compile \
 		mostlyclean-libtool mostlyclean-kr mostlyclean-tags \
-		mostlyclean-generic
+		mostlyclean-depend mostlyclean-generic
 
 mostlyclean: mostlyclean-am
 
 clean-am:  clean-noinstLTLIBRARIES clean-compile clean-libtool clean-kr \
-		clean-tags clean-generic mostlyclean-am
+		clean-tags clean-depend clean-generic mostlyclean-am
 
 clean: clean-am
 
 distclean-am:  distclean-noinstLTLIBRARIES distclean-compile \
 		distclean-libtool distclean-kr distclean-tags \
-		distclean-generic clean-am
+		distclean-depend distclean-generic clean-am
 	-rm -f libtool
 
 distclean: distclean-am
@@ -345,7 +369,8 @@ distclean: distclean-am
 maintainer-clean-am:  maintainer-clean-noinstLTLIBRARIES \
 		maintainer-clean-compile maintainer-clean-libtool \
 		maintainer-clean-kr maintainer-clean-tags \
-		maintainer-clean-generic distclean-am
+		maintainer-clean-depend maintainer-clean-generic \
+		distclean-am
 	@echo "This command is intended for maintainers to use;"
 	@echo "it deletes files that may require special tools to rebuild."
 
@@ -357,12 +382,13 @@ mostlyclean-compile distclean-compile clean-compile \
 maintainer-clean-compile mostlyclean-libtool distclean-libtool \
 clean-libtool maintainer-clean-libtool mostlyclean-kr distclean-kr \
 clean-kr maintainer-clean-kr tags mostlyclean-tags distclean-tags \
-clean-tags maintainer-clean-tags distdir info-am info dvi-am dvi check \
-check-am installcheck-am installcheck install-exec-am install-exec \
-install-data-am install-data install-am install uninstall-am uninstall \
-all-redirect all-am all install-strip installdirs mostlyclean-generic \
-distclean-generic clean-generic maintainer-clean-generic clean \
-mostlyclean distclean maintainer-clean
+clean-tags maintainer-clean-tags distdir mostlyclean-depend \
+distclean-depend clean-depend maintainer-clean-depend info-am info \
+dvi-am dvi check check-am installcheck-am installcheck install-exec-am \
+install-exec install-data-am install-data install-am install \
+uninstall-am uninstall all-redirect all-am all installdirs \
+mostlyclean-generic distclean-generic clean-generic \
+maintainer-clean-generic clean mostlyclean distclean maintainer-clean
 
 .nas.o:
 	$(NASM) $(NASMFLAGS) $< -o $@ -l $@.lst

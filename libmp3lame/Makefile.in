@@ -1,7 +1,6 @@
-# Makefile.in generated automatically by automake 1.4b from Makefile.am
+# Makefile.in generated automatically by automake 1.4 from Makefile.am
 
-# Copyright 1994, 1995, 1996, 1997, 1998, 1999, 2000
-# Free Software Foundation, Inc.
+# Copyright (C) 1994, 1995-8, 1999 Free Software Foundation, Inc.
 # This Makefile.in is free software; the Free Software Foundation
 # gives unlimited permission to copy and/or distribute it,
 # with or without modifications, as long as this notice is preserved.
@@ -10,6 +9,10 @@
 # but WITHOUT ANY WARRANTY, to the extent permitted by law; without
 # even the implied warranty of MERCHANTABILITY or FITNESS FOR A
 # PARTICULAR PURPOSE.
+
+
+# global section for every Makefile.am
+
 
 SHELL = @SHELL@
 
@@ -32,6 +35,8 @@ mandir = @mandir@
 includedir = @includedir@
 oldincludedir = /usr/include
 
+DESTDIR =
+
 pkgdatadir = $(datadir)/@PACKAGE@
 pkglibdir = $(libdir)/@PACKAGE@
 pkgincludedir = $(includedir)/@PACKAGE@
@@ -44,10 +49,9 @@ AUTOMAKE = @AUTOMAKE@
 AUTOHEADER = @AUTOHEADER@
 
 INSTALL = @INSTALL@
-INSTALL_PROGRAM = @INSTALL_PROGRAM@
+INSTALL_PROGRAM = @INSTALL_PROGRAM@ $(AM_INSTALL_PROGRAM_FLAGS)
 INSTALL_DATA = @INSTALL_DATA@
 INSTALL_SCRIPT = @INSTALL_SCRIPT@
-INSTALL_STRIP_FLAG =
 transform = @program_transform_name@
 
 NORMAL_INSTALL = :
@@ -56,8 +60,6 @@ POST_INSTALL = :
 NORMAL_UNINSTALL = :
 PRE_UNINSTALL = :
 POST_UNINSTALL = :
-
-@SET_MAKE@
 build_alias = @build_alias@
 build_triplet = @build@
 host_alias = @host_alias@
@@ -104,18 +106,14 @@ WITH_MP3RTP = @WITH_MP3RTP@
 WITH_MP3X = @WITH_MP3X@
 install_sh = @install_sh@
 
-
-# global section for every Makefile.am
-
-
 AUTOMAKE_OPTIONS = foreign $(top_srcdir)/ansi2knr
 
 SUBDIRS = i386
 
 lib_LTLIBRARIES = libmp3lame.la
-@HAVE_NASM_TRUE@nasm_ldadd = @HAVE_NASM_TRUE@$(top_builddir)/libmp3lame/@CPUTYPE@/liblameasmroutines.la
+@HAVE_NASM_TRUE@nasm_ldadd = $(top_builddir)/libmp3lame/@CPUTYPE@/liblameasmroutines.la
 @HAVE_NASM_FALSE@nasm_ldadd = 
-@LIB_WITH_DECODER_TRUE@decoder_ldadd = @LIB_WITH_DECODER_TRUE@$(top_builddir)/mpglib/libmpgdecoder.la
+@LIB_WITH_DECODER_TRUE@decoder_ldadd = $(top_builddir)/mpglib/libmpgdecoder.la
 @LIB_WITH_DECODER_FALSE@decoder_ldadd = 
 
 libmp3lame_la_LIBADD = $(nasm_ldadd) $(decoder_ldadd)
@@ -125,69 +123,19 @@ INCLUDES = @INCLUDES@ -I$(top_srcdir)/mpglib/ -I$(top_builddir)
 
 DEFS = @DEFS@ @CONFIG_DEFS@
 
-EXTRA_DIST = \
-	debugscalefac.c \
-	libmp3lame.dsp \
-	lameerror.h \
-	resample.c \
-	resample.h \
-	tools.c \
-	tools.h
+EXTRA_DIST =  	debugscalefac.c 	libmp3lame.dsp 	lameerror.h 	resample.c 	resample.h 	tools.c 	tools.h
 
 
-libmp3lame_la_SOURCES = \
-        VbrTag.c \
-	bitstream.c \
-	encoder.c \
-	fft.c \
-        id3tag.c \
-        lame.c \
-        newmdct.c \
-	psymodel.c \
-	quantize.c \
-	quantize_pvt.c \
-	reservoir.c \
-	tables.c \
-	takehiro.c \
-	util.c \
-	vbrquantize.c \
-	version.c \
-	mpglib_interface.c \
-	vorbis_interface.c
+libmp3lame_la_SOURCES =          VbrTag.c 	bitstream.c 	encoder.c 	fft.c         id3tag.c         lame.c         newmdct.c 	psymodel.c 	quantize.c 	quantize_pvt.c 	reservoir.c 	tables.c 	takehiro.c 	util.c 	vbrquantize.c 	version.c 	mpglib_interface.c 	vorbis_interface.c
 
 
-noinst_HEADERS = \
-	VbrTag.h \
-	bitstream.h \
-	encoder.h \
-	fft.h \
-	id3tag.h \
-	l3side.h \
-	lame-analysis.h \
-	machine.h \
-	newmdct.h \
-	psymodel.h \
-	quantize.h  \
-	quantize_pvt.h \
-	reservoir.h \
-	tables.h \
-	util.h \
-	version.h
+noinst_HEADERS =  	VbrTag.h 	bitstream.h 	encoder.h 	fft.h 	id3tag.h 	l3side.h 	lame-analysis.h 	machine.h 	newmdct.h 	psymodel.h 	quantize.h  	quantize_pvt.h 	reservoir.h 	tables.h 	util.h 	version.h
 
 
 CLEANFILES = lclint.txt
 
-LCLINTFLAGS = \
-	+posixlib \
-	+showsummary \
-	+showalluses \
-	+whichlib \
-	+forcehints \
-	-fixedformalarray \
-	+matchanyintegral \
-	-Dlint
+LCLINTFLAGS =  	+posixlib 	+showsummary 	+showalluses 	+whichlib 	+forcehints 	-fixedformalarray 	+matchanyintegral 	-Dlint
 
-subdir = ./libmp3lame
 mkinstalldirs = $(SHELL) $(top_srcdir)/mkinstalldirs
 CONFIG_HEADER = ../config.h
 CONFIG_CLEAN_FILES = 
@@ -197,55 +145,48 @@ CPPFLAGS = @CPPFLAGS@
 LDFLAGS = @LDFLAGS@
 LIBS = @LIBS@
 ANSI2KNR = $(top_srcdir)/ansi2knr
-@HAVE_NASM_FALSE@@LIB_WITH_DECODER_FALSE@libmp3lame_la_DEPENDENCIES = 
-@HAVE_NASM_FALSE@@LIB_WITH_DECODER_TRUE@libmp3lame_la_DEPENDENCIES =  \
-@HAVE_NASM_FALSE@@LIB_WITH_DECODER_TRUE@$(top_builddir)/mpglib/libmpgdecoder.la
 @HAVE_NASM_TRUE@@LIB_WITH_DECODER_FALSE@libmp3lame_la_DEPENDENCIES =  \
 @HAVE_NASM_TRUE@@LIB_WITH_DECODER_FALSE@$(top_builddir)/libmp3lame/@CPUTYPE@/liblameasmroutines.la
+@HAVE_NASM_FALSE@@LIB_WITH_DECODER_TRUE@libmp3lame_la_DEPENDENCIES =  \
+@HAVE_NASM_FALSE@@LIB_WITH_DECODER_TRUE@$(top_builddir)/mpglib/libmpgdecoder.la
+@HAVE_NASM_FALSE@@LIB_WITH_DECODER_FALSE@libmp3lame_la_DEPENDENCIES = 
 @HAVE_NASM_TRUE@@LIB_WITH_DECODER_TRUE@libmp3lame_la_DEPENDENCIES =  \
 @HAVE_NASM_TRUE@@LIB_WITH_DECODER_TRUE@$(top_builddir)/libmp3lame/@CPUTYPE@/liblameasmroutines.la \
 @HAVE_NASM_TRUE@@LIB_WITH_DECODER_TRUE@$(top_builddir)/mpglib/libmpgdecoder.la
-am_libmp3lame_la_OBJECTS =  VbrTag$U.lo bitstream$U.lo encoder$U.lo \
+libmp3lame_la_OBJECTS =  VbrTag$U.lo bitstream$U.lo encoder$U.lo \
 fft$U.lo id3tag$U.lo lame$U.lo newmdct$U.lo psymodel$U.lo quantize$U.lo \
 quantize_pvt$U.lo reservoir$U.lo tables$U.lo takehiro$U.lo util$U.lo \
 vbrquantize$U.lo version$U.lo mpglib_interface$U.lo \
 vorbis_interface$U.lo
-libmp3lame_la_OBJECTS =  $(am_libmp3lame_la_OBJECTS)
+CFLAGS = @CFLAGS@
 COMPILE = $(CC) $(DEFS) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS)
 LTCOMPILE = $(LIBTOOL) --mode=compile $(CC) $(DEFS) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS)
-CFLAGS = @CFLAGS@
 CCLD = $(CC)
-LINK = $(LIBTOOL) --mode=link $(CCLD) $(AM_CFLAGS) $(CFLAGS) $(AM_LDFLAGS) $(LDFLAGS) -o $@
-DIST_SOURCES =  $(libmp3lame_la_SOURCES)
+LINK = $(LIBTOOL) --mode=link $(CCLD) $(AM_CFLAGS) $(CFLAGS) $(LDFLAGS) -o $@
 HEADERS =  $(noinst_HEADERS)
 
-depcomp = $(SHELL) $(top_srcdir)/depcomp
-DEP_FILES =  @AMDEP@ $(DEPDIR)/VbrTag$U.Plo $(DEPDIR)/bitstream$U.Plo \
-$(DEPDIR)/encoder$U.Plo $(DEPDIR)/fft$U.Plo $(DEPDIR)/id3tag$U.Plo \
-$(DEPDIR)/lame$U.Plo $(DEPDIR)/mpglib_interface$U.Plo \
-$(DEPDIR)/newmdct$U.Plo $(DEPDIR)/psymodel$U.Plo \
-$(DEPDIR)/quantize$U.Plo $(DEPDIR)/quantize_pvt$U.Plo \
-$(DEPDIR)/reservoir$U.Plo $(DEPDIR)/tables$U.Plo \
-$(DEPDIR)/takehiro$U.Plo $(DEPDIR)/util$U.Plo \
-$(DEPDIR)/vbrquantize$U.Plo $(DEPDIR)/version$U.Plo \
-$(DEPDIR)/vorbis_interface$U.Plo
-DIST_COMMON =  $(noinst_HEADERS) Makefile.am Makefile.in depcomp
+DIST_COMMON =  Makefile.am Makefile.in
 
 
-DISTFILES = $(DIST_COMMON) $(DIST_SOURCES) $(TEXINFOS) $(EXTRA_DIST)
+DISTFILES = $(DIST_COMMON) $(SOURCES) $(HEADERS) $(TEXINFOS) $(EXTRA_DIST)
 
+TAR = gtar
 GZIP_ENV = --best
-DIST_SUBDIRS =  $(SUBDIRS)
+DEP_FILES =  .deps/VbrTag.P .deps/bitstream.P .deps/encoder.P \
+.deps/fft.P .deps/id3tag.P .deps/lame.P .deps/mpglib_interface.P \
+.deps/newmdct.P .deps/psymodel.P .deps/quantize.P .deps/quantize_pvt.P \
+.deps/reservoir.P .deps/tables.P .deps/takehiro.P .deps/util.P \
+.deps/vbrquantize.P .deps/version.P .deps/vorbis_interface.P
 SOURCES = $(libmp3lame_la_SOURCES)
-OBJECTS = $(am_libmp3lame_la_OBJECTS)
+OBJECTS = $(libmp3lame_la_OBJECTS)
 
 all: all-redirect
 .SUFFIXES:
-.SUFFIXES: .c .lo .o
+.SUFFIXES: .S .c .lo .o .s
 $(srcdir)/Makefile.in: @MAINTAINER_MODE_TRUE@ Makefile.am $(top_srcdir)/configure.in $(ACLOCAL_M4) $(top_srcdir)/Makefile.am.global
-	cd $(top_srcdir) && $(AUTOMAKE) --foreign ./libmp3lame/Makefile
+	cd $(top_srcdir) && $(AUTOMAKE) --foreign libmp3lame/Makefile
 
-Makefile: $(srcdir)/Makefile.in  $(top_builddir)/config.status
+Makefile: $(srcdir)/Makefile.in  $(top_builddir)/config.status $(BUILT_SOURCES)
 	cd $(top_builddir) \
 	  && CONFIG_FILES=$(subdir)/$@ CONFIG_HEADERS= $(SHELL) ./config.status
 
@@ -264,17 +205,22 @@ install-libLTLIBRARIES: $(lib_LTLIBRARIES)
 	$(mkinstalldirs) $(DESTDIR)$(libdir)
 	@list='$(lib_LTLIBRARIES)'; for p in $$list; do \
 	  if test -f $$p; then \
-	    echo " $(LIBTOOL)  --mode=install $(INSTALL) $(INSTALL_STRIP_FLAG) $$p $(DESTDIR)$(libdir)/$$p"; \
-	    $(LIBTOOL)  --mode=install $(INSTALL) $(INSTALL_STRIP_FLAG) $$p $(DESTDIR)$(libdir)/$$p; \
+	    echo "$(LIBTOOL)  --mode=install $(INSTALL) $$p $(DESTDIR)$(libdir)/$$p"; \
+	    $(LIBTOOL)  --mode=install $(INSTALL) $$p $(DESTDIR)$(libdir)/$$p; \
 	  else :; fi; \
 	done
 
 uninstall-libLTLIBRARIES:
 	@$(NORMAL_UNINSTALL)
-	@list='$(lib_LTLIBRARIES)'; for p in $$list; do \
-	  echo " $(LIBTOOL)  --mode=uninstall rm -f $(DESTDIR)$(libdir)/$$p"; \
+	list='$(lib_LTLIBRARIES)'; for p in $$list; do \
 	  $(LIBTOOL)  --mode=uninstall rm -f $(DESTDIR)$(libdir)/$$p; \
 	done
+
+.s.o:
+	$(COMPILE) -c $<
+
+.S.o:
+	$(COMPILE) -c $<
 
 mostlyclean-compile:
 	-rm -f *.o core *.core
@@ -285,6 +231,12 @@ distclean-compile:
 	-rm -f *.tab.c
 
 maintainer-clean-compile:
+
+.s.lo:
+	$(LIBTOOL) --mode=compile $(COMPILE) -c $<
+
+.S.lo:
+	$(LIBTOOL) --mode=compile $(COMPILE) -c $<
 
 mostlyclean-libtool:
 	-rm -f *.lo
@@ -365,6 +317,8 @@ vorbis_interface_.lo : $(ANSI2KNR)
 #     (which will cause the Makefiles to be regenerated when you run `make');
 # (2) otherwise, pass the desired values on the `make' command line.
 
+@SET_MAKE@
+
 all-recursive install-data-recursive install-exec-recursive \
 installdirs-recursive install-recursive uninstall-recursive  \
 check-recursive installcheck-recursive info-recursive dvi-recursive:
@@ -390,16 +344,11 @@ mostlyclean-recursive clean-recursive distclean-recursive \
 maintainer-clean-recursive:
 	@set fnord $(MAKEFLAGS); amf=$$2; \
 	dot_seen=no; \
-	case "$@" in \
-	  distclean-* | maintainer-clean-*) list='$(DIST_SUBDIRS)' ;; \
-	  *) list='$(SUBDIRS)' ;; \
-	esac; \
-	rev=''; for subdir in $$list; do \
-	  if test "$$subdir" = "."; then :; else \
-	    rev="$$subdir $$rev"; \
-	  fi; \
+	rev=''; list='$(SUBDIRS)'; for subdir in $$list; do \
+	  rev="$$subdir $$rev"; \
+	  test "$$subdir" = "." && dot_seen=yes; \
 	done; \
-	rev="$$rev ."; \
+	test "$$dot_seen" = "no" && rev=". $$rev"; \
 	target=`echo $@ | sed s/-recursive//`; \
 	for subdir in $$rev; do \
 	  echo "Making $$target in $$subdir"; \
@@ -418,17 +367,15 @@ tags-recursive:
 
 tags: TAGS
 
-ID: $(HEADERS) $(SOURCES) $(LISP) $(TAGS_FILES)
-	list='$(SOURCES) $(HEADERS) $(TAGS_FILES)'; \
-	unique=`for i in $$list; do \
-	    if test -f "$$i"; then echo $$i; else echo $(srcdir)/$$i; fi; \
-	  done | \
-	  $(AWK) '    { files[$$0] = 1; } \
+ID: $(HEADERS) $(SOURCES) $(LISP)
+	list='$(SOURCES) $(HEADERS)'; \
+	unique=`for i in $$list; do echo $$i; done | \
+	  awk '    { files[$$0] = 1; } \
 	       END { for (i in files) print i; }'`; \
-	mkid -fID $$unique $(LISP)
+	here=`pwd` && cd $(srcdir) \
+	  && mkid -f$$here/ID $$unique $(LISP)
 
-TAGS: tags-recursive $(HEADERS) $(SOURCES)  $(TAGS_DEPENDENCIES) \
-		$(TAGS_FILES) $(LISP)
+TAGS: tags-recursive $(HEADERS) $(SOURCES)  $(TAGS_DEPENDENCIES) $(LISP)
 	tags=; \
 	here=`pwd`; \
 	list='$(SUBDIRS)'; for subdir in $$list; do \
@@ -436,19 +383,12 @@ TAGS: tags-recursive $(HEADERS) $(SOURCES)  $(TAGS_DEPENDENCIES) \
 	    test -f $$subdir/TAGS && tags="$$tags -i $$here/$$subdir/TAGS"; \
    fi; \
 	done; \
-	list='$(SOURCES) $(HEADERS) $(TAGS_FILES)'; \
-	unique=`for i in $$list; do \
-	    if test -f "$$i"; then echo $$i; else echo $(srcdir)/$$i; fi; \
-	  done | \
-	  $(AWK) '    { files[$$0] = 1; } \
+	list='$(SOURCES) $(HEADERS)'; \
+	unique=`for i in $$list; do echo $$i; done | \
+	  awk '    { files[$$0] = 1; } \
 	       END { for (i in files) print i; }'`; \
 	test -z "$(ETAGS_ARGS)$$unique$(LISP)$$tags" \
-	  || etags $(ETAGS_ARGS) $$tags  $$unique $(LISP)
-
-GTAGS:
-	here=`CDPATH=: && cd $(top_builddir) && pwd` \
-	  && cd $(top_srcdir) \
-	  && gtags -i $$here
+	  || (cd $(srcdir) && etags $(ETAGS_ARGS) $$tags  $$unique $(LISP) -o $$here/TAGS)
 
 mostlyclean-tags:
 
@@ -459,61 +399,24 @@ distclean-tags:
 
 maintainer-clean-tags:
 
-@AMDEP@include $(DEPDIR)/VbrTag$U.Plo
-@AMDEP@include $(DEPDIR)/bitstream$U.Plo
-@AMDEP@include $(DEPDIR)/encoder$U.Plo
-@AMDEP@include $(DEPDIR)/fft$U.Plo
-@AMDEP@include $(DEPDIR)/id3tag$U.Plo
-@AMDEP@include $(DEPDIR)/lame$U.Plo
-@AMDEP@include $(DEPDIR)/mpglib_interface$U.Plo
-@AMDEP@include $(DEPDIR)/newmdct$U.Plo
-@AMDEP@include $(DEPDIR)/psymodel$U.Plo
-@AMDEP@include $(DEPDIR)/quantize$U.Plo
-@AMDEP@include $(DEPDIR)/quantize_pvt$U.Plo
-@AMDEP@include $(DEPDIR)/reservoir$U.Plo
-@AMDEP@include $(DEPDIR)/tables$U.Plo
-@AMDEP@include $(DEPDIR)/takehiro$U.Plo
-@AMDEP@include $(DEPDIR)/util$U.Plo
-@AMDEP@include $(DEPDIR)/vbrquantize$U.Plo
-@AMDEP@include $(DEPDIR)/version$U.Plo
-@AMDEP@include $(DEPDIR)/vorbis_interface$U.Plo
-
-mostlyclean-depend:
-
-clean-depend:
-
-distclean-depend:
-	-rm -rf $(DEPDIR)
-
-maintainer-clean-depend:
-
-@AMDEP@CCDEPMODE = @CCDEPMODE@
-
-.c.o:
-@AMDEP@	source='$<' object='$@' libtool=no @AMDEPBACKSLASH@
-@AMDEP@	depfile='$(DEPDIR)/$*.Po' tmpdepfile='$(DEPDIR)/$*.TPo' @AMDEPBACKSLASH@
-@AMDEP@	$(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
-	$(COMPILE) -c -o $@ `test -f $< || echo '$(srcdir)/'`$<
-
-.c.lo:
-@AMDEP@	source='$<' object='$@' libtool=yes @AMDEPBACKSLASH@
-@AMDEP@	depfile='$(DEPDIR)/$*.Plo' tmpdepfile='$(DEPDIR)/$*.TPlo' @AMDEPBACKSLASH@
-@AMDEP@	$(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
-	$(LTCOMPILE) -c -o $@ `test -f $< || echo '$(srcdir)/'`$<
-
-
 distdir = $(top_builddir)/$(PACKAGE)-$(VERSION)/$(subdir)
 
+subdir = libmp3lame
+
 distdir: $(DISTFILES)
+	here=`cd $(top_builddir) && pwd`; \
+	top_distdir=`cd $(top_distdir) && pwd`; \
+	distdir=`cd $(distdir) && pwd`; \
+	cd $(top_srcdir) \
+	  && $(AUTOMAKE) --include-deps --build-dir=$$here --srcdir-name=$(top_srcdir) --output-dir=$$top_distdir --foreign libmp3lame/Makefile
 	@for file in $(DISTFILES); do \
 	  d=$(srcdir); \
 	  if test -d $$d/$$file; then \
-	    cp -pR $$d/$$file $(distdir) \
-	    || exit 1; \
+	    cp -pr $$/$$file $(distdir)/$$file; \
 	  else \
 	    test -f $(distdir)/$$file \
-	    || cp -p $$d/$$file $(distdir)/$$file \
-	    || exit 1; \
+	    || ln $$d/$$file $(distdir)/$$file 2> /dev/null \
+	    || cp -p $$d/$$file $(distdir)/$$file || :; \
 	  fi; \
 	done
 	for subdir in $(SUBDIRS); do \
@@ -521,10 +424,43 @@ distdir: $(DISTFILES)
 	    test -d $(distdir)/$$subdir \
 	    || mkdir $(distdir)/$$subdir \
 	    || exit 1; \
+	    chmod 777 $(distdir)/$$subdir; \
 	    (cd $$subdir && $(MAKE) $(AM_MAKEFLAGS) top_distdir=../$(top_distdir) distdir=../$(distdir)/$$subdir distdir) \
 	      || exit 1; \
 	  fi; \
 	done
+
+DEPS_MAGIC := $(shell mkdir .deps > /dev/null 2>&1 || :)
+
+-include $(DEP_FILES)
+
+mostlyclean-depend:
+
+clean-depend:
+
+distclean-depend:
+	-rm -rf .deps
+
+maintainer-clean-depend:
+
+%.o: %.c
+	@echo '$(COMPILE) -c $<'; \
+	$(COMPILE) -Wp,-MD,.deps/$(*F).pp -c $<
+	@-cp .deps/$(*F).pp .deps/$(*F).P; \
+	tr ' ' '\012' < .deps/$(*F).pp \
+	  | sed -e 's/^\\$$//' -e '/^$$/ d' -e '/:$$/ d' -e 's/$$/ :/' \
+	    >> .deps/$(*F).P; \
+	rm .deps/$(*F).pp
+
+%.lo: %.c
+	@echo '$(LTCOMPILE) -c $<'; \
+	$(LTCOMPILE) -Wp,-MD,.deps/$(*F).pp -c $<
+	@-sed -e 's/^\([^:]*\)\.o[ 	]*:/\1.lo \1.o :/' \
+	  < .deps/$(*F).pp > .deps/$(*F).P; \
+	tr ' ' '\012' < .deps/$(*F).pp \
+	  | sed -e 's/^\\$$//' -e '/^$$/ d' -e '/:$$/ d' -e 's/$$/ :/' \
+	    >> .deps/$(*F).P; \
+	rm -f .deps/$(*F).pp
 info-am:
 info: info-recursive
 dvi-am:
@@ -547,7 +483,7 @@ uninstall: uninstall-recursive
 all-am: Makefile $(LTLIBRARIES) $(HEADERS)
 all-redirect: all-recursive
 install-strip:
-	$(MAKE) $(AM_MAKEFLAGS) INSTALL_STRIP_FLAG=-s install
+	$(MAKE) $(AM_MAKEFLAGS) AM_INSTALL_PROGRAM_FLAGS=-s install
 installdirs: installdirs-recursive
 installdirs-am:
 	$(mkinstalldirs)  $(DESTDIR)$(libdir)
@@ -563,7 +499,6 @@ distclean-generic:
 	-rm -f config.cache config.log stamp-h stamp-h[0-9]*
 
 maintainer-clean-generic:
-	-rm -f Makefile.in
 mostlyclean-am:  mostlyclean-libLTLIBRARIES mostlyclean-compile \
 		mostlyclean-libtool mostlyclean-kr mostlyclean-tags \
 		mostlyclean-depend mostlyclean-generic
@@ -598,20 +533,20 @@ uninstall-libLTLIBRARIES install-libLTLIBRARIES mostlyclean-compile \
 distclean-compile clean-compile maintainer-clean-compile \
 mostlyclean-libtool distclean-libtool clean-libtool \
 maintainer-clean-libtool mostlyclean-kr distclean-kr clean-kr \
-maintainer-clean-kr install-recursive uninstall-recursive \
-install-data-recursive uninstall-data-recursive install-exec-recursive \
-uninstall-exec-recursive installdirs-recursive uninstalldirs-recursive \
-all-recursive check-recursive installcheck-recursive info-recursive \
-dvi-recursive mostlyclean-recursive distclean-recursive clean-recursive \
+maintainer-clean-kr install-data-recursive uninstall-data-recursive \
+install-exec-recursive uninstall-exec-recursive installdirs-recursive \
+uninstalldirs-recursive all-recursive check-recursive \
+installcheck-recursive info-recursive dvi-recursive \
+mostlyclean-recursive distclean-recursive clean-recursive \
 maintainer-clean-recursive tags tags-recursive mostlyclean-tags \
-distclean-tags clean-tags maintainer-clean-tags mostlyclean-depend \
-distclean-depend clean-depend maintainer-clean-depend distdir info-am \
-info dvi-am dvi check check-am installcheck-am installcheck \
-install-exec-am install-exec install-data-am install-data install-am \
-install uninstall-am uninstall all-redirect all-am all install-strip \
-installdirs-am installdirs mostlyclean-generic distclean-generic \
-clean-generic maintainer-clean-generic clean mostlyclean distclean \
-maintainer-clean
+distclean-tags clean-tags maintainer-clean-tags distdir \
+mostlyclean-depend distclean-depend clean-depend \
+maintainer-clean-depend info-am info dvi-am dvi check check-am \
+installcheck-am installcheck install-exec-am install-exec \
+install-data-am install-data install-am install uninstall-am uninstall \
+all-redirect all-am all installdirs-am installdirs mostlyclean-generic \
+distclean-generic clean-generic maintainer-clean-generic clean \
+mostlyclean distclean maintainer-clean
 
 
 # end global section
