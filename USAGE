@@ -88,7 +88,7 @@ These options are explained in detail below.
 
 Quality related:
 
--m m/s/j/f     mode selection
+-m m/s/j/f/a   mode selection
 -k             disable all filtering
 -d             allow block types to differ between channels
 --athonly      ignore psy-model output, only use masking from the ATH
@@ -422,6 +422,7 @@ Modes:
 -m f           forced mid/side stereo
 -m d           dual (independent) channels
 -m i           intensity stereo
+-m a           auto
 
 MONO is the default mode for mono input files.  If "-m m" is specified
 for a stereo input file, the two channels will be averaged into a mono
@@ -458,6 +459,16 @@ has very little stereo seperation.
 DUAL CHANNELS
 
 INTENSITY STEREO
+
+AUTO
+
+Auto select should select (if input is stereo)
+          8 kbps   Mono
+     16- 96 kbps   Intensity Stereo (if available, otherwise Joint Stereo)
+    112-128 kbps   Joint Stereo -mj
+    160-192 kbps   -mj with variable mid/side threshold
+    224-320 kbps   Independent Stereo -ms
+
 
 
 =======================================================================

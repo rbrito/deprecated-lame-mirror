@@ -80,6 +80,7 @@ typedef struct  {
   int quality;                /* quality setting 0=best,  9=worst  default=5 */
   int mode;                   /* 0,1,2,3 = stereo,jstereo,dual channel,mono   */
   int mode_fixed;             /* user specified the mode, do not use lame's opinion of the best mode */
+  int mode_automs;            /* use a m/s threshold based on compression ratio */
   int force_ms;               /* force M/S mode.  requires mode=1 */
   int free_format;            /* use free format? default=0*/
 

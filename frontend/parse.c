@@ -175,8 +175,8 @@ int  short_help ( const lame_global_flags* gfp, FILE* const fp, const char* Prog
               "    -h              higher quality, but a little slower.  Recommended.\n"
               "    -k              keep ALL frequencies (disables all filters)\n"
               "                    Can cause ringing and twinkling\n"
-              "    -m mode         (s)tereo, (j)oint, (f)orce or (m)ono  (default j)\n"
-              "                    force = force ms_stereo on all frames.\n"
+              "    -m mode         (s)tereo, (j)oint, (m)ono or (a)uto\n"
+              "                    default is (j) or (s) depending on bitrate\n"
               "    -V n            quality setting for VBR.  default n=%i\n"
               "\n"
               "    --preset type   type must be phone, voice, fm, tape, hifi, cd or studio\n"
@@ -233,8 +233,10 @@ int  long_help ( const lame_global_flags* gfp, FILE* const fp, const char* Progr
     wait_for ( fp, lessmode );
     fprintf ( fp,
               "  Operational options:\n"
-              "    -m <mode>       (s)tereo, (j)oint, (f)orce or (m)ono  (default j)\n"
+              "    -m <mode>       (s)tereo, (j)oint, (f)orce, (m)ono or (a)auto  \n"
+              "                    default is (s) or (j) depending on bitrate\n"
               "                    force = force ms_stereo on all frames.\n"
+              "                    auto = jstereo, with varialbe mid/side threshold\n"
               "    -a              downmix from stereo to mono file for mono encoding\n"
               "    -d              allow channels to have different blocktypes\n"
               "    -S              don't print progress report, VBR histograms\n"
@@ -984,11 +986,12 @@ int  parse_args ( lame_global_flags* gfp, int argc, char** argv, char* const inP
 			gfp -> mode_fixed = 1;
 			
 			switch ( *arg ) {
-			case 's': gfp -> mode = MPG_MD_STEREO;       break;
-			case 'd': gfp -> mode = MPG_MD_DUAL_CHANNEL; break;
-			case 'f': gfp -> force_ms = 1;               /* fall through */
-			case 'j': gfp -> mode = MPG_MD_JOINT_STEREO; break;
-			case 'm': gfp -> mode = MPG_MD_MONO;         break;
+			case 's': gfp->mode = MPG_MD_STEREO;       break;
+			case 'd': gfp->mode = MPG_MD_DUAL_CHANNEL; break;
+			case 'f': gfp->force_ms = 1;               /* fall through */
+			case 'j': gfp->mode = MPG_MD_JOINT_STEREO; break;
+			case 'm': gfp->mode = MPG_MD_MONO;         break;
+			case 'a': gfp->mode_automs = 1;            /* lame picks mode, and uses variable MS threshold*/
 			default : fprintf(stderr,"%s: -m mode must be s/d/j/f/m not %s\n", ProgramName, arg);
 			    err = 1;
 			    break;

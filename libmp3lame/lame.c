@@ -546,8 +546,10 @@ int lame_init_params ( lame_global_flags* const gfp )
 	break;
     }
 
-
-  /* At higher quality (lower compression) use STEREO instead of J-STEREO.
+    
+  /* Default mode has been set to jstereo, unless user specified a mode
+   * (in which case mode_fixed=1)
+   * At higher quality (lower compression) use STEREO instead of J-STEREO.
    * (unless the user explicitly specified a mode)
    *
    * The threshold to switch to STEREO is:
@@ -559,10 +561,17 @@ int lame_init_params ( lame_global_flags* const gfp )
    *   better than STEREO, so I'm not so very happy with that. 
    *   fs < 32 kHz I have not tested.
    */
-   
-  if ( !gfp->mode_fixed  &&  gfp->mode != MPG_MD_MONO  &&  
-         gfp->compression_ratio < 8 )
-     gfp->mode = MPG_MD_STEREO;
+
+    if (gfp->mode_automs) {
+      /* KLEMM's jstereo with ms threshold adjusted via compression ratio */
+      if ( gfp->mode != MPG_MD_MONO  &&  gfp->compression_ratio < 6.6 )
+	gfp->mode = MPG_MD_STEREO;
+    } else {
+      if ( !gfp->mode_fixed  &&  gfp->mode != MPG_MD_MONO  &&  
+	   gfp->compression_ratio < 8 )
+	gfp->mode = MPG_MD_STEREO;
+    }   
+
 
 
 

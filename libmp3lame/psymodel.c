@@ -197,8 +197,8 @@ int L3psycho_anal( lame_global_flags * gfp,
     default:    ERRORF("error, invalid sampling frequency: %d Hz\a\n",
 			gfp->out_samplerate);
     return -1;
-#endif
     }
+#endif
 
     gfc->ms_ener_ratio_old=.25;
     gfc->blocktype_old[0]=STOP_TYPE;

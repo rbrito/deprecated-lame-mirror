@@ -325,15 +325,16 @@ int  lame_encode_mp3_frame (				// Output
         FLOAT8  ms_ratio_ave2 = 0.50 * ( gfc->ms_ratio[0] + gfc->ms_ratio[1] );
         FLOAT8  threshold1    = 0.35;
         FLOAT8  threshold2    = 0.45;
-    
-#ifdef KLEMM_12
-        if ( gfp->compression_ratio < 11.025 ) {
+
+	if (gfp->mode_automs) {
+	  if ( gfp->compression_ratio < 11.025 ) {
             /* 11.025 => 1, 6.3 => 0 */
-            double klemm = (gfp->compression_ratio - 6.3) / (11.025 - 6.3);
-            threshold1   *= klemm;
-            threshold2   *= klemm;
-        }
-#endif    
+            double thr = (gfp->compression_ratio - 6.3) / (11.025 - 6.3);
+            if (thr<0) thr=0;
+            threshold1   *= thr;
+            threshold2   *= thr;
+	  }
+	}
 
         if ((ms_ratio_ave1 < threshold1  &&  ms_ratio_ave2 < threshold2) || gfc->nsPsy.use) {
             int  sum_pe_MS = pe_MS[0][0] + pe_MS[0][1] + pe_MS[1][0] + pe_MS[1][1];
