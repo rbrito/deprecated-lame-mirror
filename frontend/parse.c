@@ -66,6 +66,7 @@ char *strchr (), *strrchr ();
 /* GLOBAL VARIABLES.  set by parse_args() */
 /* we need to clean this up */
 sound_file_format input_format;   
+int keeptag=0;
 int swapbytes;              /* force byte swapping   default=0*/
 int silent;
 int brhist;
@@ -526,6 +527,7 @@ int  long_help ( const lame_global_flags* gfp, FILE* const fp, const char* Progr
               "    --space-id3v1   pad version 1 tag with spaces instead of nulls\n"
               "    --pad-id3v2     pad version 2 tag with extra 128 bytes\n"
               "    --genre-list    print alphabetically sorted ID3 genre list and exit\n"
+              "    --keeptag       keep ID3v1 tag of input file(mp3 only)\n"
               "\n"
               "    Note: A version 2 tag will NOT be added unless one of the input fields\n"
               "    won't fit in a version 1 tag (e.g. the title string is longer than 30\n"
@@ -1062,6 +1064,9 @@ char* const inPath, char* const outPath, char **nogap_inPath, int *num_nogap)
                 
                 T_ELIF ("mp3input")
                     input_format=sf_mp3;
+                
+                T_ELIF ("keeptag")
+                    keeptag=1;
                 
                 T_ELIF ("mixedblock")
                     (void) lame_set_use_mixed_blocks( gfp, 2);
@@ -1652,8 +1657,14 @@ char* const inPath, char* const outPath, char **nogap_inPath, int *num_nogap)
         return -1;
     }
         
-    if ( inPath[0] == '-' ) 
+    if ( inPath[0] == '-' ) {
 	silent = (silent <= 1 ? 1 : silent);
+	if (keeptag) {
+	    keeptag = 0;
+	    fprintf(stderr,
+		    "sorry, keeptag does not work when input is stdin.\n");
+	}
+    }
 #ifdef WIN32
     else
         dosToLongFileName( inPath );

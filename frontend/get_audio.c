@@ -79,8 +79,6 @@ int     pcmbitwidth;
 unsigned int num_samples_read;
 FILE   *musicin;
 
-char id3tag_orig[128];
-
 #ifdef AMIGA_MPEGA
 int     lame_decode_initfile(const char *fullname,
                              mp3data_struct * const mp3data);

@@ -31,7 +31,8 @@
 
 /* GLOBAL VARIABLES used by parse.c and main.c.  
    instantiated in parce.c.  ugly, ugly */
-extern sound_file_format input_format;   
+extern sound_file_format input_format;
+extern int keeptag;
 extern int swapbytes;              /* force byte swapping   default=0*/
 extern int silent;
 extern int brhist;
