@@ -660,7 +660,7 @@ int calc_xmin( FLOAT8 xr[2][2][576], III_psy_ratio *ratio,
 	      (ratio->thm_s[gr][ch][sfb][b]/ratio->en_s[gr][ch][sfb][b]) *en0;
 
 	  l3_xmin->s[gr][ch][sfb][b]=Max(ATH_s[sfb],l3_xmin->s[gr][ch][sfb][b]);
-	  if (enmax > ATH_s[sfb]) ath_over++;
+	  if (en0 > ATH_s[sfb]) ath_over++;
 	}
       }
       
@@ -683,7 +683,7 @@ int calc_xmin( FLOAT8 xr[2][2][576], III_psy_ratio *ratio,
 	    (ratio->thm_l[gr][ch][sfb]/ratio->en_l[gr][ch][sfb] )* en0;
 
 	l3_xmin->l[gr][ch][sfb]=Max(ATH_l[sfb],l3_xmin->l[gr][ch][sfb]);
-	if (enmax > ATH_l[sfb]) ath_over++;
+	if (en0 > ATH_l[sfb]) ath_over++;
       }
     }
     return ath_over;
