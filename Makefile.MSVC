@@ -144,17 +144,17 @@ OFF = win32
 # LN_OPTS = /nologo /debug:full /debugtype:cv /fixed:no
 
 # profiling options
-# CC_OPTS = /nologo /Zi /O2b2gity /G6AFs /DNDEBUG 
+# CC_OPTS = /nologo /Zi /O2b2gity /G6As /DNDEBUG 
 # LN_OPTS = /nologo /debug:full /debugtype:cv /fixed:no /profile
 
 # release options
-CC_OPTS = /nologo /DNDEBUG /O2 /Ob2 /GAfy /Gs1024 /QIfdiv /QI0f /YX
+CC_OPTS = /nologo /DNDEBUG /O2 /Ob2 /GAy /Gs1024 /YX
 LN_OPTS = /nologo /DNDEBUG
 
 !	IF "$(CPU)" == "P1"
-CC_OPTS = $(CC_OPTS) /G5
+CC_OPTS = $(CC_OPTS) /G5 /QIfdiv /QI0f
 !	ELSE
-CC_OPTS = $(CC_OPTS) /G6
+CC_OPTS = $(CC_OPTS) /GX
 !	ENDIF
 
 !	IF "$(WARN)" == "OFF"
