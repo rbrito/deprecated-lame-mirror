@@ -278,6 +278,27 @@ calc_noise(
 	max_noise=Max(max_noise,noise);
     }
 
+    if (cod_info->block_type == SHORT_TYPE) {
+	distort -= sfb;
+	over = 0;
+	max_noise = -20.0;
+	over_noise_db = 0.0;
+	for (sfb = cod_info->sfb_smin; sfb < cod_info->psymax; sfb += 3) {
+	    FLOAT noise = 0.0;
+	    if (distort[sfb] > 1.0)
+		noise += FAST_LOG10(*distort);
+	    if (distort[sfb] > 1.0)
+		noise += FAST_LOG10(*distort);
+	    if (distort[sfb] > 1.0)
+		noise += FAST_LOG10(*distort);
+	    if (max_noise < noise)
+		max_noise = noise;
+	    if (noise > 0) {
+		over++;
+		over_noise_db += noise;
+	    }
+	}
+    }
     res->over_count = over;
     res->tot_noise   = tot_noise_db;
     res->over_noise  = over_noise_db;
