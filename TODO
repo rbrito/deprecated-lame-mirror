@@ -1,10 +1,26 @@
+Modularization:
+
+lame_parse_args():  main.c should parse the argument list, and then
+call lame_setflags() or some other libmp3lame.a routine to 
+set all the various flags. 
+
+lame.dll:  BladeEnc.dll was written before lame was 'modularized'
+this should be cleaned up to look like main.c:  It should be possible
+to write the BladeEnc/lame dll so that it just uses
+#include "lame.h" and then calls to various lame_*() routines
+
+
+
+
+
+
 1.  replace termcap with ncurses.  ncurses works fine except 
 for line-up cursor movement
 
 2. 
 When all sfb's have energy below ATH, (analog silence)
 use a 32kbs frame even if min VBR bandwidth is larger.
-(should be working -not thoroughly tested )
+(should be working now.  not thoroughly tested )
 
 3.
 User specified min & max bandwidth (scalefactor bands)
@@ -12,7 +28,7 @@ User specified min & max bandwidth (scalefactor bands)
 
 4.
 Does stdin work when LAME is compiled to use libsndfile? 
-(new version of libsndfile supports stdin - try this out)
+(new version of libsndfile will support this - try this out)
 
 5.
 LAME uses a linear downsampling with simple lowpass filter
@@ -30,15 +46,6 @@ make use of scalefactor_select  (crude algorithm enabled with -Y)
 
 8.
 10Hz high-pass filter.  Probably wont help much.
-
-
-9. 
-Modularization:
-
-lame_parse_args():  main.c should parse the argument list, and then
-call lame_setflags() or some other libmp3lame.a routine to 
-set all the various flags. 
-
 
 
 
