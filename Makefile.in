@@ -21,10 +21,13 @@ libmp3lame.a:
 	cd libmp3lame; $(MAKE) libmp3lame.a
 
 lame:
+	cd libmp3lame; $(MAKE) libmp3lame.a
 	cd frontend; $(MAKE)
 mp3rtp:
+	cd libmp3lame; $(MAKE) libmp3lame.a
 	cd frontend; $(MAKE)
 mp3x:
+	cd libmp3lame; $(MAKE) libmp3lame.a
 	cd analyzer; $(MAKE)
 
 
@@ -67,4 +70,4 @@ test: frontend/lame
 	cmp -l testcase.new.mp3 testcase.mp3 | wc
 
 testg: frontend/lame
-	frontend/lame -g -h ../test/castanets.wav
+	analyzer/mp3x -h ../test/castanets.wav

@@ -8,7 +8,7 @@ dnl - libmp3lame:
 dnl -    VORBIS         done.
 dnl -    decoder        done.
 dnl -    disable shared done.
-dnl -    disable analysis hooks  done.
+dnl -    disable analysis hooks -  why has this disappeared?
 dnl -    shared lib version
 dnl -    debugging mode
 dnl -    MMX support
@@ -146,6 +146,9 @@ if test ".$WARNING" != "." ; then
 fi
 
 
+dnl check if we should remove hooks for analyzer code in library
+CONFIG_DEFS="-DANALYSIS $CONFIG_DEFS"
+
 
 dnl mpg123 decoder
 AC_MSG_CHECKING(use of mpg123 decoder)
@@ -190,9 +193,6 @@ fi
 
 
 
-
-
-
 dnl vorbis
 AC_MSG_CHECKING(use of vorbis)
 WARNING=
@@ -226,8 +226,6 @@ AC_MSG_RESULT($CONFIG_VORBIS)
 if test ".$WARNING" != "." ; then
   AC_MSG_WARN($WARNING)
 fi
-
-
 
 
 

@@ -35,7 +35,7 @@ int main(int argc, char **argv)
   char outPath[MAX_NAME_SIZE];
   char inPath[MAX_NAME_SIZE];
 
-  lame_init(&gf);
+  lame_init_old(&gf);
   if(argc==1)  usage(&gf,argv[0]);  /* no command-line args  */
 
   parse_args(&gf,argc, argv, inPath, outPath); 
