@@ -116,7 +116,6 @@ if len(args) >=3:
 if len(args) >=4:
     lame2 = os.path.normpath(os.path.expanduser(args[3]))
 
-
 # check readability of options_file
 status = os.access(options_file, os.R_OK)
 if 1 != status:
@@ -155,8 +154,11 @@ if not (lame2=="ref" or lame2=="makeref"):
     if 1 != lame2_ok:
         Usage(lame2 + " is not executable")
 
+
+tmp = split(options_file,"/")
+tmp = tmp[-1]
 basename = replace(input_file,".wav","")
-basename = basename + "." + options_file
+basename = basename + "." + tmp
 
 
 num_ok=0
