@@ -58,4 +58,7 @@ void quantize_sfb_3DN(const FLOAT *, int, int, int *);
 
 #define ROUNDFAC ((FLOAT)0.40539644249863946664)
 
+/* 2514539631859660216.62 is the max qunatization-factor (ipow20) */
+#define MINIMUM_XR (FLOAT)((1.0-ROUNDFAC) / 2514539631859660216.62)
+
 #endif /* LAME_QUANTIZE_PVT_H */

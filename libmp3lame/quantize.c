@@ -378,7 +378,7 @@ init_bitalloc(lame_t gfc, gr_info *const gi)
     memset(&xr34[end], 0, sizeof(FLOAT)*(576-end));
     memset(&absxr[end], 0, sizeof(FLOAT)*(576-end));
 
-    if (sum > (FLOAT)1e-20) {
+    if (sum > (FLOAT)1e-14) {
 	int j = 0;
 	if (gfc->noise_shaping_amp >= 3)
 	    j = 1;
@@ -1567,7 +1567,7 @@ VBR_noise_shaping(lame_t gfc, gr_info *gi, FLOAT * xmin)
 	}
 	gi->scalefac[sfb] = MAX_GLOBAL_GAIN+1;
 	gfc->maxXR[sfb] = FLOAT_MAX;
-	if (maxXR > (FLOAT)(IXMAX_VAL / FLOAT_MAX)) {
+	if (maxXR > MINIMUM_XR) {
 	    maxXR = IXMAX_VAL / maxXR;
 	    gain = find_scalefac(gfc, j, xmin[sfb], width, maxXR, sfmin, gain);
 	    if (gain <= MAX_GLOBAL_GAIN) {
