@@ -1543,9 +1543,9 @@ lame_decode_initfile(FILE * fd, mp3data_struct * mp3data)
 	if (fread(&buf, 1, len, fd) != len)
 	    return -1;      /* failed */
 	buf[2] &= 127; buf[3] &= 127; buf[4] &= 127; buf[5] &= 127;
-	id3v2taglen
-	    = len = ((((buf[2] << 7) + buf[3] << 7) + buf[4]) << 7) + buf[5];
+	len = ((((buf[2] << 7) + buf[3] << 7) + buf[4]) << 7) + buf[5];
 	fskip(fd, len, SEEK_CUR);
+	id3v2taglen = ftell(fd);
 	len = 4;
 	if (fread(&buf, 1, len, fd) != len)
 	    return -1;      /* failed */
