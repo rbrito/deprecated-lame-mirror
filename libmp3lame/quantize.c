@@ -1540,7 +1540,7 @@ ABR_iteration_loop(
     III_psy_xmin l3_xmin;
     FLOAT8    xrpow[576];
     int       targ_bits[2][2];
-    int       mean_bits, totbits, max_frame_bits;
+    int       mean_bits, max_frame_bits;
     int       ch, gr, ath_over;
     int       analog_silence_bits;
     gr_info             *cod_info;
@@ -1551,7 +1551,6 @@ ABR_iteration_loop(
     
     /*  encode granules
      */
-    totbits=0;
     for (gr = 0; gr < gfc->mode_gr; gr++) {
 
         if (gfc->mode_ext == MPG_MD_MS_LR) 
@@ -1576,18 +1575,15 @@ ABR_iteration_loop(
                             xrpow, ch, targ_bits[gr][ch]);
             }
 	    iteration_finish_one(gfc, gr, ch);
-
-            totbits += cod_info->part2_3_length;
         } /* ch */
     }  /* gr */
 
-    /*  find a bitrate which can handle totbits 
+    /*  find a bitrate which can refill the resevoir to positive size.
      */
     for (gfc->bitrate_index =  gfc->VBR_min_bitrate ;
          gfc->bitrate_index <= gfc->VBR_max_bitrate;
          gfc->bitrate_index++    ) {
-        max_frame_bits = ResvFrameBegin (gfp, &mean_bits);
-        if (totbits <= max_frame_bits) break; 
+        if (ResvFrameBegin (gfp, &mean_bits) >= 0) break; 
     }
     assert (gfc->bitrate_index <= gfc->VBR_max_bitrate);
 
