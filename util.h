@@ -218,6 +218,7 @@ typedef struct  {
   int CurrentStep;
   FLOAT8 ATH_l[SBPSY_l];
   FLOAT8 ATH_s[SBPSY_s];
+  FLOAT8 masking_lower;
 
 
   /* variables used by util.c */

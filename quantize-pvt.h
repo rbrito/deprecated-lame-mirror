@@ -5,7 +5,6 @@
 #define PRECALC_SIZE (IXMAX_VAL+2)
 
 
-extern FLOAT masking_lower;
 extern int convert_mdct, convert_psy, reduce_sidechannel;
 extern unsigned nr_of_sfb_block[6][3][4];
 extern int pretab[21];
@@ -54,7 +53,7 @@ int inner_loop( lame_global_flags *gfp,FLOAT8 xrpow[576],
 int calc_xmin( lame_global_flags *gfp,FLOAT8 xr[576],
                III_psy_ratio *ratio,
                gr_info *cod_info,
-               III_psy_xmin *l3_xmin, FLOAT8 masking_lower);
+               III_psy_xmin *l3_xmin);
 
 
 int scale_bitcount( III_scalefac_t *scalefac, gr_info *cod_info);

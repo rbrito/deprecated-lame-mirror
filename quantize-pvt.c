@@ -229,8 +229,8 @@ FLOAT8 ATHformula(lame_global_flags *gfp,FLOAT8 f)
   if (gfp->noATH)
     ath -= 200; /* disables ATH */
   else {
+      /*      ath -= 109;*/
     ath -= 114;    /* MDCT scaling.  From tests by macik and MUS420 code */
-    /*ath -= 109; */
   }
 
   /* purpose of RH_QUALITY_CONTROL:
@@ -653,7 +653,7 @@ int scale_bitcount_lsf(III_scalefac_t *scalefac, gr_info *cod_info)
   returns number of sfb's with energy > ATH
 */
 int calc_xmin( lame_global_flags *gfp,FLOAT8 xr[576], III_psy_ratio *ratio,
-	       gr_info *cod_info, III_psy_xmin *l3_xmin, FLOAT8 masking_lower)
+	       gr_info *cod_info, III_psy_xmin *l3_xmin)
 {
   lame_internal_flags *gfc=gfp->internal_flags;
   int start, end, bw,l, b, ath_over=0;
@@ -683,7 +683,7 @@ int calc_xmin( lame_global_flags *gfp,FLOAT8 xr[576], III_psy_ratio *ratio,
 
 	  xmin = ratio->en.s[sfb][b];
 	  if (xmin > 0.0)
-	    xmin = en0 * ratio->thm.s[sfb][b] * masking_lower / xmin;
+	    xmin = en0 * ratio->thm.s[sfb][b] * gfc->masking_lower / xmin;
 
 	  l3_xmin->s[sfb][b] = Max(gfc->ATH_s[sfb], xmin);
 
@@ -704,7 +704,7 @@ int calc_xmin( lame_global_flags *gfp,FLOAT8 xr[576], III_psy_ratio *ratio,
 
 	xmin = ratio->en.l[sfb];
 	if (xmin > 0.0)
-	  xmin = en0 * ratio->thm.l[sfb] * masking_lower / xmin;
+	  xmin = en0 * ratio->thm.l[sfb] * gfc->masking_lower / xmin;
 
 	l3_xmin->l[sfb]=Max(gfc->ATH_l[sfb], xmin);
 
@@ -713,6 +713,137 @@ int calc_xmin( lame_global_flags *gfp,FLOAT8 xr[576], III_psy_ratio *ratio,
     }
     return ath_over;
 }
+
+
+
+
+
+
+
+/*************************************************************************/
+/*            calc_noise                                                 */
+/*************************************************************************/
+/*  mt 5/99:  Function: Improved calc_noise for a single channel   */
+int calc_noise1( lame_global_flags *gfp,
+                 FLOAT8 xr[576], int ix[576], gr_info *cod_info,
+		 FLOAT8 xfsf[4][SBPSY_l], FLOAT8 distort[4][SBPSY_l],
+		 III_psy_xmin *l3_xmin, III_scalefac_t *scalefac,
+		 FLOAT8 *over_noise,
+		 FLOAT8 *tot_noise, FLOAT8 *max_noise)
+{
+    int start, end, l, i, over=0;
+    u_int sfb;
+    FLOAT8 sum,step,bw;
+    lame_internal_flags *gfc=gfp->internal_flags;
+
+    int count=0;
+    FLOAT8 noise;
+    *over_noise=0;
+    *tot_noise=0;
+    *max_noise = -999;
+
+    for ( sfb = 0; sfb < cod_info->sfb_lmax; sfb++ ) {
+	FLOAT8 step;
+	int s = scalefac->l[sfb];
+
+	if (cod_info->preflag)
+	    s += pretab[sfb];
+
+	s = cod_info->global_gain - (s << (cod_info->scalefac_scale + 1));
+	assert(s<Q_MAX);
+	assert(s>=0);
+	step = POW20(s);
+
+	start = gfc->scalefac_band.l[ sfb ];
+        end   = gfc->scalefac_band.l[ sfb+1 ];
+        bw = end - start;
+
+        for ( sum = 0.0, l = start; l < end; l++ )
+        {
+            FLOAT8 temp;
+            temp = fabs(xr[l]) - pow43[ix[l]] * step;
+#ifdef MAXNOISE
+	    temp = bw*temp*temp;
+	    sum = Max(sum,temp);
+#else
+            sum += temp * temp;
+#endif
+	    
+        }
+        xfsf[0][sfb] = sum / bw;
+
+	/* max -30db noise below threshold */
+	noise = 10*log10(Max(.001,xfsf[0][sfb] / l3_xmin->l[sfb]));
+
+        distort[0][sfb] = noise;
+        if (noise>0) {
+	  over++;
+	  *over_noise += noise;
+	}
+	*tot_noise += noise;
+	*max_noise=Max(*max_noise,noise);
+	count++;
+
+    }
+
+
+    for ( i = 0; i < 3; i++ ) {
+        for ( sfb = cod_info->sfb_smax; sfb < SBPSY_s; sfb++ ) {
+	    int s;
+
+	    s = (scalefac->s[sfb][i] << (cod_info->scalefac_scale + 1))
+		+ cod_info->subblock_gain[i] * 8;
+	    s = cod_info->global_gain - s;
+
+	    assert(s<Q_MAX);
+	    assert(s>=0);
+	    step = POW20(s);
+	    start = gfc->scalefac_band.s[ sfb ];
+	    end   = gfc->scalefac_band.s[ sfb+1 ];
+            bw = end - start;
+
+	    for ( sum = 0.0, l = start; l < end; l++ ) {
+		FLOAT8 temp;
+		temp = fabs(xr[l * 3 + i]) - pow43[ix[l * 3 + i]] * step;
+#ifdef MAXNOISE
+		temp = bw*temp*temp;
+		sum = Max(sum,temp);
+#else
+		sum += temp * temp;
+#endif
+            }       
+	    xfsf[i+1][sfb] = sum / bw;
+
+	    /* max -30db noise below threshold */
+	    noise = 10*log10(Max(.001,xfsf[i+1][sfb] / l3_xmin->s[sfb][i] ));
+
+            distort[i+1][sfb] = noise;
+            if (noise > 0) {
+		over++;
+		*over_noise += noise;
+	    }
+	    *tot_noise += noise;
+	    *max_noise=Max(*max_noise,noise);
+	    count++;	    
+        }
+    }
+
+    if (count>1) *tot_noise /= count;
+    if (over>1) *over_noise /= over;
+
+    return over;
+}
+
+
+
+
+
+
+
+
+
+
+
 
 
 

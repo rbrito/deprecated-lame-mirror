@@ -1357,6 +1357,7 @@ int lame_init(lame_global_flags *gfp)
   gfc->OldValue[0]=180;
   gfc->OldValue[1]=180;
   gfc->CurrentStep=4;
+  gfc->masking_lower=1;
 
   id3tag.used=0;
   return 0;
