@@ -155,7 +155,7 @@ static INLINE void drain_into_ancillary ( lame_global_flags* const gfp, int rema
     
     assert (remainingBits >= 0);
     
-    get_lame_short_version ( p, sizeof(buffer), "LAME" );
+    sprintf ( p, "LAME%s", get_lame_short_version () );
 
     for (; *p != '\0'  &&  remainingBits >= 8; p++, remainingBits -= 8 )
         putbits2 ( gfp, *p, 8 );
@@ -399,8 +399,7 @@ drain_into_ancillary(lame_global_flags *gfp,int remainingBits)
     }
       
     if (remainingBits >= 32) {
-      char version[80];
-      get_lame_short_version( version, sizeof(version), NULL );
+      char *version = get_lame_short_version ();
       if (remainingBits >= 32) 
 	for (i=0; i<(int)strlen(version) && remainingBits >=8 ; ++i) {
 	  remainingBits -= 8;

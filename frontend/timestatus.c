@@ -34,7 +34,7 @@
 //////////////////////////////////////////////////////////////////////////////
 //////////////////////////////////////////////////////////////////////////////
 
-#if 1
+#ifdef __unix__                 /* first hack: assume UNIX = ISO, better is to read enviroment etc. */
 # define SPEED_CHAR	"\xD7"	/* multiply sign in ANSI, ISO-8859-1 */
 # define SPEED_MULT	1.
 #elif 1

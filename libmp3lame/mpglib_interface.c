@@ -14,40 +14,38 @@
 #include "lame.h"
 
 
-///////// #define FSIZE 8192  
-
-static char buf [16384];
-static char out  [8192];
-MPSTR mp;
-plotting_data *mpg123_pinfo=NULL;
+MPSTR           mp;
+plotting_data*  mpg123_pinfo = NULL;
+// static char     buf [16384];
 
 
-
-int lame_decode_init(void)
+int  lame_decode_init ( void )
 {
-  InitMP3(&mp);
-  memset(buf, 0, sizeof(buf));
-  return 0;
+    InitMP3 ( &mp );
+//  memset ( buf, 0, sizeof(buf) );
+    return 0;
 }
 
-
-
-
 /*
-For lame_decode:  return code
-  -1     error
-   0     ok, but need more data before outputing any samples
-   n     number of samples output.  either 576 or 1152 depending on MP3 file.
-*/
-int lame_decode1_headers(char *buffer,int len,
-                         short pcm_l[],short pcm_r[],
-                         mp3data_struct *mp3data)
+ * For lame_decode:  return code
+ * -1     error
+ *  0     ok, but need more data before outputing any samples
+ *  n     number of samples output.  either 576 or 1152 depending on MP3 file.
+ */
+ 
+int  lame_decode1_headers (
+        char*            buffer,
+        int              len,
+        short            pcm_l [],
+        short            pcm_r [],
+        mp3data_struct*  mp3data )
 {
     static const int smpls [2] [4] = {
     /* Layer   I    II   III */
         { 0, 384, 1152, 1152 }, /* MPEG-1     */
         { 0, 384, 1152,  576 }  /* MPEG-2(.5) */
     };
+    static char        out  [8192];
     signed short int*  p = (signed short int*) out;
     int                processed_bytes;
     int                processed_samples;  // processed samples per channel
@@ -118,29 +116,38 @@ int lame_decode1_headers(char *buffer,int len,
 
 
 /*
-For lame_decode:  return code
-  -1     error
-   0     ok, but need more data before outputing any samples
-   n     number of samples output.  Will be at most one frame of
-         MPEG data.  
-*/
-int lame_decode1(char *buffer,int len,short pcm_l[],short pcm_r[])
+ * For lame_decode:  return code
+ *  -1     error
+ *   0     ok, but need more data before outputing any samples
+ *   n     number of samples output.  Will be at most one frame of
+ *         MPEG data.  
+ */
+ 
+int  lame_decode1 ( 
+        char*  buffer,
+	int    len,
+	short  pcm_l [],
+	short  pcm_r [] )
 {
   mp3data_struct mp3data;
-  return lame_decode1_headers(buffer,len,pcm_l,pcm_r,&mp3data);
+  
+  return lame_decode1_headers ( buffer, len, pcm_l, pcm_r, &mp3data );
 }
 
 
-
-
 /*
-For lame_decode:  return code
-  -1     error
-   0     ok, but need more data before outputing any samples
-   n     number of samples output.  a multiple of 576 or 1152 depending on MP3 file.
-*/
-int lame_decode_headers(char *buffer,int len,short pcm_l[],short pcm_r[],
-                         mp3data_struct *mp3data)
+ * For lame_decode:  return code
+ *  -1     error
+ *   0     ok, but need more data before outputing any samples
+ *   n     number of samples output.  a multiple of 576 or 1152 depending on MP3 file.
+ */
+ 
+int  lame_decode_headers ( 
+        char*            buffer,
+	int              len,
+	short            pcm_l [],
+	short            pcm_r [],
+        mp3data_struct*  mp3data )
 {
     int  ret;
     int  totsize = 0;   // number of decoded samples per channel
@@ -157,11 +164,18 @@ int lame_decode_headers(char *buffer,int len,short pcm_l[],short pcm_r[],
 }
 
 
-
-int lame_decode(char *buffer,int len,short pcm_l[],short pcm_r[])
+int  lame_decode (
+        char*  buffer,
+	int    len,
+	short  pcm_l [],
+	short  pcm_r [] )
 {
-  mp3data_struct mp3data;
-  return lame_decode_headers(buffer,len,pcm_l,pcm_r,&mp3data);
+    mp3data_struct  mp3data;
+    
+    return lame_decode_headers ( buffer, len, pcm_l, pcm_r, &mp3data );
 }
 
+
 #endif
+
+/* end of mpglib_interface.c */

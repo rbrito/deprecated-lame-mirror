@@ -48,16 +48,7 @@
 
 static int  lame_version_print ( FILE* const fp )
 {
-   char version[80], url[80];
-
-   get_lame_url ( url, sizeof(url), NULL);
-   get_lame_version ( version, sizeof(version), NULL);
-/* 
-   fprintf ( fp, "%sLAME%s version %s    (%s)\n\n", Console_IO.str_emph, Console_IO.str_norm, version, url );
-    ^- disabled as long as there is no proper solution for Console_IO, RH 
- */
-   fprintf ( fp, "LAME version %s    (%s)\n\n", version, url );
-
+   fprintf ( fp, "LAME version %s    (%s)\n\n", get_lame_version (), get_lame_url () );
    return 0;
 }
 
@@ -119,8 +110,9 @@ int  usage ( const lame_global_flags* gfp, FILE* const fp, const char* ProgramNa
               "\n"
               "    <infile> and/or <outfile> can be \"-\", which means stdin/stdout.\n"
               "\n"
-              "Try \"%s --help\"     for more information\n" 
-              " or \"%s --longhelp\" or \"%s --?\" for a complete options list\n\n",
+              "Try  \"%s --help\"     for more information\n" 
+              "  or \"%s --longhelp\"\n"
+              "  or \"%s --?\"        for a complete options list\n\n",
               ProgramName, ProgramName, ProgramName, ProgramName ); 
     return 0;
 }

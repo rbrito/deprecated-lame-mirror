@@ -558,7 +558,7 @@ id3tag_write_v1(lame_global_flags *gfp)
 
 
 
-
+#if 0
 
 /* would use real "strcasecmp" but it isn't portable */
 int local_strcasecmp ( const char* s1, const char* s2 )  /* Move to frontend */
@@ -577,3 +577,7 @@ int local_strcasecmp ( const char* s1, const char* s2 )  /* Move to frontend */
     } while (c1 == c2);
     return c1 - c2;
 }
+
+#endif
+
+/* end of id3tag.c */

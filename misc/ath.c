@@ -237,7 +237,8 @@ typedef enum {
     turn_up    = 2,
     turn_down  = 3,
     still_up   = 4,
-    still_down = 5
+    still_down = 5,
+    change     = 6
 } direction_t;
 	
 	
@@ -339,6 +340,20 @@ int change_direction ( amplitude_t* const a, direction_t new_direction )
 	    return -1;
 	}
 	break;
+    case change:
+        switch ( a->direction ) {
+        case up:
+	    a->direction = still_up;
+	    break;
+	case down:
+	    a->direction = still_down;
+	    break;
+	default:
+	    fprintf ( stderr, "Direction still changing, so ignored\n" );
+	    return -1;
+	}
+	break;
+    
     default:
 	fprintf ( stderr, "Direction unknown, so ignored\n" );
 	return -1;
@@ -567,6 +582,7 @@ int experiment ( generator_t* const g,
     
     fprintf ( stderr, "\r+++  up  +++" );
     for ( i = 0; i < g->duration; i += sizeof(samples)/sizeof(*samples) ) {
+        fprintf ( stderr, "%3lu%%\b\b\b\b", i*100lu/g->duration );
 	
 	for (j = 0; j < sizeof(samples)/sizeof(*samples); j++ ) {
 	    static double  quant_errors [16];
@@ -599,6 +615,12 @@ int experiment ( generator_t* const g,
             report (g, a);
 	    change_direction ( a, down );
 	    break;
+	case '\r':
+	case '\n':
+	    fprintf ( stderr, "\r** change **" );
+            report (g, a);
+	    change_direction ( a, change );
+	    break;
 	case 'C'&0x1F:
 	case 'q':
 	case 'Q':
@@ -622,7 +644,7 @@ int experiment ( generator_t* const g,
 static void usage ( void )
 {
     static const char help[] = 
-        "'Absolute Threshold of Hearing' -- Version 0.04   (C) Frank Klemm 2000\n"
+        "'Absolute Threshold of Hearing' -- Version 0.05   (C) Frank Klemm 2000\n"
 	"\n"
 	"usage:\n" 
 	"    ath  type minfreq maxfreq duration ampl_speed [start_level] > reportfile\n"
@@ -659,7 +681,7 @@ int main ( int argc, char** argv )
         usage ();
         system ( "./ath erb  700 22000 600 3 0.0001 > result1" );
 	system ( "./ath erb 1400    16 360 3 0.0001 > result2" );
-	system ( "xmgr result1 result2 &" );
+	system ( "xmgr result1 result2 &> /dev/null &" );
 	return 0;
     }
     
