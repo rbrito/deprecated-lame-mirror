@@ -84,8 +84,14 @@ static void get_II_stuff(struct frame *fr)
 #define HDRCMPMASK 0xfffffd00
 
 
-int head_check(unsigned long head)
+int head_check(unsigned long head,int check_layer)
 {
+  /*
+    look for a valid header.  
+    if check_layer > 0, then require that
+    nLayer = check_layer.  
+   */
+
   /* bits 13-14 = layer 3 */
   int nLayer=4-((head>>17)&3);
 
@@ -109,6 +115,11 @@ int head_check(unsigned long head)
 		return FALSE;
     #endif
   }
+
+  if (check_layer>0) {
+      if (nLayer != check_layer) return FALSE;
+  }
+
   if( ((head>>12)&0xf) == 0xf) {
     /* bits 16,17,18,19 = 1111  invalid bitrate */
     return FALSE;
@@ -149,6 +160,7 @@ int decode_header(struct frame *fr,unsigned long newhead)
     }
     else
       fr->sampling_frequency = ((newhead>>10)&0x3) + (fr->lsf*3);
+
     fr->error_protection = ((newhead>>16)&0x1)^0x1;
 
     if(fr->mpeg25) /* allow Bitrate change for 2.5 ... */
