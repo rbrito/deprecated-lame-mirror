@@ -46,7 +46,12 @@
 
 static int  lame_version_print ( FILE* const fp )
 {
+/* 
    fprintf ( fp, "%sLAME%s version %s    (%s)\n\n", Console_IO.str_emph, Console_IO.str_norm, get_lame_version (), LAME_URL );
+    ^- disabled as long as there is no proper solution for Console_IO, RH 
+ */
+   fprintf ( fp, "LAME version %s    (%s)\n\n", get_lame_version (), LAME_URL );
+
    return 0;
 }
 

@@ -131,11 +131,12 @@ int  lame_set_stream_binary_mode ( FILE* const fp )
 # include <kernel.h>
 # include <sys/swis.h>
 #elif defined(_WIN32)
+# include <sys/types.h>
 # include <sys/stat.h>
-# include <unistd.h>
+//# include <unistd.h>
 #else
 # include <sys/stat.h>
-# include <unistd.h>
+//# include <unistd.h>
 #endif
 
 off_t  lame_get_file_size ( const char* const filename )
