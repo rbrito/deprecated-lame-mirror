@@ -454,7 +454,7 @@ RH */
                 sample_t  y;
             
                 if (j2 < 0) {
-                    assert (BLACKSIZE+j2 > 0);
+                    assert (BLACKSIZE+j2 >= 0);
                     y = inbuf_old [BLACKSIZE+j2];
                 } else {
                     assert (j2 < len);
