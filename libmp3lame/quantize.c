@@ -330,10 +330,6 @@ or sfb12 for short blocks
 From top to bottom of sfb, changes to 0
 coeffs which are below ath. It stops on the first
 coeff higher than ath.
-
-It should help reducing bitrate,
-but real gain is only about 3kbps at max
-and sometimes it even increases bitrate.
 */
 void psfb21_analogsilence(
         lame_global_flags *gfp,
@@ -352,10 +348,10 @@ void psfb21_analogsilence(
             int end = gfc->scalefac_band.psfb21[ gsfb+1 ];
             int j;
             FLOAT ath21;
-            if (gfp->VBR == vbr_rh || gfp->VBR == vbr_mtrh)
-                ath21 = athAdjust(ATH->adjust, ATH->psfb21[gsfb], ATH->floor);
-            else
-                ath21 = ATH->adjust * ATH->psfb21[gsfb];
+            ath21 = athAdjust(ATH->adjust, ATH->psfb21[gsfb], ATH->floor);
+
+            if (gfc->nsPsy.longfact[21] != 0)
+                ath21 *= gfc->nsPsy.longfact[21];
 
             for (j = end-1; j>=start; j--) {
                 if ( fabs(xr[j]) < ath21)
@@ -380,10 +376,10 @@ void psfb21_analogsilence(
                 int end = start + (gfc->scalefac_band.psfb12[gsfb+1] - gfc->scalefac_band.psfb12[gsfb]);
                 int j;
                 FLOAT ath12;
-                if (gfp->VBR == vbr_rh || gfp->VBR == vbr_mtrh)
-                    ath12 = athAdjust(ATH->adjust, ATH->psfb12[gsfb], ATH->floor);
-                else
-                    ath12 = ATH->adjust * ATH->psfb12[gsfb];
+                ath12 = athAdjust(ATH->adjust, ATH->psfb12[gsfb], ATH->floor);
+
+                if (gfc->nsPsy.longfact[12] != 0)
+                    ath12 *= gfc->nsPsy.longfact[12];
 
                 for (j = end-1; j>=start; j--) {
                     if ( fabs(xr[j]) < ath12)
