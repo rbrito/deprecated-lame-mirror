@@ -435,31 +435,6 @@ int  lame_encode_mp3_frame (				/* Output */
 	}
     }
 
-#ifndef NOANALYSIS
-    /* copy data for MP3 frame analyzer */
-    if (gfc->pinfo) {
-	if (gfp->mode == JOINT_STEREO) {
-	    for ( gr = 0; gr < gfc->mode_gr; gr++ ) {
-		gfc->pinfo->ms_ratio[gr] = gfc->pinfo->ms_ratio_next[gr];
-		gfc->pinfo->ms_ratio_next[gr]
-		    = gfc->masking_next[gr][2].pe
-		    + gfc->masking_next[gr][3].pe
-		    - gfc->masking_next[gr][0].pe
-		    - gfc->masking_next[gr][1].pe;
-	    }
-	}
-	for ( ch = 0; ch < gfc->channels_out; ch++ ) {
-	    int j;
-	    for ( j = 0; j < FFTOFFSET; j++ )
-		gfc->pinfo->pcmdata[ch][j]
-		    = gfc->pinfo->pcmdata[ch][j+gfp->framesize];
-	    for ( j = FFTOFFSET; j < 1600; j++ ) {
-		gfc->pinfo->pcmdata[ch][j] = inbuf[ch][j-FFTOFFSET];
-	    }
-	}
-    }
-#endif
-
     /* bit and noise allocation */
     switch (gfp->VBR){ 
     default:
@@ -488,7 +463,7 @@ int  lame_encode_mp3_frame (				/* Output */
 
 #ifndef NOANALYSIS
     if (gfc->pinfo)
-	set_frame_pinfo (gfc, masking);
+	set_frame_pinfo(gfp, masking, inbuf);
 #endif
 
 #ifdef BRHIST

@@ -645,7 +645,7 @@ int PutVbrTag(lame_global_flags *gfp, FILE *fpStream)
 		      | ((id3v2Header[7] & 0x7f)<<14)
 		      | ((id3v2Header[8] & 0x7f)<<7)
 		      | (id3v2Header[9] & 0x7f))
-            + sizeof id3v2Header;
+	    + sizeof id3v2Header;
     }
 
     /* Seek to first real frame */

@@ -139,11 +139,6 @@ ResvFrameBegin(lame_global_flags *gfp, int mean_bytes)
     return mean_bytes*8 + Min(l3_side->ResvSize, l3_side->ResvMax);
 }
 
-
-
-
-
-
 /*************************************************************************
  *	calc_xmin()
  * Calculate the allowed noise threshold for each scalefactor band,
@@ -607,9 +602,6 @@ loop_break(const gr_info * const gi)
     return sfb;
 }
 
-
-
-
 /*************************************************************************
  *
  *      inc_scalefac_scale()
@@ -617,7 +609,6 @@ loop_break(const gr_info * const gi)
  *  turns on scalefac scale and adjusts scalefactors
  *
  *************************************************************************/
- 
 static void
 inc_scalefac_scale (gr_info * const gi, FLOAT distort[])
 {
@@ -635,8 +626,6 @@ inc_scalefac_scale (gr_info * const gi, FLOAT distort[])
     gi->scalefac_scale = 1;
 }
 
-
-
 /*************************************************************************
  *
  *      inc_subblock_gain()
@@ -644,7 +633,6 @@ inc_scalefac_scale (gr_info * const gi, FLOAT distort[])
  *  increases the subblock gain and adjusts scalefactors
  *  and returns zero if success.
  *************************************************************************/
-
 static int 
 inc_subblock_gain(gr_info * const gi, FLOAT distort[])
 {
@@ -919,8 +907,7 @@ adjust_global_gain(
 }
 
 static void
-CBR_2nd_bitalloc(
-    lame_internal_flags * gfc, gr_info *gi, FLOAT distort[])
+CBR_2nd_bitalloc(lame_internal_flags * gfc, gr_info *gi, FLOAT distort[])
 {
     gr_info gi_w = *gi;
     int sfb, j = 0, flag = 0;
@@ -1134,11 +1121,8 @@ CBR_bitalloc(
  *  mt 2000/05/31
  *
  ********************************************************************/
-
 void 
-ABR_iteration_loop(
-    lame_global_flags *gfp,
-    III_psy_ratio      ratio        [2][2])
+ABR_iteration_loop(lame_global_flags *gfp, III_psy_ratio ratio[2][2])
 {
     lame_internal_flags *gfc=gfp->internal_flags;
     int mean_bytes, gr, max_bits, min_bits;
@@ -1172,11 +1156,6 @@ ABR_iteration_loop(
     gfc->l3_side.ResvSize += mean_bytes*8;
 }
 
-
-
-
-
-
 /************************************************************************
  *
  *      iteration_loop()
@@ -1184,11 +1163,8 @@ ABR_iteration_loop(
  *  encodes one frame of MP3 data with constant bitrate
  *
  ************************************************************************/
-
 void 
-iteration_loop(
-    lame_global_flags *gfp, 
-    III_psy_ratio      ratio        [2][2])
+iteration_loop(lame_global_flags *gfp, III_psy_ratio ratio[2][2])
 {
     lame_internal_flags *gfc=gfp->internal_flags;
     int gr, mean_bits = getframebytes(gfp);
@@ -1237,7 +1213,6 @@ iteration_loop(
     }
     assert(gfc->l3_side.ResvSize >= 0);
 }
-
 
 /************************************************************************
  *
@@ -1309,7 +1284,6 @@ find_scalefac(lame_internal_flags *gfc, int j, FLOAT xmin, int bw,
 	sf = sf_ok;
     return sf;
 }
-
 
 
 /* {long|short}_block_scalefacs() calculates global_gain and
@@ -1526,10 +1500,7 @@ VBR_3rd_bitalloc(lame_internal_flags *gfc, gr_info *gi, FLOAT * xmin)
  *
  ***********************************************************************/
 static int
-VBR_noise_shaping(
-    lame_internal_flags * gfc,
-    gr_info *gi,
-    FLOAT * xmin)
+VBR_noise_shaping(lame_internal_flags * gfc, gr_info *gi, FLOAT * xmin)
 {
     int vbrmax, sfb, j;
 
@@ -1748,8 +1719,10 @@ set_pinfo (
  ************************************************************************/
 
 void
-set_frame_pinfo(lame_internal_flags *gfc, III_psy_ratio   ratio    [2][2])
+set_frame_pinfo(
+    lame_global_flags *gfp, III_psy_ratio ratio[2][2], FLOAT *inbuf[])
 {
+    lame_internal_flags *gfc = gfp->internal_flags;
     int gr, ch;
 
     /* for every granule and channel common data */
@@ -1759,6 +1732,27 @@ set_frame_pinfo(lame_internal_flags *gfc, III_psy_ratio   ratio    [2][2])
     memset(gfc->pinfo->    en, 0, sizeof(gfc->pinfo->    en));
     memset(gfc->pinfo->   thr, 0, sizeof(gfc->pinfo->   thr));
     memset(gfc->pinfo->  xfsf, 0, sizeof(gfc->pinfo->  xfsf));
+
+    /* copy data for MP3 frame analyzer */
+    if (gfp->mode == JOINT_STEREO) {
+	for ( gr = 0; gr < gfc->mode_gr; gr++ ) {
+	    gfc->pinfo->ms_ratio[gr] = gfc->pinfo->ms_ratio_next[gr];
+	    gfc->pinfo->ms_ratio_next[gr]
+		= gfc->masking_next[gr][2].pe
+		+ gfc->masking_next[gr][3].pe
+		- gfc->masking_next[gr][0].pe
+		- gfc->masking_next[gr][1].pe;
+	}
+    }
+    for ( ch = 0; ch < gfc->channels_out; ch++ ) {
+	int j;
+	for ( j = 0; j < FFTOFFSET; j++ )
+	    gfc->pinfo->pcmdata[ch][j]
+		= gfc->pinfo->pcmdata[ch][j+gfp->framesize];
+	for ( j = FFTOFFSET; j < 1600; j++ ) {
+	    gfc->pinfo->pcmdata[ch][j] = inbuf[ch][j-FFTOFFSET];
+	}
+    }
 
     for (gr = 0; gr < gfc->mode_gr; gr ++) {
         for (ch = 0; ch < gfc->channels_out; ch ++) {
