@@ -196,10 +196,6 @@ SOURCE=..\lame.h
 # End Source File
 # Begin Source File
 
-SOURCE=..\loopold.c
-# End Source File
-# Begin Source File
-
 SOURCE=..\newmdct.c
 # End Source File
 # Begin Source File
