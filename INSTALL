@@ -1,7 +1,23 @@
-LAME 3.xx    9/99 Mark Taylor (http://www.sulaco.org/mp3)
+LAME 3.xx    3/00 Mark Taylor (http://www.sulaco.org/mp3)
 
 =======================================================================
-Building the MPEG audio encoding software:
+Building the MPEG audio encoding software on Windows:
+=======================================================================
+There are MSVC project files, and a Makefile.MSVC included
+with the project.  For production use, be sure to compile
+a "release" version and compile with the "maximum speed" compile
+option, and #define NDEBUG.   
+
+Note that MSVC "professional" claims to produce faster executables
+then MSVC "standard".  It is possible to compile the GTK frame
+analyzer under windows, see README.WINGTK
+
+
+
+
+
+=======================================================================
+Building the MPEG audio encoding software on *NIX platforms:
 =======================================================================
 If you are reading this, you have already applied the patch to the
 dist10 ISO demonstration source (or downloaded a full source
