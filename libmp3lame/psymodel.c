@@ -1068,6 +1068,23 @@ pecalc_l(
 
 
 
+static int
+check_istereo(lame_internal_flags *gfc, int gr)
+{
+    int sb = gfc->is_start_sfb_l_next[gr];
+    III_psy_ratio *mr = &gfc->masking_next[gr][0];
+    for (; sb < SBMAX_l; sb++) {
+	FLOAT l = mr[0].en.l[sb];
+	FLOAT r = mr[1].en.l[sb];
+	
+	if (mr[3].en.l[sb] > mr[3].thm.l[sb]
+	    && ((l+r) * (0.5 + 0.366025404) * 0.5 > l
+		|| (l+r) * (0.5 + 0.366025404) * 0.5 > r))
+	    return 1;
+    }
+    return 0;
+}
+
 static void
 psycho_analysis_short(
     lame_global_flags * gfp,
@@ -1835,9 +1852,14 @@ psycho_analysis(
 		gfc->useshort_next[gr][1] = gfc->useshort_next[gr][3];
 	    }
 	    if (gfp->use_istereo
-		&& (gfc->masking_next[0][3].ath_over
-		    + gfc->masking_next[gfc->mode_gr][3].ath_over != 0))
+		&& (check_istereo(gfc, 0) + check_istereo(gfc, gfc->mode_gr-1)))
 		gfc->mode_ext_next = MPG_MD_MS_I;
+	    else {
+		gfc->is_start_sfb_l_next[0]
+		    = gfc->is_start_sfb_l_next[gfc->mode_gr-1] = SBMAX_l;
+		gfc->is_start_sfb_s_next[0]
+		    = gfc->is_start_sfb_s_next[gfc->mode_gr-1] = SBMAX_s;
+	    }
 	    /* LR -> MS case */
 	    if (gfc->mode_ext_next != gfc->mode_ext
 	     && (gfc->l3_side.tt[gfc->mode_gr-1][0].block_type
