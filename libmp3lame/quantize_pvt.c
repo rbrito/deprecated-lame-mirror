@@ -218,6 +218,9 @@ static void compute_ath( lame_global_flags *gfp )
             ATH_f = ATHmdct( gfp, freq );  /* freq in kHz */
             ATH_l[sfb] = Min( ATH_l[sfb], ATH_f );
         }
+	if (!gfc->nsPsy.use)
+	    ATH_l[sfb] *=
+		(gfc->scalefac_band.l[sfb+1] - gfc->scalefac_band.l[sfb]);
     }
 
     for (sfb = 0; sfb < SBMAX_s; sfb++){
@@ -229,6 +232,8 @@ static void compute_ath( lame_global_flags *gfp )
             ATH_f = ATHmdct( gfp, freq );    /* freq in kHz */
             ATH_s[sfb] = Min( ATH_s[sfb], ATH_f );
         }
+	ATH_s[sfb] *=
+	    (gfc->scalefac_band.s[sfb+1] - gfc->scalefac_band.s[sfb]);
     }
 
     /*  no-ATH mode:
@@ -461,61 +466,54 @@ int calc_xmin(
         lame_global_flags *gfp,
         const III_psy_ratio * const ratio,
 	const gr_info       * const cod_info, 
-	      FLOAT8        * const l3_xmin
+	      FLOAT8        * pxmin
     )
 {
     lame_internal_flags *gfc = gfp->internal_flags;
     int sfb, gsfb, j=0, ath_over=0;
-    FLOAT8 xmin, tmpATH;
     ATH_t * ATH = gfc->ATH;
     const FLOAT8 *xr = cod_info->xr;
-    FLOAT8 *pxmin = l3_xmin;
 
     for (gsfb = 0; gsfb < cod_info->psy_lmax; gsfb++) {
-	FLOAT en0 = 0.0;
+	FLOAT8 en0, xmin;
 	int width, l;
-	if ( gfp->VBR == vbr_rh || gfp->VBR == vbr_mtrh )
-	    tmpATH = athAdjust( ATH->adjust, ATH->l[gsfb], ATH->floor );
+	if (gfp->VBR == vbr_rh || gfp->VBR == vbr_mtrh)
+	    xmin = athAdjust(ATH->adjust, ATH->l[gsfb], ATH->floor);
 	else
-	    tmpATH = ATH->adjust * ATH->l[gsfb];
+	    xmin = ATH->adjust * ATH->l[gsfb];
 
 	width = cod_info->width[gsfb];
 	l = width >> 1;
+	en0 = 0.0;
 	do {
 	    en0 += xr[j] * xr[j]; j++;
 	    en0 += xr[j] * xr[j]; j++;
 	} while (--l > 0);
+	if (en0 > xmin) ath_over++;
 
-	/* why is it different from short blocks <?> */
-	if ( !gfc->nsPsy.use ) en0 /= width;   
-
-	xmin = tmpATH;
 	if (!gfp->ATHonly) {
-	    xmin = ratio->en.l[gsfb];
-	    if (xmin > 0.0)
-		xmin = en0 * ratio->thm.l[gsfb] * gfc->masking_lower / xmin;
-	    if (xmin < tmpATH) 
-		xmin = tmpATH;
+	    FLOAT8 x = ratio->en.l[gsfb];
+	    if (x > 0.0) {
+		x = en0 * ratio->thm.l[gsfb] * gfc->masking_lower / x;
+		if (xmin < x)
+		    xmin = x;
+	    }
 	}
-	/* why is it different from short blocks <?> */
-	if ( !gfc->nsPsy.use ) {
-	    xmin *= width;
-	}
-	else {
+
+	if (gfc->nsPsy.use) {
 	    if      (gsfb <=  6) xmin *= gfc->nsPsy.bass;
 	    else if (gsfb <= 13) xmin *= gfc->nsPsy.alto;
 	    else if (gsfb <= 20) xmin *= gfc->nsPsy.treble;
-	    else                xmin *= gfc->nsPsy.sfb21;
+	    else                 xmin *= gfc->nsPsy.sfb21;
 	    if ((gfp->VBR == vbr_off || gfp->VBR == vbr_abr) && gfp->quality <= 1)
 		xmin *= 0.001;
 	}
 	*pxmin++ = xmin;
-	if (en0 > tmpATH) ath_over++;
     }   /* end of long block loop */
 
-    for (sfb = cod_info->sfb_smin;
-	 gsfb < cod_info->psymax; sfb++, gsfb += 3) {
+    for (sfb = cod_info->sfb_smin; gsfb < cod_info->psymax; sfb++, gsfb += 3) {
 	int width, b;
+	FLOAT8 tmpATH;
 	if ( gfp->VBR == vbr_rh || gfp->VBR == vbr_mtrh )
 	    tmpATH = athAdjust( ATH->adjust, ATH->s[sfb], ATH->floor );
 	else
@@ -523,23 +521,22 @@ int calc_xmin(
 
 	width = cod_info->width[gsfb];
 	for ( b = 0; b < 3; b++ ) {
-	    FLOAT en0 = 0.0;
+	    FLOAT8 en0 = 0.0, xmin;
 	    int l = width >> 1;
 	    do {
 		en0 += xr[j] * xr[j]; j++;
 		en0 += xr[j] * xr[j]; j++;
 	    } while (--l > 0);
-	    en0 /= width;
+	    if (en0 > tmpATH) ath_over++;
 
 	    xmin = tmpATH;
 	    if (!gfp->ATHonly && !gfp->ATHshort) {
-		xmin = ratio->en.s[sfb][b];
-		if (xmin > 0.0)
-		    xmin = en0 * ratio->thm.s[sfb][b] * gfc->masking_lower / xmin;
-		if (xmin < tmpATH) 
-		    xmin = tmpATH;
+		FLOAT8 x = ratio->en.s[sfb][b];
+		if (x > 0.0)
+		    x = en0 * ratio->thm.s[sfb][b] * gfc->masking_lower / x;
+		if (xmin < x) 
+		    xmin = x;
 	    }
-	    xmin *= width;
 
 	    if (gfc->nsPsy.use) {
 		if      (sfb <=  5) xmin *= gfc->nsPsy.bass;
@@ -549,16 +546,12 @@ int calc_xmin(
 		    xmin *= 0.001;
 	    }
 	    *pxmin++ = xmin;
-	    if (en0 > tmpATH) ath_over++;
 	}   /* b */
 	if (gfp->useTemporal) {
-	    // XXX mixed block not supported, FIXME
-	    for ( b = 1; b < 3; b++ ) {
-		xmin = l3_xmin[gsfb+b] * (1.0 - gfc->decay)
-		    + l3_xmin[gsfb+b-1] * gfc->decay;
-		if (l3_xmin[gsfb+b] < xmin)
-		    l3_xmin[gsfb+b] = xmin;
-	    }
+	    if (pxmin[-3] > pxmin[-3+1])
+		pxmin[-3+1] += (pxmin[-3] - pxmin[-3+1]) * gfc->decay;
+	    if (pxmin[-3+1] > pxmin[-3+2])
+		pxmin[-3+2] += (pxmin[-3+1] - pxmin[-3+2]) * gfc->decay;
         }
     }   /* end of short block sfb loop */
 
