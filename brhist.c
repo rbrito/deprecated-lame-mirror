@@ -20,6 +20,12 @@ char brhist_spc[BRHIST_BARMAX+1];
 char stderr_buff[BUFSIZ];
 
 
+#ifdef _WIN32  
+COORD Pos;
+HANDLE CH;
+CONSOLE_SCREEN_BUFFER_INFO CSBI;
+#endif
+
 #ifdef NOTERMCAP
 /* tgetstr */
 char *
@@ -39,10 +45,8 @@ tgetstr(char id[2], char **area)
 void brhist_init(lame_global_flags *gfp,int br_min, int br_max)
 {
   int i;
-#ifndef NOTERMCAP
   char term_buff[1024];
   char *termname;
-#endif /* !NOTERMCAP */
   char *tp;
   char tc[10];
 
@@ -85,9 +89,13 @@ void brhist_init(lame_global_flags *gfp,int br_min, int br_max)
   tp = &tc[0];
   tp=tgetstr("up", &tp);
   brhist_backcur[0] = '\0';
+#ifdef _WIN32  
+  CH= GetStdHandle(STD_ERROR_HANDLE);
+#else
   for(i = br_min-1; i <= br_max; i++)
     strcat(brhist_backcur, tp);
   setbuf(stderr, stderr_buff);
+#endif
 #endif
 }
 
@@ -118,8 +126,19 @@ void brhist_disp(long totalframes)
       fputs(&brhist_spc[barlen], stderr);
       fputc('\n', stderr);
     }
+#ifdef _WIN32  
+  //fflush is not needed
+  if(GetFileType(CH)!= FILE_TYPE_PIPE)
+  {
+    GetConsoleScreenBufferInfo(CH, &CSBI);
+    Pos.Y= CSBI.dwCursorPosition.Y-(brhist_vbrmax- brhist_vbrmin)- 2;
+    Pos.X= 0;
+    SetConsoleCursorPosition(CH, Pos);
+  }
+#else
   fputs(brhist_backcur, stderr);
   fflush(stderr);
+#endif  
 #endif
 }
 
