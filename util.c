@@ -87,6 +87,27 @@ void display_bitrates(FILE *out_fh)
 }
 
 
+#define ABS(A) (((A)>0) ? (A) : -(A))
+
+int FindNearestBitrate(
+int bRate,        /* legal rates from 32 to 448 */
+int version,      /* MPEG-1 or MPEG-2 LSF */
+int samplerate)   /* convert bitrate in kbps to index */
+{
+  int     index = 0;
+  int     bitrate = 10000;
+  
+  while( index<15)   {
+    if( ABS( bitrate_table[version][index] - bRate) < ABS(bitrate-bRate) ) {
+      bitrate = bitrate_table[version][index];
+    }
+    ++index;
+  }
+  return bitrate;
+}
+
+
+
 int BitrateIndex(
 int bRate,        /* legal rates from 32 to 448 */
 int version,      /* MPEG-1 or MPEG-2 LSF */
@@ -149,6 +170,8 @@ int  *version)
         return(-1);     /* Error! */
     }
 }
+
+
 
 
 /*****************************************************************************

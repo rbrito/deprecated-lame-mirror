@@ -44,7 +44,7 @@ int main(int argc, char **argv)
 #endif
 
 
-  lame_init(&gf);                  /* initialize libmp3lame */
+  if (lame_init(&gf)<0) exit(-1);       /* initialize libmp3lame */
   if(argc==1) lame_usage(&gf,argv[0]);  /* no command-line args, print usage, exit  */
 
   /* parse the command line arguments, setting various flags in the
@@ -68,7 +68,8 @@ int main(int argc, char **argv)
   /* Now that all the options are set, lame needs to analyze them and
    * set some more options
    */
-  lame_init_params(&gf);
+  if (lame_init_params(&gf)<0)  exit(-1);
+
   if (!gf.decode_only)
     lame_print_config(&gf);   /* print usefull information about options being used */
 

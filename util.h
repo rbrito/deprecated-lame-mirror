@@ -338,6 +338,7 @@ typedef struct  {
 
 extern void           display_bitrates(FILE *out_fh);
 extern int            BitrateIndex(int, int,int);
+extern int            FindNearestBitrate(int,int,int);
 extern int            SmpFrqIndex(long, int*);
 extern int            copy_buffer(char *buffer,int buffer_size,Bit_stream_struc *bs);
 extern void           init_bit_stream_w(lame_internal_flags *gfc);

@@ -51,7 +51,7 @@
  *   (globalflags struct filled in by calling program)
  *
  ********************************************************************/
-void lame_init_params(lame_global_flags *gfp)
+int lame_init_params(lame_global_flags *gfp)
 {
   int i;
   lame_internal_flags *gfc=gfp->internal_flags;
@@ -114,12 +114,9 @@ void lame_init_params(lame_global_flags *gfp)
 
     /* we need the version for the bitrate table look up */
     gfc->samplerate_index = SmpFrqIndex((long)gfp->out_samplerate, &gfp->version);
-    for (i=1; i<14 ; i++) {
-      int brate = bitrate_table[gfp->version][i];
-      if (brate >= gfp->brate ) 
-	break;
-    }
-    gfp->brate = bitrate_table[gfp->version][i];
+    /* find the nearest allowed bitrate */
+    if (!gfp->free_format)
+      gfp->brate = FindNearestBitrate(gfp->brate,gfp->version,gfp->out_samplerate);
   }
   if (gfp->brate >= 320) gfp->VBR=0;  /* dont bother with VBR at 320kbs */
 
@@ -425,14 +422,14 @@ void lame_init_params(lame_global_flags *gfp)
   gfc->samplerate_index = SmpFrqIndex((long)gfp->out_samplerate, &gfp->version);
   if( gfc->samplerate_index < 0) {
     display_bitrates(stderr);
-    exit(1);
+    return -1;
   }
   if (gfp->free_format) {
     gfc->bitrate_index=0;
   }else{
     if( (gfc->bitrate_index = BitrateIndex(gfp->brate, gfp->version,gfp->out_samplerate)) < 0) {
       display_bitrates(stderr);
-      exit(1);
+      return -1;
     }
   }
 
@@ -445,7 +442,7 @@ void lame_init_params(lame_global_flags *gfp)
     }else{
       if( (gfc->VBR_max_bitrate  = BitrateIndex(gfp->VBR_max_bitrate_kbps, gfp->version,gfp->out_samplerate)) < 0) {
 	display_bitrates(stderr);
-	exit(1);
+	return -1;
       }
     }
     if (0==gfp->VBR_min_bitrate_kbps) {
@@ -453,7 +450,7 @@ void lame_init_params(lame_global_flags *gfp)
     }else{
       if( (gfc->VBR_min_bitrate  = BitrateIndex(gfp->VBR_min_bitrate_kbps, gfp->version,gfp->out_samplerate)) < 0) {
 	display_bitrates(stderr);
-	exit(1);
+	return -1;
       }
     }
     gfp->VBR_mean_bitrate_kbps = Min(bitrate_table[gfp->version][gfc->VBR_max_bitrate]*.95,gfp->VBR_mean_bitrate_kbps);
@@ -570,7 +567,7 @@ void lame_init_params(lame_global_flags *gfp)
     gfc->noise_shaping=3;       /* not yet coded */
     gfc->noise_shaping_stop=2;  /* not yet coded */
     gfc->use_best_huffman=2;   /* not yet coded */
-    exit(-99);
+    return -1;
   }
 
 
@@ -620,7 +617,7 @@ void lame_init_params(lame_global_flags *gfp)
     lame_encode_ogg_init(gfp);
 #endif
 
-  return;
+  return 0;
 }
 
 

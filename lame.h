@@ -214,9 +214,9 @@ void lame_parse_args(lame_global_flags *, int argc, char **argv);
 
 
 /* REQUIRED:  sets more internal configuration based on data provided
- * above
+ * above.  returns -1 if something failed.
  */
-void lame_init_params(lame_global_flags *);
+int lame_init_params(lame_global_flags *);
 
 
 /* OPTONAL:  print internal lame configuration on stderr*/

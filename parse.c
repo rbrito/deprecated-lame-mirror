@@ -675,26 +675,8 @@ void lame_parse_args(lame_global_flags *gfp,int argc, char **argv)
 	case 'S': 
 	  gfp->silent = TRUE;
 	  break;
-	case 'X':        argUsed = 1;   gfp->experimentalX = 0;
-	  if (*arg == '0')
-	    { gfp->experimentalX=0; }
-	  else if (*arg == '1')
-	    { gfp->experimentalX=1; }
-	  else if (*arg == '2')
-	    { gfp->experimentalX=2; }
-	  else if (*arg == '3')
-	    { gfp->experimentalX=3; }
-	  else if (*arg == '4')
-	    { gfp->experimentalX=4; }
-	  else if (*arg == '5')
-	    { gfp->experimentalX=5; }
-	  else if (*arg == '6')
-	    { gfp->experimentalX=6; }
-	  else {
-	    fprintf(stderr,"%s: -X n must be 0-6, not %s\n",
-		    programName, arg);
-	    err = 1;
-	  }
+	case 'X':        argUsed = 1;   
+	  gfp->VBR_max_bitrate_kbps=atoi(arg); 
 	  break;
 
 
