@@ -35,7 +35,6 @@ extern const int nr_of_sfb_block[6*3][4];
 extern const int pretab[SBMAX_l];
 extern const int s1bits[16], s2bits[16];
 
-extern const scalefac_struct sfBandIndex[9];
 extern const int mdctorder[SBLIMIT];
 
 #define IXMAX_VAL 8206  /* ix always <= 8191+15.    see count_bits() */
