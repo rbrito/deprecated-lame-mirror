@@ -103,7 +103,7 @@ int bin_search_StepSize2(lame_global_flags *gfp,int desired_rate, int start, int
 int count_bits(lame_global_flags *gfp,int  *ix, FLOAT8 xr[576], gr_info *cod_info);
 
 
-int quant_compare(int type, calc_noise_result *best_noise, calc_noise_result *noise);
+INLINE int quant_compare(int type, calc_noise_result *best_noise, calc_noise_result *noise);
 
 void best_huffman_divide(lame_internal_flags *gfc, int gr, int ch, gr_info *cod_info, int *ix);
 

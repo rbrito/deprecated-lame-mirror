@@ -1086,6 +1086,7 @@ void inc_subblock_gain(lame_global_flags *gfp,
     }
 }
 
+INLINE 
 int quant_compare(int experimentalX,
 	calc_noise_result *best,
 	calc_noise_result *calc)

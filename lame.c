@@ -104,7 +104,7 @@ int lame_init_params(lame_global_flags *gfp)
   if (gfp->VBR==vbr_off && gfp->compression_ratio > 0) {
     
     if (gfp->out_samplerate==0) 
-      gfp->out_samplerate=gfp->in_samplerate;   
+      gfp->out_samplerate=validSamplerate(gfp->in_samplerate);   
     
     /* choose a bitrate for the output samplerate which achieves
      * specifed compression ratio 
@@ -132,29 +132,14 @@ int lame_init_params(lame_global_flags *gfp)
 
 
     /* if resamplerate is not valid, find a valid value */
-    if (gfp->out_samplerate>=48000) gfp->out_samplerate=48000;
-    else if (gfp->out_samplerate>=44100) gfp->out_samplerate=44100;
-    else if (gfp->out_samplerate>=32000) gfp->out_samplerate=32000;
-    else if (gfp->out_samplerate>=24000) gfp->out_samplerate=24000;
-    else if (gfp->out_samplerate>=22050) gfp->out_samplerate=22050;
-    else gfp->out_samplerate=16000;
-
+    gfp->out_samplerate = validSamplerate(gfp->out_samplerate);
 
     if (gfp->VBR==vbr_off && gfp->brate>0) {
       /* check if user specified bitrate requires downsampling */
       gfp->compression_ratio = gfp->out_samplerate*16*gfc->stereo/(1000.0*gfp->brate);
       if (gfp->compression_ratio > 13 ) {
 	/* automatic downsample, if possible */
-	gfp->out_samplerate = (10*1000.0*gfp->brate)/(16*gfc->stereo);
-	if (gfp->out_samplerate<=8000) gfp->out_samplerate=8000;
-	else if (gfp->out_samplerate<=11025) gfp->out_samplerate=11025;
-	else if (gfp->out_samplerate<=12000) gfp->out_samplerate=12000;
-	else if (gfp->out_samplerate<=16000) gfp->out_samplerate=16000;
-	else if (gfp->out_samplerate<=22050) gfp->out_samplerate=22050;
-	else if (gfp->out_samplerate<=24000) gfp->out_samplerate=24000;
-	else if (gfp->out_samplerate<=32000) gfp->out_samplerate=32000;
-	else if (gfp->out_samplerate<=44100) gfp->out_samplerate=44100;
-	else gfp->out_samplerate=48000;
+	gfp->out_samplerate = validSamplerate((10*1000.0*gfp->brate)/(16*gfc->stereo));
       }
     }
     if (gfp->VBR==vbr_abr) {
@@ -162,16 +147,7 @@ int lame_init_params(lame_global_flags *gfp)
       gfp->compression_ratio = gfp->out_samplerate*16*gfc->stereo/(1000.0*gfp->VBR_mean_bitrate_kbps);
       if (gfp->compression_ratio > 13 ) {
 	/* automatic downsample, if possible */
-	gfp->out_samplerate = (10*1000.0*gfp->VBR_mean_bitrate_kbps)/(16*gfc->stereo);
-	if (gfp->out_samplerate<=8000) gfp->out_samplerate=8000;
-	else if (gfp->out_samplerate<=11025) gfp->out_samplerate=11025;
-	else if (gfp->out_samplerate<=12000) gfp->out_samplerate=12000;
-	else if (gfp->out_samplerate<=16000) gfp->out_samplerate=16000;
-	else if (gfp->out_samplerate<=22050) gfp->out_samplerate=22050;
-	else if (gfp->out_samplerate<=24000) gfp->out_samplerate=24000;
-	else if (gfp->out_samplerate<=32000) gfp->out_samplerate=32000;
-	else if (gfp->out_samplerate<=44100) gfp->out_samplerate=44100;
-	else gfp->out_samplerate=48000;
+	gfp->out_samplerate = validSamplerate((10*1000.0*gfp->VBR_mean_bitrate_kbps)/(16*gfc->stereo));
       }
     }
   }

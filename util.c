@@ -14,10 +14,6 @@
 
 
 /* 1: MPEG-1, 0: MPEG-2 LSF, 1995-07-11 shn */
-FLOAT8  s_freq_table[3][4] = 
-  {{22.05, 24, 16, 0}, {44.1, 48, 32, 0}, {11.025, 12,8,0}};
-
-/* 1: MPEG-1, 0: MPEG-2 LSF, 1995-07-11 shn */
 int     bitrate_table[2][15] = {
           {0,8,16,24,32,40,48,56,64,80,96,112,128,144,160},
           {0,32,40,48,56,64,80,96,112,128,160,192,224,256,320}};
@@ -112,6 +108,23 @@ int samplerate)   /* convert bitrate in kbps to index */
 }
 
 
+/* map samplerate to a valid samplerate
+ *
+ * Robert.Hegemann@gmx.de 2000-07-01
+ */
+long validSamplerate(long samplerate)
+{
+    if (samplerate<= 8000) return  8000;
+    if (samplerate<=11025) return 11025;
+    if (samplerate<=12000) return 12000;
+    if (samplerate<=16000) return 16000;
+    if (samplerate<=22050) return 22050;
+    if (samplerate<=24000) return 24000;
+    if (samplerate<=32000) return 32000;
+    if (samplerate<=44100) return 44100;
+    
+    return 48000;
+}
 
 int BitrateIndex(
 int bRate,        /* legal rates from 32 to 448 */
