@@ -28,7 +28,6 @@
 
 
 #include <assert.h>
-#include "lame-analysis.h"
 #include "lame.h"
 #include "util.h"
 #include "bitstream.h"
@@ -359,8 +358,8 @@ lame_init_qval(lame_global_flags * gfp)
         gfc->psymodel = 2;
         gfc->quantization = 1;
         gfc->use_scalefac_scale = 0;
-        gfc->noise_shaping_amp = 0;
-        gfc->noise_shaping_stop = 0;
+        gfc->noise_shaping_amp = 1;
+        gfc->noise_shaping_stop = 1;
         gfc->use_best_huffman = 1;
         gfc->substep_shaping = 5; /* use substep shaping in outer loop */
         break;
@@ -1051,9 +1050,9 @@ lame_init_params(lame_global_flags * const gfp)
 
     if ( gfp->preset_expopts && gfc->presetTune.use < 1 )
         MSGF(gfc,"\n*** WARNING ***\n\n"
-		         "Specialized tunings for the preset you are using have been deactivated.\n"
-                 "This is *NOT* recommended and will lead to a decrease in quality!\n"
-	             "\n*** WARNING ***\n\n");
+	     "Specialized tunings for the preset you are using have been deactivated.\n"
+	     "This is *NOT* recommended and will lead to a decrease in quality!\n"
+	     "\n*** WARNING ***\n\n");
 
     /* padding method as described in 
      * "MPEG-Layer3 / Bitstream Syntax and Decoding"
