@@ -1333,7 +1333,7 @@ lame_print_internals( const lame_global_flags * gfp )
     default      : MSGF( gfc, "\t ?? oops, some new one ?? \n" );         break;
     }
     if (gfp->bWriteVbrTag) 
-    MSGF( gfc, "\tusing Xing VBR header\n" );
+    MSGF( gfc, "\tusing LAME Tag\n" );
     MSGF( gfc, "\t...\n" );
     
     /*  everything controlling psychoacoustic settings, like ATH, etc.

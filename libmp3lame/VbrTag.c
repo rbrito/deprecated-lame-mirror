@@ -486,7 +486,7 @@ void ReportLameTagProgress(lame_global_flags *gfp,int nStart)
 		return;
 
 	if (nStart)
-		MSGF( gfp->internal_flags, "Writing Lame Tag...");
+		MSGF( gfp->internal_flags, "Writing LAME Tag...");
 	else
 		MSGF( gfp->internal_flags, "done\n");
 
