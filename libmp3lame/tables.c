@@ -645,8 +645,6 @@ iteration_init(lame_t gfc)
 	adj43[i] = (i + 1) - pow(0.5 * (pow43[i] + pow43[i + 1]), 0.75);
     adj43[i] = 0.5;
 
-    printf("%e\n",
-	   1.0 - pow(0.5, 0.75));
     for (i = 0; i < Q_MAX+Q_MAX2; i++) {
 	ipow20[i] = pow(2.0, (double)(i - 210 - Q_MAX2) * -0.1875);
 	pow20[i] = pow(2.0, (double)(i - 210 - Q_MAX2) * 0.25);
