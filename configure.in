@@ -25,7 +25,7 @@ AC_CANONICAL_SYSTEM
 AC_VALIDATE_CACHED_SYSTEM_TUPLE
 
 dnl automake
-AM_INIT_AUTOMAKE(lame,3.89)
+AM_INIT_AUTOMAKE(lame,3.90)
 AM_CONFIG_HEADER(config.h)
 AM_MAINTAINER_MODE
 AM_MAKE_INCLUDE
@@ -580,11 +580,10 @@ if test "x$GCC" = "xyes"; then
 
 
 
-	OPTIMIZATION_NORM="-fthread-jumps -malign-double -frerun-loop-opt \
-		-fgcse -fexpensive-optimizations"
+	OPTIMIZATION_NORM="-malign-double -fschedule-insns2"
 
-	OPTIMIZATION_FULL="-fmove-all-movables -fschedule-insns2 \
-		-freduce-all-givs"
+	OPTIMIZATION_FULL="-fmove-all-movables -freduce-all-givs \
+			-fsched-interblock -fbranch-count-reg -fforce-addr"
 
 	case "${CONFIG_EXPOPT}" in
 	no)
