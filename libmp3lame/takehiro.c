@@ -215,7 +215,6 @@ quantize_01(const FLOAT *xp, gr_info *gi, fi_union *fi, int sfb,
 	if (xe > xend)
 	    xe = xend;
 	if (gi->scalefac[sfb] < 0) {
-	    memset(fi, 0, sizeof(int)*(xe - xp));
 	    fi += (xe-xp);
 	    xp = xe;
 	    continue;
@@ -225,11 +224,11 @@ quantize_01(const FLOAT *xp, gr_info *gi, fi_union *fi, int sfb,
 	{
 	    fi_union thre;
 	    thre.f = istep;
-	    while (xp < xend) {
+	    do {
 		(fi++)->i = ((int*)xp)[0] > thre.i ? 1:0;
 		(fi++)->i = ((int*)xp)[1] > thre.i ? 1:0;
 		xp += 2;
-	    }
+	    } while (xp < xend);
 	}
 #else
 	do {
@@ -696,7 +695,6 @@ count_bits(lame_t gfc, gr_info * const gi)
 	if (xe > xend)
 	    xe = xend;
 	if (gi->scalefac[sfb] < 0) {
-	    memset(fi, 0, sizeof(int)*(xe - xp));
 	    fi += (xe-xp);
 	    xp = xe;
 	} else
