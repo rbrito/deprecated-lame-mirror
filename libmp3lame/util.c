@@ -494,7 +494,7 @@ int fill_buffer_resample(
   filter_l += intratio;
 
   BLACKSIZE = filter_l+1;  /* size of data needed for FIR */
-
+  assert(len > BLACKSIZE);
   
   if ( gfc->fill_buffer_resample_init == 0 ) {
     gfc->inbuf_old[0]=calloc(BLACKSIZE,sizeof(gfc->inbuf_old[0][0]));
