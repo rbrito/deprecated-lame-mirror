@@ -727,29 +727,29 @@ inc_subblock_gain (
  *
  *          amp_scalefac_bands() 
  *
- *  Amplify the scalefactor bands that violate the masking threshold.
+ *  Change the scalefactor value of the band where the noise is not masked.
  *  See ISO 11172-3 Section C.1.5.4.3.5
  * 
  *  distort[] = noise/masking
- *  distort[] > 1   ==> noise is not masked
+ *  distort[] > 1   ==> noise is not masked (need more bits)
  *  distort[] < 1   ==> noise is masked
  *  max_dist = maximum value of distort[]
  *  
- *  Three algorithms:
- *  noise_shaping_amp
- *        0             Amplify all bands with distort[]>1.
+ *  Three algorithms are available to select "the band":
+ *  method
+ *    0             all bands with distort[]>1.
  *
- *        1             Amplify all bands with distort[] >= max_dist^(.5);
- *                     ( 50% in the db scale)
+ *    1             all bands with distort[] >= max_dist^(.5);
+ *                  (50% in the dB scale)
  *
- *        2             Amplify first band with distort[] >= max_dist;
- *                       
+ *    2             only the one band with distort[] = max_dist;
+ *                  (The band with the strongest distortion)
  *
- *  For algorithms 0 and 1, if max_dist < 1, then amplify all bands 
+ *  For algorithms 0 and 1, if max_dist < 1, then change all bands 
  *  with distort[] >= .95*max_dist.  This is to make sure we always
- *  amplify at least one band.  
- * 
+ *  change at least one band.
  *
+ *  returns how many bits are available to store the quantized spectrum.
  *************************************************************************/
 static int
 amp_scalefac_bands(
@@ -760,7 +760,7 @@ amp_scalefac_bands(
     int target_bits
     )
 {
-    int status, sfb;
+    int bits, sfb;
     FLOAT trigger;
 
     /* compute maximum value of distort[]  */
@@ -790,30 +790,23 @@ amp_scalefac_bands(
 	    break;
     }
 
-    /*
-     *  amplifies scalefactor bands, 
-     *   - if all are already amplified returns 0
-     *   - if some bands are amplified too much:
-     *      * try to increase scalefac_scale
-     *      * if already scalefac_scale was set
-     *          try on short blocks to increase subblock gain
-     */
-
     if (loop_break(cod_info))
-	return 0; /* failed */
+	return 0; /* all bands are already changed -> fail */
 
     /* not all scalefactors have been amplified.  so these 
      * scalefacs are possibly valid.  encode them: 
      */
-    status = target_bits - gfc->scale_bitcounter (cod_info);
-    if (status > 0)
-	return status; /* amplified some bands not exceeding limits */
+    bits = target_bits - gfc->scale_bitcounter (cod_info);
+    if (bits > 0)
+	return bits; /* Ok, we will go with this scalefactor combination */
 
-    /* some scalefactors are too large. */
+    /* some scalefactors are increased too much
+     *      -> try to use scalefac_scale or subblock_gain.
+     */
     if (gfc->use_subblock_gain && cod_info->block_type == SHORT_TYPE) {
 	/* try to use subblcok gain */
-	if (inc_subblock_gain (cod_info) || loop_break (cod_info))
-	    return 0;
+	if (inc_subblock_gain(cod_info) || loop_break(cod_info))
+	    return 0; /* failed */
     } else if (gfc->use_scalefac_scale && !cod_info->scalefac_scale) {
 	/*  lets try setting scalefac_scale=1 */
 	inc_scalefac_scale (cod_info);
@@ -829,8 +822,8 @@ amp_scalefac_bands(
  *
  *  outer_loop ()                                                       
  *
- *  Function: The outer iteration loop controls the masking conditions  
- *  of all scalefactorbands. It computes the best scalefac and global gain.
+ *  Function: The outer iteration loop controls the masking conditions
+ *  of all scalefactor bands. It computes the best scalefac and global gain.
  * 
  *  mt 5/99 completely rewritten to allow for bit reservoir control,   
  *  mid/side channels with L/R or mid/side masking thresholds, 
@@ -935,39 +928,6 @@ outer_loop (
 }
 
 
-
-
-
-/************************************************************************
- *
- *      iteration_finish_one()
- *
- *  Robert Hegemann 2000-09-06
- *
- *  update reservoir status after FINAL quantization/bitrate 
- *
- ************************************************************************/
-
-static void 
-iteration_finish_one (
-    lame_internal_flags *gfc,
-    int gr, int ch, int adjbits)
-{
-    gr_info *gi = &gfc->l3_side.tt[gr][ch];
-
-    /*  try some better scalefac storage
-     */
-    best_scalefac_store (gfc, gr, ch);
-
-    /*  best huffman_divide may save some bits too
-     */
-    if (gfc->use_best_huffman == 1) 
-	best_huffman_divide (gfc, gi);
-
-    /*  update reservoir status after FINAL quantization/bitrate
-     */
-    ResvAdjust (gfc, gi->part2_length + gi->part2_3_length - adjbits);
-}
 
 
 
@@ -1108,9 +1068,10 @@ ABR_iteration_loop(
      */
     for (gr = 0; gr < gfc->mode_gr; gr++) {
         for (ch = 0; ch < gfc->channels_out; ch++) {
-	    gr_info *cod_info = &gfc->l3_side.tt[gr][ch];
-	    outer_loop(gfp, cod_info, ch, targ_bits[gr][ch], &ratio[gr][ch]);
-	    iteration_finish_one(gfc, gr, ch, 0);
+	    gr_info *gi = &gfc->l3_side.tt[gr][ch];
+	    outer_loop(gfp, gi, ch, targ_bits[gr][ch], &ratio[gr][ch]);
+	    iteration_finish_one(gfc, gr, ch);
+	    ResvAdjust(gfc, gi->part2_length + gi->part2_3_length);
         } /* ch */
     }  /* gr */
 
@@ -1161,12 +1122,14 @@ iteration_loop(
             reduce_side (targ_bits, ms_ener_ratio[gr], mean_bits);
 
         for (ch=0 ; ch < gfc->channels_out ; ch ++) {
-	    gr_info *cod_info = &gfc->l3_side.tt[gr][ch]; 
-	    outer_loop (gfp, cod_info, ch, targ_bits[ch], &ratio[gr][ch]);
-            assert (cod_info->part2_3_length <= MAX_BITS);
-	    iteration_finish_one(gfc, gr, ch, mean_bits / gfc->channels_out);
-        } /* for ch */
-    }    /* for gr */
+	    gr_info *gi = &gfc->l3_side.tt[gr][ch]; 
+	    outer_loop(gfp, gi, ch, targ_bits[ch], &ratio[gr][ch]);
+	    iteration_finish_one(gfc, gr, ch);
+	    ResvAdjust(gfc,
+		       gi->part2_length + gi->part2_3_length
+		       - mean_bits / gfc->channels_out);
+        }
+    }
 
     ResvFrameEnd (gfc, 0);
 }
@@ -1548,16 +1511,16 @@ VBR_iteration_loop (
 	used_bits = 0;
 	for (gr = 0; gr < gfc->mode_gr; gr++) {
 	    for (ch = 0; ch < gfc->channels_out; ch++) {
-		gr_info *cod_info = &gfc->l3_side.tt[gr][ch];
-		if (init_outer_loop(gfc, cod_info, xrpow) == 0)
+		gr_info *gi = &gfc->l3_side.tt[gr][ch];
+		if (init_outer_loop(gfc, gi, xrpow) == 0)
 		    continue; /* digital silence */
 
 		while (VBR_noise_shaping(gfc, xrpow,
 					 l3_xmin[gr][ch], gr, ch) < 0) {
-		    bitpressure_strategy(cod_info, l3_xmin[gr][ch]);
+		    bitpressure_strategy(gi, l3_xmin[gr][ch]);
 		}
 
-		used_bits += cod_info->part2_3_length + cod_info->part2_length;
+		used_bits += gi->part2_3_length + gi->part2_length;
 		if (used_bits > max_frame_bits) {
 		    for (gr = 0; gr < gfc->mode_gr; gr++) 
 			for (ch = 0; ch < gfc->channels_out; ch++) 
@@ -1571,10 +1534,11 @@ VBR_iteration_loop (
 
     for (gr = 0; gr < gfc->mode_gr; gr++) {
         for (ch = 0; ch < gfc->channels_out; ch++) {
+	    gr_info *gi = &gfc->l3_side.tt[gr][ch];
 	    if (gfc->substep_shaping & 1)
-		trancate_smallspectrums(gfc, &gfc->l3_side.tt[gr][ch],
-					l3_xmin[gr][ch], xrpow);
-	    iteration_finish_one(gfc, gr, ch, 0);
+		trancate_smallspectrums(gfc, gi, l3_xmin[gr][ch], xrpow);
+	    iteration_finish_one(gfc, gr, ch);
+	    ResvAdjust (gfc, gi->part2_length + gi->part2_3_length);
 	} /* for ch */
     }    /* for gr */
 

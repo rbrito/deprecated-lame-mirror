@@ -87,12 +87,10 @@ static int quantize_xrpow(const FLOAT *xp, gr_info *gi)
 	    fi[1].i -= MAGIC_INT;
 	    fi += 2;
 #else
-	    FLOAT x1, x2;
-	    int	rx1, rx2;
-	    x1 = *xp++ * istep;
-	    x2 = *xp++ * istep;
-	    rx1 = (int)x1;
-	    rx2 = (int)x2;
+	    FLOAT x1 = *xp++ * istep;
+	    FLOAT x2 = *xp++ * istep;
+	    int rx1 = (int)x1;
+	    int rx2 = (int)x2;
 	    if (rx1 >= PRECALC_SIZE) return LARGE_BITS;
 	    if (rx2 >= PRECALC_SIZE) return LARGE_BITS;
 	    (fi++)->i = (int)(x1 + adj43[rx1]);
@@ -715,7 +713,8 @@ Find the optimal way to store the scalefactors.
 Only call this routine after final scalefactors have been
 chosen and the channel/granule will not be re-encoded.
  */
-void best_scalefac_store(
+static void
+best_scalefac_store(
     lame_internal_flags * const gfc,
     const int             gr,
     const int             ch
@@ -781,6 +780,33 @@ void best_scalefac_store(
 }
 
 
+/************************************************************************
+ *
+ *      iteration_finish_one()
+ *
+ *  Robert Hegemann 2000-09-06
+ *
+ ************************************************************************/
+void 
+iteration_finish_one (
+    lame_internal_flags *gfc, int gr, int ch)
+{
+    /*  try some better scalefac storage
+     */
+    best_scalefac_store (gfc, gr, ch);
+
+    /*  best huffman_divide may save some bits too
+     */
+    if (gfc->use_best_huffman == 1)
+	best_huffman_divide (gfc, &gfc->l3_side.tt[gr][ch]);
+}
+
+
+
+/*************************************************************************/
+/*            scale_bitcount                                             */
+/*************************************************************************/
+
 /* number of bits used to encode scalefacs */
 
 /* 18*slen1_tab[i] + 18*slen2_tab[i] */
@@ -796,11 +822,7 @@ static const int scale_long[16] = {
     0, 10, 20, 30, 33, 21, 31, 41, 32, 42, 52, 43, 53, 63, 64, 74 };
 
 
-/*************************************************************************/
-/*            scale_bitcount                                             */
-/*************************************************************************/
-
-/* Also calculates the number of bits necessary to code the scalefactors. */
+/* calculates the number of bits necessary to code the scalefactors. */
 int
 scale_bitcount(gr_info * const gi)
 {
