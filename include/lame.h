@@ -801,10 +801,20 @@ int CDECL lame_decode_init(void);
 
 /*********************************************************************
  * input 1 mp3 frame, output (maybe) pcm data.  
- * lame_decode() return code:
- *   -1: error
- *    0: need more data
- *  n>0: size of pcm output
+ *
+ *  nout = lame_decode(mp3buf,len,pcm_l,pcm_r);
+ *
+ * input:  
+ *    len          :  number of bytes of mp3 data in mp3buf
+ *    mp3buf[len]  :  mp3 data to be decoded
+ *
+ * output:
+ *    nout:  -1    : decoding error
+ *            0    : need more data before we can complete the decode 
+ *           >0    : returned 'nout' samples worth of data in pcm_l,pcm_r
+ *    pcm_l[nout]  : left channel data
+ *    pcm_r[nout]  : right channel data 
+ *    
  *********************************************************************/
 int CDECL lame_decode(
         unsigned char *  mp3buf,
