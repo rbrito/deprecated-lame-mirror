@@ -42,7 +42,7 @@
 # endif
 #endif
 
-#define         MAX_U_32_NUM            0xFFFFFFFF
+#define         MAX_U_32_NUM            0xFFFFFFFFu
 
 #include <sys/stat.h>
 
@@ -57,11 +57,10 @@
 # include <sys/types.h>
 #endif
 
-#include "lame.h"
 #include "main.h"
 #include "get_audio.h"
 #include "portableio.h"
-#include "timestatus.h"
+
 
 #ifdef WITH_DMALLOC
 #include <dmalloc.h>
@@ -670,9 +669,8 @@ unpack_read_samples( const int samples_to_read, const int bytes_per_sample,
 #define GA_URS_IFLOOP( ga_urs_bps ) \
     if( bytes_per_sample == ga_urs_bps ) \
 	for( i = samples_read * bytes_per_sample; (i -= bytes_per_sample) >=0;)
-    
 
-    samples_read = fread( sample_buffer, bytes_per_sample, 
+    samples_read = fread( sample_buffer, bytes_per_sample,
 			  samples_to_read, pcm_in);
     op = sample_buffer + samples_read;
 
@@ -717,21 +715,20 @@ read_samples_pcm(FILE * musicin, int sample_buffer[2304],
 {
     int     samples_read;
     int     iswav = (input_format == sf_wave);
-    int     hi_lo_order;	/* byte order of input stream */
+    int     hi_lo_order = 0;
 
     if( (32 == pcmbitwidth) || (24 == pcmbitwidth) || (16 == pcmbitwidth) ) {
 	/* assume only recognized wav files are */
 	/*  in little endian byte order */
 	hi_lo_order = (!iswav == !pcmswapbytes);
-        samples_read = unpack_read_samples(samples_to_read, pcmbitwidth/8, 
-					   hi_lo_order,sample_buffer, musicin);
-    } else if( 8 == pcmbitwidth ) {
-	samples_read = unpack_read_samples( samples_to_read, 1, 0,
-					    sample_buffer, musicin );
-    } else {
-        fprintf(stderr, "Only 8, 16, 24 and 32 bit input files supported \n");
-        exit(1);
+    } else if( 8 != pcmbitwidth ) {
+	fprintf(stderr, "Only 8, 16, 24 and 32 bit input files supported \n");
+	exit(1);
     }
+
+    samples_read = unpack_read_samples(samples_to_read, pcmbitwidth/8,
+				       hi_lo_order, sample_buffer, musicin);
+
     if (ferror(musicin)) {
         fprintf(stderr, "Error reading input file\n");
         exit(1);
@@ -1368,18 +1365,6 @@ decode_initfile(lame_t gfp, FILE * fd, mp3data_struct * mp3data)
 	 * ant bitrate */
         mp3data->nsamp = MAX_U_32_NUM;
     }
-
-
-    /*
-       fprintf(stderr,"ret = %i NEED_MORE=%i \n",ret,MP3_NEED_MORE);
-       fprintf(stderr,"channels = %i \n",mp.fr.channels);
-       fprintf(stderr,"samp = %i  \n",freqs[mp.fr.sampling_frequency]);
-       fprintf(stderr,"bitrate = %i  \n",mp3data->bitrate);
-       fprintf(stderr,"num frames = %ui  \n",num_frames);
-       fprintf(stderr,"num samp = %ui  \n",mp3data->nsamp);
-       fprintf(stderr,"mode     = %i  \n",mp.fr.mode);
-     */
-
     return 0;
 }
 
