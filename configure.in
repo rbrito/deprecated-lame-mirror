@@ -262,7 +262,7 @@ dnl and need libwsock32
 SOCKETFUNCTION=YES
 AC_CHECK_HEADER(winsock2.h, [AC_DEFINE(HAVE_WINSOCKET)
 		LIBS="$LIBS -lwsock32"])  
-if test $ac_cv_header_winsock_h = no; then
+if test $ac_cv_header_winsock2_h = no; then
 	AC_CHECK_FUNCS(socket)
 	if test $ac_cv_func_socket = no; then
 		# maybe it is in libsocket
