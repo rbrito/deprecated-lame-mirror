@@ -1092,10 +1092,6 @@ CBR_bitalloc(
 {
     int bits, ch, adjustBits, targ_bits[2];
 
-    /* check hard limit per granule (by spec) */
-    if (max_bits > MAX_BITS)
-	max_bits = MAX_BITS;
-
     /* allocate minimum bits to encode part2_length (for i-stereo) */
     bits = 0;
     for (ch = 0; ch < gfc->channels_out; ch++)
@@ -1162,9 +1158,12 @@ ABR_iteration_loop(
     factor = (mean_bits+600)*(1.0/2600.0);
 
     gfc->bitrate_index = gfc->VBR_max_bitrate;
-    max_bits = ResvFrameBegin (gfp, &mean_bits);
+    max_bits = ResvFrameBegin (gfp, &mean_bits) / gfc->mode_gr;
     gfc->bitrate_index = 1;
-    min_bits = ResvFrameBegin (gfp, &mean_bits);
+    min_bits = ResvFrameBegin (gfp, &mean_bits) / gfc->mode_gr;
+    /* check hard limit per granule (by spec) */
+    if (max_bits > MAX_BITS)
+	max_bits = MAX_BITS;
 
     for (gr = 0; gr < gfc->mode_gr; gr++)
 	CBR_bitalloc(gfc, ratio[gr], min_bits, max_bits, factor, gr);
@@ -1234,6 +1233,9 @@ iteration_loop(
 
 	if (max_bits > mean_bits*2)    /* limit 2*average (need tuning) */
 	    max_bits = mean_bits*2;
+	/* check hard limit per granule (by spec) */
+	if (max_bits > MAX_BITS)
+	    max_bits = MAX_BITS;
 
 	gfc->l3_side.ResvSize += mean_bits;
 
