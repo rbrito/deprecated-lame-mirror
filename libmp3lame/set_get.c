@@ -220,7 +220,7 @@ lame_get_bWriteVbrTag( const lame_global_flags*  gfp )
  * True quality is determined by the bitrate but this variable will effect
  * quality by selecting expensive or cheap algorithms.
  * quality=0..9.  0=best (very slow).  9=worst.  
- * recommended:  3     near-best quality, not too slow
+ * recommended:  2     near-best quality, not too slow
  *               5     good quality, fast
  *               7     ok quality, really fast
  */
@@ -228,8 +228,12 @@ int
 lame_set_quality( lame_global_flags*  gfp,
                   int                 quality )
 {
-    gfp->quality = quality;
+    if (quality < 0)
+	quality = 0;
+    if (quality > 9)
+	quality = 9;
 
+    gfp->quality = quality;
     return 0;
 }
 

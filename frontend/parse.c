@@ -1346,15 +1346,7 @@ char* const inPath, char* const outPath, char **nogap_inPath, int *num_nogap)
                         break;
 
                     case 'q':        argUsed = 1;
-                        {
-                            int tmp_quality = atoi( arg );
-
-                            /* XXX should we move this into lame_set_quality()? */
-                            if( tmp_quality < 0 ) tmp_quality = 0;
-                            if( tmp_quality > 9 ) tmp_quality = 9;
-
-                            (void) lame_set_quality( gfp, tmp_quality );
-                        }
+			(void) lame_set_quality(gfp, atoi( arg ));
                         break;
                     case 'f': 
                         (void) lame_set_quality( gfp, 7 );
@@ -1409,6 +1401,10 @@ char* const inPath, char* const outPath, char **nogap_inPath, int *num_nogap)
                         lame_set_highpassfreq(gfp,0);
                         break;
                     case 'd': 
+                        fprintf(stderr,"WARNING: -d is obsolete.\n");
+                        /*(void) lame_set_allow_diff_short( gfp, 1 );*/
+                        break;
+                    case 's': 
                         fprintf(stderr,"WARNING: -d is obsolete.\n");
                         /*(void) lame_set_allow_diff_short( gfp, 1 );*/
                         break;
