@@ -39,7 +39,7 @@ CPP_OPTS = $(CPP_OPTS) -DHAVE_MPGLIB
 # Requires  -DHAVE_MPGLIB
 # and SNDLIB = -DLAME or -DLIBSNDFILE
 #
-# GTK = -DHAVE_GTK `gtk-config --cflags`
+# GTK = `gtk-config --cflags`
 # GTKLIBS = `gtk-config --libs` 
 #
 ##########################################################################

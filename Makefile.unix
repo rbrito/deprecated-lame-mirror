@@ -106,7 +106,7 @@ endif
 #
 # Requires  -DHAVE_MPGLIB
 #
-# GTK = -DHAVE_GTK `gtk-config --cflags`
+# GTK = `gtk-config --cflags`
 # GTKLIBS = `gtk-config --libs` 
 #
 ##########################################################################
@@ -119,7 +119,7 @@ endif
 ##########################################################################
 ifeq ($(UNAME),Linux)
 #  remove these lines if you dont have GTK, or dont want the GTK frame analyzer
-   GTK = -DHAVE_GTK `gtk-config --cflags`
+   GTK = `gtk-config --cflags`
    GTKLIBS = `gtk-config --libs` 
 # Comment out next 2 lines if you want to remove VBR histogram capability
    BRHIST_SWITCH = -DBRHIST -DHAVE_TERMCAP -DHAVE_TERMCAP_H
@@ -245,7 +245,7 @@ endif  #  linux
 ##########################################################################
 ifeq ($(UNAME),FreeBSD)
 #  remove if you do not have GTK or do not want the GTK frame analyzer
-   GTK = -DHAVE_GTK `gtk12-config --cflags`
+   GTK = `gtk12-config --cflags`
    GTKLIBS = `gtk12-config --libs` 
 # Comment out next 2 lines if you want to remove VBR histogram capability
    BRHIST_SWITCH = -DBRHIST -DHAVE_TERMCAP -DHAVE_TERMCAP_H
@@ -259,7 +259,7 @@ endif
 ##########################################################################
 ifeq ($(UNAME),OpenBSD)
 #  remove if you do not have GTK or do not want the GTK frame analyzer
-   GTK = -DHAVE_GTK `gtk-config --cflags`
+   GTK = `gtk-config --cflags`
    GTKLIBS = `gtk-config --libs` 
 # Comment out next 2 lines if you want to remove VBR histogram capability
    BRHIST_SWITCH = -DBRHIST -DHAVE_TERMCAP -DHAVE_TERMCAP_H
@@ -291,7 +291,7 @@ ifeq ($(UNAME),IRIX64)
    CC_OPTS = -O3 -woff all 
 
 #optonal:
-#   GTK = -DHAVE_GTK `gtk-config --cflags`
+#   GTK = `gtk-config --cflags`
 #   GTKLIBS = `gtk-config --libs`
 #   BRHIST_SWITCH = -DBRHIST -DHAVE_TERMCAP -DHAVE_TERMCAP_H
 #   LIBTERMCAP = -lncurses
@@ -366,7 +366,7 @@ ifeq ($(UNAME),OS/2)
 # Uncomment & inspect the 2 GTK lines to use MP3x GTK frame analyzer.
 # Properly installed XFree86/devlibs & GTK+ is a prerequisite.
 # The following works for me using Xfree86/OS2 3.3.5 and GTK+ 1.2.3:
-#   GTK = -DHAVE_GTK -IC:/XFree86/include/gtk12 -Zmt -D__ST_MT_ERRNO__ -IC:/XFree86/include/glib12 -IC:/XFree86/include
+#   GTK = -IC:/XFree86/include/gtk12 -Zmt -D__ST_MT_ERRNO__ -IC:/XFree86/include/glib12 -IC:/XFree86/include
 #   GTKLIBS = -LC:/XFree86/lib -Zmtd -Zsysv-signals -Zbin-files -lgtk12 -lgdk12 -lgmodule -lglib12 -lXext -lX11 -lshm -lbsd -lsocket -lm
 endif
 

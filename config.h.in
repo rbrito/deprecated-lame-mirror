@@ -45,9 +45,6 @@
 /* Define to 1 if you have the `gettimeofday' function. */
 #undef HAVE_GETTIMEOFDAY
 
-/* have working GTK */
-#undef HAVE_GTK
-
 /* add ieee754_float32_t type */
 #undef HAVE_IEEE754_FLOAT32_T
 #ifndef HAVE_IEEE754_FLOAT32_T

@@ -319,10 +319,6 @@ AC_CHECK_LIB(sndfile, sf_open_read, HAVE_SNDFILE="yes")
 dnl configure use of features
 
 AM_PATH_GTK(1.2.0, HAVE_GTK="yes", HAVE_GTK="no")
-if test "${HAVE_GTK}" = "yes"; then
-	AC_DEFINE(HAVE_GTK, 1, have working GTK)
-fi
-
 
 dnl ElectricFence malloc debugging
 AC_MSG_CHECKING(use of ElectricFence malloc debugging)
@@ -988,7 +984,6 @@ if test "$UNAME" = "OS/2"; then
 # Uncomment & inspect the GTK lines to use MP3x GTK frame analyzer.
 # Properly installed XFree86/devlibs & GTK+ is a prerequisite.
 # The following works for me using Xfree86/OS2 3.3.5 and GTK+ 1.2.3:
-#   AC_DEFINE(HAVE_GTK, 1, have GTK)
 #   AC_DEFINE(__ST_MT_ERRNO__, 1)
 #   INCLUDES="-IC:/XFree86/include/gtk12 -IC:/XFree86/include/glib12 \
 #             -IC:/XFree86/include $INCLUDES"
