@@ -15,7 +15,6 @@
 
 #define __USE_SYSBASE
 #include "lame.h"
-#include "util.h"
 #include <stdio.h>
 #include <stdlib.h>
 
@@ -98,7 +97,7 @@ int lame_decode_initfile(const char *fullname, mp3data_struct *mp3data)
 	mp3data->stereo        = mstream->dec_channels;
 	mp3data->samplerate    = mstream->dec_frequency;
 	mp3data->bitrate       = mstream->bitrate;
-	mp3data->nsamp         = (FLOAT)mstream->ms_duration/1000 * mstream->dec_frequency;
+	mp3data->nsamp         = (float)mstream->ms_duration/1000 * mstream->dec_frequency;
 	mp3data->mode          = mstream->mode;
 	mp3data->mode_ext      = MPG_MD_LR_LR;	/* mpega.library doesn't supply this info! :( */
 	mp3data->framesize     = smpls[mstream->norm-1][mstream->layer];

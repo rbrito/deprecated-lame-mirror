@@ -418,6 +418,7 @@ endif
 CC_SWITCHES += -DNDEBUG $(CC_OPTS) $(SNDLIB) $(GTK) \
 $(BRHIST_SWITCH) $(VORBIS) 
 frontend_sources = \
+	frontend/amiga_mpega.c \
         frontend/brhist.c \
 	frontend/get_audio.c \
 	frontend/ieeefloat.c \
