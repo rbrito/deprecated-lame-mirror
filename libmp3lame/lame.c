@@ -279,8 +279,12 @@ static int apply_preset(lame_global_flags*  gfp, int bitrate, vbr_mode mode)
     lame_set_ATHcurve(gfp, switch_map[r].ath_curve);
     lame_set_ATHlower(gfp, (double)switch_map[r].ath_lower);
 
-    if (gfp->lowpassfreq == 0)
-	lame_set_lowpassfreq(gfp, switch_map[r].lowpass);
+    if (gfp->lowpassfreq == 0) {
+	int lowpass = switch_map[r].lowpass;
+	if (gfp->quality > 7)
+	    lowpass *= 0.9;
+	lame_set_lowpassfreq(gfp, lowpass);
+    }
 
     if (gfp->mode == NOT_SET)
 	gfp->mode = JOINT_STEREO;
