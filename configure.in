@@ -25,7 +25,7 @@ dnl check system
 AC_CANONICAL_HOST
 
 dnl automake
-AM_INIT_AUTOMAKE(lame,3.96)
+AM_INIT_AUTOMAKE(lame,3.95.1)
 AM_CONFIG_HEADER(config.h)
 AM_MAINTAINER_MODE
 AM_MAKE_INCLUDE
@@ -471,6 +471,7 @@ AM_CONDITIONAL(LIB_WITH_DECODER, test "x${CONFIG_DECODER}" = "xyes")
 if test "${CONFIG_DECODER}" != "no" ; then
 	CONFIG_DECODER="yes (Layer"
 	AC_DEFINE(HAVE_MPGLIB, 1, build with mpglib support)
+	AC_DEFINE(DECODE_ON_THE_FLY, 1, allow to compute a more accurate replaygain value)
   
 	if test "${CONFIG_DECODER_L1}" != "no"; then
 		CONFIG_DECODER="${CONFIG_DECODER} 1,"
@@ -592,18 +593,18 @@ dnl configure use of VBR bitrate histogram
 dnl todo: always use yes as default, use simulation instead ?
 AC_MSG_CHECKING(use of VBR bitrate histogram)
 if test "x${HAVE_TERMCAP}" != "x"; then
-  BRH_DEFAULT="yes"
+  TERMCAP_DEFAULT="yes"
 else
-  BRH_DEFAULT="no"
+  TERMCAP_DEFAULT="no"
 fi
 AC_ARG_ENABLE(brhist, 
-  [  --enable-brhist            Include the VBR bitrate histogram feature]
-  [                           [default=yes if any termcap available]],
-  CONFIG_BRHIST="${enableval}", CONFIG_BRHIST="${BRH_DEFAULT}")
+  [  --disable-brhist          Include the VBR bitrate histogram feature]
+  [                           [default=yes]],
+  CONFIG_BRHIST="${enableval}", CONFIG_BRHIST="yes")
 if test "${CONFIG_BRHIST}" != "no" ; then
 	AC_DEFINE(BRHIST, 1, enable VBR bitrate histogram)
 
-	if test "${BRH_DEFAULT}" = "yes" ; then
+	if test "${TERMCAP_DEFAULT}" = "yes" ; then
 		FRONTEND_LDADD="-l${HAVE_TERMCAP} ${FRONTEND_LDADD}"
 		CONFIG_BRHIST="yes, with ${HAVE_TERMCAP}"
 		AC_DEFINE(HAVE_TERMCAP, 1, have termcap)
