@@ -59,14 +59,8 @@ int lame_readframe(short int Buffer[2][1152])
   int iread;
 
   /* note: if input is gf.stereo and output is mono, get_audio() 
-   * will  .5*(L+R) in channel 0,  and nothing in channel 1. */
-  /* DOWNSAMPLE, ETC */
-  //  if (gf.resample_ratio!=1) {
-  //    /* input frequency =  output freq*resample_ratio; */
-  //    iread=get_audio_resample(Buffer,gf.resample_ratio,gf.stereo);
-  //  }else{
-    iread = get_audio(Buffer,gf.stereo);
-    //  }
+   * will return  .5*(L+R) in channel 0,  and nothing in channel 1. */
+  iread = get_audio(Buffer,gf.stereo);
   
   /* check to see if we overestimated/underestimated totalframes */
   if (iread==0)  gf.totalframes = Min(gf.totalframes,gf.frameNum+2);
@@ -143,90 +137,6 @@ int get_audio(short buffer[2][1152],int stereo)
 
 }
   
-
-/************************************************************************
-*
-* get_audio_resample()
-*
-* PURPOSE:  reads a frame of audio data from a file to the buffer,
-*   aligns the data for future processing, separates the
-*   left and right channels and resamples to desired sampling rate.  
-*
-*
-************************************************************************/
-int get_audio_resample(short int Buffer[2][1152],FLOAT resample_ratio,int stereo)
-{
-
-  typedef short int sample_buffer[2][1152];
-  static sample_buffer bufa[2];
-  static sample_buffer *r0,*r1,*swap;
-  static int iread=1;
-  static FLOAT itime=0;
-
-  FLOAT time0,time1,time2,x1,x2;
-  int rcode,out_framesize,ch,j,k;
-  static int in_framesize;
-
-  out_framesize = gf.mode_gr*576;
-  rcode=out_framesize;  
-  /* if during the last call to resample we got an iread=0, set rcode=0 */
-  if (iread==0) rcode=0;
-
-
-  if (gf.frameNum==0) {
-    r0=&bufa[0];
-    r1=&bufa[1];
-    in_framesize=out_framesize;
-    iread=get_audio(*r0,stereo);
-    if (iread>0) in_framesize=iread;
-    iread=get_audio(*r1,stereo);
-  }
-
-  /* time of j'th element in r0] = itime + j/ifreq; */
-  /* time of j'th element in r1] = itime + (j+in_framesize)/ifreq; */
-  /* time of k'th element in Buffer   =  j/ofreq */
-
-  for (k=0;k<out_framesize;k++) {
-    time0 = k*resample_ratio;       /* time of k'th output sample */
-    j = floor( time0 -itime  );  
-    time1 = itime + j;              /* time of j'th input sample */
-    time2 = time1 +1;               /* time of j+1th input sample */
-
-    if (1+j >= 2*in_framesize) {
-      fprintf(stderr,"strange error in linear_resample()");
-      exit(1);
-    }
-    for (ch=0;ch<stereo;ch++) {
-      x1 = (j<in_framesize) ? (*r0)[ch][j] : (*r1)[ch][j-in_framesize];
-      x2 = ((1+j)<in_framesize) ? (*r0)[ch][1+j] : (*r1)[ch][1+j-in_framesize];
-      Buffer[ch][k] = (x1*(time2-time0) + x2*(time0-time1));
-
-    }
-
-    if ((1+j)>=in_framesize) {
-      swap=r0; r0=r1; r1=swap;
-      iread = get_audio(*r1,stereo);
-      itime += in_framesize;
-    }
-    /*    printf("k=%i numch=%i  buffer = %i %i \n",k,stereo,Buffer[0][k],Buffer[1][k]);*/
-  }
-  itime -= out_framesize*resample_ratio;
-  return rcode;
-}
-
-
-
-
-
-
-
-
-
-
-
-
-
-
 
 
 

@@ -632,7 +632,7 @@ int lame_encode_frame(short int inbuf_l[],short int inbuf_r[],int mf_size,char *
 
   /********************** status display  *****************************/
   if (!gf.gtkflag && !gf.silent) {
-    int mod = info->version == 0 ? 100 : 20;
+    int mod = info->version == 0 ? 200 : 50;
     if (gf.frameNum%mod==0) {
       timestatus(info,gf.frameNum,gf.totalframes);
 #ifdef BRHIST
@@ -815,42 +815,68 @@ int lame_encode_frame(short int inbuf_l[],short int inbuf_r[],int mf_size,char *
 
 
 
-int fill_buffer_linear_resample(short int *outbuf,int desired_len,
+int fill_buffer_resample(short int *outbuf,int desired_len,
         short int *inbuf,int len,int *num_used,int ch) {
 
   static FLOAT8 itime[2];
-#define OLDBUFSIZE 10
+#define OLDBUFSIZE 5
   static short int inbuf_old[2][OLDBUFSIZE];
-  FLOAT8 time0,time1,time2;
-  int i,j,k,x1,x2;
+  static int init[2]={0,0};
+  int i,j=0,k,linear;
 
-  if (gf.frameNum==0) {
+  if (gf.frameNum==0 && !init[ch]) {
+    init[ch]=1;
     itime[ch]=0;
+    memset((char *) inbuf_old[ch], 0, sizeof(short int)*OLDBUFSIZE);
   }
+  if (gf.frameNum!=0) init[ch]=0; /* reset, for next time framenum=0 */
+
+
+  /* if downsampling by an integer multiple, use linear resampling,
+   * otherwise use quadratic */
+  linear = ( .0001 > fabs(gf.resample_ratio - floor(.5+gf.resample_ratio)));
 
   /* time of j'th element in inbuf = itime + j/ifreq; */
   /* time of k'th element in outbuf   =  j/ofreq */
   for (k=0;k<desired_len;k++) {
+    int y0,y1,y2,y3;
+    FLOAT8 x0,x1,x2,x3;
+    FLOAT8 time0;
+
     time0 = k*gf.resample_ratio;       /* time of k'th output sample */
     j = floor( time0 -itime[ch]  );  
-    time1 = itime[ch] + j;              /* time of j'th input sample */
-    time2 = time1 +1;               /* time of j+1th input sample */
+    /* itime[ch] + j;    */            /* time of j'th input sample */
+    if (j+2 >= len) break;             /* not enough data in input buffer */
 
-    if (1+j >= len) break;
+    x1 = time0-(itime[ch]+j);
+    x2 = x1-1; 
+    y1 = (j<0) ? inbuf_old[ch][OLDBUFSIZE+j] : inbuf[j];
+    y2 = ((1+j)<0) ? inbuf_old[ch][OLDBUFSIZE+1+j] : inbuf[1+j];
 
-    x1 = (j<0) ? inbuf_old[ch][OLDBUFSIZE+j] : inbuf[j];
-    x2 = ((1+j)<0) ? inbuf_old[ch][OLDBUFSIZE+1+j] : inbuf[1+j];
-    outbuf[k] = floor(.5 +  (x1*(time2-time0) + x2*(time0-time1)) );
-
-    /*
-    printf("k=%i ch=%i  new=%i old=%i(%i) %i(%i) \n",k,ch,outbuf[k],x1,j,x2,j+1); 
-    */
+    /* linear resample */
+    if (linear) {
+      outbuf[k] = floor(.5 +  (y2*x1-y1*x2) );
+    } else {
+      /* quadratic */
+      x0 = x1+1;
+      x3 = x1-2;
+      y0 = ((j-1)<0) ? inbuf_old[ch][OLDBUFSIZE+(j-1)] : inbuf[j-1];
+      y3 = ((j+2)<0) ? inbuf_old[ch][OLDBUFSIZE+(j+2)] : inbuf[j+2];
+      outbuf[k] = floor(.5 + 
+			-y0*x1*x2*x3/6 + y1*x0*x2*x3/2 - y2*x0*x1*x3/2 +y3*x0*x1*x2/6
+			);
+      /*
+      printf("k=%i  new=%i   [ %i %i %i %i ]\n",k,outbuf[k],
+	     y0,y1,y2,y3);
+      */
+    }
   }
+
 
   /* k = number of samples added to outbuf */
   /* last k sample used data from j,j+1, or j+1 overflowed buffer */
   /* remove num_used samples from inbuf: */
-  *num_used = Min(len,j+1);
+  *num_used = Min(len,j+2);
   assert(*num_used > OLDBUFSIZE);
   itime[ch] += *num_used - k*gf.resample_ratio;
   for (i=0;i<OLDBUFSIZE;i++)
@@ -929,7 +955,7 @@ int lame_encode_buffer(short int buffer_l[], short int buffer_r[],int nbuffer,
     /* copy in new samples */
     for (ch=0; ch<gf.stereo; ch++) {
       if (gf.resample_ratio!=1)  {
-	n_out=fill_buffer_linear_resample(&mfbuf[ch][mf_size],samplesPerFrame,
+	n_out=fill_buffer_resample(&mfbuf[ch][mf_size],samplesPerFrame,
 					  in_buffer[ch],nbuffer,&n_in,ch);
       } else { 
 	n_out=fill_buffer(&mfbuf[ch][mf_size],samplesPerFrame,in_buffer[ch],nbuffer);
