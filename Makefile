@@ -31,9 +31,11 @@ RM = rm -f
 CPP_OPTS += -DHAVEMPGLIB 
 
 ##########################################################################
-# -DHAVEMPGLIB compiles the mpglib *decoding* library into libmp3lame
+# -DFLOAT8_is_float will FLOAT8 as float
+# -DFLOAT_is_float will FLOAT8 as float
 ##########################################################################
-CPP_OPTS += -DHAVEMPGLIB 
+CPP_OPTS += -DFLOAT8_is_float
+
 
 
 
