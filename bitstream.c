@@ -71,12 +71,6 @@ putbits2(lame_global_flags *gfp, unsigned int val, int j)
     Bit_stream_struc *bs;
     bs = &gfc->bs;
 
-    assert(j <= MAX_LENGTH);
-    if ((val>>j) >= 1) {
-      DEBUGF("val=%ui %i\n",val,(1<<j));
-      assert((val >> j) < 1);
-    }
-
     while (j > 0) {
 	int k;
 	if (bs->buf_bit_idx == 0) {
@@ -92,9 +86,14 @@ putbits2(lame_global_flags *gfp, unsigned int val, int j)
 
 	k = Min(j, bs->buf_bit_idx);
 	j -= k;
+        
+        assert (j < MAX_LENGTH); /* 32 too large on 32 bit machines */
 
 	bs->buf_bit_idx -= k;
-	bs->buf[bs->buf_byte_idx] |= ((val >> j) << bs->buf_bit_idx);
+        
+        assert (bs->buf_bit_idx < MAX_LENGTH); /* 32 too large on 32 bit machines */
+	
+        bs->buf[bs->buf_byte_idx] |= ((val >> j) << bs->buf_bit_idx);
 	bs->totbit += k;
     }
 }
@@ -166,11 +165,11 @@ static INLINE void
 writeheader(lame_internal_flags *gfc,unsigned int val, int j)
 {
     int ptr = gfc->header[gfc->h_ptr].ptr;
-    assert(j <= MAX_LENGTH);
 
     while (j > 0) {
 	int k = Min(j, 8 - (ptr & 7));
 	j -= k;
+        assert (j < MAX_LENGTH); /* MAX_LENGTH=32, too large for 32 bit machines */
 	gfc->header[gfc->h_ptr].buf[ptr >> 3]
 	    |= ((val >> j)) << (8 - (ptr & 7) - k);
 	ptr += k;
@@ -186,6 +185,8 @@ CRC_writeheader(lame_internal_flags *gfc,unsigned int value, int length,unsigned
 {
    unsigned int bit = 1 << length;
 
+   assert(length < MAX_LENGTH);
+   
    while((bit >>= 1)){
       *crc <<= 1;
       if (!(*crc & 0x10000) ^ !(value & bit))
