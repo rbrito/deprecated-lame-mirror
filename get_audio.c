@@ -312,11 +312,7 @@ int default_channels)
 {
   input_bitrate=0;
   if (input_format==sf_mp3) {
-#ifdef AMIGA_ASYNCIO
-	if ((musicin = OpenAsync(lpszFileName, MODE_READ, AmigaReadBuffer)) == NULL) {
-#else
     if ((musicin = fopen(lpszFileName, "rb")) == NULL) {
-#endif
       fprintf(stderr, "Could not find \"%s\".\n", lpszFileName);
       exit(1);
     }

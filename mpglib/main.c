@@ -1,10 +1,7 @@
+#ifndef AMIGA_MPEGA /* Don't link with mpglib if you define AMIGA_MPEGA!!! */
+
 #include "mpg123.h"
 #include "mpglib.h"
-
-#ifdef AMIGA_ASYNCIO
- #undef BOOL
- #include "/util.h"
-#endif
 
 #ifdef OS_AMIGAOS
 #include "/lame.h"
@@ -209,6 +206,6 @@ int lame_decode(char *buf,int len,short pcm[][1152])
   else return outsize;
 }
 
-
+#endif /* !AMIGA_MPEGA */
 
 
