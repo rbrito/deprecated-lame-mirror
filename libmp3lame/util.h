@@ -183,7 +183,6 @@ typedef struct {
     III_psy thm;
     III_psy en;
     FLOAT	pe;
-    int	ath_over;
 } III_psy_ratio;
 
 typedef struct {

@@ -1095,7 +1095,7 @@ CBR_bitalloc(
     adjustBits = 0;
     for (ch = 0; ch < gfc->channels_out; ch++) {
 	bits = 0;
-	if (ratio[ch].ath_over != 0 && gfc->l3_side.tt[gr][ch].psymax > 0)
+	if (gfc->l3_side.tt[gr][ch].psymax > 0)
 	    bits = (int)(ratio[ch].pe*factor);
 	adjustBits += (targ_bits[ch] = ++bits); /* avoid zero division */
     }

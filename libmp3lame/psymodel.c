@@ -888,7 +888,6 @@ pecalc_s(III_psy_ratio *mr, int sb)
 	    if (en <= x)
 		continue;
 
-	    mr->ath_over++;
 	    if (en > x*1e10)
 		xx += 10.0 * LOG10;
 	    else
@@ -904,6 +903,7 @@ static FLOAT
 pecalc_l(III_psy_ratio *mr, int sb)
 {
     FLOAT pe_l = 20.0;
+    int ath_over = 0;
     static const FLOAT regcoef_l[] = {
 	6.8, /* this value is tuned only for 44.1kHz... */
 	5.8,
@@ -934,14 +934,15 @@ pecalc_l(III_psy_ratio *mr, int sb)
 	if (en <= x)
 	    continue;
 
-	mr->ath_over++;
-
+	ath_over++;
 	if (en > x*1e10)
 	    pe_l += regcoef_l[sb] * (10.0 * LOG10);
 	else
 	    pe_l += regcoef_l[sb] * FAST_LOG10(en / x);
     }
 
+    if (ath_over == 0)
+	return 0.0;
     return pe_l;
 }
 
@@ -1530,7 +1531,6 @@ psycho_analysis(
 	for (ch=0;ch<numchn;ch++) {
 	    III_psy_ratio *mr = &gfc->masking_next[gr][ch];
 	    FLOAT pe;
-	    mr->ath_over = 0;
 	    if (gfc->blocktype_next[gr][ch]) {
 		int sb = gfc->cutoff_sfb_s;
 		if (ch & 1)
