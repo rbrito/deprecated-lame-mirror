@@ -22,15 +22,15 @@
 #ifndef LAME_PSYMODEL_H
 #define LAME_PSYMODEL_H
 
-#define rpelev 2
-#define rpelev2 16
-
 /* size of each partition band, in barks: */
 #define DELBARK .34
 
 #define vo_scale (1./( 14752 ))
 
 #define TEMPORALMASK_SUSTAIN_SEC 0.01
+
+/* ??? Assuming dynamic range=96dB, this value should be 92 */
+#define NSATHSCALE 110
 
 #define NS_PREECHO_ATT0 1.0 /* 0.8 */
 #define NS_PREECHO_ATT1 0.6

@@ -1110,6 +1110,7 @@ mp3x display               <------LONG------>
 	gfc->masking_next[gr][chn].en.s[0][0] = -1.0;
 	gfc->useshort_next[gr][chn] = NORM_TYPE;
 	first_attack_position[chn] = -2;
+
 	for (i=0;i<3;i++) {
 	    /* calculate energies of each sub-shortblocks */
 	    if (gfc->nsPsy.subbk_ene[chn][i+2]
@@ -1186,7 +1187,6 @@ partially_convert_l2s(
 	    || x > mr->en.s[sfb][2])
 	    continue;
 
-//	printf("ch %d, sf %d\n", chn, sfb);
 	if (sfb == 0) {
 	    b = 0;
 	    x = 0.0;

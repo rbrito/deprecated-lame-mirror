@@ -696,9 +696,6 @@ static void init_log_table(void)
 }
 #endif /* define FAST_LOG */
 
-/* ??? Assuming dynamic range=96dB, this value should be 92 */
-#define NSATHSCALE 110
-
 /*those ATH formulas are returning
 their minimum value for input = -1*/
 
