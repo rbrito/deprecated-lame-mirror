@@ -482,19 +482,14 @@ fill_buffer_resample(lame_t gfc, sample_t *outbuf, sample_t *inbuf, int len,
 static int
 fill_buffer(lame_t gfc, sample_t *in_buffer, int nsamples, int *n_in, int ch)
 {
-    int n_out;
-
     /* copy in new samples into mfbuf, with resampling if necessary */
-    if (gfc->resample.ratio != 1.0) {
-	n_out = fill_buffer_resample(gfc, &gfc->mfbuf[ch][gfc->mf_size],
-				     in_buffer, nsamples, n_in, ch);
-    }
-    else {
-	*n_in = n_out = Min(gfc->mf_needed - gfc->mf_size, nsamples);
-	memcpy(&gfc->mfbuf[ch][gfc->mf_size], in_buffer,
-	       sizeof(sample_t) * n_out);
-    }
-    return n_out;
+    if (gfc->resample.ratio != 1.0)
+	return fill_buffer_resample(gfc, &gfc->mfbuf[ch][gfc->mf_size],
+				    in_buffer, nsamples, n_in, ch);
+
+    *n_in = Min(gfc->mf_needed - gfc->mf_size, nsamples);
+    memcpy(&gfc->mfbuf[ch][gfc->mf_size], in_buffer, sizeof(sample_t) * *n_in);
+    return *n_in;
 }
 
 /*

@@ -1606,8 +1606,7 @@ VBR_iteration_loop(lame_t gfc, III_psy_ratio ratio[MAX_GRANULES][MAX_CHANNELS])
 
     for (gr = 0; gr < gfc->mode_gr; gr++) {
 	for (ch = 0; ch < gfc->channels_out; ch++) {
-	    calc_xmin (gfc, &ratio[gr][ch],
-		       &gfc->tt[gr][ch], xmin[gr][ch]);
+	    calc_xmin (gfc, &ratio[gr][ch], &gfc->tt[gr][ch], xmin[gr][ch]);
 	}
     }
 
@@ -1634,8 +1633,7 @@ VBR_iteration_loop(lame_t gfc, III_psy_ratio ratio[MAX_GRANULES][MAX_CHANNELS])
 	    if (used_bits > max_frame_bits) {
 		for (gr = 0; gr < gfc->mode_gr; gr++)
 		    for (ch = 0; ch < gfc->channels_out; ch++)
-			bitpressure_strategy(&gfc->tt[gr][ch],
-					     xmin[gr][ch]);
+			bitpressure_strategy(&gfc->tt[gr][ch], xmin[gr][ch]);
 		goto VBRloop_restart;
 	    }
 	}

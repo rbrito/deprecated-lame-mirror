@@ -161,8 +161,9 @@ int CDECL lame_set_decode_only(lame_t, int);
 int CDECL lame_get_decode_only(lame_t);
 
 /*
-  internal algorithm selection.  True quality is determined by the bitrate
-  but this variable will effect quality by selecting expensive or cheap algorithms.
+  internal algorithm selection.
+  True quality is determined by the bitrate but this variable will
+  effect quality by selecting expensive or cheap algorithms.
   quality=0..9.  0=best (very slow).  9=worst.
   recommended:  2     near-best quality, not too slow
                 5     good quality, fast

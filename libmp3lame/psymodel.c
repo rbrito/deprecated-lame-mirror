@@ -813,9 +813,7 @@ mask_add(FLOAT m1, FLOAT m2, FLOAT ATH)
     }
 
     /* Should always be true, just checking */
-    assert(m1>0.0);
-    assert(m2>0.0);
-    assert(ATH>0.0);
+    assert(m1>0.0 && m2>0.0 && ATH>0.0);
 
     m1 += m2;
     i = trancate(FAST_LOG10_X(ratio, 16.0));
@@ -844,21 +842,10 @@ pecalc_s(III_psy_ratio *mr, int sb)
 {
     FLOAT pe_s = 0;
     static const FLOAT regcoef_s[] = {
-	11.8, /* this value is tuned only for 44.1kHz... */
-	13.6,
-	17.2,
-	32,
-	46.5,
-	51.3,
-	57.5,
-	67.1,
-	71.5,
-	84.6,
-	97.6,
-	130,
-	255.8
+	/* this value is tuned only for 44.1kHz... */
+	11.8,   13.6,   17.2,   32.0,   46.5,   51.3,   57.5,   67.1,
+	71.5,   84.6,   97.6,  130.0,  255.8
     };
-
     while (--sb >= 0) {
 	int sblock;
 	FLOAT xx=0.0;
@@ -885,30 +872,11 @@ pecalc_l(III_psy_ratio *mr, int sb)
     FLOAT pe_l = 20.0;
     int ath_over = 0;
     static const FLOAT regcoef_l[] = {
-	6.8, /* this value is tuned only for 44.1kHz... */
-	5.8,
-	5.8,
-	6.4,
-	6.5,
-	9.9,
-	12.1,
-	14.4,
-	15,
-	18.9,
-	21.6,
-	26.9,
-	34.2,
-	40.2,
-	46.8,
-	56.5,
-	60.7,
-	73.9,
-	85.7,
-	93.4,
-	126.1,
-	241.3
+	/* this value is tuned only for 44.1kHz... */
+	 6.8,    5.8,    5.8,    6.4,    6.5,    9.9,   12.1,   14.4,   15.0,
+	18.9,   21.6,   26.9,   34.2,   40.2,   46.8,   56.5,   60.7,   73.9,
+	85.7,   93.4,  126.1,  241.3
     };
-
     while (--sb >= 0) {
 	FLOAT x = mr->thm.l[sb], en = fabs(mr->en.l[sb]);
 	if (en <= x)
@@ -955,13 +923,11 @@ mp3x display               <------LONG------>
 ================long================
                   ================long================
 
-
                                           =============stop=============
                                     ===short====
                               ===short====
                         ===short====
 =============start============
-
 
                                     ================long================
                         =============stop=============
@@ -1128,20 +1094,8 @@ psycho_anal_ns(lame_t gfc, int gr, int numchn)
 	FLOAT enn, thmm, *p;
 	III_psy_ratio *mr = &gfc->masking_next[gr][ch];
 	static const FLOAT tab[] = {
-#if 0
-	    1.00000/0.11749,/*pow(10, -0)*/
-	    0.79433/0.11749,/*pow(10, -0.1)*/
-	    0.63096/0.11749,/*pow(10, -0.2)*/
-	    0.63096/0.11749,/*pow(10, -0.2)*/
-	    0.63096/0.11749,/*pow(10, -0.2)*/
-	    0.63096/0.11749,/*pow(10, -0.2)*/
-	    0.63096/0.11749,/*pow(10, -0.2)*/
-	    0.25119/0.11749,/*pow(10, -0.6)*/
-	    0.11749/0.11749,/*pow(10, -0.93)*/
-#else
 	    5.00/0.11749, 4.00/0.11749, 3.15/0.11749, 3.15/0.11749,
 	    3.15/0.11749, 3.15/0.11749, 3.15/0.11749, 1.25/0.11749,
-#endif
 	};
 	int b, i, j;
 	if (ch < 2)
@@ -1372,9 +1326,6 @@ psycho_anal_ns(lame_t gfc, int gr, int numchn)
     }
 }
 
-/* psychoacoustic model
- * psymodel has a 1 frame (576*mode_gr) delay that we must compensate for
- */
 void
 psycho_analysis(
     lame_t gfc, III_psy_ratio masking_d[MAX_GRANULES][MAX_CHANNELS],
@@ -1508,8 +1459,7 @@ psycho_analysis(
     }
 
     assert(!gfc->mode_ext
-	   || (gfc->tt[0][0].block_type
-	       == gfc->tt[0][1].block_type
+	   || (gfc->tt[0][0].block_type == gfc->tt[0][1].block_type
 	       && gfc->tt[gfc->mode_gr-1][0].block_type
 	       == gfc->tt[gfc->mode_gr-1][1].block_type));
 }
