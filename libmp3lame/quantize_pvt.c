@@ -692,8 +692,14 @@ int  calc_noise(
 	    FLOAT8 noise = 0.0;
 
         if (prev_noise && (prev_noise->step[sfb] == step)){
+
+            /* use previously computed values */
             noise = prev_noise->noise[sfb];
             j += cod_info->width[sfb];            
+            *distort++ = noise / *l3_xmin++;
+
+	        noise = prev_noise->noise_log[sfb];
+
         } else {
             l = cod_info->width[sfb] >> 1;
 
@@ -716,13 +722,18 @@ int  calc_noise(
                 prev_noise->step[sfb] = step;
                 prev_noise->noise[sfb] = noise;
             }
+
+            noise = *distort++ = noise / *l3_xmin++;
+
+	        /* multiplying here is adding in dB, but can overflow */
+	        noise = FAST_LOG10(Max(noise,1E-20));
+
+            if (prev_noise) {
+                /* save noise values */
+                prev_noise->noise_log[sfb] = noise;
+            }
         }
 
-
-        noise = *distort++ = noise / *l3_xmin++;
-
-	    /* multiplying here is adding in dB, but can overflow */
-	    noise = FAST_LOG10(Max(noise,1E-20));
 
 
 	    /*tot_noise *= Max(noise, 1E-20); */
