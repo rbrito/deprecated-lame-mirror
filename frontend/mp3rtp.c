@@ -180,16 +180,11 @@ int  main ( int argc, char **argv )
     parse_args(gfp, argc - 1, argv + 1, inPath, outPath,NULL,NULL);
 
     /* open the output file.  Filename parsed into inPath */
-    if ( 0 == strcmp ( outPath, "-" ) ) {
-        lame_set_stream_binary_mode (outf = stdout);
+    outf = init_outfile(outPath, 0);
+    if (!outf) {
+	fprintf (stderr, "Could not create \"%s\".\n", outPath);
+	return 1;
     }
-    else {
-        if ((outf = fopen (outPath, "wb+")) == NULL) {
-            fprintf (stderr, "Could not create \"%s\".\n", outPath);
-            return 1;
-        }
-    }
-
 
     /* open the wav/aiff/raw pcm or mp3 input file.  This call will
      * open the file with name gfp.inFile, try to parse the headers and

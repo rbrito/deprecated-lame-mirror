@@ -21,7 +21,6 @@
 
 /* $Id$ */
 
-
 #ifdef HAVE_CONFIG_H
 # include <config.h>
 #endif
@@ -40,20 +39,26 @@
 #else
 # ifndef HAVE_MEMCPY
 #  define memcpy(d, s, n) bcopy ((s), (d), (n))
-#  define memmove(d, s, n) bcopy ((s), (d), (n))
 # endif
 #endif
 
-
 #define         MAX_U_32_NUM            0xFFFFFFFF
-
 
 #include <math.h>
 #include <sys/stat.h>
 
-#ifdef __sun__
-/* woraround for SunOS 4.x, it has SEEK_* defined here */
-#include <unistd.h>
+#if defined(_WIN32) || defined(__CYGWIN__)
+# include <io.h>
+# include <fcntl.h>
+#else
+# include <unistd.h>
+#endif
+
+#if defined(__riscos__)
+# include <kernel.h>
+# include <sys/swis.h>
+#elif defined(_WIN32)
+# include <sys/types.h>
 #endif
 
 #include "lame.h"
@@ -61,7 +66,6 @@
 #include "get_audio.h"
 #include "portableio.h"
 #include "timestatus.h"
-#include "lametime.h"
 
 #ifdef WITH_DMALLOC
 #include <dmalloc.h>
@@ -69,10 +73,10 @@
 
 
 /* global data for get_audio.c. */
-static int     count_samples_carefully;
 static unsigned int num_samples_read;
-static int     pcmbitwidth;
-int     pcmswapbytes = 0;
+static int count_samples_carefully;
+static int pcmbitwidth;
+static int pcmswapbytes = 0;
 FILE   *musicin;
 int id3v2taglen = 0;
 
@@ -109,13 +113,13 @@ fskip(FILE * fp, long offset, int whence)
 #endif
     int     read;
 
-    if (0 == fseek(fp, offset, whence))
-        return 0;
+    if (fseek(fp, offset, whence) == 0)
+	return 0;
 
     if (whence != SEEK_CUR || offset < 0) {
-        fprintf(stderr,
-                "fskip problem: Mostly the return status of functions is not evaluate so it is more secure to polute <stderr>.\n");
-        return -1;
+	fprintf(stderr,
+		"fskip problem: Mostly the return status of functions is not evaluate so it is more secure to polute <stderr>.\n");
+	return -1;
     }
 
     while (offset > 0) {
@@ -129,6 +133,21 @@ fskip(FILE * fp, long offset, int whence)
 }
 
 
+static int
+set_stream_binary_mode ( FILE* const fp )
+{
+#if   defined __EMX__
+    _fsetmode ( fp, "b" );
+#elif defined __BORLANDC__
+    setmode   (_fileno(fp),  O_BINARY );
+#elif defined __CYGWIN__
+    setmode   ( fileno(fp), _O_BINARY );
+#elif defined _WIN32
+    _setmode  (_fileno(fp), _O_BINARY );
+#endif
+    return 0;
+}
+
 FILE   *
 init_outfile(char *outPath, int decode)
 {
@@ -139,7 +158,7 @@ init_outfile(char *outPath, int decode)
 
     /* open the output file */
     if (0 == strcmp(outPath, "-")) {
-        lame_set_stream_binary_mode(outf = stdout);
+	set_stream_binary_mode(outf = stdout);
     }
     else {
         if ((outf = fopen(outPath, "wb+")) == NULL)
@@ -161,11 +180,6 @@ init_outfile(char *outPath, int decode)
     return outf;
 }
 
-
-
-
-
-
 void
 init_infile(lame_t gfp, char *inPath)
 {
@@ -183,6 +197,16 @@ close_infile(void)
     CloseSndFile(input_format, musicin);
 }
 
+
+static off_t
+get_file_size(const char* const filename)
+{
+    struct stat       sb;
+
+    if ( 0 == stat ( filename, &sb ) )
+        return sb.st_size;
+    return (off_t) -1;
+}
 
 static int
 get_audio_common(lame_t gfp, int buffer[2][1152], short buffer16[2][1152]);
@@ -224,15 +248,14 @@ note: either buffer or buffer16 must be allocated upon call
 static int
 get_audio_common(lame_t gfp, int buffer[2][1152], short buffer16[2][1152])
 {
-    int     num_channels = lame_get_num_channels(gfp);
+    int num_channels = lame_get_num_channels(gfp), samples_read;
+    unsigned int tmp_num_samples = lame_get_num_samples(gfp);
+    unsigned int samples_to_read = lame_get_framesize(gfp);
+    unsigned int remaining;
     int     insamp[2 * 1152];
-    short   buf_tmp16[2][1152];
-    int     samples_read;
-    int     framesize;
-    int     samples_to_read;
-    unsigned int remaining, tmp_num_samples;
     int     i;
-    int     *p;
+
+    assert(samples_to_read <= 1152);
 
     /* 
      * NOTE: LAME can now handle arbritray size input data packets,
@@ -240,12 +263,6 @@ get_audio_common(lame_t gfp, int buffer[2][1152], short buffer16[2][1152])
      * size "framesize".  EXCEPT:  the LAME graphical frame analyzer 
      * will get out of sync if we read more than framesize worth of data.
      */
-
-    samples_to_read = framesize = lame_get_framesize(gfp);
-    assert(framesize <= 1152);
-
-    /* get num_samples */
-    tmp_num_samples = lame_get_num_samples(gfp);
 
     /* if this flag has been set, then we are carefull to read
      * exactly num_samples and no more.  This is useful for .wav and .aiff
@@ -257,8 +274,8 @@ get_audio_common(lame_t gfp, int buffer[2][1152], short buffer16[2][1152])
 	   a FIFO) tmp_num_samples may be 0 and therefore remaining
 	   would be 0, but we need to read some samples, so don't
 	   change samples_to_read to the wrong value in this case */
-        remaining = tmp_num_samples - Min(tmp_num_samples, num_samples_read);
-	if (remaining < framesize && 0 != tmp_num_samples)
+	remaining = tmp_num_samples - Min(tmp_num_samples, num_samples_read);
+	if (samples_to_read > remaining && tmp_num_samples)
 	    samples_to_read = remaining;
     }
 
@@ -266,56 +283,51 @@ get_audio_common(lame_t gfp, int buffer[2][1152], short buffer16[2][1152])
     case sf_mp1:
     case sf_mp2:
     case sf_mp3:
-	if (buffer)
-	    samples_read = read_samples_mp3(gfp, musicin, buf_tmp16);
-	else
-	    samples_read = read_samples_mp3(gfp, musicin, buffer16);
-	break;
-    default:
-        samples_read =
-            read_samples_pcm(musicin, insamp, num_channels * samples_to_read);
-	p = insamp + samples_read;
-        samples_read /= num_channels;
-	if (buffer) {	/* output to int buffer */
-	    if (num_channels == 2) {
-		for( i = samples_read; --i >= 0; ) {
-		    buffer[1][i] = *--p;
- 		    buffer[0][i] = *--p;
-		}
-	    } else if (num_channels == 1) {
-		memset( buffer[1], 0, samples_read * sizeof(int) );
-		for( i = samples_read; --i >= 0; ) {
- 		    buffer[0][i] = *--p;
-		}
-	    } else
-		assert(0);
-	} else {		/* convert from int; output to 16-bit buffer */
-	    if( num_channels == 2 ) {
-		for( i = samples_read; --i >= 0; ) {
-		    buffer16[1][i] = *--p >> (8 * sizeof(int) - 16);
- 		    buffer16[0][i] = *--p >> (8 * sizeof(int) - 16);
-		}
-	    } else if( num_channels == 1 ) {
-		memset( buffer16[1], 0, samples_read * sizeof(short) );
-		for( i = samples_read; --i >= 0; ) {
- 		    buffer16[0][i] = *--p >> (8 * sizeof(int) - 16);
-		}
-	    } else
-		assert(0);
-	}
-    }
-
-    /* LAME mp3 output 16bit -  convert to int, if necessary */
-    if( input_format == sf_mp1 || input_format == sf_mp2 || 
-        input_format == sf_mp3) {
-	if( buffer != NULL ) {
-	    for( i = samples_read; --i >= 0; )
+	if (buffer) {
+	    short   buf_tmp16[2][1152];
+	    samples_read = read_samples_mp3(gfp, musicin, buf_tmp16)
+		/ num_channels;
+	    /* LAME mp3 output 16bit -  convert to int */
+	    for (i = samples_read; --i >= 0; )
 		buffer[0][i] = buf_tmp16[0][i] << (8 * sizeof(int) - 16);
-	    if( num_channels == 2 ) {
+	    if (num_channels == 2) {
 		for( i = samples_read; --i >= 0; )
 		    buffer[1][i] = buf_tmp16[1][i] << (8 * sizeof(int) - 16);
 	    } else if( num_channels == 1 ) {
 		memset( buffer[1], 0, samples_read * sizeof(int) );
+	    } else
+		assert(0);
+	} else {
+	    samples_read = read_samples_mp3(gfp, musicin, buffer16);
+	}
+	break;
+
+    default:
+	samples_read
+	    = read_samples_pcm(musicin, insamp, num_channels * samples_to_read)
+	    / num_channels;
+	if (buffer) {	/* output to int buffer */
+	    if (num_channels == 2) {
+		for (i = 0; i < samples_read; i++) {
+		    buffer[1][i+samples_read] = insamp[i*2  ];
+		    buffer[0][i+samples_read] = insamp[i*2+1];
+		}
+	    } else if (num_channels == 1) {
+		memcpy(buffer[0], insamp, samples_read * sizeof(int));
+		memset(buffer[1], 0,      samples_read * sizeof(int));
+	    } else
+		assert(0);
+	} else {		/* convert from int; output to 16-bit buffer */
+	    if (num_channels == 2) {
+		for (i = 0; i < samples_read; i++) {
+ 		    buffer16[0][i] = insamp[i*2  ] >> (8 * sizeof(int) - 16);
+		    buffer16[1][i] = insamp[i*2+1] >> (8 * sizeof(int) - 16);
+		}
+	    } else if (num_channels == 1) {
+		for (i = 0; i < samples_read; i++) {
+		    buffer16[0][i] = insamp[i] >> (8 * sizeof(int) - 16);
+		}
+		memset(buffer16[1], 0, samples_read * sizeof(short));
 	    } else
 		assert(0);
 	}
@@ -323,8 +335,8 @@ get_audio_common(lame_t gfp, int buffer[2][1152], short buffer16[2][1152])
 
     /* if num_samples = MAX_U_32_NUM, then it is considered infinitely long.
        Don't count the samples */
-    if ( tmp_num_samples != MAX_U_32_NUM )
-        num_samples_read += samples_read;
+    if (tmp_num_samples != MAX_U_32_NUM)
+	num_samples_read += samples_read;
 
     return samples_read;
 }
@@ -652,7 +664,7 @@ OpenSndFile(lame_t gfp, char *inPath)
 
     if (lame_get_num_samples(gfp) == MAX_U_32_NUM) {
         /* try to figure out num_samples */
-        double  flen = lame_get_file_size( lpszFileName );
+        double  flen = get_file_size( lpszFileName );
 
         if (flen >= 0) {
             /* try file size, assume 2 bytes per sample */
@@ -945,72 +957,63 @@ parse_wave_header(lame_t gfp, FILE * sf)
     int     bits_per_sample = 0;
     int     samples_per_sec = 0;
     int     avg_bytes_per_sec = 0;
-    int     data_offset=0;
+    unsigned long data_offset = MAX_U_32_NUM;
 
     int     is_wav = 0;
     long    data_length = 0, file_length, subSize = 0;
     int     loop_sanity = 0;
 
     file_length = Read32BitsHighLow(sf);
-    data_offset +=4;
 
     if (Read32BitsHighLow(sf) != WAV_ID_WAVE)
-        return 0;
-    data_offset +=4;
+	return 0;
 
     for (loop_sanity = 0; loop_sanity < 20; ++loop_sanity) {
-        int     type = Read32BitsHighLow(sf);
-	data_offset+=4;
+	int type = Read32BitsHighLow(sf);
+	if (feof(sf))
+	    break;
 
         if (type == WAV_ID_FMT) {
-            subSize = Read32BitsLowHigh(sf);
-	    data_offset += 4;
+	    subSize = Read32BitsLowHigh(sf);
 
-            if (subSize < 16) {
-                /*DEBUGF(
-		  "'fmt' chunk too short (only %ld bytes)!", subSize);  */
-                return 0;
-            }
+	    if (subSize < 16) {
+		/* too short 'fmt ' chunk */
+		return 0;
+	    }
+	    subSize -= 16;
 
-	    data_offset += subSize;
+	    format_tag = Read16BitsLowHigh(sf);
+	    channels = Read16BitsLowHigh(sf);
+	    samples_per_sec = Read32BitsLowHigh(sf);
+	    avg_bytes_per_sec = Read32BitsLowHigh(sf);
+	    block_align = Read16BitsLowHigh(sf);
+	    bits_per_sample = Read16BitsLowHigh(sf);
 
-            format_tag = Read16BitsLowHigh(sf);
-            subSize -= 2;
-            channels = Read16BitsLowHigh(sf);
-            subSize -= 2;
-            samples_per_sec = Read32BitsLowHigh(sf);
-            subSize -= 4;
-            avg_bytes_per_sec = Read32BitsLowHigh(sf);
-            subSize -= 4;
-            block_align = Read16BitsLowHigh(sf);
-            subSize -= 2;
-            bits_per_sample = Read16BitsLowHigh(sf);
-            subSize -= 2;
-
-            /* DEBUGF("   skipping %d bytes\n", subSize); */
-
-            if (subSize > 0 && fskip(sf, subSize, SEEK_CUR) != 0)
+	    if (subSize > 0 && fskip(sf, subSize, SEEK_CUR) != 0)
 		return 0;
         }
         else if (type == WAV_ID_DATA) {
             subSize = Read32BitsLowHigh(sf);
-	    data_offset += 4;
+	    if (data_offset != MAX_U_32_NUM) {
+		/* multiple 'data' chunk */
+		return 0;
+	    }
+	    data_offset = ftell(sf);
 
             data_length = subSize;
             is_wav = 1;
 
 	    if (fskip(sf, (long) subSize, SEEK_CUR) != 0)
-                return 0;
-        }
+		return 0;
+	}
         else if (type == WAV_ID_LIST) {
 	    SetIDTagsFromRiffTags(gfp, sf);
-	    /* Position read ptr back to data chunk */
-	    break;
-        }
-        else {
-            subSize = Read32BitsLowHigh(sf);
-            if (fskip(sf, (long) subSize, SEEK_CUR) != 0)
-                return 0;
+	}
+	else {
+	    /* unknown chunk */
+	    subSize = Read32BitsLowHigh(sf);
+	    if (fskip(sf, (long) subSize, SEEK_CUR) != 0)
+		return 0;
         }
     }
 
@@ -1020,20 +1023,19 @@ parse_wave_header(lame_t gfp, FILE * sf)
 
     if (is_wav) {
         /* make sure the header is sane */
-        if( -1 == lame_set_num_channels( gfp, channels ) ) {
-            fprintf( stderr,
-                     "Unsupported number of channels: %ud\n",
-                     channels );
-            exit( 1 );
-        }
-        lame_set_in_samplerate( gfp, samples_per_sec );
-        pcmbitwidth = bits_per_sample;
-        lame_set_num_samples(
-	    gfp, data_length / (channels * ((bits_per_sample+7) / 8)) );
+	if (lame_set_num_channels(gfp, channels) == -1) {
+	    fprintf(stderr, "Unsupported number of channels: %ud\n", channels);
+	    exit(1);
+	}
+	lame_set_in_samplerate(gfp, samples_per_sec);
+	pcmbitwidth = bits_per_sample;
+	lame_set_num_samples(
+	    gfp, data_length / (channels * ((bits_per_sample+7) / 8)));
+
+	if (fskip(sf, (long) data_offset, SEEK_SET) == 0)
+	    return 1;
     }
-    if (fskip(sf, (long) data_offset, SEEK_SET) != 0)
-	return 0;
-    return is_wav;
+    return 0;
 }
 
 
@@ -1200,36 +1202,36 @@ parse_aiff_header(lame_t gfp, FILE * sf)
 static void
 parse_file_header(lame_t gfp, FILE * sf)
 {
-
-    int     type = Read32BitsHighLow(sf);
+    int type = Read32BitsHighLow(sf);
     count_samples_carefully = 0;
     input_format = sf_raw;
 
     if (type == WAV_ID_RIFF) {
         /* It's probably a WAV file */
         if (parse_wave_header(gfp, sf)) {
-            input_format = sf_wave;
-            count_samples_carefully = 1;
+	    input_format = sf_wave;
+	    count_samples_carefully = 1;
         } else {
-	    fprintf( stderr, "Warning: corrupt or unsupported WAVE format\n"); 
+	    fprintf(stderr, "Warning: corrupt or unsupported WAVE format\n"); 
         }
     }
     else if (type == IFF_ID_FORM) {
-        /* It's probably an AIFF file */
-        if (parse_aiff_header(gfp, sf)) {
-            input_format = sf_aiff;
-            count_samples_carefully = 1;
-        }
+	/* It's probably an AIFF file */
+	if (parse_aiff_header(gfp, sf)) {
+	    input_format = sf_aiff;
+	    count_samples_carefully = 1;
+	}
     }
+
     if (input_format == sf_raw) {
         /*
-           ** Assume it's raw PCM.  Since the audio data is assumed to begin
-           ** at byte zero, this will unfortunately require seeking.
+	 * Assume it's raw PCM.  Since the audio data is assumed to begin
+	 * at byte zero, this will unfortunately require seeking.
          */
-        if (fseek(sf, 0L, SEEK_SET) != 0) {
-            /* ignore errors */
+	if (fseek(sf, 0L, SEEK_SET) != 0) {
+	    /* ignore errors */
         }
-        input_format = sf_raw;
+	input_format = sf_raw;
     }
 }
 
@@ -1258,7 +1260,7 @@ OpenSndFile(lame_t gfp, char *inPath)
 
 
     if (!strcmp(inPath, "-")) {
-        lame_set_stream_binary_mode(musicin = stdin); /* Read from standard input. */
+        set_stream_binary_mode(musicin = stdin); /* Read from standard input. */
     }
     else {
         if ((musicin = fopen(inPath, "rb")) == NULL) {
@@ -1311,7 +1313,7 @@ OpenSndFile(lame_t gfp, char *inPath)
 
     if (lame_get_num_samples( gfp ) == MAX_U_32_NUM && musicin != stdin) {
 
-        double  flen = lame_get_file_size(inPath); /* try to figure out num_samples */
+        double  flen = get_file_size(inPath); /* try to figure out num_samples */
 
         if (flen >= 0) {
             /* try file size, assume 2 bytes per sample */
@@ -1482,7 +1484,6 @@ decode_initfile(lame_t gfp, FILE * fd, mp3data_struct * mp3data)
        fprintf(stderr,"ret = %i NEED_MORE=%i \n",ret,MP3_NEED_MORE);
        fprintf(stderr,"channels = %i \n",mp.fr.channels);
        fprintf(stderr,"samp = %i  \n",freqs[mp.fr.sampling_frequency]);
-       fprintf(stderr,"framesize = %i  \n",framesize);
        fprintf(stderr,"bitrate = %i  \n",mp3data->bitrate);
        fprintf(stderr,"num frames = %ui  \n",num_frames);
        fprintf(stderr,"num samp = %ui  \n",mp3data->nsamp);

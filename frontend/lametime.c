@@ -115,46 +115,4 @@ double GetRealTime ( void )			/* conforming:  SVr4, SVID, POSIX, X/OPEN, BSD 4.3
 
 #endif
                               
-
-#if defined(_WIN32) || defined(__CYGWIN__)
-# include <io.h>
-# include <fcntl.h>
-#else
-# include <unistd.h>
-#endif
-
-int  lame_set_stream_binary_mode ( FILE* const fp )
-{
-#if   defined __EMX__
-    _fsetmode ( fp, "b" );
-#elif defined __BORLANDC__
-    setmode   (_fileno(fp),  O_BINARY );
-#elif defined __CYGWIN__
-    setmode   ( fileno(fp), _O_BINARY );
-#elif defined _WIN32
-    _setmode  (_fileno(fp), _O_BINARY );
-#endif
-    return 0;
-}
-
-
-#if defined(__riscos__)
-# include <kernel.h>
-# include <sys/swis.h>
-#elif defined(_WIN32)
-# include <sys/types.h>
-# include <sys/stat.h>
-#else
-# include <sys/stat.h>
-#endif
-
-off_t  lame_get_file_size ( const char* const filename )
-{
-    struct stat       sb;
-
-    if ( 0 == stat ( filename, &sb ) )
-        return sb.st_size;
-    return (off_t) -1;
-}
-
 /* End of lametime.c */

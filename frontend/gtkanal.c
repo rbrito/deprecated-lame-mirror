@@ -264,7 +264,7 @@ plot_frame(void)
   /* however, the PCM data is delayed by 528 samples in the encoder filterbanks.
    * We added another 1152-528 delay to this so the PCM data is *exactly* one 
    * frame behind the header & MDCT information */
-  pplot1 =pplot2 +1;                   /* back one frame for header info, MDCT */
+  pplot1 =pplot2 +1; /* back one frame for header info, MDCT */
 
   /* allocate these GC's only once */
   if (firstcall) {

@@ -156,8 +156,7 @@ init_files(lame_t gfp, char *inPath, char *outPath)
  * samples to skip, to (for example) compensate for the encoder delay */
 
 static int
-decoder(lame_t gfp, FILE * outf, int skip, char *inPath,
-	char *outPath)
+decoder(lame_t gfp, FILE * outf, int skip, char *inPath, char *outPath)
 {
     short int Buffer[2][1152];
     int     iread;
@@ -223,27 +222,27 @@ decoder(lame_t gfp, FILE * outf, int skip, char *inPath,
     assert(tmp_num_channels >= 1 && tmp_num_channels <= 2);
 
     do {
-        iread = get_audio16(gfp, Buffer); /* read in 'iread' samples */
-        mp3input_data.framenum += iread / mp3input_data.framesize;
+	iread = get_audio16(gfp, Buffer); /* read in 'iread' samples */
+	mp3input_data.framenum += iread / mp3input_data.framesize;
         wavsize += iread;
 
         if (silent <= 0)
-            decoder_progress(&mp3input_data);
+	    decoder_progress(&mp3input_data);
 
-        skip -= (i = skip < iread ? skip : iread); /* 'i' samples are to skip in this frame */
+	skip -= (i = skip < iread ? skip : iread); /* 'i' samples are to skip in this frame */
 
-        for (; i < iread; i++) {
-            if ( disable_wav_header ) {
-                WriteFunction(outf, (char *) &Buffer[0][i], sizeof(short));
-                if (tmp_num_channels == 2)
-                    WriteFunction(outf, (char *) &Buffer[1][i], sizeof(short));
-            }
-            else {
-                Write16BitsLowHigh(outf, Buffer[0][i]);
-                if (tmp_num_channels == 2)
-                    Write16BitsLowHigh(outf, Buffer[1][i]);
-            }
-        }
+	for (; i < iread; i++) {
+	    if ( disable_wav_header ) {
+		WriteFunction(outf, (char *) &Buffer[0][i], sizeof(short));
+		if (tmp_num_channels == 2)
+		    WriteFunction(outf, (char *) &Buffer[1][i], sizeof(short));
+	    }
+	    else {
+		Write16BitsLowHigh(outf, Buffer[0][i]);
+		if (tmp_num_channels == 2)
+		    Write16BitsLowHigh(outf, Buffer[1][i]);
+	    }
+	}
     } while (iread);
 
     i = (16 / 8) * tmp_num_channels;
@@ -421,7 +420,6 @@ encoder(lame_t gfp, FILE * outf, int nogap, char *inPath,
 
     /* id3 tag */
     if (input_format == sf_mp3 && keeptag) {
-	extern FILE * musicin;
 #define ID3TAGSIZE 128
 	char id3tag[ID3TAGSIZE];
 	fseek(musicin, -ID3TAGSIZE, SEEK_CUR);
