@@ -71,14 +71,8 @@ static void InitParams()
 
 __declspec(dllexport) BE_ERR	beInitStream(PBE_CONFIG pbeConfig, PDWORD dwSamples, PDWORD dwBufferSize, PHBE_STREAM phbeStream)
 {
-	//char		strTmp[255];
 	int			nDllArgC=0;
-	//char		DllArgV[20][80];
-	//char*		argv[MAX_ARGV];
-//	int			i;
 	BE_CONFIG	lameConfig;
-	//	layer*		pInfo = NULL;
-
 
 	// clear out structure
 	memset(&lameConfig,0x00,CURRENT_STRUCT_SIZE);
@@ -214,15 +208,15 @@ __declspec(dllexport) BE_ERR	beInitStream(PBE_CONFIG pbeConfig, PDWORD dwSamples
 		gf.VBR_max_bitrate_kbps=lameConfig.format.LHV1.dwMaxBitrate;
 	
 	// Set copyright flag?
-    if (lameConfig.format.LHV1.bCopyright)
+	if (lameConfig.format.LHV1.bCopyright)
 		gf.copyright=1;
 
 	// Do we have to tag  it as non original 
-    if (!lameConfig.format.LHV1.bOriginal)
+	if (!lameConfig.format.LHV1.bOriginal)
 		gf.original=0;
 
 	// Add CRC?
-    if (lameConfig.format.LHV1.bCRC)
+	if (lameConfig.format.LHV1.bCRC)
 		gf.error_protection=1;
 
 	lame_init_params(&gf);	
@@ -337,7 +331,7 @@ __declspec(dllexport) BE_ERR	beEncodeChunk(HBE_STREAM hbeStream, DWORD nSamples,
 	
 		
 
-	if (gf.stereo==2)
+	if (gf.num_channels==2)
 	{
 		for (iSampleIndex=0;iSampleIndex<n;iSampleIndex++)
 		{

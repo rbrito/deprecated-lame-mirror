@@ -206,6 +206,13 @@ void lame_init_params(lame_global_flags *gfp)
 
     /* Should we use some lowpass filters? */
     int band = 1+floor(.5 + 14-18*log(compression_ratio/16.0));
+    if (gfp->resample_ratio != 1) {
+      /* resampling.  lame uses a simple 4th order resample code which
+       * requires some lowpass filtering.  If resampling, lowpass at 75% 
+       */
+      band = Min(band,24);
+    }
+
     if (band < 31) {
       gfp->lowpass1 = band/31.0;
       gfp->lowpass2 = band/31.0;
@@ -815,11 +822,10 @@ int mf_size,char *mp3buf, int mp3buf_size)
   }
 
 
-  /*
+/*
   VBR_iteration_loop_new( gfp,*pe_use, ms_ratio, xr, masking, &l3_side, l3_enc,
   	  &scalefac);
-  */
-
+*/
 
   if (gfp->VBR) {
     VBR_iteration_loop( gfp,*pe_use, ms_ratio, xr, *masking, &l3_side, l3_enc,
