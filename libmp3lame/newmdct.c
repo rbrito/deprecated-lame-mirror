@@ -38,7 +38,7 @@
 #include <dmalloc.h>
 #endif
 
-static const FLOAT8 enwindow[] = 
+static const FLOAT enwindow[] = 
 {
       -4.77e-07*0.740951125354959/2.384e-06,  1.03951e-04*0.740951125354959/2.384e-06,  9.53674e-04*0.740951125354959/2.384e-06, 2.841473e-03*0.740951125354959/2.384e-06,
   3.5758972e-02*0.740951125354959/2.384e-06, 3.401756e-03*0.740951125354959/2.384e-06,  9.83715e-04*0.740951125354959/2.384e-06,   9.9182e-05*0.740951125354959/2.384e-06, /* 15*/
@@ -171,7 +171,7 @@ static const FLOAT8 enwindow[] =
 #define NS 12
 #define NL 36
 
-static const FLOAT8 win[4][NL] = {
+static const FLOAT win[4][NL] = {
   {
     2.382191739347913e-13,
     6.423305872147834e-13,
@@ -366,7 +366,7 @@ inline static void
 window_subband(FLOAT coef[SBLIMIT], const sample_t *x1, FLOAT a[SBLIMIT])
 {
     int i;
-    FLOAT8 const *wp = enwindow+10;
+    FLOAT const *wp = enwindow+10;
 
     const sample_t *x2 = &x1[238-14-286];
 

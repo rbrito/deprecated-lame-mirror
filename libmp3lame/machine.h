@@ -110,7 +110,6 @@ char *strchr (), *strrchr ();
 
 /*
  * FLOAT    for variables which require at least 32 bits
- * FLOAT8   for variables which require at least 64 bits
  *
  * On some machines, 64 bit will be faster than 32 bit.  Also, some math
  * routines require 64 bit float, so setting FLOAT=float will result in a
@@ -130,21 +129,6 @@ typedef float   FLOAT;
 #  define FLOAT_MAX FLT_MAX
 # else
 #  define FLOAT_MAX 1e37 /* approx */
-# endif
-#endif
-
-#ifndef FLOAT8
-typedef double  FLOAT8;
-# ifdef DBL_MAX
-#  define FLOAT8_MAX DBL_MAX
-# else
-#  define FLOAT8_MAX 1e99 /* approx */
-# endif
-#else
-# ifdef FLT_MAX
-#  define FLOAT8_MAX FLT_MAX
-# else
-#  define FLOAT8_MAX 1e37 /* approx */
 # endif
 #endif
 

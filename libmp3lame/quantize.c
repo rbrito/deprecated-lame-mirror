@@ -1362,8 +1362,6 @@ VBR_noise_shaping(
 
     /* encode scalefacs */
     gfc->scale_bitcounter(gi);
-    if(gfc->pinfo)
-	printf("%d %d\n", gfc->pinfo->frameNum, gi->preflag);
     assert(gi->part2_length < LARGE_BITS);
 
     if (gfc->substep_shaping & 2) {

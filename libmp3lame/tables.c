@@ -645,10 +645,10 @@ static void init_log_table(void)
     assert((1<<LOG2_SIZE_L2)==LOG2_SIZE);
 
     for (j = 0; j < LOG2_SIZE; j++) {
-	FLOAT8 a, b, x;
-	x = log(1.0 + (j+0.5)/(FLOAT8)LOG2_SIZE) / log(2.0);
-	a = log(1.0 +  j     /(FLOAT8)LOG2_SIZE) / log(2.0);
-	b = log(1.0 + (j+1.0)/(FLOAT8)LOG2_SIZE) / log(2.0);
+	double a, b, x;
+	x = log(1.0 + (j+0.5)/(double)LOG2_SIZE) / log(2.0);
+	a = log(1.0 +  j     /(double)LOG2_SIZE) / log(2.0);
+	b = log(1.0 + (j+1.0)/(double)LOG2_SIZE) / log(2.0);
 
 	x = (a + x*2 + b) / 4.0;
 	a = (b-a) * (1.0 / (1 << (23 - LOG2_SIZE_L2)));
