@@ -136,8 +136,6 @@ ResvFrameBegin(lame_global_flags *gfp, int *mean_bits)
     assert ( 0 == l3_side->ResvMax % 8 );
 
     fullFrameBits = *mean_bits + Min(l3_side->ResvSize, l3_side->ResvMax);
-    if (fullFrameBits > l3_side->maxmp3buf)
-        fullFrameBits = l3_side->maxmp3buf;
 
 #ifndef NOANALYSIS
     if (gfc->pinfo) {
@@ -156,8 +154,8 @@ ResvFrameBegin(lame_global_flags *gfp, int *mean_bits)
          extra_bits:  amount extra available from reservoir
   Mark Taylor 4/99
 */
-static void ResvMaxBits(
-    lame_internal_flags *gfc, int mean_bits, int *targ_bits, int *extra_bits)
+static int
+ResvMaxBits(lame_internal_flags *gfc, int mean_bits, int *extra_bits)
 {
     int ResvSize = gfc->l3_side.ResvSize, ResvMax = gfc->l3_side.ResvMax;
     if (ResvSize*10 >= ResvMax*6) {
@@ -181,8 +179,8 @@ static void ResvMaxBits(
 	gfc->substep_shaping &= 0x7f;
     }
 
-    *targ_bits = mean_bits;
     *extra_bits = ResvSize;
+    return mean_bits;
 }
 
 /************************************************************************
@@ -203,7 +201,7 @@ on_pe(
     int     ch;
 
     /* allocate targ_bits for granule */
-    ResvMaxBits( gfc, mean_bits, &tbits, &extra_bits);
+    tbits = ResvMaxBits( gfc, mean_bits, &extra_bits);
 
     max_bits = tbits + extra_bits;
     if (max_bits > MAX_BITS) /* hard limit per granule */
