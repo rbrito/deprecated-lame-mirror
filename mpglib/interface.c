@@ -221,10 +221,10 @@ int decodeMP3(struct mpstr *mp,char *in,int isize,char *out,
 		if (bits<0) bits=0;
 
 		/* read just as many bytes as necessary before decoding */
-		/*		mp->dsize = (bits+7)/8;*/
+		mp->dsize = (bits+7)/8;
 
 		/* this will force mpglib to read entire frame before decoding */
-		mp->dsize= mp->framesize - mp->ssize;
+		/* mp->dsize= mp->framesize - mp->ssize;*/
 
 		mp->side_parsed=1;
 	}
