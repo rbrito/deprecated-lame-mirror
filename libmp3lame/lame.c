@@ -1757,11 +1757,11 @@ lame_encode_buffer_interleaved(lame_global_flags * gfp,
                                unsigned char *mp3buf, int mp3buf_size)
 {
     int     ret, i;
-    short int *buffer_l;
-    short int *buffer_r;
+    sample_t *buffer_l;
+    sample_t *buffer_r;
 
-    buffer_l = malloc(sizeof(short int) * nsamples);
-    buffer_r = malloc(sizeof(short int) * nsamples);
+    buffer_l = calloc(sizeof(sample_t), nsamples);
+    buffer_r = calloc(sizeof(sample_t), nsamples);
     if (buffer_l == NULL || buffer_r == NULL) {
         return -2;
     }
@@ -1770,7 +1770,7 @@ lame_encode_buffer_interleaved(lame_global_flags * gfp,
         buffer_r[i] = buffer[2 * i + 1];
     }
     ret =
-        lame_encode_buffer(gfp, buffer_l, buffer_r, nsamples, mp3buf,
+        lame_encode_buffer_sample_t(gfp, buffer_l, buffer_r, nsamples, mp3buf,
                            mp3buf_size);
     free(buffer_l);
     free(buffer_r);
