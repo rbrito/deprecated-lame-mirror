@@ -41,18 +41,18 @@
 #include <dmalloc.h>
 #endif
 
-struct rtpheader    RTPheader;
-struct sockaddr_in  rtpsi;
-int                 rtpsocket;
+static struct rtpheader    RTPheader;
+static struct sockaddr_in  rtpsi;
+static int                 rtpsocket;
 
-void  rtp_output ( const char* mp3buffer, const int mp3size )
+static void  rtp_output ( const char* mp3buffer, const int mp3size )
 {
     sendrtp (rtpsocket, &rtpsi, &RTPheader, mp3buffer, mp3size);
     RTPheader.timestamp += 5;
     RTPheader.b.sequence++;
 }
 
-unsigned int  maxvalue ( int  Buffer [2] [1152] )
+static unsigned int  maxvalue ( int  Buffer [2] [1152] )
 {
     unsigned int  max = 0;
     int  i;
@@ -65,7 +65,7 @@ unsigned int  maxvalue ( int  Buffer [2] [1152] )
     return max;
 }
 
-void levelmessage ( unsigned int maxvalue )
+static void levelmessage ( unsigned int maxvalue )
 {
     char buff[] = "|  .  |  .  |  .  |  .  |  .  |  .  |  .  |  .  |  .  |  .  |  \r";
     static int  max = 0;
