@@ -312,15 +312,60 @@ static int choose_table_nonMMX(
 /*	      count_bit							 */
 /*************************************************************************/
 
-/*
- Function: Count the number of bits necessary to code the subregion. 
-*/
-
-
-int count_bits_long(lame_internal_flags * const gfc, const int ix[576], gr_info * const gi)
+int count_bits(
+          lame_internal_flags * const gfc, 
+          int     * const ix,
+    const FLOAT8  * const xr,
+          gr_info * const gi)  
 {
-    int i, a1, a2;
     int bits = 0;
+    int i, a1, a2;
+    /* since quantize_xrpow uses table lookup, we need to check this first: */
+    FLOAT8 w = (IXMAX_VAL) / IPOW20(gi->global_gain);
+    for ( i = 0; i < 576; i++ )  {
+	if (xr[i] > w)
+	    return LARGE_BITS;
+    }
+
+    if (gfc->quantization) 
+	quantize_xrpow(xr, ix, IPOW20(gi->global_gain));
+    else
+	quantize_xrpow_ISO(xr, ix, IPOW20(gi->global_gain));
+
+    if (gfc->noise_shaping_amp==3) {
+      int sfb;
+      FLOAT8 roundfac = 0.5946 / IPOW20(gi->global_gain-1);
+      i = 0;
+      for (sfb = 0; sfb < gi->sfb_lmax; sfb++) {
+	int end;
+	if (!gfc->pseudohalf.l[sfb])
+	  continue;
+
+	end   = gfc->scalefac_band.l[sfb+1];
+	for (; i < end; i++)
+	  if (xr[i] < roundfac)
+	    ix[i] = 0;
+      }
+
+      for (sfb = gi->sfb_smin; sfb < SBPSY_s; sfb++) {
+	int start, end, win;
+	start = gfc->scalefac_band.s[sfb];
+	end   = gfc->scalefac_band.s[sfb+1];
+	for (win = 0; win < 3; win++) {
+	  int j;
+	  if (!gfc->pseudohalf.s[sfb][win])
+	    continue;
+	  for (j = start; j < end; j++, i++)
+	    if (xr[i] < roundfac)
+	      ix[i] = 0;
+	}
+      }
+    }
+
+
+
+
+
 
     i=576;
     /* Determine count1 region */
@@ -396,34 +441,6 @@ int count_bits_long(lame_internal_flags * const gfc, const int ix[576], gr_info 
     if (a1 < a2)
       gi->table_select[1] = gfc->choose_table(ix + a1, ix + a2, &bits);
     return bits;
-}
-
-
-
-
-
-int count_bits(
-          lame_internal_flags * const gfc, 
-          int     * const ix,
-    const FLOAT8  * const xr,
-          gr_info * const cod_info)  
-{
-  int bits,i;
-  /* since quantize_xrpow uses table lookup, we need to check this first: */
-  FLOAT8 w = (IXMAX_VAL) / IPOW20(cod_info->global_gain);
-  for ( i = 0; i < 576; i++ )  {
-    if (xr[i] > w)
-      return LARGE_BITS;
-  }
-
-  if (gfc->quantization) 
-    quantize_xrpow(xr, ix, IPOW20(cod_info->global_gain));
-  else
-    quantize_xrpow_ISO(xr, ix, IPOW20(cod_info->global_gain));
-
-  bits=count_bits_long(gfc, ix, cod_info);
-
-  return bits;
 }
 
 /***********************************************************************

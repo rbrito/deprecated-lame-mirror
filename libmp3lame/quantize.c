@@ -53,9 +53,9 @@
 
 static int 
 init_outer_loop(
+    lame_internal_flags *gfc,
     gr_info *const cod_info, 
     III_scalefac_t *const scalefac, 
-    const int is_mpeg1,
     const FLOAT8 xr[576], 
     FLOAT8 xrpow[576] )
 {
@@ -92,7 +92,7 @@ init_outer_loop(
              *  MPEG-1:      sfbs 0-7 long block, 3-12 short blocks 
              *  MPEG-2(.5):  sfbs 0-5 long block, 3-12 short blocks
              */ 
-            cod_info->sfb_lmax    = is_mpeg1 ? 8 : 6;
+            cod_info->sfb_lmax    = gfc->is_mpeg1 ? 8 : 6;
 	    cod_info->sfb_smin    = 3;
 	}
     } else {
@@ -109,7 +109,8 @@ init_outer_loop(
     /*  fresh scalefactors are all zero
      */
     memset(scalefac, 0, sizeof(III_scalefac_t));
-  
+    memset(&gfc->pseudohalf, 0, sizeof(gfc->pseudohalf));
+
     /*  check if there is some energy we have to quantize
      *  and calculate xrpow matching our fresh scalefactors
      */
@@ -430,6 +431,7 @@ amp_scalefac_bands(
 
   switch (gfc->noise_shaping_amp) {
 
+  case 3:
   case 2:
     /* amplify exactly 1 band */
     //trigger = distort_thresh;
@@ -457,10 +459,18 @@ amp_scalefac_bands(
     start = gfc->scalefac_band.l[sfb];
     end   = gfc->scalefac_band.l[sfb+1];
     if (distort->l[sfb]>=trigger  ) {
+      if (gfc->noise_shaping_amp==3) {
+	if (gfc->pseudohalf.l[sfb]) {
+	  gfc->pseudohalf.l[sfb] = 0;
+	  goto done;
+	}
+	gfc->pseudohalf.l[sfb] = 1;
+      }
       scalefac->l[sfb]++;
       for ( l = start; l < end; l++ )
 	xrpow[l] *= ifqstep34;
-      if (gfc->noise_shaping_amp==2) goto done;
+      if (gfc->noise_shaping_amp==2
+	  ||gfc->noise_shaping_amp==3) goto done;
     }
   }
   
@@ -470,10 +480,18 @@ amp_scalefac_bands(
     for ( i = 0; i < 3; i++ ) {
       int j2 = j;
       if ( distort->s[sfb][i]>=trigger) {
+	if (gfc->noise_shaping_amp==3) {
+	  if (gfc->pseudohalf.s[sfb][i]) {
+	    gfc->pseudohalf.s[sfb][i] = 0;
+	    goto done;
+	  }
+	  gfc->pseudohalf.s[sfb][i] = 1;
+	}
 	scalefac->s[sfb][i]++;
 	for (l = start; l < end; l++) 
 	  xrpow[j2++] *= ifqstep34;
-        if (gfc->noise_shaping_amp==2) goto done;
+	if (gfc->noise_shaping_amp==2
+	    ||gfc->noise_shaping_amp==3) goto done;
       }
       j += end-start;
     }
@@ -660,6 +678,7 @@ balance_noise (
      *  lets try setting scalefac_scale=1 
      */
     if (gfc->noise_shaping > 1) {
+	memset(&gfc->pseudohalf, 0, sizeof(gfc->pseudohalf));
 	if (!cod_info->scalefac_scale) {
 	    inc_scalefac_scale (gfc, cod_info, scalefac, xrpow);
 	    status = 0;
@@ -676,7 +695,7 @@ balance_noise (
             status = scale_bitcount (scalefac, cod_info);
         else 
             status = scale_bitcount_lsf (gfc, scalefac, cod_info);
-    }    
+    }
     return !status;
 }
 
@@ -1355,7 +1374,7 @@ VBR_iteration_loop (
       
             /*  init_outer_loop sets up cod_info, scalefac and xrpow 
              */
-            ret = init_outer_loop(cod_info, &scalefac[gr][ch], gfc->is_mpeg1,
+            ret = init_outer_loop(gfc, cod_info, &scalefac[gr][ch],
 				  xr[gr][ch], xrpow);
             if (ret == 0 || max_bits[gr][ch] == 0) {
                 /*  xr contains no energy 
@@ -1574,7 +1593,7 @@ ABR_iteration_loop(
 
             /*  cod_info, scalefac and xrpow get initialized in init_outer_loop
              */
-            ret = init_outer_loop(cod_info, &scalefac[gr][ch], gfc->is_mpeg1,
+            ret = init_outer_loop(gfc, cod_info, &scalefac[gr][ch],
 				  xr[gr][ch], xrpow);
             if (ret == 0) {
                 /*  xr contains no energy 
@@ -1670,7 +1689,7 @@ iteration_loop(
 
             /*  init_outer_loop sets up cod_info, scalefac and xrpow 
              */
-            i = init_outer_loop(cod_info, &scalefac[gr][ch], gfc->is_mpeg1,
+            i = init_outer_loop(gfc, cod_info, &scalefac[gr][ch],
 				xr[gr][ch], xrpow);
             if (i == 0) {
                 /*  xr contains no energy, l3_enc will be quantized to zero

@@ -314,9 +314,10 @@ struct lame_internal_flags {
                              */
 
   int noise_shaping_amp;    /*  0 = ISO model: amplify all distorted bands
-                                1 = amplify only most distorted band
-                                2 = amplify bands using? 
-                                3 = amplify bands using?
+                                1 = amplify within 50% of max (on db scale)
+                                2 = amplify only most distorted band
+                                3 = amplify only most distorted band and
+				    use pseudo half step
 			     */
 
   int psymodel;             /* 1 = gpsycho. 0 = none */
@@ -400,7 +401,6 @@ struct lame_internal_flags {
   
   scalefac_struct scalefac_band;
 
-
   /* DATA FROM PSYMODEL.C */
 /* The static variables "r", "phi_sav", "new", "old" and "oldest" have    */
 /* to be remembered for the unpredictability measure.  For "r" and        */
@@ -447,6 +447,7 @@ struct lame_internal_flags {
   
   
   /* Scale Factor Bands    */
+  III_scalefac_t pseudohalf;
   FLOAT8	w1_l[SBMAX_l], w2_l[SBMAX_l];
   FLOAT8	w1_s[SBMAX_s], w2_s[SBMAX_s];
   FLOAT8 mld_l[SBMAX_l],mld_s[SBMAX_s];
