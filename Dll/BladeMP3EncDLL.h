@@ -103,6 +103,8 @@ typedef enum
 	LQP_INSANE				= 10,
 	LQP_ABR					= 11,
 	LQP_CBR					= 12,
+	LQP_MEDIUM				= 13,
+	LQP_FAST_MEDIUM			= 14,
 
 	// NEW PRESET VALUES
 	LQP_PHONE	=1000,

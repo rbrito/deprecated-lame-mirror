@@ -122,14 +122,8 @@ static void PresetOptions( lame_global_flags *gfp, LONG myPreset )
 			break;
 
 /*3*/		case LQP_VOICE_QUALITY:				// --voice flag for experimental voice mode
-				lame_set_lowpassfreq( gfp, 12000 );
-            	lame_set_VBR( gfp,vbr_mtrh ); 
-//            	lame_set_VBR_q( gfp, 5 );
-            	lame_set_quality( gfp, 2 );
-            	lame_set_mode( gfp, JOINT_STEREO );
-				lame_set_no_short_blocks( gfp, 1 );
-				lame_set_VBR_min_bitrate_kbps( gfp, 32 );
-				lame_set_VBR_max_bitrate_kbps( gfp, 160 );
+				lame_set_mode( gfp, MONO );
+		        lame_set_preset( gfp, 56);
 			break;
 
 /*4*/		case LQP_R3MIX:					// --R3MIX
@@ -140,149 +134,84 @@ static void PresetOptions( lame_global_flags *gfp, LONG myPreset )
 				lame_set_quality( gfp, 0 );
 			break;
 
-/*6*/		case LQP_STANDARD:				// --ALT-PRESET STANDARD
+/*6*/		case LQP_STANDARD:				// --PRESET STANDARD
 		        lame_set_preset( gfp, STANDARD);
 			break;
 
-/*7*/		case LQP_FAST_STANDARD:				// --ALT-PRESET FAST STANDARD
+/*7*/		case LQP_FAST_STANDARD:				// --PRESET FAST STANDARD
 		        lame_set_preset( gfp, STANDARD_FAST);
 			break;
 
-/*8*/		case LQP_EXTREME:				// --ALT-PRESET EXTREME
+/*8*/		case LQP_EXTREME:				// --PRESET EXTREME
 		        lame_set_preset( gfp, EXTREME);
 			break;
 
-/*9*/		case LQP_FAST_EXTREME:				// --ALT-PRESET FAST EXTREME:
+/*9*/		case LQP_FAST_EXTREME:				// --PRESET FAST EXTREME:
 		        lame_set_preset( gfp, EXTREME_FAST);
 			break;
 
-/*10*/		case LQP_INSANE:				// --ALT-PRESET INSANE
+/*10*/		case LQP_INSANE:				// --PRESET INSANE
 		        lame_set_preset( gfp, INSANE);
 			break;
 
-/*11*/		case LQP_ABR:					// --ALT-PRESET ABR
+/*11*/		case LQP_ABR:					// --PRESET ABR
 				// handled in beInitStream
 			break;
 
-/*12*/		case LQP_CBR:					// --ALT-PRESET CBR
+/*12*/		case LQP_CBR:					// --PRESET CBR
 				// handled in beInitStream
+			break;
+
+/*13*/		case LQP_MEDIUM:					// --PRESET MEDIUM
+		        lame_set_preset( gfp, MEDIUM);
+			break;
+
+/*14*/		case LQP_FAST_MEDIUM:					// --PRESET FAST MEDIUM
+		        lame_set_preset( gfp, MEDIUM_FAST);
 			break;
 
 /*1000*/	case LQP_PHONE:
-				lame_set_out_samplerate( gfp, 8000 );
-				lame_set_lowpassfreq( gfp, 3200 );
-				lame_set_lowpasswidth( gfp, 1000 );
-				lame_set_no_short_blocks( gfp, 1 );
-				lame_set_quality( gfp, 5 );
 				lame_set_mode( gfp, MONO );
-				lame_set_brate( gfp, 16 );
-				lame_set_VBR_q( gfp, 6 );
-				lame_set_VBR_min_bitrate_kbps( gfp, 8 );
-				lame_set_VBR_max_bitrate_kbps( gfp, 56 );
+		        lame_set_preset( gfp, 16);
 			break;
 
 /*2000*/	case LQP_SW:
-				lame_set_out_samplerate( gfp, 11025 );
-				lame_set_lowpassfreq( gfp, 4800 );
-				lame_set_lowpasswidth( gfp, 500 );
-				lame_set_quality( gfp, 5 );
 				lame_set_mode( gfp, MONO );
-				lame_set_brate( gfp, 24 );
-				lame_set_VBR_q( gfp, 5 );
-				lame_set_VBR_min_bitrate_kbps( gfp, 8 );
-				lame_set_VBR_max_bitrate_kbps( gfp, 64 );
+		        lame_set_preset( gfp, 24);
 			break;
 
 /*3000*/	case LQP_AM:
-				lame_set_out_samplerate( gfp, 16000 );
-				lame_set_lowpassfreq( gfp, 7200 );
-				lame_set_lowpasswidth( gfp, 500 );
-				lame_set_quality( gfp, 5 );
 				lame_set_mode( gfp, MONO );
-				lame_set_brate( gfp, 32 );
-				lame_set_VBR_q( gfp, 5 );
-				lame_set_VBR_min_bitrate_kbps( gfp, 16 );
-				lame_set_VBR_max_bitrate_kbps( gfp, 128 );
+		        lame_set_preset( gfp, 40);
 			break;
 
 /*4000*/	case LQP_FM:
-				lame_set_out_samplerate( gfp, 22050 );
-				lame_set_lowpassfreq( gfp, 9950 );
-				lame_set_lowpasswidth( gfp, 880 );
-				lame_set_quality( gfp, 5 );
-				lame_set_mode( gfp, JOINT_STEREO );
-				lame_set_brate( gfp, 64 );
-				lame_set_VBR_q( gfp, 5 );
-				lame_set_VBR_min_bitrate_kbps( gfp, 24 );
-				lame_set_VBR_max_bitrate_kbps( gfp, 160 );
+		        lame_set_preset( gfp, 112);
 			break;
 
 /*5000*/	case LQP_VOICE:
-				lame_set_out_samplerate( gfp, 32000 );
-				lame_set_lowpassfreq( gfp, 12300 );
-				lame_set_lowpasswidth( gfp, 2000 );
-				lame_set_no_short_blocks( gfp, 1 );
-				lame_set_quality( gfp, 5 );
 				lame_set_mode( gfp, MONO );
-				lame_set_brate( gfp, 56 );
-				lame_set_VBR_q( gfp, 5 );
-				lame_set_VBR_min_bitrate_kbps( gfp, 32 );
-				lame_set_VBR_max_bitrate_kbps( gfp, 128 );
+		        lame_set_preset( gfp, 56);
 			break;
 
 /*6000*/	case LQP_RADIO:
-				lame_set_lowpassfreq( gfp, 15000 );
-				lame_set_lowpasswidth( gfp, 0 );
-				lame_set_quality( gfp, 5 );
-				lame_set_mode( gfp, JOINT_STEREO );
-				lame_set_brate( gfp, 112 );
-				lame_set_VBR_q( gfp, 4 );
-				lame_set_VBR_min_bitrate_kbps( gfp, 64 );
-				lame_set_VBR_max_bitrate_kbps( gfp, 256 );
+		        lame_set_preset( gfp, 112);
 			break;
 
 /*7000*/	case LQP_TAPE:
-				lame_set_lowpassfreq( gfp, 18500 );
-				lame_set_lowpasswidth( gfp, 2000 );
-				lame_set_quality( gfp, 5 );
-				lame_set_mode( gfp, JOINT_STEREO );
-				lame_set_brate( gfp, 128 );
-				lame_set_VBR_q( gfp, 4 );
-				lame_set_VBR_min_bitrate_kbps( gfp, 96 );
-				lame_set_VBR_max_bitrate_kbps( gfp, 320 );
+		        lame_set_preset( gfp, 112);
 			break;
 
 /*8000*/	case LQP_HIFI:
-				lame_set_lowpassfreq( gfp, 20240 );
-				lame_set_lowpasswidth( gfp, 2200 );
-				lame_set_quality( gfp, 2 );
-				lame_set_mode( gfp, JOINT_STEREO );
-				lame_set_brate( gfp, 160 );
-				lame_set_VBR_q( gfp, 3 );
-				lame_set_VBR_min_bitrate_kbps( gfp, 112 );
-				lame_set_VBR_max_bitrate_kbps( gfp, 320 );
+		        lame_set_preset( gfp, 160);
 			break;
 
 /*9000*/	case LQP_CD:
-				lame_set_lowpassfreq( gfp, -1 );
-				lame_set_highpassfreq( gfp, -1 );
-				lame_set_quality( gfp, 2 );
-				lame_set_mode( gfp, STEREO );
-				lame_set_brate( gfp, 192 );
-				lame_set_VBR_q( gfp, 2 );
-				lame_set_VBR_min_bitrate_kbps( gfp, 128 );
-				lame_set_VBR_max_bitrate_kbps( gfp, 320 );
+		        lame_set_preset( gfp, 192);
 			break;
 
 /*10000*/	case LQP_STUDIO:
-				lame_set_lowpassfreq( gfp, -1 );
-				lame_set_highpassfreq( gfp, -1 );
-				lame_set_quality( gfp, 2 );
-				lame_set_mode( gfp, STEREO );
-				lame_set_brate( gfp, 256 );
-				lame_set_VBR_q( gfp, 0 );
-				lame_set_VBR_min_bitrate_kbps( gfp, 160 );
-				lame_set_VBR_max_bitrate_kbps( gfp, 320 );
+		        lame_set_preset( gfp, 256);
 			break;
 
 	}
