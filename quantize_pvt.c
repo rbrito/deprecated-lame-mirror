@@ -693,24 +693,15 @@ int calc_noise( lame_global_flags *gfp,
 	  xfsf[0][sfb] = sum / bw;
 	}
 
-	if (gfp->exp_nspsytune && gfp->VBR == vbr_off) {
-	  noise = xfsf[0][sfb] - l3_xmin->l[sfb];
-	  noise = noise > 0 ? noise : 0;
-	  tot_noise += noise;
-	  if (noise > 0) {
-	    over++;
-	    over_noise += noise;
-	  }
-	} else {
-	  noise = xfsf[0][sfb] / l3_xmin->l[sfb];
+	noise = xfsf[0][sfb] / l3_xmin->l[sfb];
+	/* multiplying here is adding in dB */
+	tot_noise *= Max(noise, 1E-20);
+	if (noise>1) {
+	  over++;
 	  /* multiplying here is adding in dB */
-	  tot_noise *= Max(noise, 1E-20);
-	  if (noise>1) {
-	    over++;
-	    /* multiplying here is adding in dB */
-	    over_noise *= noise;
-	  }
+	  over_noise *= noise;
 	}
+
 	max_noise=Max(max_noise,noise);
         distort[0][sfb] = noise;
 	count++;
