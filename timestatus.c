@@ -1,3 +1,4 @@
+#include "lame.h"
 #include "timestatus.h"
 #include "util.h"
 #include <time.h>
@@ -143,4 +144,31 @@ void timestatus(int samp_rate,long frameNum,long totalframes,int framesize)
 
   fflush(stderr);
 }
+
+
+void timestatus_finish(void)
+{
+  fprintf(stderr, "\n");
+  fflush(stderr);
+}
+
+
+
+#if (defined LIBSNDFILE || defined LAMESNDFILE)
+
+/* these functions are used in get_audio.c */
+
+void decoder_progress(lame_global_flags *gfp)
+{
+    fprintf(stderr,"\rFrame# %lu [ %lu]  %ikbs",gfp->frameNum,
+	      gfp->totalframes-1,gfp->brate);
+}
+
+void decoder_progress_finish(lame_global_flags *gfp)
+{
+    fprintf(stderr,"\n");
+}
+
+#endif
+
 

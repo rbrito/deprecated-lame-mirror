@@ -324,7 +324,7 @@ int lame_init_params(lame_global_flags *gfp)
 	  gfc->amp_lowpass[band] = cos((PI/2)*(gfc->lowpass1-freq)/(gfc->lowpass2-gfc->lowpass1));
 	}
 	/*
-	printf("lowpass band=%i  amp=%f \n",band,gfc->amp_lowpass[band]);
+	DEBUGF("lowpass band=%i  amp=%f \n",band,gfc->amp_lowpass[band]);
 	*/
       }
       /* compute the *actual* transition band implemented by the polyphase filter */
@@ -352,7 +352,7 @@ int lame_init_params(lame_global_flags *gfp)
     if (gfc->highpass2 > 0) 
       if (gfc->highpass2 <  .9*(.75/31.0) ) {
 	gfc->highpass1=0; gfc->highpass2=0;
-	fprintf(stderr,"Warning: highpass filter disabled.  highpass frequency to small\n");
+	MSGF("Warning: highpass filter disabled.  highpass frequency to small\n");
       }
     
 
@@ -373,7 +373,7 @@ int lame_init_params(lame_global_flags *gfp)
 	  gfc->amp_highpass[band] = cos((PI/2)*(gfc->highpass2-freq)/(gfc->highpass2-gfc->highpass1));
 	}
 	/*	
-	printf("highpass band=%i  amp=%f \n",band,gfc->amp_highpass[band]);
+	DEBUGF("highpass band=%i  amp=%f \n",band,gfc->amp_highpass[band]);
 	*/
       }
       /* compute the *actual* transition band implemented by the polyphase filter */
@@ -396,12 +396,12 @@ int lame_init_params(lame_global_flags *gfp)
       gfc->highpass_end_band   = -1;  /* do not to run into for-loops */
     }
     /*
-    printf("lowpass band with amp=0:  %i \n",gfc->lowpass_band);
-    printf("highpass band with amp=0:  %i \n",gfc->highpass_band);
-    printf("lowpass band start:  %i \n",gfc->lowpass_start_band);
-    printf("lowpass band end:    %i \n",gfc->lowpass_end_band);
-    printf("highpass band start:  %i \n",gfc->highpass_start_band);
-    printf("highpass band end:    %i \n",gfc->highpass_end_band);
+    DEBUGF("lowpass band with amp=0:  %i \n",gfc->lowpass_band);
+    DEBUGF("highpass band with amp=0:  %i \n",gfc->highpass_band);
+    DEBUGF("lowpass band start:  %i \n",gfc->lowpass_start_band);
+    DEBUGF("lowpass band end:    %i \n",gfc->lowpass_end_band);
+    DEBUGF("highpass band start:  %i \n",gfc->highpass_start_band);
+    DEBUGF("highpass band end:    %i \n",gfc->highpass_end_band);
     */
   }
 
@@ -652,53 +652,53 @@ void lame_print_config(lame_global_flags *gfp)
 
   lame_print_version(stderr);
   if (gfp->num_channels==2 && gfc->stereo==1) {
-    fprintf(stderr, "Autoconverting from stereo to mono. Setting encoding to mono mode.\n");
+    MSGF("Autoconverting from stereo to mono. Setting encoding to mono mode.\n");
   }
   if (gfc->resample_ratio!=1) {
-    fprintf(stderr,"Resampling:  input=%.1fkHz  output=%.1fkHz\n",
+    MSGF("Resampling:  input=%.1fkHz  output=%.1fkHz\n",
 	    in_samplerate,out_samplerate);
   }
   if (gfc->filter_type==0) {
   if (gfc->highpass2>0.0)
-    fprintf(stderr, "Using polyphase highpass filter, transition band: %.0f Hz -  %.0f Hz\n",
+    MSGF("Using polyphase highpass filter, transition band: %.0f Hz -  %.0f Hz\n",
 	    gfc->highpass1*out_samplerate*500,
 	    gfc->highpass2*out_samplerate*500);
   if (gfc->lowpass1>0.0)
-    fprintf(stderr, "Using polyphase lowpass filter,  transition band:  %.0f Hz - %.0f Hz\n",
+    MSGF("Using polyphase lowpass filter,  transition band:  %.0f Hz - %.0f Hz\n",
 	    gfc->lowpass1*out_samplerate*500,
 	    gfc->lowpass2*out_samplerate*500);
   }
 
   if (gfp->gtkflag) {
-    fprintf(stderr, "Analyzing %s \n",gfp->inPath);
+    MSGF("Analyzing %s \n",gfp->inPath);
   }
   else {
-    fprintf(stderr, "Encoding %s to %s\n",
+    MSGF("Encoding %s to %s\n",
 	    (strcmp(gfp->inPath, "-")? gfp->inPath : "stdin"),
 	    (strcmp(gfp->outPath, "-")? gfp->outPath : "stdout"));
     if (gfp->ogg) {
-      fprintf(stderr, "Encoding as %.1f kHz VBR Ogg Vorbis \n",
+      MSGF("Encoding as %.1f kHz VBR Ogg Vorbis \n",
 	      gfp->out_samplerate/1000.0);
     }else
     if (gfp->VBR==1 || gfp->VBR==2)
-      fprintf(stderr, "Encoding as %.1f kHz VBR(q=%i) %s MPEG%i LayerIII (%4.1fx estimated) qval=%i\n",
+      MSGF("Encoding as %.1f kHz VBR(q=%i) %s MPEG%i LayerIII (%4.1fx estimated) qval=%i\n",
 	      gfp->out_samplerate/1000.0,
 	      gfp->VBR_q,mode_names[gfp->mode],2-gfp->version,gfp->compression_ratio,gfp->quality);
     else
     if (gfp->VBR==3)
-      fprintf(stderr, "Encoding as %.1f kHz average %d kbps %s MPEG%i LayerIII (%4.1fx) qval=%i\n",
+      MSGF("Encoding as %.1f kHz average %d kbps %s MPEG%i LayerIII (%4.1fx) qval=%i\n",
 	      gfp->out_samplerate/1000.0,
 	      gfp->VBR_mean_bitrate_kbps,mode_names[gfp->mode],2-gfp->version,gfp->compression_ratio,gfp->quality);
     else {
-      fprintf(stderr, "Encoding as %.1f kHz %d kbps %s MPEG%i LayerIII (%4.1fx)  qval=%i\n",
+      MSGF("Encoding as %.1f kHz %d kbps %s MPEG%i LayerIII (%4.1fx)  qval=%i\n",
 	      gfp->out_samplerate/1000.0,gfp->brate,
 	      mode_names[gfp->mode],2-gfp->version,gfp->compression_ratio,gfp->quality);
     }
   }
   if (gfp->free_format) {
-    fprintf(stderr,"Warning: many decoders cannot handle free format bitstreams\n");
+    MSGF("Warning: many decoders cannot handle free format bitstreams\n");
     if (gfp->brate>320) {
-      fprintf(stderr,"Warning: many decoders cannot handle free format bitrates > 320kbs\n");
+      MSGF("Warning: many decoders cannot handle free format bitrates > 320kbs\n");
     }
   }
 
@@ -875,7 +875,7 @@ char *mp3buf, int mp3buf_size)
 	  if (gfc->slot_lag > (gfc->frac_SpF-1.0) ) {
 	    gfc->slot_lag -= gfc->frac_SpF;
 	    gfc->padding = 0;
-	    printf("%i padding = 0 \n",gfp->frameNum);
+	    DEBUGF("%i padding = 0 \n",gfp->frameNum);
 
 	  }
 	  else {
@@ -1339,8 +1339,7 @@ int lame_encode_finish(lame_global_flags *gfp,char *mp3buffer, int mp3buffer_siz
 	  brhist_disp_total(gfp);
 	}
 
-      fprintf(stderr,"\n");
-      fflush(stderr);
+      timestatus_finish();
   }
 
   mp3buffer_size_remaining = mp3buffer_size - mp3count;
@@ -1417,7 +1416,7 @@ int lame_init(lame_global_flags *gfp)
   mask=fpgetmask();
   /* if bit is set, we get SIGFPE on that error! */
   fpsetmask(mask & ~(FP_X_INV|FP_X_DZ));
-  /*  fprintf(stderr,"FreeBSD mask is 0x%x\n",mask); */
+  /*  DEBUGF("FreeBSD mask is 0x%x\n",mask); */
   }
 #endif
 #if defined(__riscos__) && !defined(ABORTFP)
