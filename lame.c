@@ -213,6 +213,9 @@ int lame_init_params(lame_global_flags *gfp)
   gfc->stereo=2;
   if (gfp->mode == MPG_MD_MONO) gfc->stereo=1;
 
+  if (gfp->gtkflag) 
+    gfp->silent=1;
+
   if (gfp->silent) {
    gfp->brhist_disp=0;  /* turn of VBR historgram */
   }
@@ -940,7 +943,7 @@ char *mp3buf, int mp3buf_size)
 
 
   /********************** status display  *****************************/
-  if (!gfp->gtkflag && !gfp->silent) {
+  if (!gfp->silent) {
       static time_t  last_time = 0;
       time_t         curr_time = time (NULL);
       
@@ -1378,7 +1381,7 @@ int lame_encode_finish(lame_global_flags *gfp,char *mp3buffer, int mp3buffer_siz
 
 
   gfp->frameNum--;
-  if (!gfp->gtkflag && !gfp->silent) {
+  if (!gfp->silent) {
       timestatus(gfp->out_samplerate,gfp->frameNum,gfp->totalframes,gfp->framesize);
 
       if (gfp->brhist_disp)
