@@ -252,8 +252,7 @@ void lame_help ( lame_global_flags* gfp, const char* ProgramName )  /* print syn
   PRINTF1("\n");
   PRINTF1("    Note: A version 2 tag will NOT be added unless one of the input fields\n");
   PRINTF1("    won't fit in a version 1 tag (e.g. the title string is longer than 30\n");
-  PRINTF1("    characters), or the `--add-id3v2' or `--id3v2-only' options are used,\n");
-  PRINTF1("    or output is redirected to stdout.\n");
+  PRINTF1("    characters), or the `--add-id3v2' or `--id3v2-only' options are used.\n");
   PRINTF1("\n");
 #ifdef HAVEVORBIS
   PRINTF1("    Note: All `--t*' options (except those for track and genre) work for Ogg\n");
@@ -1011,12 +1010,6 @@ void lame_parse_args ( lame_global_flags* gfp, int argc, char** argv )
     /* some file options not allowed with stdout */
     if (gfp->outPath[0]=='-') {
 	gfp->bWriteVbrTag=0; /* turn off VBR tag */
-	if (gfp->id3v1_enabled) {
-	    gfp->id3v1_enabled=0;     /* turn off ID3 version 1 tagging */
-	    ERRORF("ID3 version 1 tagging not supported for stdout.\n");
-	    ERRORF("Converting any ID3 tag data to version 2 format.\n");
-	    id3tag_v2_only(&gfp->tag_spec);
-	}
     }
     
     /* if user did not explicitly specify input is mp3, check file name */

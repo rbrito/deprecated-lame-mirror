@@ -652,6 +652,14 @@ int lame_init_params(lame_global_flags *gfp)
   if (gfp->error_protection) gfc->sideinfo_len += 2;
   
 
+  /* Write id3v2 tag into the bitstream */
+  /* Can not have a id3v2 tag and a Xing VBR header */
+  if (!gfp->ogg) {
+    int ret = id3tag_write_v2(gfp,&gfp->tag_spec);
+    if (ret > 0) 
+      gfp->bWriteVbrTag = 0;
+  }
+
   /* Write initial VBR Header to bitstream */
   if (gfp->bWriteVbrTag)
       InitVbrTag(gfp);
@@ -777,14 +785,8 @@ void lame_id3v2_tag(lame_global_flags *gfp,FILE *outf)
    * below and have a nice "lame_"-prefixed function name in "lame.h".
    * -- gramps
    */
-#ifdef HAVEVORBIS
   /* no ID3 version 2 tags in Ogg Vorbis output */
-  if (!gfp->ogg) {
-#endif
-    id3tag_write_v2(&gfp->tag_spec,outf);
-#ifdef HAVEVORBIS
-  }
-#endif
+
 }
 
 
@@ -1068,7 +1070,7 @@ int    lame_encode_finish (
     mp3buffer += imp3;
     mp3count += imp3;
   }
-
+  mp3buffer_size_remaining = mp3buffer_size - mp3count;
 
   gfp->frameNum--;
   if (!gfp->silent) {
@@ -1084,25 +1086,30 @@ int    lame_encode_finish (
       timestatus_finish();
   }
 
-  mp3buffer_size_remaining = mp3buffer_size - mp3count;
+
   /* if user specifed buffer size = 0, dont check size */
   if (mp3buffer_size == 0) mp3buffer_size_remaining=0;  
-
   if (gfp->ogg) {
 #ifdef HAVEVORBIS    
     /* ogg related stuff */
     imp3 = lame_encode_ogg_finish(gfp,mp3buffer,mp3buffer_size_remaining);
 #endif
   }else{
-    /* mp3 related stuff.  bit buffer might still contain some data */
+    /* mp3 related stuff.  bit buffer might still contain some mp3 data */
     flush_bitstream(gfp);
+    /* write a id3 tag to the bitstream */
+    id3tag_write_v1(gfp,&gfp->tag_spec);
     imp3= copy_buffer(mp3buffer,mp3buffer_size_remaining,&gfc->bs);
   }
   if (imp3 < 0) {
     freegfc(gfc);    
     return imp3;
   }
+  mp3buffer += imp3;
   mp3count += imp3;
+  mp3buffer_size_remaining = mp3buffer_size - mp3count;
+
+
 
   freegfc(gfc);    
   return mp3count;
@@ -1126,28 +1133,10 @@ void lame_mp3_tags_fid(lame_global_flags *gfp,FILE *fpStream)
 	PutVbrTag(gfp,fpStream,nQuality);
     }
 
-  /* write an ID3 version 1 tag  */
-  if(gfp->id3v1_enabled
-    /* no ID3 version 1 tags in Ogg Vorbis output */
-    && !gfp->ogg
-    ) {
-    /*
-     * NOTE: The new tagging API only knows about streams and always writes at
-     * the current position, so we have to open the file and seek to the end of
-     * it here.  Perhaps we should just NOT close the file when the bitstream is
-     * completed, nor when the final VBR tag is written.
-     * -- gramps
-     *
-     * ideally this should not be done here: lame_encode_finish should 
-     * write the tag directly into the mp3 output buffer.  
-     */
-    if (fpStream && !fseek(fpStream, 0, SEEK_END)) {
-      id3tag_write_v1(&gfp->tag_spec, fpStream);
-    }
-  }
 
 }
 
+#if 0
 void lame_mp3_tags(lame_global_flags *gfp)
 {
   FILE *fpStream;
@@ -1160,7 +1149,7 @@ void lame_mp3_tags(lame_global_flags *gfp)
   lame_mp3_tags_fid(gfp,fpStream);
   fclose(fpStream);
 }
-
+#endif
 
 
 

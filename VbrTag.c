@@ -335,7 +335,10 @@ int InitVbrTag(lame_global_flags *gfp)
 	}
 	}
 
-	add_dummy_vbrframe(gfp,8*gfp->TotalFrameSize);
+	{ int i;
+	for (i=0; i<gfp->TotalFrameSize; ++i)
+	  add_dummy_byte(gfp,0);
+	}
 
 	/* Success */
 	return 0;

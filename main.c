@@ -155,8 +155,6 @@ int main(int argc, char **argv)
 
   } else {
 
-      lame_id3v2_tag(&gf,outf); /* add ID3 version 2 tag to mp3 file */
-
       /* encode until we hit eof */
       do {
 	/* read in 'iread' samples */

@@ -261,14 +261,8 @@ void lame_parse_args(lame_global_flags *, int argc, char **argv);
 int lame_init_params(lame_global_flags *);
 
 
-/* OPTONAL:  print internal lame configuration on stderr*/
+/* OPTIONAL:  print internal lame configuration on stderr*/
 void lame_print_config(lame_global_flags *);
-
-
-
-/* OPTONAL:  add ID3 version 2 tag to output file */
-void lame_id3v2_tag(lame_global_flags *,FILE *);
-
 
 
 
@@ -320,7 +314,7 @@ int lame_encode_buffer_interleaved(lame_global_flags *,short int pcm[],
 int num_samples, char *mp3buffer,int  mp3buffer_size);
 
 
-
+#if 0
 /* input 1 pcm frame, output (maybe) 1 mp3 frame.  
  * return code = number of bytes output in mp3buffer.  can be 0 
  * NOTE: this interface is outdated, please use lame_encode_buffer() instead 
@@ -328,33 +322,33 @@ int num_samples, char *mp3buffer,int  mp3buffer_size);
  * if return code = -1:  mp3buffer was too small 
  */
 int lame_encode(lame_global_flags *,short int Buffer[2][1152],char *mp3buffer,int mp3buffer_size);
-
+#endif
 
 
 /* REQUIRED:  lame_encode_finish will flush the buffers and may return a 
  * final few mp3 frames.  mp3buffer should be at least 7200 bytes.
+ *
+ * will also write id3 tags (if any) into the bitstream       
  *
  * return code = number of bytes output to mp3buffer.  can be 0
  */
 int lame_encode_finish(lame_global_flags *,char *mp3buffer, int size);
 
 
-/* OPTIONAL:  lame_mp3_tags_fid will append ID3 version 1 and Xing VBR tags to
+/* OPTIONAL:  lame_mp3_tags_fid will append a Xing VBR tag to
 the mp3 file with file pointer fid.  These calls perform forward and
 backwards seeks, so make sure fid is a real file.
-Note: if VBR and ID3 version 1 tags are turned off by the user, or turned off
+Note: if VBR  tags are turned off by the user, or turned off
 by LAME because the output is not a regular file, this call does nothing
 */
 void lame_mp3_tags_fid(lame_global_flags *,FILE* fid);
 
+#if 0
 /* OPTIONAL (and outdated, use lame_mp3_tags_fid):  lame_mp3_tags  
-This will append ID3 version 1 and Xing VBR tags to
-the mp3 file with name given by gf->outPath.  These calls open the file,
-write tags, and close the file, so make sure the the encoding is finished
-before calling these routines.  
+Same as lame_mp3_tags, only opens the file given in gf->outPath.
 */
 void lame_mp3_tags(lame_global_flags *);
-
+#endif
 
 
 

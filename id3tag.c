@@ -320,11 +320,10 @@ set_frame(unsigned char *frame, unsigned long id, const char *text,
 }
 
 int
-id3tag_write_v2(struct id3tag_spec *spec, FILE *stream)
+id3tag_write_v2(lame_global_flags *gfp,struct id3tag_spec *spec)
 {
-    if (!spec || !stream) {
-        return -1;
-    }
+    if (!spec) return -1;
+
     if ((spec->flags & CHANGED_FLAG) && !(spec->flags & V1_ONLY_FLAG)) {
         /* calculate length of four fields which may not fit in verion 1 tag */
         size_t title_length = spec->title ? strlen(spec->title) : 0;
@@ -427,12 +426,19 @@ id3tag_write_v2(struct id3tag_spec *spec, FILE *stream)
             p = set_frame(p, COMMENT_FRAME_ID, spec->comment, comment_length);
             /* clear any padding bytes */
             memset(p, 0, tag_size - (p - tag));
-            /* write tag into stream at current position */
+            /* write tag directly into bit stream at current position */
+	    {int i;
+	    for (i=0 ; i<tag_size; ++i)
+	      add_dummy_byte(gfp,tag[i]);
+	    }
+	    /*
             if (fwrite(tag, 1, tag_size, stream) != tag_size) {
                 free(tag);
                 return -1;
             }
+	    */
             free(tag);
+	    return tag_size;
         }
     }
     return 0;
@@ -452,11 +458,10 @@ set_text_field(unsigned char *field, const char *text, size_t size, int pad)
 }
 
 int
-id3tag_write_v1(struct id3tag_spec *spec, FILE *stream)
+id3tag_write_v1(lame_global_flags *gfp,struct id3tag_spec *spec)
 {
-    if (!spec || !stream) {
-        return -1;
-    }
+    if (!spec )  return -1;
+
     if ((spec->flags & CHANGED_FLAG) && !(spec->flags & V2_ONLY_FLAG)) {
         unsigned char tag[128];
         unsigned char *p = tag;
@@ -478,10 +483,11 @@ id3tag_write_v1(struct id3tag_spec *spec, FILE *stream)
             *p++ = spec->track;
         }
         *p++ = spec->genre;
-        /* write tag into stream at current position */
-        if (fwrite(tag, 1, sizeof tag, stream) != sizeof tag) {
-            return -1;
-        }
+	{ int i;
+	for (i=0; i<128; ++i)
+	  add_dummy_byte(gfp,tag[i]);
+	}
+	return 128;
     }
     return 0;
 }

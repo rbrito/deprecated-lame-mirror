@@ -27,5 +27,5 @@ int format_bitstream(lame_global_flags *gfp, int i,
 		 III_scalefac_t   scalefac[2][2] );
 
 void flush_bitstream(lame_global_flags *gfp);
-void add_dummy_vbrframe(lame_global_flags *gfp,int i);
+void add_dummy_byte(lame_global_flags *gfp,int val);
 #endif

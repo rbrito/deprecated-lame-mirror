@@ -101,6 +101,38 @@ putbits2(lame_global_flags *gfp, int val, int j)
     }
 }
 
+/*write j bits into the bit stream, ignoreing frame headers */
+static INLINE void
+putbits_noheaders(lame_global_flags *gfp, int val, int j)
+{
+    lame_internal_flags *gfc=gfp->internal_flags;
+    Bit_stream_struc *bs;
+    bs = &gfc->bs;
+
+    assert(j < MAX_LENGTH-2);
+
+    while (j > 0) {
+	int k;
+	if (bs->buf_bit_idx == 0) {
+	    bs->buf_bit_idx = 8;
+	    bs->buf_byte_idx++;
+	    assert(bs->buf_byte_idx < BUFFER_SIZE);
+	    bs->buf[bs->buf_byte_idx] = 0;
+	}
+
+	k = Min(j, bs->buf_bit_idx);
+	j -= k;
+        
+	bs->buf_bit_idx -= k;
+        
+	assert (j < MAX_LENGTH); /* 32 too large on 32 bit machines */
+        assert (bs->buf_bit_idx < MAX_LENGTH); 
+	
+        bs->buf[bs->buf_byte_idx] |= ((val >> j) << bs->buf_bit_idx);
+	bs->totbit += k;
+    }
+}
+
 /*
   Some combinations of bitrate, Fs, and stereo make it impossible to stuff
   out a frame using just main_data, due to the limited number of bits to
@@ -814,24 +846,18 @@ flush_bitstream(lame_global_flags *gfp)
 
 
 
-void add_dummy_vbrframe(lame_global_flags *gfp,int bitsPerFrame)
+void add_dummy_byte(lame_global_flags *gfp,int val)
 {
   lame_internal_flags *gfc = gfp->internal_flags;
-  int bits;
+  int i,bits;
 
-  gfc->header[gfc->h_ptr].ptr = 0;
-  memset(gfc->header[gfc->h_ptr].buf, 0, gfc->sideinfo_len);
-  bits = bitsPerFrame-8*gfc->sideinfo_len;
+  putbits_noheaders(gfp,val,8);   
 
-  /* add one byte, cause header to be written */
-  putbits2(gfp,0,8);   
-  /* setup for next header */
-  gfc->h_ptr = (gfc->h_ptr + 1) & (MAX_HEADER_BUF - 1);
-  gfc->header[gfc->h_ptr].write_timing = bitsPerFrame;
-
-  drain_into_ancillary(gfp,bits-8);
-
+  for (i=0 ; i< MAX_HEADER_BUF ; ++i) 
+    gfc->header[i].write_timing += 8;
 }
+
+
 
 
 

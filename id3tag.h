@@ -80,8 +80,8 @@ extern int id3tag_set_genre(struct id3tag_spec *spec, const char *genre);
  */
 
 /* write tag into stream at current position */
-extern int id3tag_write_v2(struct id3tag_spec *spec, FILE *stream);
-extern int id3tag_write_v1(struct id3tag_spec *spec, FILE *stream);
+extern int id3tag_write_v2(lame_global_flags *gfp,struct id3tag_spec *spec);
+extern int id3tag_write_v1(lame_global_flags *gfp,struct id3tag_spec *spec);
 
 #ifdef __cplusplus
 }
