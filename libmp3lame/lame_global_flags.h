@@ -151,11 +151,9 @@ struct lame_global_struct {
   /****************************************************************************/
   lame_internal_flags *internal_flags;
 
-  /* VBR tags.  This data is here because VBR header is writen after
-   * input file is closed and *internal_flags struct is free'd */
+  /* VBR tags. */
   int TotalFrameSize;
   int nVbrNumFrames;
-  int nVbrFrameBufferSize;
 
   struct {
     int integer[16];

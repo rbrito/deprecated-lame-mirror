@@ -65,6 +65,8 @@ void  freegfc ( lame_internal_flags* const gfc )   /* bit stream structure */
 
     if ( gfc->VBR_seek_table.bag ) {
         free ( gfc->VBR_seek_table.bag );
+        gfc->VBR_seek_table.bag=NULL;
+        gfc->VBR_seek_table.size=0;
     }
     if ( gfc->s3_ll ) {
         /* XXX allocated in psymodel_init() */

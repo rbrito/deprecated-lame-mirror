@@ -197,22 +197,7 @@ void AddVbrFrame(lame_global_flags *gfp)
     lame_internal_flags *gfc = gfp->internal_flags;
 
     int kbps = bitrate_table[gfp->version][gfc->bitrate_index];
-    
-    if (gfc->VBR_seek_table.bag == NULL) {
-        gfc->VBR_seek_table.sum  = 0;
-        gfc->VBR_seek_table.seen = 0;
-        gfc->VBR_seek_table.want = 1;
-        gfc->VBR_seek_table.pos  = 0;
-        gfc->VBR_seek_table.bag  = malloc (400*sizeof(int));
-        if (gfc->VBR_seek_table.bag != NULL) {
-            gfc->VBR_seek_table.size = 400;
-        }
-        else {
-            gfc->VBR_seek_table.size = 0;
-            ERRORF (gfc,"Error: can't allocate VbrFrames buffer\n");
-            return;
-        }   
-    }
+    assert(gfc->VBR_seek_table.bag);
     addVbr(&gfc->VBR_seek_table, kbps);
     gfp->nVbrNumFrames++;
 }
@@ -411,64 +396,76 @@ int GetVbrTag(VBRTAGDATA *pTagData,  unsigned char *buf)
 */
 int InitVbrTag(lame_global_flags *gfp)
 {
-	int nMode,SampIndex;
-	lame_internal_flags *gfc = gfp->internal_flags;
+    int nMode,SampIndex;
+    int i, header_bitrate, tot;
+    lame_internal_flags *gfc = gfp->internal_flags;
 #define MAXFRAMESIZE 2880 /* the max framesize freeformat 640 32kHz */
-	nMode = gfp->mode;
-	SampIndex = gfc->samplerate_index;
+    nMode = gfp->mode;
+    SampIndex = gfc->samplerate_index;
 
+    /* we shold also count the vbr tag itself */
+    gfp->nVbrNumFrames=1;
 
-        /* we shold also count the vbr tag itself */
-	gfp->nVbrNumFrames=1;
-	gfp->nVbrFrameBufferSize=0;
+    /*
+     * Xing VBR pretends to be a 48kbs layer III frame.  (at 44.1kHz).
+     * (at 48kHz they use 56kbs since 48kbs frame not big enough for
+     * table of contents)
+     * let's always embed Xing header inside a 64kbs layer III frame.
+     * this gives us enough room for a LAME version string too.
+     * size determined by sampling frequency (MPEG1)
+     * 32kHz:    216 bytes@48kbs    288bytes@ 64kbs
+     * 44.1kHz:  156 bytes          208bytes@64kbs     (+1 if padding = 1)
+     * 48kHz:    144 bytes          192
+     *
+     * MPEG 2 values are the same since the framesize and samplerate
+     * are each reduced by a factor of 2.
+     */
+    if (1==gfp->version) {
+	header_bitrate = XING_BITRATE1;
+    } else {
+	if (gfp->out_samplerate < 16000 )
+	    header_bitrate = XING_BITRATE25;
+	else
+	    header_bitrate = XING_BITRATE2;
+    }
 
+    if (gfp->VBR == cbr)
+	header_bitrate = gfp->mean_bitrate_kbps;
 
-	/*
-	 * Xing VBR pretends to be a 48kbs layer III frame.  (at 44.1kHz).
-	 * (at 48kHz they use 56kbs since 48kbs frame not big enough for
-	 * table of contents)
-	 * let's always embed Xing header inside a 64kbs layer III frame.
-	 * this gives us enough room for a LAME version string too.
-	 * size determined by sampling frequency (MPEG1)
-	 * 32kHz:    216 bytes@48kbs    288bytes@ 64kbs
-	 * 44.1kHz:  156 bytes          208bytes@64kbs     (+1 if padding = 1)
-	 * 48kHz:    144 bytes          192
-	 *
-	 * MPEG 2 values are the same since the framesize and samplerate
-	 * are each reduced by a factor of 2.
-	*/
-	{
-	int i,bitrate,tot;
-	if (1==gfp->version) {
-	  bitrate = XING_BITRATE1;
-	} else {
-	  if (gfp->out_samplerate < 16000 )
-	    bitrate = XING_BITRATE25;
-	  else
-	    bitrate = XING_BITRATE2;
-	}
+    gfp->TotalFrameSize
+	= ((gfp->version+1)*72000*header_bitrate) / gfp->out_samplerate;
 
-	if (gfp->VBR == cbr)
-	    bitrate = gfp->mean_bitrate_kbps;
-	
-	gfp->TotalFrameSize= 
-  	  ((gfp->version+1)*72000*bitrate) / gfp->out_samplerate;
-
-	tot = (gfc->sideinfo_len+LAMEHEADERSIZE);
-
-	if (gfp->TotalFrameSize < tot || 
-            gfp->TotalFrameSize > MAXFRAMESIZE ) {
-            /* disable tag, it wont fit */
-            gfp->bWriteVbrTag = 0;
-            return 0;
-        }
-
-	for (i=0; i<gfp->TotalFrameSize; ++i)
-	  add_dummy_byte(gfp,0);
-	}
-
-	/* Success */
+    tot = (gfc->sideinfo_len+LAMEHEADERSIZE);
+    if (!(tot <= gfp->TotalFrameSize && gfp->TotalFrameSize <= MAXFRAMESIZE)) {
+	/* disable tag, it wont fit */
+	gfp->bWriteVbrTag = 0;
 	return 0;
+    }
+
+    /* write dummy VBR tag of all 0's into bitstream */
+    for (i=0; i<gfp->TotalFrameSize; ++i)
+	add_dummy_byte(gfp,0);
+
+
+    /* TOC should also take into account the size of the VBR header
+       itself.  so initial value of .sum should be the kbps of the header */
+    gfc->VBR_seek_table.sum  = header_bitrate;
+    gfc->VBR_seek_table.seen = 0;
+    gfc->VBR_seek_table.want = 1;
+    gfc->VBR_seek_table.pos  = 0;
+    if (gfc->VBR_seek_table.bag == NULL) {
+	gfc->VBR_seek_table.bag  = malloc (400*sizeof(int));
+	if (gfc->VBR_seek_table.bag != NULL) {
+	    gfc->VBR_seek_table.size = 400;
+	}
+	else {
+	    gfc->VBR_seek_table.size = 0;
+	    ERRORF (gfc,"Error: can't allocate VbrFrames buffer\n");
+	    return -1;
+	}   
+    }
+    /* Success */
+    return 0;
 }
 
 
@@ -528,214 +525,202 @@ int PutLameVBR(lame_global_flags *gfp, FILE *fpStream, uint8_t *pbtStreamBuffer,
 
     /*recall:	gfp->VBR_q is for example set by the switch -V */
     /*			gfp->quality by -q, -h, -f, etc */
+    int nQuality		= (100 - 10 * gfp->VBR_q - gfp->quality);
+
+    const char *szVersion	= get_lame_very_short_version();
+    uint8_t nVBR;
+    uint8_t nRevision = 0x00;
+    uint8_t nRevMethod;
+    uint8_t vbr_type_translator[] = {1,5,3,2,4,0,3};		/*numbering different in vbr_mode vs. Lame tag */
+
+    uint8_t nLowpass		= ( ((gfp->lowpassfreq / 100.0)+.5) > 255 ? 255 : (gfp->lowpassfreq / 100.0)+.5 );
+
+    ieee754_float32_t fPeakSignalAmplitude	= 0;				/*TODO... */
+    uint16_t nRadioReplayGain		= 0;				/*TODO... */
+    uint16_t nAudioPhileReplayGain  = 0;				/*TODO... */
+
+    uint8_t nNoiseShaping	= gfp->internal_flags->psymodel >= 2;
+    uint8_t nStereoMode				= 0;
+    int		bNonOptimal				= 0;
+    uint8_t nSourceFreq				= 0;
+    uint8_t nMisc					= 0;
+    uint32_t nMusicLength			= 0;
+    int		bId3v1Present
+	= ((gfp->internal_flags->tag_spec.flags & CHANGED_FLAG)
+	   && !(gfp->internal_flags->tag_spec.flags & V2_ONLY_FLAG));
+    uint16_t nMusicCRC				= 0;
+
+    /*psy model type: Gpsycho or NsPsytune */
+    unsigned char    bExpNPsyTune	= 1;
+    unsigned char	 bSafeJoint		= (gfp->exp_nspsytune & 2)!=0;
+
+    unsigned char	 bNoGapMore		= 0;
+    unsigned char	 bNoGapPrevious	= 0;
+
+    int		 nNoGapCount	= gfp->internal_flags->nogap_total;
+    int		 nNoGapCurr		= gfp->internal_flags->nogap_current;
+
+    uint8_t  nAthType		= gfp->ATHtype;	/*4 bits. */
+
+    uint8_t  nFlags			= 0;
+
+    /* if ABR, {store bitrate <=255} else { store "-b"} */
+    int nABRBitrate	= gfp->mean_bitrate_kbps;
+
+    /*revision and vbr method */
+    if (gfp->VBR>=0 && gfp->VBR < sizeof(vbr_type_translator))
+	nVBR = vbr_type_translator[gfp->VBR];
+    else
+	nVBR = 0x00;		/*unknown. */
+
+    nRevMethod = 0x10 * nRevision + nVBR; 
+
+    /*nogap */
+    if (nNoGapCount != -1)
+    {
+	if (nNoGapCurr > 0)
+	    bNoGapPrevious = 1;
 	
-	int nQuality		= (100 - 10 * gfp->VBR_q - gfp->quality);
-	
+	if (nNoGapCurr < nNoGapCount-1)
+	    bNoGapMore = 1;
+    }
 
-	const char *szVersion	= get_lame_very_short_version();
-	uint8_t nVBR;
-	uint8_t nRevision = 0x00;
-	uint8_t nRevMethod;
-	uint8_t vbr_type_translator[] = {1,5,3,2,4,0,3};		/*numbering different in vbr_mode vs. Lame tag */
+    /*flags */
 
-	uint8_t nLowpass		= ( ((gfp->lowpassfreq / 100.0)+.5) > 255 ? 255 : (gfp->lowpassfreq / 100.0)+.5 );
-
-	ieee754_float32_t fPeakSignalAmplitude	= 0;				/*TODO... */
-	uint16_t nRadioReplayGain		= 0;				/*TODO... */
-	uint16_t nAudioPhileReplayGain  = 0;				/*TODO... */
+    nFlags
+	= nAthType	+ (bExpNPsyTune		<< 4)
+	+ (bSafeJoint		<< 5)
+	+ (bNoGapMore		<< 6)
+	+ (bNoGapPrevious	<< 7);
 
 
+    if (nQuality < 0)
+	nQuality = 0;
 
-
-	uint8_t nNoiseShaping	= gfp->internal_flags->psymodel >= 2;
-	uint8_t nStereoMode				= 0;
-	int		bNonOptimal				= 0;
-	uint8_t nSourceFreq				= 0;
-	uint8_t nMisc					= 0;
-	uint32_t nMusicLength			= 0;
-	int		bId3v1Present			= ((gfp->internal_flags->tag_spec.flags & CHANGED_FLAG)
-		&& !(gfp->internal_flags->tag_spec.flags & V2_ONLY_FLAG));
-	uint16_t nMusicCRC				= 0;
-
-	/*psy model type: Gpsycho or NsPsytune */
-	unsigned char    bExpNPsyTune	= 1;
-	unsigned char	 bSafeJoint		= (gfp->exp_nspsytune & 2)!=0;
-
-	unsigned char	 bNoGapMore		= 0;
-	unsigned char	 bNoGapPrevious	= 0;
-
-	int		 nNoGapCount	= gfp->internal_flags->nogap_total;
-	int		 nNoGapCurr		= gfp->internal_flags->nogap_current;
-
-
-	uint8_t  nAthType		= gfp->ATHtype;	/*4 bits. */
-	
-	uint8_t  nFlags			= 0;
-
-	/* if ABR, {store bitrate <=255} else { store "-b"} */
-	int nABRBitrate	= gfp->mean_bitrate_kbps;
-
-	/*revision and vbr method */
-	if (gfp->VBR>=0 && gfp->VBR < sizeof(vbr_type_translator))
-		nVBR = vbr_type_translator[gfp->VBR];
+    /*stereo mode field... a bit ugly.*/
+    switch(gfp->mode)
+    {
+    case MONO:
+	nStereoMode = 0;
+	break;
+    case STEREO:
+	nStereoMode = 1;
+	break;
+    case DUAL_CHANNEL:
+	nStereoMode = 2;
+	break;
+    case JOINT_STEREO:
+	if (gfp->force_ms)
+	    nStereoMode = 4;
 	else
-	    nVBR = 0x00;		/*unknown. */
+	    nStereoMode = 3;
+	break;
+    case NOT_SET:
+	/* FALLTHROUGH */
+    default:
+	nStereoMode = 7;
+	break;
+    }
 
-	nRevMethod = 0x10 * nRevision + nVBR; 
+    if (gfp->mode_automs)
+	nStereoMode = 5;
+
+    /*Intensity stereo : nStereoMode = 6. IS is not implemented */
+    if (gfp->in_samplerate <= 32000)
+	nSourceFreq = 0x00;
+    else if (gfp->in_samplerate ==48000)
+	nSourceFreq = 0x02;
+    else if (gfp->in_samplerate > 48000)
+	nSourceFreq = 0x03;
+    else
+	nSourceFreq = 0x01;  /*default is 44100Hz. */
+
+    /*Check if the user overrided the default LAME behaviour with some nasty options */
+
+    if ((gfp->lowpassfreq == -1 && gfp->highpassfreq == -1)
+	|| (gfp->scale_left != gfp->scale_right)
+	|| gfp->disable_reservoir
+	|| gfp->noATH
+	|| gfp->ATHonly
+	|| nAthType == 0
+	|| gfp->in_samplerate <= 32000)
+	bNonOptimal = 1;
+
+    nMisc
+	=	nNoiseShaping
+	+	(nStereoMode << 2)
+	+	(bNonOptimal << 5)
+	+	(nSourceFreq << 6);
+
+    /*get filesize */
+    fseek(fpStream, 0, SEEK_END);
+    nFilesize = ftell(fpStream);
+
+    nMusicLength = nFilesize - id3v2size;		/*omit current frame */
+    if (bId3v1Present)
+	nMusicLength-=128;                     /*id3v1 present. */
+    nMusicCRC = gfc->nMusicCRC;
+
+    /*Write all this information into the stream*/
+    CreateI4(&pbtStreamBuffer[nBytesWritten], nQuality);
+    nBytesWritten+=4;
+
+    strncpy(&pbtStreamBuffer[nBytesWritten], szVersion, 9);
+    nBytesWritten+=9;
+
+    pbtStreamBuffer[nBytesWritten] = nRevMethod ;
+    nBytesWritten++;
+
+    pbtStreamBuffer[nBytesWritten] = nLowpass;
+    nBytesWritten++;
+
+    memmove(&pbtStreamBuffer[nBytesWritten], &fPeakSignalAmplitude, 4);
+    nBytesWritten+=4;
+
+    CreateI2(&pbtStreamBuffer[nBytesWritten],nRadioReplayGain);
+    nBytesWritten+=2;
+
+    CreateI2(&pbtStreamBuffer[nBytesWritten],nAudioPhileReplayGain);
+    nBytesWritten+=2;
+
+    pbtStreamBuffer[nBytesWritten] = nFlags;
+    nBytesWritten++;
+
+    if (nABRBitrate >= 255)
+	pbtStreamBuffer[nBytesWritten] = 0xFF;
+    else
+	pbtStreamBuffer[nBytesWritten] = nABRBitrate;
+    nBytesWritten++;
+
+    pbtStreamBuffer[nBytesWritten   ] = enc_delay >> 4; /* works for win32, does it for unix? */
+    pbtStreamBuffer[nBytesWritten +1] = (enc_delay << 4) + (enc_padding >> 8);
+    pbtStreamBuffer[nBytesWritten +2] = enc_padding;
+
+    nBytesWritten+=3;
+
+    pbtStreamBuffer[nBytesWritten] = nMisc;
+    nBytesWritten++;
+
+    pbtStreamBuffer[nBytesWritten++] = 0;	/*unused in rev1 */
+
+    CreateI2(&pbtStreamBuffer[nBytesWritten], gfp->preset);
+    nBytesWritten+=2;
+
+    CreateI4(&pbtStreamBuffer[nBytesWritten], nMusicLength);
+    nBytesWritten+=4;
+
+    CreateI2(&pbtStreamBuffer[nBytesWritten], nMusicCRC);
+    nBytesWritten+=2;
+
+    /*Calculate tag CRC.... must be done here, since it includes
+     *previous information*/
+    for (i = 0;i<nBytesWritten;i++)
+	crc = CRC_update_lookup(pbtStreamBuffer[i], crc);
 	
-	/*nogap */
-	if (nNoGapCount != -1)
-	{
-		if (nNoGapCurr > 0)
-			bNoGapPrevious = 1;
+    CreateI2(&pbtStreamBuffer[nBytesWritten], crc);
+    nBytesWritten+=2;
 
-		if (nNoGapCurr < nNoGapCount-1)
-			bNoGapMore = 1;
-	}
-
-	/*flags */
-
-	nFlags	= nAthType	+ (bExpNPsyTune		<< 4)
-						+ (bSafeJoint		<< 5)
-						+ (bNoGapMore		<< 6)
-						+ (bNoGapPrevious	<< 7);
-
-
-	if (nQuality < 0)
-		nQuality = 0;
-
-	/*stereo mode field... a bit ugly.*/
-
-	switch(gfp->mode)
-	{
-	case MONO:
-		nStereoMode = 0;
-		break;
-	case STEREO:
-		nStereoMode = 1;
-		break;
-	case DUAL_CHANNEL:
-		nStereoMode = 2;
-		break;
-	case JOINT_STEREO:
-		if (gfp->force_ms)
-			nStereoMode = 4;
-		else
-			nStereoMode = 3;
-		break;
-	case NOT_SET:
-	    /* FALLTHROUGH */
-	default:
-		nStereoMode = 7;
-		break;
-	}
-
-	if (gfp->mode_automs)
-		nStereoMode = 5;
-
-	/*Intensity stereo : nStereoMode = 6. IS is not implemented */
-
-	if (gfp->in_samplerate <= 32000)
-	    nSourceFreq = 0x00;
-	else if (gfp->in_samplerate ==48000)
-	    nSourceFreq = 0x02;
-	else if (gfp->in_samplerate > 48000)
-	    nSourceFreq = 0x03;
-	else
-	    nSourceFreq = 0x01;  /*default is 44100Hz. */
-
-
-	/*Check if the user overrided the default LAME behaviour with some nasty options */
-
-	if (((gfp->lowpassfreq == -1) && (gfp->highpassfreq == -1))	||
-		(gfp->scale_left != gfp->scale_right)			||
-		gfp->disable_reservoir		||
-		gfp->noATH			||
-		gfp->ATHonly			||
-		(nAthType == 0)    ||
-		gfp->in_samplerate <= 32000)
-			bNonOptimal = 1;
-	
-	nMisc =		nNoiseShaping
-			+	(nStereoMode << 2)
-			+	(bNonOptimal << 5)
-			+	(nSourceFreq << 6);
-
-
-	
-	/*get filesize */
-	fseek(fpStream, 0, SEEK_END);
-	nFilesize = ftell(fpStream);
-
-	
-	nMusicLength = nFilesize - id3v2size;		/*omit current frame */
-	if (bId3v1Present)
-	    nMusicLength-=128;                     /*id3v1 present. */
-        nMusicCRC = gfc->nMusicCRC;
-
-
-	/*Write all this information into the stream*/
-	CreateI4(&pbtStreamBuffer[nBytesWritten], nQuality);
-	nBytesWritten+=4;
-
-	strncpy(&pbtStreamBuffer[nBytesWritten], szVersion, 9);
-	nBytesWritten+=9;
-
-	pbtStreamBuffer[nBytesWritten] = nRevMethod ;
-	nBytesWritten++;
-
-	pbtStreamBuffer[nBytesWritten] = nLowpass;
-	nBytesWritten++;
-
-	memmove(&pbtStreamBuffer[nBytesWritten], &fPeakSignalAmplitude, 4);
-	nBytesWritten+=4;
-
-	CreateI2(&pbtStreamBuffer[nBytesWritten],nRadioReplayGain);
-	nBytesWritten+=2;
-
-	CreateI2(&pbtStreamBuffer[nBytesWritten],nAudioPhileReplayGain);
-	nBytesWritten+=2;
-
-	pbtStreamBuffer[nBytesWritten] = nFlags;
-	nBytesWritten++;
-
-	if (nABRBitrate >= 255)
-		pbtStreamBuffer[nBytesWritten] = 0xFF;
-	else
-		pbtStreamBuffer[nBytesWritten] = nABRBitrate;
-	nBytesWritten++;
-
-        pbtStreamBuffer[nBytesWritten   ] = enc_delay >> 4; /* works for win32, does it for unix? */
-        pbtStreamBuffer[nBytesWritten +1] = (enc_delay << 4) + (enc_padding >> 8);
-        pbtStreamBuffer[nBytesWritten +2] = enc_padding;
-
-	nBytesWritten+=3;
-
-	pbtStreamBuffer[nBytesWritten] = nMisc;
-	nBytesWritten++;
-
-
-	pbtStreamBuffer[nBytesWritten++] = 0;	/*unused in rev1 */
-
-	CreateI2(&pbtStreamBuffer[nBytesWritten], gfp->preset);
-	nBytesWritten+=2;
-
-	CreateI4(&pbtStreamBuffer[nBytesWritten], nMusicLength);
-	nBytesWritten+=4;
-
-	CreateI2(&pbtStreamBuffer[nBytesWritten], nMusicCRC);
-	nBytesWritten+=2;
-
-	/*Calculate tag CRC.... must be done here, since it includes
-	 *previous information*/
-	
-	for (i = 0;i<nBytesWritten;i++)
-		crc = CRC_update_lookup(pbtStreamBuffer[i], crc);
-	
-	CreateI2(&pbtStreamBuffer[nBytesWritten], crc);
-	nBytesWritten+=2;
-
-	return nBytesWritten;
+    return nBytesWritten;
 }
 
 /***********************************************************************
