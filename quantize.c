@@ -429,7 +429,7 @@ void init_outer_loop(
   cod_info->address3          = 0;
   
   
-  if (experimentalZ) {
+  if (gf.experimentalZ) {
     /* compute subblock gains */
     int j,b;  FLOAT8 en[3],mx;
     if ((cod_info->block_type==SHORT_TYPE) ) {
@@ -523,7 +523,7 @@ void outer_loop(
 
   
 
-  if (experimentalY) memcpy(xr_save,xr[gr][ch],sizeof(FLOAT8)*576);   
+  if (gf.experimentalY) memcpy(xr_save,xr[gr][ch],sizeof(FLOAT8)*576);   
   cod_info = &l3_side->gr[gr].ch[ch].tt;
   init_outer_loop(xr,l3_xmin,scalefac,gr,stereo,l3_side,ratio,ch);  
   best_over = 100;
@@ -694,7 +694,7 @@ void outer_loop(
     }
 
     /* if no bands with distortion, we are done */
-    if (experimentalX==0)
+    if (gf.experimentalX==0)
       if (over==0) notdone=0;
 
     /* in sloppy mode, as soon as we know we can do better than targ_noise,
@@ -741,7 +741,7 @@ void outer_loop(
     
 
     
-    if (try_scale && experimentalY) {
+    if (try_scale && gf.experimentalY) {
       memcpy(xr[gr][ch],xr_save,sizeof(FLOAT8)*576);   
       init_outer_loop(xr,l3_xmin,scalefac,gr,stereo,l3_side,ratio,ch);  
       compute_stepsize=1;  /* compute a new global gain */
@@ -1063,33 +1063,33 @@ int over,FLOAT8 tot_noise, FLOAT8 over_noise, FLOAT8 max_noise)
    */
   int better=0;
 
-  if (experimentalX==0) {
+  if (gf.experimentalX==0) {
     better = ((over < best_over) ||
 	    ((over==best_over) && (over_noise<best_over_noise)) ) ;
   }
 
-  if (experimentalX==1) 
+  if (gf.experimentalX==1) 
     better = max_noise < best_max_noise;
 
-  if (experimentalX==2) {
+  if (gf.experimentalX==2) {
     better = tot_noise < best_tot_noise;
   }
-  if (experimentalX==3) {
+  if (gf.experimentalX==3) {
     better = (tot_noise < best_tot_noise) &&
       (max_noise < best_max_noise + 2);
   }
-  if (experimentalX==4) {
+  if (gf.experimentalX==4) {
     better = ( ( (0>=max_noise) && (best_max_noise>2)) ||
      ( (0>=max_noise) && (best_max_noise<0) && ((best_max_noise+2)>max_noise) && (tot_noise<best_tot_noise) ) ||
      ( (0>=max_noise) && (best_max_noise>0) && ((best_max_noise+2)>max_noise) && (tot_noise<(best_tot_noise+best_over_noise)) ) ||
      ( (0<max_noise) && (best_max_noise>-0.5) && ((best_max_noise+1)>max_noise) && ((tot_noise+over_noise)<(best_tot_noise+best_over_noise)) ) ||
      ( (0<max_noise) && (best_max_noise>-1) && ((best_max_noise+1.5)>max_noise) && ((tot_noise+over_noise+over_noise)<(best_tot_noise+best_over_noise+best_over_noise)) ) );
   }
-  if (experimentalX==5) {
+  if (gf.experimentalX==5) {
     better =   (over_noise <  best_over_noise)
       || ((over_noise == best_over_noise)&&(tot_noise < best_tot_noise));
   }
-  if (experimentalX==6) {
+  if (gf.experimentalX==6) {
     better = (over_noise < best_over_noise)
            ||( (over_noise == best_over_noise)
              &&( (max_noise < best_max_noise)

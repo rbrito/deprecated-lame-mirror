@@ -93,7 +93,7 @@ void init_outer_loop_dual(
   cod_info->address3          = 0;
   
   
-  if (experimentalZ) {
+  if (gf.experimentalZ) {
     /* compute subblock gains */
     int j,b;  FLOAT8 en[3],mx;
     if ((cod_info->block_type ==2) ) {

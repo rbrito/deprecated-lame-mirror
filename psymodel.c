@@ -5,6 +5,12 @@
  * $Id$
  *
  * $Log$
+ * Revision 1.15  2000/01/07 06:13:05  markt
+ * Robert's cw_lower_limit, upper_limit code back in.  Default is compute
+ * cw[] up to 8.9Khz.  set with --cwlimit <freq>
+ *
+ * started putting global variables into global_flags struct.
+ *
  * Revision 1.14  2000/01/05 06:20:46  markt
  * norm_l, norm_s table data replaced by formulas.
  *
@@ -146,6 +152,8 @@ void L3psycho_anal( short int *buffer[2], int stereo,
   int blocktype[2],uselongblock[2],chn;
   int numchn;
   int   b, i, j, k;
+  static int cw_upper_index,cw_lower_index;
+  FLOAT cwlimit;
   FLOAT8 ms_ratio_l=0,ms_ratio_s=0;
   FLOAT8 estot[4][3];
   FLOAT wsamp[BLKSIZE];
@@ -218,7 +226,17 @@ void L3psycho_anal( short int *buffer[2], int stereo,
     memset (thm_l,0, sizeof(thm_l));
     memset (thm_s,0, sizeof(thm_s));
     
-    
+
+    /*  gf.cwlimit = sfreq*j/1024.0;  */
+    cw_lower_index=6;
+    if (gf.cwlimit>0) 
+      cwlimit=gf.cwlimit;
+    else
+      cwlimit=8.8717;
+    cw_upper_index = cwlimit*1000.0*1024.0/sfreq;
+    cw_upper_index=minimum(HBLKSIZE-4,cw_upper_index);      /* j+3 < HBLKSIZE-1 */
+    cw_upper_index=maximum(6,cw_upper_index);
+
     
     /* setup stereo demasking thresholds */
     /* formula reverse enginerred from plot in paper */
@@ -398,7 +416,7 @@ void L3psycho_anal( short int *buffer[2], int stereo,
     /**********************************************************************
      *    compute unpredicatability of first six spectral lines            * 
      **********************************************************************/
-    for ( j = 0; j < 6; j++ )
+    for ( j = 0; j < cw_lower_index; j++ )
       {	 /* calculate unpredictability measure cw */
 	FLOAT8 an, a1, a2;
 	FLOAT8 bn, b1, b2;
@@ -472,7 +490,7 @@ void L3psycho_anal( short int *buffer[2], int stereo,
     /**********************************************************************
      *     compute unpredicatibility of next 200 spectral lines            *
      **********************************************************************/ 
-    for ( j = 6; j < 206; j += 4 )
+    for ( j = cw_lower_index; j < cw_upper_index; j += 4 )
       {/* calculate unpredictability measure cw */
 	FLOAT8 rn, r1, r2;
 	FLOAT8 numre, numim, den;
@@ -533,14 +551,11 @@ void L3psycho_anal( short int *buffer[2], int stereo,
 	cw[j+1] = cw[j+2] = cw[j+3] = cw[j];
       }
     
-    
-    
-    
-    
     /**********************************************************************
      *    Set unpredicatiblility of remaining spectral lines to 0.4  206..513 *
      **********************************************************************/
-    for ( j = 206; j < HBLKSIZE; j++ )
+    /*   for ( j = 206; j < HBLKSIZE; j++ )*/
+    for ( ; j < HBLKSIZE; j++ )
       cw[j] = 0.4;
     
     
@@ -862,7 +877,7 @@ void L3psycho_anal( short int *buffer[2], int stereo,
     blocktype[chn] = NORM_TYPE;
   }
   
-  if (!allow_diff_short)
+  if (!gf.allow_diff_short)
     if (info->mode==MPG_MD_JOINT_STEREO) {
       /* force both channels to use the same block type */
       /* this is necessary if the frame is to be encoded in ms_stereo.  */

@@ -44,14 +44,8 @@
 
 /* Global flags.  defined extern in globalflags.h */
 /* default values set in lame_init() */
-int allow_diff_short;
-int noATH;
-int ATHonly;
-int autoconvert;
-int disable_reservoir;
-int experimentalX;
-int experimentalY;
-int experimentalZ;
+global_flags gf;
+
 int force_ms;
 int fast_mode;
 long int frameNum;
@@ -152,6 +146,7 @@ void lame_usage(char *name)  /* print syntax & exit */
   fprintf(stderr,"  --noath           disable the ATH for masking\n");
   fprintf(stderr,"  --noshort         do not use short blocks\n");
   fprintf(stderr,"  --nores           disable the bit reservoir\n");
+  fprintf(stderr,"  --cwlimit freq    compute tonality up to freq (in kHz)\n");
   fprintf(stderr,"\n");
   fprintf(stderr,"    -r              input is raw pcm\n");
   fprintf(stderr,"    -x              force byte-swapping of input\n");
@@ -287,13 +282,13 @@ void lame_parse_args(int argc, char **argv)
 	  no_short_blocks=1;
 	}
 	else if (strcmp(token, "noath")==0) {
-	  noATH=1;
+	  gf.noATH=1;
 	}
 	else if (strcmp(token, "nores")==0) {
-	  disable_reservoir=1;
+	  gf.disable_reservoir=1;
 	}
 	else if (strcmp(token, "athonly")==0) {
-	  ATHonly=1;
+	  gf.ATHonly=1;
 	}
 	else if (strcmp(token, "nohist")==0) {
 #ifdef BRHIST
@@ -369,6 +364,14 @@ void lame_parse_args(int argc, char **argv)
 	  highpasswidth =  (( 1000.0 * atof( nextArg ) ) + 0.5);
 	  if (highpasswidth  < 0) {
 	    fprintf(stderr,"Must specify highpass width with --highpass-width freq, freq >= 0 kHz\n");
+	    exit(1);
+	  }
+	}
+	else if (strcmp(token, "cwlimit")==0) {
+	  argUsed=1;
+	  gf.cwlimit =  atoi( nextArg );
+	  if (gf.cwlimit <= 0 ) {
+	    fprintf(stderr,"Must specify cwlimit in kHz\n");
 	    exit(1);
 	  }
 	}
@@ -460,7 +463,7 @@ case 't':  /* dont write VBR tag */
 	  info->error_protection = 1; 
 	  break;
 	case 'a': /* autoconvert input file from stereo to mono - for mono mp3 encoding */
-	  autoconvert = TRUE;
+	  gf.autoconvert = TRUE;
 	  break;
 	case 'h': 
 	  highq = TRUE;
@@ -469,7 +472,7 @@ case 't':  /* dont write VBR tag */
 	  sfb21 = FALSE;
 	  break;
 	case 'd': 
-	  allow_diff_short = 1;
+	  gf.allow_diff_short = 1;
 	  break;
 	case 'v': 
 	  VBR = 1; 
@@ -477,21 +480,21 @@ case 't':  /* dont write VBR tag */
 	case 'S': 
 	  silent = TRUE;
 	  break;
-	case 'X':        argUsed = 1;   experimentalX = 0;
+	case 'X':        argUsed = 1;   gf.experimentalX = 0;
 	  if (*arg == '0')
-	    { experimentalX=0; }
+	    { gf.experimentalX=0; }
 	  else if (*arg == '1')
-	    { experimentalX=1; }
+	    { gf.experimentalX=1; }
 	  else if (*arg == '2')
-	    { experimentalX=2; }
+	    { gf.experimentalX=2; }
 	  else if (*arg == '3')
-	    { experimentalX=3; }
+	    { gf.experimentalX=3; }
 	  else if (*arg == '4')
-	    { experimentalX=4; }
+	    { gf.experimentalX=4; }
 	  else if (*arg == '5')
-	    { experimentalX=5; }
+	    { gf.experimentalX=5; }
 	  else if (*arg == '6')
-	    { experimentalX=6; }
+	    { gf.experimentalX=6; }
 	  else {
 	    fprintf(stderr,"%s: -X n must be 0-6 not %s\n",
 		    programName, arg);
@@ -501,10 +504,10 @@ case 't':  /* dont write VBR tag */
 
 
 	case 'Y': 
-	  experimentalY = TRUE;
+	  gf.experimentalY = TRUE;
 	  break;
 	case 'Z': 
-	  experimentalZ = TRUE;
+	  gf.experimentalZ = TRUE;
 	  break;
 	case 'f': 
 	  fast_mode = 1;
@@ -576,7 +579,7 @@ case 't':  /* dont write VBR tag */
       input_format = sf_mp3;
 
   /* default guess for number of channels */
-  if (autoconvert) num_channels=2; 
+  if (gf.autoconvert) num_channels=2; 
   else if (info->mode == MPG_MD_MONO) num_channels=1;
   else num_channels=2;
   
@@ -591,24 +594,24 @@ case 't':  /* dont write VBR tag */
   num_samples = GetSndSamples();
 #endif
 
-  if (autoconvert==TRUE) {
+  if (gf.autoconvert==TRUE) {
     info->mode = MPG_MD_MONO; 
     info->mode_ext = MPG_MD_LR_LR;
   }
   if (num_channels==1) {
-    autoconvert = FALSE;  /* avoid 78rpm emulation mode from downmixing mono file! */
+    gf.autoconvert = FALSE;  /* avoid 78rpm emulation mode from downmixing mono file! */
     info->mode = MPG_MD_MONO;
     info->mode_ext = MPG_MD_LR_LR;
   }      
   /* if user specified mono and there are 2 channels, autoconvert */
   if ((num_channels==2) && (info->mode == MPG_MD_MONO))
-    autoconvert = TRUE;
+    gf.autoconvert = TRUE;
   
   if ((num_channels==1) && (info->mode!=MPG_MD_MONO)) {
     fprintf(stderr,"Error: mono input, stereo output not supported. \n");
     exit(1);
   }
-  if (autoconvert==TRUE) {
+  if (gf.autoconvert==TRUE) {
     fprintf(stderr, "Autoconverting from stereo to mono. Setting encoding to mono mode.\n");
   }
   stereo=2;
@@ -1105,7 +1108,9 @@ int lame_encode(short int Buffer[2][1152],char *mpg123bs)
 
   int ch,gr,mean_bits;
   int bitsPerFrame;
+#if (ENCDELAY < 800) 
   static int frame_buffered=0;
+#endif
   int stereo;
   layer *info;
   int i;
@@ -1473,14 +1478,17 @@ void lame_init(int nowrite)
 #endif /* _BLADEDLL */
 
   /* Global flags.  set defaults here */
-  allow_diff_short=0;
-  ATHonly=0;
-  noATH=0;
-  autoconvert=FALSE;
-  disable_reservoir=0;
-  experimentalX = 0;
-  experimentalY = 0;
-  experimentalZ = 0;
+  gf.allow_diff_short=0;
+  gf.ATHonly=0;
+  gf.noATH=0;
+  gf.autoconvert=FALSE;
+  gf.cwlimit=0;
+  gf.disable_reservoir=0;
+  gf.experimentalX = 0;
+  gf.experimentalY = 0;
+  gf.experimentalZ = 0;
+
+
   fast_mode=0;
   frameNum=0;
   g_bWriteVbrTag=1;
@@ -1504,6 +1512,7 @@ void lame_init(int nowrite)
   VBR_min_bitrate=1;   /* 32kbs */
   VBR_max_bitrate=13;  /* 256kbs */
   voice_mode=0;
+
 
 
   /* Clear info structure */

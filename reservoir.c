@@ -5,6 +5,12 @@
  * $Id$
  *
  * $Log$
+ * Revision 1.3  2000/01/07 06:13:05  markt
+ * Robert's cw_lower_limit, upper_limit code back in.  Default is compute
+ * cw[] up to 8.9Khz.  set with --cwlimit <freq>
+ *
+ * started putting global variables into global_flags struct.
+ *
  * Revision 1.2  1999/12/17 04:24:07  markt
  * added the --nores option to disable the bitreservoir.  only usefull
  * in special circumstances
@@ -95,7 +101,7 @@ ResvFrameBegin( frame_params *fr_ps, III_side_info_t *l3_side, int mean_bits, in
 	ResvMax = 0;
     else
 	ResvMax = 7680 - frameLength;
-    if (disable_reservoir) ResvMax=0;
+    if (gf.disable_reservoir) ResvMax=0;
 
 
     /*

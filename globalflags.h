@@ -7,20 +7,35 @@ typedef enum sound_file_format_e {
 	sf_unknown, sf_wave, sf_aiff, sf_mp3, sf_raw
 } sound_file_format;
 
+
+/***********************************************************************
+*
+*  we are in the process of moving global flags into this struct
+*
+***********************************************************************/
+
+typedef struct  {
+
+  int allow_diff_short;
+  int ATHonly;
+  int noATH;
+  int autoconvert;
+  FLOAT cwlimit;
+  int disable_reservoir;
+  int experimentalX;
+  int experimentalY;
+  int experimentalZ;
+
+} global_flags;
+
+
 /***********************************************************************
 *
 *  Global Variable External Declarations
 *
 ***********************************************************************/
+extern global_flags gf;
 
-extern int allow_diff_short;
-extern int ATHonly;
-extern int noATH;
-extern int autoconvert;
-extern int disable_reservoir;
-extern int experimentalX;
-extern int experimentalY;
-extern int experimentalZ;
 extern int fast_mode; 
 extern long int frameNum;
 extern int gtkflag;

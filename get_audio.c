@@ -53,7 +53,7 @@ int get_audio(short buffer[2][1152],int stereo, layer* info)
     num_channels=2;
   }else{
     /* mono output, mono input unless we are downsampling to mono: */
-    num_channels= autoconvert ? 2 : 1;
+    num_channels= gf.autoconvert ? 2 : 1;
   }
 
   if (input_format==sf_mp3) {
@@ -66,7 +66,7 @@ int get_audio(short buffer[2][1152],int stereo, layer* info)
       buffer[0][j] = insamp[num_channels*j];
       if (num_channels==2) buffer[1][j] = insamp[2*j+1];
       else buffer[1][j]=0;
-      if (autoconvert) {
+      if (gf.autoconvert) {
 	buffer[0][j] = (buffer[0][j] + buffer[1][j])/2;
 	buffer[1][j] = 0;
       }
@@ -199,7 +199,7 @@ int read_samples_mp3(FILE *musicin,short int mpg123pcm[2][1152],int stereo)
       mpg123pcm[1][j] = 0;
     }
   }
-  if (autoconvert) {
+  if (gf.autoconvert) {
     for ( j = 0; j < out; j++ ) {
       mpg123pcm[0][j] = ((int)mpg123pcm[0][j] + (int)mpg123pcm[1][j])/2;
       mpg123pcm[1][j] = 0;

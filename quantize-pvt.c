@@ -226,10 +226,12 @@ FLOAT8 ATHformula(FLOAT8 f)
        +  0.001 * pow(f,4.0));
   
   /* convert to energy */
-  ath -= 114;    /* MDCT scaling.  From tests by macik and MUS420 code */
-  //ath -= 109;
-  if (noATH)
+  if (gf.noATH)
     ath -= 200; /* disables ATH */
+  else {
+    ath -= 114;    /* MDCT scaling.  From tests by macik and MUS420 code */
+    /* ath -= 109; */
+  }
   ath = pow( 10.0, ath/10.0 );
   return ath;
 }
@@ -634,7 +636,7 @@ int calc_xmin( FLOAT8 xr[2][2][576], III_psy_ratio *ratio,
     D192_3 *xr_s;
     xr_s = (D192_3 *) xr[gr][ch] ;
 
-    if (ATHonly) {    
+    if (gf.ATHonly) {    
       for ( sfb = cod_info->sfb_smax; sfb < SBPSY_s; sfb++ )
 	  for ( b = 0; b < 3; b++ )
 	      l3_xmin->s[gr][ch][sfb][b]=ATH_s[sfb];
