@@ -471,7 +471,7 @@ ShortHuffmancodebits(lame_global_flags *gfp,int *ix, gr_info *gi)
     int sfb,i,block,start,end,bits=0;
     int region1Start, region2Start;
 
-    region1Start=gfc->scalefac_band.s[3];
+    region1Start=scalefac_band.s[3];
     if (region1Start > gi->big_values/3)
 	region1Start = gi->big_values/3;
 
@@ -481,8 +481,8 @@ ShortHuffmancodebits(lame_global_flags *gfp,int *ix, gr_info *gi)
 
     for ( sfb = 0; sfb < 13; sfb++ )      {
       unsigned tableindex = 100;
-      start = gfc->scalefac_band.s[ sfb ];
-      end   = gfc->scalefac_band.s[ sfb+1 ];
+      start = scalefac_band.s[ sfb ];
+      end   = scalefac_band.s[ sfb+1 ];
 
       if (start>=region2Start) break;
       
@@ -514,10 +514,10 @@ LongHuffmancodebits(lame_global_flags *gfp,int *ix, gr_info *gi)
 
     i = gi->region0_count + 1;
     assert(i < 23);
-    region1Start = gfc->scalefac_band.l[i];
+    region1Start = scalefac_band.l[i];
     i += gi->region1_count + 1;
     assert(i < 23);
-    region2Start = gfc->scalefac_band.l[i];
+    region2Start = scalefac_band.l[i];
 
     if (region1Start > bigvalues)
 	region1Start = bigvalues;
