@@ -680,13 +680,15 @@ mdct_sub48(lame_internal_flags *gfc, int ch)
     /* thinking cache performance, ch->gr loop is better than gr->ch loop */
     for (gr = 0; gr < gfc->mode_gr; gr++) {
 	gr_info *gi = &(gfc->l3_side.tt[gr][ch]);
-	int type = gi->block_type, band;
+	int type = gi->block_type, band = 0, endband = SBLIMIT;
 	FLOAT *mdct_enc = gi->xr;
 	/*
 	 * Perform imdct of 18 previous subband samples
 	 * + 18 current subband samples
 	 */
-	for (band = 0; band < 32; band++, mdct_enc += 18) {
+	if (gfc->xrNumMax_longblock < 576-36)
+	    endband = gfc->xrNumMax_longblock / 18 + 1;
+	do {
 	    FLOAT *prev = &gfc->sb_sample[ch][gr  ][0][mdctorder[band]];
 	    FLOAT *next = &gfc->sb_sample[ch][gr+1][0][mdctorder[band]];
 	    if (type != SHORT_TYPE || (gi->mixed_block_flag && band < 2)) {
@@ -729,7 +731,8 @@ mdct_sub48(lame_internal_flags *gfc, int ch)
 		}
 		mdct_short(mdct_enc);
 	    }
-	}
+	} while (mdct_enc += 18, ++band < endband);
+	memset(mdct_enc, 0, sizeof(FLOAT)*(SBLIMIT-band)*18);
     }
 }
 
