@@ -630,7 +630,7 @@ lame_init_params(lame_global_flags * const gfp)
     if (gfp->analysis)
         gfp->bWriteVbrTag = 0;
     /* some file options not allowed if output is: not specified or stdout */
-    if (gfc->pinfo != NULL)
+    if (!gfc->pinfo)
         gfp->bWriteVbrTag = 0; /* disable Xing VBR tag */
 #endif
     init_bit_stream_w(gfp);
@@ -1097,7 +1097,7 @@ lame_encode_buffer(lame_global_flags * gfp,
     in_buffer[0] = calloc(sizeof(sample_t), nsamples);
     in_buffer[1] = calloc(sizeof(sample_t), nsamples);
 
-    if (in_buffer[0] == NULL || in_buffer[1] == NULL) {
+    if (!in_buffer[0] || !in_buffer[1]) {
         ERRORF(gfc, "Error: can't allocate in_buffer buffer\n");
         return -2;
     }
@@ -1136,7 +1136,7 @@ lame_encode_buffer_float(lame_global_flags * gfp,
     in_buffer[0] = calloc(sizeof(sample_t), nsamples);
     in_buffer[1] = calloc(sizeof(sample_t), nsamples);
 
-    if (in_buffer[0] == NULL || in_buffer[1] == NULL) {
+    if (!in_buffer[0] || !in_buffer[1]) {
         ERRORF(gfc, "Error: can't allocate in_buffer buffer\n");
         return -2;
     }
@@ -1176,7 +1176,7 @@ lame_encode_buffer_int(lame_global_flags * gfp,
     in_buffer[0] = calloc(sizeof(sample_t), nsamples);
     in_buffer[1] = calloc(sizeof(sample_t), nsamples);
 
-    if (in_buffer[0] == NULL || in_buffer[1] == NULL) {
+    if (!in_buffer[0] || !in_buffer[1]) {
         ERRORF(gfc, "Error: can't allocate in_buffer buffer\n");
         return -2;
     }
@@ -1220,7 +1220,7 @@ lame_encode_buffer_long2(lame_global_flags * gfp,
     in_buffer[0] = calloc(sizeof(sample_t), nsamples);
     in_buffer[1] = calloc(sizeof(sample_t), nsamples);
 
-    if (in_buffer[0] == NULL || in_buffer[1] == NULL) {
+    if (!in_buffer[0] || !in_buffer[1]) {
         ERRORF(gfc, "Error: can't allocate in_buffer buffer\n");
         return -2;
     }
@@ -1263,7 +1263,7 @@ lame_encode_buffer_long(lame_global_flags * gfp,
     in_buffer[0] = calloc(sizeof(sample_t), nsamples);
     in_buffer[1] = calloc(sizeof(sample_t), nsamples);
 
-    if (in_buffer[0] == NULL || in_buffer[1] == NULL) {
+    if (!in_buffer[0] || !in_buffer[1]) {
         ERRORF(gfc, "Error: can't allocate in_buffer buffer\n");
         return -2;
     }
@@ -1305,7 +1305,7 @@ lame_encode_buffer_interleaved(lame_global_flags * gfp,
 
     buffer_l = calloc(sizeof(sample_t), nsamples);
     buffer_r = calloc(sizeof(sample_t), nsamples);
-    if (buffer_l == NULL || buffer_r == NULL) {
+    if (!buffer_l || !buffer_r) {
         return -2;
     }
     for (i = 0; i < nsamples; i++) {
@@ -1538,7 +1538,7 @@ lame_init(void)
     int     ret;
 
     gfp = calloc(1, sizeof(lame_global_flags));
-    if (gfp == NULL)
+    if (!gfp)
         return NULL;
 
     ret = lame_init_old(gfp);
@@ -1674,12 +1674,12 @@ lame_bitrate_kbps(const lame_global_flags * const gfp, int bitrate_kbps[14])
     const lame_internal_flags *gfc;
     int     i;
 
-    if (NULL == bitrate_kbps)
+    if (!bitrate_kbps)
         return;
-    if (NULL == gfp)
+    if (!gfp)
         return;
     gfc = gfp->internal_flags;
-    if (NULL == gfc)
+    if (!gfc)
         return;
 
     for (i = 0; i < 14; i++)
@@ -1694,12 +1694,12 @@ lame_bitrate_hist(const lame_global_flags * const gfp, int bitrate_count[14])
     const lame_internal_flags *gfc;
     int     i;
 
-    if (NULL == bitrate_count)
+    if (!bitrate_count)
         return;
-    if (NULL == gfp)
+    if (!gfp)
         return;
     gfc = gfp->internal_flags;
-    if (NULL == gfc)
+    if (!gfc)
         return;
 
     for (i = 0; i < 14; i++)
@@ -1713,12 +1713,12 @@ lame_stereo_mode_hist(const lame_global_flags * const gfp, int stmode_count[4])
     const lame_internal_flags *gfc;
     int     i;
 
-    if (NULL == stmode_count)
+    if (!stmode_count)
         return;
-    if (NULL == gfp)
+    if (!gfp)
         return;
     gfc = gfp->internal_flags;
-    if (NULL == gfc)
+    if (!gfc)
         return;
 
     for (i = 0; i < 4; i++) {
@@ -1733,15 +1733,14 @@ lame_bitrate_stereo_mode_hist(const lame_global_flags * const gfp,
                               int bitrate_stmode_count[14][4])
 {
     const lame_internal_flags *gfc;
-    int     i;
-    int     j;
+    int     i, j;
 
-    if (NULL == bitrate_stmode_count)
+    if (!bitrate_stmode_count)
         return;
-    if (NULL == gfp)
+    if (!gfp)
         return;
     gfc = gfp->internal_flags;
-    if (NULL == gfc)
+    if (!gfc)
         return;
 
     for (j = 0; j < 14; j++)
@@ -1757,12 +1756,12 @@ lame_block_type_hist(const lame_global_flags * const gfp, int btype_count[6])
     const lame_internal_flags *gfc;
     int     i;
 
-    if (NULL == btype_count)
+    if (!btype_count)
         return;
-    if (NULL == gfp)
+    if (!gfp)
         return;
     gfc = gfp->internal_flags;
-    if (NULL == gfc)
+    if (!gfc)
         return;
 
     for (i = 0; i < 6; ++i) {
@@ -1779,12 +1778,12 @@ lame_bitrate_block_type_hist(const lame_global_flags * const gfp,
     const lame_internal_flags * gfc;
     int     i, j;
     
-    if (NULL == bitrate_btype_count)
+    if (!bitrate_btype_count)
         return;
-    if (NULL == gfp)
+    if (!gfp)
         return;
     gfc = gfp->internal_flags;
-    if (NULL == gfc)
+    if (!gfc)
         return;
         
     for (j = 0; j < 14; ++j)
