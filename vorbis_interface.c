@@ -335,7 +335,7 @@ int lame_encode_ogg_init(lame_global_flags *gfp)
   
   /* choose an encoding mode */
   /* (mode 0: 44kHz stereo uncoupled, roughly 128kbps VBR) */
-  memcpy(&vi2,&info_A,sizeof(vi));
+  memcpy(&vi2,&info_A,sizeof(vi2));
   vi2.channels = gfc->stereo;
   vi2.rate = gfp->out_samplerate;
 
@@ -432,12 +432,12 @@ int lame_encode_ogg_finish(lame_global_flags *gfp,
 
 
 	/* check if mp3buffer is big enough for the output */
-	bytes += og.header_len + og.body_len;
+	bytes += og2.header_len + og2.body_len;
 	if (bytes > mp3buf_size && mp3buf_size>0)
 	  return -5;
 	
-	memcpy(mp3buf,og.header,og.header_len);
-	memcpy(mp3buf+og.header_len,og.body,og.body_len);
+	memcpy(mp3buf,og2.header,og2.header_len);
+	memcpy(mp3buf+og2.header_len,og2.body,og2.body_len);
 
 	/* this could be set above, but for illustrative purposes, I do
 	   it here (to show that vorbis does know where the stream ends) */
@@ -493,26 +493,24 @@ int lame_encode_ogg_frame(lame_global_flags *gfp,
     vorbis_analysis(&vb2,&op2);
     
     /* weld the packet into the bitstream */
-    ogg_stream_packetin(&os,&op2);
+    ogg_stream_packetin(&os2,&op2);
     
     /* write out pages (if any) */
     do {
-      result=ogg_stream_pageout(&os,&og2);
+      result=ogg_stream_pageout(&os2,&og2);
       if (result==0) break;
 	
       /* check if mp3buffer is big enough for the output */
-      bytes += og.header_len + og.body_len;
+      bytes += og2.header_len + og2.body_len;
+      /*
       DEBUGF("\n\n*********\ndecoded bytes=%i  %i \n",bytes,mp3buf_size);
+      */
       if (bytes > mp3buf_size && mp3buf_size>0)
 	return -6;
       
-      /*
-	fwrite(og.header,1,og.header_len,stdout);
-	fwrite(og.body,1,og.body_len,stdout);
-      */
-      memcpy(mp3buf,og.header,og.header_len);
-      memcpy(mp3buf+og.header_len,og.body,og.body_len);
-      mp3buf += og.header_len + og.body_len;
+      memcpy(mp3buf,og2.header,og2.header_len);
+      memcpy(mp3buf+og2.header_len,og2.body,og2.body_len);
+      mp3buf += og2.header_len + og2.body_len;
       
       if(ogg_page_eos(&og2))eos=1;
     } while (1);
