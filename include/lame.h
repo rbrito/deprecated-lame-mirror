@@ -656,7 +656,17 @@ int CDECL lame_encode_buffer_float(
         const int           mp3buf_size ); /* number of valid octets in this
                                               stream                        */
 
-/* as lame_encode_buffer, but for long's' */
+/* as lame_encode_buffer, but for int's */
+int CDECL lame_encode_buffer_int(
+        lame_global_flags*  gfp,           /* global context handle         */
+        const int      buffer_l [],       /* PCM data for left channel     */
+        const int      buffer_r [],       /* PCM data for right channel    */
+        const int           nsamples,      /* number of samples per channel */
+        unsigned char*      mp3buf,        /* pointer to encoded MP3 stream */
+        const int           mp3buf_size ); /* number of valid octets in this
+                                              stream                        */
+
+/* as lame_encode_buffer, but for long's */
 int CDECL lame_encode_buffer_long(
         lame_global_flags*  gfp,           /* global context handle         */
         const long     buffer_l [],       /* PCM data for left channel     */

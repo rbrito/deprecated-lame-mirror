@@ -121,7 +121,7 @@ int main(int argc, char **argv)
     };
     int  ret;
     unsigned char  mp3buffer [LAME_MAXMP3BUFFER];
-  short int Buffer[2][1152];
+  int Buffer[2][1152];
   int iread,imp3;
   lame_global_flags *gf;
   FILE *outf;
@@ -296,7 +296,7 @@ int main(int argc, char **argv)
 	}
 
 	/* encode */
-	imp3=lame_encode_buffer(gf,Buffer[0],Buffer[1],iread,
+	imp3=lame_encode_buffer_int(gf,Buffer[0],Buffer[1],iread,
               mp3buffer,sizeof(mp3buffer));
 
 	/* was our output buffer big enough? */

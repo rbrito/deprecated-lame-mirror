@@ -130,7 +130,7 @@ int  main ( int argc, char **argv )
     unsigned char       mp3buffer [LAME_MAXMP3BUFFER];
     char       inPath    [MAX_NAME_SIZE];
     char       outPath   [MAX_NAME_SIZE];
-    short int  Buffer [2] [1152];
+    int        Buffer [2] [1152];
 
     lame_global_flags *gf;
     
@@ -225,7 +225,7 @@ int  main ( int argc, char **argv )
     /* encode until we hit EOF */
     while ( (wavsamples = get_audio(gf, Buffer)) > 0 ) { /* read in 'wavsamples' samples */
         levelmessage ( maxvalue (Buffer) );
-        mp3bytes = lame_encode_buffer(gf,               /* encode the frame */
+        mp3bytes = lame_encode_buffer_int(gf,            /* encode the frame */
 	                                Buffer[0], Buffer[1], wavsamples, 
 					mp3buffer, sizeof (mp3buffer) );
 

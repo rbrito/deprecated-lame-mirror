@@ -94,7 +94,7 @@ int     lame_decode_ogg_fromfile( lame_global_flags*  gfc,
                                   mp3data_struct*     mp3data );
 
 
-static int read_samples_pcm(FILE * musicin, short sample_buffer[2304],
+static int read_samples_pcm(FILE * musicin, int sample_buffer[2304],
                             int frame_size, int samples_to_read);
 static int read_samples_mp3(lame_global_flags * gfp, FILE * musicin,
                             short int mpg123pcm[2][1152], int num_chan);
@@ -245,6 +245,11 @@ SwapBytesInWords(short *ptr, int short_words)
 }
 
 
+
+static int
+get_audio_common( lame_global_flags * const gfp,
+		  int buffer[2][1152], short buffer16[2][1152] );
+
 /************************************************************************
 *
 * get_audio()
@@ -255,16 +260,43 @@ SwapBytesInWords(short *ptr, int short_words)
 *
 ************************************************************************/
 int
-get_audio(lame_global_flags * const gfp, short buffer[2][1152])
+get_audio( lame_global_flags * const gfp, int buffer[2][1152] )
+{
+    return( get_audio_common( gfp, buffer, NULL ) );
+}
+
+/*
+  get_audio16 - behave as the original get_audio function, with a limited
+                16 bit per sample output
+*/
+int
+get_audio16( lame_global_flags * const gfp, short buffer[2][1152] )
+{
+    return( get_audio_common( gfp, NULL, buffer ) );
+}
+
+/************************************************************************
+  get_audio_common - central functionality of get_audio*
+    in: gfp
+        buffer    output to the int buffer or 16-bit buffer
+   out: buffer    int output    (if buffer != NULL)
+        buffer16  16-bit output (if buffer == NULL) 
+returns: samples read
+note: either buffer or buffer16 must be allocated upon call
+*/
+static int
+get_audio_common( lame_global_flags * const gfp,
+		int buffer[2][1152], short buffer16[2][1152] )
 {
     int     num_channels = lame_get_num_channels( gfp );
-    short   insamp[2 * 1152];
+    int     insamp[2 * 1152];
+    short   buf_tmp16[2][1152];
     int     samples_read;
     int     framesize;
     int     samples_to_read;
     unsigned int remaining, tmp_num_samples;
-    int     j;
-    short  *p;
+    int     i;
+    int     *p;
 
     /* 
      * NOTE: LAME can now handle arbritray size input data packets,
@@ -294,36 +326,66 @@ get_audio(lame_global_flags * const gfp, short buffer[2][1152])
     case sf_mp1:
     case sf_mp2:
     case sf_mp3:
-        samples_read = read_samples_mp3(gfp, musicin, buffer, num_channels);
+	if( buffer != NULL )
+	    samples_read= read_samples_mp3( gfp, musicin, 
+					    buf_tmp16, num_channels );
+	else
+	    samples_read= read_samples_mp3( gfp, musicin, 
+					    buffer16, num_channels);
         break;
     case sf_ogg:
-        samples_read = read_samples_ogg(gfp, musicin, buffer, num_channels);
+	if( buffer != NULL )
+	    samples_read= read_samples_ogg( gfp, musicin, 
+					    buf_tmp16, num_channels );
+	else
+	    samples_read= read_samples_ogg( gfp, musicin, 
+					    buffer16, num_channels);
         break;
     default:
         samples_read =
             read_samples_pcm(musicin, insamp, num_channels * framesize,
                              num_channels * samples_to_read);
+	p = insamp + samples_read;
         samples_read /= num_channels;
-
-        p = insamp;
-        switch (num_channels) {
-        case 1:
-            for (j = 0; j < framesize; j++) {
-                buffer[0][j] = *p++;
-                buffer[1][j] = 0;
-            }
-            break;
-        case 2:
-            for (j = 0; j < framesize; j++) {
-                buffer[0][j] = *p++;
-                buffer[1][j] = *p++;
-            }
-            break;
-        default:
-            assert(0);
-            break;
-        }
+	if( buffer != NULL ) {	/* output to int buffer */
+	    if( num_channels == 2 ) {
+		for( i = framesize; --i >= 0; ) {
+		    buffer[1][i] = *--p;
+ 		    buffer[0][i] = *--p;
+		}
+	    } else if( num_channels == 1 ) {
+		for( i = framesize; --i >= 0; ) {
+		    buffer[1][i] = 0;
+ 		    buffer[0][i] = *--p;
+		}
+	    } else
+		assert(0);
+	} else {		/* convert from int; output to 16-bit buffer */
+	    if( num_channels == 2 ) {
+		for( i = framesize; --i >= 0; ) {
+		    buffer16[1][i] = *--p >> (8 * sizeof(int) - 16);
+ 		    buffer16[0][i] = *--p >> (8 * sizeof(int) - 16);
+		}
+	    } else if( num_channels == 1 ) {
+		for( i = framesize; --i >= 0; ) {
+		    buffer16[1][i] = 0;
+ 		    buffer16[0][i] = *--p >> (8 * sizeof(int) - 16);
+		}
+	    } else
+		assert(0);
+	}
     }
+
+    if( (input_format == sf_mp3) || (input_format == sf_ogg) ) {
+				/* LAME mp3 and ogg input routines currently */
+				/*  only accept up to 16 bit samples */
+	if( buffer != NULL ) 
+	    for( i = framesize; --i >= 0; ) {
+		buffer[1][i] = buf_tmp16[1][i] << (8 * sizeof(int) - 16);
+		buffer[0][i] = buf_tmp16[0][i] << (8 * sizeof(int) - 16);
+	    }
+    }
+
 
     /* if num_samples = MAX_U_32_NUM, then it is considered infinitely long.
        Don't count the samples */
@@ -332,9 +394,6 @@ get_audio(lame_global_flags * const gfp, short buffer[2][1152])
 
     return samples_read;
 }
-
-
-
 
 
 
@@ -538,7 +597,7 @@ lame_decoder(lame_global_flags * gfp, FILE * outf, int skip, char *inPath,
     assert(tmp_num_channels >= 1 && tmp_num_channels <= 2);
 
     do {
-        iread = get_audio(gfp, Buffer); /* read in 'iread' samples */
+        iread = get_audio16(gfp, Buffer); /* read in 'iread' samples */
         mp3input_data.framenum += iread / mp3input_data.framesize;
         wavsize += iread;
 
@@ -887,24 +946,30 @@ OpenSndFile(lame_global_flags * gfp, char *inPath)
 ************************************************************************/
 
 static int
-read_samples_pcm(FILE * const musicin, short sample_buffer[2304],
+read_samples_pcm(FILE * const musicin, int sample_buffer[2304],
                  int frame_size /* unused */ , int samples_to_read)
 {
     int     i;
     int     samples_read;
 
     samples_read =
-        sf_read_short((SNDFILE *) musicin, sample_buffer, samples_to_read);
+        sf_read_int((SNDFILE *) musicin, sample_buffer, samples_to_read);
 
     switch (pcmbitwidth) {
     case 8:
         for (i = 0; i < samples_read; i++)
-            sample_buffer[i] <<= 8;
+            sample_buffer[i] <<= (8 * sizeof(int) - 8);
         break;
     case 16:
+        for (i = 0; i < samples_read; i++)
+            sample_buffer[i] <<= (8 * sizeof(int) - 16);
         break;
+    case 24:
+        for (i = 0; i < samples_read; i++)
+            sample_buffer[i] <<= (8 * sizeof(int) - 24);
+	break;
     default:
-        fprintf(stderr, "Only 8 and 16 bit input files supported \n");
+        fprintf(stderr, "Only 8, 16, and 24 bit input files supported \n");
         exit(1);
     }
 
@@ -934,6 +999,56 @@ read_samples_pcm(FILE * const musicin, short sample_buffer[2304],
 
 
 /************************************************************************
+unpack_read_samples - read and unpack signed low-to-high byte or unsigned
+                      single byte input. (used for read_samples function)
+                      Output integers are stored in the native byte order
+                      (little or big endian).  -jd
+  in: samples_to_read
+      bytes_per_sample
+      swap_order    - set for high-to-low byte order input stream
+ i/o: pcm_in
+ out: sample_buffer  (must be allocated up to samples_to_read upon call)
+returns: number of samples read
+*/
+static inline int
+unpack_read_samples( const int samples_to_read, const int bytes_per_sample,
+		     const int swap_order, int *sample_buffer, FILE *pcm_in )
+{
+    int samples_read;
+    int i;
+    int *op;			/* output pointer */
+    unsigned char *ip = (unsigned char *) sample_buffer; /* input pointer */
+    const int b = sizeof(int) * 8;
+
+#define GA_URS_IFLOOP( ga_urs_bps ) \
+    if( bytes_per_sample == ga_urs_bps ) \
+	for( i = samples_read * bytes_per_sample; (i -= bytes_per_sample) >=0;)
+    
+
+    samples_read = fread( sample_buffer, bytes_per_sample, 
+			  samples_to_read, pcm_in);
+    op = sample_buffer + samples_read;
+
+    GA_URS_IFLOOP( 1 )
+	*--op = (ip[i] ^ 0x80)<<(b-8) | 0x7f<<(b-16);/* convert from unsigned*/
+    if( swap_order == 0 ) {
+	GA_URS_IFLOOP( 2 )
+	    *--op = ip[i]<<(b-16) | ip[i+1]<<(b-8); 
+	GA_URS_IFLOOP( 3 )
+	    *--op = ip[i]<<(b-24) | ip[i+1]<<(b-16) | ip[i+2]<<(b-8);
+    } else {
+	GA_URS_IFLOOP( 2 )
+	    *--op = ip[i]<<(b-8) | ip[i+1]<<(b-16); 
+	GA_URS_IFLOOP( 3 )
+	    *--op = ip[i]<<(b-8) | ip[i+1]<<(b-16) | ip[i+2]<<(b-24);
+    }
+#undef GA_URS_IFLOOP
+    return( samples_read );
+}
+
+
+
+/************************************************************************
 *
 * read_samples()
 *
@@ -946,50 +1061,33 @@ read_samples_pcm(FILE * const musicin, short sample_buffer[2304],
 ************************************************************************/
 
 int
-read_samples_pcm(FILE * musicin, short sample_buffer[2304], int frame_size,
+read_samples_pcm(FILE * musicin, int sample_buffer[2304], int frame_size,
                  int samples_to_read)
 {
     int     samples_read;
     int     iswav = (input_format == sf_wave);
+    int     hi_lo_order;	/* byte order of input stream */
 
-    if (16 == pcmbitwidth) {
-        samples_read = fread(sample_buffer, 2, samples_to_read, musicin);
-    }
-    else if (8 == pcmbitwidth) {
-        char    temp[2304];
-        int     i;
-        samples_read = fread(temp, 1, samples_to_read, musicin);
-        for (i = 0; i < samples_read; ++i) {
-            /* note: 8bit .wav samples are unsigned */
-	    /* map [0,255]  -> [-32768,32767] */
-            sample_buffer[i] = ((short int)temp[i] - 128)*256 + 127;
-        }
-    }
-    else {
-        fprintf(stderr, "Only 8 and 16 bit input files supported \n");
+    if( (24 == pcmbitwidth) || (16 == pcmbitwidth) ) {
+				/* assume only recognized wav files are */
+				/*  in little endian byte order */
+	hi_lo_order = (!iswav == !swapbytes);
+	if( 16 == pcmbitwidth )
+	    samples_read = unpack_read_samples(samples_to_read, 2, hi_lo_order,
+					       sample_buffer, musicin );
+	else			/* ( 24 == pcmbitwidth ) */
+	    samples_read = unpack_read_samples(samples_to_read, 3, hi_lo_order,
+					       sample_buffer, musicin );
+    } else if( 8 == pcmbitwidth ) {
+	samples_read = unpack_read_samples( samples_to_read, 1, 0,
+					    sample_buffer, musicin );
+    } else {
+        fprintf(stderr, "Only 8, 16, and 24 bit input files supported \n");
         exit(1);
     }
     if (ferror(musicin)) {
         fprintf(stderr, "Error reading input file\n");
         exit(1);
-    }
-
-
-
-    if (16 == pcmbitwidth) {
-        /* intel=littleEndian.  wav files are always little endian */
-#ifndef WORDS_BIGENDIAN
-        /* little endian */
-        if (!iswav)
-            SwapBytesInWords(sample_buffer, samples_read);
-#else
-        /* big endian */
-        if (iswav)
-            SwapBytesInWords(sample_buffer, samples_read);
-#endif
-
-        if (swapbytes)
-            SwapBytesInWords(sample_buffer, samples_read);
     }
 
     return samples_read;
