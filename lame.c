@@ -545,8 +545,8 @@ int lame_init_params(lame_global_flags *gfp)
     gfc->filter_type=0;
     gfc->psymodel=1;
     gfc->quantization=1;
-    if (gfp->VBR==vbr_mt || gfp->VBR==vbr_rh)
-      /* VBR modes currently have some problems which are aggravated by 
+    if (gfp->VBR==vbr_mt)
+      /* new VBR mode currently have some problems which are aggravated by 
        * scalefac_scale */
       gfc->noise_shaping=1;
     else
