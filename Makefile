@@ -31,12 +31,12 @@ RM = rm -f
 CPP_OPTS += -DHAVEMPGLIB 
 
 ##########################################################################
-# -DFLOAT8_is_float will FLOAT8 as float
-# -DFLOAT8_is_double  will FLOAT8 as double (default)
-#  NOTE: RH: 7/00:  if FLOAT8=float, it breaks resampling and VBR code 
+# floating point option:
+# -DFLOAT8_is_float         most floating point variables are 4 byte
+# -DFLOAT8_is_double        most floating point variables are 8 byte (default)
+# NOTE: RH: 7/00:  if FLOAT8=float, it breaks resampling and VBR code 
 ##########################################################################
-CPP_OPTS += -DFLOAT8_is_double
-
+#CPP_OPTS += -DFLOAT8_is_double
 
 
 
@@ -141,6 +141,13 @@ ifeq ($(UNAME),Linux)
 # LINUX on Digital/Compaq Alpha CPUs
 ##########################################################################
 ifeq ($(ARCH),alpha)
+
+################################################################
+#### Check if 'ccc' is in our path
+####   if not, use 'gcc'
+################################################################
+ifeq ($(shell which ccc 2>/dev/null | grep -c ccc),0)
+
 # double is faster than float on Alpha
 CC_OPTS =       -O4 -Wall -fomit-frame-pointer -ffast-math -funroll-loops \
                 -mfp-regs -fschedule-insns -fschedule-insns2 \
@@ -148,19 +155,48 @@ CC_OPTS =       -O4 -Wall -fomit-frame-pointer -ffast-math -funroll-loops \
 #                -DFLOAT=double
 # add "-mcpu=21164a -Wa,-m21164a" to optimize for 21164a (ev56) CPU
 
+################################################################
+#### else, use 'ccc'
+################################################################
+else
+
 # Compaq's C Compiler
-#CC = ccc
-# Options for Compaq's C Compiler
-#CC_OPTS = -fast -Wall
+CC = ccc
+
+################################################################
+#### set 'CC_OPTS = -arch host -tune host' to generate/tune instructions for 
+this machine
+####     'CC_OPTS += -migrate -fast -inline speed -unroll 0' tweak to run as 
+fast as possible :)
+####     'CC_OPTS += -w0 -Wall' set warning and linking flags
+################################################################
+CC_OPTS = -arch host -tune host
+CC_OPTS += -migrate -fast -inline speed -unroll 0
+CC_OPTS += -w0 -Wall
+
+
+################################################################
+#### to debug, uncomment
+################################################################
+# For Debugging
+#CC_OPTS += -g3
+
+################################################################
+#### define __DECALPHA__ (i was getting re-declaration warnings
+####   in machine.h
+################################################################
+# Define DEC Alpha
+CPP_OPTS += -D__DECALPHA__
 
 # standard Linux libm
-#LIBS	=	-lm  
+#LIBS	=	-lm
 # optimized libffm (free fast math library)
-#LIBS	=	-lffm  
+#LIBS	=	-lffm
 # Compaq's fast math library
-LIBS    =       -lcpml 
-endif
-endif
+LIBS    =       -lcpml
+endif  #  gcc or ccc?
+endif  #  alpha 
+endif  #  linux
 
 
 
@@ -171,6 +207,19 @@ ifeq ($(UNAME),FreeBSD)
 #  remove if you do not have GTK or do not want the GTK frame analyzer
    GTK = -DHAVEGTK `gtk12-config --cflags`
    GTKLIBS = `gtk12-config --libs` 
+# Comment out next 2 lines if you want to remove VBR histogram capability
+   BRHIST_SWITCH = -DBRHIST
+   LIBTERMCAP = -lncurses
+
+endif
+
+##########################################################################
+# FreeBSD
+##########################################################################
+ifeq ($(UNAME),OpenBSD)
+#  remove if you do not have GTK or do not want the GTK frame analyzer
+#   GTK = -DHAVEGTK `gtk12-config --cflags`
+#   GTKLIBS = `gtk12-config --libs` 
 # Comment out next 2 lines if you want to remove VBR histogram capability
    BRHIST_SWITCH = -DBRHIST
    LIBTERMCAP = -lncurses
