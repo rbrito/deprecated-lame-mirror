@@ -138,6 +138,14 @@ LINK32=xilink.exe
 # Name "lame - Win32 Release GTK"
 # Begin Source File
 
+SOURCE=.\bitstream.c
+# End Source File
+# Begin Source File
+
+SOURCE=.\bitstream.h
+# End Source File
+# Begin Source File
+
 SOURCE=.\encoder.h
 # End Source File
 # Begin Source File
