@@ -34,14 +34,6 @@
 #include "lame-analysis.h"
 #include "id3tag.h"
 
-#if HAVE_INTTYPES_H
-# include <inttypes.h>
-#else
-# if HAVE_STDINT_H
-#  include <stdint.h>
-# endif
-#endif
-
 #ifdef __cplusplus
 extern "C" {
 #endif
@@ -180,6 +172,7 @@ typedef struct {
 typedef struct {
     III_psy_xmin thm;
     III_psy_xmin en;
+    FLOAT	pe;
 } III_psy_ratio;
 
 typedef struct {
@@ -397,7 +390,6 @@ struct lame_internal_flags {
 
   /* DATA FROM PSYMODEL.C */
   FLOAT	nb_1[4][CBANDS], nb_2[4][CBANDS];
-  FLOAT	nb_s1[4][CBANDS], nb_s2[4][CBANDS];
   FLOAT *s3_ss;
   FLOAT *s3_ll;
   FLOAT decay;
@@ -418,7 +410,6 @@ struct lame_internal_flags {
   /* for next frame data */
   III_psy_ratio masking_next[2][MAX_CHANNELS*2];
   FLOAT tot_ener_next[2][MAX_CHANNELS*2];
-  FLOAT percep_entropy_next[2][MAX_CHANNELS*2];
   FLOAT loudness_next[2][MAX_CHANNELS];  /* loudness^2 approx. per granule and channel */
   int	useshort_next[2][MAX_CHANNELS*2]; /* for block type */
   int   mode_ext_next;

@@ -1534,7 +1534,6 @@ lame_set_preset_expopts( lame_global_flags*  gfp, int preset_expopts )
     switch (preset_expopts)
     {
     case 1: /* INSANE */
-	lame_set_exp_nspsytune(gfp, lame_get_exp_nspsytune(gfp) | 1);
 	lame_set_exp_nspsytune(gfp, lame_get_exp_nspsytune(gfp) | 2); // safejoint
 	lame_set_ATHtype(gfp, 2);
 
@@ -1563,7 +1562,6 @@ lame_set_preset_expopts( lame_global_flags*  gfp, int preset_expopts )
 	    gfc->presetTune.quantcomp_alt_type = 1;
 	}
 
-	lame_set_exp_nspsytune(gfp, lame_get_exp_nspsytune(gfp) | 1);
 	lame_set_experimentalZ(gfp, 1);
 	lame_set_VBR_q(gfp, 2);
 	lame_set_exp_nspsytune(gfp, lame_get_exp_nspsytune(gfp) | 2); // safejoint
@@ -1606,6 +1604,7 @@ lame_set_preset_expopts( lame_global_flags*  gfp, int preset_expopts )
 
 	break;
     default:
+	/* ABR */
 	gfc->presetTune.use = 0;
 	gfc->presetTune.quantcomp_type_s = 9;
     }

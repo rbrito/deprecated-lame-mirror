@@ -23,14 +23,7 @@
 #define LAME_VRBTAG_H
 
 #include "lame.h"
-
-#if HAVE_INTTYPES_H
-# include <inttypes.h>
-#else
-# if HAVE_STDINT_H
-#  include <stdint.h>
-# endif
-#endif
+#include "machine.h"
 
 /* -----------------------------------------------------------
  * A Vbr header may be present in the ancillary

@@ -465,7 +465,6 @@ int noquant_count_bits(
           gr_info * const gi
 	  )
 {
-    int bits = 0;
     int i, a1, a2;
     int *const ix = gi->l3_enc;
     i=576;
@@ -488,17 +487,16 @@ int noquant_count_bits(
 	a2 += t33l[p];
     }
 
-    bits = a1;
     gi->count1table_select = 0;
     if (a1 > a2) {
-	bits = a2;
+	a1 = a2;
 	gi->count1table_select = 1;
     }
 
-    gi->count1bits = bits;
+    gi->part2_3_length = gi->count1bits = a1;
     gi->big_values = i;
     if (i == 0)
-	return bits;
+	return a1;
 
     if (gi->block_type == SHORT_TYPE) {
       a1=3*gfc->scalefac_band.s[3];
@@ -514,7 +512,8 @@ int noquant_count_bits(
         a2 = gfc->scalefac_band.l[a1 + a2 + 2];
 	a1 = gfc->scalefac_band.l[a1 + 1];
 	if (a2 < i)
-	  gi->table_select[2] = gfc->choose_table(ix + a2, ix + i, &bits);
+	  gi->table_select[2] = gfc->choose_table(ix + a2, ix + i,
+						  &gi->part2_3_length);
 
     } else {
 	gi->region0_count = 7;
@@ -538,16 +537,15 @@ int noquant_count_bits(
 
     /* Count the number of bits necessary to code the bigvalues region. */
     if (0 < a1)
-	gi->table_select[0] = gfc->choose_table(ix, ix + a1, &bits);
+	gi->table_select[0] = gfc->choose_table(ix, ix + a1,
+						&gi->part2_3_length);
     if (a1 < a2)
-	gi->table_select[1] = gfc->choose_table(ix + a1, ix + a2, &bits);
-    if (gfc->use_best_huffman == 2) {
-	gi->part2_3_length = bits;
+	gi->table_select[1] = gfc->choose_table(ix + a1, ix + a2,
+						&gi->part2_3_length);
+    if (gfc->use_best_huffman == 2)
 	best_huffman_divide (gfc, gi);
-	bits = gi->part2_3_length;
-    }
 
-    return bits;
+    return gi->part2_3_length;
 }
 
 int count_bits(
@@ -817,10 +815,11 @@ chosen and the channel/granule will not be re-encoded.
 void best_scalefac_store(
     const lame_internal_flags *gfc,
     const int             gr,
-    const int             ch,
-          III_side_info_t * const l3_side)
+    const int             ch
+    )
 {
     /* use scalefac_scale if we can */
+    III_side_info_t * const l3_side = &gfc->l3_side;
     gr_info *gi = &l3_side->tt[gr][ch];
     int sfb,i,j,l;
     int recalc = 0;

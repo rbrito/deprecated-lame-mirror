@@ -591,7 +591,7 @@ compute_masking_s(
     FLOAT fft_s[BLKSIZE_s],
     FLOAT *eb,
     FLOAT *thr,
-    int blocktype_old[MAX_CHANNELS*2],
+    int useshort_old,
     int chn
     )
 {
@@ -611,19 +611,13 @@ compute_masking_s(
 	eb[b] = ecb;
 	ecb = 0.0;
     }
+
     for (j = b = 0; b < gfc->npart_s; b++) {
 	int kk = gfc->s3ind_s[b][0];
 	FLOAT ecb = gfc->s3_ss[j++] * eb[kk++];
 	while (kk <= gfc->s3ind_s[b][1])
 	    ecb += gfc->s3_ss[j++] * eb[kk++];
-
-	thr[b] = Min( ecb, rpelev_s  * gfc->nb_s1[chn][b] );
-	if (blocktype_old[chn] == SHORT_TYPE)
-	    thr[b] = Min(thr[b], rpelev2_s * gfc->nb_s2[chn][b]);
-
-	thr[b] = Max( thr[b], 1e-37 );
-	gfc->nb_s2[chn][b] = gfc->nb_s1[chn][b];
-	gfc->nb_s1[chn][b] = ecb;
+	thr[b] = ecb;
     }
 }
 
@@ -827,6 +821,7 @@ static void nsPsy2dataRead(
 
 static FLOAT
 pecalc_s(
+    lame_internal_flags *gfc,
     III_psy_ratio *mr
     )
 {
@@ -842,10 +837,11 @@ pecalc_s(
     pe_s = 1236.28/4;
     for(sblock=0;sblock<3;sblock++) {
 	for ( sb = 0; sb < SBMAX_s; sb++ ) {
-	    FLOAT x;
-	    if (regcoef_s[sb] == 0.0
-		|| mr->thm.s[sb][sblock] <= 0.0
-		|| mr->en.s[sb][sblock] <= (x = mr->thm.s[sb][sblock]))
+	    FLOAT x = mr->thm.s[sb][sblock];
+	    if (x < gfc->ATH.s_avg[sb] * gfc->ATH.adjust)
+		x = gfc->ATH.s_avg[sb] * gfc->ATH.adjust;
+
+	    if (regcoef_s[sb] == 0.0 || mr->en.s[sb][sblock] <= x)
 		continue;
 
 	    if (mr->en.s[sb][sblock] > x*1e10)
@@ -859,6 +855,7 @@ pecalc_s(
 
 static FLOAT
 pecalc_l(
+    lame_internal_flags *gfc,
     III_psy_ratio *mr
     )
 {
@@ -872,8 +869,11 @@ pecalc_l(
 
     pe_l = 1124.23/4;
     for ( sb = 0; sb < SBMAX_l; sb++ ) {
-	FLOAT x;
-	if (mr->thm.l[sb] <= 0.0 || mr->en.l[sb] <= (x = mr->thm.l[sb]))
+	FLOAT x = mr->thm.l[sb];
+	if (x < gfc->ATH.l_avg[sb] * gfc->ATH.adjust)
+	    x = gfc->ATH.l_avg[sb] * gfc->ATH.adjust;
+
+	if (mr->en.l[sb] <= x)
 	    continue;
 
 	if (mr->en.l[sb] > x*1e10)
@@ -889,26 +889,28 @@ pecalc_l(
 
 
 static void
-L3psycho_anal_ns(
+psycho_analysis_short(
     lame_global_flags * gfp,
     const sample_t *buffer[2],
-    int blocktype_old[4],
-    int gr
+    int useshort_old[4],
+    int gr,
+    int need_short
     )
 {
     lame_internal_flags *gfc=gfp->internal_flags;
 
     /* fft and energy calculation   */
-    FLOAT wsamp_L[2][BLKSIZE];
     FLOAT wsamp_S[2][3][BLKSIZE_s];
 
     /* usual variables like loop indices, etc..    */
     int numchn, chn;
-    int b, i, j, k;
+    int b, i, j;
     int	sb,sblock;
 
     FLOAT pcfact;
     FLOAT ns_hpfsmpl[MAX_CHANNELS][576];
+
+    int ns_attacks[MAX_CHANNELS*2][4] = {{0}};
 
     /**********************************************************************
      *  Apply HPF of fs/4 to the input signal.
@@ -933,45 +935,18 @@ L3psycho_anal_ns(
 	    }
 	    ns_hpfsmpl[chn][i] = sum1 + sum2;
 	}
-	fft_long ( gfc, wsamp_L[chn], chn, buffer);
-	fft_short( gfc, wsamp_S[chn], chn, buffer);
     }
 
     numchn = gfc->channels_out;
     if (gfp->mode == JOINT_STEREO) numchn=4;
 
-    if (gfp->VBR==vbr_off) pcfact = gfc->ResvMax == 0 ? 0 : ((FLOAT)gfc->ResvSize)/gfc->ResvMax*0.5;
-    else if (gfp->VBR == vbr_rh  ||  gfp->VBR == vbr_mtrh  ||  gfp->VBR == vbr_mt) {
-	static const FLOAT pcQns[10]={1.0,1.0,1.0,0.8,0.6,0.5,0.4,0.3,0.2,0.1};
-	pcfact = pcQns[gfp->VBR_q];
-    } else pcfact = 1.0;
-
     for (chn=0; chn<numchn; chn++) {
 	FLOAT en_subshort[12];
 	FLOAT attack_intensity[12];
-	int useshortblock = 0;
 	FLOAT attackThreshold;
-	int ns_attacks[4] = {0};
-	FLOAT fftenergy[HBLKSIZE];
-	/* convolution   */
-	FLOAT eb[CBANDS], eb2[CBANDS], thr[CBANDS], max[CBANDS];
-#define avg thr
-
-	static const FLOAT tab[] = {
-	    1.0    /0.11749, 0.79433/0.11749, 0.63096/0.11749, 0.63096/0.11749,
-	    0.63096/0.11749, 0.63096/0.11749, 0.63096/0.11749, 0.25119/0.11749
-	};
-
 	/*************************************************************** 
 	 * determine the block type (window type)
 	 ***************************************************************/
-	/* calculate energies of each sub-shortblocks */
-	for (i=0; i<3; i++) {
-	    en_subshort[i] = gfc->nsPsy.last_en_subshort[chn][i+6];
-	    attack_intensity[i]
-		= en_subshort[i] / gfc->nsPsy.last_en_subshort[chn][i+4];
-	}
-
 	if (chn == 2) {
 	    for(i=0;i<576;i++) {
 		FLOAT l, r;
@@ -980,22 +955,15 @@ L3psycho_anal_ns(
 		ns_hpfsmpl[0][i] = l+r;
 		ns_hpfsmpl[1][i] = l-r;
 	    }
-	    /* FFT data for mid and side channel is derived from L & R */
-	    for (j = BLKSIZE-1; j >=0 ; --j) {
-		FLOAT l = wsamp_L[0][j];
-		FLOAT r = wsamp_L[1][j];
-		wsamp_L[0][j] = (l+r)*(FLOAT)(SQRT2*0.5);
-		wsamp_L[1][j] = (l-r)*(FLOAT)(SQRT2*0.5);
-	    }
-	    for (b = 2; b >= 0; --b) {
-		for (j = BLKSIZE_s-1; j >= 0 ; --j) {
-		    FLOAT l = wsamp_S[0][b][j];
-		    FLOAT r = wsamp_S[1][b][j];
-		    wsamp_S[0][b][j] = (l+r)*(FLOAT)(SQRT2*0.5);
-		    wsamp_S[1][b][j] = (l-r)*(FLOAT)(SQRT2*0.5);
-		}
-	    }
 	}
+
+	/* calculate energies of each sub-shortblocks */
+	for (i=0; i<3; i++) {
+	    en_subshort[i] = gfc->nsPsy.last_en_subshort[chn][i+6];
+	    attack_intensity[i]
+		= en_subshort[i] / gfc->nsPsy.last_en_subshort[chn][i+4];
+	}
+
 	{
 	    FLOAT *pf = ns_hpfsmpl[chn & 1];
 	    for (i=0;i<9;i++) {
@@ -1022,73 +990,131 @@ L3psycho_anal_ns(
 	attackThreshold = (chn == 3)
 	    ? gfc->nsPsy.attackthre_s : gfc->nsPsy.attackthre;
 	for (i=0;i<12;i++) 
-	    if (!ns_attacks[i/3] && attack_intensity[i] > attackThreshold)
-		ns_attacks[i/3] = (i % 3)+1;
+	    if (!ns_attacks[chn][i/3] && attack_intensity[i] > attackThreshold)
+		ns_attacks[chn][i/3] = (i % 3)+1;
 
-	if (ns_attacks[0] && gfc->nsPsy.last_attacks[chn])
-	    ns_attacks[0] = 0;
+	if (ns_attacks[chn][0] && gfc->nsPsy.last_attacks[chn])
+	    ns_attacks[chn][0] = 0;
 
+	gfc->useshort_next[gr][chn] = NORM_TYPE;
 	if (gfc->nsPsy.last_attacks[chn] == 3 ||
-	    ns_attacks[0] + ns_attacks[1] + ns_attacks[2] + ns_attacks[3]) {
-	    useshortblock = 1;
+	    ns_attacks[chn][0] + ns_attacks[chn][1] + ns_attacks[chn][2] + ns_attacks[chn][3]) {
+	    gfc->useshort_next[gr][chn] = SHORT_TYPE;
+	    need_short = 1;
 
-	    if (ns_attacks[3] && ns_attacks[2]) ns_attacks[3] = 0;
-	    if (ns_attacks[2] && ns_attacks[1]) ns_attacks[2] = 0;
-	    if (ns_attacks[1] && ns_attacks[0]) ns_attacks[1] = 0;
+	    if (ns_attacks[chn][3] && ns_attacks[chn][2]) ns_attacks[chn][3] = 0;
+	    if (ns_attacks[chn][2] && ns_attacks[chn][1]) ns_attacks[chn][2] = 0;
+	    if (ns_attacks[chn][1] && ns_attacks[chn][0]) ns_attacks[chn][1] = 0;
 	}
-	gfc->useshort_next[gr][chn] = useshortblock;
+    }
+    if (gfc->useshort_next[gr][2] || gfc->useshort_next[gr][3])
+	gfc->useshort_next[gr][2] = gfc->useshort_next[gr][3] = SHORT_TYPE;
 
+#if 1
+    if (!need_short) {
+	for (chn=0; chn<numchn; chn++)
+	    gfc->nsPsy.last_attacks[chn] = ns_attacks[chn][2];
+	return;
+    }
+#endif
+    if (gfp->VBR==vbr_off) pcfact = gfc->ResvMax == 0 ? 0 : ((FLOAT)gfc->ResvSize)/gfc->ResvMax*0.5;
+    else if (gfp->VBR == vbr_rh  ||  gfp->VBR == vbr_mtrh  ||  gfp->VBR == vbr_mt) {
+	static const FLOAT pcQns[10]={1.0,1.0,1.0,0.8,0.6,0.5,0.4,0.3,0.2,0.1};
+	pcfact = pcQns[gfp->VBR_q];
+    } else pcfact = 1.0;
+
+    for (chn=0; chn<numchn; chn++) {
+	/* convolution   */
+	FLOAT eb[CBANDS], thr[CBANDS];
+	FLOAT enn, thmm;
+	if (chn < 2)
+	    fft_short( gfc, wsamp_S[chn], chn, buffer);
 	/* compute masking thresholds for short blocks */
 	for (sblock = 0; sblock < 3; sblock++) {
+	    if (chn == 2) {
+		for (j = BLKSIZE_s-1; j >= 0 ; --j) {
+		    FLOAT l = wsamp_S[0][sblock][j];
+		    FLOAT r = wsamp_S[1][sblock][j];
+		    wsamp_S[0][sblock][j] = l+r;
+		    wsamp_S[1][sblock][j] = l-r;
+		}
+	    }
+
 	    compute_masking_s(gfc, wsamp_S[chn&1][sblock], eb, thr,
-			      blocktype_old, chn);
+			      useshort_old[chn], chn);
 	    b = -1;
+	    enn = thmm = 0.0;
 	    for (sb = 0; sb < SBMAX_s; sb++) {
-		FLOAT enn, thmm;
-		enn = thmm = 0.0;
 		while (++b < gfc->bo_s[sb]) {
 		    enn  += eb[b];
 		    thmm += thr[b];
 		}
+		b++;
 		enn  += 0.5 * eb[b];
 		thmm += 0.5 * thr[b];
 		gfc->masking_next[gr][chn].en.s[sb][sblock] = enn;
-
-		/****   short block pre-echo control   ****/
-		if (ns_attacks[sblock] >= 2 || ns_attacks[sblock+1] == 1) {
-		    int idx = (sblock != 0) ? sblock-1 : 2;
-		    if (gfc->masking_next[gr][chn].thm.s[sb][idx] < thmm)
-			thmm = NS_INTERP2(gfc->masking_next[gr][chn].thm.s[sb][idx], thmm,
-					  NS_PREECHO_ATT1*pcfact);
-		}
-
-		if (ns_attacks[sblock] == 1) {
-		    int idx = (sblock != 0) ? sblock-1 : 2;
-		    if (gfc->masking_next[gr][chn].thm.s[sb][idx] < thmm)
-			thmm = NS_INTERP2(gfc->masking_next[gr][chn].thm.s[sb][idx], thmm,
-					  NS_PREECHO_ATT2*pcfact);
-		} else if ((sblock != 0 && ns_attacks[sblock-1] == 3)
-			|| (sblock == 0 && gfc->nsPsy.last_attacks[chn] == 3)) {
-		    int idx = (sblock != 2) ? sblock+1 : 0;
-		    if (gfc->masking_next[gr][chn].thm.s[sb][idx] < thmm)
-			thmm = NS_INTERP2(gfc->masking_next[gr][chn].thm.s[sb][idx], thmm,
-					  NS_PREECHO_ATT2*pcfact);
-		}
-
-		/* pulse like signal detection for fatboy.wav and so on */
-		enn = en_subshort[sblock*3+3] + en_subshort[sblock*3+4]
-		    + en_subshort[sblock*3+5];
-		if (en_subshort[sblock*3+5]*6 < enn) {
-		    thmm *= 0.5;
-		    if (en_subshort[sblock*3+4]*6 < enn)
-			thmm *= 0.5;
-		}
-
 		gfc->masking_next[gr][chn].thm.s[sb][sblock] = thmm;
+		enn  = 0.5 * eb[b];
+		thmm = 0.5 * thr[b];
 	    }
 	}
-	gfc->nsPsy.last_attacks[chn] = ns_attacks[2];
+	gfc->nsPsy.last_attacks[chn] = ns_attacks[chn][2];
+    } /* end loop over chn */
+}
 
+static void
+L3psycho_anal_ns(
+    lame_global_flags * gfp,
+    const sample_t *buffer[2],
+    int useshort_old[4],
+    int gr
+    )
+{
+    lame_internal_flags *gfc=gfp->internal_flags;
+
+    /* fft and energy calculation   */
+    FLOAT wsamp_L[2][BLKSIZE];
+
+    /* usual variables like loop indices, etc..    */
+    int numchn, chn;
+    int b, i, j, k;
+    FLOAT pcfact;
+
+    /*********************************************************************
+     * compute the long block masking ratio
+     *********************************************************************/
+    for (chn = 0; chn < gfc->channels_out; chn++)
+	fft_long ( gfc, wsamp_L[chn], chn, buffer);
+
+    numchn = gfc->channels_out;
+    if (gfp->mode == JOINT_STEREO) numchn=4;
+
+    if (gfp->VBR==vbr_off) pcfact = gfc->ResvMax == 0 ? 0 : ((FLOAT)gfc->ResvSize)/gfc->ResvMax*0.5;
+    else if (gfp->VBR == vbr_rh  ||  gfp->VBR == vbr_mtrh  ||  gfp->VBR == vbr_mt) {
+	static const FLOAT pcQns[10]={1.0,1.0,1.0,0.8,0.6,0.5,0.4,0.3,0.2,0.1};
+	pcfact = pcQns[gfp->VBR_q];
+    } else pcfact = 1.0;
+
+    for (chn=0; chn<numchn; chn++) {
+	FLOAT fftenergy[HBLKSIZE];
+	/* convolution   */
+	FLOAT eb[CBANDS], eb2[CBANDS], thr[CBANDS], max[CBANDS];
+#define avg thr
+
+	static const FLOAT tab[] = {
+	    1.0    /0.11749, 0.79433/0.11749, 0.63096/0.11749, 0.63096/0.11749,
+	    0.63096/0.11749, 0.63096/0.11749, 0.63096/0.11749, 0.25119/0.11749
+	};
+
+	if (chn == 2) {
+	    /* FFT data for mid and side channel is derived from L & R */
+	    for (j = BLKSIZE-1; j >=0 ; --j) {
+		FLOAT l = wsamp_L[0][j];
+		FLOAT r = wsamp_L[1][j];
+		wsamp_L[0][j] = (l+r)*(FLOAT)(SQRT2*0.5);
+		wsamp_L[1][j] = (l-r)*(FLOAT)(SQRT2*0.5);
+	    }
+	}
 	/*********************************************************************
 	 *    Calculate the energy and the tonality of each partition.
 	 *********************************************************************/
@@ -1136,14 +1162,9 @@ L3psycho_anal_ns(
 	    gfc->tot_ener_next[gr][chn] = totalenergy;
 	}
 #ifdef HAVE_GTK
-	if (gfp->analysis) {
-	    for (j=0; j<HBLKSIZE ; j++) {
-		gfc->pinfo->energy[gr][chn][j] = gfc->energy_save[gr][chn][j];
-		gfc->energy_save[gr][chn][j]=fftenergy[j];
-	    }
-	}
+	if (gfp->analysis)
+	    memcpy(gfc->energy_save[gr][chn], fftenergy, sizeof(fftenergy));
 #endif
-
 	if (gfc->nsPsy.pass1fp)
 	    nsPsy2dataRead(gfc->nsPsy.pass1fp, eb2, eb, chn, gfc->npart_l);
 	else {
@@ -1210,16 +1231,12 @@ L3psycho_anal_ns(
 	     * frame2:  regular frame.  looks like pre-echo when compared to 
 	     *          frame0, but all pre-echo was in frame1.
 	     */
-	    /* chn=0,1   L and R channels
-	       chn=2,3   S and M channels.
-	    */
-
-	    if (blocktype_old[chn] == SHORT_TYPE)
+	    if (useshort_old[chn] == SHORT_TYPE)
 		thr[b] = ecb; /* Min(ecb, rpelev*gfc->nb_1[chn][b]); */
 	    else
 		thr[b] = NS_INTERP(Min(ecb,
-				       Min(rpelev*gfc->nb_1[chn][b],
-					   rpelev2*gfc->nb_2[chn][b])),
+				       Min(rpelev  * gfc->nb_1[chn][b],
+					   rpelev2 * gfc->nb_2[chn][b])),
 				   ecb, pcfact);
 
 	    gfc->nb_2[chn][b] = gfc->nb_1[chn][b];
@@ -1242,8 +1259,10 @@ L3psycho_anal_ns(
 		if (sb == SBMAX_l - 1)
 		    break;
 
-		gfc->masking_next[gr][chn].en .l[sb] = enn  + 0.5 * eb [b];
-		gfc->masking_next[gr][chn].thm.l[sb] = thmm + 0.5 * thr[b];
+		enn  += .5* eb[b];
+		thmm += .5*thr[b];
+		gfc->masking_next[gr][chn].en .l[sb] = enn;
+		gfc->masking_next[gr][chn].thm.l[sb] = thmm;
 
 		enn  =  eb[b] * 0.5;
 		thmm = thr[b] * 0.5;
@@ -1254,38 +1273,6 @@ L3psycho_anal_ns(
 	    gfc->masking_next[gr][chn].en .l[SBMAX_l-1] = enn;
 	    gfc->masking_next[gr][chn].thm.l[SBMAX_l-1] = thmm;
 	}
-    } /* end loop over chn */
-
-    if (gfp->interChRatio != 0.0)
-	calc_interchannel_masking(gfp, gr);
-
-    if (gfp->mode == JOINT_STEREO) {
-	FLOAT msfix;
-	msfix1(gfc, gr);
-	msfix = gfp->msfix;
-	if (gfc->ATH.adjust >= gfc->presetTune.athadjust_switch_level)
-	    msfix = gfc->nsPsy.athadjust_msfix;
-
-	if (msfix != 0.0)
-	    ns_msfix(gfc, msfix, gr);
-    }
-
-    /*********************************************************************
-     * compute the value of PE to return
-     *********************************************************************/
-
-    if (gfp->mode == JOINT_STEREO) {
-	if (gfc->useshort_next[gr][2] || gfc->useshort_next[gr][3])
-	    gfc->useshort_next[gr][2] = gfc->useshort_next[gr][3] = 1;
-    }
-
-    for (chn=0;chn<numchn;chn++) {
-	III_psy_ratio *mr = &gfc->masking_next[gr][chn];
-
-	if (gfc->useshort_next[gr][chn])
-	    gfc->percep_entropy_next[gr][chn] = pecalc_s(mr);
-	else
-	    gfc->percep_entropy_next[gr][chn] = pecalc_l(mr);
     }
 }
 
@@ -1451,8 +1438,7 @@ psycho_analysis(
     lame_global_flags * gfp,
     const sample_t *buffer[2],
     FLOAT ms_ener_ratio_d[2],
-    III_psy_ratio masking_d[2][2],
-    FLOAT pe_d[2][2]
+    III_psy_ratio masking_d[2][2]
     )
 {
     int gr, ch, need_short;
@@ -1462,9 +1448,10 @@ psycho_analysis(
     /* address of beginning of left & right granule */
     const sample_t *bufp[MAX_CHANNELS];
 
-    for (ch = 0; ch < gfc->channels_out; ch++)
-	blocktype_old[ch] = gfc->l3_side.tt[gfc->mode_gr-1][ch].block_type;
-
+    for (ch = 0; ch < gfc->channels_out; ch++) {
+	blocktype_old[ch] = blocktype_old[ch+2]
+	    = gfc->l3_side.tt[gfc->mode_gr-1][ch].block_type;
+    }
     /* next frame data -> current frame data (aging) */
     adjust_ATH(gfp);
     gfc->mode_ext = gfc->mode_ext_next;
@@ -1478,7 +1465,6 @@ psycho_analysis(
 
 	    for (ch = 0; ch < gfc->channels_out; ch++) {
 		masking_d[gr][ch] = gfc->masking_next[gr][ch + 2];
-		pe_d[gr][ch] = gfc->percep_entropy_next[gr][ch + 2];
 		gfc->l3_side.tt[gr][ch].block_type = NORM_TYPE;
 		if (gfc->useshort_next[gr][ch]) {
 		    gfc->l3_side.tt[gr][ch].block_type = SHORT_TYPE;
@@ -1490,7 +1476,6 @@ psycho_analysis(
 	for (gr=0; gr < gfc->mode_gr ; gr++) {
 	    for (ch = 0; ch < gfc->channels_out; ch++) {
 		masking_d[gr][ch] = gfc->masking_next[gr][ch];
-		pe_d[gr][ch] = gfc->percep_entropy_next[gr][ch];
 		gfc->l3_side.tt[gr][ch].block_type = NORM_TYPE;
 		if (gfc->useshort_next[gr][ch]) {
 		    gfc->l3_side.tt[gr][ch].block_type = SHORT_TYPE;
@@ -1502,13 +1487,48 @@ psycho_analysis(
 
     /* calculate next frame data */
     for (gr=0; gr < gfc->mode_gr ; gr++) {
+	int numchn;
 	for (ch = 0; ch < gfc->channels_out; ch++)
 	    bufp[ch] = &buffer[ch][576*(gr + gfc->mode_gr) - FFTOFFSET];
 
-	if (gr == 0)
+	if (gr == 0) {
+	    psycho_analysis_short(gfp, bufp, blocktype_old, gr, need_short);
 	    L3psycho_anal_ns(gfp, bufp, blocktype_old, gr);
-	else
+	} else {
+	    psycho_analysis_short(gfp, bufp, gfc->useshort_next[0], gr, need_short);
 	    L3psycho_anal_ns(gfp, bufp, gfc->useshort_next[0], gr);
+	}
+
+	numchn = gfc->channels_out;
+
+	/*********************************************************************
+	 * other masking effect
+	 *********************************************************************/
+	if (gfp->interChRatio != 0.0)
+	    calc_interchannel_masking(gfp, gr);
+
+	if (gfp->mode == JOINT_STEREO) {
+	    FLOAT msfix;
+	    msfix1(gfc, gr);
+	    msfix = gfp->msfix;
+	    if (gfc->ATH.adjust >= gfc->presetTune.athadjust_switch_level)
+		msfix = gfc->nsPsy.athadjust_msfix;
+
+	    if (msfix != 0.0)
+		ns_msfix(gfc, msfix, gr);
+
+	    numchn = 4;
+	}
+	/*********************************************************************
+	 * compute the value of PE to return
+	 *********************************************************************/
+	for (ch=0;ch<numchn;ch++) {
+	    III_psy_ratio *mr = &gfc->masking_next[gr][ch];
+	    if (gfc->useshort_next[gr][ch])
+		mr->pe = pecalc_s(gfc, mr);
+	    else
+		mr->pe = pecalc_l(gfc, mr);
+	}
     }
 
     /* determine MS/LR in the next frame */
@@ -1520,8 +1540,8 @@ psycho_analysis(
 	for (gr = 0; gr < gfc->mode_gr; gr++)
 	    for (ch = 0; ch < gfc->channels_out; ch++)
 		diff_pe
-		    += gfc->percep_entropy_next[gr][ch+2]
-		    -  gfc->percep_entropy_next[gr][ch];
+		    += gfc->masking_next[gr][ch+2].pe
+		    -  gfc->masking_next[gr][ch].pe;
 
 	/* based on PE: M/S coding would not use much more bits than L/R */
 	if (diff_pe <= 0.0) {
@@ -1539,7 +1559,7 @@ psycho_analysis(
 	} else if (gfc->mode_ext_next != gfc->mode_ext) {
 	    /* MS -> LR case */
 	    if (gfc->useshort_next[0][0] || gfc->useshort_next[0][1])
-		gfc->useshort_next[0][0] = gfc->useshort_next[0][1] = 1;
+		gfc->useshort_next[0][0] = gfc->useshort_next[0][1] = SHORT_TYPE;
 	}
     }
 

@@ -45,7 +45,7 @@ typedef struct {
   float ms_ener_ratio[2];
 
   /* L,R, M and S values */
-  float energy[2][4][BLKSIZE];
+  float energy[2][4][HBLKSIZE];
   float pe[2][4];
   float thr[2][4][SBMAX_l];
   float en[2][4][SBMAX_l];

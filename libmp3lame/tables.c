@@ -1122,7 +1122,6 @@ int psymodel_init(lame_global_flags *gfp)
 	for (j=0; j<CBANDS; ++j) {
 	    gfc->nb_1[i][j]=1e20;
 	    gfc->nb_2[i][j]=1e20;
-	    gfc->nb_s1[i][j] = gfc->nb_s2[i][j] = 1.0;
 	}
 	for ( sb = 0; sb < SBMAX_l; sb++ ) {
 	    gfc->masking_next[0][i].en.l[sb] = 1e20;

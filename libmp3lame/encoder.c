@@ -140,7 +140,7 @@ updateStats( lame_internal_flags * const gfc )
 
 
 static void
-init_outer_loop(
+init_gr_info(
     lame_internal_flags *gfc,
     gr_info *const cod_info)
 {
@@ -294,7 +294,6 @@ int  lame_encode_mp3_frame (				// Output
     lame_internal_flags *gfc=gfp->internal_flags;
 
     FLOAT ms_ener_ratio[2]={.5,.5};
-    FLOAT pe_use[2][2];
 
     int ch,gr;
 
@@ -336,7 +335,7 @@ int  lame_encode_mp3_frame (				// Output
 	if (gfc->psymodel) {
 	    inbuf[0]=primebuff[0] - gfp->framesize;
 	    inbuf[1]=primebuff[1] - gfp->framesize;
-	    psycho_analysis(gfp, inbuf, ms_ener_ratio, masking, pe_use);
+	    psycho_analysis(gfp, inbuf, ms_ener_ratio, masking);
 	}
     }
     inbuf[0]=inbuf_l;
@@ -360,15 +359,20 @@ int  lame_encode_mp3_frame (				// Output
 
     inbuf[0]=inbuf_l;
     inbuf[1]=inbuf_r;
-    if (gfc->psymodel)
-	psycho_analysis(gfp, inbuf, ms_ener_ratio, masking, pe_use);
-    else {
+    if (gfc->psymodel) {
+#ifdef HAVE_GTK
+	if (gfp->analysis)
+	    memcpy(gfc->pinfo->energy, gfc->energy_save,
+		   sizeof(gfc->energy_save));
+#endif
+	psycho_analysis(gfp, inbuf, ms_ener_ratio, masking);
+    } else {
 	memset(masking, 0, sizeof(masking));
 	for (gr=0; gr < gfc->mode_gr ; gr++)
 	    for ( ch = 0; ch < gfc->channels_out; ch++ ) {
 		gfc->l3_side.tt[gr][ch].block_type=NORM_TYPE;
 		gfc->l3_side.tt[gr][ch].mixed_block_flag=0;
-		pe_use[gr][ch] = 700.0;
+		masking[gr][ch].pe = 700.0;
 	    }
 	gfc->ATH.adjust = 1.0;	/* no adjustment */
 	gfc->mode_ext = MPG_MD_LR_LR;
@@ -380,7 +384,7 @@ int  lame_encode_mp3_frame (				// Output
     for ( ch = 0; ch < gfc->channels_out; ch++ ) {
 	mdct_sub48(gfc, inbuf[ch], ch);
 	for (gr = 0; gr < gfc->mode_gr; gr++) {
-	    init_outer_loop(gfc, &gfc->l3_side.tt[gr][ch]);
+	    init_gr_info(gfc, &gfc->l3_side.tt[gr][ch]);
 	}
     }
 
@@ -410,7 +414,7 @@ int  lame_encode_mp3_frame (				// Output
 		gfc->pinfo->ms_ener_ratio[gr]=ms_ener_ratio[gr];
 		gfc->pinfo->blocktype[gr][ch]
 		    =gfc->l3_side.tt[gr][ch].block_type;
-		gfc->pinfo->pe[gr][ch]=pe_use[gr][ch];
+		gfc->pinfo->pe[gr][ch]=masking[gr][ch].pe;
 		memcpy(gfc->pinfo->xr[gr][ch], &gfc->l3_side.tt[gr][ch].xr,
 		       sizeof(FLOAT)*576);
 	    }
@@ -440,7 +444,7 @@ int  lame_encode_mp3_frame (				// Output
 	    gfc->nsPsy.pefirbuf[i] = gfc->nsPsy.pefirbuf[i+1];
 	for (gr = 0; gr < gfc->mode_gr; gr++)
 	    for ( ch = 0; ch < gfc->channels_out; ch++ )
-		f += pe_use[gr][ch];
+		f += masking[gr][ch].pe;
 	gfc->nsPsy.pefirbuf[18] = f;
 
 	f = gfc->nsPsy.pefirbuf[9];
@@ -451,7 +455,7 @@ int  lame_encode_mp3_frame (				// Output
 	f = (670*5*gfc->mode_gr*gfc->channels_out)/f;
 	for ( gr = 0; gr < gfc->mode_gr; gr++ ) {
 	    for ( ch = 0; ch < gfc->channels_out; ch++ ) {
-		pe_use[gr][ch] *= f;
+		masking[gr][ch].pe *= f;
 	    }
 	}
     }
@@ -459,15 +463,15 @@ int  lame_encode_mp3_frame (				// Output
     switch (gfp->VBR){ 
     default:
     case vbr_off:
-	iteration_loop( gfp, pe_use, ms_ener_ratio, masking);
+	iteration_loop( gfp, ms_ener_ratio, masking);
 	break;
     case vbr_mt:
     case vbr_rh:
     case vbr_mtrh:
-	VBR_iteration_loop( gfp, pe_use,ms_ener_ratio, masking);
+	VBR_iteration_loop( gfp, ms_ener_ratio, masking);
 	break;
     case vbr_abr:
-	ABR_iteration_loop( gfp, pe_use,ms_ener_ratio, masking);
+	ABR_iteration_loop( gfp, ms_ener_ratio, masking);
 	break;
     }
 

@@ -73,8 +73,8 @@ int     noquant_count_bits (lame_internal_flags * const gfc,
 void    best_huffman_divide (const lame_internal_flags * const gfc, 
                              gr_info * const cod_info);
 
-void    best_scalefac_store (const lame_internal_flags * gfc, const int gr, const int ch,
-                             III_side_info_t * const l3_side);
+void    best_scalefac_store (const lame_internal_flags * gfc,
+			     const int gr, const int ch );
 
 int     scale_bitcount (gr_info * const cod_info);
 int     scale_bitcount_lsf (const lame_internal_flags *gfp,

@@ -44,15 +44,14 @@
 # define NMT 6
 #endif
 
-#define NS_PREECHO_ATT0 0.8
+#define NS_PREECHO_ATT0 1.0 /* 0.8 */
 #define NS_PREECHO_ATT1 0.6
 #define NS_PREECHO_ATT2 0.3
 
 void psycho_analysis( lame_global_flags *gfc,
 		      const sample_t *buffer[2],
 		      FLOAT ms_ener_ratio_d[2],
-		      III_psy_ratio masking[2][2],
-		      FLOAT pe_d[2][2]);
+		      III_psy_ratio masking[2][2] );
 
 int psymodel_init(lame_global_flags *gfp);
 
