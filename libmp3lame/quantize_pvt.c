@@ -577,9 +577,27 @@ int calc_xmin(
 // + 6 dB  =>  +3.69
 // +10 dB  =>  +6.45
 
-double penalties ( double noise )
+static double penalties ( double noise )
 {
     return log ( 0.368 + 0.632 * noise * noise * noise );
+}
+
+double get_klemm_noise(
+    const III_psy_xmin  *distort,
+    gr_info		*gi
+    )
+{
+    int sfb, i;
+    double klemm_noise = 1E-37;
+    for (sfb = 0; sfb < gi->psy_lmax; sfb++) {
+	klemm_noise += penalties(distort->l[sfb]);
+    }
+    for (sfb = gi->sfb_smin; sfb < gi->psy_smax; sfb++) {
+	for ( i = 0; i < 3; i++ ) {
+	    klemm_noise += penalties(distort->s[sfb][i]);
+	}
+    }
+    return Max(1e-20, klemm_noise);
 }
 
 /*  mt 5/99:  Function: Improved calc_noise for a single channel   */
@@ -595,7 +613,6 @@ int  calc_noise(
     FLOAT8 over_noise_db = 0;
     FLOAT8 tot_noise_db  = 0;     /*    0 dB relative to masking */
     FLOAT8 max_noise  = 1E-20; /* -200 dB relative to masking */
-    double klemm_noise = 1E-37;
     int j = 0;
     const int *ix = cod_info->l3_enc;
     const III_scalefac_t * const scalefac = &cod_info->scalefac;
@@ -616,7 +633,6 @@ int  calc_noise(
 	} while (--l > 0);
 	noise = xfsf->l[sfb] = noise / l3_xmin->l[sfb];
 	max_noise=Max(max_noise,noise);
-	klemm_noise += penalties (noise);
 
 	noise = log10(Max(noise,1E-20));
 	/* multiplying here is adding in dB, but can overflow */
@@ -650,7 +666,6 @@ int  calc_noise(
 	    noise = xfsf->s[sfb][i]  = noise / l3_xmin->s[sfb][i];
 
 	    max_noise    = Max(max_noise,noise);
-	    klemm_noise += penalties (noise);
 
 	    noise = log10(Max(noise,1E-20));
 	    tot_noise_db += noise;
@@ -663,10 +678,9 @@ int  calc_noise(
     }
 
     res->over_count = over;
-    res->tot_noise   = 10.*tot_noise_db;
-    res->over_noise  = 10.*over_noise_db;
-    res->max_noise   = 10.*log10(max_noise);
-    res->klemm_noise = klemm_noise;
+    res->tot_noise   = tot_noise_db;
+    res->over_noise  = over_noise_db;
+    res->max_noise   = log10(max_noise);
 
     return over;
 }

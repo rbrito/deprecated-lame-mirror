@@ -335,11 +335,13 @@ loop_break(
 inline 
 static int 
 quant_compare(
-    const int                       experimentalX,
-          lame_internal_flags * const gfc,
-    const calc_noise_result * const best,
-    const calc_noise_result   * const calc,
-	const int                         block_type )
+    const int                   experimentalX,
+          lame_internal_flags	* const gfc,
+    const calc_noise_result	* const best,
+    const calc_noise_result	* calc,
+    const gr_info		* const gi,
+    const III_psy_xmin		* distort
+    )
 {
     /*
        noise is given in decibels (dB) relative to masking thesholds.
@@ -361,6 +363,10 @@ quant_compare(
                      calc->over_noise == best->over_noise  &&
                      calc->tot_noise   < best->tot_noise  ); 
 	    break;
+
+        case 8:
+	    calc->max_noise = get_klemm_noise(distort, gi);
+	    /* pass through */
         case 1: 
 	    better = calc->max_noise < best->max_noise; 
 	    break;
@@ -368,31 +374,33 @@ quant_compare(
 	    better = calc->tot_noise < best->tot_noise; 
 	    break;
         case 3: 
-		better = ( calc->tot_noise < (gfc->presetTune.use &&
-                                      block_type != NORM_TYPE ? (best->tot_noise - gfc->presetTune.quantcomp_adjust_rh_tot)
-                                                          :  best->tot_noise ) &&
-                   calc->max_noise < (gfc->presetTune.use &&
-                                      block_type != NORM_TYPE ? (best->max_noise - gfc->presetTune.quantcomp_adjust_rh_max)
-                                                          :  best->max_noise ));
+		better = ( calc->tot_noise <
+			   (gfc->presetTune.use &&
+			    gi->block_type != NORM_TYPE ? (best->tot_noise - gfc->presetTune.quantcomp_adjust_rh_tot)
+			    :  best->tot_noise ) &&
+                   calc->max_noise <
+			   (gfc->presetTune.use &&
+			    gi->block_type != NORM_TYPE ? (best->max_noise - gfc->presetTune.quantcomp_adjust_rh_max*0.1)
+			    :  best->max_noise ));
 	    break;
         case 4: 
 	    better = ( calc->max_noise <= 0  &&
-                       best->max_noise >  2 )
+                       best->max_noise >  0.2 )
                  ||  ( calc->max_noise <= 0  &&
                        best->max_noise <  0  &&
-                       best->max_noise >  calc->max_noise-2  &&
+                       best->max_noise >  calc->max_noise-0.2  &&
                        calc->tot_noise <  best->tot_noise )
                  ||  ( calc->max_noise <= 0  &&
                        best->max_noise >  0  &&
-                       best->max_noise >  calc->max_noise-2  &&
+                       best->max_noise >  calc->max_noise-0.2  &&
                        calc->tot_noise <  best->tot_noise+best->over_noise )
                  ||  ( calc->max_noise >  0  &&
-                       best->max_noise > -0.5  &&
-                       best->max_noise >  calc->max_noise-1  &&
+                       best->max_noise > -0.05  &&
+                       best->max_noise >  calc->max_noise-0.1  &&
                        calc->tot_noise+calc->over_noise < best->tot_noise+best->over_noise )
                  ||  ( calc->max_noise >  0  &&
-                       best->max_noise > -1  &&
-                       best->max_noise >  calc->max_noise-1.5  &&
+                       best->max_noise > -0.1  &&
+                       best->max_noise >  calc->max_noise-0.15  &&
                        calc->tot_noise+calc->over_noise+calc->over_noise < best->tot_noise+best->over_noise+best->over_noise );
             break;
         case 5: 
@@ -412,10 +420,6 @@ quant_compare(
 	    better =   calc->over_count < best->over_count
                    ||  calc->over_noise < best->over_noise; 
 	    break;
-        case 8: 
-	    better =   Max(1e-20, calc->klemm_noise)
-	      < Max(1e-20, best->klemm_noise);
-            break;
     }   
 
     return better;
@@ -853,9 +857,10 @@ outer_loop (
 
         /* check if this quantization is better
          * than our saved quantization */
-	better = quant_compare ((gfc->presetTune.use ? gfc->presetTune.quantcomp_current
-				 : gfp->experimentalX), 
-				gfc, &best_noise_info, &noise_info, cod_info_w.block_type);
+	better = quant_compare((gfc->presetTune.use ? gfc->presetTune.quantcomp_current
+				: gfp->experimentalX), 
+			       gfc, &best_noise_info, &noise_info, &cod_info_w,
+			       &distort);
 
         /* save data so we can restore this quantization later */
 	if (better) {
@@ -875,7 +880,7 @@ outer_loop (
 	     * Much more than 3 makes not a big difference, it is only slower.
 	     */
 	    if (++age > 3 && best_noise_info.over_count == 0)
-		break;    
+		break;
 	}
     }
     while (1); /* main iteration loop, breaks adjusted */

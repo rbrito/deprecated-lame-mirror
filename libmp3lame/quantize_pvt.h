@@ -53,7 +53,6 @@ typedef struct calc_noise_result_t {
     FLOAT8  over_noise;      /* sum of quantization noise > masking */
     FLOAT8  tot_noise;       /* sum of all quantization noise */
     FLOAT8  max_noise;       /* max quantization noise */
-    float   klemm_noise;
 } calc_noise_result;
 
 int     on_pe (lame_global_flags *gfp, FLOAT8 pe[2][2], III_side_info_t * l3_side,
@@ -78,6 +77,9 @@ int     calc_noise (const lame_internal_flags * const gfc,
                     const gr_info * const cod_info,
                     const III_psy_xmin * const l3_xmin,
                     III_psy_xmin * distort, calc_noise_result * const res);
+
+double get_klemm_noise(const III_psy_xmin  *distort,
+		       gr_info		*gi);
 
 void    set_frame_pinfo (lame_global_flags *gfp,
                          III_psy_ratio ratio[2][2]);
