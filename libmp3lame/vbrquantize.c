@@ -1086,13 +1086,15 @@ block_xr34(const lame_internal_flags * gfc, const gr_info * cod_info,
 {
     int     sfb, j = 0, sfbmax, *scalefac = cod_info->scalefac;
 
-    /* even though there is no scalefactor for sfb12
+    /* even though there is no scalefactor for sfb12/sfb21
      * subblock gain affects upper frequencies too, that's why
-     * we have to go up to SBMAX_s
+     * we have to go up to SBMAX_s/SBMAX_l
      */
     sfbmax = cod_info->psymax;
-    if (sfbmax == 35 || sfbmax == 36)
+    if (sfbmax == 35 || sfbmax == 36) /* short block / mixed? case */
 	sfbmax += 3;
+    if (sfbmax == 21) /* long block case */
+        sfbmax += 1;
 
     for (sfb = 0; sfb < sfbmax; ++sfb) {
 	FLOAT8 fac;
@@ -1235,7 +1237,7 @@ VBR_noise_shaping(lame_internal_flags * gfc, FLOAT8 * xr34orig, int minbits, int
     }
     assert (cod_info->global_gain < 256u);
 
-    if (cod_info->part2_3_length + cod_info->part2_length >= LARGE_BITS)
+    if (cod_info->part2_3_length + cod_info->part2_length >= LARGE_BITS) 
 	return -2; /* Houston, we have a problem */
 
     return 0;
