@@ -23,7 +23,7 @@
 #include "util.h"
 #include "l3side.h"
 #include "tables.h"
-#include "quantize.h"
+#include "quantize-pvt.h"
 #include "globalflags.h"
 
 extern int *scalefac_band_long; 
