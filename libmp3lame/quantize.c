@@ -134,7 +134,7 @@ ResvFrameBegin(lame_t gfc, int mean_bytes)
 
 #ifndef NOANALYSIS
     if (gfc->pinfo) {
-	gfc->pinfo->mean_bits = mean_bytes*8/(gfc->channels_out*gfc->mode_gr);
+	gfc->pinfo->mean_bits = mean_bytes*8;
 	gfc->pinfo->resvsize  = l3_side->ResvSize;
     }
 #endif

@@ -1178,8 +1178,7 @@ static void text_window (GtkWidget *widget, gpointer data)
     sprintf(text,"mean bits/frame (approximate): %i\n",
 	    gtkinfo.approxbits);
     gtk_text_insert(GTK_TEXT(box),NULL,NULL,NULL,text,-1);
-    sprintf(text,"mean bits/frame (from LAME): %i\n",
-	    4*Pinfo[0].mean_bits);
+    sprintf(text,"mean bits/frame (from LAME): %i\n", Pinfo[0].mean_bits);
     gtk_text_insert(GTK_TEXT(box),NULL,NULL,NULL,text,-1);
     sprintf(text,"bitsize of largest frame: %i \n",gtkinfo.maxbits);
     gtk_text_insert(GTK_TEXT(box),NULL,NULL,NULL,text,-1);
