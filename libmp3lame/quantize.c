@@ -1030,11 +1030,10 @@ CBR_1st_bitalloc (
 		> (newNoise = calc_noise(gfc, &gi_w, rxmin, distort))) {
 		bestNoise = newNoise;
 		*gi = gi_w;
-		if (bestNoise < 1.0) {
+		if (bestNoise < 1.0 && current_method == 0) {
 		    if (gfc->noise_shaping_stop == 0)
 			break;
-		    if (current_method == 0)
-			current_method++;
+		    current_method++;
 		}
 		age = current_method*3+2;
 		continue;
