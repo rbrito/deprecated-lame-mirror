@@ -642,7 +642,7 @@ void plot_frame(void)
      *******************************************************************/
     for (gr = 0 ; gr < mode_gr ; gr ++) {
 
-      if (blocktype[gr][ch]==2) {
+      if (blocktype[gr][ch]==SHORT_TYPE) {
 	n = 3*SBMAX_s; 
 	data = &pplot->en_s[gr][ch][0];
 	data2 = &pplot->thr_s[gr][ch][0];
@@ -726,7 +726,7 @@ void plot_frame(void)
    *******************************************************************/
   for (gr = 0 ; gr < mode_gr ; gr ++) {
       int ggain;
-      if (blocktype[gr][ch]==2) {
+      if (blocktype[gr][ch]==SHORT_TYPE) {
 	n = 3*SBMAX_s; 
 	if (gtkinfo.flag123) data = pplot1->sfb_s[gr][ch];
 	else data = pplot->LAMEsfb_s[gr][ch];
@@ -749,7 +749,7 @@ void plot_frame(void)
 	ymn=(ycord[i] < ymn) ? ycord[i]-1 : ymn;
       }
 
-      if (blocktype[gr][ch]==2) {
+      if (blocktype[gr][ch]==SHORT_TYPE) {
 	sprintf(label2,
 		"SFB scale=%i preflag=%i  %i%i%i",
 		pplot1->scalefac_scale[gr][ch],
@@ -857,7 +857,7 @@ static int frameadv1(GtkWidget *widget, gpointer   data )
 	{ int gr,ch;
 	for (gr = 0 ; gr < 2 ; gr ++) 
 	  for (ch = 0 ; ch < 2 ; ch ++) {
-	    gtkinfo.totshort += (pinfo->mpg123blocktype[gr][ch]==2);
+	    gtkinfo.totshort += (pinfo->mpg123blocktype[gr][ch]==SHORT_TYPE);
 	    gtkinfo.totmix  += !(pinfo->mixed[gr][ch]==0);
             gtkinfo.totpreflag += (pinfo->preflag[gr][ch]==1);
 	    pinfo->totbits += pinfo->mainbits[gr][ch];
