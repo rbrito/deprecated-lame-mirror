@@ -333,7 +333,7 @@ float CDECL lame_get_compression_ratio(lame_global_flags *);
  *  frame params
  ***********************************************************************/
 // mark as copyright.  default=0
-int CDECL lame_set_copyrigth(lame_global_flags *, int);
+int CDECL lame_set_copyright(lame_global_flags *, int);
 int CDECL lame_get_copyright(lame_global_flags *);
 
 // mark as original.  default=1

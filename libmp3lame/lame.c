@@ -576,10 +576,11 @@ lame_init_params(lame_global_flags * const gfp)
     gfc->CPU_features.SIMD2 = has_SIMD2();
 
 
-    gfc->ATH = calloc(1, sizeof(ATH_t));
+    if (NULL == gfc->ATH)
+        gfc->ATH = calloc(1, sizeof(ATH_t));
 
     if (NULL == gfc->ATH)
-        return -2;
+        return -2;  // maybe error codes should be enumerated in lame.h ??
 
 #ifdef KLEMM_44
     /* Select the fastest functions for this CPU */
