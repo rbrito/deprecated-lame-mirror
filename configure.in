@@ -383,13 +383,29 @@ fi
 
 
 
+AC_MSG_CHECKING(if the lame frontend should be build)
+AC_ARG_ENABLE(frontend,
+  [  --disable-frontend         Do not build the lame executable [default: build it]],
+    WITH_FRONTEND="${enableval}", WITH_FRONTEND=yes)
+if test "x${WITH_FRONTEND}" = "xyes"; then
+	WITH_FRONTEND=lame
+	AC_MSG_RESULT(yes)
+else
+	WITH_FRONTEND=
+	AC_MSG_RESULT(no)
+fi
+
+
+
 AC_MSG_CHECKING(if mp3x is requested)
 AC_ARG_ENABLE(mp3x,
   [  --enable-mp3x              Build GTK frame analyzer [default: no]],
-    WITH_MP3X="mp3x", WITH_MP3X=)
-if test "x${WITH_MP3X}" = "xmp3x"; then
+    WITH_MP3X="${enableval}", WITH_MP3X=no)
+if test "x${WITH_MP3X}" = "xyes"; then
+	WITH_MP3X=mp3x
 	AC_MSG_RESULT(yes)
 else
+	WITH_MP3X=
 	AC_MSG_RESULT(no)
 fi
 
@@ -407,10 +423,12 @@ fi
 AC_MSG_CHECKING(if mp3rtp is requested)
 AC_ARG_ENABLE(mp3rtp,
   [  --enable-mp3rtp            Build mp3rtp [default: no]],
-    WITH_MP3RTP="mp3rtp", WITH_MP3RTP=)
-if test "x${WITH_MP3RTP}" = "xmp3rtp"; then
+    WITH_MP3RTP="${enableval}", WITH_MP3RTP=no)
+if test "x${WITH_MP3RTP}" = "xyes"; then
+	WITH_MP3RTP=mp3rtp
 	AC_MSG_RESULT(yes)
 else
+	WITH_MP3RTP=
 	AC_MSG_RESULT(no)
 fi
 
@@ -870,6 +888,7 @@ AC_SUBST(RM_F)
 
 AC_SUBST(LIBTOOL_DEPS)
 
+AC_SUBST(WITH_FRONTEND)
 AC_SUBST(WITH_MP3X)
 AC_SUBST(WITH_MP3RTP)
 
