@@ -187,33 +187,6 @@ lame_get_out_samplerate( const lame_global_flags*  gfp )
  * general control parameters
  */
 
-/* collect data for an MP3 frame analzyer */
-int
-lame_set_analysis( lame_global_flags*  gfp,
-                   int                 analysis )
-{
-    /* default = 0 */
-
-    /* enforce disable/enable meaning, if we need more than two values
-       we need to switch to an enum to have an apropriate representation
-       of the possible meanings of the value */
-    if ( 0 > analysis || 1 < analysis )
-        return -1;
-
-    gfp->analysis = analysis;
-
-    return 0;
-}
-
-int
-lame_get_analysis( const lame_global_flags*  gfp )
-{
-    assert( 0 <= gfp->analysis && 1 >= gfp->analysis );
-
-    return gfp->analysis;
-}
-
-
 /* write a Xing VBR header frame */
 int
 lame_set_bWriteVbrTag( lame_global_flags*  gfp,

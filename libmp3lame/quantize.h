@@ -37,7 +37,7 @@ void    iteration_init (lame_global_flags *gfp);
 
 
 
-#if defined(HAVE_GTK)
+#ifndef NOANALYSIS
 void    set_frame_pinfo (lame_internal_flags *gfc,
 			 III_psy_ratio ratio[2][2]);
 #endif

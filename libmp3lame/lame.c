@@ -587,9 +587,9 @@ lame_init_params(lame_global_flags * const gfp)
 	    gfp->mean_bitrate_kbps = gfp->VBR_max_bitrate_kbps;
     }
 
-#if defined(HAVE_GTK)
+#ifndef NOANALYSIS
     /* some file options not allowed if output is: not specified or stdout */
-    if (gfp->analysis || !gfc->pinfo)
+    if (!gfc->pinfo)
 	gfp->bWriteVbrTag = 0; /* disable Xing VBR tag */
 #endif
     init_bit_stream_w(gfp);

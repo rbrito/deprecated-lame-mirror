@@ -30,7 +30,6 @@ struct lame_global_struct {
 			         amount before encoding                      */
 
   /* general control params */
-  int analysis;               /* collect data for a MP3 frame analyzer?      */
   int bWriteVbrTag;           /* add Xing VBR tag?                           */
   int decode_only;            /* use lame/mpglib to convert mp3/ogg to wav   */
 

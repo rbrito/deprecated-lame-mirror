@@ -477,7 +477,7 @@ int  lame_encode_mp3_frame (				/* Output */
 	}
     }
 
-#ifdef HAVE_GTK
+#ifndef NOANALYSIS
     /* copy data for MP3 frame analyzer */
     if (gfc->pinfo) {
 	for ( gr = 0; gr < gfc->mode_gr; gr++ ) {
@@ -536,7 +536,7 @@ int  lame_encode_mp3_frame (				/* Output */
 	    AddVbrFrame(gfp);
     }
 
-#if defined(HAVE_GTK)
+#ifndef NOANALYSIS
     if (gfc->pinfo)
 	set_frame_pinfo (gfc, masking);
 #endif

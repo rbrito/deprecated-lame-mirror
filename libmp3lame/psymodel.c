@@ -1068,7 +1068,7 @@ mp3x display               <------LONG------>
 	}
 
 	/* calculate energies of each sub-shortblocks */
-#if defined(HAVE_GTK)
+#ifndef NOANALYSIS
 	if (gfc->pinfo) {
 	    memcpy(gfc->pinfo->ers[gr][chn], gfc->pinfo->ers_save[gr][chn],
 		   sizeof(gfc->pinfo->ers_save[0][0]));
@@ -1257,7 +1257,7 @@ L3psycho_anal_ns(
 	    gfc->loudness_next[gr][chn]
 		= psycho_loudness_approx(fftenergy, gfc);
 
-#ifdef HAVE_GTK
+#ifndef NOANALYSIS
 	if (gfc->pinfo) {
 	    memcpy(gfc->pinfo->energy[gr][chn], gfc->pinfo->energy_save[gr][chn],
 		   sizeof(fftenergy));

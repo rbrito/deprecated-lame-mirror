@@ -18,7 +18,7 @@
 #endif
 
 MPSTR   mp; /* oops, not reentrant ... */
-#ifdef HAVE_GTK
+#ifndef NOANALYSIS
 plotting_data *mpg123_pinfo = NULL;
 #endif
 

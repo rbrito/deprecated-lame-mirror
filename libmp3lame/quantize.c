@@ -139,7 +139,7 @@ ResvFrameBegin(lame_global_flags *gfp, int *mean_bits)
     if (fullFrameBits > l3_side->maxmp3buf)
         fullFrameBits = l3_side->maxmp3buf;
 
-#ifdef HAVE_GTK
+#ifndef NOANALYSIS
     if (gfc->pinfo) {
 	gfc->pinfo->mean_bits = *mean_bits / (gfc->channels_out*gfc->mode_gr);
 	gfc->pinfo->resvsize  = l3_side->ResvSize;
@@ -1565,7 +1565,7 @@ VBR_iteration_loop(lame_global_flags *gfp, III_psy_ratio ratio[2][2])
 
 
 
-#ifdef HAVE_GTK
+#ifndef NOANALYSIS
 /************************************************************************
  *
  *  set_pinfo()
@@ -1700,4 +1700,4 @@ set_frame_pinfo(lame_internal_flags *gfc, III_psy_ratio   ratio    [2][2])
 	} /* for ch */
     }    /* for gr */
 }
-#endif /* ifdef HAVE_GTK */
+#endif /* #ifndef NOANALYSIS */
