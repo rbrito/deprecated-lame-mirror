@@ -147,8 +147,11 @@ static void quantize_xrpow(const FLOAT8 *xp, int *pi, FLOAT8 istep, gr_info * co
                 int usefullsize;
                 usefullsize = cod_info->max_nonzero_coeff - j +1;
                 memset(&pi[cod_info->max_nonzero_coeff],0,
-                    sizeof(int)*(575-cod_info->max_nonzero_coeff));
+                    sizeof(int)*(576-cod_info->max_nonzero_coeff));
                 l = usefullsize >> 1;
+
+                /* no need to compute higher sfb values */
+                sfb = sfbmax + 1;
             }
 
             remaining = l%2;
@@ -192,7 +195,8 @@ static void quantize_xrpow(const FLOAT8 *xp, int *pi, FLOAT8 istep, gr_info * co
 	            xp += 2;
             }
         }
-        j += cod_info->width[sfb];
+        if (sfb <= sfbmax)
+            j += cod_info->width[sfb];
     }
 }
 
