@@ -262,7 +262,9 @@ void lame_init_params(void)
     }
   }
 
-
+  /****************************************************************/
+  /* if a filter has not been enabled, see if we should add one: */
+  /****************************************************************/
   if (gf.lowpassfreq == 0) {
     /* Should we disable the scalefactor band 21 cutoff? 
      * FhG does this for bps <= 128kbs, so we will too.  
@@ -302,40 +304,39 @@ void lame_init_params(void)
       lowpass1 = .73-.10;
       lowpass2 = .73+.05;
     */
+  }
     
 
 
-    /* apply user driven filters*/
-    if ( gf.highpassfreq > 0 ) {
-      gf.highpass1 = 2.0*gf.highpassfreq/gf.resamplerate; /* will always be >=0 */
-      if ( gf.highpasswidth >= 0 ) {
-	gf.highpass2 = 2.0*(gf.highpassfreq+gf.highpasswidth)/gf.resamplerate;
-      } else {
-	gf.highpass2 = 1.15*2.0*gf.highpassfreq/gf.resamplerate; /* 15% above on default */
-      }
-      if ( gf.highpass1 == gf.highpass2 ) { /* ensure highpass1 < highpass2 */
-	gf.highpass2 += 1E-6;
-      }
-      gf.highpass1 = Min( 1, gf.highpass1 );
-      gf.highpass2 = Min( 1, gf.highpass2 );
+  /* apply user driven filters*/
+  if ( gf.highpassfreq > 0 ) {
+    gf.highpass1 = 2.0*gf.highpassfreq/gf.resamplerate; /* will always be >=0 */
+    if ( gf.highpasswidth >= 0 ) {
+      gf.highpass2 = 2.0*(gf.highpassfreq+gf.highpasswidth)/gf.resamplerate;
+    } else {
+      gf.highpass2 = 1.15*2.0*gf.highpassfreq/gf.resamplerate; /* 15% above on default */
     }
-    if ( gf.lowpassfreq > 0 ) {
-      gf.lowpass2 = 2.0*gf.lowpassfreq/gf.resamplerate; /* will always be >=0 */
-      if ( gf.lowpasswidth >= 0 ) { 
-	gf.lowpass1 = 2.0*(gf.lowpassfreq-gf.lowpasswidth)/gf.resamplerate;
-	if ( gf.lowpass1 < 0 ) { /* has to be >= 0 */
-	  gf.lowpass1 = 0;
-	}
-      } else {
-	gf.lowpass1 = 0.85*2.0*gf.lowpassfreq/gf.resamplerate; /* 15% below on default */
-      }
-      if ( gf.lowpass1 == gf.lowpass2 ) { /* ensure lowpass1 < lowpass2 */
-	gf.lowpass2 += 1E-6;
-      }
-      gf.lowpass1 = Min( 1, gf.lowpass1 );
-      gf.lowpass2 = Min( 1, gf.lowpass2 );
+    if ( gf.highpass1 == gf.highpass2 ) { /* ensure highpass1 < highpass2 */
+      gf.highpass2 += 1E-6;
     }
-   
+    gf.highpass1 = Min( 1, gf.highpass1 );
+    gf.highpass2 = Min( 1, gf.highpass2 );
+  }
+  if ( gf.lowpassfreq > 0 ) {
+    gf.lowpass2 = 2.0*gf.lowpassfreq/gf.resamplerate; /* will always be >=0 */
+    if ( gf.lowpasswidth >= 0 ) { 
+      gf.lowpass1 = 2.0*(gf.lowpassfreq-gf.lowpasswidth)/gf.resamplerate;
+      if ( gf.lowpass1 < 0 ) { /* has to be >= 0 */
+	gf.lowpass1 = 0;
+      }
+    } else {
+      gf.lowpass1 = 0.85*2.0*gf.lowpassfreq/gf.resamplerate; /* 15% below on default */
+    }
+    if ( gf.lowpass1 == gf.lowpass2 ) { /* ensure lowpass1 < lowpass2 */
+      gf.lowpass2 += 1E-6;
+    }
+    gf.lowpass1 = Min( 1, gf.lowpass1 );
+    gf.lowpass2 = Min( 1, gf.lowpass2 );
   }
   
   /* dont use cutoff filter and lowpass filter */
@@ -375,7 +376,6 @@ void lame_init_params(void)
       if (gf.VBR_q == 0) gf.VBR_max_bitrate=14;   /* allow 320kbs */
       if (gf.VBR_q >= 4) gf.VBR_max_bitrate=12;   /* max = 224kbs */
       if (gf.VBR_q >= 8) gf.VBR_max_bitrate=9;    /* low quality, max = 128kbs */
-      if (gf.voice_mode) gf.VBR_max_bitrate=10;
     }else{
       if( (gf.VBR_max_bitrate  = BitrateIndex(3, gf.VBR_max_bitrate_kbps, info->version,gf.resamplerate)) < 0) {
 	display_bitrates(2);
@@ -506,7 +506,8 @@ void lame_parse_args(int argc, char **argv)
 	  gf.input_format=sf_mp3;
 	}
 	else if (strcmp(token, "voice")==0) {
-	  gf.voice_mode=1;
+	  gf.lowpassfreq=12000;
+	  gf.VBR_max_bitrate_kbps=160;
 	  gf.no_short_blocks=1;
 	}
 	else if (strcmp(token, "noshort")==0) {
@@ -1257,7 +1258,7 @@ FFT's                    <---------1024---------->
   mdct_sub48(mfbuf[0], mfbuf[1], xr, &l3_side);
 
   /* lowpass MDCT filtering */
-  if (gf.sfb21 || gf.voice_mode || gf.lowpass1>0 || gf.highpass2>0) 
+  if (gf.sfb21 || gf.lowpass1>0 || gf.highpass2>0) 
     filterMDCT(xr,&l3_side,&fr_ps);
 
 
@@ -1439,7 +1440,6 @@ lame_global_flags * lame_init(int nowrite, int noread)
   gf.VBR_q=4;
   gf.VBR_min_bitrate_kbps=0;
   gf.VBR_max_bitrate_kbps=0;
-  gf.voice_mode=0;
 
   switch(DFLT_MOD) {
   case 's': gf.mode = MPG_MD_STEREO; break;

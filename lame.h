@@ -47,11 +47,6 @@ typedef struct  {
   int num_channels;           /* input number of channels  */
   int samplerate;             /* input_samp_rate           */
 
-  /* input file reading - not used if you handle your own i/o */
-  sound_file_format input_format;   
-  int swapbytes;              /* force byte swapping   default=0*/
-
-
   /* general control params */
   int gtkflag;                /* frame analyzer?       */
   int bWriteVbrTag;           /* Xing VBR tag?         */
@@ -60,7 +55,6 @@ typedef struct  {
   int allow_diff_short;       /* allow blocktypes to differ between channels ? */
   int no_short_blocks;        /* disable short blocks       */
   int silent;                 /* disable some status output */
-  int voice_mode;
   int mode;                       /* mono, stereo, jstereo */
   int mode_fixed;                 /* use specified mode, not lame's opinion of the best mode */
   int brate;                      /* bitrate */
@@ -79,11 +73,11 @@ typedef struct  {
 
   /* resampling and filtering */
   int resamplerate;               /* output_samp_rate.   */ 
-  int lowpassfreq;                /* freq in Hz. 0=lame choses. 1=no filter */
-  int highpassfreq;               /* freq in Hz. 0=lame choses. 1=no filter */
-  int lowpasswidth;               /* freq width of filter, in Hz */
-  int highpasswidth;              /* freq width of filter, in Hz */
-  int sfb21;
+  int lowpassfreq;                /* freq in Hz. 0=lame choses. -1=no filter */
+  int highpassfreq;               /* freq in Hz. 0=lame choses. -1=no filter */
+  int lowpasswidth;               /* freq width of filter, in Hz (default=15%)*/
+  int highpasswidth;              /* freq width of filter, in Hz (default=15%)*/
+  int sfb21;                      /* soon to be obsolete */
 
   /* quantization/noise shaping */
   int disable_reservoir;          /* use bit reservoir? */
@@ -96,6 +90,20 @@ typedef struct  {
   int VBR_q;
   int VBR_min_bitrate_kbps;
   int VBR_max_bitrate_kbps;
+
+  /* not yet coded: */
+  int filter_type;          /* MDCT filter, or true (expensive) filters */
+  int no_noise_shaping;     /* disable noise shaping */
+  int no_psymodel;          /* dont compute maskings */
+  int no_ms_masking;        /* dont use mid/side maskings */
+  int use_best_huffman;     /* 0 = no.  1=outside loop  2=inside loop(slow) */
+  int scalefac_search;      /* 0=standard, 1=more thorough */
+  int stopping_criterion;   /* 0=stop at over=0.  1=stop when all scalefacs too large */
+
+
+  /* input file reading - not used if you handle your own i/o */
+  sound_file_format input_format;   
+  int swapbytes;              /* force byte swapping   default=0*/
 
 
 

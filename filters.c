@@ -18,21 +18,6 @@ void filterMDCT( FLOAT8 xr_org[2][2][576],
   scalefac_band_long  = &sfBandIndex[info->sampling_frequency + (info->version * 3)].l[0];
   scalefac_band_short = &sfBandIndex[info->sampling_frequency + (info->version * 3)].s[0];
 
-  /* voice mode disables short blocks */  
-  if (gf.voice_mode) {
-    for ( gr = 0; gr < gf.mode_gr; gr++ ) {
-      for (ch =0 ; ch < gf.stereo ; ch++) {
-		int start = scalefac_band_long[ SBMAX_l-3 ];
-		  for ( i = start; i < 576; i++ )
-			  xr_org[gr][ch][i]=0;
-      }
-      for (ch =0 ; ch < gf.stereo ; ch++) {
-		for ( i = 0; i < 2; i++ )
-			  xr_org[gr][ch][i]=0;
-      }
-    }
-  }
-
   if (gf.lowpass1>0) {
     FLOAT start,stop;
     for ( gr = 0; gr < gf.mode_gr; gr++ ) {
