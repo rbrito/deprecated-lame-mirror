@@ -976,16 +976,20 @@ OpenSndFile(lame_t gfp, char *inPath)
         /* try to figure out num_samples */
         double  flen = get_file_size(inPath);
 	unsigned long tmp_num_samples;
+
         if (flen >= 0) {
 	    /* try file size, assume 2 bytes per sample */
 	    int bps = 2*lame_get_num_channels(gfp);
             if (IS_MPEG123(input_format) && mp3input_data.bitrate > 0) {
 		/* if input is mp3, use its bitrate */
 		bps = mp3input_data.bitrate * (1000/8);
-		flen /= lame_get_in_samplerate(gfp);
+		flen *= lame_get_in_samplerate(gfp);
             }
 	    tmp_num_samples = flen / bps;
 	    lame_set_num_samples(gfp, tmp_num_samples);
+            if (IS_MPEG123(input_format)
+		&& mp3input_data.nsamp == MAX_U_32_NUM)
+		mp3input_data.nsamp = tmp_num_samples;
 	}
     }
 
