@@ -794,11 +794,13 @@ void amp_scalefac_bands(lame_global_flags *gfp,
 
     for ( i = 0; i < 3; i++ ) {
 	for ( sfb = cod_info->sfb_smax; sfb < 12; sfb++ ) {
+            if ( distort[i+1][sfb]>distort_thresh) {
                 scalefac->s[sfb][i]++;
                 start = gfc->scalefac_band.s[sfb];
                 end   = gfc->scalefac_band.s[sfb+1];
 		for (l = start; l < end; l++)
 		    xrpow[l * 3 + i] *= ifqstep34;
+	    }
 	}
     }
 }
