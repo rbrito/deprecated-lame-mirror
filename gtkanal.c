@@ -1165,7 +1165,7 @@ int gtkcontrol(void)
     char frameinfo[80];
 
     graphx = 500;  /* minimum allowed size of pixmap */
-    graphy = 100;
+    graphy = 95;
 
 
     /* set some global defaults/variables */

@@ -610,14 +610,20 @@ int lame_encode(short int Buffer[2][1152],char *mpg123bs)
   if (gf.VBR) {
     info->padding=0;
   } else {
-    if (frac_SpF != 0) {
-      if (slot_lag > (frac_SpF-1.0) ) {
-	slot_lag -= frac_SpF;
-	info->padding = 0;
-      }
-      else {
-	info->padding = 1;
-	slot_lag += (1-frac_SpF);
+    if (gf.disable_reservoir) {
+      info->padding = 0;
+      /* if the user specified --nores, dont very info->padding either */
+      /* tiny changes in frac_SpF rounding will cause file differences */
+    }else{
+      if (frac_SpF != 0) {
+	if (slot_lag > (frac_SpF-1.0) ) {
+	  slot_lag -= frac_SpF;
+	  info->padding = 0;
+	}
+	else {
+	  info->padding = 1;
+	  slot_lag += (1-frac_SpF);
+	}
       }
     }
   }
