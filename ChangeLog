@@ -11,6 +11,338 @@
 
 -- 
 
+2003-12-18 15:46  bouvigne
+
+	* libmp3lame/version.h:
+
+	3.94b
+
+2003-12-18 12:54  aleidinger
+
+	* frontend/get_audio.c:
+
+	Takehiro noticed a bug in the pipe fix, it results in a click sound at
+	the end of the encoding of BlackBirds.wav.
+
+	This fix is a merge from the experimental branch and doesn't seem to be
+	harmful while encoding over a pipe, but I'm not sure if I was able to
+	reproduce the situation where the original fix was needed.
+
+	I've tested:
+	  mkfifo pipetest
+	  lame -preset 96 pipetest pipetest.mp3
+	  other shell: cat wav >pipetest
+
+2003-12-17 18:45  bouvigne
+
+	* frontend/parse.c:
+
+	help
+
+2003-12-17 11:52  bouvigne
+
+	* libmp3lame/psymodel.c:
+
+	updated comment regarding spreading function
+
+2003-12-15 17:07  bouvigne
+
+	* mpglib/layer3.c:
+
+	fixed 8kHz decoding
+
+2003-12-15 11:48  takehiro
+
+	* ACM/ddk/: Makefile.am, Makefile.in
+	(takehiro-2002_05_07-experimental):
+
+	sync with main line
+
+2003-12-14 17:56  takehiro
+
+	* TODO (takehiro-2002_05_07-experimental):
+
+	added some new items.
+	- highpass filter for psycho-analysis.
+	- temporal-masking-aware block switching.
+
+2003-12-14 17:52  takehiro
+
+	* libmp3lame/tables.c (takehiro-2002_05_07-experimental):
+
+	clean up s3_func() (no results difference)
+	remove normalization and bark width consideration.
+	# hehe, it's now obvious to see which frequency makes strong masking :p
+
+2003-12-12 18:22  takehiro
+
+	* frontend/get_audio.c (takehiro-2002_05_07-experimental):
+
+	coding style update.
+	check the INFO sub-chunk in LIST chunk.
+
+2003-12-12 18:21  takehiro
+
+	* frontend/get_audio.c (takehiro-2002_05_07-experimental):
+
+	fix it treat the chunk after data chunk as part of data chunk.
+
+2003-12-12 17:24  takehiro
+
+	* frontend/get_audio.c (takehiro-2002_05_07-experimental):
+
+	trivial style update (including comment style, etc).
+
+2003-12-12 16:52  takehiro
+
+	* libmp3lame/: psymodel.c, tables.c, util.h
+	(takehiro-2002_05_07-experimental):
+
+	remove nb_1 from gfc.
+
+2003-12-12 16:15  takehiro
+
+	* libmp3lame/psymodel.c (takehiro-2002_05_07-experimental):
+
+	fix last change (oops, I checked-in the wrong version...)
+
+2003-12-12 16:12  takehiro
+
+	* libmp3lame/bitstream.c (takehiro-2002_05_07-experimental):
+
+	fix bit reservoir handling when looooooooow bit rate.
+
+2003-12-12 14:31  takehiro
+
+	* libmp3lame/psymodel.c (takehiro-2002_05_07-experimental):
+
+	trivial clean up
+
+2003-12-12 14:31  takehiro
+
+	* libmp3lame/bitstream.c (takehiro-2002_05_07-experimental):
+
+	added error check code.
+
+2003-12-12 13:29  takehiro
+
+	* frontend/main.c, frontend/main.h, frontend/parse.c,
+	include/lame.h, libmp3lame/lame.c, libmp3lame/lame_global_flags.h,
+	libmp3lame/psymodel.c, libmp3lame/set_get.c, libmp3lame/util.h
+	(takehiro-2002_05_07-experimental):
+
+	clean up variables in gfc and gfp.
+
+2003-12-09 17:22  olcios
+
+	* frontend/parse.c:
+
+	Fixed typo.
+
+2003-12-09 17:19  olcios
+
+	* frontend/parse.c:
+
+	Fixed an error message.
+
+2003-12-09 16:08  aleidinger
+
+	* ACM/Makefile.in:
+
+	regen
+
+2003-12-09 16:01  aleidinger
+
+	* configure:
+
+	regen
+
+2003-12-09 15:51  aleidinger
+
+	* ACM/ddk/Makefile.in:
+
+	Add the autoconf Makefile.
+
+2003-12-09 15:49  aleidinger
+
+	* configure.in:
+
+	Add the ACM/ddk subdirectory.
+
+2003-12-09 15:49  aleidinger
+
+	* ACM/Makefile.am:
+
+	Add the ddk subdirectory.
+
+2003-12-09 15:48  aleidinger
+
+	* ACM/ddk/Makefile.am:
+
+	Add an automake Makefile.
+
+2003-12-09 15:06  bouvigne
+
+	* libmp3lame/version.h:
+
+	Bump alpha
+
+2003-12-09 15:05  bouvigne
+
+	* frontend/parse.c:
+
+	do not display --r3mix in help
+
+2003-12-09 15:03  bouvigne
+
+	* doc/html/history.html:
+
+	3.94 release date?
+
+2003-12-09 14:59  bouvigne
+
+	* doc/html/: basic.html, examples.html, history.html, index.html,
+	modes.html, presets.html, switchs.html:
+
+	3.94 documentation
+
+2003-12-08 16:52  bouvigne
+
+	* libmp3lame/VbrTag.c:
+
+	Use integer format for ReplayGain peak value
+
+2003-12-06 20:54  takehiro
+
+	* libmp3lame/psymodel.c (takehiro-2002_05_07-experimental):
+
+	trivial optimization.
+
+2003-12-06 20:10  takehiro
+
+	* libmp3lame/: quantize.c, quantize_pvt.h, takehiro.c
+	(takehiro-2002_05_07-experimental):
+
+	make best_huffman_divide() as static.
+	make it do not call best_huffman_divide() twice when vbr.
+
+2003-12-06 19:00  takehiro
+
+	* libmp3lame/: quantize.c, quantize_pvt.h, takehiro.c
+	(takehiro-2002_05_07-experimental):
+
+	fix warning of quantize_sfb_3DN() prototype declaration.
+	fix pseudo half step bug on 3DNow!/SSE machines.
+
+2003-12-06 17:17  takehiro
+
+	* frontend/parse.c, libmp3lame/lame.c,
+	libmp3lame/lame_global_flags.h, libmp3lame/set_get.c
+	(takehiro-2002_05_07-experimental):
+
+	remove experimental switches from context structure.
+
+2003-12-06 13:37  takehiro
+
+	* libmp3lame/: psymodel.c, quantize.c, quantize_pvt.h
+	(takehiro-2002_05_07-experimental):
+
+	trivial clean up
+
+2003-12-06 11:10  takehiro
+
+	* libmp3lame/quantize.c (takehiro-2002_05_07-experimental):
+
+	reduce subblock gain value.
+
+2003-12-06 07:01  takehiro
+
+	* libmp3lame/quantize.c (takehiro-2002_05_07-experimental):
+
+	VBR code update.
+	- fixed sf value range limit(not fatal, but possible quality degrade in higher VBR quality mode).
+	- adjust the initiail value of scalefactor search for speed up(arround 1 or 2%).CVS: ----------------------------------------------------------------------
+
+2003-12-05 12:49  aleidinger
+
+	* libmp3lame/i386/Makefile.in:
+
+	add missing "
+
+2003-12-04 12:26  aleidinger
+
+	* libmp3lame/i386/Makefile.in:
+
+	nasm -> NASM fix
+
+2003-12-03 16:35  takehiro
+
+	* testcase.mp3, libmp3lame/quantize.c
+	(takehiro-2002_05_07-experimental):
+
+	changed short block noise estimation (max noise -> sum noise).
+
+2003-12-03 15:32  takehiro
+
+	* frontend/rtp.c (takehiro-2002_05_07-experimental):
+
+	sync with main line.
+
+2003-12-03 03:09  olcios
+
+	* include/lame.h:
+
+	comments / doc
+
+2003-12-03 02:18  olcios
+
+	* frontend/get_audio.c, libmp3lame/lame.c,
+	libmp3lame/mpglib_interface.c:
+
+	Brought back the possibility to run lame_decode_init() more than once
+
+2003-12-03 01:44  olcios
+
+	* frontend/get_audio.c, frontend/parse.c, include/lame.h,
+	libmp3lame/lame.c, libmp3lame/mpglib_interface.c,
+	libmp3lame/set_get.c:
+
+	Made it impossible to simultaneously use mp3 input and decoding on the fly.
+
+2003-12-01 17:45  takehiro
+
+	* configure, Dll/Makefile.in, frontend/Makefile.in,
+	libmp3lame/Makefile.in, libmp3lame/i386/Makefile.in,
+	misc/Makefile.in, mpglib/Makefile.in
+	(takehiro-2002_05_07-experimental):
+
+	regen
+
+2003-12-01 17:44  takehiro
+
+	* libmp3lame/i386/Makefile.am (takehiro-2002_05_07-experimental):
+
+	backport Alex's dirty hack, which is less dirty than mine :)
+
+2003-12-01 17:43  takehiro
+
+	* ltmain.sh (takehiro-2002_05_07-experimental):
+
+	replaced the one from libtool 1.5
+
+2003-12-01 15:45  takehiro
+
+	* frontend/depcomp, libmp3lame/depcomp, misc/depcomp,
+	mpglib/depcomp (takehiro-2002_05_07-experimental):
+
+	removed unused file (build system uses ../depcomp)
+
+2003-11-29 12:14  aleidinger
+
+	* ChangeLog:
+
+	update
+
 2003-11-29 12:10  aleidinger
 
 	* test/cvscheck.sh:
@@ -259,6 +591,12 @@
 
 	simplify the loudness approx code.
 
+2003-11-27 12:27  takehiro
+
+	* ACM/ddk/msacmdrv.h (takehiro-2002_05_07-experimental):
+
+	sync with mainline
+
 2003-11-27 12:20  takehiro
 
 	* libmp3lame/: VbrTag.c, bitstream.c, bitstream.h, tables.c,
@@ -270,7 +608,7 @@
 
 2003-11-27 08:24  bouvigne
 
-	* ACM/readme.txt:
+	* ACM/: readme.txt, ddk/msacmdrv.h:
 
 	Allow compilation of ACM codec without Microsoft platform DDK
 
