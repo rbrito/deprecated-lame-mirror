@@ -955,12 +955,14 @@ ieee754_float32_t fast_log2(ieee754_float32_t x)
   int i = *(int*)&x;
   ieee754_float32_t log2val;
   int mantisse = i & 0x7FFFFF;
-  int exponent = i & 0x7F800000;
-  ieee754_float32_t partial = (mantisse & ((1<<(23-LOG2_SIZE_L2))-1)) * (1.0f/((1<<(23-LOG2_SIZE_L2))));
+  ieee754_float32_t partial;
+
+  log2val = ((i>>23) & 0xFF)-0x7f;
+  partial = (mantisse & ((1<<(23-LOG2_SIZE_L2))-1));
+  partial *= 1.0f/((1<<(23-LOG2_SIZE_L2)));
 
 
   mantisse >>= (23-LOG2_SIZE_L2);
-  log2val = (exponent>>23)-0x7f;
 
   /* log2val += log_table[mantisse];  without interpolation the results are not good */
   log2val += log_table[mantisse] * (1.0f-partial) + log_table[mantisse+1]*partial;
