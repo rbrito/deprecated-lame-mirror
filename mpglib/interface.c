@@ -104,14 +104,15 @@ static int read_buf_byte(struct mpstr *mp)
 
 	int pos;
 
+	
 	pos = mp->tail->pos;
 	while(pos >= mp->tail->size) {
 	        remove_buf(mp);
-		pos = mp->tail->pos;
 		if(!mp->tail) {
-			fprintf(stderr,"Fatal error!\n");
+			fprintf(stderr,"Fatal error! tried to read past mp buffer\n");
 			exit(1);
 		}
+		pos = mp->tail->pos;
 	}
 
 	b = mp->tail->pnt[pos];
@@ -147,6 +148,7 @@ static void read_head(struct mpstr *mp)
 void copy_mp(struct mpstr *mp,int size,unsigned char *ptr) 
 {
   int len = 0;
+
   while(len < size) {
     int nlen;
     int blen = mp->tail->size - mp->tail->pos;
@@ -286,15 +288,27 @@ int decodeMP3(struct mpstr *mp,char *in,int isize,char *out,
 		  mp->old_free_format=0;
 
 		  /* skip some bytes, buffer the rest */
-		  size = (int) (wordpointer - mp->bsspace[mp->bsnum]+512);
+		  size = (int) (wordpointer - (mp->bsspace[mp->bsnum]+512));
+
+		  if (size > MAXFRAMESIZE) {
+		    /* wordpointer buffer is trashed.  probably cant recover, but try anyway */
+		    fprintf(stderr,"mpglib: wordpointer trashed.  size=%i (%i)  bytes=%i \n",
+			    size,MAXFRAMESIZE,bytes);		  
+		    size=0;
+		    wordpointer = mp->bsspace[mp->bsnum]+512;
+		  }
+
+		  /* buffer contains 'size' data right now 
+		     we want to add 'bytes' worth of data, but do not 
+		     exceed MAXFRAMESIZE, so we through away 'i' bytes */
 		  i = (size+bytes)-MAXFRAMESIZE;
 		  for (; i>0; --i) {
 		    --bytes;
 		    read_buf_byte(mp);
 		  }
+
 		  copy_mp(mp,bytes,wordpointer);
 		  mp->fsizeold += bytes;
-
 		}
 
 		read_head(mp);
@@ -348,6 +362,7 @@ int decodeMP3(struct mpstr *mp,char *in,int isize,char *out,
 		*done = 0;
 		do_layer3(&mp->fr,(unsigned char *) out,done);
 		wordpointer = mp->bsspace[mp->bsnum] + 512 + mp->ssize + mp->dsize;
+
 		mp->data_parsed=1;
 		iret=MP3_OK;
 	}
@@ -379,8 +394,20 @@ int decodeMP3(struct mpstr *mp,char *in,int isize,char *out,
 	  return iret;
 	}
 	if (bytes>0) {
+	  int size;
 	  copy_mp(mp,bytes,wordpointer);
 	  wordpointer += bytes;
+
+	  size = (int) (wordpointer - (mp->bsspace[mp->bsnum]+512));
+	  if (size > MAXFRAMESIZE) {
+	    fprintf(stderr,"fatal error.  MAXFRAMESIZE not large enough.\n");
+	  }
+
+
+
+
+
+
 	}
 
 	/* the above frame is completey parsed.  start looking for next frame */

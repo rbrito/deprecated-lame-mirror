@@ -343,7 +343,7 @@ static void III_get_side_info_1(struct III_sideinfo *si,int stereo,
        gr_infos->part2_3_length = getbits(12);
        gr_infos->big_values = getbits_fast(9);
        if(gr_infos->big_values > 288) {
-          fprintf(stderr,"big_values too large!\n");
+          fprintf(stderr,"big_values too large! %i\n",gr_infos->big_values);
           gr_infos->big_values = 288;
        }
        {
@@ -431,7 +431,7 @@ static void III_get_side_info_2(struct III_sideinfo *si,int stereo,
        gr_infos->part2_3_length = getbits(12);
        gr_infos->big_values = getbits_fast(9);
        if(gr_infos->big_values > 288) {
-         fprintf(stderr,"big_values too large!\n");
+         fprintf(stderr,"big_values too large! %i\n",gr_infos->big_values);
          gr_infos->big_values = 288;
        }
        qss=getbits_fast(8);
