@@ -2981,7 +2981,7 @@ LD="$LD" LDFLAGS="$LDFLAGS" LIBS="$LIBS" \
 LN_S="$LN_S" NM="$NM" RANLIB="$RANLIB" \
 DLLTOOL="$DLLTOOL" AS="$AS" OBJDUMP="$OBJDUMP" \
 ${CONFIG_SHELL-/bin/sh} $ac_aux_dir/ltconfig --no-reexec \
-$libtool_flags  $ac_aux_dir/ltmain.sh $lt_target \
+$libtool_flags $ac_aux_dir/ltmain.sh $lt_target \
 || { { echo "$as_me:$LINENO: error: libtool configure failed" >&5
 echo "$as_me: error: libtool configure failed" >&2;}
    { (exit 1); exit 1; }; }
@@ -12062,10 +12062,10 @@ if test "x$GCC" = "xyes"; then
         	OPTIMIZATION="-O -fomit-frame-pointer -ffast-math \
 			-funroll-loops"
         	;;
-	3.*)
+	3.0*)
 		# -funroll-loops seems to produce buggy code with gcc 3.0.3
 		OPTIMIZATION="-O -fomit-frame-pointer -ffast-math \
-			-funroll-loops -maccumulate-outgoing-args"
+			-funroll-loops"
 		;;
 	*)
 		# default
@@ -12095,6 +12095,14 @@ if test "x$GCC" = "xyes"; then
 						-mcpu=ultrasparc \
 						-mtune=ultrasparc"
 			fi
+			;;
+		esac
+		;;
+	*86)
+		case "${GCC_version}" in
+		3.*)
+			OPTIMIZATION="${OPTIMIZATION} \
+				-maccumulate-outgoing-args"
 			;;
 		esac
 		;;
