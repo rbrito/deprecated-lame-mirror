@@ -777,7 +777,9 @@ VBR_quantize(lame_global_flags *gfp,
   mean_bits = (bitsPerFrame - 8*gfc->sideinfo_len) / gfc->mode_gr;
   }
 
-  //  minbits=Max(minbits,.66*(mean_bits/gfc->stereo));
+
+  minbits = Max(minbits,125);
+  minbits=Max(minbits,.40*(mean_bits/gfc->stereo));
   maxbits=Min(maxbits,2.5*(mean_bits/gfc->stereo));
 
 
@@ -819,16 +821,18 @@ VBR_quantize(lame_global_flags *gfp,
       int minbits_lr[2];
       minbits_lr[0]=minbits;
       minbits_lr[1]=minbits;
+
 #if 0
       if (gfc->mode_ext==MPG_MD_MS_LR) {
 	FLOAT8 fac;
 	fac = .33*(.5-ms_ener_ratio[gr])/.5;
 	if (fac<0) fac=0;
 	if (fac>.5) fac=.5;
-	minbits_lr[0] *= 1+fac;
-	minbits_lr[1] *= 1-fac;
+	minbits_lr[0] = (1+fac)*minbits;
+	minbits_lr[1] = Max(125,(1-fac)*minbits);
       }
 #endif
+
 
       for (ch = 0; ch < gfc->stereo; ch++) { 
 	int adjusted,shortblock;
