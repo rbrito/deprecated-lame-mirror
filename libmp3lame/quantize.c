@@ -302,7 +302,7 @@ calc_xmin(
 static FLOAT
 calc_noise(const gr_info  * const gi, const FLOAT * l3_xmin, FLOAT * distort)
 {
-    FLOAT max_noise = -100.0;
+    FLOAT max_noise = 0.0;
     int sfb = 0, j = 0, l;
 
     do {
@@ -324,8 +324,6 @@ calc_noise(const gr_info  * const gi, const FLOAT * l3_xmin, FLOAT * distort)
 	    } while (l < 0);
 	    noise = *distort = noise / *l3_xmin;
 	}
-
-	noise = FAST_LOG10(Max(noise,1E-20));
 	max_noise=Max(max_noise,noise);
     } while (l3_xmin++, distort++, ++sfb < gi->psymax);
 
@@ -341,21 +339,19 @@ calc_noise(const gr_info  * const gi, const FLOAT * l3_xmin, FLOAT * distort)
 	    } while ((l += 2) < 0);
 	    noise = *distort = noise / *l3_xmin;
 	}
-	noise = FAST_LOG10(Max(noise,1E-20));
 	max_noise=Max(max_noise,noise);
     }
 
-    if (max_noise > 0.0 && gi->block_type == SHORT_TYPE) {
+    if (max_noise > 1.0 && gi->block_type == SHORT_TYPE) {
 	distort -= sfb;
-	max_noise = -100.0;
+	max_noise = 0.0;
 	for (sfb = gi->sfb_smin; sfb < gi->psymax; sfb += 3) {
-	    FLOAT noise
-		= FAST_LOG10(distort[sfb] * distort[sfb+1] * distort[sfb+2]);
+	    FLOAT noise = distort[sfb] * distort[sfb+1] * distort[sfb+2];
 	    if (max_noise < noise)
 		max_noise = noise;
 	}
     }
-    return max_noise;
+    return Max(max_noise, 1e-20);
 }
 
 static FLOAT
@@ -690,25 +686,14 @@ amp_scalefac_bands(
     lame_internal_flags *gfc,
     gr_info  *const gi, 
     FLOAT *distort,
+    FLOAT trigger,
     int method,
     int target_bits
     )
 {
-    FLOAT trigger = distort[0];
     int bits, sfb, sfbmax = gi->sfbmax;
     if (sfbmax > gi->psymax)
 	sfbmax = gi->psymax;
-
-    /* compute maximum value of distort[]  */
-    for (sfb = 1; sfb < sfbmax; sfb++) {
-	if (trigger < distort[sfb])
-	    trigger = distort[sfb];
-    }
-
-    for (; sfb < gi->psymax; sfb++) {
-	if (trigger < distort[sfb])
-	    return 0;
-    }
 
     if (method < 2) {
 	if (trigger <= 1.0)
@@ -864,8 +849,8 @@ adjust_global_gain(
     gr_info *gi, FLOAT *distort, int huffbits)
 {
     fi_union *fi = (fi_union *)gi->l3_enc;
-    FLOAT *xend = &xp[gi->big_values = gi->count1 = gi->xrNumMax];
-    int sfb = 0;
+    FLOAT *xend = &xp[gi->xrNumMax];
+    int sfb = 0, j = 0;
 
     do {
 	int width = gi->width[sfb];
@@ -877,6 +862,8 @@ adjust_global_gain(
 
 	width = -width;
 	istep = IPOW20(scalefactor(gi, sfb));
+	if (gi->count1 < fi - (fi_union*)gi->l3_enc)
+	    gi->count1 = fi - (fi_union*)gi->l3_enc;
 	do {
 #ifdef TAKEHIRO_IEEE754_HACK
 	    double x0 = istep * xp[width  ] + MAGIC_FLOAT;
@@ -925,6 +912,16 @@ adjust_global_gain(
  *  as long as it satisfy the bitrate condition.
  ************************************************************************/
 
+static int
+noise_in_sfb21(gr_info *gi, FLOAT distort[], FLOAT threshold)
+{
+    int sfb;
+    for (sfb = gi->sfbmax; sfb < gi->psymax; sfb++)
+	if (distort[sfb] >= threshold)
+	    return 1;
+    return 0;
+}
+
 static void
 CBR_1st_bitalloc (
     lame_internal_flags *gfc,
@@ -959,20 +956,21 @@ CBR_1st_bitalloc (
     newNoise = bestNoise = calc_noise_allband(gi, l3_xmin, distort);
     current_method = 0;
     age = 3;
-    if (bestNoise < 0.0) {
+    if (bestNoise < 1.0) {
 	if (gfc->noise_shaping_stop == 0)
 	    goto quit_quantization;
 	current_method = 1;
 	age = 5;
     }
+    if (noise_in_sfb21(gi, distort, bestNoise))
+	goto quit_quantization;
 
     /* BEGIN MAIN LOOP */
     gi_w = *gi;
     for (;;) {
 	/* try the new scalefactor conbination on gi_w */
-	int huff_bits = amp_scalefac_bands(gfc, &gi_w, distort,
+	int huff_bits = amp_scalefac_bands(gfc, &gi_w, distort, newNoise,
 					   current_method, targ_bits);
-
 	if (huff_bits > 0) {
 	    /* adjust global_gain to fit the available bits */
 	    if (adjust_global_gain(gfc, xrpow, &gi_w, distort, huff_bits)) {
@@ -986,10 +984,10 @@ CBR_1st_bitalloc (
 
 	    /* store this scalefactor combination if it is better */
 	    if (gi_w.global_gain != 256
-		&& bestNoise > (newNoise = calc_noise(&gi_w, l3_xmin, distort))) {
+	     && bestNoise > (newNoise = calc_noise(&gi_w, l3_xmin, distort))) {
 		bestNoise = newNoise;
 		*gi = gi_w;
-		if (bestNoise < 0.0) {
+		if (bestNoise < 1.0) {
 		    if (gfc->noise_shaping_stop == 0)
 			break;
 		    if (current_method == 0)
@@ -1003,7 +1001,7 @@ CBR_1st_bitalloc (
 
 	/* stopping criteria */
 	if (--age > 0 && gi_w.global_gain != 256
-	    && (gi_w.psy_lmax != SBMAX_l || distort[SBMAX_l-1] > bestNoise))
+	    && !noise_in_sfb21(&gi_w, distort, bestNoise))
 	    continue;
 
 	/* seems we cannot get a better combination.
@@ -1735,7 +1733,7 @@ set_pinfo (
     gfc->pinfo->LAMEsfbits  [gr][ch] = gi->part2_length;
 
     gfc->pinfo->over      [gr][ch] = over;
-    gfc->pinfo->max_noise [gr][ch] = max_noise * 10.0;
+    gfc->pinfo->max_noise [gr][ch] = FAST_LOG10(max_noise) * 10.0;
     gfc->pinfo->over_noise[gr][ch] = over_noise * 10.0;
     gfc->pinfo->tot_noise [gr][ch] = tot_noise;
 }
