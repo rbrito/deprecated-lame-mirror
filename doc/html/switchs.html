@@ -13,9 +13,10 @@
         BGCOLOR=#F9FBFB LINK=#006666 VLINK=#4C4C4C
         ALINK=#995500>
 <H1>Full command line switch reference</H1>
-<P> note: Options which could exist without beeing documented here are considered as experimental ones.
-Such options should usually not be used.
-<P>
+<P> <font size="-1">note: Options which could exist without beeing documented 
+  here are considered as experimental ones. Such experimental options should usually 
+  not be used.</font> 
+<P> 
 <TABLE CELLPADDING=3 BORDER="1">
   <TR VALIGN="TOP"> 
     <TD ALIGN="LEFT" nowrap><b>switch</b></TD>
@@ -241,6 +242,14 @@ Such options should usually not be used.
   <tr valign="TOP"> 
     <td align="LEFT" nowrap><kbd><a href="#V">-V</a></kbd></td>
     <td align="LEFT" nowrap>VBR quality setting (0...9)</td>
+  </tr>
+  <tr valign="TOP"> 
+    <td align="LEFT" nowrap><kbd><a href="#-vbr-new">--vbr-new</a></kbd></td>
+    <td align="LEFT" nowrap>new VBR mode</td>
+  </tr>
+  <tr valign="TOP"> 
+    <td align="LEFT" nowrap><kbd><a href="#-vbr-old">--vbr-old</a></kbd></td>
+    <td align="LEFT" nowrap>older VBR mode</td>
   </tr>
   <tr valign="TOP"> 
     <td align="LEFT" nowrap><kbd><a href="#-verbose">--verbose</a></kbd></td>
@@ -1068,6 +1077,33 @@ Such options should usually not be used.
   <dd> Enable VBR (Variable BitRate) and specifies the value of VBR quality.<br>
     default=4<br>
     0=highest quality. 
+  <dt><br>
+    <br>
+  </dt>
+  <hr width="50%" noshade align="center">
+  <br>
+  <dl> </dl>
+  <dt><strong>* <kbd>--vbr-new</kbd><a name="-vbr-new">&nbsp;&nbsp;&nbsp;&nbsp;new 
+    VBR mode</a></strong></dt>
+</dl>
+<dl> 
+  <dd> Invokes the newest VBR algorithm. During the development of version 3.90, 
+    considerable tuning was done on this algorithm, and it is now considered to 
+    be on par with the original --vbr-old. <br>
+    It has the added advantage of being very fast (over twice as fast as --vbr-old). 
+  <dt><br>
+    <br>
+  </dt>
+  <hr width="50%" noshade align="center">
+  <br>
+  <dl> </dl>
+  <dt><strong>* <kbd>--vbr-old</kbd><a name="-vbr-old">&nbsp;&nbsp;&nbsp;&nbsp;older 
+    VBR mode</a></strong></dt>
+</dl>
+<dl> 
+  <dd> Invokes the oldest, most tested VBR algorithm. It produces very good quality 
+    files, though is not very fast. This has, up through v3.89, been considered 
+    the "workhorse" VBR algorithm. 
   <dt><br>
     <br>
   </dt>
