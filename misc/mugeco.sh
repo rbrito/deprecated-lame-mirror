@@ -105,7 +105,7 @@ while [ "${iterate}" != "${num}" ]; do
 	${enc} ${enc_opts} --tc "lame ${lame_vers}; Generation: ${gen}" "${SECURE}.wav" "${SECURE}.mp3" || exit 1
 	${enc} --decode "${SECURE}.mp3" "${SECURE}.wav" || exit 1
 
-	iterate=$(echo ${iterate} | awk '{i=$1 + 1; printf "%d", i}')
+	iterate=${gen}
 done
 
 end=$(date)
