@@ -225,15 +225,6 @@ turns on encoding with a targeted average bitrate of n kbps, allowing
 to use frames of different sizes.  The allowed range of n is 8...320 
 kbps, you can use any integer value within that range.
 
-It can be combined with the -b and -B switches like
-lame --abr 123 -b 64 -B 192 a.wav a.mp3
-which would limit the allowed frame sizes between 64 and 192 kbps.
-
-Using -B is NOT RECOMMENDED.  A 128 kbps CBR bitstream, because of the
-bit reservoir, can actually have frames which use as many bits as a
-320 kbps frame.  VBR modes minimize the use of the bit reservoir, and
-thus need to allow 320 kbps frames to get the same flexability as CBR
-streams.
 
 
 
@@ -277,7 +268,15 @@ max bitrate
 
 see also option "-b" for allowed bitrates.
 
-Maximum allowed bitrate when using VBR.
+Maximum allowed bitrate when using VBR/ABR.
+
+Using -B is NOT RECOMMENDED.  A 128 kbps CBR bitstream, because of the
+bit reservoir, can actually have frames which use as many bits as a
+320 kbps frame.  ABR/VBR modes minimize the use of the bit reservoir, and
+thus need to allow 320 kbps frames to get the same flexability as CBR
+streams.  
+
+
 
 
 =======================================================================
@@ -508,42 +507,6 @@ non-original
 -o   
 
 mark the encoded file as a copy
-
-
-
-=======================================================================
-Ogg Vorbis encoding
-=======================================================================
---ogg
-
-Encode using the Ogg Vobis codec (using libvorbis) instead of
-LAME's internal mp3 codec.
-
-Most options related to the internal workings of the MP3 format
-are ignored when using "--ogg".  But downsampling and stereo/mono
-options work.  
-
-Currently (8/00) Ogg Vorbis only supports 5 modes, which range
-from approximately 128 kbps to 320 kbps.   Based on the bitrate
-specified (or the -V n option), LAME will take its best guess
-as to which of the 5 Vorbis modes will give about close to the
-desired bitrate.
-
-
-
-
-=======================================================================
-Ogg Vorbis input file
-=======================================================================
---ogginput
-
-Assume the input file is an Ogg Vorbis file.  Mostly useful
-with --decode for playing back .ogg files, or converting
-your .ogg collection to MP3 :-)
-
-If the filename ends in ".ogg" LAME will assume it is Ogg.  For
-stdin or files which dont end in .ogg you need to use this switch.
-
 
 
 
