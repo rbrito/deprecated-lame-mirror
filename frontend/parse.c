@@ -81,20 +81,22 @@ dosToLongFileName( char *fn )
 {
     const int MSIZE = MAX_NAME_SIZE-4;  //  we wanna add ".mp3" later
     WIN32_FIND_DATAA lpFindFileData;
-    if ( FindFirstFileA( fn, &lpFindFileData ) ) {
+    HANDLE h = FindFirstFileA( fn, &lpFindFileData );
+    if ( h != INVALID_HANDLE_VALUE ) {
         int   a;
         char *q;
+        FindClose( h );
         for ( a = 0; a < MSIZE; a++ ) {
-            if ( 0 == lpFindFileData.cFileName[a] ) break;
+            if ( '\0' == lpFindFileData.cFileName[a] ) break;
         }
-        if ( a >= MSIZE ) return;
-        q = strrchr(fn,'\\');
+        if ( a >= MSIZE || a == 0 ) return;
+        q = strrchr( fn, '\\' );
         if ( q == NULL ) q = strrchr(fn,':');
-        if ( q == NULL ) strncpy( fn, lpFindFileData.cFileName, a+1 );
+        if ( q == NULL ) strncpy( fn, lpFindFileData.cFileName, a );
         else {
-            a += q-fn +2;
-            if (a < MSIZE)
-                strncpy( ++q, lpFindFileData.cFileName, MSIZE-a );
+            a += q-fn +1;
+            if ( a >= MSIZE ) return;
+            strncpy( ++q, lpFindFileData.cFileName, MSIZE-a );
         }
     }
 }
@@ -1342,9 +1344,9 @@ char* const inPath, char* const outPath, char **nogap_inPath, int *num_nogap)
 	    strcpy(outPath,"-");
 	} else {
 #ifdef WIN32
-        dosToLongFileName( inPath );
+            dosToLongFileName( inPath );
 #endif
-		strncpy(outPath, inPath, MAX_NAME_SIZE - 4);
+            strncpy(outPath, inPath, MAX_NAME_SIZE - 4);
 	    if ( lame_get_decode_only( gfp ) ) {
 	        strncat (outPath, ".wav", 4 );
 	    } else if( lame_get_ogg( gfp ) ) {
