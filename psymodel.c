@@ -65,7 +65,7 @@ void L3psycho_anal( short int *buffer[2],
   static FLOAT8 pe[4]={0,0,0,0};
   static FLOAT8 ms_ratio_s_old=0,ms_ratio_l_old=0;
   static FLOAT8 ms_ener_ratio_old=.25;
-  FLOAT8 tot_ener[4];
+  FLOAT8 tot_ener[4]={0,0,0,0};
   
 #ifdef HAVEGTK
   static FLOAT energy_save[4][HBLKSIZE];
