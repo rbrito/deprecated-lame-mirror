@@ -689,14 +689,18 @@ void lame_print_config(lame_global_flags *gfp)
 	    in_samplerate,out_samplerate);
   }
   if (gfc->filter_type==0) {
-  if (gfc->highpass2>0.0)
-    MSGF("Using polyphase highpass filter, transition band: %.0f Hz -  %.0f Hz\n",
-	    gfc->highpass1*out_samplerate*500,
-	    gfc->highpass2*out_samplerate*500);
-  if (gfc->lowpass1>0.0)
-    MSGF("Using polyphase lowpass filter,  transition band:  %.0f Hz - %.0f Hz\n",
-	    gfc->lowpass1*out_samplerate*500,
-	    gfc->lowpass2*out_samplerate*500);
+    if (gfc->highpass2>0.0)
+      MSGF("Using polyphase highpass filter, transition band: %.0f Hz -  %.0f Hz\n",
+	   gfc->highpass1*out_samplerate*500,
+	   gfc->highpass2*out_samplerate*500);
+    if (gfc->lowpass1>0.0)
+      MSGF("Using polyphase lowpass filter,  transition band:  %.0f Hz - %.0f Hz\n",
+	   gfc->lowpass1*out_samplerate*500,
+	   gfc->lowpass2*out_samplerate*500);
+    else
+      MSGF("polyphase lowpass filter disabled\n");
+  } else {
+    MSGF("polyphase filters disabled\n");
   }
 #ifdef RH_AMP
   if (gfp->experimentalY) {

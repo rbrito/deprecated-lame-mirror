@@ -335,18 +335,25 @@ int lame_encode_ogg_init(lame_global_flags *gfp)
   
   /* choose an encoding mode */
   /* (mode 0: 44kHz stereo uncoupled, roughly 128kbps VBR) */
-  if (gfp->compression_ratio < 5.01)
+  if (gfp->compression_ratio < 5.01) {
     memcpy(&vi2,&info_E,sizeof(vi2));
-  else if (gfp->compression_ratio < 6)
+    MSGF("Encoding with Vorbis mode info_E \n");
+  } else if (gfp->compression_ratio < 6) {
     memcpy(&vi2,&info_D,sizeof(vi2));
-  else if (gfp->compression_ratio < 8)
+    MSGF("Encoding with Vorbis mode info_D \n");
+  } else if (gfp->compression_ratio < 8) {
     memcpy(&vi2,&info_C,sizeof(vi2));
-  else if (gfp->compression_ratio < 10)
+    MSGF("Encoding with Vorbis mode info_C \n");
+  } else if (gfp->compression_ratio < 10) {
     memcpy(&vi2,&info_B,sizeof(vi2));
-  else if (gfp->compression_ratio < 12)
+    MSGF("Encoding with Vorbis mode info_B \n");
+  } else if (gfp->compression_ratio < 12) {
     memcpy(&vi2,&info_A,sizeof(vi2));
-  else 
+    MSGF("Encoding with Vorbis mode info_A \n");
+  } else {
     memcpy(&vi2,&info_A,sizeof(vi2));
+    MSGF("Encoding with Vorbis mode info_A \n");
+  }
 
   vi2.channels = gfc->stereo;
   vi2.rate = gfp->out_samplerate;
