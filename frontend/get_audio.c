@@ -68,7 +68,6 @@
 /* global data for get_audio.c. */
 static unsigned int num_samples_read;
 static int count_samples_carefully;
-static int pcmswapbytes = 0;
 FILE   *musicin;
 int id3v2taglen = 0;
 
@@ -192,7 +191,6 @@ init_infile(lame_t gfp, char *inPath)
     /* open the input file */
     count_samples_carefully = 0;
     num_samples_read=0;
-    pcmswapbytes=swapbytes;
     musicin = OpenSndFile(gfp, inPath);
 }
 
@@ -419,12 +417,12 @@ OpenSndFile(lame_t gfp, char *inPath)
 	    } else {
 #ifndef WORDS_BIGENDIAN
 		/* little endian */
-		if (swapbytes)
+		if (pcmswapbytes)
 		    gs_wfInfo.format = SF_ENDIAN_BIG;
 		else
 		    gs_wfInfo.format = SF_ENDIAN_LITTLE;
 #else
-		if (swapbytes)
+		if (pcmswapbytes)
 		    gs_wfInfo.format = SF_ENDIAN_LITTLE;
 		else
 		    gs_wfInfo.format = SF_ENDIAN_BIG;
@@ -985,11 +983,10 @@ OpenSndFile(lame_t gfp, char *inPath)
         if (input_format == sf_raw) {
             /* assume raw PCM */
             fprintf(stderr, "Assuming raw pcm input file");
-            if (swapbytes)
+            if (pcmswapbytes)
                 fprintf(stderr, " : Forcing byte-swapping\n");
             else
                 fprintf(stderr, "\n");
-            pcmswapbytes = swapbytes;
         }
     }
 

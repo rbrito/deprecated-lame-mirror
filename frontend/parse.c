@@ -77,7 +77,7 @@ int experimentalZ = 0;
 /* we need to clean this up */
 sound_file_format input_format;   
 int keeptag=0;
-int swapbytes;              /* force byte swapping   default=0*/
+int pcmswapbytes=0;         /* force byte swapping   default=0*/
 int silent;                 /* Verbosity */
 int brhist;
 float update_interval;      /* to use Frank's time status display */
@@ -1349,7 +1349,7 @@ int  parse_args (lame_t gfp, int argc, char** argv,
                         input_format=sf_raw;
                         break;
                     case 'x':  /* force byte swapping */
-                        swapbytes=1;
+                        pcmswapbytes=1;
                         break;
                     case 'p': /* (jo) error_protection: add crc16 information to stream */
                         lame_set_error_protection(gfp,1);
