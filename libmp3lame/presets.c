@@ -136,7 +136,7 @@ int apply_preset(lame_global_flags*  gfp, int preset, int enforce)
     gfp->preset = preset;
 
     switch (preset) {
-    case STREAMING: {
+    case STREAMING: { /*v9*/
 	    lame_set_VBR(gfp, vbr_rh);
 
 	    lame_set_quality(gfp, 3);
@@ -145,23 +145,23 @@ int apply_preset(lame_global_flags*  gfp, int preset, int enforce)
 	    lame_set_mode(gfp, JOINT_STEREO);
 
         lame_set_short_threshold(gfp, 4.50f, 30.0f);
-        lame_set_quant_comp(gfp, 3);
-        lame_set_quant_comp_short(gfp, 3);
+        lame_set_quant_comp(gfp, 1);
+        lame_set_quant_comp_short(gfp, 0);
         lame_set_psy_model(gfp, PSY_NSPSYTUNE);
-        lame_set_maskingadjust( gfp, .5 );
-        lame_set_maskingadjust_short( gfp, .4 );
+        lame_set_maskingadjust( gfp, 1.6 );
+        lame_set_maskingadjust_short( gfp, 1.6 );
         lame_set_interChRatio(gfp, 0.0008);
-        lame_set_ATHlower( gfp, -19 );
+        lame_set_ATHlower( gfp, -36 );
         lame_set_ATHtype(gfp, 4);
         lame_set_ATHcurve(gfp, 11);
-	    lame_set_athaa_sensitivity(gfp, -22);
+	    lame_set_athaa_sensitivity(gfp, -25);
         
 	    lame_set_experimentalY(gfp, 1);
 
 	    return preset;
 
     }
-    case RADIO: {
+    case RADIO: { /*v7*/
 	    lame_set_VBR(gfp, vbr_rh);
 
 	    lame_set_quality(gfp, 3);
@@ -171,12 +171,12 @@ int apply_preset(lame_global_flags*  gfp, int preset, int enforce)
 
         lame_set_short_threshold(gfp, 4.50f, 30.0f);
         lame_set_quant_comp(gfp, 1);
-        lame_set_quant_comp_short(gfp, 3);
+        lame_set_quant_comp_short(gfp, 0);
         lame_set_psy_model(gfp, PSY_NSPSYTUNE);
-        lame_set_maskingadjust( gfp, .5 );
-        lame_set_maskingadjust_short( gfp, 4.1 );
+        lame_set_maskingadjust( gfp, .8 );
+        lame_set_maskingadjust_short( gfp, .75 );
         lame_set_interChRatio(gfp, 0.0006);
-        lame_set_ATHlower( gfp, -22 );
+        lame_set_ATHlower( gfp, -20 );
         lame_set_ATHtype(gfp, 4);
         lame_set_ATHcurve(gfp, 8);
 	    lame_set_athaa_sensitivity(gfp, -22);
@@ -186,31 +186,7 @@ int apply_preset(lame_global_flags*  gfp, int preset, int enforce)
 	    return preset;
 
     }
-    case PORTABLE: {
-	    lame_set_VBR(gfp, vbr_rh);
-
-	    lame_set_quality(gfp, 3);
-	    lame_set_lowpassfreq(gfp, 17000);
-	    lame_set_mode(gfp, JOINT_STEREO);
-
-        lame_set_short_threshold(gfp, 4.40f, 25.0f);
-        lame_set_quant_comp(gfp, 1);
-        lame_set_quant_comp_short(gfp, 0);
-        lame_set_psy_model(gfp, PSY_NSPSYTUNE);
-        lame_set_maskingadjust( gfp, -.6 );
-        lame_set_maskingadjust_short( gfp, -.7 );
-        lame_set_interChRatio(gfp, 0.0002);
-        lame_set_ATHlower( gfp, -14 );
-        lame_set_ATHtype(gfp, 4);
-        lame_set_ATHcurve(gfp, 5);
-	    lame_set_athaa_sensitivity(gfp, -16);
-        
-	    lame_set_experimentalY(gfp, 1);
-
-	    return preset;
-
-    }
-    case PORTABLE1: {
+    case PORTABLE: { /*v5*/
 	    lame_set_VBR(gfp, vbr_rh);
 
 	    lame_set_quality(gfp, 3);
@@ -234,7 +210,7 @@ int apply_preset(lame_global_flags*  gfp, int preset, int enforce)
 	    return preset;
 
     }
-    case MEDIUM: {
+    case MEDIUM: { /*v4*/
 	    lame_set_VBR(gfp, vbr_rh);
 
 	    lame_set_quality(gfp, 3);
@@ -283,7 +259,7 @@ int apply_preset(lame_global_flags*  gfp, int preset, int enforce)
 
 	    return preset;
     }
-    case STANDARD: {
+    case STANDARD: { /*v2*/
 	    lame_set_VBR(gfp, vbr_rh);
 	    lame_set_VBR_min_bitrate_kbps(gfp, 96); /*ideally, we should get rid of this*/
 
@@ -332,7 +308,7 @@ int apply_preset(lame_global_flags*  gfp, int preset, int enforce)
 
 	    return preset;
     }
-    case EXTREME: {
+    case EXTREME: { /*v0*/
 	    lame_set_VBR(gfp, vbr_rh);
 	    lame_set_VBR_min_bitrate_kbps(gfp, 128);
 

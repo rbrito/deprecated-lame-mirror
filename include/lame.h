@@ -80,6 +80,31 @@ typedef enum preset_mode_e {
     /*for abr I'd suggest to directly use the targeted bitrate as a value*/
     ABR_8 = 8,
     ABR_320 = 320,
+
+    V9 = 410, /*Vx to match Lame and VBR_xx to match FhG*/
+    VBR_10 = 410,
+    V8 = 420,
+    VBR_20 = 420,
+    V7 = 430,
+    VBR_30 = 430,
+    V6 = 440,
+    VBR_40 = 440,
+    V5 = 450,
+    VBR_50 = 450,
+    V4 = 460,
+    VBR_60 = 460,
+    V3 = 470,
+    VBR_70 = 470,
+    V2 = 480,
+    VBR_80 = 480,
+    V1 = 490,
+    VBR_90 = 490,
+    V0 = 500,
+    VBR_100 = 500,
+
+
+
+    /*still there for compatibility*/
     R3MIX = 1000,
     STANDARD = 1001,
     EXTREME = 1002,
@@ -90,7 +115,6 @@ typedef enum preset_mode_e {
     MEDIUM_FAST = 1007,
 
     PORTABLE = 1010,
-    PORTABLE1 = 1014,
     RADIO = 1015,
     STREAMING = 1016
 } preset_mode;
