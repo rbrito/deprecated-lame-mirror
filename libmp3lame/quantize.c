@@ -80,9 +80,14 @@ on_pe(
     mean_bits /= gfc->channels_out;
 
     for ( bits = 0, ch = 0; ch < gfc->channels_out; ++ch ) {
+	if (ratio[ch].ath_over == 0) {
+	    targ_bits[ch] = 0.0;
+	    continue;
+	}
+
 	targ_bits[ch] = tbits;
-	if (ratio[ch].pe > 800.0) {
-	    targ_bits[ch] = tbits * (ratio[ch].pe-800) / 1.4;
+	if (ratio[ch].pe > 500.0) {
+	    targ_bits[ch] = tbits * (ratio[ch].pe-500.0) / 1.4;
 	    if (targ_bits[ch] > mean_bits) 
 		targ_bits[ch] = mean_bits;
 	}
@@ -90,52 +95,13 @@ on_pe(
     }
     if (bits > max_bits) {
         for ( ch = 0; ch < gfc->channels_out; ++ch ) {
-            targ_bits[ch]
+	    targ_bits[ch]
 		= tbits + extra_bits * (targ_bits[ch] - tbits) / bits;
-        }
+	}
     }
 }
 
 
-
-
-static void
-reduce_side(int targ_bits[2],FLOAT ms_ener_ratio,int mean_bits)
-{
-    int move_bits;
-    FLOAT fac;
-
-    if (targ_bits[1] < 125)
-	return; /* dont reduce side channel below 125 bits */
-
-    /*  ms_ener_ratio = 0:  allocate 66/33  mid/side  fac=.33
-     *  ms_ener_ratio =.5:  allocate 50/50 mid/side   fac= 0 */
-    /* 75/25 split is fac=.25 */
-    /* float fac = .50*(.5-ms_ener_ratio[gr])/.5;*/
-    fac = .33*(.5-ms_ener_ratio);
-    if (fac<0) fac=0;
-    if (fac>.25) fac=.25;
-
-    /* number of bits to move from side channel to mid channel */
-    /*    move_bits = fac*targ_bits[1];  */
-    move_bits = fac*(targ_bits[0]+targ_bits[1]);
-
-    if (move_bits > MAX_BITS - targ_bits[0])
-        move_bits = MAX_BITS - targ_bits[0];
-
-    if (targ_bits[1] - move_bits > 125) {
-	targ_bits[1] -= move_bits;
-	/* if mid channel already has 2x more than average, dont bother */
-	/* mean_bits = bits per granule (for both channels) */
-	if (targ_bits[0] < mean_bits)
-	    targ_bits[0] += move_bits;
-    } else {
-	targ_bits[0] += targ_bits[1] - 125;
-	targ_bits[1] = 125;
-    }
-    assert ((unsigned)targ_bits[0] <= MAX_BITS);
-    assert ((unsigned)targ_bits[1] <= MAX_BITS);
-}
 
 
 /*************************************************************************/
@@ -956,8 +922,6 @@ ABR_calc_target_bits (
                 targ_bits[gr][ch] += add_bits;
             }
         }
-	if (gfc->mode_ext & MPG_MD_MS_LR)
-	    reduce_side(targ_bits[gr], ms_ener_ratio[gr], mean_bits * STEREO);
     }
 
     /*  sum target bits
@@ -1062,9 +1026,6 @@ iteration_loop(
     for (gr = 0; gr < gfc->mode_gr; gr++) {
         /*  calculate needed bits */
         on_pe (gfc, ratio[gr], targ_bits, mean_bits);
-        if (gfc->mode_ext & MPG_MD_MS_LR)
-            reduce_side (targ_bits, ms_ener_ratio[gr], mean_bits);
-
         for (ch=0 ; ch < gfc->channels_out ; ch ++) {
 	    gr_info *gi = &gfc->l3_side.tt[gr][ch]; 
 	    outer_loop(gfp, gi, ch, targ_bits[ch], &ratio[gr][ch]);
@@ -1240,19 +1201,13 @@ static int
 block_sf(const lame_internal_flags * gfc, const FLOAT * l3_xmin,
 	 const FLOAT * xr34, int * vbrsf, gr_info *gi)
 {
-    int sfb, j, vbrmax, scalefac_method = gfc->quantcomp_method;
-    if (gi->block_type == SHORT_TYPE)
-	scalefac_method = gfc->quantcomp_method_s;
+    int sfb, j, vbrmax;
     sfb = j = 0;
     vbrmax = -10000;
     do {
 	int width = gi->width[sfb], gain;
-	if (scalefac_method >= 4)
-	    gain = 210 + (int) (9.0 * log10(l3_xmin[sfb] / width) - .5);
-	else {
-	    gain = find_scalefac(&gi->xr[j], &xr34[j], l3_xmin[sfb], width);
-	    j += width;
-	}
+	gain = find_scalefac(&gi->xr[j], &xr34[j], l3_xmin[sfb], width);
+	j += width;
 	vbrsf[sfb] = gain;
 	if (vbrmax < gain)
 	    vbrmax = gain;
