@@ -139,121 +139,108 @@ int apply_preset(lame_global_flags*  gfp, int preset, int enforce)
     case STREAMING: { /*v9*/
 	    lame_set_VBR(gfp, vbr_rh);
 
-	    lame_set_quality(gfp, 3);
 	    lame_set_out_samplerate(gfp, 22050);
-	    lame_set_lowpassfreq(gfp, 10000);
-	    lame_set_mode(gfp, JOINT_STEREO);
+	    SET_OPTION(lowpassfreq, 10000, 0);
 
-        lame_set_short_threshold(gfp, 4.50f, 30.0f);
-        lame_set_quant_comp(gfp, 1);
-        lame_set_quant_comp_short(gfp, 0);
-        lame_set_psy_model(gfp, PSY_NSPSYTUNE);
-        lame_set_maskingadjust( gfp, 1.6 );
-        lame_set_maskingadjust_short( gfp, 1.6 );
-        lame_set_interChRatio(gfp, 0.0008);
-        lame_set_ATHlower( gfp, -36 );
-        lame_set_ATHtype(gfp, 4);
-        lame_set_ATHcurve(gfp, 11);
-	    lame_set_athaa_sensitivity(gfp, -25);
+        SET_OPTION(short_threshold_lrm, 4.50f, -1);
+        SET_OPTION(short_threshold_s, 30.0f, -1);
+        SET_OPTION(quant_comp, 1, -1);
+        SET_OPTION(quant_comp_short, 0, -1);
+        SET_OPTION(psy_model, PSY_NSPSYTUNE, -1);
+        SET_OPTION(maskingadjust, 1.6, 0);
+        SET_OPTION(maskingadjust_short, 1.6, 0);
+        SET_OPTION(interChRatio, 0.0008, -1);
+        SET_OPTION(ATHlower, -36, 0);
+        SET_OPTION(ATHcurve, 11, -1);
+	    SET_OPTION(athaa_sensitivity, -25, 0);
         
 	    lame_set_experimentalY(gfp, 1);
 
 	    return preset;
-
     }
     case RADIO: { /*v7*/
 	    lame_set_VBR(gfp, vbr_rh);
 
-	    lame_set_quality(gfp, 3);
 	    lame_set_out_samplerate(gfp, 32000);
-	    lame_set_lowpassfreq(gfp, 14900);
-	    lame_set_mode(gfp, JOINT_STEREO);
+	    SET_OPTION(lowpassfreq, 14900, 0);
 
-        lame_set_short_threshold(gfp, 4.50f, 30.0f);
-        lame_set_quant_comp(gfp, 1);
-        lame_set_quant_comp_short(gfp, 0);
-        lame_set_psy_model(gfp, PSY_NSPSYTUNE);
-        lame_set_maskingadjust( gfp, .8 );
-        lame_set_maskingadjust_short( gfp, .75 );
-        lame_set_interChRatio(gfp, 0.0006);
-        lame_set_ATHlower( gfp, -20 );
-        lame_set_ATHtype(gfp, 4);
-        lame_set_ATHcurve(gfp, 8);
-	    lame_set_athaa_sensitivity(gfp, -22);
+        SET_OPTION(short_threshold_lrm, 4.50f, -1);
+        SET_OPTION(short_threshold_s, 30.0f, -1);
+        SET_OPTION(quant_comp, 1, -1);
+        SET_OPTION(quant_comp_short, 0, -1);
+        SET_OPTION(psy_model, PSY_NSPSYTUNE, -1);
+        SET_OPTION(maskingadjust, .8, 0);
+        SET_OPTION(maskingadjust_short, .75, 0);
+        SET_OPTION(interChRatio, 0.0006, -1);
+        SET_OPTION(ATHlower, -20, 0);
+        SET_OPTION(ATHcurve, 8, -1);
+	    SET_OPTION(athaa_sensitivity, -22, 0);
         
 	    lame_set_experimentalY(gfp, 1);
 
 	    return preset;
-
     }
     case PORTABLE: { /*v5*/
 	    lame_set_VBR(gfp, vbr_rh);
 
-	    lame_set_quality(gfp, 3);
-	    lame_set_lowpassfreq(gfp, 17000);
-	    lame_set_mode(gfp, JOINT_STEREO);
+	    SET_OPTION(lowpassfreq, 17000, 0);
 
-        lame_set_short_threshold(gfp, 4.40f, 25.0f);
-        lame_set_quant_comp(gfp, 1);
-        lame_set_quant_comp_short(gfp, 0);
-        lame_set_psy_model(gfp, PSY_NSPSYTUNE);
-        lame_set_maskingadjust( gfp, .5 );
-        lame_set_maskingadjust_short( gfp, .4 );
-        lame_set_interChRatio(gfp, 0.0002);
-        lame_set_ATHlower( gfp, -8.5 );
-        lame_set_ATHtype(gfp, 4);
-        lame_set_ATHcurve(gfp, 5);
-	    lame_set_athaa_sensitivity(gfp, -16);
-        
-	    lame_set_experimentalY(gfp, 1);
+        SET_OPTION(short_threshold_lrm, 4.40f, -1);
+        SET_OPTION(short_threshold_s, 25.0f, -1);
+        SET_OPTION(quant_comp, 1, -1);
+        SET_OPTION(quant_comp_short, 0, -1);
+        SET_OPTION(psy_model, PSY_NSPSYTUNE, -1);
+        SET_OPTION(maskingadjust, .5, 0);
+        SET_OPTION(maskingadjust_short, .4, 0);
+        SET_OPTION(interChRatio, 0.0002, -1);
+        SET_OPTION(ATHlower, -8.5, 0);
+        SET_OPTION(ATHcurve, 5, -1);
+	    SET_OPTION(athaa_sensitivity, -16, 0);
+
+        lame_set_experimentalY(gfp, 1);
 
 	    return preset;
-
     }
     case MEDIUM: { /*v4*/
 	    lame_set_VBR(gfp, vbr_rh);
 
-	    lame_set_quality(gfp, 3);
-	    lame_set_lowpassfreq(gfp, 18000);
-	    lame_set_mode(gfp, JOINT_STEREO);
+	    SET_OPTION(lowpassfreq, 18000, 0);
 
-        lame_set_short_threshold(gfp, 4.25f, 15.0f);
-        lame_set_quant_comp(gfp, 3);
-        lame_set_quant_comp_short(gfp, 3);
-        lame_set_psy_model(gfp, PSY_NSPSYTUNE);
+        SET_OPTION(short_threshold_lrm, 4.25f, -1);
+        SET_OPTION(short_threshold_s, 15.0f, -1);
+        SET_OPTION(quant_comp, 3, -1);
+        SET_OPTION(quant_comp_short, 3, -1);
+        SET_OPTION(psy_model, PSY_NSPSYTUNE, -1);
         lame_set_exp_nspsytune(gfp, lame_get_exp_nspsytune(gfp) | 2); /* safejoint */
-        lame_set_msfix( gfp, 1.62 );
-        lame_set_maskingadjust( gfp, 1.1 );
-        lame_set_maskingadjust_short( gfp, .7 );
-        lame_set_ATHlower( gfp, -11 );
-        lame_set_ATHtype(gfp, 4);
-        lame_set_ATHcurve(gfp, 4);
-	    lame_set_athaa_sensitivity(gfp, -8);
-        
+        SET_OPTION(msfix, 1.62, -1);
+        SET_OPTION(maskingadjust, 1.1, 0);
+        SET_OPTION(maskingadjust_short, .7, 0);
+        SET_OPTION(ATHlower, -11, 0);
+        SET_OPTION(ATHcurve, 4, -1);
+	    SET_OPTION(athaa_sensitivity, -8, 0);
+
 	    lame_set_experimentalY(gfp, 1);
 
 	    return preset;
     }
     case MEDIUM_FAST: {
 	    lame_set_VBR(gfp, vbr_mtrh);
-	    lame_set_vbr_smooth(gfp, 1);
+	    SET_OPTION(vbr_smooth, 1, -1);
 
-	    lame_set_quality(gfp, 3);
-	    lame_set_lowpassfreq(gfp, 18000);
-	    lame_set_mode(gfp, JOINT_STEREO);
+	    SET_OPTION(lowpassfreq, 18000, 0);
 
-        lame_set_short_threshold(gfp, 4.25f, 15.0f);
-        lame_set_quant_comp(gfp, 0);
-        lame_set_quant_comp_short(gfp, 0);
-        lame_set_psy_model(gfp, PSY_NSPSYTUNE);
+        SET_OPTION(short_threshold_lrm, 4.25f, -1);
+        SET_OPTION(short_threshold_s, 15.0f, -1);
+        SET_OPTION(quant_comp, 0, -1);
+        SET_OPTION(quant_comp_short, 0, -1);
+        SET_OPTION(psy_model, PSY_NSPSYTUNE, -1);
         lame_set_exp_nspsytune(gfp, lame_get_exp_nspsytune(gfp) | 2); /* safejoint */
-        lame_set_msfix( gfp, 1.62 );
-        lame_set_maskingadjust( gfp, -0.5 );
-        lame_set_maskingadjust_short( gfp, -0.9 );
-        lame_set_ATHlower( gfp, 0 );
-        lame_set_ATHtype(gfp, 4);
-        lame_set_ATHcurve(gfp, 4);
-	    lame_set_athaa_sensitivity(gfp, -8);
+        SET_OPTION(msfix, 1.62, -1);
+        SET_OPTION(maskingadjust, -.5, 0);
+        SET_OPTION(maskingadjust_short, -.9, 0);
+        SET_OPTION(ATHlower, 0, 0);
+        SET_OPTION(ATHcurve, 4, -1);
+	    SET_OPTION(athaa_sensitivity, -8, 0);
         
 	    lame_set_experimentalY(gfp, 1);
 
@@ -261,48 +248,44 @@ int apply_preset(lame_global_flags*  gfp, int preset, int enforce)
     }
     case STANDARD: { /*v2*/
 	    lame_set_VBR(gfp, vbr_rh);
-	    lame_set_VBR_min_bitrate_kbps(gfp, 96); /*ideally, we should get rid of this*/
+	    SET_OPTION(VBR_min_bitrate_kbps, 96, 0); /*ideally, we should get rid of this*/
 
-	    lame_set_quality(gfp, 3);
-	    lame_set_lowpassfreq(gfp, 19000);
-	    lame_set_mode(gfp, JOINT_STEREO);
+	    SET_OPTION(lowpassfreq, 19000, 0);
 
-        lame_set_short_threshold(gfp, 3.5f, 15.0f);
-        lame_set_quant_comp(gfp, 3);
-        lame_set_quant_comp_short(gfp, 3);
-        lame_set_psy_model(gfp, PSY_NSPSYTUNE);
+        SET_OPTION(short_threshold_lrm, 3.5f, -1);
+        SET_OPTION(short_threshold_s, 15.0f, -1);
+        SET_OPTION(quant_comp, 3, -1);
+        SET_OPTION(quant_comp_short, 3, -1);
+        SET_OPTION(psy_model, PSY_NSPSYTUNE, -1);
         lame_set_exp_nspsytune(gfp, lame_get_exp_nspsytune(gfp) | 2); /* safejoint */
-        lame_set_msfix( gfp, 1.38 );
-        lame_set_maskingadjust( gfp, .9 );
-        lame_set_maskingadjust_short( gfp, -1 );
-        lame_set_ATHlower( gfp, -1.5 );
-        lame_set_ATHtype(gfp, 4);
-        lame_set_ATHcurve(gfp, 2);
-        /* modify sfb21 by 3.75 dB plus ns-treble=0                  */
+        SET_OPTION(msfix, 1.38, -1);
+        SET_OPTION(maskingadjust, .9, 0);
+        SET_OPTION(maskingadjust_short, -1, 0);
+        SET_OPTION(ATHlower, -1.5, 0);
+        SET_OPTION(ATHcurve, 2, -1);
+       /* modify sfb21 by 3.75 dB plus ns-treble=0                  */
         lame_set_exp_nspsytune(gfp, lame_get_exp_nspsytune(gfp) | (15 << 20));
 
 	    return preset;
     }
     case STANDARD_FAST: {
 	    lame_set_VBR(gfp, vbr_mtrh);
-	    lame_set_VBR_min_bitrate_kbps(gfp, 96); /*ideally, we should get rid of this*/
-	    lame_set_vbr_smooth(gfp, 2);
+	    SET_OPTION(VBR_min_bitrate_kbps, 96, 0); /*ideally, we should get rid of this*/
+	    SET_OPTION(vbr_smooth, 2, -1);
 
-	    lame_set_quality(gfp, 3);
-	    lame_set_lowpassfreq(gfp, 19000);
-	    lame_set_mode(gfp, JOINT_STEREO);
+	    SET_OPTION(lowpassfreq, 19000, 0);
 
-        lame_set_short_threshold(gfp, 3.5f, 15.0f);
-        lame_set_quant_comp(gfp, 0);
-        lame_set_quant_comp_short(gfp, 0);
-        lame_set_psy_model(gfp, PSY_NSPSYTUNE);
+        SET_OPTION(short_threshold_lrm, 3.5f, -1);
+        SET_OPTION(short_threshold_s, 15.0f, -1);
+        SET_OPTION(quant_comp, 0, -1);
+        SET_OPTION(quant_comp_short, 0, -1);
+        SET_OPTION(psy_model, PSY_NSPSYTUNE, -1);
         lame_set_exp_nspsytune(gfp, lame_get_exp_nspsytune(gfp) | 2); /* safejoint */
-        lame_set_msfix( gfp, 1.38 );
-        lame_set_maskingadjust( gfp, -1 );
-        lame_set_maskingadjust_short( gfp, -2.5 );
-        lame_set_ATHlower( gfp, 0 );
-        lame_set_ATHtype(gfp, 4);
-        lame_set_ATHcurve(gfp, 2);
+        SET_OPTION(msfix, 1.38, -1);
+        SET_OPTION(maskingadjust, -1, 0);
+        SET_OPTION(maskingadjust_short, -2.5, 0);
+        SET_OPTION(ATHlower, 0, 0);
+        SET_OPTION(ATHcurve, 2, -1);
         /* modify sfb21 by 3.75 dB plus ns-treble=0                  */
         lame_set_exp_nspsytune(gfp, lame_get_exp_nspsytune(gfp) | (15 << 20));
 
@@ -310,23 +293,21 @@ int apply_preset(lame_global_flags*  gfp, int preset, int enforce)
     }
     case EXTREME: { /*v0*/
 	    lame_set_VBR(gfp, vbr_rh);
-	    lame_set_VBR_min_bitrate_kbps(gfp, 128);
+	    SET_OPTION(VBR_min_bitrate_kbps, 128, 0);
 
-	    lame_set_quality(gfp, 3);
-	    lame_set_lowpassfreq(gfp, 19500);
-	    lame_set_mode(gfp, JOINT_STEREO);
+	    SET_OPTION(lowpassfreq, 19500, 0);
 
-        lame_set_short_threshold(gfp, 3.1f, 15.0f);
-        lame_set_quant_comp(gfp, 3);
-        lame_set_quant_comp_short(gfp, 3);
-        lame_set_psy_model(gfp, PSY_NSPSYTUNE);
+        SET_OPTION(short_threshold_lrm, 3.1f, -1);
+        SET_OPTION(short_threshold_s, 15.0f, -1);
+        SET_OPTION(quant_comp, 3, -1);
+        SET_OPTION(quant_comp_short, 3, -1);
+        SET_OPTION(psy_model, PSY_NSPSYTUNE, -1);
         lame_set_exp_nspsytune(gfp, lame_get_exp_nspsytune(gfp) | 2); /* safejoint */
-        lame_set_msfix( gfp, 0.85);
-        lame_set_maskingadjust( gfp, -0.8 );
-        lame_set_maskingadjust_short( gfp, -2.9 );
-        lame_set_ATHlower( gfp, 2 );
-        lame_set_ATHtype(gfp, 4);
-        lame_set_ATHcurve(gfp, 1);
+        SET_OPTION(msfix, .85, -1);
+        SET_OPTION(maskingadjust, -.8, 0);
+        SET_OPTION(maskingadjust_short, -2.9, 0);
+        SET_OPTION(ATHlower, 2, 0);
+        SET_OPTION(ATHcurve, 1, -1);
         /* modify sfb21 by 3 dB plus ns-treble=0                  */
         lame_set_exp_nspsytune(gfp, lame_get_exp_nspsytune(gfp) | (12 << 20));
 
@@ -334,24 +315,22 @@ int apply_preset(lame_global_flags*  gfp, int preset, int enforce)
     }
     case EXTREME_FAST: {
 	    lame_set_VBR(gfp, vbr_mtrh);
-	    lame_set_VBR_min_bitrate_kbps(gfp, 128);
-	    lame_set_vbr_smooth(gfp, 2);
+	    SET_OPTION(VBR_min_bitrate_kbps, 128, 0);
+	    SET_OPTION(vbr_smooth, 2, -1);
 
-	    lame_set_quality(gfp, 3);
-	    lame_set_lowpassfreq(gfp, 19500);
-	    lame_set_mode(gfp, JOINT_STEREO);
+	    SET_OPTION(lowpassfreq, 19500, 0);
 
-        lame_set_short_threshold(gfp, 3.1f, 15.0f);
-        lame_set_quant_comp(gfp, 0);
-        lame_set_quant_comp_short(gfp, 0);
-        lame_set_psy_model(gfp, PSY_NSPSYTUNE);
+        SET_OPTION(short_threshold_lrm, 3.1f, -1);
+        SET_OPTION(short_threshold_s, 15.0f, -1);
+        SET_OPTION(quant_comp, 0, -1);
+        SET_OPTION(quant_comp_short, 0, -1);
+        SET_OPTION(psy_model, PSY_NSPSYTUNE, -1);
         lame_set_exp_nspsytune(gfp, lame_get_exp_nspsytune(gfp) | 2); /* safejoint */
-        lame_set_msfix( gfp, 0.85 );
-        lame_set_maskingadjust( gfp, -2.1 );
-        lame_set_maskingadjust_short( gfp, -3.7 );
-        lame_set_ATHlower( gfp, 3 );
-        lame_set_ATHtype(gfp, 4);
-        lame_set_ATHcurve(gfp, 1);
+        SET_OPTION(msfix, .85, -1);
+        SET_OPTION(maskingadjust, -2.1, 0);
+        SET_OPTION(maskingadjust_short, -3.7, 0);
+        SET_OPTION(ATHlower, 3, 0);
+        SET_OPTION(ATHcurve, 1, -1);
         /* modify sfb21 by 3 dB plus ns-treble=0                  */
         lame_set_exp_nspsytune(gfp, lame_get_exp_nspsytune(gfp) | (12 << 20));
 
@@ -368,9 +347,7 @@ int apply_preset(lame_global_flags*  gfp, int preset, int enforce)
 
 	    lame_set_VBR(gfp,vbr_mtrh); 
 	    lame_set_VBR_q(gfp,1);
-	    lame_set_quality( gfp, 3);
 	    lame_set_lowpassfreq(gfp,19500);
-	    lame_set_mode( gfp, JOINT_STEREO );
 	    lame_set_ATHtype( gfp, 3 );
 	    lame_set_VBR_min_bitrate_kbps(gfp,96);
 	    return preset;

@@ -895,7 +895,6 @@ lame_init_params(lame_global_flags * const gfp)
         
     case vbr_mtrh: {
 
-        if (gfp->ATHtype < 0) gfp->ATHtype = 4;
         if (gfp->quality < 0) gfp->quality = LAME_DEFAULT_QUALITY;
         if (gfp->quality > 7) {
             gfp->quality = 7;     /* needs psymodel */
@@ -971,6 +970,8 @@ lame_init_params(lame_global_flags * const gfp)
         if ( gfp->psymodel == PSY_NSPSYTUNE ) {
             gfc->PSY->mask_adjust = gfp->maskingadjust;
             gfc->PSY->mask_adjust_short = gfp->maskingadjust_short;
+            if (gfp->VBR_smooth < 0)
+                gfp->VBR_smooth = 0;
             gfc->VBR->smooth = gfp->VBR_smooth;
         }
 
@@ -1004,10 +1005,6 @@ lame_init_params(lame_global_flags * const gfp)
             }
         }
         
-        /*  use Gabriel's adaptative ATH shape for VBR by default
-         */
-        if (gfp->ATHtype == -1)
-            gfp->ATHtype = 4;
 
         /*  automatic ATH adjustment on, VBR modes need it
          */
@@ -1043,10 +1040,6 @@ lame_init_params(lame_global_flags * const gfp)
     default: /* cbr/abr */{
         vbr_mode vbrmode;
 
-        /* first, set parameters valid for every bitrate */
-        if (gfp->ATHtype == -1)
-            gfp->ATHtype = 4;
-
         /*  automatic ATH adjustment off by default
          *  not so important for CBR code?
          */
@@ -1074,6 +1067,10 @@ lame_init_params(lame_global_flags * const gfp)
         break;
     }
     }
+
+    /*initialize default values common for all modes*/
+
+
     /*  just another daily changing developer switch  */
     if ( gfp->tune ) gfc->PSY->mask_adjust = gfp->tune_value_a;
 
@@ -1127,12 +1124,14 @@ lame_init_params(lame_global_flags * const gfp)
 
     if ( gfp->scale < 0 ) gfp->scale = 1;
     
+    if (gfp->ATHtype < 0) gfp->ATHtype = 4;
+
     if ( gfp->ATHcurve < 0 ) gfp->ATHcurve = 4;
+    
+    if ( gfp->athaa_loudapprox < 0 ) gfp->athaa_loudapprox = 2;
     
     if (gfp->interChRatio < 0 ) gfp->interChRatio = 0;
 
-    if ( gfp->athaa_loudapprox < 0 ) gfp->athaa_loudapprox = 2;
-    
     if (gfp->useTemporal < 0 ) gfp->useTemporal = 1;  /* on by default */
 
 
@@ -2094,6 +2093,10 @@ lame_init_old(lame_global_flags * gfp)
     gfp->VBR_min_bitrate_kbps = 0;
     gfp->VBR_max_bitrate_kbps = 0;
     gfp->VBR_hard_min = 0;
+    gfc->VBR_min_bitrate = 1; /* not  0 ????? */
+    gfc->VBR_max_bitrate = 13; /* not 14 ????? */
+
+    gfp->VBR_smooth = -1;
 
     gfp->quant_comp = -1;
     gfp->quant_comp_short = -1;
@@ -2101,8 +2104,6 @@ lame_init_old(lame_global_flags * gfp)
     gfp->msfix = -1;
 
     gfc->resample_ratio = 1;
-    gfc->VBR_min_bitrate = 1; /* not  0 ????? */
-    gfc->VBR_max_bitrate = 13; /* not 14 ????? */
 
     gfc->OldValue[0] = 180;
     gfc->OldValue[1] = 180;
