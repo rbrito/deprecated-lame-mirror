@@ -430,12 +430,6 @@ __declspec(dllexport) BE_ERR	beInitStream(PBE_CONFIG pbeConfig, PDWORD dwSamples
 			lame_set_VBR( gfp, vbr_off );
 		}
 
-		// Set frequency resampling rate, if specified
-		if ( lameConfig.format.LHV1.dwReSampleRate > 0 )
-		{
-			lame_set_out_samplerate( gfp, lameConfig.format.LHV1.dwReSampleRate );
-		}
-		
 		// Set bitrate.  (CDex users always specify bitrate=Min bitrate when using VBR)
 		lame_set_brate( gfp, lameConfig.format.LHV1.dwBitrate );
 			
@@ -500,6 +494,31 @@ now --vbr-mtrh is known as --vbr-new
 
 	}
 
+    // First set all the preset options
+    if ( LQP_NOPRESET !=  lameConfig.format.LHV1.nPreset )
+    {
+    PresetOptions( gfp, lameConfig.format.LHV1.nPreset );
+    }
+
+
+	// Set frequency resampling rate, if specified
+	if ( lameConfig.format.LHV1.dwReSampleRate > 0 )
+	{
+		lame_set_out_samplerate( gfp, lameConfig.format.LHV1.dwReSampleRate );
+	}
+		
+
+    switch ( lameConfig.format.LHV1.nMode )
+	{
+		case BE_MP3_MODE_MONO:
+			lame_set_mode( gfp, MONO );
+			lame_set_num_channels( gfp, 1 );
+			break;
+		default:
+            break;
+	}
+
+
 	// Use strict ISO encoding?
 	lame_set_strict_ISO( gfp, ( lameConfig.format.LHV1.bStrictIso == TRUE ) ? 1 : 0 );
 	
@@ -550,12 +569,6 @@ now --vbr-mtrh is known as --vbr-new
 	if ( lameConfig.format.LHV1.dwMaxBitrate > 0 )
 	{
 		lame_set_VBR_max_bitrate_kbps( gfp, lameConfig.format.LHV1.dwMaxBitrate );
-	}
-
-	// First set all the preset options
-	if ( LQP_NOPRESET !=  lameConfig.format.LHV1.nPreset )
-	{
-		PresetOptions( gfp, lameConfig.format.LHV1.nPreset );
 	}
 
 	if ( lameConfig.format.LHV1.bNoRes )
