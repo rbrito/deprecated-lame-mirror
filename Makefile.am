@@ -19,6 +19,7 @@ EXTRA_DIST = \
 	STYLEGUIDE \
 	USAGE \
 	auenc \
+	configMS.h \
 	lame.bat \
 	lame.spec.in \
 	lame4dos.bat \
