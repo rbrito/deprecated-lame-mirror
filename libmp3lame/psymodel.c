@@ -1104,29 +1104,37 @@ int L3psycho_anal( lame_global_flags *gfp,
 		    thmm += thr[b];
 	          }
 
-#if 0
-#define NS_PREECHO_ATT 0.3
-		/* Short block preecho control. This code is far from completed. */
+		/* short block pre-echo control. */
+
+#define NS_PREECHO_ATT1 0.5
+#define NS_PREECHO_ATT2 0.1
+#define NS_INTERP(x,y,r) (pow((x),(r))*pow((y),1-(r)))
+
 		if (ns_attacks[sblock] >= 2) {
 		  if (sblock != 0) {
-		    thmm = Min(thmm,gfc->thm[chn].s[sb][sblock-1]);
+		    double p = NS_INTERP(gfc->thm[chn].s[sb][sblock-1],thmm,NS_PREECHO_ATT1);
+		    thmm = Min(thmm,p);
 		  } else {
-		    thmm = Min(thmm,gfc->ns_last_thm[chn][sb][2]);
+		    double p = NS_INTERP(gfc->ns_last_thm[chn][sb][2],thmm,NS_PREECHO_ATT1);
+		    thmm = Min(thmm,p);
 		  }
 		} else if (ns_attacks[sblock+1] == 1) {
 		  if (sblock != 0) {
-		    thmm = Min(thmm,gfc->thm[chn].s[sb][sblock-1]);
+		    double p = NS_INTERP(gfc->thm[chn].s[sb][sblock-1],thmm,NS_PREECHO_ATT1);
+		    thmm = Min(thmm,p);
 		  } else {
-		    thmm = Min(thmm,gfc->ns_last_thm[chn][sb][2]);
+		    double p = NS_INTERP(gfc->ns_last_thm[chn][sb][2],thmm,NS_PREECHO_ATT1);
+		    thmm = Min(thmm,p);
 		  }
 		}
 
 		if (ns_attacks[sblock] == 1 ||
 		    (sblock != 0 && ns_attacks[sblock-1] == 3) ||
 		    (sblock == 0 && gfc->ns_last_attacks[chn][2] == 3)) {
-		  thmm *= NS_PREECHO_ATT;
+		  double p = sblock == 0 ? gfc->ns_last_thm[chn][sb][2] : gfc->thm[chn].s[sb][sblock-1];
+		  p = NS_INTERP(p,thmm,NS_PREECHO_ATT2);
+		  thmm = Min(thmm,p);
 		}
-#endif
 
 		gfc->en [chn].s[sb][sblock] = enn;
 		gfc->thm[chn].s[sb][sblock] = thmm;
