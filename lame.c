@@ -94,6 +94,9 @@ void lame_init_params(lame_global_flags *gfp)
   if (!gfp->VBR) {
     gfp->brhist_disp=0;  /* turn of VBR historgram */
   }
+  if (gfp->VBR) {
+    gfp->free_format=0;  /* VBR cant mix with free format */
+  }
 
 
   /* set the output sampling rate, and resample options if necessary
@@ -341,9 +344,13 @@ void lame_init_params(lame_global_flags *gfp)
     display_bitrates(stderr);
     exit(1);
   }
-  if( (gfc->bitrate_index = BitrateIndex(gfp->brate, gfp->version,gfp->out_samplerate)) < 0) {
-    display_bitrates(stderr);
-    exit(1);
+  if (gfp->free_format) {
+    gfc->bitrate_index=0;
+  }else{
+    if( (gfc->bitrate_index = BitrateIndex(gfp->brate, gfp->version,gfp->out_samplerate)) < 0) {
+      display_bitrates(stderr);
+      exit(1);
+    }
   }
 
 
@@ -594,6 +601,13 @@ void lame_print_config(lame_global_flags *gfp)
 	      gfp->out_samplerate/1000.0,gfp->brate,
 	      mode_names[gfp->mode],2-gfp->version,compression,gfp->quality);
   }
+  if (gfp->free_format) {
+    fprintf(stderr,"Warning: many decoders cannot handle free format bitstreams\n");
+    if (gfp->brate>320) {
+      fprintf(stderr,"Warning: many decoders cannot handle free format bitrates > 320kbs\n");
+    }
+  }
+
   fflush(stderr);
 }
 

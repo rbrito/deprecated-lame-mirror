@@ -87,7 +87,8 @@ Constant Bit Rate (CBR)
 -b  n          set bitrate (8,16,24,...,320)
 -h             higher quality but slower
 -f             disable psycho-acoustics.  Encoding much faster but lower quality
-
+--freeformat   produce a free format bitstream.  User must also specify
+               a bitrate with -b, between 8 and 320 kbs.
 
 Variable Bit Rate (VBR)
 -v             VBR
@@ -274,6 +275,17 @@ fast mode
 -f   
 
 disable psycho-acoustics.  Encoding much faster but lower quality
+
+
+
+=======================================================================
+fast mode
+=======================================================================
+-freeformat   
+
+LAME will produce a fixed bitrate, free format bitstream.
+User must specify the desired bitrate in kbs, which can
+be any integer between 8 and 320.
 
 
 

@@ -122,6 +122,7 @@ void lame_help(lame_global_flags *gfp,char *name)  /* print syntax & exit */
   fprintf(stdout,"    -d              allow channels to have different blocktypes\n");
   fprintf(stdout,"    -S              don't print progress report, VBR histograms\n");
   fprintf(stdout,"    --decode        input=mp3 file, output=raw pcm\n");
+  fprintf(stdout,"    --freeformat    produce a free format bitstream\n");
   fprintf(stdout,"    --athonly       only use the ATH for masking\n");
   fprintf(stdout,"    --noath         disable the ATH for masking\n");
   fprintf(stdout,"    --noshort       do not use short blocks\n");
@@ -296,6 +297,9 @@ void lame_parse_args(lame_global_flags *gfp,int argc, char **argv)
 	}
 	else if (strcmp(token, "athonly")==0) {
 	  gfp->ATHonly=1;
+	}
+	else if (strcmp(token, "freeformat")==0) {
+	  gfp->free_format=1;
 	}
 	else if (strcmp(token, "athshort")==0) {
 	  gfp->ATHshort=1;
@@ -761,6 +765,13 @@ void lame_parse_args(lame_global_flags *gfp,int argc, char **argv)
 
   /* user specified a quality value.  override any defaults set above */
   if (user_quality)   gfp->quality=user_quality;
+
+  if (gfp->free_format) {
+    if (gfp->brate<8) {
+      fprintf(stderr,"For free format, specify a bitrate between 8 and 320kbs\n");
+      exit(1);
+    }
+  }
 
 }
 
