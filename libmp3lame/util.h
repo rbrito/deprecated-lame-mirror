@@ -171,6 +171,7 @@ typedef struct
     int     gain_adjust;
     int     smooth;         // 0=no, 1=peaks, 2=+-4
     int     bitpressure;    // strategy for bitpressure situations
+    FLOAT8  scratch[192];
 } VBR_t;
 
 /**

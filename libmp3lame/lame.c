@@ -49,7 +49,6 @@
 #endif
 
 
-
 static void
 lame_init_params_ppflt_lowpass(FLOAT8 amp_lowpass[32], FLOAT lowpass1,
                                FLOAT lowpass2, int *lowpass_band,
@@ -1049,7 +1048,18 @@ lame_init_params(lame_global_flags * const gfp)
             gfc->VBR->mask_adjust = dbQ[gfp->VBR_q];
             gfc->VBR->gain_adjust = 0;
             gfc->VBR->smooth = 1;
-        }    
+        }
+        if ( gfc->VBR->quality < 2 ) {
+            static float const dbQ[10] = { -2., -1.4, -.7, 0, .7, 1.5, 2.3, 3.1, 4., 5 };
+            gfc->VBR->mask_adjust = dbQ[gfp->VBR_q];
+            gfc->VBR->smooth = 0;    
+        }
+        if ( gfc->VBR->quality == 0 ) {
+            static float const dbQ[10] = { -1., -.6, -.3, 0, 1, 2, 3, 4, 5, 6};
+            gfc->VBR->mask_adjust = dbQ[gfp->VBR_q];
+            gfc->VBR->smooth = 0;    
+            gfc->PSY->tonalityPatch = 0;
+        }
         gfc->VBR->bitpressure = 1;
         
         gfc->sfb21_extra = (gfp->out_samplerate > 44000);
@@ -1094,9 +1104,11 @@ lame_init_params(lame_global_flags * const gfp)
             /*static const FLOAT8 atQns[10]={-16,-12,-8,-4,0,  1,  2,  3,  4,  5};*/
             if ( gfc->nsPsy.use )
                 gfc->VBR->mask_adjust = dbQns[gfp->VBR_q];
-            else
+            else {
+                gfc->PSY->tonalityPatch = 1;
                 gfc->VBR->mask_adjust = dbQ[gfp->VBR_q]; 
-            gfc->PSY->tonalityPatch = 1;
+                if (gfp->useTemporal < 0 ) gfp->useTemporal = 0;  // off by default
+            }
         }
         gfc->VBR->bitpressure = 1;
         

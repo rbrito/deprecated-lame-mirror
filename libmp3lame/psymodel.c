@@ -714,7 +714,7 @@ int L3psycho_anal( lame_global_flags * gfp,
 	  }
 	
 	/* disable short blocks */
-	if (gfp->no_short_blocks)
+	if (gfp->no_short_blocks || gfc->pe[chn] > 12000)
 	  uselongblock[chn]=1;
       }
     }

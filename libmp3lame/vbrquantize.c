@@ -50,8 +50,7 @@ typedef union {
 
 #ifdef TAKEHIRO_IEEE754_HACK
 
-#ifdef MAXQUANTERROR 
-#define DUFFBLOCK() do { \
+#define DUFFBLOCKMQ() do { \
         xp = xr34[0] * sfpow34_p1; \
         xe = xr34[0] * sfpow34_eq; \
         xm = xr34[0] * sfpow34_m1; \
@@ -82,7 +81,7 @@ typedef union {
         ++xr; \
         ++xr34; \
     } while(0)  
-#else
+
 #define DUFFBLOCK() do { \
         xp = xr34[0] * sfpow34_p1; \
         xe = xr34[0] * sfpow34_eq; \
@@ -111,7 +110,6 @@ typedef union {
         ++xr; \
         ++xr34; \
     } while(0)  
-#endif
 
 #else
 
@@ -129,6 +127,43 @@ typedef union {
 
 
 #endif
+
+/*  caution: a[] will be resorted!!
+ */
+FLOAT8 select_kth(FLOAT8 a[], int N, int k)
+{
+    int i, j, l, r;
+    FLOAT8 v, w;
+    
+    l = 0;
+    r = N-1;
+    while (r > l) {
+        v = a[r];
+        i = l-1;
+        j = r;
+        for (;;) {
+            while (a[++i] < v) /*empty*/;
+            while (a[--j] > v) /*empty*/;
+            if (i >= j) 
+                break;
+            /* swap i and j */
+            w = a[i];
+            a[i] = a[j];
+            a[j] = w;
+        }
+        /* swap i and r */
+        w = a[i];
+        a[i] = a[r];
+        a[r] = w;
+        if (i >= k) 
+            r = i-1;
+        if (i <= k) 
+            l = i+1;
+    }
+    return a[k];
+}
+
+
 
 
 static FLOAT8
@@ -190,6 +225,58 @@ calc_sfb_noise(const FLOAT8 *xr, const FLOAT8 *xr34, const int bw, const int sf)
 #else
   return xfsf;//bw;
 #endif
+}
+
+
+
+
+static FLOAT8
+calc_sfb_noise_mq(const FLOAT8 *xr, const FLOAT8 *xr34, const int bw, 
+const int sf, const int mq, FLOAT8 *scratch)
+{
+    int j,k;
+    fi_union fi; 
+    FLOAT8 temp;
+    FLOAT8 sfpow,sfpow34, xfsfm = 0, xfsf = 0;
+
+    sfpow = POW20(sf+210); /*pow(2.0,sf/4.0); */
+    sfpow34  = IPOW20(sf+210); /*pow(sfpow,-3.0/4.0);*/
+
+    for ( j=0; j < bw ; ++j) {
+        if (xr34[j]*sfpow34 > IXMAX_VAL) return -1;
+
+#ifdef TAKEHIRO_IEEE754_HACK
+        temp   = sfpow34*xr34[j];
+        temp  += MAGIC_FLOAT; 
+        fi.f  = temp;
+        fi.f  = temp + (adj43asm - MAGIC_INT)[fi.i];
+        fi.i -= MAGIC_INT;
+#else
+        temp = xr34[j]*sfpow34;
+        XRPOW_FTOI(temp, fi.i);
+        XRPOW_FTOI(temp + QUANTFAC(fi.i), fi.i);
+#endif
+
+        temp = fabs(xr[j])- pow43[fi.i]*sfpow;
+        temp *= temp;
+  
+        scratch[j] = temp;  
+        if ( xfsfm < temp ) xfsfm = temp;
+        xfsf += temp;
+    }
+//    return bw*select_kth(scratch,bw,bw*15/16);
+//    return bw * xfsfm;
+
+    if ( mq == 0 ) return bw * xfsfm;
+    
+    xfsf /= bw;
+    for ( k = 1, j = 0; j < bw; ++j ) {
+        if ( scratch[j] > xfsf ) { 
+            xfsfm += scratch[j];
+            k++; 
+        }
+    }
+    return xfsfm/k * bw;
 }
 
 
@@ -292,6 +379,45 @@ find_scalefac(const FLOAT8 *xr, const FLOAT8 *xr34, FLOAT8 l3_xmin, int bw)
   for (i=0; i<7; i++) {
     delsf /= 2;
     xfsf = calc_sfb_noise(xr,xr34,bw,sf);
+
+    if (xfsf < 0) {
+      /* scalefactors too small */
+      sf += delsf;
+    }else{
+      if (xfsf > l3_xmin)  {
+	/* distortion.  try a smaller scalefactor */
+	sf -= delsf;
+      }else{
+	sf_ok = sf;
+	sf += delsf;
+      }
+    }
+  } 
+  assert(sf_ok!=10000);
+#if 0
+  assert(delsf==1);  /* when for loop goes up to 7 */
+#endif
+
+    /*  returning a scalefac without distortion, if possible
+     */
+  return sf_ok > 45 ? sf : sf_ok;
+}
+
+static int
+find_scalefac_mq(const FLOAT8 *xr, const FLOAT8 *xr34, FLOAT8 l3_xmin, 
+int bw, int mq, FLOAT8 *scratch)
+{
+  FLOAT8 xfsf;
+  int i,sf,sf_ok,delsf;
+
+  /* search will range from sf:  -209 -> 45  */
+  sf = -82;
+  delsf = 128;
+
+  sf_ok=10000;
+  for (i=0; i<7; i++) {
+    delsf /= 2;
+    xfsf = calc_sfb_noise_mq(xr,xr34,bw,sf,mq,scratch);
 
     if (xfsf < 0) {
       /* scalefactors too small */
@@ -699,12 +825,19 @@ short_block_sf (
                                               l3_xmin->s[sfb][b], width);
                 break;
             case 2:
-            case 1:
-            case 0:
                 /*  the slower and better mode to use at higher quality
                  */
                 vbrsf->s[sfb][b] = find_scalefac_ave (&xr34[j], &xr34_orig[j],
                                                     l3_xmin->s[sfb][b], width);
+                break;
+            case 1:
+            case 0:
+                /*  maxnoise mode to use at higher quality
+                 */
+                vbrsf->s[sfb][b] = find_scalefac_mq (&xr34[j], &xr34_orig[j], 
+                                              l3_xmin->s[sfb][b], width,
+                                              gfc->VBR->quality,
+                                              gfc->VBR->scratch);
                 break;
             }
             j += width;
@@ -806,12 +939,19 @@ long_block_sf (
                                            l3_xmin->l[sfb], width);
             break;
         case 2:
-        case 1:
-        case 0:
             /*  the slower and better mode to use at higher quality
              */
             vbrsf->l[sfb] = find_scalefac_ave (&xr34[start], &xr34_orig[start],
                                                l3_xmin->l[sfb], width);
+            break;
+        case 1:
+        case 0:
+            /*  maxnoise mode to use at higher quality
+             */
+            vbrsf->l[sfb] = find_scalefac_mq (&xr34[start], &xr34_orig[start], 
+                                           l3_xmin->l[sfb], width, 
+                                           gfc->VBR->quality,
+                                           gfc->VBR->scratch);
             break;
         }
     }
