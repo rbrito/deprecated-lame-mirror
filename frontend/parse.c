@@ -886,7 +886,7 @@ void parse_args ( lame_global_flags* gfp, int argc, char** argv )
 		    lame_presets_setup ( gfp, nextArg, ProgramName );
                 T_ELIF ("disptime")
                     argUsed = 1;
-		    gfp -> update_interval = atof (nextArg);
+		    update_interval = atof (nextArg);
 		T_ELSE
 		    fprintf(stderr,"%s: unrec option --%s\n", ProgramName, token);
 		    

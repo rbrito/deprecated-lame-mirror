@@ -95,7 +95,6 @@ typedef struct  {
 
   int quality;                /* quality setting 0=best,  9=worst  */
   int silent;                 /* disable some status output */
-  float update_interval;      /* to use Frank's time status display */
   int brhist_disp;            /* enable VBR bitrate histogram display */
   int mode;                       /* 0,1,2,3 stereo,jstereo,dual channel,mono */
   int mode_fixed;                 /* use specified the mode, do not use lame's opinion of the best mode */

@@ -40,6 +40,7 @@ int swapbytes;              /* force byte swapping   default=0*/
 int totalframes;                /* frames: 0..totalframes-1 (estimate)*/
 int frameNum;                   /* frame counter */
 
+float update_interval;      /* to use Frank's time status display */
 
 #ifndef FALSE
 #define         FALSE                   0

@@ -251,8 +251,8 @@ void timestatus_klemm(lame_global_flags *gfp)
   if (! gfp -> silent) {
     if ( frameNum ==  0  ||  
 	 frameNum == 10  ||
-	 ( GetRealTime () - last_time >= gfp -> update_interval  ||
-	   GetRealTime ()             <  gfp -> update_interval )) {
+	 ( GetRealTime () - last_time >= update_interval  ||
+	   GetRealTime ()             <  update_interval )) {
       timestatus ( gfp -> out_samplerate, 
 		   frameNum, 
 		   totalframes, 

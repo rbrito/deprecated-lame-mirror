@@ -644,9 +644,6 @@ int lame_init_params(lame_global_flags *gfp)
   if (gfp->bWriteVbrTag)
       InitVbrTag(gfp);
 
-  if ( gfp -> update_interval < 0. )
-      gfp -> update_interval = 2.;
-  
   gfc->sfb21_extra = (gfp->VBR==vbr_rh || gfp->VBR==vbr_mtrh || gfp->VBR==vbr_mt)
                    &&(gfp->out_samplerate >= 32000);
   

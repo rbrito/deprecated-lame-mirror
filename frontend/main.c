@@ -141,6 +141,9 @@ int main(int argc, char **argv)
    */
   i = lame_init_params(&gf);
 
+  if ( update_interval < 0. )
+       update_interval = 2.;
+
   /* estimate total frames.  must be done after setting sampling rate so
    * we know the framesize.  */
   {
