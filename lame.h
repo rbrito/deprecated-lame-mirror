@@ -232,6 +232,12 @@ int lame_encode_buffer(lame_global_flags *,short int leftpcm[], short int rightp
 char *mp3buffer,int  mp3buffer_size);
 
 
+/* as above.  Note:  num_samples = number of samples in the L (or R)
+   channel, not the total number of samples in pcm[]  */
+int lame_encode_buffer_interleaved(lame_global_flags *,short int pcm[], 
+int num_samples, char *mp3buffer,int  mp3buffer_size);
+
+
 
 /* input 1 pcm frame, output (maybe) 1 mp3 frame.  
  * return code = number of bytes output in mp3buffer.  can be 0 

@@ -961,7 +961,7 @@ int fill_buffer(lame_global_flags *gfp,short int *outbuf,int desired_len,short i
  * return code = number of bytes output in mp3buffer.  can be 0
 */
 int lame_encode_buffer(lame_global_flags *gfp,
-   short int buffer_l[], short int buffer_r[],int nbuffer,
+   short int buffer_l[], short int buffer_r[],int nsamples,
    char *mp3buf, int mp3buf_size)
 {
   static int frame_buffered=0;
@@ -998,21 +998,21 @@ int lame_encode_buffer(lame_global_flags *gfp,
     frame_buffered=0;
   }
 
-  while (nbuffer > 0) {
+  while (nsamples > 0) {
     int n_in=0;
     int n_out=0;
     /* copy in new samples */
     for (ch=0; ch<gfp->stereo; ch++) {
       if (gfp->resample_ratio!=1)  {
 	n_out=fill_buffer_resample(gfp,&mfbuf[ch][mf_size],gfp->framesize,
-					  in_buffer[ch],nbuffer,&n_in,ch);
+					  in_buffer[ch],nsamples,&n_in,ch);
       } else {
-	n_out=fill_buffer(gfp,&mfbuf[ch][mf_size],gfp->framesize,in_buffer[ch],nbuffer);
+	n_out=fill_buffer(gfp,&mfbuf[ch][mf_size],gfp->framesize,in_buffer[ch],nsamples);
 	n_in = n_out;
       }
       in_buffer[ch] += n_in;
     }
-    nbuffer -= n_in;
+    nsamples -= n_in;
     mf_size += n_out;
     assert(mf_size<=MFSIZE);
     mf_samples_to_encode += n_out;
@@ -1035,9 +1035,96 @@ int lame_encode_buffer(lame_global_flags *gfp,
 	  mfbuf[ch][i]=mfbuf[ch][i+gfp->framesize];
     }
   }
-  assert(nbuffer==0);
+  assert(nsamples==0);
   return mp3size;
 }
+
+
+
+
+int lame_encode_buffer_interleaved(lame_global_flags *gfp,
+   short int buffer[], int nsamples, char *mp3buf, int mp3buf_size)
+{
+  static int frame_buffered=0;
+  int mp3size=0,ret,i,ch,mf_needed;
+
+  short int *in_buffer[2];
+
+  /* some sanity checks */
+  assert(ENCDELAY>=MDCTDELAY);
+  assert(BLKSIZE-FFTOFFSET >= 0);
+  mf_needed = BLKSIZE+gfp->framesize-FFTOFFSET;
+  assert(MFSIZE>=mf_needed);
+
+  if (gfp->resample_ratio!=1)  {
+    short int *buffer_l;
+    short int *buffer_r;
+    buffer_l=malloc(sizeof(short int)*nsamples);
+    buffer_r=malloc(sizeof(short int)*nsamples);
+    for (i=0; i<nsamples; i++) {
+      buffer_l[i]=buffer[2*i];
+      buffer_r[i]=buffer[2*i+1];
+    }
+    return lame_encode_buffer(gfp,buffer_l,buffer_r,nsamples,mp3buf,mp3buf_size);
+  }
+
+  if (gfp->frameNum==0 && !frame_buffered) {
+    memset((char *) mfbuf, 0, sizeof(mfbuf));
+    frame_buffered=1;
+    mf_samples_to_encode = ENCDELAY+288;
+    mf_size=ENCDELAY-MDCTDELAY;  /* we pad input with this many 0's */
+  }
+  if (gfp->frameNum==1) {
+    /* reset, for the next time frameNum==0 */
+    frame_buffered=0;
+  }
+
+  while (nsamples > 0) {
+    int n_out;
+    /* copy in new samples */
+    n_out = Min(gfp->framesize,nsamples);
+    for (i=0; i<n_out; ++i); {
+      mfbuf[0][mf_size+i]=buffer[2*i];
+      mfbuf[1][mf_size+i]=buffer[2*i+1];
+    }
+    nsamples -= n_out;
+    mf_size += n_out;
+    assert(mf_size<=MFSIZE);
+    mf_samples_to_encode += n_out;
+
+    if (mf_size >= mf_needed) {
+      /* encode the frame */
+      ret = lame_encode_frame(gfp,mfbuf[0],mfbuf[1],mf_size,mp3buf,mp3buf_size);
+      if (ret == -1) {
+	/* fatel error: mp3buffer was too small */
+	return -1;
+      }
+      mp3buf += ret;
+      mp3size += ret;
+
+      /* shift out old samples */
+      mf_size -= gfp->framesize;
+      mf_samples_to_encode -= gfp->framesize;
+      for (ch=0; ch<gfp->stereo; ch++)
+	for (i=0; i<mf_size; i++)
+	  mfbuf[ch][i]=mfbuf[ch][i+gfp->framesize];
+    }
+  }
+  assert(nsamples==0);
+  return mp3size;
+}
+
+
+
+
+
+
+
+
+
+
+
+
 
 
 /* old LAME interface */
