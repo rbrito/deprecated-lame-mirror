@@ -81,15 +81,14 @@ on_pe(
 
     for ( bits = 0, ch = 0; ch < gfc->channels_out; ++ch ) {
 	if (ratio[ch].ath_over == 0) {
-	    targ_bits[ch] = 0.0;
-	    continue;
-	}
-
-	targ_bits[ch] = tbits;
-	if (ratio[ch].pe > 500.0) {
-	    targ_bits[ch] = tbits * (ratio[ch].pe-500.0) / 1.4;
-	    if (targ_bits[ch] > mean_bits) 
-		targ_bits[ch] = mean_bits;
+	    targ_bits[ch] = 126;
+	} else {
+	    targ_bits[ch] = tbits;
+	    if (ratio[ch].pe > 500.0) {
+		targ_bits[ch] = tbits * (ratio[ch].pe-500.0) / 1.4;
+		if (targ_bits[ch] > mean_bits) 
+		    targ_bits[ch] = mean_bits;
+	    }
 	}
 	bits += targ_bits[ch];
     }
