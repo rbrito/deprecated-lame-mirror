@@ -414,7 +414,7 @@ void plot_frame(void)
   /* draw the MDCT energy spectrum */
   /*******************************************************************/
   for (gr = 0 ; gr < mode_gr ; gr ++) {
-    int bits;
+    int bits,bits2;
     char *blockname="";
     switch (blocktype[gr][ch]) {
     case 0: blockname = "normal"; 	break;
@@ -444,9 +444,14 @@ void plot_frame(void)
     ymx=11;
 
     /* draw title, erase old plot */
-    if (gtkinfo.flag123) bits=pplot1->mainbits[gr][ch];
-    else bits=pplot->LAMEmainbits[gr][ch];
-    sprintf(title2,"MDCT%1i(%s) bits=%i ",gr,label,bits);
+    if (gtkinfo.flag123) {
+      bits=pplot1->mainbits[gr][ch];
+      bits2=pplot1->sfbits[gr][ch];
+    }else{
+      bits=pplot->LAMEmainbits[gr][ch];
+      bits2=pplot->LAMEsfbits[gr][ch];
+    }
+    sprintf(title2,"MDCT%1i(%s) bits=%i/%i ",gr,label,bits,bits2);
     gpk_bargraph_draw(mdctbox[gr],0,xcord,ycord,
 		      xmn,ymn,xmx,ymx,1,title2,0,barcolor);
 
@@ -653,13 +658,15 @@ void plot_frame(void)
 
       if (blocktype[gr][ch]==2) {
 	sprintf(label2,
-		"SFB scale=%i %i%i%i",
+		"SFB scale=%i preflag=%i  %i%i%i",
 		pplot1->scalefac_scale[gr][ch],
+		pplot1->preflag[gr][ch],
 		pplot1->sub_gain[gr][ch][0],
 		pplot1->sub_gain[gr][ch][1],
 		pplot1->sub_gain[gr][ch][2]);
       }else{
-	sprintf(label2,"SFB scale=%i",pplot1->scalefac_scale[gr][ch]);
+	sprintf(label2,"SFB scale=%i preflag=%i",pplot1->scalefac_scale[gr][ch],
+		pplot1->preflag[gr][ch]);
       }
       
       if (gtkinfo.flag123) ggain = -(pplot1->qss[gr][ch]);

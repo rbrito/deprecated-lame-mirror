@@ -272,8 +272,10 @@ void compute_ath(lame_global_flags *gfp,FLOAT8 ATH_l[],FLOAT8 ATH_s[])
       ATH_f = ATHformula(gfp,samp_freq*i/(2*576)); /* freq in kHz */
       ATH_l[sfb]=Min(ATH_l[sfb],ATH_f);
     }
+
     /*
-    printf("sfb=%i %f  ATH=%f %f  %f   \n",sfb,samp_freq*start/(2*576),
+    printf("sfb=%2i freq(khz): %5.2f ..%5.2f  ATH=%6.2f %6.2f  %6.2f   \n",sfb,samp_freq*start/(2*576),
+samp_freq*end/(2*576),
 10*log10(ATH_l[sfb]),
 10*log10( ATHformula(gfp,samp_freq*start/(2*576)))  ,
 10*log10(ATHformula(gfp,samp_freq*end/(2*576))));
@@ -1122,6 +1124,7 @@ set_pinfo (lame_global_flags *gfp,
   }
   pinfo->LAMEqss[gr][ch] = cod_info->global_gain;
   pinfo->LAMEmainbits[gr][ch] = cod_info->part2_3_length;
+  pinfo->LAMEsfbits[gr][ch] = cod_info->part2_length;
 
   pinfo->over      [gr][ch] = noise[0];
   pinfo->max_noise [gr][ch] = noise[1];

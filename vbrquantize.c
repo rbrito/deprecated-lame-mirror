@@ -368,13 +368,45 @@ VBR_quantize_granule(lame_global_flags *gfp,
   l3_side = &gfc->l3_side;
   cod_info = &l3_side->gr[gr].ch[ch].tt;
 
-
   /* encode scalefacs */
   if ( gfp->version == 1 ) 
     scale_bitcount(&scalefac[gr][ch], cod_info);
   else
     scale_bitcount_lsf(&scalefac[gr][ch], cod_info);
-  
+
+
+  {/* check xr vs xr34 */
+    /* quantize xr34[] based on computed scalefactors */
+    int start,end,l,sfb;
+    int ifqstep = ( cod_info->scalefac_scale == 0 ) ? 2 : 4;
+    for ( sfb = 0; sfb < SBPSY_l; sfb++ ) {
+      int ifac;
+      FLOAT8 fac;
+      ifac = ifqstep*scalefac[gr][ch].l[sfb];
+      if (cod_info->preflag)
+	ifac += ifqstep*pretab[sfb];
+
+      if (ifac+210<Q_MAX) 
+	fac = 1/IPOW20(ifac+210);
+      else
+	fac = pow(2.0,.75*ifac/4.0);
+
+      start = gfc->scalefac_band.l[ sfb ];
+      end   = gfc->scalefac_band.l[ sfb+1 ];
+      if (gfp->frameNum>0)
+      for ( l = start; l < end; l++ ) {
+	FLOAT8 temp=fabs(xr[l]);
+	if (fabs(xr34[l]-fac*sqrt(sqrt(temp)*temp)) > 1e-10) {
+	  printf("frame=%i %i %i \n",gfp->frameNum,gr,ch);
+	  printf("xr43[l] = %e  \n",xr34[l]);
+	  printf("fac*xr  = %e  \n",fac*sqrt(sqrt(temp)*temp));
+	  exit(-1);
+	}
+      }
+    }
+  }
+
+
   /* quantize xr34 */
   cod_info->part2_3_length = count_bits(gfp,l3_enc[gr][ch],xr34,cod_info);
   cod_info->part2_3_length += cod_info->part2_length;
@@ -575,7 +607,7 @@ VBR_noise_shaping
 	int ifac;
 	FLOAT8 fac;
 	ifac = (8*cod_info->subblock_gain[i]+ifqstep*scalefac[gr][ch].s[sfb][i]);
-	if (ifac+210<256) 
+	if (ifac+210<Q_MAX) 
 	  fac = 1/IPOW20(ifac+210);
 	else
 	  fac = pow(2.0,.75*ifac/4.0);
@@ -605,7 +637,14 @@ VBR_noise_shaping
       maxover1p = Max(maxover1,(vbrmax - vbrsf.l[sfb]) - 4*(max_range_long[sfb]+pretab[sfb]));
     }
     
-    
+    /* disable preflag: */
+    /*
+    maxover0p=9999;
+    maxover1p=9999;
+    */
+
+    printf("%i %i %i maxover:  %i %i %i %i \n",gfp->frameNum,gr,ch,maxover0,maxover0p,maxover1,maxover1p);
+
     if (maxover0==0) {
       cod_info->scalefac_scale = 0;
       cod_info->preflag=0;
@@ -631,6 +670,8 @@ VBR_noise_shaping
       }
     }
     
+    printf("preflag, scale = %i %i \n",
+	   cod_info->preflag,cod_info->scalefac_scale);
     
     /* sf =  (cod_info->global_gain-210.0) */
     cod_info->global_gain = vbrmax +210;
@@ -641,6 +682,10 @@ VBR_noise_shaping
     
     
     maxover=compute_scalefacs_long(vbrsf.l,cod_info,scalefac[gr][ch].l);
+    if (gfp->frameNum==34 && gr==0 && ch==0) {
+      for ( sfb = 0; sfb < SBPSY_l; sfb++ )   
+	printf("sfb=%i  sf=%i \n",sfb,scalefac[gr][ch].l[sfb]);
+    }
     assert(maxover <=0);
     
     
@@ -654,15 +699,16 @@ VBR_noise_shaping
 	ifac += ifqstep*pretab[sfb];
 
       assert(ifac >= -vbrsf.l[sfb]);
-      if (ifac+210<256) 
+      if (ifac+210<Q_MAX) 
 	fac = 1/IPOW20(ifac+210);
       else
 	fac = pow(2.0,.75*ifac/4.0);
 
       start = gfc->scalefac_band.l[ sfb ];
       end   = gfc->scalefac_band.l[ sfb+1 ];
-      for ( l = start; l < end; l++ ) 
-	xr34[l]*=fac;
+      for ( l = start; l < end; l++ ) {
+    	xr34[l]*=fac;
+      }
     }
   } 
   

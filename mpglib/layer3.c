@@ -1611,6 +1611,7 @@ int do_layer3(struct frame *fr,unsigned char *pcm_sample,int *pcm_point)
 
       if (mpg123_pinfo!=NULL) {
 	int i;
+	mpg123_pinfo->sfbits[gr][0] = part2bits;
 	for (i=0; i<39; i++) 
 	  mpg123_pinfo->sfb_s[gr][0][i]=scalefacs[0][i];
       }
@@ -1632,6 +1633,7 @@ int do_layer3(struct frame *fr,unsigned char *pcm_sample,int *pcm_point)
       }
       if (mpg123_pinfo!=NULL) {
 	int i;
+	mpg123_pinfo->sfbits[gr][1] = part2bits;
 	for (i=0; i<39; i++) 
 	  mpg123_pinfo->sfb_s[gr][1][i]=scalefacs[1][i];
       }
@@ -1705,6 +1707,7 @@ int do_layer3(struct frame *fr,unsigned char *pcm_sample,int *pcm_point)
       mpg123_pinfo->mixed[gr][ch] = gr_info->mixed_block_flag;
       mpg123_pinfo->mpg123blocktype[gr][ch]=gr_info->block_type;
       mpg123_pinfo->mainbits[gr][ch] = gr_info->part2_3_length;
+      mpg123_pinfo->preflag[gr][ch] = gr_info->preflag;
       if (gr==1) mpg123_pinfo->scfsi[ch] = gr_info->scfsi;
     }
 

@@ -51,10 +51,13 @@ typedef struct {
   double over_noise[2][2];
   int blocktype[2][2];
   int scalefac_scale[2][2];
+  int preflag[2][2];
   int mpg123blocktype[2][2];
   int mixed[2][2];
   int mainbits[2][2];
+  int sfbits[2][2];
   int LAMEmainbits[2][2];
+  int LAMEsfbits[2][2];
   int framesize,stereo,js,ms_stereo,i_stereo,emph,bitrate,sampfreq,maindata;
   int crc,padding;
   int scfsi[2],mean_bits,resvsize;
