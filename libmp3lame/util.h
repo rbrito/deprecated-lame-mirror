@@ -538,14 +538,19 @@ int lame_decode1_unclipped(
 
 
 
-
+#ifdef HAVE_NASM
 extern int  has_MMX   ( void );
 extern int  has_3DNow ( void );
 extern int  has_E3DNow( void );
 extern int  has_SSE   ( void );
 extern int  has_SSE2  ( void );
-
-
+#else
+# define has_MMX()	0
+# define has_3DNow()	0
+# define has_E3DNow()	0
+# define has_SSE()	0
+# define has_SSE2()	0
+#endif
 
 /***********************************************************************
 *

@@ -10,11 +10,11 @@
 
 %include "nasm.h"
 
-	globaldef	has_MMX_nasm
-	globaldef	has_3DNow_nasm
-	globaldef	has_E3DNow_nasm
-	globaldef	has_SSE_nasm
-	globaldef	has_SSE2_nasm
+	globaldef	has_MMX
+	globaldef	has_3DNow
+	globaldef	has_E3DNow
+	globaldef	has_SSE
+	globaldef	has_SSE2
 
         segment_code
 
@@ -31,10 +31,10 @@ testCPUID:
 	ret
 
 ;---------------------------------------
-;	int  has_MMX_nasm (void)
+;	int  has_MMX (void)
 ;---------------------------------------
 
-has_MMX_nasm:
+has_MMX:
         pushad
 	call	testCPUID
 	jz	return0		; no CPUID command, so no MMX
@@ -46,10 +46,10 @@ has_MMX_nasm:
 	jmp	return1		; MMX support
         
 ;---------------------------------------
-;	int  has_SSE_nasm (void)
+;	int  has_SSE (void)
 ;---------------------------------------
 
-has_SSE_nasm:
+has_SSE:
         pushad
 	call	testCPUID
 	jz	return0		; no CPUID command, so no SSE
@@ -61,10 +61,10 @@ has_SSE_nasm:
 	jmp	return1		; SSE support
         
 ;---------------------------------------
-;	int  has_SSE2_nasm (void)
+;	int  has_SSE2 (void)
 ;---------------------------------------
 
-has_SSE2_nasm:
+has_SSE2:
         pushad
 	call	testCPUID
 	jz	return0		; no CPUID command, so no SSE2
@@ -76,10 +76,10 @@ has_SSE2_nasm:
 	jmp	return1		; SSE2 support
         
 ;---------------------------------------
-;	int  has_E3DNow_nasm (void)
+;	int  has_E3DNow (void)
 ;---------------------------------------
 
-has_E3DNow_nasm:
+has_E3DNow:
         pushad
 	call	testCPUID
 	jz	return0		; no CPUID command, so no E3DNow!
@@ -106,10 +106,10 @@ return0:
 	ret
 
 ;---------------------------------------
-;	int  has_3DNow_nasm (void)
+;	int  has_3DNow (void)
 ;---------------------------------------
 
-has_3DNow_nasm:
+has_3DNow:
         pushad
 	call	testCPUID
 	jz	return0		; no CPUID command, so no 3DNow!
