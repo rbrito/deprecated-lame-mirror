@@ -397,7 +397,6 @@ struct lame_internal_flags {
 	/* factor for tuning the (sample power) point below which adaptive
 	 * threshold of hearing adjustment occurs */
 	FLOAT aa_decay;
-	FLOAT loudness_next[MAX_CHANNELS*2];  /* loudness^2 approx. */
 	FLOAT adjust[MAX_CHANNELS*2]; /* ATH lowering factor based on peak volume */
 	FLOAT eql_w[CBANDS];  /* equal loudness weights (based on ATH) */
     } ATH;

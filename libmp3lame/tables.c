@@ -1197,7 +1197,7 @@ psymodel_init(lame_global_flags *gfp)
 	    gfc->nsPsy.subbk_ene[i][j] = 1.0;
 	gfc->blocktype_next[0][i] = gfc->blocktype_next[1][i] = NORM_TYPE;
 
-	gfc->ATH.loudness_next[i] = 0.0;
+	gfc->ATH.adjust[i] = 0.0;
     }
 
     gfc->masking_lower = db2pow(gfp->VBR_q - 8 - 4);
@@ -1330,6 +1330,8 @@ psymodel_init(lame_global_flags *gfp)
     }
 #endif
 
+    if (gfc->channels_out == 1)
+	gfc->interChRatio = 0.0;
     return 0;
 }
 

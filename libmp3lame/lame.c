@@ -894,11 +894,9 @@ lame_encode_buffer_sample_t(
 
     /* Downsample to Mono if 2 channels in and 1 channel out */
     if (gfp->num_channels == 2 && gfc->channels_out == 1) {
-	for (i=0; i<nsamples; ++i) {
+	for (i=0; i<nsamples; i++)
 	    in_buffer[0][i] =
 		0.5f * ((FLOAT) in_buffer[0][i] + in_buffer[1][i]);
-		in_buffer[1][i] = 0.0;
-	}
     }
 
     /* some sanity checks */
