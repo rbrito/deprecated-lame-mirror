@@ -789,7 +789,8 @@ lame_init_params(lame_global_flags * const gfp)
         case MPG_MD_STEREO:
             channels = 3.;
             break;
-        default:
+        default:    
+            channels = 1.;  // just to make data flow analysis happy :-)
             assert(0);
             break;
         }

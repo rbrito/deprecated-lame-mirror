@@ -863,7 +863,7 @@ static const int max_range_sfac_tab[6][4] =
 /*  This is reverse-engineered from section 2.4.3.2 of the MPEG2 IS,     */
 /* "Audio Decoding Layer III"                                            */
 
-int scale_bitcount_lsf(lame_internal_flags *gfc,
+int scale_bitcount_lsf(const lame_internal_flags *gfc,
     const III_scalefac_t * const scalefac, gr_info * const cod_info)
 {
     int table_number, row_in_table, partition, nr_sfb, window, over;

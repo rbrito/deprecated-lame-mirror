@@ -529,9 +529,9 @@ extern void updateStats (lame_internal_flags *gfc);
 *  Macros about Message Printing and Exit
 *
 ***********************************************************************/
-extern int lame_errorf(lame_internal_flags *gfc, const char *, ...);
-extern int lame_debugf(lame_internal_flags *gfc, const char *, ...);
-extern int lame_msgf(lame_internal_flags *gfc, const char *, ...);
+extern int lame_errorf(const lame_internal_flags *gfc, const char *, ...);
+extern int lame_debugf(const lame_internal_flags *gfc, const char *, ...);
+extern int lame_msgf(const lame_internal_flags *gfc, const char *, ...);
 #define DEBUGF	lame_debugf
 #define ERRORF	lame_errorf
 #define MSGF	lame_msgf
