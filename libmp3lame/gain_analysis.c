@@ -338,8 +338,10 @@ AnalyzeSamples (replaygain_t* rgData, const Float_t* left_samples, const Float_t
         if ( rgData->totsamp == rgData->sampleWindow ) {  /* Get the Root Mean Square (RMS) for this set of samples */
             double  val  = STEPS_per_dB * 10. * log10 ( (rgData->lsum+rgData->rsum) / rgData->totsamp * 0.5 + 1.e-37 );
             int     ival = (int) val;
-            if ( ival <                     0 ) ival = 0;
-            if ( ival >= sizeof(rgData->A)/sizeof(*(rgData->A)) ) ival = sizeof(rgData->A)/sizeof(*(rgData->A)) - 1;
+            if (ival < 0)
+		ival = 0;
+            if (ival > sizeof(rgData->A)/sizeof(*(rgData->A)) - 1)
+		ival = sizeof(rgData->A)/sizeof(*(rgData->A)) - 1;
             rgData->A [ival]++;
             rgData->lsum = rgData->rsum = 0.;
             memmove ( rgData->loutbuf , rgData->loutbuf  + rgData->totsamp, MAX_ORDER * sizeof(Float_t) );
