@@ -1066,7 +1066,7 @@ lame_init_params(lame_global_flags * const gfp)
         if (gfp->ATHtype == -1) gfp->ATHtype = 4;
         gfp->allow_diff_short = 1;
         gfp->quality = 1;   // the usual stuff at level 1
-                
+        gfp->experimentalY = 1;        
         break;
         
     case vbr_mt:
@@ -1256,6 +1256,12 @@ lame_print_config(const lame_global_flags * gfp)
     }
 }
 
+
+/**     rh:
+ *      some pretty printing is very welcome at this point!
+ *      so, if someone is willing to do so, please do it!
+ *      add more, if you see more...
+ */
 void 
 lame_print_internals( const lame_global_flags * gfp )
 {
@@ -1266,11 +1272,17 @@ lame_print_internals( const lame_global_flags * gfp )
      */
     MSGF( gfc, "\nmisc:\n\n" );
     
+    MSGF( gfc, "\tscaling: %f\n", gfp->scale );
     MSGF( gfc, "\tfilter type: %d\n", gfc->filter_type );
     pc = gfc->quantization ? "xr^3/4" : "ISO";
     MSGF( gfc, "\tquantization: %s\n", pc );
-    pc = gfc->use_best_huffman ? "best" : "normal";
+    switch( gfc->use_best_huffman ) {
+    default: pc = "normal"; break;
+    case  1: pc = "best (outside loop)"; break;
+    case  2: pc = "best (inside loop, slow)"; break;
+    } 
     MSGF( gfc, "\thuffman search: %s\n", pc ); 
+    MSGF( gfc, "\texperimental X=%d Y=%d Z=%d\n", gfp->experimentalX, gfp->experimentalY, gfp->experimentalZ );
     MSGF( gfc, "\t...\n" );
 
     /*  everything controlling the stream format 
@@ -1290,6 +1302,13 @@ lame_print_internals( const lame_global_flags * gfp )
     default          : pc = "mono";         break;
     }
     MSGF( gfc, "\t%d channel - %s\n", gfc->channels_out, pc );
+    switch ( gfp->padding_type ) {
+    case PAD_NO    : pc = "off";  break;
+    case PAD_ALL   : pc = "all";  break;
+    case PAD_ADJUST: pc = "auto"; break;
+    default        : pc = "???";  break;
+    }
+    MSGF( gfc, "\tpadding: %s\n", pc );
     
     if ( vbr_default == gfp->VBR )  pc = "(default)";
     if ( gfp->free_format )         pc = "(free format)";
@@ -1301,6 +1320,8 @@ lame_print_internals( const lame_global_flags * gfp )
     case vbr_mtrh: MSGF( gfc, "\tvariable bitrate - VBR mtrh %s\n", pc ); break; 
     default      : MSGF( gfc, "\t ?? oops, some new one ?? \n" );         break;
     }
+    if (gfp->bWriteVbrTag) 
+    MSGF( gfc, "\tusing Xing VBR header\n" );
     MSGF( gfc, "\t...\n" );
     
     /*  everything controlling psychoacoustic settings, like ATH, etc.
@@ -1310,14 +1331,28 @@ lame_print_internals( const lame_global_flags * gfp )
     MSGF( gfc, "\ttonality estimation limit: %f Hz\n", gfc->PSY->cwlimit );
     pc = gfc->PSY->allow_diff_short ? "yes" : "no";
     MSGF( gfc, "\tallow channels to have different block types: %s\n", pc );    
+    if ( gfp->no_short_blocks )
+    MSGF( gfc, "\tforbid using short blocks\n" );
+    
     MSGF( gfc, "\tadjust masking: %f dB\n", gfc->VBR->mask_adjust );
     MSGF( gfc, "\tpsymodel: %d\n", gfc->psymodel );
     MSGF( gfc, "\tnoise shaping: %d\n", gfc->noise_shaping );
     MSGF( gfc, "\t ^ amplification: %d\n", gfc->noise_shaping_amp );
     MSGF( gfc, "\t ^ stopping: %d\n", gfc->noise_shaping_stop );
     
-    MSGF( gfc, "\tATH adjust type: %d\n", gfc->ATH->use_adjust );
+    pc = "using";
+    if ( gfp->ATHshort ) pc = "the only masking for short blocks";
+    if ( gfp->ATHonly  ) pc = "the only masking";
+    if ( gfp->noATH    ) pc = "not used";
+    MSGF( gfc, "\tATH: %s\n", pc );
+    MSGF( gfc, "\t ^ type: %d\n", gfp->ATHtype );
+    MSGF( gfc, "\t ^ adjust type: %d\n", gfc->ATH->use_adjust );
     MSGF( gfc, "\t ^ adapt threshold type: %d\n", gfp->adapt_thres_type );
+    
+    if ( gfc->nsPsy.use )
+    MSGF( gfc, "\texperimental psy tunings by Naoki Shibata\n" ); 
+    if ( gfp->useTemporal )
+    MSGF( gfc, "\tusing temporal masking effect\n" );
     MSGF( gfc, "\t...\n" );
     
     /*  that's all ?

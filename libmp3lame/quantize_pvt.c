@@ -474,7 +474,7 @@ int calc_xmin(
     if (cod_info->block_type == SHORT_TYPE) {
 
         for ( j = 0, sfb = 0; sfb < SBMAX_s; sfb++ ) {
-            tmpATH = gfp->experimentalY || gfp->VBR == vbr_mtrh
+            tmpATH = gfp->experimentalY
             ? athAdjust( gfc->ATH->adjust, gfc->ATH->s[sfb], gfc->ATH->floor )
             : gfc->ATH->adjust * gfc->ATH->s[sfb];
         
@@ -529,7 +529,7 @@ int calc_xmin(
     else {
         
         for ( sfb = 0; sfb < SBMAX_l; sfb++ ){
-            tmpATH = gfp->experimentalY || gfp->VBR == vbr_mtrh
+            tmpATH = gfp->experimentalY
             ? athAdjust( gfc->ATH->adjust, gfc->ATH->l[sfb], gfc->ATH->floor )
             : gfc->ATH->adjust * gfc->ATH->l[sfb];
           
