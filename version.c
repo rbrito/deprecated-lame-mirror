@@ -32,7 +32,8 @@ void lame_print_version(FILE *ofile) {
   fprintf(ofile,"GPSYCHO: GPL psycho-acoustic and noise shaping model version %s. \n",get_psy_version());
   */
 #ifdef LIBSNDFILE
-  fprintf(ofile,"Input handled by libsndfile (www.zip.com.au/~erikd/libsndfile)\n");
+  sf_get_lib_version(lpszVersion,sizeof(lpszVersion));
+  fprintf(ofile,"Input handled by libsndfile %s (www.zip.com.au/~erikd/libsndfile)\n",lpszVersion);
 #endif
 }
 
