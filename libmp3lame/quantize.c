@@ -332,16 +332,14 @@ trancate_smallspectrums(
 
 	width = gi->width[sfb];
 	j += width;
-	allowedNoise = (1.0 - distort[sfb]) * l3_xmin[sfb];
-	if (allowedNoise == 0.0)
+	if (distort[sfb] >= 1.0)
 	    continue;
 
-	qsort(&work[j-width], width,
-	      sizeof(FLOAT8), (__compar_fn_t)float8compare);
-
+	qsort(&work[j-width], width, sizeof(FLOAT8), float8compare);
 	if (work[j - 1] == 0.0)
 	    continue; /* all zero sfb */
 
+	allowedNoise = (1.0 - distort[sfb]) * l3_xmin[sfb];
 	trancateThreshold = 0.0;
 	start = 0;
 	do {
