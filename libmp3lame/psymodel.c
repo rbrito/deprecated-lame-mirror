@@ -506,51 +506,6 @@ calc_interchannel_masking(
  * (the sound is positioned almost center), more masking is produced
  * because you cannot detect the sound position properly.
  ***************************************************************/
-static void
-msfix1(
-    lame_internal_flags *gfc,
-    int gr
-    )
-{
-    int sb, sblock;
-    FLOAT rside,rmid,mld;
-    III_psy_ratio *mr = &gfc->masking_next[gr][0];
-    for (sb = 0; sb < SBMAX_l; sb++) {
-	/* use this fix if L & R masking differs by 2db (*1.58) or less */
-	if (mr[0].thm.l[sb] > 1.58*mr[1].thm.l[sb]
-	 || mr[1].thm.l[sb] > 1.58*mr[0].thm.l[sb])
-	    continue;
-
-	mld = gfc->mld_l[sb] * mr[3].en.l[sb];
-	rmid = Max(mr[2].thm.l[sb], Min(mr[3].thm.l[sb], mld));
-
-	mld = gfc->mld_l[sb] * mr[2].en.l[sb];
-	rside = Max(mr[3].thm.l[sb], Min(mr[2].thm.l[sb], mld));
-
-	mr[2].thm.l[sb] = rmid;
-	mr[3].thm.l[sb] = rside;
-    }
-
-    for (sb = 0; sb < SBMAX_s; sb++) {
-	for (sblock = 0; sblock < 3; sblock++) {
-	    if (mr[0].thm.s[sb][sblock] > 1.58 * mr[1].thm.s[sb][sblock]
-	     || mr[1].thm.s[sb][sblock] > 1.58 * mr[0].thm.s[sb][sblock])
-		continue;
-
-	    mld = gfc->mld_s[sb] * mr[3].en.s[sb][sblock];
-	    rmid = Max(mr[2].thm.s[sb][sblock],
-		       Min(mr[3].thm.s[sb][sblock], mld));
-
-	    mld = gfc->mld_s[sb] * mr[2].en.s[sb][sblock];
-	    rside = Max(mr[3].thm.s[sb][sblock],
-			Min(mr[2].thm.s[sb][sblock],mld));
-
-	    mr[2].thm.s[sb][sblock] = rmid;
-	    mr[3].thm.s[sb][sblock] = rside;
-	}
-    }
-}
-
 /*************************************************************** 
  * Adjust M/S maskings if user set "msfix"
  * Naoki Shibata 2000
@@ -572,44 +527,87 @@ msfix1(
  * Therefore,
  *      alpha (thM+thS) < min(thR, thL)
  ***************************************************************/
+
 static void
-ns_msfix(
-    FLOAT msfix,
-    III_psy_ratio *mr
+msfix_l(
+    lame_internal_flags *gfc,
+    int gr
+    )
+{
+    int sb;
+    III_psy_ratio *mr = &gfc->masking_next[gr][0];
+    for (sb = 0; sb < SBMAX_l; sb++) {
+	/* use this fix if L & R masking differs by 2db (*1.58) or less */
+	FLOAT rside,rmid,mld;
+	if (mr[0].thm.l[sb] > 1.58*mr[1].thm.l[sb]
+	 || mr[1].thm.l[sb] > 1.58*mr[0].thm.l[sb])
+	{
+	    FLOAT thmLR, thmM, thmS, x;
+	    thmLR = Min(mr[0].thm.l[sb], mr[1].thm.l[sb]);
+	    thmM = mr[2].thm.l[sb];
+	    thmS = mr[3].thm.l[sb];
+	    x = Min(thmM, mr[2].en.l[sb]) + Min(thmS, mr[3].en.l[sb]);
+
+	    if (thmLR*gfc->nsPsy.msfix < x) {
+		x = thmLR / x * gfc->nsPsy.msfix;
+		thmM *= x;
+		thmS *= x;
+		mr[2].thm.l[sb] = thmM;
+		mr[3].thm.l[sb] = thmS;
+	    }
+	    continue;
+	}
+
+	mld = gfc->mld_l[sb] * mr[3].en.l[sb];
+	rmid = Max(mr[2].thm.l[sb], Min(mr[3].thm.l[sb], mld));
+
+	mld = gfc->mld_l[sb] * mr[2].en.l[sb];
+	rside = Max(mr[3].thm.l[sb], Min(mr[2].thm.l[sb], mld));
+
+	mr[2].thm.l[sb] = rmid;
+	mr[3].thm.l[sb] = rside;
+    }
+}
+
+static void
+msfix_s(
+    lame_internal_flags *gfc,
+    int gr
     )
 {
     int sb, sblock;
-    for ( sb = 0; sb < SBMAX_l; sb++ ) {
-	FLOAT thmLR, thmM, thmS, x;
-	thmLR = Min(mr[0].thm.l[sb], mr[1].thm.l[sb]);
-	thmM = mr[2].thm.l[sb];
-	thmS = mr[3].thm.l[sb];
-	x = thmM + thmS;
-
-	if (thmLR*msfix < x) {
-	    x = thmLR / x;
-	    thmM *= x;
-	    thmS *= x;
-	    if (mr[2].thm.l[sb] > thmM)
-		mr[2].thm.l[sb] = thmM;
-	    if (mr[3].thm.l[sb] > thmS)
-		mr[3].thm.l[sb] = thmS;
-	}
-    }
-
+    III_psy_ratio *mr = &gfc->masking_next[gr][0];
     for (sb = 0; sb < SBMAX_s; sb++) {
 	for (sblock = 0; sblock < 3; sblock++) {
-	    FLOAT thmLR, thmM, thmS, x;
-	    thmLR = Min(mr[0].thm.s[sb][sblock], mr[1].thm.s[sb][sblock]);
-	    thmM = mr[2].thm.s[sb][sblock];
-	    thmS = mr[3].thm.s[sb][sblock];
-	    x = thmM + thmS;
+	    FLOAT rside,rmid,mld;
+	    if (mr[0].thm.s[sb][sblock] > 1.58 * mr[1].thm.s[sb][sblock]
+	     || mr[1].thm.s[sb][sblock] > 1.58 * mr[0].thm.s[sb][sblock])
+	    {
+		FLOAT thmLR, thmM, thmS, x;
+		thmLR = Min(mr[0].thm.s[sb][sblock], mr[1].thm.s[sb][sblock]);
+		thmM = mr[2].thm.s[sb][sblock];
+		thmS = mr[3].thm.s[sb][sblock];
+		x = Min(thmM, mr[2].en.s[sb][sblock])
+		    + Min(thmS, mr[3].en.s[sb][sblock]);
 
-	    if (thmLR*msfix < x) {
-		x = thmLR / x;
-		mr[2].thm.s[sb][sblock] = thmM*x;
-		mr[3].thm.s[sb][sblock] = thmS*x;
+		if (thmLR*gfc->nsPsy.msfix < x) {
+		    x = thmLR / x * gfc->nsPsy.msfix;
+		    mr[2].thm.s[sb][sblock] = thmM*x;
+		    mr[3].thm.s[sb][sblock] = thmS*x;
+		}
+		continue;
 	    }
+
+	    mld = gfc->mld_s[sb] * mr[3].en.s[sb][sblock];
+	    rmid = Max(mr[2].thm.s[sb][sblock],
+		       Min(mr[3].thm.s[sb][sblock], mld));
+
+	    mld = gfc->mld_s[sb] * mr[2].en.s[sb][sblock];
+	    rside = Max(mr[3].thm.s[sb][sblock],
+			Min(mr[2].thm.s[sb][sblock],mld));
+
+	    mr[2].thm.s[sb][sblock] = rmid;
+	    mr[3].thm.s[sb][sblock] = rside;
 	}
     }
 }
@@ -1164,7 +1162,7 @@ partially_convert_l2s(
     int sfb, b;
     for (sfb = 0; sfb < SBMAX_s; sfb++) {
 	FLOAT x = (mr->en.s[sfb][0] + mr->en.s[sfb][1] + mr->en.s[sfb][2])
-	    * (1.0/4.5);
+	    * (1.0/4.0);
 	if (x > mr->en.s[sfb][0]
 	    || x > mr->en.s[sfb][1]
 	    || x > mr->en.s[sfb][2])
@@ -1191,7 +1189,12 @@ partially_convert_l2s(
 //	printf("(%e)\n", gfc->ATH.s_avg[sfb] * gfc->ATH.adjust);
 //	printf("%e %e %e\n",
 //	       mr->en.s[sfb][0], mr->en.s[sfb][1], mr->en.s[sfb][2]);
-	mr->thm.s[sfb][0] = mr->thm.s[sfb][1] = mr->thm.s[sfb][2] = x;
+	if (mr->thm.s[sfb][0] > x)
+	    mr->thm.s[sfb][0] = x;
+	if (mr->thm.s[sfb][1] > x)
+	    mr->thm.s[sfb][1] = x;
+	if (mr->thm.s[sfb][2] > x)
+	    mr->thm.s[sfb][2] = x;
     }
 }
 
@@ -1414,7 +1417,7 @@ L3psycho_anal_ns(
 	    thmm *= gfc->masking_lower;
 	    if (thmm < gfc->ATH.l_avg[j] * gfc->ATH.adjust)
 		thmm = gfc->ATH.l_avg[j] * gfc->ATH.adjust;
-	    
+
 	    mr->en .l[j] = enn;
 	    mr->thm.l[j] = thmm;
 
@@ -1705,9 +1708,10 @@ psycho_analysis(
 	    calc_interchannel_masking(gfp, gr);
 
 	if (gfp->mode == JOINT_STEREO) {
-	    msfix1(gfc, gr);
-	    ns_msfix(gfc->nsPsy.msfix, &gfc->masking_next[gr][0]);
+	    if (!gfc->useshort_next[gr][ch]) 
+		msfix_l(gfc, gr);
 
+	    msfix_s(gfc, gr);
 	    numchn = 4;
 	}
 	/*********************************************************************
