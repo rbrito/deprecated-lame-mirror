@@ -347,8 +347,8 @@ int  lame_encode_mp3_frame (				/* Output */
 	for ( ch = 0; ch < gfc->channels_out; ch++ ) {
 	    int i;
 	    memset(primebuff, 0, sizeof(FLOAT)*gfp->framesize);
-	    for (i = 0; i < 576; i++)
-		primebuff[gfp->framesize + i] = inbuf[ch][i];
+	    for (i = -48; i < 576; i++)
+		primebuff[gfp->framesize + i] = inbuf[ch][i+1152];
 
 	    subband(gfc, primebuff-gfp->framesize, sbsmpl[ch]);
 	    memset(gfc->sb_sample[ch][0], 0, sizeof(gfc->sb_sample[0][0]));
