@@ -498,6 +498,7 @@ struct lame_internal_flags {
 
   int	numlines_s[CBANDS];
   int	numlines_l[CBANDS];
+  FLOAT rnumlines_l[CBANDS];
 
   /* ratios  */
   FLOAT8 pe[4];

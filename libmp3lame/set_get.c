@@ -1121,14 +1121,14 @@ int
 lame_set_ATHlower( lame_global_flags*  gfp,
                    float               ATHlower )
 {
-    gfp->ATHlower = ATHlower;
+    gfp->ATHlower = -ATHlower / 10.0;
     return 0;
 }
 
 float
 lame_get_ATHlower( const lame_global_flags*  gfp )
 {
-    return gfp->ATHlower;
+    return -gfp->ATHlower * 10.0;
 }
 
 

@@ -192,11 +192,8 @@ static FLOAT8 ATHmdct( lame_global_flags *gfp, FLOAT8 f )
         ath -= 114;
     }
     
-    /*  modify the MDCT scaling for the ATH  */
-    ath -= gfp->ATHlower;
-
-    /* convert to energy */
-    ath = pow( 10.0, ath/10.0 );
+    /* modify the MDCT scaling for the ATH and convert to energy */
+    ath = pow( 10.0, ath/10.0 + gfp->ATHlower);
     return ath;
 }
 
