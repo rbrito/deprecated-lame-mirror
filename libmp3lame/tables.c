@@ -1087,7 +1087,7 @@ static FLOAT s3_func(FLOAT bark) {
     FLOAT tempx,x,tempy,temp;
     tempx = bark;
     if (tempx>=0) tempx *= 3;
-    else tempx *=1.5; 
+    else tempx *=1.5;
 
     if (tempx>=0.5 && tempx<=2.5)
       {
@@ -1463,15 +1463,13 @@ int psymodel_init(lame_global_flags *gfp)
     gfc->ATH.adjust = 0.01; /* minimum, for leading low loudness */
     gfc->ATH.adjust_limit = 1.0; /* on lead, allow adjust up to maximum */
 
-    gfc->bo_s[SBMAX_s-1]--;
     assert(gfc->bo_l[SBMAX_l-1] <= gfc->npart_l);
     assert(gfc->bo_l2s[SBMAX_s-1] <= gfc->npart_l);
     assert(gfc->bo_s[SBMAX_s-1] <= gfc->npart_s);
 
     // The type of window used here will make no real difference, but
-    // in the interest of merging nspsytune stuff - switch to blackman window
+    // use blackman window for long block.
     for (i = 0; i < BLKSIZE ; i++)
-      /* blackman window */
       window[i] =
 	  0.42-0.5*cos(2*PI*(i+.5)/BLKSIZE) + 0.08*cos(4*PI*(i+.5)/BLKSIZE);
 
