@@ -1,16 +1,16 @@
 struct buf {
-        unsigned char *pnt;
-	long size;
-	long pos;
-        struct buf *next;
-        struct buf *prev;
+    unsigned char *pnt;
+    long size;
+    long pos;
+    struct buf *next;
+    struct buf *prev;
 };
 
 struct framebuf {
-	struct buf *buf;
-	long pos;
-	struct frame *next;
-	struct frame *prev;
+    struct buf *buf;
+    long pos;
+    struct frame *next;
+    struct frame *prev;
 };
 
 typedef struct mpstr_tag {
@@ -31,7 +31,7 @@ typedef struct mpstr_tag {
     int fsizeold;
     int fsizeold_nopadding;
     struct frame fr;
-    unsigned char bsspace[2][MAXFRAMESIZE+512]; /* MAXFRAMESIZE */
+    unsigned char bsspace[2][MAXFRAMESIZE+1024]; /* MAXFRAMESIZE */
     real hybrid_block[2][2][SBLIMIT*SSLIMIT];
     int hybrid_blc[2];
     unsigned long header;
