@@ -654,8 +654,9 @@ int PutLameVBR(lame_global_flags *gfp, FILE *fpStream, uint8_t *pbtStreamBuffer,
 		(gfp->lowpassfreq >=19500 || gfp->lowpassfreq == 0) && 
 		(nAthType > 0 && nAthType < 5 )		&&
 		( 
-				(gfp->brate >=256 && (gfp->mode == STEREO || gfp->mode == JOINT_STEREO) && bExpNPsyTune && bSafeJoint) 
-			||  (nABRBitrate >=224 && gfp->mode == JOINT_STEREO && bExpNPsyTune && bSafeJoint) 
+			(gfp->brate >=256 && (gfp->mode == STEREO || (gfp->mode == JOINT_STEREO && bExpNPsyTune && bSafeJoint))) 
+			|| (nABRBitrate >=224 && gfp->mode == JOINT_STEREO && bExpNPsyTune && bSafeJoint) 
+			|| (nABRBitrate >=256 && gfp->mode == STEREO) 
 			|| (nQuality>=88 && bExpNPsyTune) 
 			|| (nQuality>=78 && gfp->mode == JOINT_STEREO && bExpNPsyTune && bSafeJoint && nAthType > 0 && nAthType < 5) 
 			)
