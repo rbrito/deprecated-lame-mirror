@@ -202,14 +202,7 @@ wave <-> mp3
 
 
 Build environment
-1. MSVC project files.  It would be nice to create a working
-   MSVC6 workspace, which included all the projects as possible
-   targets:
-          lame.exe
-          mp3x.exe   (require GTK libs)
-          lame_enc.dll   
-          ACM codec
-          directshow codec
+1. MSVC .net solution files.
 
 2. more 64 bit environment support.
 
@@ -217,6 +210,7 @@ Build environment
 really fast, but are not confirmed to run on all environments.
 
 4. NASM version check. LAME4 needs nasm 0.98.38 (or maybe upper).
+
 
 
 ACM
