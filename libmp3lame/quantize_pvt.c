@@ -634,11 +634,50 @@ int  calc_noise(
     FLOAT8 max_noise  = 1E-20; /* -200 dB relative to masking */
     double klemm_noise = 1E-37;
     int j = 0;
+    int max_index = 0;
+
+    if (cod_info->block_type != SHORT_TYPE)
+	max_index = gfc->sfb21_extra ? SBMAX_l : SBPSY_l;
+    else if (cod_info->mixed_block_flag)
+	max_index = 8;
+
+    for (sfb = 0; sfb < max_index; sfb++) {
+	int s =
+	    cod_info->global_gain
+	    - ((scalefac->l[sfb] + (cod_info->preflag ? pretab[sfb] : 0))
+	       << (cod_info->scalefac_scale + 1));
+	FLOAT8 step = POW20(s);
+	FLOAT8 noise = 0.0;
+
+	l = gfc->scalefac_band.l[sfb+1] - gfc->scalefac_band.l[sfb];
+	do {
+	    FLOAT8 temp = fabs(xr[j]) - pow43[ix[j]] * step;
+	    noise += temp * temp;
+	    j++;
+	} while (--l > 0);
+	noise = xfsf->l[sfb] = noise / l3_xmin->l[sfb];
+	max_noise=Max(max_noise,noise);
+	klemm_noise += penalties (noise);
+
+	noise = log10(Max(noise,1E-20));
+	/* multiplying here is adding in dB, but can overflow */
+	//tot_noise *= Max(noise, 1E-20);
+	tot_noise_db += noise;
+
+	if (noise > 0.0) {
+	    over++;
+	    /* multiplying here is adding in dB -but can overflow */
+	    //over_noise *= noise;
+	    over_noise_db += noise;
+	}
+    }
 
     if (cod_info->block_type == SHORT_TYPE) {
-	int max_index = gfc->sfb21_extra ? SBMAX_s : SBPSY_s;
-
-	for ( sfb = 0; sfb < max_index; sfb++ ) {
+	max_index = gfc->sfb21_extra ? SBMAX_s : SBPSY_s;
+	sfb = 0;
+	if (cod_info->mixed_block_flag)
+	    sfb = 3;
+	for (; sfb < max_index; sfb++) {
 	    int width =
 		gfc->scalefac_band.s[sfb+1] - gfc->scalefac_band.s[sfb];
 	    for ( i = 0; i < 3; i++ ) {
@@ -660,7 +699,7 @@ int  calc_noise(
 		max_noise    = Max(max_noise,noise);
 		klemm_noise += penalties (noise);
 
-		noise=10*log10(Max(noise,1E-20));
+		noise = log10(Max(noise,1E-20));
 		tot_noise_db += noise;
 
 		if (noise > 0.0) {
@@ -669,46 +708,13 @@ int  calc_noise(
 		}
 	    }
 	}
-    } else { /* cod_info->block_type == SHORT_TYPE */
-	int max_index = gfc->sfb21_extra ? SBMAX_l : SBPSY_l;
-	for (sfb = 0; sfb < max_index; sfb++ ) {
-	    int s =
-		cod_info->global_gain
-		- ((scalefac->l[sfb] + (cod_info->preflag ? pretab[sfb] : 0))
-		   << (cod_info->scalefac_scale + 1));
-	    FLOAT8 step = POW20(s);
-	    FLOAT8 noise = 0.0;
-
-	    l = gfc->scalefac_band.l[sfb+1] - gfc->scalefac_band.l[sfb];
-	    do {
-		FLOAT8 temp;
-		temp = fabs(xr[j]) - pow43[ix[j]] * step;
-		noise += temp * temp;
-		j++;
-	    } while (--l > 0);
-	    noise = xfsf->l[sfb] = noise / l3_xmin->l[sfb];
-	    max_noise=Max(max_noise,noise);
-	    klemm_noise += penalties (noise);
-
-	    noise=10*log10(Max(noise,1E-20));
-	    /* multiplying here is adding in dB, but can overflow */
-	    //tot_noise *= Max(noise, 1E-20);
-	    tot_noise_db += noise;
-
-	    if (noise > 0.0) {
-		over++;
-		/* multiplying here is adding in dB -but can overflow */
-		//over_noise *= noise;
-		over_noise_db += noise;
-	    }
-	}
     } /* cod_info->block_type == SHORT_TYPE */
 
     res->over_count = over;
-    res->tot_noise   = tot_noise_db;
-    res->over_noise  = over_noise_db;
-    res->max_noise   = 10.*log10(Max(1e-20,max_noise ));
-    res->klemm_noise = 10.*log10(Max(1e-20,klemm_noise));
+    res->tot_noise   = 10.*tot_noise_db;
+    res->over_noise  = 10.*over_noise_db;
+    res->max_noise   = 10.*log10(max_noise);
+    res->klemm_noise = 10.*log10(klemm_noise);
 
     return over;
 }
