@@ -261,7 +261,7 @@ unsigned int getbits(int number_of_bits)
 {
   unsigned long rval;
 
-  if(!number_of_bits)
+  if(!number_of_bits || !wordpointer)
     return 0;
 
   {
