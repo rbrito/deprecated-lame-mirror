@@ -806,7 +806,7 @@ void set_pinfo (
                 /* convert to MDCT units */
                 en1=1e15;  /* scaling so it shows up on FFT plot */
                 gfc->pinfo->xfsf_s[gr][ch][3*sfb+i] 
-                    = en1*xfsf.s[sfb][i]*l3_xmin.s[sfb][i];
+                    = en1*xfsf.s[sfb][i]*l3_xmin.s[sfb][i]/bw;
                 gfc->pinfo->en_s[gr][ch][3*sfb+i] = en1*en0;
 
                 if (ratio->en.s[sfb][i]>0)
@@ -878,7 +878,7 @@ void set_pinfo (
 
             /* convert to MDCT units */
             en1=1e15;  /* scaling so it shows up on FFT plot */
-            gfc->pinfo->xfsf[gr][ch][sfb] =  en1*xfsf.l[sfb]*l3_xmin.l[sfb];
+            gfc->pinfo->xfsf[gr][ch][sfb] =  en1*xfsf.l[sfb]*l3_xmin.l[sfb]/bw;
             gfc->pinfo->en[gr][ch][sfb] = en1*en0;
             if (ratio->en.l[sfb]>0)
                 en0 = en0/ratio->en.l[sfb];
