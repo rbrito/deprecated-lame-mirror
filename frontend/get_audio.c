@@ -614,9 +614,9 @@ lame_decoder(lame_global_flags * gfp, FILE * outf, int skip, char *inPath,
 
         for (; i < iread; i++) {
             if ( lame_get_disable_waveheader( gfp ) ) {
-                WriteFunction(outf, (char *) Buffer[0] + i, sizeof(short));
+                WriteFunction(outf, (char *) &Buffer[0][i], sizeof(short));
                 if (tmp_num_channels == 2)
-                    WriteFunction(outf, (char *) Buffer[1] + i, sizeof(short));
+                    WriteFunction(outf, (char *) &Buffer[1][i], sizeof(short));
             }
             else {
                 Write16BitsLowHigh(outf, Buffer[0][i]);

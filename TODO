@@ -2,6 +2,9 @@ frontend: a bunch of static variables (input_format, swapbytes,
           silent, brhist, update_inteval) are set in parse_args and used in
           get_audio.  should be cleaned up.
 
+lame_disable_wavheader: this variable is only needed by the
+front end - remove from library.
+
 
 
 
