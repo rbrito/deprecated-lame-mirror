@@ -645,7 +645,7 @@ int L3psycho_anal( lame_global_flags *gfp,
 	    int i,j;
 	    for(i=0;i<7;i++)
 	      for(j=0;j<20;j++)
-		tab[i][j] = pow(10,-tab[i][j]/10.0);
+		tab[i][j] = pow(10.0,-tab[i][j]/10.0);
 	  }
 	  eb2[b] = eb[b] * tab[b/10][(int)(20*tonality2[b])];
 	}
@@ -926,7 +926,7 @@ int L3psycho_anal( lame_global_flags *gfp,
            *  Robert Hegemann 2000-09-12
            */
 	  FLOAT8 enM  = enn;
-          FLOAT8 thmM = thmM;
+          FLOAT8 thmM = thmm;
           
           for ( b = gfc->bu_l[sb]+1; b < gfc->bo_l[sb]; b++ )
 	    {

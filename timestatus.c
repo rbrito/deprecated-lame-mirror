@@ -201,12 +201,12 @@ void timestatus ( unsigned long samp_rate,
 
     fprintf ( stderr, "\r%6ld/%-6ld", frameNum, totalframes - dropped_frames );
     fprintf ( stderr, percent < 100 ? " (%2d%%)|" : "(%3.3d%%)|", percent );
-    ts_time_decompose ( process_time.so_far   , '/' );
-    ts_time_decompose ( process_time.estimated, '|' );
-    ts_time_decompose ( real_time   .so_far   , '/' );
-    ts_time_decompose ( real_time   .estimated, '|' );
+    ts_time_decompose ( (unsigned long)process_time.so_far   , '/' );
+    ts_time_decompose ( (unsigned long)process_time.estimated, '|' );
+    ts_time_decompose ( (unsigned long)real_time   .so_far   , '/' );
+    ts_time_decompose ( (unsigned long)real_time   .estimated, '|' );
     fprintf ( stderr, process_time.speed <= 9999.9999 ? "%9.4fx|" : "%9.3ex|", process_time.speed );
-    ts_time_decompose ( real_time   .eta      , ' ' );
+    ts_time_decompose ( (unsigned long)real_time   .eta      , ' ' );
     fflush ( stderr );
 }
 
