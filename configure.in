@@ -574,11 +574,15 @@ x86_64)
 
 	AC_DEFINE(USE_IEEE754_HACK, 1, IEEE754 compatible machine)
 	;;
+powerpc)
+	# use internal knowledge of the IEEE 754 layout
+	CPUTYPE="no"
+
+	AC_DEFINE(USE_IEEE754_HACK, 1, IEEE754 compatible machine)
+	;;
 *)
 	CPUTYPE="no"
 	;;
-# seems sparc/power pc cannot get any performance gain from IEEE754_HACK
-
 esac
 
 
@@ -718,7 +722,7 @@ if test "x$GCC" = "xyes"; then
 			;;
 		esac
 
-		OPTIMIZATION="-O ${OMIT_FRAME_POINTER} -ffast-math"
+		OPTIMIZATION="-O3 ${OMIT_FRAME_POINTER} -ffast-math"
 		OPTIMIZATION_FULL="-fmove-all-movables -freduce-all-givs \
 			-fbranch-count-reg -fforce-addr -fforce-mem"
 		;;
