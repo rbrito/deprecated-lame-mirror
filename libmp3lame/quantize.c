@@ -1551,8 +1551,8 @@ VBR_noise_shaping(
     assert(gi->part2_length < LARGE_BITS);
 
     if (gi->part2_3_length > MAX_BITS
-	||  (gi->block_type == SHORT_TYPE && (gfc->substep_shaping & 2))
-	|| !(gi->block_type != SHORT_TYPE && (gfc->substep_shaping & 1)))
+	|| (gi->block_type == SHORT_TYPE && (gfc->substep_shaping & 2))
+	|| (gi->block_type != SHORT_TYPE && (gfc->substep_shaping & 1)))
 	trancate_smallspectrums(gfc, gi, xmin);
 
     if (gfc->use_best_huffman == 2)
