@@ -285,7 +285,7 @@ void  brhist_disp ( const lame_global_flags*  gf )
 
     for ( i = 0; i < BRHIST_WIDTH; i++ )
         if ( br_hist [i]  ||  (i >= brhist.vbr_bitrate_min_index  &&  i <= brhist.vbr_bitrate_max_index) )
-            brhist_disp_line ( gf, i, br_hist [i], br_sm_hist [i][LR], most_often, frames );
+            brhist_disp_line ( gf, i, br_hist [i], br_sm_hist [i][LR]+br_sm_hist [i][LR+1], most_often, frames );
 
     fputs ( "\r", Console_IO.Console_fp );
     fflush ( Console_IO.Console_fp );   /* fflush is ALSO needed for Windows! */
