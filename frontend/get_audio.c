@@ -856,8 +856,10 @@ read_samples_pcm(FILE * const musicin, int sample_buffer[2304],
         for (i = 0; i < samples_read; i++)
             sample_buffer[i] <<= (8 * sizeof(int) - 24);
 	break;
+    case 32:
+	break;
     default:
-        fprintf(stderr, "Only 8, 16, and 24 bit input files supported \n");
+        fprintf(stderr, "Only 8, 16, 24 and 32 bit input files supported \n");
         exit(1);
     }
 
@@ -971,7 +973,7 @@ read_samples_pcm(FILE * musicin, int sample_buffer[2304], int frame_size,
 	samples_read = unpack_read_samples( samples_to_read, 1, 0,
 					    sample_buffer, musicin );
     } else {
-        fprintf(stderr, "Only 8, 16, and 24 bit input files supported \n");
+        fprintf(stderr, "Only 8, 16, 24 and 32 bit input files supported \n");
         exit(1);
     }
     if (ferror(musicin)) {
