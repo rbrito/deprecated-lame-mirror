@@ -338,7 +338,6 @@ void  brhist_disp_total ( const lame_global_flags* gf )
 
     fprintf ( Console_IO.Console_fp, "\naverage: %5.1f kbps\n", sum / br_frames);
 
-    /* I'm very unhappy because this is only printed out in VBR modes */
     if (st_frames > 0) {
 	fprintf ( Console_IO.Console_fp, "   LR: %d (%#5.4g%%)", st_mode[LR], 100. * st_mode[LR] / st_frames );
 	fprintf ( Console_IO.Console_fp, "   MS: %d (%#5.4g%%)", st_mode[MS], 100. * st_mode[MS] / st_frames );
