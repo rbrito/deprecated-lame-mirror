@@ -44,8 +44,7 @@ void    best_scalefac_store (lame_internal_flags * const gfc,
 			     const int gr, const int ch );
 
 int     scale_bitcount (gr_info * const cod_info);
-int     scale_bitcount_lsf (const lame_internal_flags *gfp,
-                            gr_info * const cod_info);
+int     scale_bitcount_lsf (gr_info * const cod_info);
 
 #define LARGE_BITS 100000
 

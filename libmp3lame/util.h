@@ -501,6 +501,7 @@ struct lame_internal_flags {
   sample_t *blackfilt [2*BPC+1];
   FLOAT itime[2];
 
+    int (*scale_bitcounter)(gr_info const *gi);
 #if HAVE_NASM
     /* functions to replace with CPU feature optimized one in takehiro.c */
     int (*choose_table)(const int *ix, const int *end, int *s);

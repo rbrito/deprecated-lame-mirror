@@ -776,13 +776,8 @@ void best_scalefac_store(
 	&& l3_side->tt[0][ch].block_type != SHORT_TYPE
 	&& gi->block_type != SHORT_TYPE) {
       	scfsi_calc(ch, l3_side);
-    } else if (recalc) {
-	if (gfc->mode_gr == 2) {
-	    scale_bitcount(gi);
-	} else {
-	    scale_bitcount_lsf(gfc, gi);
-	}
-    }
+    } else if (recalc)
+	gfc->scale_bitcounter(gi);
 }
 
 
@@ -806,41 +801,37 @@ static const int scale_long[16] = {
 /*************************************************************************/
 
 /* Also calculates the number of bits necessary to code the scalefactors. */
-
-int scale_bitcount(gr_info * const cod_info)
+int
+scale_bitcount(gr_info * const gi)
 {
     int k, sfb, max_slen1 = 0, max_slen2 = 0;
+    int *tab, *scalefac = gi->scalefac;
 
     /* maximum values */
-    const int *tab;
-    int *scalefac = cod_info->scalefac;
-
-    if ( cod_info->block_type == SHORT_TYPE ) {
+    if ( gi->block_type == SHORT_TYPE ) {
 	tab = scale_short;
-	if (cod_info->mixed_block_flag)
+	if (gi->mixed_block_flag)
 	    tab = scale_mixed;
-    }
-    else
-    { /* block_type == 1,2,or 3 */
+    } else {
         tab = scale_long;
-	if (!cod_info->preflag) {
+	if (!gi->preflag) {
 	    for ( sfb = 11; sfb < SBPSY_l; sfb++ )
 		if (scalefac[sfb] < pretab[sfb])
 		    break;
 
 	    if (sfb == SBPSY_l) {
-		cod_info->preflag = 1;
+		gi->preflag = 1;
 		for ( sfb = 11; sfb < SBPSY_l; sfb++ )
 		    scalefac[sfb] -= pretab[sfb];
 	    }
 	}
     }
 
-    for (sfb = 0; sfb < cod_info->sfbdivide; sfb++)
+    for (sfb = 0; sfb < gi->sfbdivide; sfb++)
 	if (max_slen1 < scalefac[sfb])
 	    max_slen1 = scalefac[sfb];
 
-    for (; sfb < cod_info->sfbmax; sfb++)
+    for (; sfb < gi->sfbmax; sfb++)
 	if (max_slen2 < scalefac[sfb])
 	    max_slen2 = scalefac[sfb];
 
@@ -848,32 +839,16 @@ int scale_bitcount(gr_info * const cod_info)
      * loop over *all* posible values of scalefac_compress to find the
      * one which uses the smallest number of bits.  ISO would stop
      * at first valid index */
-    cod_info->part2_length = LARGE_BITS;
+    gi->part2_length = LARGE_BITS;
     for ( k = 0; k < 16; k++ ) {
-        if (max_slen1 < slen1_n[k] && max_slen2 < slen2_n[k]
-	    && cod_info->part2_length > tab[k]) {
-	    cod_info->part2_length=tab[k];
-	    cod_info->scalefac_compress=k;
+	if (max_slen1 < slen1_n[k] && max_slen2 < slen2_n[k]
+	    && gi->part2_length > tab[k]) {
+	    gi->part2_length=tab[k];
+	    gi->scalefac_compress=k;
 	}
     }
-    return cod_info->part2_length == LARGE_BITS;
+    return gi->part2_length;
 }
-
-
-
-/*
-  table of largest scalefactor values for MPEG2
-*/
-static const int max_range_sfac_tab[6][4] =
-{
- { 15, 15, 7,  7},
- { 15, 15, 7,  0},
- { 7,  3,  0,  0},
- { 15, 31, 31, 0},
- { 7,  7,  7,  0},
- { 3,  3,  0,  0}
-};
-
 
 
 
@@ -881,115 +856,98 @@ static const int max_range_sfac_tab[6][4] =
 /*            scale_bitcount_lsf                                         */
 /*************************************************************************/
 
-/* Also counts the number of bits to encode the scalefacs but for MPEG 2 */ 
-/* Lower sampling frequencies  (24, 22.05 and 16 kHz.)                   */
- 
-/*  This is reverse-engineered from section 2.4.3.2 of the MPEG2 IS,     */
-/* "Audio Decoding Layer III"                                            */
+/* counts the number of bits to encode the scalefacs but for MPEG 2,2.5
+ * Lower sampling frequencies  (24, 22.05 and 16 kHz.)
+ *
+ * This is reverse-engineered from section 2.4.3.2 of the MPEG2 IS,
+ * "Audio Decoding Layer III"
+ */
 
-int scale_bitcount_lsf(const lame_internal_flags *gfc,
-		       gr_info * const cod_info)
+/*
+  table of largest scalefactor values for MPEG2
+*/
+static const int max_range_sfac_tab[6][4] = {
+    { 15, 15, 7,  7},
+    { 15, 15, 7,  0},
+    { 7,  3,  0,  0},
+    { 15, 31, 31, 0},
+    { 7,  7,  7,  0},
+    { 3,  3,  0,  0}
+};
+
+static const int log2tab[] = {0, 1, 2, 2, 3, 3, 3, 3, 4, 4, 4, 4, 4, 4, 4, 4};
+
+int
+scale_bitcount_lsf(gr_info * const gi)
 {
-    int table_number, row_in_table, partition, nr_sfb, window, over;
-    int i, sfb, max_sfac[ 4 ];
+    int table_number, row_in_table, partition, nr_sfb, window, i, sfb;
     const int *partition_table;
-    int *scalefac = cod_info->scalefac;
+    int *scalefac = gi->scalefac;
 
     /*
       Set partition table. Note that should try to use table one,
       but do not yet...
     */
-    if ( cod_info->preflag )
-	table_number = 2;
-    else
-	table_number = 0;
-
+    table_number = gi->preflag * 2;
     for ( i = 0; i < 4; i++ )
-	max_sfac[i] = 0;
+	gi->slen[i] = 0;
 
-    if ( cod_info->block_type == SHORT_TYPE )
-    {
+    if ( gi->block_type == SHORT_TYPE ) {
 	row_in_table = 1;
 	partition_table = &nr_of_sfb_block[table_number][row_in_table][0];
-	for ( sfb = 0, partition = 0; partition < 4; partition++ )
-	{
+	for ( sfb = 0, partition = 0; partition < 4; partition++ ) {
 	    nr_sfb = partition_table[ partition ] / 3;
 	    for ( i = 0; i < nr_sfb; i++, sfb++ )
 		for ( window = 0; window < 3; window++ )
-		    if ( scalefac[sfb*3+window] > max_sfac[partition] )
-			max_sfac[partition] = scalefac[sfb*3+window];
+		    if (gi->slen[partition] < scalefac[sfb*3+window])
+			gi->slen[partition] = scalefac[sfb*3+window];
 	}
-    }
-    else
-    {
+    } else {
 	row_in_table = 0;
 	partition_table = &nr_of_sfb_block[table_number][row_in_table][0];
-	for ( sfb = 0, partition = 0; partition < 4; partition++ )
-	{
+	for ( sfb = 0, partition = 0; partition < 4; partition++ ) {
 	    nr_sfb = partition_table[ partition ];
 	    for ( i = 0; i < nr_sfb; i++, sfb++ )
-		if ( scalefac[sfb] > max_sfac[partition] )
-		    max_sfac[partition] = scalefac[sfb];
+		if (gi->slen[partition] < scalefac[sfb])
+		    gi->slen[partition] = scalefac[sfb];
 	}
     }
 
-    for ( over = 0, partition = 0; partition < 4; partition++ )
-    {
-	if ( max_sfac[partition] > max_range_sfac_tab[table_number][partition] )
-	    over++;
+    gi->part2_length = LARGE_BITS;
+    for (partition = 0; partition < 4; partition++ ) {
+	if (gi->slen[partition] > max_range_sfac_tab[table_number][partition])
+	    return gi->part2_length; /* fail */
+	gi->slen[partition] = log2tab[gi->slen[partition]];
     }
-    if ( !over )
-    {
-	/*
-	  Since no bands have been over-amplified, we can set scalefac_compress
-	  and slen[] for the formatter
-	*/
-	static const int log2tab[] = { 0, 1, 2, 2, 3, 3, 3, 3, 4, 4, 4, 4, 4, 4, 4, 4 };
 
-	int slen1, slen2, slen3, slen4;
+    gi->sfb_partition_table = nr_of_sfb_block[table_number][row_in_table];
+    /* set scalefac_compress */
+    switch ( table_number ) {
+    case 0:
+	gi->scalefac_compress
+	    = gi->slen[0]*80 + gi->slen[1]*16 + gi->slen[2]*4 + gi->slen[3];
+	break;
 
-        cod_info->sfb_partition_table = nr_of_sfb_block[table_number][row_in_table];
-	for ( partition = 0; partition < 4; partition++ )
-	    cod_info->slen[partition] = log2tab[max_sfac[partition]];
-
-	/* set scalefac_compress */
-	slen1 = cod_info->slen[ 0 ];
-	slen2 = cod_info->slen[ 1 ];
-	slen3 = cod_info->slen[ 2 ];
-	slen4 = cod_info->slen[ 3 ];
-
-	switch ( table_number )
-	{
-	  case 0:
-	    cod_info->scalefac_compress = (((slen1 * 5) + slen2) << 4)
-		+ (slen3 << 2)
-		+ slen4;
-	    break;
-
-	  case 1:
-	    cod_info->scalefac_compress = 400
-		+ (((slen1 * 5) + slen2) << 2)
-		+ slen3;
-	    break;
-
-	  case 2:
-	    cod_info->scalefac_compress = 500 + (slen1 * 3) + slen2;
-	    break;
-
-	  default:
-	    ERRORF(gfc,"intensity stereo not implemented yet\n" );
-	    break;
-	}
+    case 2:
+	gi->scalefac_compress = 500 + gi->slen[0]*3 + gi->slen[1];
+	break;
+/*
+    case 1:
+	gi->scalefac_compress
+	    = 400 + gi->slen[0]*20 + gi->slen[1]*4 + gi->slen[2];
+	break;
+*/
+    default:
+	/* ERRORF(gfc, "intensity stereo not implemented yet\n" ); */
+	assert(0);
+	break;
     }
-#ifdef DEBUG
-    if ( over ) 
-        ERRORF(gfc, "---WARNING !! Amplification of some bands over limits\n" );
-#endif
-    if (!over) {
-      assert( cod_info->sfb_partition_table );     
-      cod_info->part2_length=0;
-      for ( partition = 0; partition < 4; partition++ )
-	cod_info->part2_length += cod_info->slen[partition] * cod_info->sfb_partition_table[partition];
-    }
-    return over;
+
+    assert( gi->sfb_partition_table );
+    gi->part2_length=0;
+    for ( partition = 0; partition < 4; partition++ )
+	gi->part2_length
+	    += gi->slen[partition] * gi->sfb_partition_table[partition];
+
+    return gi->part2_length;
 }

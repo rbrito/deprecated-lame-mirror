@@ -542,17 +542,17 @@ trancate_smallspectrums(
  *************************************************************************/
 
 inline static int
-loop_break( 
-    const gr_info        * const cod_info)
+loop_break(
+    const gr_info * const gi
+    )
 {
     int sfb;
 
-    for (sfb = 0; sfb < cod_info->sfbmax; sfb++)
-        if (cod_info->scalefac[sfb]
-	    + cod_info->subblock_gain[cod_info->window[sfb]] == 0)
+    for (sfb = 0; sfb < gi->sfbmax; sfb++)
+        if (gi->scalefac[sfb] + gi->subblock_gain[gi->window[sfb]] == 0)
             return 0;
 
-    return 1;
+    return sfb;
 }
 
 
@@ -635,74 +635,6 @@ better_quant(
 }
 
 
-
-/*************************************************************************
- *
- *          amp_scalefac_bands() 
- *
- *  author/date??
- *        
- *  Amplify the scalefactor bands that violate the masking threshold.
- *  See ISO 11172-3 Section C.1.5.4.3.5
- * 
- *  distort[] = noise/masking
- *  distort[] > 1   ==> noise is not masked
- *  distort[] < 1   ==> noise is masked
- *  max_dist = maximum value of distort[]
- *  
- *  Three algorithms:
- *  noise_shaping_amp
- *        0             Amplify all bands with distort[]>1.
- *
- *        1             Amplify all bands with distort[] >= max_dist^(.5);
- *                     ( 50% in the db scale)
- *
- *        2             Amplify first band with distort[] >= max_dist;
- *                       
- *
- *  For algorithms 0 and 1, if max_dist < 1, then amplify all bands 
- *  with distort[] >= .95*max_dist.  This is to make sure we always
- *  amplify at least one band.  
- * 
- *
- *************************************************************************/
-static void 
-amp_scalefac_bands(
-    lame_internal_flags *gfc,
-    gr_info  *const cod_info, 
-    FLOAT *distort,
-    int method )
-{
-    int sfb;
-    FLOAT trigger;
-
-    /* compute maximum value of distort[]  */
-    trigger = 0;
-    for (sfb = 0; sfb < cod_info->sfbmax; sfb++) {
-	if (trigger < distort[sfb])
-	    trigger = distort[sfb];
-    }
-
-    if (method != 2) {
-	if (trigger <= 1.0)
-	    trigger *= 0.95;
-	else if (method == 0)
-	    trigger = 1.0;
-	else
-	    trigger = sqrt(trigger);
-    }
-
-    for (sfb = 0; sfb < cod_info->sfbmax; sfb++) {
-	if (distort[sfb] < trigger)
-	    continue;
-
-	if (!((gfc->substep_shaping & 2) && (method == 3))
-	    || (gfc->pseudohalf[sfb] ^= 1))
-	    cod_info->scalefac[sfb]++;
-	if (method >= 2)
-	    return;
-    }
-}
 
 /*************************************************************************
  *
@@ -791,40 +723,93 @@ inc_subblock_gain (
 
 
 
-/********************************************************************
+/*************************************************************************
  *
- *      balance_noise()
+ *          amp_scalefac_bands() 
  *
- *  Takehiro Tominaga /date??
- *  Robert Hegemann 2000-09-06: made a function of it
+ *  Amplify the scalefactor bands that violate the masking threshold.
+ *  See ISO 11172-3 Section C.1.5.4.3.5
+ * 
+ *  distort[] = noise/masking
+ *  distort[] > 1   ==> noise is not masked
+ *  distort[] < 1   ==> noise is masked
+ *  max_dist = maximum value of distort[]
+ *  
+ *  Three algorithms:
+ *  noise_shaping_amp
+ *        0             Amplify all bands with distort[]>1.
  *
- *  amplifies scalefactor bands, 
- *   - if all are already amplified returns 0
- *   - if some bands are amplified too much:
- *      * try to increase scalefac_scale
- *      * if already scalefac_scale was set
- *          try on short blocks to increase subblock gain
+ *        1             Amplify all bands with distort[] >= max_dist^(.5);
+ *                     ( 50% in the db scale)
  *
- ********************************************************************/
-inline static int 
-balance_noise (
-    lame_internal_flags *const gfc,
-    gr_info        * const cod_info
+ *        2             Amplify first band with distort[] >= max_dist;
+ *                       
+ *
+ *  For algorithms 0 and 1, if max_dist < 1, then amplify all bands 
+ *  with distort[] >= .95*max_dist.  This is to make sure we always
+ *  amplify at least one band.  
+ * 
+ *
+ *************************************************************************/
+static int
+amp_scalefac_bands(
+    lame_internal_flags *gfc,
+    gr_info  *const cod_info, 
+    FLOAT *distort,
+    int method,
+    int target_bits
     )
 {
-    int status;
+    int status, sfb;
+    FLOAT trigger;
+
+    /* compute maximum value of distort[]  */
+    trigger = 0;
+    for (sfb = 0; sfb < cod_info->sfbmax; sfb++) {
+	if (trigger < distort[sfb])
+	    trigger = distort[sfb];
+    }
+
+    if (method != 2) {
+	if (trigger <= 1.0)
+	    trigger *= 0.95;
+	else if (method == 0)
+	    trigger = 1.0;
+	else
+	    trigger = sqrt(trigger);
+    }
+
+    for (sfb = 0; sfb < cod_info->sfbmax; sfb++) {
+	if (distort[sfb] < trigger)
+	    continue;
+
+	if (!((gfc->substep_shaping & 2) && (method == 3))
+	    || (gfc->pseudohalf[sfb] ^= 1))
+	    cod_info->scalefac[sfb]++;
+	if (method >= 2)
+	    break;
+    }
+
+    /*
+     *  amplifies scalefactor bands, 
+     *   - if all are already amplified returns 0
+     *   - if some bands are amplified too much:
+     *      * try to increase scalefac_scale
+     *      * if already scalefac_scale was set
+     *          try on short blocks to increase subblock gain
+     */
+
+    if (loop_break(cod_info))
+	return 0; /* failed */
+
     /* not all scalefactors have been amplified.  so these 
      * scalefacs are possibly valid.  encode them: 
      */
-    if (gfc->mode_gr == 2)
-	status = scale_bitcount (cod_info);
-    else 
-	status = scale_bitcount_lsf (gfc, cod_info);
+    status = target_bits - gfc->scale_bitcounter (cod_info);
+    if (status > 0)
+	return status; /* amplified some bands not exceeding limits */
 
-    if (!status)
-	return 1; /* amplified some bands not exceeding limits */
-
-    /*  some scalefactors are too large. */
+    /* some scalefactors are too large. */
     if (gfc->use_subblock_gain && cod_info->block_type == SHORT_TYPE) {
 	/* try to use subblcok gain */
 	if (inc_subblock_gain (cod_info) || loop_break (cod_info))
@@ -835,10 +820,7 @@ balance_noise (
     } else
 	return 0;
 
-    if (gfc->mode_gr == 2)
-	return !scale_bitcount (cod_info);
-    else 
-	return !scale_bitcount_lsf (gfc, cod_info);
+    return target_bits - gfc->scale_bitcounter (cod_info);
 }
 
 
@@ -871,7 +853,7 @@ outer_loop (
     calc_noise_result best_noise_info;
     gr_info cod_info_w;
     FLOAT distort[SFBMAX], l3_xmin[SFBMAX], xrpow[576];
-    int huff_bits, current_method, age;
+    int current_method, age;
 
     if (!init_outer_loop(gfc, cod_info, xrpow))
 	return; /* digital silence */
@@ -900,10 +882,9 @@ outer_loop (
     age = 3;
     for (;;) {
 	/* try the new scalefactor conbination on cod_info_w */
-	amp_scalefac_bands(gfc, &cod_info_w, distort, current_method);
-	if (!loop_break(&cod_info_w) && balance_noise(gfc, &cod_info_w)
-	    && (huff_bits = targ_bits - cod_info_w.part2_length) > 0) {
-
+	int huff_bits = amp_scalefac_bands(gfc, &cod_info_w, distort,
+					   current_method, targ_bits);
+	if (huff_bits > 0) {
 	    /* adjust global_gain to fit the available bits */
 	    while (count_bits(gfc, xrpow, &cod_info_w) > huff_bits
 		   && ++cod_info_w.global_gain < 256u)
@@ -1515,10 +1496,7 @@ VBR_noise_shaping(
     }
 
     /* encode scalefacs */
-    if (gfc->mode_gr == 2)
-	scale_bitcount(gi);
-    else
-	scale_bitcount_lsf(gfc, gi);
+    gfc->scale_bitcounter(gi);
 
     /* quantize xr34 */
     gi->part2_3_length = count_bits(gfc, xr34, gi);

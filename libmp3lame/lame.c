@@ -35,6 +35,7 @@
 #include "quantize.h"
 #include "psymodel.h"
 #include "VbrTag.h"
+#include "quantize_pvt.h"
 
 #if defined(__FreeBSD__) && !defined(__alpha__)
 #include <floatingpoint.h>
@@ -534,8 +535,14 @@ lame_init_params(lame_global_flags * const gfp)
 	gfp->out_samplerate
 	    = optimum_samplefreq(gfp->lowpassfreq, gfp->in_samplerate);
 
-    gfp->version = gfp->out_samplerate <= 24000 ? 0 : 1;
-    gfc->mode_gr = gfp->out_samplerate <= 24000 ? 1 : 2;
+    gfc->scale_bitcounter = scale_bitcount;
+    gfp->version = 1;
+    gfc->mode_gr = 2;
+    if (gfp->out_samplerate <= 24000) {
+	gfp->version = 0;
+	gfc->mode_gr = 1;
+	gfc->scale_bitcounter = scale_bitcount_lsf;
+    }
     gfp->framesize = 576 * gfc->mode_gr;
     gfp->encoder_delay = ENCDELAY;
     gfc->resample_ratio = (double) gfp->in_samplerate / gfp->out_samplerate;
