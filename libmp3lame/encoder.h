@@ -111,9 +111,9 @@
 #define BLKSIZE_s     256
 
 #define NORM_TYPE     0
-#define START_TYPE    1
 #define SHORT_TYPE    3 /* in the spec, 2 */
-#define STOP_TYPE     2 /* in the spec, 3 */
+/*#define START_TYPE    1 */
+/*#define STOP_TYPE     2 // in the spec, 3 */
 
 /* 
  * Mode Extention:
@@ -121,9 +121,8 @@
  * two channels. The stereo modes -m? are using a subset of them.
  *
  *  -ms: MPG_MD_LR_LR
- *  -mj: MPG_MD_LR_LR and MPG_MD_MS_LR
  *  -mf: MPG_MD_MS_LR
- *  -mi: all
+ *  -mj: all
  */
  
 #define MPG_MD_LR_LR  0
