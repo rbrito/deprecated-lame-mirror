@@ -192,98 +192,208 @@ int apply_preset(lame_global_flags*  gfp, int preset, int enforce)
     switch (preset) {
     case V9: {
         lame_set_VBR_q(gfp, 9);
+        switch (lame_get_VBR(gfp)) {
+        case vbr_rh: {
+            SET_OPTION(short_threshold_lrm, 4.50f, -1);
+            SET_OPTION(short_threshold_s, 30.0f, -1);
+            SET_OPTION(quant_comp, 1, -1);
+            SET_OPTION(quant_comp_short, 0, -1);
+            SET_OPTION(psy_model, PSY_NSPSYTUNE, -1);
+            SET_OPTION(maskingadjust, 1.6, 0);
+            SET_OPTION(maskingadjust_short, 1.6, 0);
+            SET_OPTION(interChRatio, 0.0008, -1);
+            SET_OPTION(ATHlower, -36, 0);
+            SET_OPTION(ATHcurve, 11, -1);
+            SET_OPTION(athaa_sensitivity, -25, 0);
 
-        SET_OPTION(short_threshold_lrm, 4.50f, -1);
-        SET_OPTION(short_threshold_s, 30.0f, -1);
-        SET_OPTION(quant_comp, 1, -1);
-        SET_OPTION(quant_comp_short, 0, -1);
-        SET_OPTION(psy_model, PSY_NSPSYTUNE, -1);
-        SET_OPTION(maskingadjust, 1.6, 0);
-        SET_OPTION(maskingadjust_short, 1.6, 0);
-        SET_OPTION(interChRatio, 0.0008, -1);
-        SET_OPTION(ATHlower, -36, 0);
-        SET_OPTION(ATHcurve, 11, -1);
-        SET_OPTION(athaa_sensitivity, -25, 0);
+            lame_set_experimentalY(gfp, 1);
 
-        lame_set_experimentalY(gfp, 1);
+            return preset;
+        }
+        default: {
+            SET_OPTION(vbr_smooth, 0, -1);
 
-        return preset;
+            SET_OPTION(short_threshold_lrm, 4.50f, -1);
+            SET_OPTION(short_threshold_s, 30.0f, -1);
+            SET_OPTION(quant_comp, 0, -1);
+            SET_OPTION(quant_comp_short, 0, -1);
+            SET_OPTION(psy_model, PSY_NSPSYTUNE, -1);
+            SET_OPTION(maskingadjust, 1.75, 0);
+            SET_OPTION(maskingadjust_short, 1.75, 0);
+            SET_OPTION(interChRatio, 0.0008, -1);
+            SET_OPTION(ATHlower, -39.5, 0);
+            SET_OPTION(ATHcurve, 11, -1);
+            SET_OPTION(athaa_sensitivity, -25, 0);
+
+            lame_set_experimentalY(gfp, 1);
+
+            return preset;
+        }
+        }
     }
     case V8: {
         lame_set_VBR_q(gfp, 8);
+        switch (lame_get_VBR(gfp)) {
+        case vbr_rh: {
+            SET_OPTION(short_threshold_lrm, 4.50f, -1);
+            SET_OPTION(short_threshold_s, 30.0f, -1);
+            SET_OPTION(quant_comp, 1, -1);
+            SET_OPTION(quant_comp_short, 0, -1);
+            SET_OPTION(psy_model, PSY_NSPSYTUNE, -1);
+            SET_OPTION(maskingadjust, 1.2, 0);
+            SET_OPTION(maskingadjust_short, 1.15, 0);
+            SET_OPTION(interChRatio, 0.0007, -1);
+            SET_OPTION(ATHlower, -28, 0);
+            SET_OPTION(ATHcurve, 10, -1);
+            SET_OPTION(athaa_sensitivity, -23, 0);
 
-        SET_OPTION(short_threshold_lrm, 4.50f, -1);
-        SET_OPTION(short_threshold_s, 30.0f, -1);
-        SET_OPTION(quant_comp, 1, -1);
-        SET_OPTION(quant_comp_short, 0, -1);
-        SET_OPTION(psy_model, PSY_NSPSYTUNE, -1);
-        SET_OPTION(maskingadjust, 1.2, 0);
-        SET_OPTION(maskingadjust_short, 1.15, 0);
-        SET_OPTION(interChRatio, 0.0007, -1);
-        SET_OPTION(ATHlower, -28, 0);
-        SET_OPTION(ATHcurve, 10, -1);
-        SET_OPTION(athaa_sensitivity, -23, 0);
+            lame_set_experimentalY(gfp, 1);
 
-        lame_set_experimentalY(gfp, 1);
+            return preset;
+        }
+        default: {
+            SET_OPTION(vbr_smooth, 0, -1);
 
-        return preset;
+            SET_OPTION(short_threshold_lrm, 4.50f, -1);
+            SET_OPTION(short_threshold_s, 30.0f, -1);
+            SET_OPTION(quant_comp, 0, -1);
+            SET_OPTION(quant_comp_short, 0, -1);
+            SET_OPTION(psy_model, PSY_NSPSYTUNE, -1);
+            SET_OPTION(maskingadjust, 1.2, 0);
+            SET_OPTION(maskingadjust_short, 1.15, 0);
+            SET_OPTION(interChRatio, 0.0007, -1);
+            SET_OPTION(ATHlower, -30, 0);
+            SET_OPTION(ATHcurve, 10, -1);
+            SET_OPTION(athaa_sensitivity, -23, 0);
+
+            lame_set_experimentalY(gfp, 1);
+
+            return preset;
+        }
+        }
     }
     case V7: {
         lame_set_VBR_q(gfp, 7);
+        switch (lame_get_VBR(gfp)) {
+        case vbr_rh: {
+            SET_OPTION(short_threshold_lrm, 4.50f, -1);
+            SET_OPTION(short_threshold_s, 30.0f, -1);
+            SET_OPTION(quant_comp, 1, -1);
+            SET_OPTION(quant_comp_short, 0, -1);
+            SET_OPTION(psy_model, PSY_NSPSYTUNE, -1);
+            SET_OPTION(maskingadjust, .8, 0);
+            SET_OPTION(maskingadjust_short, .75, 0);
+            SET_OPTION(interChRatio, 0.0006, -1);
+            SET_OPTION(ATHlower, -20, 0);
+            SET_OPTION(ATHcurve, 8, -1);
+            SET_OPTION(athaa_sensitivity, -22, 0);
 
-        SET_OPTION(short_threshold_lrm, 4.50f, -1);
-        SET_OPTION(short_threshold_s, 30.0f, -1);
-        SET_OPTION(quant_comp, 1, -1);
-        SET_OPTION(quant_comp_short, 0, -1);
-        SET_OPTION(psy_model, PSY_NSPSYTUNE, -1);
-        SET_OPTION(maskingadjust, .8, 0);
-        SET_OPTION(maskingadjust_short, .75, 0);
-        SET_OPTION(interChRatio, 0.0006, -1);
-        SET_OPTION(ATHlower, -20, 0);
-        SET_OPTION(ATHcurve, 8, -1);
-        SET_OPTION(athaa_sensitivity, -22, 0);
+            lame_set_experimentalY(gfp, 1);
 
-        lame_set_experimentalY(gfp, 1);
+            return preset;
+        }
+        default: {
+            SET_OPTION(vbr_smooth, 0, -1);
 
-        return preset;
+            SET_OPTION(short_threshold_lrm, 4.50f, -1);
+            SET_OPTION(short_threshold_s, 30.0f, -1);
+            SET_OPTION(quant_comp, 0, -1);
+            SET_OPTION(quant_comp_short, 0, -1);
+            SET_OPTION(psy_model, PSY_NSPSYTUNE, -1);
+            SET_OPTION(maskingadjust, 0.8, 0);
+            SET_OPTION(maskingadjust_short, 0.78, 0);
+            SET_OPTION(interChRatio, 0.0006, -1);
+            SET_OPTION(ATHlower, -22, 0);
+            SET_OPTION(ATHcurve, 8, -1);
+            SET_OPTION(athaa_sensitivity, -22, 0);
+
+            lame_set_experimentalY(gfp, 1);
+
+            return preset;
+        }
+        }
     }
     case V6: {
         lame_set_VBR_q(gfp, 6);
+        switch (lame_get_VBR(gfp)) {
+        case vbr_rh: {
+            SET_OPTION(short_threshold_lrm, 4.45f, -1);
+            SET_OPTION(short_threshold_s, 27.5f, -1);
+            SET_OPTION(quant_comp, 1, -1);
+            SET_OPTION(quant_comp_short, 0, -1);
+            SET_OPTION(psy_model, PSY_NSPSYTUNE, -1);
+            SET_OPTION(maskingadjust, .67, 0);
+            SET_OPTION(maskingadjust_short, .65, 0);
+            SET_OPTION(interChRatio, 0.0004, -1);
+            SET_OPTION(ATHlower, -15, 0);
+            SET_OPTION(ATHcurve, 6.5, -1);
+            SET_OPTION(athaa_sensitivity, -19, 0);
 
-        SET_OPTION(short_threshold_lrm, 4.45f, -1);
-        SET_OPTION(short_threshold_s, 27.5f, -1);
-        SET_OPTION(quant_comp, 1, -1);
-        SET_OPTION(quant_comp_short, 0, -1);
-        SET_OPTION(psy_model, PSY_NSPSYTUNE, -1);
-        SET_OPTION(maskingadjust, .65, 0);
-        SET_OPTION(maskingadjust_short, .67, 0);
-        SET_OPTION(interChRatio, 0.0004, -1);
-        SET_OPTION(ATHlower, -15, 0);
-        SET_OPTION(ATHcurve, 6.5, -1);
-        SET_OPTION(athaa_sensitivity, -19, 0);
+            lame_set_experimentalY(gfp, 1);
 
-        lame_set_experimentalY(gfp, 1);
+            return preset;
+        }
+        default: {
+            SET_OPTION(vbr_smooth, 0, -1);
 
-        return preset;
+            SET_OPTION(short_threshold_lrm, 4.45f, -1);
+            SET_OPTION(short_threshold_s, 27.5f, -1);
+            SET_OPTION(quant_comp, 0, -1);
+            SET_OPTION(quant_comp_short, 0, -1);
+            SET_OPTION(psy_model, PSY_NSPSYTUNE, -1);
+            SET_OPTION(maskingadjust, 0.67, 0);
+            SET_OPTION(maskingadjust_short, 0.65, 0);
+            SET_OPTION(interChRatio, 0.0004, -1);
+            SET_OPTION(ATHlower, -15, 0);
+            SET_OPTION(ATHcurve, 6.5, -1);
+            SET_OPTION(athaa_sensitivity, -19, 0);
+
+            lame_set_experimentalY(gfp, 1);
+
+            return preset;
+        }
+        }
     }
     case V5: {
         lame_set_VBR_q(gfp, 5);
+        switch (lame_get_VBR(gfp)) {
+            case vbr_rh: {
+            SET_OPTION(short_threshold_lrm, 4.40f, -1);
+            SET_OPTION(short_threshold_s, 25.0f, -1);
+            SET_OPTION(quant_comp, 1, -1);
+            SET_OPTION(quant_comp_short, 0, -1);
+            SET_OPTION(psy_model, PSY_NSPSYTUNE, -1);
+            SET_OPTION(maskingadjust, .5, 0);
+            SET_OPTION(maskingadjust_short, .4, 0);
+            SET_OPTION(interChRatio, 0.0002, -1);
+            SET_OPTION(ATHlower, -8.5, 0);
+            SET_OPTION(ATHcurve, 5, -1);
+            SET_OPTION(athaa_sensitivity, -16, 0);
 
-        SET_OPTION(short_threshold_lrm, 4.40f, -1);
-        SET_OPTION(short_threshold_s, 25.0f, -1);
-        SET_OPTION(quant_comp, 1, -1);
-        SET_OPTION(quant_comp_short, 0, -1);
-        SET_OPTION(psy_model, PSY_NSPSYTUNE, -1);
-        SET_OPTION(maskingadjust, .5, 0);
-        SET_OPTION(maskingadjust_short, .4, 0);
-        SET_OPTION(interChRatio, 0.0002, -1);
-        SET_OPTION(ATHlower, -8.5, 0);
-        SET_OPTION(ATHcurve, 5, -1);
-        SET_OPTION(athaa_sensitivity, -16, 0);
+            lame_set_experimentalY(gfp, 1);
 
-        lame_set_experimentalY(gfp, 1);
+            return preset;
+        }
+        default: {
+            SET_OPTION(vbr_smooth, 0, -1);
 
-        return preset;
+            SET_OPTION(short_threshold_lrm, 4.40f, -1);
+            SET_OPTION(short_threshold_s, 25.0f, -1);
+            SET_OPTION(quant_comp, 0, -1);
+            SET_OPTION(quant_comp_short, 0, -1);
+            SET_OPTION(psy_model, PSY_NSPSYTUNE, -1);
+            SET_OPTION(maskingadjust, 0.5, 0);
+            SET_OPTION(maskingadjust_short, 0.4, 0);
+            SET_OPTION(interChRatio, 0.0002, -1);
+            SET_OPTION(ATHlower, -8.5, 0);
+            SET_OPTION(ATHcurve, 5, -1);
+            SET_OPTION(athaa_sensitivity, -16, 0);
+
+            lame_set_experimentalY(gfp, 1);
+
+            return preset;
+        }
+        }
     }
     case V4: { /*MEDIUM*/
         lame_set_VBR_q(gfp, 4);
