@@ -1041,6 +1041,13 @@ lame_init_params(lame_global_flags * const gfp)
 
     case vbr_mtrh:
 
+        if (gfp->ATHtype < 0) gfp->ATHtype = 4;
+        if (gfp->quality < 0) gfp->quality = 2;
+        if (gfp->quality > 7) {
+            gfp->quality = 7;     // needs psymodel
+            ERRORF( gfc, "VBR needs a psymodel, switching to quality level 7\n");
+        }
+
         /*  tonality
          */
         if (gfp->cwlimit <= 0) gfp->cwlimit = 0.454 * gfp->out_samplerate;
@@ -1080,13 +1087,6 @@ lame_init_params(lame_global_flags * const gfp)
         else
             gfc->ATH->use_adjust = gfp->adjust_type;
         
-        if (gfp->ATHtype < 0) gfp->ATHtype = 4;
-        if (gfp->quality < 0) gfp->quality = 2;
-        if (gfp->quality > 7) {
-            gfp->quality = 7;     // needs psymodel
-            ERRORF( gfc, "VBR needs a psymodel, switching to quality level 7\n");
-        }
-
         // on/off switches different from usual defaults
         if (gfp->useTemporal   < 0 ) gfp->useTemporal   = 0;  // off by default
         if (gfp->experimentalY < 1 ) gfp->experimentalY = 1;  // on by default
@@ -1100,7 +1100,7 @@ lame_init_params(lame_global_flags * const gfp)
         {   static const FLOAT8 dbQ[10]={-6.06,-4.4,-2.9,-1.57, -0.4, 0.61, 1.45, 2.13, 2.65, 3.0};
             gfc->VBR->mask_adjust = dbQ[gfp->VBR_q];
         }
-        gfc->VBR->quality = 0;
+        gfc->VBR->quality = 2;
         gfc->VBR->gain_adjust = 0;
         gfc->VBR->smooth = 2;
 
