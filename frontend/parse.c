@@ -388,7 +388,7 @@ const preset_t Presets [] = {
 
 static int  presets_info ( const lame_global_flags* gfp, FILE* const fp, const char* ProgramName )  /* print possible combination */
 {
-    size_t  i;
+    int i;
 
     fprintf ( fp, "\n");    
     lame_version_print ( fp );
@@ -482,7 +482,7 @@ static int  presets_info ( const lame_global_flags* gfp, FILE* const fp, const c
 
 static int  presets_setup ( lame_global_flags* gfp, const char* preset_name, const char* ProgramName )
 {
-    size_t  i;
+    int i;
 
     for ( i = 0; i < sizeof(Presets)/sizeof(*Presets); i++ )
         if ( 0 == strncmp (preset_name, Presets[i].name, strlen (preset_name) ) ) {
@@ -554,7 +554,7 @@ static int local_strcasecmp ( const char* s1, const char* s2 )
 // contents is well beyond the scope of LAME and should not be added.
 static int filename_to_type ( const char* FileName )
 {
-    size_t len = strlen (FileName);
+    int len = strlen (FileName);
     
     if ( len < 4 ) return sf_unknown;
 

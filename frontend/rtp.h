@@ -22,8 +22,25 @@ struct rtpheader {      /* in network byte order */
 };
 
 void initrtp(struct rtpheader *foo);
-int sendrtp(int fd, struct sockaddr_in *sSockAddr, struct rtpheader *foo, const void *data, size_t len);
+int sendrtp(int fd, struct sockaddr_in *sSockAddr, struct rtpheader *foo, const void *data, int len);
 int makesocket(char *szAddr,unsigned short port,unsigned char TTL,struct sockaddr_in *sSockAddr);
-void rtp_output(const char *mp3buffer,size_t mp3size);
+void rtp_output(const char *mp3buffer,int mp3size);
+
+#ifdef 0
+int rtp_send (
+    SOCKET s,
+    struct rtpheader *foo,
+    void *data,
+    int len
+) ;
+
+int rtp_socket (
+    SOCKET *ps,
+    char *Address,
+    unsigned short port,
+    int TTL
+) ;
+#endif
+
 
 #endif

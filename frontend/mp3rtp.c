@@ -46,12 +46,27 @@ struct rtpheader    RTPheader;
 struct sockaddr_in  rtpsi;
 int                 rtpsocket;
 
-void  rtp_output ( const char* mp3buffer, const size_t mp3size )
+void  rtp_output ( const char* mp3buffer, const int mp3size )
 {
     sendrtp (rtpsocket, &rtpsi, &RTPheader, mp3buffer, mp3size);
     RTPheader.timestamp += 5;
     RTPheader.b.sequence++;
 }
+
+#if 0
+struct rtpheader RTPheader;
+SOCKET rtpsocket;
+
+void rtp_output (char *mp3buffer, int mp3size)
+{
+    rtp_send (rtpsocket, &RTPheader,mp3buffer,mp3size) ;
+    RTPheader.timestamp+=5;
+    RTPheader.b.sequence++;
+}
+#endif
+
+
+
 
 unsigned  maxvalue ( short int  Buffer [2] [1152] )
 {
@@ -97,7 +112,7 @@ float   update_interval;     /* to use Frank's time status display */
 
 int  main ( int argc, char **argv )
 {
-    char       mp3buffer [LAME_MAXMP3BUFFER];
+    unsigned char       mp3buffer [LAME_MAXMP3BUFFER];
     char       inPath    [MAX_NAME_SIZE];
     char       outPath   [MAX_NAME_SIZE];
     short int  Buffer [2] [1152];
@@ -192,8 +207,6 @@ int  main ( int argc, char **argv )
     if (update_interval < 0.)
         update_interval = 2.;
 
-//  lame_id3v2_tag (&gf, outf); /* add ID3 version 2 tag to mp3 file */
-
     /* encode until we hit EOF */
     while ( (wavsamples = get_audio (&gf, Buffer)) > 0 ) { /* read in 'wavsamples' samples */
         levelmessage ( maxvalue (Buffer) );
@@ -210,7 +223,7 @@ int  main ( int argc, char **argv )
     rtp_output ( mp3buffer, mp3bytes );           /* write MP3 output to RTP port */
     fwrite ( mp3buffer, 1, mp3bytes, outf );      /* write the MP3 output to file */
     
-    lame_mp3_tags_fid ( &gf, outf ); /* add ID3 version 1 or VBR tags to mp3 file */
+    lame_mp3_tags_fid ( &gf, outf ); /* add VBR tags to mp3 file */
     
     lame_close   ( &gf );
     fclose       ( outf );

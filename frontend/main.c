@@ -317,7 +317,7 @@ int main(int argc, char **argv)
       }
 
       fwrite(mp3buffer,1,imp3,outf);
-      lame_mp3_tags_fid(&gf,outf);       /* add ID3 version 1 or VBR tags to mp3 file */
+      lame_mp3_tags_fid(&gf,outf);       /* add VBR tags to mp3 file */
       lame_close(&gf);
       fclose(outf);
     }
