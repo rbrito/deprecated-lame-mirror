@@ -833,21 +833,6 @@ char *mp3buf, int mp3buf_size)
   gfc->mode_ext = MPG_MD_LR_LR;
 
   if (gfc->lame_encode_frame_init==0 )  {
-#if 0
-    /* Figure average number of 'slots' per frame. */
-    FLOAT8 avg_slots_per_frame;
-    FLOAT8 sampfreq =   gfp->out_samplerate/1000.0;
-    int bit_rate = gfp->brate;
-
-    avg_slots_per_frame = (bit_rate*gfp->framesize) /
-      (sampfreq* 8);
-    /* -f fast-math option causes some strange rounding here, be carefull: */
-    gfc->frac_SpF  = avg_slots_per_frame - floor(avg_slots_per_frame + 1e-9);
-    if (fabs(gfc->frac_SpF) < 1e-9) gfc->frac_SpF = 0;
-    gfc->slot_lag  = -gfc->frac_SpF;
-    gfc->padding = 1;
-    if (gfc->frac_SpF==0) gfc->padding = 0;
-#else
     /* padding method as described in 
      * "MPEG-Layer3 / Bitstream Syntax and Decoding"
      * by Martin Sieler, Ralph Sperschneider
@@ -857,9 +842,8 @@ char *mp3buf, int mp3buf_size)
      * Robert.Hegemann@gmx.de 2000-06-22
      */
         
-    gfc->difference = ((gfp->version+1)*72000L*gfp->brate) % gfp->out_samplerate;
-    gfc->remainder  = gfc->difference;
-#endif    
+    gfc->frac_SpF = ((gfp->version+1)*72000L*gfp->brate) % gfp->out_samplerate;
+    gfc->slot_lag  = gfc->frac_SpF;
     
     gfc->lame_encode_frame_init=1;
     
@@ -918,20 +902,6 @@ char *mp3buf, int mp3buf_size)
 	/* if the user specified --nores, dont very gfc->padding either */
 	/* tiny changes in frac_SpF rounding will cause file differences */
       }else{
-#if 0
-	if (gfc->frac_SpF != 0) {
-	  if (gfc->slot_lag > (gfc->frac_SpF-1.0) ) {
-	    gfc->slot_lag -= gfc->frac_SpF;
-	    gfc->padding = 0;
-	    DEBUGF("%i padding = 0 \n",gfp->frameNum);
-
-	  }
-	  else {
-	    gfc->padding = 1;
-	    gfc->slot_lag += (1-gfc->frac_SpF);
-	  }
-	}
-#else
         /* padding method as described in 
          * "MPEG-Layer3 / Bitstream Syntax and Decoding"
          * by Martin Sieler, Ralph Sperschneider
@@ -941,17 +911,13 @@ char *mp3buf, int mp3buf_size)
          * Robert.Hegemann@gmx.de 2000-06-22
          */
 
-        gfc->remainder -= gfc->difference;
-        if (gfc->remainder < 0)
-          {
-            gfc->remainder += gfp->out_samplerate;
-            gfc->padding = 1;
-          }
-        else
-          {
-            gfc->padding = 0;
-          }
-#endif
+        gfc->slot_lag -= gfc->frac_SpF;
+        if (gfc->slot_lag < 0) {
+          gfc->slot_lag += gfp->out_samplerate;
+          gfc->padding = 1;
+        } else {
+          gfc->padding = 0;
+        }
       } /* reservoir enabled */
     }
   }

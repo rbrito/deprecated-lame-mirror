@@ -344,10 +344,12 @@ int count_bits_long(lame_internal_flags *gfc, int ix[576], gr_info *gi)
       a2 = gi->big_values;
 
     }else if (gi->block_type == NORM_TYPE) {
-	a1 = gi->region0_count = gfc->bv_scf[i-2];
+	assert(i <= 576); /* bv_scf has 576 entries (0..575) */
+        a1 = gi->region0_count = gfc->bv_scf[i-2];
 	a2 = gi->region1_count = gfc->bv_scf[i-1];
 
-	a2 = gfc->scalefac_band.l[a1 + a2 + 2];
+	assert(a1+a2+2 < SBPSY_l);
+        a2 = gfc->scalefac_band.l[a1 + a2 + 2];
 	a1 = gfc->scalefac_band.l[a1 + 1];
 	if (a2 < i)
 	  gi->table_select[2] = choose_table(ix + a2, ix + i, &bits);
@@ -368,7 +370,9 @@ int count_bits_long(lame_internal_flags *gfc, int ix[576], gr_info *gi)
     /* (and region0, region1 are ignored) */
     a1 = Min(a1,i);
     a2 = Min(a2,i);
-
+    
+    assert( a1 >= 0 );
+    assert( a2 >= 0 );
 
     /* Count the number of bits necessary to code the bigvalues region. */
     if (0 < a1)
@@ -991,7 +995,7 @@ void huffman_init(lame_global_flags *gfp)
 	scale_long [i] = slen1_tab[i] * 11 + slen2_tab[i] * 10;
     }
 
-    for (i = 2; i < 576; i += 2) {
+    for (i = 2; i <= 576; i += 2) {
 	int scfb_anz = 0, index;
 	while (gfc->scalefac_band.l[++scfb_anz] < i)
 	    ;

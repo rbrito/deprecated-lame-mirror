@@ -206,12 +206,11 @@ typedef struct  {
   int mf_size;
   int mf_samples_to_encode;
   short int mfbuf[2][MFSIZE];
-  FLOAT8 frac_SpF;
-  FLOAT8 slot_lag;
   FLOAT8 ms_ener_ratio[2];
   FLOAT8 ms_ratio[2];
-  long remainder;
-  long difference;
+  /* used for padding */
+  long frac_SpF;
+  long slot_lag;
 
 
   /* variables used by quantize.c */
@@ -222,7 +221,7 @@ typedef struct  {
   FLOAT8 masking_lower;
   FLOAT8 ATH_vbrlower;
 
-  char bv_scf[576-2];
+  char bv_scf[576];
 
   /* variables used by util.c */
 #define BLACKSIZE 30
