@@ -46,10 +46,8 @@ void outer_loop( FLOAT8 xr[576],     /*vector of the magnitudees of the spectral
 		frame_params *fr_ps,
 		 III_scalefac_t *scalefac, /* scalefactors */
 		 gr_info *,
-		III_side_info_t *l3_side,
-		III_psy_ratio *ratio, 
-		FLOAT8 ms_ratio,
-		int gr, int ch);
+                FLOAT8 xfsf[4][SBPSY_l],
+		int ch);
 
 
 void outer_loop_dual( FLOAT8 xr[2][576],     /*vector of the magnitudees of the spectral values */
@@ -144,10 +142,8 @@ void best_scalefac_store(int gr, int ch,
 			 III_side_info_t *l3_side,
 			 III_scalefac_t scalefac[2][2]);
 
-void init_outer_loop(
+int init_outer_loop(
     FLOAT8 xr[576],        /*  could be L/R OR MID/SIDE */
-    III_scalefac_t *scalefac, /* scalefactors */
-    gr_info *cod_info,
-    III_side_info_t *l3_side);
+    gr_info *cod_info);
 
 #endif

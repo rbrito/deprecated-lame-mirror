@@ -64,6 +64,76 @@ int over[2],FLOAT8 tot_noise[2], FLOAT8 over_noise[2], FLOAT8 max_noise[2])
 
 
 /************************************************************************/
+/*  init_outer_loop  mt 6/99                                            */
+/************************************************************************/
+void init_outer_loop_dual(
+    FLOAT8 xr[576],        /*  could be L/R OR MID/SIDE */
+    III_scalefac_t *scalefac, /* scalefactors */
+    gr_info *cod_info,
+    III_side_info_t *l3_side)
+{
+  int i;
+
+  /* reset of iteration variables */
+  memset(scalefac, 0, sizeof(III_scalefac_t));
+
+  for ( i = 0; i < 4; i++ )
+    cod_info->slen[i] = 0;
+  cod_info->sfb_partition_table = &nr_of_sfb_block[0][0][0];
+
+  cod_info->part2_3_length    = 0;
+  cod_info->big_values        = ((cod_info->block_type==SHORT_TYPE)?288:0);
+  cod_info->count1            = 0;
+  cod_info->scalefac_compress = 0;
+  cod_info->table_select[0]   = 0;
+  cod_info->table_select[1]   = 0;
+  cod_info->table_select[2]   = 0;
+  cod_info->subblock_gain[0]  = 0;
+  cod_info->subblock_gain[1]  = 0;
+  cod_info->subblock_gain[2]  = 0;
+  cod_info->region0_count     = 0;
+  cod_info->region1_count     = 0;
+  cod_info->part2_length      = 0;
+  cod_info->preflag           = 0;
+  cod_info->scalefac_scale    = 0;
+  cod_info->global_gain       = 210;
+  cod_info->count1table_select= 0;
+  cod_info->count1bits        = 0;
+  
+  
+  if (gf.experimentalZ) {
+    /* compute subblock gains */
+    int j,b;  FLOAT8 en[3],mx;
+    if ((cod_info->block_type==SHORT_TYPE) ) {
+      /* estimate energy within each subblock */
+      for (b=0; b<3; b++) en[b]=0;
+      for ( i=0,j = 0; j < 192; j++ ) {
+	for (b=0; b<3; b++) {
+	  en[b]+=xr[i] * xr[i];
+	  i++;
+	}
+      }
+      mx = 1e-12;
+      for (b=0; b<3; b++) mx=Max(mx,en[b]);
+      for (b=0; b<3; b++) en[b] = Max(en[b],1e-12)/mx;
+      /*printf("ener = %4.2f  %4.2f  %4.2f  \n",en[0],en[1],en[2]);*/
+      /* pick gain so that 2^(2gain)*en[0] = 1  */
+      /* gain = .5* log( 1/en[0] )/LOG2 = -.5*log(en[])/LOG2 */
+      for (b=0; b<3; b++) {
+	cod_info->subblock_gain[b] = (int)(-.5*log(en[b])/LOG2 + 0.5);
+	if (cod_info->subblock_gain[b] > 2) 
+	  cod_info->subblock_gain[b]=2;
+	if (cod_info->subblock_gain[b] < 0) 
+	  cod_info->subblock_gain[b]=0;
+      }
+    }
+  }
+}
+
+
+
+
+/************************************************************************/
 /*  outer_loop                                                         */
 /************************************************************************/
 /*  Function: The outer iteration loop controls the masking conditions  */
@@ -178,7 +248,7 @@ void outer_loop_dual(
     /* compute max allowed distortion */
     calc_xmin(xr_org[ch], &ratio[ch], cod_info[ch], &l3_xmin[ch]);
 
-    init_outer_loop(xr[ch], &scalefac_w[ch], cod_info[ch], l3_side);
+    init_outer_loop_dual(xr[ch], &scalefac_w[ch], cod_info[ch], l3_side);
 
     count[ch] = 0;
     for (i=0; i<576; i++) {
