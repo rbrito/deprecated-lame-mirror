@@ -1038,19 +1038,19 @@ Optional Features:
   --enable-efence            Use ElectricFence for malloc debugging
   --disable-analyzer-hooks   Exclude analyzer hooks
   --disable-decoder          Exclude mpg123 decoder
-  --disable-decoder-layer1   Exclude layer1 decoding
-  --disable-decoder-layer2   Exclude layer2 decoding
-  --disable-frontend         Do not build the lame executable default: build it
-  --enable-mp3x              Build GTK frame analyzer default: no
-  --enable-mp3rtp            Build mp3rtp default: no
+  --enable-decode-layer1     Include layer1 decoding default=no
+  --disable-decode-layer2    Exclude layer2 decoding
+  --disable-frontend         Do not build the lame executable default=build
+  --enable-mp3x              Build GTK frame analyzer default=no
+  --enable-mp3rtp            Build mp3rtp default=no
   --enable-brhist            Include the VBR bitrate histogram feature
-                             default: yes if any termcap available
+                             default=yes if any termcap available
   --enable-all-float         Whether to make all floting point variables as float, not double
-                             default: no
+                             default=no
   --enable-expopt=full,norm  Whether to enable experimental optimizations
-                             default: no
+                             default=no
   --enable-debug=alot,norm   Enable debugging (disables optimizations)
-                             default: no
+                             default=no
 
 Optional Packages:
   --with-PACKAGE[=ARG]    use PACKAGE [ARG=yes]
@@ -1819,7 +1819,7 @@ fi
 
 # Define the identity of the package.
  PACKAGE=lame
- VERSION=3.94
+ VERSION=3.95
 
 
 cat >>confdefs.h <<_ACEOF
@@ -26824,11 +26824,11 @@ if test "${enable_decode_layer1+set}" = set; then
   enableval="$enable_decode_layer1"
   CONFIG_DECODER_L1="${enableval}"
 else
-  CONFIG_DECODER_L1="yes"
+  CONFIG_DECODER_L1="no"
 fi;
-# Check whether --enable-decode-layer1 or --disable-decode-layer1 was given.
-if test "${enable_decode_layer1+set}" = set; then
-  enableval="$enable_decode_layer1"
+# Check whether --enable-decode-layer2 or --disable-decode-layer2 was given.
+if test "${enable_decode_layer2+set}" = set; then
+  enableval="$enable_decode_layer2"
   CONFIG_DECODER_L2="${enableval}"
 else
   CONFIG_DECODER_L2="yes"
@@ -27107,7 +27107,7 @@ case $host_cpu in
 *86)
 	CPUTYPE="i386"
 
-	# this may make a faster binary
+	# use internal knowledge of the IEEE 754 layout
 
 cat >>confdefs.h <<\_ACEOF
 #define TAKEHIRO_IEEE754_HACK 1
@@ -27116,6 +27116,13 @@ _ACEOF
 	;;
 *)
 	CPUTYPE="no"
+
+	# it has enough precission for us...
+
+cat >>confdefs.h <<\_ACEOF
+#define USE_FAST_LOG 1
+_ACEOF
+
 	;;
 esac
 
