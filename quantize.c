@@ -90,8 +90,10 @@ iteration_loop( FLOAT8 pe[2][2], FLOAT8 ms_ener_ratio[2],
       else memcpy(xr[gr],xr_org[gr],sizeof(FLOAT8)*2*576);   
       
       on_pe(pe,l3_side,targ_bits,mean_bits,stereo,gr);
+#ifndef RH_masking
       if (reduce_sidechannel) 
 	reduce_side(targ_bits,ms_ener_ratio[gr],mean_bits);
+#endif      
       
       for (ch=0 ; ch < stereo ; ch ++) {
 	outer_loop( xr, targ_bits[ch], noise, targ_noise, 0, &l3_xmin,l3_enc, 
@@ -122,23 +124,25 @@ void set_masking_lower( int nbits )
 	
 	/* quality setting */
 	/* Adjust allowed masking based on quality setting */
-	/* db_lower varies from -10 to +8 db */
 	
-#define RH_maskingXXX
 #ifdef  RH_masking	
+	/* masking_lower varies from -14 to +2.9 db */
+	
+	/* masking_lower_db varies from -10 to +2.9 db */
 	masking_lower_db = 10 * ( VBR_q/7.0 - 1 );
+	
+	/* adjust by -4(min)..0(max) depending on bitrate */
+	/* above 1500 bits we will trust the PSY model */
+	fac  = nbits > 1500 ? 0 : 2*(sin(PI*(nbits/1500.0 - 0.5))-1.0);
+	fac *= reduce_sidechannel ? 0.707 : 1;
 #else
+	/* masking_lower varies from -18 to +8 db */
 	masking_lower_db = -10 + 2*VBR_q;
+	/* adjust by -6(min)..0(max) depending on bitrate */
+	fac = (nbits-125)/(2500.0-125.0);
+	fac = 6*(fac-1);
 #endif
 	
-	/* adjust by -6(min)..0(max) depending on bitrate */
-
-#ifdef  RH_masking	
-	fac = nbits > 1750 ? 1 : 0.5*(1.0+sin(PI*(nbits/1750.0 - 0.5)));
-#else
-	fac = (nbits-125)/(2500.0-125.0);
-#endif
-	fac = 6*(fac-1);
 	masking_lower_db += fac;
 
 	masking_lower = pow(10.0,masking_lower_db/10);
@@ -207,8 +211,10 @@ VBR_iteration_loop (FLOAT8 pe[2][2], FLOAT8 ms_ener_ratio[2],
   analog_silence=0;
   for (gr = 0; gr < mode_gr; gr++) {
     int num_chan=stereo;
+#ifndef  RH_masking	
     /* determine quality based on mid channel only */
     if (reduce_sidechannel) num_chan=1;  
+#endif
 
     /* copy data to be quantized into xr */
     if (convert_mdct) ms_convert(xr[gr],xr_org[gr]);
@@ -288,6 +294,7 @@ VBR_iteration_loop (FLOAT8 pe[2][2], FLOAT8 ms_ener_ratio[2],
   } /* for gr */
 
 
+#ifndef  RH_masking	
   if (reduce_sidechannel) {
     /* number of bits needed was found for MID channel above.  Use formula
      * (fixed bitrate code) to set the side channel bits */
@@ -298,6 +305,7 @@ VBR_iteration_loop (FLOAT8 pe[2][2], FLOAT8 ms_ener_ratio[2],
       used_bits += save_bits[gr][1];
     }
   }
+#endif
 
   /******************************************************************
    * find lowest bitrate able to hold used bits
@@ -523,7 +531,9 @@ void outer_loop(
 
   
 
-  if (gf.experimentalY) memcpy(xr_save,xr[gr][ch],sizeof(FLOAT8)*576);   
+  if (gf.experimentalY && (sloppy || !VBR)) {
+    memcpy(xr_save,xr[gr][ch],sizeof(FLOAT8)*576);
+  }   
   cod_info = &l3_side->gr[gr].ch[ch].tt;
   init_outer_loop(xr,l3_xmin,scalefac,gr,stereo,l3_side,ratio,ch);  
   best_over = 100;
@@ -711,10 +721,13 @@ void outer_loop(
     if (notdone) {
       /* see if we should apply preemphasis */
       int pre_just_turned_on=0;
-      /*
-      pre_just_turned_on=
-      	preemphasis(xr[gr][ch],xrpow,l3_xmin,gr,ch,l3_side,distort);
-      */
+      
+      /* should be done only after the first call to inner loop
+       */
+      if (iteration==1) {
+        pre_just_turned_on =
+      	  preemphasis(xr[gr][ch],xrpow,l3_xmin,gr,ch,l3_side,distort);
+      }
 
       /* if we didn't just apply pre-emph, let us see if we should 
        * amplify some scale factor bands */
@@ -741,7 +754,7 @@ void outer_loop(
     
 
     
-    if (try_scale && gf.experimentalY) {
+    if (try_scale && gf.experimentalY && (sloppy || !VBR)) {
       memcpy(xr[gr][ch],xr_save,sizeof(FLOAT8)*576);   
       init_outer_loop(xr,l3_xmin,scalefac,gr,stereo,l3_side,ratio,ch);  
       compute_stepsize=1;  /* compute a new global gain */
