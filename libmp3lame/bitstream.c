@@ -189,11 +189,9 @@ drain_into_ancillary(lame_global_flags *gfp, int remainingBits)
 }
 
 /*write N bits into the header */
-inline static void
-writeheader(lame_internal_flags *gfc,int val, int j)
+inline static int
+writeheader(lame_internal_flags *gfc,int val, int j, int ptr)
 {
-    int ptr = gfc->bs.ptr;
-
     while (j > 0) {
 	int k = Min(j, 8 - (ptr & 7));
 	j -= k;
@@ -202,7 +200,7 @@ writeheader(lame_internal_flags *gfc,int val, int j)
 	    |= ((val >> j)) << (8 - (ptr & 7) - k);
 	ptr += k;
     }
-    gfc->bs.ptr = ptr;
+    return ptr;
 }
 
 
@@ -245,98 +243,96 @@ encodeSideInfo2(lame_global_flags *gfp, int bitsPerFrame)
 {
     lame_internal_flags *gfc=gfp->internal_flags;
     III_side_info_t *l3_side = &gfc->l3_side;
-    int gr, ch;
+    int gr, ch, ptr = 0;
 
-    gfc->bs.ptr = 0;
     memset(gfc->bs.header[gfc->bs.h_ptr].buf, 0, l3_side->sideinfo_len);
     if (gfp->out_samplerate < 16000) 
-	writeheader(gfc,0xffe,                12);
+	ptr = writeheader(gfc,0xffe,                12, ptr);
     else
-	writeheader(gfc,0xfff,                12);
-    writeheader(gfc,(gfp->version),            1);
-    writeheader(gfc,4 - 3,                 2);
-    writeheader(gfc,(!gfp->error_protection),  1);
-    writeheader(gfc,(gfc->bitrate_index),      4);
-    writeheader(gfc,(gfc->samplerate_index),   2);
-    writeheader(gfc,(gfc->padding),            1);
-    writeheader(gfc,(gfp->extension),          1);
-    writeheader(gfc,(gfp->mode),               2);
-    writeheader(gfc,(gfc->mode_ext),           2);
-    writeheader(gfc,(gfp->copyright),          1);
-    writeheader(gfc,(gfp->original),           1);
-    writeheader(gfc,(gfp->emphasis),           2);
-    if (gfp->error_protection) {
-	writeheader(gfc,0, 16); /* dummy */
-    }
+	ptr = writeheader(gfc,0xfff,                12, ptr);
+    ptr = writeheader(gfc,(gfp->version),            1, ptr);
+    ptr = writeheader(gfc,4 - 3,                     2, ptr);
+    ptr = writeheader(gfc,(!gfp->error_protection),  1, ptr);
+    ptr = writeheader(gfc,(gfc->bitrate_index),      4, ptr);
+    ptr = writeheader(gfc,(gfc->samplerate_index),   2, ptr);
+    ptr = writeheader(gfc,(gfc->padding),            1, ptr);
+    ptr = writeheader(gfc,(gfp->extension),          1, ptr);
+    ptr = writeheader(gfc,(gfp->mode),               2, ptr);
+    ptr = writeheader(gfc,(gfc->mode_ext),           2, ptr);
+    ptr = writeheader(gfc,(gfp->copyright),          1, ptr);
+    ptr = writeheader(gfc,(gfp->original),           1, ptr);
+    ptr = writeheader(gfc,(gfp->emphasis),           2, ptr);
+    if (gfp->error_protection)
+	ptr += 16;
 
     assert(l3_side->main_data_begin >= 0);
+    ptr = writeheader(gfc, l3_side->main_data_begin, 7+gfc->mode_gr, ptr);
     if (gfp->version == 1) {
 	/* MPEG1 */
-	writeheader(gfc, l3_side->main_data_begin, 9);
-	writeheader(gfc, l3_side->private_bits, 7 - gfc->channels_out*2);
+	ptr += 7 - gfc->channels_out*2; /* private_bits */
+	for (ch = 0; ch < gfc->channels_out; ch++)
+	    ptr = writeheader(gfc,
+			      l3_side->scfsi[ch][0]*8
+			      + l3_side->scfsi[ch][1]*4
+			      + l3_side->scfsi[ch][2]*2
+			      + l3_side->scfsi[ch][3], 4, ptr);
 
-	for (ch = 0; ch < gfc->channels_out; ch++) {
-	    int band;
-	    for (band = 0; band < 4; band++) {
-		writeheader(gfc, l3_side->scfsi[ch][band], 1);
-	    }
-	}
 	for (gr = 0; gr < 2; gr++) {
 	    for (ch = 0; ch < gfc->channels_out; ch++) {
 		gr_info *gi = &l3_side->tt[gr][ch];
-		writeheader(gfc, gi->part2_3_length+gi->part2_length, 12);
-		writeheader(gfc, gi->big_values / 2,        9);
-		writeheader(gfc, gi->global_gain,           8);
-		writeheader(gfc, gi->scalefac_compress,     4);
+		ptr = writeheader(gfc, gi->part2_3_length+gi->part2_length, 12,
+				  ptr);
+		ptr = writeheader(gfc, gi->big_values / 2,        9, ptr);
+		ptr = writeheader(gfc, gi->global_gain,           8, ptr);
+		ptr = writeheader(gfc, gi->scalefac_compress,     4, ptr);
 
 		if (gi->block_type != NORM_TYPE) {
-		    writeheader(gfc, 1, 1); /* window_switching_flag */
-		    writeheader(gfc, blockConv[gi->block_type], 2);
-		    writeheader(gfc, gi->mixed_block_flag, 1);
+		    ptr = writeheader(gfc, 1, 1, ptr); /* window_switching_flag */
+		    ptr = writeheader(gfc, blockConv[gi->block_type], 2, ptr);
+		    ptr = writeheader(gfc, gi->mixed_block_flag, 1, ptr);
 
 		    if (gi->table_select[0] == 14)
 			gi->table_select[0] = 16;
-		    writeheader(gfc, gi->table_select[0],  5);
+		    ptr = writeheader(gfc, gi->table_select[0],  5, ptr);
 		    if (gi->table_select[1] == 14)
 			gi->table_select[1] = 16;
-		    writeheader(gfc, gi->table_select[1],  5);
+		    ptr = writeheader(gfc, gi->table_select[1],  5, ptr);
 
-		    writeheader(gfc, gi->subblock_gain[0], 3);
-		    writeheader(gfc, gi->subblock_gain[1], 3);
-		    writeheader(gfc, gi->subblock_gain[2], 3);
+		    ptr = writeheader(gfc, gi->subblock_gain[0], 3, ptr);
+		    ptr = writeheader(gfc, gi->subblock_gain[1], 3, ptr);
+		    ptr = writeheader(gfc, gi->subblock_gain[2], 3, ptr);
 		} else {
-		    writeheader(gfc, 0, 1); /* window_switching_flag */
+		    ptr = writeheader(gfc, 0, 1, ptr); /* window_switching_flag */
 		    if (gi->table_select[0] == 14)
 			gi->table_select[0] = 16;
-		    writeheader(gfc, gi->table_select[0], 5);
+		    ptr = writeheader(gfc, gi->table_select[0], 5, ptr);
 		    if (gi->table_select[1] == 14)
 			gi->table_select[1] = 16;
-		    writeheader(gfc, gi->table_select[1], 5);
+		    ptr = writeheader(gfc, gi->table_select[1], 5, ptr);
 		    if (gi->table_select[2] == 14)
 			gi->table_select[2] = 16;
-		    writeheader(gfc, gi->table_select[2], 5);
+		    ptr = writeheader(gfc, gi->table_select[2], 5, ptr);
 
 		    assert(gi->region0_count < 16U);
 		    assert(gi->region1_count < 8U);
-		    writeheader(gfc, gi->region0_count, 4);
-		    writeheader(gfc, gi->region1_count, 3);
+		    ptr = writeheader(gfc, gi->region0_count, 4, ptr);
+		    ptr = writeheader(gfc, gi->region1_count, 3, ptr);
 		}
-		writeheader(gfc, gi->preflag > 0,        1);
-		writeheader(gfc, gi->scalefac_scale,     1);
-		writeheader(gfc, gi->count1table_select, 1);
+		ptr = writeheader(gfc,
+				  (gi->preflag > 0)*4 + gi->scalefac_scale*2
+				  + gi->count1table_select, 3, ptr);
 	    }
 	}
     } else {
 	/* MPEG2 */
-	writeheader(gfc, l3_side->main_data_begin, 8);
-	writeheader(gfc, l3_side->private_bits, gfc->channels_out);
-
+	ptr += gfc->channels_out; /* private_bits */
 	for (ch = 0; ch < gfc->channels_out; ch++) {
 	    gr_info *gi = &l3_side->tt[0][ch];
 	    int part;
-	    writeheader(gfc, gi->part2_3_length+gi->part2_length, 12);
-	    writeheader(gfc, gi->big_values / 2,        9);
-	    writeheader(gfc, gi->global_gain,           8);
+	    ptr = writeheader(gfc, gi->part2_3_length+gi->part2_length, 12,
+			      ptr);
+	    ptr = writeheader(gfc, gi->big_values / 2,        9, ptr);
+	    ptr = writeheader(gfc, gi->global_gain,           8, ptr);
 
 	    /* set scalefac_compress */
 	    switch (gi->scalefac_compress) {
@@ -382,43 +378,43 @@ encodeSideInfo2(lame_global_flags *gfp, int bitsPerFrame)
 		part = 0;
 		assert(0);
 	    }
-	    writeheader(gfc, part, 9);
+	    ptr = writeheader(gfc, part, 9, ptr);
 
 	    if (gi->block_type != NORM_TYPE) {
-		writeheader(gfc, 1, 1); /* window_switching_flag */
-		writeheader(gfc, blockConv[gi->block_type], 2);
-		writeheader(gfc, gi->mixed_block_flag, 1);
+		ptr = writeheader(gfc, 1, 1, ptr); /* window_switching_flag */
+		ptr = writeheader(gfc, blockConv[gi->block_type], 2, ptr);
+		ptr = writeheader(gfc, gi->mixed_block_flag, 1, ptr);
 
 		if (gi->table_select[0] == 14)
 		    gi->table_select[0] = 16;
-		writeheader(gfc, gi->table_select[0],  5);
+		ptr = writeheader(gfc, gi->table_select[0],  5, ptr);
 		if (gi->table_select[1] == 14)
 		    gi->table_select[1] = 16;
-		writeheader(gfc, gi->table_select[1],  5);
+		ptr = writeheader(gfc, gi->table_select[1],  5, ptr);
 
-		writeheader(gfc, gi->subblock_gain[0], 3);
-		writeheader(gfc, gi->subblock_gain[1], 3);
-		writeheader(gfc, gi->subblock_gain[2], 3);
+		ptr = writeheader(gfc, gi->subblock_gain[0], 3, ptr);
+		ptr = writeheader(gfc, gi->subblock_gain[1], 3, ptr);
+		ptr = writeheader(gfc, gi->subblock_gain[2], 3, ptr);
 	    } else {
-		writeheader(gfc, 0, 1); /* window_switching_flag */
+		ptr = writeheader(gfc, 0, 1, ptr); /* window_switching_flag */
 		if (gi->table_select[0] == 14)
 		    gi->table_select[0] = 16;
-		writeheader(gfc, gi->table_select[0], 5);
+		ptr = writeheader(gfc, gi->table_select[0], 5, ptr);
 		if (gi->table_select[1] == 14)
 		    gi->table_select[1] = 16;
-		writeheader(gfc, gi->table_select[1], 5);
+		ptr = writeheader(gfc, gi->table_select[1], 5, ptr);
 		if (gi->table_select[2] == 14)
 		    gi->table_select[2] = 16;
-		writeheader(gfc, gi->table_select[2], 5);
+		ptr = writeheader(gfc, gi->table_select[2], 5, ptr);
 
 		assert(gi->region0_count < 16U);
 		assert(gi->region1_count < 8U);
-		writeheader(gfc, gi->region0_count, 4);
-		writeheader(gfc, gi->region1_count, 3);
+		ptr = writeheader(gfc, gi->region0_count, 4, ptr);
+		ptr = writeheader(gfc, gi->region1_count, 3, ptr);
 	    }
 
-	    writeheader(gfc, gi->scalefac_scale,     1);
-	    writeheader(gfc, gi->count1table_select, 1);
+	    ptr = writeheader(gfc, gi->scalefac_scale,     1, ptr);
+	    ptr = writeheader(gfc, gi->count1table_select, 1, ptr);
 	}
     }
 
@@ -429,7 +425,7 @@ encodeSideInfo2(lame_global_flags *gfp, int bitsPerFrame)
 
     {
 	int old = gfc->bs.h_ptr;
-	assert(gfc->bs.ptr == l3_side->sideinfo_len * 8);
+	assert(ptr == l3_side->sideinfo_len * 8);
 
 	gfc->bs.h_ptr = (old + 1) & (MAX_HEADER_BUF-1);
 	gfc->bs.header[gfc->bs.h_ptr].write_timing

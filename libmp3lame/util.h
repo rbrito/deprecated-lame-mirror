@@ -160,7 +160,6 @@ typedef struct {
 	int write_timing;
 	char buf[MAX_HEADER_LEN];
     } header[MAX_HEADER_BUF];
-    int ptr;
     int h_ptr;
     int w_ptr;
 } Bit_stream_struc;
@@ -228,7 +227,6 @@ typedef struct {
 typedef struct {
     gr_info tt[2][2];
     int main_data_begin; 
-    int private_bits;
     int ResvSize; /* in bits */
     int ResvMax;  /* in bits */
     int maxmp3buf; /* in bits */
