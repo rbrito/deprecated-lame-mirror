@@ -56,7 +56,7 @@ enum byte_order NativeByteOrder = order_unknown;
 
 
 #ifdef AMIGA_MPEGA
-int lame_decode_initfile(const char *fullname,mp3data_struct *mp3data);
+int lame_decode_initfile(char *fullname,mp3data_struct *mp3data);
 #else
 int lame_decode_initfile(FILE *fd,mp3data_struct *mp3data);
 #endif
@@ -103,8 +103,8 @@ static int  fskip ( FILE* fp, long offset, int whence )
         return 0;
 #endif	
     
-    if ( whence != SEEK_SET  ||  offset < 0 )
-        return -1;
+    if ( whence != SEEK_CUR  ||  offset < 0 )
+      return -1;
 
     while ( offset > 0 ) {
         read      = offset > sizeof(buffer)  ?  sizeof(buffer)  :  offset;
@@ -240,7 +240,7 @@ int get_audio(lame_global_flags *gfp,short buffer[2][1152])
   short	insamp[2304];
   int samples_read;
   int framesize,samples_to_read;
-  unsigned long remaining;
+  unsigned int remaining;
   int num_channels = gfp->num_channels;
 
   /* NOTE: LAME can now handle arbritray size input data packets,
@@ -258,7 +258,7 @@ int get_audio(lame_global_flags *gfp,short buffer[2][1152])
      * files which have id3 or other tags at the end.  Note that if you
      * are using LIBSNDFILE, this is not necessary */
     remaining=gfp->num_samples-Min(gfp->num_samples,num_samples_read);
-    if (remaining < (unsigned long)framesize)
+    if (remaining < (unsigned int)framesize)
       samples_to_read = remaining;
   }
 
@@ -554,7 +554,7 @@ void CloseSndFile(sound_file_format input,FILE *musicin)
 
 FILE * OpenSndFile(lame_global_flags *gfp, char *inPath)
 {
-  const char* lpszFileName = inPath;
+  char* lpszFileName = inPath;
   FILE * musicin;
   SNDFILE *gs_pSndFileIn;
   SF_INFO gs_wfInfo;
@@ -787,7 +787,7 @@ int read_samples_pcm(FILE *musicin,short sample_buffer[2304], int frame_size,int
     if (16==pcmbitwidth) {
       samples_read = fread(sample_buffer, 2, (unsigned int)samples_to_read, musicin);
     }else if (8==pcmbitwidth) {
-      unsigned char temp[2304];
+      char temp[2304];
       int i;
       samples_read = fread(temp, 1, (unsigned int)samples_to_read, musicin);
       for (i=0 ; i<samples_read; ++i) {
@@ -943,7 +943,7 @@ parse_wave_header(lame_global_flags *gfp,FILE *sf)
 ************************************************************************/
 
 static void
-aiff_check2(const char *file_name, IFF_AIFF *pcm_aiff_data)
+aiff_check2(char *file_name, IFF_AIFF *pcm_aiff_data)
 {
 	if (pcm_aiff_data->sampleType != IFF_ID_SSND) {
 	   fprintf(stderr,"Sound data is not PCM in \"%s\".\n", file_name);
@@ -1243,7 +1243,7 @@ FILE * OpenSndFile(lame_global_flags *gfp, char *inPath)
 
 
 #ifdef HAVEMPGLIB
-static int check_aid ( const unsigned char* const header ) 
+static int check_aid (char* header ) 
 {
   int aid_header =
     (header[0]=='A' && header[1]=='i' && header[2]=='D'
@@ -1251,19 +1251,26 @@ static int check_aid ( const unsigned char* const header )
   return aid_header;
 }
 
-static int is_syncword ( const unsigned char* const header )
+static int is_syncword(char *header)
 {
-    int mpeg1  = header[0] == 0xFF  &&  (header[1] & 0xF0) == 0xF0;
-    int mpeg25 = header[0] == 0xFF  &&  (header[1] & 0xF0) == 0xE0;
+
+  int mpeg1=((int) ( header[0] == (char) 0xFF)) &&
+    ((int) ( (header[1] & (char) 0xF0) == (char) 0xF0));
   
-    return  mpeg1 || mpeg25;
+  int mpeg25=((int) ( header[0] == (char) 0xFF)) &&
+    ((int) ( (header[1] & (char) 0xF0) == (char) 0xE0));
+  
+  return (mpeg1 || mpeg25);
+ 
+
 }
+
 
 
 int lame_decode_initfile(FILE *fd, mp3data_struct *mp3data)
 {
   VBRTAGDATA pTagData;
-  unsigned char buf[1000];
+  char buf[1000];
   int ret;
   int num_frames=0;
   int len,len2,xing_header,aid_header;

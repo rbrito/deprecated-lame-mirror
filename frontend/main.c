@@ -94,7 +94,7 @@ int main(int argc, char **argv)
 
   /* initialize libmp3lame */
   input_format=sf_unknown;
-  if (lame_init(&gf)<0) {
+  if (lame_init_old(&gf)<0) {
     fprintf(stderr,"fatal error during initialization\n");
     exit(-1);
   }
@@ -259,12 +259,12 @@ int main(int argc, char **argv)
 	}
 #endif
 	timestatus_finish();
-        lame_close(&gf);
       }
 
       /* imp3 is not negative, but fwrite needs an unsigned here */
       fwrite(mp3buffer,1,(unsigned int)imp3,outf);
       lame_mp3_tags_fid(&gf,outf);       /* add ID3 version 1 or VBR tags to mp3 file */
+      lame_close(&gf);
       fclose(outf);
     }
   close_infile();            /* close the input file */
