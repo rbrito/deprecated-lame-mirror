@@ -83,6 +83,7 @@
 
 
 const static char	VBRTag[]={"Xing"};
+const static char	VBRTag2[]={"Info"};
 
 
 //<<<<<<< VbrTag.c
@@ -919,10 +920,21 @@ int PutVbrTag(lame_global_flags *gfp,FILE *fpStream,int nVbrScale)
 	if (gfp->error_protection) nStreamIndex -= 2;
 
 	/* Put Vbr tag */
-	pbtStreamBuffer[nStreamIndex++]=VBRTag[0];
-	pbtStreamBuffer[nStreamIndex++]=VBRTag[1];
-	pbtStreamBuffer[nStreamIndex++]=VBRTag[2];
-	pbtStreamBuffer[nStreamIndex++]=VBRTag[3];
+	if (gfp->VBR == vbr_off)
+	{
+		pbtStreamBuffer[nStreamIndex++]=VBRTag2[0];
+		pbtStreamBuffer[nStreamIndex++]=VBRTag2[1];
+		pbtStreamBuffer[nStreamIndex++]=VBRTag2[2];
+		pbtStreamBuffer[nStreamIndex++]=VBRTag2[3];
+
+	}
+	else
+	{
+		pbtStreamBuffer[nStreamIndex++]=VBRTag[0];
+		pbtStreamBuffer[nStreamIndex++]=VBRTag[1];
+		pbtStreamBuffer[nStreamIndex++]=VBRTag[2];
+		pbtStreamBuffer[nStreamIndex++]=VBRTag[3];
+	}	
 
 	/* Put header flags */
 	CreateI4(&pbtStreamBuffer[nStreamIndex],FRAMES_FLAG+BYTES_FLAG+TOC_FLAG+VBR_SCALE_FLAG);
