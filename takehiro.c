@@ -269,7 +269,6 @@ static int choose_table(int *ix, int *end, int *s)
     case 10: case 11: case 12:
     case 13: case 14: case 15:
 	return count_bit_noESC_from3(ix, end, huf_tbl_noESC[max - 1], s);
-	return choice;
 
     default:
 	/* try tables with linbits */
