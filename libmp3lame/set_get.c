@@ -1397,13 +1397,10 @@ lame_set_preset_expopts( lame_global_flags*  gfp, int preset_expopts )
     return 0;
 }
 
-#define         Min(A, B)       ((A) < (B) ? (A) : (B))
-#define         Max(A, B)       ((A) > (B) ? (A) : (B))
 
 
 
-
-static int apply_abr_preset(lame_global_flags*  gfp, int preset)
+int apply_preset(lame_global_flags*  gfp, int preset, vbr_mode mode)
 {
     typedef struct {
         int    abr_kbps;
@@ -1418,7 +1415,7 @@ static int apply_abr_preset(lame_global_flags*  gfp, int preset)
     } dm_abr_presets_t;
 
 
-    // Switch mappings for ABR mode
+    /* Switch mappings for target bitrate */
     const dm_abr_presets_t abr_switch_map [] = {
         //  scalefac_s   lowpass     scale     athlower
         // kbps    qantcomp   nsmsfix     athcurve  inter-ch
@@ -1433,8 +1430,8 @@ static int apply_abr_preset(lame_global_flags*  gfp, int preset)
         {  80,  1,    3, 13500,  0,   0.93, 10,  -2, 0.0007 },
         {  96,  1,    1, 15300,  0,   0.93,  8,  -2, 0.0006 },
         { 112,  1,    1, 16000,  0,   0.93,  7,  -2, 0.0005 },
-        { 128,  1,    1, 17500,  0,   0.93,  5,  -2, 0.0002 },
-        { 160,  1,    1, 18000,  0,   0.95,  4,  -2, 0.0 },
+        { 128,  1,    1, 17500,  0,   0.93,  5,  -1, 0.0002 },
+        { 160,  1,    1, 18000,  0,   0.95,  4,  -1, 0.0 },
         { 192,  1,    1, 19500,1.7,   0.97,  3,  -1, 0.0 },
         { 224,  1,    1, 20000,1.25,  0.98,  2,  -1, 0.0 },
         { 256,  0,    3, 20500,  0,   1.00,  1,   0, 0.0 },
@@ -1474,27 +1471,34 @@ static int apply_abr_preset(lame_global_flags*  gfp, int preset)
         r = upper_range;
 
 
-    lame_set_VBR(gfp, abr);
+    lame_set_VBR(gfp, mode);
     lame_set_VBR_mean_bitrate_kbps(gfp, actual_bitrate);
-    lame_set_VBR_mean_bitrate_kbps(gfp, Min(lame_get_VBR_mean_bitrate_kbps(gfp), 320)); 
-    lame_set_VBR_mean_bitrate_kbps(gfp, Max(lame_get_VBR_mean_bitrate_kbps(gfp), 8)); 
     lame_set_brate(gfp, lame_get_VBR_mean_bitrate_kbps(gfp));
 
-    lame_set_use_largescalefac(gfp, abr_switch_map[r].large_scalefac);
-    lame_set_use_subblock_gain(gfp, abr_switch_map[r].large_scalefac);
-    lame_set_quantcomp_method(gfp, abr_switch_map[r].method);
+    if (mode != vbr) {
+	lame_set_use_largescalefac(gfp, abr_switch_map[r].large_scalefac);
+	lame_set_use_subblock_gain(gfp, abr_switch_map[r].large_scalefac);
+	lame_set_quantcomp_method(gfp, abr_switch_map[r].method);
+	/*
+	 * ABR seems to have big problems with clipping, especially at
+	 * low bitrates. so we compensate for that here by using a scale
+	 * value depending on bitrate
+	 */
+	if (abr_switch_map[r].scale != 1)
+	    (void) lame_set_scale( gfp, abr_switch_map[r].scale );
+    }
 
-    lame_set_quality(gfp, 5);
-    lame_set_lowpassfreq(gfp, abr_switch_map[r].lowpass);
-    lame_set_mode(gfp, JOINT_STEREO);
+    if (gfp->lowpassfreq == 0)
+	lame_set_lowpassfreq(gfp, abr_switch_map[r].lowpass);
+
+    if (gfp->mode == NOT_SET)
+	gfp->mode = JOINT_STEREO;
+
+    if (gfp->mode_automs && gfp->mode != MONO && gfp->compression_ratio < 6.6)
+	gfp->mode = STEREO;
 
     if (abr_switch_map[r].nsmsfix > 0)
 	(void) lame_set_msfix( gfp, abr_switch_map[r].nsmsfix );
-
-    // ABR seems to have big problems with clipping, especially at low bitrates
-    // so we compensate for that here by using a scale value depending on bitrate
-    if (abr_switch_map[r].scale != 1)
-        (void) lame_set_scale( gfp, abr_switch_map[r].scale );
 
     lame_set_interChRatio(gfp, abr_switch_map[r].interch);
     lame_set_ATHcurve(gfp, abr_switch_map[r].ath_curve);
@@ -1637,7 +1641,7 @@ lame_set_preset( lame_global_flags*  gfp, int preset )
     }
 
     if ((preset >= 8) && (preset < 320))
-        return apply_abr_preset(gfp, preset);
+        return apply_preset(gfp, preset, abr);
 
 
     return preset;

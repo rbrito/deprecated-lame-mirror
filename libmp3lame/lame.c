@@ -55,158 +55,6 @@
 
 #define LAME_DEFAULT_QUALITY 5
 
-static void
-optimum_bandwidth(double *const lowerlimit,
-                  double *const upperlimit,
-                  const unsigned bitrate,
-                  const int samplefreq,
-                  const double channels)
-{
-/* 
- *  Input:
- *      bitrate     total bitrate in bps
- *      samplefreq  output sampling frequency in Hz
- *      channels    1 for mono, 2+epsilon for MS stereo, 3 for LR stereo
- *                  epsilon is the percentage of LR frames for typical audio
- *                  (I use 'Fade to Gray' by Metallica)
- *
- *   Output:
- *      lowerlimit: best lowpass frequency limit for input filter in Hz
- *      upperlimit: best highpass frequency limit for input filter in Hz
- */
-    double  f_low;
-    double  f_high;
-    double  br;
-
-    assert(bitrate >= 8000 && bitrate <= 320000);
-    assert(samplefreq >= 8000 && samplefreq <= 48000);
-    assert(channels == 1 || (channels >= 2 && channels <= 3));
-
-    if (samplefreq >= 32000)
-        br =
-            bitrate - (channels ==
-                       1 ? (17 + 4) * 8 : (32 + 4) * 8) * samplefreq / 1152;
-    else
-        br =
-            bitrate - (channels ==
-                       1 ? (9 + 4) * 8 : (17 + 4) * 8) * samplefreq / 576;
-
-    if (channels >= 2.)
-        br /= 1.75 + 0.25 * (channels - 2.); // MS needs 1.75x mono, LR needs 2.00x mono (experimental data of a lot of albums)
-
-    br *= 0.5;          // the sine and cosine term must share the bitrate
-
-/* 
- *  So, now we have the bitrate for every spectral line.
- *  Let's look at the current settings:
- *
- *    Bitrate   limit    bits/line
- *     8 kbps   0.34 kHz  4.76
- *    16 kbps   1.9 kHz   2.06
- *    24 kbps   2.8 kHz   2.21
- *    32 kbps   3.85 kHz  2.14
- *    40 kbps   5.1 kHz   2.06
- *    48 kbps   5.6 kHz   2.21
- *    56 kbps   7.0 kHz   2.10
- *    64 kbps   7.7 kHz   2.14
- *    80 kbps  10.1 kHz   2.08
- *    96 kbps  11.2 kHz   2.24
- *   112 kbps  14.0 kHz   2.12
- *   128 kbps  15.4 kHz   2.17
- *   160 kbps  18.2 kHz   2.05
- *   192 kbps  21.1 kHz   2.14
- *   224 kbps  22.0 kHz   2.41
- *   256 kbps  22.0 kHz   2.78
- *
- *   What can we see?
- *       Value for 8 kbps is nonsense (although 8 kbps and stereo is nonsense)
- *       Values are between 2.05 and 2.24 for 16...192 kbps
- *       Some bitrate lack the following bitrates have: 16, 40, 80, 160 kbps
- *       A lot of bits per spectral line have: 24, 48, 96 kbps
- *
- *   What I propose?
- *       A slightly with the bitrate increasing bits/line function. It is
- *       better to decrease NMR for low bitrates to get a little bit more
- *       bandwidth. So we have a better trade off between twickling and
- *       muffled sound.
- */
-
-    f_low = br / log10(br * 4.425e-3); // Tests with 8, 16, 32, 64, 112 and 160 kbps
- 
-/*
-GB 04/04/01
-sfb21 is a huge bitrate consumer in vbr with the new ath.
-Need to reduce the lowpass to more reasonable values. This extra lowpass
-won't reduce quality over 3.87 as the previous ath was doing this lowpass
-*/
-/*GB 22/05/01
-I'm also extending this to CBR as tests showed that a
-limited bandwidth is increasing quality
-*/
-    if (f_low>18400)
-	    f_low = 18400+(f_low-18400)/4;
-
-/*
- *  What we get now?
- *
- *    Bitrate       limit  bits/line	difference
- *     8 kbps (8)  1.89 kHz  0.86          +1.6 kHz
- *    16 kbps (8)  3.16 kHz  1.24          +1.2 kHz
- *    32 kbps(16)  5.08 kHz  1.54          +1.2 kHz
- *    56 kbps(22)  7.88 kHz  1.80          +0.9 kHz
- *    64 kbps(22)  8.83 kHz  1.86          +1.1 kHz
- *   112 kbps(32) 14.02 kHz  2.12           0.0 kHz
- *   112 kbps(44) 13.70 kHz  2.11          -0.3 kHz
- *   128 kbps     15.40 kHz  2.17           0.0 kHz
- *   160 kbps     16.80 kHz  2.22          -1.4 kHz 
- *   192 kbps     19.66 kHz  2.30          -1.4 kHz
- *   256 kbps     22.05 kHz  2.78           0.0 kHz
- */
-
-
-/*
- *  Now we try to choose a good high pass filtering frequency.
- *  This value is currently not used.
- *    For fu < 16 kHz:  sqrt(fu*fl) = 560 Hz
- *    For fu = 18 kHz:  no high pass filtering
- *  This gives:
- *
- *   2 kHz => 160 Hz
- *   3 kHz => 107 Hz
- *   4 kHz =>  80 Hz
- *   8 kHz =>  40 Hz
- *  16 kHz =>  20 Hz
- *  17 kHz =>  10 Hz
- *  18 kHz =>   0 Hz
- *
- *  These are ad hoc values and these can be optimized if a high pass is available.
- */
-    if (f_low <= 16000)
-        f_high = 16000. * 20. / f_low;
-    else if (f_low <= 18000)
-        f_high = 180. - 0.01 * f_low;
-    else
-        f_high = 0.;
-
-    /*  
-     *  When we sometimes have a good highpass filter, we can add the highpass
-     *  frequency to the lowpass frequency
-     */
-
-    if (lowerlimit != NULL)
-        *lowerlimit = (f_low>0.5 * samplefreq ? 0.5 * samplefreq : f_low); // roel - fixes mono "-b320 -a"
-    if (upperlimit != NULL)
-        *upperlimit = f_high;
-/*
- * Now the weak points:
- *
- *   - the formula f_low=br/log10(br*4.425e-3) is an ad hoc formula
- *     (but has a physical background and is easy to tune)
- *   - the switch to the ATH based bandwidth selecting is the ad hoc
- *     value of 128 kbps
- */
-}
-
 /* set internal feature flags.  USER should not access these since
  * some combinations will produce strange results */
 void
@@ -581,48 +429,12 @@ lame_init_params(lame_global_flags * const gfp)
     if (gfc->samplerate_index < 0)
         return -1;
 
-    /* mode = -1 (not set by user) or 
-     * mode = MONO (because of only 1 input channel).  
-     * If mode has been set, then select between STEREO or J-STEREO
-     * At higher quality (lower compression) use STEREO instead of J-STEREO.
-     * (unless the user explicitly specified a mode)
-     *
-     * The threshold to switch to STEREO is:
-     *    48 kHz:   171 kbps (used at 192+)
-     *    44.1 kHz: 160 kbps (used at 160+)
-     *    32 kHz:   119 kbps (used at 128+)
-     *
-     *   Note, that for 32 kHz/128 kbps J-STEREO FM recordings sound much
-     *   better than STEREO, so I'm not so very happy with that. 
-     *   fs < 32 kHz I have not tested.
-     */
-    if (gfp->mode == NOT_SET) {
-	gfp->mode = JOINT_STEREO;
-        if (gfp->compression_ratio < 8)
-            gfp->mode = STEREO;
-    }
-    if (gfp->mode_automs && gfp->mode != MONO && gfp->compression_ratio < 6.6)
-	gfp->mode = STEREO;
-
     /****************************************************************/
     /* if a filter has not been enabled, see if we should add one: */
     /****************************************************************/
-    if (gfp->lowpassfreq == 0) {
-        double  lowpass;
-        double  highpass;
-        double  channels;
-
-	channels = gfc->channels_out;
-        if (gfp->mode == DUAL_CHANNEL || gfp->mode == STEREO)
-            channels = 3.;
-
-        optimum_bandwidth(
-	    &lowpass, &highpass,
-	    gfp->out_samplerate * 16 * gfc->channels_out / gfp->compression_ratio,
-	    gfp->out_samplerate, channels);
-
-        gfp->lowpassfreq = lowpass;
-    }
+    apply_preset(gfp,
+		 (int)(gfp->out_samplerate * 16 * gfc->channels_out
+		       / (gfp->compression_ratio * 1000)), gfp->VBR);
 
     /* apply user driven high pass filter */
     if (gfp->highpassfreq > 0) {
@@ -655,9 +467,6 @@ lame_init_params(lame_global_flags * const gfp)
 	gfc->lowpass1 /= gfp->out_samplerate;
 	gfc->lowpass2 /= gfp->out_samplerate;
     }
-
-
-
 
     /*******************************************************
      * samplerate and bitrate index
