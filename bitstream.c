@@ -67,7 +67,7 @@ void putheader_bits(lame_internal_flags *gfc,int w_ptr)
 
 
 /*write N bits into the bit stream */
-INLINE static void
+static INLINE void
 putbits2(lame_global_flags *gfp, unsigned int val, int j)
 {
     lame_internal_flags *gfc=gfp->internal_flags;
@@ -100,7 +100,7 @@ putbits2(lame_global_flags *gfp, unsigned int val, int j)
 
 
 /*write N bits into the header */
-inline static void
+static INLINE void
 writeheader(lame_internal_flags *gfc,unsigned int val, int j)
 {
     int ptr = gfc->header[gfc->h_ptr].ptr;
@@ -132,7 +132,7 @@ CRC_writeheader(lame_internal_flags *gfc,unsigned int value, int length,unsigned
    writeheader(gfc,value, length);
 }
 
-inline static void
+static INLINE void
 encodeSideInfo2(lame_global_flags *gfp,int bitsPerFrame)
 {
     lame_internal_flags *gfc=gfp->internal_flags;
@@ -277,7 +277,7 @@ encodeSideInfo2(lame_global_flags *gfp,int bitsPerFrame)
   the ancillary data...
 */
 
-INLINE static void
+static INLINE void
 drain_into_ancillary(lame_global_flags *gfp,int remainingBits)
 {
   /*    lame_internal_flags *gfc=gfp->internal_flags;*/
@@ -295,7 +295,7 @@ drain_into_ancillary(lame_global_flags *gfp,int remainingBits)
     }
 }
 
-inline static int
+static INLINE int
 huffman_coder_count1(lame_global_flags *gfp,int *ix, gr_info *gi)
 {
   /*    lame_internal_flags *gfc=gfp->internal_flags;*/
@@ -363,7 +363,7 @@ huffman_coder_count1(lame_global_flags *gfp,int *ix, gr_info *gi)
   Implements the pseudocode of page 98 of the IS
   */
 
-inline static int
+static INLINE int
 HuffmanCode(lame_global_flags *gfp,int table_select, int x, int y)
 {
   /*    lame_internal_flags *gfc=gfp->internal_flags;*/
@@ -531,7 +531,7 @@ LongHuffmancodebits(lame_global_flags *gfp,int *ix, gr_info *gi)
     return bits;
 }
 
-inline static int
+static INLINE int
 writeMainData(lame_global_flags *gfp,
       int              l3_enc[2][2][576],
   	III_scalefac_t   scalefac[2][2] )
