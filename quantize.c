@@ -88,7 +88,7 @@ iteration_loop( lame_global_flags *gfp, FLOAT8 pe[2][2],
 
       best_scalefac_store(gfp,gr, ch, l3_enc, l3_side, scalefac);
       if (gfc->use_best_huffman==1 && cod_info->block_type != SHORT_TYPE) {
-	best_huffman_divide(gfc, gr, ch, cod_info, l3_enc[gr][ch]);
+        best_huffman_divide(gfc, gr, ch, cod_info, l3_enc[gr][ch]);
       }
       assert((int)cod_info->part2_3_length < 4096);
 
@@ -661,8 +661,8 @@ int quant_compare(int experimentalX,
                        && calc->over_noise < best->over_noise )
                  ||  ( calc->over_count == best->over_count 
                        && calc->over_noise==best->over_noise
-		       && calc->tot_noise < best->tot_noise)
-	    ; break;
+                       && calc->tot_noise < best->tot_noise)
+                 ; break;
 
 
   case 1: better = calc->max_noise < best->max_noise; break;
@@ -1049,7 +1049,11 @@ void amp_scalefac_bands(lame_global_flags *gfp, FLOAT8 xrpow[576],
       distort_thresh = Max(distort[i+1][sfb],distort_thresh);
     }
   }
-  distort_thresh=Min(distort_thresh * 1.05, 1.0);
+  if (distort_thresh <= 1.0) {
+    distort_thresh *= 0.95;
+  } else {
+    distort_thresh = 1.0;
+  }
 
 
 
