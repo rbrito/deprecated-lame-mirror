@@ -249,7 +249,8 @@ static void PresetOptions( lame_global_flags *gfp, LONG myPreset )
 __declspec(dllexport) BE_ERR	beInitStream(PBE_CONFIG pbeConfig, PDWORD dwSamples, PDWORD dwBufferSize, PHBE_STREAM phbeStream)
 {
 	int			nDllArgC=0;
-	BE_CONFIG	lameConfig;
+	BE_CONFIG	lameConfig = { 0, };
+	int			nInitReturn = 0;
 
 	// Init the global flags structure
 	gfp = lame_init();
@@ -486,7 +487,10 @@ now --vbr-mtrh is known as --vbr-new
 		lame_set_padding_type( gfp, PAD_NO );
 	}
 
-	lame_init_params(gfp);	
+	if ( 0 != ( nInitReturn = lame_init_params( gfp ) ) )
+	{
+		return nInitReturn;
+	}
 
 	//LAME encoding call will accept any number of samples.  
 	if ( 0 == lame_get_version( gfp ) )
@@ -516,14 +520,18 @@ now --vbr-mtrh is known as --vbr-new
 
 __declspec(dllexport) BE_ERR	beDeinitStream(HBE_STREAM hbeStream, PBYTE pOutput, PDWORD pdwOutput)
 {
+	int nOutputSamples = 0;
 
-//	*pdwOutput = lame_encode_finish(gfp,pOutput,0);
+    nOutputSamples = lame_encode_flush( gfp, pOutput, 0 );
 
-    *pdwOutput = lame_encode_flush( gfp, pOutput, 0 );
-
-	if (*pdwOutput<0) {
-		*pdwOutput=0;
+	if ( nOutputSamples < 0 )
+	{
+		*pdwOutput = 0;
 		return BE_ERR_BUFFER_TOO_SMALL;
+	}
+	else
+	{
+		*pdwOutput = nOutputSamples;
 	}
 
     
@@ -541,7 +549,6 @@ __declspec(dllexport) BE_ERR	beDeinitStream(HBE_STREAM hbeStream, PBYTE pOutput,
 __declspec(dllexport) BE_ERR	beCloseStream(HBE_STREAM hbeStream)
 {
 	// DeInit encoder
-//	return DeInitEncoder();
 	return BE_ERR_SUCCESSFUL;
 }
 
@@ -614,6 +621,7 @@ __declspec(dllexport) BE_ERR	beEncodeChunk(HBE_STREAM hbeStream, DWORD nSamples,
 
 	// Encode it
 	int dwSamples;
+	int	nOutputSamples = 0;
 
 	dwSamples = nSamples / lame_get_num_channels( gfp );
 
@@ -628,17 +636,22 @@ __declspec(dllexport) BE_ERR	beEncodeChunk(HBE_STREAM hbeStream, DWORD nSamples,
 
 	if ( 1 == lame_get_num_channels( gfp ) )
 	{
-		*pdwOutput=lame_encode_buffer(gfp,pSamples,pSamples,dwSamples,pOutput,0);
+		nOutputSamples = lame_encode_buffer(gfp,pSamples,pSamples,dwSamples,pOutput,0);
 	}
 	else
 	{
-		*pdwOutput=lame_encode_buffer_interleaved(gfp,pSamples,dwSamples,pOutput,0);
+		nOutputSamples = lame_encode_buffer_interleaved(gfp,pSamples,dwSamples,pOutput,0);
 	}
 
 
-	if (*pdwOutput<0) {
+	if ( nOutputSamples < 0 )
+	{
 		*pdwOutput=0;
 		return BE_ERR_BUFFER_TOO_SMALL;
+	}
+	else
+	{
+		*pdwOutput = (DWORD)nOutputSamples;
 	}
 
 	return BE_ERR_SUCCESSFUL;
