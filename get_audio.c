@@ -334,7 +334,7 @@ void CloseSndFile(void)
 
 
 
-void OpenSndFile(const char* lpszFileName, int default_samp,
+FILE * OpenSndFile(const char* lpszFileName, int default_samp,
 int default_channels)
 {
   input_bitrate=0;
@@ -445,6 +445,18 @@ int default_channels)
 #endif
     bitwidth=gs_wfInfo.pcmbitwidth;
   }
+
+  if (gs_wfInfo.samples==MAX_U_32_NUM) {
+    /* try to figure out num_samples */
+    stat(inPath,&sb);  /* try file size, assume 2 bytes per sample */
+    if (gf.input_format == sf_mp3) {
+      FLOAT totalseconds = (sb.st_size*8.0/(1000.0*GetSndBitrate()));
+      gs_wfInfo.samples= totalseconds*GetSndSampleRate();
+    }else{
+      gs_wfInfo.samples = sb.st_size/(2*GetSndChannels());
+    }
+  }
+  return musicin;    
 }
 
 
@@ -539,7 +551,7 @@ int GetSndChannels(void)
 }
 
 
-void OpenSndFile(const char* inPath, int default_samp,
+FILE * OpenSndFile(const char* inPath, int default_samp,
 int default_channels)
 {
   struct stat sb;
@@ -548,7 +560,7 @@ int default_channels)
   num_samples=MAX_U_32_NUM;
   samp_freq=default_samp;
   num_channels = default_channels;
-
+  
   if (!strcmp(inPath, "-")) {
     /* Read from standard input. */
 #ifdef __EMX__
@@ -556,7 +568,7 @@ int default_channels)
 #elif (defined  __BORLANDC__)
     setmode(_fileno(stdin), O_BINARY);
 #elif (defined  __CYGWIN__)
-      setmode(fileno(stdin), _O_BINARY);
+    setmode(fileno(stdin), _O_BINARY);
 #elif (defined _WIN32)
     _setmode(_fileno(stdin), _O_BINARY);
 #endif
@@ -567,7 +579,7 @@ int default_channels)
       exit(1);
     }
   }
-
+  
   input_bitrate=0;
   if (gf.input_format==sf_mp3) {
 #ifdef AMIGA_MPEGA
@@ -578,34 +590,35 @@ int default_channels)
       fprintf(stderr,"Error reading headers in mp3 input file %s.\n", inPath);
       exit(1);
     }
-  }else{
-    if (gf.input_format != sf_raw) {
-      parse_file_header(musicin);
-    }
-
-    if (num_samples==MAX_U_32_NUM) {
-      /* try to figure out num_samples */
-      stat(inPath,&sb);  /* try file size, assume 2 bytes per sample */
-      if (gf.input_format == sf_mp3) {
-	FLOAT totalseconds = (sb.st_size*8.0/(1000.0*GetSndBitrate()));
-	num_samples= totalseconds*GetSndSampleRate();
-      }else{
-	num_samples = sb.st_size/(2*GetSndChannels());
-      }
-    }
+ }else{
+   if (gf.input_format != sf_raw) {
+     parse_file_header(musicin);
+   }
+   
+   if (gf.input_format==sf_raw) {
+     /* assume raw PCM */
+     fprintf(stderr, "Assuming raw pcm input file");
+     if (gf.swapbytes==TRUE)
+       fprintf(stderr, " : Forcing byte-swapping\n");
+     else
+       fprintf(stderr, "\n");
+   }
+ }
     
-    if (gf.input_format==sf_raw) {
-      /* assume raw PCM */
-      fprintf(stderr, "Assuming raw pcm input file");
-      if (gf.swapbytes==TRUE)
-	fprintf(stderr, " : Forcing byte-swapping\n");
-      else
-	fprintf(stderr, "\n");
+  if (num_samples==MAX_U_32_NUM) {
+    /* try to figure out num_samples */
+    stat(inPath,&sb);  /* try file size, assume 2 bytes per sample */
+    if (gf.input_format == sf_mp3) {
+      FLOAT totalseconds = (sb.st_size*8.0/(1000.0*GetSndBitrate()));
+      num_samples= totalseconds*GetSndSampleRate();
+    }else{
+      num_samples = sb.st_size/(2*GetSndChannels());
     }
   }
+  return musicin;
 }
-
-
+  
+  
 /************************************************************************
 *
 * read_samples()

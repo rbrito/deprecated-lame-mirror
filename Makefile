@@ -63,6 +63,10 @@ ifeq ($(UNAME),Linux)
    BRHIST_SWITCH = -DBRHIST
    LIBTERMCAP = -lncurses
 
+# suggested for gcc-2.7.x
+   CC_OPTS =  -O3 -fomit-frame-pointer -funroll-loops -ffast-math \
+                    -finline-functions 
+
 #  for debugging:
    CC_OPTS =  -UNDEBUG -O  -Wall -g -DABORTFP 
 
@@ -70,10 +74,6 @@ ifeq ($(UNAME),Linux)
 #  for lots of debugging:
 #   CC_OPTS =  -DDEBUG -UNDEBUG  -O -Wall -g -DABORTFP -DNO_LEONID
 
-
-# suggested for gcc-2.7.x
-#   CC_OPTS =    -O3 -fomit-frame-pointer -funroll-loops -ffast-math \
-#                    -finline-functions 
 
 # these options were suggested with egcs-990524
 #   CC = egcs   #egcc for Debian systems

@@ -621,6 +621,12 @@ void plot_frame(void)
       xmx = n+1;
       gpk_bargraph_draw(sfbbox[gr],n,xcord,ycord,
 			xmn,ymn,xmx,ymx,1,label2,0,grcolor[gr]);
+
+      ycord[0] = ycord[1] = 0;
+      xcord[0] = 1;
+      xcord[1] = n+1;
+      gpk_rectangle_draw(sfbbox[gr],xcord,ycord,xmn,ymn,xmx,ymx,&yellow);
+
       
     }
 
