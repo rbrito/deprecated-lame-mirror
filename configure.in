@@ -498,7 +498,7 @@ case $target_cpu in
 *86)
 	CPUTYPE="i386"
 
-	# this may make faster binary
+	# this may make a faster binary
 	AC_DEFINE(TAKEHIRO_IEEE754_HACK, 1, IEEE754 compatible machine)
 	;;
 *)
@@ -585,40 +585,43 @@ if test "x$GCC" = "xyes"; then
 	full)
 		OPTIMIZATION="${OPTIMIZATION} ${OPTIMIZATION_NORM} \
 			${OPTIMIZATION_FULL}"
+
+		# some hardware dependend options
+		case "${GCC_version}" in
+		2.9*|3.*)
+			# "new" GCC, use some "new" CPU specific optimizations
+			case ${target_cpu} in
+			*486)
+				OPTIMIZATION="${OPTIMIZATION} -m486 \
+					-mfancy-math-387"
+				;;
+			*586)
+				OPTIMIZATION="${OPTIMIZATION} -mpentium \
+					-march=pentium -mfancy-math-387"
+				;;
+			*686)
+				OPTIMIZATION="${OPTIMIZATION} -mpentiumpro \
+					-march=pentiumpro -mfancy-math-387"
+				;;
+			*86)
+				OPTIMIZATION="${OPTIMIZATION} -mfancy-math-387"
+				;;
+			alpha*)
+				OPTIMIZATION="${OPTIMIZATION} -mfp-regs"
+				AC_DEFINE(FLOAT, double, double is faster than float on Alpha)
+				# add "-mcpu=21164a -Wa,-m21164a" to optimize
+				# for 21164a (ev56) CPU
+				;;
+			*)
+				OPTIMIZATION="${OPTIMIZATION} -fdelayed-branch"
+				;;
+			esac
 		;;
 	*)
 		AC_MSG_ERROR(bad value »${CONFIG_EXPOPT}« for expopt option)
 		;;
 	esac
-
-	# some hardware dependend options
-dnl	if test "XXX" = "yes"; then
-dnl		# "new" GCC, use some "new" CPU specific optimizations
-		case ${target_cpu} in
-		*486)
-			OPTIMIZATION="${OPTIMIZATION} -m486 -mfancy-math-387"
-			;;
-dnl		*586)
-dnl			OPTIMIZATION="${OPTIMIZATION} -mpentium -march=pentium \
-dnl				-mfancy-math-387"
-dnl			;;
-dnl		*686)
-dnl			OPTIMIZATION="${OPTIMIZATION} -mpentiumpro \
-dnl				-march=pentiumpro -mfancy-math-387"
-dnl			;;
-		*86)
-			OPTIMIZATION="${OPTIMIZATION} -mfancy-math-387"
-			;;
-		alpha*)
-			OPTIMIZATION="${OPTIMIZATION} -mfp-regs"
-			AC_DEFINE(FLOAT, double, double is faster than float on Alpha)
-	# add "-mcpu=21164a -Wa,-m21164a" to optimize for 21164a (ev56) CPU
-			;;
-		*)
-			OPTIMIZATION="${OPTIMIZATION} -fdelayed-branch"
-			;;
-		esac
-dnl	fi
+esac
 
 	AC_MSG_RESULT(${CONFIG_EXPOPT})
 else
