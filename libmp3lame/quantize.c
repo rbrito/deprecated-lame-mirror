@@ -95,6 +95,7 @@ init_outer_loop(
              *  MPEG-2(.5):  sfbs 0-5 long block, 3-12 short blocks
              */ 
             cod_info->sfb_lmax    = gfc->is_mpeg1 ? 8 : 6;
+	    cod_info->psy_lmax    = gfc->is_mpeg1 ? 8 : 6;
 	    cod_info->sfb_smin    = 3;
 	}
     } else {
