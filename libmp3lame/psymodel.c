@@ -754,7 +754,7 @@ static inline int trancate(FLOAT x)
 #endif /* TAKEHIRO_IEEE754_HACK */
 
 void
-init_mask_add_max_values(lame_t  const gfc)
+init_mask_add_max_values(lame_t gfc)
 {
     int i;
     ma_max_i1 = db2pow((I1LIMIT+1)/16.0*10.0);
