@@ -347,7 +347,7 @@ count_bit_noESC_from4(
     int	sum1, sum2, sum3;
     int t;
     do {
-	sum += table[(ix[0] << 4) + ix[1]];
+	sum += table[ix[0]*16 + ix[1]];
     } while ((ix += 2) < end);
 
     t = t1;
@@ -412,6 +412,7 @@ static int
 choose_table(const int *ix, const int * const end, int * const s)
 {
     int choice, choice2, max;
+    const uint64_t *ptable;
     static const short linmax[] = {
 	 2+15,  4+15,  8+15,  16+15,  64+15,  256+15,  1024+15,  8192+15,
 	16+15, 32+15, 64+15, 128+15, 256+15,  512+15,  2048+15,  8192+15
@@ -426,34 +427,34 @@ choose_table(const int *ix, const int * const end, int * const s)
 	return count_bit_noESC_from2(s, ix, end);
 
     case 2:
-	return count_bit_noESC_from4(s, ix, end,  2, table7B89+98);
+	          ptable = table7B89+98; break;
 
     case 3:
-	return count_bit_noESC_from4(s, ix, end,  5, table7B89+94);
+	max =  5; ptable = table7B89+94; break;
 
     case 4: case 5:
-	return count_bit_noESC_from4(s, ix, end,  7, table7B89);
+	max =  7; ptable = table7B89;    break;
 
     case 6: case 7:
-	return count_bit_noESC_from4(s, ix, end, 10, table7B89+6);
+	max = 10; ptable = table7B89+6;  break;
 
     case 8: case 9: case 10: case 11: case 12: case 13: case 14: case 15:
-	return count_bit_noESC_from4(s, ix, end, 13, tableDxEF);
+	max = 13; ptable = tableDxEF;    break;
 
     default:
 	/* try tables with linbits */
-	for (choice2 = 24; choice2 < 32; choice2++) {
-	    if (linmax[choice2-16] > max) {
-		choice = choice2 - 8;
-		do {
-		    if (linmax[choice-16] > max)
-			break;
-		} while (++choice < 24);
-		return count_bit_ESC(s, ix, end, choice, choice2);
-	    }
+	for (choice2 = 24; choice2 < 31; choice2++) {
+	    if (linmax[choice2-16] <= max)
+		break;
 	}
-	return max;
+	choice = choice2 - 8;
+	do {
+	    if (linmax[choice-16] > max)
+		break;
+	} while (++choice < 24);
+	return count_bit_ESC(s, ix, end, choice, choice2);
     }
+    return count_bit_noESC_from4(s, ix, end, max, ptable);
 }
 
 
@@ -486,11 +487,11 @@ recalc_divide_init(
     int r0;
     for (r0 = 0; r0 < SBMAX_l; r0++) {
 	int m = 0;
-	r01_bits[r0] = LARGE_BITS;
-	if (gfc->scalefac_band.l[r0] <= gi->big_values)
+	if (gfc->scalefac_band.l[r0] < gi->big_values && gi->scalefac[r0] >= 0)
 	    m = ixmax(&gi->l3_enc[gfc->scalefac_band.l[r0]],
 		      &gi->l3_enc[gfc->scalefac_band.l[r0+1]]);
 	max_info[r0] = m;
+	r01_bits[r0] = LARGE_BITS;
     }
 
     for (r0 = 0; r0 < 16; r0++) {
