@@ -95,44 +95,44 @@ lame_init_qval(lame_global_flags * gfp)
 
     case 5: /* same as the default setting(-q 2) before LAME 3.83 */
 	/* LAME4's new default */
-        gfc->filter_type = 0;
-        gfc->psymodel = 2;
-        gfc->noise_shaping_amp = 1;
-        gfc->use_best_huffman = 1;
-        break;
+	gfc->filter_type = 0;
+	gfc->psymodel = 2;
+	gfc->noise_shaping_amp = 1;
+	gfc->use_best_huffman = 1;
+	break;
 
     case 4:
-        gfc->filter_type = 0;
-        gfc->psymodel = 2;
-        gfc->noise_shaping_amp = 2;
-        gfc->use_best_huffman = 1;
-        break;
+	gfc->filter_type = 0;
+	gfc->psymodel = 2;
+	gfc->noise_shaping_amp = 2;
+	gfc->use_best_huffman = 1;
+	break;
 
     case 3:
-        gfc->filter_type = 0;
-        gfc->psymodel = 2;
-        gfc->noise_shaping_amp = 3;
-        gfc->use_best_huffman = 1;
-        break;
+	gfc->filter_type = 0;
+	gfc->psymodel = 2;
+	gfc->noise_shaping_amp = 3;
+	gfc->use_best_huffman = 1;
+	break;
 
     case 2:	/* aliased -h */
+	gfc->filter_type = 0;
+	gfc->psymodel = 2;
+	gfc->noise_shaping_amp = 4;
+	gfc->use_best_huffman = 1;
+	break;
+
+    case 1:	/* LAME 3.94's -h + alpha */
         gfc->filter_type = 0;
         gfc->psymodel = 2;
-        gfc->noise_shaping_amp = 3;
+        gfc->noise_shaping_amp = 4;
         gfc->use_best_huffman = 2; /* inner loop, PAINFULLY SLOW */
         break;
 
-    case 1:	/* same with -q 2 */
-        gfc->filter_type = 0;
-        gfc->psymodel = 2;
-        gfc->noise_shaping_amp = 3; /* 4 not yet coded */
-        gfc->use_best_huffman = 2;
-        break;
-
-    case 0:	/* same with -q 2 */
+    case 0:	/* same with -q 1 */
         gfc->filter_type = 0; /* 1 not yet coded */
         gfc->psymodel = 2;
-        gfc->noise_shaping_amp = 3;
+        gfc->noise_shaping_amp = 4; /* 5 not yet coded */
         gfc->use_best_huffman = 2;
         break;
     }
@@ -583,8 +583,8 @@ lame_init_params(lame_global_flags * const gfp)
 	ERRORF(gfc, "VBR mode with -q setting is meaningless.\n");
     }
 
-    if (gfc->noise_shaping_amp > 2)
-	gfc->noise_shaping_amp = 2;
+    if (gfc->noise_shaping_amp > 4)
+	gfc->noise_shaping_amp = 4;
 
     /* initialize internal qval settings */
     lame_init_qval(gfp);

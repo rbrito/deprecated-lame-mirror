@@ -932,7 +932,7 @@ adjust_global_gain(
 	int bw = gi->width[sfb];
 	FLOAT istep;
 	j += bw;
-	if (distort[sfb] > 0.0)
+	if (distort[sfb] >= 0.0)
 	    continue;
 
 	bw = -bw;
@@ -981,26 +981,36 @@ CBR_2nd_bitalloc(
     gr_info *gi,
     FLOAT distort[])
 {
-    int sfb, j = 0;
-    for (sfb = 0; sfb < gi->psymax; sfb++) {
-	int width = -gi->width[sfb];
+    gr_info gi_w = *gi;
+    int sfb, j = 0, flag = 0;
+    for (sfb = 0; sfb < gi_w.psymax; sfb++) {
+	int width = -gi_w.width[sfb];
 	distort[sfb] = 0.0;
 	j -= width;
-	if (gi->scalefac[sfb] > 0) {
-	    int s0 = gi->scalefac[sfb];
+	if (gi_w.scalefac[sfb] > 0) {
+	    int s0 = gi_w.scalefac[sfb];
 	    FLOAT noiseold = calc_sfb_noise(gfc, j, width,
-					    scalefactor(gi, sfb));
-	    while (--gi->scalefac[sfb] >= 0
-		   && calc_sfb_noise(gfc, j, width, scalefactor(gi, sfb))
+					    scalefactor((&gi_w), sfb));
+	    while (--gi_w.scalefac[sfb] >= 0
+		   && calc_sfb_noise(gfc, j, width, scalefactor((&gi_w), sfb))
 		   <= noiseold)
 		;
-	    gi->scalefac[sfb]++;
-	    if (gi->scalefac[sfb] != s0)
+	    gi_w.scalefac[sfb]++;
+	    if (gi_w.scalefac[sfb] != s0) {
+		flag = 1;
 		distort[sfb] = -1.0;
+	    }
 	}
     }
-    gfc->scale_bitcounter(gi);
-    adjust_global_gain(gfc, gi, distort, gi->part2_3_length);
+    if (!flag)
+	return;
+
+    if (!adjust_global_gain(gfc, &gi_w, distort, gi_w.part2_3_length)) {
+	gfc->scale_bitcounter(&gi_w);
+	assert(gi_w.part2_length + gi_w.part2_3_length
+	       <= gi->part2_length + gi->part2_3_length);
+	*gi = gi_w;
+    }
 }
 
 static int
@@ -1109,7 +1119,8 @@ CBR_1st_bitalloc (
     }
     assert (gi->global_gain < 256);
 
-//    CBR_2nd_bitalloc(gfc, gi, distort);
+    if (gfc->noise_shaping_amp >= 4)
+	CBR_2nd_bitalloc(gfc, gi, distort);
  quit_quantization:
     if ((gfc->substep_shaping & 0x80) == 0
 	&& ((gi->block_type == SHORT_TYPE && (gfc->substep_shaping & 2))

@@ -354,7 +354,9 @@ struct lame_internal_flags {
 				 1 = amplify within 50% of max (on db scale)
 				 2 = amplify only most distorted band
 				 3 = half amplify only most distorted band
-				 4 = do not stop when all scalefacs amplified
+				 4 = after noise shaping, try to reduce noise
+				     by decreasing scalefactor
+				 5 = reduce "total noise" if possible
 			      */
     int substep_shaping;  /* 0 = no substep
 			     1 = use substep only long
