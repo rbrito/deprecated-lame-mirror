@@ -174,7 +174,6 @@ typedef struct {
     FLOAT xr[576];
     int l3_enc[576];
     int scalefac[SFBMAX];
-    FLOAT maxXR[SFBMAX];
     FLOAT ATHadjust;
 
     int part2_length;
@@ -205,7 +204,7 @@ typedef struct {
     int count1bits;
     /* added for LSF */
     int slen[4];
-    int dummy_for_padding[3];
+    int dummy_for_padding[2];
 } gr_info;
 
 typedef struct {
@@ -233,6 +232,7 @@ struct lame_internal_flags {
 
     /* side information */
     gr_info tt[MAX_GRANULES][MAX_CHANNELS];
+    FLOAT maxXR[SFBMAX];
     int main_data_begin;  /* in bytes */
     int ResvSize; /* in bits */
     int ResvMax;  /* in bits */

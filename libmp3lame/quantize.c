@@ -1448,7 +1448,7 @@ noisesfb(lame_t gfc, gr_info *gi, FLOAT * xmin, int startsfb)
 	j += width;
 	if (sfb >= startsfb) {
 	    int s = scalefactor(gi, sfb);
-	    if (IPOW20(s) > gi->maxXR[sfb])
+	    if (IPOW20(s) > gfc->maxXR[sfb])
 		return -1;
 
 	    if (calc_sfb_noise(gfc, j, -width, s) > xmin[sfb])
@@ -1497,7 +1497,7 @@ VBR_3rd_bitalloc(lame_t gfc, gr_info *gi, FLOAT * xmin)
        at this point */
     int sfb, j, r = 0;
     for (j = sfb = 0; sfb < gi->psymax; sfb++) {
-	if (IPOW20(scalefactor(gi, sfb)) > gi->maxXR[sfb]) {
+	if (IPOW20(scalefactor(gi, sfb)) > gfc->maxXR[sfb]) {
 	    if (gi->scalefac[sfb] == 0)
 		return -2;
 	    r = -1;
@@ -1549,13 +1549,13 @@ VBR_noise_shaping(lame_t gfc, gr_info *gi, FLOAT * xmin)
 	}
 
 	if (maxXR != 0.0) {
-	    gi->maxXR[sfb] = (maxXR = IXMAX_VAL / maxXR);
+	    gfc->maxXR[sfb] = (maxXR = IXMAX_VAL / maxXR);
 	    gain = find_scalefac(gfc, j, xmin[sfb], -width, maxXR,
 				 gi->block_type == SHORT_TYPE, gain);
 	    if (gain <= 255 && vbrmax < gain)
 		vbrmax = gain;
 	} else {
-	    gi->maxXR[sfb] = FLOAT_MAX;
+	    gfc->maxXR[sfb] = FLOAT_MAX;
 	}
 	gi->scalefac[sfb] = gain;
     } while (++sfb < gi->psymax);
@@ -1763,7 +1763,7 @@ set_frame_pinfo(lame_t gfc, III_psy_ratio ratio[MAX_GRANULES][MAX_CHANNELS])
 		= gfc->masking_next[gr][2].pe + gfc->masking_next[gr][3].pe
 		- gfc->masking_next[gr][0].pe - gfc->masking_next[gr][1].pe;
 	}
-        for (ch = 0; ch < gfc->channels_out; ch ++) {
+        for (ch = 0; ch < gfc->channels_out; ch++) {
 	    gr_info *gi = &gfc->tt[gr][ch];
 	    int scalefac_sav[SFBMAX], sfb;
 
