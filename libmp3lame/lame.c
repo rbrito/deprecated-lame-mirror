@@ -875,31 +875,10 @@ lame_init_params(lame_global_flags * const gfp)
         if (gfp->ATHtype == -1)
             gfp->ATHtype = 4;
 
-        gfc->nsPsy.bass = gfc->nsPsy.alto = gfc->nsPsy.treble = 0;
-
-        i = (gfp->exp_nspsytune >> 2) & 63;
-        if (i >= 32)
-            i -= 64;
-        gfc->nsPsy.bass = pow(10, i / 4.0 / 10.0);
-        i = (gfp->exp_nspsytune >> 8) & 63;
-        if (i >= 32)
-            i -= 64;
-        gfc->nsPsy.alto = pow(10, i / 4.0 / 10.0);
-        i = (gfp->exp_nspsytune >> 14) & 63;
-        if (i >= 32)
-            i -= 64;
-        gfc->nsPsy.treble = pow(10, i / 4.0 / 10.0);
-        /*  to be compatible with Naoki's original code, the next 6 bits
-         *  define only the amount of changing treble for sfb21 */
-        j = (gfp->exp_nspsytune >> 20) & 63;
-        if (j >= 32)
-            j -= 64;
-        gfc->nsPsy.sfb21 = pow(10, (i+j) / 4.0 / 10.0);
-    }
-
-    if (gfp->exp_nspsytune2.pointer[0]) {
-      gfc->nsPsy.pass1fp = gfp->exp_nspsytune2.pointer[0];
-      gfc->nsPsy.use2 = 1;
+	if (gfp->exp_nspsytune2.pointer[0])
+	    gfc->nsPsy.pass1fp = gfp->exp_nspsytune2.pointer[0];
+	else
+	    gfc->nsPsy.pass1fp = NULL;
     }
 
     assert( gfp->VBR_q <= 9 );
@@ -1313,10 +1292,12 @@ lame_print_internals( const lame_global_flags * gfp )
     MSGF( gfc, "\t ^ adapt threshold type: %d\n", gfp->athaa_loudapprox );
     
     if ( gfc->nsPsy.use ) {
-    MSGF( gfc, "\texperimental psy tunings by Naoki Shibata\n" ); 
-    MSGF( gfc, "\t   adjust masking bass=%g dB, alto=%g dB, treble=%g dB, sfb21=%g dB\n", 
-        10*log10(gfc->nsPsy.bass),   10*log10(gfc->nsPsy.alto), 
-        10*log10(gfc->nsPsy.treble), 10*log10(gfc->nsPsy.sfb21) );
+	MSGF(gfc, "\texperimental psy tunings by Naoki Shibata\n" );
+	MSGF(gfc, "\t   adjust masking bass=%g dB, alto=%g dB, treble=%g dB, sfb21=%g dB\n", 
+	     10*log10(gfc->nsPsy.longfact[ 0]),
+	     10*log10(gfc->nsPsy.longfact[ 7]),
+	     10*log10(gfc->nsPsy.longfact[14]),
+	     10*log10(gfc->nsPsy.longfact[21]));
     }
     pc = gfp->useTemporal ? "yes" : "no";
     MSGF( gfc, "\tusing temporal masking effect: %s\n", pc );

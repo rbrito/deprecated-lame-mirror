@@ -1503,8 +1503,8 @@ lame_set_preset_expopts( lame_global_flags*  gfp, int preset_expopts )
 
     /* default = 0 (disabled) */
     gfp->preset_expopts = preset_expopts;
-    gfc->nsPsy.attackthre   = 80.0;
-    gfc->nsPsy.attackthre_s = 150.0;
+    gfc->nsPsy.attackthre   =  8.0;
+    gfc->nsPsy.attackthre_s = 15.0;
 
     switch (preset_expopts)
     {

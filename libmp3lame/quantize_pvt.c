@@ -298,6 +298,60 @@ iteration_init( lame_global_flags *gfp)
         iipow20[i] = pow(2.0, (double)i * 0.1875);
 
     huffman_init(gfc);
+
+    if (gfc->nsPsy.use) {
+	FLOAT8 bass, alto, treble, sfb21;
+
+        i = (gfp->exp_nspsytune >> 2) & 63;
+        if (i >= 32)
+            i -= 64;
+        bass = pow(10, i / 4.0 / 10.0);
+
+        i = (gfp->exp_nspsytune >> 8) & 63;
+        if (i >= 32)
+            i -= 64;
+        alto = pow(10, i / 4.0 / 10.0);
+
+        i = (gfp->exp_nspsytune >> 14) & 63;
+        if (i >= 32)
+            i -= 64;
+        treble = pow(10, i / 4.0 / 10.0);
+
+        /*  to be compatible with Naoki's original code, the next 6 bits
+         *  define only the amount of changing treble for sfb21 */
+        i = (gfp->exp_nspsytune >> 20) & 63;
+        if (i >= 32)
+            i -= 64;
+        sfb21 = treble * pow(10, i / 4.0 / 10.0);
+
+	for (i = 0; i < SBMAX_l; i++) {
+	    FLOAT8 f;
+	    if      (i <=  6) f = bass;
+	    else if (i <= 13) f = alto;
+	    else if (i <= 20) f = treble;
+	    else              f = sfb21;
+	    if ((gfp->VBR == vbr_off || gfp->VBR == vbr_abr) && gfp->quality <= 1)
+		f *= 0.001;
+
+	    gfc->nsPsy.longfact[i] = f;
+	}
+	for (i = 0; i < SBMAX_s; i++) {
+	    FLOAT8 f;
+	    if      (i <=  5) f = bass;
+	    else if (i <= 10) f = alto;
+	    else              f = treble;
+
+	    if ((gfp->VBR == vbr_off || gfp->VBR == vbr_abr) && gfp->quality <= 1)
+		f *= 0.001;
+
+	    gfc->nsPsy.shortfact[i] = f;
+	}
+    } else {
+	for (i = 0; i < SBMAX_l; i++)
+	    gfc->nsPsy.longfact[i] = 1.0;
+	for (i = 0; i < SBMAX_s; i++)
+	    gfc->nsPsy.shortfact[i] = 1.0;
+    }
   }
 }
 
@@ -496,16 +550,7 @@ int calc_xmin(
 		    xmin = x;
 	    }
 	}
-
-	if (gfc->nsPsy.use) {
-	    if      (gsfb <=  6) xmin *= gfc->nsPsy.bass;
-	    else if (gsfb <= 13) xmin *= gfc->nsPsy.alto;
-	    else if (gsfb <= 20) xmin *= gfc->nsPsy.treble;
-	    else                 xmin *= gfc->nsPsy.sfb21;
-	    if ((gfp->VBR == vbr_off || gfp->VBR == vbr_abr) && gfp->quality <= 1)
-		xmin *= 0.001;
-	}
-	*pxmin++ = xmin;
+	*pxmin++ = xmin * gfc->nsPsy.longfact[gsfb];
     }   /* end of long block loop */
 
     for (sfb = cod_info->sfb_smin; gsfb < cod_info->psymax; sfb++, gsfb += 3) {
@@ -534,15 +579,7 @@ int calc_xmin(
 		if (xmin < x) 
 		    xmin = x;
 	    }
-
-	    if (gfc->nsPsy.use) {
-		if      (sfb <=  5) xmin *= gfc->nsPsy.bass;
-		else if (sfb <= 10) xmin *= gfc->nsPsy.alto;
-		else                xmin *= gfc->nsPsy.treble;
-		if ((gfp->VBR == vbr_off || gfp->VBR == vbr_abr) && gfp->quality <= 1)
-		    xmin *= 0.001;
-	    }
-	    *pxmin++ = xmin;
+	    *pxmin++ = xmin * gfc->nsPsy.shortfact[sfb];
 	}   /* b */
 	if (gfp->useTemporal) {
 	    if (pxmin[-3] > pxmin[-3+1])

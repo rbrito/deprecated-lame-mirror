@@ -148,23 +148,21 @@ typedef struct  bit_stream_struc {
 
 /* variables used for --nspsytune */
 typedef struct {
-  /* variables for nspsytune */
-  int   use; /* indicates the use of nspsytune */
-  FLOAT last_en_subshort[4][9];
-  FLOAT last_attack_intensity[4][9];
-  FLOAT	last_thm[4][SBMAX_s][3];
-  int   last_attacks[4][3];
-  FLOAT pefirbuf[19];
-  FLOAT bass,alto,treble,sfb21;
-  FLOAT athadjust_msfix;             // msfix adjustment based on athadjust
+    /* variables for nspsytune */
+    int   use; /* indicates the use of nspsytune */
+    FLOAT last_en_subshort[4][9];
+    int   last_attacks[4];
+    FLOAT pefirbuf[19];
+    FLOAT longfact[SBMAX_l];
+    FLOAT shortfact[SBMAX_s];
+    FLOAT athadjust_msfix;  /* msfix adjustment based on athadjust */
 
-  // short block tuning
-  FLOAT     attackthre;
-  FLOAT     attackthre_s;
+    /* short block tuning */
+    FLOAT     attackthre;
+    FLOAT     attackthre_s;
 
-  /* variables for nspsytune2 */
-  int use2; /* indicates the use of nspsytune2 */
-  FILE *pass1fp;
+    /* variables for nspsytune2 */
+    FILE *pass1fp;
 } nsPsy_t;
 
 /* variables used for --alt-preset */
@@ -473,6 +471,7 @@ struct lame_internal_flags {
   FLOAT rx_sav[4][2][HBLKSIZE];
   FLOAT cw[HBLKSIZE];
 
+
   /* fft and energy calculation    */
   FLOAT tot_ener[4];
 
@@ -539,11 +538,12 @@ struct lame_internal_flags {
   /* simple statistics */
   int   bitrate_stereoMode_Hist [16] [4+1];
 #endif
-
+#ifdef HAVE_GTK
   /* used by the frame analyzer */
   plotting_data *pinfo;
   FLOAT energy_save[4][HBLKSIZE];
   FLOAT8 ers_save[4];
+#endif
 };
 
 

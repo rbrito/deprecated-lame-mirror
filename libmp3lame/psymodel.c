@@ -360,18 +360,6 @@ compute_ffts(
 	    gfc->pinfo->energy[gr_out][chn][j]=gfc->energy_save[chn][j];
 	    gfc->energy_save[chn][j]=fftenergy[j];
 	}
-	for ( j = HBLKSIZE_s/2; j < HBLKSIZE_s; j ++) {
-	    ma += fftenergy_s[0][j];
-	    mb += fftenergy_s[1][j];
-	    mc += fftenergy_s[2][j];
-	}
-	mn = Min(ma,mb);
-	mn = Min(mn,mc);
-	mx = Max(ma,mb);
-	mx = Max(mx,mc);
-
-	gfc->pinfo->ers[gr_out][chn]=gfc->ers_save[chn];
-	gfc->ers_save[chn]=(mx/(1e-12+mn));
  	gfc->pinfo->pe[gr_out][chn]=gfc->pe[chn];
     }
 #endif
@@ -984,7 +972,12 @@ int L3psycho_anal( lame_global_flags * gfp,
 	    mn = Min(mn,mc);
 	    mx = Max(ma,mb);
 	    mx = Max(mx,mc);
-
+#if defined(HAVE_GTK)
+	    if (gfp->analysis) {
+		gfc->pinfo->ers[gr_out][chn]=gfc->ers_save[chn];
+		gfc->ers_save[chn]=(mx/(1e-12+mn));
+	    }
+#endif
 	    /* bit allocation is based on pe.  */
 	    if (mx>mn) {
 		FLOAT8 tmp = 400*FAST_LOG(mx/(1e-12+mn));
@@ -1404,22 +1397,30 @@ int L3psycho_anal_ns( lame_global_flags * gfp,
     /* unroll the loop 2 times */
     for(chn=0;chn<gfc->channels_out;chn++) {
 	static const FLOAT fircoef[] = {
-	    -8.65163e-18,-0.00851586,-6.74764e-18, 0.0209036,
-	    -3.36639e-17,-0.0438162 ,-1.54175e-17, 0.0931738,
-	    -5.52212e-17,-0.313819
+	    -8.65163e-18*2, -0.00851586*2, -6.74764e-18*2, 0.0209036*2,
+	    -3.36639e-17*2, -0.0438162 *2, -1.54175e-17*2, 0.0931738*2,
+	    -5.52212e-17*2, -0.313819  *2
 	};
 
 	/* apply high pass filter of fs/4 */
 	const sample_t * const firbuf = &buffer[chn][576-350-NSFIRLEN+192];
 	for (i=0;i<576;i++) {
 	    FLOAT sum1, sum2;
-	    sum1 = 0.5 * firbuf[i + 10];
+	    sum1 = firbuf[i + 10];
 	    sum2 = 0.0;
 	    for (j=0;j<(NSFIRLEN-1)/2;j+=2) {
 		sum1 += fircoef[j  ] * (firbuf[i+j  ]+firbuf[i+NSFIRLEN-j  ]);
 		sum2 += fircoef[j+1] * (firbuf[i+j+1]+firbuf[i+NSFIRLEN-j-1]);
 	    }
 	    ns_hpfsmpl[chn][i] = sum1 + sum2;
+	}
+	masking_ratio    [gr_out] [chn]  .en  = gfc -> en  [chn];
+	masking_ratio    [gr_out] [chn]  .thm = gfc -> thm [chn];
+	if (numchn > 2) {
+	    /* MS maskings  */
+	    //percep_MS_entropy         [chn-2]     = gfc -> pe  [chn]; 
+	    masking_MS_ratio [gr_out] [chn].en  = gfc -> en  [chn+2];
+	    masking_MS_ratio [gr_out] [chn].thm = gfc -> thm [chn+2];
 	}
     }
 
@@ -1437,28 +1438,77 @@ int L3psycho_anal_ns( lame_global_flags * gfp,
 	/* convolution   */
 	FLOAT8 eb[CBANDS],eb2[CBANDS];
 	FLOAT8 thr[CBANDS];
-	static FLOAT8 tab[] = {
+	static const FLOAT8 tab[] = {
 	    1.0,     0.79433, 0.63096, 0.63096,
 	    0.63096, 0.63096, 0.63096, 0.25119,
 	    0.11749
 	};
 
+	/*************************************************************** 
+	 * determine the block type (window type)
+	 ***************************************************************/
+	/* calculate energies of each sub-shortblocks */
+	for (i=0; i<3; i++) {
+	    en_subshort[i] = gfc->nsPsy.last_en_subshort[chn][i+6];
+	    attack_intensity[i]
+		= en_subshort[i] / gfc->nsPsy.last_en_subshort[chn][i+4];
+	}
+
+	if (chn == 2) {
+	    for(i=0;i<576;i++) {
+		FLOAT l, r;
+		l = ns_hpfsmpl[0][i];
+		r = ns_hpfsmpl[1][i];
+		ns_hpfsmpl[0][i] = l+r;
+		ns_hpfsmpl[1][i] = l-r;
+	    }
+	}
+	{
+	    FLOAT *pf = ns_hpfsmpl[chn & 1];
+	    for (i=0;i<9;i++) {
+		FLOAT *pfe = pf + 576/9, p = 10.;
+		for (; pf < pfe; pf++)
+		    if (p < fabs(*pf))
+			p = fabs(*pf);
+
+		gfc->nsPsy.last_en_subshort[chn][i] = en_subshort[i+3] = p;
+		attack_intensity[i+3] = p / en_subshort[i+3-2];
+	    }
+	}
+#if defined(HAVE_GTK)
+	if (gfp->analysis) {
+	    FLOAT x = attack_intensity[0];
+	    for (i=1;i<12;i++) 
+		if (x < attack_intensity[i])
+		    x = attack_intensity[i];
+	    gfc->pinfo->ers[gr_out][chn] = gfc->ers_save[chn];
+	    gfc->ers_save[chn] = x;
+	}
+#endif
+	/* compare energies between sub-shortblocks */
+	attackThreshold = (chn == 3)
+	    ? gfc->nsPsy.attackthre_s : gfc->nsPsy.attackthre;
+	for (i=0;i<12;i++) 
+	    if (!ns_attacks[i/3] && attack_intensity[i] > attackThreshold)
+		ns_attacks[i/3] = (i % 3)+1;
+
+	if (ns_attacks[0] && gfc->nsPsy.last_attacks[chn])
+	    ns_attacks[0] = 0;
+
+	if (gfc->nsPsy.last_attacks[chn] == 3 ||
+	    ns_attacks[0] + ns_attacks[1] + ns_attacks[2] + ns_attacks[3]) {
+	    ns_uselongblock = 0;
+
+	    if (ns_attacks[1] && ns_attacks[0]) ns_attacks[1] = 0;
+	    if (ns_attacks[2] && ns_attacks[1]) ns_attacks[2] = 0;
+	    if (ns_attacks[3] && ns_attacks[2]) ns_attacks[3] = 0;
+	}
+	uselongblock[chn] = ns_uselongblock;
+
 	/* there is a one granule delay.  Copy maskings computed last call
 	 * into masking_ratio to return to calling program.
 	 */
 	energy[chn]=gfc->tot_ener[chn];
-
-	if (chn < 2) {    
-	    /* LR maskings  */
-	    //percep_entropy            [chn]       = gfc -> pe  [chn]; 
-	    masking_ratio    [gr_out] [chn]  .en  = gfc -> en  [chn];
-	    masking_ratio    [gr_out] [chn]  .thm = gfc -> thm [chn];
-	} else {
-	    /* MS maskings  */
-	    //percep_MS_entropy         [chn-2]     = gfc -> pe  [chn]; 
-	    masking_MS_ratio [gr_out] [chn-2].en  = gfc -> en  [chn];
-	    masking_MS_ratio [gr_out] [chn-2].thm = gfc -> thm [chn];
-	}
 
 	/*********************************************************************
 	 *  compute FFTs
@@ -1467,6 +1517,61 @@ int L3psycho_anal_ns( lame_global_flags * gfp,
 	wsamp_l = wsamp_L+(chn & 1);
 	compute_ffts(gfp, fftenergy, fftenergy_s,
 		     wsamp_l, wsamp_s, gr_out, chn, buffer);
+
+	/* compute masking thresholds for short blocks */
+	for (sblock = 0; sblock < 3; sblock++) {
+	    FLOAT8 enn, thmm;
+	    compute_masking_s(gfc, fftenergy_s, eb, thr, chn, sblock);
+	    b = -1;
+	    for (sb = 0; sb < SBMAX_s; sb++) {
+		enn = thmm = 0.0;
+		while (++b < gfc->bo_s[sb]) {
+		    enn  += eb[b];
+		    thmm += thr[b];
+		}
+		enn  += 0.5 * eb[b];
+		thmm += 0.5 * thr[b];
+		gfc->en [chn].s[sb][sblock] = enn;
+
+		/****   short block pre-echo control   ****/
+#define NS_PREECHO_ATT0 0.8
+#define NS_PREECHO_ATT1 0.6
+#define NS_PREECHO_ATT2 0.3
+
+		thmm *= NS_PREECHO_ATT0;
+		if (ns_attacks[sblock] >= 2 || ns_attacks[sblock+1] == 1) {
+		    int idx = (sblock != 0) ? sblock-1 : 2;
+		    double p = NS_INTERP(gfc->thm[chn].s[sb][idx],
+					 thmm, NS_PREECHO_ATT1*pcfact);
+		    thmm = Min(thmm,p);
+		}
+
+		if (ns_attacks[sblock] == 1) {
+		    int idx = (sblock != 0) ? sblock-1 : 2;
+		    double p = NS_INTERP(gfc->thm[chn].s[sb][idx],
+					 thmm,NS_PREECHO_ATT2*pcfact);
+		    thmm = Min(thmm,p);
+		} else if ((sblock != 0 && ns_attacks[sblock-1] == 3)
+			|| (sblock == 0 && gfc->nsPsy.last_attacks[chn] == 3)) {
+		    int idx = (sblock != 2) ? sblock+1 : 0;
+		    double p = NS_INTERP(gfc->thm[chn].s[sb][idx],
+					 thmm,NS_PREECHO_ATT2*pcfact);
+		    thmm = Min(thmm,p);
+		}
+
+		/* pulse like signal detection for fatboy.wav and so on */
+		enn = en_subshort[sblock*3+3] + en_subshort[sblock*3+4]
+		    + en_subshort[sblock*3+5];
+		if (en_subshort[sblock*3+5]*6 < enn) {
+		    thmm *= 0.5;
+		    if (en_subshort[sblock*3+4]*6 < enn)
+			thmm *= 0.5;
+		}
+
+		gfc->thm[chn].s[sb][sblock] = thmm;
+	    }
+	}
+	gfc->nsPsy.last_attacks[chn] = ns_attacks[2];
 
 	/*********************************************************************
 	 *    Calculate the energy and the tonality of each partition.
@@ -1485,7 +1590,7 @@ int L3psycho_anal_ns( lame_global_flags * gfp,
 	    avg[b] = ebb * gfc->rnumlines_l[b];
 	}
 
-	if (gfc->nsPsy.use2)
+	if (gfc->nsPsy.pass1fp)
 	    nsPsy2dataRead(gfc->nsPsy.pass1fp, eb2, eb, chn, gfc->npart_l);
 	else {
 	    FLOAT8 m,a;
@@ -1572,129 +1677,9 @@ int L3psycho_anal_ns( lame_global_flags * gfp,
 	    gfc->nb_1[chn][b] = ecb;
 	}
 
-	/*************************************************************** 
-	 * determine the block type (window type)
-	 ***************************************************************/
-	/* calculate energies of each sub-shortblocks */
-	for (i=0; i<3; i++) {
-	    en_subshort[i] = gfc->nsPsy.last_en_subshort[chn][i+6];
-	    attack_intensity[i]
-		= en_subshort[i] / gfc->nsPsy.last_en_subshort[chn][i+4];
-	}
-
-	if (chn == 2) {
-	    for(i=0;i<576;i++) {
-		FLOAT l, r;
-		l = ns_hpfsmpl[0][i];
-		r = ns_hpfsmpl[1][i];
-		ns_hpfsmpl[0][i] = l+r;
-		ns_hpfsmpl[1][i] = l-r;
-	    }
-	}
-	{
-	    FLOAT *pf = ns_hpfsmpl[chn & 1];
-	    for (i=0;i<9;i++) {
-		double p = 0.0;
-		FLOAT *pfe = pf + 576/9;
-		for (; pf < pfe; pf++)
-		    p += *pf * *pf;
-
-		if (p < 100.0)
-		    p = 100.0;
-		gfc->nsPsy.last_en_subshort[chn][i] = en_subshort[i+3] = p;
-		attack_intensity[i+3] = p / en_subshort[i+3-2];
-	    }
-	}
-
-	/* compare energies between sub-shortblocks */
-	attackThreshold = (chn == 3)
-	    ? gfc->nsPsy.attackthre_s : gfc->nsPsy.attackthre;
-	for (i=0;i<12;i++)
-	    if (!ns_attacks[i/3] && attack_intensity[i] > attackThreshold)
-		ns_attacks[i/3] = (i % 3)+1;
-
-	if (ns_attacks[0] && gfc->nsPsy.last_attacks[chn][2])
-	    ns_attacks[0] = 0;
-
-	if (gfc->nsPsy.last_attacks[chn][2] == 3 ||
-	    ns_attacks[0] || ns_attacks[1] || ns_attacks[2] || ns_attacks[3]) {
-	    ns_uselongblock = 0;
-
-	    if (ns_attacks[1] && ns_attacks[0]) ns_attacks[1] = 0;
-	    if (ns_attacks[2] && ns_attacks[1]) ns_attacks[2] = 0;
-	    if (ns_attacks[3] && ns_attacks[2]) ns_attacks[3] = 0;
-	}
-	uselongblock[chn] = ns_uselongblock;
-
 	/* compute masking thresholds for long blocks */
 	convert_partition2scalefac_l(gfc, eb, thr, chn);
 
-	/* compute masking thresholds for short blocks */
-	for (sblock = 0; sblock < 3; sblock++) {
-	    FLOAT8 enn, thmm;
-	    compute_masking_s(gfc, fftenergy_s, eb, thr, chn, sblock);
-	    b = -1;
-	    for (sb = 0; sb < SBMAX_s; sb++) {
-		enn = thmm = 0.0;
-		while (++b < gfc->bo_s[sb]) {
-		    enn  += eb[b];
-		    thmm += thr[b];
-		}
-		enn  += 0.5 * eb[b];
-		thmm += 0.5 * thr[b];
-		gfc->en [chn].s[sb][sblock] = enn;
-
-		/****   short block pre-echo control   ****/
-#define NS_PREECHO_ATT0 0.8
-#define NS_PREECHO_ATT1 0.6
-#define NS_PREECHO_ATT2 0.3
-
-		thmm *= NS_PREECHO_ATT0;
-		if (ns_attacks[sblock] >= 2 || ns_attacks[sblock+1] == 1) {
-		    int idx = (sblock != 0) ? sblock-1 : 2;
-		    double p = NS_INTERP(gfc->nsPsy.last_thm[chn][sb][idx],
-					 thmm, NS_PREECHO_ATT1*pcfact);
-		    thmm = Min(thmm,p);
-		}
-
-		if (ns_attacks[sblock] == 1) {
-		    int idx = (sblock != 0) ? sblock-1 : 2;
-		    double p = NS_INTERP(gfc->nsPsy.last_thm[chn][sb][idx],
-					 thmm,NS_PREECHO_ATT2*pcfact);
-		    thmm = Min(thmm,p);
-		} else if ((sblock != 0 && ns_attacks[sblock-1] == 3)
-			|| (sblock == 0 && gfc->nsPsy.last_attacks[chn][2] == 3)) {
-		    int idx = (sblock != 2) ? sblock+1 : 0;
-		    double p = NS_INTERP(gfc->nsPsy.last_thm[chn][sb][idx],
-					 thmm,NS_PREECHO_ATT2*pcfact);
-		    thmm = Min(thmm,p);
-		}
-
-		if (1) {
-		    /* pulse like signal detection for fatboy.wav */
-		    FLOAT8 avg = en_subshort[sblock*3+3] + en_subshort[sblock*3+4]
-			+ en_subshort[sblock*3+5];
-		    int pulsive =
-			(en_subshort[sblock*3+3]*6 < avg)
-			+ (en_subshort[sblock*3+4]*6 < avg)
-			+ (en_subshort[sblock*3+5]*6 < avg);
-		    
-		    if (pulsive == 1)
-			thmm *= 0.5;
-		    else if (pulsive == 2)
-			thmm *= 0.25;
-		}
-
-		gfc->thm[chn].s[sb][sblock] = thmm;
-
-		/************************************************************ 
-		 * save some values for analysis of the next granule
-		 *************************************************************/
-		gfc->nsPsy.last_thm[chn][sb][sblock]
-		    = gfc->thm[chn].s[sb][sblock];
-	    }
-	    gfc->nsPsy.last_attacks[chn][sblock] = ns_attacks[sblock];
-	}
     } /* end loop over chn */
 
     if (gfp->interChRatio != 0.0)
@@ -1717,7 +1702,7 @@ int L3psycho_anal_ns( lame_global_flags * gfp,
     block_type_set(gfp, uselongblock, blocktype_d, blocktype);
 
     /*********************************************************************
-     * compute the value of PE to return (one granule delay)
+     * compute the value of PE to return ... no delay and advance
      *********************************************************************/
     for(chn=0;chn<numchn;chn++) {
 	FLOAT8 *ppe;
@@ -1935,12 +1920,11 @@ int psymodel_init(lame_global_flags *gfp)
 	    for ( sb = 0; sb < SBMAX_s; sb++ ) {
 		gfc->en[i].s[sb][j] = 1e20;
 		gfc->thm[i].s[sb][j] = 1e20;
-		gfc->nsPsy.last_thm[i][sb][j] = 1e20;
 	    }
-	    gfc->nsPsy.last_attacks[i][j] = 0;
+	    gfc->nsPsy.last_attacks[i] = 0;
 	}
 	for(j=0;j<9;j++)
-	    gfc->nsPsy.last_en_subshort[i][j] = 100;
+	    gfc->nsPsy.last_en_subshort[i][j] = 10.;
     }
 
 
@@ -2047,8 +2031,8 @@ int psymodel_init(lame_global_flags *gfp)
 	FLOAT8 msfix;
 
 #define NS_MSFIX 3.5
-#define NSATTACKTHRE 150
-#define NSATTACKTHRE_S 300
+#define NSATTACKTHRE 15
+#define NSATTACKTHRE_S 30
 
 	msfix = NS_MSFIX;
 	if (gfp->exp_nspsytune & 2) msfix = 1.0;
