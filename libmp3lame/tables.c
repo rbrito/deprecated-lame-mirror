@@ -35,12 +35,6 @@
 #include <assert.h>
 #include <psymodel.h>
 
-#ifdef M_LN10
-#define		LN_TO_LOG10		(M_LN10/10)
-#else
-#define         LN_TO_LOG10             0.2302585093
-#endif
-
 /*
   The following table is used to implement the scalefactor
   partitioning for MPEG2 as described in section
@@ -970,7 +964,7 @@ static FLOAT s3_func(FLOAT bark) {
 
     if (tempy <= -60.0) return  0.0;
 
-    tempx = exp( (x + tempy)*LN_TO_LOG10 ); 
+    tempx = db2pow((x + tempy)); 
 
     /* Normalization.  The spreading function should be normalized so that:
          +inf
@@ -1248,7 +1242,7 @@ int psymodel_init(lame_global_flags *gfp)
 
     /* setup temporal masking */
 #define temporalmask_sustain_sec 0.01
-    gfc->decay = exp(-1.0*LOG10/(temporalmask_sustain_sec*sfreq/192.0));
+    gfc->decay = db2pow(-(576.0/3)/(temporalmask_sustain_sec*sfreq));
 
     {
 	FLOAT msfix;
@@ -1270,13 +1264,6 @@ int psymodel_init(lame_global_flags *gfp)
 	gfp->msfix *= 2.0;
 	gfc->nsPsy.athadjust_msfix *= 2.0;
 	gfc->presetTune.ms_maskadjust *= 2.0;
-
-	/* spread only from npart_l bands.  Normally, we use the spreading
-	 * function to convolve from npart_l down to npart_l bands 
-	 */
-	for (b=0;b<gfc->npart_l;b++)
-	    if (gfc->s3ind[b][1] > gfc->npart_l-1)
-		gfc->s3ind[b][1] = gfc->npart_l-1;
     }
 
     if (gfc->presetTune.quantcomp_alt_type < 0)
