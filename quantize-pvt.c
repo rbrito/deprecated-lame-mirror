@@ -85,9 +85,6 @@ int  pretab[21] =
     1, 1, 1, 1, 2, 2, 3, 3, 3, 2
 };
 
-/* This is the scfsi_band table from 2.4.2.7 of the IS */
-/*int scfsi_band_long[5] = { 0, 6, 11, 16, 21 };*/
-
 int *scalefac_band_long; 
 int *scalefac_band_short;
 
@@ -178,7 +175,6 @@ iteration_init( FLOAT8 xr_org[2][2][576],
   for ( ch = 0; ch < gf.stereo; ch++ )
     for ( i = 0; i < 4; i++ )
       l3_side->scfsi[ch][i] = 0;
-
 }
 
 
@@ -444,10 +440,6 @@ int scale_bitcount( III_scalefac_t *scalefac, gr_info *cod_info,
 		    scalefac->l[gr][ch][sfb] -= pretab[sfb];
 	    }
 	}
-
-	/*
-	 * Note that scfsi is not enabled for frames containing short blocks
-	 */
 
         for ( sfb = 11; sfb < SBPSY_l; sfb++ )
             if ( scalefac->l[gr][ch][sfb] > max_slen2 )

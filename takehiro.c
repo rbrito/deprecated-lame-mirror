@@ -627,45 +627,55 @@ void best_huffman_divide(int gr, int ch, gr_info *gi, int *ix)
 
 static void
 scfsi_calc(int ch,
-	   III_side_info_t *l3_side)
+	   III_side_info_t *l3_side,
+	   III_scalefac_t *scalefac)
 {
-#if 0
     int i, s1, s2, c1, c2;
     int sfb;
-    gr_info *gi = &l3_side.gr[1].ch[ch].tt;
+    gr_info *gi = &l3_side->gr[1].ch[ch].tt;
+
+    const int scfsi_band[5] = { 0, 6, 11, 16, 21 };
+
+    const int slen1_n[16] = { 0, 1, 1, 1, 8, 2, 2, 2, 4, 4, 4, 8, 8, 8,16,16 };
+    const int slen2_n[16] = { 0, 2, 4, 8, 1, 2, 4, 8, 2, 4, 8, 2, 4, 8, 4, 8 };
+
+    const int slen1_tab[16] = { 0, 0, 0, 0, 3, 1, 1, 1, 2, 2, 2, 3, 3, 3, 4, 4 };
+    const int slen2_tab[16] = { 0, 1, 2, 3, 0, 1, 2, 3, 1, 2, 3, 1, 2, 3, 2, 3 };
 
     for (i = 0; i < 4; i++) 
 	l3_side->scfsi[ch][i] = 0;
 
     for (i = 0; i < sizeof(scfsi_band) / sizeof(int) - 1; i++) {
 	for (sfb = scfsi_band[i]; sfb < scfsi_band[i + 1]; sfb++) {
-	    if (scalefac[0][ch].l[sfb] != scalefac[1][ch].l[sfb])
+	    if (scalefac->l[0][ch][sfb] != scalefac->l[1][ch][sfb])
 		break;
 	}
 	if (sfb == scfsi_band[i + 1]) {
 	    for (sfb = scfsi_band[i]; sfb < scfsi_band[i + 1]; sfb++) {
-		scalefac[1][ch].l[sfb] = -1;
+		scalefac->l[1][ch][sfb] = -1;
 	    }
-	    l3_side.scfsi[ch][i] = 1;
+	    l3_side->scfsi[ch][i] = 1;
 	}
     }
 
+    printf("%d -> ", gi->part2_length);
+    gi->part2_3_length -= gi->part2_length;
     s1 = c1 = 0;
     for (sfb = 0; sfb < 11; sfb++) {
-	if (scalefac[1][ch].l[sfb] < 0)
+	if (scalefac->l[1][ch][sfb] < 0)
 	    continue;
 	c1++;
-	if (s1 < scalefac[1][ch].l[sfb])
-	    s1 = scalefac[1][ch].l[sfb];
+	if (s1 < scalefac->l[1][ch][sfb])
+	    s1 = scalefac->l[1][ch][sfb];
     }
 
     s2 = c2 = 0;
-    for (; sfb < SBMAX_l; sfb++) {
-	if (scalefac[1][ch].l[sfb] < 0)
+    for (; sfb < SBPSY_l; sfb++) {
+	if (scalefac->l[1][ch][sfb] < 0)
 	    continue;
 	c2++;
-	if (s2 < scalefac[1][ch].l[sfb])
-	    s2 = scalefac[1][ch].l[sfb];
+	if (s2 < scalefac->l[1][ch][sfb])
+	    s2 = scalefac->l[1][ch][sfb];
     }
     for (i = 0; i < 16; i++) {
 	if (s1 < slen1_n[i] && s2 < slen2_n[i]) {
@@ -676,7 +686,8 @@ scfsi_calc(int ch,
 	    }
 	}
     }
-#endif
+    gi->part2_3_length += gi->part2_length;
+    printf("%d\n", gi->part2_length);
 }
 
 void best_scalefac_store(int gr, int ch,
@@ -685,6 +696,7 @@ void best_scalefac_store(int gr, int ch,
 {
     /* use scalefac_scale if we can */
     gr_info *gi = &l3_side->gr[gr].ch[ch].tt;
+
     if (!gi->scalefac_scale && !gi->preflag) {
 	int sfb;
 	int b, s = 0;
@@ -728,6 +740,6 @@ void best_scalefac_store(int gr, int ch,
 	&& l3_side->gr[0].ch[ch].tt.preflag
 	== l3_side->gr[1].ch[ch].tt.preflag) {
 
-	scfsi_calc(ch, l3_side);
+	scfsi_calc(ch, l3_side, scalefac);
     }
 }

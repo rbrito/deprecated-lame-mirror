@@ -54,11 +54,6 @@ void init_outer_loop_dual(
   else
     calc_xmin( xr, ratio, cod_info, l3_xmin, gr, ch );
   
-  /* if ( info->version == 1 )
-     calc_scfsi( xr[gr][ch], l3_side, &l3_xmin, ch, gr ); 
-  */
-  
-    
   /* reset of iteration variables */
     
   for ( sfb = 0; sfb < SBMAX_l; sfb++ )

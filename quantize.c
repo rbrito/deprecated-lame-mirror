@@ -97,16 +97,17 @@ iteration_loop( FLOAT8 pe[2][2], FLOAT8 ms_ener_ratio[2],
 	outer_loop( xr, targ_bits[ch], noise, targ_noise, 0, &l3_xmin,l3_enc, 
 		    fr_ps, scalefac,gr, l3_side, ratio, ms_ener_ratio[gr],ch);
 	cod_info = &l3_side->gr[gr].ch[ch].tt;
+
 	best_scalefac_store(gr, ch, l3_side, scalefac);
 	if (gf.highq && cod_info->block_type == NORM_TYPE) {
 	  best_huffman_divide(gr, ch, cod_info, l3_enc[gr][ch]);
 	}
-	best_scalefac_store(gr, ch, l3_side, scalefac);
 #ifdef HAVEGTK
 	if (gf.gtkflag)
 	  pinfo->LAMEmainbits[gr][ch]=cod_info->part2_3_length;
 #endif
 	ResvAdjust(cod_info, l3_side, mean_bits );
+
       }
     }
   } /* loop over gr */
@@ -435,11 +436,6 @@ void init_outer_loop(
   /* compute max allowed distortion */
   calc_xmin( xr, ratio, cod_info, l3_xmin, gr, ch );
 
-  /* if ( info->version == 1 )
-     calc_scfsi( xr[gr][ch], l3_side, &l3_xmin, ch, gr ); 
-  */
-  
-    
   /* reset of iteration variables */
     
   for ( sfb = 0; sfb < SBMAX_l; sfb++ )
@@ -995,11 +991,6 @@ int amp_scalefac_bands( FLOAT8 xr[576], FLOAT8 xrpow[576],
     }
 
 
-
-    /*
-      Note that scfsi is not enabled for frames containing
-      short blocks
-    */
 
     distort_thresh = -900;
     for ( i = 0; i < 3; i++ )
