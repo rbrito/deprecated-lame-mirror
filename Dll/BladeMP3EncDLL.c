@@ -319,8 +319,6 @@ __declspec(dllexport) BE_ERR	beEncodeChunk(HBE_STREAM hbeStream, DWORD nSamples,
 											  PSHORT pSamples, PBYTE pOutput, PDWORD pdwOutput)
 {
 	int iSampleIndex;
-	int n=nSamples/gf.num_channels;
-	PSHORT LBuffer,RBuffer;
 
 	// Encode it
 	*pdwOutput=lame_encode_buffer_interleaved(&gf,pSamples,
