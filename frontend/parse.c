@@ -397,7 +397,6 @@ int  long_help ( const lame_global_flags* gfp, FILE* const fp, const char* Progr
               "    --scale <arg>   scale input (multiply PCM data) by <arg>\n"
 	      "    --scale-l <arg> scale channel 0 (left) input (multiply PCM data) by <arg>\n"
               "    --scale-r <arg> scale channel 1 (right) input (multiply PCM data) by <arg>\n"
-              "    --voice         experimental voice mode\n"
               "    --preset type   type must be phone, voice, fm, tape, hifi, cd or studio\n"
               "                    \"--preset help\" gives some more infos on these\n" 
  	      "    --r3mix         use high-quality VBR preset"
@@ -1157,26 +1156,32 @@ char* const inPath, char* const outPath, char **nogap_inPath, int *num_nogap)
                 T_ELIF ("phone")
                     if (presets_setup ( gfp, token, ProgramName ) < 0)
                         return -1;
+                    fprintf(stderr, "Warning: --phone is deprecated, use --preset phone instead!");
                     
                 T_ELIF ("voice")
                     if (presets_setup ( gfp, token, ProgramName ) < 0)
                         return -1;
+                    fprintf(stderr, "Warning: --voice is deprecated, use --preset voice instead!");
                     
                 T_ELIF ("radio")
                     if (presets_setup ( gfp, token, ProgramName ) < 0)
                         return -1;
-                    
+                    fprintf(stderr, "Warning: --radio is deprecated, use --preset radio instead!");
+
                 T_ELIF ("tape")
                     if (presets_setup ( gfp, token, ProgramName ) < 0)
                         return -1;
+                fprintf(stderr, "Warning: --tape is deprecated, use --preset tape instead!");
                     
                 T_ELIF ("cd")
                     if (presets_setup ( gfp, token, ProgramName ) < 0)
                         return -1;
+                fprintf(stderr, "Warning: --cd is deprecated, use --preset cd instead!");
                     
                 T_ELIF ("studio")
                     if (presets_setup ( gfp, token, ProgramName ) < 0)
                         return -1;
+                fprintf(stderr, "Warning: --studio is deprecated, use --preset studio instead!");
                     
                 T_ELIF ("noshort")
                     (void) lame_set_no_short_blocks( gfp, 1 );
