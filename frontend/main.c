@@ -239,13 +239,16 @@ lame_decoder(lame_global_flags * gfp, FILE * outf, int skip, char *inPath,
         break;
     }
 
-    if (silent < 10) fprintf(stderr, ")\noutput: %s%s(16 bit, Microsoft WAVE)\n",
-            strcmp(outPath, "-") ? outPath : "<stdout>",
-            strlen(outPath) > 45 ? "\n\t" : "  ");
+    if (silent < 10) {
+	fprintf(stderr, ")\noutput: %s%s(16 bit, Microsoft WAVE)\n",
+		strcmp(outPath, "-") ? outPath : "<stdout>",
+		strlen(outPath) > 45 ? "\n\t" : "  ");
 
-    if (skip > 0)
-        if (silent < 10) fprintf(stderr, "skipping initial %i samples (encoder+decoder delay)\n",
-                skip);
+	if (skip > 0)
+	    fprintf(stderr,
+		    "skipping initial %i samples (encoder+decoder delay)\n",
+		    skip);
+    }
 
     if ( 0 == disable_wav_header )
         WriteWaveHeader(outf, 0x7FFFFFFF, lame_get_in_samplerate( gfp ),
@@ -720,7 +723,6 @@ main(int argc, char **argv)
                  * by lame_init_params(), but we cannot call that routine twice */
                 if (use_flush_nogap) 
                     lame_init_bitstream(gf);
-
             }
             lame_close(gf);
 
