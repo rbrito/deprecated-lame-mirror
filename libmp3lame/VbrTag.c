@@ -596,7 +596,7 @@ int PutLameVBR(lame_global_flags *gfp, FILE *fpStream, uint8_t *pbtStreamBuffer,
 
 
 	/* ReplayGain */
-	if (gfp->findReplayGain) { 
+	if (gfc->findReplayGain) { 
 	  if (gfc->RadioGain > 0x1FE)
 	    gfc->RadioGain = 0x1FE;
 	  if (gfc->RadioGain < -0x1FE)

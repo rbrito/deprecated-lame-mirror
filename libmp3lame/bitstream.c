@@ -822,17 +822,17 @@ flush_bitstream(lame_global_flags *gfp)
 
 
   /* save the ReplayGain value */
-  if (gfp->findReplayGain) {
+  if (gfc->findReplayGain) {
     FLOAT RadioGain = (FLOAT) GetTitleGain(gfc->rgdata);
     assert(RadioGain != GAIN_NOT_ENOUGH_SAMPLES); 
-    gfp->internal_flags->RadioGain = (int) floor( RadioGain * 10.0 + 0.5 ); /* round to nearest */
+    gfc->RadioGain = (int) floor( RadioGain * 10.0 + 0.5 ); /* round to nearest */
   }
 
   /* find the gain and scale change required for no clipping */
   if (gfc->findPeakSample) {
     gfc->noclipGainChange = (int) ceil(log10(gfc->PeakSample / 32767.0) *20.0*10.0);  /* round up */
     
-    if (gfc->noclipGainChange > 0.0) { /* clipping occurs */
+    if (gfc->noclipGainChange > 0) { /* clipping occurs */
       if (gfp->scale == 1.0 || gfp->scale == 0.0) 
 	gfc->noclipScale = floor( (32767.0 / gfc->PeakSample) * 100.0 ) / 100.0;  /* round down */
       else
@@ -969,7 +969,7 @@ int copy_buffer(lame_internal_flags *gfc,unsigned char *buffer,int size,int mp3d
         UpdateMusicCRC(&gfc->nMusicCRC,buffer,minimum);
 
 #ifdef DECODE_ON_THE_FLY 
-        if (gfc->gfp->decode_on_the_fly) {  /* decode the frame */
+        if (gfc->decode_on_the_fly) {  /* decode the frame */
           sample_t pcm_buf[2][1152];
 	  int mp3_in = minimum;
           int samples_out = -1;
@@ -1016,13 +1016,13 @@ int copy_buffer(lame_internal_flags *gfc,unsigned char *buffer,int size,int mp3d
                   }
               }
 
-              if (gfc->gfp->findReplayGain)
+              if (gfc->findReplayGain)
                 if (AnalyzeSamples(gfc->rgdata, pcm_buf[0], pcm_buf[1], samples_out, gfc->channels_out) == GAIN_ANALYSIS_ERROR)
                    return -6;
 		   
             } /* if (samples_out>0) */
           } /* while (samples_out!=0) */
-        } /* if (gfp->decode_on_the_fly) */ 
+        } /* if (gfc->decode_on_the_fly) */ 
 #endif
   
     } /* if (mp3data) */

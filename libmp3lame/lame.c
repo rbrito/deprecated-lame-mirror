@@ -472,8 +472,6 @@ lame_init_params(lame_global_flags * const gfp)
     int     j;
     lame_internal_flags *gfc = gfp->internal_flags;
 
-    gfc->gfp = gfp;
-
     gfc->Class_ID = 0;
 
     /* report functions */
@@ -665,24 +663,25 @@ lame_init_params(lame_global_flags * const gfp)
 	gfp->decode_on_the_fly = 0;
         gfc->findPeakSample = 0;
     }
+    gfc->findReplayGain = gfp->findReplayGain;
+    gfc->decode_on_the_fly = gfp->decode_on_the_fly;
 
-    if (gfp->decode_on_the_fly) 
+    if (gfc->decode_on_the_fly) 
       gfc->findPeakSample = 1;
 
-    if (gfp->findReplayGain) {
+    if (gfc->findReplayGain) {
       if (InitGainAnalysis(gfc->rgdata, gfp->out_samplerate) == INIT_GAIN_ANALYSIS_ERROR)
         return -6;
     }
 
 #ifdef DECODE_ON_THE_FLY
-    if (gfp->decode_on_the_fly && !gfp->decode_only)
+    if (gfc->decode_on_the_fly && !gfp->decode_only)
       lame_decode_init();  /* initialize the decoder  */
 #endif
 
     gfc->mode_gr = gfp->out_samplerate <= 24000 ? 1 : 2; /* Number of granules per frame */
     gfp->framesize = 576 * gfc->mode_gr;
     gfp->encoder_delay = ENCDELAY;
-    gfc->frame_size = gfp->framesize;
 
     gfc->resample_ratio = (double) gfp->in_samplerate / gfp->out_samplerate;
 
@@ -905,8 +904,6 @@ lame_init_params(lame_global_flags * const gfp)
 
         gfc->PSY->mask_adjust = gfp->maskingadjust;
         gfc->PSY->mask_adjust_short = gfp->maskingadjust_short;
-        if (gfp->VBR_smooth < 0)
-            gfp->VBR_smooth = 0;    /* obsolete */
         
         /*  sfb21 extra only with MPEG-1 at higher sampling rates
          */
@@ -1483,7 +1480,7 @@ lame_encode_buffer_sample_t(lame_global_flags * gfp,
         fill_buffer(gfp, mfbuf, in_buffer, nsamples, &n_in, &n_out);
 
         /* compute ReplayGain of resampled input if requested */
-        if (gfp->findReplayGain && !gfp->decode_on_the_fly) 
+        if (gfc->findReplayGain && !gfc->decode_on_the_fly) 
             if (AnalyzeSamples(gfc->rgdata, &mfbuf[0][gfc->mf_size], &mfbuf[1][gfc->mf_size], n_out, gfc->channels_out) == GAIN_ANALYSIS_ERROR) 
                 return -6;
 
@@ -2029,8 +2026,6 @@ lame_init_old(lame_global_flags * gfp)
     gfc->VBR_min_bitrate = 1; /* not  0 ????? */
     gfc->VBR_max_bitrate = 13; /* not 14 ????? */
 
-    gfp->VBR_smooth = -1;
-
     gfp->quant_comp = -1;
     gfp->quant_comp_short = -1;
 
@@ -2073,12 +2068,14 @@ lame_init_old(lame_global_flags * gfp)
     gfp->findReplayGain = 0;
     gfp->decode_on_the_fly = 0;
 
+    gfc->decode_on_the_fly = 0;
+    gfc->findReplayGain = 0;
     gfc->findPeakSample = 0;
 
-    gfc->RadioGain = 0.0;
-    gfc->AudiophileGain = 0.0;
-    gfc->noclipGainChange = 0.0;
-    gfc->noclipScale = -1;
+    gfc->RadioGain = 0;
+    gfc->AudiophileGain = 0;
+    gfc->noclipGainChange = 0;
+    gfc->noclipScale = -1.0;
 
     gfp->asm_optimizations.mmx = 1;
     gfp->asm_optimizations.amd3dnow = 1;

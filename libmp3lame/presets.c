@@ -207,8 +207,6 @@ int apply_preset(lame_global_flags*  gfp, int preset, int enforce)
             return preset;
         }
         default: {
-            SET_OPTION(vbr_smooth, 0, -1);
-
             SET_OPTION(short_threshold_lrm, 6.60f, -1);
             SET_OPTION(short_threshold_s, 145.0f, -1);
             SET_OPTION(quant_comp, 0, -1);
@@ -248,8 +246,6 @@ int apply_preset(lame_global_flags*  gfp, int preset, int enforce)
             return preset;
         }
         default: {
-            SET_OPTION(vbr_smooth, 0, -1);
-
             SET_OPTION(short_threshold_lrm, 6.60f, -1);
             SET_OPTION(short_threshold_s, 145.0f, -1);
             SET_OPTION(quant_comp, 0, -1);
@@ -290,8 +286,6 @@ int apply_preset(lame_global_flags*  gfp, int preset, int enforce)
             return preset;
         }
         default: {
-            SET_OPTION(vbr_smooth, 0, -1);
-
             SET_OPTION(short_threshold_lrm, 6.60f, -1);
             SET_OPTION(short_threshold_s, 145.0f, -1);
             SET_OPTION(quant_comp, 0, -1);
@@ -333,8 +327,6 @@ int apply_preset(lame_global_flags*  gfp, int preset, int enforce)
             return preset;
         }
         default: {
-            SET_OPTION(vbr_smooth, 0, -1);
-
             SET_OPTION(short_threshold_lrm, 6.60f, -1);
             SET_OPTION(short_threshold_s, 145.0f, -1);
             SET_OPTION(quant_comp, 0, -1);
@@ -376,8 +368,6 @@ int apply_preset(lame_global_flags*  gfp, int preset, int enforce)
             return preset;
         }
         default: {
-            SET_OPTION(vbr_smooth, 0, -1);
-
             SET_OPTION(short_threshold_lrm, 6.40f, -1);
             SET_OPTION(short_threshold_s, 140.0f, -1);
             SET_OPTION(quant_comp, 0, -1);
@@ -419,8 +409,6 @@ int apply_preset(lame_global_flags*  gfp, int preset, int enforce)
             return preset;
         }
         default: {
-            SET_OPTION(vbr_smooth, 1, -1);
-
             SET_OPTION(short_threshold_lrm, 6.00f, -1);
             SET_OPTION(short_threshold_s, 135.0f, -1);
             SET_OPTION(quant_comp, 0, -1);
@@ -464,8 +452,6 @@ int apply_preset(lame_global_flags*  gfp, int preset, int enforce)
             return preset;
         }
         default: {
-            SET_OPTION(vbr_smooth, 1, -1);
-
             SET_OPTION(short_threshold_lrm, 5.80f, -1);
             SET_OPTION(short_threshold_s, 130.0f, -1);
             SET_OPTION(quant_comp, 0, -1);
@@ -509,7 +495,6 @@ int apply_preset(lame_global_flags*  gfp, int preset, int enforce)
         }
         default: {
             SET_OPTION(VBR_min_bitrate_kbps, 128, 0); /*ideally, we should get rid of this*/
-            SET_OPTION(vbr_smooth, 2, -1);
 
             SET_OPTION(short_threshold_lrm, 5.6f, -1);
             SET_OPTION(short_threshold_s, 125.0f, -1);
@@ -553,7 +538,6 @@ int apply_preset(lame_global_flags*  gfp, int preset, int enforce)
         }
         default: {
             SET_OPTION(VBR_min_bitrate_kbps, 128, 0);
-            SET_OPTION(vbr_smooth, 2, -1);
 
             SET_OPTION(short_threshold_lrm, 5.3f, -1);
             SET_OPTION(short_threshold_s, 125.0f, -1);
@@ -597,7 +581,6 @@ int apply_preset(lame_global_flags*  gfp, int preset, int enforce)
         }
         default: {
             SET_OPTION(VBR_min_bitrate_kbps, 128, 0);
-            SET_OPTION(vbr_smooth, 2, -1);
 
             SET_OPTION(short_threshold_lrm, 5.2f, -1);
             SET_OPTION(short_threshold_s, 125.0f, -1);

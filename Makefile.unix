@@ -143,15 +143,13 @@ ifeq ($(CFG),RH)
   CPP_OPTS += -DFLOAT8=float -DREAL_IS_FLOAT=1
 # these options for gcc-3.2 & AthlonXP
    CC_OPTS = \
-	-Wall -ansic99 -pipe -O9 \
+	-ansic99 -pipe -O3 \
+	-Wall -W -Wmissing-declarations -Wfloat-equal \
+	-Wcast-qual -Wcast-align -Wdisabled-optimization -Wshadow \
 	-march=athlon-xp \
 	-malign-double \
-	-finline-functions \
-	-fstrength-reduce \
-	-fexpensive-optimizations \
-	-fomit-frame-pointer \
-    -ftracer \
-    -maccumulate-outgoing-args -fschedule-insns2
+	-maccumulate-outgoing-args  
+#	-Wconversion -Wunreachable-code \
 	       
    HAVE_NEWER_GLIBC = YES
    HAVE_NASM = YES

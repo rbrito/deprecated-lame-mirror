@@ -1221,20 +1221,6 @@ lame_get_psy_model( const lame_global_flags*  gfp )
     return gfp->psymodel;
 }
 
-int
-lame_set_vbr_smooth( lame_global_flags*  gfp,
-                   int               smooth )
-{
-    gfp->VBR_smooth = smooth;
-    return 0;
-}
-
-int
-lame_get_vbr_smooth( const lame_global_flags*  gfp )
-{
-    return gfp->VBR_smooth;
-}
-
 /* Adjust masking values. */
 int
 lame_set_maskingadjust( lame_global_flags*  gfp,
