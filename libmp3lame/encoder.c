@@ -306,61 +306,31 @@ int  lame_encode_mp3_frame (				// Output
   inbuf[0]=inbuf_l;
   inbuf[1]=inbuf_r;
 
-  if (gfc->lame_encode_frame_init==0 )  {
-    gfc->lame_encode_frame_init=1;
-    
-    /* padding method as described in 
-     * "MPEG-Layer3 / Bitstream Syntax and Decoding"
-     * by Martin Sieler, Ralph Sperschneider
-     *
-     * note: there is no padding for the very first frame
-     *
-     * Robert.Hegemann@gmx.de 2000-06-22
-     */
-    gfc->slot_lag = gfc->frac_SpF = 0;
-    if (gfp->VBR == vbr_off && !gfp->disable_reservoir)
-	gfc->slot_lag = gfc->frac_SpF
-	    = ((gfp->version+1)*72000L*gfp->brate) % gfp->out_samplerate;
-
-    /* check FFT will not use a negative starting offset */
-#if 576 < FFTOFFSET
-# error FFTOFFSET greater than 576: FFT uses a negative offset
-#endif
-    /* check if we have enough data for FFT */
-    assert(gfc->mf_size>=(BLKSIZE+gfp->framesize-FFTOFFSET));
-    /* check if we have enough data for polyphase filterbank */
-    /* it needs 1152 samples + 286 samples ignored for one granule */
-    /*          1152+576+286 samples for two granules */
-    assert(gfc->mf_size>=(286+576*(1+gfc->mode_gr)));
-
-    /* prime the MDCT/polyphase filterbank with a short block */
-    { 
+  if (gfc->lame_encode_frame_init==0 ) {
+      /* prime the MDCT/polyphase filterbank with a short block */
       int i,j;
       sample_t primebuff0[286+1152+576];
       sample_t primebuff1[286+1152+576];
+      gfc->lame_encode_frame_init=1;
       for (i=0, j=0; i<286+576*(1+gfc->mode_gr); ++i) {
-	if (i<576*gfc->mode_gr) {
-	  primebuff0[i]=0;
-	  if (gfc->channels_out==2) 
-	    primebuff1[i]=0;
-	}else{
-	  primebuff0[i]=inbuf[0][j];
-	  if (gfc->channels_out==2) 
-	    primebuff1[i]=inbuf[1][j];
-	  ++j;
-	}
+	  if (i<576*gfc->mode_gr) {
+	      primebuff0[i]=0;
+	      if (gfc->channels_out==2) 
+		  primebuff1[i]=0;
+	  }else{
+	      primebuff0[i]=inbuf[0][j];
+	      if (gfc->channels_out==2) 
+		  primebuff1[i]=inbuf[1][j];
+	      ++j;
+	  }
       }
       /* polyphase filtering / mdct */
       for ( gr = 0; gr < gfc->mode_gr; gr++ ) {
-	for ( ch = 0; ch < gfc->channels_out; ch++ ) {
-	  gfc->l3_side.tt[gr][ch].block_type=SHORT_TYPE;
-	}
+	  for ( ch = 0; ch < gfc->channels_out; ch++ ) {
+	      gfc->l3_side.tt[gr][ch].block_type=SHORT_TYPE;
+	  }
       }
       mdct_sub48(gfc, primebuff0, primebuff1);
-    }
-    
-    iteration_init(gfp);
-    psymodel_init(gfp);
   }
 
 

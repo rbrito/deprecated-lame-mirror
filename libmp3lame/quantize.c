@@ -441,6 +441,8 @@ loop_break(
 
 
 
+/*  mt 5/99:  Function: Improved calc_noise for a single channel   */
+
 /*************************************************************************
  *
  *      quant_compare()                                               
@@ -450,6 +452,24 @@ loop_break(
  *  several different codes to decide which quantization is better
  *
  *************************************************************************/
+
+static double penalties ( double noise )
+{
+    return FAST_LOG10( 0.368 + 0.632 * noise * noise * noise );
+}
+
+static double get_klemm_noise(
+    const FLOAT8  * distort,
+    const gr_info * const gi
+    )
+{
+    int sfb;
+    double klemm_noise = 1E-37;
+    for (sfb = 0; sfb < gi->psymax; sfb++)
+	klemm_noise += penalties(distort[sfb]);
+
+    return Max(1e-20, klemm_noise);
+}
 
 inline 
 static int 

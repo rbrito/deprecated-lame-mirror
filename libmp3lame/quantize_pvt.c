@@ -577,26 +577,6 @@ int calc_xmin(
 // + 6 dB  =>  +3.69
 // +10 dB  =>  +6.45
 
-static double penalties ( double noise )
-{
-    return FAST_LOG10( 0.368 + 0.632 * noise * noise * noise );
-}
-
-double get_klemm_noise(
-    const FLOAT8  * distort,
-    const gr_info * const gi
-    )
-{
-    int sfb;
-    double klemm_noise = 1E-37;
-    for (sfb = 0; sfb < gi->psymax; sfb++)
-	klemm_noise += penalties(distort[sfb]);
-
-    return Max(1e-20, klemm_noise);
-}
-
-/*  mt 5/99:  Function: Improved calc_noise for a single channel   */
-
 int  calc_noise( 
         const lame_internal_flags * const gfc,
         const gr_info             * const cod_info,

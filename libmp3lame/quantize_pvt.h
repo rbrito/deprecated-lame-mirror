@@ -92,12 +92,10 @@ int     calc_noise (const lame_internal_flags * const gfc,
                     FLOAT8 * distort,
 		    calc_noise_result * const res);
 
-double get_klemm_noise(const FLOAT8	* const distort,
-		       const gr_info	* const gi);
-
+#if defined(HAVE_GTK)
 void    set_frame_pinfo (lame_global_flags *gfp,
                          III_psy_ratio ratio[2][2]);
-
+#endif
 
 
 
