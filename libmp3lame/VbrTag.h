@@ -41,9 +41,9 @@
  * e.g. half duration seek point = (toc[50]/256.0) * total_bitstream_bytes
  */
 
-int InitVbrTag(lame_t gfp);
-int PutVbrTag(lame_t gfp, FILE *fid);
-void AddVbrFrame(lame_t gfp);
+int InitVbrTag(lame_t gfc);
+int PutVbrTag(lame_t gfc, FILE *fid);
+void AddVbrFrame(lame_t gfc);
 void UpdateMusicCRC(uint16_t *crc,unsigned char *buffer, int size);
 
 #endif

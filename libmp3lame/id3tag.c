@@ -38,16 +38,11 @@
 # include <stddef.h>
 # include <stdlib.h>
 # include <string.h>
-#else
-# ifndef HAVE_MEMCPY
-#  define memcpy(d, s, n) bcopy ((s), (d), (n))
-#  define memmove(d, s, n) bcopy ((s), (d), (n))
-# endif
 #endif
 
 
 #ifdef _MSC_VER
-#define snprintf _snprintf
+# define snprintf _snprintf
 #endif
 
 

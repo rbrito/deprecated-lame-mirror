@@ -31,8 +31,8 @@ void ABR_iteration_loop(lame_t gfc, III_psy_ratio ratio[2][2]);
 void iteration_init(lame_t gfc);
 
 #ifndef NOANALYSIS
-void    set_frame_pinfo (lame_t gfc, III_psy_ratio ratio[2][2],
-			 const sample_t *inbuf[]);
+void set_frame_pinfo (lame_t gfc, III_psy_ratio ratio[2][2],
+		      const sample_t *inbuf[]);
 #endif
 
 #endif /* LAME_QUANTIZE_H */
