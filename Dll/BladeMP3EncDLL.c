@@ -529,7 +529,7 @@ __declspec(dllexport) VOID		beVersion(PBE_VERSION pbeVersion)
 
 	memset(pbeVersion->zHomepage,0x00,BE_MAX_HOMEPAGE);
 
-	strcpy(pbeVersion->zHomepage,"http://www.sulaco.org/mp3/");
+	strcpy(pbeVersion->zHomepage,"http://www.mp3dev.org/");
 }
 
 __declspec(dllexport) BE_ERR	beEncodeChunk(HBE_STREAM hbeStream, DWORD nSamples, 
@@ -541,7 +541,7 @@ __declspec(dllexport) BE_ERR	beEncodeChunk(HBE_STREAM hbeStream, DWORD nSamples,
 	dwSamples=nSamples/gf.num_channels;
 
 	// old versions of lame_enc.dll required exactly 1152 samples
-	// and worked even if nSamples accidently set to 2304
+	// and worked even if nSamples accidently set to 2304 
 	// simulate this behavoir:
 	if (gf.num_channels==1 && nSamples == 2304)
 	  dwSamples/=2;
@@ -577,8 +577,12 @@ __declspec(dllexport) BE_ERR beWriteVBRHeader(LPCSTR lpszFileName)
 		if (fpStream==NULL)
 		  return BE_ERR_INVALID_FORMAT_PARAMETERS;
 
+#if 0
 		// Write Xing header again
 		beResult=PutVbrTag(&gf,fpStream,nQuality);
+#else
+		lame_mp3_tags_fid(&gf,fpStream);
+#endif
 
 		// Close the file stream
 		fclose(fpStream);

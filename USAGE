@@ -2,7 +2,7 @@
 % lame [options] inputfile [outputfile]
 
 =======================================================================
-Examples:
+Constant Bitrate Examples:
 =======================================================================
 fixed bit rate jstereo 128 kbps encoding:
 % lame sample.wav  sample.mp3      
@@ -10,23 +10,35 @@ fixed bit rate jstereo 128 kbps encoding:
 fixed bit rate jstereo 128 kbps encoding, highest quality:  (recommended)
 % lame -h sample.wav  sample.mp3      
 
-To disable joint stereo encoding (slightly faster, but less quality at 
-bitrates <= 128 kbps)
-% lame -m s sample.wav  sample.mp3     
-
 Fast encode, low quality  (no noise shaping)
 % lame -f sample.wav  sample.mp3     
 
+=======================================================================
+Variable Bitrate Examples:
+=======================================================================
+LAME has two types of variable bitrate: ABR and CBR.
+
+ABR is the type of variable bitrate encoding usually found
+in other encoders and in AAC.  It bases the number of bits based on
+the perceptual entropy.  ABR is still in beta, but it should always
+give results equal or better than CBR:
+
+ABR:   (--abr <x> means encode with an average bitrate of around x kbps)
+lame -h --abr 128  sample.wav sample.mp3
+
+
+VBR is a true variable bitrate mode which bases the number of bits for
+each frame on the measured quantization error relative to the
+estimated allowed masking.  VBR is currently under heavy development.
+Right now it can often result in too much compression.  I do not
+recommend using VBR.  But if you must, you should at least use a
+minimum bitrate of 112 kbps.  This will let LAME increase the bitrate
+for difficult-to-encode frames, but prevent LAME from being too
+aggressive for simple frames:
+
 Variable Bitrate (VBR): (use -V n to adjust quality/filesize)
-% lame -h -v sample.wav sample.mp3
+% lame -h -v -b 112 sample.wav sample.mp3
 
-Note: VBR is currently under heavy development.  Right now it can
-often result in too much compression.  I would recommend using VBR
-with a minimum bitrate of 112 kbps.  This will let LAME increase
-the bitrate for difficult-to-encode frames, but prevent LAME from
-being too aggressive for simple frames:
-
-% lame -h -v -b 112  sample.wav sample.mp3
 
 
 =======================================================================
