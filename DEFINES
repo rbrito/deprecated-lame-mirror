@@ -3,10 +3,6 @@ $Id$
 USE_FFT3DN:
  - enable 3DNow code for the FFT
 
-KLEMM_04:  (missing)
- - correctly calculated FIR coefficients
- - sample_t instead of FLOAT for FIR coefficients
- 
 KLEMM_14: (missing)
  - some optimizations and code simplifications (unrolled code)
 
