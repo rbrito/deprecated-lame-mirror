@@ -350,7 +350,7 @@ int  lame_encode_mp3_frame (				// Output
             /* based on PE: M/S coding would not use much more bits than L/R coding */
 
 	    if (sum_pe_MS <= 1.07 * sum_pe_LR && !gfc->nsPsy.use) gfc->mode_ext = MPG_MD_MS_LR;
-	    if (sum_pe_MS <= 0.96 * sum_pe_LR &&  gfc->nsPsy.use) gfc->mode_ext = MPG_MD_MS_LR;
+	    if (sum_pe_MS <= 1.00 * sum_pe_LR &&  gfc->nsPsy.use) gfc->mode_ext = MPG_MD_MS_LR;
         }
 
 
@@ -390,7 +390,7 @@ int  lame_encode_mp3_frame (				// Output
   }
 
 
-  if (gfc->nsPsy.use && gfp->VBR == vbr_off) {
+  if (gfc->nsPsy.use && (gfp->VBR == vbr_off || gfp->VBR == vbr_abr)) {
     static FLOAT fircoef[19] = {
       -0.0207887,-0.0378413,-0.0432472,-0.031183,
       7.79609e-18,0.0467745,0.10091,0.151365,
@@ -418,7 +418,7 @@ int  lame_encode_mp3_frame (				// Output
 
     for ( gr = 0; gr < gfc->mode_gr; gr++ ) {
       for ( ch = 0; ch < gfc->channels_out; ch++ ) {
-	(*pe_use)[gr][ch] *= 650 / f;
+	(*pe_use)[gr][ch] *= 670 / f;
       }
     }
   }

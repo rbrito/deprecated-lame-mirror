@@ -347,18 +347,22 @@ int targ_bits[2],int mean_bits, int gr)
     
     targ_bits[ch]=Min(4095,tbits/gfc->channels_out);
     
-    add_bits[ch]=(pe[gr][ch]-750)/1.4;
-    /* short blocks us a little extra, no matter what the pe */
-    if (cod_info->block_type==SHORT_TYPE && !gfc->nsPsy.use) {
-      if (add_bits[ch]<mean_bits/4) add_bits[ch]=mean_bits/4;
+    if (gfc->nsPsy.use) {
+      add_bits[ch] = targ_bits[ch]*pe[gr][ch]/700.0-targ_bits[ch];
+    } else {
+      add_bits[ch]=(pe[gr][ch]-750)/1.4;
+      /* short blocks us a little extra, no matter what the pe */
+      if (cod_info->block_type==SHORT_TYPE) {
+	if (add_bits[ch]<mean_bits/4) add_bits[ch]=mean_bits/4;
+      }
+
+      /* at most increase bits by 1.5*average */
+      if (add_bits[ch] > .75*mean_bits) add_bits[ch]=mean_bits*.75;
+      if (add_bits[ch] < 0) add_bits[ch]=0;
+
+      if ((targ_bits[ch]+add_bits[ch]) > 4095) 
+	add_bits[ch]=Max(0,4095-targ_bits[ch]);
     }
-
-    /* at most increase bits by 1.5*average */
-    if (add_bits[ch] > .75*mean_bits) add_bits[ch]=mean_bits*.75;
-    if (add_bits[ch] < 0) add_bits[ch]=0;
-
-    if ((targ_bits[ch]+add_bits[ch]) > 4095) 
-      add_bits[ch]=Max(0,4095-targ_bits[ch]);
 
     bits += add_bits[ch];
   }
@@ -478,7 +482,7 @@ int calc_xmin(
       }
 
       if (en0 > gfc->ATH_s[sfb]) ath_over++;
-      if (gfc->nsPsy.use && gfp->VBR == vbr_off && gfp->quality <= 1)
+      if (gfc->nsPsy.use && (gfp->VBR == vbr_off || gfp->VBR == vbr_abr) && gfp->quality <= 1)
         l3_xmin->s[sfb][b] *= 0.001;
     }
   }
@@ -513,7 +517,7 @@ int calc_xmin(
 	}
 
 	if (en0 > gfc->ATH_l[sfb]) ath_over++;
-	if (gfp->VBR == vbr_off && gfp->quality <= 1)
+	if ((gfp->VBR == vbr_off || gfp->VBR == vbr_abr) && gfp->quality <= 1)
           l3_xmin->l[sfb] *= 0.001;
       }
     } else {

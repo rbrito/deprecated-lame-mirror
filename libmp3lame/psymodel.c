@@ -1015,7 +1015,7 @@ int L3psycho_anal_ns( lame_global_flags * gfp,
   int ns_attacks[4];
   FLOAT ns_hpfsmpl[4][576+576/3+NSFIRLEN];
   FLOAT pe_l[4],pe_s[4];
-
+  FLOAT pcfact;
 
 
   /************************* Beginning of initialization *****************************/
@@ -1155,7 +1155,8 @@ int L3psycho_anal_ns( lame_global_flags * gfp,
   /* chn=2 and 3 = Mid and Side channels */
   if (gfp->mode == MPG_MD_JOINT_STEREO) numchn=4;
 
-
+  if (gfp->VBR==vbr_off) pcfact = gfc->ResvMax == 0 ? 0 : ((FLOAT)gfc->ResvSize)/gfc->ResvMax*0.5;
+  else pcfact = 1;
 
   /**********************************************************************
    *  Apply HPF of fs/4 to the input signal.
@@ -1419,11 +1420,12 @@ int L3psycho_anal_ns( lame_global_flags * gfp,
 
 #define rpelev 2
 #define rpelev2 16
+#define NS_INTERP(x,y,r) (pow((x),(r))*pow((y),1-(r)))
 
 	if (gfc->blocktype_old[chn>1 ? chn-2 : chn] == SHORT_TYPE )
 	  thr[b] = ecb; /* Min(ecb, rpelev*gfc->nb_1[chn][b]); */
 	else
-	  thr[b] = Min(ecb, Min(rpelev*gfc->nb_1[chn][b],rpelev2*gfc->nb_2[chn][b]) ); /* rpelev=2.0, rpelev2=16.0 */
+	  thr[b] = NS_INTERP(Min(ecb, Min(rpelev*gfc->nb_1[chn][b],rpelev2*gfc->nb_2[chn][b])),ecb,pcfact);
 
 	gfc->nb_2[chn][b] = gfc->nb_1[chn][b];
 	gfc->nb_1[chn][b] = ecb;
@@ -1584,36 +1586,35 @@ int L3psycho_anal_ns( lame_global_flags * gfp,
 #define NS_PREECHO_ATT0 0.8
 #define NS_PREECHO_ATT1 0.6
 #define NS_PREECHO_ATT2 0.3
-#define NS_INTERP(x,y,r) (pow((x),(r))*pow((y),1-(r)))
 
 	    thmm *= NS_PREECHO_ATT0;
 
 	    if (ns_attacks[sblock] >= 2) {
 	      if (sblock != 0) {
-		double p = NS_INTERP(gfc->thm[chn].s[sb][sblock-1],thmm,NS_PREECHO_ATT1);
+		double p = NS_INTERP(gfc->thm[chn].s[sb][sblock-1],thmm,NS_PREECHO_ATT1*pcfact);
 		thmm = Min(thmm,p);
 	      } else {
-		double p = NS_INTERP(gfc->nsPsy.last_thm[chn][sb][2],thmm,NS_PREECHO_ATT1);
+		double p = NS_INTERP(gfc->nsPsy.last_thm[chn][sb][2],thmm,NS_PREECHO_ATT1*pcfact);
 		thmm = Min(thmm,p);
 	      }
 	    } else if (ns_attacks[sblock+1] == 1) {
 	      if (sblock != 0) {
-		double p = NS_INTERP(gfc->thm[chn].s[sb][sblock-1],thmm,NS_PREECHO_ATT1);
+		double p = NS_INTERP(gfc->thm[chn].s[sb][sblock-1],thmm,NS_PREECHO_ATT1*pcfact);
 		thmm = Min(thmm,p);
 	      } else {
-		double p = NS_INTERP(gfc->nsPsy.last_thm[chn][sb][2],thmm,NS_PREECHO_ATT1);
+		double p = NS_INTERP(gfc->nsPsy.last_thm[chn][sb][2],thmm,NS_PREECHO_ATT1*pcfact);
 		thmm = Min(thmm,p);
 	      }
 	    }
 
 	    if (ns_attacks[sblock] == 1) {
 	      double p = sblock == 0 ? gfc->nsPsy.last_thm[chn][sb][2] : gfc->thm[chn].s[sb][sblock-1];
-	      p = NS_INTERP(p,thmm,NS_PREECHO_ATT2);
+	      p = NS_INTERP(p,thmm,NS_PREECHO_ATT2*pcfact);
 	      thmm = Min(thmm,p);
 	    } else if ((sblock != 0 && ns_attacks[sblock-1] == 3) ||
 		       (sblock == 0 && gfc->nsPsy.last_attacks[chn][2] == 3)) {
 	      double p = sblock <= 1 ? gfc->nsPsy.last_thm[chn][sb][sblock+1] : gfc->thm[chn].s[sb][0];
-	      p = NS_INTERP(p,thmm,NS_PREECHO_ATT2);
+	      p = NS_INTERP(p,thmm,NS_PREECHO_ATT2*pcfact);
 	      thmm = Min(thmm,p);
 	    }
 
