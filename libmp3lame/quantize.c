@@ -551,7 +551,7 @@ static double get_klemm_noise(
 inline 
 static int 
 quant_compare(
-    const int                   experimentalX,
+    const int                   quant_comp,
           lame_internal_flags	* const gfc,
     const calc_noise_result	* const best,
           calc_noise_result	* const calc,
@@ -569,7 +569,7 @@ quant_compare(
      */
     int better;
 
-    switch (experimentalX) {
+    switch (quant_comp) {
         default:
         case 0:
 	    better = calc->over_count  < best->over_count
@@ -993,7 +993,7 @@ outer_loop (
 	/******************************************************************/
 	/* if no bands with distortion and -X0, we are done */
 	if (0==gfc->noise_shaping_stop && 
-	    0==gfp->experimentalX &&
+	    0==gfp->quant_comp &&
 	    (over == 0 || best_noise_info.over_count == 0) )
 	    break;
 
@@ -1041,9 +1041,9 @@ outer_loop (
 
         /* check if this quantization is better
          * than our saved quantization */
-	better = gfp->experimentalX;
+	better = gfp->quant_comp;
 	if (cod_info->block_type != NORM_TYPE)
-	    better = gfc->presetTune.quantcomp_type_s;
+	    better = gfp->quant_comp_short;
 	else if (gfc->ATH->adjust >= gfc->presetTune.athadjust_switch_level
 		 && gfc->presetTune.quantcomp_alt_type >= 0)
 	    better = gfc->presetTune.quantcomp_alt_type;

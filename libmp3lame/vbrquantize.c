@@ -667,9 +667,9 @@ block_sf(const lame_internal_flags * gfc, const FLOAT8 * l3_xmin,
     int     scalefac_criteria;
 
     scalefac_criteria = gfc->VBR->quality;
-    /* map experimentalX settings to internal selections */
+    /* map quant_comp settings to internal selections */
     if (gi->block_type != NORM_TYPE)
-	scalefac_criteria = gfc->presetTune.quantcomp_type_s;
+	    scalefac_criteria = gfc->gfp->quant_comp_short;
     else if (gfc->ATH->adjust >= gfc->presetTune.athadjust_switch_level
 	     && gfc->presetTune.quantcomp_alt_type >= 0)
 	scalefac_criteria = gfc->presetTune.quantcomp_alt_type;

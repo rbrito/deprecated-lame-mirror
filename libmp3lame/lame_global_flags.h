@@ -71,9 +71,11 @@ struct lame_global_struct {
                                      Meaningless                            */
   int strict_ISO;                 /* enforce ISO spec as much as possible   */
 
-  /* quantization/noise shaping */
   int disable_reservoir;          /* use bit reservoir?                     */
-  int experimentalX;
+
+  /* quantization/noise shaping */
+  int quant_comp;
+  int quant_comp_short;
   int experimentalY;
   int experimentalZ;
   int exp_nspsytune;

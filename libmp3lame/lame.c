@@ -876,7 +876,7 @@ lame_init_params(lame_global_flags * const gfp)
         if (gfp->cwlimit <= 0) gfp->cwlimit = 0.42 * gfp->out_samplerate;
         gfc->PSY->tonalityPatch = 1;
 
-        switch ( gfp->experimentalX ) {
+        switch ( gfp->quant_comp ) {
         default:
         case 0: {
                 static const float dbQ[10]={-2.,-1.0,-.66,-.33,0.,0.33,.66,1.0,1.33,1.66};
@@ -1197,7 +1197,9 @@ lame_print_internals( const lame_global_flags * gfp )
     case  2: pc = "best (inside loop, slow)"; break;
     } 
     MSGF( gfc, "\thuffman search: %s\n", pc ); 
-    MSGF( gfc, "\texperimental X=%d Y=%d Z=%d\n", gfp->experimentalX, gfp->experimentalY, gfp->experimentalZ );
+    MSGF( gfc, "\texperimental Y=%d Z=%d\n", gfp->experimentalY, gfp->experimentalZ );
+    MSGF( gfc, "\tquantization comparison: %d\n", gfp->quant_comp );
+    MSGF( gfc, "\tquantization comparison short blocks: %d\n", gfp->quant_comp_short );
     MSGF( gfc, "\t...\n" );
 
     /*  everything controlling the stream format 

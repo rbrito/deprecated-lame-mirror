@@ -1355,7 +1355,8 @@ char* const inPath, char* const outPath, char **nogap_inPath, int *num_nogap)
                 T_ELIF ("nspsytune")
                     lame_set_exp_nspsytune(gfp, lame_get_exp_nspsytune(gfp) | 1);
                     lame_set_experimentalZ(gfp,1);
-                    lame_set_experimentalX(gfp,1);
+                    lame_set_quant_comp(gfp,1);
+                    lame_set_quant_comp_short(gfp,1);
                 
                 T_ELIF ("nssafejoint")
                     lame_set_exp_nspsytune(gfp,lame_get_exp_nspsytune(gfp) | 2);
@@ -1630,7 +1631,8 @@ char* const inPath, char* const outPath, char **nogap_inPath, int *num_nogap)
 			i = sscanf(arg, "%d,%d", &n, &m);
 			if (i == 1)
 			    m = n;
-			lame_set_quantcomp(gfp, (m*16 + n) | (~0xff));
+			lame_set_quant_comp(gfp, n);
+			lame_set_quant_comp_short(gfp, m);
                         break;
 		    }
                     case 'Y': 

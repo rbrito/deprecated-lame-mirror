@@ -35,7 +35,7 @@ int apply_abr_preset(lame_global_flags*  gfp, int preset)
     typedef struct {
         int    abr_kbps;
         int    expZ;
-        int    expX;
+        int    quant_comp;
         int    safejoint;
         double nsmsfix;
         double nsbass;
@@ -46,24 +46,24 @@ int apply_abr_preset(lame_global_flags*  gfp, int preset)
 
     // Switch mappings for ABR mode
     const dm_abr_presets_t abr_switch_map [] = {
-        // kbps Z  X safejoint nsmsfix ns-bass scale
-        {   8,  1, 6,  0,        0   ,   -3,      0.85 }, //   8 //impossible to use in stereo
-        {  16,  1, 6,  0,        0   ,   -3,      0.85 }, //  16
-        {  24,  1, 1,  0,        0   ,   -3,      0.85 }, //  24
-        {  32,  1, 1,  0,        0   ,   -3,      0.85 }, //  32
-        {  40,  1, 1,  0,        0   ,   -3,      0.85 }, //  40
-        {  48,  1, 1,  0,        0   ,   -3,      0.85 }, //  48
-        {  56,  1, 1,  0,        0   ,   -3,      0.85 }, //  56
-        {  64,  1, 1,  0,        0   ,   -3,      0.85 }, //  64
-        {  80,  1, 1,  0,        0   ,   -3,      0.85 }, //  80
-        {  96,  1, 1,  0,        0   ,   -4,      0.85 }, //  96
-        { 112,  1, 1,  0,        0   ,   -5,      0.87 }, // 112
-        { 128,  1, 1,  0,        0   ,   -6,      0.93 }, // 128
-        { 160,  1, 1,  0,        0   ,   -4,      0.95 }, // 160
-        { 192,  1, 1,  1,        1.7 ,   -2,      0.97 }, // 192
-        { 224,  1, 1,  1,        1.25,    0,      0.98 }, // 224
-        { 256,  0, 3,  1,        0   ,    0,      1.00 }, // 256
-        { 320,  0, 3,  1,        0   ,    0,      1.00 }  // 320
+        // kbps Z  quant safejoint nsmsfix ns-bass scale
+        {   8,  1, 6,    0,        0   ,   -3,      0.85 }, //   8 //impossible to use in stereo
+        {  16,  1, 6,    0,        0   ,   -3,      0.85 }, //  16
+        {  24,  1, 1,    0,        0   ,   -3,      0.85 }, //  24
+        {  32,  1, 1,    0,        0   ,   -3,      0.85 }, //  32
+        {  40,  1, 1,    0,        0   ,   -3,      0.85 }, //  40
+        {  48,  1, 1,    0,        0   ,   -3,      0.85 }, //  48
+        {  56,  1, 1,    0,        0   ,   -3,      0.85 }, //  56
+        {  64,  1, 1,    0,        0   ,   -3,      0.85 }, //  64
+        {  80,  1, 1,    0,        0   ,   -3,      0.85 }, //  80
+        {  96,  1, 1,    0,        0   ,   -4,      0.85 }, //  96
+        { 112,  1, 1,    0,        0   ,   -5,      0.87 }, // 112
+        { 128,  1, 1,    0,        0   ,   -6,      0.93 }, // 128
+        { 160,  1, 1,    0,        0   ,   -4,      0.95 }, // 160
+        { 192,  1, 1,    1,        1.7 ,   -2,      0.97 }, // 192
+        { 224,  1, 1,    1,        1.25,    0,      0.98 }, // 224
+        { 256,  0, 3,    1,        0   ,    0,      1.00 }, // 256
+        { 320,  0, 3,    1,        0   ,    0,      1.00 }  // 320
                                        };
 
     
@@ -83,7 +83,7 @@ int apply_abr_preset(lame_global_flags*  gfp, int preset)
 
     lame_set_exp_nspsytune(gfp, lame_get_exp_nspsytune(gfp) | 1);
     lame_set_experimentalZ(gfp, abr_switch_map[r].expZ);
-    lame_set_experimentalX(gfp, abr_switch_map[r].expX);
+    lame_set_quant_comp(gfp, abr_switch_map[r].quant_comp);
     lame_set_quality(gfp, 3);
     lame_set_mode(gfp, JOINT_STEREO);
 
@@ -118,190 +118,189 @@ int apply_preset(lame_global_flags*  gfp, int preset)
 {
     switch (preset) {
     case DM_RADIO: {
-	lame_set_VBR(gfp, vbr_rh);
+	    lame_set_VBR(gfp, vbr_rh);
 
-	lame_set_preset_expopts(gfp, 3);
-	lame_set_quality(gfp, 3);
-	lame_set_lowpassfreq(gfp, 19000);
-	lame_set_mode(gfp, JOINT_STEREO);
-	lame_set_VBR_min_bitrate_kbps(gfp, 64);
+	    lame_set_preset_expopts(gfp, 3);
+	    lame_set_quality(gfp, 3);
+	    lame_set_lowpassfreq(gfp, 19000);
+	    lame_set_mode(gfp, JOINT_STEREO);
+	    lame_set_VBR_min_bitrate_kbps(gfp, 64);
 
-	/*put in expopts later */
-	lame_set_VBR_q(gfp, 3);
-	lame_set_experimentalY(gfp, 1);
-	lame_set_substep(gfp, 1);
-	lame_set_interChRatio(gfp, 0.0005);
+	    /*put in expopts later */
+	    lame_set_VBR_q(gfp, 3);
+	    lame_set_experimentalY(gfp, 1);
+	    lame_set_substep(gfp, 1);
+	    lame_set_interChRatio(gfp, 0.0005);
 
-	return preset;
+	    return preset;
     }
     case DM_RADIO_FAST: {
-	lame_set_VBR(gfp, vbr_mtrh);
+	    lame_set_VBR(gfp, vbr_mtrh);
 
-	lame_set_preset_expopts(gfp, 3);
-	lame_set_quality(gfp, 3);
-	lame_set_lowpassfreq(gfp, 19000);
-	lame_set_mode(gfp, JOINT_STEREO);
-	lame_set_VBR_min_bitrate_kbps(gfp, 64);
+	    lame_set_preset_expopts(gfp, 3);
+	    lame_set_quality(gfp, 3);
+	    lame_set_lowpassfreq(gfp, 19000);
+	    lame_set_mode(gfp, JOINT_STEREO);
+	    lame_set_VBR_min_bitrate_kbps(gfp, 64);
 
-	/*put in expopts later */
-	lame_set_VBR_q(gfp, 3);
-	lame_set_experimentalY(gfp, 1);
-	lame_set_substep( gfp, 1 );
-	lame_set_interChRatio(gfp, 0.0005);
+	    /*put in expopts later */
+	    lame_set_VBR_q(gfp, 3);
+	    lame_set_experimentalY(gfp, 1);
+	    lame_set_substep( gfp, 1 );
+	    lame_set_interChRatio(gfp, 0.0005);
 
-	return preset;
+	    return preset;
     }
     case PORTABLE: {
-	lame_set_VBR(gfp, vbr_rh);
+	    lame_set_VBR(gfp, vbr_rh);
 
-	lame_set_preset_expopts(gfp, 3);
-	lame_set_quality(gfp, 3);
-	lame_set_lowpassfreq(gfp, 19000);
-	lame_set_mode(gfp, JOINT_STEREO);
-	lame_set_VBR_min_bitrate_kbps(gfp, 128);
+	    lame_set_preset_expopts(gfp, 3);
+	    lame_set_quality(gfp, 3);
+	    lame_set_lowpassfreq(gfp, 19000);
+	    lame_set_mode(gfp, JOINT_STEREO);
+	    lame_set_VBR_min_bitrate_kbps(gfp, 128);
 
-	/*put in expopts later */
-	lame_set_experimentalY(gfp, 1);
-	lame_set_substep( gfp, 1 );
+	    /*put in expopts later */
+	    lame_set_experimentalY(gfp, 1);
+	    lame_set_substep( gfp, 1 );
 
-	return preset;
+	    return preset;
     }
     case PORTABLE_FAST: {
-	lame_set_VBR(gfp, vbr_mtrh);
+	    lame_set_VBR(gfp, vbr_mtrh);
 
-	lame_set_preset_expopts(gfp, 3);
-	lame_set_quality(gfp, 3);
-	lame_set_lowpassfreq(gfp, 19000);
-	lame_set_mode(gfp, JOINT_STEREO);
-	lame_set_VBR_min_bitrate_kbps(gfp, 128);
+	    lame_set_preset_expopts(gfp, 3);
+	    lame_set_quality(gfp, 3);
+	    lame_set_lowpassfreq(gfp, 19000);
+	    lame_set_mode(gfp, JOINT_STEREO);
+	    lame_set_VBR_min_bitrate_kbps(gfp, 128);
 
-	/*put in expopts later */
-	lame_set_experimentalY(gfp, 1);
-	lame_set_substep( gfp, 1 );
+	    /*put in expopts later */
+	    lame_set_experimentalY(gfp, 1);
+	    lame_set_substep( gfp, 1 );
 
-	return preset;
+	    return preset;
     }
     case DM_MEDIUM: {
-	lame_set_VBR(gfp, vbr_rh);
+	    lame_set_VBR(gfp, vbr_rh);
 
-	lame_set_preset_expopts(gfp, 3);
-	lame_set_quality(gfp, 3);
-	lame_set_lowpassfreq(gfp, 19000);
-	lame_set_mode(gfp, JOINT_STEREO);
-	lame_set_VBR_min_bitrate_kbps(gfp, 128);
+	    lame_set_preset_expopts(gfp, 3);
+	    lame_set_quality(gfp, 3);
+	    lame_set_lowpassfreq(gfp, 19000);
+	    lame_set_mode(gfp, JOINT_STEREO);
+	    lame_set_VBR_min_bitrate_kbps(gfp, 128);
 
-	/*put in expopts later */
-	lame_set_experimentalY(gfp, 1);
+	    /*put in expopts later */
+	    lame_set_experimentalY(gfp, 1);
 
-	return preset;
+	    return preset;
     }
     case DM_MEDIUM_FAST: {
-	lame_set_VBR(gfp, vbr_mtrh);
+	    lame_set_VBR(gfp, vbr_mtrh);
 
-	lame_set_preset_expopts(gfp, 3);
-	lame_set_quality(gfp, 3);
-	lame_set_lowpassfreq(gfp, 19000);
-	lame_set_mode(gfp, JOINT_STEREO);
-	lame_set_VBR_min_bitrate_kbps(gfp, 128);
+	    lame_set_preset_expopts(gfp, 3);
+	    lame_set_quality(gfp, 3);
+	    lame_set_lowpassfreq(gfp, 19000);
+	    lame_set_mode(gfp, JOINT_STEREO);
+	    lame_set_VBR_min_bitrate_kbps(gfp, 128);
 
-	/*put in expopts later */
-	lame_set_experimentalY(gfp, 1);
+	    /*put in expopts later */
+	    lame_set_experimentalY(gfp, 1);
 
-	return preset;
+	    return preset;
     }
     case MEDIUM: {
-	lame_set_VBR(gfp, vbr_rh);
+	    lame_set_VBR(gfp, vbr_rh);
 
-	lame_set_preset_expopts(gfp, 3);
-	lame_set_quality(gfp, 3);
-	lame_set_lowpassfreq(gfp, 18000);
-	lame_set_mode(gfp, JOINT_STEREO);
-	lame_set_VBR_min_bitrate_kbps(gfp, 64);
-	lame_set_athaa_sensitivity(gfp, -11);
-	lame_set_msfix(gfp, 3);
-	lame_set_VBR_q(gfp, 3);
-	lame_set_experimentalY(gfp, 1);
-	return preset;
+	    lame_set_preset_expopts(gfp, 3);
+	    lame_set_quality(gfp, 3);
+	    lame_set_lowpassfreq(gfp, 18000);
+	    lame_set_mode(gfp, JOINT_STEREO);
+	    lame_set_VBR_min_bitrate_kbps(gfp, 64);
+	    lame_set_athaa_sensitivity(gfp, -11);
+	    lame_set_msfix(gfp, 3);
+	    lame_set_VBR_q(gfp, 3);
+	    lame_set_experimentalY(gfp, 1);
+	    return preset;
     }
     case MEDIUM_FAST: {
-	lame_set_VBR(gfp, vbr_mtrh);
+	    lame_set_VBR(gfp, vbr_mtrh);
 
-	lame_set_preset_expopts(gfp, 3);
-	lame_set_quality(gfp, 3);
-	lame_set_lowpassfreq(gfp, 18000);
-	lame_set_mode(gfp, JOINT_STEREO);
-	lame_set_VBR_min_bitrate_kbps(gfp, 64);
-	lame_set_athaa_sensitivity(gfp, -11);
-	lame_set_msfix(gfp, 3);
-	lame_set_VBR_q(gfp, 3);
-	lame_set_experimentalY(gfp, 1);
-	return preset;
+	    lame_set_preset_expopts(gfp, 3);
+	    lame_set_quality(gfp, 3);
+	    lame_set_lowpassfreq(gfp, 18000);
+	    lame_set_mode(gfp, JOINT_STEREO);
+	    lame_set_VBR_min_bitrate_kbps(gfp, 64);
+	    lame_set_athaa_sensitivity(gfp, -11);
+	    lame_set_msfix(gfp, 3);
+	    lame_set_VBR_q(gfp, 3);
+	    lame_set_experimentalY(gfp, 1);
+	    return preset;
     }
     case STANDARD: {
-	lame_set_VBR(gfp, vbr_rh);
+	    lame_set_VBR(gfp, vbr_rh);
 
-	lame_set_preset_expopts(gfp, 3);
-	lame_set_quality(gfp, 3);
-	lame_set_lowpassfreq(gfp, 19000);
-	lame_set_mode(gfp, JOINT_STEREO);
-	lame_set_VBR_min_bitrate_kbps(gfp, 128);
-	return preset;
+	    lame_set_preset_expopts(gfp, 3);
+	    lame_set_quality(gfp, 3);
+	    lame_set_lowpassfreq(gfp, 19000);
+	    lame_set_mode(gfp, JOINT_STEREO);
+	    lame_set_VBR_min_bitrate_kbps(gfp, 128);
+	    return preset;
     }
     case STANDARD_FAST: {
-	lame_set_VBR(gfp, vbr_mtrh);
+	    lame_set_VBR(gfp, vbr_mtrh);
 
-	lame_set_preset_expopts(gfp, 3);
-	lame_set_quality(gfp, 3);
-	lame_set_lowpassfreq(gfp, 19000);
-	lame_set_mode(gfp, JOINT_STEREO);
-	lame_set_VBR_min_bitrate_kbps(gfp, 128);
-	return preset;
+	    lame_set_preset_expopts(gfp, 3);
+	    lame_set_quality(gfp, 3);
+	    lame_set_lowpassfreq(gfp, 19000);
+	    lame_set_mode(gfp, JOINT_STEREO);
+	    lame_set_VBR_min_bitrate_kbps(gfp, 128);
+	    return preset;
     }
     case EXTREME: {
-	lame_set_VBR(gfp, vbr_rh);
+	    lame_set_VBR(gfp, vbr_rh);
 
-	lame_set_preset_expopts(gfp, 2);
-	lame_set_quality(gfp, 3);
-	lame_set_lowpassfreq(gfp, 19500);
-	lame_set_mode(gfp, JOINT_STEREO);
-	lame_set_VBR_min_bitrate_kbps(gfp, 128);
+	    lame_set_preset_expopts(gfp, 2);
+	    lame_set_quality(gfp, 3);
+	    lame_set_lowpassfreq(gfp, 19500);
+	    lame_set_mode(gfp, JOINT_STEREO);
+	    lame_set_VBR_min_bitrate_kbps(gfp, 128);
 
-	return preset;
+	    return preset;
     }
     case EXTREME_FAST: {
-	lame_set_VBR(gfp, vbr_mtrh);
+	    lame_set_VBR(gfp, vbr_mtrh);
 
-	lame_set_preset_expopts(gfp, 2);
-	lame_set_quality(gfp, 3);
-	lame_set_lowpassfreq(gfp, 19500);
-	lame_set_mode(gfp, JOINT_STEREO);
-	lame_set_VBR_min_bitrate_kbps(gfp, 128);
+	    lame_set_preset_expopts(gfp, 2);
+	    lame_set_quality(gfp, 3);
+	    lame_set_lowpassfreq(gfp, 19500);
+	    lame_set_mode(gfp, JOINT_STEREO);
+	    lame_set_VBR_min_bitrate_kbps(gfp, 128);
 
-	return preset;
+	    return preset;
     }
     case INSANE: {
-	lame_set_preset_expopts(gfp, 1);
-	lame_set_brate(gfp, 320);
-	lame_set_quality(gfp, 3);
-	lame_set_mode(gfp, JOINT_STEREO);
-	lame_set_lowpassfreq(gfp, 20500);
-	return preset;
+	    lame_set_preset_expopts(gfp, 1);
+	    lame_set_brate(gfp, 320);
+	    lame_set_quality(gfp, 3);
+	    lame_set_mode(gfp, JOINT_STEREO);
+	    lame_set_lowpassfreq(gfp, 20500);
+	    return preset;
     }
     case R3MIX: {
-	lame_set_exp_nspsytune(gfp, lame_get_exp_nspsytune(gfp) | 1); /*nspsytune*/
-	/*  lame_set_experimentalX(gfp,1); (test CVS) */
-	(void) lame_set_scale( gfp, 0.98 ); /* --scale 0.98*/
+	    lame_set_exp_nspsytune(gfp, lame_get_exp_nspsytune(gfp) | 1); /*nspsytune*/
+	    (void) lame_set_scale( gfp, 0.98 ); /* --scale 0.98*/
 
-	lame_set_exp_nspsytune(gfp, lame_get_exp_nspsytune(gfp) | (8 << 20));
+	    lame_set_exp_nspsytune(gfp, lame_get_exp_nspsytune(gfp) | (8 << 20));
 
-	lame_set_VBR(gfp,vbr_mtrh); 
-	lame_set_VBR_q(gfp,1);
-	lame_set_quality( gfp, 3);
-	lame_set_lowpassfreq(gfp,19500);
-	lame_set_mode( gfp, JOINT_STEREO );
-	lame_set_ATHtype( gfp, 3 );
-	lame_set_VBR_min_bitrate_kbps(gfp,96);
-	return preset;
+	    lame_set_VBR(gfp,vbr_mtrh); 
+	    lame_set_VBR_q(gfp,1);
+	    lame_set_quality( gfp, 3);
+	    lame_set_lowpassfreq(gfp,19500);
+	    lame_set_mode( gfp, JOINT_STEREO );
+	    lame_set_ATHtype( gfp, 3 );
+	    lame_set_VBR_min_bitrate_kbps(gfp,96);
+	    return preset;
     }
     default:
 	break;
