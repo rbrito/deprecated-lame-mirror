@@ -1425,7 +1425,8 @@ lame_decode_initfile(FILE * fd, mp3data_struct * mp3data)
     int freeformat = 0;
 
     memset(mp3data, 0, sizeof(mp3data_struct));
-    lame_decode_init();
+    if (lame_decode_init() < 0)
+	    return -1;
 
     len = 4;
     if (fread(buf, 1, len, fd) != len)

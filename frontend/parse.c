@@ -1842,6 +1842,32 @@ char* const inPath, char* const outPath, char **nogap_inPath, int *num_nogap)
     }
 #endif
 
+#ifdef DECODE_ON_THE_FLY
+    if (( input_format == sf_mp1 ||
+          input_format == sf_mp2 ||
+          input_format == sf_mp3) && 
+	  lame_get_ReplayGain_decode( gfp ) ){
+
+        fprintf(stderr, "Error: input cannot be MPEG if a feature requiring "
+	    	        "decoding on the fly,\nlike --replaygain-accurate, "
+		        "is used\n");
+
+	return -1;
+    }
+
+    if (( input_format == sf_mp1 ||
+          input_format == sf_mp2 ||
+          input_format == sf_mp3) && 
+	  lame_get_findPeakSample( gfp ) ){
+
+	fprintf(stderr, "Error: input cannot be MPEG if a feature requiring "
+			    "decoding on the fly,\nlike --clipdetect, "
+			    "is used\n");
+
+	return -1;
+    }
+#endif
+    
     if ( input_format == sf_ogg ) {
         fprintf(stderr, "sorry, vorbis support in LAME is deprecated.\n");
         return -1;

@@ -459,13 +459,10 @@ lame_set_ReplayGain_decode( lame_global_flags*  gfp,
     /* enforce disable/enable meaning, if we need more than two values
        we need to switch to an enum to have an apropriate representation
        of the possible meanings of the value */
-
-/*disabled because it crashes when using with mp3 input*/       
-       
-/*    if ( 0 > ReplayGain_decode || 1 < ReplayGain_decode )
+    if ( 0 > ReplayGain_decode || 1 < ReplayGain_decode )
         return -1;
 
-    gfp->ReplayGain_decode = ReplayGain_decode;*/
+    gfp->ReplayGain_decode = ReplayGain_decode;
 
     return 0;
 }
@@ -1727,9 +1724,14 @@ lame_get_PeakSample( const lame_global_flags*  gfp )
     lame_internal_flags *gfc = gfp->internal_flags;
     return (float)gfc->PeakSample;
 }
+
+int
+lame_get_decode_on_the_fly( const lame_global_flags* gfp )
+{
+    lame_internal_flags *gfc = gfp->internal_flags;
+    return gfc->decode_on_the_fly; 
+}
 #endif
-
-
 
 
 /*

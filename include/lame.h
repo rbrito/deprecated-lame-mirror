@@ -561,6 +561,9 @@ int CDECL lame_get_AudiophileGain(const lame_global_flags *);
 #ifdef DECODE_ON_THE_FLY
 /* the peak sample */
 float CDECL lame_get_PeakSample(const lame_global_flags *);
+
+/* is decoding on the fly going to be performed */
+int CDECL lame_get_decode_on_the_fly(const lame_global_flags *);
 #endif
 
 
