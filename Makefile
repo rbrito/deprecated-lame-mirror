@@ -22,8 +22,7 @@ MAKEDEP = -M
 BRHIST_SWITCH = 
 LIBTERMCAP = 
 RM = rm -f
-#CPP_OPTS = -DHAVEMPGLIB -DLAMEPARSE
-CPP_OPTS = -DLAMEPARSE
+CPP_OPTS = -DHAVEMPGLIB -DLAMEPARSE
 
 
 ##########################################################################
