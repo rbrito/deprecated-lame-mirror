@@ -718,6 +718,23 @@ best_scalefac_store(
 	    gi->scalefac[sfb] = recalc = -2; /* anything goes. */
     }
 
+    if (gi->psymax > gi->sfbmax && gi->block_type != SHORT_TYPE
+	&& gi->scalefac[gi->sfbmax] == -2) {
+	int minsfb = 15;
+	for (sfb = 0; sfb < gi->psymax; sfb++)
+	    if (minsfb > (unsigned int)gi->scalefac[sfb])
+		minsfb = gi->scalefac[sfb];
+	if (minsfb != 0) {
+	    if (gi->global_gain - (minsfb << (gi->scalefac_scale+1)) < 0)
+		minsfb = gi->global_gain >> (gi->scalefac_scale+1);
+	    gi->global_gain -= minsfb << (gi->scalefac_scale+1);
+	    for (sfb = 0; sfb < gi->psymax; sfb++)
+		if (gi->scalefac[sfb] != -2)
+		    gi->scalefac[sfb] -= minsfb;
+	}
+	recalc = 1;
+    }
+
     if (!gi->scalefac_scale && !gi->preflag) {
 	int s = 0;
 	for (sfb = 0; sfb < gi->psymax; sfb++)
