@@ -923,7 +923,6 @@ outer_loop (
     FLOAT distort[SFBMAX], l3_xmin[SFBMAX];
     FLOAT xrpow[576];
     int huff_bits;
-    int age;
 
     if (!init_outer_loop(gfc, cod_info, xrpow))
 	return; /* digital silence */
@@ -944,7 +943,6 @@ outer_loop (
     calc_xmin (gfp, ratio, cod_info, l3_xmin);
     calc_noise (cod_info, l3_xmin, distort, &best_noise_info);
     cod_info_w = *cod_info;
-    age = 0;
 
     /* BEGIN MAIN LOOP */
     do {
@@ -957,11 +955,10 @@ outer_loop (
 
 	/* Check if the last scalefactor band is distorted.
 	 * (makes a 10% speed increase, the files I tested were
-	 * binary identical, 2000/05/20 Robert.Hegemann@gmx.de)
+	 * binary identical, 2000/05/20 Robert Hegemann)
 	 * distort[] > 1 means noise > allowed noise
 	 */
-	if (gfc->sfb21_extra && cod_info_w.block_type != SHORT_TYPE
-	    && distort[SBMAX_l-1] > 1.0)
+	if (cod_info_w.psy_lmax == SBMAX_l && distort[SBMAX_l-1] > 1.0)
 	    break;
 
 	/* try the new scalefactor conbination on cod_info_w */
@@ -969,7 +966,7 @@ outer_loop (
 	    break;
 
         huff_bits = targ_bits - cod_info_w.part2_length;
-        if (huff_bits <= 0)
+	if (huff_bits <= 0)
             break;
 
         /* this loop starts with the initial quantization step computed above
@@ -988,20 +985,8 @@ outer_loop (
 	 */
         /* compute the distortion in this quantization and
 	   compare it with "BEST" result */
-	if (better_quant(gfc, l3_xmin, distort, &best_noise_info,
-			 &cod_info_w)) {
+	if (better_quant(gfc, l3_xmin, distort, &best_noise_info, &cod_info_w))
 	    *cod_info = cod_info_w;
-	    age = 0;
-        }
-        else {
-	    /* allow up to 3 unsuccesful tries in serial, then stop 
-	     * if our best quantization so far had no distorted bands. This
-	     * gives us more possibilities for different better_quant modes.
-	     * Much more than 3 makes not a big difference, it is only slower.
-	     */
-	    if (++age > 3 && best_noise_info.over_count == 0)
-		break;
-	}
     }
     while (cod_info_w.global_gain <= 255u);
 
