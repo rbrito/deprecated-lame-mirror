@@ -46,14 +46,6 @@
 static const int log2tab[] = {
     0, 1, 2, 2, 3, 3, 3, 3, 4, 4, 4, 4, 4, 4, 4, 4, 5};
 
-/*   for (i = 0; i < 2*2; i++)
- *       table13[i] = ((ht[1].hlen[i]) << 16) + ht[3].hlen[(i&1) + (i&2)*2];
- */
-static const unsigned int table13[2*2] = {
-    0x010002, 0x040003,
-    0x030004, 0x050004
-};
-
 /* ixmax=3 (select table from 5, 9, 6, 7) */
 static const uint64_t table5967[] = {
     u64const(0x03000100030001), u64const(0x04000400040004), u64const(0x06000700060007), u64const(0x08000900070008),
@@ -279,20 +271,17 @@ count_bit_ESC(
 inline static int
 count_bit_noESC_from2(int * const s, const int *ix, const int * const end)
 {
-    /* No ESC-words */
-    unsigned int sum = 0, sum2;
-    int t1;
+    int t1, diff = 0, sum = 0;
     do {
-	sum += table13[ix[0] * 2 + ix[1]];
+	t1 = ix[1] + ix[0]*2 - (ix[0]&ix[1]);
+	sum += t1 + 2;
+	diff += ix[1]*2 - 1;
     } while ((ix += 2) < end);
 
-    sum2 = sum & 0xffff;
-    sum >>= 16;
-
-    t1 = 1;
-    if (sum > sum2) {
-	sum = sum2;
-	t1 = 3;
+    t1 = 3;
+    if (diff < 0) {
+	sum += diff;
+	t1 = 1;
     }
     *s = t1;
     return sum;
