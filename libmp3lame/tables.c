@@ -696,7 +696,8 @@ static void init_log_table(void)
 }
 #endif /* define FAST_LOG */
 
-#define NSATHSCALE 100 // Assuming dynamic range=96dB, this value should be 92
+/* ??? Assuming dynamic range=96dB, this value should be 92 */
+#define NSATHSCALE 120
 
 /*those ATH formulas are returning
 their minimum value for input = -1*/
@@ -747,10 +748,8 @@ static FLOAT ATHformula(FLOAT f,lame_global_flags *gfp)
 
 static FLOAT ATHmdct( lame_global_flags *gfp, FLOAT f )
 {
-    FLOAT ath = ATHformula( f , gfp ) - NSATHSCALE;
-
     /* modify the MDCT scaling for the ATH and convert to energy */
-    return db2pow(ath + gfp->VBR_q - 4);
+    return db2pow(ATHformula( f , gfp ) - NSATHSCALE + gfp->VBR_q - 4);
 }
 
 static void compute_ath( lame_global_flags *gfp )
