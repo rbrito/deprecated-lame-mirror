@@ -76,25 +76,6 @@ has_SSE2_nasm:
 	jmp	return1		; SSE2 support
         
 ;---------------------------------------
-;	int  has_3DNow_nasm (void)
-;---------------------------------------
-
-has_3DNow_nasm:
-        pushad
-	call	testCPUID
-	jz	return0		; no CPUID command, so no 3DNow!
-
-	mov	eax,0x80000000
-	CPUID
-	cmp	eax,0x80000000
-	jbe	return0		; no extended MSR(1), so no 3DNow!
-
-	mov	eax,0x80000001
-	CPUID
-	test	edx,0x80000000
-	jz	return0		; no 3DNow! support
-	jmp	return1		; 3DNow! support
-;---------------------------------------
 ;	int  has_E3DNow_nasm (void)
 ;---------------------------------------
 
@@ -123,5 +104,26 @@ return0:
 	popad
 	xor	eax,eax
 	ret
+
+;---------------------------------------
+;	int  has_3DNow_nasm (void)
+;---------------------------------------
+
+has_3DNow_nasm:
+        pushad
+	call	testCPUID
+	jz	return0		; no CPUID command, so no 3DNow!
+
+	mov	eax,0x80000000
+	CPUID
+	cmp	eax,0x80000000
+	jbe	return0		; no extended MSR(1), so no 3DNow!
+
+	mov	eax,0x80000001
+	CPUID
+	test	edx,0x80000000
+	jz	return0		; no 3DNow! support
+	jmp	return1		; 3DNow! support
         
         end
+
