@@ -1291,7 +1291,7 @@ static int is_syncword_mp3 ( const void* const headerptr )
 int lame_decode_initfile(FILE *fd, mp3data_struct *mp3data)
 {
   VBRTAGDATA pTagData;
-  char buf[1000];
+  char buf[100];
   int ret;
   int num_frames=0;
   int len,len2,xing_header,aid_header;
@@ -1309,15 +1309,13 @@ int lame_decode_initfile(FILE *fd, mp3data_struct *mp3data)
     /* skip rest of AID, except for 6 bytes we have already read */
     fskip ( fd, aid_header-6, SEEK_CUR );
 
-    /* read 2 more bytes to set up buffer for MP3 header check */
-    if (fread(&buf,1,4,fd) != 4) return -1;  /* failed */
-    len =4;
+    /* read 4 more bytes to set up buffer for MP3 header check */
+    len = fread(&buf,1,4,fd);
   }
 
 
-
-  /* look for sync word  FFF */
-  if (len<4) return -1;                /* is_sync_word now checks the next 4 byte, call for fix this line */
+  /* look for valid 4 byte MPEG header  */
+  if (len<4) return -1;    
   while (!is_syncword_mp123(buf)) {
     int i;
     for (i=0; i<len-1; i++)
@@ -1327,7 +1325,7 @@ int lame_decode_initfile(FILE *fd, mp3data_struct *mp3data)
 
 
   
-  /* read the rest of header and enough bytes to check for Xing header */
+  /* buffer 48 bytes so we can check for Xing header */
   len2 = fread(&buf[len],1,48-len,fd);
   if (len2 != 48-len ) return -1;
   len = 48;
@@ -1338,45 +1336,30 @@ int lame_decode_initfile(FILE *fd, mp3data_struct *mp3data)
   if (xing_header && pTagData.headersize >= 48) {
     num_frames=pTagData.frames;
     fprintf(stderr,"\rXing VBR header dectected.  MP3 file has %i frames\n",num_frames);
-    
-    fskip ( fd, pTagData.headersize-48 ,SEEK_CUR );
-    
-    /* 
-     *  pfk: This is a fix, please check this. The is_sync now needs all 4 bytes !!! 
-     *  This code can be wrong !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
-     */
-    
-    /* look for next sync word in buffer*/
-    len = 4;
-    buf[0] = buf[1] = buf[2] = buf[3] = 0;
-    
-    while ( !is_syncword_mp123(buf) ) {
-        buf[0] = buf[1];
-        buf[1] = buf[2];
-        buf[2] = buf[3];
-        if (fread ( buf+3, 1, 1, fd ) != 1 )
-            return -1;  /* fread failed */
-    }
-    /* read the rest of header */
-    // len2 = fread(&buf[2],1,2,fd);
-    // if (len2 ==0 ) return -1;
-    // wrong, if ( len != 2) is right
-    // len +=len2;
 
+    // skip the rest of the Xing header.  LAME decoder ignores TOC data    
+    fskip ( fd, pTagData.headersize-48 ,SEEK_CUR );
+    // buffer a few more bytes for next header check:  
+    len = fread(buf,1,4,fd);
 
   } else {
-    /* rewind file back what we read looking for Xing headers */
+    /* we have read 48 bytes, but did not find a Xing header */
+    /* lets try and rewind the stream:  */
     if (fseek(fd, -44, SEEK_CUR) != 0) {
       /* backwards fseek failed.  input is probably a pipe */
+      /* keep 'len' unchanged */
     } else {
-      len=4;
+      len -= 44;
     }
   }
 
 
   // now parse the current buffer looking for MP3 headers 
-  // we dont want to feed too much data to lame_decode1_headers 
-  // because we dont want it to actually decode the first frame.
+  // we dont want to feed too much data to lame_decode1_headers -  
+  // we dont want it to actually decode the first frame
+  // (as of 11/00: mpglib modified so that for the first frame where 
+  // headers are parsed, no data will be decoded.  So the above is
+  // now a moot point.
   ret = lame_decode1_headers(buf,len,pcm_l,pcm_r,mp3data);
   if (-1==ret) return -1;
   if (ret>0 && !xing_header) 
@@ -1384,13 +1367,14 @@ int lame_decode_initfile(FILE *fd, mp3data_struct *mp3data)
 
   /* repeat until we decode a valid mp3 header */
   while (!mp3data->header_parsed) {
-    len = fread(buf,1,2,fd);
-    if (len != 2 ) return -1;
+    len = fread(buf,1,sizeof(buf),fd);
+    if (len != sizeof(buf) ) return -1;
     ret = lame_decode1_headers(buf,len,pcm_l,pcm_r,mp3data);
     if (-1==ret) return -1;
 
     if (ret>0 && !xing_header)
       fprintf(stderr,"Oops2: first frame of mpglib output will be lost \n"); 
+
   }
 
   mp3data->nsamp=MAX_U_32_NUM;

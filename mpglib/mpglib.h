@@ -21,6 +21,7 @@ struct framebuf {
 
 typedef struct mpstr_tag {
 	struct buf *head,*tail;
+        int vbr_header;               /* 1 if vbr header detected */
         int header_parsed;
         int side_parsed;  
         int data_parsed;  

@@ -186,6 +186,30 @@ void copy_mp(PMPSTR mp,int size,unsigned char *ptr)
 
 
 
+
+// this routine needs to be written:
+// traverse mp data structure without changing it
+// (just like sync_buffer)
+// pull out 48 bytes
+// call vbr header check code from LAME
+// if we find a header, parse it and then
+// remove the 48 bytes + rest of header.
+// if no header, do nothing.
+//
+// bytes = number of bytes before MPEG header.  skip this many bytes
+// before starting to read
+int check_vbr_header(PMPSTR mp,int bytes)
+{
+  mp->vbr_header=0;
+  return 0;
+}
+
+
+
+
+
+
+
 int sync_buffer(PMPSTR mp,int free_match) 
 {
   /* traverse mp structure without modifing pointers, looking
@@ -284,12 +308,29 @@ int decodeMP3( PMPSTR mp,char *in,int isize,char *out,
 	/* First decode header */
 	if(!mp->header_parsed) {
 
-	  if (mp->fsizeold==-1) 
-	    /* first call.   sync with anything */
-	    bytes=sync_buffer(mp,0);
-	  else
-	    /* match channels, samplerate, etc, when syncing */
-	    bytes=sync_buffer(mp,1);
+	    if (mp->fsizeold==-1) {
+	        int vbrbytes;
+
+	        /* first call.   sync with anything */
+	        bytes=sync_buffer(mp,0);
+	        /* now look for Xing VBR header */
+	        if (mp->bsize >= bytes+48) 
+		  vbrbytes=check_vbr_header(mp,bytes);
+		else
+		  return MP3_NEED_MORE;
+
+		if (mp->vbr_header) {
+		  for (i=0; i<vbrbytes+bytes; ++i) read_buf_byte(mp);
+		  /* now we need to find another syncword */
+		  /* just return and make user send in more data */
+		  return MP3_NEED_MORE;
+		}
+            }else{
+	        /* match channels, samplerate, etc, when syncing */
+                bytes=sync_buffer(mp,1);
+	    }
+
+
 		if (bytes<0) return MP3_NEED_MORE;
 		if (bytes>0) {
 		  /* bitstream problem, but we are now resynced 
@@ -341,6 +382,10 @@ int decodeMP3( PMPSTR mp,char *in,int isize,char *out,
 		mp->bsnum = 1-mp->bsnum; /* toggle buffer */
 		wordpointer = mp->bsspace[mp->bsnum] + 512;
 		bitindex = 0;
+
+		/* for very first header, never parse rest of data */
+		if (mp->fsizeold==-1)
+		  return MP3_NEED_MORE;
 	}
 
 	/* now decode side information */
