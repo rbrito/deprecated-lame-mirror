@@ -181,10 +181,8 @@ else
 CC = ccc
 
 ################################################################
-#### set 'CC_OPTS = -arch host -tune host' to generate/tune instructions for 
-this machine
-####     'CC_OPTS += -migrate -fast -inline speed -unroll 0' tweak to run as 
-fast as possible :)
+#### set 'CC_OPTS = -arch host -tune host' to generate/tune instructions for this machine
+####     'CC_OPTS += -migrate -fast -inline speed -unroll 0' tweak to run as fast as possible :)
 ####     'CC_OPTS += -w0 -Wall' set warning and linking flags
 ################################################################
 CC_OPTS = -arch host -tune host
