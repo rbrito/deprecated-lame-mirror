@@ -5,72 +5,147 @@
 %define prefix %{_usr}
 %define docdir %{_defaultdocdir}
 
-Summary : LAME Ain't an MP3 Encoder
+Summary : LAME Ain't an MP3 Encoder... but it's the best.
 Summary(fr) : LAME n'est pas un encodeur MP3 ;->
 Name: %{name}
 Version: %{ver}%{quality}
 Release: %{rel}
 Copyright: LGPL
 Vendor: The LAME Project
-Packager: cefiar <cefiar1@optushome.com.au>
-URL: http://www.sulaco.org/mp3/
+Packager: Yosi Markovich <yosim@bigfoot.com>
+URL: http://www.mp3dev.org/mp3
 Group: Applications/Multimedia
-Source: http://www.sulaco.org:80/mp3/download/beta/%{name}-%{ver}.tar.gz
-BuildRoot: /var/tmp/lame-%{ver}-root
-Prefix: %{prefix}
+Source: ftp://lame.sourceforge.net/pub/lame/src/%{name}-%{version}.tar.bz2
+BuildRoot: %{_tmppath}/%{name}-root
+Requires: ncurses >= 5.0
+BuildRequires: gcc3, /usr/bin/find, ncurses-devel
+Provides: mp3encoder
 
 %description
 LAME is an educational tool to be used for learning about MP3 encoding.  The
 goal of the LAME project is to use the open source model to improve the
-psycho acoustics, noise shaping and speed of MP3.  Another goal of the LAME
-project is to use these improvements for the basis of a  patent free audio
-compression codec for the GNU project.
+psycho acoustics, noise shaping and speed of MP3. 
 
 %description -l fr
 LAME est un outil d'enseignement pour l'apprentissage de l'encodage MP3.
 Le but du projet LAME est d'utiliser un modèle "open source" afin
-d'améliorer la qualité et la vitesse du MP3. Un autre but du projet LAME
-est d'utiliser ces améliorations pour créer la base d'un algorithme de
-compression audio libre de droits pour le projet GNU.
- 
+d'améliorer la qualité et la vitesse du MP3. 
+
+
+
+%package devel
+Summary: Shared and static libraries for LAME.
+Group: Development/Libraries
+Requires: %{name} = %{version}
+
+%description devel
+LAME is an educational tool to be used for learning about MP3 encoding.
+This package contains both the shared and the static libraries from the
+LAME project.
+
+You will also need to install the main lame package in order to install
+these libraries.
 
 %prep -q
+%setup -q
 
-%setup -n %{name}-%{ver} -q
+%build
 
-%build -q
+# Optimize the mother-fucker to the bone
+export CC_OPTS="-O3 -march=i386 -mcpu=i686 -fomit-frame-pointer  -funroll-loops -ffast-math -finline-functions -Wall -pedantic"
 
-LC_ALL=POSIX
-export LC_ALL
-% nasm broken on most RH systems.  
-% mp3rtp broken as of 6/2001
-%CFLAGS="$RPM_OPT_FLAGS" ./configure --prefix=%prefix --enable-nasm --enable-mp3x --enable-mp3rtp --quiet
-CFLAGS="$RPM_OPT_FLAGS" ./configure --prefix=%prefix --enable-mp3x --quiet
+%ifarch i686
+	export CC_OPTS="-O3 -fomit-frame-pointer -mcpu=athlon -march=athlon -malign-functions=4 -funroll-loops -fexpensive-optimizations -fschedule-insns2 -Wall -mfancy-math-387 -pipe"
+%endif
+%ifarch athlon
+	export CC_OPTS="-O3 -fomit-frame-pointer -fno-strength-reduce -mcpu=athlon -march=athlon -malign-functions=4 -funroll-loops  -fexpensive-optimizations -fschedule-insns2 -Wall -mfancy-math-387 -pipe"
+%endif
 
-numcpu=`egrep -c "^processor[[:space:]]+:[[:space:]]+[0-9]+" /proc/cpuinfo`
-if [ "$numcpu""x" != "x" ]; then
-	make -j"$numcpu"
-else
-	make
-fi
+# Vorbis makes the build fail for now. . .
+rm -f config.cache
+ 
+%configure \
+	--enable-nasm \
+	--without-vorbis \
+	--enable-analyzer=no \
+	--disable-brhist \
+	--disable-debug
+
+make CC="gcc3" CFLAGS="${CC_OPTS}" test
 
 %install
-rm -fr $RPM_BUILD_ROOT
-make install prefix=$RPM_BUILD_ROOT%{prefix}
+rm -rf %{buildroot}
+find . -name CVS | xargs rm -rf
+mkdir -p %{buildroot}%{_bindir}
+%makeinstall
+install -D -m 644 doc/man/lame.1 %{buildroot}%{_mandir}/man/lame.1
+
+# move back lame.h
+mv %{buildroot}%{_includedir}/lame/lame.h %{buildroot}%{_includedir}/lame.h
+find doc/html -name "Makefile*" | xargs rm -f
+
+%post -p /sbin/ldconfig
+%postun -p /sbin/ldconfig
 
 %clean
-rm -rf $RPM_BUILD_ROOT
-rm -rf /usr/src/redhat/BUILD/%{name}-%{ver}
+rm -rf %{buildroot}
 
 %files
 %defattr (-,root,root)
-%doc LICENSE USAGE COPYING API TODO README* HACKING STYLEGUIDE PRESETS.draft
-%doc %{docdir}/%{name}
-%{prefix}/bin
-%{prefix}/lib
-%{prefix}/man
+%doc COPYING ChangeLog README TODO USAGE doc/html
+%doc doc/html
+%{_bindir}/lame
+%{_libdir}/libmp3lame.so.*
+%{_mandir}/man1/lame.1*
+
+%files devel
+%defattr (-, root, root)
+%doc API HACKING STYLEGUIDE
+%{_libdir}/libmp3lame.a
+%{_libdir}/libmp3lame.la
+%{_libdir}/libmp3lame.so
+%{_includedir}/lame.h
 
 %changelog
+* Tue Jan 22 2002 Mark Taylor <mt@mp3dev.org>
+- replaced lame.spec.in with Yosi's version.  Merged some stuff from
+  the prevous lame.spec.in file, and appended changelog below.
+
+* Tue Jan 22 2002 Yosi Markovich <yosim@bigfoot.com>
+- Rewrote lame.spec.in to create a correct and nice spec file.
+  imho, this spec file is not good for anyone who wants to build
+  daily cvs snapshots. Closes bug #495975
+
+* Tue Dec 11 2001 Yosi Markovich <yosim@bigfoot.com>
+- Shamelessly stole Matthias Saou's excellent spec file to create daily
+  CVS snapshots of Lame. Other than that, nothing is new.
+
+* Tue Oct 23 2001 Matthias Saou <matthias.saou@est.une.marmotte.net>
+- Fixed the %pre and %post that should have been %post and %postun, silly me!
+- Removed -malign-double (it's evil, Yosi told me and I tested, brrr ;-)).
+- Now build with gcc3, VBR encoding gets a hell of a boost, impressive!
+  I recommend you now use "lame --r3mix", it's the best.
+- Tried to re-enable vorbis, but it's a no-go.
+
+* Thu Jul 26 2001 Matthias Saou <matthias.saou@est.une.marmotte.net>
+- Build with kgcc to have VBR working.
+
+* Wed Jul 25 2001 Matthias Saou <matthias.saou@est.une.marmotte.net>
+- Update to 3.89beta : Must be built with a non-patched version of nasm
+  to work!
+
+* Mon May  7 2001 Matthias Saou <matthias.saou@est.une.marmotte.net>
+- Rebuilt for Red Hat 7.1.
+- Disabled the vorbis support since it fails to build with it.
+- Added a big optimisation section, thanks to Yosi Markovich
+  <senna@camelot.com> for this and other pointers.
+
+* Sun Feb 11 2001 Matthias Saou <matthias.saou@est.une.marmotte.net>
+- Split the package, there is now a -devel
+
+* Thu Oct 26 2000 Matthias Saou <matthias.saou@est.une.marmotte.net>
+- Initial RPM release for RedHat 7.0 from scratch
+
 * Wed Nov 21 2001 Eric Lassauge <lassauge@mail.dotcom.fr>
 - Updated and corrected RPM to 3.89beta.
 - Added french translations
