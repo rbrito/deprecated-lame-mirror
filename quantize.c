@@ -775,7 +775,7 @@ void outer_loop(
   iteration = 0;
   while ( notdone  ) {
     int try_scale=0;
-    iteration ++;
+    ++iteration;
 
     if (compute_stepsize) {
       /* init and compute initial quantization step */
@@ -852,6 +852,7 @@ void outer_loop(
 #endif
       }
     }
+
     
     /* if no bands with distortion, we are done */
     if (gfc->noise_shaping_stop==0)

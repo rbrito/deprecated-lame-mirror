@@ -870,8 +870,6 @@ char *mp3buf, int mp3buf_size)
   }
 
 
-
-
 #ifdef BRHIST
   brhist_temp[gfc->bitrate_index]++;
 #endif
@@ -883,8 +881,6 @@ char *mp3buf, int mp3buf_size)
     format_bitstream( gfp, bitsPerFrame, l3_enc, scalefac);
   else
     III_format_bitstream( gfp,bitsPerFrame, l3_enc, scalefac);
-
-
 
 
   /* copy mp3 bit buffer into array */
@@ -905,7 +901,6 @@ char *mp3buf, int mp3buf_size)
   }
 #endif
   gfc->frameNum++;
-
   return mp3count;
 }
 
@@ -937,8 +932,7 @@ int lame_encode_buffer(lame_global_flags *gfp,
   in_buffer[0] = buffer_l;
   in_buffer[1] = buffer_r;
 
-  if (!gfc->lame_init_params_init) 
-    lame_init_params(gfp);
+  if (!gfc->lame_init_params_init) return -3;
 
   /* some sanity checks */
   assert(ENCDELAY>=MDCTDELAY);
@@ -962,6 +956,7 @@ int lame_encode_buffer(lame_global_flags *gfp,
     int n_in=0;
     int n_out=0;
     /* copy in new samples into mfbuf, with filtering */
+
     for (ch=0; ch<gfc->stereo; ch++) {
       if (gfc->resample_ratio>1)  {
 	n_out=fill_buffer_downsample(gfp,&mfbuf[ch][gfc->mf_size],gfc->framesize,
@@ -977,19 +972,16 @@ int lame_encode_buffer(lame_global_flags *gfp,
       in_buffer[ch] += n_in;
     }
 
-
     nsamples -= n_in;
     gfc->mf_size += n_out;
     assert(gfc->mf_size<=MFSIZE);
     gfc->mf_samples_to_encode += n_out;
 
+
     if (gfc->mf_size >= mf_needed) {
       /* encode the frame */
       ret = lame_encode_frame(gfp,mfbuf[0],mfbuf[1],mp3buf,mp3buf_size);
-      if (ret == -1) {
-	/* fatel error: mp3buffer was too small */
-	return -1;
-      }
+      if (ret < 0) return ret;
       mp3buf += ret;
       mp3size += ret;
 
@@ -1002,6 +994,7 @@ int lame_encode_buffer(lame_global_flags *gfp,
     }
   }
   assert(nsamples==0);
+
   return mp3size;
 }
 
@@ -1098,32 +1091,12 @@ int lame_encode_buffer_interleaved(lame_global_flags *gfp,
 
 
 
-
-
-
-
-
-
-
-
-
-
-/* old LAME interface */
-/* With this interface, it is the users responsibilty to keep track of the
- * buffered, unencoded samples.  Thus mf_samples_to_encode is not incremented.
- *
- * lame_encode() is also used to flush the PCM input buffer by
- * lame_encode_finish()
- */
+/* old LAME interface.  use lame_encode_buffer instead */
 int lame_encode(lame_global_flags *gfp, short int in_buffer[2][1152],char *mp3buf,int size){
-  int imp3,save;
+  int imp3;
   lame_internal_flags *gfc=gfp->internal_flags;
   if (!gfc->lame_init_params_init) return -3;
-
-  save = gfc->mf_samples_to_encode;
-  imp3= lame_encode_buffer(gfp,in_buffer[0],in_buffer[1],576*gfc->mode_gr,
-        mp3buf,size);
-  gfc->mf_samples_to_encode = save;
+  imp3= lame_encode_buffer(gfp,in_buffer[0],in_buffer[1],576*gfc->mode_gr,mp3buf,size);
   return imp3;
 }
 
@@ -1143,18 +1116,22 @@ int lame_encode_finish(lame_global_flags *gfp,char *mp3buffer, int mp3buffer_siz
   while (gfc->mf_samples_to_encode > 0) {
 
     mp3buffer_size_remaining = mp3buffer_size - mp3count;
+
     /* if user specifed buffer size = 0, dont check size */
     if (mp3buffer_size == 0) mp3buffer_size_remaining=0;  
-    imp3=lame_encode(gfp,buffer,mp3buffer,mp3buffer_size_remaining);
 
-    if (imp3 == -1) {
-      /* fatel error: mp3buffer too small */
-      desalloc_buffer(&gfc->bs);    /* Deallocate all buffers */
-      return -1;
+    /* send in a frame of 0 padding until all internal sample buffers flushed */
+    imp3=lame_encode_buffer(gfp,buffer[0],buffer[1],gfc->framesize,mp3buffer,mp3buffer_size_remaining);
+    /* dont count the above padding: */
+    gfc->mf_samples_to_encode -= gfc->framesize;
+
+    if (imp3 < 0) {
+      /* some type of fatel error */
+      freegfc(gfc);    
+      return imp3;
     }
     mp3buffer += imp3;
     mp3count += imp3;
-    gfc->mf_samples_to_encode -= gfc->framesize;
   }
 
 
@@ -1185,14 +1162,13 @@ int lame_encode_finish(lame_global_flags *gfp,char *mp3buffer, int mp3buffer_siz
   if (mp3buffer_size == 0) mp3buffer_size_remaining=0;  
 
   imp3= copy_buffer(mp3buffer,mp3buffer_size_remaining,&gfc->bs);
-  if (imp3 == -1) {
-    /* fatel error: mp3buffer too small */
-    desalloc_buffer(&gfc->bs);    /* Deallocate all buffers */
-    return -1;
+  if (imp3 < 0) {
+    freegfc(gfc);    
+    return imp3;
   }
 
   mp3count += imp3;
-  desalloc_buffer(&gfc->bs);    /* Deallocate all buffers */
+  freegfc(gfc);    
   return mp3count;
 }
 

@@ -195,10 +195,10 @@ typedef struct  {
   /* variables used by lame.c */
   Bit_stream_struc   bs;
   III_side_info_t l3_side;
-#define MFSIZE (1152+1152+ENCDELAY-MDCTDELAY)
-  short int mfbuf[2][MFSIZE];
+#define MFSIZE (3*1152+ENCDELAY-MDCTDELAY)
   int mf_size;
   int mf_samples_to_encode;
+  short int mfbuf[2][MFSIZE];
   FLOAT8 frac_SpF;
   FLOAT8 slot_lag;
   FLOAT8 ms_ener_ratio[2];
@@ -210,9 +210,9 @@ typedef struct  {
 
   /* variables used by util.c */
 #define BLACKSIZE 30
-#define BPC 8   
+#define BPC 16
   short int inbuf_old[2][BLACKSIZE];
-  FLOAT8 blackfilt[2*BPC+1][BLACKSIZE];
+  FLOAT blackfilt[2*BPC+1][BLACKSIZE];
   FLOAT8 itime[2];
 #define OLDBUFSIZE 5
   FLOAT8 upsample_itime[2];
@@ -253,7 +253,7 @@ extern int            SmpFrqIndex(long, int*);
 extern int            copy_buffer(char *buffer,int buffer_size,Bit_stream_struc *bs);
 extern void           init_bit_stream_w(lame_internal_flags *gfc);
 extern void           alloc_buffer(Bit_stream_struc*, int);
-extern void           desalloc_buffer(Bit_stream_struc*);
+extern void           freegfc(lame_internal_flags *gfc);
 extern void           putbits(Bit_stream_struc *bs,unsigned int val,int N);
 extern void           reorder(int * bands, int ix[576], int ix_org[576]);
 

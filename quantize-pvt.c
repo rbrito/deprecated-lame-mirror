@@ -825,6 +825,7 @@ bin_search_StepSize2 (lame_global_flags *gfp,int desired_rate, int start, int *i
     lame_internal_flags *gfc=gfp->internal_flags;
 
     binsearchDirection_t Direction = BINSEARCH_NONE;
+    assert(gfc->CurrentStep);
     CurrentStep = gfc->CurrentStep;
 
     do
@@ -873,6 +874,7 @@ bin_search_StepSize2 (lame_global_flags *gfp,int desired_rate, int start, int *i
 	CurrentStep = 2;
     }
 
+    gfc->CurrentStep = CurrentStep;
     return nBits;
 }
 

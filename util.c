@@ -290,10 +290,11 @@ int size)
    bs->buf_size = size;
 }
 
-/*empty and close the buffer */
-void desalloc_buffer(Bit_stream_struc *bs)   /* bit stream structure */
+/*empty and close mallocs in gfc */
+void freegfc(lame_internal_flags *gfc)   /* bit stream structure */
 {
-   free(bs->buf);
+   free(gfc->bs.buf);
+   free(gfc);
 }
 
 int putmask[9]={0x0, 0x1, 0x3, 0x7, 0xf, 0x1f, 0x3f, 0x7f, 0xff};
@@ -402,7 +403,7 @@ int fill_buffer_downsample(lame_global_flags *gfp,short int *outbuf,int desired_
     memset((char *) gfc->inbuf_old, 0, sizeof(short int)*2*BLACKSIZE);
     /* precompute blackman filter coefficients */
     for (j= 0; j<= 2*BPC; ++j) {
-      offset=(j-BPC)/(2*BPC);
+      offset=(double)(j-BPC)/(double)(2*BPC);
       for (i=0; i<=filter_l; ++i) {
 	gfc->blackfilt[j][i]=blackman(i,offset,fcn,filter_l);
       }

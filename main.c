@@ -118,8 +118,9 @@ int main(int argc, char **argv)
               mp3buffer,(int)sizeof(mp3buffer)); 
 
 	/* was our output buffer big enough? */
-	if (imp3==-1) {
-	  fprintf(stderr,"mp3 buffer is not big enough... \n");
+	if (imp3<0) {
+	  if (imp3==-1) fprintf(stderr,"mp3 buffer is not big enough... \n");
+	  else fprintf(stderr,"mp3 internal error:  error code=%i\n",imp3);
 	  exit(1);
 	}
 
@@ -129,6 +130,12 @@ int main(int argc, char **argv)
 	}
       } while (iread);
       imp3=lame_encode_finish(&gf,mp3buffer,(int)sizeof(mp3buffer));   /* may return one more mp3 frame */
+      if (imp3<0) {
+	if (imp3==-1) fprintf(stderr,"mp3 buffer is not big enough... \n");
+	else fprintf(stderr,"mp3 internal error:  error code=%i\n",imp3);
+	exit(1);
+      }
+
       fwrite(mp3buffer,1,imp3,outf);
       fclose(outf);
       lame_mp3_tags(&gf);                /* add id3 or VBR tags to mp3 file */
