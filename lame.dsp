@@ -166,14 +166,6 @@ SOURCE=.\fft.h
 # End Source File
 # Begin Source File
 
-SOURCE=.\formatBitstream.c
-# End Source File
-# Begin Source File
-
-SOURCE=.\formatBitstream.h
-# End Source File
-# Begin Source File
-
 SOURCE=.\get_audio.c
 # End Source File
 # Begin Source File
@@ -211,18 +203,6 @@ SOURCE=.\ieeefloat.c
 # Begin Source File
 
 SOURCE=.\ieeefloat.h
-# End Source File
-# Begin Source File
-
-SOURCE=".\l3bitstream-pvt.h"
-# End Source File
-# Begin Source File
-
-SOURCE=.\l3bitstream.c
-# End Source File
-# Begin Source File
-
-SOURCE=.\l3bitstream.h
 # End Source File
 # Begin Source File
 
