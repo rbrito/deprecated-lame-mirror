@@ -7,6 +7,60 @@ under the LGPL. More information is in the README file)
 
 ============================================================================
 
+New, 7/00, Christopher Wise <cwise@ses.swin.edu.au>
+
+Makefile.DJGPP is now included with LAME.  If you have
+make.exe and ar.exe (these come with DJGPP?), you
+should be able to just run, from the MSDOS prompt
+in the directory with the LAME source code:
+
+make -f Makefile.DJGPP.  
+
+Otherwise, see below.  
+
+Notes from Chri:
+
+I have tested it with DJGPP 2.03, GCC 2.95 (19990728 release),
+the DJGPP port of GNU make 3.78.1 and lame 3.85 beta.
+
+Here are some timings for my Celeron 400 Mhz.
+
+Test track: We Care A Lot by Faith No More - Track 01 - Greatest Hits,
+encoded with the -h switch.
+
+1:28  -  MSVC 6.0 with default project file 
+1:47  -  DJGPP with default compiler options 
+1:40  -  DJGPP with second set of options 
+1:40  -  DJGPP with third set of options (the ones for GCC 2.95.2)
+1:41  -  gcc under linux on the same machine with the 3rd set 
+         of compiler options 
+1.37  -  mingw32, gcc 2.95.2 for win32 (3rd set of compiler options)
+         see: http://www.xraylith.wisc.edu/~khan/software/gnu-win32/
+
+So on my system at least, DJGPP isn't quite as fast as MSVC 6.
+However it's still pretty good and freely available.
+Mingw32 is slightly faster and produces true win32 executables which 
+should be better for windows NT users. (AFAIK DJGPP only can't use long
+filenames under win NT.)
+
+mingw32 has a problem with this in brhist.c:
+
+#ifdef _WIN32  
+COORD Pos;
+HANDLE CH;
+CONSOLE_SCREEN_BUFFER_INFO CSBI;
+#endif
+
+because COORD isn't in the mingw32 include files.
+
+Chris Wise
+
+
+
+
+
+============================================================================
+
 (Note: S.T.L. doesn't know C programming (...yet) but he has learned
 how to compile things with DJGPP. He's not providing his E-mail address
 here because he wouldn't know how to answer any questions even if you

@@ -1,0 +1,359 @@
+# Makefile for LAME 3.xx using DJGPP (DJ Delorie's DOS port of GCC)
+# based on the original lame makefile
+#
+# Hints:
+#
+# To compile, use: make -f Makefile.djgpp
+#
+# Make sure that you have the DJGPP make utility installed (get it from where you got DJGPP)
+#
+# Use UPX to compress the exe to less half the original size.
+#
+## Some of the changes (things that don't work with DOS/DJGPP)
+## removed VBR histogram capability
+## removed references to GTK 
+## removed references to rtp
+## make clean is a hack because the dos prompt doesn't like really long command lines
+## removed -pipe from CC_OPTS
+
+# generic defaults. OS specific options go in versious sections below
+PGM = lame
+CC = gcc
+CC_OPTS =  -O
+SNDLIB = -DLAMESNDFILE
+LIBSNDFILE =  
+LIBS = -lm 
+MAKEDEP = -M
+
+
+##########################################################################
+# -DHAVEMPGLIB compiles the mpglib *decoding* library into libmp3lame
+##########################################################################
+CPP_OPTS += -DHAVEMPGLIB 
+
+##########################################################################
+# -DFLOAT8_is_float will FLOAT8 as float
+# -DFLOAT8_is_double  will FLOAT8 as double (default)
+#  NOTE: RH: 7/00:  if FLOAT8=float, it breaks resampling and VBR code 
+##########################################################################
+CPP_OPTS += -DFLOAT8_is_double
+
+
+##########################################################################
+# Define these in the OS specific sections below to compile in support
+# for the Ogg Vorbis audio format (both decoding and encoding)
+# 
+# VORBIS = -DHAVEVORBIS  -I ../vorbis/include
+# VORBIS_LIB = -L ../vorbis/lib -lvorbis
+##########################################################################
+
+
+##########################################################################
+# Define these in the OS specific sections below to compile in code for:
+#
+# SNDLIB =                no file i/o 
+# SNDLIB = -DLAMESNDFILE  to use internal LAME soundfile routines 
+# SNDLIB = -DLIBSNDFILE   to use Erik de Castro Lopo's libsndfile 
+# http://www.zip.com.au/~erikd/libsndfile/
+#
+# Note: at present, libsndfile does not support input from stdin.  
+#
+# for example:
+#  SNDLIB = -DLIBSNDFILE
+#  LIBSNDFILE=-lsndfile 
+#  if libsndfile is in a custom location, try:
+#  LIBSNDFILE=-L $(LIBSNDHOME) -lsndfile  -I $(LIBSNDHOME)
+##########################################################################
+
+
+##########################################################################
+# DJGPP   
+##########################################################################
+
+# suggested for gcc-2.7.x
+CC_OPTS = -s  -O3 -fomit-frame-pointer -funroll-loops -ffast-math  -finline-functions -Wall
+
+#CC_OPTS =  -s -O9 -fomit-frame-pointer -fno-strength-reduce -mpentiumpro -ffast-math -finline-functions -funroll-loops -Wall -malign-double -g -march=pentiumpro -mfancy-math-387
+
+# these options for gcc-2.95.2 to produce fast code
+#CC_OPTS = -s -Wall -O9 -fomit-frame-pointer -march=pentiumpro -finline-functions \
+#  	-fexpensive-optimizations -funroll-loops -funroll-all-loops -fschedule-insns2 \
+# 	-fstrength-reduce -malign-double -mfancy-math-387 -ffast-math 
+
+#  for debugging:
+#   CC_OPTS =  -UNDEBUG -O -Wall -g -DABORTFP
+
+#  for lots of debugging:
+#   CC_OPTS =  -DDEBUG -UNDEBUG  -O -Wall -g -DABORTFP 
+
+
+# 10/99 added -D__NO_MATH_INLINES to fix a bug in *all* versions of
+# gcc 2.8+ as of 10/99.  
+
+CC_SWITCHES = -DNDEBUG -D__NO_MATH_INLINES $(CC_OPTS) $(SNDLIB)  \
+$(VORBIS) 
+c_sources = \
+	brhist.c \
+	bitstream.c \
+	fft.c \
+	get_audio.c \
+	id3tag.c \
+	ieeefloat.c \
+	lame.c \
+	newmdct.c \
+	parse.c \
+	portableio.c \
+	psymodel.c \
+	quantize.c \
+	quantize-pvt.c \
+	vbrquantize.c \
+	reservoir.c \
+	tables.c \
+	takehiro.c \
+	timestatus.c \
+	util.c \
+	vorbis_interface.c \
+	VbrTag.c \
+	version.c \
+	mpglib/common.c \
+	mpglib/dct64_i386.c \
+	mpglib/decode_i386.c \
+	mpglib/layer3.c \
+	mpglib/tabinit.c \
+	mpglib/interface.c \
+	mpglib/main.c 
+
+OBJ = $(c_sources:.c=.o)
+DEP = $(c_sources:.c=.d)
+
+
+NASM = nasm
+ASFLAGS=-f elf -i i386/
+%.o: %.nas
+	$(NASM) $(ASFLAGS) $< -o $@
+%.o: %.s
+	gcc -c $< -o $@
+
+## use MMX extension. you need nasm and MMX supported CPU.
+#CC_SWITCCH += -DMMX_choose_table
+#OBJ += i386/choose_table.o
+
+%.o: %.c 
+	$(CC) $(CPP_OPTS) $(CC_SWITCHES) -c $< -o $@
+
+#%.d: %.c
+#	$(SHELL) -ec '$(CC) $(MAKEDEP)  $(CPP_OPTS) $(CC_SWITCHES)  $< | sed '\''s;$*.o;& $@;g'\'' > $@'
+
+all: $(PGM)
+
+$(PGM):	main.o libmp3lame.a 
+	$(CC) $(CC_OPTS) -o $(PGM)  main.o  -L. -lmp3lame $(LIBS) $(LIBSNDFILE) $(VORBIS_LIB)
+
+libmp3lame.a:  $(OBJ) Makefile
+#	cd libmp3lame
+#	make libmp3lame
+	ar cr libmp3lame.a  $(OBJ) 
+
+clean:
+	del *.o 
+	del mpglib\*.o 
+	del lame.exe
+	del libmp3lame.a 
+
+
+#
+#  testcase.mp3 is a 2926 byte file.  The first number output by
+#  wc is the number of bytes which differ between new output
+#  and 'official' results.  
+#
+#  Because of compilier options and effects of roundoff, the 
+#  number of bytes which are different may not be zero, but
+#  should be at most 30.
+#
+test: $(PGM)
+	./lame  --nores -h testcase.wav testcase.new.mp3
+	cmp -l testcase.new.mp3 testcase.mp3 | wc
+
+testg: $(PGM)
+	./lame -g -h ../test/castanets.wav
+ -=- MIME -=- 
+  This message is in MIME format.  The first part should be readable text,
+  while the remaining parts are likely unreadable without MIME-aware tools.
+  Send mail to mime@docserver.cac.washington.edu for more info.
+
+---1165485303-1904377015-962930545=:28432
+Content-Type: TEXT/PLAIN; charset=US-ASCII
+
+
+Last night I hacked the lame makefile for DJGPP.
+It's attached to this email
+
+I have tested it with DJGPP 2.03, GCC 2.95 (19990728 release),
+the DJGPP port of GNU make 3.78.1 and lame 3.85 beta.
+
+Here are some timings for my Celeron 400 Mhz.
+
+Test track: We Care A Lot by Faith No More - Track 01 - Greatest Hits,
+encoded with the -h switch.
+
+1:28  -  MSVC 6.0 with default project file 
+1:47  -  DJGPP with default compiler options 
+1:40  -  DJGPP with second set of options 
+1:40  -  DJGPP with third set of options (the ones for GCC 2.95.2)
+1:41  -  gcc under linux on the same machine with the 3rd set 
+         of compiler options 
+1.37  -  mingw32, gcc 2.95.2 for win32 (3rd set of compiler options)
+         see: http://www.xraylith.wisc.edu/~khan/software/gnu-win32/
+
+So on my system at least, DJGPP isn't quite as fast as MSVC 6.
+However it's still pretty good and freely available.
+Mingw32 is slightly faster and produces true win32 executables which 
+should be better for windows NT users. (AFAIK DJGPP only can't use long
+filenames under win NT.)
+
+mingw32 has a problem with this in brhist.c:
+
+#ifdef _WIN32  
+COORD Pos;
+HANDLE CH;
+CONSOLE_SCREEN_BUFFER_INFO CSBI;
+#endif
+
+because COORD isn't in the mingw32 include files.
+
+Chris Wise
+
+---1165485303-1904377015-962930545=:28432
+Content-Type: TEXT/PLAIN; charset=US-ASCII; name="Makefile.djgpp"
+Content-Transfer-Encoding: BASE64
+Content-ID: <Pine.LNX.4.10.10007071042250.28432@mordor.ses.swin.edu.au>
+Content-Description: 
+Content-Disposition: attachment; filename="Makefile.djgpp"
+
+IyBNYWtlZmlsZSBmb3IgTEFNRSAzLnh4IHVzaW5nIERKR1BQIChESiBEZWxv
+cmllJ3MgRE9TIHBvcnQgb2YgR0NDKQ0NCiMgYmFzZWQgb24gdGhlIG9yaWdp
+bmFsIGxhbWUgbWFrZWZpbGUNDQojDQ0KIyBIaW50czoNDQojDQ0KIyBUbyBj
+b21waWxlLCB1c2U6IG1ha2UgLWYgTWFrZWZpbGUuZGpncHANDQojDQ0KIyBN
+YWtlIHN1cmUgdGhhdCB5b3UgaGF2ZSB0aGUgREpHUFAgbWFrZSB1dGlsaXR5
+IGluc3RhbGxlZCAoZ2V0IGl0IGZyb20gd2hlcmUgeW91IGdvdCBESkdQUCkN
+DQojDQ0KIyBVc2UgVVBYIHRvIGNvbXByZXNzIHRoZSBleGUgdG8gbGVzcyBo
+YWxmIHRoZSBvcmlnaW5hbCBzaXplLg0NCiMNDQojIyBTb21lIG9mIHRoZSBj
+aGFuZ2VzICh0aGluZ3MgdGhhdCBkb24ndCB3b3JrIHdpdGggRE9TL0RKR1BQ
+KQ0NCiMjIHJlbW92ZWQgVkJSIGhpc3RvZ3JhbSBjYXBhYmlsaXR5DQ0KIyMg
+cmVtb3ZlZCByZWZlcmVuY2VzIHRvIEdUSyANDQojIyByZW1vdmVkIHJlZmVy
+ZW5jZXMgdG8gcnRwDQ0KIyMgbWFrZSBjbGVhbiBpcyBhIGhhY2sgYmVjYXVz
+ZSB0aGUgZG9zIHByb21wdCBkb2Vzbid0IGxpa2UgcmVhbGx5IGxvbmcgY29t
+bWFuZCBsaW5lcw0NCiMjIHJlbW92ZWQgLXBpcGUgZnJvbSBDQ19PUFRTDQ0K
+DQ0KIyBnZW5lcmljIGRlZmF1bHRzLiBPUyBzcGVjaWZpYyBvcHRpb25zIGdv
+IGluIHZlcnNpb3VzIHNlY3Rpb25zIGJlbG93DQ0KUEdNID0gbGFtZQ0NCkND
+ID0gZ2NjDQ0KQ0NfT1BUUyA9ICAtTw0NClNORExJQiA9IC1ETEFNRVNOREZJ
+TEUNDQpMSUJTTkRGSUxFID0gIA0NCkxJQlMgPSAtbG0gDQ0KTUFLRURFUCA9
+IC1NDQ0KDQ0KDQ0KIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMj
+IyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMNDQoj
+IC1ESEFWRU1QR0xJQiBjb21waWxlcyB0aGUgbXBnbGliICpkZWNvZGluZyog
+bGlicmFyeSBpbnRvIGxpYm1wM2xhbWUNDQojIyMjIyMjIyMjIyMjIyMjIyMj
+IyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMj
+IyMjIyMjIyMjIw0NCkNQUF9PUFRTICs9IC1ESEFWRU1QR0xJQiANDQoNDQoj
+IyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMj
+IyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIw0NCiMgLURGTE9BVDhfaXNf
+ZmxvYXQgd2lsbCBGTE9BVDggYXMgZmxvYXQNDQojIC1ERkxPQVQ4X2lzX2Rv
+dWJsZSAgd2lsbCBGTE9BVDggYXMgZG91YmxlIChkZWZhdWx0KQ0NCiMgIE5P
+VEU6IFJIOiA3LzAwOiAgaWYgRkxPQVQ4PWZsb2F0LCBpdCBicmVha3MgcmVz
+YW1wbGluZyBhbmQgVkJSIGNvZGUgDQ0KIyMjIyMjIyMjIyMjIyMjIyMjIyMj
+IyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMj
+IyMjIyMjIyMNDQpDUFBfT1BUUyArPSAtREZMT0FUOF9pc19kb3VibGUNDQoN
+DQoNDQojIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMj
+IyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIw0NCiMgRGVmaW5l
+IHRoZXNlIGluIHRoZSBPUyBzcGVjaWZpYyBzZWN0aW9ucyBiZWxvdyB0byBj
+b21waWxlIGluIHN1cHBvcnQNDQojIGZvciB0aGUgT2dnIFZvcmJpcyBhdWRp
+byBmb3JtYXQgKGJvdGggZGVjb2RpbmcgYW5kIGVuY29kaW5nKQ0NCiMgDQ0K
+IyBWT1JCSVMgPSAtREhBVkVWT1JCSVMgIC1JIC4uL3ZvcmJpcy9pbmNsdWRl
+DQ0KIyBWT1JCSVNfTElCID0gLUwgLi4vdm9yYmlzL2xpYiAtbHZvcmJpcw0N
+CiMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMj
+IyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjDQ0KDQ0KDQ0KIyMjIyMj
+IyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMj
+IyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMNDQojIERlZmluZSB0aGVzZSBpbiB0
+aGUgT1Mgc3BlY2lmaWMgc2VjdGlvbnMgYmVsb3cgdG8gY29tcGlsZSBpbiBj
+b2RlIGZvcjoNDQojDQ0KIyBTTkRMSUIgPSAgICAgICAgICAgICAgICBubyBm
+aWxlIGkvbyANDQojIFNORExJQiA9IC1ETEFNRVNOREZJTEUgIHRvIHVzZSBp
+bnRlcm5hbCBMQU1FIHNvdW5kZmlsZSByb3V0aW5lcyANDQojIFNORExJQiA9
+IC1ETElCU05ERklMRSAgIHRvIHVzZSBFcmlrIGRlIENhc3RybyBMb3BvJ3Mg
+bGlic25kZmlsZSANDQojIGh0dHA6Ly93d3cuemlwLmNvbS5hdS9+ZXJpa2Qv
+bGlic25kZmlsZS8NDQojDQ0KIyBOb3RlOiBhdCBwcmVzZW50LCBsaWJzbmRm
+aWxlIGRvZXMgbm90IHN1cHBvcnQgaW5wdXQgZnJvbSBzdGRpbi4gIA0NCiMN
+DQojIGZvciBleGFtcGxlOg0NCiMgIFNORExJQiA9IC1ETElCU05ERklMRQ0N
+CiMgIExJQlNOREZJTEU9LWxzbmRmaWxlIA0NCiMgIGlmIGxpYnNuZGZpbGUg
+aXMgaW4gYSBjdXN0b20gbG9jYXRpb24sIHRyeToNDQojICBMSUJTTkRGSUxF
+PS1MICQoTElCU05ESE9NRSkgLWxzbmRmaWxlICAtSSAkKExJQlNOREhPTUUp
+DQ0KIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMj
+IyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMNDQoNDQoNDQojIyMj
+IyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMj
+IyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIw0NCiMgREpHUFAgICANDQojIyMj
+IyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMj
+IyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIw0NCg0NCiMgc3VnZ2VzdGVkIGZv
+ciBnY2MtMi43LngNDQpDQ19PUFRTID0gLXMgIC1PMyAtZm9taXQtZnJhbWUt
+cG9pbnRlciAtZnVucm9sbC1sb29wcyAtZmZhc3QtbWF0aCAgLWZpbmxpbmUt
+ZnVuY3Rpb25zIC1XYWxsDQ0KDQ0KI0NDX09QVFMgPSAgLXMgLU85IC1mb21p
+dC1mcmFtZS1wb2ludGVyIC1mbm8tc3RyZW5ndGgtcmVkdWNlIC1tcGVudGl1
+bXBybyAtZmZhc3QtbWF0aCAtZmlubGluZS1mdW5jdGlvbnMgLWZ1bnJvbGwt
+bG9vcHMgLVdhbGwgLW1hbGlnbi1kb3VibGUgLWcgLW1hcmNoPXBlbnRpdW1w
+cm8gLW1mYW5jeS1tYXRoLTM4Nw0NCg0NCiMgdGhlc2Ugb3B0aW9ucyBmb3Ig
+Z2NjLTIuOTUuMiB0byBwcm9kdWNlIGZhc3QgY29kZQ0NCiNDQ19PUFRTID0g
+LXMgLVdhbGwgLU85IC1mb21pdC1mcmFtZS1wb2ludGVyIC1tYXJjaD1wZW50
+aXVtcHJvIC1maW5saW5lLWZ1bmN0aW9ucyBcDQ0KIyAgCS1mZXhwZW5zaXZl
+LW9wdGltaXphdGlvbnMgLWZ1bnJvbGwtbG9vcHMgLWZ1bnJvbGwtYWxsLWxv
+b3BzIC1mc2NoZWR1bGUtaW5zbnMyIFwNDQojIAktZnN0cmVuZ3RoLXJlZHVj
+ZSAtbWFsaWduLWRvdWJsZSAtbWZhbmN5LW1hdGgtMzg3IC1mZmFzdC1tYXRo
+IA0NCg0NCiMgIGZvciBkZWJ1Z2dpbmc6DQ0KIyAgIENDX09QVFMgPSAgLVVO
+REVCVUcgLU8gLVdhbGwgLWcgLURBQk9SVEZQDQ0KDQ0KIyAgZm9yIGxvdHMg
+b2YgZGVidWdnaW5nOg0NCiMgICBDQ19PUFRTID0gIC1EREVCVUcgLVVOREVC
+VUcgIC1PIC1XYWxsIC1nIC1EQUJPUlRGUCANDQoNDQoNDQojIDEwLzk5IGFk
+ZGVkIC1EX19OT19NQVRIX0lOTElORVMgdG8gZml4IGEgYnVnIGluICphbGwq
+IHZlcnNpb25zIG9mDQ0KIyBnY2MgMi44KyBhcyBvZiAxMC85OS4gIA0NCg0N
+CkNDX1NXSVRDSEVTID0gLUROREVCVUcgLURfX05PX01BVEhfSU5MSU5FUyAk
+KENDX09QVFMpICQoU05ETElCKSAgXA0NCiQoVk9SQklTKSANDQpjX3NvdXJj
+ZXMgPSBcDQ0KCWJyaGlzdC5jIFwNDQoJYml0c3RyZWFtLmMgXA0NCglmZnQu
+YyBcDQ0KCWdldF9hdWRpby5jIFwNDQoJaWQzdGFnLmMgXA0NCglpZWVlZmxv
+YXQuYyBcDQ0KCWxhbWUuYyBcDQ0KCW5ld21kY3QuYyBcDQ0KCXBhcnNlLmMg
+XA0NCglwb3J0YWJsZWlvLmMgXA0NCglwc3ltb2RlbC5jIFwNDQoJcXVhbnRp
+emUuYyBcDQ0KCXF1YW50aXplLXB2dC5jIFwNDQoJdmJycXVhbnRpemUuYyBc
+DQ0KCXJlc2Vydm9pci5jIFwNDQoJdGFibGVzLmMgXA0NCgl0YWtlaGlyby5j
+IFwNDQoJdGltZXN0YXR1cy5jIFwNDQoJdXRpbC5jIFwNDQoJdm9yYmlzX2lu
+dGVyZmFjZS5jIFwNDQoJVmJyVGFnLmMgXA0NCgl2ZXJzaW9uLmMgXA0NCglt
+cGdsaWIvY29tbW9uLmMgXA0NCgltcGdsaWIvZGN0NjRfaTM4Ni5jIFwNDQoJ
+bXBnbGliL2RlY29kZV9pMzg2LmMgXA0NCgltcGdsaWIvbGF5ZXIzLmMgXA0N
+CgltcGdsaWIvdGFiaW5pdC5jIFwNDQoJbXBnbGliL2ludGVyZmFjZS5jIFwN
+DQoJbXBnbGliL21haW4uYyANDQoNDQpPQkogPSAkKGNfc291cmNlczouYz0u
+bykNDQpERVAgPSAkKGNfc291cmNlczouYz0uZCkNDQoNDQoNDQpOQVNNID0g
+bmFzbQ0NCkFTRkxBR1M9LWYgZWxmIC1pIGkzODYvDQ0KJS5vOiAlLm5hcw0N
+CgkkKE5BU00pICQoQVNGTEFHUykgJDwgLW8gJEANDQolLm86ICUucw0NCgln
+Y2MgLWMgJDwgLW8gJEANDQoNDQojIyB1c2UgTU1YIGV4dGVuc2lvbi4geW91
+IG5lZWQgbmFzbSBhbmQgTU1YIHN1cHBvcnRlZCBDUFUuDQ0KI0NDX1NXSVRD
+Q0ggKz0gLURNTVhfY2hvb3NlX3RhYmxlDQ0KI09CSiArPSBpMzg2L2Nob29z
+ZV90YWJsZS5vDQ0KDQ0KJS5vOiAlLmMgDQ0KCSQoQ0MpICQoQ1BQX09QVFMp
+ICQoQ0NfU1dJVENIRVMpIC1jICQ8IC1vICRADQ0KDQ0KIyUuZDogJS5jDQ0K
+IwkkKFNIRUxMKSAtZWMgJyQoQ0MpICQoTUFLRURFUCkgICQoQ1BQX09QVFMp
+ICQoQ0NfU1dJVENIRVMpICAkPCB8IHNlZCAnXCcnczskKi5vOyYgJEA7Zydc
+JycgPiAkQCcNDQoNDQphbGw6ICQoUEdNKQ0NCg0NCiQoUEdNKToJbWFpbi5v
+IGxpYm1wM2xhbWUuYSANDQoJJChDQykgJChDQ19PUFRTKSAtbyAkKFBHTSkg
+IG1haW4ubyAgLUwuIC1sbXAzbGFtZSAkKExJQlMpICQoTElCU05ERklMRSkg
+JChWT1JCSVNfTElCKQ0NCg0NCmxpYm1wM2xhbWUuYTogICQoT0JKKSBNYWtl
+ZmlsZQ0NCiMJY2QgbGlibXAzbGFtZQ0NCiMJbWFrZSBsaWJtcDNsYW1lDQ0K
+CWFyIGNyIGxpYm1wM2xhbWUuYSAgJChPQkopIA0NCg0NCmNsZWFuOg0NCglk
+ZWwgKi5vIA0NCglkZWwgbXBnbGliXCoubyANDQoJZGVsIGxhbWUuZXhlDQ0K
+CWRlbCBsaWJtcDNsYW1lLmEgDQ0KDQ0KDQ0KIw0NCiMgIHRlc3RjYXNlLm1w
+MyBpcyBhIDI5MjYgYnl0ZSBmaWxlLiAgVGhlIGZpcnN0IG51bWJlciBvdXRw
+dXQgYnkNDQojICB3YyBpcyB0aGUgbnVtYmVyIG9mIGJ5dGVzIHdoaWNoIGRp
+ZmZlciBiZXR3ZWVuIG5ldyBvdXRwdXQNDQojICBhbmQgJ29mZmljaWFsJyBy
+ZXN1bHRzLiAgDQ0KIw0NCiMgIEJlY2F1c2Ugb2YgY29tcGlsaWVyIG9wdGlv
+bnMgYW5kIGVmZmVjdHMgb2Ygcm91bmRvZmYsIHRoZSANDQojICBudW1iZXIg
+b2YgYnl0ZXMgd2hpY2ggYXJlIGRpZmZlcmVudCBtYXkgbm90IGJlIHplcm8s
+IGJ1dA0NCiMgIHNob3VsZCBiZSBhdCBtb3N0IDMwLg0NCiMNDQp0ZXN0OiAk
+KFBHTSkNDQoJLi9sYW1lICAtLW5vcmVzIC1oIHRlc3RjYXNlLndhdiB0ZXN0
+Y2FzZS5uZXcubXAzDQ0KCWNtcCAtbCB0ZXN0Y2FzZS5uZXcubXAzIHRlc3Rj
+YXNlLm1wMyB8IHdjDQ0KDQ0KdGVzdGc6ICQoUEdNKQ0NCgkuL2xhbWUgLWcg
+LWggLi4vdGVzdC9jYXN0YW5ldHMud2F2DQ0K
+---1165485303-1904377015-962930545=:28432--
+--
+MP3 ENCODER mailing list ( http://geek.rcc.se/mp3encoder/ )
+
