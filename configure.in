@@ -48,8 +48,8 @@ AC_MINIX
 AC_CYGWIN
 AC_EXEEXT
 
-dnl# work around for a bug, don't know where it is exactly
-dnlif test "${ac_cv_cygwin}" = "yes"; then
+dnl # work around for a bug, don't know where it is exactly
+dnl if test "${ac_cv_cygwin}" = "yes"; then
 dnl	AC_MSG_CHECKING(if CC is set)
 dnl	old_cc="${CC-cc_wasnt_set}"
 dnl	CC=gcc
@@ -58,7 +58,7 @@ dnl		AC_MSG_RESULT(no, setting it to 'gcc')
 dnl	else
 dnl		AC_MSG_RESULT(yes)
 dnl	fi
-dnlfi
+dnl fi
 
 dnl check programs
 AM_PROG_CC_STDC
