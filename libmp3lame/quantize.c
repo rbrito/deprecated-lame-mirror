@@ -1104,8 +1104,7 @@ CBR_bitalloc(
     adjustBits = 0;
     for (ch = 0; ch < gfc->channels_out; ch++) {
 	bits = 0;
-	if (ratio[ch].ath_over != 0 && gfc->l3_side.tt[gr][ch].psymax > 0
-	    && ratio[ch].pe > 0.0)
+	if (ratio[ch].ath_over != 0 && gfc->l3_side.tt[gr][ch].psymax > 0)
 	    bits = (int)(ratio[ch].pe*factor);
 	adjustBits += (targ_bits[ch] = ++bits); /* avoid zero division */
     }
@@ -1151,11 +1150,10 @@ ABR_iteration_loop(
     FLOAT factor;
 
     gfc->bitrate_index = 0;
-    mean_bits = getframebits(gfp) - gfc->l3_side.sideinfo_len * 8;
-    mean_bits /= gfc->mode_gr;
+    factor = ((getframebits(gfp) - gfc->l3_side.sideinfo_len * 8)
+	      / gfc->mode_gr + 600.0)*(1.0/2600.0);
     if (gfc->substep_shaping & 1)
-	mean_bits *= 1.1;
-    factor = (mean_bits+600)*(1.0/2600.0);
+	factor *= 1.1;
 
     gfc->bitrate_index = gfc->VBR_max_bitrate;
     max_bits = ResvFrameBegin (gfp, &mean_bits) / gfc->mode_gr;
