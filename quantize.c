@@ -65,7 +65,7 @@ iteration_loop( lame_global_flags *gfp, FLOAT8 pe[2][2],
       ms_convert(xr[gr], xr[gr]);
       reduce_side(targ_bits,ms_ener_ratio[gr],mean_bits,max_bits);
     }
-    for (ch=0 ; ch < gfc->stereo ; ch ++) {
+    for (ch=0 ; ch < gfc->channels ; ch ++) {
       cod_info = &l3_side->gr[gr].ch[ch].tt; 
 
       if (!init_outer_loop(gfp,xr[gr][ch],xrpow, cod_info))
@@ -118,7 +118,7 @@ iteration_loop( lame_global_flags *gfp, FLOAT8 pe[2][2],
      the second granule to use bits saved by the first granule.
      when combined with --nores, this is usefull for testing only */
   for ( gr = 0; gr < gfc->mode_gr; gr++ ) {
-    for ( ch =  0; ch < gfc->stereo; ch++ ) {
+    for ( ch =  0; ch < gfc->channels; ch++ ) {
       cod_info = &l3_side->gr[gr].ch[ch].tt;
       ResvAdjust(gfp, cod_info, l3_side, mean_bits );
     }
@@ -164,7 +164,7 @@ ABR_iteration_loop (lame_global_flags *gfp, FLOAT8 pe[2][2],
 
   gfc->bitrate_index = 1;
   getframebits (gfp,&bitsPerFrame, &mean_bits);
-  analog_silence_bits = mean_bits/gfc->stereo;
+  analog_silence_bits = mean_bits/gfc->channels;
 
   /* compute a target  mean_bits based on compression ratio 
    * which was set based on VBR_q  
@@ -181,13 +181,13 @@ ABR_iteration_loop (lame_global_flags *gfp, FLOAT8 pe[2][2],
 
 
   for(gr = 0; gr < gfc->mode_gr; gr++) {
-    for(ch = 0; ch < gfc->stereo; ch++) {
-      targ_bits[gr][ch]=res_factor*(mean_bits/gfc->stereo);
+    for(ch = 0; ch < gfc->channels; ch++) {
+      targ_bits[gr][ch]=res_factor*(mean_bits/gfc->channels);
       if (pe[gr][ch]>700) {
         int add_bits=(pe[gr][ch]-700)/1.4;
  
         cod_info = &l3_side->gr[gr].ch[ch].tt;
-        targ_bits[gr][ch]=res_factor*(mean_bits/gfc->stereo);
+        targ_bits[gr][ch]=res_factor*(mean_bits/gfc->channels);
  
         /* short blocks use a little extra, no matter what the pe */
         if (cod_info->block_type==SHORT_TYPE) {
@@ -209,7 +209,7 @@ ABR_iteration_loop (lame_global_flags *gfp, FLOAT8 pe[2][2],
 
   totbits=0;
   for(gr = 0; gr < gfc->mode_gr; gr++) {
-    for(ch = 0; ch < gfc->stereo; ch++) {
+    for(ch = 0; ch < gfc->channels; ch++) {
       if (targ_bits[gr][ch] > 4095) { targ_bits[gr][ch]=4095; }
       totbits += targ_bits[gr][ch];
     }
@@ -217,7 +217,7 @@ ABR_iteration_loop (lame_global_flags *gfp, FLOAT8 pe[2][2],
 
   if (totbits > max_frame_bits) {
     for(gr = 0; gr < gfc->mode_gr; gr++) {
-      for(ch = 0; ch < gfc->stereo; ch++) {
+      for(ch = 0; ch < gfc->channels; ch++) {
         targ_bits[gr][ch] *= ((float)max_frame_bits/(float)totbits); 
       }
     }
@@ -228,7 +228,7 @@ ABR_iteration_loop (lame_global_flags *gfp, FLOAT8 pe[2][2],
 
     if (gfc->mode_ext==MPG_MD_MS_LR) { ms_convert(xr[gr], xr[gr]); }
 
-    for(ch = 0; ch < gfc->stereo; ch++) {
+    for(ch = 0; ch < gfc->channels; ch++) {
       cod_info = &l3_side->gr[gr].ch[ch].tt;
 
       if (!init_outer_loop(gfp,xr[gr][ch],xrpow, cod_info)) {
@@ -277,7 +277,7 @@ ABR_iteration_loop (lame_global_flags *gfp, FLOAT8 pe[2][2],
    * update reservoir status after FINAL quantization/bitrate 
    *******************************************************************/
   for (gr = 0; gr < gfc->mode_gr; gr++)
-    for (ch = 0; ch < gfc->stereo; ch++) {
+    for (ch = 0; ch < gfc->channels; ch++) {
       cod_info = &l3_side->gr[gr].ch[ch].tt;
 
       best_scalefac_store(gfp,gr, ch, l3_enc, l3_side, scalefac);
@@ -358,13 +358,13 @@ VBR_iteration_loop (lame_global_flags *gfp, FLOAT8 pe[2][2],
   /* bits for analog silence */
   gfc->bitrate_index = 1;
   getframebits (gfp,&bitsPerFrame, &mean_bits);
-  analog_mean_bits = mean_bits/gfc->stereo;
+  analog_mean_bits = mean_bits/gfc->channels;
   
   analog_silence=1;
   for (gr = 0; gr < gfc->mode_gr; gr++) {
     /* copy data to be quantized into xr */
     if (gfc->mode_ext==MPG_MD_MS_LR) { ms_convert(xr[gr],xr[gr]); }
-    for (ch = 0; ch < gfc->stereo; ch++) {
+    for (ch = 0; ch < gfc->channels; ch++) {
       cod_info = &l3_side->gr[gr].ch[ch].tt;
       /* - lower masking depending on Quality setting
        * - quality control together with adjusted ATH MDCT scaling
@@ -406,7 +406,7 @@ VBR_iteration_loop (lame_global_flags *gfp, FLOAT8 pe[2][2],
     if (gfc->bitrate_index == gfc->VBR_min_bitrate) {
       /* always use at least this many bits per granule per channel */
       /* unless we detect analog silence, see below */
-      min_mean_bits=mean_bits/gfc->stereo;
+      min_mean_bits=mean_bits/gfc->channels;
     }
     frameBits[gfc->bitrate_index]
      = ResvFrameBegin (gfp,l3_side, mean_bits, bitsPerFrame);
@@ -419,7 +419,7 @@ VBR_iteration_loop (lame_global_flags *gfp, FLOAT8 pe[2][2],
    * how many bits would we use of it?
    *******************************************************************/
   for (gr = 0; gr < gfc->mode_gr; gr++) {
-    int num_chan=gfc->stereo;
+    int num_chan=gfc->channels;
     
     /* determine quality based on mid channel only */
     if (reduce_s_ch) { num_chan=1; }  
@@ -478,8 +478,8 @@ VBR_iteration_loop (lame_global_flags *gfp, FLOAT8 pe[2][2],
         min_bits = Max(min_bits,min_pe_bits);
       }
       max_bits = 1200
-               + frameBits[gfc->VBR_max_bitrate]/(gfc->stereo*gfc->mode_gr);
-      max_bits = Min(max_bits,4095-195*(gfc->stereo-1));
+               + frameBits[gfc->VBR_max_bitrate]/(gfc->channels*gfc->mode_gr);
+      max_bits = Min(max_bits,4095-195*(gfc->channels-1));
       max_bits = Max(max_bits,min_bits);
       Max_bits = max_bits;
 
@@ -595,7 +595,7 @@ VBR_iteration_loop (lame_global_flags *gfp, FLOAT8 pe[2][2],
   bits=ResvFrameBegin (gfp,l3_side, mean_bits, bitsPerFrame);
 
   for(gr = 0; gr < gfc->mode_gr; gr++) {
-    for(ch = 0; ch < gfc->stereo; ch++) {
+    for(ch = 0; ch < gfc->channels; ch++) {
       cod_info = &l3_side->gr[gr].ch[ch].tt;
       
       if (used_bits > bits) {

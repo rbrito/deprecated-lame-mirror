@@ -131,8 +131,7 @@ lame_init_params_ppflt(lame_internal_flags *gfc)
 		if (gfc->highpass2 < .9 * (.75 / 31.0) ) {
 			gfc->highpass1 = 0;
 			gfc->highpass2 = 0;
-			MSGF("Warning: highpass filter disabled.  "
-			     "highpass frequency to small\n");
+			MSGF("Warning: highpass filter disabled. highpass frequency too small\n");
 		}
 	}
 
@@ -203,7 +202,9 @@ lame_init_params_ppflt(lame_internal_flags *gfc)
  ********************************************************************/
 int lame_init_params(lame_global_flags *gfp)
 {
-  int i;
+  int                     i;
+  const scalefac_struct*  sf;
+  
   lame_internal_flags *gfc=gfp->internal_flags;
   gfc->lame_init_params_init=1;
 
@@ -211,8 +212,8 @@ int lame_init_params(lame_global_flags *gfp)
   if (gfp->num_channels==1) {
     gfp->mode = MPG_MD_MONO;
   }
-  gfc->stereo=2;
-  if (gfp->mode == MPG_MD_MONO) gfc->stereo=1;
+  gfc->channels=2;
+  if (gfp->mode == MPG_MD_MONO) gfc->channels=1;
 
   if (gfp->gtkflag) 
     gfp->silent=1;
@@ -227,23 +228,23 @@ int lame_init_params(lame_global_flags *gfp)
     gfp->free_format=0;  /* VBR cant mix with free format */
   }
 
-  if (gfp->VBR==vbr_off && gfp->brate==0) {
-    /* no bitrate or compression ratio specified, use 11 */
-    if (gfp->compression_ratio==0) gfp->compression_ratio=11;
-  }
+    if ( gfp->VBR == vbr_off  &&  gfp->brate == 0  &&  gfp->compression_ratio == 0 ) {
+        /* CBR/ABR, no bitrate or compression ratio specified, use 11.025 (CD => 128 kbps) */
+        gfp->compression_ratio = 44100.0 * 16 * 2 / 128000;
+    }
 
 
   /* find bitrate if user specify a compression ratio */
   if (gfp->VBR==vbr_off && gfp->compression_ratio > 0) {
     
     if (gfp->out_samplerate==0) 
-      gfp->out_samplerate=validSamplerate(gfp->in_samplerate);   
+      gfp->out_samplerate = RoundSampleRateUp (gfp->in_samplerate);   
     
     /* choose a bitrate for the output samplerate which achieves
      * specifed compression ratio 
      */
     gfp->brate = 
-      gfp->out_samplerate*16*gfc->stereo/(1000.0*gfp->compression_ratio);
+      gfp->out_samplerate*16*gfc->channels/(1000.0*gfp->compression_ratio);
 
     /* we need the version for the bitrate table look up */
     gfc->samplerate_index = SmpFrqIndex((long)gfp->out_samplerate, &gfp->version);
@@ -265,22 +266,22 @@ int lame_init_params(lame_global_flags *gfp)
 
 
     /* if resamplerate is not valid, find a valid value */
-    gfp->out_samplerate = validSamplerate(gfp->out_samplerate);
+    gfp->out_samplerate = RoundSampleRateToNearest (gfp -> out_samplerate);
 
     if (gfp->VBR==vbr_off && gfp->brate>0) {
       /* check if user specified bitrate requires downsampling */
-      gfp->compression_ratio = gfp->out_samplerate*16*gfc->stereo/(1000.0*gfp->brate);
+      gfp->compression_ratio = gfp->out_samplerate*16*gfc->channels/(1000.0*gfp->brate);
       if (gfp->compression_ratio > 13 ) {
 	/* automatic downsample, if possible */
-	gfp->out_samplerate = validSamplerate((10*1000L*gfp->brate)/(16*gfc->stereo));
+	gfp->out_samplerate = RoundSampleRateToNearest ((10*1000L*gfp->brate)/(16*gfc->channels));
       }
     }
     if (gfp->VBR==vbr_abr) {
       /* check if user specified bitrate requires downsampling */
-      gfp->compression_ratio = gfp->out_samplerate*16*gfc->stereo/(1000.0*gfp->VBR_mean_bitrate_kbps);
+      gfp->compression_ratio = gfp->out_samplerate*16*gfc->channels/(1000.0*gfp->VBR_mean_bitrate_kbps);
       if (gfp->compression_ratio > 13 ) {
 	/* automatic downsample, if possible */
-	gfp->out_samplerate = validSamplerate((10*1000L*gfp->VBR_mean_bitrate_kbps)/(16*gfc->stereo));
+	gfp->out_samplerate = RoundSampleRateToNearest ((10*1000L*gfp->VBR_mean_bitrate_kbps)/(16*gfc->channels));
       }
     }
   }
@@ -307,41 +308,52 @@ int lame_init_params(lame_global_flags *gfp)
     gfp->totalframes = 2+ gfp->num_samples/(gfc->resample_ratio*gfp->framesize);
 
 
+    /*
+     * For the CBR and ABR mode the compression ratio is (nearly) correct,
+     * for VBR it is only a guess. The real compression rate also depends on
+     * the kind of music, so don't waste too much time for "correct" values
+     * in the table vbr_compression_ratio_guess.
+     *
+     * Nevertheless at the end of the beta phase of a lame version, the
+     * table should be calibrated. Take a normal piece of music (rock) and
+     * compress the WAV file to different MP3s via:
+     *
+     *	in=/archive/Audio/Queen/We_Will_Rock_You
+     *	out=We_Will_Rock_You
+     *	for i in 0 1 2 3 4 5 6 7 8 9; do
+     *	    lame -V $i $in.wav $out.$i.mp3
+     *	done
+     *	a=`cat $in.wav | wc -c`
+     *	echo
+     *	for i in 0 1 2 3 4 5 6 7 8 9; do
+     *	    b=`cat $out.$i.mp3 | wc -c`
+     *	    c=$[ 20*a/b + 1]
+     *	    echo -n $[c/2], " "
+     *	done
+     *	echo
+     *
+     *  If you need lower bitrates than -V9 supports, you must reduce
+     *  sampling frequency via --resample xx.xx
+     */
 
-  /* 44.1kHz at 56kbs/channel: compression factor of 12.6
-     44.1kHz at 64kbs/channel: compression factor of 11.025
-     44.1kHz at 80kbs/channel: compression factor of 8.82
-     22.05kHz at 24kbs:  14.7
-     22.05kHz at 32kbs:  11.025
-     22.05kHz at 40kbs:  8.82
-     16kHz at 16kbs:  16.0
-     16kHz at 24kbs:  10.7
-
-     compression_ratio
-        11                                .70?
-        12                   sox resample .66
-        14.7                 sox resample .45
-
-  */
-
-  /* for VBR, take a guess at the compression_ratio. for example: */
-  /* VBR_q           compression       like
-                      4.4             320kbs/41khz
-     0-1              5.5             256kbs/41khz
-     2                7.3             192kbs/41khz
-     4                8.8             160kbs/41khz
-     6                11              128kbs/41khz
-     9                14.7             96kbs
-     for lower bitrates, downsample with --resample
-  */
-  if (gfp->VBR==vbr_mt || gfp->VBR==vbr_rh) {
-    gfp->compression_ratio = 5.0 + gfp->VBR_q;
-  }else
-  if (gfp->VBR==vbr_abr) {
-    gfp->compression_ratio = gfp->out_samplerate*16*gfc->stereo/(1000.0*gfp->VBR_mean_bitrate_kbps);
-  }else{
-    gfp->compression_ratio = gfp->out_samplerate*16*gfc->stereo/(1000.0*gfp->brate);
-  }
+    switch ( gfp -> VBR ) {
+        static unsigned char vbr_compression_ratio_guess [] = { 52, 57, 64, 71, 89, 98, 110, 125, 137, 150 };
+        
+    case vbr_mt:
+    case vbr_rh:
+        assert ( (unsigned)(gfp -> VBR_q) < sizeof(vbr_compression_ratio_guess)/sizeof(*vbr_compression_ratio_guess) );
+        gfp -> compression_ratio = 0.1 * vbr_compression_ratio_guess [gfp -> VBR_q];
+	break;
+    case vbr_abr:
+        gfp -> compression_ratio = gfp->out_samplerate * 16.e-3 * gfc->channels / gfp->VBR_mean_bitrate_kbps;
+	break;
+    case vbr_off:
+        gfp -> compression_ratio = gfp->out_samplerate * 16.e-3 * gfc->channels / gfp->brate;
+	break;
+    default:
+        assert (0);
+        return -1;
+    }
 
 
 
@@ -427,7 +439,7 @@ int lame_init_params(lame_global_flags *gfp)
   /* not yet coded */
 
   gfc->mode_ext=MPG_MD_LR_LR;
-  gfc->stereo = (gfp->mode == MPG_MD_MONO) ? 1 : 2;
+  gfc->channels = (gfp->mode == MPG_MD_MONO) ? 1 : 2;
 
   gfc->samplerate_index = SmpFrqIndex((long)gfp->out_samplerate, &gfp->version);
   if( gfc->samplerate_index < 0) {
@@ -472,21 +484,23 @@ int lame_init_params(lame_global_flags *gfp)
      * effects CBR encodings.  Lowering the maskings will make LAME
      * work harder to get over=0 and may give better noise shaping?
      */
-    if (gfp->VBR == vbr_abr)
-    {
-      static const FLOAT8 dbQ[10]={-5.0,-3.75,-2.5,-1.25,0,0.4,0.8,1.2,1.6,2.0};
-      FLOAT8 masking_lower_db;
-      assert( gfp->VBR_q <= 9 );
-      assert( gfp->VBR_q >= 0 );
-      masking_lower_db = dbQ[gfp->VBR_q];
-      gfc->masking_lower = pow(10.0,masking_lower_db/10);
-      gfc->ATH_vbrlower = (4-gfp->VBR_q)*4.0; 
-    }
+     
+        switch ( gfp -> VBR ) {
+            static const float  masking_lower_dB [] = { -5.0, -3.75, -2.5, -1.25, 0, 0.4, 0.8, 1.2, 1.6, 2.0 };
+	case vbr_abr:
+            assert ( (unsigned) (gfp -> VBR_q) < sizeof(masking_lower_dB)/sizeof(*masking_lower_dB) );
+            gfc -> masking_lower = pow ( 10., 0.1 * masking_lower_dB [gfp -> VBR_q] );
+            gfc -> ATH_vbrlower  = 4. * ( 4 - gfp -> VBR_q ); 
+	    break;
     
-    if (gfp->VBR == vbr_rh)
-    {
-      gfc->ATH_vbrlower = (4-gfp->VBR_q)*4.0;     
-    }
+        case vbr_rh:
+            gfc -> ATH_vbrlower  = 4. * ( 4 - gfp -> VBR_q );
+	    break;
+	    
+        case vbr_off:
+        case vbr_mt:
+            break;
+        }     
 
 
 
@@ -525,137 +539,123 @@ int lame_init_params(lame_global_flags *gfp)
     gfp->bWriteVbrTag=0;  /* disable Xing VBR tag */
   }
 
-  init_bit_stream_w(gfc);
+    init_bit_stream_w (gfc);
 
 
-  /* set internal feature flags.  USER should not access these since
-   * some combinations will produce strange results */
+    /* set internal feature flags.
+     * User should not access these since some combinations 
+     * will produce strange results 
+     */
 
-  /* no psymodel, no noise shaping */
-  if (gfp->quality==9) {
-    gfc->filter_type=0;
-    gfc->psymodel=0;
-    gfc->quantization=0;
-    gfc->noise_shaping=0;
-    gfc->noise_shaping_stop=0;
-    gfc->use_best_huffman=0;
-  }
-
-  if (gfp->quality==8) gfp->quality=7;
-
-  /* use psymodel (for short block and m/s switching), but no noise shapping */
-  if (gfp->quality==7) {
-    gfc->filter_type=0;
-    gfc->psymodel=1;
-    gfc->quantization=0;
-    gfc->noise_shaping=0;
-    gfc->noise_shaping_stop=0;
-    gfc->use_best_huffman=0;
-  }
-
-  if (gfp->quality==6) gfp->quality=5;
-
-  if (gfp->quality==5) {
-    /* the default */
-    gfc->filter_type=0;
-    gfc->psymodel=1;
-    gfc->quantization=0;
-    gfc->noise_shaping=1;
-    gfc->noise_shaping_stop=0;
-    gfc->use_best_huffman=0;
-  }
-
-  if (gfp->quality==4) gfp->quality=3;
-
-  if (gfp->quality==3) {
-    gfc->filter_type=0;
-    gfc->psymodel=1;
-    gfc->quantization=1;
-    gfc->noise_shaping=1;
-    gfc->noise_shaping_stop=0;
-    gfc->use_best_huffman=1;
-  }
-
-  if (gfp->quality==2) {
-    gfc->filter_type=0;
-    gfc->psymodel=1;
-    gfc->quantization=1;
-    gfc->noise_shaping=1;
-    gfc->noise_shaping_stop=0;
-    gfc->use_best_huffman=1;
-  }
-
-  if (gfp->quality==1) {
-    gfc->filter_type=0;
-    gfc->psymodel=1;
-    gfc->quantization=1;
-    gfc->noise_shaping=2;
-    gfc->noise_shaping_stop=0;
-    gfc->use_best_huffman=1;
-  }
-
-  if (gfp->quality==0) {
-    /* 0..1 quality */
-    gfc->filter_type=1;         /* not yet coded */
-    gfc->psymodel=1;
-    gfc->quantization=1;
-    gfc->noise_shaping=3;       /* not yet coded */
-    gfc->noise_shaping_stop=2;  /* not yet coded */
-    gfc->use_best_huffman=2;   /* not yet coded */
-    return -1;
-  }
-
-
-  for (i = 0; i < SBMAX_l + 1; i++) {
-    gfc->scalefac_band.l[i] =
-      sfBandIndex[gfc->samplerate_index + (gfp->version * 3) + 
-             6*(gfp->out_samplerate<16000)].l[i];
-  }
-  for (i = 0; i < SBMAX_s + 1; i++) {
-    gfc->scalefac_band.s[i] =
-      sfBandIndex[gfc->samplerate_index + (gfp->version * 3) + 
-             6*(gfp->out_samplerate<16000)].s[i];
-  }
-
-
-  /* determine the mean bitrate for main data */
-  gfc->sideinfo_len = 4;
-  if ( gfp->version == 1 )
-    {   /* MPEG 1 */
-      if ( gfc->stereo == 1 )
-	gfc->sideinfo_len += 17;
-      else
-	gfc->sideinfo_len += 32;
+    switch ( gfp -> quality ) {
+    case 9:  /* no psymodel, no noise shaping */
+	gfc -> filter_type        = 0;
+	gfc -> psymodel           = 0;
+	gfc -> quantization       = 0;
+	gfc -> noise_shaping      = 0;
+	gfc -> noise_shaping_stop = 0;
+	gfc -> use_best_huffman   = 0;
+        break;
+    case 8: gfp -> quality = 7;
+    case 7:  /* use psymodel (for short block and m/s switching), but no noise shaping */
+	gfc -> filter_type        = 0;
+	gfc -> psymodel           = 1;
+	gfc -> quantization       = 0;
+	gfc -> noise_shaping      = 0;
+	gfc -> noise_shaping_stop = 0;
+	gfc -> use_best_huffman   = 0;
+        break;
+    case 6: gfp -> quality = 5;
+    case 5:  /* the default */
+	gfc -> filter_type        = 0;
+	gfc -> psymodel           = 1;
+	gfc -> quantization       = 0;
+        gfc -> noise_shaping      = 1;
+        gfc -> noise_shaping_stop = 0;
+        gfc -> use_best_huffman   = 0;
+        break;
+    case 4: gfp -> quality = 3;
+    case 3:  /* missing comment */
+	gfc -> filter_type        = 0;
+	gfc -> psymodel           = 1;
+	gfc -> quantization       = 1;
+	gfc -> noise_shaping      = 1;
+	gfc -> noise_shaping_stop = 0;
+	gfc -> use_best_huffman   = 1;
+        break;
+    case 2:
+	gfc -> filter_type        = 0;
+	gfc -> psymodel           = 1;
+	gfc -> quantization       = 1;
+	gfc -> noise_shaping      = 1;
+	gfc -> noise_shaping_stop = 0;
+	gfc -> use_best_huffman   = 1;
+        break;
+    case 1:
+	gfc -> filter_type        = 0;
+	gfc -> psymodel           = 1;
+	gfc -> quantization       = 1;
+	gfc -> noise_shaping      = 2;
+	gfc -> noise_shaping_stop = 0;
+	gfc -> use_best_huffman   = 1;
+	break;
+    case 0:
+	gfc -> filter_type        = 1;  /* not yet coded */
+	gfc -> psymodel           = 1;
+	gfc -> quantization       = 1;
+	gfc -> noise_shaping      = 3;  /* not yet coded */
+	gfc -> noise_shaping_stop = 2;  /* not yet coded */
+	gfc -> use_best_huffman   = 2;  /* not yet coded */
+	return -1;
+	break;
+    default:
+        assert (0);
+	return -1;
     }
-  else
-    {   /* MPEG 2 */
-      if ( gfc->stereo == 1 )
-	gfc->sideinfo_len += 9;
-      else
-	gfc->sideinfo_len += 17;
+    
+    sf = sfBandIndex + gfc->samplerate_index + 3 * (gfp->version + 2 * (gfp->out_samplerate < 16000) );
+
+    for ( i = 0; i <= SBMAX_l; i++ )
+        gfc -> scalefac_band.l [i] = sf -> l [i];
+ 
+    for ( i = 0; i <= SBMAX_s; i++ )
+        gfc -> scalefac_band.s [i] = sf -> s [i];
+
+
+    /* determine the mean bitrate for main data */
+    gfc -> sideinfo_len = 4;
+  
+    switch ( gfp -> version ) {
+    case 1: /* MPEG 1 */
+        gfc -> sideinfo_len += gfc->channels == 1  ?  17  :  32;
+        break;
+    case 0: /* MPEG 2 */
+        gfc -> sideinfo_len += gfc->channels == 1  ?   9  :  17;
+        break;
+    default:
+        assert (0);
+        return -1;
     }
   
-  if (gfp->error_protection) gfc->sideinfo_len += 2;
+    if (gfp -> error_protection) 
+        gfc -> sideinfo_len += 2;                 /* 16 bit CRC eats 2 bytes */
   
 
-  if (gfp->bWriteVbrTag)
-    {
-      /* Write initial VBR Header to bitstream */
-      InitVbrTag(gfp);
-    }
+    if (gfp -> bWriteVbrTag)        /* Write initial VBR Header to bitstream */
+        InitVbrTag (gfp);
 
-  if (gfp->brhist_disp)
-    brhist_init(gfp,1,14);
+    if (gfp -> brhist_disp)
+        brhist_init ( gfp, 1, 14 );
 
 #ifdef HAVEVORBIS
-  if (gfp->ogg) {
-    lame_encode_ogg_init(gfp);
-    gfc->filter_type = -1;   /* vorbis claims not to need filters */
-    gfp->VBR=vbr_off;            /* ignore lame's various VBR modes */
-  }
+    if (gfp -> ogg) {
+        lame_encode_ogg_init (gfp);
+        gfc -> filter_type = -1;        /* vorbis claims not to need filters */
+        gfp -> VBR         = vbr_off;   /* ignore lame's various VBR modes   */
+    }
 #endif
 
-  return 0;
+    return 0;
 }
 
 
@@ -682,7 +682,7 @@ void lame_print_config(lame_global_flags *gfp)
   FLOAT in_samplerate = gfc->resample_ratio*out_samplerate;
 
   lame_print_version(stderr);
-  if (gfp->num_channels==2 && gfc->stereo==1) {
+  if (gfp->num_channels==2 && gfc->channels==1) {
     MSGF("Autoconverting from stereo to mono. Setting encoding to mono mode.\n");
   }
   if (gfc->resample_ratio!=1) {
@@ -951,23 +951,25 @@ char *mp3buf, size_t mp3buf_size)
     /* prime the MDCT/polyphase filterbank with a short block */
     { 
       int i,j;
-      sample_t primebuff0[286+1152+576];
-      sample_t primebuff1[286+1152+576];
+      sample_t primebuff0 [286+1152+576];
+      sample_t primebuff1 [286+1152+576];
       for (i=0, j=0; i<286+576*(1+gfc->mode_gr); ++i) {
 	if (i<576*gfc->mode_gr) {
 	  primebuff0[i]=0;
-	  if (gfc->stereo) 
+	  fprintf (stderr, "Check for bug here! %u pfk@uni-jena.de", gfc->channels);
+	  if (gfc->channels) 
 	    primebuff1[i]=0;
 	}else{
 	  primebuff0[i]=inbuf[0][j];
-	  if (gfc->stereo) 
+	  fprintf (stderr, "Check for bug here! %u pfk@uni-jena.de", gfc->channels);
+	  if (gfc->channels) 
 	    primebuff1[i]=inbuf[1][j];
 	  ++j;
 	}
       }
       /* polyphase filtering / mdct */
       for ( gr = 0; gr < gfc->mode_gr; gr++ ) {
-	for ( ch = 0; ch < gfc->stereo; ch++ ) {
+	for ( ch = 0; ch < gfc->channels; ch++ ) {
 	  gfc->l3_side.gr[gr].ch[ch].tt.block_type=SHORT_TYPE;
 	}
       }
@@ -1064,7 +1066,7 @@ char *mp3buf, size_t mp3buf_size)
     ms_ratio_prev=gfc->ms_ratio[gfc->mode_gr-1];
     for (gr=0; gr < gfc->mode_gr ; gr++) {
 
-      for ( ch = 0; ch < gfc->stereo; ch++ )
+      for ( ch = 0; ch < gfc->channels; ch++ )
 	bufp[ch] = &inbuf[ch][576 + gr*576-FFTOFFSET];
 
       ret=L3psycho_anal( gfp,bufp, gr, 
@@ -1073,7 +1075,7 @@ char *mp3buf, size_t mp3buf_size)
 		     pe[gr],pe_MS[gr],blocktype);
       if (ret!=0) return -4;
 
-      for ( ch = 0; ch < gfc->stereo; ch++ )
+      for ( ch = 0; ch < gfc->channels; ch++ )
 	gfc->l3_side.gr[gr].ch[ch].tt.block_type=blocktype[ch];
 
     }
@@ -1081,7 +1083,7 @@ char *mp3buf, size_t mp3buf_size)
     gfc->ms_ratio[1]=gfc->ms_ratio[gfc->mode_gr-1];
   }else{
     for (gr=0; gr < gfc->mode_gr ; gr++)
-      for ( ch = 0; ch < gfc->stereo; ch++ ) {
+      for ( ch = 0; ch < gfc->channels; ch++ ) {
 	gfc->l3_side.gr[gr].ch[ch].tt.block_type=NORM_TYPE;
 	pe_MS[gr][ch]=pe[gr][ch]=700;
       }
@@ -1090,7 +1092,7 @@ char *mp3buf, size_t mp3buf_size)
 
   /* block type flags */
   for( gr = 0; gr < gfc->mode_gr; gr++ ) {
-    for ( ch = 0; ch < gfc->stereo; ch++ ) {
+    for ( ch = 0; ch < gfc->channels; ch++ ) {
       gr_info *cod_info = &gfc->l3_side.gr[gr].ch[ch].tt;
       cod_info->mixed_block_flag = 0;     /* never used by this model */
       if (cod_info->block_type == NORM_TYPE )
@@ -1105,7 +1107,7 @@ char *mp3buf, size_t mp3buf_size)
   mdct_sub48(gfp,inbuf[0], inbuf[1], xr, &gfc->l3_side);
   /* re-order the short blocks, for more efficient encoding below */
   for (gr = 0; gr < gfc->mode_gr; gr++) {
-    for (ch = 0; ch < gfc->stereo; ch++) {
+    for (ch = 0; ch < gfc->channels; ch++) {
       gr_info *cod_info = &gfc->l3_side.gr[gr].ch[ch].tt;
       if (cod_info->block_type==SHORT_TYPE) {
 	freorder(gfc->scalefac_band.s,xr[gr][ch]);
@@ -1147,7 +1149,7 @@ char *mp3buf, size_t mp3buf_size)
 
   if (gfp->gtkflag && gfc->pinfo != NULL) {
     for ( gr = 0; gr < gfc->mode_gr; gr++ ) {
-      for ( ch = 0; ch < gfc->stereo; ch++ ) {
+      for ( ch = 0; ch < gfc->channels; ch++ ) {
 	gfc->pinfo->ms_ratio[gr]=gfc->ms_ratio[gr];
 	gfc->pinfo->ms_ener_ratio[gr]=gfc->ms_ener_ratio[gr];
 	gfc->pinfo->blocktype[gr][ch]=
@@ -1209,7 +1211,7 @@ char *mp3buf, size_t mp3buf_size)
 
   if (gfp->gtkflag && gfc->pinfo != NULL) {
     int j;
-    for ( ch = 0; ch < gfc->stereo; ch++ ) {
+    for ( ch = 0; ch < gfc->channels; ch++ ) {
       for ( j = 0; j < FFTOFFSET; j++ )
 	gfc->pinfo->pcmdata[ch][j] = gfc->pinfo->pcmdata[ch][j+gfp->framesize];
       for ( j = FFTOFFSET; j < 1600; j++ ) {
@@ -1292,7 +1294,7 @@ int lame_encode_buffer(lame_global_flags *gfp,
   mfbuf[0]=gfc->mfbuf[0];
   mfbuf[1]=gfc->mfbuf[1];
 
-  if (gfp->num_channels==2  && gfc->stereo==1) {
+  if (gfp->num_channels==2  && gfc->channels==1) {
     /* downsample to mono */
     for (i=0; i<nsamples; ++i) {
       in_buffer[0][i]=((int)in_buffer[0][i]+(int)in_buffer[1][i])/2;
@@ -1306,7 +1308,7 @@ int lame_encode_buffer(lame_global_flags *gfp,
     int n_out=0;
     /* copy in new samples into mfbuf, with filtering */
 
-    for (ch=0; ch<gfc->stereo; ch++) {
+    for (ch=0; ch<gfc->channels; ch++) {
       if (gfc->resample_ratio>1)  {
 	n_out=fill_buffer_downsample(gfp,&mfbuf[ch][gfc->mf_size],gfp->framesize,
 					  in_buffer[ch],nsamples,&n_in,ch);
@@ -1338,7 +1340,7 @@ int lame_encode_buffer(lame_global_flags *gfp,
       /* shift out old samples */
       gfc->mf_size -= gfp->framesize;
       gfc->mf_samples_to_encode -= gfp->framesize;
-      for (ch=0; ch<gfc->stereo; ch++)
+      for (ch=0; ch<gfc->channels; ch++)
 	for (i=0; i<gfc->mf_size; i++)
 	  mfbuf[ch][i]=mfbuf[ch][i+gfp->framesize];
     }
@@ -1394,7 +1396,7 @@ int lame_encode_buffer_interleaved(lame_global_flags *gfp,
   }
 
 
-  if (gfp->num_channels==2  && gfc->stereo==1) {
+  if (gfp->num_channels==2  && gfc->channels==1) {
     /* downsample to mono */
     for (i=0; i<nsamples; ++i) {
       buffer[2*i]=((int)buffer[2*i]+(int)buffer[2*i+1])/2;
@@ -1431,7 +1433,7 @@ int lame_encode_buffer_interleaved(lame_global_flags *gfp,
       /* shift out old samples */
       gfc->mf_size -= gfp->framesize;
       gfc->mf_samples_to_encode -= gfp->framesize;
-      for (ch=0; ch<gfc->stereo; ch++)
+      for (ch=0; ch<gfc->channels; ch++)
 	for (i=0; i<gfc->mf_size; i++)
 	  mfbuf[ch][i]=mfbuf[ch][i+gfp->framesize];
     }

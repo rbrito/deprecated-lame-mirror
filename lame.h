@@ -413,7 +413,7 @@ void   lame_close_infile ( lame_global_flags* gfp );
  * lame_decode return code:  -1: error.  0: need more data.  n>0: size of pcm output
  *********************************************************************/
 typedef struct {
-    int            stereo;      /* number of channels */
+    int            channels;    /* number of channels */
     int            samplerate;  /* sample rate */
     int            bitrate;     /* bitrate */
     unsigned long  nsamp;       /* number of samples in mp3 file, estimated */

@@ -35,17 +35,26 @@ enum byte_order NativeByteOrder = order_unknown;
 *  Global Function Definitions
 *
 ***********************************************************************/
+
+
 /* Replacement for forward fseek(,,SEEK_CUR), because fseek() fails on pipes */
-int fskip(FILE *sf,long num_bytes,int dummy)
+int fskip ( FILE* sf, off_t bytes, int whence )
 {
-  char data[1024];
-  int nskip = 0;
-  while (num_bytes > 0) {
-    nskip = (num_bytes>1024) ? 1024 : num_bytes;
-    num_bytes -= fread(data,(size_t)1,(size_t)nskip,sf);
-  }
+    char    data [4096];
+    size_t  skip = 0;
+  
+    assert ( whence == SEEK_CUR );
+  
+    while ( bytes > 0 ) {
+        skip   = bytes > sizeof(data)  ?  sizeof(data)  :  bytes;
+        skip   = fread ( data, 1, (size_t)skip, sf );
+	if ( (signed) skip <= 0 ) {
+	    fprintf (stderr, "Problems reading data in fskip().\n");
+	}
+	bytes -= skip;
+    }
   /* return 0 if last read was successful */
-  return num_bytes;
+  return bytes;
 }
 
 
@@ -157,7 +166,8 @@ int FindNearestBitrate ( unsigned       bRate,        /* legal rates from 32 to 
  *
  * Robert.Hegemann@gmx.de 2000-07-01
  */
-long validSamplerate ( long samplerate )
+
+long RoundSampleRateToNearest ( long samplerate )         /* This functions rounds to nearest sample frequency */
 {
     if (samplerate <=  9500) return  8000;
     if (samplerate <= 11500) return 11025;
@@ -170,12 +180,29 @@ long validSamplerate ( long samplerate )
     return 48000;
 }
 
+long RoundSampleRateUp ( long samplerate )         /* This functions rounds up sample frequency with a margin of 3% */
+{
+    if (samplerate <=  8240) return  8000;
+    if (samplerate <= 11355) return 11025;
+    if (samplerate <= 12360) return 12000;
+    if (samplerate <= 16480) return 16000;
+    if (samplerate <= 22710) return 22050;
+    if (samplerate <= 24720) return 24000;
+    if (samplerate <= 32960) return 32000;
+    if (samplerate <= 45420) return 44100;
+    return 48000;
+}
+
 int BitrateIndex(
 int bRate,        /* legal rates from 32 to 448 */
 int version,      /* MPEG-1 or MPEG-2 LSF */
 int samplerate)   /* convert bitrate in kbps to index */
 {
     int* t = index_to_bitrate [version];
+
+    if ( bRate == t [ 0] ) { ERRORF ("Bitrate %d kbps not legal for %i Hz output sampling.\n", bRate, samplerate );
+                             return 0;
+			   }
 
     if ( bRate == t [ 1] ) return  1;
     if ( bRate == t [ 2] ) return  2;

@@ -67,7 +67,7 @@
 #define AUSHIFT (3)
 
 struct frame {
-    int stereo;
+    int channels;
     int jsbound;
     int single;
     int lsf;

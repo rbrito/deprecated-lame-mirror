@@ -226,7 +226,7 @@ int sync_buffer(struct mpstr *mp,int free_match)
 	if (h && free_match) {
 	  /* just to be even more thorough, match the sample rate */
 	  struct frame *fr = &mp->fr;
-	  int mode,stereo,sampling_frequency,mpeg25,lsf;
+	  int mode,channels,sampling_frequency,mpeg25,lsf;
 
 	  if( head & (1<<20) ) {
 	    lsf = (head & (1<<19)) ? 0x0 : 0x1;
@@ -238,13 +238,13 @@ int sync_buffer(struct mpstr *mp,int free_match)
 	  }
 
 	  mode      = ((head>>6)&0x3);
-	  stereo    = (mode == MPG_MD_MONO) ? 1 : 2;
+	  channels    = (mode == MPG_MD_MONO) ? 1 : 2;
 
 	  if(mpeg25) 
 	    sampling_frequency = 6 + ((head>>10)&0x3);
 	  else
 	    sampling_frequency = ((head>>10)&0x3) + (lsf*3);
-	  h = ((stereo==fr->stereo) && (lsf==fr->lsf) && (mpeg25==fr->mpeg25) && 
+	  h = ((channels==fr->channels) && (lsf==fr->lsf) && (mpeg25==fr->mpeg25) && 
                  (sampling_frequency == fr->sampling_frequency));
 	}
 
@@ -329,9 +329,9 @@ int decodeMP3(struct mpstr *mp,char *in,int isize,char *out,
 		mp->free_format = (mp->framesize==0);
 
 		if(mp->fr.lsf)
-		  mp->ssize = (mp->fr.stereo == 1) ? 9 : 17;
+		  mp->ssize = (mp->fr.channels == 1) ?  9 : 17;
 		else
-		  mp->ssize = (mp->fr.stereo == 1) ? 17 : 32;
+		  mp->ssize = (mp->fr.channels == 1) ? 17 : 32;
 		if (mp->fr.error_protection) 
 		  mp->ssize += 2;
 

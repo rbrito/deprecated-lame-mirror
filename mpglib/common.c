@@ -55,7 +55,7 @@ static void get_II_stuff(struct frame *fr)
   if(fr->lsf)
     table = 4;
   else
-    table = translate[fr->sampling_frequency][2-fr->stereo][fr->bitrate_index];
+    table = translate[fr->sampling_frequency][2-fr->channels][fr->bitrate_index];
   sblim = sblims[table];
 
   fr->alloc = tables[table];
@@ -145,7 +145,7 @@ int decode_header(struct frame *fr,unsigned long newhead)
     fr->original  = ((newhead>>2)&0x1);
     fr->emphasis  = newhead & 0x3;
 
-    fr->stereo    = (fr->mode == MPG_MD_MONO) ? 1 : 2;
+    fr->channels  = fr->mode == MPG_MD_MONO  ?  1  :  2;
 
     switch(fr->lay)
     {
@@ -171,9 +171,9 @@ int decode_header(struct frame *fr,unsigned long newhead)
 #if 0
         fr->do_layer = do_layer3;
         if(fr->lsf)
-          ssize = (fr->stereo == 1) ? 9 : 17;
+          ssize = (fr->channels == 1) ?  9 : 17;
         else
-          ssize = (fr->stereo == 1) ? 17 : 32;
+          ssize = (fr->channels == 1) ? 17 : 32;
 #endif
 
 #if 0
@@ -209,7 +209,7 @@ void print_header(struct frame *fr)
 		layers[fr->lay],freqs[fr->sampling_frequency],
 		modes[fr->mode],fr->mode_ext,fr->framesize+4);
 	fprintf(stderr,"Channels: %d, copyright: %s, original: %s, CRC: %s, emphasis: %d.\n",
-		fr->stereo,fr->copyright?"Yes":"No",
+		fr->channels,fr->copyright?"Yes":"No",
 		fr->original?"Yes":"No",fr->error_protection?"Yes":"No",
 		fr->emphasis);
 	fprintf(stderr,"Bitrate: %d Kbits/s, Extension value: %d\n",

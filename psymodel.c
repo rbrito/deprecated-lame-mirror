@@ -49,19 +49,19 @@ int L3para_read( lame_global_flags *gfp,
 /* addition of simultaneous masking   Naoki Shibata 2000/7 */
 INLINE FLOAT8 mask_add(FLOAT8 m1,FLOAT8 m2,int k,int b,lame_internal_flags *gfc)
 {
-  static FLOAT8 table1[] = {
+  static const FLOAT8 table1 [] = {
     3.3246 *3.3246 ,3.23837*3.23837,3.15437*3.15437,3.00412*3.00412,2.86103*2.86103,2.65407*2.65407,2.46209*2.46209,2.284  *2.284  ,
     2.11879*2.11879,1.96552*1.96552,1.82335*1.82335,1.69146*1.69146,1.56911*1.56911,1.46658*1.46658,1.37074*1.37074,1.31036*1.31036,
     1.25264*1.25264,1.20648*1.20648,1.16203*1.16203,1.12765*1.12765,1.09428*1.09428,1.0659 *1.0659 ,1.03826*1.03826,1.01895*1.01895,
     1
   };
 
-  static FLOAT8 table2[] = {
+  static const FLOAT8 table2 [] = {
     1.33352*1.33352,1.35879*1.35879,1.38454*1.38454,1.39497*1.39497,1.40548*1.40548,1.3537 *1.3537 ,1.30382*1.30382,1.22321*1.22321,
     1.14758*1.14758
   };
 
-  static FLOAT8 table3[] = {
+  static const FLOAT8 table3 [] = {
     2.35364*2.35364,2.29259*2.29259,2.23313*2.23313,2.12675*2.12675,2.02545*2.02545,1.87894*1.87894,1.74303*1.74303,1.61695*1.61695,
     1.49999*1.49999,1.39148*1.39148,1.29083*1.29083,1.19746*1.19746,1.11084*1.11084,1.03826*1.03826
   };
@@ -317,7 +317,7 @@ int L3psycho_anal( lame_global_flags *gfp,
 
   
   
-  numchn = gfc->stereo;
+  numchn = gfc->channels;
   /* chn=2 and 3 = Mid and Side channels */
   if (gfp->mode == MPG_MD_JOINT_STEREO) numchn=4;
   for (chn=0; chn<numchn; chn++) {
@@ -1047,12 +1047,12 @@ int L3psycho_anal( lame_global_flags *gfp,
    * determin final block type
    ***************************************************************/
 
-  for (chn=0; chn<gfc->stereo; chn++) {
+  for (chn=0; chn<gfc->channels; chn++) {
     blocktype[chn] = NORM_TYPE;
   }
 
 
-  if (gfc->stereo==2) {
+  if (gfc->channels==2) {
     if (!gfp->allow_diff_short || gfp->mode==MPG_MD_JOINT_STEREO) {
       /* force both channels to use the same block type */
       /* this is necessary if the frame is to be encoded in ms_stereo.  */
@@ -1069,7 +1069,7 @@ int L3psycho_anal( lame_global_flags *gfp,
   
   /* update the blocktype of the previous granule, since it depends on what
    * happend in this granule */
-  for (chn=0; chn<gfc->stereo; chn++) {
+  for (chn=0; chn<gfc->channels; chn++) {
     if ( uselongblock[chn])
       {				/* no attack : use long blocks */
 	switch( gfc->blocktype_old[chn] ) 
@@ -1147,7 +1147,7 @@ int *npart_l_orig,int *npart_l,int *npart_s_orig,int *npart_s)
   FLOAT8 freq_tp;
   FLOAT8 bval_l[CBANDS], bval_s[CBANDS];
   int   cbmax=0, cbmax_tp;
-  FLOAT8 *p = psy_data;
+  const FLOAT8 *p = psy_data;
   int  sbmax ;
   int  i,j,k2,loop;
   int freq_scale=1;

@@ -63,7 +63,7 @@ void init_layer2(void)
 
 void II_step_one(unsigned int *bit_alloc,int *scale,struct frame *fr)
 {
-    int stereo = fr->stereo-1;
+    int stereo = fr->channels-1;
     int sblimit = fr->II_sblimit;
     int jsbound = fr->jsbound;
     int sblimit2 = fr->II_sblimit<<stereo;
@@ -137,7 +137,7 @@ void II_step_one(unsigned int *bit_alloc,int *scale,struct frame *fr)
 void II_step_two(unsigned int *bit_alloc,real fraction[2][4][SBLIMIT],int *scale,struct frame *fr,int x1)
 {
     int i,j,k,ba;
-    int stereo = fr->stereo;
+    int channels = fr->channels;
     int sblimit = fr->II_sblimit;
     int jsbound = fr->jsbound;
     struct al_table *alloc2,*alloc1 = fr->alloc;
@@ -147,7 +147,7 @@ void II_step_two(unsigned int *bit_alloc,real fraction[2][4][SBLIMIT],int *scale
     for (i=0;i<jsbound;i++,alloc1+=(1<<step))
     {
       step = alloc1->bits;
-      for (j=0;j<stereo;j++)
+      for (j=0;j<channels;j++)
       {
         if ( (ba=*bita++) ) 
         {
@@ -224,7 +224,7 @@ void II_step_two(unsigned int *bit_alloc,real fraction[2][4][SBLIMIT],int *scale
 //    sblimit = fr->down_sample_sblimit;
 
   for(i=sblimit;i<SBLIMIT;i++)
-    for (j=0;j<stereo;j++)
+    for (j=0;j<channels;j++)
       fraction[j][0][i] = fraction[j][1][i] = fraction[j][2][i] = 0.0;
 
 }
@@ -247,7 +247,7 @@ static void II_select_table(struct frame *fr)
   if(fr->lsf)
     table = 4;
   else
-    table = translate[fr->sampling_frequency][2-fr->stereo][fr->bitrate_index];
+    table = translate[fr->sampling_frequency][2-fr->channels][fr->bitrate_index];
   sblim = sblims[table];
 
   fr->alloc      = tables[table];
@@ -260,7 +260,7 @@ int do_layer2(struct frame *fr,unsigned char *pcm_sample,int *pcm_point)
 {
   int clip=0;
   int i,j;
-  int stereo = fr->stereo;
+  int channels = fr->channels;
   real fraction[2][4][SBLIMIT]; /* pick_table clears unused subbands */
   unsigned int bit_alloc[64];
   int scale[192];
@@ -270,7 +270,7 @@ int do_layer2(struct frame *fr,unsigned char *pcm_sample,int *pcm_point)
   fr->jsbound = (fr->mode == MPG_MD_JOINT_STEREO) ?
      (fr->mode_ext<<2)+4 : fr->II_sblimit;
 
-  if(stereo == 1 || single == 3)
+  if(channels == 1 || single == 3)
     single = 0;
 
   II_step_one(bit_alloc, scale, fr);

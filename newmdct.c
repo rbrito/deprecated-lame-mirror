@@ -593,7 +593,7 @@ void mdct_sub48(lame_global_flags *gfp,
 
     wk = w0 + 286;
     /* thinking cache performance, ch->gr loop is better than gr->ch loop */
-    for (ch = 0; ch < gfc->stereo; ch++) {
+    for (ch = 0; ch < gfc->channels; ch++) {
 	for (gr = 0; gr < gfc->mode_gr; gr++) {
 	    int	band;
 	    FLOAT8 *mdct_enc = &mdct_freq[gr][ch][0];

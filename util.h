@@ -150,7 +150,7 @@ typedef struct  {
 
   int padding;                    /* padding for the current frame? */
   int mode_gr;                    /* granules per frame */
-  int stereo;                     /* number of channels */
+  int channels;                   /* number of channels */
   int VBR_min_bitrate;            /* min bitrate index */
   int VBR_max_bitrate;            /* max bitrate index */
   float resample_ratio;           /* input_samp_rate/output_samp_rate */
@@ -344,7 +344,10 @@ extern int            fskip(FILE *sf,long num_bytes,int dummy);
 extern void           display_bitrates(FILE *out_fh);
 extern int            BitrateIndex(int, int,int);
 extern int            FindNearestBitrate(unsigned,unsigned, unsigned long);
-extern long           validSamplerate(long samplerate);
+
+extern long  RoundSampleRateToNearest ( long samplerate );
+extern long  RoundSampleRateUp        ( long samplerate );
+
 extern int            SmpFrqIndex(long, int*);
 extern int            copy_buffer(char *buffer,int buffer_size,Bit_stream_struc *bs);
 extern void           init_bit_stream_w(lame_internal_flags *gfc);

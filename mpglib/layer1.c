@@ -17,7 +17,9 @@ void I_step_one(unsigned int balloc[], unsigned int scale_index[2][SBLIMIT],stru
   unsigned int *ba=balloc;
   unsigned int *sca = (unsigned int *) scale_index;
 
-  if(fr->stereo) {
+  fprintf (stderr, "check for bug!!! %u pfk@uni-jena.de\n", fr->channels);
+  
+  if(fr->channels) {
     int i;
     int jsbound = fr->jsbound;
     for (i=0;i<jsbound;i++) { 
@@ -61,7 +63,8 @@ void I_step_two(real fraction[2][SBLIMIT],unsigned int balloc[2*SBLIMIT],
   register unsigned int *ba;
   register unsigned int *sca = (unsigned int *) scale_index;
 
-  if(fr->stereo) {
+  fprintf (stderr, "check for bug!!! %u pfk@uni-jena.de\n", fr->channels);
+  if(fr->channels) {
     int jsbound = fr->jsbound;
     register real *f0 = fraction[0];
     register real *f1 = fraction[1];
@@ -121,7 +124,7 @@ void I_step_two(real fraction[2][SBLIMIT],unsigned int balloc[2*SBLIMIT],
 int do_layer1(struct frame *fr,unsigned char *pcm_sample,int *pcm_point)
 {
   int clip=0;
-  int i,stereo = fr->stereo;
+  int i,channels = fr->channels;
   unsigned int balloc[2*SBLIMIT];
   unsigned int scale_index[2][SBLIMIT];
   real fraction[2][SBLIMIT];
@@ -129,7 +132,7 @@ int do_layer1(struct frame *fr,unsigned char *pcm_sample,int *pcm_point)
 
   fr->jsbound = (fr->mode == MPG_MD_JOINT_STEREO) ? (fr->mode_ext<<2)+4 : 32;
 
-  if(stereo == 1 || single == 3)
+  if(channels == 1 || single == 3)
     single = 0;
 
   I_step_one(balloc,scale_index,fr);
