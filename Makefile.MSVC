@@ -42,7 +42,7 @@ c_sources = \
  ieeefloat.c \
         lame.c \
         newmdct.c \
- parse.c \ 
+ parse.c \
  portableio.c \
  psymodel.c \
  quantize.c \
