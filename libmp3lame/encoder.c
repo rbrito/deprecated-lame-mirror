@@ -26,6 +26,7 @@
 #endif
 
 #include <assert.h>
+
 #include "lame.h"
 #include "util.h"
 #include "newmdct.h"
@@ -139,7 +140,9 @@ char *mp3buf, int mp3buf_size)
     gfc->slot_lag  = gfc->frac_SpF;
     
     /* check FFT will not use a negative starting offset */
-    assert(576>=FFTOFFSET);
+#if 576 < FFTOFFSET
+# error FFTOFFSET greater than 576: FFT uses a negative offset
+#endif
     /* check if we have enough data for FFT */
     assert(gfc->mf_size>=(BLKSIZE+gfp->framesize-FFTOFFSET));
     /* check if we have enough data for polyphase filterbank */
