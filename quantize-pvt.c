@@ -956,8 +956,6 @@ void quantize_xrpow_ISO( FLOAT8 xr[576], int ix[576], gr_info *cod_info )
 
 
 
-static int OldValue = -30; /* guess it or so. */
-
 typedef enum {
     BINSEARCH_NONE,
     BINSEARCH_UP, 
@@ -968,7 +966,6 @@ typedef enum {
 int 
 bin_search_StepSize2(int      desired_rate, 
 		    FLOAT8   start, 
-		    int      bot, 
 		    int     *ix,
 		    FLOAT8   xrs[576], 
 		    FLOAT8   xrspow[576], 
@@ -978,7 +975,7 @@ bin_search_StepSize2(int      desired_rate,
     int flag_GoneOver = 0;
     int CurrentStep = 4;
     int nBits;
-    int StepSize = OldValue;
+    int StepSize = start;
     binsearchDirection_t Direction = BINSEARCH_NONE;
     do
     {
@@ -1016,7 +1013,6 @@ bin_search_StepSize2(int      desired_rate,
 	else break; /* nBits == desired_rate;; most unlikely to happen.
 */
     } while (1); /* For-ever, break is adjusted. */
-    OldValue = StepSize;
     return nBits;
 }
 

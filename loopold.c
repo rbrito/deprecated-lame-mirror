@@ -297,6 +297,7 @@ void outer_loop_dual(
   compute_stepsize=1;
 
   while ( (notdone[0] || notdone[1])  ) {
+    static FLOAT8 OldValue[2] = {-30, -30};
     int pre_just_turned_on[2]={0,0};
     iteration ++;
 
@@ -309,7 +310,7 @@ void outer_loop_dual(
 	    temp=fabs(xr[gr][ch][i]);
 	    xrpow[gr][ch][i]=sqrt(sqrt(temp)*temp);
 	  }
-	  bits_found[ch]=bin_search_StepSize2(targ_bits[ch],-211.0,46,
+	  bits_found[ch]=bin_search_StepSize2(targ_bits[ch],OldValue[ch],
 	      l3_enc[gr][ch],xr[gr][ch],xrpow[gr][ch],cod_info[ch]); 
 	}
     }

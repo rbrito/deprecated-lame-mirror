@@ -523,6 +523,7 @@ void outer_loop(
   /* BEGIN MAIN LOOP */
   iteration = 0;
   while ( notdone  ) {
+    static FLOAT8 OldValue[2] = {-30, -30};
     int try_scale=0;
     iteration ++;
     
@@ -533,7 +534,7 @@ void outer_loop(
 	temp=fabs(xr[gr][ch][i]);
 	xrpow[i]=sqrt(sqrt(temp)*temp);
       }
-      bits_found=bin_search_StepSize2(targ_bits,-211.0,46,
+      bits_found=bin_search_StepSize2(targ_bits,OldValue[ch],
 		  l3_enc[gr][ch],xr[gr][ch],xrpow,cod_info); 
     }
     
