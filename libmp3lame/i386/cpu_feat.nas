@@ -132,7 +132,7 @@ has_3DNow_nasm:
 
 	mov	eax,0x80000000
 	CPUID
-	test	edx,0x80000000
+	cmp	eax,0x80000000
 	jbe	NO_3DNow_FEATURE	; no extended MSR1
 
 	mov	eax,0x80000001
