@@ -1023,7 +1023,6 @@ outer_loop (
 {
     lame_internal_flags *gfc=gfp->internal_flags;
     gr_info cod_info_w;
-    FLOAT save_xrpow[576];
     FLOAT distort[SFBMAX];
     calc_noise_result best_noise_info;
     int huff_bits;
@@ -1040,8 +1039,6 @@ outer_loop (
     calc_noise (gfc, cod_info, l3_xmin, distort, &best_noise_info);
     cod_info_w = *cod_info;
     age = 0;
-    if (gfp->VBR == vbr_rh)
-	memcpy(save_xrpow, xrpow, sizeof(FLOAT)*576);
 
     /* BEGIN MAIN LOOP */
     do {
@@ -1054,8 +1051,6 @@ outer_loop (
 	    break;
 
 	/* Check if the last scalefactor band is distorted.
-	 * in VBR mode we can't get rid of the distortion, so quit now
-	 * and VBR mode will try again with more bits.  
 	 * (makes a 10% speed increase, the files I tested were
 	 * binary identical, 2000/05/20 Robert.Hegemann@gmx.de)
 	 * distort[] > 1 means noise > allowed noise
@@ -1097,11 +1092,6 @@ outer_loop (
 			 &cod_info_w)) {
 	    *cod_info = cod_info_w;
 	    age = 0;
-	    /* save data so we can restore this quantization later */
-	    if (gfp->VBR == vbr_rh) {
-		/* store for later reuse */
-		memcpy(save_xrpow, xrpow, sizeof(FLOAT)*576);
-	    }
         }
         else {
 	    /* allow up to 3 unsuccesful tries in serial, then stop 
@@ -1117,14 +1107,9 @@ outer_loop (
 
     assert (cod_info->global_gain < 256);
 
-    /*  finish up
-     */
-    if (gfp->VBR == vbr_rh)
-	/* restore for reuse on next try */
-	memcpy(xrpow, save_xrpow, sizeof(FLOAT)*576);
     /*  do the 'substep shaping'
      */
-    else if (gfc->substep_shaping & 1)
+    if (gfc->substep_shaping & 1)
 	trancate_smallspectrums(gfc, cod_info, l3_xmin, xrpow);
 
     return best_noise_info.over_count;
@@ -1163,102 +1148,6 @@ iteration_finish_one (
     /*  update reservoir status after FINAL quantization/bitrate
      */
     ResvAdjust (gfc, cod_info);
-}
-
-
-
-/*********************************************************************
- *
- *      VBR_encode_granule()
- *
- *  2000-09-04 Robert Hegemann
- *
- *********************************************************************/
- 
-static void
-VBR_encode_granule (
-    lame_global_flags	*gfp,
-    gr_info		* const cod_info,
-    const FLOAT	* const l3_xmin,     /* allowed distortion of the scalefactor */
-          FLOAT                 xrpow[576],  /* coloured magnitudes of spectral values */
-    const int                    ch, 
-          int                    min_bits, 
-          int                    max_bits )
-{
-    lame_internal_flags *gfc=gfp->internal_flags;
-    gr_info         bst_cod_info;
-    FLOAT          bst_xrpow [576]; 
-    int Max_bits  = max_bits;
-    int real_bits = max_bits+1;
-    int this_bits = (max_bits+min_bits)/2;
-    int dbits, over, found = 0;
-    int sfb21_extra = gfc->sfb21_extra;
-
-    assert(Max_bits <= MAX_BITS);
-
-    /*  search within round about 40 bits of optimal
-     */
-    do {
-        assert(this_bits >= min_bits);
-        assert(this_bits <= max_bits);
-        assert(min_bits <= max_bits);
-
-        if (this_bits > Max_bits-42) 
-            gfc->sfb21_extra = 0;
-        else
-            gfc->sfb21_extra = sfb21_extra;
-
-        over = outer_loop ( gfp, cod_info, l3_xmin, xrpow, ch, this_bits );
-
-        /*  is quantization as good as we are looking for ?
-         *  in this case: is no scalefactor band distorted?
-         */
-        if (over <= 0) {
-            found = 1;
-            /*  now we know it can be done with "real_bits"
-             *  and maybe we can skip some iterations
-             */
-            real_bits = cod_info->part2_3_length;
-
-            /*  store best quantization so far
-             */
-            bst_cod_info = *cod_info;
-            memcpy(bst_xrpow, xrpow, sizeof(FLOAT)*576);
-
-            /*  try with fewer bits
-             */
-            max_bits  = real_bits-32;
-            dbits     = max_bits-min_bits;
-            this_bits = (max_bits+min_bits)/2;
-        } 
-        else {
-            /*  try with more bits
-             */
-            min_bits  = this_bits+32;
-            dbits     = max_bits-min_bits;
-            this_bits = (max_bits+min_bits)/2;
-            
-            if (found) {
-                found = 2;
-                /*  start again with best quantization so far
-                 */
-                *cod_info = bst_cod_info;
-                memcpy(xrpow, bst_xrpow, sizeof(FLOAT)*576);
-            }
-        }
-    } while (dbits>12);
-
-    gfc->sfb21_extra = sfb21_extra;
-
-    /*  found=0 => nothing found, use last one
-     *  found=1 => we just found the best and left the loop
-     *  found=2 => we restored a good one and have now l3_enc to restore too
-     */
-    if (found==2) {
-        memcpy(cod_info->l3_enc, bst_cod_info.l3_enc, sizeof(int)*576);
-    }
-    assert(cod_info->part2_3_length <= Max_bits);
-
 }
 
 
@@ -1343,7 +1232,7 @@ VBR_prepare (
     )
 {
     lame_internal_flags *gfc=gfp->internal_flags;
-    FLOAT  masking_lower_db, adjust = 0.0;
+    FLOAT  masking_lower_db;
     int     gr, ch;
     int     analog_silence = 1;
     int     avg, mxb, bits = 0;
@@ -1361,14 +1250,8 @@ VBR_prepare (
         for (ch = 0; ch < gfc->channels_out; ++ch) {
             gr_info *cod_info = &gfc->l3_side.tt[gr][ch];
       
-            if (gfp->VBR == vbr_rh) {
-		if (cod_info->block_type == NORM_TYPE) 
-		    adjust = 1.28/(1+exp(3.5-ratio[gr][ch].pe/300.))-0.05;
-		else 
-		    adjust = 2.56/(1+exp(3.5-ratio[gr][ch].pe/300.))-0.14;
-            }
-            masking_lower_db   = gfc->VBR.mask_adjust - adjust;
-            gfc->masking_lower = pow (10.0, masking_lower_db * 0.1);
+            masking_lower_db   = gfc->VBR.mask_adjust;
+            gfc->masking_lower = db2pow(masking_lower_db);
       
 	    if (calc_xmin (gfp, &ratio[gr][ch], cod_info, l3_xmin[gr][ch]))
                 analog_silence = 0;
@@ -1481,16 +1364,11 @@ VBR_iteration_loop (
                 continue; /* with next channel */
             }
 
-            if (gfp->VBR == vbr_mtrh) {
-                ret = VBR_noise_shaping (gfc, xrpow,
-					 min_bits[gr][ch], max_bits[gr][ch], 
-					 l3_xmin[gr][ch], gr, ch );
-                if (ret < 0)
-                    cod_info->part2_3_length = 100000;
-            } 
-            else
-	        VBR_encode_granule (gfp, cod_info, l3_xmin[gr][ch], xrpow,
-                                    ch, min_bits[gr][ch], max_bits[gr][ch] );
+	    ret = VBR_noise_shaping (gfc, xrpow,
+				     min_bits[gr][ch], max_bits[gr][ch], 
+				     l3_xmin[gr][ch], gr, ch );
+	    if (ret < 0)
+		cod_info->part2_3_length = 100000;
 
 	    /*  do the 'substep shaping'
 	     */
