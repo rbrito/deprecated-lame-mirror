@@ -815,18 +815,17 @@ void
 check_preflag(gr_info * const gi)
 {
     int sfb;
-    if (!gi->preflag) {
-	for (sfb = 11; sfb < gi->psymax; sfb++)
-	    if (gi->scalefac[sfb] < pretab[sfb])
-		break;
+    if (gi->preflag)
+	return;
 
-	if (sfb == gi->psymax) {
-	    gi->preflag = 1;
-	    for (sfb = 11; sfb < gi->psymax; sfb++)
-		if (gi->scalefac[sfb] != LARGE_BITS)
-		    gi->scalefac[sfb] -= pretab[sfb];
-	}
-    }
+    for (sfb = 11; sfb < gi->psymax; sfb++)
+	if (gi->scalefac[sfb] < pretab[sfb])
+	    return;
+
+    gi->preflag = 1;
+    for (sfb = 11; sfb < gi->psymax; sfb++)
+	if (gi->scalefac[sfb] != LARGE_BITS)
+	    gi->scalefac[sfb] -= pretab[sfb];
 }
 
 static void
