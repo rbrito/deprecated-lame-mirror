@@ -762,7 +762,7 @@ int mf_size,char *mp3buf, int mp3buf_size)
     ms_ratio_ave = .25*(ms_ratio[0] + ms_ratio[1]+
 			 ms_ratio_prev + ms_ratio_next);
     ms_ener_ratio_ave = .5*(ms_ener_ratio[0]+ms_ener_ratio[1]);
-    if ( ms_ratio_ave <.35 /* && ms_ener_ratio_ave<.75 */ ) gfp->mode_ext = MPG_MD_MS_LR;
+    if ( ms_ratio_ave <.35 /*&& ms_ener_ratio_ave<.75*/ ) gfp->mode_ext = MPG_MD_MS_LR;
   }
   if (gfp->force_ms) gfp->mode_ext = MPG_MD_MS_LR;
 
@@ -802,6 +802,10 @@ int mf_size,char *mp3buf, int mp3buf_size)
   }
 
 
+  /*
+  VBR_iteration_loop_new( gfp,*pe_use, ms_ratio, xr, masking, &l3_side, l3_enc,
+  	  &scalefac);
+  */
 
 
   if (gfp->VBR) {
@@ -811,10 +815,7 @@ int mf_size,char *mp3buf, int mp3buf_size)
     iteration_loop( gfp,*pe_use, ms_ratio, xr, *masking, &l3_side, l3_enc,
 		    scalefac);
   }
-  /*
-  VBR_iteration_loop_new( gfp,*pe_use, ms_ratio, xr, masking, &l3_side, l3_enc,
-			  &scalefac);
-  */
+
 
 
 
@@ -1078,7 +1079,10 @@ int lame_encode_buffer_interleaved(lame_global_flags *gfp,
       buffer_l[i]=buffer[2*i];
       buffer_r[i]=buffer[2*i+1];
     }
-    return lame_encode_buffer(gfp,buffer_l,buffer_r,nsamples,mp3buf,mp3buf_size);
+    ret = lame_encode_buffer(gfp,buffer_l,buffer_r,nsamples,mp3buf,mp3buf_size);
+    free(buffer_l);
+    free(buffer_r);
+    return ret;
   }
 
 
