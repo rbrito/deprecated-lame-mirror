@@ -124,7 +124,9 @@ WARN = OFF
 #	/G6     Pentium II/III optimization
 #	/GA     optimize for Windows Application
 #	/GF     enable read-only string pooling
+#	/Gf     enable string spooling
 #	/Gs     disable stack checking calls
+#	/Gy     separate functions for linker
 #	/QIfdiv generate code for Pentium FDIV fix
 #	/QI0f   generate code for Pentium 0x0f erratum fix
 #
@@ -142,7 +144,7 @@ WARN = OFF
 # LN_OPTS = /nologo /debug:full /debugtype:cv /fixed:no /profile
 
 # release options
-CC_OPTS = /nologo /DNDEBUG /O2b2gity /GAF /Gs1024 /QIfdiv /QI0f /w /YX
+CC_OPTS = /nologo /DNDEBUG /O2 /Ob2 /GAfy /Gs1024 /QIfdiv /QI0f /YX
 LN_OPTS = /nologo /DNDEBUG
 
 !	IF "$(CPU)" == "P1"
@@ -170,13 +172,15 @@ LN = cl
 #__ Intel 4.5 options _________________________________________________________
 #
 #	/YX         enable automatic precompiled header file creation/usage
-#	/Ox         maximum optimization
+#	/Ox         maximum optimization same as /O2 without /Gfy
+#	/O2         same as /Gfsy /Ob1gyti
 #	/Gd      1) make cdecl the default calling convention
 #	/G5      2) optimized for Pentium
 #	/G6      3) optimized for Pentium II/III
 #	/GA         assume single threaded
 #	/Gs[n]      disable stack checks for functions with <n bytes of locals
 #	/GF         read-only string pooling optimization
+#	/Gy         separate functions for the linker 
 #	/Qunroll    unroll loops with default heuristic
 #	/QIfist     enable fast float to int conversion
 #	/QIfdiv     enable patch for Pentium with FDIV erratum
@@ -200,9 +204,11 @@ CC_OPTS = /G6
 CC_OPTS = $(CC_OPTS) /Qip
 !	ELSE
 !	IF "$(OPT)" == "EXTRA"
+#	resulting exe seems to be not faster than with NORMAL
 CC_OPTS = $(CC_OPTS) /Qip /Qipo
 !	ELSE
 !	IF "$(OPT)" == "ULTRA"
+#	resulting exe seems to be not faster than with NORMAL
 CC_OPTS = $(CC_OPTS) /Qip /Qipo_wp
 !	ENDIF
 !	ENDIF
@@ -214,10 +220,10 @@ CC_OPTS = $(CC_OPTS) /w
 CC_OPTS = $(CC_OPTS) /W2 /Wport
 !	ENDIF
 
-CC_OPTS = /nologo /DNDEBUG /YX /Ox /GA /Gs1024 /GF \
-          /Qunroll /QIfist /QIfdiv /QI0f /QaxiMK $(CC_OPTS) 
+CC_OPTS = /nologo /DNDEBUG /YX /GA /O2 /Gs1024 \
+          /Qunroll /Qsox- /QIfist /QIfdiv /QI0f /QaxiMK $(CC_OPTS)
 
-LN_OPTS = $(CC_OPTS) 
+LN_OPTS = $(CC_OPTS)
 LN_DLL = /LD
 LN_OUT = /Fe
 CC_OUT = /Fo
