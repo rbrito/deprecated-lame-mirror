@@ -48,6 +48,11 @@ char   *strchr(), *strrchr();
 # include <fcntl.h>
 #endif
 
+#ifdef __sun__
+/* woraround for SunOS 4.x, it has SEEK_* defined here */
+#include <unistd.h>
+#endif
+
 #if defined(_WIN32)
 # include <windows.h>
 #endif
