@@ -631,16 +631,13 @@ const preset_t Presets [] = {
 };
 
 
-static int  presets_info ( const lame_global_flags* gfp, FILE* const fp, const char* ProgramName )  /* print possible combination */
+static int  presets_longinfo_basic ( FILE* const fp )  /* print possible combination */
 {
     int i;
 
-    fprintf ( fp, "\n");    
-    lame_version_print ( fp );
-    
-    fprintf ( fp, "Presets are some shortcuts for common settings.\n");
-    fprintf ( fp, "They can be combined with -v if you want VBR MP3s.\n");
-    
+    fprintf ( fp, "\n"
+              "Basic- presets covering a wide span of qualities and bit rates\n"
+              "       These presets may be combined with -v for VBR MP3s.\n");
     fprintf ( fp, "\n                ");
     for ( i = 0; i < sizeof(Presets)/sizeof(*Presets); i++)
         fprintf ( fp,  strlen(Presets[i].name) <= 4 ? "%5s " : " %-5s", Presets[i].name );
@@ -723,21 +720,92 @@ static int  presets_info ( const lame_global_flags* gfp, FILE* const fp, const c
     fprintf ( fp, " b) -v --preset studio\n");
     fprintf ( fp, "    equals to: -h -ms -V0 -b160 -B320\n");
     
-    fprintf ( fp, "\n\n"
-              "VBR presets highly tuned via blind listening tests to provide utmost quality:\n"
-              "--dm-preset standard\n"
-              "--dm-preset xtreme\n"
-              "--dm-preset insane\n"
-              "\n"
-              "ABR preset tuned in the same manner to provide best quality at given bitrate:\n"
-              "--dm-preset <bitrate value>\n"
-              "\n"
-              "VBR preset for quality with little excess:\n"
-              "--preset r3mix\n"
-              "\n"
-              );
- 
     return 0;
+}
+
+
+static void  presets_info_basic ( FILE* msgfp )
+{
+    int i;
+    int j;
+    int k;
+    int p_cnt = sizeof(Presets)/sizeof(*Presets);
+    int rows;
+
+    fprintf ( msgfp, "\n" 
+              "basic- presets covering a wide span (fixed rates unless used with -v or VBR):\n"
+        );
+    rows = ((p_cnt - 1) / 4) + 1;
+    for ( i = 0; i < rows; ++i) {
+        for( j = 0; j < 4; ++j ) {
+            k = i + j * 4;
+            if( k < p_cnt ) {
+                fprintf( msgfp, "    %-5s (%2d kbps)", 
+                         Presets[k].name, Presets[k].cbr );
+            }
+        }
+        fputc( '\n', msgfp );
+    }
+
+}
+
+
+static void  presets_info_dm ( FILE* msgfp )
+{
+    fprintf( msgfp, "\n"
+             "dm- presets highly tuned for utmost quality via blind listening tests:\n"
+             "  VBR presets for steady quality\n"
+             "    --dm-preset standard\n"
+             "    --dm-preset xtreme\n"
+             "    --dm-preset insane\n"
+             "  ABR presets for best quality at a given average bitrate:\n"
+             "    --dm-preset <bitrate value>\n"
+        );
+}
+
+
+static void  presets_info_r3mix ( FILE* msgfp )
+{
+    fprintf( msgfp, "\n"
+             "r3mix- VBR preset for steady quality with little excess:\n"
+             "    --preset r3mix\n" );
+}
+
+
+static void  presets_info_head ( FILE* msgfp )
+{
+    fputc( '\n', msgfp );
+    lame_version_print( msgfp );
+    fprintf( msgfp, 
+             "Presets are shortcuts for common or carefully tuned settings.\n"
+             "Several separate collections of preset profiles are available.\n"
+        );
+}
+
+
+/* briefly and concisely display all available presets
+*/
+static void  presets_info ( FILE* msgfp )
+{
+    fprintf( msgfp, "For more preset details, refer to --preset longhelp.\n" );
+    presets_info_basic( msgfp );
+    presets_info_dm( msgfp );
+    presets_info_r3mix( msgfp );
+}
+
+
+/* elaborate on details for all available presets
+*/
+static void  presets_longinfo ( FILE* msgfp )
+{
+    const char hr[] = "\n----------------------------------------------------------------\n";
+
+    fprintf( msgfp, hr );
+    presets_longinfo_basic( msgfp );
+    fprintf( msgfp, hr );
+    presets_info_dm( msgfp );
+    fprintf( msgfp, hr );
+    presets_info_r3mix( msgfp );
 }
 
 
@@ -748,17 +816,28 @@ static const char* presets_alias( const char* preset_name )
     int i;
     unsigned char p0;
 
-    /* note (rh): previous code did not compile with GNU-C
-     */
     struct ps_alias {
         const char *in;
         const char *out;
     } ps_xlat[] = {             /* alphabetically ordered alias table  */
-        {"insane", "dm-insane"},
-        {"metal",  "dm-metal"},
-        {"standard", "dm-standard"}, 
-        {"xtreme", "dm-xtreme"},
-        {"\xff", NULL}
+        {"cd",       "basic-cd"},
+        {"fm",       "basic-fm"},
+        {"hifi",     "basic-hifi"},
+        {"insane",   "dm-insane"},
+        {"lw",       "basic-lw"},
+        {"metal",    "dm-metal"},
+        {"mw-eu",    "basic-mw-eu"},
+        {"mw-us",    "basic-mw-us"},
+        {"phon+",    "basic-phon+"},
+        {"phone",    "basic-phone"},
+        {"radio",    "basic-radio"},
+        {"standard", "dm-standard"},
+        {"studio",   "basic-studio"},
+        {"sw",       "basic-sw"},
+        {"tape",     "basic-tape"},
+        {"voice",    "basic-voice"},
+        {"xtreme",   "dm-xtreme"},
+        {"\xff", ""}
     };
 
     p0 = preset_name[0];
@@ -775,8 +854,10 @@ static const char* presets_alias( const char* preset_name )
     return( preset_name );
 }
 
+static const char presets_set_err_unk[] = "ERROR, unknown --preset profile: ";
 
-static int  presets_setup ( lame_global_flags* gfp, const char* preset_name, const char* ProgramName )
+static int  presets_set_basic( lame_t gfp, const char* preset_name, 
+                               FILE *msgfp )
 {
     int i;
 
@@ -799,16 +880,17 @@ static int  presets_setup ( lame_global_flags* gfp, const char* preset_name, con
             return 0;
         }
 
-    presets_info ( gfp, stderr, ProgramName );
+    fprintf( msgfp, "%sbasic-%s\n", presets_set_err_unk, preset_name );
     return -1;
 }
 
 
 /* presets courtesy of r3mix
  */
-static int  r3mix_presets( lame_t gfp, const char* preset_subname )
+static int  presets_set_r3mix( lame_t gfp, const char* preset_name, 
+                               FILE *msgfp )
 {
-    if (preset_subname[0] == '\0') {
+    if (preset_name[0] == '\0') {
         lame_set_exp_nspsytune(gfp, lame_get_exp_nspsytune(gfp) | 1); /*nspsytune*/
         /*  lame_set_experimentalX(gfp,1); (test CVS) */
 
@@ -826,13 +908,13 @@ static int  r3mix_presets( lame_t gfp, const char* preset_subname )
     
         return 0;
     }
-/*  else if( strcmp(preset_subname, "-...") == 0 ) {
+/*  else if( strcmp(preset_name, "-...") == 0 ) {
         ;
         return 0;
     }
 */
-    fprintf( stderr, "Unknown --preset profile: r3mix%s\n"
-             "Available r3mix presets:\n  r3mix\n", preset_subname );
+    fprintf( msgfp, "%sr3mix%s\n", presets_set_err_unk, preset_name );
+    presets_info_r3mix( msgfp );
     return -1;
 }
 
@@ -1236,7 +1318,7 @@ char* const inPath, char* const outPath, char **nogap_inPath, int *num_nogap)
                     lame_set_VBR(gfp,vbr_mtrh); 
 
                 T_ELIF ("r3mix")
-		    r3mix_presets(gfp, "");
+		    presets_set_r3mix(gfp, "", stderr);
                                     
                 /**
                  *  please, do *not* DOCUMENT this one
@@ -1298,32 +1380,32 @@ char* const inPath, char* const outPath, char **nogap_inPath, int *num_nogap)
                     return -1;
 #endif
                 T_ELIF ("phone")
-                    if (presets_setup ( gfp, token, ProgramName ) < 0)
+                    if (presets_set_basic( gfp, token, stderr ) < 0)
                         return -1;
                     fprintf(stderr, "Warning: --phone is deprecated, use --preset phone instead!");
                     
                 T_ELIF ("voice")
-                    if (presets_setup ( gfp, token, ProgramName ) < 0)
+                    if (presets_set_basic( gfp, token, stderr ) < 0)
                         return -1;
                     fprintf(stderr, "Warning: --voice is deprecated, use --preset voice instead!");
                     
                 T_ELIF ("radio")
-                    if (presets_setup ( gfp, token, ProgramName ) < 0)
+                    if (presets_set_basic( gfp, token, stderr ) < 0)
                         return -1;
                     fprintf(stderr, "Warning: --radio is deprecated, use --preset radio instead!");
 
                 T_ELIF ("tape")
-                    if (presets_setup ( gfp, token, ProgramName ) < 0)
+                    if (presets_set_basic( gfp, token, stderr ) < 0)
                         return -1;
                 fprintf(stderr, "Warning: --tape is deprecated, use --preset tape instead!");
                     
                 T_ELIF ("cd")
-                    if (presets_setup ( gfp, token, ProgramName ) < 0)
+                    if (presets_set_basic( gfp, token, stderr ) < 0)
                         return -1;
                 fprintf(stderr, "Warning: --cd is deprecated, use --preset cd instead!");
                     
                 T_ELIF ("studio")
-                    if (presets_setup ( gfp, token, ProgramName ) < 0)
+                    if (presets_set_basic( gfp, token, stderr ) < 0)
                         return -1;
                 fprintf(stderr, "Warning: --studio is deprecated, use --preset studio instead!");
                     
@@ -1626,20 +1708,37 @@ char* const inPath, char* const outPath, char **nogap_inPath, int *num_nogap)
                 
                 T_ELIF ("preset") {
                     const char *xlatArg;
+                    int rval = -1;
                     argUsed = 1;
                     xlatArg = presets_alias( nextArg );
                     
-//                    if (strncmp( xlatArg, "dm-", 3 ) == 0 ) {
-//                        if( dm_presets( gfp, xlatArg + 3 ) < 0 )
-//                            return -1;
-//                    } 
-                     if (strncmp( xlatArg, "r3mix", 5 ) == 0 ) {
-                        if( r3mix_presets( gfp, xlatArg + 5 ) < 0 )
-                            return -1;
+                    if( strncmp( xlatArg, "basic-", 6 ) == 0 ) {
+                        rval = presets_set_basic( gfp, xlatArg + 6, stderr );
+                    }
+//                  else if (strncmp( xlatArg, "dm-", 3 ) == 0 ) {
+//                      rval = dm_presets( gfp, xlatArg + 3, stderr );
+//                  } 
+                    else if( strncmp( xlatArg, "r3mix", 5 ) == 0 ) {
+                        rval = presets_set_r3mix( gfp, xlatArg + 5, stderr );
+                    }
+                    else if( strcmp( xlatArg, "longhelp" ) == 0 ) {
+                                /* send explicitly requested help to stdout */
+                        presets_info_head( stdout );
+                        presets_longinfo( stdout );
                     }
                     else {
-                        if( presets_setup( gfp, xlatArg, ProgramName ) < 0 )
-                            return -1;
+                        if( strcmp( xlatArg, "help" ) == 0 ) {
+                            presets_info_head( stdout );
+                            presets_info( stdout );
+                        }
+                        else {
+                            fprintf( stderr, "\n%s%s\n", 
+                                     presets_set_err_unk, xlatArg );
+                            presets_info( stderr );
+                        }
+                    }
+                    if( rval < 0 ) {
+                        return -1;
                     }
                 }
 
