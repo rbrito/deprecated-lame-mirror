@@ -342,7 +342,7 @@ int targ_bits[2],int mean_bits, int gr)
     add_bits[ch]=(pe[gr][ch]-750)/1.4;
     /* short blocks us a little extra, no matter what the pe */
     if (cod_info->block_type==SHORT_TYPE) {
-      if (add_bits[ch]<mean_bits/4) add_bits[ch]=.20*mean_bits;
+      if (add_bits[ch]<mean_bits/4) add_bits[ch]=mean_bits/4;
     }
 
     /* at most increase bits by 1.5*average */

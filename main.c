@@ -19,42 +19,21 @@
 #endif
 
 
-static void PutNum(long num,FILE *f,int endianness,int bytes){
-  int i;
-  unsigned char c;
-
-  if(!endianness)
-    i=0;
-  else
-    i=bytes-1;
-  while(bytes--){
-    c=(num>>(i<<3))&0xff;
-    if(fwrite(&c,1,1,f)<1){
-      perror("Could not write to output.");
-      exit(1);
-    }
-    if(endianness)
-      i--;
-    else
-      i++;
-  }
-}
 
 void WriteWav(FILE *f,unsigned long bytes,int srate,int ch){
   /* quick and dirty */
 
   fwrite("RIFF",1,4,f);               /*  0-3 */
-  PutNum(bytes+44-8,f,0,4);        /*  4-7 */
+  Write32BitsLowHigh(f,bytes+44-8);
   fwrite("WAVEfmt ",1,8,f);           /*  8-15 */
-  PutNum(16,f,0,4);                /* 16-19 */
-  PutNum(1,f,0,2);                 /* 20-21 */
-  PutNum(ch,f,0,2);                 /* 22-23 */
-  PutNum(srate,f,0,4);             /* 24-27 */
-  PutNum(srate*ch*2,f,0,4);         /* 28-31 */
-  PutNum(4,f,0,2);                 /* 32-33 */
-  PutNum(16,f,0,2);                /* 34-35 */
-  fwrite("data",1,4,f);               /* 36-39 */
-  PutNum(bytes,f,0,4);             /* 40-43 */
+  Write32BitsLowHigh(f,16);
+  Write16BitsLowHigh(f,1);
+  Write16BitsLowHigh(f,ch);
+  Write32BitsLowHigh(f,srate);
+  Write32BitsLowHigh(f,srate*ch*2);
+  Write16BitsLowHigh(f,4);
+  Write16BitsLowHigh(f,16);
+  Write32BitsLowHigh(f,bytes);
 }
 
 
@@ -174,8 +153,9 @@ int main(int argc, char **argv)
 	if (skip) {
 	  --skip;
 	}else{
-	  fwrite(&Buffer[0][i],2,1,outf);
-	  if (gf.num_channels==2) fwrite(&Buffer[1][i],2,1,outf);
+	  Write16BitsLowHigh(outf,Buffer[0][i]);
+	  if (gf.num_channels==2) 
+	    Write16BitsLowHigh(outf,Buffer[1][i]);
 	}
       }
     } while (iread);
