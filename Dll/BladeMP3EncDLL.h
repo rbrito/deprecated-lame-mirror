@@ -26,6 +26,10 @@
 #pragma pack(push)
 #pragma pack(1)
 
+#ifdef	__cplusplus
+extern "C" {
+#endif
+
 /* encoding formats */
 
 #define		BE_CONFIG_MP3			0										
@@ -250,5 +254,9 @@ __declspec(dllexport) BE_ERR	beWriteVBRHeader(LPCSTR lpszFileName);
 #endif
 
 #pragma pack(pop)
+
+#ifdef	__cplusplus
+}
+#endif
 
 #endif

@@ -34,6 +34,10 @@
 #include "lame-analysis.h"
 #include "id3tag.h"
 
+#ifdef __cplusplus
+extern "C" {
+#endif
+
 /***********************************************************************
 *
 *  Global Definitions
@@ -611,5 +615,8 @@ extern void lame_msgf  (const lame_internal_flags *gfc, const char *, ...);
 int select_kth_int(int b[], int N, int k);
 
 
+#ifdef __cplusplus
+}
+#endif
 
 #endif /* LAME_UTIL_H */
