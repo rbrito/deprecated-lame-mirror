@@ -296,7 +296,7 @@ void fht(FLOAT *fz, int n)
     } while (k4<n);
 }
 
-static const unsigned char rv_tbl[] = {
+static const int rv_tbl[] = {
     0x00,    0x80,    0x40,    0xc0,    0x20,    0xa0,    0x60,    0xe0,
     0x10,    0x90,    0x50,    0xd0,    0x30,    0xb0,    0x70,    0xf0,
     0x08,    0x88,    0x48,    0xc8,    0x28,    0xa8,    0x68,    0xe8,
@@ -315,83 +315,24 @@ static const unsigned char rv_tbl[] = {
     0x1e,    0x9e,    0x5e,    0xde,    0x3e,    0xbe,    0x7e,    0xfe
 };
 
-#define ch01(index)  (buffer[chn][index])
-
-#define ml00(f)	(window[i        ] * f(i))
-#define ml10(f)	(window[i + 0x200] * f(i + 0x200))
-#define ml20(f)	(window[i + 0x100] * f(i + 0x100))
-#define ml30(f)	(window[i + 0x300] * f(i + 0x300))
-
-#define ml01(f)	(window[i + 0x001] * f(i + 0x001))
-#define ml11(f)	(window[i + 0x201] * f(i + 0x201))
-#define ml21(f)	(window[i + 0x101] * f(i + 0x101))
-#define ml31(f)	(window[i + 0x301] * f(i + 0x301))
-
-#define ms00(f)	(window_s[i       ] * f(i + k))
-#define ms10(f)	(window_s[0x7f - i] * f(i + k + 0x80))
-#define ms20(f)	(window_s[i + 0x40] * f(i + k + 0x40))
-#define ms30(f)	(window_s[0x3f - i] * f(i + k + 0xc0))
-
-#define ms01(f)	(window_s[i + 0x01] * f(i + k + 0x01))
-#define ms11(f)	(window_s[0x7e - i] * f(i + k + 0x81))
-#define ms21(f)	(window_s[i + 0x41] * f(i + k + 0x41))
-#define ms31(f)	(window_s[0x3e - i] * f(i + k + 0xc1))
-
+#define ml00(i)	(window[i] * buffer[i])
+#define ms00(i)	(window_s[i] * buffer[i])
 
 static void
-fft_short(lame_internal_flags * const gfc, 
-	  FLOAT x_real[3][BLKSIZE_s], int chn, const sample_t *buffer[2])
+fft_short(lame_internal_flags * const gfc,
+	  FLOAT x[BLKSIZE_s], const sample_t *buffer)
 {
-    int           i;
-    int           j;
-    int           b;
-
-    for (b = 0; b < 3; b++) {
-	FLOAT *x = &x_real[b][BLKSIZE_s / 2];
-	short k = (576 / 3) * (b + 1);
-	j = BLKSIZE_s / 8 - 1;
-	do {
-	  FLOAT f0,f1,f2,f3, w;
-
-	  i = rv_tbl[j << 2];
-
-	  f0 = ms00(ch01); w = ms10(ch01); f1 = f0 - w; f0 = f0 + w;
-	  f2 = ms20(ch01); w = ms30(ch01); f3 = f2 - w; f2 = f2 + w;
-
-	  x -= 4;
-	  x[0] = f0 + f2;
-	  x[2] = f0 - f2;
-	  x[1] = f1 + f3;
-	  x[3] = f1 - f3;
-
-	  f0 = ms01(ch01); w = ms11(ch01); f1 = f0 - w; f0 = f0 + w;
-	  f2 = ms21(ch01); w = ms31(ch01); f3 = f2 - w; f2 = f2 + w;
-
-	  x[BLKSIZE_s / 2 + 0] = f0 + f2;
-	  x[BLKSIZE_s / 2 + 2] = f0 - f2;
-	  x[BLKSIZE_s / 2 + 1] = f1 + f3;
-	  x[BLKSIZE_s / 2 + 3] = f1 - f3;
-	} while (--j >= 0);
-
-	gfc->fft_fht(x, BLKSIZE_s/2);   
-        /* BLKSIZE_s/2 because of 3DNow! ASM routine */
-    }
-}
-
-static void
-fft_long(lame_internal_flags * const gfc,
-	 FLOAT x[BLKSIZE], int chn, const sample_t *buffer[2] )
-{
-    int           i;
-    int           jj = BLKSIZE / 8 - 1;
-    x += BLKSIZE / 2;
+    int i;
+    int j = (BLKSIZE_s / 8 - 1)*4;
+    x += BLKSIZE_s / 2;
 
     do {
 	FLOAT f0,f1,f2,f3, w;
 
-	i = rv_tbl[jj];
-	f0 = ml00(ch01); w = ml10(ch01); f1 = f0 - w; f0 = f0 + w;
-	f2 = ml20(ch01); w = ml30(ch01); f3 = f2 - w; f2 = f2 + w;
+	i = rv_tbl[j];
+
+	f0 = ms00(i     ); w = ms00(i + 128); f1 = f0 - w; f0 = f0 + w;
+	f2 = ms00(i + 64); w = ms00(i + 192); f3 = f2 - w; f2 = f2 + w;
 
 	x -= 4;
 	x[0] = f0 + f2;
@@ -399,14 +340,47 @@ fft_long(lame_internal_flags * const gfc,
 	x[1] = f1 + f3;
 	x[3] = f1 - f3;
 
-	f0 = ml01(ch01); w = ml11(ch01); f1 = f0 - w; f0 = f0 + w;
-	f2 = ml21(ch01); w = ml31(ch01); f3 = f2 - w; f2 = f2 + w;
+	f0 = ms00(i +  1); w = ms00(i + 129); f1 = f0 - w; f0 = f0 + w;
+	f2 = ms00(i + 65); w = ms00(i + 193); f3 = f2 - w; f2 = f2 + w;
+
+	x[BLKSIZE_s / 2 + 0] = f0 + f2;
+	x[BLKSIZE_s / 2 + 2] = f0 - f2;
+	x[BLKSIZE_s / 2 + 1] = f1 + f3;
+	x[BLKSIZE_s / 2 + 3] = f1 - f3;
+    } while ((j -= BLKSIZE/BLKSIZE_s) >= 0);
+
+    gfc->fft_fht(x, BLKSIZE_s/2);   
+}
+
+static void
+fft_long(lame_internal_flags * const gfc,
+	 FLOAT x[BLKSIZE], const sample_t *buffer )
+{
+    int           i;
+    int           j = BLKSIZE / 8 - 1;
+    x += BLKSIZE / 2;
+
+    do {
+	FLOAT f0,f1,f2,f3, w;
+
+	i = rv_tbl[j];
+	f0 = ml00(i      ); w = ml00(i + 512); f1 = f0 - w; f0 = f0 + w;
+	f2 = ml00(i + 256); w = ml00(i + 768); f3 = f2 - w; f2 = f2 + w;
+
+	x -= 4;
+	x[0] = f0 + f2;
+	x[2] = f0 - f2;
+	x[1] = f1 + f3;
+	x[3] = f1 - f3;
+
+	f0 = ml00(i +   1); w = ml00(i + 513); f1 = f0 - w; f0 = f0 + w;
+	f2 = ml00(i + 257); w = ml00(i + 769); f3 = f2 - w; f2 = f2 + w;
 
 	x[BLKSIZE / 2 + 0] = f0 + f2;
 	x[BLKSIZE / 2 + 2] = f0 - f2;
 	x[BLKSIZE / 2 + 1] = f1 + f3;
 	x[BLKSIZE / 2 + 3] = f1 - f3;
-    } while (--jj >= 0);
+    } while (--j >= 0);
 
     gfc->fft_fht(x, BLKSIZE/2); /* BLKSIZE/2 because of 3DNow! ASM routine */
 }
@@ -598,7 +572,7 @@ compute_masking_s(
     int j, b, sb;
     FLOAT eb[CBANDS];
     FLOAT ecb, enn, thmm;
-
+    
     ecb = fft_s[0] * fft_s[0] * 2.0f;
     j = 1;
     for (b = 0; b < gfc->npart_s; b++) {
@@ -702,9 +676,9 @@ static inline int trancate(FLOAT x)
 
 void init_mask_add_max_values(void)
 {
-    ma_max_i1 = pow(10,(I1LIMIT+1)/16.0);
-    ma_max_i2 = pow(10,(I2LIMIT+1)/16.0);
-    ma_max_m  = pow(10,(MLIMIT)/10.0);
+    ma_max_i1 = db2pow((I1LIMIT+1)/16.0*10.0);
+    ma_max_i2 = db2pow((I2LIMIT+1)/16.0*10.0);
+    ma_max_m  = db2pow(MLIMIT);
 }
 
 
@@ -905,19 +879,16 @@ pecalc_l(
 
 
 
-static void
+static int
 psycho_analysis_short(
     lame_global_flags * gfp,
     const sample_t *buffer[2],
-    int useshort_old[4],
     int gr,
-    int need_short
+    int previous_is_short
     )
 {
     lame_internal_flags *gfc=gfp->internal_flags;
-
-    /* fft and energy calculation   */
-    FLOAT wsamp_S[2][3][BLKSIZE_s];
+    int current_is_short = 0;
 
     /* usual variables like loop indices, etc..    */
     int numchn, chn;
@@ -943,14 +914,19 @@ psycho_analysis_short(
 	/* apply high pass filter of fs/4 */
 	const sample_t * const firbuf = &buffer[chn][576-350-NSFIRLEN+192];
 	for (i=0;i<576;i++) {
-	    FLOAT sum1, sum2;
-	    sum1 = 0.0;
-	    sum2 = firbuf[i + 10];
-	    for (j=0;j<(NSFIRLEN-1)/2;j+=2) {
-		sum1 += fircoef[j  ] * (firbuf[i+j  ]+firbuf[i+NSFIRLEN-j  ]);
-		sum2 += fircoef[j+1] * (firbuf[i+j+1]+firbuf[i+NSFIRLEN-j-1]);
-	    }
-	    ns_hpfsmpl[chn][i] = sum1 + sum2;
+	    ns_hpfsmpl[chn][i]
+		= firbuf[i + 10]
+		+  fircoef[0] * (firbuf[i+0]+firbuf[i+NSFIRLEN-0])
+		+  fircoef[1] * (firbuf[i+1]+firbuf[i+NSFIRLEN-1])
+		+  fircoef[2] * (firbuf[i+2]+firbuf[i+NSFIRLEN-2])
+		+  fircoef[3] * (firbuf[i+3]+firbuf[i+NSFIRLEN-3])
+		+  fircoef[4] * (firbuf[i+4]+firbuf[i+NSFIRLEN-4])
+		+  fircoef[5] * (firbuf[i+5]+firbuf[i+NSFIRLEN-5])
+		+  fircoef[6] * (firbuf[i+6]+firbuf[i+NSFIRLEN-6])
+		+  fircoef[7] * (firbuf[i+7]+firbuf[i+NSFIRLEN-7])
+		+  fircoef[8] * (firbuf[i+8]+firbuf[i+NSFIRLEN-8])
+		+  fircoef[9] * (firbuf[i+9]+firbuf[i+NSFIRLEN-9]);
+
 	}
     }
 
@@ -965,7 +941,7 @@ psycho_analysis_short(
 	 * determine the block type (window type)
 	 ***************************************************************/
 	if (chn == 2) {
-	    for(i=0;i<576;i++) {
+	    for (i=0;i<576;i++) {
 		FLOAT l, r;
 		l = ns_hpfsmpl[0][i];
 		r = ns_hpfsmpl[1][i];
@@ -1017,7 +993,7 @@ psycho_analysis_short(
 	if (gfc->nsPsy.last_attacks[chn] == 3 ||
 	    ns_attacks[chn][0] + ns_attacks[chn][1] + ns_attacks[chn][2] + ns_attacks[chn][3]) {
 	    gfc->useshort_next[gr][chn] = SHORT_TYPE;
-	    need_short = 1;
+	    current_is_short = 1;
 
 	    if (ns_attacks[chn][3] && ns_attacks[chn][2]) ns_attacks[chn][3] = 0;
 	    if (ns_attacks[chn][2] && ns_attacks[chn][1]) ns_attacks[chn][2] = 0;
@@ -1027,13 +1003,12 @@ psycho_analysis_short(
     if (gfc->useshort_next[gr][2] || gfc->useshort_next[gr][3])
 	gfc->useshort_next[gr][2] = gfc->useshort_next[gr][3] = SHORT_TYPE;
 
-#if 1
-    if (!need_short) {
+    else if (!previous_is_short && !current_is_short) {
 	for (chn=0; chn<numchn; chn++)
 	    gfc->nsPsy.last_attacks[chn] = ns_attacks[chn][2];
-	return;
+	return current_is_short;
     }
-#endif
+
     if (gfp->VBR==vbr_off) pcfact = gfc->ResvMax == 0 ? 0 : ((FLOAT)gfc->ResvSize)/gfc->ResvMax*0.5;
     else if (gfp->VBR == vbr_rh  ||  gfp->VBR == vbr_mtrh  ||  gfp->VBR == vbr_mt) {
 	static const FLOAT pcQns[10]={1.0,1.0,1.0,0.8,0.6,0.5,0.4,0.3,0.2,0.1};
@@ -1041,14 +1016,16 @@ psycho_analysis_short(
     } else pcfact = 1.0;
 
     for (chn=0; chn<numchn; chn++) {
-	/* convolution   */
-	FLOAT enn, thmm;
-	if (chn < 2)
-	    fft_short( gfc, wsamp_S[chn], chn, buffer);
+	/* fft and energy calculation   */
+	FLOAT wsamp_S[2][3][BLKSIZE_s];
+
 	/* compute masking thresholds for short blocks */
 	for (sblock = 0; sblock < 3; sblock++) {
-	    if (chn == 2) {
-		for (j = BLKSIZE_s-1; j >= 0 ; --j) {
+	    if (chn < 2)
+		fft_short( gfc, wsamp_S[chn][sblock],
+			   &buffer[chn][(576/3) * (sblock+1)]);
+	    else if (chn == 2) {
+		for (j = 0; j < BLKSIZE_s; j++) {
 		    FLOAT l = wsamp_S[0][sblock][j];
 		    FLOAT r = wsamp_S[1][sblock][j];
 		    wsamp_S[0][sblock][j] = l+r;
@@ -1061,6 +1038,7 @@ psycho_analysis_short(
 	}
 	gfc->nsPsy.last_attacks[chn] = ns_attacks[chn][2];
     } /* end loop over chn */
+    return current_is_short;
 }
 
 static void
@@ -1078,16 +1056,11 @@ L3psycho_anal_ns(
 
     /* usual variables like loop indices, etc..    */
     int numchn, chn;
-    int b, i, j, k;
     FLOAT pcfact;
-    FLOAT enn, thmm;
 
     /*********************************************************************
      * compute the long block masking ratio
      *********************************************************************/
-    for (chn = 0; chn < gfc->channels_out; chn++)
-	fft_long ( gfc, wsamp_L[chn], chn, buffer);
-
     numchn = gfc->channels_out;
     if (gfp->mode == JOINT_STEREO) numchn=4;
 
@@ -1101,13 +1074,17 @@ L3psycho_anal_ns(
 	FLOAT fftenergy[HBLKSIZE];
 	/* convolution   */
 	FLOAT eb[CBANDS], max[CBANDS], avg[CBANDS];
+	FLOAT enn, thmm;
 #define eb2 fftenergy
 	static const FLOAT tab[] = {
 	    1.0    /0.11749, 0.79433/0.11749, 0.63096/0.11749, 0.63096/0.11749,
 	    0.63096/0.11749, 0.63096/0.11749, 0.63096/0.11749, 0.25119/0.11749
 	};
+	int b, i, j, k;
 
-	if (chn == 2) {
+	if (chn < 2)
+	    fft_long ( gfc, wsamp_L[chn], buffer[chn]);
+	else if (chn == 2) {
 	    /* FFT data for mid and side channel is derived from L & R */
 	    for (j = 0; j < BLKSIZE; j++) {
 		FLOAT l = wsamp_L[0][j];
@@ -1461,7 +1438,7 @@ psycho_analysis(
 		gfc->l3_side.tt[gr][ch].block_type = NORM_TYPE;
 		if (gfc->useshort_next[gr][ch]) {
 		    gfc->l3_side.tt[gr][ch].block_type = SHORT_TYPE;
-		    need_short = 1;
+		    need_short |= 2 - gfc->mode_gr + gr;
 		}
 	    }
 	}
@@ -1472,7 +1449,7 @@ psycho_analysis(
 		gfc->l3_side.tt[gr][ch].block_type = NORM_TYPE;
 		if (gfc->useshort_next[gr][ch]) {
 		    gfc->l3_side.tt[gr][ch].block_type = SHORT_TYPE;
-		    need_short = 1;
+		    need_short |= 2 - gfc->mode_gr + gr;
 		}
 	    }
 	}
@@ -1485,10 +1462,10 @@ psycho_analysis(
 	    bufp[ch] = &buffer[ch][576*(gr + gfc->mode_gr) - FFTOFFSET];
 
 	if (gr == 0) {
-	    psycho_analysis_short(gfp, bufp, blocktype_old, gr, need_short);
+	    need_short = psycho_analysis_short(gfp, bufp, gr, need_short);
 	    L3psycho_anal_ns(gfp, bufp, blocktype_old, gr);
 	} else {
-	    psycho_analysis_short(gfp, bufp, gfc->useshort_next[0], gr, need_short);
+	    need_short = psycho_analysis_short(gfp, bufp, gr, need_short);
 	    L3psycho_anal_ns(gfp, bufp, gfc->useshort_next[0], gr);
 	}
 
