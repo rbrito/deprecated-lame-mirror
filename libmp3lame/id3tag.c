@@ -42,10 +42,6 @@
 # include <string.h>
 #endif
 
-#ifdef _MSC_VER
-# define snprintf _snprintf
-#endif
-
 #include "encoder.h"
 #include "id3tag.h"
 #include "bitstream.h"
@@ -368,8 +364,9 @@ id3tag_write_v2(lame_t gfc)
 
             /* calulate size of tag starting with 10-byte tag header */
             tag_size = 10;
-            encoder_length = snprintf(encoder, sizeof(encoder),
-                            "LAME v%s", get_lame_short_version());
+	    strcpy(encoder, "LAME v");
+	    strncat(encoder, get_lame_short_version(), sizeof(encoder));
+	    encoder_length = strlen(encoder);
             tag_size += 11 + encoder_length;
             if (title_length) {
                 /* add 10-byte frame header, 1 encoding descriptor byte ... */
@@ -382,8 +379,9 @@ id3tag_write_v2(lame_t gfc)
                 tag_size += 11 + album_length;
             }
             if (gfc->tag_spec.year) {
-                year_length = snprintf(year, sizeof(year),
-				       "%d", gfc->tag_spec.year);
+		if (gfc->tag_spec.year > 9999)
+		    gfc->tag_spec.year = 9999;
+                year_length = sprintf(year, "%d", gfc->tag_spec.year);
                 tag_size += 11 + year_length;
             } else {
                 year_length = 0;
@@ -394,12 +392,14 @@ id3tag_write_v2(lame_t gfc)
                 tag_size += 15 + comment_length;
             }
             if (gfc->tag_spec.track) {
+		if (gfc->tag_spec.track > 9999)
+		    gfc->tag_spec.track = 9999;
+		track_length = sprintf(track, "%d", gfc->tag_spec.track);
 		if (gfc->tag_spec.totaltrack > 0) {
-		    track_length = snprintf(track, sizeof(track), "%d/%d",
-					    gfc->tag_spec.track,
+		    if (gfc->tag_spec.totaltrack > 9999)
+			gfc->tag_spec.totaltrack = 9999;
+		    track_length += sprintf(&track[track_length], "/%d",
 					    gfc->tag_spec.totaltrack);
-		} else {
-		    track_length = sprintf(track, "%d", gfc->tag_spec.track);
 		}
                 tag_size += 11 + track_length;
             } else {
