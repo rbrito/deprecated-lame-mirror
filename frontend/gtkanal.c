@@ -44,6 +44,18 @@
 #endif
 
 
+
+#ifdef _WIN32
+#  include <windows.h>
+#  define msleep(t) Sleep(t)
+#else
+#  include <unistd.h>
+#  define msleep(t) usleep((t) * 1000)
+#endif
+
+
+
+
 /*! Stringify \a x. */
 #define STR(x)   #x
 /*! Stringify \a x, perform macro expansion. */
@@ -887,6 +899,9 @@ static int frameadv1(GtkWidget *widget, gpointer   data )
     if (gtkinfo.pupdate) plot_frame();
     update_progress();
     if ((idle_count>=idle_count_max) && (! idle_end)) analyze();
+  } else {
+        /*no processing to do, sleep in order to not monopolize CPU*/
+        msleep(10);
   }
   return 1;
 }
