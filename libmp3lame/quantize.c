@@ -678,17 +678,10 @@ static void
 amp_scalefac_bands(
     lame_internal_flags *gfc,
     gr_info  *const cod_info, 
-    FLOAT *distort,
-    FLOAT xrpow[576] )
+    FLOAT *distort )
 {
-    int j, sfb;
-    FLOAT ifqstep34, trigger;
-
-    if (cod_info->scalefac_scale == 0) {
-	ifqstep34 = 1.29683955465100964055; /* 2**(.75*.5)*/
-    } else {
-	ifqstep34 = 1.68179283050742922612;  /* 2**(.75*1) */
-    }
+    int sfb;
+    FLOAT trigger;
 
     /* compute maximum value of distort[]  */
     trigger = 0;
@@ -720,23 +713,20 @@ amp_scalefac_bands(
 	break;
     }
 
-    j = 0;
     for (sfb = 0; sfb < cod_info->sfbmax; sfb++) {
-	int width = cod_info->width[sfb];
-	int l;
-	j += width;
 	if (distort[sfb] < trigger)
 	    continue;
 
 	if (gfc->substep_shaping & 2) {
 	    gfc->pseudohalf[sfb] = !gfc->pseudohalf[sfb];
-	    if (!gfc->pseudohalf[sfb] && gfc->noise_shaping_amp==2)
-		return;
+	    if (!gfc->pseudohalf[sfb]) {
+		if (gfc->noise_shaping_amp==2)
+		    return;
+		else
+		    continue;
+	    }
 	}
 	cod_info->scalefac[sfb]++;
-	for (l = -width; l < 0; l++)
-	    xrpow[j+l] *= ifqstep34;
-
 	if (gfc->noise_shaping_amp==2)
 	    return;
     }
@@ -754,23 +744,17 @@ amp_scalefac_bands(
  
 static void
 inc_scalefac_scale (
-    gr_info        * const cod_info, 
-    FLOAT                 xrpow[576] )
+    gr_info        * const cod_info
+    )
 {
-    int l, j, sfb;
-    j = 0;
+    int sfb;
     for (sfb = 0; sfb < cod_info->sfbmax; sfb++) {
-	int width = cod_info->width[sfb];
-        int s = cod_info->scalefac[sfb];
+	int s = cod_info->scalefac[sfb];
 	if (cod_info->preflag)
 	    s += pretab[sfb];
-	j += width;
-        if (s & 1) {
+	if (s & 1)
 	    s++;
-            for (l = -width; l < 0; l++) 
-                xrpow[j+l] *= 1.29683955465100964055; /* 2**(.75*.5)*/
-        }
-        cod_info->scalefac[sfb] = s >> 1;
+	cod_info->scalefac[sfb] = s >> 1;
     }
     cod_info->preflag = 0;
     cod_info->scalefac_scale = 1;
@@ -791,8 +775,8 @@ inc_scalefac_scale (
 static int 
 inc_subblock_gain (
     const lame_internal_flags        * const gfc,
-          gr_info        * const cod_info,
-          FLOAT                 xrpow[576] )
+          gr_info        * const cod_info
+    )
 {
     int sfb, window;
     int * const scalefac = cod_info->scalefac;
@@ -804,18 +788,18 @@ inc_subblock_gain (
     }
 
     for (window = 0; window < 3; window++) {
-	int s1, s2, l, j;
+	int s1, s2, j;
         s1 = s2 = 0;
 
         for (sfb = cod_info->sfb_lmax+window;
 	     sfb < cod_info->sfbdivide; sfb += 3) {
-            if (s1 < scalefac[sfb])
+	    if (s1 < scalefac[sfb])
 		s1 = scalefac[sfb];
         }
 	for (; sfb < cod_info->sfbmax; sfb += 3) {
 	    if (s2 < scalefac[sfb])
 		s2 = scalefac[sfb];
-        }
+	}
 
         if (s1 < 16 && s2 < 8)
             continue;
@@ -823,38 +807,14 @@ inc_subblock_gain (
         if (cod_info->subblock_gain[window] >= 7)
             return 1;
 
-        /* even though there is no scalefactor for sfb12
-         * subblock gain affects upper frequencies too, that's why
-         * we have to go up to SBMAX_s
-         */
         cod_info->subblock_gain[window]++;
 	j = gfc->scalefac_band.l[cod_info->sfb_lmax];
 	for (sfb = cod_info->sfb_lmax+window;
 	     sfb < cod_info->sfbmax; sfb += 3) {
-	    FLOAT amp;
-	    int width = cod_info->width[sfb], s = scalefac[sfb];
-
-	    assert(s >= 0);
-	    s = s - (4 >> cod_info->scalefac_scale);
-            if (s >= 0) {
-		scalefac[sfb] = s;
-		j += width*3;
-		continue;
-	    }
-
-	    scalefac[sfb] = 0;
-	    amp = IPOW20(210 + (s << (cod_info->scalefac_scale + 1)));
-	    j += width * (window+1);
-	    for (l = -width; l < 0; l++) {
-		xrpow[j+l] *= amp;
-            }
-	    j += width*(2-window);
-        }
-	{
-	    FLOAT8 amp = IPOW20(210 - 8);
-	    j += cod_info->width[sfb] * (window+1);
-	    for (l = -cod_info->width[sfb]; l < 0; l++)
-		xrpow[j+l] *= amp;
+	    int s = scalefac[sfb] - (4 >> cod_info->scalefac_scale);
+            if (s < 0)
+		s = 0;
+	    scalefac[sfb] = s;
         }
     }
     return 0;
@@ -881,12 +841,12 @@ inline static int
 balance_noise (
     lame_internal_flags *const gfc,
     gr_info        * const cod_info,
-    FLOAT         * distort,
-    FLOAT         xrpow[576] )
+    FLOAT         * distort
+    )
 {
     int status;
     
-    amp_scalefac_bands ( gfc, cod_info, distort, xrpow);
+    amp_scalefac_bands ( gfc, cod_info, distort);
 
     /* check to make sure we have not amplified too much 
      * loop_break returns 0 if there is an unamplified scalefac
@@ -899,21 +859,21 @@ balance_noise (
      * scalefacs are possibly valid.  encode them: 
      */
     if (gfc->mode_gr == 2)
-        status = scale_bitcount (cod_info);
+	status = scale_bitcount (cod_info);
     else 
-        status = scale_bitcount_lsf (gfc, cod_info);
+	status = scale_bitcount_lsf (gfc, cod_info);
 
     if (!status)
-        return 1; /* amplified some bands not exceeding limits */
+	return 1; /* amplified some bands not exceeding limits */
     
     /*  some scalefactors are too large. */
     if (gfc->use_subblock_gain && cod_info->block_type == SHORT_TYPE) {
 	/* try to use subblcok gain */
-	if (inc_subblock_gain (gfc, cod_info, xrpow) || loop_break (cod_info))
+	if (inc_subblock_gain (gfc, cod_info) || loop_break (cod_info))
 	    return 0;
     } else if (gfc->use_scalefac_scale && !cod_info->scalefac_scale) {
 	/*  lets try setting scalefac_scale=1 */
-	inc_scalefac_scale (cod_info, xrpow);
+	inc_scalefac_scale (cod_info);
     } else
 	return 0;
 
@@ -994,7 +954,7 @@ outer_loop (
 	    break;
 
 	/* try the new scalefactor conbination on cod_info_w */
-	if (balance_noise (gfc, &cod_info_w, distort, xrpow) == 0)
+	if (balance_noise (gfc, &cod_info_w, distort) == 0)
 	    break;
 
         huff_bits = targ_bits - cod_info_w.part2_length;

@@ -85,7 +85,7 @@ extern FLOAT adj43[PRECALC_SIZE];
 		   */
 
 extern FLOAT pow20[Q_MAX+Q_MAX2];
-extern FLOAT ipow20[Q_MAX];
+extern FLOAT ipow20[Q_MAX+Q_MAX2];
 extern FLOAT iipow20[Q_MAX2];
 
 

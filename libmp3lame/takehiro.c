@@ -50,159 +50,80 @@
  *********************************************************************/
 
 
+static int quantize_xrpow(const FLOAT *xp, gr_info *gi)
+{
+    /* quantize on xr^(3/4) instead of xr */
+    int sfb;
+    fi_union *fi = (fi_union *)gi->l3_enc;
+
+    for (sfb = 0; sfb < gi->psymax; sfb++) {
+	const FLOAT *xe = xp + gi->width[sfb];
+	FLOAT istep
+	    = IPOW20(gi->global_gain
+		     - ((gi->scalefac[sfb] + (gi->preflag ? pretab[sfb] : 0))
+			<< (gi->scalefac_scale + 1))
+		     - gi->subblock_gain[gi->window[sfb]] * 8);
+	do {
 #ifdef TAKEHIRO_IEEE754_HACK
-static int quantize_xrpow(const FLOAT *xp, int *pi, FLOAT istep)
-{
-    /* quantize on xr^(3/4) instead of xr */
-    fi_union *fi = (fi_union *)pi;
-    const FLOAT *xe = xp + 576;
+	    double x0 = istep * xp[0] + MAGIC_FLOAT;
+	    double x1 = istep * xp[1] + MAGIC_FLOAT;
+	    xp += 2;
 
-    do {
-	double x0 = istep * xp[0] + MAGIC_FLOAT;
-	double x1 = istep * xp[1] + MAGIC_FLOAT;
-	double x2 = istep * xp[2] + MAGIC_FLOAT;
-	double x3 = istep * xp[3] + MAGIC_FLOAT;
-	xp += 4;
+	    fi[0].f = x0;
+	    fi[1].f = x1;
 
-	fi[0].f = x0;
-	fi[1].f = x1;
-	fi[2].f = x2;
-	fi[3].f = x3;
-
-	if (fi[0].i >= MAGIC_INT + PRECALC_SIZE) return LARGE_BITS;
-	fi[0].f = x0 + (adj43asm - MAGIC_INT)[fi[0].i];
-	if (fi[1].i >= MAGIC_INT + PRECALC_SIZE) return LARGE_BITS;
-	fi[1].f = x1 + (adj43asm - MAGIC_INT)[fi[1].i];
-	if (fi[2].i >= MAGIC_INT + PRECALC_SIZE) return LARGE_BITS;
-	fi[2].f = x2 + (adj43asm - MAGIC_INT)[fi[2].i];
-	if (fi[3].i >= MAGIC_INT + PRECALC_SIZE) return LARGE_BITS;
-	fi[3].f = x3 + (adj43asm - MAGIC_INT)[fi[3].i];
-	fi[0].i -= MAGIC_INT;
-	fi[1].i -= MAGIC_INT;
-	fi[2].i -= MAGIC_INT;
-	fi[3].i -= MAGIC_INT;
-	fi += 4;
-    } while (xp < xe);
-    return 0;
-}
-
-static void quantize_xrpow_ISO(const FLOAT *xp, int *pi, FLOAT istep)
-{
-    /* quantize on xr^(3/4) instead of xr */
-    int j;
-    fi_union *fi;
-
-    fi = (fi_union *)pi;
-    for (j=576/4 - 1;j>=0;j--) {
-	fi[0].f = istep * xp[0] + (ROUNDFAC + MAGIC_FLOAT);
-	fi[1].f = istep * xp[1] + (ROUNDFAC + MAGIC_FLOAT);
-	fi[2].f = istep * xp[2] + (ROUNDFAC + MAGIC_FLOAT);
-	fi[3].f = istep * xp[3] + (ROUNDFAC + MAGIC_FLOAT);
-
-	fi[0].i -= MAGIC_INT;
-	fi[1].i -= MAGIC_INT;
-	fi[2].i -= MAGIC_INT;
-	fi[3].i -= MAGIC_INT;
-	fi+=4;
-	xp+=4;
-    }
-}
-
+	    if (fi[0].i >= MAGIC_INT + PRECALC_SIZE) return LARGE_BITS;
+	    fi[0].f = x0 + (adj43asm - MAGIC_INT)[fi[0].i];
+	    if (fi[1].i >= MAGIC_INT + PRECALC_SIZE) return LARGE_BITS;
+	    fi[1].f = x1 + (adj43asm - MAGIC_INT)[fi[1].i];
+	    fi[0].i -= MAGIC_INT;
+	    fi[1].i -= MAGIC_INT;
+	    fi += 2;
 #else
-
-static int quantize_xrpow(const FLOAT *xr, int *ix, FLOAT istep) {
-    /* quantize on xr^(3/4) instead of xr */
-    /* from Wilfried.Behne@t-online.de.  Reported to be 2x faster than 
-       the above code (when not using ASM) on PowerPC */
-    int j;
-
-    for ( j = 576/8; j > 0; --j) {
-	FLOAT	x1, x2, x3, x4, x5, x6, x7, x8;
-	int	rx1, rx2, rx3, rx4, rx5, rx6, rx7, rx8;
-	x1 = *xr++ * istep;
-	x2 = *xr++ * istep;
-	XRPOW_FTOI(x1, rx1);
-	x3 = *xr++ * istep;
-	XRPOW_FTOI(x2, rx2);
-	x4 = *xr++ * istep;
-	XRPOW_FTOI(x3, rx3);
-	x5 = *xr++ * istep;
-	XRPOW_FTOI(x4, rx4);
-	x6 = *xr++ * istep;
-	XRPOW_FTOI(x5, rx5);
-	x7 = *xr++ * istep;
-	XRPOW_FTOI(x6, rx6);
-	x8 = *xr++ * istep;
-	XRPOW_FTOI(x7, rx7);
-
-	if (rx1 >= PRECALC_SIZE) return LARGE_BITS;
-	if (rx2 >= PRECALC_SIZE) return LARGE_BITS;
-	if (rx3 >= PRECALC_SIZE) return LARGE_BITS;
-	if (rx4 >= PRECALC_SIZE) return LARGE_BITS;
-	if (rx5 >= PRECALC_SIZE) return LARGE_BITS;
-	if (rx6 >= PRECALC_SIZE) return LARGE_BITS;
-	if (rx7 >= PRECALC_SIZE) return LARGE_BITS;
-	if (rx8 >= PRECALC_SIZE) return LARGE_BITS;
-	x1 += adj43[rx1];
-	XRPOW_FTOI(x8, rx8);
-	x2 += adj43[rx2];
-	XRPOW_FTOI(x1,*ix++);
-	x3 += adj43[rx3];
-	XRPOW_FTOI(x2,*ix++);
-	x4 += adj43[rx4];
-	XRPOW_FTOI(x3,*ix++);
-	x5 += adj43[rx5];
-	XRPOW_FTOI(x4,*ix++);
-	x6 += adj43[rx6];
-	XRPOW_FTOI(x5,*ix++);
-	x7 += adj43[rx7];
-	XRPOW_FTOI(x6,*ix++);
-	x8 += adj43[rx8];
-	XRPOW_FTOI(x7,*ix++);
-	XRPOW_FTOI(x8,*ix++);
+	    FLOAT x1, x2;
+	    int	rx1, rx2;
+	    x1 = *xp++ * istep;
+	    x2 = *xp++ * istep;
+	    rx1 = (int)x1;
+	    rx2 = (int)x2;
+	    if (rx1 >= PRECALC_SIZE) return LARGE_BITS;
+	    if (rx2 >= PRECALC_SIZE) return LARGE_BITS;
+	    (fi++)->i = (int)(x1 + adj43[rx1]);
+	    (fi++)->i = (int)(x2 + adj43[rx2]);
+#endif
+	} while (xp < xe);
     }
     return 0;
 }
 
 
-
-
-
-
-static void quantize_xrpow_ISO( const FLOAT *xr, int *ix, FLOAT istep )
+static void quantize_xrpow_ISO(const FLOAT *xp, gr_info *gi)
 {
     /* quantize on xr^(3/4) instead of xr */
-    const FLOAT compareval0 = (1.0 - 0.4054)/istep;
-    int j;
-    /* depending on architecture, it may be worth calculating a few more
-       compareval's.
-
-       eg.  compareval1 = (2.0 - 0.4054/istep);
-       .. and then after the first compare do this ...
-       if compareval1>*xr then ix = 1;
-
-       On a pentium166, it's only worth doing the one compare (as done here),
-       as the second compare becomes more expensive than just calculating
-       the value. Architectures with slow FP operations may want to add some
-       more comparevals. try it and send your diffs statistically speaking
-
-       73% of all xr*istep values give ix=0
-       16% will give 1
-       4%  will give 2
-    */
-    for (j=576;j>0;j--) {
-	if (compareval0 > *xr) {
-	    *(ix++) = 0;
-	    xr++;
-	} else {
-	    /*    *(ix++) = (int)( istep*(*(xr++))  + 0.4054); */
-	    XRPOW_FTOI(  istep*(*(xr++))  + ROUNDFAC , *(ix++) );
-	}
+    int sfb;
+    fi_union *fi = (fi_union *)gi->l3_enc;
+    for (sfb = 0; sfb < gi->psymax; sfb++) {
+	const FLOAT *xe = xp + gi->width[sfb];
+	FLOAT istep
+	    = IPOW20(gi->global_gain
+		     - ((gi->scalefac[sfb] + (gi->preflag ? pretab[sfb] : 0))
+			<< (gi->scalefac_scale + 1))
+		     - gi->subblock_gain[gi->window[sfb]] * 8);
+	do {
+#ifdef TAKEHIRO_IEEE754_HACK
+	    fi[0].f = istep * xp[0] + (ROUNDFAC + MAGIC_FLOAT);
+	    fi[1].f = istep * xp[1] + (ROUNDFAC + MAGIC_FLOAT);
+	    xp += 2;
+	    fi[0].i -= MAGIC_INT;
+	    fi[1].i -= MAGIC_INT;
+	    fi += 2;
+#else
+	    (fi++)->i = (int)(*xp++ * istep + ROUNDFAC);
+	    (fi++)->i = (int)(*xp++ * istep + ROUNDFAC);
+#endif
+	} while (xp < xe);
     }
 }
-
-#endif
-
 
 /*************************************************************************/
 /*	      ix_max							 */
@@ -524,38 +445,43 @@ int noquant_count_bits(
 
 int count_bits(
           lame_internal_flags * const gfc, 
-    const FLOAT  * const xr,
+    const FLOAT  * const xrpow,
           gr_info * const gi
 	  )
 {
     int i;
-    int *const ix = gi->l3_enc;
 
     if (gfc->quantization) {
-	i = quantize_xrpow(xr, ix, IPOW20(gi->global_gain));
+	i = quantize_xrpow(xrpow, gi);
 	if (i)
 	    return i;
     } else
-	quantize_xrpow_ISO(xr, ix, IPOW20(gi->global_gain));
+	quantize_xrpow_ISO(xrpow, gi);
 
     if (gfc->substep_shaping & 2) {
 	int sfb, j = 0;
+	int *const ix = gi->l3_enc;
 	// 0.634521682242439 = 0.5946*2**(.5*0.1875)
-	const FLOAT roundfac =
-	    0.634521682242439 / IPOW20(gi->global_gain+gi->scalefac_scale);
 	for (sfb = 0; sfb < gi->sfbmax; sfb++) {
 	    int width = gi->width[sfb];
 	    int l;
+	    const FLOAT roundfac = 0.634521682242439
+		/ IPOW20(gi->global_gain
+			 - ((gi->scalefac[sfb] + (gi->preflag ? pretab[sfb]:0))
+			    << (gi->scalefac_scale + 1))
+			 - gi->subblock_gain[gi->window[sfb]] * 8
+			 + gi->scalefac_scale);
 	    j += width;
 	    if (!gfc->pseudohalf[sfb])
 		continue;
 	    for (l = -width; l < 0; l++)
-		if (xr[j+l] < roundfac)
+		if (xrpow[j+l] < roundfac)
 		    ix[j+l] = 0;
 	}
     }
     return noquant_count_bits(gfc, gi);
 }
+
 /***********************************************************************
   re-calculate the best scalefac_compress using scfsi
   the saved bits are kept in the bit reservoir.

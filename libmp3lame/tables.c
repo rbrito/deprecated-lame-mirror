@@ -621,7 +621,7 @@ const int scfsi_band[5] = { 0, 6, 11, 16, 21 };
 
 /* for fast quantization */
 FLOAT pow20[Q_MAX+Q_MAX2];
-FLOAT ipow20[Q_MAX];
+FLOAT ipow20[Q_MAX+Q_MAX2];
 FLOAT iipow20[Q_MAX2];
 FLOAT pow43[PRECALC_SIZE];
 /* initialized in first call to iteration_init */
@@ -1043,10 +1043,10 @@ iteration_init( lame_global_flags *gfp)
 	adj43[i] = (i + 1) - pow(0.5 * (pow43[i] + pow43[i + 1]), 0.75);
     adj43[i] = 0.5;
 #endif
-    for (i = 0; i < Q_MAX; i++)
-	ipow20[i] = pow(2.0, (double)(i - 210) * -0.1875);
-    for (i = 0; i < Q_MAX+Q_MAX2; i++)
+    for (i = 0; i < Q_MAX+Q_MAX2; i++) {
+	ipow20[i] = pow(2.0, (double)(i - 210 - Q_MAX2) * -0.1875);
 	pow20[i] = pow(2.0, (double)(i - 210 - Q_MAX2) * 0.25);
+    }
     for (i = 0; i < Q_MAX2; i++)
         iipow20[i] = pow(2.0, (double)i * 0.1875);
 
