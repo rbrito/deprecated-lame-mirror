@@ -294,7 +294,10 @@ int lame_init_params(lame_global_flags *gfp)
   /* estimate total frames.  must be done after setting sampling rate so
    * we know the framesize.  */
   gfp->totalframes=0;
-  gfp->totalframes = 2+ gfp->num_samples/(gfc->resample_ratio*gfp->framesize);
+  if(gfp->input_format == sf_mp1 && gfp->decode_only)
+    gfp->totalframes = 2+ gfp->num_samples/(gfc->resample_ratio*gfp->framesize/3);
+  else
+    gfp->totalframes = 2+ gfp->num_samples/(gfc->resample_ratio*gfp->framesize);
 
 
 
@@ -453,8 +456,8 @@ int lame_init_params(lame_global_flags *gfp)
 	return -1;
       }
     }
-    gfp->VBR_mean_bitrate_kbps = Min(bitrate_table[gfp->version][gfc->VBR_max_bitrate]*.95,gfp->VBR_mean_bitrate_kbps);
-    gfp->VBR_mean_bitrate_kbps = Max(bitrate_table[gfp->version][gfc->VBR_min_bitrate]*.95,gfp->VBR_mean_bitrate_kbps);
+    gfp->VBR_mean_bitrate_kbps = Min(bitrate_table[gfp->version][gfc->VBR_max_bitrate],gfp->VBR_mean_bitrate_kbps);
+    gfp->VBR_mean_bitrate_kbps = Max(bitrate_table[gfp->version][gfc->VBR_min_bitrate],gfp->VBR_mean_bitrate_kbps);
     
     /* Note: ABR mode should normally be used without a -V n setting,
      * (or with the default value of 4)

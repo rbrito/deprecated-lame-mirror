@@ -21,6 +21,12 @@ static char out[FSIZE];
 struct mpstr mp;
 plotting_data *mpg123_pinfo=NULL;
 
+static const int smpls[2][4]={
+/* Layer x  I   II   III */
+        {0,384,1152,1152}, /* MPEG-1     */
+        {0,192, 576, 576}  /* MPEG-2(.5) */
+};
+
 
 int check_aid(char *header) {
   int aid_header =
@@ -157,7 +163,7 @@ int lame_decode_initfile(FILE *fd, mp3data_struct *mp3data)
   mp3data->bitrate = tabsel_123[mp.fr.lsf][mp.fr.lay-1][mp.fr.bitrate_index];
   mp3data->nsamp=MAX_U_32_NUM;
 
-  framesize = (mp.fr.lsf == 0) ? 1152 : 576;
+  framesize = smpls[mp.fr.lsf][mp.fr.lay];
   if (xing_header && num_frames) {
     mp3data->nsamp=framesize * num_frames;
   }
@@ -219,11 +225,10 @@ int lame_decode_fromfile(FILE *fd, short pcm_l[], short pcm_r[],mp3data_struct *
     mp3data->samplerate = freqs[mp.fr.sampling_frequency];
     /* bitrate formula works for free bitrate also */
     mp3data->bitrate = .5 + 8*(4+mp.fsizeold)*freqs[mp.fr.sampling_frequency]/
-      (1000.0*(mp.fr.lay==1?192:576)*(2-mp.fr.lsf));
+                       (1000.0*smpls[mp.fr.lsf][mp.fr.lay]);
     /*    write(1,out,size); */
     outsize = size/(2*(stereo));
-    if ((outsize!=1152) && (outsize!=576) &&
-        (outsize!= 384) && (outsize!=192)) {
+    if (outsize!=smpls[mp.fr.lsf][mp.fr.lay]) {
       fprintf(stderr,"Oops: mpg123 returned more than one frame!  Cant handle this... \n");
      }
 

@@ -147,7 +147,7 @@ void lame_help(lame_global_flags *gfp,char *name)  /* print syntax & exit */
   PRINTF1("    -V n            quality setting for VBR.  default n=%i\n",gfp->VBR_q);
   PRINTF1("                    0=high quality,bigger files. 9=smaller files\n");
   PRINTF1("    -b <bitrate>    specify minimum allowed bitrate, default 32kbs\n");
-  PRINTF1("    -B <bitrate>    specify maximum allowed bitrate, default 256kbs\n");
+  PRINTF1("    -B <bitrate>    specify maximum allowed bitrate, default 320kbs\n");
   PRINTF1("    -F              strictly enforce the -b option, for use with players that\n");
   PRINTF1("                    do not support low bitrate mp3 (Apex AD600-A DVD/mp3 player)\n");
   PRINTF1("    -t              disable writing Xing VBR informational tag\n");
