@@ -213,10 +213,6 @@ lame_decoder(lame_global_flags * gfp, FILE * outf, int skip, char *inPath,
         if (silent < 10) fprintf(stderr, "MPEG-%u%s Layer %s", 2 - lame_get_version(gfp),
                 lame_get_out_samplerate( gfp ) < 16000 ? ".5" : "", "I");
         break;
-    case sf_ogg:
-        if (silent < 10) fprintf(stderr, "Ogg Vorbis");
-        skip = 0;       /* other formats have no delay *//* is += 0 not better ??? */
-        break;
     case sf_raw:
         if (silent < 10) fprintf(stderr, "raw PCM data");
         mp3input_data.nsamp = lame_get_num_samples( gfp );

@@ -274,6 +274,7 @@ lame_get_decode_only( const lame_global_flags*  gfp )
 
 
 /* encode a Vorbis .ogg file */
+/* DEPRECATED */
 int
 lame_set_ogg( lame_global_flags*  gfp,
               int                 ogg )

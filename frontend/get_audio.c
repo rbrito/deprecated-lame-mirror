@@ -1299,7 +1299,7 @@ OpenSndFile(lame_global_flags * gfp, char *inPath)
         (void) lame_set_num_samples( gfp, mp3input_data.nsamp );
     }
     else if (input_format == sf_ogg) {
-        fprintf(stderr, "sorry, vorbis support in LAME is desperated.\n");
+        fprintf(stderr, "sorry, vorbis support in LAME is deprecated.\n");
         exit(1);
     }
     else {
