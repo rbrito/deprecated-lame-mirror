@@ -473,6 +473,10 @@ int CDECL lame_get_ATHtype(const lame_global_flags *);
 int CDECL lame_set_ATHlower(lame_global_flags *, float);
 float CDECL lame_get_ATHlower(const lame_global_flags *);
 
+// select adaptive ATH level adjustment scheme
+int CDECL lame_set_adapt_thres_type( lame_global_flags *, int);
+int CDECL lame_get_adapt_thres_type( const lame_global_flags *);
+
 // predictability limit (ISO tonality formula)
 int CDECL lame_set_cwlimit(lame_global_flags *, int);
 int CDECL lame_get_cwlimit(const lame_global_flags *);
