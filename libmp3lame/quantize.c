@@ -25,21 +25,19 @@
 #ifdef HAVE_CONFIG_H
 # include <config.h>
 #endif
-
+#ifdef WITH_DMALLOC
+# include <dmalloc.h>
+#endif
 #include <math.h>
 #include <assert.h>
 #include <stdlib.h>
+
+#include "encoder.h"
 #include "bitstream.h"
 #include "quantize.h"
 #include "quantize_pvt.h"
-#include "machine.h"
 #include "tables.h"
 #include "psymodel.h"
-
-#ifdef WITH_DMALLOC
-#include <dmalloc.h>
-#endif
-
 
 #ifdef HAVE_NASM
 extern void pow075_SSE(float *, float *, int, float*);

@@ -21,7 +21,7 @@
 
 #ifndef LAME_BITSTREAM_H
 #define LAME_BITSTREAM_H
-#include "util.h"
+#include "encoder.h"
 
 #define         CRC16_POLYNOMIAL        0x8005
 
@@ -33,6 +33,5 @@ int  copy_buffer(lame_t gfc, unsigned char *buffer, int buffer_size, int update_
 void init_bit_stream_w(lame_t gfc);
 void CRC_writeheader (char *buffer, int len);
 int compute_flushbits(const lame_t gfc, int *nbytes);
-
 
 #endif

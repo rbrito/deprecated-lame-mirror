@@ -24,15 +24,13 @@
 #ifdef HAVE_CONFIG_H
 # include <config.h>
 #endif
-
-#include <assert.h>
-#include "util.h"
-#include "bitstream.h"  /* because of compute_flushbits */
-
 #ifdef WITH_DMALLOC
-#include <dmalloc.h>
+# include <dmalloc.h>
 #endif
+#include <assert.h>
 
+#include "encoder.h"
+#include "bitstream.h"  /* because of compute_flushbits */
 
 /*
  * input stream description

@@ -24,9 +24,16 @@
 #ifdef HAVE_CONFIG_H
 # include <config.h>
 #endif
-
+#ifdef WITH_DMALLOC
+# include <dmalloc.h>
+#endif
+#ifdef __sun__
+/* woraround for SunOS 4.x, it has SEEK_* defined here */
+# include <unistd.h>
+#endif
 #include <assert.h>
 
+#include "encoder.h"
 #include "util.h"
 #include "set_get.h"
 #include "bitstream.h"
@@ -36,16 +43,6 @@
 #include "psymodel.h"
 #include "VbrTag.h"
 #include "id3tag.h"
-
-#ifdef WITH_DMALLOC
-#include <dmalloc.h>
-#endif
-
-#ifdef __sun__
-/* woraround for SunOS 4.x, it has SEEK_* defined here */
-#include <unistd.h>
-#endif
-
 
 #define LAME_DEFAULT_QUALITY 5
 

@@ -119,24 +119,18 @@ noise in the mid & side channels is assumed to also
 be masked by strong maskers in the L or R channels.
 */
 
-
-
-
 #ifdef HAVE_CONFIG_H
 # include <config.h>
 #endif
-
+#ifdef WITH_DMALLOC
+# include <dmalloc.h>
+#endif
 #include <assert.h>
 #include <math.h>
 
-#ifdef WITH_DMALLOC
-#include <dmalloc.h>
-#endif
-
-#include "util.h"
+#include "encoder.h"
 #include "psymodel.h"
 #include "tables.h"
-#include "machine.h"
 
 /*
    psycho_anal.  Compute psycho acoustics.

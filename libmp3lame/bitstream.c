@@ -24,16 +24,15 @@
 #ifdef HAVE_CONFIG_H
 # include <config.h>
 #endif
-
+#ifdef WITH_DMALLOC
+# include <dmalloc.h>
+#endif
 #include <assert.h>
+
 #include "bitstream.h"
 #include "version.h"
 #include "VbrTag.h"
 #include "tables.h"
-
-#ifdef WITH_DMALLOC
-#include <dmalloc.h>
-#endif
 
 /***********************************************************************
  * compute bits-per-frame

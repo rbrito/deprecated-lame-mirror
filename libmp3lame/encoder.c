@@ -22,23 +22,20 @@
 /* $Id$ */
 
 #ifdef HAVE_CONFIG_H
-#include <config.h>
+# include <config.h>
 #endif
-
+#ifdef WITH_DMALLOC
+# include <dmalloc.h>
+#endif
 #include <assert.h>
 
-#include "util.h"
+#include "encoder.h"
 #include "newmdct.h"
 #include "psymodel.h"
 #include "quantize.h"
 #include "tables.h"
 #include "bitstream.h"
 #include "VbrTag.h"
-
-#ifdef WITH_DMALLOC
-#include <dmalloc.h>
-#endif
-
 
 static void
 conv_istereo(lame_t gfc, gr_info *gi, int sfb, int i)
@@ -515,10 +512,6 @@ fill_buffer_resample(lame_t gfc, sample_t *outbuf, sample_t *inbuf, int len,
     return k;  /* return the number samples created at the new samplerate */
 }
 
-
-
-
-
 static int
 fill_buffer(lame_t gfc, sample_t *in_buffer, int nsamples, int *n_in, int ch)
 {
@@ -536,8 +529,6 @@ fill_buffer(lame_t gfc, sample_t *in_buffer, int nsamples, int *n_in, int ch)
     }
     return n_out;
 }
-
-
 
 /*
  * THE MAIN LAME ENCODING INTERFACE
@@ -561,22 +552,20 @@ fill_buffer(lame_t gfc, sample_t *in_buffer, int nsamples, int *n_in, int ch)
  */
 int
 lame_encode_buffer_sample_t(
-    lame_t gfc,
-    sample_t buffer_lr[],
-    int nsamples,
-    unsigned char *mp3buf,
-    const int mp3buf_size
-    )
+    lame_t gfc, sample_t buffer_lr[], int nsamples,
+    unsigned char *mp3buf, const int mp3buf_size)
 {
-    int mp3size = 0, ret, i, mf_needed;
-    int mp3out;
+    int buf_remain = mp3buf_size, i, mf_needed;
     sample_t *in_buffer[2];
+    unsigned char *p = mp3buf;
 
     /* copy out any tags that may have been written into bitstream */
-    mp3out = copy_buffer(gfc,mp3buf,mp3buf_size,0);
-    if (mp3out<0) return mp3out;  /* not enough buffer space */
-    mp3buf += mp3out;
-    mp3size += mp3out;
+    i = copy_buffer(gfc, p, mp3buf_size, 0);
+    if (i < 0)
+	return i;  /* not enough buffer space */
+    p += i;
+    if (mp3buf_size)
+	buf_remain -= i;
 
     /* Downsample to Mono if 2 channels in and 1 channel out */
     if (gfc->num_channels == 2 && gfc->channels_out == 1) {
@@ -584,9 +573,6 @@ lame_encode_buffer_sample_t(
 	    buffer_lr[i] = 0.5f * ((FLOAT) buffer_lr[i]
 				   + buffer_lr[i+nsamples]);
     }
-
-    in_buffer[0] = buffer_lr;
-    in_buffer[1] = buffer_lr + nsamples;
 
     /* some sanity checks */
 #if ENCDELAY < MDCTDELAY
@@ -599,17 +585,19 @@ lame_encode_buffer_sample_t(
     mf_needed = BLKSIZE + gfc->framesize - FFTOFFSET + 1152; /* amount needed for FFT */
     mf_needed = Max(mf_needed, 480 + gfc->framesize + 1152); /* amount needed for MDCT/filterbank */
     assert(MFSIZE >= mf_needed);
-
     assert(nsamples > 0);
+
+    in_buffer[0] = buffer_lr;
+    in_buffer[1] = buffer_lr + nsamples;
     do {
-	int buf_size, n_in, n_out, ch;
+	int n_in, n_out, ch = 0;
 	/* copy in new samples into mfbuf, with resampling
 	 * consume (n_in) samples from in_buffer,
 	 * and output (n_out) samples in gfc->mfbuf. */
-	for (ch = 0; ch < gfc->channels_out; ch++) {
+	do {
 	    n_out = fill_buffer(gfc, in_buffer[ch], nsamples, &n_in, ch);
 	    in_buffer[ch] += n_in;
-	}
+	} while (++ch < gfc->channels_out);
 
 	/* update in_buffer counters */
 	nsamples -= n_in;
@@ -621,32 +609,29 @@ lame_encode_buffer_sample_t(
 
 	assert(gfc->mf_size <= MFSIZE);
 	/* encode the frame.
-	 *  mp3buf              = pointer to current location in buffer
-	 *  mp3buf_size         = size of original mp3 output buffer
-	 *			= 0 if we should not worry about the
-	 *			    buffer size because calling program is 
-	 *			    to lazy to compute it
-	 *  mp3size		= size of data written to buffer so far
-	 *  mp3buf_size-mp3size = amount of space avalable
+	 *  p           = pointer to current location in buffer
+	 *  mp3buf_size = size of original mp3 output buffer
+	 *		  if 0, we should not worry about the buffer size
+	 *		  because calling program is to lazy to compute it
+	 *  buf_remain  = amount of space avalable
 	 */
-	buf_size = mp3buf_size - mp3size;
-	if (mp3buf_size == 0)
-	    buf_size = 0;
+	i = encode_mp3_frame(gfc, p, buf_remain);
+	if (i < 0)
+	    return i;
 
-	ret = encode_mp3_frame(gfc, mp3buf, buf_size);
+	if (mp3buf_size)
+	    buf_remain -= i;
+	p += i;
 	gfc->frameNum++;
-
-	if (ret < 0)
-	    return ret;
-	mp3buf += ret;
-	mp3size += ret;
 
 	/* shift out old samples */
 	gfc->mf_size -= gfc->framesize;
-	for (ch = 0; ch < gfc->channels_out; ch++)
+	ch = 0;
+	do {
 	    memcpy(gfc->mfbuf[ch], &gfc->mfbuf[ch][gfc->framesize],
 		   sizeof(sample_t) * gfc->mf_size);
+	} while (++ch < gfc->channels_out);
     } while (nsamples > 0);
     assert(nsamples == 0);
-    return mp3size;
+    return p - mp3buf;
 }

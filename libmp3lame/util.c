@@ -24,8 +24,9 @@
 #ifdef HAVE_CONFIG_H
 # include <config.h>
 #endif
-
-#include "util.h"
+#ifdef WITH_DMALLOC
+# include <dmalloc.h>
+#endif
 #include <assert.h>
 #include <stdarg.h>
 
@@ -36,17 +37,14 @@
 #include "asmstuff.h"
 #endif
 
-#ifdef WITH_DMALLOC
-#include <dmalloc.h>
-#endif
+#include "util.h"
+#include "encoder.h"
 
 /***********************************************************************
 *
 *  Global Function Definitions
 *
 ***********************************************************************/
-/*empty and close mallocs in gfc */
-
 int
 BitrateIndex(
     int bRate,        /* legal rates from 32 to 448 kbps */
@@ -54,11 +52,10 @@ BitrateIndex(
     )
 {
     int  i;
+    for (i = 0; i <= 14; i++)
+	if (bitrate_table[version][i] == bRate)
+	    return i;
 
-    for ( i = 0; i <= 14; i++)
-        if ( bitrate_table [version] [i] == bRate )
-            return i;
-	    
     return -1;
 }
 

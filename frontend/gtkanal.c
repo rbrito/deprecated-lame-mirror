@@ -28,10 +28,12 @@
 #include <math.h>
 #include <gtk/gtk.h>
 #include <assert.h>
-#include "main.h"
+
 #include "lame.h"
+
+#include "encoder.h"
+#include "main.h"
 #include "lame-analysis.h"
-#include "get_audio.h"
 #include "gtkanal.h"
 #include "gpkplotting.h"
 

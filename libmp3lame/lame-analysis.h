@@ -22,8 +22,6 @@
 #ifndef LAME_GTKANAL_H
 #define LAME_GTKANAL_H
 
-#include "encoder.h"
-
 #define READ_AHEAD 40             /* number of frames to read ahead */
 #define MAXMPGLAG READ_AHEAD      /* if the mpg123 lag becomes bigger than this
 				     we have to stop */

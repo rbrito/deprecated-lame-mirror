@@ -1,9 +1,3 @@
-#include "lame-analysis.h"
-
-#ifndef NOANALYSIS
-extern plotting_data *mpg123_pinfo;
-#endif
-
 struct buf {
         unsigned char *pnt;
 	long size;
@@ -53,6 +47,3 @@ typedef struct mpstr_tag {
 #define MP3_ERR -1
 #define MP3_OK  0
 #define MP3_NEED_MORE 1
-
-
-

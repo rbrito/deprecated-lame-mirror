@@ -6,16 +6,15 @@
 
 #ifdef HAVE_MPGLIB
 
+#ifdef WITH_DMALLOC
+# include <dmalloc.h>
+#endif
 #include <limits.h>
 #include <stdlib.h>
 #include <assert.h>
 
+#include "encoder.h"
 #include "interface.h"
-#include "util.h"
-
-#ifdef WITH_DMALLOC
-#include <dmalloc.h>
-#endif
 
 #ifndef NOANALYSIS
 plotting_data *mpg123_pinfo = NULL;

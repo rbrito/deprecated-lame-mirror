@@ -70,8 +70,9 @@ char *strchr (), *strrchr ();
 #endif
 
 #if INTERNAL_OPTS
-# include "lame-analysis.h"
+# include "encoder.h"
 # include "set_get.h"
+# include "lame-analysis.h"
 int experimentalX = 0;
 int experimentalY = 0;
 int experimentalZ = 0;
@@ -232,13 +233,11 @@ static int setOS2Priority(int Priority)
 
 void lame_version_print ( FILE* const fp )
 {
-    const char * v = get_lame_version ();
-    const char * u = get_lame_url ();
-
-    fprintf ( fp, "LAME version %s (%s)\n\n", v, u );
+    fprintf(fp, "LAME version %s (%s)\n\n",
+	    get_lame_version (), get_lame_url ());
 
     if (LAME_ALPHA_VERSION)
-	fprintf ( fp, "warning: alpha versions should be used for testing only\n\n");
+	fprintf (fp, "warning: alpha versions should be used for testing only\n\n");
 }
 
 /* print version & license */

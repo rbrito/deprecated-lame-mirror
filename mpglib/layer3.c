@@ -14,12 +14,16 @@
 #include <stdlib.h>
 #include "common.h"
 #include "huffman.h"
-#include "lame-analysis.h"
 #include "layer3.h"
 #include "decode_i386.h"
 
 #ifdef WITH_DMALLOC
 #include <dmalloc.h>
+#endif
+
+#ifndef NOANALYSIS
+#include "encoder.h"
+extern plotting_data *mpg123_pinfo;
 #endif
 
 #define MPEG1

@@ -22,8 +22,6 @@
 #ifndef LAME_QUANTIZE_H
 #define LAME_QUANTIZE_H
 
-#include "util.h"
-
 void     iteration_loop(lame_t gfc, III_psy_ratio ratio[2][2]);
 void VBR_iteration_loop(lame_t gfc, III_psy_ratio ratio[2][2]);
 void ABR_iteration_loop(lame_t gfc, III_psy_ratio ratio[2][2]);

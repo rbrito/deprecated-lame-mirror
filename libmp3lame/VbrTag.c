@@ -24,23 +24,20 @@
 #ifdef HAVE_CONFIG_H
 # include <config.h>
 #endif
-
-#include "machine.h"
-#include "bitstream.h"
-#include "VbrTag.h"
-#include "version.h"
-#include "id3tag.h"
-
-#include	<assert.h>
-
 #ifdef WITH_DMALLOC
-#include <dmalloc.h>
+# include <dmalloc.h>
 #endif
-
 #ifdef __sun__
 /* woraround for SunOS 4.x, it has SEEK_* defined here */
 #include <unistd.h>
 #endif
+#include <assert.h>
+
+#include "util.h"
+#include "bitstream.h"
+#include "VbrTag.h"
+#include "version.h"
+#include "id3tag.h"
 
 /*
  *    4 bytes for Header Tag
@@ -164,7 +161,8 @@ void AddVbrFrame(lame_t gfc)
  * Paramters:
  *			fpStream: pointer to output file stream
  ****************************************************************************/
-int InitVbrTag(lame_t gfc)
+int
+InitVbrTag(lame_t gfc)
 {
 #define MAXFRAMESIZE 2880 /* the max framesize freeformat 640 32kHz */
     int i, header_bitrate, tot;

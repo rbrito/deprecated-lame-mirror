@@ -22,8 +22,6 @@
 #ifndef LAME_TABLES_H
 #define LAME_TABLES_H
 
-#include "machine.h"
-
 struct huffcodetab {
     const int    xlen; 	        /* max. x-index+			*/ 
     const int    linmax;	/* max number to be stored in linbits	*/

@@ -30,18 +30,15 @@
   \ingroup libmp3lame
 */
 
-
 #ifdef HAVE_CONFIG_H
 # include <config.h>
 #endif
-
-
-#include <stdio.h>
-#include "version.h"    /* macros of version numbers */
-
 #ifdef WITH_DMALLOC
-#include <dmalloc.h>
+# include <dmalloc.h>
 #endif
+#include <stdio.h>
+
+#include "version.h"    /* macros of version numbers */
 
 /*! Stringify \a x. */
 #define STR(x)   #x

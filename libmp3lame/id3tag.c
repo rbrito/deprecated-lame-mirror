@@ -31,28 +31,24 @@
 /* $Id$ */
 
 #ifdef HAVE_CONFIG_H
-#include <config.h>
+# include <config.h>
 #endif
-
+#ifdef WITH_DMALLOC
+# include <dmalloc.h>
+#endif
 #ifdef STDC_HEADERS
 # include <stddef.h>
 # include <stdlib.h>
 # include <string.h>
 #endif
 
-
 #ifdef _MSC_VER
 # define snprintf _snprintf
 #endif
 
-
-#include "util.h"
+#include "encoder.h"
 #include "id3tag.h"
 #include "bitstream.h"
-
-#ifdef WITH_DMALLOC
-#include <dmalloc.h>
-#endif
 
 static const char *const genre_names[] =
 {

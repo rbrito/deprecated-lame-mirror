@@ -29,14 +29,13 @@
 #ifdef HAVE_CONFIG_H
 # include <config.h>
 #endif
+#ifdef WITH_DMALLOC
+# include <dmalloc.h>
+#endif
 
-#include "util.h"
+#include "encoder.h"
 #include "tables.h"
 #include "newmdct.h"
-
-#ifdef WITH_DMALLOC
-#include <dmalloc.h>
-#endif
 
 static const FLOAT enwindow[] = 
 {

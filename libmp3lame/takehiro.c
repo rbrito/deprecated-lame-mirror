@@ -24,15 +24,14 @@
 #ifdef HAVE_CONFIG_H
 # include <config.h>
 #endif
-
+#ifdef WITH_DMALLOC
+# include <dmalloc.h>
+#endif
 #include <assert.h>
-#include "util.h"
+
+#include "encoder.h"
 #include "tables.h"
 #include "quantize_pvt.h"
-
-#ifdef WITH_DMALLOC
-#include <dmalloc.h>
-#endif
 
 #if HAVE_NASM
 # define choosetable(a,b,c) gfc->choose_table(a,b,c)

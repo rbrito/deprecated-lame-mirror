@@ -4,12 +4,13 @@
 # include <config.h>
 #endif
 
+#include <stdio.h>
+#include <gtk/gtk.h>
+
 #include "lame.h"
 
-#include <stdio.h>
-
+#include "encoder.h"
 #include "lame-analysis.h"
-#include <gtk/gtk.h>
 #include "parse.h"
 #include "get_audio.h"
 #include "gtkanal.h"

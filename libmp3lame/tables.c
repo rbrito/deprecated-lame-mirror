@@ -24,17 +24,16 @@
 #ifdef HAVE_CONFIG_H
 # include <config.h>
 #endif
+#ifdef WITH_DMALLOC
+# include <dmalloc.h>
+#endif
+#include <assert.h>
 
+#include "encoder.h"
 #include "util.h"
 #include "tables.h"
 #include "psymodel.h"
 #include "quantize_pvt.h"
-
-#ifdef WITH_DMALLOC
-#include <dmalloc.h>
-#endif
-
-#include <assert.h>
 
 /*
   The following table is used to implement the scalefactor
