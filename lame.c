@@ -98,6 +98,36 @@ void lame_init_params(lame_global_flags *gfp)
     gfp->free_format=0;  /* VBR cant mix with free format */
   }
 
+  if (!gfp->VBR && gfp->brate==0) {
+    /* no bitrate or compression ratio specified, use 11 */
+    if (gfp->user_comp_ratio==0) gfp->user_comp_ratio=11;
+  }
+
+
+  /* find bitrate if user specify a compression ratio */
+  if (!gfp->VBR && gfp->user_comp_ratio > 0) {
+    
+    if (gfp->out_samplerate==0) 
+      gfp->out_samplerate=gfp->in_samplerate;   
+    
+    /* choose a bitrate for the output samplerate which achieves
+     * specifed compression ratio 
+     */
+    gfp->brate = 
+      gfp->out_samplerate*16*gfc->stereo/(1000.0*gfp->user_comp_ratio);
+
+    /* we need the version for the bitrate table look up */
+    gfc->samplerate_index = SmpFrqIndex((long)gfp->out_samplerate, &gfp->version);
+    for (i=1; i<14 ; i++) {
+      int brate = bitrate_table[gfp->version][i];
+      if (brate >= gfp->brate ) 
+	break;
+    }
+    gfp->brate = bitrate_table[gfp->version][i];
+  }
+  if (gfp->brate >= 320) gfp->VBR=0;  /* dont bother with VBR at 320kbs */
+
+
 
   /* set the output sampling rate, and resample options if necessary
      samplerate = input sample rate
@@ -117,10 +147,10 @@ void lame_init_params(lame_global_flags *gfp)
     else gfp->out_samplerate=16000;
 
 
-    if (gfp->brate>0) {
+    if (!gfp->VBR && gfp->brate>0) {
       /* check if user specified bitrate requires downsampling */
       compression_ratio = gfp->out_samplerate*16*gfc->stereo/(1000.0*gfp->brate);
-      if (!gfp->VBR && compression_ratio > 13 ) {
+      if (compression_ratio > 13 ) {
 	/* automatic downsample, if possible */
 	gfp->out_samplerate = (10*1000.0*gfp->brate)/(16*gfc->stereo);
 	if (gfp->out_samplerate<=16000) gfp->out_samplerate=16000;
@@ -136,11 +166,6 @@ void lame_init_params(lame_global_flags *gfp)
   gfc->mode_gr = (gfp->out_samplerate <= 24000) ? 1 : 2;  /* mode_gr = 2 */
   gfc->encoder_delay = ENCDELAY;
   gfc->framesize = gfc->mode_gr*576;
-
-  if (gfp->brate==0) { /* user didn't specify a bitrate, use default */
-    gfp->brate=128;
-    if (gfc->mode_gr==1) gfp->brate=64;
-  }
 
 
   gfc->resample_ratio=1;
@@ -169,9 +194,6 @@ void lame_init_params(lame_global_flags *gfp)
         14.7                 sox resample .45
 
   */
-  if (gfp->brate >= 320) gfp->VBR=0;  /* dont bother with VBR at 320kbs */
-  compression_ratio = gfp->out_samplerate*16*gfc->stereo/(1000.0*gfp->brate);
-
 
   /* for VBR, take a guess at the compression_ratio. for example: */
   /* VBR_q           compression       like
@@ -181,9 +203,11 @@ void lame_init_params(lame_global_flags *gfp)
      4                8.8             160kbs/41khz
      6                10.4            128kbs/41khz
   */
-  if (gfp->VBR) {
+  if (gfp->VBR) 
     compression_ratio = 4.4 + gfp->VBR_q;
-  }
+  else
+    compression_ratio = gfp->out_samplerate*16*gfc->stereo/(1000.0*gfp->brate);
+
 
 
   /* At higher quality (lower compression) use STEREO instead of JSTEREO.
@@ -535,8 +559,6 @@ void lame_init_params(lame_global_flags *gfp)
       InitVbrTag(gfp);
     }
 
-
-
   if (gfp->brhist_disp)
     brhist_init(gfp,1,14);
 
@@ -565,8 +587,6 @@ void lame_print_config(lame_global_flags *gfp)
   static const char *mode_names[4] = { "stereo", "j-stereo", "dual-ch", "single-ch" };
   FLOAT out_samplerate=gfp->out_samplerate/1000.0;
   FLOAT in_samplerate = gfc->resample_ratio*out_samplerate;
-  FLOAT compression=
-    (FLOAT)(gfc->stereo*16*out_samplerate)/(FLOAT)(gfp->brate);
 
   lame_print_version(stderr);
   if (gfp->num_channels==2 && gfc->stereo==1) {
@@ -596,10 +616,13 @@ void lame_print_config(lame_global_flags *gfp)
       fprintf(stderr, "Encoding as %.1fkHz VBR(q=%i) %s MPEG%i LayerIII  qval=%i\n",
 	      gfp->out_samplerate/1000.0,
 	      gfp->VBR_q,mode_names[gfp->mode],2-gfp->version,gfp->quality);
-    else
+    else {
+      FLOAT compression=
+	(FLOAT)(gfc->stereo*16*out_samplerate)/(FLOAT)(gfp->brate);
       fprintf(stderr, "Encoding as %.1f kHz %d kbps %s MPEG%i LayerIII (%4.1fx)  qval=%i\n",
 	      gfp->out_samplerate/1000.0,gfp->brate,
 	      mode_names[gfp->mode],2-gfp->version,compression,gfp->quality);
+    }
   }
   if (gfp->free_format) {
     fprintf(stderr,"Warning: many decoders cannot handle free format bitstreams\n");
@@ -686,7 +709,7 @@ char *mp3buf, int mp3buf_size)
   memset((char *) scalefac, 0, sizeof(scalefac));
   inbuf[0]=inbuf_l;
   inbuf[1]=inbuf_r;
-
+    
   gfc->mode_ext = MPG_MD_LR_LR;
 
   if (gfc->lame_encode_frame_init==0 )  {
@@ -697,14 +720,14 @@ char *mp3buf, int mp3buf_size)
     gfc->lame_encode_frame_init=1;
 
     avg_slots_per_frame = (bit_rate*gfc->framesize) /
-           (sampfreq* 8);
+      (sampfreq* 8);
     /* -f fast-math option causes some strange rounding here, be carefull: */
     gfc->frac_SpF  = avg_slots_per_frame - floor(avg_slots_per_frame + 1e-9);
     if (fabs(gfc->frac_SpF) < 1e-9) gfc->frac_SpF = 0;
-
     gfc->slot_lag  = -gfc->frac_SpF;
     gfc->padding = 1;
     if (gfc->frac_SpF==0) gfc->padding = 0;
+
     /* check FFT will not use a negative starting offset */
     assert(576>=FFTOFFSET);
     /* check if we have enough data for FFT */
@@ -756,7 +779,6 @@ char *mp3buf, int mp3buf_size)
 
     }
   }
-
 
   if (gfc->psymodel) {
     /* psychoacoustic model

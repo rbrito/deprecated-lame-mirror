@@ -108,21 +108,22 @@ void lame_help(lame_global_flags *gfp,char *name)  /* print syntax & exit */
   fprintf(stdout,"\n");
   fprintf(stdout,"  Filter options:\n");
   fprintf(stdout,"    -k              keep ALL frequencies (disables all filters)\n");
-  fprintf(stdout,"  --lowpass freq         frequency(kHz), lowpass filter cutoff above freq\n");
-  fprintf(stdout,"  --lowpass-width freq   frequency(kHz) - default 15%% of lowpass freq\n");
-  fprintf(stdout,"  --highpass freq        frequency(kHz), highpass filter cutoff below freq\n");
-  fprintf(stdout,"  --highpass-width freq  frequency(kHz) - default 15%% of highpass freq\n");
-  fprintf(stdout,"  --resample sfreq  sampling frequency of output file(kHz)- default=input sfreq\n");
-  fprintf(stdout,"  --cwlimit freq    compute tonality up to freq (in kHz) default 8.8717\n");
+  fprintf(stdout,"  --lowpass <freq>        frequency(kHz), lowpass filter cutoff above freq\n");
+  fprintf(stdout,"  --lowpass-width <freq>  frequency(kHz) - default 15%% of lowpass freq\n");
+  fprintf(stdout,"  --highpass <freq>       frequency(kHz), highpass filter cutoff below freq\n");
+  fprintf(stdout,"  --highpass-width <freq> frequency(kHz) - default 15%% of highpass freq\n");
+  fprintf(stdout,"  --resample <sfreq>  sampling frequency of output file(kHz)- default=input sfreq\n");
+  fprintf(stdout,"  --cwlimit <freq>    compute tonality up to freq (in kHz) default 8.8717\n");
   fprintf(stdout,"\n");
   fprintf(stdout,"  Operational options:\n");
-  fprintf(stdout,"    -m mode         (s)tereo, (j)oint, (f)orce or (m)ono  (default j)\n");
+  fprintf(stdout,"    -m <mode>       (s)tereo, (j)oint, (f)orce or (m)ono  (default j)\n");
   fprintf(stdout,"                    force = force ms_stereo on all frames. Faster\n");
   fprintf(stdout,"    -a              downmix from stereo to mono file for mono encoding\n");
   fprintf(stdout,"    -d              allow channels to have different blocktypes\n");
   fprintf(stdout,"    -S              don't print progress report, VBR histograms\n");
   fprintf(stdout,"    --decode        input=mp3 file, output=raw pcm\n");
   fprintf(stdout,"    --freeformat    produce a free format bitstream\n");
+  fprintf(stdout,"    --comp  <arg>   choose bitrate to achive a compression ratio of <arg>\n");
   fprintf(stdout,"    --athonly       only use the ATH for masking\n");
   fprintf(stdout,"    --noath         disable the ATH for masking\n");
   fprintf(stdout,"    --noshort       do not use short blocks\n");
@@ -133,19 +134,21 @@ void lame_help(lame_global_flags *gfp,char *name)  /* print syntax & exit */
   fprintf(stdout,"  CBR (constant bitrate, the default) options:\n");
   fprintf(stdout,"    -h              higher quality, but a little slower.  Recommended.\n");
   fprintf(stdout,"    -f              fast mode (very low quality)\n");
-  fprintf(stdout,"    -b bitrate      set the bitrate, default 128kbps\n");
+  fprintf(stdout,"    -b <bitrate>    set the bitrate in kbs, default 128kbps\n");
   fprintf(stdout,"\n");
   fprintf(stdout,"  VBR options:\n");
   fprintf(stdout,"    -v              use variable bitrate (VBR)\n");
   fprintf(stdout,"    -V n            quality setting for VBR.  default n=%i\n",gfp->VBR_q);
   fprintf(stdout,"                    0=high quality,bigger files. 9=smaller files\n");
-  fprintf(stdout,"    -b bitrate      specify minimum allowed bitrate, default 32kbs\n");
-  fprintf(stdout,"    -B bitrate      specify maximum allowed bitrate, default 256kbs\n");
+  fprintf(stdout,"    -b <bitrate>    specify minimum allowed bitrate, default 32kbs\n");
+  fprintf(stdout,"    -B <bitrate>    specify maximum allowed bitrate, default 256kbs\n");
+  fprintf(stdout,"    -F              strictly enforce the -b option, for use with players that\n");
+  fprintf(stdout,"                    do not support low bitrate mp3 (Apex AD600-A DVD/mp3 player)\n");
   fprintf(stdout,"    -t              disable Xing VBR informational tag\n");
   fprintf(stdout,"    --nohist        disable VBR histogram display\n");
   fprintf(stdout,"\n");
   fprintf(stdout,"  MP3 header/stream options:\n");
-  fprintf(stdout,"    -e emp          de-emphasis n/5/c  (obsolete)\n");
+  fprintf(stdout,"    -e <emp>        de-emphasis n/5/c  (obsolete)\n");
   fprintf(stdout,"    -c              mark as copyright\n");
   fprintf(stdout,"    -o              mark as non-original\n");
   fprintf(stdout,"    -p              error protection.  adds 16bit checksum to every frame\n");
@@ -391,6 +394,14 @@ void lame_parse_args(lame_global_flags *gfp,int argc, char **argv)
 	    fprintf(stderr,"Must specify cwlimit in kHz\n");
 	    exit(1);
 	  }
+	} 
+	else if (strcmp(token, "comp")==0) {
+	  argUsed=1;
+	  gfp->user_comp_ratio =  atof( nextArg );
+	  if (gfp->user_comp_ratio < 1.0 ) {
+	    fprintf(stderr,"Must specify compression ratio >= 1.0\n");
+	    exit(1);
+	  }
 	} /* some more GNU-ish options could be added
 	   * version       => complete name, version and license info (normal exit)  
 	   * quiet/silent  => no messages on screen
@@ -612,6 +623,9 @@ void lame_parse_args(lame_global_flags *gfp,int argc, char **argv)
 	case 'B':        
 	  argUsed = 1;
 	  gfp->VBR_max_bitrate_kbps=atoi(arg); 
+	  break;	
+	case 'F':        
+	  gfp->VBR_hard_min;
 	  break;	
 	case 't':  /* dont write VBR tag */
 	  gfp->bWriteVbrTag=0;

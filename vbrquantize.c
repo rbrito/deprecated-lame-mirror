@@ -755,6 +755,11 @@ VBR_quantize(lame_global_flags *gfp,
     //    maxbits = .5*(maxbits+mean_bits*gfc->mode_gr);  
     if (totbits <= maxbits) break;
   }
+  if (gfp->VBR_hard_min) {
+    /* actual frame must use min bitrate or higher */
+    if (gfc->bitrate_index < gfc->VBR_min_bitrate)
+      gfc->bitrate_index = gfc->VBR_min_bitrate;
+  }
   
   getframebits (gfp,&bitsPerFrame, &mean_bits);
   maxbits = ResvFrameBegin(gfp,l3_side, mean_bits, bitsPerFrame);

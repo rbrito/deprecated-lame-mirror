@@ -101,8 +101,6 @@ int main(int argc, char **argv)
   }
 
 
-
-
   if (gf.gtkflag) {
 
 #ifdef HAVEGTK

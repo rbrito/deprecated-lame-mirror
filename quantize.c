@@ -228,7 +228,7 @@ VBR_iteration_loop (lame_global_flags *gfp,
   /*******************************************************************
    * how many bits would we use of it?
    *******************************************************************/
-  analog_silence=0;
+  analog_silence=1;
   for (gr = 0; gr < gfc->mode_gr; gr++) {
     int num_chan=gfc->stereo;
     /* determine quality based on mid channel only */
@@ -260,18 +260,17 @@ VBR_iteration_loop (lame_global_flags *gfp,
 	  memset(xfsf,0,sizeof(xfsf));
 	  set_pinfo(gfp, cod_info, &ratio[gr][ch], &scalefac[gr][ch], xr[gr][ch], xfsf, noise, gr, ch);
 	}
-	analog_silence=1;
 	continue; /* with next channel */
       }
       
       memcpy( &clean_cod_info, cod_info, sizeof(gr_info) );
       
-      /* check for analolg silence */
+      /* disable analog_silence if *any* of the granules != silence */
       /* if energy < ATH, set min_bits = 125 */
-      if (0==calc_xmin(gfp,xr[gr][ch], &ratio[gr][ch], cod_info, &l3_xmin)) {
-	  analog_silence=1;
-	  min_bits=125;
-      }
+      if (calc_xmin(gfp,xr[gr][ch], &ratio[gr][ch], cod_info, &l3_xmin)) 
+	analog_silence=0;
+      else
+	min_bits=125;
 
       if (cod_info->block_type==SHORT_TYPE) {
 	  min_bits += Max(1000,pe[gr][ch]);
@@ -394,7 +393,7 @@ VBR_iteration_loop (lame_global_flags *gfp,
   /******************************************************************
    * find lowest bitrate able to hold used bits
    ******************************************************************/
-  for( gfc->bitrate_index =   (analog_silence ? 1 : gfc->VBR_min_bitrate );
+  for( gfc->bitrate_index =   ((analog_silence && !gfp->VBR_hard_min) ? 1 : gfc->VBR_min_bitrate );
        gfc->bitrate_index < gfc->VBR_max_bitrate;
        gfc->bitrate_index++    )
     if( used_bits <= frameBits[gfc->bitrate_index] ) break;

@@ -95,6 +95,7 @@ Variable Bit Rate (VBR)
 -V n           VBR quality setting  (0=highest quality, 9=lowest)
 -b  n          specify a minimum allowed bitrate (8,16,24,...,320)
 -B  n          specify a maximum allowed bitrate (8,16,24,...,320)
+-F             strictly enforce minimum bitrate
 -t             disable Xing VBR informational tag 
 --nohist       disable display of VBR bitrate histogram
 
@@ -276,10 +277,18 @@ fast mode
 
 disable psycho-acoustics.  Encoding much faster but lower quality
 
+=======================================================================
+strictly enforce VBR minimum bitrate
+=======================================================================
+-F   
+
+strictly enforce VBR minimum bitrate.  With out this optioni, the minimum
+bitrate will be ignored for passages of analog silence.
+
 
 
 =======================================================================
-fast mode
+free format bitstreams
 =======================================================================
 -freeformat   
 
@@ -287,6 +296,7 @@ LAME will produce a fixed bitrate, free format bitstream.
 User must specify the desired bitrate in kbs, which can
 be any integer between 8 and 320.
 
+Not supported by many decoders.  
 
 
 =======================================================================
