@@ -709,14 +709,34 @@ int  calc_noise(
                     l = 0;
             }
 
+            assert(cod_info->count1 != 0);
+            assert(cod_info->big_values != 0);
 
-	        while (l--) {
-                FLOAT temp;
-                temp = fabs(cod_info->xr[j]) - pow43[ix[j]] * step;j++;
-	            noise += temp * temp;
-	            temp = fabs(cod_info->xr[j]) - pow43[ix[j]] * step;j++;
-	            noise += temp * temp;
- 	        };
+            if (j> cod_info->count1) {
+	            while (l--) {
+                    FLOAT temp;
+                    temp = cod_info->xr[j];j++;
+	                noise += temp * temp;
+	                temp = cod_info->xr[j];j++;
+	                noise += temp * temp;
+ 	            }
+            } else if (j> cod_info->big_values) {
+	            while (l--) {
+                    FLOAT temp;
+                    temp = fabs(cod_info->xr[j]) - ix[j] * step;j++;
+	                noise += temp * temp;
+	                temp = fabs(cod_info->xr[j]) - ix[j] * step;j++;
+	                noise += temp * temp;
+ 	            }
+            } else {
+	            while (l--) {
+                    FLOAT temp;
+                    temp = fabs(cod_info->xr[j]) - pow43[ix[j]] * step;j++;
+	                noise += temp * temp;
+	                temp = fabs(cod_info->xr[j]) - pow43[ix[j]] * step;j++;
+	                noise += temp * temp;
+ 	            }
+            }
 
             if (prev_noise) {
                 /* save noise values */
