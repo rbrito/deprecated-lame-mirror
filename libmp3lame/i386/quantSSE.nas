@@ -8,7 +8,7 @@
 
 ;void pow075(
 ;	float xr[576],
-;	float xrpow[576],
+;	float xr34[576],
 ;	int end,
 ;	float *psum);
 
@@ -19,6 +19,71 @@ Q_fm0p25	dd	-0.25, -0.25, -0.25, -0.25
 Q_ABS		dd	0x7FFFFFFF, 0x7FFFFFFF, 0x7FFFFFFF, 0x7FFFFFFF
 
 	segment_text
+proc	pow075_3DN
+	femms
+	mov	ecx, [esp+12]	; ecx = end
+	mov	edx, [esp+8]	; edx = xr34
+	mov	eax, [esp+4]	; eax = xr
+	shl	ecx, 2
+	add	eax, ecx
+	add	edx, ecx
+	neg	ecx
+	pxor	mm7, mm7
+	jmp		.lp
+
+	align 16
+.lp:
+%assign i 0
+%rep 4
+	movq		mm0, [eax+ecx+fsizen(i)]
+	pand		mm0, [Q_ABS]	; = D_ABS
+	movq		mm4, mm0
+	pfadd		mm7, mm0
+	movq		[edx+ecx+576*4+fsizen(i)], mm0
+	punpckhdq	mm4,mm4
+	pfrsqrt		mm1, mm0
+	pfrsqrt		mm5, mm4
+	movq		mm2, mm1
+	movq		mm6, mm5
+	pfmul		mm1, mm1
+	pfmul		mm5, mm5
+	pfrsqit1	mm1, mm0
+	pfrsqit1	mm5, mm4
+	pfrcpit2	mm1, mm2
+	pfrcpit2	mm5, mm6
+	pfrsqrt		mm3, mm1
+
+	pfrsqrt		mm0, mm5
+	movq		mm2, mm3
+	movq		mm6, mm0
+	pfmul		mm3, mm3
+	pfmul		mm0, mm0
+	pfrsqit1	mm3, mm1
+	pfrsqit1	mm0, mm5
+	pfrcpit2	mm3, mm2
+	pfrcpit2	mm0, mm6
+	punpckldq	mm3,mm0
+	movq		mm0, mm3
+	pfmul		mm3, mm3
+	pfmul		mm3, mm0
+	movq		[edx+ecx+fsizen(i)], mm3
+
+%assign i i+2
+%endrep
+	add	ecx, 32
+	jnz	near .lp
+
+	movq	mm1, mm7
+	punpckhdq	mm1,mm1
+	pfadd	mm7, mm1
+	movd	eax, mm7
+
+	femms
+	mov	edx, [esp+16]	; psum
+	mov	[edx], eax
+	ret
+
+
 proc	pow075_SSE
 %assign _P 0
 	mov	eax, [esp+_P+4]		; eax = xr
@@ -88,4 +153,53 @@ proc	pow075_SSE
 	addps	xm4, xm2		;* * * 0
 	movss	[eax], xm4
 .exit:
+	ret
+
+;*psum = sum_{i=0}^{i=n} x_i^2,
+;	n should be even number and greater than 4.
+;	x should be aligned to 8
+;void sumofsqr(
+;	float x[],
+;	int n,
+;	float *psum);
+
+
+proc	sumofsqr_3DN
+%assign _P 0
+	femms
+	mov	eax, [esp+_P+4]		; eax = xr
+	mov	ecx, [esp+_P+8]		; edx = n
+	mov	edx, [esp+_P+12]	; edx = psum
+
+	pxor	mm0, mm0		; mm0 = sum0
+	pxor	mm1, mm1		; mm1 = sum1
+	test	ecx, 2
+	jz	.even
+	movq	mm0, [eax]
+	add	eax, 8
+	sub	ecx, 2
+	pfmul	mm0, mm0
+.even:
+	shl	ecx, 2
+	add	eax, ecx
+	neg	ecx
+	jmp	.lp
+	align 16
+.lp:
+	movq	mm2, [eax+ecx+ 0]
+	movq	mm3, [eax+ecx+ 8]
+	pfmul	mm2, mm2
+	pfmul	mm3, mm3
+	add	ecx, 16
+	pfadd	mm0, mm2
+	pfadd	mm1, mm3
+	jnz near	.lp
+
+	pfadd	mm0, mm1
+	movq	mm1, mm0
+	punpckhdq	mm1,mm1
+	pfadd	mm0, mm1
+	movd	eax, mm0
+	femms
+	mov	[edx], eax
 	ret

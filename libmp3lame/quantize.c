@@ -253,14 +253,22 @@ calc_xmin(
     int sfb, gsfb, j=0;
     for (gsfb = 0; gsfb < gi->psy_lmax; gsfb++) {
 	FLOAT threshold = gfc->ATH.adjust * gfc->ATH.l[gsfb];
-	FLOAT en0 = 0.0, x;
+	FLOAT en0, x;
 	int l = gi->width[gsfb];
-	l >>= 1;
-	do {
-	    en0 += gi->xr[j] * gi->xr[j]; j++;
-	    en0 += gi->xr[j] * gi->xr[j]; j++;
-	} while (--l > 0);
-
+#ifdef HAVE_NASM
+	if (gfc->CPU_features.AMD_3DNow) {
+	    sumofsqr_3DN(&gi->xr[j], l, &en0);
+	    j += l;
+	} else
+#endif
+	{
+	    en0 = 0.0;
+	    l >>= 1;
+	    do {
+		en0 += gi->xr[j] * gi->xr[j]; j++;
+		en0 += gi->xr[j] * gi->xr[j]; j++;
+	    } while (--l > 0);
+	}
 	x = ratio->en.l[gsfb];
 	if (x > 0.0) {
 	    x = en0 * ratio->thm.l[gsfb] / x;
@@ -332,11 +340,18 @@ calc_noise(
 	l = -gi->width[sfb];
 	j -= l;
 	if (noise < 0.0) {
-	    noise = 0.0;
-	    do {
-		FLOAT t0 = absxr[j+l], t1 = absxr[j+l+1];
-		noise += t0*t0 + t1*t1;
-	    } while ((l += 2) < 0);
+#ifdef HAVE_NASM
+	    if (gfc->CPU_features.AMD_3DNow) {
+		sumofsqr_3DN(&absxr[j+l], -l, &noise);
+	    } else
+#endif
+	    {
+		noise = 0.0;
+		do {
+		    FLOAT t0 = absxr[j+l], t1 = absxr[j+l+1];
+		    noise += t0*t0 + t1*t1;
+		} while ((l += 2) < 0);
+	    }
 	    *distort = noise = noise * *rxmin;
 	}
 	max_noise=Max(max_noise,noise);
@@ -394,6 +409,12 @@ init_bitalloc(lame_internal_flags *gfc, gr_info *const gi)
 	if (end) {
 	    end = (end + 7) & (~7);
 	    pow075_SSE(gi->xr, xr34, end, &sum);
+	}
+    } else if (gfc->CPU_features.AMD_3DNow) {
+	extern void pow075_3DN(float *, float *, int, float*);
+	if (end) {
+	    end = (end + 7) & (~7);
+	    pow075_3DN(gi->xr, xr34, end, &sum);
 	}
     } else
 #endif
