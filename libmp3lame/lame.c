@@ -1465,7 +1465,7 @@ lame_encode_buffer_sample_t(lame_global_flags * gfp,
 
         /* compute ReplayGain of resampled input if requested */
         if (gfp->ReplayGain_input) 
-            if (AnalyzeSamples(gfc->rgdata, mfbuf[0], mfbuf[1], n_out, gfc->channels_out) == GAIN_ANALYSIS_ERROR) 
+            if (AnalyzeSamples(gfc->rgdata, &mfbuf[0][gfc->mf_size], &mfbuf[1][gfc->mf_size], n_out, gfc->channels_out) == GAIN_ANALYSIS_ERROR) 
                 return -6;
 
 
