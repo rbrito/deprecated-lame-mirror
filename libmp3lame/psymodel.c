@@ -1080,6 +1080,7 @@ L3psycho_anal_ns(
     int numchn, chn;
     int b, i, j, k;
     FLOAT pcfact;
+    FLOAT enn, thmm;
 
     /*********************************************************************
      * compute the long block masking ratio
@@ -1100,8 +1101,7 @@ L3psycho_anal_ns(
 	FLOAT fftenergy[HBLKSIZE];
 	/* convolution   */
 	FLOAT eb[CBANDS], max[CBANDS], avg[CBANDS];
-#define thr fftenergy
-#define eb2 (fftenergy+CBANDS)
+#define eb2 fftenergy
 	static const FLOAT tab[] = {
 	    1.0    /0.11749, 0.79433/0.11749, 0.63096/0.11749, 0.63096/0.11749,
 	    0.63096/0.11749, 0.63096/0.11749, 0.63096/0.11749, 0.25119/0.11749
@@ -1210,10 +1210,11 @@ L3psycho_anal_ns(
 	 *      convolve the partitioned energy and unpredictability
 	 *      with the spreading function, s3_l[b][k]
 	 ******************************************************************* */
-	k = 0;
-	for (b = 0; b < gfc->npart_l; b++ ) {
+	b = j = k = 0;
+	enn = thmm = 0.0;
+	for (;; b++ ) {
 	    /* convolve the partitioned energy with the spreading function */
-	    FLOAT ecb;
+	    FLOAT ecb, tmp;
 	    int kk = gfc->s3ind[b][0];
 	    ecb = gfc->s3_ll[k++] * eb2[kk];
 	    while (++kk <= gfc->s3ind[b][1]) {
@@ -1231,49 +1232,38 @@ L3psycho_anal_ns(
 	     *          frame0, but all pre-echo was in frame1.
 	     */
 	    if (useshort_old[chn] == SHORT_TYPE)
-		thr[b] = ecb; /* Min(ecb, rpelev*gfc->nb_1[chn][b]); */
+		tmp = ecb; /* or Min(ecb, rpelev*gfc->nb_1[chn][b]); ? */
 	    else
-		thr[b] = NS_INTERP(Min(ecb,
-				       Min(rpelev  * gfc->nb_1[chn][b],
-					   rpelev2 * gfc->nb_2[chn][b])),
-				   ecb, pcfact);
+		tmp = NS_INTERP(Min(ecb,
+				    Min(rpelev  * gfc->nb_1[chn][b],
+					rpelev2 * gfc->nb_2[chn][b])),
+				ecb, pcfact);
 
 	    gfc->nb_2[chn][b] = gfc->nb_1[chn][b];
 	    gfc->nb_1[chn][b] = ecb;
-	}
 
-	/* compute masking thresholds for long blocks */
-	{
-	    FLOAT enn, thmm;
-	    int sb, b;
-	    enn = thmm = 0.0;
-	    sb = b = 0;
-	    for (;;) {
-		while (b < gfc->bo_l[sb]) {
-		    enn  += eb[b];
-		    thmm += thr[b];
-		    b++;
-		}
+	    enn  += eb [b];
+	    thmm += tmp;
+	    if (b != gfc->bo_l[j])
+		continue;
 
-		if (sb == SBMAX_l - 1)
-		    break;
+	    if (j == SBMAX_l - 1)
+		break;
 
-		enn  += .5* eb[b];
-		thmm += .5*thr[b];
-		thmm *= 0.158489319246111 * gfc->masking_lower; // pow(10,-0.8)
-		gfc->masking_next[gr][chn].en .l[sb] = enn;
-		gfc->masking_next[gr][chn].thm.l[sb] = thmm;
-
-		enn  =  eb[b] * 0.5;
-		thmm = thr[b] * 0.5;
-		b++;
-		sb++;
-	    }
-
+	    enn  -= .5*eb[b];
+	    thmm -= .5*tmp;
 	    thmm *= 0.158489319246111 * gfc->masking_lower; // pow(10,-0.8)
-	    gfc->masking_next[gr][chn].en .l[SBMAX_l-1] = enn;
-	    gfc->masking_next[gr][chn].thm.l[SBMAX_l-1] = thmm;
+	    gfc->masking_next[gr][chn].en .l[j] = enn;
+	    gfc->masking_next[gr][chn].thm.l[j] = thmm;
+
+	    enn  =  eb[b] * 0.5;
+	    thmm = tmp * 0.5;
+	    j++;
 	}
+
+	thmm *= 0.158489319246111 * gfc->masking_lower; // pow(10,-0.8)
+	gfc->masking_next[gr][chn].en .l[SBMAX_l-1] = enn;
+	gfc->masking_next[gr][chn].thm.l[SBMAX_l-1] = thmm;
     }
 }
 
