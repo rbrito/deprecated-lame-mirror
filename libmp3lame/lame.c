@@ -526,11 +526,11 @@ lame_init_params(lame_global_flags * const gfp)
 
     gfc->Class_ID = 0;
 
-    gfc->CPU_features_i387 = has_i387();
-    gfc->CPU_features_3DNow = has_3DNow();
-    gfc->CPU_features_MMX = has_MMX();
-    gfc->CPU_features_SIMD = has_SIMD();
-    gfc->CPU_features_SIMD2 = has_SIMD2();
+    gfc->CPU_features.i387      = has_i387();
+    gfc->CPU_features.AMD_3DNow = has_3DNow();
+    gfc->CPU_features.MMX       = has_MMX();
+    gfc->CPU_features.SIMD      = has_SIMD();
+    gfc->CPU_features.SIMD2     = has_SIMD2();
 
 
     gfc->ATH = calloc(1, sizeof(ATH_t));
@@ -538,7 +538,10 @@ lame_init_params(lame_global_flags * const gfp)
     if (NULL == gfc->ATH)
         return -2;
 
-    //init_scalar_functions ( gfc );      /* Select the fastest functions for this CPU */
+#ifdef KLEMM_44
+    /* Select the fastest functions for this CPU */
+    init_scalar_functions ( gfc );
+#endif
 
     gfc->channels_in = gfp->num_channels;
     if (gfc->channels_in == 1)
@@ -1074,6 +1077,16 @@ lame_init_params(lame_global_flags * const gfp)
     /* initialize internal qval settings */
     lame_init_qval(gfp);
 
+#ifdef KLEMM_44
+    gfc->mfbuf[0]     = (sample_t*) calloc (sizeof(sample_t), MFSIZE);
+    gfc->mfbuf[1]     = (sample_t*) calloc (sizeof(sample_t), MFSIZE);
+    gfc->sampfreq_in  = unround_samplefrequency (gfp->in_samplerate);
+    gfc->sampfreq_out = gfp->out_samplerate;
+    gfc->resample_in  = resample_open ( gfc->sampfreq_in,
+                                        gfc->sampfreq_out,
+                                        -1 .0 /* Auto */,
+                                        32 );
+#endif
 
     return 0;
 }
@@ -1099,23 +1112,25 @@ lame_print_config(const lame_global_flags * gfp)
 
     MSGF("LAME version %s (%s)\n", get_lame_version(), get_lame_url());
 
-    if (gfc->CPU_features_MMX || gfc->CPU_features_3DNow
-        || gfc->CPU_features_SIMD || gfc->CPU_features_SIMD2) {
+    if (gfc->CPU_features.MMX
+        || gfc->CPU_features.AMD_3DNow
+        || gfc->CPU_features.SIMD
+        || gfc->CPU_features.SIMD2) {
         MSGF("CPU features:");
 
-        if (gfc->CPU_features_i387)
+        if (gfc->CPU_features.i387)
             MSGF(" i387");
-        if (gfc->CPU_features_MMX)
+        if (gfc->CPU_features.MMX)
 #ifdef MMX_choose_table
             MSGF(", MMX (ASM used)");
 #else
             MSGF(", MMX");
 #endif
-        if (gfc->CPU_features_3DNow)
+        if (gfc->CPU_features.AMD_3DNow)
             MSGF(", 3DNow!");
-        if (gfc->CPU_features_SIMD)
+        if (gfc->CPU_features.SIMD)
             MSGF(", SIMD");
-        if (gfc->CPU_features_SIMD2)
+        if (gfc->CPU_features.SIMD2)
             MSGF(", SIMD2");
         MSGF("\n");
     }
@@ -1455,6 +1470,15 @@ lame_close(lame_global_flags * gfp)
 
     gfc->Class_ID = 0;
 
+#ifdef KLEMM_44
+    if (gfc->resample_in != NULL) {
+        resample_close (gfc->resample_in);
+       gfc->resample_in = NULL;
+    }
+    free (gfc->mfbuf[0]);
+    free (gfc->mfbuf[1]);
+#endif
+
     freegfc(gfp->internal_flags);
 
     gfp->internal_flags = NULL;
@@ -1685,6 +1709,11 @@ lame_init_old(lame_global_flags * gfp)
      */
     gfc->mf_samples_to_encode = ENCDELAY + 288;
     gfc->mf_size = ENCDELAY - MDCTDELAY; /* we pad input with this many 0's */
+
+#ifdef KLEMM_44
+    /* XXX: this wasn't protectes by KLEMM_44 initially! */
+    gfc->last_ampl = gfc->ampl = +1.0;
+#endif
 
     return 0;
 }
