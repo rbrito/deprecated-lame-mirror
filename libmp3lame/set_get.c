@@ -318,33 +318,6 @@ lame_get_mode( const lame_global_flags*  gfp )
 }
 
 
-/* Us a M/S mode with a switching threshold based on compression ratio */
-int
-lame_set_mode_automs( lame_global_flags*  gfp,
-                      int                 mode_automs )
-{
-    /* default = 0 (disabled) */
-
-    /* enforce disable/enable meaning, if we need more than two values
-       we need to switch to an enum to have an apropriate representation
-       of the possible meanings of the value */
-    if ( 0 > mode_automs || 1 < mode_automs )
-        return -1;
-
-    gfp->mode_automs = mode_automs;
-
-    return 0;
-}
-
-int
-lame_get_mode_automs( const lame_global_flags*  gfp )
-{
-    assert( 0 <= gfp->mode_automs && 1 >= gfp->mode_automs );
-
-    return gfp->mode_automs;
-}
-
-
 /*
  * Force M/S for all frames.  For testing only.
  * Requires mode = 1.

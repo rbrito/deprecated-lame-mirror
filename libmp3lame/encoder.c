@@ -52,8 +52,8 @@ ms_sparsing(lame_internal_flags* gfc, int gr)
     int width;
 
     for (sfb = 0; sfb < gfc->l3_side.tt[gr][0].sfbmax; ++sfb) {
-        FLOAT threshold;
-        width = gfc->l3_side.tt[gr][0].width[sfb];
+	FLOAT threshold;
+	width = gfc->l3_side.tt[gr][0].width[sfb];
 	if (sfb < gfc->l3_side.tt[gr][0].sfb_lmax)
 	    threshold
 		= db2pow(-(gfc->sparseA - gfc->mld_l[sfb]*gfc->sparseB));
@@ -412,35 +412,10 @@ int  lame_encode_mp3_frame (				/* Output */
 		   sizeof(gfc->energy_save));
 #endif
 	psycho_analysis(gfp, inbuf, masking, sbsmpl);
-    } else {
-	memset(masking, 0, sizeof(masking));
-	for (gr=0; gr < gfc->mode_gr ; gr++)
-	    for ( ch = 0; ch < gfc->channels_out; ch++ ) {
-		gfc->l3_side.tt[gr][ch].block_type=NORM_TYPE;
-		gfc->l3_side.tt[gr][ch].mixed_block_flag=0;
-		masking[gr][ch].pe = 700.0;
-	    }
-	gfc->ATH.adjust = 1.0;	/* no adjustment */
-	gfc->mode_ext = MPG_MD_LR_LR;
-	if (gfp->mode == JOINT_STEREO)
-	    gfc->mode_ext = MPG_MD_MS_LR;
-    }
-
-    if (gfc->mode_ext == MPG_MD_MS_I) {
-	int i = 0;
-	for (gr = 0; gr < gfc->mode_gr; gr++) {
-	    gr_info *gi = &gfc->l3_side.tt[gr][0];
-	    if (gi->block_type == SHORT_TYPE)
-		i += gfc->is_start_sfb_s[gr];
-	    else
-		i += gfc->is_start_sfb_l[gr];
-	}
-	if (i == 0)
-	    gfc->mode_ext = MPG_MD_MS_LR;
     }
 
     /* polyphase filtering / mdct */
-    for ( ch = 0; ch < gfc->channels_out; ch++ ) {
+    for (ch = 0; ch < gfc->channels_out; ch++) {
 	mdct_sub48(gfc, ch);
 	/* aging subband filetr output */
 	memcpy(gfc->sb_sample[ch][0], gfc->sb_sample[ch][gfc->mode_gr],
@@ -468,6 +443,18 @@ int  lame_encode_mp3_frame (				/* Output */
 
     if (gfc->mode_ext & MPG_MD_MS_LR) {
 	/* convert from L/R -> Mid/Side */
+	if (gfc->mode_ext == MPG_MD_MS_I) {
+	    int i = 0;
+	    for (gr = 0; gr < gfc->mode_gr; gr++) {
+		if (gfc->l3_side.tt[gr][0].block_type == SHORT_TYPE)
+		    i += gfc->is_start_sfb_s[gr];
+		else
+		    i += gfc->is_start_sfb_l[gr];
+	    }
+	    if (i == 0)
+		gfc->mode_ext = MPG_MD_MS_LR;
+	}
+
 	for (gr = 0; gr < gfc->mode_gr; gr++) {
 	    gr_info *gi = &gfc->l3_side.tt[gr][0];
 	    int sfb = gfc->is_start_sfb_l[gr];
@@ -540,13 +527,13 @@ int  lame_encode_mp3_frame (				/* Output */
     switch (gfp->VBR){ 
     default:
     case cbr:
-	iteration_loop( gfp, masking);
+	iteration_loop(gfp, masking);
 	break;
     case vbr:
-	VBR_iteration_loop( gfp, masking);
+	VBR_iteration_loop(gfp, masking);
 	break;
     case abr:
-	ABR_iteration_loop( gfp, masking);
+	ABR_iteration_loop(gfp, masking);
 	break;
     }
 

@@ -37,9 +37,6 @@ struct lame_global_struct {
   int quality;                /* quality setting 0=best,  9=worst  default=5 */
   MPEG_mode mode;             /* see enum in lame.h
                                  default = LAME picks best value             */
-  int mode_fixed;             /* ignored                                     */
-  int mode_automs;            /* use a m/s threshold based on compression
-                                 ratio                                       */
   int force_ms;               /* force M/S mode. */
   int use_istereo;            /* use intensity stereo */
   int free_format;            /* use free format? default=0                  */

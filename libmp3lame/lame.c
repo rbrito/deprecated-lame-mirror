@@ -309,9 +309,6 @@ static int apply_preset(lame_global_flags*  gfp, int bitrate, vbr_mode mode)
     if (gfp->mode == NOT_SET)
 	gfp->mode = JOINT_STEREO;
 
-    if (gfp->mode_automs && gfp->mode != MONO && gfp->compression_ratio < 6.6)
-	gfp->mode = STEREO;
-
     if (gfp->internal_flags->reduce_side < 0.0)
 	lame_set_reduceSide( gfp, switch_map[r].reduce_side);
 
@@ -469,8 +466,6 @@ lame_init_params(lame_global_flags * const gfp)
     gfc->mode_ext_next = gfc->mode_ext = MPG_MD_LR_LR;
     if (gfp->mode == MONO)
         gfp->force_ms = 0; // don't allow forced mid/side stereo for mono output
-
-
     if (gfp->VBR != cbr) {
 	gfp->free_format = 0; /* VBR can't be mixed with free format */
 	/* at 160 kbps (MPEG-2/2.5)/ 320 kbps (MPEG-1) only
@@ -641,6 +636,20 @@ lame_init_params(lame_global_flags * const gfp)
 
     gfp->scale_left  *= gfp->scale;
     gfp->scale_right *= gfp->scale;
+
+    if (!gfc->psymodel) {
+	int gr, ch;
+	gfc->ATH.adjust = 1.0;	/* no adjustment */
+	gfc->mode_ext = MPG_MD_LR_LR;
+	if (gfp->mode == JOINT_STEREO)
+	    gfc->mode_ext = MPG_MD_MS_LR;
+	gfp->disable_reservoir = 1;
+	for (gr=0; gr < gfc->mode_gr ; gr++)
+	    for ( ch = 0; ch < gfc->channels_out; ch++ ) {
+		gfc->l3_side.tt[gr][ch].block_type=NORM_TYPE;
+		gfc->l3_side.tt[gr][ch].mixed_block_flag=0;
+	    }
+    }
 
     return 0;
 }

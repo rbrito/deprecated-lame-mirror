@@ -1322,7 +1322,7 @@ int psymodel_init(lame_global_flags *gfp)
     }
 
     gfc->masking_lower = db2pow(gfp->VBR_q - 8 - 4);
-      
+
     /* init. for loudness approx. -jd 2001 mar 27*/
     gfc->loudness_next[0][0] = gfc->loudness_next[0][1]
 	= gfc->loudness_next[1][0] = gfc->loudness_next[1][1]

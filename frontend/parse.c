@@ -406,10 +406,9 @@ int  long_help ( const lame_global_flags* gfp, FILE* const fp, const char* Progr
     wait_for ( fp, lessmode );
     fprintf ( fp,
               "  Operational options:\n"
-              "    -m <mode>       (s)tereo, (j)oint, (f)orce, (m)ono or (a)auto  \n"
+              "    -m <mode>       (s)tereo, (j)oint, (f)orce, or (m)ono \n"
               "                    default is (s) or (j) depending on bitrate\n"
               "                    force = force ms_stereo on all frames.\n"
-              "                    auto = jstereo, with varialbe mid/side threshold\n"
               "    -a              downmix from stereo to mono file for mono encoding\n"
               "    --freeformat    produce a free format bitstream\n"
               "    --decode        input=mp3 file, output=wav\n"
@@ -1393,11 +1392,8 @@ char* const inPath, char* const outPath, char **nogap_inPath, int *num_nogap)
                                   break;
                         case 'm': (void) lame_set_mode( gfp, MONO         );
                                   break;
-                        case 'a': (void) lame_set_mode_automs( gfp, 1 );
-                                  /* lame picks mode and uses variable MS
-                                     threshold */
-                                  break; 
-                        default : fprintf(stderr,"%s: -m mode must be s/d/j/f/m not %s\n", ProgramName, arg);
+			default:
+			    fprintf(stderr,"%s: -m mode must be s/d/j/f/m not %s\n", ProgramName, arg);
                             err = 1;
                             break;
                         }
