@@ -1047,8 +1047,10 @@ void amp_scalefac_bands(lame_global_flags *gfp, FLOAT8 xrpow[576],
       distort_thresh = Max(distort[i+1][sfb],distort_thresh);
     }
   }
-  distort_thresh=Min(distort_thresh * 1.05, 1.0);
-
+  if (distort_thresh>1.0)
+    distort_thresh=1.0;
+  else
+    distort_thresh *= .95;
 
 
   for ( sfb = 0; sfb < cod_info->sfb_lmax; sfb++ ) {
