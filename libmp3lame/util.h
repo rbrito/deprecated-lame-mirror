@@ -573,6 +573,17 @@ int  fill_buffer_resample (
         int*       num_used,
         int        channels );
 
+/* same as lame_decode1 (look in lame.h), but returns 
+   unclipped raw floating-point samples. It is declared
+   here, not in lame.h, because it returns LAME's 
+   internal type sample_t. No more than 1152 samples 
+   per channel are allowed. */
+int lame_decode1_unclipped(
+     unsigned char*  mp3buf,
+     int             len,
+     sample_t        pcm_l[],
+     sample_t        pcm_r[] );
+
 
 extern int  has_i387  ( void );
 extern int  has_MMX   ( void );

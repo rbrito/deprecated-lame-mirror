@@ -1568,7 +1568,9 @@ int do_layer3_sideinfo(struct frame *fr)
 
 
 
-int do_layer3( PMPSTR mp,unsigned char *pcm_sample,int *pcm_point)
+int  do_layer3( PMPSTR mp,unsigned char *pcm_sample,int *pcm_point,
+                int (*synth_1to1_mono_ptr)(PMPSTR,real *,unsigned char *,int *),
+                int (*synth_1to1_ptr)(PMPSTR,real *,int,unsigned char *, int *) )
 {
   int gr, ch, ss,clip=0;
   int scalefacs[2][39]; /* max 39 for short[13][3] mode, mixed: 38, long: 22 */
@@ -1780,12 +1782,12 @@ int do_layer3( PMPSTR mp,unsigned char *pcm_sample,int *pcm_point)
 
     for(ss=0;ss<SSLIMIT;ss++) {
       if(single >= 0) {
-        clip += synth_1to1_mono(mp, hybridOut[0][ss],pcm_sample,pcm_point);
+        clip += (*synth_1to1_mono_ptr)(mp, hybridOut[0][ss],pcm_sample,pcm_point);
       }
       else {
         int p1 = *pcm_point;
-        clip += synth_1to1(mp, hybridOut[0][ss],0,pcm_sample,&p1);
-        clip += synth_1to1(mp, hybridOut[1][ss],1,pcm_sample,pcm_point);
+        clip += (*synth_1to1_ptr)(mp, hybridOut[0][ss],0,pcm_sample,&p1);
+        clip += (*synth_1to1_ptr)(mp, hybridOut[1][ss],1,pcm_sample,pcm_point);
       }
     }
   }

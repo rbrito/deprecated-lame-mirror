@@ -12,6 +12,7 @@
 #include "tabinit.h"
 #include "layer3.h"
 #include "VbrTag.h"
+#include "decode_i386.h"
 
 #ifdef USE_LAYER_1
 	#include "layer1.h"
@@ -334,15 +335,12 @@ int sync_buffer(PMPSTR mp,int free_match)
 
 
 
-int decodeMP3( PMPSTR mp,unsigned char *in,int isize,char *out,
-		int osize,int *done)
+int decodeMP3_clipchoice( PMPSTR mp,unsigned char *in,int isize,char *out,
+		           int osize,int *done,      
+                           int (*synth_1to1_mono_ptr)(PMPSTR,real *,unsigned char *,int *),
+                           int (*synth_1to1_ptr)(PMPSTR,real *,int,unsigned char *, int *) )
 {
 	int i,iret,bits,bytes;
-
-	if(osize < 4608) {
-		fprintf(stderr,"To less out space\n");
-		return MP3_ERR;
-	}
 
 	if(in) {
 		if(addbuf(mp,in,isize) == NULL) {
@@ -521,7 +519,7 @@ int decodeMP3( PMPSTR mp,unsigned char *in,int isize,char *out,
 			break;
 #endif
 			case 3:
-				do_layer3(mp,(unsigned char *) out,done);
+				do_layer3(mp,(unsigned char *) out,done, synth_1to1_mono_ptr, synth_1to1_ptr);
 			break;
 			default:
 				fprintf(stderr,"invalid layer %d\n",mp->fr.lay);
@@ -582,6 +580,32 @@ int decodeMP3( PMPSTR mp,unsigned char *in,int isize,char *out,
 
 	return iret;
 }
+
+int decodeMP3( PMPSTR mp,unsigned char *in,int isize,char *out,
+		int osize,int *done)
+{
+	if(osize < 4608) {
+		fprintf(stderr,"To less out space\n");
+		return MP3_ERR;
+	}
+
+	/* passing pointers to the functions which clip the samples */
+	return decodeMP3_clipchoice(mp, in, isize, out, osize, done, synth_1to1_mono, synth_1to1);
+}	
+
+int decodeMP3_unclipped( PMPSTR mp,unsigned char *in,int isize,char *out,
+		          int osize,int *done)
+{
+	/* we forbid input with more than 1152 samples per channel for output in unclipped mode */
+	if(osize < 1152 * 2 * sizeof(real) ) { 
+		fprintf(stderr,"To less out space\n");
+		return MP3_ERR;
+	}
+
+	/* passing pointers to the functions which don't clip the samples */
+	return decodeMP3_clipchoice(mp, in, isize, out, osize, done, synth_1to1_mono_unclipped, synth_1to1_unclipped);
+}	
+
 
 	
 
