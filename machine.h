@@ -101,6 +101,7 @@ typedef double FLOAT8;
 	typedef unsigned int	u_int;
 	typedef unsigned short	u_short;
 	typedef unsigned char	u_char;
+	typedef short  int	int16_t;
 #elif defined __DECALPHA__
 /*       do nothing */
 #elif defined OS_AMIGAOS
