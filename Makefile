@@ -29,6 +29,8 @@ endif
 PGM ?= lame
 CC = gcc
 CC_OPTS =  -O
+AR = ar
+RANLIB = ranlib
 GTK = 
 GTKLIBS = 
 SNDLIB = -DLAMESNDFILE
@@ -39,12 +41,15 @@ BRHIST_SWITCH =
 LIBTERMCAP = 
 RM = rm -f
 
-
-
 ##########################################################################
 # -DHAVEMPGLIB compiles the mpglib *decoding* library into libmp3lame
 ##########################################################################
 CPP_OPTS += -DHAVEMPGLIB 
+
+##########################################################################
+# -DUSE_LAYER_1/2 enables Layer1 or Layer2 *decoding* abilities 
+##########################################################################
+CPP_OPTS += -DUSE_LAYER_1 -DUSE_LAYER_2
 
 ##########################################################################
 # floating point option:
@@ -133,19 +138,20 @@ ifeq ($(UNAME),Linux)
 
 
 # suggested for gcc-2.7.x
-#   CC_OPTS =  -O3 -fomit-frame-pointer -funroll-loops -ffast-math  -finline-functions -Wall
+   CC_OPTS =  -O3 -fomit-frame-pointer -funroll-loops -ffast-math  -finline-functions -Wall
 #  CC_OPTS =  -O9 -fomit-frame-pointer -fno-strength-reduce -mpentiumpro -ffast-math -finline-functions -funroll-loops -Wall -malign-double -g -march=pentiumpro -mfancy-math-387 -pipe 
 
 #  for debugging:
-   CC_OPTS =  -UNDEBUG -O -Wall -ggdb  -DABORTFP
+   CC_OPTS =  -UNDEBUG -O -Wall -ggdb -DABORTFP
 
 #  for lots of debugging:
 #   CC_OPTS =  -DDEBUG -UNDEBUG  -O -Wall -g -DABORTFP 
 
 
-
+#  special noise calculation
+#  CPP_OPTS += -DRH_AMP
 # these options for gcc-2.95.2 to produce fast code
-#   CC_OPTS = $(FEATURES)\
+#   CC_OPTS = \
 #	-Wall -O9 -fomit-frame-pointer -march=pentium \
 #	-finline-functions -fexpensive-optimizations \
 #	-funroll-loops -funroll-all-loops -pipe -fschedule-insns2 \
@@ -180,10 +186,8 @@ else
 CC = ccc
 
 ################################################################
-#### set 'CC_OPTS = -arch host -tune host' to generate/tune instructions for 
-this machine
-####     'CC_OPTS += -migrate -fast -inline speed -unroll 0' tweak to run as 
-fast as possible :)
+#### set 'CC_OPTS = -arch host -tune host' to generate/tune instructions for this machine
+####     'CC_OPTS += -migrate -fast -inline speed -unroll 0' tweak to run as fast as possible :)
 ####     'CC_OPTS += -w0 -Wall' set warning and linking flags
 ################################################################
 CC_OPTS = -arch host -tune host
@@ -344,6 +348,49 @@ ifeq ($(UNAME),MSDOS)
   PGM ?= lame.exe
 endif
 
+###########################################################################
+# AmigaOS
+###########################################################################
+# Type 'Make ARCH=PPC' for PowerUP and 'Make ARCH=WOS' for WarpOS
+#
+###########################################################################
+ifeq ($(UNAME),AmigaOS)
+	CC = gcc -noixemul
+	CC_OPTS = -O3 -ffast-math -funroll-loops -m68020-60 -m68881
+	BRHIST_SWITCH = -DBRHIST -DNOTERMCAP
+	MAKEDEP = -MM
+	ifeq ($(ARCH),WOS)
+		CC = ppc-amigaos-gcc -warpup
+		CC_OPTS = -O3 -ffast-math -fomit-frame-pointer -funroll-loops \
+		-mmultiple -mcpu=603e
+		AR = ppc-amigaos-ar
+		RANLIB = ppc-amigaos-ranlib
+		LIBS =
+	endif
+	ifeq ($(ARCH),PPC)
+		CC = ppc-amigaos-gcc
+		CC_OPTS = -O3 -ffast-math -fomit-frame-pointer -funroll-loops \
+		-mmultiple -mcpu=603e
+		AR = ppc-amigaos-ar
+		RANLIB = ppc-amigaos-ranlib
+		LIBS =
+	endif
+endif
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 # 10/99 added -D__NO_MATH_INLINES to fix a bug in *all* versions of
 # gcc 2.8+ as of 10/99.  
@@ -363,7 +410,7 @@ c_sources_s = \
 	portableio.c \
 	psymodel.c \
 	quantize.c \
-	quantize-pvt.c \
+	quantize_pvt.c \
 	vbrquantize.c \
 	reservoir.c \
 	tables.c \
@@ -376,6 +423,8 @@ c_sources_s = \
         mpglib/common.c \
         mpglib/dct64_i386.c \
         mpglib/decode_i386.c \
+        mpglib/layer1.c \
+        mpglib/layer2.c \
         mpglib/layer3.c \
         mpglib/tabinit.c \
         mpglib/interface.c \
@@ -429,10 +478,9 @@ mp3rtp:	rtp.o mp3rtp.o libmp3lame.a
 	$(CC) -o mp3rtp mp3rtp.o rtp.o   $(OBJ) $(LIBS) $(LIBSNDFILE) $(GTKLIBS) $(LIBTERMCAP) $(VORBIS_LIB)
 
 libmp3lame.a:  $(OBJ) Makefile
-#	cd libmp3lame
-#	make libmp3lame
-	ar cr libmp3lame.a  $(OBJ) 
-	ranlib libmp3lame.a
+	$(AR) cr libmp3lame.a  $(OBJ) 
+	$(RANLIB) libmp3lame.a
+
 
 clean:
   ifeq ($(UNAME),MSDOS)
