@@ -866,7 +866,7 @@ int L3psycho_anal( lame_global_flags * gfp,
 
 
   if (gfc->channels_out==2) {
-    if (!gfp->allow_diff_short || gfp->mode==JOINT_STEREO) {
+    if (!gfp->allow_diff_short || gfp->force_ms) {
       /* force both channels to use the same block type */
       /* this is necessary if the frame is to be encoded in ms_stereo.  */
       /* But even without ms_stereo, FhG  does this */
@@ -911,7 +911,7 @@ int L3psycho_anal( lame_global_flags * gfp,
     gfc->blocktype_old[chn] = blocktype[chn];    /* save for next call to l3psy_anal */
   }
   
-  if (blocktype_d[0]==2) 
+  if (blocktype_d[0]==2 && blocktype_d[1]==2)
     *ms_ratio = gfc->ms_ratio_s_old;
   else
     *ms_ratio = gfc->ms_ratio_l_old;
