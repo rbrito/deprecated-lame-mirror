@@ -1716,16 +1716,12 @@ psycho_analysis(
 	    III_psy_ratio *mr = &gfc->masking_next[gr][ch];
 	    mr->ath_over = 0;
 	    if (gfc->useshort_next[gr][ch]) {
-		int sb = SBMAX_s - 1;
-		if (!gfc->sfb21_extra)
-		    sb--;
+		int sb = gfc->cutoff_sfb_s;
 		if (gfp->use_istereo && (ch & 1))
 		    sb = gfc->is_start_sfb_s_next[gr];
 		mr->pe = pecalc_s(gfc, mr, sb);
 	    } else {
-		int sb = SBMAX_l - 1;
-		if (!gfc->sfb21_extra)
-		    sb--;
+		int sb = gfc->cutoff_sfb_l;
 		if (gfp->use_istereo && (ch & 1))
 		    sb = gfc->is_start_sfb_l_next[gr];
 		mr->pe = pecalc_l(gfc, mr, sb);

@@ -447,7 +447,9 @@ struct lame_internal_flags {
     char bv_scf[576];
     int pseudohalf[SFBMAX];
 
-    int sfb21_extra; /* will be set in lame_init_params */
+    /* default cutoff(the max sfb where we should do noise-shaping) */
+    int cutoff_sfb_l;
+    int cutoff_sfb_s;
 
     /* variables for bitstream.c */
     /* mpeg1: buffer=511 bytes  smallest frame: 96-38(sideinfo)=58

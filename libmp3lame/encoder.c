@@ -202,7 +202,7 @@ init_gr_info(lame_internal_flags *gfc, gr_info *const cod_info)
     cod_info->part2_length        = 0;
     cod_info->sfb_lmax        = SBPSY_l;
     cod_info->sfb_smin        = SBPSY_s;
-    cod_info->psy_lmax        = gfc->sfb21_extra ? SBMAX_l : SBPSY_l;
+    cod_info->psy_lmax        = gfc->cutoff_sfb_l;
     cod_info->psymax          = cod_info->psy_lmax;
     cod_info->sfbmax          = cod_info->sfb_lmax;
     cod_info->sfbdivide       = 11;
@@ -232,7 +232,7 @@ init_gr_info(lame_internal_flags *gfc, gr_info *const cod_info)
 	    }
 	    cod_info->psymax
 		= cod_info->sfb_lmax
-		+ 3*((gfc->sfb21_extra ? SBMAX_s : SBPSY_s) - cod_info->sfb_smin);
+		+ 3*(gfc->cutoff_sfb_s - cod_info->sfb_smin);
 	    cod_info->sfbmax
 		= cod_info->sfb_lmax + 3*(SBPSY_s - cod_info->sfb_smin);
 	    cod_info->sfbdivide   = cod_info->sfbmax - 18;

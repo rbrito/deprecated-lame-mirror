@@ -997,20 +997,6 @@ iteration_init( lame_global_flags *gfp)
     if ( gfc->sparseB < 0 ) gfc->sparseB = 0;
     if ( gfc->sparseB > gfc->sparseA ) gfc->sparseB = gfc->sparseA;
 
-    /* intensity stereo */
-    gfp->use_istereo = 0;
-    gfc->is_start_sfb_l_next[0] = gfc->is_start_sfb_l_next[1]
-	= gfc->l3_side.is_start_sfb_l[0] = gfc->l3_side.is_start_sfb_l[1]
-	= gfc->sfb21_extra ? SBMAX_l : SBPSY_l;
-    gfc->is_start_sfb_s_next[0] = gfc->is_start_sfb_s_next[1]
-	= gfc->l3_side.is_start_sfb_s[0] = gfc->l3_side.is_start_sfb_s[1]
-	= gfc->sfb21_extra ? SBMAX_s : SBPSY_s;
-    if (gfp->mode != MONO && gfp->compression_ratio > 12.0 && gfp->VBR != vbr
-	&& gfp->internal_flags->mode_gr == 2) {
-	/* currently only MPEG1/CBR or ABR */
-	gfp->use_istereo = 1;
-    }
-
     /* scalefactor band start/end position */
     j = gfc->samplerate_index
 	+ (3 * gfp->version) + 6 * (gfp->out_samplerate < 16000);
@@ -1018,6 +1004,31 @@ iteration_init( lame_global_flags *gfp)
         gfc->scalefac_band.l[i] = sfBandIndex[j].l[i];
     for (i = 0; i < SBMAX_s + 1; i++)
         gfc->scalefac_band.s[i] = sfBandIndex[j].s[i];
+
+    /* cutoff and intensity stereo */
+    for (i = 0; i < SBMAX_l; i++) {
+	if (gfc->scalefac_band.l[i] > gfc->lowpass2*576)
+	    break;
+    }
+    gfc->cutoff_sfb_l = i;
+    for (i = 0; i < SBMAX_s; i++) {
+	if (gfc->scalefac_band.s[i] > gfc->lowpass2*576)
+	    break;
+    }
+    gfc->cutoff_sfb_s = i;
+
+    gfp->use_istereo = 0;
+    gfc->is_start_sfb_l_next[0] = gfc->is_start_sfb_l_next[1]
+	= gfc->l3_side.is_start_sfb_l[0] = gfc->l3_side.is_start_sfb_l[1]
+	= gfc->cutoff_sfb_l;
+    gfc->is_start_sfb_s_next[0] = gfc->is_start_sfb_s_next[1]
+	= gfc->l3_side.is_start_sfb_s[0] = gfc->l3_side.is_start_sfb_s[1]
+	= gfc->cutoff_sfb_s;
+    if (gfp->mode != MONO && gfp->compression_ratio > 12.0 && gfp->VBR != vbr
+	&& gfp->internal_flags->mode_gr == 2) {
+	/* currently only MPEG1/CBR or ABR */
+	gfp->use_istereo = 1;
+    }
 
     l3_side->main_data_begin = 0;
     compute_ath(gfp);
