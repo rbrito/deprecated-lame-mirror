@@ -129,7 +129,7 @@ int  brhist_init ( const lame_global_flags* const gf, const int bitrate_kbps_min
     }
 
     /* initialize histogramming data structure */
-    lame_bitrate_hist ( gf, NULL, brhist.kbps );
+    lame_bitrate_kbps ( gf, brhist.kbps );
     brhist.vbr_bitrate_min_index = calculate_index ( brhist.kbps, BRHIST_WIDTH, bitrate_kbps_min );
     brhist.vbr_bitrate_max_index = calculate_index ( brhist.kbps, BRHIST_WIDTH, bitrate_kbps_max );
 
@@ -209,12 +209,11 @@ void  brhist_disp ( const lame_global_flags* const gf, const int jump_back )
 {
     int   i;
     int   br_hist [BRHIST_WIDTH];   /* how often a frame size was used */
-    int   br_kbps [BRHIST_WIDTH];   /* related bitrates in kbps of this frame sizes */
     int   frames;                   /* total number of encoded frames */
     int   full;                     /* usage count of the most often used frame size, but not smaller than Console_IO.disp_width-30 (makes this sense?) and 1 */
     int   printed_lines = 0;        /* printed number of lines for the brhist functionality, used to skip back the right number of lines */
     
-    lame_bitrate_hist(gf, br_hist, br_kbps);
+    lame_bitrate_hist(gf, br_hist);
     
     frames = full = 0;
     for (i = 0; i < BRHIST_WIDTH; i++) {
@@ -274,18 +273,17 @@ void  brhist_disp_total ( const lame_global_flags* const gf )
 {
     int i;
     int br_hist [BRHIST_WIDTH];
-    int br_kbps [BRHIST_WIDTH];
     int st_mode [4];
     int st_frames = 0;
     int br_frames = 0;
     double sum = 0.;
     
     lame_stereo_mode_hist ( gf, st_mode );
-    lame_bitrate_hist     ( gf, br_hist, br_kbps );
+    lame_bitrate_hist     ( gf, br_hist );
     
     for (i = 0; i < BRHIST_WIDTH; i++) {
         br_frames += br_hist[i];
-	sum       += br_hist[i] * br_kbps[i];
+	sum       += br_hist[i] * brhist.kbps[i];
     }
 
     for (i = 0; i < 4; i++) {

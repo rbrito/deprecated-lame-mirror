@@ -285,16 +285,18 @@ int lame_encode_flush(lame_global_flags *,char *mp3buffer, int size);
  *   3: MS-I  mid-side and intensity encoded (currently not supported)
  *
  * attention: don't call them after lame_encode_finish
- * suggested: lame_encode_flush -> lame_***_hist -> lame_close
+ * suggested: lame_encode_flush -> lame_*_hist -> lame_close
  */
  
 void lame_bitrate_hist( 
-        lame_global_flags* gfp, 
-        int                bitrate_count[14],
-        int                bitrate_kbps [14] );
+        const lame_global_flags *const gfp, 
+              int                      bitrate_count[14] );
+void lame_bitrate_kbps( 
+        const lame_global_flags *const gfp, 
+              int                      bitrate_kbps [14] );
 void lame_stereo_mode_hist( 
-        lame_global_flags* gfp, 
-        int                stereo_mode_count[4] );
+        const lame_global_flags *const gfp, 
+              int                      stereo_mode_count[4] );
 
 
 
