@@ -587,21 +587,6 @@ main(int argc, char **argv)
 
     lame_version_print (stdout);
 
-#if defined(_WIN32)
-   /* set affinity back to all CPUs.  Fix for EAC/lame on SMP systems from
-     "Todd Richmond" <todd.richmond@openwave.com> */
-    typedef BOOL (WINAPI *SPAMFunc)(HANDLE, DWORD);
-    SPAMFunc func;
-    SYSTEM_INFO si;
-
-    if ((func = (SPAMFunc)GetProcAddress(GetModuleHandle("KERNEL32.DLL"),
-        "SetProcessAffinityMask")) != NULL) {
-        GetSystemInfo(&si);
-        func(GetCurrentProcess(), si.dwActiveProcessorMask);
-    }
-#endif
-
-
 #ifdef __EMX__
     /* This gives wildcard expansion on Non-POSIX shells with OS/2 */
     _wildcard(&argc, &argv);
