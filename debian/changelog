@@ -1,3 +1,9 @@
+lame (4.0-0) unstable; urgency=low
+
+  * testing package of lame4
+
+ -- Takehiro TOMINAGA <takehiro@users.sf.net>  Sun, 11 Apr 2004 22:19:16 +0900
+
 lame (3.93-0.1) unstable; urgency=low
 
   * Prevent lame 3.93 shipping and still building a 3.92 debian package;
