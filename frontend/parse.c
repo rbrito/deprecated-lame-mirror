@@ -697,6 +697,14 @@ static void  presets_longinfo_dm ( FILE* msgfp )
 }
 
 
+static void  presets_info_r3mix ( FILE* msgfp )
+{
+    fprintf( msgfp, "\n"
+             "r3mix- VBR preset for steady quality with little excess:\n"
+             "    --preset r3mix\n" );
+}
+
+#if 0
 static void  presets_info_dm ( FILE* msgfp )
 {
     fprintf( msgfp, "\n"
@@ -711,14 +719,6 @@ static void  presets_info_dm ( FILE* msgfp )
 }
 
 
-static void  presets_info_r3mix ( FILE* msgfp )
-{
-    fprintf( msgfp, "\n"
-             "r3mix- VBR preset for steady quality with little excess:\n"
-             "    --preset r3mix\n" );
-}
-
-
 static void  presets_info_head ( FILE* msgfp )
 {
     fputc( '\n', msgfp );
@@ -728,7 +728,6 @@ static void  presets_info_head ( FILE* msgfp )
              "Several separate collections of preset profiles are available.\n"
         );
 }
-
 
 /* briefly and concisely display all available presets
 */
@@ -751,6 +750,7 @@ static void  presets_longinfo ( FILE* msgfp )
     fprintf( msgfp, hr );
     presets_info_r3mix( msgfp );
 }
+#endif
 
 
 static const char presets_set_err_unk[] = "ERROR, unknown --preset profile: ";
