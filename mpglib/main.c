@@ -170,14 +170,14 @@ int lame_decode_initfile(FILE *fd, mp3data_struct *mp3data)
     mp3data->nsamp=framesize * num_frames;
   }
 
-
+  /*
   fprintf(stderr,"ret = %i NEED_MORE=%i \n",ret,MP3_NEED_MORE);
   fprintf(stderr,"stereo = %i \n",mp.fr.stereo);
   fprintf(stderr,"samp = %i  \n",freqs[mp.fr.sampling_frequency]);
   fprintf(stderr,"framesize = %i  \n",framesize);
   fprintf(stderr,"num frames = %i  \n",(int)num_frames);
   fprintf(stderr,"mode     = %i  \n",mp.fr.mode);
-
+  */
   return 0;
 }
 

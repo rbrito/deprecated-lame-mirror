@@ -46,9 +46,6 @@
 #endif
 
 
-typedef signed short int  sample_t;
-typedef sample_t          stereo_t [2];
-
 
 
 
@@ -111,6 +108,11 @@ typedef sample_t          stereo_t [2];
 		#define FLOAT8_is_double
 	#endif
 #endif
+
+typedef FLOAT sample_t;
+typedef sample_t          stereo_t [2];
+
+
 
 
 #if defined _WIN32 && !defined __CYGWIN__

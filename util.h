@@ -160,8 +160,7 @@ typedef struct  {
   int lame_init_params_init;      /* was lame_init_params called? */
   int lame_encode_frame_init;     
   int iteration_init_init;
-  int fill_buffer_downsample_init;
-  int fill_buffer_upsample_init;
+  int fill_buffer_resample_init;
   int mdct_sub48_init;
   int psymodel_init;
 
@@ -222,7 +221,7 @@ typedef struct  {
 #define MFSIZE (3*1152+ENCDELAY-MDCTDELAY)
   int mf_size;
   int mf_samples_to_encode;
-  short int mfbuf[2][MFSIZE];
+  sample_t mfbuf[2][MFSIZE];
   FLOAT8 ms_ener_ratio[2];
   FLOAT8 ms_ratio[2];
   /* used for padding */
@@ -375,10 +374,7 @@ extern void fun_reorder(int scalefac_band[],FLOAT8 ix_orig[576]);
 extern enum byte_order DetermineByteOrder(void);
 extern void SwapBytesInWords( short *loc, int words );
 
-extern int fill_buffer_downsample(lame_global_flags *gfp,short int *outbuf,int desired_len,
-	 short int *inbuf,int len,int *num_used,int ch);
-
-extern int fill_buffer_upsample(lame_global_flags *gfp,short int *outbuf,int desired_len,
+extern int fill_buffer_resample(lame_global_flags *gfp,sample_t *outbuf,int desired_len,
 	 short int *inbuf,int len,int *num_used,int ch);
 
 extern void 

@@ -490,12 +490,12 @@ INLINE double blackman(int i,double offset,double fcn,int l)
     return  (sin( (wcn *  ( x - dly))) / (PI * ( x - dly)) * bkwn );
 }
 
-int fill_buffer_downsample(lame_global_flags *gfp,short int *outbuf,int desired_len,
+int fill_buffer_resample(lame_global_flags *gfp,sample_t *outbuf,int desired_len,
 			 short int *inbuf,int len,int *num_used,int ch) {
   
   lame_internal_flags *gfc=gfp->internal_flags;
   FLOAT8 offset,xvalue;
-  int i,j=0,k,value;
+  int i,j=0,k;
   int filter_l;
   FLOAT8 fcn,intratio;
   short int *inbuf_old;
@@ -511,8 +511,8 @@ int fill_buffer_downsample(lame_global_flags *gfp,short int *outbuf,int desired_
   filter_l += intratio;
   assert(filter_l +5 < BLACKSIZE);
   
-  if (!gfc->fill_buffer_downsample_init) {
-    gfc->fill_buffer_downsample_init=1;
+  if (!gfc->fill_buffer_resample_init) {
+    gfc->fill_buffer_resample_init=1;
     gfc->itime[0]=0;
     gfc->itime[1]=0;
     memset((char *) gfc->inbuf_old, 0, sizeof(short int)*2*BLACKSIZE);
@@ -558,10 +558,17 @@ int fill_buffer_downsample(lame_global_flags *gfp,short int *outbuf,int desired_
 	xvalue += y*blackman(i,offset,fcn,filter_l);  /* very slow! */
 #endif
     }
-    value = floor(.5+xvalue);
+#if 1
+    outbuf[k]=xvalue;
+#else
+    /* output buffer is of type FLOAT - this is no longer needed */
+    {
+    int value = floor(.5+xvalue);
     if (value > 32767) outbuf[k]=32767;
     else if (value < -32767) outbuf[k]=-32767;
     else outbuf[k]=value;
+    }
+#endif
   }
 
   

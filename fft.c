@@ -35,6 +35,7 @@
 #include "util.h"
 #include "psymodel.h"
 #include "lame.h"
+#include "fft.h"
 
 #define TRI_SIZE (5-1) /* 1024 =  4**5 */
 static FLOAT costab[TRI_SIZE*2];
@@ -168,7 +169,7 @@ static const short rv_tbl[] = {
 
 
 void fft_short(
-    lame_global_flags *gfp, FLOAT x_real[3][BLKSIZE_s], int chn, short *buffer[2])
+    lame_global_flags *gfp, FLOAT x_real[3][BLKSIZE_s], int chn, sample_t *buffer[2])
 {
     short i, j, b;
 
@@ -204,7 +205,7 @@ void fft_short(
 }
 
 void fft_long(
-    lame_global_flags *gfp, FLOAT x[BLKSIZE], int chn, short *buffer[2])
+    lame_global_flags *gfp, FLOAT x[BLKSIZE], int chn, sample_t *buffer[2])
 {
     short i,jj = BLKSIZE / 8 - 1;
     x += BLKSIZE / 2;

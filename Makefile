@@ -520,7 +520,7 @@ clean:
 	-del $(PGM)
   else
 	-$(RM) $(gtk_obj) $(OBJ) $(DEP) $(PGM) main.o rtp.o mp3rtp mp3rtp.o \
-         mp3x.o mp3x libmp3lame.a 
+         mp3x.o mp3x libmp3lame.a libmp3lame.so
   endif
 
 
