@@ -22,6 +22,7 @@ dnl - move all system-dependent entries from Makefile here
 
 AC_INIT(libmp3lame/lame.c)
 AM_INIT_AUTOMAKE(lamelib,3.88,notdef)
+AM_PROG_LIBTOOL
 
 # increase this when the shared lib becomes totally incompatible
 LIB_MAJOR_VERSION=1
@@ -288,6 +289,9 @@ if test "$CONFIG_BRHIST" != "no" ; then
   fi
 fi
 AC_MSG_RESULT($CONFIG_BRHIST)
+
+
+dnl ############### host dependent setup #####################
 
 
 
