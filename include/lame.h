@@ -24,6 +24,23 @@
 extern "C" {
 #endif
 
+
+
+/***********************************************************************
+*
+*  these should be moved somewhere else 
+*
+***********************************************************************/
+extern const int      bitrate_table[2][16];
+extern const int      samplerate_table[2][3];
+
+
+
+
+
+
+
+
 /* maximum size of mp3buffer needed if you encode at most 1152 samples for
    each call to lame_encode_buffer.  see lame_encode_buffer() below  
    (LAME_MAXMP3BUFFER is now obsolete)  */
@@ -320,44 +337,8 @@ int lame_decode1(char *mp3buf,int len,short pcm_l[],short pcm_r[]);
 int lame_decode1_headers(char *mp3buf,int len,short pcm_l[],short pcm_r[],
 mp3data_struct *mp3data);
 
-
-/***********************************************************************
-*
-*  Global Variable External Declarations
-*
-***********************************************************************/
-
-extern const int      bitrate_table[2][16];
-extern const int      samplerate_table[2][3];
-
-
-
-#define FRAMES_FLAG     0x0001
-#define BYTES_FLAG      0x0002
-#define TOC_FLAG        0x0004
-#define VBR_SCALE_FLAG  0x0008
-
+/* Also usefull for decoding is the ability to parse Xing VBR headers: */
 #define NUMTOCENTRIES 100
-
-#define FRAMES_AND_BYTES (FRAMES_FLAG | BYTES_FLAG)
-
-/* -----------------------------------------------------------
- * A Vbr header may be present in the ancillary
- * data field of the first frame of an mp3 bitstream
- * The Vbr header (optionally) contains
- *      frames      total number of audio frames in the bitstream
- *      bytes       total number of bytes in the bitstream
- *      toc         table of contents
-
- * toc (table of contents) gives seek points
- * for random access
- * the ith entry determines the seek point for
- * i-percent duration
- * seek point in bytes = (toc[i]/256.0) * total_bitstream_bytes
- * e.g. half duration seek point = (toc[50]/256.0) * total_bitstream_bytes
- */
-
-
 /*structure to receive extracted header */
 /* toc may be NULL*/
 typedef struct
@@ -372,14 +353,14 @@ typedef struct
   int           headersize;             /* size of VBR header, in bytes */
 }   VBRTAGDATA;
 
-
-
-int CheckVbrTag(unsigned char *buf);
 int GetVbrTag(VBRTAGDATA *pTagData,  unsigned char *buf);
-int SeekPoint(unsigned char TOC[NUMTOCENTRIES], int file_bytes, float percent);
-int InitVbrTag(lame_global_flags *gfp);
-int PutVbrTag(lame_global_flags *gfp,FILE *fid,int nVbrScale);
-void AddVbrFrame(lame_global_flags *gfp);
+
+
+
+
+
+
+
 
 
 /*

@@ -210,21 +210,25 @@ void timestatus ( int samp_rate,
     ts_times  real_time;
     ts_times  process_time;
     int       percent;
+    static int  init=0;
 
     real_time   .so_far = ts_real_time    (frameNum);
     process_time.so_far = ts_process_time (frameNum);
 
-    if ( frameNum == 0 ) {
+    if ( frameNum == 0 && init==0 ) {
         fputs ( "    Frame          |  CPU time/estim | REAL time/estim | play/CPU |    ETA  \n"
                 "     0/       ( 0%)|    0:00/     :  |    0:00/     :  |    .    x|     :   \r", stderr );
+	init=1;
         return;
     }  
+    /* reset init counter for next time we are called with frameNum==0 */
+    if (frameNum > 0) init=0;
 
     ts_calc_times ( &real_time   , samp_rate, frameNum, totalframes, framesize );
     ts_calc_times ( &process_time, samp_rate, frameNum, totalframes, framesize );
 
     if ( frameNum < totalframes  ) {
-        percent = (int) (100.0 * frameNum / (totalframes + 0.5 );
+        percent = (int) (100.0 * frameNum / (totalframes + 0.5 ));
     } else {
         percent = 100;
     }

@@ -27,6 +27,7 @@
 #include "version.h"
 #include "tables.h"
 #include "quantize_pvt.h"
+#include "VbrTag.h"
 
 #ifdef __riscos__
 #include "asmstuff.h"
@@ -725,20 +726,21 @@ int lame_encode_frame(lame_global_flags *gfp,
 sample_t inbuf_l[],sample_t inbuf_r[],
 char *mp3buf, int mp3buf_size)
 {
+  int ret;
   if (gfp->ogg) {
 #ifdef HAVEVORBIS
-    return lame_encode_ogg_frame(gfp,inbuf_l,inbuf_r,mp3buf,mp3buf_size);
+    ret = lame_encode_ogg_frame(gfp,inbuf_l,inbuf_r,mp3buf,mp3buf_size);
 #else
     return -5; /* wanna encode ogg without vorbis */
 #endif
   } else {
-    return lame_encode_mp3_frame(gfp,inbuf_l,inbuf_r,mp3buf,mp3buf_size);
+    ret = lame_encode_mp3_frame(gfp,inbuf_l,inbuf_r,mp3buf,mp3buf_size);
   }
   ++gfp->frameNum;
 
   /* check to see if we overestimated/underestimated totalframes */
   if (gfp->frameNum > (gfp->totalframes-1)) gfp->totalframes = gfp->frameNum;
-
+  return ret;
 }
 
 

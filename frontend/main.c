@@ -215,8 +215,7 @@ int main(int argc, char **argv)
 	  if (update_interval>0) {
 	    timestatus_klemm(&gf);
 	  }else{
-	    int mod = gf.version == 0 ? 100 : 50;
-	    if (gf.frameNum % mod==0) {
+	    if (0==gf.frameNum % 50) {
 	      timestatus(gf.out_samplerate,gf.frameNum,gf.totalframes,gf.framesize);
 #ifdef BRHIST
 	      if (brhist)
