@@ -154,7 +154,7 @@ ifeq ($(CFG),RH)
 #  CPP_OPTS += /DRH_???
 # these options for gcc-2.95.2 to produce fast code
    CC_OPTS = \
-	-Wall -O9 -fomit-frame-pointer -march=pentium \
+	-Wall -O9 -fomit-frame-pointer -march=pentiumpro \
 	-finline-functions -fexpensive-optimizations \
 	-funroll-loops -funroll-all-loops -pipe -fschedule-insns2 \
 	-fstrength-reduce \
@@ -465,6 +465,7 @@ lib_sources = \
 	libmp3lame/mpglib_interface.c \
         libmp3lame/VbrTag.c \
         libmp3lame/version.c \
+        libmp3lame/presets.c \
         mpglib/common.c \
         mpglib/dct64_i386.c \
         mpglib/decode_i386.c \
