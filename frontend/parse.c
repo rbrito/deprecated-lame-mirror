@@ -272,8 +272,6 @@ int  usage ( const lame_global_flags* gfp, FILE* const fp, const char* ProgramNa
               "     \"%s --help\"           for general usage information\n" 
               " or:\n"
               "     \"%s --preset help\"    for information on suggested predefined settings\n"
-              "     \"%s --alt-preset help\" for information on the seperate and very highly\n" 
-              "                             tuned for quality predefined settings\n"
               " or:\n"
               "     \"%s --longhelp\"\n"
               "  or \"%s -?\"              for a complete options list\n\n",
@@ -312,11 +310,10 @@ int  short_help ( const lame_global_flags* gfp, FILE* const fp, const char* Prog
               "                    default is (j) or (s) depending on bitrate\n"
               "    -V n            quality setting for VBR.  default n=%i\n"
               "\n"
-              "    --preset type   type must be phone, voice, fm, tape, hifi, cd or studio\n"
+              "    --preset type   type must be \"standard\", \"extreme\", \"insane\",\n"
+              "                    or a value for an average desired bitrate and depending on\n"                       
+              "                    the value specified, appropriate quality settings will be used.\n"
               "                    \"--preset help\" gives some more infos on these\n"
-              "    --alt-preset type type must be \"standard\", \"extreme\", \"insane\",\n"
-              "                      or a value for an average desired bitrate and depending on\n"                       
-              "                      the value specified, appropriate quality settings will be used.\n"
               "\n"
 #if defined(__OS2__)
               "    --priority type  sets the process priority (OS/2 only):\n"
@@ -407,12 +404,11 @@ int  long_help ( const lame_global_flags* gfp, FILE* const fp, const char* Progr
               "    --scale <arg>   scale input (multiply PCM data) by <arg>\n"
 	      "    --scale-l <arg> scale channel 0 (left) input (multiply PCM data) by <arg>\n"
               "    --scale-r <arg> scale channel 1 (right) input (multiply PCM data) by <arg>\n"
-              "    --preset type   type must be phone, voice, fm, tape, hifi, cd or studio\n"
+              "    --preset type   type must be \"standard\", \"extreme\", \"insane\",\n"
+              "                    or a value for an average desired bitrate and depending on\n"                       
+              "                    the value specified, appropriate quality settings will be used.\n"
               "                    \"--preset help\" gives some more infos on these\n" 
-              "    --alt-preset type type must be \"standard\", \"extreme\", \"insane\",\n"
-              "                      or a value for an average desired bitrate and depending on\n"                       
-              "                      the value specified, appropriate quality settings will be used.\n"
- 	      "    --r3mix         use high-quality VBR preset"
+ 	          "    --r3mix         use  r3mix.net VBR preset"
               );
 
     wait_for ( fp, lessmode );
@@ -593,6 +589,17 @@ int  display_bitrates ( FILE* const fp )
     suggestion:  lame --preset <file-name> ...
             or:  lame --preset my-setting  ... and my-setting is defined in lame.ini
  */
+
+
+/*
+Note from GB on 08/25/2002:
+I am merging --presets and --alt-presets. Old presets are now aliases for
+corresponding abr values from old alt-presets. This way we now have a 
+unified preset system, and I hope than more people will use the new tuned
+presets instead of the old unmaintained ones.
+*/
+
+
  
 /************************************************************************
 *
@@ -603,168 +610,98 @@ int  display_bitrates ( FILE* const fp )
 ************************************************************************/
 
 
-typedef struct {
-    const char* name;                   // name of preset
-    long        resample;               // resample frequency in Hz, or -1 for no resampling
-    short       highpass_freq;          // highpass frequency in Hz, or -1 for no highpass filtering
-    short       lowpass_freq;           // lowpass frequency in Hz, or -1 for no lowpass filtering
-    short       lowpass_width;          // lowpass width in Hz
-    signed char no_short_blocks;        // use of short blocks, 1: no, 0: yes
-    signed char quality;                // quality, the same as -f or -h
-    MPEG_mode   mode;                   // channel mode (mono, stereo, joint)
-    short       cbr;                    // CBR data rate in kbps (8...320)
-    signed char vbr_mode;               // VBR mode (0...9)
-    short       vbr_min;                // minimum VBR rate in kbps ( 8...256)
-    short       vbr_max;                // maximum VBR rate in kbps (16...320)
-} preset_t;
 
-const preset_t Presets [] = {
-   // name       fs     fu    fo    dfo shrt qual  mode              cbr vbr_mode/min/max
-    { "phone" ,  8000, 125,  3400,    0,  1,  5, MONO        ,  16,  6,   8,  24 },  // phone standard 300-3400
-    { "phon+" , 11025, 100,  4000,    0,  1,  5, MONO        ,  24,  4,  16,  32 },  // phone theoretical limits
-    { "lw"    , 11025,  -1,  4000,    0,  0,  5, MONO        ,  24,  3,  16,  56 },  // LW
-    { "mw-eu" , 11025,  -1,  4000,    0,  0,  5, MONO        ,  24,  3,  16,  56 },  // MW in europe
-    { "mw-us" , 16000,  -1,  7500,    0,  0,  5, MONO        ,  40,  3,  24, 112 },  // MW in U.S.A.
-    { "sw"    , 11025,  -1,  4000,    0,  0,  5, MONO        ,  24,  3,  16,  56 },  // SW
-    { "fm"    , 32000,  -1, 15000,    0,  0,  3, JOINT_STEREO, 112,  3,  80, 256 },
-    { "voice" , 24000,  -1, 12000,    0,  1,  5, MONO        ,  56,  4,  40, 112 },
-    { "radio" ,    -1,  -1, 15000,    0,  0,  3, JOINT_STEREO, 128,  3,  96, 256 },
-    { "tape"  ,    -1,  -1, 18000,  900,  0,  3, JOINT_STEREO, 128,  3,  96, 256 },
-    { "hifi"  ,    -1,  -1, 18000,  900,  0,  2, JOINT_STEREO, 160,  2, 112, 320 },
-    { "cd"    ,    -1,  -1,    -1,   -1,  0,  2, STEREO      , 192,  1, 128, 320 },
-    { "studio",    -1,  -1,    -1,   -1,  0,  1, STEREO      , 256,  0, 160, 320 },
-};
-
-
-static int  presets_longinfo_basic ( FILE* const fp )  /* print possible combination */
+static void  presets_longinfo_dm ( FILE* msgfp )
 {
-    int i;
-
-    fprintf ( fp, "\n"
-              "Basic- presets covering a wide span of qualities and bit rates\n"
-              "       These presets may be combined with -v for VBR MP3s.\n");
-    fprintf ( fp, "\n                ");
-    for ( i = 0; i < sizeof(Presets)/sizeof(*Presets); i++)
-        fprintf ( fp,  strlen(Presets[i].name) <= 4 ? "%5s " : " %-5s", Presets[i].name );
-    fprintf ( fp, "\n=================");
-    for ( i = 0; i < sizeof(Presets)/sizeof(*Presets); i++)
-        fprintf ( fp,  "======" );
-    fprintf ( fp, "\n--resample      ");
-    for ( i = 0; i < sizeof(Presets)/sizeof(*Presets); i++)
-        if ( Presets[i].resample < 0 )
-            fprintf ( fp,  "      " );
-        else
-            fprintf ( fp,  "%6.3g",  Presets[i].resample*1.e-3 );
-    fprintf ( fp, "\n--highpass      ");
-    for ( i = 0; i < sizeof(Presets)/sizeof(*Presets); i++)
-        if ( Presets[i].highpass_freq < 0 )
-            fprintf ( fp,  "      " );
-        else
-            fprintf ( fp,  "%6.3g",  Presets[i].highpass_freq*1.e-3 );
-    fprintf ( fp, "\n--lowpass       ");
-    for ( i = 0; i < sizeof(Presets)/sizeof(*Presets); i++)
-        if ( Presets[i].lowpass_freq < 0 )
-            fprintf ( fp,  "      " );
-        else
-            fprintf ( fp,  "%6.3g",  Presets[i].lowpass_freq*1.e-3 );
-    fprintf ( fp, "\n--lowpass-width ");
-    for ( i = 0; i < sizeof(Presets)/sizeof(*Presets); i++)
-        if ( Presets[i].lowpass_width < 0 )
-            fprintf ( fp,  "      " );
-        else
-            fprintf ( fp,  "%6.3g",  Presets[i].lowpass_width*1.e-3 );
-    fprintf ( fp, "\n--noshort       ");
-    for ( i = 0; i < sizeof(Presets)/sizeof(*Presets); i++)
-        switch ( Presets[i].no_short_blocks ) {
-        case  1: fprintf ( fp,  "   yes" ); break;
-        case  0: fprintf ( fp,  "    no" ); break;
-        case -1: fprintf ( fp,  "      " ); break;
-        default: assert (0);                break;
-        }
-    fprintf ( fp, "\n                ");
-    for ( i = 0; i < sizeof(Presets)/sizeof(*Presets); i++)
-        switch ( Presets[i].mode ) {
-        case MONO:         fprintf ( fp, "   -mm"); break;
-        case JOINT_STEREO: fprintf ( fp, "   -mj"); break;
-        case STEREO:       fprintf ( fp, "   -ms"); break;
-        case -1:                  fprintf ( fp, "      "); break;
-        default:                  assert (0);              break;
-        }
-    fprintf ( fp, "\n                ");
-    for ( i = 0; i < sizeof(Presets)/sizeof(*Presets); i++)
-        switch ( Presets[i].quality ) {
-        case -1: fprintf ( fp, "      "); break;
-        case  2: fprintf ( fp, "    -h"); break;
-        case  3: fprintf ( fp, "   -q3"); break;
-        case  5: fprintf ( fp, "      "); break;
-        case  7: fprintf ( fp, "    -f"); break;
-        default: assert (0);              break;
-    }
-    fprintf ( fp, "\n-b              ");
-    for ( i = 0; i < sizeof(Presets)/sizeof(*Presets); i++)
-        fprintf ( fp,  "%6u", Presets[i].cbr );
-    fprintf ( fp, "\n-- PLUS WITH -v ");
-    for ( i = 0; i < sizeof(Presets)/sizeof(*Presets); i++)
-        fprintf ( fp,  "------" );
-    fprintf ( fp, "-\n-V              ");
-    for ( i = 0; i < sizeof(Presets)/sizeof(*Presets); i++)
-        fprintf ( fp,  "%6u", Presets[i].vbr_mode );
-    fprintf ( fp, "\n-b              ");
-    for ( i = 0; i < sizeof(Presets)/sizeof(*Presets); i++)
-        fprintf ( fp,  "%6u", Presets[i].vbr_min );
-    fprintf ( fp, "\n-B              ");
-    for ( i = 0; i < sizeof(Presets)/sizeof(*Presets); i++)
-        fprintf ( fp,  "%6u", Presets[i].vbr_max );
-    fprintf ( fp, "\n----------------");
-    for ( i = 0; i < sizeof(Presets)/sizeof(*Presets); i++)
-        fprintf ( fp,  "------" );
-  
-    fprintf ( fp, "-\nEXAMPLES:\n");
-    fprintf ( fp, " a) --preset fm\n");
-    fprintf ( fp, "    equal to: -mj -b112 --resample 32 --lowpass 15 --lowpass-width 0\n");
-    fprintf ( fp, " b) -v --preset studio\n");
-    fprintf ( fp, "    equals to: -h -ms -V0 -b160 -B320\n");
-    
-    return 0;
-}
-
-
-static void  presets_info_basic ( FILE* msgfp )
-{
-    int i;
-    int j;
-    int k;
-    int p_cnt = sizeof(Presets)/sizeof(*Presets);
-    int rows;
-
-    fprintf ( msgfp, "\n" 
-              "basic- presets covering a wide span (fixed rates unless used with -v or VBR):\n"
-        );
-    rows = ((p_cnt - 1) / 4) + 1;
-    for ( i = 0; i < rows; ++i) {
-        for( j = 0; j < 4; ++j ) {
-            k = i + j * 4;
-            if( k < p_cnt ) {
-                fprintf( msgfp, "    %-5s (%2d kbps)", 
-                         Presets[k].name, Presets[k].cbr );
-            }
-        }
-        fputc( '\n', msgfp );
-    }
-
+        fprintf ( msgfp,
+        "\n" 
+        "The --preset switches are designed to provide the highest possible quality.\n"
+        "\n"
+        "They have for the most part been subject to and tuned via rigorous double blind\n"
+        "listening tests to verify and achieve this objective.\n"
+        "\n"
+        "These are continually updated to coincide with the latest developments that\n"
+        "occur and as a result should provide you with nearly the best quality\n"
+        "currently possible from LAME.\n"
+        "\n"
+        "To activate these presets:\n"
+        "\n"
+        "   For VBR modes (generally highest quality):\n"
+        "\n"
+        "     \"--preset standard\" This preset should generally be transparent\n"
+        "                             to most people on most music and is already\n"
+        "                             quite high in quality.\n"
+        "\n"
+        "     \"--preset extreme\" If you have extremely good hearing and similar\n"
+        "                             equipment, this preset will generally provide\n"
+        "                             slightly higher quality than the \"standard\"\n"
+        "                             mode.\n"
+        "\n"
+        "   For CBR 320kbps (highest quality possible from the --preset switches):\n"
+        "\n"
+        "     \"--preset insane\"  This preset will usually be overkill for most\n"
+        "                             people and most situations, but if you must\n"
+        "                             have the absolute highest quality with no\n"
+        "                             regard to filesize, this is the way to go.\n"
+        "\n"
+        "   For ABR modes (high quality per given bitrate but not as high as VBR):\n"
+        "\n"
+        "     \"--preset <kbps>\"  Using this preset will usually give you good\n"
+        "                             quality at a specified bitrate. Depending on the\n"
+        "                             bitrate entered, this preset will determine the\n"
+        "                             optimal settings for that particular situation.\n"
+        "                             While this approach works, it is not nearly as\n"
+        "                             flexible as VBR, and usually will not attain the\n"
+        "                             same level of quality as VBR at higher bitrates.\n"  
+        "\n"
+        "The following options are also available for the corresponding profiles:\n"
+        "\n"
+        "   <fast>        standard\n"
+        "   <fast>        extreme\n"
+        "                 insane\n"
+        "   <cbr> (ABR Mode) - The ABR Mode is implied. To use it,\n"
+        "                      simply specify a bitrate. For example:\n"
+        "                      \"--preset 185\" activates this\n"
+        "                      preset and uses 185 as an average kbps.\n" 
+        "\n"
+        "   \"fast\" - Enables the new fast VBR for a particular profile. The\n"
+        "            disadvantage to the speed switch is that often times the\n"
+        "            bitrate will be slightly higher than with the normal mode\n"
+        "            and quality may be slightly lower also.\n"
+        "\n"
+        "   \"cbr\"  - If you use the ABR mode (read above) with a significant\n"
+        "            bitrate such as 80, 96, 112, 128, 160, 192, 224, 256, 320,\n"
+        "            you can use the \"cbr\" option to force CBR mode encoding\n"
+        "            instead of the standard abr mode. ABR does provide higher\n"
+        "            quality but CBR may be useful in situations such as when\n"
+        "            streaming an mp3 over the internet may be important.\n"
+        "\n"
+        "    For example:\n"
+        "\n"
+        "    \"--preset fast standard <input file> <output file>\"\n"
+        " or \"--preset cbr 192 <input file> <output file>\"\n"
+        " or \"--preset 172 <input file> <output file>\"\n"
+        " or \"--preset extreme <input file> <output file>\"\n"
+        "\n"
+        "\n"
+        "A few aliases are available for ABR mode:\n"
+        "phone => 16kbps/mono        phon+/lw/mw-eu/sw => 24kbps/mono\n"
+        "mw-us => 40kbps/mono        voice => 56kbps/mono\n"
+        "fm/radio/tape => 112kbps    hifi => 160kbps\n"
+        "cd => 192kbps               studio => 256kbps");
 }
 
 
 static void  presets_info_dm ( FILE* msgfp )
 {
     fprintf( msgfp, "\n"
-             "alt- presets highly tuned for utmost quality via blind listening tests:\n"
+             "presets highly tuned for utmost quality via blind listening tests:\n"
              "  VBR presets for steady quality\n"
-             "    --alt-preset standard\n"
-             "    --alt-preset extreme\n"
-             "    --alt-preset insane\n"
+             "    --preset standard\n"
+             "    --preset extreme\n"
+             "    --preset insane\n"
              "  ABR presets for best quality at a given average bitrate:\n"
-             "    --alt-preset <bitrate value>\n"
+             "    --preset <bitrate value>\n"
         );
 }
 
@@ -793,7 +730,6 @@ static void  presets_info_head ( FILE* msgfp )
 static void  presets_info ( FILE* msgfp )
 {
     fprintf( msgfp, "For more preset details, refer to --preset longhelp.\n" );
-    presets_info_basic( msgfp );
     presets_info_dm( msgfp );
     presets_info_r3mix( msgfp );
 }
@@ -806,88 +742,14 @@ static void  presets_longinfo ( FILE* msgfp )
     const char hr[] = "\n----------------------------------------------------------------\n";
 
     fprintf( msgfp, hr );
-    presets_longinfo_basic( msgfp );
-    fprintf( msgfp, hr );
-    presets_info_dm( msgfp );
+    presets_longinfo_dm( msgfp );
     fprintf( msgfp, hr );
     presets_info_r3mix( msgfp );
 }
 
 
-/* preset alias translation
- */
-static const char* presets_alias( const char* preset_name )
-{
-    int i;
-    unsigned char p0;
-
-    struct ps_alias {
-        const char *in;
-        const char *out;
-    } ps_xlat[] = {             /* alphabetically ordered alias table  */
-        {"cd",       "basic-cd"},
-        {"fm",       "basic-fm"},
-        {"hifi",     "basic-hifi"},
-        {"insane",   "dm-insane"},     // deprecated, change to alt
-        {"lw",       "basic-lw"},
-        {"metal",    "dm-metal"},      // dm-metal is no longer supported
-        {"mw-eu",    "basic-mw-eu"},
-        {"mw-us",    "basic-mw-us"},
-        {"phon+",    "basic-phon+"},
-        {"phone",    "basic-phone"},
-        {"radio",    "basic-radio"},
-        {"standard", "dm-standard"},   // deprecated, change to alt-standard
-        {"studio",   "basic-studio"},
-        {"sw",       "basic-sw"},
-        {"tape",     "basic-tape"},
-        {"voice",    "basic-voice"},
-        {"xtreme",   "dm-xtreme"},     // deprecated, change to alt-extreme. Note the "e"
-        {"\xff", ""}
-    };
-
-    p0 = preset_name[0];
-    if( p0 < 0xff ) {
-        for ( i = 0; ps_xlat[i].in[0] < p0; ++i )
-            ;
-        for ( ; ps_xlat[i].in[0] == p0; ++i ) {
-            if( strcmp( preset_name, ps_xlat[i].in ) == 0 ) {
-                return( ps_xlat[i].out );
-            }
-        }
-    }
-
-    return( preset_name );
-}
-
 static const char presets_set_err_unk[] = "ERROR, unknown --preset profile: ";
 
-static int  presets_set_basic( lame_t gfp, const char* preset_name, 
-                               FILE *msgfp )
-{
-    int i;
-
-    for ( i = 0; i < sizeof(Presets)/sizeof(*Presets); i++ )
-        if ( 0 == strncmp (preset_name, Presets[i].name, strlen (preset_name) ) ) {
-            if ( Presets[i].resample >= 0 )
-                (void) lame_set_out_samplerate( gfp, Presets[i].resample );
-            if ( Presets[i].highpass_freq >= 0 )
-                lame_set_highpassfreq(gfp,Presets[i].highpass_freq),
-                lame_set_highpasswidth(gfp,0);
-            lame_set_lowpassfreq(gfp,Presets[i].lowpass_freq);
-            lame_set_lowpasswidth(gfp,Presets[i].lowpass_width);
-            lame_set_no_short_blocks( gfp, Presets[i].no_short_blocks );
-            lame_set_quality        ( gfp, Presets[i].quality         );
-            lame_set_mode           ( gfp, Presets[i].mode            );
-            lame_set_brate(gfp,Presets[i].cbr);
-            lame_set_VBR_q(gfp,Presets[i].vbr_mode);
-            lame_set_VBR_min_bitrate_kbps(gfp,Presets[i].vbr_min);
-            lame_set_VBR_max_bitrate_kbps(gfp,Presets[i].vbr_max);
-            return 0;
-        }
-
-    fprintf( msgfp, "%sbasic-%s\n", presets_set_err_unk, preset_name );
-    return -1;
-}
 
 
 /* presets courtesy of r3mix
@@ -912,84 +774,62 @@ static int  presets_set_r3mix( lame_t gfp, const char* preset_name,
 extern void lame_set_msfix( lame_t gfp, double msfix );
 extern int lame_set_preset_expopts( lame_t gfp, int preset_expopts );
 
+
+
 /*  some presets thanks to Dibrom
  */
-static int  dm_presets( lame_t gfp, int fast, int cbr, const char* preset_name, const char* ProgramName )
+static int  presets_set( lame_t gfp, int fast, int cbr, const char* preset_name, const char* ProgramName )
 {
+    int mono = 0;
+
     if ((strcmp(preset_name, "help") == 0) && (fast < 1)
 	                                   && (cbr  < 1)) {
         lame_version_print ( stdout );
-        fprintf ( stdout,
-        "The --alt-preset switches are designed to provide the highest possible quality.\n"
-        "\n"
-        "They have for the most part been subject to and tuned via rigorous double blind\n"
-        "listening tests to verify and achieve this objective.\n"
-        "\n"
-        "These are continually updated to coincide with the latest developments that\n"
-        "occur and as a result should provide you with nearly the best quality\n"
-        "currently possible from LAME.\n"
-        "\n"
-        "To activate these presets:\n"
-        "\n"
-        "   For VBR modes (generally highest quality):\n"
-        "\n"
-        "     \"--alt-preset standard\" This preset should generally be transparent\n"
-        "                             to most people on most music and is already\n"
-        "                             quite high in quality.\n"
-        "\n"
-        "     \"--alt-preset extreme\" If you have extremely good hearing and similar\n"
-        "                             equipment, this preset will generally provide\n"
-        "                             slightly higher quality than the \"standard\"\n"
-        "                             mode.\n"
-        "\n"
-        "   For CBR 320kbps (highest quality possible from the --alt-preset switches):\n"
-        "\n"
-        "     \"--alt-preset insane\"  This preset will usually be overkill for most\n"
-        "                             people and most situations, but if you must\n"
-        "                             have the absolute highest quality with no\n"
-        "                             regard to filesize, this is the way to go.\n"
-        "\n"
-        "   For ABR modes (high quality per given bitrate but not as high as VBR):\n"
-        "\n"
-        "     \"--alt-preset <kbps>\"  Using this preset will usually give you good\n"
-        "                             quality at a specified bitrate. Depending on the\n"
-        "                             bitrate entered, this preset will determine the\n"
-        "                             optimal settings for that particular situation.\n"
-        "                             While this approach works, it is not nearly as\n"
-        "                             flexible as VBR, and usually will not attain the\n"
-        "                             same level of quality as VBR at higher bitrates.\n"  
-        "\n"
-        "The following options are also available for the corresponding profiles:\n"
-        "\n"
-        "   <fast>        standard\n"
-        "   <fast>        extreme\n"
-        "                 insane\n"
-        "          <cbr> (ABR Mode) - The ABR Mode is implied. To use it,\n"
-        "                             simply specify a bitrate. For example:\n"
-        "                             \"--alt-preset 185\" activates this\n"
-        "                             preset and uses 185 as an average kbps.\n" 
-        "\n"
-        "   \"fast\" - Enables the new fast VBR for a particular profile. The\n"
-        "            disadvantage to the speed switch is that often times the\n"
-        "            bitrate will be slightly higher than with the normal mode\n"
-        "            and quality may be slightly lower also.\n"
-        "\n"
-        "   \"cbr\"  - If you use the ABR mode (read above) with a significant\n"
-        "            bitrate such as 80, 96, 112, 128, 160, 192, 224, 256, 320,\n"
-        "            you can use the \"cbr\" option to force CBR mode encoding\n"
-        "            instead of the standard abr mode. ABR does provide higher\n"
-        "            quality but CBR may be useful in situations such as when\n"
-        "            streaming an mp3 over the internet may be important.\n"
-        "\n"
-        "    For example:\n"
-        "\n"
-        " or \"%s --alt-preset fast standard <input file> <output file>\"\n"
-        " or \"%s --alt-preset cbr 192 <input file> <output file>\"\n"
-        " or \"%s --alt-preset 172 <input file> <output file>\"\n"
-        " or \"%s --alt-preset extreme <input file> <output file>\"\n"
-        , ProgramName, ProgramName, ProgramName, ProgramName);
+        presets_longinfo_dm( stdout );
         return -1;
     }
+
+
+
+    //aliases for compatibility with old presets
+
+    if (strcmp(preset_name, "phone") == 0) {
+        preset_name = "16";
+        mono = 1;
+    }
+    if ( (strcmp(preset_name, "phon+") == 0) ||
+         (strcmp(preset_name, "lw") == 0) ||
+         (strcmp(preset_name, "mw-eu") == 0) ||
+         (strcmp(preset_name, "sw") == 0)) {
+        preset_name = "24";
+        mono = 1;
+    }
+    if (strcmp(preset_name, "mw-us") == 0) {
+        preset_name = "40";
+        mono = 1;
+    }
+    if (strcmp(preset_name, "voice") == 0) {
+        preset_name = "56";
+        mono = 1;
+    }
+    if (strcmp(preset_name, "fm") == 0) {
+        preset_name = "112";
+    }
+    if ( (strcmp(preset_name, "radio") == 0) ||
+         (strcmp(preset_name, "tape") == 0)) {
+        preset_name = "112";
+    }
+    if (strcmp(preset_name, "hifi") == 0) {
+        preset_name = "160";
+    }
+    if (strcmp(preset_name, "cd") == 0) {
+        preset_name = "192";
+    }
+    if (strcmp(preset_name, "studio") == 0) {
+        preset_name = "256";
+    }
+
+
 
     if (strcmp(preset_name, "standard") == 0) {
 
@@ -1027,6 +867,10 @@ static int  dm_presets( lame_t gfp, int fast, int cbr, const char* preset_name, 
             if (cbr == 1 )
                 lame_set_VBR(gfp, vbr_off);
 
+            if (mono == 1 ) {
+                lame_set_mode(gfp, MONO);
+            }
+
             return 0;
 
         }
@@ -1036,7 +880,7 @@ static int  dm_presets( lame_t gfp, int fast, int cbr, const char* preset_name, 
                            "\n"
                            "When using this mode you must enter a value between \"32\" and \"320\"\n"
                            "\n"
-                           "For further information try: \"%s --alt-preset help\"\n"                  
+                           "For further information try: \"%s --preset help\"\n"                  
 
                            , ProgramName
                    );
@@ -1044,8 +888,10 @@ static int  dm_presets( lame_t gfp, int fast, int cbr, const char* preset_name, 
         }
     }
 
+
+
     lame_version_print ( stderr );
-    fprintf(stderr,"Error: You did not enter a valid profile and/or options with --alt-preset\n"
+    fprintf(stderr,"Error: You did not enter a valid profile and/or options with --preset\n"
                    "\n"
                    "Available profiles are:\n"
                    "\n"
@@ -1054,17 +900,17 @@ static int  dm_presets( lame_t gfp, int fast, int cbr, const char* preset_name, 
                    "                 insane\n"
                    "          <cbr> (ABR Mode) - The ABR Mode is implied. To use it,\n"
                    "                             simply specify a bitrate. For example:\n"
-                   "                             \"--alt-preset 185\" activates this\n"
+                   "                             \"--preset 185\" activates this\n"
                    "                             preset and uses 185 as an average kbps.\n" 
                    "\n"
                    "    Some examples:\n"
                    "\n"
-                   " or \"%s --alt-preset fast standard <input file> <output file>\"\n"
-                   " or \"%s --alt-preset cbr 192 <input file> <output file>\"\n"
-                   " or \"%s --alt-preset 172 <input file> <output file>\"\n"
-                   " or \"%s --alt-preset extreme <input file> <output file>\"\n"                   
+                   " or \"%s --preset fast standard <input file> <output file>\"\n"
+                   " or \"%s --preset cbr 192 <input file> <output file>\"\n"
+                   " or \"%s --preset 172 <input file> <output file>\"\n"
+                   " or \"%s --preset extreme <input file> <output file>\"\n"                   
                    "\n"
-                   "For further information try: \"%s --alt-preset help\"\n"                  
+                   "For further information try: \"%s --preset help\"\n"                  
 
                    , ProgramName, ProgramName, ProgramName, ProgramName, ProgramName
            );
@@ -1289,32 +1135,32 @@ char* const inPath, char* const outPath, char **nogap_inPath, int *num_nogap)
                     return -1;
 #endif
                 T_ELIF ("phone")
-                    if (presets_set_basic( gfp, token, stderr ) < 0)
+                    if (presets_set( gfp, 0, 0, token, ProgramName ) < 0)
                         return -1;
                     fprintf(stderr, "Warning: --phone is deprecated, use --preset phone instead!");
                     
                 T_ELIF ("voice")
-                    if (presets_set_basic( gfp, token, stderr ) < 0)
+                    if (presets_set( gfp, 0, 0, token, ProgramName ) < 0)
                         return -1;
                     fprintf(stderr, "Warning: --voice is deprecated, use --preset voice instead!");
                     
                 T_ELIF ("radio")
-                    if (presets_set_basic( gfp, token, stderr ) < 0)
+                    if (presets_set( gfp, 0, 0, token, ProgramName ) < 0)
                         return -1;
                     fprintf(stderr, "Warning: --radio is deprecated, use --preset radio instead!");
 
                 T_ELIF ("tape")
-                    if (presets_set_basic( gfp, token, stderr ) < 0)
+                    if (presets_set( gfp, 0, 0, token, ProgramName ) < 0)
                         return -1;
                 fprintf(stderr, "Warning: --tape is deprecated, use --preset tape instead!");
                     
                 T_ELIF ("cd")
-                    if (presets_set_basic( gfp, token, stderr ) < 0)
+                    if (presets_set( gfp, 0, 0, token, ProgramName ) < 0)
                         return -1;
                 fprintf(stderr, "Warning: --cd is deprecated, use --preset cd instead!");
                     
                 T_ELIF ("studio")
-                    if (presets_set_basic( gfp, token, stderr ) < 0)
+                    if (presets_set( gfp, 0, 0, token, ProgramName ) < 0)
                         return -1;
                 fprintf(stderr, "Warning: --studio is deprecated, use --preset studio instead!");
                     
@@ -1650,43 +1496,7 @@ char* const inPath, char* const outPath, char **nogap_inPath, int *num_nogap)
 #endif              
                     return -2;
                 
-                T_ELIF ("preset") {
-                    const char *xlatArg;
-                    int rval = -1;
-                    argUsed = 1;
-                    xlatArg = presets_alias( nextArg );
-                    
-                    if( strncmp( xlatArg, "basic-", 6 ) == 0 ) {
-                        rval = presets_set_basic( gfp, xlatArg + 6, stderr );
-                    }
-//                  else if (strncmp( xlatArg, "dm-", 3 ) == 0 ) {   // dm is no longer used, change to alt
-//                      rval = dm_presets( gfp, xlatArg + 3, stderr );
-//                  } 
-                    else if( strncmp( xlatArg, "r3mix", 5 ) == 0 ) {
-                        rval = presets_set_r3mix( gfp, xlatArg + 5, stderr );
-                    }
-                    else if( strcmp( xlatArg, "longhelp" ) == 0 ) {
-                                /* send explicitly requested help to stdout */
-                        presets_info_head( stdout );
-                        presets_longinfo( stdout );
-                    }
-                    else {
-                        if( strcmp( xlatArg, "help" ) == 0 ) {
-                            presets_info_head( stdout );
-                            presets_info( stdout );
-                        }
-                        else {
-                            fprintf( stderr, "\n%s%s\n", 
-                                     presets_set_err_unk, xlatArg );
-                            presets_info( stderr );
-                        }
-                    }
-                    if( rval < 0 ) {
-                        return -1;
-                    }
-                }
-
-                T_ELIF ("alt-preset")
+                T_ELIF2 ("preset", "alt-preset")
                     argUsed = 1;
                     {
                     int fast = 0, cbr = 0;
@@ -1703,7 +1513,7 @@ char* const inPath, char* const outPath, char **nogap_inPath, int *num_nogap)
                         nextArg = i+argUsed < argc  ?  argv[i+argUsed]  :  "";
                     }
 
-                    if (dm_presets ( gfp, fast, cbr, nextArg, ProgramName ) < 0)
+                    if (presets_set ( gfp, fast, cbr, nextArg, ProgramName ) < 0)
                     return -1;
                 }
 
