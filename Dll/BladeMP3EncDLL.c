@@ -804,7 +804,7 @@ __declspec(dllexport) BE_ERR beWriteVBRHeader(LPCSTR lpszFileName)
 	BE_ERR beResult	=BE_ERR_SUCCESSFUL;
 
 	// Do we have to write the VBR tag?
-	if (	 lame_get_bWriteVbrTag( gfp )
+	if (	 lame_get_bWriteVbrTag( gfp ) )
 	{
 
 		// Try to open the file
