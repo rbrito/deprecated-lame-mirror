@@ -26,6 +26,6 @@
 
 int	BitrateIndex(int, int);
 void	disable_FPE(void);
-uint16_t calculateCRC(unsigned char *buffer, int size, uint16_t crc);
+uint16_t calculateCRC(unsigned char *p, int size, uint16_t crc);
 
 #endif /* LAME_UTIL_H */

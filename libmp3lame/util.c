@@ -44,8 +44,8 @@
 #include "asmstuff.h"
 #endif
 
-#include "util.h"
 #include "encoder.h"
+#include "util.h"
 
 /***********************************************************************
 *
