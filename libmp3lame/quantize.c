@@ -278,7 +278,7 @@ init_bitalloc(
 
 	for (i = 0; i < gi->psymax; i++)
 	    gfc->pseudohalf[i] = j;
-	return 1;
+	return gi->psymax;
     }
 
     memset(&gi->l3_enc, 0, sizeof(int)*576);
@@ -742,7 +742,7 @@ CBR_1st_bitalloc (
     FLOAT distort[SFBMAX], l3_xmin[SFBMAX], xrpow[576], bestNoise;
     int current_method, age;
 
-    if (!init_bitalloc(gfc, gi, xrpow) || gi->psymax == 0)
+    if (!init_bitalloc(gfc, gi, xrpow))
 	return; /* digital silence */
 
     gi->global_gain = gfc->OldValue[ch];
@@ -1409,7 +1409,7 @@ VBR_iteration_loop(lame_global_flags *gfp, III_psy_ratio ratio[2][2])
 	for (gr = 0; gr < gfc->mode_gr; gr++) {
 	    for (ch = 0; ch < gfc->channels_out; ch++) {
 		gr_info *gi = &gfc->l3_side.tt[gr][ch];
-		if (init_bitalloc(gfc, gi, xrpow) == 0)
+		if (!init_bitalloc(gfc, gi, xrpow))
 		    continue; /* digital silence */
 
 		gi->global_gain = gfc->OldValue[ch];
