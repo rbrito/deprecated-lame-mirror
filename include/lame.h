@@ -479,7 +479,7 @@ const /*@observer@*/ char*  CDECL get_lame_url           ( void );
 
 /*
  * OPTIONAL:
- * get the version numers in numerical form.
+ * get the version numbers in numerical form.
  */
 typedef struct {
     /* generic LAME version */
