@@ -421,38 +421,39 @@ lame_get_free_format( const lame_global_flags*  gfp )
 }
 
 
-/* Perform ReplayGain analysis on the input data. */
+
+/* Perform ReplayGain analysis */
 int
-lame_set_ReplayGain_input( lame_global_flags*  gfp,
-                           int                 ReplayGain_input )
+lame_set_findReplayGain( lame_global_flags*  gfp,
+                         int                 findReplayGain )
 {
-    /* default = 1 (enabled) */
+    /* default = 0 (disabled) */
 
     /* enforce disable/enable meaning, if we need more than two values
        we need to switch to an enum to have an apropriate representation
        of the possible meanings of the value */
-    if ( 0 > ReplayGain_input || 1 < ReplayGain_input )
+    if ( 0 > findReplayGain || 1 < findReplayGain )
         return -1;
 
-    gfp->ReplayGain_input = ReplayGain_input;
+    gfp->findReplayGain = findReplayGain;
 
     return 0;
 }
 
 int
-lame_get_ReplayGain_input( const lame_global_flags*  gfp )
+lame_get_findReplayGain( const lame_global_flags*  gfp )
 {
-    assert( 0 <= gfp->ReplayGain_input && 1 >= gfp->ReplayGain_input );
+    assert( 0 <= gfp->findReplayGain && 1 >= gfp->findReplayGain);
 
-    return gfp->ReplayGain_input;
+    return gfp->findReplayGain;
 }
 
 
-/* Decode on the fly, perform ReplayGain analysis on the decoded data
-   and find the peak sample. */
+/* Decode on the fly. Find the peak sample. If ReplayGain analysis is 
+   enabled then perform it on the decoded data. */
 int
-lame_set_ReplayGain_decode( lame_global_flags*  gfp,
-                            int                 ReplayGain_decode )
+lame_set_decode_on_the_fly( lame_global_flags*  gfp,
+                            int                 decode_on_the_fly )
 {
 #ifndef DECODE_ON_THE_FLY
     return -1;
@@ -462,54 +463,75 @@ lame_set_ReplayGain_decode( lame_global_flags*  gfp,
     /* enforce disable/enable meaning, if we need more than two values
        we need to switch to an enum to have an apropriate representation
        of the possible meanings of the value */
-    if ( 0 > ReplayGain_decode || 1 < ReplayGain_decode )
+    if ( 0 > decode_on_the_fly || 1 < decode_on_the_fly )
         return -1;
 
-    gfp->ReplayGain_decode = ReplayGain_decode;
+    gfp->decode_on_the_fly = decode_on_the_fly;
 
     return 0;
 #endif
 }
 
 int
-lame_get_ReplayGain_decode( const lame_global_flags*  gfp )
+lame_get_decode_on_the_fly( const lame_global_flags*  gfp )
 {
-    assert( 0 <= gfp->ReplayGain_decode && 1 >= gfp->ReplayGain_decode );
+    assert( 0 <= gfp->decode_on_the_fly && 1 >= gfp->decode_on_the_fly );
 
-    return gfp->ReplayGain_decode;
+    return gfp->decode_on_the_fly;
 }
 
-
-/* find the peak sample. 
-   DEPRECATED: now does the same as lame_set_ReplayGain_decode() */
+/* DEPRECATED. same as lame_set_decode_on_the_fly() */
 int
 lame_set_findPeakSample( lame_global_flags*  gfp,
-                         int                 findPeakSample )
+                           int                 arg )
 {
-#ifndef DECODE_ON_THE_FLY
-    return -1;
-#else
-    /* default = 0 (disabled) */
-
-    /* enforce disable/enable meaning, if we need more than two values
-       we need to switch to an enum to have an apropriate representation
-       of the possible meanings of the value */
-    if ( 0 > findPeakSample || 1 < findPeakSample )
-        return -1;
-
-    gfp->findPeakSample = findPeakSample;
-
-    return 0;
-#endif
+    return lame_set_decode_on_the_fly(gfp, arg);
 }
 
 int
 lame_get_findPeakSample( const lame_global_flags*  gfp )
 {
-    assert( 0 <= gfp->findPeakSample && 1 >= gfp->findPeakSample );
-
-    return gfp->findPeakSample;
+    return lame_get_decode_on_the_fly(gfp);
 }
+
+/* DEPRECATED. same as lame_set_findReplayGain() */
+int
+lame_set_ReplayGain_input( lame_global_flags*  gfp,
+                           int                 arg )
+{
+    return lame_set_findReplayGain(gfp, arg);
+}
+
+int
+lame_get_ReplayGain_input( const lame_global_flags*  gfp )
+{
+    return lame_get_findReplayGain(gfp);
+}
+
+/* DEPRECATED. same as lame_set_decode_on_the_fly() &&
+   lame_set_findReplayGain() */
+int
+lame_set_ReplayGain_decode( lame_global_flags*  gfp,
+                           int                 arg )
+{
+    if( lame_set_decode_on_the_fly(gfp, arg) < 0 ||
+        lame_set_findReplayGain(gfp, arg) < 0)
+	return -1;
+    else 
+        return 0;
+}
+
+int
+lame_get_ReplayGain_decode( const lame_global_flags*  gfp )
+{
+    if (lame_get_decode_on_the_fly(gfp) > 0 &&
+        lame_get_findReplayGain(gfp) > 0)
+	return 1;
+    else
+        return 0;
+}
+
+
 
 
 /* message handlers */
@@ -1730,20 +1752,6 @@ lame_get_PeakSample( const lame_global_flags*  gfp )
 {
     lame_internal_flags *gfc = gfp->internal_flags;
     return (float)gfc->PeakSample;
-}
-
-int
-lame_get_decode_on_the_fly( const lame_global_flags* gfp )
-{
-    lame_internal_flags *gfc = gfp->internal_flags;
-    return gfc->decode_on_the_fly; 
-}
-
-int
-lame_get_findReplayGain( const lame_global_flags* gfp )
-{
-    lame_internal_flags *gfc = gfp->internal_flags;
-    return gfc->findReplayGain; 
 }
 
 int

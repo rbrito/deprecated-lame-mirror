@@ -48,9 +48,8 @@ struct lame_global_struct {
   int mode_fixed;             /* ignored                                     */
   int force_ms;               /* force M/S mode.  requires mode=1            */
   int free_format;            /* use free format? default=0                  */
-  int ReplayGain_input;       /* perform analysis on input data? default=0   */
-  int ReplayGain_decode;      /* perfrom analysys on decoded data? default=0 */
-  int findPeakSample;         /* find peak sample? default=0                 */
+  int findReplayGain;         /* find the RG value? default=0		     */
+  int decode_on_the_fly;      /* decode on the fly? default=0                */
 
   /*
    * set either brate>0  or compression_ratio>0, LAME will compute

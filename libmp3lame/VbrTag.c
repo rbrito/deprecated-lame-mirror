@@ -596,7 +596,7 @@ int PutLameVBR(lame_global_flags *gfp, FILE *fpStream, uint8_t *pbtStreamBuffer,
 
 
 	/* ReplayGain */
-	if (gfc->findReplayGain) { 
+	if (gfp->findReplayGain) { 
 	  if (gfc->RadioGain > 0x1FE)
 	    gfc->RadioGain = 0x1FE;
 	  if (gfc->RadioGain < -0x1FE)
@@ -614,7 +614,7 @@ int PutLameVBR(lame_global_flags *gfp, FILE *fpStream, uint8_t *pbtStreamBuffer,
 	}
 
         /* peak sample */	
-        if(gfp->findPeakSample)
+        if(gfc->findPeakSample)
           nPeakSignalAmplitude = abs((int)((((FLOAT8)gfc->PeakSample) / 32767.0 ) * pow(2,23) +.5));
 
 	/*nogap */

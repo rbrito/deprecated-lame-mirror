@@ -497,13 +497,12 @@ struct lame_internal_flags {
   int nogap_total;
   int nogap_current;  
 
-  int findReplayGain;
   int RadioGain;
   int AudiophileGain;
 
   replaygain_t *rgdata;
 
-  int decode_on_the_fly;
+  int findPeakSample;
   sample_t PeakSample;
   int noclipGainChange;  /* gain change required for preventing clipping */
   FLOAT noclipScale;     /* user-specified scale factor required for preventing clipping */

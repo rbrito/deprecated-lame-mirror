@@ -265,6 +265,32 @@ since most MP3 decoders will truncate data which decodes to values
 greater than 32768.
 .PD
 .TP
+.B --replaygain-fast
+Compute ReplayGain fast but slightly inaccurately.
+
+This computes "Radio" ReplayGain on the input data stream after
+user-specified volume-scaling and/or resampling.
+
+The ReplayGain analysis does
+.I not
+affect the content of a compressed data stream itself,
+it is a value stored in the header of a sound file.
+Information on the purpose of ReplayGain and the algorithms used is
+available from
+.B http://www.replaygain.org/.
+
+Only the "RadioGain" Replaygain value is computed,
+it is stored in the LAME tag.
+The analysis is performed with the reference
+volume equal to 89dB.
+Note: the reference volume has been changed from 83dB on transition from
+version 3.95 to 3.95.1.
+
+This switch is enabled by default.
+
+See also:
+.B --replaygain-accurate, --noreplaygain
+.TP
 .B --replaygain-accurate
 Compute ReplayGain more accurately and find the peak sample.
 
@@ -331,8 +357,16 @@ ReplayGain analysis is performed on the input data after user-specified
 volume scaling).
  
 See also:
-.B --clipdetect
+.B --replaygain-fast, --noreplaygain --clipdetect
 .RE
+.TP
+.B --noreplaygain
+Disable ReplayGain analysis.
+
+By default ReplayGain analysis is enabled. This switch disables it.
+
+See also:
+.B --replaygain-fast, --replaygain-accurate
 .TP
 .B --clipdetect
 Clipping detection.

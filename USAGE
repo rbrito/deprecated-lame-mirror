@@ -147,7 +147,9 @@ Operational:
 -o              mark the encoded file as a copy
 -S              don't print progress report, VBR histogram
 --strictly-enforce-ISO   comply as much as possible to ISO MPEG spec
---replaygain-accurate   compute RG more accurately and find the peak sample	
+--replaygain-fast   compute RG fast but slightly inaccurately (default)
+--replaygain-accurate   compute RG more accurately and find the peak sample
+--noreplaygain  disable ReplayGain analysis
 --clipdetect    enable --replaygain-accurate and print a message whether
                 clipping occurs and how far the waveform is from full scale
 
@@ -512,6 +514,16 @@ VBR mp3 files.  This will disable that feature.
 
 
 =======================================================================
+disable ReplayGain analysis
+=======================================================================
+--noreplaygain
+
+By default ReplayGain analysis is enabled. This switch disables it.
+
+See also: --replaygain-accurate, --replaygain-fast
+
+
+=======================================================================
 disable short blocks
 =======================================================================
 --noshort
@@ -622,7 +634,31 @@ in the build of LAME. (Note: if LAME is compiled without the MP3 decoder,
 ReplayGain analysis is performed on the input data after user-specified 
 volume scaling).
 
-See also: --clipdetect
+See also: --replaygain-fast, --noreplaygain, --clipdetect
+
+
+=======================================================================
+fast ReplayGain analysis
+=======================================================================
+--replaygain-fast
+
+Compute "Radio" ReplayGain of the input data stream after user-specified
+volume scaling and/or resampling.
+
+ReplayGain analysis does _not_ affect the content of a compressed data
+stream itself, it is a value stored in the header of a sound file. 
+Information on the purpose of ReplayGain and the algorithms used is 
+available from http://www.replaygain.org/
+
+Only the "Radio" ReplayGain value is computed. It is stored in the LAME tag. 
+The analysis is performed with the reference volume equal to 89dB. 
+Note: the reference volume has been changed from 83dB on transition
+from version 3.95 to 3.95.1.
+
+This switch is enabled by default.
+
+See also: --replaygain-accurate, --noreplaygain
+
 
 
 =======================================================================

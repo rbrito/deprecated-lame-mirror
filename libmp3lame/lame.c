@@ -652,31 +652,21 @@ lame_init_params(lame_global_flags * const gfp)
     /* do not compute ReplayGain values and do not find the peak sample
        if we can't store them */
     if (!gfp->bWriteVbrTag){
-	gfp->ReplayGain_input = 0;
-        gfp->ReplayGain_decode = 0;	
-        gfp->findPeakSample = 0;	
+        gfp->findReplayGain = 0;
+	gfp->decode_on_the_fly = 0;
+        gfc->findPeakSample = 0;
     }
 
-    
-    if (gfp->ReplayGain_decode || gfp->findPeakSample) {
-      gfc->decode_on_the_fly = 1;
-      gfp->ReplayGain_input = 0;
-      gfp->ReplayGain_decode = 1;
-      gfp->findPeakSample = 1;
-    }
+    if (gfp->decode_on_the_fly) 
+      gfc->findPeakSample = 1;
 
-
-    if (gfp->ReplayGain_decode || gfp->ReplayGain_input) 
-        gfc->findReplayGain = 1;
-
-
-    if (gfc->findReplayGain) {
+    if (gfp->findReplayGain) {
       if (InitGainAnalysis(gfc->rgdata, gfp->out_samplerate) == INIT_GAIN_ANALYSIS_ERROR)
         return -6;
     }
 
 #ifdef DECODE_ON_THE_FLY
-    if (gfc->decode_on_the_fly && !gfp->decode_only)
+    if (gfp->decode_on_the_fly && !gfp->decode_only)
       lame_decode_init();  /* initialize the decoder  */
 #endif
 
@@ -1466,7 +1456,7 @@ lame_encode_buffer_sample_t(lame_global_flags * gfp,
         fill_buffer(gfp, mfbuf, in_buffer, nsamples, &n_in, &n_out);
 
         /* compute ReplayGain of resampled input if requested */
-        if (gfp->ReplayGain_input) 
+        if (gfp->findReplayGain && !gfp->decode_on_the_fly) 
             if (AnalyzeSamples(gfc->rgdata, &mfbuf[0][gfc->mf_size], &mfbuf[1][gfc->mf_size], n_out, gfc->channels_out) == GAIN_ANALYSIS_ERROR) 
                 return -6;
 
@@ -2083,12 +2073,10 @@ lame_init_old(lame_global_flags * gfp)
     gfp->encoder_padding = 0;
     gfc->mf_size = ENCDELAY - MDCTDELAY; /* we pad input with this many 0's */
 
-    gfc->decode_on_the_fly = 0;
-    gfp->findPeakSample = 0;
+    gfp->findReplayGain = 0;
+    gfp->decode_on_the_fly = 0;
 
-    gfc->findReplayGain = 0;
-    gfp->ReplayGain_input = 1;
-    gfp->ReplayGain_decode = 0;
+    gfc->findPeakSample = 0;
 
     gfc->RadioGain = 0.0;
     gfc->AudiophileGain = 0.0;

@@ -167,6 +167,10 @@
     <td align="LEFT" nowrap>disable histogram display</td>
   </tr>
   <tr valign="TOP"> 
+    <td align="LEFT" nowrap><kbd><a href="#-noreplaygain">--noreplaygain</a></kbd></td>
+    <td align="LEFT" nowrap>disable ReplayGain analysis</td>
+  </tr>
+  <tr valign="TOP"> 
     <td align="LEFT" nowrap><kbd><a href="#-nores">--nores</a></kbd></td>
     <td align="LEFT" nowrap>disable bit reservoir</td>
   </tr>
@@ -207,8 +211,12 @@
     <td align="LEFT" nowrap>input file is raw pcm</td>
   </tr>
   <tr valign="TOP"> 
-    <td align="LEFT" nowrap><kbd><a href="#-replaygain">--replaygain-accurate</a></kbd></td>
+    <td align="LEFT" nowrap><kbd><a href="#-replaygain-accurate">--replaygain-accurate</a></kbd></td>
     <td align="LEFT" nowrap>compute ReplayGain more accurately and find the peak sample</td>
+  </tr>
+  <tr valign="TOP"> 
+    <td align="LEFT" nowrap><kbd><a href="#-replaygain-fast">--replaygain-fast</a></kbd></td>
+    <td align="LEFT" nowrap>compute ReplayGain fast but slightly inaccurately (default)</td>
   </tr>
   <tr valign="TOP"> 
     <td align="LEFT" nowrap><kbd><a href="#-resample">--resample</a></kbd></td>
@@ -459,7 +467,7 @@
     This option is not usable if the MP3 decoder was <b>explicitly</b>
     disabled in the build of LAME.<br>
     <br>
-    See also: <a href="#-replaygain">--replaygain-accurate</a>
+    See also: <a href="#-replaygain-accurate">--replaygain-accurate</a>
   <dt><br>
     <br>
     <hr width="50%" noshade align="center">
@@ -840,6 +848,21 @@
   <hr width="50%" noshade align="center">
   <br>
   <dl> </dl>
+  <dt><strong>* <kbd>--noreplaygain</kbd><a name="-noreplaygain">&nbsp;&nbsp;&nbsp;&nbsp;disable 
+    ReplayGain analysis</a></strong></dt>
+</dl>
+<dl> 
+  <dd> By default ReplayGain analysis is enabled. This switch disables it.<br>
+  <br>
+    See also: <a href="#-replaygain-accurate">--replaygain-accurate</a>,
+    <a href="#-replaygain-fast">--replaygain-fast</a>
+  <dt><br>
+  </dt>
+</dl>
+<dl> 
+  <hr width="50%" noshade align="center">
+  <br>
+  <dl> </dl>
   <dt><strong>* <kbd>--nores</kbd><a name="-nores">&nbsp;&nbsp;&nbsp;&nbsp;disable 
     bit reservoir</a></strong></dt>
 </dl>
@@ -999,7 +1022,7 @@
   <hr width="50%" noshade align="center">
   <br>
   <dl> </dl>
-  <dt><strong>* <kbd>--replaygain-accurate</kbd><a name="-replaygain">&nbsp;&nbsp;&nbsp;&nbsp;compute
+  <dt><strong>* <kbd>--replaygain-accurate</kbd><a name="-replaygain-accurate">&nbsp;&nbsp;&nbsp;&nbsp;compute
    ReplayGain more accurately and find the peak sample</a></strong></dt>
 </dl>
 <dl> 
@@ -1050,7 +1073,38 @@
     MP3 decoder, ReplayGain analysis is performed on the input data after
     user-specified volume scaling).<br>
     <br>
-    See also: <a href="#-clipdetect">--clipdetect</a>
+    See also: <a href="#-replaygain-fast">--replaygain-fast</a>, 
+    <a href="#-noreplaygain">--noreplaygain</a>, <a href="#-clipdetect">--clipdetect</a>
+  <dt><br>
+  </dt>
+</dl>
+<dl> 
+  <hr width="50%" noshade align="center">
+  <br>
+  <dl> </dl>
+  <dt><strong>* <kbd>--replaygain-fast</kbd><a name="-replaygain-fast">&nbsp;&nbsp;&nbsp;&nbsp;compute
+   ReplayGain fast but slightly inaccurately (default)</a></strong></dt>
+</dl>
+<dl> 
+  <dd>
+    Compute "Radio" ReplayGain on the input data stream after user-specified 
+    volume scaling and/or resampling.<br>
+    <br>    
+    ReplayGain analysis does <i>not</i> affect the content of a 
+    compressed data stream itself, it is a value stored in the header 
+    of a sound file. Information on the purpose of ReplayGain and the
+    algorithms used is available from 
+    <a href="http://www.replaygain.org/">http://www.replaygain.org/</a><br>
+    <br>
+    Only the "RadioGain" Replaygain value is computed. It is stored in the 
+    LAME tag. The analysis is  performed with the reference volume equal
+    to 89dB. Note: the reference volume has been changed from 83dB on 
+    transition from version 3.95 to 3.95.1.<br>
+    <br>
+    This switch is enabled by default.<br>
+    <br>
+    See also: <a href="#-replaygain-accurate">--replaygain-accurate</a>, 
+    <a href="#-noreplaygain">--noreplaygain</a>
   <dt><br>
   </dt>
 </dl>

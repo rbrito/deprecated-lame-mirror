@@ -460,7 +460,9 @@ int  long_help ( const lame_global_flags* gfp, FILE* const fp, const char* Progr
               );
 #ifdef DECODE_ON_THE_FLY
     fprintf ( fp,
+              "    --replaygain-fast   compute RG fast but slightly inaccurately (default)\n"
               "    --replaygain-accurate   compute RG more accurately and find the peak sample\n"
+              "    --noreplaygain  disable ReplayGain analysis\n"
               "    --clipdetect    enable --replaygain-accurate and print a message whether\n"
               "                    clipping occurs and how far the waveform is from full scale\n"
               );
@@ -1066,6 +1068,7 @@ char* const inPath, char* const outPath, char **nogap_inPath, int *num_nogap)
     int         nogap_tags=0;  /* set to 1 to use VBR tags in NOGAP mode */
     const char* ProgramName  = argv[0]; 
     int count_nogap=0;
+    int 	noreplaygain=0;  /* is RG explicitly disabled by the user */
 
     inPath [0] = '\0';   
     outPath[0] = '\0';
@@ -1331,13 +1334,24 @@ char* const inPath, char* const outPath, char **nogap_inPath, int *num_nogap)
                 T_ELIF ("freeformat")
                     lame_set_free_format(gfp,1);
 
+                T_ELIF ("replaygain-fast")
+                    lame_set_findReplayGain(gfp,1);
+		    
 #ifdef DECODE_ON_THE_FLY
                 T_ELIF ("replaygain-accurate")
-                    lame_set_ReplayGain_decode(gfp,1);
+                    lame_set_decode_on_the_fly(gfp,1);
+                    lame_set_findReplayGain(gfp,1);
+#endif
 
+                T_ELIF ("noreplaygain")
+		    noreplaygain = 1;
+                    lame_set_findReplayGain(gfp,0);
+		    
+
+#ifdef DECODE_ON_THE_FLY
                 T_ELIF ("clipdetect")
    		    print_clipping_info = 1;
-		    lame_set_ReplayGain_decode(gfp,1);
+		    lame_set_decode_on_the_fly(gfp,1);
 #endif
 
                 T_ELIF ("athshort")
@@ -1890,6 +1904,10 @@ char* const inPath, char* const outPath, char **nogap_inPath, int *num_nogap)
         }
     }
     
+    /* RG is enabled by default */
+    if (!noreplaygain) 
+      lame_set_findReplayGain(gfp,1);
+    
     /* disable VBR tags with nogap unless the VBR tags are forced */
     if (nogap && lame_get_bWriteVbrTag(gfp) && nogap_tags==0) {
       fprintf(stderr,"Note: Disabling VBR Xing/Info tag since it interferes with --nogap\n");
@@ -1932,7 +1950,7 @@ char* const inPath, char* const outPath, char **nogap_inPath, int *num_nogap)
     if (( input_format == sf_mp1 ||
           input_format == sf_mp2 ||
           input_format == sf_mp3) && 
-	  lame_get_ReplayGain_decode( gfp ) ){
+	  lame_get_decode_on_the_fly( gfp ) ){
 
         fprintf(stderr, "\nError: input cannot be MPEG when --replaygain-accurate is used\n"
 	    	        "\n--replaygain-accurate requires decoding of MPEG *output* on the fly which\n"
