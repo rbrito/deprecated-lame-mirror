@@ -254,11 +254,11 @@ static int apply_preset(lame_global_flags*  gfp, int bitrate, vbr_mode mode)
         {  96,  1,    1, 15300,  0,   0.93,  8,  -2, 0.0006 },
         { 112,  1,    1, 16000,  0,   0.93,  7,  -2, 0.0005 },
         { 128,  1,    1, 17500,  0,   0.93,  5,  -1, 0.0002 },
-        { 160,  1,    1, 18000,  0,   0.95,  4,  -1, 0.0 },
-        { 192,  1,    1, 19500,1.7,   0.97,  3,  -1, 0.0 },
-        { 224,  1,    1, 20000,1.25,  0.98,  2,  -1, 0.0 },
-        { 256,  0,    3, 20500,  0,   1.00,  1,   0, 0.0 },
-        { 320,  0,    3, 21000,  0,   1.00,  0,   0, 0.0 }
+        { 160,  1,    1, 18000,  0,   0.95,  4,   0, 0.0 },
+        { 192,  1,    1, 19500,1.7,   0.97,  3,   0, 0.0 },
+        { 224,  1,    1, 20000,1.25,  0.98,  2,   1, 0.0 },
+        { 256,  0,    3, 20500,  0,   1.00,  1,   1, 0.0 },
+        { 320,  0,    3, 21000,  0,   1.00,  0,   1, 0.0 }
     };
 
     int lower_range, lower_range_kbps, upper_range, upper_range_kbps;
@@ -285,6 +285,8 @@ static int apply_preset(lame_global_flags*  gfp, int bitrate, vbr_mode mode)
     if (mode != vbr) {
 	lame_set_use_largescalefac(gfp, abr_switch_map[r].large_scalefac);
 	lame_set_use_subblock_gain(gfp, abr_switch_map[r].large_scalefac);
+	lame_set_ATHcurve(gfp, abr_switch_map[r].ath_curve);
+	lame_set_ATHlower(gfp, (double)abr_switch_map[r].ath_lower);
 	if (gfp->internal_flags->quantcomp_method < 0)
 	    lame_set_quantcomp_method(gfp, abr_switch_map[r].method);
 	/*
@@ -309,8 +311,6 @@ static int apply_preset(lame_global_flags*  gfp, int bitrate, vbr_mode mode)
 	(void) lame_set_msfix( gfp, abr_switch_map[r].nsmsfix );
 
     lame_set_interChRatio(gfp, abr_switch_map[r].interch);
-    lame_set_ATHcurve(gfp, abr_switch_map[r].ath_curve);
-    lame_set_ATHlower(gfp, (double)abr_switch_map[r].ath_lower);
 
     if (gfp->internal_flags->nsPsy.attackthre < 0.0) {
 	if (bitrate >= 160)
@@ -815,7 +815,7 @@ lame_print_internals( const lame_global_flags * gfp )
     MSGF( gfc, "\t ^ shape: %g\n", gfp->ATHcurve);
     MSGF( gfc, "\t ^ level adjustement: %f (dB)\n", gfp->ATHlower );
     MSGF( gfc, "\t ^ adjust type: %d\n", gfc->ATH.use_adjust );
-    MSGF( gfc, "\t ^ adjust sensitivity power: %d\n", gfc->ATH.aa_sensitivity_p );
+    MSGF( gfc, "\t ^ adjust sensitivity power (dB): %f\n", gfp->athaa_sensitivity);
     MSGF( gfc, "\t ^ adapt threshold type: %d\n", gfp->athaa_loudapprox );
 
     i = (gfp->exp_nspsytune >> 2) & 63;

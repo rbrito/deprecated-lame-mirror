@@ -301,7 +301,7 @@ lame_set_mode( lame_global_flags*  gfp,
 {
     /* default: lame chooses based on compression ratio and input channels */
 
-    if( 0 > mode || MAX_INDICATOR <= mode )
+    if ((unsigned int)mode >= MAX_INDICATOR)
         return -1;  /* Unknown MPEG mode! */
 
     gfp->mode = mode;
@@ -312,7 +312,7 @@ lame_set_mode( lame_global_flags*  gfp,
 MPEG_mode
 lame_get_mode( const lame_global_flags*  gfp )
 {
-    assert( 0 <= gfp->mode && MAX_INDICATOR > gfp->mode );
+    assert((unsigned int)gfp->mode < MAX_INDICATOR);
 
     return gfp->mode;
 }
@@ -773,7 +773,7 @@ int
 lame_set_VBR( lame_global_flags*  gfp,
               vbr_mode            VBR )
 {
-    if( 0 > VBR || vbr_max_indicator <= VBR )
+    if ((unsigned int)VBR >= vbr_max_indicator)
         return -1;  /* Unknown VBR mode! */
 
     gfp->VBR = VBR;
@@ -784,8 +784,7 @@ lame_set_VBR( lame_global_flags*  gfp,
 vbr_mode
 lame_get_VBR( const lame_global_flags*  gfp )
 {
-    assert( 0 <= gfp->VBR && vbr_max_indicator > gfp->VBR );
-
+    assert((unsigned int)gfp->VBR < vbr_max_indicator);
     return gfp->VBR;
 }
 
@@ -1372,8 +1371,7 @@ lame_set_preset_expopts( lame_global_flags*  gfp, int preset_expopts )
 
     case 2: /* EXTREME */
 	(void) lame_set_ATHlower( gfp, 2.0 );
-	lame_set_athaa_sensitivity(
-	    gfp, db2pow(-8.0) * lame_get_athaa_sensitivity(gfp));
+	lame_set_athaa_sensitivity(gfp, lame_get_athaa_sensitivity(gfp) - 8.0);
 
 	lame_set_use_largescalefac(gfp, 1);
 	lame_set_VBR_q(gfp, 2);
@@ -1385,9 +1383,7 @@ lame_set_preset_expopts( lame_global_flags*  gfp, int preset_expopts )
 
     case 3: /* DM_RADIO, PORTABLE, DM_MEDIUM, MEDIUM, STANDARD */
 	(void) lame_set_ATHlower( gfp, 2.0 );
-	lame_set_athaa_sensitivity(
-	    gfp, db2pow(-8.0) * lame_get_athaa_sensitivity(gfp));
-
+	lame_set_athaa_sensitivity(gfp, lame_get_athaa_sensitivity(gfp) - 8.0);
 	lame_set_VBR_q(gfp, 3);
 	lame_set_ATHcurve(gfp, 2);
 	// modify sfb21 by 3.75 dB plus ns-treble=0
@@ -1478,7 +1474,6 @@ lame_set_preset( lame_global_flags*  gfp, int preset )
 	lame_set_quality(gfp, 5);
 	lame_set_lowpassfreq(gfp, 19000);
 	lame_set_mode(gfp, JOINT_STEREO);
-	lame_set_VBR_min_bitrate_kbps(gfp, 128);
 	return preset;
     }
     case EXTREME:
