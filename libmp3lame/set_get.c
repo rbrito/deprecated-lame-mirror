@@ -654,52 +654,31 @@ lame_get_disable_reservoir( const lame_global_flags*  gfp )
 
 /* Select a different "best quantization" function. default = 0 */
 int
-lame_set_experimentalX( lame_global_flags*  gfp,
-                        int                 experimentalX )
+lame_set_quantcomp_method( lame_global_flags*  gfp,
+			   int                 method )
 {
-    gfp->experimentalX = experimentalX;
+    gfp->internal_flags->quantcomp_method   =  method       & 15;
+    gfp->internal_flags->quantcomp_method_s = (method >> 4) & 15;
 
     return 0;
 }
 
 int
-lame_get_experimentalX( const lame_global_flags*  gfp )
+lame_get_quantcomp_method(const lame_global_flags*  gfp)
 {
-    return gfp->experimentalX;
+    return 
+	gfp->internal_flags->quantcomp_method
+	+ gfp->internal_flags->quantcomp_method_s * 16;
 }
 
 
-/* Another experimental option. For testing only. */
 int
-lame_set_experimentalY( lame_global_flags*  gfp,
-                        int                 experimentalY )
+lame_set_use_largescalefac( lame_global_flags*  gfp,
+			    int                 method)
 {
-    gfp->experimentalY = experimentalY;
+    gfp->internal_flags->use_scalefac_scale = method;
 
     return 0;
-}
-
-int
-lame_get_experimentalY( const lame_global_flags*  gfp )
-{
-    return gfp->experimentalY;
-}
-
-
-/* Another experimental option. For testing only. */
-int
-lame_set_experimentalZ( lame_global_flags*  gfp,
-                        int                 experimentalZ )
-{
-    gfp->experimentalZ += experimentalZ;
-
-    return 0;
-}
-
-int
-lame_get_experimentalZ( const lame_global_flags*  gfp )
-{
-    return gfp->experimentalZ;
 }
 
 
@@ -708,8 +687,6 @@ int
 lame_set_exp_nspsytune( lame_global_flags*  gfp,
                         int                 exp_nspsytune )
 {
-    /* default = 0 (disabled) */
-
     gfp->exp_nspsytune = exp_nspsytune;
 
     return 0;
@@ -1064,14 +1041,14 @@ int
 lame_set_ATHlower( lame_global_flags*  gfp,
                    float               ATHlower )
 {
-    gfp->ATHlower = -ATHlower / 10.0;
+    gfp->ATHlower = ATHlower;
     return 0;
 }
 
 float
 lame_get_ATHlower( const lame_global_flags*  gfp )
 {
-    return -gfp->ATHlower * 10.0;
+    return gfp->ATHlower;
 }
 
 
@@ -1126,43 +1103,14 @@ lame_get_athaa_sensitivity( const lame_global_flags*  gfp )
 }
 
 
-/* just for backward compatibility */
 int
-lame_set_cwlimit( lame_global_flags*  gfp,
-                  int                 cwlimit )
+lame_set_short_threshold( lame_global_flags*  gfp,
+			  float lrm, float s)
 {
+    lame_internal_flags *gfc = gfp->internal_flags;
+    gfc->nsPsy.attackthre   = lrm;
+    gfc->nsPsy.attackthre_s = s;
     return 0;
-}
-
-int
-lame_get_cwlimit( const lame_global_flags*  gfp )
-{
-    return 0;
-}
-
-
-
-/*
- * Allow blocktypes to differ between channels.
- * default:
- *  0 for jstereo => block types coupled
- *  1 for stereo  => block types may differ
- */
-int
-lame_set_allow_diff_short( lame_global_flags*  gfp,
-                           int                 allow_diff_short )
-{
-    gfp->short_blocks = 1;
-    return 0;
-}
-
-int
-lame_get_allow_diff_short( const lame_global_flags*  gfp )
-{
-    if ( gfp->short_blocks == short_block_allowed ) 
-        return 1; /* short blocks allowed to differ */
-    else 
-        return 0; /* not set, dispensed, forced or coupled */
 }
 
 
@@ -1253,67 +1201,6 @@ lame_set_use_mixed_blocks( lame_global_flags*  gfp,
     gfp->mixed_blocks = use_mixed_blocks;
     return 0;
 }
-
-/* Disable short blocks. */
-int
-lame_set_no_short_blocks( lame_global_flags*  gfp,
-                          int                 no_short_blocks )
-{
-    /* enforce disable/enable meaning, if we need more than two values
-       we need to switch to an enum to have an apropriate representation
-       of the possible meanings of the value */
-    if ( 0 > no_short_blocks || 1 < no_short_blocks )
-        return -1;
-
-    gfp->short_blocks = 
-        no_short_blocks ? short_block_dispensed : short_block_allowed;
-
-    return 0;
-}
-
-int
-lame_get_no_short_blocks( const lame_global_flags*  gfp )
-{
-    switch ( gfp->short_blocks ) {
-    default:
-    case short_block_not_set:   return -1;
-    case short_block_dispensed: return 1;
-    case short_block_allowed:
-    case short_block_forced:    return 0;
-    }
-}
-
-
-/* Force short blocks. */
-int
-lame_set_force_short_blocks( lame_global_flags*  gfp,
-                          int                 short_blocks )
-{
-    /* enforce disable/enable meaning, if we need more than two values
-       we need to switch to an enum to have an apropriate representation
-       of the possible meanings of the value */
-    if ( 0 > short_blocks || 1 < short_blocks )
-        return -1;
-
-    if (short_blocks == 1)
-        gfp->short_blocks = short_block_forced;
-    else if (gfp->short_blocks == short_block_forced) 
-        gfp->short_blocks = short_block_allowed;
-
-    return 0;
-}
-int
-lame_get_force_short_blocks( const lame_global_flags*  gfp )
-{
-    switch ( gfp->short_blocks ) {
-    default:
-    case short_block_not_set:   return -1;
-    case short_block_dispensed: 
-    case short_block_allowed:   return 0;
-    case short_block_forced:    return 1;
-    }
-}
-
 
 /*
  * Input PCM is emphased PCM
@@ -1432,6 +1319,325 @@ lame_get_totalframes( const lame_global_flags*  gfp )
 }
 
 
+/* Custom msfix hack */
+void
+lame_set_msfix( lame_global_flags*  gfp, double msfix )
+{
+    gfp->internal_flags->nsPsy.msfix = msfix;
+}
+
+int
+lame_set_preset_expopts( lame_global_flags*  gfp, int preset_expopts )
+{
+    lame_internal_flags *gfc = gfp->internal_flags;
+
+    /* default = 0 (disabled) */
+    gfc->nsPsy.attackthre   =  3.5;
+    gfc->nsPsy.attackthre_s = 15.0;
+
+    switch (preset_expopts)
+    {
+    case 1: /* INSANE */
+	lame_set_ATHtype(gfp, 2);
+	lame_set_quantcomp_method(gfp, 9*16 + 3);
+	break;
+
+    case 2: /* EXTREME */
+	lame_set_quantcomp_method(gfp, 4*16 + 2);
+	lame_set_athaa_sensitivity(
+	    gfp, db2pow(-8.0) * lame_get_athaa_sensitivity(gfp));
+
+	lame_set_use_largescalefac(gfp, 1);
+	lame_set_VBR_q(gfp, 2);
+	lame_set_ATHtype(gfp, 2);				
+	// modify sfb21 by 3 dB plus ns-treble=0                 
+	lame_set_exp_nspsytune(gfp, lame_get_exp_nspsytune(gfp) | (12 << 20));
+
+	break;
+
+    case 3: /* DM_RADIO, PORTABLE, DM_MEDIUM, MEDIUM, STANDARD */
+	(void) lame_set_ATHlower( gfp, 2.0 );
+	lame_set_athaa_sensitivity(
+	    gfp, db2pow(-8.0) * lame_get_athaa_sensitivity(gfp));
+
+	lame_set_use_largescalefac(gfp, 1);
+	lame_set_quantcomp_method(gfp, 0*16 + 0);
+	lame_set_VBR_q(gfp, 2);
+	lame_set_ATHtype(gfp, 4);
+	// modify sfb21 by 3.75 dB plus ns-treble=0
+	lame_set_exp_nspsytune(gfp, lame_get_exp_nspsytune(gfp) | (15 << 20));
+	break;
+    }
+    return 0;
+}
+
+#define         Min(A, B)       ((A) < (B) ? (A) : (B))
+#define         Max(A, B)       ((A) > (B) ? (A) : (B))
+
+
+
+
+static int apply_abr_preset(lame_global_flags*  gfp, int preset)
+{
+    int k; 
+
+    typedef struct {
+        int    abr_kbps;
+        int    large_scalefac;
+        int    method;
+        int    lowpass;
+        double nsmsfix;
+        double nsbass;
+        double scale;
+    } dm_abr_presets_t;
+
+
+    // Switch mappings for ABR mode
+    const dm_abr_presets_t abr_switch_map [] = {
+        // kbps Z method  lowpass nsmsfix ns-bass scale
+        {   8,  1,     6,  2000,  0   ,   -3,      0.85 }, //   8 //impossible to use in stereo
+        {  16,  1,     6,  3700,  0   ,   -3,      0.85 }, //  16
+        {  24,  1,     1,  3900,  0   ,   -3,      0.85 }, //  24
+        {  32,  1,     1,  5500,  0   ,   -3,      0.85 }, //  32
+        {  40,  1,     1,  7000,  0   ,   -3,      0.85 }, //  40
+        {  48,  1,     1,  7500,  0   ,   -3,      0.85 }, //  48
+        {  56,  1,     1, 10000,  0   ,   -3,      0.85 }, //  56
+        {  64,  1,     1, 11000,  0   ,   -3,      0.85 }, //  64
+        {  80,  1,     1, 13500,  0   ,   -3,      0.85 }, //  80
+        {  96,  1,     1, 15300,  0   ,   -4,      0.85 }, //  96
+        { 112,  1,     1, 16000,  0   ,   -5,      0.87 }, // 112
+        { 128,  1,     1, 17500,  0   ,   -6,      0.93 }, // 128
+        { 160,  1,     1, 18000,  0   ,   -4,      0.95 }, // 160
+        { 192,  1,     1, 19500,  1.7 ,   -2,      0.97 }, // 192
+        { 224,  1,     1, 20000,  1.25,    0,      0.98 }, // 224
+        { 256,  0,     3, 20500,  0   ,    0,      1.00 }, // 256
+        { 320,  0,     3, 21000,  0   ,    0,      1.00 }  // 320
+    };
+
+    // Variables for the ABR stuff
+    int actual_bitrate = preset;
+
+    int lower_range = 0, lower_range_kbps = 0,
+        upper_range = 0, upper_range_kbps = 0;
+    
+    int r; // r = resolved range
+
+    int b;
+
+
+
+
+    // We assume specified bitrate will be 320kbps
+    upper_range_kbps = abr_switch_map[16].abr_kbps;
+    upper_range = 16;
+    lower_range_kbps = abr_switch_map[16].abr_kbps;
+    lower_range = 16;
+ 
+    // Determine which significant bitrates the value specified falls between,
+    // if loop ends without breaking then we were correct above that the value was 320
+    for (b = 1; b < 17; b++) {
+        if ((Max(actual_bitrate, abr_switch_map[b].abr_kbps)) != actual_bitrate) {
+              upper_range_kbps = abr_switch_map[b].abr_kbps;
+              upper_range = b;
+              lower_range_kbps = abr_switch_map[b-1].abr_kbps;
+              lower_range = (b-1);
+              break; // We found upper range 
+        }
+    }
+
+    // Determine which range the value specified is closer to
+    if ((upper_range_kbps - actual_bitrate) > (actual_bitrate - lower_range_kbps))
+        r = lower_range;
+    else
+        r = upper_range;
+
+
+    lame_set_VBR(gfp, vbr_abr); 
+    lame_set_VBR_mean_bitrate_kbps(gfp, (actual_bitrate));
+    lame_set_VBR_mean_bitrate_kbps(gfp, Min(lame_get_VBR_mean_bitrate_kbps(gfp), 320)); 
+    lame_set_VBR_mean_bitrate_kbps(gfp, Max(lame_get_VBR_mean_bitrate_kbps(gfp), 8)); 
+    lame_set_brate(gfp, lame_get_VBR_mean_bitrate_kbps(gfp));
+
+    lame_set_use_largescalefac(gfp, abr_switch_map[r].large_scalefac);
+    lame_set_quantcomp_method(gfp, abr_switch_map[r].method);
+
+    lame_set_quality(gfp, 5);
+    lame_set_lowpassfreq(gfp, abr_switch_map[r].lowpass);
+    lame_set_mode(gfp, JOINT_STEREO);
+
+    if (abr_switch_map[r].nsmsfix > 0)
+	(void) lame_set_msfix( gfp, abr_switch_map[r].nsmsfix );
+
+    // ns-bass tweaks
+    if (abr_switch_map[r].nsbass != 0) {
+        k = (int)(abr_switch_map[r].nsbass * 4);
+        if (k < 0) k += 64;
+        lame_set_exp_nspsytune(gfp, lame_get_exp_nspsytune(gfp) | (k << 2));
+    }
+
+    // ABR seems to have big problems with clipping, especially at low bitrates
+    // so we compensate for that here by using a scale value depending on bitrate
+    if (abr_switch_map[r].scale != 1)
+        (void) lame_set_scale( gfp, abr_switch_map[r].scale );
+
+    lame_set_ATHtype(gfp, 2);
+
+    return preset;
+}
+
+
+
+
+
+int
+lame_set_preset( lame_global_flags*  gfp, int preset )
+{
+    gfp->preset = preset;
+    switch (preset) {
+    case DM_RADIO:
+    case DM_RADIO_FAST: {
+	lame_set_VBR(gfp, vbr_mtrh);
+
+	lame_set_preset_expopts(gfp, 3);
+	lame_set_quality(gfp, 4);
+	lame_set_lowpassfreq(gfp, 19000);
+	lame_set_mode(gfp, JOINT_STEREO);
+	lame_set_VBR_min_bitrate_kbps(gfp, 64);
+
+	//put in expopts later
+	lame_set_VBR_q(gfp, 3);
+	lame_set_experimentalY(gfp, 1);
+	lame_set_interChRatio(gfp, 0.0005);
+
+	return preset;
+    }
+    case PORTABLE:
+    case PORTABLE_FAST: {
+	lame_set_VBR(gfp, vbr_mtrh);
+
+	lame_set_preset_expopts(gfp, 3);
+	lame_set_quality(gfp, 4);
+	lame_set_lowpassfreq(gfp, 19000);
+	lame_set_mode(gfp, JOINT_STEREO);
+	lame_set_VBR_min_bitrate_kbps(gfp, 128);
+
+	//put in expopts later
+	lame_set_experimentalY(gfp, 1);
+	lame_set_substep( gfp, 1 );
+
+	return preset;
+    }
+    case DM_MEDIUM:
+    case DM_MEDIUM_FAST: {
+	lame_set_VBR(gfp, vbr_mtrh);
+
+	lame_set_preset_expopts(gfp, 3);
+	lame_set_quality(gfp, 5);
+	lame_set_lowpassfreq(gfp, 19000);
+	lame_set_mode(gfp, JOINT_STEREO);
+	lame_set_VBR_min_bitrate_kbps(gfp, 128);
+
+	//put in expopts later
+	lame_set_experimentalY(gfp, 1);
+
+	return preset;
+    }
+    case MEDIUM:
+    case MEDIUM_FAST: {
+	lame_set_VBR(gfp, vbr_mtrh);
+
+	lame_set_preset_expopts(gfp, 3);
+	lame_set_quality(gfp, 5);
+	lame_set_lowpassfreq(gfp, 18000);
+	lame_set_mode(gfp, JOINT_STEREO);
+	lame_set_VBR_min_bitrate_kbps(gfp, 64);
+	lame_set_athaa_sensitivity(gfp, -11);
+	lame_set_msfix(gfp, 3);
+	lame_set_VBR_q(gfp, 3);
+	lame_set_experimentalY(gfp, 1);
+	return preset;
+    }
+    case STANDARD:
+    case STANDARD_FAST: {
+	lame_set_VBR(gfp, vbr_mtrh);
+
+	lame_set_preset_expopts(gfp, 3);
+	lame_set_quality(gfp, 5);
+	lame_set_lowpassfreq(gfp, 19000);
+	lame_set_mode(gfp, JOINT_STEREO);
+	lame_set_VBR_min_bitrate_kbps(gfp, 128);
+	return preset;
+    }
+    case EXTREME:
+    case EXTREME_FAST: {
+	lame_set_VBR(gfp, vbr_mtrh);
+
+	lame_set_preset_expopts(gfp, 2);
+	lame_set_quality(gfp, 5);
+	lame_set_lowpassfreq(gfp, 19500);
+	lame_set_mode(gfp, JOINT_STEREO);
+	lame_set_VBR_min_bitrate_kbps(gfp, 128);
+
+	return preset;
+    }
+    case INSANE: {
+	lame_set_preset_expopts(gfp, 1);
+	lame_set_brate(gfp, 320);
+	lame_set_quality(gfp, 5);
+	lame_set_mode(gfp, JOINT_STEREO);
+	lame_set_lowpassfreq(gfp, 20500);
+	return preset;
+    }
+    case R3MIX: {
+	(void) lame_set_scale( gfp, 0.98 ); /* --scale 0.98*/
+
+	lame_set_exp_nspsytune(gfp, lame_get_exp_nspsytune(gfp) | (8 << 20));
+
+	lame_set_VBR(gfp,vbr_mtrh);
+	lame_set_VBR_q(gfp,1);
+	lame_set_quality( gfp, 3);
+	lame_set_lowpassfreq(gfp,19500);
+	lame_set_mode( gfp, JOINT_STEREO );
+	lame_set_ATHtype( gfp, 3 );
+	lame_set_VBR_min_bitrate_kbps(gfp,96);
+	return preset;
+    }
+    default:
+	break;
+    }
+
+    if ((preset >= 8) && (preset <=320))
+        return apply_abr_preset(gfp, preset);
+
+
+    return preset;
+}
+
+
+
+int 
+lame_set_asm_optimizations( lame_global_flags*  gfp, int optim, int mode)
+{
+    mode = (mode == 1? 1 : 0);
+    switch (optim){
+        case MMX: {
+            gfp->asm_optimizations.mmx = mode;
+            return optim;
+        }
+        case AMD_3DNOW: {
+            gfp->asm_optimizations.amd3dnow = mode;
+            return optim;
+        }
+        case SSE: {
+            gfp->asm_optimizations.sse = mode;
+            return optim;
+        }
+        default: return optim;
+    }
+}
+
+
+
 /*
 
 UNDOCUMENTED, experimental settings.  These routines are not prototyped
@@ -1482,120 +1688,52 @@ float lame_get_ms_sparse_high( lame_global_flags* gfp )
 
 
 
-/* Custom msfix hack */
-void
-lame_set_msfix( lame_global_flags*  gfp, double msfix )
-{
-    /* default = 0 */
-    gfp->msfix = msfix;
-}
-
+/* Another experimental option. For testing only. */
 int
-lame_set_preset_expopts( lame_global_flags*  gfp, int preset_expopts )
+lame_set_experimentalX( lame_global_flags*  gfp,
+                        int                 experimentalX )
 {
+    gfp->experimentalX = experimentalX;
 
-    lame_internal_flags *gfc = gfp->internal_flags;
-
-    gfc->presetTune.use = 1;
-
-    /* default = 0 (disabled) */
-    gfp->preset_expopts = preset_expopts;
-    gfc->nsPsy.attackthre   =  3.5;
-    gfc->nsPsy.attackthre_s = 15.0;
-
-    switch (preset_expopts)
-    {
-    case 1: /* INSANE */
-	lame_set_exp_nspsytune(gfp, lame_get_exp_nspsytune(gfp) | 2); // safejoint
-	lame_set_ATHtype(gfp, 2);
-
-	gfc->presetTune.ms_maskadjust = .5;
-
-	lame_set_experimentalX(gfp, 3);
-	gfc->quantcomp_type_s = 9;
-	break;
-
-    case 2: /* EXTREME */
-	lame_set_experimentalX(gfp, 2);
-	gfc->presetTune.quantcomp_adjust_mtrh = 9;
-	gfc->quantcomp_type_s = 4;
-	lame_set_athaa_sensitivity(
-	    gfp, db2pow(-8.0) * lame_get_athaa_sensitivity(gfp));
-
-	lame_set_experimentalZ(gfp, 1);
-	lame_set_VBR_q(gfp, 2);
-	lame_set_exp_nspsytune(gfp, lame_get_exp_nspsytune(gfp) | 2); // safejoint
-	lame_set_ATHtype(gfp, 2);				
-	// modify sfb21 by 3 dB plus ns-treble=0                 
-	lame_set_exp_nspsytune(gfp, lame_get_exp_nspsytune(gfp) | (12 << 20));
-
-	gfc->presetTune.ms_maskadjust = .5;
-	(void) lame_set_msfix( gfp, 2.13 );
-	break;
-
-    case 3: /* DM_RADIO, PORTABLE, DM_MEDIUM, MEDIUM, STANDARD */
-	gfc->quantcomp_type_s = 4;
-	gfc->presetTune.quantcomp_adjust_mtrh = 9;
-	(void) lame_set_ATHlower( gfp, -2 );
-	lame_set_athaa_sensitivity(
-	    gfp, db2pow(-8.0) * lame_get_athaa_sensitivity(gfp));
-
-	lame_set_experimentalZ(gfp, 1);
-	lame_set_experimentalX(gfp, 1);
-	lame_set_VBR_q(gfp, 2);
-	lame_set_exp_nspsytune(gfp, lame_get_exp_nspsytune(gfp) | 2); // safejoint
-	(void) lame_set_msfix( gfp, 2.13 );
-	lame_set_ATHtype(gfp, 4);
-	// modify sfb21 by 3.75 dB plus ns-treble=0                 
-	lame_set_exp_nspsytune(gfp, lame_get_exp_nspsytune(gfp) | (15 << 20));
-	gfc->presetTune.ms_maskadjust = .5;
-	break;
-    default:
-	/* ABR */
-	gfc->presetTune.use = 0;
-	gfc->quantcomp_type_s = 0;
-    }
     return 0;
 }
 
 int
-lame_set_preset_notune( lame_global_flags*  gfp, int preset_notune )
+lame_get_experimentalX( const lame_global_flags*  gfp )
 {
-    lame_internal_flags *gfc = gfp->internal_flags;
+    return gfp->experimentalX;
+}
 
-    gfc->presetTune.use = 0;  // Turn off specialized preset tunings
+
+
+/* Another experimental option. For testing only. */
+int
+lame_set_experimentalY( lame_global_flags*  gfp,
+                        int                 experimentalY )
+{
+    gfp->experimentalY = experimentalY;
 
     return 0;
 }
 
-
 int
-lame_set_preset( lame_global_flags*  gfp, int preset )
+lame_get_experimentalY( const lame_global_flags*  gfp )
 {
-    extern int apply_preset();
-    gfp->preset = preset;
-    return apply_preset(gfp, preset);
+    return gfp->experimentalY;
 }
 
-
-
-int 
-lame_set_asm_optimizations( lame_global_flags*  gfp, int optim, int mode)
+/* Another experimental option. For testing only. */
+int
+lame_set_experimentalZ( lame_global_flags*  gfp,
+                        int                 experimentalZ )
 {
-    mode = (mode == 1? 1 : 0);
-    switch (optim){
-        case MMX: {
-            gfp->asm_optimizations.mmx = mode;
-            return optim;
-        }
-        case AMD_3DNOW: {
-            gfp->asm_optimizations.amd3dnow = mode;
-            return optim;
-        }
-        case SSE: {
-            gfp->asm_optimizations.sse = mode;
-            return optim;
-        }
-        default: return optim;
-    }
+    gfp->experimentalZ += experimentalZ;
+
+    return 0;
+}
+
+int
+lame_get_experimentalZ( const lame_global_flags*  gfp )
+{
+    return gfp->experimentalZ;
 }

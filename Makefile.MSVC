@@ -391,7 +391,6 @@ lamelib_sources = \
 	libmp3lame/util.c \
 	libmp3lame/mpglib_interface.c \
 	libmp3lame/VbrTag.c \
-	libmp3lame/presets.c \
 	libmp3lame/version.c
 
 mpglib_sources = \

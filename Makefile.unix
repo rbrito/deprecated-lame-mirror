@@ -464,7 +464,6 @@ lib_sources = \
 	libmp3lame/mpglib_interface.c \
         libmp3lame/VbrTag.c \
         libmp3lame/version.c \
-        libmp3lame/presets.c \
         mpglib/common.c \
         mpglib/dct64_i386.c \
         mpglib/decode_i386.c \

@@ -141,10 +141,6 @@ SOURCE=.\newmdct.c
 # End Source File
 # Begin Source File
 
-SOURCE=.\presets.c
-# End Source File
-# Begin Source File
-
 SOURCE=.\psymodel.c
 # End Source File
 # Begin Source File
