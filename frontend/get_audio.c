@@ -297,7 +297,7 @@ int get_audio(lame_global_flags *gfp,short buffer[2][1152])
 
 int read_samples_ogg(lame_global_flags *gfp,FILE *musicin,short int mpg123pcm[2][1152],int stereo)
 {
-#ifdef HAVEVORBIS
+#ifdef HAVE_VORBIS
   int out=0;
 
   out=lame_decode_ogg_fromfile(musicin,mpg123pcm[0],mpg123pcm[1],&mp3input_data);
@@ -586,7 +586,7 @@ FILE * OpenSndFile(lame_global_flags *gfp, char *inPath)
       exit(1);
     }
 #endif
-#ifdef HAVEMPGLIB
+#ifdef HAVE_MPGLIB
     if ((musicin = fopen(lpszFileName, "rb")) == NULL) {
 	  fprintf(stderr,"Could not find \"%s\".\n", lpszFileName);
 	  exit(1);
@@ -601,7 +601,7 @@ FILE * OpenSndFile(lame_global_flags *gfp, char *inPath)
     gfp->in_samplerate=mp3input_data.samplerate;
     gfp->num_samples=mp3input_data.nsamp;
   }else if (input_format==sf_ogg) {
-#ifdef HAVEVORBIS
+#ifdef HAVE_VORBIS
     if ((musicin = fopen(lpszFileName, "rb")) == NULL) {
 	  fprintf(stderr,"Could not find \"%s\".\n", lpszFileName);
 	  exit(1);
@@ -1167,7 +1167,7 @@ FILE * OpenSndFile(lame_global_flags *gfp, char *inPath)
       exit(1);
     }
 #endif
-#ifdef HAVEMPGLIB
+#ifdef HAVE_MPGLIB
     if (-1==lame_decode_initfile(musicin,&mp3input_data)) {
       fprintf(stderr,"Error reading headers in mp3 input file %s.\n", inPath);
       exit(1);
@@ -1177,7 +1177,7 @@ FILE * OpenSndFile(lame_global_flags *gfp, char *inPath)
     gfp->in_samplerate=mp3input_data.samplerate;
     gfp->num_samples=mp3input_data.nsamp;
   }else if (input_format==sf_ogg) {
-#ifdef HAVEVORBIS
+#ifdef HAVE_VORBIS
     if (-1==lame_decode_ogg_initfile(musicin,&mp3input_data)) {
       fprintf(stderr,"Error reading headers in ogg input file %s.\n", inPath);
       exit(1);
@@ -1231,7 +1231,7 @@ FILE * OpenSndFile(lame_global_flags *gfp, char *inPath)
 
 
 
-#if defined(HAVEMPGLIB)
+#if defined(HAVE_MPGLIB)
 static int check_aid ( const char* header ) 
 {
     return  0 == strncmp ( header, "AiD\1", 4 );
@@ -1402,6 +1402,6 @@ int lame_decode_fromfile(FILE *fd, short pcm_l[], short pcm_r[],mp3data_struct *
   }
   return ret;
 }
-#endif /* defined(HAVEMPGLIB) */
+#endif /* defined(HAVE_MPGLIB) */
 
 /* end of get_audio.c */

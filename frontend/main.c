@@ -200,7 +200,7 @@ int main(int argc, char **argv)
 #endif
 
 
-#ifdef HAVEVORBIS
+#ifdef HAVE_VORBIS
   if (gf.ogg) {
     lame_encode_ogg_init(&gf);
     gf.VBR=vbr_off;            /* ignore lame's various VBR modes */

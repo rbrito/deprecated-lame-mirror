@@ -96,14 +96,17 @@
 /* Define if compiler has function prototypes */
 #undef PROTOTYPES
 
+/* have working GTK */
+#undef HAVE_GTK
+
 /* build with libsndfile support */
 #undef LIBSNDFILE
 
-/* build with hooks for analyzer */
-#undef ANALYSIS
+/* build without hooks for analyzer */
+#undef NOANALYSIS
 
 /* build with mpglib support */
-#undef HAVEMPGLIB
+#undef HAVE_MPGLIB
 
 /* build with layer 1 decoding */
 #undef USE_LAYER_1
@@ -112,7 +115,7 @@
 #undef USE_LAYER_2
 
 /* build with vorbis support */
-#undef HAVEVORBIS
+#undef HAVE_VORBIS
 
 /* work around a glibc bug */
 #undef __NO_MATH_INLINES

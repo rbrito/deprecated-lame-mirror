@@ -6,7 +6,7 @@
 
 /* LAME interface to libvorbis */
 
-#ifdef HAVEVORBIS
+#ifdef HAVE_VORBIS
 #include <time.h>
 #include "vorbis/codec.h"
 #include "vorbis/modes.h"

@@ -789,7 +789,7 @@ char *mp3buf, int mp3buf_size)
 {
   int ret;
   if (gfp->ogg) {
-#ifdef HAVEVORBIS
+#ifdef HAVE_VORBIS
     ret = lame_encode_ogg_frame(gfp,inbuf_l,inbuf_r,mp3buf,mp3buf_size);
 #else
     return -5; /* wanna encode ogg without vorbis */
@@ -1102,7 +1102,7 @@ int    lame_encode_flush (
     if (mp3buffer_size == 0) mp3buffer_size_remaining = 0;  
 
     if (gfp->ogg) {
-#ifdef HAVEVORBIS
+#ifdef HAVE_VORBIS
         /* ogg related stuff */
         imp3 = lame_encode_ogg_finish(gfp, mp3buffer, mp3buffer_size_remaining);
 #endif

@@ -4,7 +4,7 @@
 #include <config.h>
 #endif
 
-#ifdef HAVEMPGLIB
+#ifdef HAVE_MPGLIB
 
 #include <limits.h>
 #include <stdlib.h>
