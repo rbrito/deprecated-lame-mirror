@@ -88,12 +88,20 @@ void  freegfc ( lame_internal_flags* const gfc )   /* bit stream structure */
     free ( gfc );
 }
 
+
+
+/*those ATH formulas are returning
+their minimum value for input = -1*/
+
 FLOAT8 ATHformula_old(FLOAT8 f)
 {
   FLOAT8 ath;
   f /= 1000;  // convert to khz
   f  = Max(0.01, f);
   f  = Min(18.0, f);
+
+  if (f==-1)
+      f=3.3;
 
   /* from Painter & Spanias, 1997 */
   /* minimum: (i=77) 3.3kHz = -5db */
@@ -110,6 +118,9 @@ FLOAT8 ATHformula_GB(FLOAT8 f)
   f  = Max(0.01, f);
   f  = Min(18.0, f);
 
+  if (f==-1)
+      f=3.4;
+
   /* from Painter & Spanias, 1997 */
   /* modified by Gabriel Bouvigne to better fit to the reality */
   ath =    3.640 * pow(f,-0.8)
@@ -119,7 +130,7 @@ FLOAT8 ATHformula_GB(FLOAT8 f)
   return ath;
 }
 
-FLOAT8 ATHformula_GBauto(FLOAT8 f, float value)
+FLOAT8 ATHformula_GBauto(FLOAT8 f, FLOAT8 value)
 {
 /*this curve is designed for VBR:
 it adjusts from something close to Painter & Spanias
@@ -129,6 +140,9 @@ on V9 up to Bouvigne's formula for V0*/
   f /= 1000;  // convert to khz
   f  = Max(0.01, f);
   f  = Min(18.0, f);
+
+  if (f==-1)
+      f=3.4;
 
   ath =    3.640 * pow(f,-0.8)
          - 6.800 * exp(-0.6*pow(f-3.4,2.0))
@@ -143,6 +157,9 @@ FLOAT8 ATHformula_GBtweak(FLOAT8 f)
   f /= 1000;  // convert to khz
   f  = Max(0.01, f);
   f  = Min(18.0, f);
+
+  if (f==-1)
+      f=3.4;
 
   /* from Painter & Spanias, 1997 */
   /* modified by Gabriel Bouvigne to better fit to the reality */
@@ -211,6 +228,9 @@ FLOAT8  ATHformula_Frank( FLOAT8 freq )
     FLOAT8    freq_log;
     unsigned  index;
     
+    if (freq==-1)
+        freq=3300;
+
     if ( freq <    10. ) freq =    10.;
     if ( freq > 29853. ) freq = 29853.;
     
@@ -233,10 +253,11 @@ FLOAT8 ATHformula(FLOAT8 f,lame_global_flags *gfp)
     case 3:
       return ATHformula_GBtweak(f);
     case 4:
-      return ATHformula_GBauto(f,gfp->VBR_q);
+      if (!(gfp->VBR == vbr_off || gfp->VBR == vbr_abr)) //this case should be used with true vbr only
+        return ATHformula_GBauto(f,gfp->VBR_q);
     }
 
-  return ATHformula_Frank(f);
+  return ATHformula_GB(f);
 }
 
 /* see for example "Zwicker: Psychoakustik, 1982; ISBN 3-540-11401-7 */
