@@ -447,6 +447,7 @@ static int choose_table_short(int *ix, int *end, int * s)
 }
 
 
+
 static int count_bits_long(int ix[576], gr_info *gi)
 {
     int i, a1, a2;
@@ -509,7 +510,6 @@ static int count_bits_long(int ix[576], gr_info *gi)
 
 	while (scalefac_band.l[++scfb_anz] < i) 
 	    ;
-
 	index = subdv_table[scfb_anz].region0_count;
 	while (scalefac_band.l[index + 1] > i)
 	    index--;
@@ -523,6 +523,7 @@ static int count_bits_long(int ix[576], gr_info *gi)
 	a1 = scalefac_band.l[gi->region0_count + 1];
 	a2 = scalefac_band.l[index + gi->region0_count + 2];
 	gi->table_select[2] = choose_table(ix + a2, ix + i, &bits);
+
     } else {
 	gi->region0_count = 7;
 	/*gi->region1_count = SBPSY_l - 7 - 1;*/

@@ -352,6 +352,10 @@ void L3psycho_anal( short int *buffer[2],
         }
       }
     }
+
+    /**********************************************************************
+     *  compute energies
+     **********************************************************************/
     for (j=1; j < BLKSIZE/2; j++)
     {
       FLOAT re = (*wsamp_l)[BLKSIZE/2-j];
@@ -376,6 +380,8 @@ void L3psycho_anal( short int *buffer[2],
       energy_s[b][BLKSIZE_s/2]  = (*wsamp_s)[b][BLKSIZE_s/2];
       energy_s[b][BLKSIZE_s/2] *=  energy_s [b][BLKSIZE_s/2];
     }
+
+
 
     if (check_ms_stereo) {
       /* used for MS stereo criterion */

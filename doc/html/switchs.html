@@ -28,6 +28,10 @@
     <td align="LEFT" nowrap>downmix stereo file to mono</td>
   </tr>
   <tr valign="TOP"> 
+    <td align="LEFT" nowrap><kbd><a href="#-athonly">--athonly</a></kbd></td>
+    <td align="LEFT" nowrap>ATH only</td>
+  </tr>
+  <tr valign="TOP"> 
     <td align="LEFT" nowrap><kbd><a href="#b">-b</a></kbd></td>
     <td align="LEFT" nowrap>bitrate (8...320)</td>
   </tr>
@@ -40,6 +44,10 @@
     <td align="LEFT" nowrap>copyright</td>
   </tr>
   <tr valign="TOP"> 
+    <td align="LEFT" nowrap><kbd><a href="#d">-d</a></kbd></td>
+    <td align="LEFT" nowrap>block type control</td>
+  </tr>
+  <tr valign="TOP"> 
     <td align="LEFT" nowrap><kbd><a href="#e">-e</a></kbd></td>
     <td align="LEFT" nowrap>de-emphasis (<b>n</b>, 5, c)</td>
   </tr>
@@ -49,7 +57,7 @@
   </tr>
   <tr valign="TOP"> 
     <td align="LEFT" nowrap><kbd>-g</kbd></td>
-    <td align="LEFT" nowrap>turn on MP3x graphical frame analyser (might not be 
+    <td align="LEFT" nowrap>turn on MP3x graphical frame analyser (may not be 
       available on your release)</td>
   </tr>
   <tr valign="TOP"> 
@@ -57,8 +65,16 @@
     <td align="LEFT" nowrap>high quality</td>
   </tr>
   <tr valign="TOP"> 
+    <td align="LEFT" nowrap><kbd><a href="#-help">--help</a></kbd></td>
+    <td align="LEFT" nowrap> help</td>
+  </tr>
+  <tr valign="TOP"> 
     <td align="LEFT" nowrap><kbd><a href="#-highpass">--highpass</a></kbd></td>
     <td align="LEFT" nowrap> highpass filtering frequency in kHz</td>
+  </tr>
+  <tr valign="TOP"> 
+    <td align="LEFT" nowrap><kbd><a href="#-highpass">--highpass-width</a></kbd></td>
+    <td align="LEFT" nowrap> width of highpass filtering in kHz</td>
   </tr>
   <tr valign="TOP"> 
     <td align="LEFT" nowrap><kbd><a href="#k">-k</a></kbd></td>
@@ -69,6 +85,10 @@
     <td align="LEFT" nowrap> lowpass filtering frequency in kHz</td>
   </tr>
   <tr valign="TOP"> 
+    <td align="LEFT" nowrap><kbd><a href="#-lowpass-width">--lowpass-width</a></kbd></td>
+    <td align="LEFT" nowrap> width of lowpass filtering in kHz</td>
+  </tr>
+  <tr valign="TOP"> 
     <td align="LEFT" nowrap><kbd><a href="#m">-m</a></kbd></td>
     <td align="LEFT" nowrap>stereo mode (s, <b>j</b>, f, m)</td>
   </tr>
@@ -77,8 +97,16 @@
     <td align="LEFT" nowrap>mp3 input file</td>
   </tr>
   <tr valign="TOP"> 
+    <td align="LEFT" nowrap><kbd><a href="#-noath">--noath</a></kbd></td>
+    <td align="LEFT" nowrap>no ATH</td>
+  </tr>
+  <tr valign="TOP"> 
     <td align="LEFT" nowrap><kbd><a href="#-nohist">--nohist</a></kbd></td>
     <td align="LEFT" nowrap>disable histogram display</td>
+  </tr>
+  <tr valign="TOP"> 
+    <td align="LEFT" nowrap><kbd><a href="#-nores">--nores</a></kbd></td>
+    <td align="LEFT" nowrap>disable bit reservoir</td>
   </tr>
   <tr valign="TOP"> 
     <td align="LEFT" nowrap><kbd><a href="#-noshort">--noshort</a></kbd></td>
@@ -91,6 +119,11 @@
   <tr valign="TOP"> 
     <td align="LEFT" nowrap><kbd><a href="#p">-p</a></kbd></td>
     <td align="LEFT" nowrap>error protection</td>
+  </tr>
+  <tr valign="TOP"> 
+    <td align="LEFT" nowrap><kbd><a href="#-preset">--preset</a></kbd></td>
+    <td align="LEFT" nowrap>use built-in preset (phone, voice, fm, tape, hifi, 
+      cd, studio)</td>
   </tr>
   <tr valign="TOP"> 
     <td align="LEFT" nowrap><kbd><a href="#r">-r</a></kbd></td>
@@ -139,6 +172,17 @@
   <dt><br>
     <br>
   </dt>
+  <dt><strong>* <kbd>--athonly</kbd><a name="-athonly">&nbsp;&nbsp;&nbsp;&nbsp;ATH 
+    only</a></strong> </dt>
+</dl>
+<dl> 
+  <dd>This option causes LAME to ignore the output of the psy-model and only use 
+    masking from the ATH. Might be useful at very high bitrates or for testing 
+    the ATH.
+  <dt><br>
+  </dt>
+</dl>
+<dl> 
   <dt><strong>* <kbd>-b</kbd><a name="b">&nbsp;&nbsp;&nbsp;&nbsp;bitrate</a></strong> 
   </dt>
 </dl>
@@ -171,8 +215,8 @@
     <br>
     <i>note: If you own an mp3 hardware player build upon a MAS 3503 chip, you 
     must set maximum bitrate to no more than 224 kpbs.</i> 
-  <dt><br>
-  </dt>
+  <br>
+  
 </dl>
 <dl> 
   <dt><strong>* <kbd>-c</kbd><a name="c">&nbsp;&nbsp;&nbsp;&nbsp;copyright</a></strong> 
@@ -180,6 +224,13 @@
 </dl>
 <dl> 
   <dd>Mark the encoded file as being copyrighted. 
+  <dt><br>
+    <br>
+  <dt><strong>* <kbd>-d</kbd><a name="d">&nbsp;&nbsp;&nbsp;&nbsp;block type control</a></strong> 
+  </dt>
+</dl>
+<dl> 
+  <dd>Allows the left and right channels to use different block size types.
   <dt><br>
     <br>
     <strong>* <kbd>-e n/5/c</kbd><a name="e">&nbsp;&nbsp;&nbsp;&nbsp;de-emphasis</a></strong> 
@@ -215,7 +266,14 @@
   <dd> Enables specialized mid/side masking thresholds to be used in jstereo mode 
     and also enables a more accurate but slightly slower quantization formula. 
     It will sound better but is about 20% slower.<br>
-    Recommended setting.
+    Recommended setting. 
+  <dt><br>
+    <br>
+    <strong>* <kbd>--help</kbd><a name="-help">&nbsp;&nbsp;&nbsp;&nbsp;help</a></strong> 
+  </dt>
+</dl>
+<dl> 
+  <dd> Display a list of all available options. 
   <dt><br>
     <br>
     <strong>* <kbd>--highpass</kbd><a name="-highpass">&nbsp;&nbsp;&nbsp;&nbsp;highpass 
@@ -226,14 +284,22 @@
     will be cutoff. 
   <dt><br>
     <br>
+    <strong>* <kbd>--highpass-width</kbd><a name="-highpass-width">&nbsp;&nbsp;&nbsp;&nbsp;width 
+    of highpass filtering in kHz</a></strong> </dt>
+</dl>
+<dl> 
+  <dd> Set the width of the highpass filter. The default value is 15% of highpass 
+    frequency. 
+  <dt><br>
+    <br>
     <strong>* <kbd>-k</kbd><a name="k">&nbsp;&nbsp;&nbsp;&nbsp;full bandwidth</a></strong> 
   </dt>
 </dl>
 <dl> 
-  <dd> Tells the encoder to use full bandwidth. By default, the encoder uses a 
-    16kHz bandwidth up to 64kbps per channel, and full bandwidth at higher bitrates. 
-    Increasing the bandwidth from the default setting might produces ringing artefacts 
-    at low bitrates. Use with care! 
+  <dd> Tells the encoder to use full bandwidth. By default, the encoder uses some 
+    highpass filtering at low bitrates, in order to keep a good quality. Increasing 
+    the bandwidth from the default setting might produces ringing artefacts at 
+    low bitrates. Use with care! 
   <dt><br>
     <br>
     <strong>* <kbd>--lowpass</kbd><a name="-lowpass">&nbsp;&nbsp;&nbsp;&nbsp;lowpass 
@@ -242,6 +308,14 @@
 <dl> 
   <dd> Set a lowpass filtering frequency. Frequencies above the specified one 
     will be cutoff. 
+  <dt><br>
+    <br>
+    <strong>* <kbd>--lowpass-width</kbd><a name="-lowpass-width">&nbsp;&nbsp;&nbsp;&nbsp;width 
+    of lowpass filtering in kHz</a></strong></dt>
+</dl>
+<dl> 
+  <dd> Set the width of the lowpass filter. The default value is 15% of lowpass 
+    frequency. 
   <dt><br>
     <br>
     <strong>* <kbd>-m s/<b>j/</b>f/m</kbd><a name="m">&nbsp;&nbsp;&nbsp;&nbsp;stereo 
@@ -290,6 +364,15 @@
   </dt>
 </dl>
 <dl> 
+  <dt><strong>* <kbd>--noath</kbd><a name="-noath">&nbsp;&nbsp;&nbsp;&nbsp;no 
+    ATH</a></strong> </dt>
+</dl>
+<dl> 
+  <dd> Disable any use of the ATH for masking.
+  <dt><br>
+  </dt>
+</dl>
+<dl> 
   <dt><strong>* <kbd>--nohist</kbd><a name="-nohist">&nbsp;&nbsp;&nbsp;&nbsp;disable 
     histogram display</a></strong> </dt>
 </dl>
@@ -301,13 +384,22 @@
   </dt>
 </dl>
 <dl> 
+  <dt><strong>* <kbd>--nores</kbd><a name="-nores">&nbsp;&nbsp;&nbsp;&nbsp;disable 
+    bit reservoir</a></strong></dt>
+</dl>
+<dl> 
+  <dd> Disable the bit reservoir. Each frame will then become independent from 
+    previous ones, but the quality will be lower.
+  <dt><br>
+  </dt>
+</dl>
+<dl> 
   <dt><strong>* <kbd>--noshort</kbd><a name="-noshort">&nbsp;&nbsp;&nbsp;&nbsp;disable 
-    short blocks frames</a></strong> </dt>
+    short blocks frames</a></strong></dt>
 </dl>
 <dl> 
   <dd> Encode all frames using long blocks only. This could increase quality when 
-    encoding to very low bitrates, but can produce serious pre-echo artefacts.<br>
-    For expert users only 
+    encoding at very low bitrates, but can produce serious pre-echo artefacts. 
   <dt><br>
   </dt>
 </dl>
@@ -323,6 +415,13 @@
 </dl>
 <dl> 
   <dd> Turn on CRC error protection. 
+  <dt><br>
+    <br>
+    <strong>* <kbd>--preset phone/voice/fm/tape/hifi/cd/studio</kbd> <a name="-preset">&nbsp;&nbsp;&nbsp;&nbsp;use 
+    built-in preset</a></strong></dt>
+</dl>
+<dl> 
+  <dd> Use one of the built-in presets. 
   <dt><br>
     <br>
     <strong>* <kbd>-r</kbd><a name="r">&nbsp;&nbsp;&nbsp;&nbsp;input file is raw 
