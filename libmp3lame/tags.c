@@ -767,7 +767,7 @@ PutLameVBR(lame_t gfc, size_t nMusicLength, uint8_t *p, uint8_t *p0)
 	}
     }
     if (gfc->findPeakSample)
-	nPeakSignalAmplitude = abs((int)((((double)gfc->PeakSample) / 32767.0 ) * pow(2,23) +.5));
+	nPeakSignalAmplitude = (int)(fabs(gfc->PeakSample) / 32767.0 * pow(2.0, 23.0) + .5);
 
     p = CreateI4(p, nPeakSignalAmplitude);
     p = CreateI2(p, nRadioReplayGain);
@@ -805,7 +805,7 @@ PutLameVBR(lame_t gfc, size_t nMusicLength, uint8_t *p, uint8_t *p0)
 }
 
 /***********************************************************************
- * PutVbrTag: Write final VBR tag to the file
+ * lame_mp3_tags_fid: Write final VBR tag to the file
  * Paramters:
  *			fpStream: pointer to output file stream
  ***********************************************************************/
@@ -871,7 +871,7 @@ lame_mp3_tags_fid(lame_t gfc, FILE * fpStream)
     if (gfc->error_protection)
 	p -= 2;
 
-    /* Put Vbr tag */
+    /* Put VBR tag */
     CreateI4(p+ 4, FRAMES_FLAG+BYTES_FLAG+TOC_FLAG+VBR_SCALE_FLAG);
     CreateI4(p+ 8, gfc->frameNum);
     CreateI4(p+12, lFileSize);
