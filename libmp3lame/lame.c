@@ -483,8 +483,11 @@ lame_init_params(lame_t gfc)
 
     gfc->mode_gr = gfc->version+1;
     gfc->framesize = 576 * gfc->mode_gr;
-    gfc->encoder_delay = ENCDELAY;
+    gfc->mf_size = gfc->framesize - MDCTDELAY + ENCDELAY + FFTOFFSET;
+    gfc->mf_needed = gfc->mf_size + 32;
+    gfc->encoder_delay = ENCDELAY + gfc->framesize;
     gfc->resample_ratio = (double) gfc->in_samplerate / gfc->out_samplerate;
+    assert(MFSIZE >= gfc->mf_needed);
     /* at 160 kbps (MPEG-2/2.5)/ 320 kbps (MPEG-1) only
        Free format or CBR are possible, no ABR */
     if (gfc->mean_bitrate_kbps > 160 * gfc->mode_gr) {
@@ -820,8 +823,7 @@ lame_encode_buffer(lame_t gfc,
 	    in_buffer[i+nsamples] = buffer_r[i] * gfc->scale_right;
     }
 
-    ret = lame_encode_buffer_sample_t(gfc, in_buffer,
-				      nsamples, mp3buf, mp3buf_size);
+    ret = encode_buffer_sample(gfc, in_buffer, nsamples, mp3buf, mp3buf_size);
     free(in_buffer);
     return ret;
 }
@@ -856,8 +858,7 @@ lame_encode_buffer_float(lame_t gfc,
 	    in_buffer[i+nsamples] = buffer_r[i] * gfc->scale_right;
     }
 
-    ret = lame_encode_buffer_sample_t(gfc, in_buffer,
-				      nsamples, mp3buf, mp3buf_size);
+    ret = encode_buffer_sample(gfc, in_buffer, nsamples, mp3buf, mp3buf_size);
     free(in_buffer);
     return ret;
 }
@@ -896,17 +897,17 @@ lame_encode_buffer_int(lame_t gfc,
 	    in_buffer[i+nsamples] = buffer_r[i] * scale;
     }
 
-    ret = lame_encode_buffer_sample_t(gfc, in_buffer,
-				      nsamples, mp3buf, mp3buf_size);
+    ret = encode_buffer_sample(gfc, in_buffer, nsamples, mp3buf, mp3buf_size);
     free(in_buffer);
     return ret;
 }
 
 int
 lame_encode_buffer_long2(lame_t gfc,
-                   const long buffer_l[],
-                   const long buffer_r[],
-                   const int nsamples, unsigned char *mp3buf, const int mp3buf_size)
+			 const long buffer_l[],
+			 const long buffer_r[],
+			 const int nsamples, unsigned char *mp3buf,
+			 const int mp3buf_size)
 {
     int     ret, i;
     sample_t *in_buffer;
@@ -936,8 +937,7 @@ lame_encode_buffer_long2(lame_t gfc,
 	    in_buffer[i+nsamples] = buffer_r[i] * scale;
     }
 
-    ret = lame_encode_buffer_sample_t(gfc, in_buffer,
-				      nsamples, mp3buf, mp3buf_size);
+    ret = encode_buffer_sample(gfc, in_buffer, nsamples, mp3buf, mp3buf_size);
 
     free(in_buffer);
     return ret;
@@ -972,8 +972,7 @@ lame_encode_buffer_long(lame_t gfc,
 	    in_buffer[i+nsamples] = gfc->scale_right * buffer_r[i];
     }
 
-    ret = lame_encode_buffer_sample_t(gfc, in_buffer,
-				      nsamples, mp3buf, mp3buf_size);
+    ret = encode_buffer_sample(gfc, in_buffer, nsamples, mp3buf, mp3buf_size);
 
     free(in_buffer);
     return ret;
@@ -1001,8 +1000,7 @@ lame_encode_buffer_interleaved(lame_t gfc,
         in_buffer[i] = buffer[2 * i]    * gfc->scale_left;
         in_buffer[i+nsamples] = buffer[2 * i + 1]* gfc->scale_right;
     }
-    ret = lame_encode_buffer_sample_t(gfc, in_buffer,
-				      nsamples, mp3buf, mp3buf_size);
+    ret = encode_buffer_sample(gfc, in_buffer, nsamples, mp3buf, mp3buf_size);
     free(in_buffer);
     return ret;
 }
@@ -1065,7 +1063,7 @@ lame_encode_flush(lame_t gfc, unsigned char *mp3buf, int mp3buffer_size)
      * granule).  So we need to pad with 288 samples to make sure we can
      * encode the 576 samples we are interested in.
      */
-    int mf_samples_to_encode = gfc->mf_size + MDCTDELAY + POSTDELAY;
+    int mf_samples_to_encode = gfc->mf_size + ENCDELAY + POSTDELAY;
 
     if (gfc->Class_ID != LAME_ID)
         return -3;
@@ -1074,8 +1072,8 @@ lame_encode_flush(lame_t gfc, unsigned char *mp3buf, int mp3buffer_size)
 	/* send in a frame of 0 padding until all internal sample buffers
 	 * are flushed
 	 */
-	imp3 = lame_encode_buffer_sample_t(gfc, buffer, gfc->framesize,
-					   mp3buf, mp3buffer_size_remaining);
+	imp3 = encode_buffer_sample(gfc, buffer, gfc->framesize,
+				    mp3buf, mp3buffer_size_remaining);
 	if (imp3 < 0) return imp3;
 
 	if (mp3buffer_size)
@@ -1216,7 +1214,6 @@ lame_init(void)
     gfc->ATHlower = -1.0;
     gfc->ATHcurve = -1;
 
-    gfc->mf_size = ENCDELAY - MDCTDELAY; /* we pad input with this many 0's */
     gfc->encoder_padding = 0;
 
 #ifdef DECODE_ON_THE_FLY

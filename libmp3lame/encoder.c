@@ -236,27 +236,40 @@ init_gr_info(lame_t gfc, int gr, int ch)
  encode_mp3_frame()
    encode a single frame for Layer3
 
-                       gr 0            gr 1
-inbuf:           |--------------|---------------|-------------|
-MDCT output:  |--------------|---------------|-------------|
+mfbuf:               |--------576-------|--------576-------|--------576-------|
 
-FFT's                    <---------1024---------->
-                                         <---------1024-------->
+  |-------(pre.b)576+480----------|
+subband in           |---------(a)576+480------------|
+                                        |-----------(b)576+480----------|
 
+                     <-------> PQF delay = 240
 
-    inbuf = buffer of PCM data size=MP3 framesize
-    encoder acts on inbuf[ch][0], but output is delayed by MDCTDELAY
+          |---(prev.b)576----|
+subband out                  |------(a)576------|------(b)576------|
+
+MDCT in   |----------------1152-----------------|
+                             |----------------1152-----------------|
+MDCT out:          |--------576-------|--------576-------|
+
+                   <-> 288-240 = 48 = MDCTDELAY
+            <------> (1024-576)/2 = 224
+            <--------> FFTOFFSET = 272
+
+FFT's       |--------------1024--------------|
+                               |--------------1024--------------|
+
+            <---------------------- mf_needed -------------------------->
+
+    gfc->mfbuf = buffer of PCM data
+    encoder acts on mfbuf[ch][0], but output is delayed by MDCTDELAY
     so the MDCT coefficints are from inbuf[ch][-MDCTDELAY]
 
-    psy-model FFT has a 1 granule delay, so we feed it data for the 
-    next granule.
+    psy-model FFT has a 1 frame delay, so we feed it data for the next frame.
     FFT is centered over granule:  224+576+224
-    So FFT starts at:   576-224-MDCTDELAY
+    So FFT starts at:   framesize-224-MDCTDELAY = 1152(or 576)-224-48
 
-    MPEG2:  FFT ends at:  BLKSIZE+576-224-MDCTDELAY
-    MPEG1:  FFT ends at:  BLKSIZE+2*576-224-MDCTDELAY    (1904)
-
-    FFT starts at 576-224-MDCTDELAY (304)  = 576-FFTOFFSET
+    MPEG1: subband ends at:  272+576*2+480 = 1904
+    MPEG2: subband ends at:  272+576  +480 = 1328
 *************************************************************************/
 
 static int
@@ -266,60 +279,40 @@ encode_mp3_frame(lame_t gfc, unsigned char* mp3buf, int mp3buf_size)
     III_psy_ratio masking[2][MAX_CHANNELS];
     FLOAT sbsmpl[MAX_CHANNELS][1152];
 
-    if (!gfc->lame_encode_frame_init) {
-	/* prime the MDCT/polyphase filterbank with a short block */
-	sample_t primebuff[1152+576];
-	memset(gfc->sb_sample, 0, sizeof(gfc->sb_sample));
-	gfc->lame_encode_frame_init = 1;
-
-	/* polyphase filtering / mdct */
-	for ( ch = 0; ch < gfc->channels_out; ch++ ) {
-	    int i;
-	    memset(primebuff, 0, sizeof(FLOAT)*gfc->framesize);
-	    for (i = -48; i < 576; i++)
-		primebuff[gfc->framesize + i] = gfc->mfbuf[ch][i+1152];
-
-	    subband(gfc, primebuff-gfc->framesize, sbsmpl[ch]);
-	    memset(gfc->sb_sample[ch][0], 0, sizeof(gfc->sb_sample[0][0]));
-	    memcpy(gfc->sb_sample[ch][1], sbsmpl[ch],
-		   sizeof(gfc->sb_sample[0][0])*gfc->mode_gr);
-	}
-
-	/* check if we have enough data for FFT */
-	assert(gfc->mf_size>=(BLKSIZE+gfc->framesize*2-FFTOFFSET));
-	/* check if we have enough data for polyphase filterbank */
-	/* it needs 1152 samples + 286 samples ignored for one granule */
-	/*          1152+576+286 samples for two granules */
-	assert(gfc->mf_size >= 286+576+gfc->framesize);
-
-	if (gfc->psymodel)
-	    psycho_analysis(gfc, masking, sbsmpl);
-    }
-
-    /********************** padding *****************************/
-    /* padding method as described in 
-     * "MPEG-Layer3 / Bitstream Syntax and Decoding"
-     * by Martin Sieler, Ralph Sperschneider
-     *
-     * note: there is no padding for the very first frame
-     *
-     * Robert.Hegemann@gmx.de 2000-06-22
-     */
-    gfc->padding = FALSE;
-    if ((gfc->slot_lag -= gfc->frac_SpF) < 0) {
-	gfc->slot_lag += gfc->out_samplerate;
-	gfc->padding = TRUE;
-    }
-
     /* subband filtering in the next frame */
     /* to determine long/short swithcing in psymodel */
-    for ( ch = 0; ch < gfc->channels_out; ch++ )
+    for (ch = 0; ch < gfc->channels_out; ch++)
 	subband(gfc, gfc->mfbuf[ch], sbsmpl[ch]);
 
     if (gfc->psymodel)
 	psycho_analysis(gfc, masking, sbsmpl);
     else
 	memset(masking, 0, sizeof(masking));
+
+    if (gfc->frameNum++ == 0) {
+	/* very the first frame */
+	for (ch = 0; ch < gfc->channels_out; ch++) {
+	    memcpy(gfc->sb_sample[ch][1], sbsmpl[ch],
+		   sizeof(gfc->sb_sample[0][0])*gfc->mode_gr);
+#ifndef NOANALYSIS
+	    if (gfc->pinfo) {
+		/* copy data for MP3 frame analyzer */
+		int j;
+		for (j = 0; j < 1600-FFTOFFSET; j++)
+		    gfc->pinfo->pcmdata[ch][j+FFTOFFSET]
+			= gfc->mfbuf[ch][j];
+	    }
+#endif
+	}
+	return 0;
+    }
+
+    /* padding (by Robert.Hegemann at gmx.de 2000-06-22) */
+    gfc->padding = FALSE;
+    if ((gfc->slot_lag -= gfc->frac_SpF) < 0) {
+	gfc->slot_lag += gfc->out_samplerate;
+	gfc->padding = TRUE;
+    }
 
     /* mdct */
     for (ch = 0; ch < gfc->channels_out; ch++) {
@@ -333,7 +326,7 @@ encode_mp3_frame(lame_t gfc, unsigned char* mp3buf, int mp3buf_size)
 	for (gr = 0; gr < gfc->mode_gr; gr++)
 	    init_gr_info(gfc, gr, ch);
     }
-#if 0
+
     /* channel conversion */
     if (gfc->narrowStereo != 0.0) {
 	/* narrown_stereo */
@@ -347,7 +340,7 @@ encode_mp3_frame(lame_t gfc, unsigned char* mp3buf, int mp3buf_size)
 	    }
 	}
     }
-#endif
+
     if (gfc->mode_ext == MPG_MD_MS_LR) {
 	/* convert from L/R -> Mid/Side */
 	if (1
@@ -417,7 +410,6 @@ encode_mp3_frame(lame_t gfc, unsigned char* mp3buf, int mp3buf_size)
     /* copy mp3 bit buffer into array */
     mp3count = copy_buffer(gfc,mp3buf,mp3buf_size,1);
 
-    gfc->frameNum++;
     if (gfc->bWriteVbrTag && gfc->VBR != cbr)
 	AddVbrFrame(gfc);
 
@@ -544,11 +536,11 @@ fill_buffer(lame_t gfc, sample_t *in_buffer, int nsamples, int *n_in, int ch)
  * etc... depending on what type of data they are working with.  
  */
 int
-lame_encode_buffer_sample_t(
+encode_buffer_sample(
     lame_t gfc, sample_t buffer_lr[], int nsamples,
     unsigned char *mp3buf, const int mp3buf_size)
 {
-    int buf_remain = mp3buf_size, i, mf_needed;
+    int buf_remain = mp3buf_size, i;
     sample_t *in_buffer[2];
     unsigned char *p = mp3buf;
 
@@ -567,27 +559,16 @@ lame_encode_buffer_sample_t(
 				   + buffer_lr[i+nsamples]);
     }
 
-    /* some sanity checks */
-    /* check FFT will not use a negative starting offset */
-#if 576 < FFTOFFSET
-# error FFTOFFSET greater than 576: FFT uses a negative offset
-#endif
-#if ENCDELAY < MDCTDELAY
-# error ENCDELAY is less than MDCTDELAY, see encoder.h
-#endif
-
-    mf_needed = BLKSIZE + gfc->framesize - FFTOFFSET + 1152; /* amount needed for FFT */
-    mf_needed = Max(mf_needed, 480 + gfc->framesize + 1152); /* amount needed for MDCT/filterbank */
-    assert(MFSIZE >= mf_needed);
     assert(nsamples > 0);
 
     in_buffer[0] = buffer_lr;
     in_buffer[1] = buffer_lr + nsamples;
     do {
-	int n_in, n_out, ch = 0;
-	/* copy in new samples into mfbuf, with resampling
-	 * consume (n_in) samples from in_buffer,
+	int n_in, n_out, ch;
+	/* copy the new samples into mfbuf (with resampling if needed)
+	 * it consumes (n_in) samples from in_buffer,
 	 * and output (n_out) samples in gfc->mfbuf. */
+	ch = 0;
 	do {
 	    n_out = fill_buffer(gfc, in_buffer[ch], nsamples, &n_in, ch);
 	    in_buffer[ch] += n_in;
@@ -598,7 +579,7 @@ lame_encode_buffer_sample_t(
 
 	/* update mfbuf[] counters */
 	gfc->mf_size += n_out;
-	if (gfc->mf_size < mf_needed)
+	if (gfc->mf_size < gfc->mf_needed)
 	    break;
 
 	assert(gfc->mf_size <= MFSIZE);

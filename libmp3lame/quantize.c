@@ -1754,11 +1754,11 @@ set_frame_pinfo(lame_t gfc, III_psy_ratio ratio[MAX_GRANULES][MAX_CHANNELS])
     /* copy data for MP3 frame analyzer */
     for (ch = 0; ch < gfc->channels_out; ch++) {
 	int j;
-	for ( j = 0; j < FFTOFFSET; j++ )
+	for (j = 0; j < FFTOFFSET; j++)
 	    gfc->pinfo->pcmdata[ch][j]
 		= gfc->pinfo->pcmdata[ch][j+gfc->framesize];
-	for (j = FFTOFFSET; j < 1600; j++)
-	    gfc->pinfo->pcmdata[ch][j] = gfc->mfbuf[ch][j-FFTOFFSET];
+	for (j = 0; j < 1600-FFTOFFSET; j++)
+	    gfc->pinfo->pcmdata[ch][j+FFTOFFSET] = gfc->mfbuf[ch][j];
 	gfc->pinfo->athadjust[ch] = gfc->l3_side.tt[0][ch].ATHadjust;
     }
 

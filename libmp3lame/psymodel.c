@@ -1045,7 +1045,7 @@ mp3x display               <------LONG------>
 	if (ch < 2 && (current_is_short & (12+1+ch))) {
 	    for (sb = 0; sb < 3; sb++)
 		fft_short(gfc, wsamp_S[ch][sb],
-			  &gfc->mfbuf[ch][576/3*(3*(gr + gfc->mode_gr)+sb+1) - FFTOFFSET]);
+			  &gfc->mfbuf[ch][576/3*(3*gr+sb+1)]);
 	}
 	else if (ch == 2 && (current_is_short & 12)) {
 	    for (sb = 0; sb < 3; sb++) {
@@ -1133,8 +1133,7 @@ psycho_anal_ns(lame_t gfc, int gr, int numchn)
 	};
 	int b, i, j;
 	if (ch < 2)
-	    fft_long(gfc, wsamp_L[ch],
-		     gfc->mfbuf[ch] + 576*(gr + gfc->mode_gr) - FFTOFFSET);
+	    fft_long(gfc, wsamp_L[ch], &gfc->mfbuf[ch][576*gr]);
 	else if (ch == 2) {
 	    /* FFT data for mid and side channel is derived from L & R */
 	    for (j = 0; j < BLKSIZE; j++) {

@@ -37,7 +37,7 @@
  *
  * polyphase 256-16             (dec or enc)        = 240
  * mdct      256+32  (9*32)     (dec or enc)        = 288
- * total:    512+16
+ * total:    528
  *
  * My guess is that delay of polyphase filterbank is actualy 240.5
  * (there are technical reasons for this, see postings in mp3encoder).
@@ -45,37 +45,37 @@
  */
 
 /* 
- * ENCDELAY  The encoder delay.  
- *
- * Minimum allowed is MDCTDELAY (see below)
- *  
- * The first 96 samples will be attenuated, so using a value less than 96
- * will result in corrupt data for the first 96-ENCDELAY samples.
- *
- * suggested: 576
- * set to 1160 to sync with FhG.
+ * ENCDELAY. The extra encoder delay.
+ * very the 1st frame is always all zero, so the "normal" dealy is framesize.
+ * extra delay is for adjusting the delay to the other encoders.
  */
-#define ENCDELAY      (576*2)
-
-/*
- * make sure there is at least one complete frame after the
- * last frame containing real data
- *
- * Using a value of 288 would be sufficient for a 
- * a very sophisticated decoder that can decode granule-by-granule instead
- * of frame by frame.  But lets not assume this, and assume the decoder  
- * will not decode frame N unless it also has data for frame N+1
- *
- */
-/*#define POSTDELAY   288*/
-#define POSTDELAY   (gfc->mode_gr*576)
+#define ENCDELAY      0
 
 /* 
  * delay of the MDCT used in mdct.c
  * original ISO routines had a delay of 528!
  */
-#define MDCTDELAY     48  
-#define FFTOFFSET     (224+MDCTDELAY)
+#define MDCTDELAY     48
+#define FFTOFFSET     ((BLKSIZE-576)/2+MDCTDELAY)
+
+/* FFT sizes */
+#define BLKSIZE       1024
+#define HBLKSIZE      (BLKSIZE/2 + 1)
+#define BLKSIZE_s     256
+
+#define MFSIZE  (FFTOFFSET + 576*2*2 + 480 + ENCDELAY)
+
+/*
+ * make sure there is at least one complete frame after the
+ * last frame containing real data
+ *
+ * Using a value of 288(=576/2) would be sufficient for a 
+ * a very sophisticated decoder that can decode granule-by-granule instead
+ * of frame by frame.  But lets not assume this, and assume the decoder  
+ * will not decode frame N unless it also has data for frame N+1
+ *
+ */
+#define POSTDELAY	(gfc->framesize)
 
 /*
  * Most decoders, including the one we use, have a delay of 528 samples.  
@@ -98,13 +98,6 @@
 
 /* max scalefactor band, max(SBMAX_l, SBMAX_s*3, (SBMAX_s-3)*3+8) */
 #define SFBMAX (SBMAX_s*3)
-
-/* FFT sizes */
-#define BLKSIZE       1024
-#define HBLKSIZE      (BLKSIZE/2 + 1)
-#define BLKSIZE_s     256
-
-#define MFSIZE  ( 3*1152 + ENCDELAY - MDCTDELAY )
 
 /* 
  * Mode Extention:
@@ -274,7 +267,6 @@ struct lame_internal_flags {
 
     sample_t     mfbuf[MAX_CHANNELS][MFSIZE];
     int alignment;
-    int lame_encode_frame_init;
     int iteration_init_init;
 
     int padding;        /* padding for the current frame? */
@@ -286,6 +278,7 @@ struct lame_internal_flags {
     FLOAT resample_ratio;      /* input_samp_rate/output_samp_rate */
 
     int mf_size;
+    int mf_needed;
     int VBR_min_bitrate;            /* min bitrate index */
     int VBR_max_bitrate;            /* max bitrate index */
     int bitrate_index;
@@ -562,14 +555,14 @@ struct lame_internal_flags {
 #endif
 };
 
-
-int	lame_encode_buffer_sample_t(
+int encode_buffer_sample(
     lame_t gfc,
     sample_t buffer_lr[],
     int nsamples,
     unsigned char *mp3buf,
     const int mp3buf_size
     );
+
 /* same as lame_decode1 (look in lame.h), but returns 
    unclipped raw floating-point samples. It is declared
    here, not in lame.h, because it returns LAME's 

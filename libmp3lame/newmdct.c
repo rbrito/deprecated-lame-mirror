@@ -740,7 +740,7 @@ void
 subband(lame_t gfc, const sample_t *wk, FLOAT *samp)
 {
     int k;
-    wk += 286+576*gfc->mode_gr;
+    wk += 286 + FFTOFFSET;
     for (k = 0; k < (18 / 2) * gfc->mode_gr; k++) {
 	int	band;
 	window_subband(gfc->amp_filter, wk, samp);
