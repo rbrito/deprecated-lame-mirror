@@ -1053,6 +1053,7 @@ int    lame_encode_flush (
 void lame_close (lame_global_flags *gfp)
 {
     freegfc(gfp->internal_flags);    
+    if (gfp->lame_allocated_gfp) free(gfp);
 }
 
 
@@ -1095,10 +1096,23 @@ void lame_mp3_tags_fid(lame_global_flags *gfp,FILE *fpStream)
 }
 
 
+lame_global_flags *lame_init(void)
+{
+  lame_global_flags *gfp;
+  int ret;
+  gfp = malloc(sizeof(lame_global_flags));
+  if (NULL==gfp) return NULL;
+
+  ret = lame_init_old(gfp);
+  gfp->lame_allocated_gfp=1;
+  if (0!=ret) return NULL;
+  return gfp;
+
+}
 
 
 /* initialize mp3 encoder */
-int lame_init(lame_global_flags *gfp)
+int lame_init_old(lame_global_flags *gfp)
 {
   lame_internal_flags *gfc;
 

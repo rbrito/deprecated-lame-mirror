@@ -137,6 +137,7 @@ typedef struct  {
   int framesize;                  
   int frameNum;                   /* number of frames encoded */
   int totalframes;
+  int lame_allocated_gfp;         /* is this struct owned by calling program or lame? */
 
 
   /* VBR tags */
@@ -173,7 +174,10 @@ typedef struct  {
  * otherwise returns 0
  * 
  */
-int lame_init(lame_global_flags *);
+lame_global_flags *lame_init(void);
+/* obsolete version */
+int lame_init_old(lame_global_flags *);
+
 
 /* REQUIRED:  sets more internal configuration based on data provided
  * above.  returns -1 if something failed.

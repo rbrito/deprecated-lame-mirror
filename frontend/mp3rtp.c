@@ -100,7 +100,7 @@ int main(int argc, char **argv)
 
 
   /* initialize encoder */
-  lame_init(&gf);
+  lame_init_old(&gf);
 
   /* Remove the argumets that are rtp related, and then 
    * parse the command line arguments, setting various flags in the
