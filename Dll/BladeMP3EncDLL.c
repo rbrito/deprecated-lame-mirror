@@ -435,8 +435,8 @@ void dump_config( char *inPath, char *outPath)
 //	sprintf(strTmp,"Voice mode %s\n",(voice_mode)?"enabled":"disabled");
 //	OutputDebugString(strTmp);
 
-	sprintf(strTmp,"Encoding as %.1f kHz %d kbps %d MPEG-%d LayerIII file\n",gf.out_samplerate/1000.0,gf.brate,gf.mode,3 - gf.mode_gr);
-	OutputDebugString(strTmp);
+//	sprintf(strTmp,"Encoding as %.1f kHz %d kbps %d MPEG-%d LayerIII file\n",gf.out_samplerate/1000.0,gf.brate,gf.mode,3 - gf.mode_gr);
+//	OutputDebugString(strTmp);
 }
 
 
