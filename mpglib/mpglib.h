@@ -30,7 +30,12 @@ struct mpstr {
 	
 };
 
-#define BOOL int
+
+#if ( defined(_MSC_VER) || defined(__BORLANDC__) )
+	typedef int BOOL; /* windef.h contains the same definition */
+#else
+	#define BOOL int
+#endif
 
 #define MP3_ERR -1
 #define MP3_OK  0
