@@ -555,22 +555,21 @@ void inc_scalefac_scale
         scalefac->l[sfb]  = s >> 1;
         cod_info->preflag = 0;
     }
-#if 0
+
     for (j = 0, sfb = cod_info->sfb_smax; sfb < SBPSY_s; sfb++) {
-        start = gfc->scalefac_band.s[sfb];
-        end   = gfc->scalefac_band.s[sfb+1];
-        for (i = 0; i < 3; i++) {
-            int j2 = j;
-            if (scalefac->s[sfb][i] & 1) {
-                scalefac->s[sfb][i]++;
-                for (l = start; l < end; l++) 
-                    xrpow[j2++] *= ifqstep34;
-            }
-            scalefac->s[sfb][i] >>= 1;
-            j += end-start;
-        }
+	start = gfc->scalefac_band.s[sfb];
+	end   = gfc->scalefac_band.s[sfb+1];
+	for (i = 0; i < 3; i++) {
+	    int j2 = j;
+	    if (scalefac->s[sfb][i] & 1) {
+		scalefac->s[sfb][i]++;
+		for (l = start; l < end; l++) 
+		    xrpow[j2++] *= ifqstep34;
+	    }
+	    scalefac->s[sfb][i] >>= 1;
+	    j += end-start;
+	}
     }
-#endif
     cod_info->scalefac_scale = 1;
 }
 
