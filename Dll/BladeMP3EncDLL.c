@@ -36,7 +36,7 @@
 
 // lame_enc DLL version number
 const int MAJORVERSION = 1;
-const int MINORVERSION = 28;
+const int MINORVERSION = 29;
 
 
 // Local variables
@@ -415,15 +415,6 @@ __declspec(dllexport) BE_ERR	beInitStream(PBE_CONFIG pbeConfig, PDWORD dwSamples
 			lame_set_VBR( gfp, vbr_default );
 
 			lame_set_VBR_q( gfp, lameConfig.format.LHV1.nVBRQuality );
-
-			if (lameConfig.format.LHV1.bWriteVBRHeader==TRUE)
-			{
-				lame_set_bWriteVbrTag( gfp, 1 );
-			}
-			else
-			{
-				lame_set_bWriteVbrTag( gfp, 0 );
-			}
 		}
 		else
 		{
@@ -575,6 +566,17 @@ now --vbr-mtrh is known as --vbr-new
 	{
 		lame_set_disable_reservoir( gfp,1 );
 		lame_set_padding_type( gfp, PAD_NO );
+	}
+
+	// check if the VBR tag is required
+	if ( ( TRUE == lameConfig.format.LHV1.bWriteVBRHeader) &&
+		 ( vbr_off != lame_get_VBR( gfp ) ) )
+	{
+		lame_set_bWriteVbrTag( gfp, 1 );
+	}
+	else
+	{
+		lame_set_bWriteVbrTag( gfp, 0 );
 	}
 
 	if ( 0 != ( nInitReturn = lame_init_params( gfp ) ) )
