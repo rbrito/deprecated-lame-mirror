@@ -86,7 +86,6 @@ struct lame_global_struct {
     int noATH;                      /* disable ATH                          */
     float ATHcurve;                 /* change ATH formula 4 shape           */
     float ATHlower;                 /* lower ATH by this many db            */
-    float athaa_sensitivity;        /* dB, tune active region of auto-level */
     int mixed_blocks;
     int emphasis;                   /* Input PCM is emphased PCM (for
 				       instance from one of the rarely

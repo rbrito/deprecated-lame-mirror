@@ -906,15 +906,14 @@ int
 lame_set_athaa_sensitivity( lame_global_flags*  gfp,
                             float               athaa_sensitivity )
 {
-    gfp->athaa_sensitivity = athaa_sensitivity;
-
+    gfp->internal_flags->ATH.aa_decay = db2pow(athaa_sensitivity);
     return 0;
 }
 
 float
 lame_get_athaa_sensitivity( const lame_global_flags*  gfp )
 {
-    return gfp->athaa_sensitivity;
+    return FAST_LOG10(gfp->internal_flags->ATH.aa_decay) * 10.0;
 }
 
 

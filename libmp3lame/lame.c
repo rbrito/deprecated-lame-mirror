@@ -586,9 +586,6 @@ lame_init_params(lame_global_flags * const gfp)
     /* initialize internal qval settings */
     lame_init_qval(gfp);
 
-    /* initialize internal adaptive ATH settings  -jd */
-    gfc->ATH.aa_sensitivity_p = db2pow(-gfp->athaa_sensitivity);
-
     lame_init_bitstream(gfp);
     iteration_init(gfp);
     psymodel_init(gfp);
@@ -607,7 +604,8 @@ lame_init_params(lame_global_flags * const gfp)
     gfp->scale_right *= gfp->scale;
 
     if (!gfc->psymodel) {
-	gfc->ATH.adjust = 1.0;	/* no adjustment */
+	gfc->ATH.adjust[0] = gfc->ATH.adjust[1]
+	    = gfc->ATH.adjust[2] = gfc->ATH.adjust[3] = 1.0;
 	gfc->mode_ext = MPG_MD_LR_LR;
 	if (gfp->mode == JOINT_STEREO)
 	    gfc->mode_ext = MPG_MD_MS_LR;
@@ -776,7 +774,8 @@ lame_print_internals( const lame_global_flags * gfp )
     MSGF( gfc, "\tATH: %s\n", pc );
     MSGF( gfc, "\t ^ shape: %g\n", gfp->ATHcurve);
     MSGF( gfc, "\t ^ level adjustement: %f (dB)\n", gfp->ATHlower );
-    MSGF( gfc, "\t ^ adjust sensitivity power (dB): %f\n", gfp->athaa_sensitivity);
+    MSGF( gfc, "\t ^ adaptive adjustment decay (dB): %f\n",
+	  FAST_LOG10(gfc->ATH.aa_decay) * 10.0);
 
     i = (gfp->internal_flags->nsPsy.tune >> 2) & 63;
     if (i >= 32)
@@ -1507,7 +1506,6 @@ lame_init_old(lame_global_flags * gfp)
     gfc->interChRatio = -1.0;
 
     gfp->ATHcurve = 4;
-    gfp->athaa_sensitivity = 0.0; /* no offset */
 
     /* The reason for
      *       int mf_samples_to_encode = ENCDELAY + POSTDELAY;

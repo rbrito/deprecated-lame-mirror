@@ -223,7 +223,7 @@ init_gr_info(lame_internal_flags *gfc, int gr, int ch)
 	    FLOAT power = 0.0;
 	    for (j = j0; j < 576; j++)
 		power += gi->xr[j] * gi->xr[j];
-	    if (power < gfc->ATH.adjust * gfc->ATH.l[SBMAX_l-1]) {
+	    if (power < gi->ATHadjust * gfc->ATH.l[SBMAX_l-1]) {
 		for (j = j0; j < 576; j++)
 		    gi->xr[j] = 0;
 	    }

@@ -43,6 +43,7 @@ typedef struct {
   float mpg123xr[2][2][576];
   float ms_ratio[2];
   float ms_ratio_next[2];
+  float athadjust[2];
 
   /* L,R, M and S values */
   float energy[2][4][HBLKSIZE];

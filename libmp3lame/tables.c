@@ -655,7 +655,6 @@ static FLOAT ATHformula(FLOAT f,lame_global_flags *gfp)
          + 6.000 * exp(-0.15*pow(f-8.7,2.0))
          + 0.6* 0.001 * pow(f,4.0);
 
-
 	In the past LAME was using the Painter &Spanias formula.
 	But we had some recurrent problems with HF content.
 	We measured real ATH values, and found the older formula
@@ -675,16 +674,18 @@ static FLOAT ATHformula(FLOAT f,lame_global_flags *gfp)
 	- gfp->ATHlower;
 }
 
-static FLOAT ATHmdct( lame_global_flags *gfp, FLOAT f )
+static FLOAT
+ATHmdct(lame_global_flags *gfp, FLOAT f)
 {
     /* modify the MDCT scaling for the ATH and convert to energy */
-    return db2pow(ATHformula( f , gfp ) - NSATHSCALE);
+    return db2pow(ATHformula(f , gfp)) / FFT2MDCT;
 }
 
-static void compute_ath( lame_global_flags *gfp )
+static void
+compute_ath(lame_global_flags *gfp)
 {
     lame_internal_flags *gfc = gfp->internal_flags;
-    FLOAT ATH_f, samp_freq = gfp->out_samplerate;
+    FLOAT ATH_f, sfreq = gfp->out_samplerate;
     int sfb, i, start, end;
 
     /*  no-ATH mode: reduce ATH to -370 dB */
@@ -703,11 +704,11 @@ static void compute_ath( lame_global_flags *gfp )
 	end   = gfc->scalefac_band.l[ sfb+1 ];
 	gfc->ATH.l[sfb] = FLOAT_MAX;
 	for (i = start ; i < end; i++) {
-	    FLOAT freq = i*samp_freq/(2.0*576);
-	    ATH_f = ATHmdct( gfp, freq );  /* freq in kHz */
+	    ATH_f = ATHmdct(gfp, i*sfreq/(2.0*576));
 	    if (gfc->ATH.l[sfb] > ATH_f)
 		gfc->ATH.l[sfb] = ATH_f;
 	}
+	gfc->ATH.l[sfb] *= (end-start);
     }
 
     for (sfb = 0; sfb < SBMAX_s; sfb++){
@@ -715,11 +716,11 @@ static void compute_ath( lame_global_flags *gfp )
 	end   = gfc->scalefac_band.s[ sfb+1 ];
 	gfc->ATH.s[sfb] = FLOAT_MAX;
 	for (i = start ; i < end; i++) {
-	    FLOAT freq = i*samp_freq/(2*192);
-	    ATH_f = ATHmdct( gfp, freq );    /* freq in kHz */
+	    ATH_f = ATHmdct(gfp, i*sfreq/(2.0*192));
 	    if (gfc->ATH.s[sfb] > ATH_f)
 		gfc->ATH.s[sfb] = ATH_f;
 	}
+	gfc->ATH.s[sfb] *= (end-start);
     }
 }
 
@@ -1204,7 +1205,6 @@ int psymodel_init(lame_global_flags *gfp)
     FLOAT norm[CBANDS];
     FLOAT sfreq = gfp->out_samplerate;
     int numlines_s[CBANDS];
-    FLOAT eql_balance;
 
     for (i=0; i<MAX_CHANNELS*2; ++i) {
 	for ( sb = 0; sb < SBMAX_l; sb++ ) {
@@ -1224,6 +1224,8 @@ int psymodel_init(lame_global_flags *gfp)
 	for (j=0;j<6;j++)
 	    gfc->nsPsy.subbk_ene[i][j] = 1.0;
 	gfc->blocktype_next[0][i] = gfc->blocktype_next[1][i] = NORM_TYPE;
+
+	gfc->ATH.loudness_next[i] = 0.0;
     }
 
     gfc->masking_lower = db2pow(gfp->VBR_q - 8 - 4);
@@ -1263,17 +1265,19 @@ int psymodel_init(lame_global_flags *gfp)
 
     /* compute long block specific values, ATH */
     j = 0;
-    for ( i = 0; i < gfc->npart_l; i++ ) {
+    for (i = 0; i < gfc->npart_l; i++) {
 	/* ATH */
 	FLOAT x = FLOAT_MAX;
 	for (k=0; k < gfc->numlines_l[i]; k++, j++) {
-	    FLOAT level = db2pow(ATHformula(sfreq*j/BLKSIZE, gfp) - 20)
-		* gfc->numlines_l[i];
+	    FLOAT level = db2pow(ATHformula(sfreq*j/BLKSIZE, gfp));
 	    if (x > level)
 		x = level;
 	}
-	gfc->ATH.cb[i] = x;
+	gfc->ATH.cb[i] = x * ATHAdjustLimit * gfc->numlines_l[i];
+	gfc->ATH.eql_w[i] = db2pow(ATHformula(3300, gfp)) / x / FFT2MDCT;
     }
+    for (i = 0; i < 8; i++)
+	gfc->ATH.eql_w[i] = gfc->ATH.eql_w[0];
     for (i = 0; i < SBMAX_l; i++)
 	gfc->ATH.l_avg[i] = gfc->ATH.cb[bm[i]];
 
@@ -1303,8 +1307,8 @@ int psymodel_init(lame_global_flags *gfp)
 	    norm[i] = 1e-37;
     }
     for (i = 0; i < SBMAX_s; i++)
-	gfc->ATH.s_avg[i] = gfc->ATH.cb[bm[i]]
-	    * (BLKSIZE_s*BLKSIZE_s) / (BLKSIZE*BLKSIZE);
+	gfc->ATH.s_avg[i]
+	    = gfc->ATH.cb[bm[i]] * (BLKSIZE_s*BLKSIZE_s) / (BLKSIZE*BLKSIZE);
 
     i = init_s3_values(gfc, &gfc->s3_ss, gfc->s3ind_s,
 		       gfc->npart_s, bval, norm);
@@ -1321,39 +1325,13 @@ int psymodel_init(lame_global_flags *gfp)
     gfc->decay = db2pow(-(576.0/3)/(TEMPORALMASK_SUSTAIN_SEC*sfreq)*20);
 
     /* long/short switching, use subbandded sample in f > 2kHz */
-    i = (int) (2000.0 / (sfreq / 2.0 / 32.0) + 0.5);
+    i = (int) (4000.0 / (sfreq / 2.0 / 32.0) + 0.5);
     gfc->nsPsy.switching_band = Min(i, 30);
 
     /*  prepare for ATH auto adjustment:
      *  we want to decrease the ATH by 12 dB per second
      */
-    gfc->ATH.adjust = 0.01; /* minimum, for leading low loudness */
-    gfc->ATH.adjust_limit = 1.0; /* on lead, allow adjust up to maximum */
-
-    /* compute equal loudness weights jd - 2001 mar 12
-       notes:
-         ATHformula is used to approximate an equal loudness curve.
-       future:
-         Data indicates that the shape of the equal loudness curve varies
-	 with intensity.  This function might be improved by using an equal
-	 loudness curve shaped for typical playback levels (instead of the
-	 ATH, that is shaped for the threshold).  A flexible realization might
-	 simply bend the existing ATH curve to achieve the desired shape.
-	 However, the potential gain may not be enough to justify an effort.
-    */
-    gfc->loudness_next[0] = gfc->loudness_next[1] = 0.0;
-    eql_balance = 0.0;
-    for( i = 0; i < BLKSIZE/2; ++i ) {
-	FLOAT freq = gfp->out_samplerate * i / BLKSIZE;
-	/* we cannot get precise analysis at lower frequency */
-	if (i < 20)
-	    freq = gfp->out_samplerate * 0.0 / BLKSIZE;
-	gfc->ATH.eql_w[i] = db2pow(-ATHformula( freq, gfp ));
-	eql_balance += gfc->ATH.eql_w[i];
-    }
-    eql_balance =  (vo_scale * vo_scale / (BLKSIZE/2)) / eql_balance * 0.5;
-    for( i = BLKSIZE/2; --i >= 0; )
-	gfc->ATH.eql_w[i] *= eql_balance;
+    gfc->ATH.aa_decay = 0.9;
 
     /* The type of window used here will make no real difference, but
      * use blackman window for long block. */

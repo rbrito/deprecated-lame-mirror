@@ -517,7 +517,7 @@ msfix_l(lame_internal_flags *gfc, int gr)
 		x = thmLR / x;
 		thmM *= x;
 		thmS *= x;
-		x = gfc->ATH.l_avg[sb] * gfc->ATH.adjust;
+		x = gfc->ATH.l_avg[sb] * gfc->ATH.adjust[2];
 		mr[2].thm.l[sb] = Max(thmM, x);
 		mr[3].thm.l[sb] = Max(thmS, x);
 	    }
@@ -558,7 +558,7 @@ msfix_s(lame_internal_flags *gfc, int gr)
 		    x = thmLR/x;
 		    thmM *= x;
 		    thmS *= x;
-		    x = gfc->ATH.s_avg[sb] * gfc->ATH.adjust;
+		    x = gfc->ATH.s_avg[sb] * gfc->ATH.adjust[2];
 		    mr[2].thm.s[sb][sblock] = Max(thmM, x);
 		    mr[3].thm.s[sb][sblock] = Max(thmS, x);
 		}
@@ -652,6 +652,7 @@ compute_masking_s(
     lame_internal_flags *gfc,
     FLOAT fft_s[BLKSIZE_s],
     III_psy_ratio *mr,
+    int ch,
     int sblock
     )
 {
@@ -686,8 +687,8 @@ compute_masking_s(
 
 	enn  -= eb[b] * 0.5;
 	thmm -= ecb * 0.5;
-	if (thmm < gfc->ATH.s_avg[sb] * gfc->ATH.adjust) {
-	    thmm = gfc->ATH.s_avg[sb] * gfc->ATH.adjust;
+	if (thmm < gfc->ATH.s_avg[sb] * gfc->ATH.adjust[ch]) {
+	    thmm = gfc->ATH.s_avg[sb] * gfc->ATH.adjust[ch];
 	    enn  = -enn;
 	}
 	mr->en .s[sb][sblock] = enn;
@@ -698,8 +699,8 @@ compute_masking_s(
 	if (sb == SBMAX_s)
 	    break;
 	if (b == gfc->bo_s[sb]) {
-	    if (thmm < gfc->ATH.s_avg[sb] * gfc->ATH.adjust) {
-		thmm = gfc->ATH.s_avg[sb] * gfc->ATH.adjust;
+	    if (thmm < gfc->ATH.s_avg[sb] * gfc->ATH.adjust[ch]) {
+		thmm = gfc->ATH.s_avg[sb] * gfc->ATH.adjust[ch];
 		enn  = -enn;
 	    }
 	    mr->en .s[sb][sblock] = enn;
@@ -963,6 +964,7 @@ psycho_analysis_short(
      * determine the block type (window type)
      ***************************************************************/
     for (ch = 0; ch < numchn; ch++) {
+	FLOAT pre;
 /*
   use subband filtered samples to determine block type switching.
 
@@ -1044,24 +1046,40 @@ mp3x display               <------LONG------>
 #endif
 	/* initialize the flag representing
 	 * "short block may be needed but not calculated" */
-	gfc->masking_next[gr][ch].en.s[0][0] = -1.0;
+	gfc->masking_next[gr][ch].en.s[0][0]
+	    = gfc->masking_next[gr][ch].en.s[0][1]
+	    = gfc->masking_next[gr][ch].en.s[0][2] = -1.0;
 	gfc->blocktype_next[gr][ch] = NORM_TYPE;
-	first_attack_position[ch] = -2;
+	first_attack_position[ch] = -1;
 
-	for (i=0;i<3;i++) {
+	for (i = -1; i < 4; i++) {
 	    /* calculate energies of each sub-shortblocks */
-	    FLOAT pre = gfc->nsPsy.subbk_ene[ch][i+1]
-		+ gfc->decay * gfc->nsPsy.subbk_ene[ch][i];
-	    if (gfc->nsPsy.subbk_ene[ch][i+2] <= gfc->nsPsy.attackthre * pre)
-		continue;
-
-	    gfc->blocktype_next[gr][ch] = SHORT_TYPE;
-	    current_is_short += (1 << ch);
-	    first_attack_position[ch] = i;
-	    attack_adjust[ch]
-		= gfc->nsPsy.subbk_ene[ch][i+1]/gfc->nsPsy.subbk_ene[ch][i+2];
-	    break;
+	    pre = gfc->nsPsy.subbk_ene[ch][i+1];
+	    if (i == -1 || i == 3)
+		pre *= 1.5;
+	    else {
+		if (gfc->nsPsy.attackthre*gfc->nsPsy.subbk_ene[ch][i+2]*100 < pre)
+		    goto shortblock;
+		pre += gfc->decay * gfc->nsPsy.subbk_ene[ch][i];
+	    }
+	    if (gfc->nsPsy.subbk_ene[ch][i+2] > gfc->nsPsy.attackthre*pre)
+		goto shortblock;
 	}
+	continue;
+ shortblock:
+	gfc->blocktype_next[gr][ch] = SHORT_TYPE;
+	current_is_short += (1 << ch);
+	pre = gfc->nsPsy.subbk_ene[ch][i+1]/gfc->nsPsy.subbk_ene[ch][i+2];
+	if (pre > 1.0)
+	    pre = 1.0/pre;
+	if (pre < 0.01)
+	    pre = 0.01;
+	attack_adjust[ch] = pre;
+	if (i < 0)
+	    i = 0;
+	if (i > 2)
+	    i = 2;
+	first_attack_position[ch] = i;
     }
 
     if (!current_is_short)
@@ -1088,64 +1106,31 @@ mp3x display               <------LONG------>
 	    if (ch < 2)
 		fft_short(gfc, wsamp_S[ch][sblock],
 			  &buffer[ch][(576/3) * (sblock+1)]);
-	    if (!gfc->blocktype_next[gr][ch])
+	    if (!gfc->blocktype_next[gr][ch]
+		|| sblock < first_attack_position[ch])
 		continue;
 
 	    compute_masking_s(gfc, wsamp_S[ch&1][sblock],
-			      &gfc->masking_next[gr][ch], sblock);
+			      &gfc->masking_next[gr][ch], ch, sblock);
 	    if (sblock == first_attack_position[ch]) {
 		int sb;
 		for (sb = 0; sb < SBMAX_s; sb++) 
 		    gfc->masking_next[gr][ch].thm.s[sb][sblock]
-			*= Max(0.01, attack_adjust[ch]);
+			*= attack_adjust[ch];
 	    }
 	}
     } /* end loop over ch */
-}
-
-/* in some scalefactor band, 
-   we can use masking threshold value of long block */
-static void
-partially_convert_l2s(lame_internal_flags *gfc, III_psy_ratio *mr, FLOAT *nb_1)
-{
-    int sfb, b;
-    for (sfb = 0; sfb < SBMAX_s; sfb++) {
-	FLOAT x = (mr->en.s[sfb][0] + mr->en.s[sfb][1] + mr->en.s[sfb][2])
-	    * (1.0/4.0);
-	if (x > mr->en.s[sfb][0]
-	    || x > mr->en.s[sfb][1]
-	    || x > mr->en.s[sfb][2])
-	    continue;
-
-	if (sfb == 0) {
-	    b = 0;
-	    x = 0.0;
-	} else {
-	    b = gfc->bo_l2s[sfb-1];
-	    x = nb_1[b++] * 0.5;
-	}
-	for (; b < gfc->bo_l2s[sfb]; b++) {
-	    x += nb_1[b];
-	}
-	x += .5 * nb_1[b];
-
-	x *= ((double)BLKSIZE_s*BLKSIZE_s) / (BLKSIZE*BLKSIZE);
-	if (x < gfc->ATH.s_avg[sfb] * gfc->ATH.adjust)
-	    continue;
-	x *= gfc->masking_lower;
-	mr->thm.s[sfb][0] = mr->thm.s[sfb][1] = mr->thm.s[sfb][2] = x;
-    }
 }
 
 static void
 L3psycho_anal_ns(
     lame_internal_flags *gfc,
     const sample_t *buffer[2],
-    FLOAT adjATH[],
     int gr,
     int numchn
     )
 {
+    FLOAT adjATH[CBANDS];
     FLOAT wsamp_L[MAX_CHANNELS][BLKSIZE];    /* fft and energy calculation   */
     FLOAT nb_1[CBANDS];
     int ch;
@@ -1206,14 +1191,25 @@ L3psycho_anal_ns(
 	/*********************************************************************
 	 * compute loudness approximation (used for ATH auto-level adjustment) 
 	 *********************************************************************/
-	if (ch < 2) { /*no loudness for mid/side ch*/
-	    int i;
-	    FLOAT loudness = gfc->loudness_next[gr];
-	    /* apply weights to power in freq. bands*/
-	    for (i = 0; i < BLKSIZE/2; i++)
-		loudness += fftenergy[i] * gfc->ATH.eql_w[i];
-	    gfc->loudness_next[gr] = loudness;
-	}
+	if (ch < 3) {
+	    FLOAT loudness = 0.0, loudness_old;
+	    for (b = 0; b < gfc->npart_l; b++)
+		loudness += eb[b] * gfc->ATH.eql_w[b];
+
+	    loudness_old = gfc->ATH.adjust[ch] * gfc->ATH.aa_decay;
+	    if (loudness < loudness_old)
+		loudness = loudness_old;
+	    if (loudness > 1.0)
+		loudness = 1.0;
+	    if (loudness < ATHAdjustLimit)
+		loudness = ATHAdjustLimit;
+	    gfc->ATH.adjust[ch] = loudness;
+	    for (i = 0; i < gfc->npart_l; i++)
+		adjATH[i] = gfc->ATH.cb[i] * loudness;
+	} else 
+	    /* no loudness for side ch.
+	       same value of main(ch=2) is used for it. */
+	    gfc->ATH.adjust[ch] = gfc->ATH.adjust[ch-1];
 
 #ifndef NOANALYSIS
 	if (gfc->pinfo) {
@@ -1326,8 +1322,8 @@ L3psycho_anal_ns(
 	    enn  -= .5*eb[b];
 	    thmm -= .5*ecb;
 
-	    if (thmm < gfc->ATH.l_avg[j] * gfc->ATH.adjust) {
-		thmm = gfc->ATH.l_avg[j] * gfc->ATH.adjust;
+	    if (thmm < gfc->ATH.l_avg[j] * gfc->ATH.adjust[ch]) {
+		thmm = gfc->ATH.l_avg[j] * gfc->ATH.adjust[ch];
 		enn  = -enn;
 	    }
 
@@ -1341,23 +1337,23 @@ L3psycho_anal_ns(
 		break;
 	}
 
-	if (thmm < gfc->ATH.l_avg[SBMAX_l-1] * gfc->ATH.adjust) {
-	    thmm = gfc->ATH.l_avg[SBMAX_l-1] * gfc->ATH.adjust;
+	if (thmm < gfc->ATH.l_avg[SBMAX_l-1] * gfc->ATH.adjust[ch]) {
+	    thmm = gfc->ATH.l_avg[SBMAX_l-1] * gfc->ATH.adjust[ch];
 	    enn  = -enn;
 	}
 
 	mr->en .l[SBMAX_l-1] = enn;
 	mr->thm.l[SBMAX_l-1] = thmm * gfc->masking_lower;
 
-	if (mr->en.s[0][0] >= 0.0) {
-	    partially_convert_l2s(gfc, mr, nb_1);
-	    continue;
-	}
-
 	/* short block may be needed but not calculated */
 	/* calculate it from converting from long */
 	b = j = 0;
 	enn = thmm = 0.0;
+
+	i = 0;
+	if (mr->en.s[0][0] < 0.0) i += 1;
+	if (mr->en.s[0][1] < 0.0) i += 2;
+	if (mr->en.s[0][2] < 0.0) i += 4;
 	for (;; b++ ) {
 	    FLOAT tmp = nb_1[b];
 	    enn  += eb[b];
@@ -1372,14 +1368,23 @@ L3psycho_anal_ns(
 	    thmm -= .5*tmp;
 	    thmm *= ((double)BLKSIZE_s*BLKSIZE_s) / (BLKSIZE*BLKSIZE);
 	    enn  *= ((double)BLKSIZE_s*BLKSIZE_s) / (BLKSIZE*BLKSIZE);
-	    if (thmm < gfc->ATH.s_avg[j] * gfc->ATH.adjust) {
-		thmm = gfc->ATH.s_avg[j] * gfc->ATH.adjust;
+	    if (thmm < gfc->ATH.s_avg[j] * gfc->ATH.adjust[ch]) {
+		thmm = gfc->ATH.s_avg[j] * gfc->ATH.adjust[ch];
 		enn  = -enn;
 	    }
 
-	    mr->thm.s[j][0] = mr->thm.s[j][1] = mr->thm.s[j][2]
-		= thmm * gfc->masking_lower;
-	    mr->en .s[j][0] = mr->en .s[j][1] = mr->en .s[j][2] = enn;
+	    if (i & 1) {
+		mr->thm.s[j][0] = thmm * gfc->masking_lower;
+		mr->en .s[j][0] = enn;
+	    }
+	    if (i & 2) {
+		mr->thm.s[j][1] = thmm * gfc->masking_lower;
+		mr->en .s[j][1] = enn;
+	    }
+	    if (i & 4) {
+		mr->thm.s[j][2] = thmm * gfc->masking_lower;
+		mr->en .s[j][2] = enn;
+	    }
 
 	    enn  =  eb[b] * 0.5;
 	    thmm = tmp * 0.5;
@@ -1390,8 +1395,8 @@ L3psycho_anal_ns(
 
 	thmm *= ((double)BLKSIZE_s*BLKSIZE_s) / (BLKSIZE*BLKSIZE);
 	enn  *= ((double)BLKSIZE_s*BLKSIZE_s) / (BLKSIZE*BLKSIZE);
-	if (thmm < gfc->ATH.s_avg[SBMAX_s-1] * gfc->ATH.adjust) {
-	    thmm = gfc->ATH.s_avg[SBMAX_s-1] * gfc->ATH.adjust;
+	if (thmm < gfc->ATH.s_avg[SBMAX_s-1] * gfc->ATH.adjust[ch]) {
+	    thmm = gfc->ATH.s_avg[SBMAX_s-1] * gfc->ATH.adjust[ch];
 	    enn  = -enn;
 	}
 
@@ -1400,67 +1405,6 @@ L3psycho_anal_ns(
 	mr->en .s[SBMAX_s-1][0] = mr->en .s[SBMAX_s-1][1]
 	    = mr->en .s[SBMAX_s-1][2] = enn;
     }
-}
-
-/*
- * auto-adjust of ATH, useful for low volume
- * Gabriel Bouvigne 3 feb 2001
- *
- * loudness based on equal loudness curve
- * use granule with maximum combined loudness
- * jd - 2001 mar 12, 27, jun 30
- */
-static void
-adjust_ATH(lame_internal_flags* const  gfc)
-{
-    FLOAT max_pow = gfc->loudness_next[0];
-    if (gfc->mode_gr == 2 && max_pow < gfc->loudness_next[1])
-	max_pow = gfc->loudness_next[1];
-    gfc->loudness_next[0] = gfc->loudness_next[1] = 0.0;
-
-    /* jd - 2001 mar 31, jun 30 */
-    /* user tuning of ATH adjustment region */
-    max_pow *= gfc->ATH.aa_sensitivity_p;
-    /* jd - 2001 feb27, mar12,20, jun30, jul22 */
-    /* continuous curves based on approximation to GB's original values. */
-    /* For an increase in approximate loudness, */
-    /* set ATH adjust to adjust_limit immediately*/
-    /* after a delay of one frame. */
-    /* For a loudness decrease, reduce ATH adjust*/
-    /* towards adjust_limit gradually. */
-    /* max_pow is a loudness squared or a power. */
-    if (max_pow > 0.03125*2.0) { /* ((1 - 0.000625)/ 31.98) from curve below */
-	if (gfc->ATH.adjust >= 1.0)
-	    gfc->ATH.adjust = 1.0;
-	else {
-	    /* preceding frame has lower ATH adjust; */
-	    /* ascend only to the preceding adjust_limit */
-	    /* in case there is leading low volume */
-	    if (gfc->ATH.adjust < gfc->ATH.adjust_limit)
-		gfc->ATH.adjust = gfc->ATH.adjust_limit;
-	}
-	max_pow = 1.0;
-    } else {
-	/* adjustment curve, about 32 dB maximum adjust (0.000625) */
-	max_pow = 31.98 * 0.5 * max_pow + 0.000625;
-	if (gfc->ATH.adjust >= max_pow) {
-	    /* descend gradually */
-	    gfc->ATH.adjust *= max_pow * 0.075 + 0.925;
-	    if( gfc->ATH.adjust < max_pow)
-		gfc->ATH.adjust = max_pow; /* stop descent */
-	} else {
-	    /* ascend */
-	    if (gfc->ATH.adjust_limit >= max_pow)
-		gfc->ATH.adjust = max_pow;
-	    else {
-		/* preceding frame has lower ATH adjust; */
-		/* ascend only to the preceding adjust_limit */
-		if( gfc->ATH.adjust < gfc->ATH.adjust_limit)
-		    gfc->ATH.adjust = gfc->ATH.adjust_limit;
-	    }
-	}
-    }
-    gfc->ATH.adjust_limit = max_pow;
 }
 
 /* psychoacoustic model
@@ -1477,31 +1421,27 @@ psycho_analysis(
     lame_internal_flags *gfc=gfp->internal_flags;
     int gr, ch, blocktype_old[MAX_CHANNELS], numchn;
     const sample_t *bufp[MAX_CHANNELS];
-    FLOAT adjATH[CBANDS];
 
     /* next frame data -> current frame data (aging) */
     gfc->mode_ext = gfc->mode_ext_next;
     blocktype_old[0] = gfc->l3_side.tt[gfc->mode_gr-1][0].block_type;
     blocktype_old[1] = gfc->l3_side.tt[gfc->mode_gr-1][1].block_type;
 
-    /* calculate next frame data */
-    adjust_ATH(gfc);
-    {int i;
-    for (i = 0; i < gfc->npart_l; i++)
-	adjATH[i] = gfc->ATH.cb[i] * gfc->ATH.adjust;
-    }
     numchn = gfc->channels_out;
     if (gfp->mode == JOINT_STEREO)
 	numchn = 4;
     for (gr=0; gr < gfc->mode_gr ; gr++) {
 	for (ch = 0; ch < gfc->channels_out; ch++) {
-	    masking_d[gr][ch] = gfc->masking_next[gr][ch + gfc->mode_ext];
-	    gfc->l3_side.tt[gr][ch].block_type = gfc->blocktype_next[gr][ch];
+	    gr_info *gi = &gfc->l3_side.tt[gr][ch];
+	    masking_d[gr][ch] = gfc->masking_next[gr][ch + (gfc->mode_ext & 2)];
+	    /* not good XXX */
+	    gi->ATHadjust = gfc->ATH.adjust[ch + (gfc->mode_ext & 2)];
+	    gi->block_type = gfc->blocktype_next[gr][ch];
 	    bufp[ch] = buffer[ch] + 576*(gr + gfc->mode_gr) - FFTOFFSET;
 	}
 
 	psycho_analysis_short(gfc, bufp, sbsmpl, gr, numchn);
-	L3psycho_anal_ns(gfc, bufp, adjATH, gr, numchn);
+	L3psycho_anal_ns(gfc, bufp, gr, numchn);
 
 	/*********************************************************************
 	 * other masking effect

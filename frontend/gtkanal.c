@@ -358,9 +358,10 @@ void plot_frame(void)
   else 
     title=ch ? "Right Channel" : "Left Channel";
 
-  sprintf(title2,"%s pe_diff = %3.2f + %3.2f = %3.2f",
+  sprintf(title2,"%s pe_diff = %3.2f + %3.2f = %3.2f   ATHadj = %1.2f %1.2f",
 	  title, pplot->ms_ratio[0],pplot->ms_ratio[1],
-	  pplot->ms_ratio[0] + pplot->ms_ratio[1]
+	  pplot->ms_ratio[0] + pplot->ms_ratio[1],
+	  pplot->athadjust[0], pplot->athadjust[1]
       );
 
 

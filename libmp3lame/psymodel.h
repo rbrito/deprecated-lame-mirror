@@ -25,12 +25,12 @@
 /* size of each partition band, in barks: */
 #define DELBARK .34
 
-#define vo_scale (1./( 14752 ))
+#define ATHAdjustLimit 0.01
 
 #define TEMPORALMASK_SUSTAIN_SEC 0.01
 
-/* ??? Assuming dynamic range=96dB, this value should be 92 */
-#define NSATHSCALE 110
+/* ATH FFT -> MDCT conversion factor, 32768*32768*1024*2 */
+#define FFT2MDCT 1e12
 
 #define NS_MSFIX 4.0
 

@@ -189,6 +189,7 @@ typedef struct {
     FLOAT xr[576];
     int l3_enc[576];
     int scalefac[SFBMAX];
+    FLOAT ATHadjust;
 
     int part2_length;
     int part2_3_length;
@@ -218,7 +219,7 @@ typedef struct {
     int count1bits;
     /* added for LSF */
     int slen[4];
-    int dummy_for_padding[3];
+    int dummy_for_padding[2];
 } gr_info;
 
 /* Layer III side information. */
@@ -364,7 +365,6 @@ struct lame_internal_flags {
 
     /* for next frame data */
     III_psy_ratio masking_next[2][MAX_CHANNELS*2];
-    FLOAT loudness_next[2];  /* loudness^2 approx. per granule */
     int blocktype_next[2][MAX_CHANNELS*2]; /* for block type */
     int mode_ext_next;
     int is_start_sfb_l[2];
@@ -393,13 +393,13 @@ struct lame_internal_flags {
 	FLOAT cb[CBANDS];     /* ATH for convolution bands */
 	FLOAT l_avg[SBMAX_l];
 	FLOAT s_avg[SBMAX_s];
-	FLOAT adjust;     /* lowering based on peak volume, 1 = no lowering */
-	FLOAT adjust_limit;   /* limit for dynamic ATH adjust */
-	FLOAT eql_w[BLKSIZE/2];/* equal loudness weights (based on ATH) */
 
 	/* factor for tuning the (sample power) point below which adaptive
 	 * threshold of hearing adjustment occurs */
-	FLOAT aa_sensitivity_p;
+	FLOAT aa_decay;
+	FLOAT loudness_next[MAX_CHANNELS*2];  /* loudness^2 approx. */
+	FLOAT adjust[MAX_CHANNELS*2]; /* ATH lowering factor based on peak volume */
+	FLOAT eql_w[CBANDS];  /* equal loudness weights (based on ATH) */
     } ATH;
 
     /* quantization */

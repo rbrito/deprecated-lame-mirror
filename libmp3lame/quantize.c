@@ -173,7 +173,7 @@ calc_xmin(
 {
     int sfb, gsfb, j=0;
     for (gsfb = 0; gsfb < gi->psy_lmax; gsfb++) {
-	FLOAT threshold = gfc->ATH.adjust * gfc->ATH.l[gsfb];
+	FLOAT threshold = gi->ATHadjust * gfc->ATH.l[gsfb];
 	FLOAT x = ratio->en.l[gsfb];
 	int l = gi->width[gsfb];
 	j += l;
@@ -200,7 +200,7 @@ calc_xmin(
     }   /* end of long block loop */
 
     for (sfb = gi->sfb_smin; gsfb < gi->psymax; sfb++, gsfb += 3) {
-	FLOAT tmpATH = gfc->ATH.adjust * gfc->ATH.s[sfb];
+	FLOAT tmpATH = gi->ATHadjust * gfc->ATH.s[sfb];
 	int b;
 	for (b = 0; b < 3; b++) {
 	    FLOAT threshold = tmpATH, x = ratio->en.s[sfb][b];
@@ -1740,6 +1740,7 @@ set_frame_pinfo(
 		= gfc->pinfo->pcmdata[ch][j+gfp->framesize];
 	for (j = FFTOFFSET; j < 1600; j++)
 	    gfc->pinfo->pcmdata[ch][j] = inbuf[ch][j-FFTOFFSET];
+	gfc->pinfo->athadjust[ch] = gfc->l3_side.tt[0][ch].ATHadjust;
     }
 
     for (gr = 0; gr < gfc->mode_gr; gr ++) {
