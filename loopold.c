@@ -181,6 +181,9 @@ void outer_loop_dual(
 
   cod_info[0] = &l3_side->gr[gr].ch[0].tt;
   cod_info[1] = &l3_side->gr[gr].ch[1].tt;
+  /* this is necessary for the case when one channel has count=0 */
+  /* l3_enc_w still needs to be set to zero */
+  memset(l3_enc_w, 0, sizeof(l3_enc_w));
 
   /******************************************************************
    * allocate bits for each channel 
@@ -305,7 +308,6 @@ void outer_loop_dual(
 	}
       }
     }
-
 
 
     /* compute the distortion in this quantization */
