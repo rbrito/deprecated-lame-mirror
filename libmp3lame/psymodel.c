@@ -615,7 +615,7 @@ int L3psycho_anal( lame_global_flags * gfp,
         
         if (vbr_mtrh == gfp->VBR) {
             thr[b] = Min (rpelev*gfc->nb_1[chn][b], rpelev2*gfc->nb_2[chn][b]);
-            thr[b] = Max (thr[b], gfc->adjust_ath*gfc->ATH_partitionbands[b]);
+            thr[b] = Max (thr[b], gfc->ATH->adjust * gfc->ATH->cb[b]);
             thr[b] = Min (thr[b], ecb);
 	}
         else if (gfc->blocktype_old[chn>1 ? chn-2 : chn] == SHORT_TYPE )
@@ -628,9 +628,9 @@ int L3psycho_anal( lame_global_flags * gfp,
 
 	{
 	  FLOAT8 thrpe;
-	  thrpe = Max(thr[b],gfc->ATH_partitionbands[b]);
+	  thrpe = Max(thr[b],gfc->ATH->cb[b]);
 	  /*
-	    printf("%i thr=%e   ATH=%e  \n",b,thr[b],gfc->ATH_partitionbands[b]);
+	    printf("%i thr=%e   ATH=%e  \n",b,thr[b],gfc->ATH->cb[b]);
 	  */
 	  if (thrpe < eb[b])
 	    gfc->pe[chn] -= gfc->numlines_l[b] * log(thrpe / eb[b]);
@@ -953,7 +953,7 @@ inline static FLOAT8 mask_add(FLOAT8 m1,FLOAT8 m2,int k,int b, lame_internal_fla
   if (b < 0) b = -b;
 
   i = 10*log10(m2 / m1)/10*16;
-  m = 10*log10((m1+m2)/gfc->ATH_partitionbands[k]);
+  m = 10*log10((m1+m2)/gfc->ATH->cb[k]);
 
   if (i < 0) i = -i;
 
@@ -1723,7 +1723,7 @@ int L3psycho_anal_ns( lame_global_flags * gfp,
     for ( sb = 0; sb < SBPSY_l; sb++ )
       {
 	FLOAT8 thmL,thmR,thmM,thmS,ath;
-	ath  = (gfc->ATH_partitionbands[(gfc->bu_l[sb] + gfc->bo_l[sb])/2])*pow(10,-gfp->ATHlower/10.0);
+	ath  = (gfc->ATH->cb[(gfc->bu_l[sb] + gfc->bo_l[sb])/2])*pow(10,-gfp->ATHlower/10.0);
 	thmL = Max(gfc->thm[0].l[sb],ath);
 	thmR = Max(gfc->thm[1].l[sb],ath);
 	thmM = Max(gfc->thm[2].l[sb],ath);
@@ -1747,7 +1747,7 @@ int L3psycho_anal_ns( lame_global_flags * gfp,
     for ( sb = 0; sb < SBPSY_s; sb++ ) {
       for ( sblock = 0; sblock < 3; sblock++ ) {
 	FLOAT8 thmL,thmR,thmM,thmS,ath;
-	ath  = (gfc->ATH_partitionbands[(gfc->bu_s[sb] + gfc->bo_s[sb])/2])*pow(10,-gfp->ATHlower/10.0);
+	ath  = (gfc->ATH->cb[(gfc->bu_s[sb] + gfc->bo_s[sb])/2])*pow(10,-gfp->ATHlower/10.0);
 	thmL = Max(gfc->thm[0].s[sb][sblock],ath);
 	thmR = Max(gfc->thm[1].s[sb][sblock],ath);
 	thmM = Max(gfc->thm[2].s[sb][sblock],ath);
@@ -2168,7 +2168,7 @@ int *npart_l_orig,int *npart_l,int *npart_s_orig,int *npart_s)
                           freq2bark (sfreq*(j+k)/BLKSIZE) );
       bval_l[i] = bark;
 
-      gfc->ATH_partitionbands [i] = 1.e37; // preinit for minimum search
+      gfc->ATH->cb [i] = 1.e37; // preinit for minimum search
       for (k=0; k < numlines_l[i]; k++, j++) {
 	FLOAT8  freq = sfreq*j/(1000.0*BLKSIZE);
 	FLOAT8  level;
@@ -2177,8 +2177,8 @@ int *npart_l_orig,int *npart_l,int *npart_s_orig,int *npart_s)
 	level  = ATHformula (freq*1000, gfp) - 20;   // scale to FFT units; returned value is in dB
 	level  = pow ( 10., 0.1*level );   // convert from dB -> energy
 	level *= numlines_l [i];
-	if ( level < gfc->ATH_partitionbands [i] )
-	    gfc->ATH_partitionbands [i] = level;
+	if ( level < gfc->ATH->cb [i] )
+	    gfc->ATH->cb [i] = level;
       }
 
 

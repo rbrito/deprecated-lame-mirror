@@ -263,7 +263,6 @@ int  long_help ( const lame_global_flags* gfp, FILE* const fp, const char* Progr
               "    --athonly       only use the ATH for masking\n"
               "    --noath         disable the ATH for masking\n"
               "    --athlower x    lower the ATH x dB\n"
-              "    --athadjust     auto adjust ATH at low volume\n"
               "    --short         use short blocks\n"
               "    --temporal <n>  use temporal masking effect (type n)\n"
               "    --noshort       do not use short blocks\n"
@@ -786,9 +785,6 @@ int  parse_args ( lame_global_flags* gfp, int argc, char** argv, char* const inP
 		T_ELIF ("athtype")
 		    argUsed=1;
 		    gfp->ATHtype = atoi(nextArg);
-		
-		T_ELIF ("athadjust")
-		    gfp->ATH_auto_adjust = 1;
 		
 		T_ELIF ("scale")
 		    argUsed=1;

@@ -165,7 +165,7 @@ iteration_init( lame_global_flags *gfp)
     gfc->iteration_init_init=1;
 
     l3_side->main_data_begin = 0;
-    compute_ath(gfp,gfc->ATH_l,gfc->ATH_s);
+    compute_ath(gfp,gfc->ATH->l,gfc->ATH->s);
 
     pow43[0] = 0.0;
     for(i=1;i<PRECALC_SIZE;i++)
@@ -456,12 +456,12 @@ int calc_xmin(
       en0 /= bw;
       
       if (gfp->ATHonly || gfp->ATHshort) {
-        xmin = gfc->adjust_ath*gfc->ATH_s[sfb];
+        xmin = gfc->ATH->adjust * gfc->ATH->s[sfb];
       } else {
         xmin = ratio->en.s[sfb][b];
         if (xmin > 0.0)
           xmin = en0 * ratio->thm.s[sfb][b] * gfc->masking_lower / xmin;
-        xmin = Max(gfc->adjust_ath*gfc->ATH_s[sfb], xmin);
+        xmin = Max(gfc->ATH->adjust * gfc->ATH->s[sfb], xmin);
       }
       l3_xmin->s[sfb][b] = xmin * bw;
 
@@ -475,7 +475,7 @@ int calc_xmin(
 	}
       }
 
-      if (en0 > gfc->adjust_ath*gfc->ATH_s[sfb]) ath_over++;
+      if (en0 > gfc->ATH->adjust * gfc->ATH->s[sfb]) ath_over++;
       if (gfc->nsPsy.use && (gfp->VBR == vbr_off || gfp->VBR == vbr_abr) && gfp->quality <= 1)
         l3_xmin->s[sfb][b] *= 0.001;
     }
@@ -504,12 +504,12 @@ int calc_xmin(
 	}
     
 	if (gfp->ATHonly) {
-	  xmin=gfc->adjust_ath*gfc->ATH_l[sfb];
+	  xmin=gfc->ATH->adjust * gfc->ATH->l[sfb];
 	} else {
 	  xmin = ratio->en.l[sfb];
 	  if (xmin > 0.0)
 	    xmin = en0 * ratio->thm.l[sfb] * gfc->masking_lower / xmin;
-          xmin=Max(gfc->adjust_ath*gfc->ATH_l[sfb], xmin);
+          xmin=Max(gfc->ATH->adjust * gfc->ATH->l[sfb], xmin);
 	}
 	l3_xmin->l[sfb]=xmin;
 
@@ -521,7 +521,7 @@ int calc_xmin(
 	  l3_xmin->l[sfb] *= gfc->nsPsy.treble;
 	}
 
-	if (en0 > gfc->adjust_ath*gfc->ATH_l[sfb]) ath_over++;
+	if (en0 > gfc->ATH->adjust * gfc->ATH->l[sfb]) ath_over++;
 	if ((gfp->VBR == vbr_off || gfp->VBR == vbr_abr) && gfp->quality <= 1)
           l3_xmin->l[sfb] *= 0.001;
       }
@@ -538,16 +538,16 @@ int calc_xmin(
 	en0 /= bw;
     
 	if (gfp->ATHonly) {
-	  xmin=gfc->adjust_ath*gfc->ATH_l[sfb];
+	  xmin=gfc->ATH->adjust * gfc->ATH->l[sfb];
 	} else {
 	  xmin = ratio->en.l[sfb];
 	  if (xmin > 0.0)
 	    xmin = en0 * ratio->thm.l[sfb] * gfc->masking_lower / xmin;
-          xmin=Max(gfc->adjust_ath*gfc->ATH_l[sfb], xmin);
+          xmin=Max(gfc->ATH->adjust * gfc->ATH->l[sfb], xmin);
 	}
 	l3_xmin->l[sfb]=xmin*bw;
 	
-        if (en0 > gfc->adjust_ath*gfc->ATH_l[sfb]) ath_over++;
+        if (en0 > gfc->ATH->adjust * gfc->ATH->l[sfb]) ath_over++;
       }
     }
   }
@@ -819,7 +819,7 @@ void set_pinfo (
                     en0=0;
 
                 gfc->pinfo->thr_s[gr][ch][3*sfb+i] = 
-                        en1*Max(en0*ratio->thm.s[sfb][i],gfc->ATH_s[sfb]);
+                        en1*Max(en0*ratio->thm.s[sfb][i],gfc->ATH->s[sfb]);
 
  
                 /* there is no scalefactor bands >= SBPSY_s */
@@ -889,7 +889,7 @@ void set_pinfo (
             if (gfp->ATHonly)
                 en0=0;
             gfc->pinfo->thr[gr][ch][sfb] =
-                             en1*Max(en0*ratio->thm.l[sfb],gfc->ATH_l[sfb]);
+                             en1*Max(en0*ratio->thm.l[sfb],gfc->ATH->l[sfb]);
 
             /* there is no scalefactor bands >= SBPSY_l */
             if (sfb<SBPSY_l) {

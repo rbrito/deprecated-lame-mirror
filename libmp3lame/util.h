@@ -144,6 +144,21 @@ typedef struct
 } VBR_seek_info_t;
 
 
+/**
+ *  ATH related stuff, if something new ATH related has to be added,
+ *  please plugg it here into the ATH_t struct
+ */
+typedef struct
+{
+    int     use_adjust;    // do we want to use the auto adjustment yes/no
+    FLOAT8  adjust;        // lowering based on peak volume, 1 = no lowering
+    FLOAT8  l[SBMAX_l];    // ATH for sfbs in long blocks
+    FLOAT8  s[SBMAX_s];    // ATH for sfbs in short blocks
+    FLOAT8  cb[CBANDS];    // ATH for convolution bands
+} ATH_t;
+
+
+
 /* Guest structure, only temporarly here */
 
 typedef enum {
@@ -277,11 +292,8 @@ typedef struct  {
   /* variables used by quantize.c */
   int OldValue[2];
   int CurrentStep;
-  FLOAT8 ATH_l[SBMAX_l];
-  FLOAT8 ATH_s[SBMAX_s];
   FLOAT8 decay;
   FLOAT8 masking_lower;
-  FLOAT8 adjust_ath;
 
   char bv_scf[576];
   
@@ -340,7 +352,6 @@ typedef struct  {
   FLOAT8	nb_1[4][CBANDS], nb_2[4][CBANDS];
   FLOAT8 s3_s[CBANDS][CBANDS];
   FLOAT8 s3_l[CBANDS][CBANDS];
-  FLOAT8 ATH_partitionbands[CBANDS];
 
   III_psy_xmin thm[4];
   III_psy_xmin en[4];
@@ -415,6 +426,8 @@ typedef struct  {
   unsigned crcvalue;
   
   VBR_seek_info_t VBR_seek_table; // used for Xing VBR header
+  
+  ATH_t *ATH;   // all ATH related stuff
   
   //  lame_global_flags *gfp;  // lame_init_params() should copy all information 
                            // needed from gfp to this structure, so gfp becomes

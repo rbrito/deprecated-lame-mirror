@@ -513,6 +513,12 @@ int lame_init_params ( lame_global_flags* const gfp )
     gfc -> CPU_features_SIMD  = has_SIMD  ();
     gfc -> CPU_features_SIMD2 = has_SIMD2 ();
     
+    
+    gfc -> ATH = calloc (1, sizeof(ATH_t));
+    
+    if (NULL == gfc->ATH)
+        return -2;
+    
     //init_scalar_functions ( gfc );      /* Select the fastest functions for this CPU */
 
     gfc->channels_in  = gfp->num_channels;
@@ -847,16 +853,6 @@ int lame_init_params ( lame_global_flags* const gfp )
 
   }
 
-  /* VBR needs at least the output of GPSYCHO,
-   * so we have to garantee that by setting a minimum 
-   * quality level, actually level 5 does it.
-   * the -v and -V x settings switch the quality to level 2
-   * you would have to add a -q 5 to reduce the quality
-   * down to level 5
-   */
-
-  if ( gfp->VBR != vbr_off)  gfp->quality = Min ( gfp->quality, 5 );
-
   /* Do not write VBR tag if VBR flag is not specified */
   if ( gfp->VBR == vbr_off) gfp->bWriteVbrTag = 0;
   if ( gfp->ogg )           gfp->bWriteVbrTag = 0;
@@ -896,9 +892,6 @@ int lame_init_params ( lame_global_flags* const gfp )
     if ( gfp->bWriteVbrTag )
         InitVbrTag ( gfp );
 
-    gfc->sfb21_extra = ( gfp->VBR == vbr_rh  ||  gfp->VBR == vbr_mtrh  ||  gfp->VBR == vbr_mt )
-                    && ( gfp->out_samplerate > 44000 );
-
     if (gfp->version == 1) /* 0 indicates use lower sample freqs algorithm */
       gfc->is_mpeg1=1; /* yes */
     else
@@ -930,7 +923,53 @@ int lame_init_params ( lame_global_flags* const gfp )
       i = (gfp->exp_nspsytune >> 14) & 63; if (i >= 32) i -= 64; gfc->nsPsy.treble = pow(10,i / 4.0 / 10.0);
     }
 
-    if (gfp->ATHtype == -1) gfp->ATHtype = 1;
+    switch (gfp->VBR) {
+        
+        case vbr_rh:
+        case vbr_mt:
+        case vbr_mtrh:
+            
+            /*  automatic ATH adjustment on, VBR modes need it
+             */
+            gfc->ATH->use_adjust = 1;
+            
+            /*  use Roel's tweaked Gaby-ATH for VBR by default
+             */   
+            if (gfp->ATHtype == -1)
+                gfp->ATHtype = 3;   
+
+            /*  sfb21 extra only with MPEG-1 at higher sampling rates
+             */
+            gfc->sfb21_extra = ( gfp->out_samplerate > 44000 );
+
+            /* VBR needs at least the output of GPSYCHO,
+             * so we have to garantee that by setting a minimum 
+             * quality level, actually level 5 does it.
+             * the -v and -V x settings switch the quality to level 2
+             * you would have to add a -q 5 to reduce the quality
+             * down to level 5
+             */
+            gfp->quality = Min ( gfp->quality, 5 );
+
+        break;
+        
+        default:
+            
+            /*  automatic ATH adjustment off, not so important for CBR code
+             */
+            gfc->ATH->use_adjust = 0;   
+            
+            /*  use Frank's ATH for CBR/ABR by default
+             */
+            if (gfp->ATHtype == -1)
+                gfp->ATHtype = 1;   
+                
+            /*  no sfb21 extra with CBR code
+             */
+            gfc->sfb21_extra = 0;
+            
+        break;
+    }
 
     /* initialize internal qval settings */
     lame_init_qval(gfp);
