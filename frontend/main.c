@@ -591,7 +591,9 @@ void print_trailing_info(lame_global_flags *gf)
 	       "         high to be stored in the header.\n" );
     }
 	
-    if(print_clipping_info) {
+    /* if (the user requested printing info about clipping) and (decoding
+       on the fly has actually been performed) */
+    if(print_clipping_info && lame_get_ReplayGain_decode(gf)) {
       float noclipGainChange = (float)lame_get_noclipGainChange(gf) / 10.0;
       float noclipScale = lame_get_noclipScale(gf);
 
