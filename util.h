@@ -9,6 +9,7 @@
 #include "encoder.h"
 #include "lame.h"
 #include "gtkanal.h"
+#include <assert.h>
 
 /***********************************************************************
 *
@@ -359,6 +360,38 @@ extern int fill_buffer_upsample(lame_global_flags *gfp,short int *outbuf,int des
 
 extern void 
 getframebits(lame_global_flags *gfp,int *bitsPerFrame, int *mean_bits);
+
+
+
+/***********************************************************************
+*
+*  Macros about Message Printing and Exit
+*
+***********************************************************************/
+
+#define LAME_STD_PRINT
+
+#ifdef LAME_STD_PRINT
+extern void lame_errorf(const char *, ...);
+
+#define DEBUGF	printf
+#define ERRORF	lame_errorf
+#define MSGF	lame_errorf
+
+#define FLUSH_DEBUG()	fflush(stdout)
+#define FLUSH_ERR()	fflush(stderr)
+#define FLUSH_MSG()	fflush(stderr)
+#endif
+
+#define LAME_ASSERT(x)	assert(x)
+
+#define LAME_EXIT(n)		exit(n)
+#define LAME_NORMAL_EXIT()	exit(0)
+#define LAME_ERROR_EXIT()	exit(1)
+#define LAME_FATAL_EXIT()	exit(2)
+
+
+
 
 #endif
 
