@@ -252,7 +252,6 @@ int  long_help ( const lame_global_flags* gfp, FILE* const fp, const char* Progr
               "                    auto = jstereo, with varialbe mid/side threshold\n"
               "    -a              downmix from stereo to mono file for mono encoding\n"
               "    -d              allow channels to have different blocktypes\n"
-              "    -S              don't print progress report, VBR histograms\n"
               "    --disptime <arg>print progress report every arg seconds\n"
               "    --ogg           encode to Ogg Vorbis instead of MP3\n"
               "    --freeformat    produce a free format bitstream\n"
@@ -263,8 +262,8 @@ int  long_help ( const lame_global_flags* gfp, FILE* const fp, const char* Progr
               "    --athonly       only use the ATH for masking\n"
               "    --noath         disable the ATH for masking\n"
               "    --athlower x    lower the ATH x dB\n"
-              "    --short         use short blocks\n"
               "    --temporal <n>  use temporal masking effect (type n)\n"
+              "    --short         use short blocks\n"
               "    --noshort       do not use short blocks\n"
               "    --voice         experimental voice mode\n"
               "    --preset type   type must be phone, voice, fm, tape, hifi, cd or studio\n"
@@ -272,6 +271,12 @@ int  long_help ( const lame_global_flags* gfp, FILE* const fp, const char* Progr
 
     wait_for ( fp, lessmode );
     fprintf ( fp,
+              "  Verbosity:\n"
+              "    -S              don't print progress report, VBR histograms\n"
+              "    --silent        don't print anything on screen\n"
+              "    --quiet         don't print anything on screen\n"
+              "    --verbose       print a lot of useful information, default\n"
+              "\n"
               "  Noise shaping & psycho acoustic algorithms:\n"
               "    -q <arg>        <arg> = 0...9.  Default  -q 5 \n"
               "                    -q 0:  Highest quality, very slow \n"
@@ -693,7 +698,8 @@ int  parse_args ( lame_global_flags* gfp, int argc, char** argv, char* const inP
 		
 		T_ELIF ("vbr-mtrh")
 		    gfp->VBR = vbr_mtrh; 
-		    gfp->quality = 1;
+		    gfp->quality = 2;
+                    user_quality = 1;
 
 		T_ELIF ("r3mix")
 		    gfp->VBR = vbr_rh; 
@@ -967,16 +973,19 @@ int  parse_args ( lame_global_flags* gfp, int argc, char** argv, char* const inP
 		    }
 		
 		/* some more GNU-ish options could be added
-		 * version       => complete name, version and license info (normal exit)  
-		 * quiet/silent  => no messages on screen
 		 * brief         => few messages on screen (name, status report)
-		 * verbose       => all infos to screen (brhist, internal flags/filters)
 		 * o/output file => specifies output filename
 		 * O             => stdout
 		 * i/input file  => specifies input filename
 		 * I             => stdin
 		 */
-		T_ELIF2 ("version", "license")
+		T_ELIF2 ("quiet", "silent")
+		    silent = 10;    /* on a scale from 1 to 10 be very silent */
+		
+                T_ELIF ("verbose")
+		    silent = 0;    /* print a lot on screen, the default */
+                    
+                T_ELIF2 ("version", "license")
 		    print_license ( gfp, stdout, ProgramName );
 		    return -2;
 		

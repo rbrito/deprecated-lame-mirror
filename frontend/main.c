@@ -215,7 +215,7 @@ int main(int argc, char **argv)
     gf->VBR=vbr_off;            /* ignore lame's various VBR modes */
   }
 #endif
-  if (!gf->decode_only) {
+  if (!gf->decode_only && silent < 10) {
     lame_print_config(gf);   /* print useful information about options being used */
 
     fprintf ( stderr, "Encoding %s%s to %s\n",
@@ -252,6 +252,7 @@ int main(int argc, char **argv)
 		  0.1 * (int)(10.*gf->compression_ratio + 0.5), 
 		  gf->quality );
     }
+    fflush ( stderr );
   }
 
 
