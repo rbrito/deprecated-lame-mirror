@@ -64,7 +64,7 @@ ifeq ($(UNAME),Linux)
    LIBTERMCAP = -lncurses
 
 #  for debugging:
-   CC_OPTS =  -UNDEBUG -O  -Wall -g -DABORTFP 
+#   CC_OPTS =  -UNDEBUG -O  -Wall -g -DABORTFP 
 
 
 #  for lots of debugging:
@@ -275,8 +275,9 @@ libmp3lame.a:  $(OBJ) Makefile
 	ar cr libmp3lame.a  $(OBJ) 
 
 clean:
-	-$(RM) $(OBJ) $(DEP) $(PGM) main.o rtp.o mp3rtp mp3rtp.o mp3x.o mp3x libmp3lame.a \
-                      mp3resample.o mp3resample	
+	-$(RM) $(OBJ) $(DEP) $(PGM) main.o rtp.o mp3rtp mp3rtp.o \
+         mp3x.o mp3x libmp3lame.a 
+
 
 tags: TAGS
 
@@ -288,25 +289,16 @@ ifneq ($(MAKECMDGOALS),clean)
 endif
 
 
-test25: $(PGM)
-	./lame  ../test/castanets.wav
-	cmp -l ../test/castanets.wav.mp3 ../test/castanets.ref25.mp3 | head
-test25h: $(PGM)
-	./lame  -h  ../test/castanets.wav
-	cmp -l ../test/castanets.wav.mp3 ../test/castanets.ref25h.mp3 | head
-test24: $(PGM)
-	./lame  ../test/castanets.wav
-	cmp -l ../test/castanets.wav.mp3 ../test/castanets.ref24.mp3 | head
-test24h: $(PGM)
-	./lame  -h  ../test/castanets.wav
-	cmp -l ../test/castanets.wav.mp3 ../test/castanets.ref24h.mp3 | head
-
-testr: $(PGM)
-	./lame  --nores -h  ../test/castanets.wav
-	cmp -l ../test/castanets.wav.mp3 ../test/castanets.refr.mp3 | wc
-testv: $(PGM)
-	./lame  -v  ../test/castanets.wav
-	cmp -l ../test/castanets.wav.mp3 ../test/castanets.refv.mp3 | wc
-testg: $(PGM)
-	./lame -h -g ../test/castanets.wav
+#
+#  testcase.mp3 is a 2926 byte file.  The first number output by
+#  wc is the number of bytes which differ between new output
+#  and 'official' results.  
+#
+#  Because of compilier options and effects of roundoff, the 
+#  number of bytes which are different may not be zero, but
+#  should be at most 30.
+#
+test: $(PGM)
+	./lame  --nores -h testcase.wav testcase.new.mp3
+	cmp -l testcase.new.mp3 testcase.mp3 | wc
 
