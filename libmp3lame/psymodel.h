@@ -35,7 +35,6 @@
 #define NS_MSFIX 4.0
 
 void psycho_analysis(lame_t gfc,
-		     const sample_t *buffer[2],
 		     III_psy_ratio masking[2][2],
 		     FLOAT sbsmpl[2][1152] );
 

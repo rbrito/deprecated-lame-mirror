@@ -139,7 +139,7 @@ be masked by strong maskers in the L or R channels.
 #include "machine.h"
 
 /*
-   L3psycho_anal.  Compute psycho acoustics.
+   psycho_anal.  Compute psycho acoustics.
 
    Data returned to the calling program must be delayed by one frame.
 
@@ -403,8 +403,7 @@ fft_short(lame_t  const gfc,
 }
 
 static void
-fft_long(lame_t  const gfc,
-	 FLOAT x[BLKSIZE], const sample_t *buffer )
+fft_long(lame_t  const gfc, FLOAT x[BLKSIZE], const sample_t *buffer)
 {
     int i, j = BLKSIZE / 8 - 1;
     x += BLKSIZE / 2;
@@ -939,13 +938,7 @@ pecalc_l(III_psy_ratio *mr, int sb)
 
 
 static void
-psycho_analysis_short(
-    lame_t gfc,
-    const sample_t *buffer[2],
-    FLOAT sbsmpl[2][1152],
-    int gr,
-    int numchn
-    )
+psycho_analysis_short(lame_t gfc, FLOAT sbsmpl[2][1152], int gr, int numchn)
 {
     FLOAT wsamp_S[2][3][BLKSIZE_s];
     int current_is_short = 0, ch, j, sb;
@@ -1061,7 +1054,8 @@ mp3x display               <------LONG------>
 	III_psy_ratio *mr = &gfc->masking_next[gr][ch];
 	if (ch < 2 && (current_is_short & (12+1+ch))) {
 	    for (sb = 0; sb < 3; sb++)
-		fft_short(gfc, wsamp_S[ch][sb], &buffer[ch][(576/3) * (sb+1)]);
+		fft_short(gfc, wsamp_S[ch][sb],
+			  &gfc->mfbuf[ch][576/3*(3*(gr + gfc->mode_gr)+sb+1) - FFTOFFSET]);
 	}
 	else if (ch == 2 && (current_is_short & 12)) {
 	    for (sb = 0; sb < 3; sb++) {
@@ -1127,12 +1121,7 @@ partially_convert_l2s(lame_t gfc, III_psy_ratio *mr, FLOAT *nb_1,
 }
 
 static void
-L3psycho_anal_ns(
-    lame_t gfc,
-    const sample_t *buffer[2],
-    int gr,
-    int numchn
-    )
+psycho_anal_ns(lame_t gfc, int gr, int numchn)
 {
     FLOAT adjATH[CBANDS];
     FLOAT wsamp_L[MAX_CHANNELS][BLKSIZE];    /* fft and energy calculation   */
@@ -1153,7 +1142,8 @@ L3psycho_anal_ns(
 	};
 	int b, i, j;
 	if (ch < 2)
-	    fft_long ( gfc, wsamp_L[ch], buffer[ch]);
+	    fft_long(gfc, wsamp_L[ch],
+		     gfc->mfbuf[ch] + 576*(gr + gfc->mode_gr) - FFTOFFSET);
 	else if (ch == 2) {
 	    /* FFT data for mid and side channel is derived from L & R */
 	    for (j = 0; j < BLKSIZE; j++) {
@@ -1385,11 +1375,9 @@ L3psycho_anal_ns(
  */
 void
 psycho_analysis(
-    lame_t gfc, const sample_t *buffer[2], III_psy_ratio masking_d[2][2],
-    FLOAT sbsmpl[2][1152])
+    lame_t gfc, III_psy_ratio masking_d[2][2], FLOAT sbsmpl[2][1152])
 {
     int gr, ch, blocktype_old[MAX_CHANNELS], numchn;
-    const sample_t *bufp[MAX_CHANNELS];
 
     /* next frame data -> current frame data (aging) */
     gfc->mode_ext = gfc->mode_ext_next;
@@ -1404,13 +1392,12 @@ psycho_analysis(
 	    gr_info *gi = &gfc->l3_side.tt[gr][ch];
 	    masking_d[gr][ch] = gfc->masking_next[gr][ch + gfc->mode_ext];
 	    /* not good XXX */
-	    gi->ATHadjust = gfc->ATH.adjust[ch + gfc->mode_ext];
+x	    gi->ATHadjust = gfc->ATH.adjust[ch + gfc->mode_ext];
 	    gi->block_type = gfc->blocktype_next[gr][ch];
-	    bufp[ch] = buffer[ch] + 576*(gr + gfc->mode_gr) - FFTOFFSET;
 	}
 
-	psycho_analysis_short(gfc, bufp, sbsmpl, gr, numchn);
-	L3psycho_anal_ns(gfc, bufp, gr, numchn);
+	psycho_analysis_short(gfc, sbsmpl, gr, numchn);
+	psycho_anal_ns(gfc, gr, numchn);
 
 	/*********************************************************************
 	 * other masking effect

@@ -243,15 +243,9 @@ init_gr_info(lame_t gfc, int gr, int ch)
 
 
 
-/************************************************************************
-*
-* encodeframe()           Layer 3
-*
-* encode a single frame
-*
-************************************************************************
-lame_encode_frame()
-
+/*************************************************************************
+ encode_mp3_frame()
+   encode a single frame for Layer3
 
                        gr 0            gr 1
 inbuf:           |--------------|---------------|-------------|
@@ -259,7 +253,6 @@ MDCT output:  |--------------|---------------|-------------|
 
 FFT's                    <---------1024---------->
                                          <---------1024-------->
-
 
 
     inbuf = buffer of PCM data size=MP3 framesize
@@ -275,23 +268,14 @@ FFT's                    <---------1024---------->
     MPEG1:  FFT ends at:  BLKSIZE+2*576-224-MDCTDELAY    (1904)
 
     FFT starts at 576-224-MDCTDELAY (304)  = 576-FFTOFFSET
-*/
+*************************************************************************/
 
 static int
-lame_encode_mp3_frame (		/* Output */
-    lame_t	gfc,
-    sample_t*           inbuf_l,	/* Input */
-    sample_t*           inbuf_r,	/* Input */
-    unsigned char*      mp3buf, 	/* Output */
-    int                 mp3buf_size)	/* Output */
+encode_mp3_frame(lame_t gfc, unsigned char* mp3buf, int mp3buf_size)
 {
     int mp3count, ch, gr;
     III_psy_ratio masking[2][MAX_CHANNELS];
-    const sample_t *inbuf[MAX_CHANNELS];
     FLOAT sbsmpl[MAX_CHANNELS][1152];
-
-    inbuf[0]=inbuf_l;
-    inbuf[1]=inbuf_r;
 
     if (!gfc->lame_encode_frame_init) {
 	/* prime the MDCT/polyphase filterbank with a short block */
@@ -304,7 +288,7 @@ lame_encode_mp3_frame (		/* Output */
 	    int i;
 	    memset(primebuff, 0, sizeof(FLOAT)*gfc->framesize);
 	    for (i = -48; i < 576; i++)
-		primebuff[gfc->framesize + i] = inbuf[ch][i+1152];
+		primebuff[gfc->framesize + i] = gfc->mfbuf[ch][i+1152];
 
 	    subband(gfc, primebuff-gfc->framesize, sbsmpl[ch]);
 	    memset(gfc->sb_sample[ch][0], 0, sizeof(gfc->sb_sample[0][0]));
@@ -324,7 +308,7 @@ lame_encode_mp3_frame (		/* Output */
 	assert(gfc->mf_size >= 286+576+gfc->framesize);
 
 	if (gfc->psymodel)
-	    psycho_analysis(gfc, inbuf, masking, sbsmpl);
+	    psycho_analysis(gfc, masking, sbsmpl);
     }
 
     /********************** padding *****************************/
@@ -345,10 +329,10 @@ lame_encode_mp3_frame (		/* Output */
     /* subband filtering in the next frame */
     /* to determine long/short swithcing in psymodel */
     for ( ch = 0; ch < gfc->channels_out; ch++ )
-	subband(gfc, inbuf[ch], sbsmpl[ch]);
+	subband(gfc, gfc->mfbuf[ch], sbsmpl[ch]);
 
     if (gfc->psymodel)
-	psycho_analysis(gfc, inbuf, masking, sbsmpl);
+	psycho_analysis(gfc, masking, sbsmpl);
     else
 	memset(masking, 0, sizeof(masking));
 
@@ -448,8 +432,12 @@ lame_encode_mp3_frame (		/* Output */
     }
 
 #ifndef NOANALYSIS
-    if (gfc->pinfo)
+    if (gfc->pinfo) {
+	const sample_t *inbuf[MAX_CHANNELS];
+	inbuf[0]=gfc->mfbuf[0];
+	inbuf[1]=gfc->mfbuf[1];
 	set_frame_pinfo(gfc, masking, inbuf);
+    }
 #endif
 
 #ifdef BRHIST
@@ -499,12 +487,12 @@ static int
 fill_buffer_resample(
     lame_t gfc,
     sample_t *outbuf,
-    int desired_len,
     sample_t *inbuf,
     int len,
     int *num_used,
     int ch) 
 {
+    int desired_len = gfc->framesize;
     int BLACKSIZE;
     FLOAT offset,xvalue;
     int i,j=0,k;
@@ -533,11 +521,11 @@ fill_buffer_resample(
 	gfc->itime[1]=0;
 
 	/* precompute blackman filter coefficients */
-	for ( j = 0; j <= 2*bpc; j++ ) {
+	for (j = 0; j <= 2*bpc; j++) {
 	    FLOAT sum = 0.; 
 	    offset = (j-bpc) / (2.*bpc);
 	    for (i = 0; i <= filter_l; i++)
-		sum += gfc->blackfilt[j][i]  = blackman(i-offset,fcn,filter_l);
+		sum += gfc->blackfilt[j][i] = blackman(i-offset,fcn,filter_l);
 	    for (i = 0; i <= filter_l; i++)
 		gfc->blackfilt[j][i] /= sum;
 	}
@@ -616,8 +604,7 @@ fill_buffer_resample(
 
 
 static int
-fill_buffer(lame_t gfc, sample_t *mfbuf[2], sample_t *in_buffer[2],
-	    int nsamples, int *n_in)
+fill_buffer(lame_t gfc, sample_t *in_buffer[2], int nsamples, int *n_in)
 {
     int n_out;
 
@@ -625,17 +612,16 @@ fill_buffer(lame_t gfc, sample_t *mfbuf[2], sample_t *in_buffer[2],
     if (gfc->resample_ratio != 1.0) {
 	int ch = 0;
 	do {
-	    n_out = fill_buffer_resample(gfc, &mfbuf[ch][gfc->mf_size],
-					 gfc->framesize, in_buffer[ch],
-					 nsamples, n_in, ch);
+	    n_out = fill_buffer_resample(gfc, &gfc->mfbuf[ch][gfc->mf_size],
+					 in_buffer[ch], nsamples, n_in, ch);
 	} while (ch < gfc->channels_out);
     }
     else {
 	*n_in = n_out = Min(gfc->framesize, nsamples);
-	memcpy(&mfbuf[0][gfc->mf_size], &in_buffer[0][0],
+	memcpy(&gfc->mfbuf[0][gfc->mf_size], &in_buffer[0][0],
 	       sizeof(sample_t) * n_out);
 	if (gfc->channels_out == 2)
-	    memcpy(&mfbuf[1][gfc->mf_size], &in_buffer[1][0],
+	    memcpy(&gfc->mfbuf[1][gfc->mf_size], &in_buffer[1][0],
 		   sizeof(sample_t) * n_out);
     }
     return n_out;
@@ -674,7 +660,6 @@ lame_encode_buffer_sample_t(
 {
     int mp3size = 0, ret, i, ch, mf_needed;
     int mp3out;
-    sample_t *mfbuf[2];
     sample_t *in_buffer[2];
 
     /* copy out any tags that may have been written into bitstream */
@@ -690,8 +675,8 @@ lame_encode_buffer_sample_t(
 				   + buffer_lr[i+nsamples]);
     }
 
-    mfbuf[0] = gfc->mfbuf[0]; in_buffer[0]=buffer_lr;
-    mfbuf[1] = gfc->mfbuf[1]; in_buffer[1]=buffer_lr + nsamples;
+    in_buffer[0]=buffer_lr;
+    in_buffer[1]=buffer_lr + nsamples;
 
     /* some sanity checks */
 #if ENCDELAY < MDCTDELAY
@@ -713,7 +698,7 @@ lame_encode_buffer_sample_t(
 	int	buf_size;
 
         /* copy in new samples into mfbuf, with resampling */
-        n_out = fill_buffer(gfc, mfbuf, in_buffer, nsamples, &n_in);
+        n_out = fill_buffer(gfc, in_buffer, nsamples, &n_in);
 
         /* update in_buffer counters */
         nsamples -= n_in;
@@ -741,7 +726,7 @@ lame_encode_buffer_sample_t(
 	if (mp3buf_size==0)
 	    buf_size=0;
 
-	ret = lame_encode_mp3_frame(gfc, mfbuf[0], mfbuf[1], mp3buf, buf_size);
+	ret = encode_mp3_frame(gfc, mp3buf, buf_size);
 	gfc->frameNum++;
 
 	if (ret < 0)
@@ -754,7 +739,7 @@ lame_encode_buffer_sample_t(
 	gfc->mf_samples_to_encode -= gfc->framesize;
 	for (ch = 0; ch < gfc->channels_out; ch++)
 	    for (i = 0; i < gfc->mf_size; i++)
-		mfbuf[ch][i] = mfbuf[ch][i + gfc->framesize];
+		gfc->mfbuf[ch][i] = gfc->mfbuf[ch][i + gfc->framesize];
     } while (nsamples > 0);
     assert(nsamples == 0);
     return mp3size;
