@@ -1095,10 +1095,10 @@ int L3psycho_anal( lame_global_flags *gfp,
 		  p = NS_INTERP(p,thmm,NS_PREECHO_ATT2);
 		  thmm = Min(thmm,p);
 		}
-
-		gfc->en [chn].s[sb][sblock] = enn;
-		gfc->thm[chn].s[sb][sblock] = thmm;
             }
+
+	    gfc->en [chn].s[sb][sblock] = enn;
+	    gfc->thm[chn].s[sb][sblock] = thmm;
 	  }
       }
 
