@@ -768,6 +768,9 @@ if test "x$GCC" = "xyes"; then
 				/bin/uname${ac_exeext} -a | grep i686 > /dev/null 2>&1 && \
 				OPTIMIZATION="${OPTIMIZATION} \
 						-mcpu=pentiumpro"
+				/bin/uname${ac_exeext} -a | grep i586 > /dev/null 2>&1 && \
+				OPTIMIZATION="${OPTIMIZATION} \
+						-mcpu=pentium"
 			fi
 			;;
 		esac
@@ -797,15 +800,6 @@ if test "x$GCC" = "xyes"; then
 			*486)
 				OPTIMIZATION="${OPTIMIZATION} -m486 \
 					-mfancy-math-387"
-				;;
-			*586)
-				OPTIMIZATION="${OPTIMIZATION} -mcpu=pentium \
-					-march=pentium -mfancy-math-387"
-				;;
-			*686)
-				OPTIMIZATION="${OPTIMIZATION} -mcpu=pentiumpro \
-					-march=pentiumpro -mfancy-math-387 \
-					-malign-double"
 				;;
 			*86)
 				OPTIMIZATION="${OPTIMIZATION} -mfancy-math-387"
