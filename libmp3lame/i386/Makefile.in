@@ -116,8 +116,8 @@ nasm_sources = \
 	scalar.nas
 
 
-@HAVE_NASM_TRUE@noinst_LIBRARIES = @HAVE_NASM_TRUE@liblameasmroutines.a
-@HAVE_NASM_TRUE@liblameasmroutines_a_SOURCES = @HAVE_NASM_TRUE@$(nasm_sources)
+@HAVE_NASM_TRUE@noinst_LTLIBRARIES = @HAVE_NASM_TRUE@liblameasmroutines.la
+@HAVE_NASM_TRUE@liblameasmroutines_la_SOURCES = @HAVE_NASM_TRUE@$(nasm_sources)
 
 noinst_HEADERS = nasm.h
 
@@ -125,13 +125,13 @@ INCLUDES = @INCLUDES@ -I$(top_srcdir)/libmp3lame/@CPUTYPE@
 
 SUFFIXES = .nas
 
-EXTRA_liblameasmroutines_a_SOURCES = $(nasm_sources)
+EXTRA_liblameasmroutines_la_SOURCES = $(nasm_sources)
 
 CLEANFILES = \
-	choose_table.lst \
-	cpu_feat.lst \
-	fft3dn.lst \
-	scalar.lst
+	choose_table.o.lst \
+	cpu_feat.o.lst \
+	fft3dn.o.lst \
+	scalar.o.lst
 
 
 EXTRA_DIST = \
@@ -147,25 +147,24 @@ subdir = libmp3lame/i386
 mkinstalldirs = $(SHELL) $(top_srcdir)/mkinstalldirs
 CONFIG_HEADER = ../../config.h
 CONFIG_CLEAN_FILES = 
-LIBRARIES =  $(noinst_LIBRARIES)
+LTLIBRARIES =  $(noinst_LTLIBRARIES)
 
 CPPFLAGS = @CPPFLAGS@
 LDFLAGS = @LDFLAGS@
 LIBS = @LIBS@
 ANSI2KNR = $(top_srcdir)/ansi2knr
-liblameasmroutines_a_AR = $(AR) cru
-liblameasmroutines_a_LIBADD = 
-@HAVE_NASM_TRUE@am_liblameasmroutines_a_OBJECTS =  choose_table.o \
+liblameasmroutines_la_LDFLAGS = 
+liblameasmroutines_la_LIBADD = 
+@HAVE_NASM_TRUE@am_liblameasmroutines_la_OBJECTS =  choose_table.o \
 @HAVE_NASM_TRUE@cpu_feat.o fft3dn.o scalar.o
-liblameasmroutines_a_OBJECTS =  $(am_liblameasmroutines_a_OBJECTS)
-AR = ar
+liblameasmroutines_la_OBJECTS =  $(am_liblameasmroutines_la_OBJECTS)
 CFLAGS = @CFLAGS@
 COMPILE = $(CC) $(DEFS) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS)
 LTCOMPILE = $(LIBTOOL) --mode=compile $(CC) $(DEFS) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS)
 CCLD = $(CC)
 LINK = $(LIBTOOL) --mode=link $(CCLD) $(AM_CFLAGS) $(CFLAGS) $(AM_LDFLAGS) $(LDFLAGS) -o $@
-DIST_SOURCES =  $(liblameasmroutines_a_SOURCES) \
-$(EXTRA_liblameasmroutines_a_SOURCES)
+DIST_SOURCES =  $(liblameasmroutines_la_SOURCES) \
+$(EXTRA_liblameasmroutines_la_SOURCES)
 HEADERS =  $(noinst_HEADERS)
 
 DIST_COMMON =  $(noinst_HEADERS) Makefile.am Makefile.in
@@ -174,8 +173,8 @@ DIST_COMMON =  $(noinst_HEADERS) Makefile.am Makefile.in
 DISTFILES = $(DIST_COMMON) $(DIST_SOURCES) $(TEXINFOS) $(EXTRA_DIST)
 
 GZIP_ENV = --best
-SOURCES = $(liblameasmroutines_a_SOURCES) $(EXTRA_liblameasmroutines_a_SOURCES)
-OBJECTS = $(am_liblameasmroutines_a_OBJECTS)
+SOURCES = $(liblameasmroutines_la_SOURCES) $(EXTRA_liblameasmroutines_la_SOURCES)
+OBJECTS = $(am_liblameasmroutines_la_OBJECTS)
 
 all: all-am
 .SUFFIXES:
@@ -188,14 +187,14 @@ Makefile: $(srcdir)/Makefile.in  $(top_builddir)/config.status
 	  && CONFIG_FILES=$(subdir)/$@ CONFIG_HEADERS= CONFIG_LINKS= $(SHELL) ./config.status
 
 
-mostlyclean-noinstLIBRARIES:
+mostlyclean-noinstLTLIBRARIES:
 
-clean-noinstLIBRARIES:
-	-test -z "$(noinst_LIBRARIES)" || rm -f $(noinst_LIBRARIES)
+clean-noinstLTLIBRARIES:
+	-test -z "$(noinst_LTLIBRARIES)" || rm -f $(noinst_LTLIBRARIES)
 
-distclean-noinstLIBRARIES:
+distclean-noinstLTLIBRARIES:
 
-maintainer-clean-noinstLIBRARIES:
+maintainer-clean-noinstLTLIBRARIES:
 
 mostlyclean-compile:
 	-rm -f *.o core *.core
@@ -221,10 +220,8 @@ $(top_srcdir)/ansi2knr.o:
 mostlyclean-kr:
 	-rm -f *_.c
 
-liblameasmroutines.a: $(liblameasmroutines_a_OBJECTS) $(liblameasmroutines_a_DEPENDENCIES)
-	-rm -f liblameasmroutines.a
-	$(liblameasmroutines_a_AR) liblameasmroutines.a $(liblameasmroutines_a_OBJECTS) $(liblameasmroutines_a_LIBADD)
-	$(RANLIB) liblameasmroutines.a
+liblameasmroutines.la: $(liblameasmroutines_la_OBJECTS) $(liblameasmroutines_la_DEPENDENCIES)
+	$(LINK)  $(liblameasmroutines_la_LDFLAGS) $(liblameasmroutines_la_OBJECTS) $(liblameasmroutines_la_LIBADD) $(LIBS)
 
 tags: TAGS
 
@@ -292,7 +289,7 @@ install-am: all-am
 install: install-am
 uninstall-am:
 uninstall: uninstall-am
-all-am: Makefile $(LIBRARIES) $(HEADERS)
+all-am: Makefile $(LTLIBRARIES) $(HEADERS)
 install-strip:
 	$(MAKE) $(AM_MAKEFLAGS) INSTALL_STRIP_FLAG=-s install
 installdirs:
@@ -313,38 +310,43 @@ maintainer-clean-generic:
 	-rm -f Makefile.in
 clean: clean-am
 
-clean-am: clean-generic clean-libtool clean-noinstLIBRARIES \
+clean-am: clean-generic clean-libtool clean-noinstLTLIBRARIES \
 	mostlyclean-am
 
 distclean: distclean-am
 
 distclean-am: clean-am distclean-compile distclean-generic \
-	distclean-libtool distclean-noinstLIBRARIES distclean-tags
+	distclean-libtool distclean-noinstLTLIBRARIES distclean-tags
 
 maintainer-clean: maintainer-clean-am
 
 maintainer-clean-am: distclean-am maintainer-clean-generic \
-	maintainer-clean-noinstLIBRARIES
+	maintainer-clean-noinstLTLIBRARIES
 
 mostlyclean: mostlyclean-am
 
 mostlyclean-am: mostlyclean-compile mostlyclean-generic mostlyclean-kr \
-	mostlyclean-libtool mostlyclean-noinstLIBRARIES
+	mostlyclean-libtool mostlyclean-noinstLTLIBRARIES
 
 .PHONY: check check-am clean clean-generic clean-libtool \
-	clean-noinstLIBRARIES distclean distclean-compile \
-	distclean-generic distclean-libtool distclean-noinstLIBRARIES \
+	clean-noinstLTLIBRARIES distclean distclean-compile \
+	distclean-generic distclean-libtool distclean-noinstLTLIBRARIES \
 	distclean-tags distdir dvi dvi-am info info-am install \
 	install-am install-data install-data-am install-exec \
 	install-exec-am install-strip installcheck installcheck-am \
 	installdirs maintainer-clean maintainer-clean-generic \
-	maintainer-clean-noinstLIBRARIES mostlyclean \
+	maintainer-clean-noinstLTLIBRARIES mostlyclean \
 	mostlyclean-compile mostlyclean-generic mostlyclean-kr \
-	mostlyclean-libtool mostlyclean-noinstLIBRARIES tags uninstall \
-	uninstall-am
+	mostlyclean-libtool mostlyclean-noinstLTLIBRARIES tags \
+	uninstall uninstall-am
 
-.nas.o:
+
+.nas.o: $< nasm.h
 	$(NASM) $(NASMFLAGS) $< -o $@ -l $@.lst
+
+#$(OBJECTS): libtool
+#libtool: $(LIBTOOL_DEPS)
+#	$(SHELL) $(top_builddir)/config.status --recheck
 
 # Tell versions [3.59,3.63) of GNU make to not export all variables.
 # Otherwise a system limit (for SysV at least) may be exceeded.

@@ -113,7 +113,7 @@ AUTOMAKE_OPTIONS = 1.4d foreign $(top_srcdir)/ansi2knr
 SUBDIRS = i386
 
 lib_LTLIBRARIES = libmp3lame.la
-@HAVE_NASM_TRUE@nasm_ldadd = @HAVE_NASM_TRUE@$(top_builddir)/libmp3lame/@CPUTYPE@/liblameasmroutines.a
+@HAVE_NASM_TRUE@nasm_ldadd = @HAVE_NASM_TRUE@$(top_builddir)/libmp3lame/@CPUTYPE@/liblameasmroutines.la
 @HAVE_NASM_FALSE@nasm_ldadd = 
 @LIB_WITH_DECODER_TRUE@decoder_ldadd = @LIB_WITH_DECODER_TRUE@$(top_builddir)/mpglib/libmpgdecoder.la
 @LIB_WITH_DECODER_FALSE@decoder_ldadd = 
@@ -203,9 +203,9 @@ ANSI2KNR = $(top_srcdir)/ansi2knr
 @HAVE_NASM_FALSE@@LIB_WITH_DECODER_TRUE@libmp3lame_la_DEPENDENCIES =  \
 @HAVE_NASM_FALSE@@LIB_WITH_DECODER_TRUE@$(top_builddir)/mpglib/libmpgdecoder.la
 @HAVE_NASM_TRUE@@LIB_WITH_DECODER_FALSE@libmp3lame_la_DEPENDENCIES =  \
-@HAVE_NASM_TRUE@@LIB_WITH_DECODER_FALSE@$(top_builddir)/libmp3lame/@CPUTYPE@/liblameasmroutines.a
+@HAVE_NASM_TRUE@@LIB_WITH_DECODER_FALSE@$(top_builddir)/libmp3lame/@CPUTYPE@/liblameasmroutines.la
 @HAVE_NASM_TRUE@@LIB_WITH_DECODER_TRUE@libmp3lame_la_DEPENDENCIES =  \
-@HAVE_NASM_TRUE@@LIB_WITH_DECODER_TRUE@$(top_builddir)/libmp3lame/@CPUTYPE@/liblameasmroutines.a \
+@HAVE_NASM_TRUE@@LIB_WITH_DECODER_TRUE@$(top_builddir)/libmp3lame/@CPUTYPE@/liblameasmroutines.la \
 @HAVE_NASM_TRUE@@LIB_WITH_DECODER_TRUE@$(top_builddir)/mpglib/libmpgdecoder.la
 am_libmp3lame_la_OBJECTS =  VbrTag$U.lo bitstream$U.lo encoder$U.lo \
 fft$U.lo id3tag$U.lo lame$U.lo newmdct$U.lo pcm$U.lo psymodel$U.lo \
@@ -598,6 +598,10 @@ lclint.txt: ${libmp3lame_la_SOURCES} ${noinst_HEADERS}
 
 lclint: lclint.txt
 	more lclint.txt
+
+#$(OBJECTS): libtool
+#libtool: $(LIBTOOL_DEPS)
+#	$(SHELL) $(top_builddir)/config.status --recheck
 
 # Tell versions [3.59,3.63) of GNU make to not export all variables.
 # Otherwise a system limit (for SysV at least) may be exceeded.
