@@ -217,7 +217,7 @@ static FLOAT
 calc_noise(
     lame_t gfc, const gr_info * const gi, const FLOAT rxmin[], FLOAT distort[])
 {
-    FLOAT max_noise = 1e-20;
+    FLOAT max_noise = (FLOAT)1.0;
     int sfb = 0, j = 0, l;
 
     do {
@@ -295,9 +295,9 @@ calc_noise(
 	max_noise = Max(max_noise, noise);
     }
 
-    if (max_noise > 1.0 && gi->block_type == SHORT_TYPE) {
+    if (max_noise > (FLOAT)1.0 && gi->block_type == SHORT_TYPE) {
 	distort -= sfb;
-	max_noise = 1.0;
+	max_noise = (FLOAT)1.0;
 	for (sfb = gi->sfb_smin; sfb < gi->psymax; sfb += 3) {
 	    FLOAT noise = 1.0;
 	    if (distort[sfb  ] > 1.0) noise  = distort[sfb  ];
@@ -315,7 +315,7 @@ quantEstimate(
 {
     FLOAT noise = calc_noise(gfc, gi, rxmin, distort);
 
-    if (noise < (FLOAT)1.0) {
+    if (noise <= (FLOAT)1.0) {
 	return (FLOAT) (-(MAX_BITS - gi->part2_3_length - gi->part2_length));
     }
     return noise;
@@ -1699,7 +1699,7 @@ set_pinfo(lame_t gfc, gr_info *gi, const III_psy_ratio *ratio, int gr, int ch)
 	end = j - gi->wi[sfb2].width;
 	for (en0 = (FLOAT)0.0; j < end; j++) 
 	    en0 += gi->xr[j] * gi->xr[j];
-	en0=Max(en0, 1e-20);
+	en0=Max(en0, (FLOAT)1e-20);
 	/* convert to MDCT units */
 	gfc->pinfo->  en[gr][ch][sfb2] = FFT2MDCT*en0;
 	gfc->pinfo-> thr[gr][ch][sfb2] = FFT2MDCT*xmin[sfb2];
@@ -1724,7 +1724,7 @@ set_pinfo(lame_t gfc, gr_info *gi, const III_psy_ratio *ratio, int gr, int ch)
 	    for (en0 = (FLOAT)0.0; j < end; j++)
 		en0 += gi->xr[j] * gi->xr[j];
 
-	    en0 = Max(en0, 1e-20);
+	    en0 = Max(en0, (FLOAT)1e-20);
 	    /* convert to MDCT units */
 	    gfc->pinfo->  en_s[gr][ch][3*sfb+i] = FFT2MDCT*en0;
 	    gfc->pinfo-> thr_s[gr][ch][3*sfb+i] = FFT2MDCT*xmin[sfb2];

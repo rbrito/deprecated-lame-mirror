@@ -296,7 +296,7 @@ void fht(FLOAT *fz, int n)
 	s1 = tri[1];
 	for (i = 1; i < kx; i++) {
 	    FLOAT c2,s2;
-	    c2 = 1.0 - (2*s1)*s1;
+	    c2 = (FLOAT)1.0 - (2*s1)*s1;
 	    s2 = (2*s1)*c1;
 	    fi = fz + i;
 	    gi = fz + k1 - i;
@@ -656,10 +656,10 @@ compute_masking_s(
 	    j++;
 	}
 	eb[b++] = ecb;
-	ecb = 0.0;
+	ecb = (FLOAT)0.0;
     } while (j < BLKSIZE_s/2 + 1);
 
-    enn = thmm = 0.0;
+    enn = thmm = (FLOAT)0.0;
     sb = j = b = 0;
     for (;;b++) {
 	int kk = gfc->s3ind_s[b][0];
@@ -751,7 +751,7 @@ init_mask_add_max_values(lame_t gfc)
     for (i = 0; i < gfc->npart_l; i++)
 	gfc->ATH.cb[i] *= ma_max_m;
 
-    ma_max_m = 1.0 / ma_max_m;
+    ma_max_m = (FLOAT)1.0 / ma_max_m;
 }
 
 /* addition of simultaneous masking   Naoki Shibata 2000/7 */
@@ -820,9 +820,9 @@ mask_add(FLOAT m1, FLOAT m2, FLOAT ATH)
     /* Originally if (m > 0) { */
     ATH *= ma_max_m;
     if (m > ATH) {
-	FLOAT f = 1.0, r;
+	FLOAT f = (FLOAT)1.0, r;
 	if (i <= 13) f = table3[i];
-	r = FAST_LOG10_X(m / ATH, 10.0/15.0);
+	r = FAST_LOG10_X(m / ATH, (FLOAT)(10.0/15.0));
 	return m * ((table1[i]-f)*r+f);
     }
 
@@ -842,15 +842,15 @@ pecalc_s(III_psy_ratio *mr, int sb)
     };
     while (--sb >= 0) {
 	int sblock;
-	FLOAT xx=0.0;
+	FLOAT xx = (FLOAT)0.0;
 	for (sblock=0;sblock<3;sblock++) {
 	    FLOAT x = mr->thm.s[sb][sblock], en = fabs(mr->en.s[sb][sblock]);
 	    FLOAT f = 0.9 + (sblock*0.1);
 	    if (en <= x)
 		continue;
 
-	    if (en > x*1e10)
-		xx += 10.0 * LOG10 * f;
+	    if (en > x*(FLOAT)1e10)
+		xx += (FLOAT)(10.0 * LOG10) * f;
 	    else
 		xx += FAST_LOG10(en / x) * f;
 	}
@@ -863,7 +863,7 @@ pecalc_s(III_psy_ratio *mr, int sb)
 static FLOAT
 pecalc_l(III_psy_ratio *mr, int sb)
 {
-    FLOAT pe_l = 20.0;
+    FLOAT pe_l = (FLOAT)20.0;
     int ath_over = 0;
     static const FLOAT regcoef_l[] = {
 	/* this value is tuned only for 44.1kHz... */
@@ -878,13 +878,13 @@ pecalc_l(III_psy_ratio *mr, int sb)
 
 	ath_over++;
 	if (en > x*1e10)
-	    pe_l += regcoef_l[sb] * (10.0 * LOG10);
+	    pe_l += regcoef_l[sb] * (FLOAT)(10.0 * LOG10);
 	else
 	    pe_l += regcoef_l[sb] * FAST_LOG10(en / x);
     }
 
     if (ath_over == 0)
-	return 0.0;
+	return (FLOAT)0.0;
     return pe_l;
 }
 
@@ -935,7 +935,7 @@ mp3x display               <------LONG------>
 	/* calculate energies of each sub-shortblocks */
 	if (ch < 2) {
 	    for (sb = 0; sb < 6; sb++) {
-		FLOAT y = 1.0;
+		FLOAT y = (FLOAT)1.0;
 		for (j = 0; j < 3; j++) {
 		    int k = sb*3+j, band;
 		    for (band = gfc->nsPsy.switching_band;
@@ -947,7 +947,7 @@ mp3x display               <------LONG------>
 	    }
 	} else if (ch == 2) {
 	    for (sb = 0; sb < 6; sb++) {
-		FLOAT y0 = 1.0, y1 = 1.0;
+		FLOAT y0 = (FLOAT)1.0, y1 = (FLOAT)1.0;
 		for (j = 0; j < 3; j++) {
 		    int k = sb*3+j, band;
 		    for (band = gfc->nsPsy.switching_band;
@@ -967,7 +967,7 @@ mp3x display               <------LONG------>
 
 	/* en.s[0][sb] is the flag representing
 	 * "short block may be needed but not calculated" */
-	mr->en.s[0][0] = mr->en.s[0][1] = mr->en.s[0][2] = -1.0;
+	mr->en.s[0][0] = mr->en.s[0][1] = mr->en.s[0][2] = (FLOAT)-1.0;
 	gfc->blocktype_next[gr][ch] = NORM_TYPE;
 
 	for (sb = 0; sb < 6; sb++) {
@@ -997,20 +997,21 @@ mp3x display               <------LONG------>
 
 	    current_is_short |= (1 << ch);
 	    adjust /= nextPow;
-	    if (adjust < 0.01)
-		adjust = 0.01;
-	    if (mr->en.s[0][(sb+1)/3] > adjust || mr->en.s[0][(sb+1)/3] < 0.0)
+	    if (adjust < (FLOAT)0.01)
+		adjust = (FLOAT)0.01;
+	    if (mr->en.s[0][(sb+1)/3] > adjust
+		|| mr->en.s[0][(sb+1)/3] < (FLOAT)0.0)
 		mr->en.s[0][(sb+1)/3] = adjust;
-	    if (mr->en.s[0][(sb  )/3] < 0.0)
-		mr->en.s[0][(sb  )/3] = 1.0;
+	    if (mr->en.s[0][(sb  )/3] < (FLOAT)0.0)
+		mr->en.s[0][(sb  )/3] = (FLOAT)1.0;
 	}
 #ifndef NOANALYSIS
 	if (gfc->pinfo) {
 	    memcpy(gfc->pinfo->ers[gr][ch], gfc->pinfo->ers_save[gr][ch],
 		   sizeof(gfc->pinfo->ers_save[0][0]));
-	    gfc->pinfo->ers_save[gr][ch][0] = 1.0/mr->en.s[0][0];
-	    gfc->pinfo->ers_save[gr][ch][1] = 1.0/mr->en.s[0][1];
-	    gfc->pinfo->ers_save[gr][ch][2] = 1.0/mr->en.s[0][2];
+	    gfc->pinfo->ers_save[gr][ch][0] = (FLOAT)1.0/mr->en.s[0][0];
+	    gfc->pinfo->ers_save[gr][ch][1] = (FLOAT)1.0/mr->en.s[0][1];
+	    gfc->pinfo->ers_save[gr][ch][2] = (FLOAT)1.0/mr->en.s[0][2];
 	}
 #endif
     }
@@ -1059,17 +1060,17 @@ partially_convert_l2s(lame_t gfc, III_psy_ratio *mr, FLOAT *nb_1,
     int sfb, b;
     for (sfb = 0; sfb < SBMAX_s; sfb++) {
 	FLOAT x = (mr->en.s[sfb][0] + mr->en.s[sfb][1] + mr->en.s[sfb][2])
-	    * (1.0/4.0);
+	    * (FLOAT)(1.0/4.0);
 	if (x > mr->en.s[sfb][0]
 	    || x > mr->en.s[sfb][1]
 	    || x > mr->en.s[sfb][2])
 	    continue;
 	if (sfb == 0) {
 	    b = 0;
-	    x = 0.0;
+	    x = (FLOAT)0.0;
 	} else {
 	    b = gfc->bo_l2s[sfb-1];
-	    x = nb_1[b++] * 0.5;
+	    x = nb_1[b++] * (FLOAT)0.5;
 	}
         for (; b < gfc->bo_l2s[sfb]; b++) {
 	    x += nb_1[b];
@@ -1154,12 +1155,12 @@ psycho_anal_ns(lame_t gfc, int gr, int numchn)
 	 * compute loudness approximation (used for ATH auto-level adjustment) 
 	 *********************************************************************/
 	if (ch < 3) {
-	    FLOAT loudness = 0.0, loudness_old;
+	    FLOAT loudness = (FLOAT)0.0, loudness_old;
 	    for (b = 0; b < gfc->npart_l; b++)
 		loudness += eb[b] * gfc->ATH.eql_w[b];
 
-	    if (loudness > 1.0)
-		loudness = 1.0;
+	    if (loudness > (FLOAT)1.0)
+		loudness = (FLOAT)1.0;
 	    else {
 		loudness_old = gfc->ATH.adjust[ch] * gfc->ATH.aa_decay;
 		if (loudness < loudness_old)
@@ -1179,7 +1180,7 @@ psycho_anal_ns(lame_t gfc, int gr, int numchn)
 	{
 	    FLOAT m,a;
 	    a = avg[0] + avg[1];
-	    if (a != 0.0) {
+	    if (a != (FLOAT)0.0) {
 		m = max[0]; if (m < max[1]) m = max[1];
 		a *= 3.0/2.0;
 		m = (m-a) / a * gfc->rnumlines_ls[0];
@@ -1191,7 +1192,7 @@ psycho_anal_ns(lame_t gfc, int gr, int numchn)
 
 	    for (b = 1; b < gfc->npart_l-1; b++) {
 		a = avg[b-1] + avg[b] + avg[b+1];
-		if (a != 0.0) {
+		if (a != (FLOAT)0.0) {
 		    m = max[b-1];
 		    if (m < max[b  ]) m = max[b];
 		    if (m < max[b+1]) m = max[b+1];
@@ -1204,7 +1205,7 @@ psycho_anal_ns(lame_t gfc, int gr, int numchn)
 	    }
 
 	    a = avg[b-1] + avg[b];
-	    if (a != 0.0) {
+	    if (a != (FLOAT)0.0) {
 		m = max[b-1];
 		if (m < max[b]) m = max[b];
 		a *= 3.0/2.0;
@@ -1221,7 +1222,7 @@ psycho_anal_ns(lame_t gfc, int gr, int numchn)
 	 *      with the spreading function, s3_l[b][k]
 	 ******************************************************************* */
 	p = gfc->s3_ll;
-	enn = thmm = 0.0;
+	enn = thmm = (FLOAT)0.0;
 	for (b = j = 0;; b++ ) {
 	    /* convolve the partitioned energy with the spreading function */
 	    FLOAT ecb;
@@ -1234,15 +1235,15 @@ psycho_anal_ns(lame_t gfc, int gr, int numchn)
 		int k2;
 
 		k2 = b + kk;
-		if (k2 <= gfc->s3ind[b][1] && eb2[k2] != 0.0)
+		if (k2 <= gfc->s3ind[b][1] && eb2[k2] != (FLOAT)0.0)
 		    ecb = mask_add_samebark(ecb, p[k2] * eb2[k2]);
 
 		k2 = b - kk;
-		if (k2 >= gfc->s3ind[b][0] && eb2[k2] != 0.0)
+		if (k2 >= gfc->s3ind[b][0] && eb2[k2] != (FLOAT)0.0)
 		    ecb = mask_add_samebark(ecb, p[k2] * eb2[k2]);
 	    }
 	    for (kk = gfc->s3ind[b][0]; kk <= gfc->s3ind[b][1]; kk++) {
-		if ((unsigned int)(kk - b + 3) <= 6 || eb2[kk] == 0.0)
+		if ((unsigned int)(kk - b + 3) <= 6 || eb2[kk] == (FLOAT)0.0)
 		    continue;
 		ecb = mask_add(ecb, p[kk] * eb2[kk], adjATH[kk]);
 	    }
@@ -1283,11 +1284,11 @@ psycho_anal_ns(lame_t gfc, int gr, int numchn)
 	/* short block may be needed but not calculated */
 	/* calculate it from converting from long */
 	i = 0;
-	if (mr->en.s[0][0] < 0.0) i += 1;
-	if (mr->en.s[0][1] < 0.0) i += 2;
-	if (mr->en.s[0][2] < 0.0) i += 4;
+	if (mr->en.s[0][0] < (FLOAT)0.0) i += 1;
+	if (mr->en.s[0][1] < (FLOAT)0.0) i += 2;
+	if (mr->en.s[0][2] < (FLOAT)0.0) i += 4;
 
-	enn = thmm = 0.0;
+	enn = thmm = (FLOAT)0.0;
 	for (b = j = 0;; b++ ) {
 	    FLOAT tmp = nb_1[b];
 	    enn  += eb[b];
@@ -1365,7 +1366,7 @@ psycho_analysis(
 	/*********************************************************************
 	 * other masking effect
 	 *********************************************************************/
-	if (gfc->interChRatio != 0.0)
+	if (gfc->interChRatio != (FLOAT)0.0)
 	    calc_interchannel_masking(gfc, gr);
 
 	if (gfc->mode == JOINT_STEREO) {
@@ -1396,10 +1397,10 @@ psycho_analysis(
 		    sb = gfc->is_start_sfb_l_next[gr];
 		pe = pecalc_l(mr, sb);
 	    }
-	    if (pe > 500.0)
-		pe = pe*0.5+750;
+	    if (pe > (FLOAT)500.0)
+		pe = pe*(FLOAT)0.5 + (FLOAT)750;
 	    else
-		pe *= 1.5;
+		pe *= (FLOAT)1.5;
 	    mr->pe = pe;
 	}
 	gfc->masking_next[gr][3].pe *= gfc->reduce_side;
@@ -1413,7 +1414,7 @@ psycho_analysis(
 
     /* determine MS/LR in the next frame */
     if (gfc->mode == JOINT_STEREO) {
-	FLOAT diff_pe = 50.0;
+	FLOAT diff_pe = (FLOAT)50.0;
 	if (gfc->mode_ext)
 	    diff_pe = -diff_pe;
 
@@ -1424,7 +1425,7 @@ psycho_analysis(
 	    -  gfc->masking_next[1][0].pe -  gfc->masking_next[1][1].pe;
 
 	/* based on PE: M/S coding would not use much more bits than L/R */
-	if (diff_pe <= 0.0 || gfc->force_ms) {
+	if (diff_pe <= (FLOAT)0.0 || gfc->force_ms) {
 	    gfc->mode_ext_next = MPG_MD_MS_LR;
 	    gfc->blocktype_next[0][0] = gfc->blocktype_next[0][1]
 		= gfc->blocktype_next[0][2];
