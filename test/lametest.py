@@ -53,8 +53,8 @@ def compare(name1,name2,decode):
     if (decode):
         print "converting mp3 to wav for comparison..."
         # XXX shouldn't we use lame1 instead of a hardcoded lame?
-        os.system("lame --mp3input --decode " + name1)
-        os.system("lame --mp3input --decode " + name2)
+        os.system("lame --quiet --mp3input --decode " + name1)
+        os.system("lame --quiet --mp3input --decode " + name2)
         name1 = name1 + ".wav"
         name2 = name2 + ".wav"
 
@@ -199,5 +199,7 @@ while line:
     line = rstrip(foptions.readline())
 
 foptions.close()
-print "\nNumber of tests which passed: ",num_ok
-print "Number of tests which failed: ",n-num_ok
+
+if lame2 != 'makeref':
+    print os.linesep + "Number of tests which passed: ",num_ok
+    print "Number of tests which failed: ",n-num_ok
