@@ -11,6 +11,7 @@
 %include "nasm.h"
 
 	globaldef	has_MMX
+	globaldef	has_MMX2
 	globaldef	has_3DNow
 	globaldef	has_E3DNow
 	globaldef	has_SSE
@@ -105,6 +106,23 @@ return0:
 	xor	eax,eax
 	ret
 
+;---------------------------------------
+;	int  has_MMX2 (void)
+;---------------------------------------
+
+has_MMX2:
+        pushad
+	call	testCPUID
+	jz	return0		; no CPUID command, so no MMX
+
+	mov	eax,0x1
+	CPUID
+	test	edx, (1<<22)
+	jnz	return1		; AMD MMX extension
+	test	edx, (1<<25)
+	jnz	return1		; Katmai New Instruction
+	jmp	return0		; no MMX2 support
+        
 ;---------------------------------------
 ;	int  has_3DNow (void)
 ;---------------------------------------

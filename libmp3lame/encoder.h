@@ -457,10 +457,11 @@ struct lame_internal_flags {
     struct {
 	unsigned int  MMX       : 1; /* Pentium MMX, Pentium II...IV, K6, K6-2,
 					K6-III, Athlon */
+	unsigned int  MMX2      : 1; /* Pentium III, IV, M, Athlon, K8 */
 	unsigned int  AMD_3DNow : 1; /* K6-2, K6-III, Athlon, K8 */
 	unsigned int  AMD_E3DNow: 1; /* Athlon, K8               */
 	unsigned int  SSE      : 1; /* Pentium III, Pentium 4    */
-	unsigned int  SSE2     : 1; /* Pentium 4, K8             */
+	unsigned int  SSE2     : 1; /* Pentium 4, M, K8          */
     } CPU_features;
     struct {
 	int mmx;

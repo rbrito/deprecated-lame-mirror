@@ -343,6 +343,10 @@ huffman_init(lame_t gfc)
 	extern int ix_max_MMX(const int *ix, const int *end);
 	gfc->ix_max = ix_max_MMX;
     }
+    if (gfc->CPU_features.MMX2) {
+	extern int ix_max_MMX2(const int *ix, const int *end);
+	gfc->ix_max = ix_max_MMX2;
+    }
 #endif
 
     gfc->scale_bitcounter = scale_bitcount;

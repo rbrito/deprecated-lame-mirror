@@ -390,6 +390,7 @@ lame_init_params(lame_t gfc)
 
 #ifdef HAVE_NASM
     extern int  has_MMX   ( void );
+    extern int  has_MMX2  ( void );
     extern int  has_3DNow ( void );
     extern int  has_E3DNow( void );
     extern int  has_SSE   ( void );
@@ -398,13 +399,16 @@ lame_init_params(lame_t gfc)
 	= gfc->CPU_features.SSE = gfc->CPU_features.SSE2
 	= gfc->CPU_features.AMD_3DNow = gfc->CPU_features.AMD_E3DNow = 0;
 
-    if (gfc->asm_optimizations.mmx)
-        gfc->CPU_features.MMX = has_MMX();
+    if (gfc->asm_optimizations.mmx) {
+        gfc->CPU_features.MMX  = has_MMX();
+        gfc->CPU_features.MMX2 = has_MMX2();
+    }
 
     if (gfc->asm_optimizations.amd3dnow ) {
 	gfc->CPU_features.AMD_3DNow = has_3DNow();
 	gfc->CPU_features.AMD_E3DNow = has_E3DNow();
     }
+
     if (gfc->asm_optimizations.sse) {
 	gfc->CPU_features.SSE = has_SSE();
 	gfc->CPU_features.SSE2 = has_SSE2();
@@ -648,6 +652,8 @@ lame_print_config(lame_t gfc)
 
         if (gfc->CPU_features.MMX)
             gfc->report.msgf("MMX (ASM used)");
+        if (gfc->CPU_features.MMX2)
+            gfc->report.msgf(", MMX2 (ASM used)");
         if (gfc->CPU_features.AMD_3DNow)
             gfc->report.msgf(", 3DNow! (ASM used)");
         if (gfc->CPU_features.AMD_E3DNow)
