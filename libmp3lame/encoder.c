@@ -238,7 +238,7 @@ init_gr_info(lame_internal_flags *gfc, int gr, int ch)
 	    }
 	    j = gfc->cutoff_sfb_s;
 	    if (ch & 1)
-		j = gfc->is_start_sfb_s_next[gr];
+		j = gfc->is_start_sfb_s[gr];
 	    gi->psymax = gi->sfb_lmax + 3*(j - gi->sfb_smin);
 	    gi->sfbmax = gi->sfb_lmax + 3*(SBPSY_s - gi->sfb_smin);
 	    gi->sfbdivide   = gi->sfbmax - 18;
