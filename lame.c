@@ -387,8 +387,12 @@ void lame_init_params(lame_global_flags *gfp)
   if (gfp->VBR==0) gfp->bWriteVbrTag=0;
 
   /* some file options not allowed if output is: not specified or stdout */
-  if (gfp->outPath==NULL || gfp->outPath[0]=='-' ) {
+
+  if (gfp->outPath!=NULL && gfp->outPath[0]=='-' ) {
     gfp->bWriteVbrTag=0; /* turn off VBR tag */
+  }
+
+  if (gfp->outPath==NULL || gfp->outPath[0]=='-' ) {
     id3tag.used=0;         /* turn of id3 tagging */
   }
 
