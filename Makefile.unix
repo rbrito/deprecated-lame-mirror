@@ -12,12 +12,15 @@
 #   make PGM=lame_exp             - specify a name of an executable file
 #
 # if you have mingw32-gcc, try:
-#   make UNAME=MSDOS
+#   make -fMakefile.unix UNAME=MSDOS
+# or if you have NASM:
+#   make -fMakefile.unix UNAME=MSDOS HAVE_NASM=YES
 #
 
 ifeq ($(UNAME),MSDOS)
   UNAME ?= UNKNOWN
-  ARCH ?= UNKNOWN_ARCH
+  ARCH = x86
+  NOUNIXCMD = YES
 else
   UNAME = $(shell uname)
   ARCH = $(shell uname -m)
@@ -370,6 +373,10 @@ endif
 ###########################################################################
 ifeq ($(UNAME),MSDOS)
   RM =
+  CC_OPTS = \
+       -Wall -pipe -O3 -fomit-frame-pointer -ffast-math -funroll-loops \
+       -fschedule-insns2 -fmove-all-movables -freduce-all-givs         \
+       -mcpu=pentium -march=pentium -mfancy-math-387
   PGM = lame.exe
 endif
 
@@ -468,8 +475,8 @@ lib_sources = \
 
 
 ifeq ($(UNAME),MSDOS)
-  frontend_sources = $(subst /,\\,$(frontend_sources))
-  lib_sources = $(subst /,\\,$(lib_sources))
+  frontend_sources := $(subst /,\,$(frontend_sources))
+  lib_sources := $(subst /,\,$(lib_sources))
 endif
 
 frontend_obj = $(frontend_sources:.c=.o)
@@ -485,6 +492,12 @@ gtk_dep = $(gtk_sources:.c=.d)
 
 NASM = nasm
 ASFLAGS=-f elf -i libmp3lame/i386/
+
+# for people with nasmw
+ifeq ($(UNAME),MSDOS) 
+ ASFLAGS=-f win32 -DWIN32 -i libmp3lame/i386/
+endif
+
 %.o: %.nas
 	$(NASM) $(ASFLAGS) $< -o $@
 %.o: %.s
