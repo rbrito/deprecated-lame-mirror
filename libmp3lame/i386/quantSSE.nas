@@ -22,7 +22,7 @@ Q_ABS		dd	0x7FFFFFFF, 0x7FFFFFFF, 0x7FFFFFFF, 0x7FFFFFFF
 proc	pow075_SSE
 %assign _P 0
 	mov	eax, [esp+_P+4]		; eax = xr
-	mov	edx, [esp+_P+8]		; edx = xrpow
+	mov	edx, [esp+_P+8]		; edx = xr34
 	mov	ecx, [esp+_P+12]	; ecx = end
 	shl	ecx, 2
 	xorps	xm3, xm3
@@ -39,6 +39,8 @@ proc	pow075_SSE
 	andps	xm0, [Q_ABS]		; xm0 = |xr|
 	movaps	xm6, xm1
 	andps	xm1, [Q_ABS]
+	movaps	[edx+ecx+ 0+576*4], xm0 ; absxr[]
+	movaps	[edx+ecx+16+576*4], xm1
 	add	ecx, 8*4
 
 	;------x^(3/4)------
@@ -74,7 +76,7 @@ proc	pow075_SSE
 	maxps	xm1, xm3
 	;------------------
 
-	movaps	[edx+ecx+ 0-32], xm0	; xrpow
+	movaps	[edx+ecx+ 0-32], xm0	; xr34
 	movaps	[edx+ecx+16-32], xm1
 	jnz near	.lp
 

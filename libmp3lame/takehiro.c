@@ -460,11 +460,7 @@ noquant_count_bits(const lame_internal_flags * const gfc, gr_info * const gi)
 }
 
 int
-count_bits(
-    const lame_internal_flags * const gfc, 
-    const FLOAT  * const xr34,
-          gr_info * const gi
-    )
+count_bits(const lame_internal_flags * const gfc, gr_info * const gi)
 {
     if (gfc->quantization > 0) {
 	int i = quantize_best(xr34, gi);
@@ -477,15 +473,15 @@ count_bits(
 	int sfb, j = 0;
 	for (sfb = 0; sfb < gi->psymax && j < gi->count1; sfb++) {
 	    FLOAT roundfac;
-	    int width = gi->width[sfb], l;
-	    j += gi->width[sfb];
+	    int bw = gi->width[sfb];
+	    j += bw;
 	    if (!gfc->pseudohalf[sfb])
 		continue;
 	    roundfac = 0.634521682242439
 		/ IPOW20(scalefactor(gi, sfb) + gi->scalefac_scale);
-	    for (l = -width; l < 0; l++)
-		if (xr34[j+l] < roundfac)
-		    gi->l3_enc[j+l] = 0;
+	    for (bw = -bw; bw < 0; bw++)
+		if (xr34[j+bw] < roundfac)
+		    gi->l3_enc[j+bw] = 0;
 	}
     }
     return noquant_count_bits(gfc, gi);

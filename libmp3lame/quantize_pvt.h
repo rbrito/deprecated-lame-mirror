@@ -28,9 +28,12 @@
         << (gi->scalefac_scale + 1)) \
      - gi->subblock_gain[gi->window[sfb]]*8)
 
+#define xr34 gfc->xrwork[0]
+#define absxr gfc->xrwork[1]
+
 /* takehiro.c */
 
-int count_bits (const lame_internal_flags * const gfc, const FLOAT * const xr,
+int count_bits (const lame_internal_flags * const gfc,
 		gr_info * const cod_info);
 
 int noquant_count_bits (const lame_internal_flags * const gfc,

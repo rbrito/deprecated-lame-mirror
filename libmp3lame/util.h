@@ -277,114 +277,110 @@ typedef struct {
 } resample_t;
 
 
+/********************************************************************
+ * internal variables NOT set by calling program, and should not be *
+ * modified by the calling program                                  *
+ ********************************************************************/
 struct lame_internal_flags {
+    /* most used variables */
+    FLOAT xrwork[2][576];  /* xr^(3/4) and fabs(xr) */
 
-  /********************************************************************
-   * internal variables NOT set by calling program, and should not be *
-   * modified by the calling program                                  *
-   ********************************************************************/
-  
-  /*  
-   * Some remarks to the Class_ID field:
-   * The Class ID is an Identifier for a pointer to this struct.
-   * It is very unlikely that a pointer to lame_global_flags has the same 32 bits 
-   * in it's structure (large and other special properties, for instance prime).
-   *
-   * To test that the structure is right and initialized, use:
-   *     if ( gfc -> Class_ID == LAME_ID ) ...
-   * Other remark:
-   *     If you set a flag to 0 for uninit data and 1 for init data, the right test
-   *     should be "if (flag == 1)" and NOT "if (flag)". Unintended modification
-   *     of this element will be otherwise misinterpreted as an init.
-   */
+    /* side information */
+    III_side_info_t l3_side;
+
+    /* variables for subband filter and MDCT */
+    FLOAT sb_sample[2][3][18][SBLIMIT];
+    FLOAT amp_filter[SBLIMIT];
+    int xrNumMax_longblock;
+
+/*  
+ * Some remarks to the Class_ID field:
+ * The Class ID is an Identifier for a pointer to this struct.
+ * It is very unlikely that a pointer to lame_global_flags has the same 32 bits
+ * in it's structure (large and other special properties, for instance prime).
+ *
+ * To test that the structure is right and initialized, use:
+ *   if ( gfc -> Class_ID == LAME_ID ) ...
+ * Other remark:
+ *   If you set a flag to 0 for uninit data and 1 for init data, the right test
+ *   should be "if (flag == 1)" and NOT "if (flag)". Unintended modification
+ *   of this element will be otherwise misinterpreted as an init.
+ */
 
 #ifndef  MFSIZE
 # define MFSIZE  ( 3*1152 + ENCDELAY - MDCTDELAY )
 #endif
-  sample_t     mfbuf [2] [MFSIZE];
+    sample_t     mfbuf [2] [MFSIZE];
 
 #  define  LAME_ID   0xFFF88E3B
-  unsigned long Class_ID;
-  int alignment;
+    unsigned long Class_ID;
+    int alignment;
 
-  int lame_encode_frame_init;
-  int iteration_init_init;
-  int fill_buffer_resample_init;
+    int lame_encode_frame_init;
+    int iteration_init_init;
+    int fill_buffer_resample_init;
 
-  int padding;          /* padding for the current frame? */
-  int mode_gr;          /* granules per frame */
-  int channels_in;	/* number of channels in the input data stream (PCM or decoded PCM) */
-  int channels_out;     /* number of channels in the output data stream (not used for decoding) */
-  resample_t*  resample_in;   /* context for coding (PCM=>MP3) resampling */
-  resample_t*  resample_out;	/* context for decoding (MP3=>PCM) resampling */
-  FLOAT samplefreq_in;
-  FLOAT samplefreq_out;
-  FLOAT resample_ratio;           /* input_samp_rate/output_samp_rate */
+    int padding;          /* padding for the current frame? */
+    int mode_gr;          /* granules per frame */
+    int channels_in;	/* number of channels in the input data stream (PCM or decoded PCM) */
+    int channels_out;     /* number of channels in the output data stream (not used for decoding) */
+    resample_t*  resample_in;   /* context for coding (PCM=>MP3) resampling */
+    resample_t*  resample_out;	/* context for decoding (MP3=>PCM) resampling */
+    FLOAT samplefreq_in;
+    FLOAT samplefreq_out;
+    FLOAT resample_ratio;           /* input_samp_rate/output_samp_rate */
 
-  lame_global_flags* gfp;     /* needed as long as the frame encoding functions must access gfp (all needed information can be added to gfc) */
-  int          mf_samples_to_encode;
-  int          mf_size;
-  int VBR_min_bitrate;            /* min bitrate index */
-  int VBR_max_bitrate;            /* max bitrate index */
-  int bitrate_index;
-  int samplerate_index;
-  int mode_ext;
+    lame_global_flags* gfp;     /* needed as long as the frame encoding functions must access gfp (all needed information can be added to gfc) */
+    int          mf_samples_to_encode;
+    int          mf_size;
+    int VBR_min_bitrate;            /* min bitrate index */
+    int VBR_max_bitrate;            /* max bitrate index */
+    int bitrate_index;
+    int samplerate_index;
+    int mode_ext;
 
 
-  /* lowpass and highpass filter control */
-  FLOAT lowpass1,lowpass2;   /* normalized frequency bounds of passband */
-  FLOAT highpass1,highpass2; /* normalized frequency bounds of passband */
+    /* lowpass and highpass filter control */
+    FLOAT lowpass1,lowpass2;   /* normalized frequency bounds of passband */
+    FLOAT highpass1,highpass2; /* normalized frequency bounds of passband */
 
-  FLOAT narrowStereo;        /* stereo image narrowen factor */
-  FLOAT reduce_side;         /* side channel PE reduce factor */
+    FLOAT narrowStereo;        /* stereo image narrowen factor */
+    FLOAT reduce_side;         /* side channel PE reduce factor */
 
-  int filter_type;          /* 0=polyphase filter, 1= FIR filter 2=MDCT filter(bad)*/
-  int quantization;         /* 0 = ISO formual,  1=best amplitude */
+    int filter_type;          /* 0=polyphase filter, 1= FIR filter 2=MDCT filter(bad)*/
+    int quantization;         /* 0 = ISO formual,  1=best amplitude */
 
-  int use_scalefac_scale;   /* 0 = not use  1 = use */
-  int use_subblock_gain;   /* 0 = not use  1 = use */
-  int noise_shaping_amp;    /*  0 = ISO model: amplify all distorted bands
-                                1 = amplify within 50% of max (on db scale)
-                                2 = amplify only most distorted band
-			     */
-  int substep_shaping;  /* 0,4 = no substep
-			   1 = use substep shaping at last (only long block)
-			   2 = use substep inside loop (only long)
-			   3 = use substep inside loop and at last (only long)
-			   5 = at last step, both of long and short block
-			   6 = inside loop, long and short
-			   7 = inside loop and at last, long and short
-			*/
-
-  int psymodel;         /* 2 = use psychomodel and noise shaping.
-			   1 = use psychomodel but no noise shaping.
-			   0 = don't use psychomodel
-			*/
-  int noise_shaping_stop;   /* 0 = stop at over=0, all scalefacs amplified or
-                                   a scalefac has reached max value
-                               1 = stop when all scalefacs amplified or
+    int use_scalefac_scale;   /* 0 = not use  1 = use */
+    int use_subblock_gain;    /* 0 = not use  1 = use */
+    int noise_shaping_amp;    /* 0 = ISO model: amplify all distorted bands
+				 1 = amplify within 50% of max (on db scale)
+				 2 = amplify only most distorted band
+			      */
+    int substep_shaping;  /* 0 = no substep
+			     1 = use substep only long
+			     2 = use substep only short
+			     3 = use substep all block type.
+			  */
+    int psymodel;         /* 2 = use psychomodel and noise shaping.
+			     1 = use psychomodel but no noise shaping.
+			     0 = don't use psychomodel
+			  */
+    int noise_shaping_stop; /* 0 = stop at over=0, all scalefacs amplified or
 			           a scalefac has reached max value
-                               2 = stop when all scalefacs amplified (not yet)
+			       1 = stop when all scalefacs amplified or
+				   a scalefac has reached max value
+			       2 = stop when all scalefacs amplified (not yet)
 			    */
+    int use_best_huffman;   /* 0 = no.  1=outside loop  2=inside loop(slow) */
 
-  int use_best_huffman;     /* 0 = no.  1=outside loop  2=inside loop(slow) */
+    /* used for padding */
+    int frac_SpF;
+    int slot_lag;
 
-  /* variables used by lame.c */
-  align16 III_side_info_t l3_side;
-
-  /* used for padding */
-  int frac_SpF;
-  int slot_lag;
-
-  /* variables for subband filter and MDCT */
-  FLOAT sb_sample[2][3][18][SBLIMIT];
-  FLOAT amp_filter[SBLIMIT];
-  int xrNumMax_longblock;
-
-  /* side channel sparsing */
-  int   sparsing;
-  FLOAT sparseA;
-  FLOAT sparseB;
+    /* side channel sparsing */
+    int   sparsing;
+    FLOAT sparseA;
+    FLOAT sparseB;
 
     /* intensity stereo threshold */
     FLOAT istereo_ratio;

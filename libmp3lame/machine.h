@@ -144,13 +144,4 @@ typedef FLOAT     sample_t;
 
 #endif
 
-/* alignment work */
-#ifdef __GNUC__
-# define align16 __attribute__((aligned(16)))
-#elif (defined(_MSC_VER) | defined(__ICC))
-# define align16 __declspec(align(16))
-#else
-# define align16
-#endif
-
 /* end of machine.h */

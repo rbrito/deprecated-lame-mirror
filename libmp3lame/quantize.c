@@ -39,7 +39,6 @@
 #include <dmalloc.h>
 #endif
 
-
 static const int max_range_short[SBMAX_s*3] = {
     15, 15, 15, 15, 15, 15, 15, 15, 15, 15, 15, 15, 15, 15, 15, 15, 15, 15,
     7, 7, 7, 7, 7, 7, 7, 7, 7, 7, 7, 7, 7, 7, 7, 7, 7, 7,
@@ -299,7 +298,9 @@ calc_xmin(
  * calculate the quantization noise and store the ratio to the threshold.
  *************************************************************************/
 static FLOAT
-calc_noise(const gr_info * const gi, const FLOAT rxmin[], FLOAT distort[])
+calc_noise(
+    lame_internal_flags *gfc,
+    const gr_info * const gi, const FLOAT rxmin[], FLOAT distort[])
 {
     FLOAT max_noise = 0.0;
     int sfb = 0, j = 0, l;
@@ -316,9 +317,9 @@ calc_noise(const gr_info * const gi, const FLOAT rxmin[], FLOAT distort[])
 	    noise = 0.0;
 	    do {
 		FLOAT temp;
-		temp = fabs(gi->xr[j+l]) - pow43[gi->l3_enc[j+l]] * step; l++;
+		temp = absxr[j+l] - pow43[gi->l3_enc[j+l]] * step; l++;
 		noise += temp * temp;
-		temp = fabs(gi->xr[j+l]) - pow43[gi->l3_enc[j+l]] * step; l++;
+		temp = absxr[j+l] - pow43[gi->l3_enc[j+l]] * step; l++;
 		noise += temp * temp;
 	    } while (l < 0);
 	    *distort = noise = noise * *rxmin;
@@ -333,7 +334,7 @@ calc_noise(const gr_info * const gi, const FLOAT rxmin[], FLOAT distort[])
 	if (noise < 0.0) {
 	    noise = 0.0;
 	    do {
-		FLOAT t0 = gi->xr[j+l], t1 = gi->xr[j+l+1];
+		FLOAT t0 = absxr[j+l], t1 = absxr[j+l+1];
 		noise += t0*t0 + t1*t1;
 	    } while ((l += 2) < 0);
 	    *distort = noise = noise * *rxmin;
@@ -355,6 +356,7 @@ calc_noise(const gr_info * const gi, const FLOAT rxmin[], FLOAT distort[])
 
 static FLOAT
 calc_noise_allband(
+    lame_internal_flags *gfc,
     const gr_info * const gi,
     const FLOAT * const xmin,
     FLOAT distort[],
@@ -366,7 +368,7 @@ calc_noise_allband(
 	distort[sfb] = -1.0;
 	rxmin[sfb] = 1.0/xmin[sfb];
     }
-    return calc_noise(gi, rxmin, distort);
+    return calc_noise(gfc, gi, rxmin, distort);
 }
 
 /************************************************************************
@@ -379,10 +381,13 @@ calc_noise_allband(
  ************************************************************************/
 
 static int 
-init_bitalloc(lame_internal_flags *gfc, gr_info *const gi, FLOAT xr34[576])
+init_bitalloc(lame_internal_flags *gfc, gr_info *const gi)
 {
     FLOAT tmp, sum = 0.0;
     int i, end = gi->xrNumMax;
+
+    /*  check if there is some energy we have to quantize
+     *  and calculate xr34(gfc->xrwork[0]) matching our fresh scalefactors */
 #ifdef HAVE_NASM
     if (gfc->CPU_features.SIMD) {
 	extern void pow075_SSE(float *, float *, int, float*);
@@ -393,15 +398,15 @@ init_bitalloc(lame_internal_flags *gfc, gr_info *const gi, FLOAT xr34[576])
     } else
 #endif
     {
-	/*  check if there is some energy we have to quantize
-	 *  and calculate xr34 matching our fresh scalefactors */
 	for (i = 0; i < end; i++) {
-	    tmp = fabs (gi->xr[i]);
+	    tmp = fabs(gi->xr[i]);
 	    sum += tmp;
-	    xr34[i] = sqrt (tmp * sqrt(tmp));
+	    absxr[i] = tmp;
+	    xr34[i] = sqrt(tmp * sqrt(tmp));
 	}
     }
     memset(&xr34[end], 0, sizeof(FLOAT)*(576-end));
+    memset(&absxr[end], 0, sizeof(FLOAT)*(576-end));
 
     if (sum > (FLOAT)1e-20) {
 	int j = 0;
@@ -427,8 +432,7 @@ init_global_gain(
     lame_internal_flags * const gfc,
     gr_info * const gi,
     int desired_rate,
-    int CurrentStep,
-    const FLOAT xr34[576])
+    int CurrentStep)
 {
     int nbits, flag_GoneOver = 0;
     assert(CurrentStep);
@@ -437,7 +441,7 @@ init_global_gain(
     do {
 	if (flag_GoneOver & 2)
 	    gi->big_values = gi->count1 = gi->xrNumMax;
-	nbits = count_bits(gfc, xr34, gi);
+	nbits = count_bits(gfc, gi);
 
 	if (CurrentStep == 1 || nbits == desired_rate)
 	    break; /* nothing to adjust anymore */
@@ -459,14 +463,14 @@ init_global_gain(
 
     if (gi->global_gain < 0) {
 	gi->global_gain = 0;
-	count_bits(gfc, xr34, gi);
+	count_bits(gfc, gi);
     } else if (gi->global_gain > 255) {
 	gi->global_gain = 255;
 	gi->big_values = gi->count1 = gi->xrNumMax;
-	count_bits(gfc, xr34, gi);
+	count_bits(gfc, gi);
     } else if (nbits > desired_rate) {
 	gi->global_gain++;
-	count_bits(gfc, xr34, gi);
+	count_bits(gfc, gi);
     }
 }
 
@@ -494,23 +498,22 @@ static void
 trancate_smallspectrums(
     lame_internal_flags *gfc,
     gr_info		* const gi,
-    const FLOAT	* const xmin,
-    FLOAT		* work
+    const FLOAT	* const xmin
     )
 {
     int sfb, j;
-    FLOAT distort[SFBMAX], dummy[SFBMAX];
+    FLOAT distort[SFBMAX], work[576]; /* 576 is too much */
 
     for (sfb = 0; sfb < gi->psymax; sfb++) {
-	dummy[sfb] = 1.0;
+	work[sfb] = 1.0;
 	distort[sfb] = -1.0;
     }
-    calc_noise(gi, dummy, distort);
+    calc_noise(gfc, gi, work, distort);
 
     j = sfb = 0;
     do {
 	FLOAT threshold;
-	int nsame, start, end, width2 = 0, k = j, width = gi->width[sfb];
+	int nsame, start, width2 = 0, k = j, width = gi->width[sfb];
 	j += width;
 
 	if (distort[sfb] >= 1.0)
@@ -518,7 +521,7 @@ trancate_smallspectrums(
 
 	do {
 	    if (gi->l3_enc[k] != 0)
-		work[width2++] = fabs(gi->xr[k]);
+		work[width2++] = absxr[k];
 	} while (++k < j);
 	if (width2 == 0)
 	    continue; /* already all zero */
@@ -532,13 +535,14 @@ trancate_smallspectrums(
 		    break;
 
 	    threshold -= work[start] * work[start] * nsame;
-	} while (threshold > 0.0 && (start += nsame) < width);
+	} while (threshold > 0.0 && (start += nsame) < width2);
 	if (start == 0)
 	    continue;
+	assert(start <= width2);
 
 	threshold = work[start-1];
 	do {
-	    if (fabs(gi->xr[j - width]) <= threshold)
+	    if (absxr[j - width] <= threshold)
 		gi->l3_enc[j - width] = 0.0;
 	} while (--width > 0);
     } while (++sfb < gi->psymax);
@@ -734,132 +738,128 @@ amp_scalefac_bands(
 
 
 inline static FLOAT
-calc_sfb_noise_fast(const FLOAT * xr, const FLOAT * xr34, int bw, int sf)
+calc_sfb_noise_fast(lame_internal_flags *gfc, int j, int bw, int sf)
 {
     FLOAT xfsf = 0.0;
     FLOAT sfpow = POW20(sf);  /*pow(2.0,sf/4.0); */
     FLOAT sfpow34 = IPOW20(sf); /*pow(sfpow,-3.0/4.0); */
 
-    bw >>= 1;
+    j += bw;
+    bw = -bw;
     do {
 	fi_union fi0, fi1;
 	FLOAT t0, t1;
 #ifdef TAKEHIRO_IEEE754_HACK
-	fi0.f = sfpow34 * xr34[0] + (ROUNDFAC_NEAR + MAGIC_FLOAT);
-	fi1.f = sfpow34 * xr34[1] + (ROUNDFAC_NEAR + MAGIC_FLOAT);
+	fi0.f = sfpow34 * xr34[j+bw  ] + (ROUNDFAC_NEAR + MAGIC_FLOAT);
+	fi1.f = sfpow34 * xr34[j+bw+1] + (ROUNDFAC_NEAR + MAGIC_FLOAT);
 
 	if (fi0.i > MAGIC_INT + IXMAX_VAL) return -1;
 	if (fi1.i > MAGIC_INT + IXMAX_VAL) return -1;
-	t0 = fabs(xr[0]) - (pow43 - MAGIC_INT)[fi0.i] * sfpow;
-	t1 = fabs(xr[1]) - (pow43 - MAGIC_INT)[fi1.i] * sfpow;
+	t0 = absxr[j+bw  ] - (pow43 - MAGIC_INT)[fi0.i] * sfpow;
+	t1 = absxr[j+bw+1] - (pow43 - MAGIC_INT)[fi1.i] * sfpow;
 #else
-	fi0.i = (int)(sfpow34 * xr34[0] + ROUNDFAC);
-	fi1.i = (int)(sfpow34 * xr34[1] + ROUNDFAC);
+	fi0.i = (int)(sfpow34 * xr34[j+bw  ] + ROUNDFAC);
+	fi1.i = (int)(sfpow34 * xr34[j+bw+1] + ROUNDFAC);
 
 	if (fi0.i > IXMAX_VAL) return -1;
 	if (fi1.i > IXMAX_VAL) return -1;
-	t0 = fabs(xr[0]) - pow43[fi0.i] * sfpow;
-	t1 = fabs(xr[1]) - pow43[fi1.i] * sfpow;
+	t0 = absxr[j+bw  ] - pow43[fi0.i] * sfpow;
+	t1 = absxr[j+bw+1] - pow43[fi1.i] * sfpow;
 #endif
 	xfsf += t0*t0 + t1*t1;
-	xr34 += 2;
-	xr += 2;
-    } while (--bw > 0);
+    } while ((bw += 2) < 0);
     return xfsf;
 }
 
 inline static FLOAT
-calc_sfb_noise(const FLOAT * xr, const FLOAT * xr34, int bw, int sf)
+calc_sfb_noise(lame_internal_flags *gfc, int j, int bw, int sf)
 {
     FLOAT xfsf = 0.0;
     FLOAT sfpow = POW20(sf);  /*pow(2.0,sf/4.0); */
     FLOAT sfpow34 = IPOW20(sf); /*pow(sfpow,-3.0/4.0); */
 
-    bw >>= 1;
+    j += bw;
+    bw = -bw;
     do {
 	fi_union fi0, fi1;
 #ifdef TAKEHIRO_IEEE754_HACK
 	double t0, t1;
-	fi0.f = (t0 = sfpow34 * xr34[0] + MAGIC_FLOAT);
-	fi1.f = (t1 = sfpow34 * xr34[1] + MAGIC_FLOAT);
+	fi0.f = (t0 = sfpow34 * xr34[j+bw  ] + MAGIC_FLOAT);
+	fi1.f = (t1 = sfpow34 * xr34[j+bw+1] + MAGIC_FLOAT);
 	if (fi0.i > MAGIC_INT + IXMAX_VAL) return -1.0;
 	if (fi1.i > MAGIC_INT + IXMAX_VAL) return -1.0;
 	fi0.f = t0 + (adj43asm - MAGIC_INT)[fi0.i];
 	fi1.f = t1 + (adj43asm - MAGIC_INT)[fi1.i];
-	t0 = fabs(xr[0]) - (pow43 - MAGIC_INT)[fi0.i] * sfpow;
-	t1 = fabs(xr[1]) - (pow43 - MAGIC_INT)[fi1.i] * sfpow;
+	t0 = absxr[j+bw  ] - (pow43 - MAGIC_INT)[fi0.i] * sfpow;
+	t1 = absxr[j+bw+1] - (pow43 - MAGIC_INT)[fi1.i] * sfpow;
 #else
 	FLOAT t0, t1;
-	fi0.i = (int) (t0 = sfpow34 * xr34[0]);
-	fi1.i = (int) (t1 = sfpow34 * xr34[1]);
+	fi0.i = (int) (t0 = sfpow34 * xr34[j+bw  ]);
+	fi1.i = (int) (t1 = sfpow34 * xr34[j+bw+1]);
 	if (fi0.i > IXMAX_VAL) return -1.0;
 	if (fi1.i > IXMAX_VAL) return -1.0;
 
-	t0 = fabs(xr[0]) - pow43[(int)(t0 + adj43[fi0.i])] * sfpow;
-	t1 = fabs(xr[1]) - pow43[(int)(t1 + adj43[fi1.i])] * sfpow;
+	t0 = absxr[j+bw  ] - pow43[(int)(t0 + adj43[fi0.i])] * sfpow;
+	t1 = absxr[j+bw+1] - pow43[(int)(t1 + adj43[fi1.i])] * sfpow;
 #endif
 	xfsf += t0*t0 + t1*t1;
-	xr34 += 2;
-	xr += 2;
-    } while (--bw > 0);
+    } while ((bw += 2) < 0);
     return xfsf;
 }
 
 static int
 adjust_global_gain(
     lame_internal_flags *gfc,
-    FLOAT *xp,
     gr_info *gi, FLOAT *distort, int huffbits)
 {
     fi_union *fi = (fi_union *)gi->l3_enc;
-    FLOAT *xend = &xp[gi->xrNumMax];
-    int sfb = 0;
+    int sfb = 0, j = 0, end = gi->xrNumMax;
 
     do {
-	int width = gi->width[sfb];
+	int bw = gi->width[sfb];
 	FLOAT istep;
-	xp += width;
-	fi += width;
+	j += bw;
 	if (distort[sfb] > 0.0)
 	    continue;
 
-	width = -width;
+	bw = -bw;
 	istep = IPOW20(scalefactor(gi, sfb));
-	if (gi->count1 < fi - (fi_union*)gi->l3_enc)
-	    gi->count1 = fi - (fi_union*)gi->l3_enc;
+	if (gi->count1 < j)
+	    gi->count1 = j;
 	do {
 #ifdef TAKEHIRO_IEEE754_HACK
-	    double x0 = istep * xp[width  ] + MAGIC_FLOAT;
-	    double x1 = istep * xp[width+1] + MAGIC_FLOAT;
+	    double x0 = istep * xr34[j+bw  ] + MAGIC_FLOAT;
+	    double x1 = istep * xr34[j+bw+1] + MAGIC_FLOAT;
 
-	    fi[width  ].f = x0;
-	    fi[width+1].f = x1;
+	    fi[j+bw  ].f = x0;
+	    fi[j+bw+1].f = x1;
 
-	    if (fi[width  ].i >= MAGIC_INT + PRECALC_SIZE) return LARGE_BITS;
-	    fi[width  ].f = x0 + (adj43asm - MAGIC_INT)[fi[width  ].i];
-	    if (fi[width+1].i >= MAGIC_INT + PRECALC_SIZE) return LARGE_BITS;
-	    fi[width+1].f = x1 + (adj43asm - MAGIC_INT)[fi[width+1].i];
-	    fi[width  ].i -= MAGIC_INT;
-	    fi[width+1].i -= MAGIC_INT;
+	    if (fi[j+bw  ].i >= MAGIC_INT + PRECALC_SIZE) return LARGE_BITS;
+	    fi[j+bw  ].f = x0 + (adj43asm - MAGIC_INT)[fi[j+bw  ].i];
+	    if (fi[j+bw+1].i >= MAGIC_INT + PRECALC_SIZE) return LARGE_BITS;
+	    fi[j+bw+1].f = x1 + (adj43asm - MAGIC_INT)[fi[j+bw+1].i];
+
+	    fi[j+bw  ].i -= MAGIC_INT;
+	    fi[j+bw+1].i -= MAGIC_INT;
 #else
-	    FLOAT x1 = xp[width  ] * istep;
-	    FLOAT x2 = xp[width+1] * istep;
+	    FLOAT x1 = xr34[j+bw  ] * istep;
+	    FLOAT x2 = xr34[j+bw+1] * istep;
 	    int rx1 = (int)x1;
 	    int rx2 = (int)x2;
 	    if (rx1 >= PRECALC_SIZE) return LARGE_BITS;
 	    if (rx2 >= PRECALC_SIZE) return LARGE_BITS;
-	    fi[width  ].i = (int)(x1 + adj43[rx1]);
-	    fi[width+1].i = (int)(x2 + adj43[rx2]);
+	    fi[j+bw  ].i = (int)(x1 + adj43[rx1]);
+	    fi[j+bw+1].i = (int)(x2 + adj43[rx2]);
 #endif
-	} while ((width += 2) < 0);
+	} while ((bw += 2) < 0);
 	if (!gfc->pseudohalf[sfb])
 	    continue;
 	istep = 0.634521682242439
 	    / IPOW20(scalefactor(gi, sfb) + gi->scalefac_scale);
-	for (width = -gi->width[sfb]; width < 0; width++)
-	    if (xp[width] < istep)
-		fi[width].i = 0;
-    } while (++sfb < gi->psymax && xp < xend);
+	for (bw = -gi->width[sfb]; bw < 0; bw++)
+	    if (xr34[j+bw] < istep)
+		fi[j+bw].i = 0;
+    } while (++sfb < gi->psymax && j < end);
 
     if (noquant_count_bits(gfc, gi) > huffbits)
 	return (++gi->global_gain) - 256;
@@ -871,7 +871,6 @@ static void
 CBR_2nd_bitalloc(
     lame_internal_flags * gfc,
     gr_info *gi,
-    FLOAT * xr34,
     FLOAT distort[])
 {
     int sfb, j = 0;
@@ -880,11 +879,11 @@ CBR_2nd_bitalloc(
 	distort[sfb] = 0.0;
 	if (gi->scalefac[sfb] > 0) {
 	    int s0 = gi->scalefac[sfb];
-	    FLOAT noiseold = calc_sfb_noise(&gi->xr[j], &xr34[j], width,
+	    FLOAT noiseold = calc_sfb_noise(gfc, j, width,
 					    scalefactor(gi, sfb));
 	    while (--gi->scalefac[sfb] >= 0
-		   && calc_sfb_noise(&gi->xr[j], &xr34[j], width,
-				     scalefactor(gi, sfb)) <= noiseold)
+		   && calc_sfb_noise(gfc, j, width, scalefactor(gi, sfb))
+		   <= noiseold)
 		;
 	    gi->scalefac[sfb]++;
 	    if (gi->scalefac[sfb] != s0)
@@ -893,7 +892,7 @@ CBR_2nd_bitalloc(
 	j += width;
     }
     gfc->scale_bitcounter(gi);
-    adjust_global_gain(gfc, xr34, gi, distort, gi->part2_3_length);
+    adjust_global_gain(gfc, gi, distort, gi->part2_3_length);
 }
 
 static int
@@ -924,14 +923,13 @@ CBR_1st_bitalloc (
 {
     gr_info gi_w;
     FLOAT distort[SFBMAX], xmin[SFBMAX], rxmin[SFBMAX], bestNoise, newNoise;
-    align16 FLOAT xr34[576];
     int current_method, age;
 
-    if (!init_bitalloc(gfc, gi, xr34))
+    if (!init_bitalloc(gfc, gi))
 	return; /* digital silence */
 
     gi->global_gain = gfc->OldValue[ch];
-    init_global_gain(gfc, gi, targ_bits, gfc->CurrentStep[ch], xr34);
+    init_global_gain(gfc, gi, targ_bits, gfc->CurrentStep[ch]);
 
     gfc->CurrentStep[ch] = (gfc->OldValue[ch] - gi->global_gain) >= 4 ? 4 : 2;
     gfc->OldValue[ch] = gi->global_gain;
@@ -941,7 +939,7 @@ CBR_1st_bitalloc (
 
     /* compute the noise */
     calc_xmin (gfc, ratio, gi, xmin);
-    newNoise = bestNoise = calc_noise_allband(gi, xmin, distort, rxmin);
+    newNoise = bestNoise = calc_noise_allband(gfc, gi, xmin, distort, rxmin);
     if (noise_in_sfb21(gi, distort, bestNoise))
 	goto quit_quantization;
     current_method = 0;
@@ -961,9 +959,9 @@ CBR_1st_bitalloc (
 					   current_method, targ_bits);
 	if (huff_bits > 0) {
 	    /* adjust global_gain to fit the available bits */
-	    if (adjust_global_gain(gfc, xr34, &gi_w, distort, huff_bits)) {
+	    if (adjust_global_gain(gfc, &gi_w, distort, huff_bits)) {
 		int sfb;
-		while (count_bits(gfc, xr34, &gi_w) > huff_bits
+		while (count_bits(gfc, &gi_w) > huff_bits
 		       && ++gi_w.global_gain < 256u)
 		    ;
 		for (sfb = 0; sfb < gi->psymax; sfb++)
@@ -972,7 +970,8 @@ CBR_1st_bitalloc (
 
 	    /* store this scalefactor combination if it is better */
 	    if (gi_w.global_gain != 256
-	     && bestNoise > (newNoise = calc_noise(&gi_w, rxmin, distort))) {
+		&& bestNoise
+		> (newNoise = calc_noise(gfc, &gi_w, rxmin, distort))) {
 		bestNoise = newNoise;
 		*gi = gi_w;
 		if (bestNoise < 1.0) {
@@ -1002,12 +1001,12 @@ CBR_1st_bitalloc (
     }
     assert (gi->global_gain < 256);
 
-    CBR_2nd_bitalloc(gfc, gi, xr34, distort);
+    CBR_2nd_bitalloc(gfc, gi, distort);
  quit_quantization:
     if (gi->psymax != 0
 	&& !(gi->block_type != SHORT_TYPE && !(gfc->substep_shaping & 1))
 	&& !(gi->block_type == SHORT_TYPE && !(gfc->substep_shaping & 2)))
-	trancate_smallspectrums(gfc, gi, xmin, xr34);
+	trancate_smallspectrums(gfc, gi, xmin);
 }
 
 
@@ -1222,7 +1221,7 @@ bitpressure_strategy(gr_info *gi, FLOAT *xmin)
 /* find_scalefac() calculates a quantization step size which would
  * introduce as much noise as allowed (= as less bits as possible). */
 inline static int
-find_scalefac(const FLOAT * xr, const FLOAT * xr34, FLOAT xmin, int bw,
+find_scalefac(lame_internal_flags *gfc, int j, FLOAT xmin, int bw,
 	      int shortflag, int sf)
 {
     int sf_ok = 10000, delsf = 8, sfmin = -7*2, endflag = 0;
@@ -1232,7 +1231,7 @@ find_scalefac(const FLOAT * xr, const FLOAT * xr34, FLOAT xmin, int bw,
 	sfmin = -7*4-7*2;
 
     do {
-	FLOAT xfsf = calc_sfb_noise_fast(xr, xr34, bw, sf);
+	FLOAT xfsf = calc_sfb_noise_fast(gfc, j, bw, sf);
 	if (xfsf > xmin) {
 	    /* there's noticible noise. try a smaller scalefactor */
 	    endflag |= 1;
@@ -1384,14 +1383,13 @@ set_scalefactor_values(gr_info *gi)
 
 
 static int
-noisesfb(gr_info *gi, FLOAT * xr34, FLOAT * xmin, int startsfb)
+noisesfb(lame_internal_flags *gfc, gr_info *gi, FLOAT * xmin, int startsfb)
 {
     int sfb, j = 0;
     for (sfb = 0; sfb < gi->psymax; sfb++) {
 	int width = gi->width[sfb];
 	if (sfb >= startsfb) {
-	    FLOAT noise = calc_sfb_noise(&gi->xr[j], &xr34[j], width,
-					 scalefactor(gi, sfb));
+	    FLOAT noise = calc_sfb_noise(gfc, j, width, scalefactor(gi, sfb));
 	    if (noise > xmin[sfb])
 		return sfb;
 	    if (noise < 0.0)
@@ -1406,7 +1404,6 @@ static void
 VBR_2nd_bitalloc(
     lame_internal_flags * gfc,
     gr_info *gi,
-    FLOAT * xr34,
     FLOAT * xmin)
 {
     /* note: we cannot use calc_noise() because l3_enc[] is not calculated
@@ -1414,7 +1411,7 @@ VBR_2nd_bitalloc(
     gr_info gi_w = *gi;
     int sfb = 0, endflag = 0;
     for (;;) {
-	sfb = noisesfb(&gi_w, xr34, xmin, sfb);
+	sfb = noisesfb(gfc, &gi_w, xmin, sfb);
 	if (sfb >= 0) {
 	    if (sfb >= gi->sfbmax) { /* noise in sfb21 */
 		endflag |= 1;
@@ -1439,14 +1436,13 @@ VBR_2nd_bitalloc(
 }
 
 static int
-VBR_3rd_bitalloc(gr_info *gi, FLOAT * xr34, FLOAT * xmin)
+VBR_3rd_bitalloc(lame_internal_flags *gfc, gr_info *gi, FLOAT * xmin)
 {
     /* note: we cannot use calc_noise() because l3_enc[] is not calculated
        at this point */
     int sfb, j, r = 0;
     for (j = sfb = 0; sfb < gi->psymax; sfb++) {
-	if (calc_sfb_noise(&gi->xr[j], &xr34[j], gi->width[sfb],
-			   scalefactor(gi, sfb)) < 0) {
+	if (calc_sfb_noise(gfc, j, gi->width[sfb], scalefactor(gi, sfb)) < 0) {
 	    if (gi->scalefac[sfb] == 0 || r < 0)
 		r = -2;
 	    else {
@@ -1462,8 +1458,8 @@ VBR_3rd_bitalloc(gr_info *gi, FLOAT * xr34, FLOAT * xmin)
     for (j = sfb = 0; sfb < gi->psymax; sfb++) {
 	while (gi->scalefac[sfb] > 0) {
 	    gi->scalefac[sfb]--;
-	    if (calc_sfb_noise(&gi->xr[j], &xr34[j], gi->width[sfb],
-			       scalefactor(gi, sfb)) > xmin[sfb]) {
+	    if (calc_sfb_noise(gfc, j, gi->width[sfb], scalefactor(gi, sfb))
+		> xmin[sfb]) {
 		gi->scalefac[sfb]++;
 		break;
 	    }
@@ -1484,7 +1480,6 @@ static int
 VBR_noise_shaping(
     lame_internal_flags * gfc,
     gr_info *gi,
-    FLOAT * xr34,
     FLOAT * xmin)
 {
     int vbrmax, sfb, j;
@@ -1493,7 +1488,7 @@ VBR_noise_shaping(
     vbrmax = -10000;
     do {
 	int width = gi->width[sfb], gain;
-	gain = find_scalefac(&gi->xr[j], &xr34[j], xmin[sfb], width,
+	gain = find_scalefac(gfc, j, xmin[sfb], width,
 			     gi->block_type == SHORT_TYPE, gi->global_gain);
 	j += width;
 	gi->scalefac[sfb] = gain;
@@ -1508,26 +1503,26 @@ VBR_noise_shaping(
     set_scalefactor_values(gi);
 
     /* ensure there's no noise */
-    VBR_2nd_bitalloc(gfc, gi, xr34, xmin);
+    VBR_2nd_bitalloc(gfc, gi, xmin);
 
     /* reduce bitrate if possible */
-    j = VBR_3rd_bitalloc(gi, xr34, xmin);
+    j = VBR_3rd_bitalloc(gfc, gi, xmin);
     if (j)
 	return j;
 
-    /* quantize xr34 */
+    /* quantize */
     gi->big_values = gi->count1 = gi->xrNumMax;
-    if (count_bits(gfc, xr34, gi) >= LARGE_BITS)
+    if (count_bits(gfc, gi) >= LARGE_BITS)
 	return -2;
 
     /* encode scalefacs */
     gfc->scale_bitcounter(gi);
     assert(gi->part2_length < LARGE_BITS);
 
-    if (gi->part2_3_length > MAX_BITS) {
-	FLOAT xrtmp[576];
-	trancate_smallspectrums(gfc, gi, xmin, xrtmp);
-    }
+    if (gi->part2_3_length > MAX_BITS
+	||  (gi->block_type == SHORT_TYPE && (gfc->substep_shaping & 2))
+	|| !(gi->block_type != SHORT_TYPE && (gfc->substep_shaping & 1)))
+	trancate_smallspectrums(gfc, gi, xmin);
 
     if (gfc->use_best_huffman == 2)
 	best_huffman_divide(gfc, gi);
@@ -1545,14 +1540,12 @@ void
 VBR_iteration_loop(lame_global_flags *gfp, III_psy_ratio ratio[2][2])
 {
     lame_internal_flags *gfc=gfp->internal_flags;
-    align16 FLOAT xr34[576];
     FLOAT xmin[2][2][SFBMAX];
-    int mean_bits, max_frame_bits, used_bits;
-    int ch, gr, ath_over = 0;
+    int mean_bits, max_frame_bits, used_bits, ch, gr, ath_over = 0;
 
     for (gr = 0; gr < gfc->mode_gr; gr++) {
 	for (ch = 0; ch < gfc->channels_out; ch++) {
-     	    calc_xmin (gfc, &ratio[gr][ch],
+	    calc_xmin (gfc, &ratio[gr][ch],
 		       &gfc->l3_side.tt[gr][ch], xmin[gr][ch]);
 	    ath_over += ratio[gr][ch].ath_over;
 	}
@@ -1567,13 +1560,12 @@ VBR_iteration_loop(lame_global_flags *gfp, III_psy_ratio ratio[2][2])
 	for (gr = 0; gr < gfc->mode_gr; gr++) {
 	    for (ch = 0; ch < gfc->channels_out; ch++) {
 		gr_info *gi = &gfc->l3_side.tt[gr][ch];
-		if (!init_bitalloc(gfc, gi, xr34))
+		if (!init_bitalloc(gfc, gi))
 		    continue; /* digital silence */
 
 		gi->global_gain = gfc->OldValue[ch];
 		for (;;) {
-		    int ret
-			= VBR_noise_shaping(gfc, gi, xr34, xmin[gr][ch]);
+		    int ret = VBR_noise_shaping(gfc, gi, xmin[gr][ch]);
 		    if (ret == 0)
 			break;
 		    if (ret == -2)
@@ -1596,10 +1588,6 @@ VBR_iteration_loop(lame_global_flags *gfp, III_psy_ratio ratio[2][2])
     for (gr = 0; gr < gfc->mode_gr; gr++) {
 	for (ch = 0; ch < gfc->channels_out; ch++) {
 	    gr_info *gi = &gfc->l3_side.tt[gr][ch];
-	    if (gi->psymax != 0
-		&& !(gi->block_type != SHORT_TYPE && !(gfc->substep_shaping & 1))
-		&& !(gi->block_type == SHORT_TYPE && !(gfc->substep_shaping & 2)))
-		trancate_smallspectrums(gfc, gi, xmin[gr][ch], xr34);
 	    iteration_finish_one(gfc, gr, ch);
 	    gfc->l3_side.ResvSize -= gi->part2_length + gi->part2_3_length;
 	}
@@ -1643,7 +1631,7 @@ set_pinfo (
     FLOAT xmin[SFBMAX], distort[SFBMAX], dummy[SFBMAX];
 
     calc_xmin (gfc, ratio, gi, xmin);
-    max_noise = calc_noise_allband(gi, xmin, distort, dummy);
+    max_noise = calc_noise_allband(gfc, gi, xmin, distort, dummy);
 
     over = j = 0;
     for (sfb2 = 0; sfb2 < gi->psy_lmax; sfb2++) {
