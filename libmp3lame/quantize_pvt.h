@@ -23,9 +23,9 @@
 #define LAME_QUANTIZE_PVT_H
 
 #define scalefactor(gi, sfb) \
-    (gi->global_gain - gi->subblock_gain[gi->wi[sfb].window]*8) \
-     - ((gi->scalefac[sfb] + ((gi->preflag > 0) ? pretab[sfb] : 0)) \
-        << (gi->scalefac_scale + 1))
+    ((gi)->global_gain - (gi)->subblock_gain[(gi)->wi[(sfb)].window]*8) \
+     - (((gi)->scalefac[(sfb)] + (((gi)->preflag > 0) ? pretab[(sfb)] : 0)) \
+        << ((gi)->scalefac_scale + 1))
 
 #define xr34 gfc->w.xrwork[0]
 #define absxr gfc->w.xrwork[1]
