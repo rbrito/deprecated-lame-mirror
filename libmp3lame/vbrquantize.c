@@ -292,7 +292,44 @@ find_scalefac(const FLOAT8 *xr, const FLOAT8 *xr34, const int sfb,
   sf_ok=10000;
   for (i=0; i<7; i++) {
     delsf /= 2;
-    //      xfsf = calc_sfb_noise(xr,xr34,bw,sf);
+    xfsf = calc_sfb_noise(xr,xr34,bw,sf);
+
+    if (xfsf < 0) {
+      /* scalefactors too small */
+      sf += delsf;
+    }else{
+      if (sf_ok==10000) sf_ok=sf;  
+      if (xfsf > l3_xmin)  {
+	/* distortion.  try a smaller scalefactor */
+	sf -= delsf;
+      }else{
+	sf_ok = sf;
+	sf += delsf;
+      }
+    }
+  } 
+  assert(sf_ok!=10000);
+#if 0
+  assert(delsf==1);  /* when for loop goes up to 7 */
+#endif
+
+  return sf;
+}
+
+static int
+find_scalefac_ave(const FLOAT8 *xr, const FLOAT8 *xr34, const int sfb,
+		     const FLOAT8 l3_xmin, const int bw)
+{
+  FLOAT8 xfsf;
+  int i,sf,sf_ok,delsf;
+
+  /* search will range from sf:  -209 -> 45  */
+  sf = -82;
+  delsf = 128;
+
+  sf_ok=10000;
+  for (i=0; i<7; i++) {
+    delsf /= 2;
     xfsf = calc_sfb_noise_ave(xr,xr34,bw,sf);
 
     if (xfsf < 0) {
@@ -635,9 +672,20 @@ short_block_vbr_sf (
 	    const unsigned int start = gfc->scalefac_band.s[ sfb ];
 	    const unsigned int end   = gfc->scalefac_band.s[ sfb+1 ];
 	    const unsigned int width = end - start;
-	    vbrsf->s[sfb][b] = find_scalefac (&xr34[j], &xr34_orig[j], sfb,
+	    
+            if (0 == gfc->noise_shaping_amp) {
+                /*  the faster and sloppier mode to use at lower quality
+                 */
+                vbrsf->s[sfb][b] = find_scalefac (&xr34[j], &xr34_orig[j], sfb,
                                               l3_xmin->s[sfb][b], width);
-	    j += width;
+	    }
+            else {
+                /*  the slower and better mode to use at higher quality
+                 */
+                vbrsf->s[sfb][b] = find_scalefac_ave (&xr34[j], &xr34_orig[j],
+                                              sfb, l3_xmin->s[sfb][b], width);
+            }
+            j += width;
         }
     }
     for (sfb = 0; sfb < SBMAX_s; sfb++) {
@@ -673,8 +721,19 @@ long_block_vbr_sf (
         const unsigned int start = gfc->scalefac_band.l[ sfb ];
         const unsigned int end   = gfc->scalefac_band.l[ sfb+1 ];
         const unsigned int width = end - start;
-        vbrsf->l[sfb] = find_scalefac (&xr34[start], &xr34_orig[start], sfb,
-                                       l3_xmin->l[sfb], width);
+        
+        if (0 == gfc->noise_shaping_amp) {
+            /*  the faster and sloppier mode to use at lower quality
+             */
+            vbrsf->l[sfb] = find_scalefac (&xr34[start], &xr34_orig[start], 
+                                           sfb, l3_xmin->l[sfb], width);
+        }
+        else {
+            /*  the slower and better mode to use at higher quality
+             */
+            vbrsf->l[sfb] = find_scalefac_ave (&xr34[start], &xr34_orig[start],
+                                               sfb, l3_xmin->l[sfb], width);
+        }
     }
     for (sfb = 0; sfb < SBMAX_l; sfb++) {
         if (sfb > 0) 
