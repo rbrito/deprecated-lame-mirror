@@ -2087,8 +2087,10 @@ int *npart_l_orig,int *npart_l,int *npart_s_orig,int *npart_s)
       k         = numlines_l[i] - 1;
       bark1 = freq2bark(sfreq*(j+0)/BLKSIZE);
       bark2 = freq2bark(sfreq*(j+k)/BLKSIZE);
-      
       bval_l[i] = .5*(bark1+bark2);
+
+      bark1 = freq2bark(sfreq*(j+0-.5)/BLKSIZE);
+      bark2 = freq2bark(sfreq*(j+k+.5)/BLKSIZE);
       bval_l_width[i] = bark2-bark1;
 
       gfc->ATH->cb [i] = 1.e37; // preinit for minimum search
@@ -2206,8 +2208,10 @@ i,*npart_s_orig,freq,numlines_s[i],j2-j,j,j2-1,bark1,bark2);
 
       bark1 = freq2bark (sfreq*(j+0)/BLKSIZE_s);
       bark2 = freq2bark (sfreq*(j+k)/BLKSIZE_s); 
-      
       bval_s[i] = .5*(bark1+bark2);
+
+      bark1 = freq2bark (sfreq*(j+0-.5)/BLKSIZE_s);
+      bark2 = freq2bark (sfreq*(j+k+.5)/BLKSIZE_s); 
       bval_s_width[i] = bark2-bark1;
       j        += k+1;
       
@@ -2238,12 +2242,12 @@ i,*npart_s_orig,freq,numlines_s[i],j2-j,j,j2-1,bark1,bark2);
      NOTE: i and j are used opposite as in the ISO docs */
   for(i=0;i<*npart_l_orig;i++)    {
       for(j=0;j<*npart_l_orig;j++) 	{
-  	  s3_l[i][j]=s3_func(bval_l[i]-bval_l[j])*DELBARK;
+  	  s3_l[i][j]=s3_func(bval_l[i]-bval_l[j])*bval_l_width[j];
       }
   }
   for(i=0;i<*npart_s_orig;i++)     {
       for(j=0;j<*npart_s_orig;j++) 	{
-  	  s3_s[i][j]=s3_func(bval_s[i]-bval_s[j])*DELBARK;
+  	  s3_s[i][j]=s3_func(bval_s[i]-bval_s[j])*bval_s_width[j];
       }
   }
   
@@ -2474,34 +2478,15 @@ int psymodel_init(lame_global_flags *gfp)
 	    }
 	}
 	/* short block spreading function normalization */
+	// no longer needs to be normalized, but nspsytune wants 
+	// SNR_s applied here istead of later to save CPU cycles
 	for ( b = 0;b < gfc->npart_s; b++ ) {
 	    FLOAT8 norm=0;
 	    for ( k = gfc->s3ind_s[b][0]; k <= gfc->s3ind_s[b][1]; k++ ) {
 		norm += gfc->s3_s[b][k];
 	    }
 	    for ( k = gfc->s3ind_s[b][0]; k <= gfc->s3ind_s[b][1]; k++ ) {
-		gfc->s3_s[b][k] *= gfc->SNR_s[b] / norm;
-	    }
-	}
-    }else{
-	/* long block spreading function normalization */
-	for ( b = 0;b < gfc->npart_l; b++ ) {
-	    FLOAT8 norm=0;
-	    for ( k = gfc->s3ind[b][0]; k <= gfc->s3ind[b][1]; k++ ) {
-		norm += gfc->s3_l[b][k];
-	    }
-	    for ( k = gfc->s3ind[b][0]; k <= gfc->s3ind[b][1]; k++ ) {
-		gfc->s3_l[b][k] /=  norm;
-	    }
-	}
-	/* short block spreading function normalization */
-	for ( b = 0;b < gfc->npart_s; b++ ) {
-	    FLOAT8 norm=0;
-	    for ( k = gfc->s3ind_s[b][0]; k <= gfc->s3ind_s[b][1]; k++ ) {
-		norm += gfc->s3_s[b][k];
-	    }
-	    for ( k = gfc->s3ind_s[b][0]; k <= gfc->s3ind_s[b][1]; k++ ) {
-		gfc->s3_s[b][k] /= norm;
+		gfc->s3_s[b][k] *= gfc->SNR_s[b] /* / norm */;
 	    }
 	}
     }
