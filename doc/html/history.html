@@ -142,7 +142,7 @@ shared library style API.</font></li>
   <li> <font color="#000000">Anonymous: New more efficient RTP code.</font></li>
   
   <li> <font color="#ff0000">Mark Taylor: psycho-acoustic data now computed
-for all scalefactor bands (up to 24khz)</font></li>
+for all scalefactor bands (up to 24 kHz)</font></li>
   
   <li> <font color="#ff0000">Mark Taylor, Takehiro Tominaga: All ISO table
 data replaced by formulas - should improve MPEG2.5 results for which we never 
@@ -290,8 +290,8 @@ than the default of 576 samples.</li>
   
   <li> <font color="#ff0000">Mark Taylor:&nbsp; "vdbj" and "Caster"&nbsp;
 found several VBR bugs (now fixed):&nbsp;&nbsp; 1.&nbsp; Analog silence detection 
-only checked frequencies up to 16khz.&nbsp; 2.&nbsp; VBR mode could still 
-somehow avoid -F mode.&nbsp; 3.&nbsp; VBR mode would ignore noise above 16khz
+only checked frequencies up to 16 kHz.&nbsp; 2.&nbsp; VBR mode could still 
+somehow avoid -F mode.&nbsp; 3.&nbsp; VBR mode would ignore noise above 16 kHz
 (scalefactor band 22), Now calc_noise1 will compute the noise in this band
 when in VBR mode.&nbsp; Not calculated in CBR&nbsp; mode since CBR algorithm
 has no way of using this information.</font></li>
@@ -774,7 +774,7 @@ in psymodel.c</font></li>
 <ul>
  
   <li> Takehiro Tominaga: Bug in quantize.c absolute threshold of hearing
-calculation for non-44.1kHz input files.</li>
+calculation for non-44.1 kHz input files.</li>
  
 </ul>
   
@@ -889,7 +889,7 @@ and use only the absolute threshold of hearing for the masking.</li>
 <ul>
  
   <li> <font color="#3366ff">Takehiro Tominaga:&nbsp; faster long block spreading 
-function convolution for non 44.1kHz sampling frequencies, and faster short 
+function convolution for non 44.1 kHz sampling frequencies, and faster short 
 block spreading function convolution for all sampling frequencies.</font></li>
   
   <li> <font color="#ff0000">Takehiro Tominaga:&nbsp; Completly rewritten
@@ -1110,7 +1110,7 @@ L channel.</li>
   
   <li> Input filesize limit removed for raw pcm input files.&nbsp; For other
 file types, LAME will still only read the first 2^32 samples, (27 hours of
-playing time at 44.1kHz).</li>
+playing time at 44.1 kHz).</li>
   <br>
 &nbsp;
 </ul>
@@ -1180,7 +1180,7 @@ bands.&nbsp; MPEG1 sometimes has less, MPEG2 can have more.&nbsp; In MPEG1,
 this bug would not have effected the output if your compiler initializes static
 variables to 0 on creation.&nbsp; In MPEG2 it leads to array out-of-bounds 
 access errors. Finally, there was a related bug in MPEG1/MPEG2, short &amp; 
-long blocks where the energy above 16kHz was all added to partition band 0.
+long blocks where the energy above 16 kHz was all added to partition band 0.
 (the lowest frequeny partition band!)</font></li>
   
   <li> <font color="#ff0000">The -Z option (Gabriel Bouvigne's idea of using
@@ -1528,7 +1528,7 @@ when many coefficients are zero.&nbsp; (Thanks to Martin Weghofer).</font></li>
     <li> <font color="#ff0000">encoder could use ms_stereo even if channel
 0 and 1 block types were different.&nbsp; (Thanks to Jan Rafaj)</font></li>
   
-    <li> <font color="#ff0000">added -k option to disable the 16kHz cutoff
+    <li> <font color="#ff0000">added -k option to disable the 16 kHz cutoff
 at 128kbs.&nbsp; This cutoff is never used at higher bitrates. (Thanks to
 Jan Rafaj)</font></li>
   
@@ -1587,7 +1587,7 @@ Droppo</li>
     <li> New command line switch <b>-a</b> auto-resamples a stereo input
 file to mono.</li>
   
-    <li> New command line switch <b>-r</b> resamples from 44.1khz to 32khz
+    <li> New command line switch <b>-r</b> resamples from 44.1 kHz to 32 kHz
 [this switch doesn't work really well. Very tinny sounding output files.
 Has to do with the way I do the resampling probably]</li>
   
@@ -1637,7 +1637,7 @@ not concerned with quality.</int></li>
     <li> Version 2.1a released. User input/output has been cleaned up a bit.
 WAV file reading is there in a very rudimentary sense ie the program will
 recognize the header and skip it, but not read it. The WAV file is assumed
-to be 16bit stereo 44.1khz.</li>
+to be 16bit stereo 44.1 kHz.</li>
  
   </ul>
  <b>October 6 1998</b> 
@@ -1747,8 +1747,8 @@ left where malloc.h hasn't been superceded by stdlib.h?</li>
         <ul>
  
           <li> my PSYD hack for the spreading functions is only valid for
-44.1khz - Should really put in a "if freq = 44.1khz" switch for it. Someone
-might want to extend the speedup for 48 and 32khz.</li>
+44.1 kHz - Should really put in a "if freq = 44.1 kHz" switch for it. Someone
+might want to extend the speedup for 48 and 32 kHz.</li>
   
           <li> Putting in Jan Peman's quantanf_init speedup.</li>
  
