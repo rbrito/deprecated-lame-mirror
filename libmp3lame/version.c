@@ -54,18 +54,6 @@
 # define V1  ""
 #endif
 
-#if defined(KLEMM)
-# define V2  "KLM "
-#else
-# define V2  ""
-#endif
-
-#if defined(RH)
-# define V3  "RH "
-#else
-# define V3  ""
-#endif
-
 //! Compile time features.
 #define V   V1 V2 V3
 
