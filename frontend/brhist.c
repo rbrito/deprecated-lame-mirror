@@ -37,7 +37,7 @@
 # define BRHIST_WIDTH    14
 #endif
 #ifndef BRHIST_RES
-# define BRHIST_RES      11
+# define BRHIST_RES      12
 #endif
 
 
@@ -236,8 +236,8 @@ static void  brhist_disp_line ( const lame_global_flags*  gf, int i, int br_hist
         fprintf ( Console_IO.Console_fp, "\n%3d%s %.*s%.*s%*s ", 
 	          brhist.kbps [i], brppt, 
                   barlen_LR, brhist.bar_hash, 
-                  barlen_TOT, brhist.bar_asterisk, 
-		  Console_IO.disp_width - BRHIST_RES - barlen_TOT - barlen_LR, "" );
+                  barlen_TOT - barlen_LR, brhist.bar_asterisk, 
+		  Console_IO.disp_width - BRHIST_RES - barlen_TOT, "" );
 }
 
 

@@ -125,6 +125,7 @@ mpx_sources = \
 	frontend/gpkplotting.c \
 	frontend/gtkanal.c \
 	frontend/mp3x.c \
+	frontend/brhist.c \
 	frontend/get_audio.c \
 	frontend/ieeefloat.c \
 	frontend/lametime.c \
@@ -217,9 +218,9 @@ prg: $(LIB_OBJ) $(LAME_OBJ) Makefile.MSVC
 	@$(CC) $(CC_SWITCHES) $(CPP_OPTS) -Iinclude -Impglib -Ilibmp3lame -Ifrontend /c $< /Fo$@
 
 prg: $(LIB_OBJ) $(MPX_OBJ) Makefile.MSVC
-	@echo mpx.exe
+	@echo mp3x.exe
 	@$(LN) $(LN_SWITCHES) $(LIB_OBJ) $(MPX_OBJ) $(LIBS) $(LIBSNDFILE) $(VORBISLIB) \
-	       $(GTKLIBS) /out:mpx.exe /map:mpx.map
+	       $(GTKLIBS) /out:mp3x.exe /map:mp3x.map
 
 !ENDIF
 

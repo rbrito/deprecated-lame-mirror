@@ -22,6 +22,7 @@
 #ifndef LAME_LAMETIME_H
 #define LAME_LAMETIME_H
 
+#include <sys/types.h>
 #include "lame.h"
 
 extern double  GetCPUTime  ( void );
