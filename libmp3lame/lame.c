@@ -1384,8 +1384,6 @@ int lame_init_old(lame_global_flags *gfp)
   gfc->mf_samples_to_encode = ENCDELAY+288;
   gfc->mf_size=ENCDELAY-MDCTDELAY;  /* we pad input with this many 0's */
 
-  main_CRC_init ();  /* ulgy, it's C, not Ada, C++ or Modula */
-
   return 0;
 }
 

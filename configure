@@ -3968,6 +3968,7 @@ alpha*-*-linux*)
 if test "`which ccc 2>/dev/null | grep -c ccc`" = ".0" ; then
 #   if not, use 'gcc'
 	# double is faster than float on Alpha
+        echo -n
 	else
 	# Compaq's C Compiler
 	CC=ccc
