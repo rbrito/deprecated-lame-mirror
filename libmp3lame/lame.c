@@ -940,7 +940,7 @@ int lame_init_params ( lame_global_flags* const gfp )
       gfc->nsPsy.use = 1;
       gfc->nsPsy.safejoint = (gfp->exp_nspsytune & 2) != 0;
 #ifdef RH_AMP
-      if (gfp->VBR != vbr_off) gfp->experimentalY = 1;
+      if (gfp->VBR == vbr_off) gfp->experimentalY = 1;
 #endif
       for(i=0;i<19;i++) gfc->nsPsy.pefirbuf[i] = 700;
 
