@@ -936,8 +936,10 @@ lame_init_params(lame_global_flags * const gfp)
         gfp->bWriteVbrTag = 0;
     if (gfp->ogg)
         gfp->bWriteVbrTag = 0;
+#if defined(HAVE_GTK)
     if (gfp->analysis)
         gfp->bWriteVbrTag = 0;
+#endif
 
     /* some file options not allowed if output is: not specified or stdout */
     if (gfc->pinfo != NULL)

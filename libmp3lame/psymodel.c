@@ -358,12 +358,14 @@ int L3psycho_anal( lame_global_flags * gfp,
       }
     }
 
+#if defined(HAVE_GTK)
     if (gfp->analysis) {
       for (j=0; j<HBLKSIZE ; j++) {
         gfc->pinfo->energy[gr_out][chn][j]=gfc->energy_save[chn][j];
         gfc->energy_save[chn][j]=gfc->energy[j];
       }
     }
+#endif
 
 
 
@@ -706,6 +708,7 @@ int L3psycho_anal( lame_global_flags * gfp,
       }
     }
 
+#if defined(HAVE_GTK)
     if (gfp->analysis) {
       FLOAT mn,mx,ma=0,mb=0,mc=0;
 
@@ -725,6 +728,7 @@ int L3psycho_anal( lame_global_flags * gfp,
       gfc->pinfo->pe[gr_out][chn]=gfc->pe_save[chn];
       gfc->pe_save[chn]=gfc->pe[chn];
     }
+#endif
 
 
     /*************************************************************** 
@@ -1200,12 +1204,14 @@ int L3psycho_anal_ns( lame_global_flags * gfp,
 
     /* output data for analysis */
 
+#if defined(HAVE_GTK)
     if (gfp->analysis) {
       for (j=0; j<HBLKSIZE ; j++) {
 	gfc->pinfo->energy[gr_out][chn][j]=gfc->energy_save[chn][j];
 	gfc->energy_save[chn][j]=gfc->energy[j];
       }
     }
+#endif
     
 
     /**********************************************************************
@@ -1412,6 +1418,7 @@ int L3psycho_anal_ns( lame_global_flags * gfp,
       }
     }
 
+#if defined(HAVE_GTK)
     if (gfp->analysis) {
       FLOAT mn,mx,ma=0,mb=0,mc=0;
 
@@ -1429,6 +1436,7 @@ int L3psycho_anal_ns( lame_global_flags * gfp,
       gfc->pinfo->ers[gr_out][chn]=gfc->ers_save[chn];
       gfc->ers_save[chn]=(mx/(1e-12+mn));
     }
+#endif
 
 
     /*************************************************************** 
