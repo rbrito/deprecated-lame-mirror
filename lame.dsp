@@ -139,6 +139,22 @@ LINK32=link.exe
 # Name "lame - Win32 Release GTK"
 # Begin Source File
 
+SOURCE=.\bitstream.c
+# End Source File
+# Begin Source File
+
+SOURCE=.\bitstream.h
+# End Source File
+# Begin Source File
+
+SOURCE=.\brhist.c
+# End Source File
+# Begin Source File
+
+SOURCE=.\brhist.h
+# End Source File
+# Begin Source File
+
 SOURCE=.\encoder.h
 # End Source File
 # Begin Source File
@@ -148,14 +164,6 @@ SOURCE=.\fft.c
 # Begin Source File
 
 SOURCE=.\fft.h
-# End Source File
-# Begin Source File
-
-SOURCE=.\formatBitstream.c
-# End Source File
-# Begin Source File
-
-SOURCE=.\formatBitstream.h
 # End Source File
 # Begin Source File
 
@@ -196,18 +204,6 @@ SOURCE=.\ieeefloat.c
 # Begin Source File
 
 SOURCE=.\ieeefloat.h
-# End Source File
-# Begin Source File
-
-SOURCE=".\l3bitstream-pvt.h"
-# End Source File
-# Begin Source File
-
-SOURCE=.\l3bitstream.c
-# End Source File
-# Begin Source File
-
-SOURCE=.\l3bitstream.h
 # End Source File
 # Begin Source File
 
