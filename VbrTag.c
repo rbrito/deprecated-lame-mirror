@@ -315,7 +315,7 @@ int InitVbrTag(lame_global_flags *gfp)
 	if (1==gfp->version) {
 	  bitrate = XING_BITRATE1;
 	} else {
-	  if (gfp->out_samplerate < 32000 )
+	  if (gfp->out_samplerate < 16000 )
 	    bitrate = XING_BITRATE25;
 	  else
 	    bitrate = XING_BITRATE2;
@@ -421,7 +421,7 @@ int PutVbrTag(lame_global_flags *gfp,FILE *fpStream,int nVbrScale)
 	if (1==gfp->version) {
 	  bitrate = XING_BITRATE1;
 	} else {
-	  if (gfp->out_samplerate < 32000 )
+	  if (gfp->out_samplerate < 16000 )
 	    bitrate = XING_BITRATE25;
 	  else
 	    bitrate = XING_BITRATE2;
