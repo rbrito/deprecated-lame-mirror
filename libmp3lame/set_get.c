@@ -1162,6 +1162,20 @@ lame_get_maskingadjust( const lame_global_flags*  gfp )
     return gfp->maskingadjust;
 }
 
+int
+lame_set_maskingadjust_short( lame_global_flags*  gfp,
+                   float               adjust )
+{
+    gfp->maskingadjust_short = adjust;
+    return 0;
+}
+
+float
+lame_get_maskingadjust_short( const lame_global_flags*  gfp )
+{
+    return gfp->maskingadjust_short;
+}
+
 /* Only use ATH for masking. */
 int
 lame_set_ATHonly( lame_global_flags*  gfp,

@@ -413,6 +413,8 @@ int CDECL lame_get_highpasswidth(const lame_global_flags *);
 
 int CDECL lame_set_maskingadjust( lame_global_flags *, float);
 float CDECL lame_get_maskingadjust( const lame_global_flags *);
+int CDECL lame_set_maskingadjust_short( lame_global_flags *, float);
+float CDECL lame_get_maskingadjust_short( const lame_global_flags *);
 
 /* only use ATH for masking */
 int CDECL lame_set_ATHonly(lame_global_flags *, int);

@@ -230,7 +230,6 @@ typedef struct
  */
 typedef struct
 {
-    FLOAT8  mask_adjust;    /* the dbQ stuff */
     int     quality;
     int     smooth;         /* 0=no, 1=peaks, 2=+-4 */
 } VBR_t;
@@ -240,6 +239,8 @@ typedef struct
  */
 typedef struct
 {
+    FLOAT8  mask_adjust;    /* the dbQ stuff */
+    FLOAT8  mask_adjust_short;    /* the dbQ stuff */
     int     tonalityPatch;      /* temporaly needed by VBR */
     FLOAT   cwlimit;
     FLOAT8  prvTonRed[CBANDS];

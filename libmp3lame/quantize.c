@@ -1464,13 +1464,13 @@ VBR_prepare (
         for (ch = 0; ch < gfc->channels_out; ++ch) {
             gr_info *cod_info = &gfc->l3_side.tt[gr][ch];
       
-            if (gfc->nsPsy.use && gfp->VBR == vbr_rh) {
-            if (cod_info->block_type == NORM_TYPE) 
+            if (cod_info->block_type == NORM_TYPE) {
                 adjust = 1.28/(1+exp(3.5-pe[gr][ch]/300.))-0.05;
-            else 
+                masking_lower_db   = gfc->PSY->mask_adjust - adjust;
+            } else { 
                 adjust = 2.56/(1+exp(3.5-pe[gr][ch]/300.))-0.14;
+                masking_lower_db   = gfc->PSY->mask_adjust_short - adjust; 
             }
-            masking_lower_db   = gfc->VBR->mask_adjust - adjust; 
             gfc->masking_lower = pow (10.0, masking_lower_db * 0.1);
       
             init_outer_loop(gfp, gfc, cod_info);

@@ -910,21 +910,24 @@ lame_init_params(lame_global_flags * const gfp)
         case 0: {
                 static const float dbQ[10]={-2.,-1.0,-.66,-.33,0.,0.33,.66,1.0,1.33,1.66};
                 gfc->VBR->quality = 0;
-                gfc->VBR->mask_adjust = dbQ[gfp->VBR_q];
+                gfc->PSY->mask_adjust = dbQ[gfp->VBR_q];
+                gfc->PSY->mask_adjust_short = dbQ[gfp->VBR_q];
                 gfc->VBR->smooth = 1;
             } 
             break;        
         case 1: {
                 static float const dbQ[10] = { -2., -1.4, -.7, 0, .7, 1.5, 2.3, 3.1, 4., 5 };
                 gfc->VBR->quality = 1;
-                gfc->VBR->mask_adjust = dbQ[gfp->VBR_q];
+                gfc->PSY->mask_adjust = dbQ[gfp->VBR_q];
+                gfc->PSY->mask_adjust_short = dbQ[gfp->VBR_q];
                 gfc->VBR->smooth = 0;    
             } 
             break;        
         case 2: {
                 static float const dbQ[10] = { -1., -.6, -.3, 0, 1, 2, 3, 4, 5, 6};
                 gfc->VBR->quality = 2;
-                gfc->VBR->mask_adjust = dbQ[gfp->VBR_q];
+                gfc->PSY->mask_adjust = dbQ[gfp->VBR_q];
+                gfc->PSY->mask_adjust_short = dbQ[gfp->VBR_q];
                 gfc->VBR->smooth = 0;    
                 gfc->PSY->tonalityPatch = 0;
             } 
@@ -932,28 +935,32 @@ lame_init_params(lame_global_flags * const gfp)
         case 3: {
                 static const float dbQ[10]={-2.,-1.0,-.66,-.33,0.,0.33,.66,1.0,1.33,1.66};
                 gfc->VBR->quality = 3;
-                gfc->VBR->mask_adjust = dbQ[gfp->VBR_q];
+                gfc->PSY->mask_adjust = dbQ[gfp->VBR_q];
+                gfc->PSY->mask_adjust_short = dbQ[gfp->VBR_q];
                 gfc->VBR->smooth = 1;
             } 
             break;        
         case 4: {
                 static float const dbQ[10] = { -6,-4.75,-3.5,-2.25,-1,.25,1.5,2.75,4,5.25 };
                 gfc->VBR->quality = 4;
-                gfc->VBR->mask_adjust = dbQ[gfp->VBR_q];
+                gfc->PSY->mask_adjust = dbQ[gfp->VBR_q];
+                gfc->PSY->mask_adjust_short = dbQ[gfp->VBR_q];
                 gfc->VBR->smooth = 1;   /* not finally */
             }
             break;        
         case 5: {
                 static const float dbQ[10]={-2.,-1.0,-.66,-.33,0.,0.33,.66,1.0,1.33,1.66};
                 gfc->VBR->quality = 0;
-                gfc->VBR->mask_adjust = dbQ[gfp->VBR_q];
+                gfc->PSY->mask_adjust = dbQ[gfp->VBR_q];
+                gfc->PSY->mask_adjust_short = dbQ[gfp->VBR_q];
                 gfc->VBR->smooth = 2;
             } 
             break;        
         case 9: {
                 static float const dbQ[10] = { -6,-4.75,-3.5,-2.25,-1,.25,1.5,2.75,4,5.25 };
                 gfc->VBR->quality = 4;
-                gfc->VBR->mask_adjust = dbQ[gfp->VBR_q];
+                gfc->PSY->mask_adjust = dbQ[gfp->VBR_q];
+                gfc->PSY->mask_adjust_short = dbQ[gfp->VBR_q];
                 gfc->VBR->smooth = 0;   /* not finally */
             }
             break;        
@@ -978,13 +985,14 @@ lame_init_params(lame_global_flags * const gfp)
         {   static const FLOAT8 dbQ[10]={-2.,-1.0,-.66,-.33,0.,0.33,.66,1.0,1.33,1.66};
             static const FLOAT8 dbQns[10]={- 4,- 3,-2,-1,0,0.7,1.4,2.1,2.8,3.5};
             /*static const FLOAT8 atQns[10]={-16,-12,-8,-4,0,  1,  2,  3,  4,  5};*/
-            if ( gfc->nsPsy.use )
-                gfc->VBR->mask_adjust = dbQns[gfp->VBR_q];
-            else {
+            if ( gfc->nsPsy.use ) {
+                 gfc->PSY->mask_adjust = gfp->maskingadjust;
+                 gfc->PSY->mask_adjust_short = gfp->maskingadjust_short;
+            } else {
                 gfc->PSY->tonalityPatch = 1;
-                gfc->VBR->mask_adjust = dbQ[gfp->VBR_q]; 
+                gfc->PSY->mask_adjust = dbQ[gfp->VBR_q]; 
+                gfc->PSY->mask_adjust_short = dbQ[gfp->VBR_q]; 
             }
-            gfc->VBR->mask_adjust += gfp->maskingadjust;
         }
         
         /*  use Gabriel's adaptative ATH shape for VBR by default
@@ -1046,7 +1054,7 @@ lame_init_params(lame_global_flags * const gfp)
         break;
     }
     /*  just another daily changing developer switch  */
-    if ( gfp->tune ) gfc->VBR->mask_adjust = gfp->tune_value_a;
+    if ( gfp->tune ) gfc->PSY->mask_adjust = gfp->tune_value_a;
 
     /* initialize internal qval settings */
     lame_init_qval(gfp);
@@ -1294,7 +1302,7 @@ lame_print_internals( const lame_global_flags * gfp )
     }
     MSGF( gfc, "\tusing short blocks: %s\n", pc );    
     MSGF( gfc, "\tadjust masking: %g dB\n", gfp->maskingadjust );
-    MSGF( gfc, "\tadjust VBR masking: %g dB\n", gfc->VBR->mask_adjust );
+    MSGF( gfc, "\tadjust masking short: %g dB\n", gfp->maskingadjust_short );
     MSGF( gfc, "\tquantization comparison: %d\n", gfp->quant_comp );
     MSGF( gfc, "\t ^ comparison short blocks: %d\n", gfp->quant_comp_short );
     MSGF( gfc, "\tnoise shaping: %d\n", gfc->noise_shaping );

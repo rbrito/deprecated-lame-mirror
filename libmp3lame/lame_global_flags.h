@@ -115,6 +115,7 @@ struct lame_global_struct {
    * unless you know what you are doing
    */
   float maskingadjust;
+  float maskingadjust_short;
   int ATHonly;                    /* only use ATH                         */
   int ATHshort;                   /* only use ATH for short blocks        */
   int noATH;                      /* disable ATH                          */
