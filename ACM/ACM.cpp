@@ -242,7 +242,13 @@ ACM::ACM( HMODULE hModule )
 		}
 	}
 
-	wsprintf(VersionString,"%s - %d.%d", ACM_VERSION, LAME_MAJOR_VERSION, LAME_MINOR_VERSION);
+#if   LAME_ALPHA_VERSION > 0
+	wsprintf(VersionString,"%s - %d.%d (alpha %d)", ACM_VERSION, LAME_MAJOR_VERSION, LAME_MINOR_VERSION,LAME_ALPHA_VERSION);
+#elif LAME_BETA_VERSION > 0
+	wsprintf(VersionString,"%s - %d.%d (beta %d)", ACM_VERSION, LAME_MAJOR_VERSION, LAME_MINOR_VERSION, LAME_BETA_VERSION);
+#else
+	wsprintf(VersionString,"%s - %d.%d (stable)", ACM_VERSION, LAME_MAJOR_VERSION, LAME_MINOR_VERSION);
+#endif
 
 	BuildBitrateTable();
 	

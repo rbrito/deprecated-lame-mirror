@@ -129,8 +129,8 @@ BEGIN
     CONTROL         "Smart Encode",IDC_CHECK_ENC_SMART,"Button",
                     BS_AUTOCHECKBOX | BS_FLAT | WS_GROUP | WS_TABSTOP,49,39,
                     61,10
-    ICON            IDI_ICON,IDC_STATIC_ENC_ICON,179,134,20,20
-    LTEXT           "v0.0.0 - 0.00",IDC_STATIC_CONFIG_VERSION,169,160,43,8
+    ICON            IDI_ICON,IDC_STATIC_ENC_ICON,179,129,20,20
+    CTEXT           "v0.0.0 - 0.00",IDC_STATIC_CONFIG_VERSION,168,155,43,17
     CONTROL         "Average BitRate",IDC_CHECK_ENC_ABR,"Button",
                     BS_AUTOCHECKBOX | BS_FLAT | WS_GROUP | WS_TABSTOP,49,53,
                     68,10
@@ -167,8 +167,8 @@ BEGIN
     DEFPUSHBUTTON   "OK",IDOK,130,56,50,14
     LTEXT           "Steve Lhomme + LAME developers",IDC_STATIC,7,33,112,8
     LTEXT           "LGPL license",IDC_STATIC,7,20,43,8
-    ICON            IDI_ICON,IDC_STATIC,145,16,21,20
-    LTEXT           "Static",IDC_STATIC_ABOUT_TITLE,7,7,111,8
+    ICON            IDI_ICON,IDC_STATIC,145,16,20,20
+    LTEXT           "Static",IDC_STATIC_ABOUT_TITLE,7,7,173,8
     LTEXT           "http://www.mp3dev.org/",IDC_STATIC_ABOUT_URL,7,47,80,8
     LTEXT           "icon : Lucas Granito",IDC_STATIC,7,61,64,8
 END
