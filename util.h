@@ -342,16 +342,16 @@ typedef struct  {
 ***********************************************************************/
 extern int            fskip                    ( FILE* fp, off_t bytes, int whence );
 extern void           display_bitrates         ( FILE* fp );
-extern int            BitrateIndex             ( unsigned rate, unsigned version, unsigned long samplerate );
-extern int            FindNearestBitrateIndex  ( unsigned rate, unsigned version, unsigned long samplerate );
-extern unsigned       FindNearestBitrate       ( unsigned rate, unsigned version, unsigned long samplerate );
+extern int            BitrateIndex             ( unsigned int rate, unsigned int version, unsigned long samplerate );
+extern int            FindNearestBitrateIndex  ( unsigned int rate, unsigned int version, unsigned long samplerate );
+extern unsigned int   FindNearestBitrate       ( unsigned int rate, unsigned int version, unsigned long samplerate );
 extern long           RoundSampleRateToNearest ( long samplerate );
 extern long           RoundSampleRateUp        ( long samplerate );
 
 extern int            SmpFrqIndex(long, MPEG_version_t*);
 extern int            copy_buffer(char *buffer,int buffer_size,Bit_stream_struc *bs);
 extern void           init_bit_stream_w(lame_internal_flags *gfc);
-extern void           alloc_buffer(Bit_stream_struc*, unsigned int);
+extern void           alloc_buffer(Bit_stream_struc*, size_t);
 extern void           freegfc(lame_internal_flags *gfc);
 extern FLOAT8         ATHformula(FLOAT8 f);
 extern FLOAT8         freq2bark(FLOAT8 freq);
