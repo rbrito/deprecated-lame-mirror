@@ -49,7 +49,7 @@ CPP_OPTS += -DFLOAT8_is_double
 
 
 ##########################################################################
-# Define these in the OS specific sections below to compile in code for:
+# Define these in the section below to compile in code for:
 #
 # SNDLIB =                no file i/o 
 # SNDLIB = -DLAMESNDFILE  to use internal LAME soundfile routines 
@@ -61,7 +61,7 @@ CPP_OPTS += -DFLOAT8_is_double
 # for example:
 #  SNDLIB = -DLIBSNDFILE
 #  LIBSNDFILE=-lsndfile 
-#  if libsndfile is in a custom location, try:
+#  if sndfile.lib is in a custom location, try:
 #  LIBSNDFILE=-L $(LIBSNDHOME) -lsndfile  -I $(LIBSNDHOME)
 ##########################################################################
 
@@ -70,21 +70,24 @@ CPP_OPTS += -DFLOAT8_is_double
 # DJGPP   
 ##########################################################################
 
-# suggested for gcc-2.7.x
-CC_OPTS = -s  -O3 -fomit-frame-pointer -funroll-loops -ffast-math  -finline-functions -Wall
+# Generic, safe options:
+CC_OPTS = -O2
+
+# other possibilities:
+#CC_OPTS = -s  -O3 -fomit-frame-pointer -funroll-loops -ffast-math  -finline-functions -Wall
 
 #CC_OPTS =  -s -O9 -fomit-frame-pointer -fno-strength-reduce -mpentiumpro -ffast-math -finline-functions -funroll-loops -Wall -malign-double -g -march=pentiumpro -mfancy-math-387
 
-# these options for gcc-2.95.2 to produce fast code
-#CC_OPTS = -s -Wall -O9 -fomit-frame-pointer -march=pentiumpro -finline-functions \
-#  	-fexpensive-optimizations -funroll-loops -funroll-all-loops -fschedule-insns2 \
-# 	-fstrength-reduce -malign-double -mfancy-math-387 -ffast-math 
+#CC_OPTS = -s -O2 -march=i686 -fomit-frame-pointer -ffast-math -funroll-loops  -funroll-all-loops -malign-double -fstrict-aliasing 
+
+#CC_OPTS = -s -Wall -O9 -fomit-frame-pointer -march=pentiumpro -finline-functions -fexpensive-optimizations -funroll-loops -funroll-all-loops -fschedule-insns2 -fstrength-reduce -malign-double -mfancy-math-387 -ffast-math 
 
 #  for debugging:
 #   CC_OPTS =  -UNDEBUG -O -Wall -g -DABORTFP
 
-#  for lots of debugging:
-#   CC_OPTS =  -DDEBUG -UNDEBUG  -O -Wall -g -DABORTFP 
+
+
+
 
 
 # 10/99 added -D__NO_MATH_INLINES to fix a bug in *all* versions of

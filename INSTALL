@@ -1,4 +1,4 @@
-LAME 3.xx    3/00 Mark Taylor (http://www.sulaco.org/mp3)
+LAME 3.xx    7/00 Mark Taylor (http://www.sulaco.org/mp3)
 
 
 =======================================================================
@@ -18,6 +18,7 @@ and lame_enc.dll, none are required.  See Makefile for details.
 
 #define HAVEMPGLIB   to compile in mpglib's mp3 *decoding* capibility
 #define HAVEVORBIS   to compile in Vorbis decoding and encoding capibility
+                     (you need libvorbis already built)
 
 Exactly one of these is required for the command line encoder:
 #define LIBSNDFILE   to use Erik de Castro Lopo's libsndfile
@@ -34,7 +35,7 @@ Other options for the command line encoder:
 
 
 =======================================================================
-Building the MPEG audio encoding software on Windows:
+Building the software on Windows:
 =======================================================================
 There are MSVC project files, and a Makefile.MSVC included
 with the project.  For production use, be sure to compile
@@ -45,6 +46,9 @@ Note that MSVC "professional" claims to produce faster executables
 then MSVC "standard".  It is possible to compile the GTK frame
 analyzer under windows, see README.WINGTK
 
+LAME can be compiled with various Windows MSDOS ports (all free!)
+of GCC (DJGPP, Mingw32).  See README.DJGPP
+
 The Windows Borland C compiler is now free!  Borland will also
 compile LAME, although a new makefile is needed.  If you get
 this to work, please write a README.BORLAND which I can include
@@ -52,8 +56,10 @@ with LAME!
 
 
 
+
+
 =======================================================================
-Building the MPEG audio encoding software on *NIX platforms:
+Building the software on *NIX platforms:
 =======================================================================
 If you are reading this, you have already applied the patch to the
 dist10 ISO demonstration source (or downloaded a full source

@@ -1,26 +1,15 @@
 
                Compiling LAME with DJGPP
-                       by S.T.L.               
+
+by S.T.L. and Christopher Wise <cwise@ses.swin.edu.au>
 
 (LAME's homepage is http://www.sulaco.org/mp3, and LAME is distributed
 under the LGPL. More information is in the README file)
 
 ============================================================================
+Also, check out:
 
-New, 7/00, Christopher Wise <cwise@ses.swin.edu.au>
-
-Makefile.DJGPP is now included with LAME.  If you have
-make.exe and ar.exe (these come with DJGPP), you
-should be able to just run, from the MSDOS prompt
-in the directory with the LAME source code:
-
-make -f Makefile.DJGPP.  
-
-Otherwise, see below, and also check out:
 http://www.chat.ru/~lame_djgpp/lame_djgpp.htm
-
-
-
 ============================================================================
 
 (Note: S.T.L. doesn't know C programming (...yet) but he has learned
@@ -40,56 +29,33 @@ might work under DOS, but I haven't tried it. S.T.L. takes no responsibility
 for what you do with these instructions. Now, let's get compiling!
 
 1) Find and install DJGPP.  It's at www.delorie.com. They have a Zip Picker
-there that makes the process easy and painless.
+there that makes the process easy and painless.  Make sure you also
+get the utilities "MAKE.EXE" and "AR.EXE".  
+
 
 2) Download the LAME sourcecode, preferably the latest version. Extract it
 to a directory using WinZip or another decompressor set to preserve the
 directory structure. Hopefully you already have done this, as you're reading
 this file!
 
-3) Create a new directory wherever. I called mine Crud.
+3) Open an MSDOS window and cd into the directory with the LAME source
+code (the directory with all the .c and .h files, README, INSTALL,
+etc)
 
-4) In the directory with all the .c and .h files (and the README, INSTALL, etc
-files), copy all the *.c and *.h files to the Crud directory.
+4) From the dos prompt, run:  
 
-5) Go into the Crud directory and delete the following files and no others:
-debugscalefac.c
-mp3rtp.c
-mp3x.c
-rtp.c
+   make -f Makefile.DJGPP.  
 
-6) The command (don't type this!)
-GCC -o LAME_BAD.EXE -DNDEBUG -DLAMESNDFILE -DLAMEPARSE *.c
-should now create a terribly unoptimized but working LAME_BAD.EXE. Don't type
-it, because optimizations are a good thing and are what you want. I only
-provide the command so you can use it as a last resort. Here's how to execute
-the optimized command:
+5) To compile a faster version of LAME.EXE, edit "Makefile.DJGPP"
+   and experiment with some of the other settings given for
+   CC_OPTS.  
 
-7) In the Crud directory, create a new file. I called mine FILE. (In the DOS
-prompt, typing EDIT FILE will create such a file with no extension). Make its
-text consist of:
+6) Have fun!
 
--s -O2 -march=i686 -fomit-frame-pointer -ffast-math -funroll-loops 
--funroll-all-loops -malign-double -fstrict-aliasing -o LAME.EXE -DNDEBUG 
--DLAMESNDFILE -DLAMEPARSE *.c
+Notes on optimization: 
 
-That should be one line in FILE even if it doesn't look like it in NotePad
-or whereever you're reading this. It is case sensitive.  If you're curious,
-you're making this file instead of typing a commandline directly
-because DOS will scream at such a long commandline.
-
-***ONLY FOR PENTIUM III, PENTIUM II, CELERON, OR PENTIUM PRO USERS***
-8) Now, save FILE and go back to the Crud directory. Typing GCC @FILE will
-now compile LAME.EXE. It will be heavily optimized - on my machine, it can
-encode a .WAV file using the -h -b256 -ms options at 5.73X, while the
-binary I downloaded and ran using those same options only achieved
-5.32X.
-
-9) Have fun!
-
-***FOR OTHER PROCESSORS***
-8a) Using the commandline in (7) won't work for non-P6-core processors.
-Therefore you must use another commandline. The key is the -march=i686
+Using some of the settings for CC_OPTS won't work for non-P6-core processors.
+The key is the -march=i686
 option. If you are running a Pentium (MMX or not), use -march=i586. For
 the 386 and 486, the option should now be self-explanatory! For a K6
 processor, use -march=k6 . For any other type of processor, you'll just
@@ -100,5 +66,4 @@ able to run on any i386 or later computer, use the -mcpu=[CPU TYPE
 HERE], using the same cpu types as -march= accepts.  The
 mcpu option gives less optimization, though.
 
-9a) Have fun!
 
