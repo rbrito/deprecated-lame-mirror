@@ -29,22 +29,23 @@
 #define _RELEASEDEBUG 0
 
 const int MAJORVERSION=1;
-const int MINORVERSION=14;
+const int MINORVERSION=15;
 
 
 // Local variables
-static int		nPsychoModel=2;
-static BOOL		bFirstFrame=TRUE;
-static DWORD	dwSampleBufferSize=0;
-static HANDLE	gs_hModule=NULL;
-static BOOL gs_bLogFile=FALSE;
+static DWORD				dwSampleBufferSize=0;
+static HANDLE				gs_hModule=NULL;
+static BOOL					gs_bLogFile=FALSE;
+static lame_global_flags	gf;
 
-void dump_config( char *inPath, char *outPath);
+// Local function prototypes
+static void dump_config( char *inPath, char *outPath);
+static void DebugPrintf(const char* pzFormat, ...);
+static void DispErr(LPSTR strErr);
+static void PresetOptions(lame_global_flags *gfp,LONG myPreset);
 
-lame_global_flags gf;
 
-
-void DebugPrintf(const char* pzFormat, ...)
+static void DebugPrintf(const char* pzFormat, ...)
 {
     char	szBuffer[1024]={'\0',};
 	char	szFileName[MAX_PATH+1]={'\0',};
@@ -88,14 +89,6 @@ void DebugPrintf(const char* pzFormat, ...)
 #endif
 
 	va_end(ap);
-}
-
-
-static void InitParams()
-{
-    bFirstFrame=TRUE;
-    lame_init(&gf);
-
 }
 
 
@@ -246,7 +239,8 @@ __declspec(dllexport) BE_ERR	beInitStream(PBE_CONFIG pbeConfig, PDWORD dwSamples
 	int			nDllArgC=0;
 	BE_CONFIG	lameConfig;
 
-	InitParams();
+	// Init the global flags structure
+    lame_init(&gf);
 
 	// clear out structure
 	memset(&lameConfig,0x00,CURRENT_STRUCT_SIZE);
@@ -466,8 +460,8 @@ __declspec(dllexport) BE_ERR	beCloseStream(HBE_STREAM hbeStream)
 __declspec(dllexport) VOID		beVersion(PBE_VERSION pbeVersion)
 {
 	// DLL Release date
-	char lpszDate[20];
-	char lpszTemp[5];
+	char lpszDate[20]	={'\0',};
+	char lpszTemp[5]	={'\0',};
 
 
 	// Set DLL interface version
@@ -539,22 +533,32 @@ __declspec(dllexport) BE_ERR	beEncodeChunk(HBE_STREAM hbeStream, DWORD nSamples,
 
 __declspec(dllexport) BE_ERR beWriteVBRHeader(LPCSTR lpszFileName)
 {
-        FILE * fpStream;
+	FILE* fpStream	=NULL;
+	BE_ERR beResult	=BE_ERR_SUCCESSFUL;
+
+	// Do we have to write the VBR tag?
 	if ( (gf.bWriteVbrTag) && (gf.VBR!=vbr_off) )
 	{
 		// Calculate relative quality of VBR stream 
 		// 0=best, 100=worst
 		int nQuality=gf.VBR_q*100/9;
 
-		fpStream=fopen(gfp->outPath,"rb+");
+		// Try to open the file
+		fpStream=fopen(lpszFileName,"rb+");
+
+		// Check file open result
 		if (fpStream==NULL)
-		  return;
+		  return BE_ERR_INVALID_FORMAT_PARAMETERS;
 
 		// Write Xing header again
-		return PutVbrTag(&gf,fpStream,nQuality);
+		beResult=PutVbrTag(&gf,fpStream,nQuality);
+
+		// Close the file stream
 		fclose(fpStream);
 	}
-	return BE_ERR_INVALID_FORMAT_PARAMETERS;
+
+	// return result
+	return beResult;
 }
 
 
@@ -585,7 +589,7 @@ BOOL APIENTRY DllMain(HANDLE hModule,
 }
 
 
-void dump_config( char *inPath, char *outPath)
+static void dump_config( char *inPath, char *outPath)
 {
 	DebugPrintf("\n\nLame_enc configuration options:\n");
 	DebugPrintf("==========================================================\n");
@@ -640,7 +644,7 @@ void dump_config( char *inPath, char *outPath)
 }
 
 
-void DispErr(LPSTR strErr)
+static void DispErr(LPSTR strErr)
 {
 	MessageBox(NULL,strErr,"",MB_OK);
 }
