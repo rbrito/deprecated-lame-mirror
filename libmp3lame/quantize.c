@@ -226,10 +226,8 @@ coeffs which are below ath. It stops on the first
 coeff higher than ath.
 
 It should help reducing bitrate,
-but real gain is only about 2kbps at max
-for long blocks and 5kbps for short ones
+but real gain is only about 3kbps at max
 and sometimes it even increases bitrate.
-(some extreme cases like spahm.wav are 20kbps lower)
 */
 void psfb21_analogsilence(
         lame_global_flags *gfp,
@@ -265,21 +263,15 @@ void psfb21_analogsilence(
     } else if (cod_info->block_type == SHORT_TYPE) {
         /*note: short blocks coeffs are reordered*/
         int block;
- 
-/*
-I am disabling the code for psfb12 analog
-silence detection, as it produces some kind of
-dropouts. It probably means that there is a bug
-somewhere inside.
-*/
-        
-/*        for (block = 0; block<3; block++) {
+        for (block = 0; block<3; block++) {
 
             int gsfb;
             int stop=0;
             for (gsfb = PSFB12-1; gsfb>=0 && !stop; gsfb--) {
-                int start = 192*block + gfc->scalefac_band.psfb12[ gsfb ];
-                int end = 192*block + gfc->scalefac_band.psfb12[ gsfb+1 ];
+                int start = gfc->scalefac_band.s[12] * 3 +
+                            (gfc->scalefac_band.s[13] - gfc->scalefac_band.s[12]) * block +
+                            (gfc->scalefac_band.psfb12[gsfb] - gfc->scalefac_band.psfb12[0]);
+                int end = start + (gfc->scalefac_band.psfb12[gsfb+1] - gfc->scalefac_band.psfb12[gsfb]);
                 int j;
                 FLOAT8 ath12;
                 if (gfp->VBR == vbr_rh || gfp->VBR == vbr_mtrh)
@@ -296,7 +288,7 @@ somewhere inside.
                     }
                 }
             }
-        }*/
+        }
     }
 
 }
