@@ -78,6 +78,12 @@ void lame_usage(char *name)  /* print syntax & exit */
   fprintf(stderr,"    -g              run graphical analysis on <infile>\n");
 #endif
   display_bitrates(2);
+  if( stderr != stdout )
+  {
+    fprintf(stderr,"\n");
+    fprintf(stderr,"*** USE \"%s --help | more\" TO SCROLL THROUGH THE USAGE PAGE ***\n",name);
+    fprintf(stderr,"\n");
+  }
   exit(1);
 }
 
@@ -244,6 +250,11 @@ void lame_parse_args(int argc, char **argv)
 	    fprintf(stderr,"Must specify cwlimit in kHz\n");
 	    exit(1);
 	  }
+	}
+	else if (strcmp(token, "help")==0) {
+	  fclose(stderr);
+	  stderr = stdout;          /* let DOS users scroll thru the usage page */
+	  lame_usage(programName);  /* doesn't return */
 	}
 	else
 	  {
