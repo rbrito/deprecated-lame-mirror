@@ -542,9 +542,10 @@ recalc_divide_sub(
 	bits = r01_bits[r2] + gi->count1bits;
 	if (gi->part2_3_length <= bits)
 	    break;
-
 	a2 = gfc->scalefac_band.l[r2+2];
-	assert(a2 < gi->big_values);
+	if (a2 >= gi->big_values)
+	    break;
+
 	r2t = choosetable(&gi->l3_enc[a2], &gi->l3_enc[gi->big_values], &bits);
 	if (gi->part2_3_length <= bits)
 	    continue;
@@ -740,7 +741,7 @@ best_scalefac_store(
 	}
     }
 
-    if (!gi->preflag && gi->block_type != SHORT_TYPE) {
+    if (gfc->mode_gr == 2 && !gi->preflag && gi->block_type != SHORT_TYPE) {
 	for (sfb = 11; sfb < SBPSY_l; sfb++)
 	    if (gi->scalefac[sfb] < pretab[sfb] && gi->scalefac[sfb] != -2)
 		break;
@@ -887,37 +888,26 @@ static const int log2tab[] = {0, 1, 2, 2, 3, 3, 3, 3, 4, 4, 4, 4, 4, 4, 4, 4};
 int
 scale_bitcount_lsf(gr_info * const gi)
 {
-    int table_number, row_in_table, partition, nr_sfb, window, i, sfb;
+    int table_number, row_in_table, partition, nr_sfb, i, sfb;
     const int *partition_table;
-    int *scalefac = gi->scalefac;
 
     /*
       Set partition table. Note that should try to use table one,
       but do not yet...
     */
     table_number = gi->preflag * 2;
-    for ( i = 0; i < 4; i++ )
-	gi->slen[i] = 0;
-
-    if ( gi->block_type == SHORT_TYPE ) {
+    row_in_table = 0;
+    if ( gi->block_type == SHORT_TYPE )
 	row_in_table = 1;
-	partition_table = &nr_of_sfb_block[table_number][row_in_table][0];
-	for ( sfb = 0, partition = 0; partition < 4; partition++ ) {
-	    nr_sfb = partition_table[ partition ] / 3;
-	    for ( i = 0; i < nr_sfb; i++, sfb++ )
-		for ( window = 0; window < 3; window++ )
-		    if (gi->slen[partition] < scalefac[sfb*3+window])
-			gi->slen[partition] = scalefac[sfb*3+window];
-	}
-    } else {
-	row_in_table = 0;
-	partition_table = &nr_of_sfb_block[table_number][row_in_table][0];
-	for ( sfb = 0, partition = 0; partition < 4; partition++ ) {
-	    nr_sfb = partition_table[ partition ];
-	    for ( i = 0; i < nr_sfb; i++, sfb++ )
-		if (gi->slen[partition] < scalefac[sfb])
-		    gi->slen[partition] = scalefac[sfb];
-	}
+
+    partition_table = &nr_of_sfb_block[table_number][row_in_table][0];
+    for ( sfb = 0, partition = 0; partition < 4; partition++ ) {
+	int m = 0;
+	nr_sfb = partition_table[ partition ];
+	for (i = 0; i < nr_sfb; i++, sfb++)
+	    if (m < gi->scalefac[sfb])
+		m = gi->scalefac[sfb];
+	gi->slen[partition] = m;
     }
 
     gi->part2_length = LARGE_BITS;
@@ -951,7 +941,7 @@ scale_bitcount_lsf(gr_info * const gi)
     }
 
     assert( gi->sfb_partition_table );
-    gi->part2_length=0;
+    gi->part2_length = 0;
     for ( partition = 0; partition < 4; partition++ )
 	gi->part2_length
 	    += gi->slen[partition] * gi->sfb_partition_table[partition];
