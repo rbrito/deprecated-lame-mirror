@@ -63,6 +63,7 @@
 //  140 bytes
 */
 #define VBRHEADERSIZE (NUMTOCENTRIES+4+4+4+4+4)
+
 #define LAMEHEADERSIZE (VBRHEADERSIZE + 9 + 1 + 1 + 8 + 1 + 1 + 3 + 1 + 1 + 2 + 4 + 2 + 2)
 
 /* the size of the Xing header (MPEG1 and MPEG2) in kbps */
@@ -587,7 +588,7 @@ int PutLameVBR(lame_global_flags *gfp, FILE *fpStream, u_char *pbtStreamBuffer, 
 	uint8_t nRevMethod;
 	uint8_t vbr_type_translator[] = {1,5,3,2,4,0,3};		//numbering different in vbr_mode vs. Lame tag
 
-	uint8_t nLowpass		= gfp->lowpassfreq / 100;
+	uint8_t nLowpass		= (gfp->lowpassfreq / 100.0)+.5;
 
 	FLOAT fPeakSignalAmplitude	= 0;				//TODO...
 	uint16_t nRadioReplayGain		= 0;				//TODO...
@@ -632,10 +633,6 @@ int PutLameVBR(lame_global_flags *gfp, FILE *fpStream, u_char *pbtStreamBuffer, 
 
 	nRevMethod = 0x10 * nRevision + nVBR; 
 	
-	/*Validate lowpass*/
-	if (gfp->lowpassfreq < 100 || gfp->lowpassfreq > 25500)
-		nLowpass = 0;
-
 	//nogap
 	if (nNoGapCount != -1)
 	{

@@ -208,7 +208,7 @@ optimum_bandwidth(double *const lowerlimit,
                   double *const upperlimit,
                   const unsigned bitrate,
                   const int samplefreq,
-                  const double channels, lame_global_flags * gfp)
+                  const double channels)
 {
 /* 
  *  Input:
@@ -311,39 +311,6 @@ limited bandwidth is increasing quality
  *   256 kbps     22.05 kHz  2.78           0.0 kHz
  */
 
-#if 0
-/* 
- *  Beginning at 128 kbps/jstereo, we can use the following additional
- *  strategy:
- *
- *      For every increase of f_low in a way that the ATH(f_low) 
- *      increases by 4 dB we force an additional NMR of 1.25 dB. 
- *      These are the setting of the VBR quality selecting scheme 
- *      for V <= 4.
- */
-    {
-        double  br_sw = (128000 - (32 + 4) * 8 * 44100 / 1152) / 1.75 * 0.5;
-        double  f_low_sw = br_sw / log10(br_sw * 4.425e-3);
-
-        // printf ("br_sw=%f  f_low_sw=%f\n", br_sw, f_low_sw );
-        // printf ("br   =%f  f_low   =%f\n", br   , f_low    );
-        // fflush (stdout);
-
-        while (f_low > f_low_sw) {
-            double  dATH = ATHformula(f_low, gfp) - ATHformula(f_low_sw, gfp); // [dB]
-            double  dNMR = br / f_low - br_sw / f_low_sw; // bit
-
-            // printf ("br   =%f  f_low   =%f\n", br   , f_low    );
-            // printf ("dATH =%f  dNMR    =%f\n", dATH , dNMR     );
-            // fflush (stdout);
-
-
-            if (dATH / 4.0 < dNMR * 6.0206 / 1.25) // 1 bit = 6.0206... dB
-                break;
-            f_low -= 25.;
-        }
-    }
-#endif
 
 /*
  *  Now we try to choose a good high pass filtering frequency.
@@ -820,14 +787,16 @@ lame_init_params(lame_global_flags * const gfp)
         optimum_bandwidth(&lowpass,
                           &highpass,
                           gfp->out_samplerate * 16 * gfc->channels_out /
-                          gfp->compression_ratio, gfp->out_samplerate, channels,
-                          gfp);
-
-        if (lowpass < 0.5 * gfp->out_samplerate) {
+                          gfp->compression_ratio, gfp->out_samplerate, channels);
+			
+		if (lowpass > 0.5 * gfp->out_samplerate) {
             //MSGF(gfc,"Lowpass @ %7.1f Hz\n", lowpass);
             gfc->lowpass1 = gfc->lowpass2 =
                 lowpass / (0.5 * gfp->out_samplerate);
         }
+
+        gfp->lowpassfreq = lowpass;
+
 #if 0
         if (gfp->out_samplerate !=
             optimum_samplefreq(lowpass, gfp->in_samplerate)) {
