@@ -63,39 +63,31 @@ int getframebits(const lame_global_flags * gfp)
 
 /*write j bits into the bit stream */
 inline static void
-putbits(lame_internal_flags *gfc, int val, int j)
+putbits24(lame_internal_flags *gfc, int val, int j)
 {
     Bit_stream_struc *bs = &gfc->bs;
-    int timing = bs->header[bs->w_ptr].write_timing;
-    char *p = bs->pbuf;
+    char *p = &bs->buf[bs->bitidx >> 3];
 
-    assert(0 < j && j < MAX_LENGTH-2);
-    do {
-	int k, bit_idx;
-	if (timing == bs->totbit) {
-	    memcpy(p, bs->header[bs->w_ptr].buf, gfc->l3_side.sideinfo_len);
-	    p += gfc->l3_side.sideinfo_len;
-	    bs->totbit += gfc->l3_side.sideinfo_len * 8;
-	    bs->w_ptr = (bs->w_ptr + 1) & (MAX_HEADER_BUF-1);
-	}
+    val <<= (32 - j - (bs->bitidx & 7));
+    bs->bitidx += j;
 
-	bit_idx = 8 - (bs->totbit & 7);
-	k = Min(j, bit_idx);
-
-	j -= k;
-	bit_idx -= k;
-
-	*p++ |= ((val >> j) << bit_idx);
-	bs->totbit += k;
-    } while (j > 0);
-
-    if (bs->totbit & 7)
-	p--;
-    bs->pbuf = p;
-    assert(p < &bs->buf[BUFFER_SIZE]);
-    assert(bs->header[bs->w_ptr].write_timing >= bs->totbit
-	   ||(bs->header[bs->w_ptr].write_timing ^ bs->totbit) < 0);
+    p[0] |= val >> 24;
+    p[1]  = val >> 16;
+    p[2]  = val >> 8;
+    p[3]  = val;
 }
+
+inline static void
+putbits(lame_internal_flags *gfc, int val, int j)
+{
+    if (j > 25) {
+	putbits24(gfc, val>>16, j-16);
+	val &= 0xffff;
+	j = 16;
+    }
+    putbits24(gfc, val, j);
+}
+
 
 /*
   Some combinations of bitrate, Fs, and stereo make it impossible to stuff
@@ -112,19 +104,19 @@ drain_into_ancillary(lame_global_flags *gfp, int remainingBits)
     assert(remainingBits >= 0);
 
     if (remainingBits >= 8) {
-	putbits(gfc,0x4c,8);
+	putbits24(gfc,0x4c,8);
 	remainingBits -= 8;
     }
     if (remainingBits >= 8) {
-	putbits(gfc,0x41,8);
+	putbits24(gfc,0x41,8);
 	remainingBits -= 8;
     }
     if (remainingBits >= 8) {
-	putbits(gfc,0x4d,8);
+	putbits24(gfc,0x4d,8);
 	remainingBits -= 8;
     }
     if (remainingBits >= 8) {
-	putbits(gfc,0x45,8);
+	putbits24(gfc,0x45,8);
 	remainingBits -= 8;
     }
 
@@ -135,15 +127,15 @@ drain_into_ancillary(lame_global_flags *gfp, int remainingBits)
 	const char *version = get_lame_short_version ();
 	for (i=0; remainingBits >=8 ; ++i) {
 	    if (i < strlen(version))
-		putbits(gfc,version[i],8);
+		putbits24(gfc,version[i],8);
 	    else
-		putbits(gfc,pad,8);
+		putbits24(gfc,pad,8);
 	    remainingBits -= 8;
 	}
     }
 
     if (remainingBits)
-	putbits(gfc, pad >> (8 - remainingBits), remainingBits);
+	putbits24(gfc, pad >> (8 - remainingBits), remainingBits);
 }
 
 /*write N bits into the header */
@@ -355,7 +347,8 @@ encodeSideInfo2(lame_global_flags *gfp, int bitsPerFrame)
 
 	gfc->bs.h_ptr = (old + 1) & (MAX_HEADER_BUF-1);
 	gfc->bs.header[gfc->bs.h_ptr].write_timing
-	    = gfc->bs.header[old].write_timing + bitsPerFrame;
+	    = gfc->bs.header[old].write_timing + bitsPerFrame/8
+	    - l3_side->sideinfo_len;
 
 	assert(gfc->bs.h_ptr != gfc->bs.w_ptr);
     }
@@ -391,7 +384,7 @@ Huf_count1(lame_internal_flags *gfc, gr_info *gi)
 	    p++;
 	    huffbits = huffbits*2 + (gi->xr[index+3] < 0);
 	}
-	putbits(gfc, huffbits + hcode[p+16], hcode[p]);
+	putbits24(gfc, huffbits + hcode[p+16], hcode[p]);
     }
 }
 
@@ -421,6 +414,7 @@ Huffmancode_esc( lame_internal_flags* const gfc, const struct huffcodetab* h,
 	    }
 	    ext += (gi->xr[index] < 0);
 	    cbits--;
+	    x1 *= 16;
 	}
 
 	if (x2 != 0) {
@@ -433,14 +427,13 @@ Huffmancode_esc( lame_internal_flags* const gfc, const struct huffcodetab* h,
 	    }
 	    ext = ext*2 + (gi->xr[index+1] < 0);
 	    cbits--;
+	    x1 += x2;
 	}
 
-	assert ( (x1|x2) < 16u );
-	x1 = x1*16 + x2;
 	xbits -= cbits;
 	cbits += h->hlen  [x1];
 
-	putbits(gfc, h->table [x1], cbits);
+	putbits24(gfc, h->table [x1], cbits);
 	if (xbits)
 	    putbits(gfc, ext, xbits);
     } while ((index += 2) < end);
@@ -463,7 +456,7 @@ Huffmancode( lame_internal_flags* const gfc, const struct huffcodetab* h,
 	if (x1) code = code*2 + (gi->xr[index  ] < 0);
 	if (x2) code = code*2 + (gi->xr[index+1] < 0);
 
-	putbits(gfc, code, clen);
+	putbits24(gfc, code, clen);
     } while ((index += 2) < end);
 }
 
@@ -489,8 +482,7 @@ static void
 Huffmancodebits(lame_internal_flags *gfc, gr_info *gi)
 {
 #ifndef NDEBUG
-    int data_bits = gfc->bs.totbit;
-    int wptr = gfc->bs.w_ptr;
+    int data_bits = gfc->bs.bitidx;
 #endif
     int r1, r2;
 
@@ -508,18 +500,14 @@ Huffmancodebits(lame_internal_flags *gfc, gr_info *gi)
 
 #ifndef NDEBUG
     data_bits += gi->part2_3_length - gi->count1bits;
-    assert(gfc->bs.totbit
-	   == data_bits + ((gfc->bs.w_ptr-wptr)&(MAX_HEADER_BUF-1))
-	   * gfc->l3_side.sideinfo_len*8);
+    assert(gfc->bs.bitidx == data_bits);
 #endif
 
     Huf_count1(gfc, gi);
 
 #ifndef NDEBUG
     data_bits += gi->count1bits;
-    assert(gfc->bs.totbit
-	   == data_bits + ((gfc->bs.w_ptr-wptr)&(MAX_HEADER_BUF-1))
-	   * gfc->l3_side.sideinfo_len*8);
+    assert(gfc->bs.bitidx == data_bits);
 #endif
 }
 
@@ -534,8 +522,7 @@ writeMainData (lame_internal_flags *gfc)
 		gr_info *gi = &gfc->l3_side.tt[gr][ch];
 		int slen = s1bits[gi->scalefac_compress];
 #ifndef NDEBUG
-		int data_bits = gfc->bs.totbit;
-		int wptr = gfc->bs.w_ptr;
+		int data_bits = gfc->bs.bitidx;
 #endif
 		if (slen)
 		    for (sfb = 0; sfb < gi->sfbdivide; sfb++) {
@@ -543,7 +530,7 @@ writeMainData (lame_internal_flags *gfc)
 			    continue; /* scfsi is used */
 			if (gi->scalefac[sfb] == -2)
 			    gi->scalefac[sfb] = 0;
-			putbits(gfc, gi->scalefac[sfb], slen);
+			putbits24(gfc, gi->scalefac[sfb], slen);
 		    }
 		slen = s2bits[gi->scalefac_compress];
 		if (slen)
@@ -552,14 +539,11 @@ writeMainData (lame_internal_flags *gfc)
 			    continue; /* scfsi is used */
 			if (gi->scalefac[sfb] == -2)
 			    gi->scalefac[sfb] = 0;
-			putbits(gfc, gi->scalefac[sfb], slen);
+			putbits24(gfc, gi->scalefac[sfb], slen);
 		    }
 #ifndef NDEBUG
-		data_bits += gi->part2_length
-		    + ((gfc->bs.w_ptr-wptr)&(MAX_HEADER_BUF-1))
-		    * gfc->l3_side.sideinfo_len*8;
-		assert(data_bits == gfc->bs.totbit);
-		wptr = gfc->bs.w_ptr;
+		data_bits += gi->part2_length;
+		assert(data_bits == gfc->bs.bitidx);
 #endif
 		Huffmancodebits(gfc, gi);
 	    } /* for ch */
@@ -568,8 +552,7 @@ writeMainData (lame_internal_flags *gfc)
 	/* MPEG 2 */
 	for (ch = 0; ch < gfc->channels_out; ch++) {
 #ifndef NDEBUG
-	    int data_bits = gfc->bs.totbit;
-	    int wptr = gfc->bs.w_ptr;
+	    int data_bits = gfc->bs.bitidx;
 #endif
 	    gr_info *gi = &gfc->l3_side.tt[0][ch];
 	    int partition;
@@ -581,15 +564,12 @@ writeMainData (lame_internal_flags *gfc)
 		int slen = gi->slen[partition];
 		if (slen)
 		    for (; sfb < sfbend; sfb++)
-			putbits(gfc, Max(gi->scalefac[sfb], 0U), slen);
+			putbits24(gfc, Max(gi->scalefac[sfb], 0U), slen);
 		sfb = sfbend;
 	    }
 #ifndef NDEBUG
-	    data_bits += gi->part2_length
-		+ ((gfc->bs.w_ptr-wptr)&(MAX_HEADER_BUF-1))
-		* gfc->l3_side.sideinfo_len*8;
-	    assert(data_bits == gfc->bs.totbit);
-	    wptr = gfc->bs.w_ptr;
+	    data_bits += gi->part2_length;
+	    assert(data_bits == gfc->bs.bitidx);
 #endif
 	    Huffmancodebits(gfc, gi);
 	} /* for ch */
@@ -623,13 +603,13 @@ compute_flushbits( const lame_global_flags * gfp, int *total_bytes_output )
     int last_ptr = (bs->h_ptr - 1) & (MAX_HEADER_BUF-1);
 
     /* add this many bits to bitstream so we can flush all headers */
-    flushbits = bs->header[last_ptr].write_timing - bs->totbit;
+    flushbits = (bs->header[last_ptr].write_timing - bs->totbyte)*8;
     *total_bytes_output = flushbits;
 
     if (flushbits >= 0) {
 	/* if flushbits >= 0, some headers have not yet been written */
-	/* reduce flushbits by the size of the headers */
-	flushbits -= 8 * gfc->l3_side.sideinfo_len
+	/* add the size of the headers to the total byte output */
+	*total_bytes_output += 8 * gfc->l3_side.sideinfo_len
 	    * ((bs->h_ptr - bs->w_ptr) & (MAX_HEADER_BUF-1));
     }
 
@@ -637,22 +617,11 @@ compute_flushbits( const lame_global_flags * gfp, int *total_bytes_output )
      * these bits are not necessary to decode the last frame, but
      * some decoders will ignore last frame if these bits are missing 
      */
-    bitsPerFrame = getframebits(gfp);
+    bitsPerFrame = getframebits(gfp) - gfc->l3_side.sideinfo_len*8;
     flushbits += bitsPerFrame;
-    *total_bytes_output += bitsPerFrame;
-    /* round up */
-    if (*total_bytes_output % 8) 
-	*total_bytes_output = 1 + (*total_bytes_output/8);
-    else
-	*total_bytes_output = (*total_bytes_output/8);
-    *total_bytes_output += bs->pbuf - bs->buf;
-
-    if (flushbits<0) {
-/* if flushbits < 0, this would mean that the buffer looks like:
- * (data...)  last_header  (data...)  (extra data that should not be here...)
- */
-	ERRORF(gfc,"strange error flushing buffer ... \n");
-    }
+    assert(flushbits >= 0);
+    *total_bytes_output
+	= (*total_bytes_output + bitsPerFrame + bs->bitidx + 7) / 8;
     return flushbits;
 }
 
@@ -663,9 +632,9 @@ flush_bitstream(
     lame_global_flags *gfp,unsigned char *buffer,int size,int mp3data)
 {
     III_side_info_t *l3_side = &gfp->internal_flags->l3_side;
-    int nbytes, flushbits;
+    int dummy, flushbits;
 
-    if ((flushbits = compute_flushbits(gfp,&nbytes)) >= 0) {
+    if ((flushbits = compute_flushbits(gfp,&dummy)) >= 0) {
 	drain_into_ancillary(gfp, flushbits);
 	/* we have padded out all frames with ancillary data, which is the
 	   same as filling the bitreservoir with ancillary data, so : */
@@ -682,10 +651,11 @@ void  add_dummy_byte (lame_internal_flags* gfc, unsigned char val )
 {
     Bit_stream_struc *bs = &gfc->bs;
     int i;
-    assert((bs->totbit & 7) == 0);
-    *bs->pbuf++ = val;
-    for (i = 0 ; i < MAX_HEADER_BUF ; i++)
-	bs->header[i].write_timing += 8;
+    assert((bs->bitidx & 7) == 0);
+    bs->buf[bs->bitidx>>3] = val;
+    bs->bitidx += 8;
+    for (i = 0; i < MAX_HEADER_BUF; i++)
+	bs->header[i].write_timing++;
 }
 
 /*
@@ -726,7 +696,7 @@ format_bitstream(lame_global_flags *gfp)
     l3_side->main_data_begin
 	= (l3_side->ResvSize = l3_side->ResvSize - drainbits) / 8;
 
-    assert(gfc->bs.totbit % 8 == 0);
+    assert(gfc->bs.bitidx % 8 == 0);
     assert(l3_side->ResvSize % 8 == 0);
     return 0;
 }
@@ -743,18 +713,42 @@ format_bitstream(lame_global_flags *gfp)
 */
 int
 copy_buffer(
-    lame_internal_flags *gfc,unsigned char *buffer,int size,int mp3data)
+    lame_internal_flags *gfc, unsigned char *buffer, int size, int mp3data)
 {
     Bit_stream_struc *bs=&gfc->bs;
-    int minimum = bs->pbuf - bs->buf;
-    if (minimum <= 0) return 0;
-    if (size!=0 && minimum>size) return -1; /* buffer is too small */
-    memcpy(buffer,bs->buf,minimum);
-    memset(bs->buf, 0, minimum);
-    bs->pbuf = bs->buf;
+    int spec_idx, minimum;
+    unsigned char *pbuf, *pend;
+    if (bs->bitidx <= 0)
+	return 0;
+
+    /* interleave the sideinfo and spectrum data */
+    pbuf = buffer;
+    if (size == 0)
+	size = 65535;
+    pend = &pbuf[size];
+
+    assert(bs->bitidx % 8 == 0);
+    bs->bitidx >>= 3;
+    spec_idx = 0;
+    do {
+	if (bs->totbyte + spec_idx == bs->header[bs->w_ptr].write_timing) {
+	    int i = gfc->l3_side.sideinfo_len;
+	    if (pbuf+i >= pend) return -1; /* buffer is too small */
+	    memcpy(pbuf, bs->header[bs->w_ptr].buf, i);
+	    pbuf += i;
+	    bs->w_ptr = (bs->w_ptr + 1) & (MAX_HEADER_BUF-1);
+	}
+	if (pbuf >= pend) return -1; /* buffer is too small */
+	*pbuf++ = bs->buf[spec_idx++];
+    } while (spec_idx < bs->bitidx);
+    bs->totbyte += spec_idx;
+
+    memset(bs->buf, 0, spec_idx);
+    bs->bitidx = 0;
+    minimum = pbuf - buffer;
 
     if (mp3data) {
-	UpdateMusicCRC(&gfc->nMusicCRC,buffer,minimum);
+	UpdateMusicCRC(&gfc->nMusicCRC, buffer, minimum);
 #ifdef DECODE_ON_THE_FLY
 	/* this is untested code;
 	   if, for somereason, we would like to decode the frame: */
@@ -782,6 +776,3 @@ copy_buffer(
     }
     return minimum;
 }
-
-
-/* end of bitstream.c */
