@@ -23,12 +23,11 @@ main.c
 1. (optional) Get the version number of the encoder, if you are interested.  
    lame_version(char *);
 
-2. Initialize the encoder.  sets default for all encoder parameters,
-returns pointer to encoder parameters listed above 
+2. Initialize the encoder.  sets default for all encoder parameters.
 
    #include "lame.h"
    lame_global_flags gf;
-   lame_init(%gf);
+   lame_init(&gf);
 
 Then override various default settings as necessary, for example:
 

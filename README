@@ -6,8 +6,7 @@
 Originally developed by Mike Cheng (www.uq.net.au/~zzmcheng).  Now 
 maintained by Mark Taylor (www.sulaco.org/mp3).
 
-This is a patch against the ISO MPEG2 dist10 demonstration source.  The
-modifications are distributed under the GNU LESSER PUBLIC LICENSE
+This code is distributed under the GNU LESSER PUBLIC LICENSE
 (LGPL, see www.gnu.org) with the following modification:
 
 1. If you determine that distribution of LAME requires a patent license,
