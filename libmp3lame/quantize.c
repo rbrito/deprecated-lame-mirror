@@ -1066,7 +1066,8 @@ CBR_1st_bitalloc (
     }
     assert (gi->global_gain < 256);
 
-    CBR_2nd_bitalloc(gfc, gi, distort);
+    if (gfc->quantization > 0)
+	CBR_2nd_bitalloc(gfc, gi, distort);
  quit_quantization:
     if ((gi->block_type == SHORT_TYPE && (gfc->substep_shaping & 2))
      || (gi->block_type != SHORT_TYPE && (gfc->substep_shaping & 1)))
