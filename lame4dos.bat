@@ -33,17 +33,17 @@ rem  ---------------------------------------------
 	set thecmd=%LAME% %OPTS%
 :processArgs
 	if "%1"=="" goto endmark
-	for %%f in (%1) do (echo %thecmd% %@if[%@ext[%%f]==mp3,--mp3input ]%%f^ren %%f.mp3 "%@lfn[%%f].mp3")
+	for %%f in (%1) do (%thecmd% %@if[%@ext[%%f]==mp3,--mp3input ]%%f^ren %%f.mp3 "%@lfn[%%f].mp3")
 	if errorlevel 1 goto errormark
 	shift
 	goto processArgs
-	ren *.wav.mp3 *.mp3 > NUL
 :errormark
 	echo.
 	echo.
 	echo ERROR processing %1
 	echo. 
 :endmark
+	ren *.wav.mp3 *.mp3 > NUL
 rem
 rem	finished
 rem
