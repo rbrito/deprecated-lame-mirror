@@ -11,11 +11,8 @@ EXTRA_DIST = \
 	$(brhist_sources) \
 	console.c \
 	console.h \
-	lame.dsp \
-	lame.dsw \
 	lame_vc6.dsp \
-	mp3x.dsp \
-	mp3x.dsw \
+	mp3x_vc6.dsp \
 	amiga_mpega.c
 
 DEFS = @DEFS@ @CONFIG_DEFS@

@@ -182,10 +182,7 @@ libmp3lame_la_LDFLAGS = -version-info @LIB_MAJOR_VERSION@:@LIB_MINOR_VERSION@ \
 			-no-undefined
 
 
-EXTRA_DIST = \
-	libmp3lame.dsp \
-	libmp3lame_vc6.dsp
-
+EXTRA_DIST = libmp3lame_vc6.dsp
 
 libmp3lame_la_SOURCES = \
         VbrTag.c \

@@ -20,7 +20,6 @@ EXTRA_DIST = \
 	adebug.h \
 	lame.ico \
 	lameACM.def \
-	lameACM.dsp \
 	lameACM_vc6.dsp \
 	lame_acm.xml \
 	main.cpp \

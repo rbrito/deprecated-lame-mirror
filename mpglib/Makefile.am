@@ -4,9 +4,7 @@ include $(top_srcdir)/Makefile.am.global
 
 INCLUDES = @INCLUDES@ -I$(top_srcdir)/libmp3lame -I$(top_builddir)
 
-EXTRA_DIST = \
-	mpglib.dsp \
-	mpglib_vc6.dsp
+EXTRA_DIST = mpglib_vc6.dsp
 
 DEFS = @DEFS@ @CONFIG_DEFS@
 
