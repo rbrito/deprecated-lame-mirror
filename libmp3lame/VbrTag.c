@@ -28,7 +28,7 @@
 #include "machine.h"
 #if defined(__riscos__) && defined(FPA10)
 #include	"ymath.h"
-#else
+#else 
 #include	<math.h>
 #endif
 
@@ -63,6 +63,7 @@
 //  140 bytes
 */
 #define VBRHEADERSIZE (NUMTOCENTRIES+4+4+4+4+4)
+#define LAMEHEADERSIZE (VBRHEADERSIZE + 9 + 1 + 1 + 8 + 1 + 1 + 3 + 1 + 1 + 2 + 4 + 2 + 2)
 
 /* the size of the Xing header (MPEG1 and MPEG2) in kbps */
 #define XING_BITRATE1 128
@@ -408,7 +409,7 @@ int InitVbrTag(lame_global_flags *gfp)
 {
 	int nMode,SampIndex;
 	lame_internal_flags *gfc = gfp->internal_flags;
-#define MAXFRAMESIZE 576
+#define MAXFRAMESIZE 1792
 	//	u_char pbtStreamBuffer[MAXFRAMESIZE];
 	nMode = gfp->mode;
 	SampIndex = gfc->samplerate_index;
@@ -449,11 +450,14 @@ int InitVbrTag(lame_global_flags *gfp)
 	  else
 	    bitrate = XING_BITRATE2;
 	}
+
+	if (gfp->VBR==vbr_off)
+			bitrate = gfp->brate;
+	
 	gfp->TotalFrameSize= 
 	  ((gfp->version+1)*72000*bitrate) / gfp->out_samplerate;
-	tot = (gfc->sideinfo_len+VBRHEADERSIZE);
-	tot += 20;  /* extra 20 bytes for LAME & version string */
-
+	tot = (gfc->sideinfo_len+LAMEHEADERSIZE);
+	
 	assert(gfp->TotalFrameSize >= tot );
 	assert(gfp->TotalFrameSize <= MAXFRAMESIZE );
 
@@ -676,7 +680,7 @@ int PutLameVBR(lame_global_flags *gfp, FILE *fpStream, u_char *pbtStreamBuffer, 
 				(gfp->brate >=256 && (gfp->mode == MPG_MD_STEREO || gfp->mode == MPG_MD_JOINT_STEREO) && bExpNPsyTune && bSafeJoint) 
 			||  (nABRBitrate >=224 && gfp->mode == MPG_MD_JOINT_STEREO && bExpNPsyTune && bSafeJoint) 
 			|| (nQuality>=88 && bExpNPsyTune) 
-			|| (nQuality>=78 && gfp->mode == MPG_MD_JOINT_STEREO && bExpNPsyTune && bSafeJoint && nAthType == 2) 
+			|| (nQuality>=78 && gfp->mode == MPG_MD_JOINT_STEREO && bExpNPsyTune && bSafeJoint && nAthType > 0 && nAthType < 5) 
 			)
 		)
 		bArchival = 1;
@@ -852,16 +856,21 @@ int PutVbrTag(lame_global_flags *gfp,FILE *fpStream,int nVbrScale)
 	/* from first valid frame */
 	pbtStreamBuffer[0]=(u_char) 0xff;
 	abyte = (pbtStreamBuffer[1] & (char) 0xf1);
-	{ int bitrate;
-	if (1==gfp->version) {
-	  bitrate = XING_BITRATE1;
-	} else {
-	  if (gfp->out_samplerate < 16000 )
-	    bitrate = XING_BITRATE25;
-	  else
-	    bitrate = XING_BITRATE2;
-	}
-	  bbyte = 16*BitrateIndex(bitrate,gfp->version,gfp->out_samplerate);
+	{	
+		int bitrate;
+		if (1==gfp->version) {
+		  bitrate = XING_BITRATE1;
+		} else {
+		  if (gfp->out_samplerate < 16000 )
+			bitrate = XING_BITRATE25;
+		  else
+			bitrate = XING_BITRATE2;
+		}
+		
+		if (gfp->VBR==vbr_off)
+			bitrate = gfp->brate;
+
+		bbyte = 16*BitrateIndex(bitrate,gfp->version,gfp->out_samplerate);
 	}
 
 	/* Use as much of the info from the real frames in the
