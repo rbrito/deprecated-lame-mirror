@@ -345,8 +345,8 @@ compute_ffts(
 	    fftenergy_s[b][BLKSIZE_s/2-j] = NON_LINEAR_SCALE_ENERGY((re * re + im * im) * 0.5f);
 	}
     }
-    /* total energy ... XXX: it seems buggy */
-    {FLOAT8 totalenergy=fftenergy[0];
+    /* total energy */
+    {FLOAT8 totalenergy=0.0;
     for (j=11;j < HBLKSIZE; j++)
 	totalenergy += fftenergy[j];
 
