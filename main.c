@@ -128,6 +128,8 @@ int main(int argc, char **argv)
 
   } else {
 
+      lame_id3v2_tag(&gf,outf); /* add ID3 version 2 tag to mp3 file */
+
       /* encode until we hit eof */
       do {
 	/* read in 'iread' samples */
@@ -160,7 +162,7 @@ int main(int argc, char **argv)
       /* imp3 is not negative, but fwrite needs an unsigned here */
       fwrite(mp3buffer,1,(unsigned int)imp3,outf);
       fclose(outf);
-      lame_mp3_tags(&gf);                /* add id3 or VBR tags to mp3 file */
+      lame_mp3_tags(&gf);       /* add ID3 version 1 or VBR tags to mp3 file */
     }
   lame_close_infile(&gf);            /* close the input file */
   return 0;

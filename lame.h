@@ -20,6 +20,7 @@
 #ifndef LAME_H_INCLUDE
 #define LAME_H_INCLUDE
 #include <stdio.h>
+#include "id3tag.h"
 
 /* maximum size of mp3buffer needed if you encode at most 1152 samples for
    each call to lame_encode_buffer.  see lame_encode_buffer() below  */
@@ -38,21 +39,6 @@ typedef enum vbr_mode_e {
   vbr_abr=3,
   vbr_default=vbr_rh  /* change this to change the default VBR mode of LAME */ 
 } vbr_mode;
-
-
-typedef struct
-{
-	int valid;
-	char title[31];
-	char artist[31];
-	char album[31];
-	char year[5];
-	char comment[31];
-	char tagtext[128];
-	char genre[1];
-	unsigned char track;
-
-}   ID3TAGDATA;
 
 
 
@@ -127,14 +113,14 @@ typedef struct  {
   int swapbytes;              /* force byte swapping   default=0*/
 #define         MAX_NAME_SIZE           1000
   char inPath[MAX_NAME_SIZE];
-  /* Note: outPath must be set if you want Xing VBR or id3 tags written */
+  /* Note: outPath must be set if you want Xing VBR or ID3 version 1 tags written */
   char outPath[MAX_NAME_SIZE];
 
 
 
-  /* optional id3 tags  */
-  int id3tag_used;
-  ID3TAGDATA id3tag;
+  /* optional ID3 tags  */
+  int id3v1_enabled;
+  struct id3tag_spec tag_spec;
 
 
   /* psycho acoustics and other aguments which you should not change 
@@ -235,6 +221,11 @@ void lame_print_config(lame_global_flags *);
 
 
 
+/* OPTONAL:  add ID3 version 2 tag to output file */
+void lame_id3v2_tag(lame_global_flags *,FILE *);
+
+
+
 
 /* input pcm data, output (maybe) mp3 frames.
  * This routine handles all buffering, resampling and filtering for you.
@@ -303,11 +294,11 @@ int lame_encode(lame_global_flags *,short int Buffer[2][1152],char *mp3buffer,in
 int lame_encode_finish(lame_global_flags *,char *mp3buffer, int size);
 
 
-/* OPTIONAL:  lame_mp3_tags will append id3 and Xing VBR tags to
+/* OPTIONAL:  lame_mp3_tags will append ID3 version 1 and Xing VBR tags to
 the mp3 file with name given by gf->outPath.  These calls open the file,
 write tags, and close the file, so make sure the the encoding is finished
 before calling these routines.  
-Note: if VBR and id3 tags are turned off by the user, or turned off
+Note: if VBR and ID3 version 1 tags are turned off by the user, or turned off
 by LAME because the output is not a regular file, this call does nothing
 */
 void lame_mp3_tags(lame_global_flags *);

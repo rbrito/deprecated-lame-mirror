@@ -328,6 +328,8 @@ int PutVbrTag(lame_global_flags *gfp,char* lpszFileName,int nVbrScale)
 	FILE *fpStream;
         u_char pbtStreamBuffer[216];
 	char str1[80];
+        unsigned char id3v2Header[10];
+        size_t id3v2TagSize;
 
 	if (gfp->nVbrNumFrames==0 || gfp->pVbrFrames==NULL)
 		return -1;
@@ -352,8 +354,32 @@ int PutVbrTag(lame_global_flags *gfp,char* lpszFileName,int nVbrScale)
 	if (lFileSize==0)
 		return -1;
 
+        /*
+         * The VBR tag may NOT be located at the beginning of the stream.
+         * If an ID3 version 2 tag was added, then it must be skipped to write
+         * the VBR tag data.
+         */
+
+        /* seek to the beginning of the stream */
+	fseek(fpStream,0,SEEK_SET);
+        /* read 10 bytes in case there's an ID3 version 2 header here */
+        fread(id3v2Header,1,sizeof id3v2Header,fpStream);
+        /* does the stream begin with the ID3 version 2 file identifier? */
+        if (!strncmp((char *)id3v2Header,"ID3",3)) {
+          /* the tag size (minus the 10-byte header) is encoded into four
+           * bytes where the most significant bit is clear in each byte */
+          id3v2TagSize=(((id3v2Header[6] & 0x7f)<<21)
+            | ((id3v2Header[7] & 0x7f)<<14)
+            | ((id3v2Header[8] & 0x7f)<<7)
+            | (id3v2Header[9] & 0x7f))
+            + sizeof id3v2Header;
+        } else {
+          /* no ID3 version 2 tag in this stream */
+          id3v2TagSize=0;
+        }
+
 	/* Seek to first real frame */
-	fseek(fpStream,(long)gfp->TotalFrameSize,SEEK_SET);
+	fseek(fpStream,id3v2TagSize+(long)gfp->TotalFrameSize,SEEK_SET);
 
 	/* Read the header (first valid frame) */
 	fread(pbtStreamBuffer,4,1,fpStream);
@@ -380,7 +406,7 @@ int PutVbrTag(lame_global_flags *gfp,char* lpszFileName,int nVbrScale)
 
 
 	/*Seek to the beginning of the stream */
-	fseek(fpStream,0,SEEK_SET);
+	fseek(fpStream,id3v2TagSize,SEEK_SET);
 
 	/* Clear all TOC entries */
 	memset(btToc,0,sizeof(btToc));

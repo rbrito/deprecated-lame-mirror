@@ -18,9 +18,9 @@
         ALINK=#995500>
 <H1>ID3 tags</H1>
 <p>&nbsp;</p>
-<p>LAME is able to embed ID3 v1 or v1.1 tags inside the encoded MP3 file. This 
-  allows to have some usefull information about the music track included inside 
-  the file. Those data can be read by most MP3 players.</p>
+<p>LAME can embed ID3 version 1 and version 2 tags inside an encoded MP3 file.
+  This can provide useful information about the audio in that file. The data can
+  be read by most MP3 players.</p>
 <P> 
 <TABLE CELLPADDING=3 BORDER="1">
   <TR VALIGN="TOP"> 
@@ -28,36 +28,65 @@
     <TD ALIGN="LEFT" nowrap><b>parameter</b></TD>
   </TR>
   <tr valign="TOP"> 
-    <td align="LEFT" nowrap><kbd>--tt "title"</kbd></td>
-    <td align="LEFT" nowrap>title of song (max 30 chars)</td>
+    <td align="LEFT" nowrap><kbd>--tt &lt;title&gt;</kbd></td>
+    <td align="LEFT" nowrap>audio/song title (max 30 chars for version 1 tag)</td>
   </tr>
   <tr valign="TOP"> 
-    <td align="LEFT" nowrap><kbd>--ta "artist"</kbd></td>
-    <td align="LEFT" nowrap>artist who did the song (max 30 chars)</td>
+    <td align="LEFT" nowrap><kbd>--ta &lt;artist&gt;</kbd></td>
+    <td align="LEFT" nowrap>audio/song artist (max 30 chars for version 1 tag)</td>
   </tr>
   <tr valign="TOP"> 
-    <td align="LEFT" nowrap><kbd>--tl "album"</kbd></td>
-    <td align="LEFT" nowrap>album where it came from (max 30 chars)</td>
+    <td align="LEFT" nowrap><kbd>--tl &lt;album&gt;</kbd></td>
+    <td align="LEFT" nowrap>audio/song album (max 30 chars for version 1 tag)</td>
   </tr>
   <tr valign="TOP"> 
-    <td align="LEFT" nowrap><kbd>--ty "year"</kbd></td>
-    <td align="LEFT" nowrap>year in which the song/album was made (max 4 chars)</td>
+    <td align="LEFT" nowrap><kbd>--ty &lt;year&gt;</kbd></td>
+    <td align="LEFT" nowrap>audio/song year of issue (1 to 9999)</td>
   </tr>
   <tr valign="TOP"> 
-    <td align="LEFT" nowrap><kbd>--tc "comment"</kbd></td>
-    <td align="LEFT" nowrap>additional info (max 30 chars or max 28 chars if using 
-      the "track" option)</td>
+    <td align="LEFT" nowrap><kbd>--tc &lt;comment&gt;</kbd></td>
+    <td align="LEFT" nowrap>user-defined text (max 30 chars for v1 tag, 28 for v1.1)</td>
   </tr>
   <tr valign="TOP"> 
-    <td align="LEFT" nowrap><kbd>--tn "track&quot;</kbd></td>
-    <td align="LEFT" nowrap>track number of the song on the CD (1 to 99)<br>
-      using this option will add an ID3v1.1 tag</td>
+    <td align="LEFT" nowrap><kbd>--tn &lt;track&gt;</kbd></td>
+    <td align="LEFT" nowrap>audio/song track number (1 to 99, creates v1.1 tag)</td>
   </tr>
   <tr valign="TOP"> 
-    <td align="LEFT" nowrap><kbd>--tg "genre"</kbd></td>
-    <td align="LEFT" nowrap> genre of song (name or number)</td>
+    <td align="LEFT" nowrap><kbd>--tg &lt;genre&gt;</kbd></td>
+    <td align="LEFT" nowrap>audio/song genre (name or number in list)</td>
+  </tr>
+  <tr valign="TOP"> 
+    <td align="LEFT" nowrap><kbd>--add-id3v2</kbd></td>
+    <td align="LEFT" nowrap>force addition of version 2 tag</td>
+  </tr>
+  <tr valign="TOP"> 
+    <td align="LEFT" nowrap><kbd>--id3v1-only</kbd></td>
+    <td align="LEFT" nowrap>add only a version 1 tag</td>
+  </tr>
+  <tr valign="TOP"> 
+    <td align="LEFT" nowrap><kbd>--id3v2-only</kbd></td>
+    <td align="LEFT" nowrap>add only a version 2 tag</td>
+  </tr>
+  <tr valign="TOP"> 
+    <td align="LEFT" nowrap><kbd>--space-id3v1</kbd></td>
+    <td align="LEFT" nowrap>pad version 1 tag with spaces instead of nulls</td>
+  </tr>
+  <tr valign="TOP"> 
+    <td align="LEFT" nowrap><kbd>--pad-id3v2</kbd></td>
+    <td align="LEFT" nowrap>pad version 2 tag with extra 128 bytes</td>
+  </tr>
+  <tr valign="TOP"> 
+    <td align="LEFT" nowrap><kbd>--genre-list</kbd></td>
+    <td align="LEFT" nowrap>print alphabetically sorted ID3 genre list and exit</td>
   </tr>
 </TABLE>
+<p><br>
+  <b>Note:</b> A version 2 tag will NOT be added unless one of the input
+  fields won't fit in a version 1 tag (e.g. the title string is longer than 30
+  characters), or the `--add-id3v2' or `--id3v2-only' options are used, or
+  output is redirected to stdout.<br>
+  <br>
+</p>
 <p><br>
   The following genres are supported:<br>
   <br>
@@ -78,7 +107,7 @@
       11 - Oldies<br>
       12 - Other<br>
       13 - Pop<br>
-      14 - R&B<br>
+      14 - R&amp;B<br>
       15 - Rap<br>
       16 - Reggae<br>
       17 - Rock<br>
@@ -104,8 +133,9 @@
       37 - Sound Clip<br>
       38 - Gospel<br>
       39 - Noise<br>
-      40 - Alternative Rock<br>
+      40 - Alt. Rock<br>
       41 - Bass<br>
+      41 - Soul<br>
       43 - Punk<br>
       44 - Space<br>
       45 - Meditative<br>
@@ -122,15 +152,15 @@
       56 - Southern Rock<br>
       57 - Comedy<br>
       58 - Cult<br>
-      59 - Gangsta<br>
+      59 - Gangsta Rap<br>
       60 - Top 40<br>
       61 - Christian Rap<br>
       62 - Pop/Funk<br>
       63 - Jungle<br>
-      64 - Native US<br>
+      64 - Native American<br>
       65 - Cabaret<br>
       66 - New Wave<br>
-      67 - Psychadelic<br>
+      67 - Psychedelic<br>
       68 - Rave<br>
       69 - Showtunes<br>
       70 - Trailer<br>
@@ -141,13 +171,13 @@
       75 - Polka<br>
       76 - Retro<br>
       77 - Musical<br>
-      78 - Rock & Roll<br>
+      78 - Rock &amp; Roll<br>
       79 - Hard Rock<br>
       80 - Folk<br>
-      81 - Folk-Rock<br>
+      81 - Folk/Rock<br>
       82 - National Folk<br>
       83 - Swing<br>
-      84 - Fast Fusion<br>
+      84 - Fast-Fusion<br>
       85 - Bebob<br>
       86 - Latin<br>
       87 - Revival<br>
@@ -181,16 +211,16 @@
       115 - Folklore<br>
       116 - Ballad<br>
       117 - Power Ballad<br>
-      118 - Rhytmic Soul<br>
+      118 - Rhythmic Soul<br>
       119 - Freestyle<br>
       120 - Duet<br>
       121 - Punk Rock<br>
       122 - Drum Solo<br>
-      123 - Acapella<br>
+      123 - A Cappella<br>
       124 - Euro-House<br>
       125 - Dance Hall<br>
       126 - Goa<br>
-      127 - Drum & Bass<br>
+      127 - Drum &amp; Bass<br>
       128 - Club-House<br>
       129 - Hardcore<br>
       130 - Terror<br>
@@ -199,18 +229,18 @@
       133 - Negerpunk<br>
       134 - Polsk Punk<br>
       135 - Beat<br>
-      136 - Christian Gangsta<br>
+      136 - Christian Gangsta Rap<br>
       137 - Heavy Metal<br>
       138 - Black Metal<br>
       139 - Crossover<br>
-      140 - Contemporary C<br>
+      140 - Contemporary Christian<br>
       141 - Christian Rock<br>
       142 - Merengue<br>
       143 - Salsa<br>
       144 - Thrash Metal<br>
       145 - Anime<br>
       146 - JPop<br>
-      147 - SynthPop</td>
+      147 - Synthpop</td>
   </tr>
 </table>
 <p><br>

@@ -495,7 +495,7 @@ int lame_init_params(lame_global_flags *gfp)
   }
 
   if (gfp->outPath==NULL || gfp->outPath[0]=='-' ) {
-    gfp->id3tag_used=0;         /* turn of id3 tagging */
+    gfp->id3v1_enabled=0;       /* turn off ID3 version 1 tagging */
   }
 
 
@@ -718,6 +718,22 @@ void lame_print_config(lame_global_flags *gfp)
   }
 
   fflush(stderr);
+}
+
+
+
+/*****************************************************************/
+/* write ID3 version 2 tag to output file, if asked for          */
+/*****************************************************************/
+void lame_id3v2_tag(lame_global_flags *gfp,FILE *outf)
+{
+  /*
+   * NOTE: "lame_id3v2_tag" is obviously just a wrapper to call the function
+   * below and have a nice "lame_"-prefixed function name in "lame.h".  But
+   * since "lame.h" now includes "id3tag.h", we COULD do this with a macro.
+   * -- gramps
+   */
+  id3tag_write_v2(&gfp->tag_spec,outf);
 }
 
 
@@ -1396,7 +1412,7 @@ int lame_encode_finish(lame_global_flags *gfp,char *mp3buffer, int mp3buffer_siz
 
 
 /*****************************************************************/
-/* write VBR Xing header, and ID3 tag, if asked for               */
+/* write VBR Xing header, and ID3 version 1 tag, if asked for    */
 /*****************************************************************/
 void lame_mp3_tags(lame_global_flags *gfp)
 {
@@ -1410,10 +1426,20 @@ void lame_mp3_tags(lame_global_flags *gfp)
     }
 
 
-  /* write an ID3 tag  */
-  if(gfp->id3tag_used) {
-    id3_buildtag(&gfp->id3tag);
-    id3_writetag(gfp->outPath, &gfp->id3tag);
+  /* write an ID3 version 1 tag  */
+  if(gfp->id3v1_enabled) {
+    /*
+     * NOTE: The new tagging API only knows about streams and always writes at
+     * the current position, so we have to open the file and seek to the end of
+     * it here.  Perhaps we should just NOT close the file when the bitstream is
+     * completed, nor when the final VBR tag is written.
+     * -- gramps
+     */
+    FILE *stream = fopen(gfp->outPath, "rb+");
+    if (stream && !fseek(stream, 0, SEEK_END)) {
+      id3tag_write_v1(&gfp->tag_spec, stream);
+      fclose(stream);
+    }
   }
 }
 

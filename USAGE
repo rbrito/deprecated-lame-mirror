@@ -123,14 +123,26 @@ Operational:
 
 --ogg          Encode using Ogg Vorbis (.ogg) instead of mp3.
 
-id3 tagging:
+ID3 tagging:
 
---tt "title"     title of song (max 30 chars)
---ta "artist"    artist who did the song (max 30 chars)
---tl "album"     album where it came from (max 30 chars)
---ty "year"      year in which the song/album was made (max 4 chars)
---tc "comment"   additional info (max 30 chars)
---tg "genre"     genre of song (name or number)
+--tt <title>    audio/song title (max 30 chars for version 1 tag)
+--ta <artist>   audio/song artist (max 30 chars for version 1 tag)
+--tl <album>    audio/song album (max 30 chars for version 1 tag)
+--ty <year>     audio/song year of issue (1 to 9999)
+--tc <comment>  user-defined text (max 30 chars for v1 tag, 28 for v1.1)
+--tn <track>    audio/song track number (1 to 99, creates v1.1 tag)
+--tg <genre>    audio/song genre (name or number in list)
+--add-id3v2     force addition of version 2 tag
+--id3v1-only    add only a version 1 tag
+--id3v2-only    add only a version 2 tag
+--space-id3v1   pad version 1 tag with spaces instead of nulls
+--pad-id3v2     pad version 2 tag with extra 128 bytes
+--genre-list    print alphabetically sorted ID3 genre list and exit
+
+Note: A version 2 tag will NOT be added unless one of the input fields
+won't fit in a version 1 tag (e.g. the title string is longer than 30
+characters), or the `--add-id3v2' or `--id3v2-only' options are used,
+or output is redirected to stdout.
 
 
 

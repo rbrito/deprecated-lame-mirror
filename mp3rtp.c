@@ -148,6 +148,8 @@ int main(int argc, char **argv)
   lame_init_params(&gf);
   lame_print_config(&gf);   /* print usefull information about options being used */
 
+  lame_id3v2_tag(&gf,outf); /* add ID3 version 2 tag to mp3 file */
+
   /* encode until we hit eof */
   do {
     /* read in 'iread' samples */
@@ -165,7 +167,7 @@ int main(int argc, char **argv)
   rtp_output(mp3buffer,imp3);
   fclose(outf);
   lame_close_infile(&gf);             /* close the sound input file */
-  lame_mp3_tags(&gf);                /* add id3 or VBR tags to mp3 file */
+  lame_mp3_tags(&gf);       /* add ID3 version 1 or VBR tags to mp3 file */
   return 0;
 }
 

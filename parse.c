@@ -160,16 +160,25 @@ void lame_help(lame_global_flags *gfp,char *name)  /* print syntax & exit */
   PRINTF1("  --resample <sfreq>  sampling frequency of output file(kHz)- default=automatic\n");
   PRINTF1("  --cwlimit <freq>    compute tonality up to freq (in kHz) default 8.8717\n");
   PRINTF1("\n");
-  PRINTF1("  Specifying any of the following options will add an ID3 tag:\n");
-  PRINTF1("     --tt \"title\"     title of song (max 30 chars)\n");
-  PRINTF1("     --ta \"artist\"    artist who did the song (max 30 chars)\n");
-  PRINTF1("     --tl \"album\"     album where it came from (max 30 chars)\n");
-  PRINTF1("     --ty \"year\"      year in which the song/album was made (max 4 chars)\n");
-  PRINTF1("     --tc \"comment\"   additional info (max 30 chars)\n");
-  PRINTF1("                      (or max 28 chars if using the \"track\" option)\n");
-  PRINTF1("     --tn \"track\"     track number of the song on the CD (1 to 99)\n");
-  PRINTF1("                      (using this option will add an ID3v1.1 tag)\n");
-  PRINTF1("     --tg \"genre\"     genre of song (name or number)\n");
+  PRINTF1("  ID3 tag options:\n");
+  PRINTF1("    --tt <title>    audio/song title (max 30 chars for version 1 tag)\n");
+  PRINTF1("    --ta <artist>   audio/song artist (max 30 chars for version 1 tag)\n");
+  PRINTF1("    --tl <album>    audio/song album (max 30 chars for version 1 tag)\n");
+  PRINTF1("    --ty <year>     audio/song year of issue (1 to 9999)\n");
+  PRINTF1("    --tc <comment>  user-defined text (max 30 chars for v1 tag, 28 for v1.1)\n");
+  PRINTF1("    --tn <track>    audio/song track number (1 to 99, creates v1.1 tag)\n");
+  PRINTF1("    --tg <genre>    audio/song genre (name or number in list)\n");
+  PRINTF1("    --add-id3v2     force addition of version 2 tag\n");
+  PRINTF1("    --id3v1-only    add only a version 1 tag\n");
+  PRINTF1("    --id3v2-only    add only a version 2 tag\n");
+  PRINTF1("    --space-id3v1   pad version 1 tag with spaces instead of nulls\n");
+  PRINTF1("    --pad-id3v2     pad version 2 tag with extra 128 bytes\n");
+  PRINTF1("    --genre-list    print alphabetically sorted ID3 genre list and exit\n");
+  PRINTF1("\n");
+  PRINTF1("    Note: A version 2 tag will NOT be added unless one of the input fields\n");
+  PRINTF1("    won't fit in a version 1 tag (e.g. the title string is longer than 30\n");
+  PRINTF1("    characters), or the `--add-id3v2' or `--id3v2-only' options are used,\n");
+  PRINTF1("    or output is redirected to stdout.\n");
   PRINTF1("\n");
 #ifdef HAVEGTK
   PRINTF1("    -g              run graphical analysis on <infile>\n");
@@ -221,6 +230,13 @@ void lame_presets_info(lame_global_flags *gfp,char *name)  /* print syntax & exi
 
 
 
+static void genre_list_handler(int num,const char *name,void *cookie)
+{
+  PRINTF1("%3d %s\n",num,name);
+}
+
+
+
 /************************************************************************
 *
 * parse_args
@@ -242,14 +258,14 @@ void lame_parse_args(lame_global_flags *gfp,int argc, char **argv)
   int autoconvert=0;
   int user_quality=0;
   char *programName = argv[0]; 
-  int track = 0;
 
   gfp->inPath[0] = '\0';   
   gfp->outPath[0] = '\0';
   /* turn on display options. user settings may turn them off below */
   gfp->silent=0;
   gfp->brhist_disp = 1;
-  id3_inittag(&gfp->id3tag);
+  gfp->id3v1_enabled = 1;
+  id3tag_init(&gfp->tag_spec);
 
   /* process args */
   while(++i<argc && err == 0) {
@@ -350,49 +366,55 @@ void lame_parse_args(lame_global_flags *gfp,int argc, char **argv)
 	}
 	/* options for ID3 tag */
  	else if (strcmp(token, "tt")==0) {
- 		gfp->id3tag_used=1;      argUsed = 1;
-  		strncpy(gfp->id3tag.title, nextArg, 30);
- 		}
+ 	  argUsed=1;
+ 	  id3tag_set_title(&gfp->tag_spec, nextArg);
+ 	}
  	else if (strcmp(token, "ta")==0) {
- 		gfp->id3tag_used=1; argUsed = 1;
-  		strncpy(gfp->id3tag.artist, nextArg, 30);
- 		}
+ 	  argUsed=1;
+ 	  id3tag_set_artist(&gfp->tag_spec, nextArg);
+ 	}
  	else if (strcmp(token, "tl")==0) {
- 		gfp->id3tag_used=1; argUsed = 1;
-  		strncpy(gfp->id3tag.album, nextArg, 30);
- 		}
+ 	  argUsed=1;
+ 	  id3tag_set_album(&gfp->tag_spec, nextArg);
+ 	}
  	else if (strcmp(token, "ty")==0) {
- 		gfp->id3tag_used=1; argUsed = 1;
-  		strncpy(gfp->id3tag.year, nextArg, 4);
- 		}
+ 	  argUsed=1;
+ 	  id3tag_set_year(&gfp->tag_spec, nextArg);
+ 	}
  	else if (strcmp(token, "tc")==0) {
- 		gfp->id3tag_used=1; argUsed = 1;
-  		strncpy(gfp->id3tag.comment, nextArg, 30);
- 		}
+ 	  argUsed=1;
+ 	  id3tag_set_comment(&gfp->tag_spec, nextArg);
+ 	}
  	else if (strcmp(token, "tn")==0) {
- 		gfp->id3tag_used=1; argUsed = 1;
-  		track = atoi(nextArg);
-  		if (track < 1) { track = 1; }
-  		if (track > 99) { track = 99; }
-  		gfp->id3tag.track = track;
- 		}
+ 	  argUsed=1;
+ 	  id3tag_set_track(&gfp->tag_spec, nextArg);
+ 	}
  	else if (strcmp(token, "tg")==0) {
-		argUsed = strtol (nextArg, &token, 10);
-		if (nextArg==token) {
-		  /* Genere was given as a string, so it's number*/
-		  for (argUsed=0; argUsed<=genre_last; argUsed++) {
-		    if (!strcmp (genre_list[argUsed], nextArg)) { break; }
-		  }
- 		}
-		if (argUsed>genre_last) { 
-		  argUsed=255; 
-		  ERRORF("Unknown genre: %s.  Specifiy genre number \n", nextArg);
-		}
-	        argUsed &= 255; c=(char)(argUsed);
-
- 		gfp->id3tag_used=1; argUsed = 1;
-  		strncpy(gfp->id3tag.genre, &c, 1);
-	       }
+ 	  argUsed=1;
+ 	  if (id3tag_set_genre(&gfp->tag_spec, nextArg)) {
+	    ERRORF("Unknown genre: %s.  Specify genre name or number\n", nextArg);
+	    LAME_ERROR_EXIT();
+          }
+	}
+ 	else if (strcmp(token, "add-id3v2")==0) {
+ 	  id3tag_add_v2(&gfp->tag_spec);
+ 	}
+ 	else if (strcmp(token, "id3v1-only")==0) {
+ 	  id3tag_v1_only(&gfp->tag_spec);
+ 	}
+ 	else if (strcmp(token, "id3v2-only")==0) {
+ 	  id3tag_v2_only(&gfp->tag_spec);
+ 	}
+ 	else if (strcmp(token, "space-id3v1")==0) {
+ 	  id3tag_space_v1(&gfp->tag_spec);
+ 	}
+ 	else if (strcmp(token, "pad-id3v2")==0) {
+ 	  id3tag_pad_v2(&gfp->tag_spec);
+ 	}
+ 	else if (strcmp(token, "genre-list")==0) {
+ 	  id3tag_genre_list(genre_list_handler, NULL);
+	  LAME_NORMAL_EXIT();
+ 	}
 	else if (strcmp(token, "lowpass")==0) {
 	  argUsed=1;
 	  gfp->lowpassfreq =  (( 1000.0 * atof( nextArg ) ) + 0.5);
@@ -771,9 +793,11 @@ void lame_parse_args(lame_global_flags *gfp,int argc, char **argv)
   /* some file options not allowed with stdout */
   if (gfp->outPath[0]=='-') {
     gfp->bWriteVbrTag=0; /* turn off VBR tag */
-    if (gfp->id3tag_used) {
-      gfp->id3tag_used=0;         /* turn of id3 tagging */
-      ERRORF("id3tag ignored: id3 tagging not supported for stdout.\n");
+    if (gfp->id3v1_enabled) {
+      gfp->id3v1_enabled=0;     /* turn off ID3 version 1 tagging */
+      ERRORF("ID3 version 1 tagging not supported for stdout.\n");
+      ERRORF("Converting any ID3 tag data to version 2 format.\n");
+      id3tag_v2_only(&gfp->tag_spec);
     }
   }
 
