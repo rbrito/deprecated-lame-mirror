@@ -1417,22 +1417,29 @@ int lame_encode_finish(lame_global_flags *gfp,char *mp3buffer, int mp3buffer_siz
 /*****************************************************************/
 void lame_mp3_tags(lame_global_flags *gfp)
 {
+  FILE *fpStream;
+
+  /* Open the bitstream again */
+  fpStream=fopen(gfp->outPath,"rwb+");
+  /* Assert stream is valid */
+  if (fpStream==NULL)
+    return;
+
   if (gfp->bWriteVbrTag)
     {
       /* Calculate relative quality of VBR stream
        * 0=best, 100=worst */
       int nQuality=gfp->VBR_q*100/9;
+
       /* Write Xing header again */
-      PutVbrTag(gfp,gfp->outPath,nQuality);
+      PutVbrTag(gfp,fpStream,nQuality);
     }
 
 
   /* write an ID3 version 1 tag  */
   if(gfp->id3v1_enabled
-#ifdef HAVEVORBIS
     /* no ID3 version 1 tags in Ogg Vorbis output */
     && !gfp->ogg
-#endif
     ) {
     /*
      * NOTE: The new tagging API only knows about streams and always writes at
@@ -1440,13 +1447,15 @@ void lame_mp3_tags(lame_global_flags *gfp)
      * it here.  Perhaps we should just NOT close the file when the bitstream is
      * completed, nor when the final VBR tag is written.
      * -- gramps
+     *
+     * ideally this should not be done here: lame_encode_finish should 
+     * write the tag directly into the mp3 output buffer.  
      */
-    FILE *stream = fopen(gfp->outPath, "rb+");
-    if (stream && !fseek(stream, 0, SEEK_END)) {
-      id3tag_write_v1(&gfp->tag_spec, stream);
-      fclose(stream);
+    if (fpStream && !fseek(fpStream, 0, SEEK_END)) {
+      id3tag_write_v1(&gfp->tag_spec, fpStream);
     }
   }
+  fclose(fpStream);
 }
 
 

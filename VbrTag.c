@@ -318,14 +318,13 @@ int InitVbrTag(lame_global_flags *gfp)
  *				nVbrScale	: encoder quality indicator (0..100)
  ****************************************************************************
 */
-int PutVbrTag(lame_global_flags *gfp,char* lpszFileName,int nVbrScale)
+int PutVbrTag(lame_global_flags *gfp,FILE *fpStream,int nVbrScale)
 {
 	int			i;
 	long lFileSize;
 	int nStreamIndex;
 	char abyte;
 	u_char		btToc[NUMTOCENTRIES];
-	FILE *fpStream;
         u_char pbtStreamBuffer[216];
 	char str1[80];
         unsigned char id3v2Header[10];
@@ -334,12 +333,6 @@ int PutVbrTag(lame_global_flags *gfp,char* lpszFileName,int nVbrScale)
 	if (gfp->nVbrNumFrames==0 || gfp->pVbrFrames==NULL)
 		return -1;
 
-	/* Open the bitstream again */
-	fpStream=fopen(lpszFileName,"rb+");
-
-	/* Assert stream is valid */
-	if (fpStream==NULL)
-		return -1;
 
 	/* Clear stream buffer */
 	memset(pbtStreamBuffer,0x00,sizeof(pbtStreamBuffer));
@@ -476,8 +469,6 @@ int PutVbrTag(lame_global_flags *gfp,char* lpszFileName,int nVbrScale)
 	{
 		return -1;
 	}
-	fclose(fpStream);
-
 	/* Save to delete the frame buffer */
 	free(gfp->pVbrFrames);
 	gfp->pVbrFrames=NULL;
