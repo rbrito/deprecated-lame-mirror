@@ -1692,6 +1692,7 @@ int do_layer3(struct frame *fr,unsigned char *pcm_sample,int *pcm_point)
 	  if (gr_info->preflag) pinfo->sfb[gr][ch][sb] += pretab[sb];
 	  pinfo->sfb[gr][ch][sb] *= -ifqstep;
 	}
+	pinfo->sfb[gr][ch][21]=0;
       }
     }
 
