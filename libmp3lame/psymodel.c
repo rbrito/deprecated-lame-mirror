@@ -767,15 +767,14 @@ mask_add_samebark(FLOAT m1, FLOAT m2)
 
     if (m2 > m1) {
 	if (m2 >= m1*ma_max_i1)
-	    return m; /* 43% of the total */
+	    return m;
 	m1 = m2/m1;
     } else {
 	if (m1 >= m2*ma_max_i1)
-	    return m; /* 43% of the total */
+	    return m;
 	m1 = m1/m2;
     }
 
-    /* 22% of the total */
     return m * table2[trancate(FAST_LOG10_X(m1, 16.0))];
 }
 
@@ -800,41 +799,36 @@ mask_add(FLOAT m1, FLOAT m2, FLOAT ATH)
     };
 
     int i;
-    FLOAT ratio;
+    FLOAT m = m1+m2;
 
     if (m2 > m1) {
 	if (m2 >= m1*ma_max_i2)
-	    return m1+m2;
-	ratio = m2/m1;
+	    return m;
+	m1 = m2/m1;
     } else {
 	if (m1 >= m2*ma_max_i2)
-	    return m1+m2;
-	ratio = m1/m2;
+	    return m;
+	m1 = m1/m2;
     }
-
-    /* Should always be true, just checking */
-    assert(m1>0.0 && m2>0.0 && ATH>0.0);
-
-    m1 += m2;
-    i = trancate(FAST_LOG10_X(ratio, 16.0));
+    i = trancate(FAST_LOG10_X(m1, 16.0));
 
     /* 10% of total */
-    if (m1 >= ATH)
-	return m1*table1[i];
+    if (m >= ATH)
+	return m*table1[i];
 
     /* 3% of the total */
     /* Originally if (m > 0) { */
     ATH *= ma_max_m;
-    if (m1 > ATH) {
+    if (m > ATH) {
 	FLOAT f = 1.0, r;
 	if (i <= 13) f = table3[i];
-	r = FAST_LOG10_X(m1 / ATH, 10.0/15.0);
-	return m1 * ((table1[i]-f)*r+f);
+	r = FAST_LOG10_X(m / ATH, 10.0/15.0);
+	return m * ((table1[i]-f)*r+f);
     }
 
     /* very rare case */
-    if (i > 13) return m1;
-    return m1*table3[i];
+    if (i > 13) return m;
+    return m*table3[i];
 }
 
 static FLOAT

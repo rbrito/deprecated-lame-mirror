@@ -54,8 +54,8 @@ static const int max_range_short[SBMAX_s*3] = {
     7, 7, 7, 7, 7, 7, 7, 7, 7, 7, 7, 7, 7, 7, 7, 7, 7, 7,
     0, 0, 0
 };
-static const int max_range_long[SBMAX_l] = {
-    15, 15, 15, 15, 15, 15, 15, 15, 15, 15, 15, 7, 7, 7, 7, 7, 7, 7, 7, 7, 7, 0
+static const char max_range_long[SBMAX_l] = {
+    15*2, 15*2, 15*2, 15*2, 15*2, 15*2, 15*2, 15*2, 15*2, 15*2, 15*2, 7*2, 7*2, 7*2, 7*2, 7*2, 7*2, 7*2, 7*2, 7*2, 7*2, 0
 };
 
 /*
@@ -1316,11 +1316,11 @@ long_block_scalefacs(lame_t gfc, gr_info * gi, int vbrmax)
     for (sfb = 0; sfb < gi->psymax; ++sfb) {
 	if (gi->scalefac[sfb] > 255)
 	    continue;
-	maxov0  = Min(gi->scalefac[sfb] + 2*max_range_long[sfb], maxov0);
-	maxov1  = Min(gi->scalefac[sfb] + 4*max_range_long[sfb], maxov1);
-	maxov0p = Min(gi->scalefac[sfb] + 2*(max_range_long[sfb]+pretab[sfb]),
+	maxov0  = Min(gi->scalefac[sfb] + max_range_long[sfb], maxov0);
+	maxov1  = Min(gi->scalefac[sfb] + 2*max_range_long[sfb], maxov1);
+	maxov0p = Min(gi->scalefac[sfb] + max_range_long[sfb] + 2*pretab[sfb],
 		      maxov0p);
-	maxov1p = Min(gi->scalefac[sfb] + 4*(max_range_long[sfb]+pretab[sfb]),
+	maxov1p = Min(gi->scalefac[sfb] + 2*max_range_long[sfb]+4*pretab[sfb],
 		      maxov1p);
     }
 
@@ -1328,24 +1328,18 @@ long_block_scalefacs(lame_t gfc, gr_info * gi, int vbrmax)
 	maxov1p = maxov0p = 10000;
 
     gi->preflag = 0;
+    gi->scalefac_scale = 0;
     if (maxov0 == vbrmax) {
-	gi->scalefac_scale = 0;
     }
     else if (maxov0p == vbrmax) {
-	gi->scalefac_scale = 0;
 	gi->preflag = 1;
     }
-    else if (maxov1 == vbrmax) {
+    else {
 	gi->scalefac_scale = 1;
-    }
-    else if (maxov1p == vbrmax) {
-	gi->scalefac_scale = 1;
-	gi->preflag = 1;
-    } else {
-	gi->scalefac_scale = 1;
-	if (maxov1 > maxov1p) {
+	if (maxov1 == vbrmax) {
+	}
+	else if (maxov1p == vbrmax) {
 	    gi->preflag = 1;
-	    vbrmax = maxov1p;
 	} else {
 	    vbrmax = maxov1;
 	}
