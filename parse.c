@@ -47,47 +47,53 @@ void lame_help(char *name)  /* print syntax & exit */
   fprintf(stdout,"\n<infile> and/or <outfile> can be \"-\", which means stdin/stdout.\n");
   fprintf(stdout,"\n");
   fprintf(stdout,"OPTIONS :\n");
-  fprintf(stdout,"    -m mode         (s)tereo, (j)oint, (f)orce or (m)ono  (default j)\n");
-  fprintf(stdout,"                    force = force ms_stereo on all frames. Faster\n");
-  fprintf(stdout,"    -b bitrate      set the bitrate, default 128kbps\n");
+  fprintf(stdout,"  Input options:\n");
+  fprintf(stdout,"    -r              input is raw pcm\n");
+  fprintf(stdout,"    -x              force byte-swapping of input\n");
   fprintf(stdout,"    -s sfreq        sampling frequency of input file(kHz) - default 44.1kHz\n");
-  fprintf(stdout,"  --resample sfreq  sampling frequency of output file(kHz)- default=input sfreq\n");
-  fprintf(stdout,"  --mp3input        input file is a MP3 file\n");
-  fprintf(stdout,"  --voice           experimental voice mode\n");
-  fprintf(stdout,"  --preset type     type must be phone, voice, fm, tape, hifi, cd or studio\n");
+  fprintf(stdout,"    --mp3input      input file is a MP3 file\n");
   fprintf(stdout,"\n");
+  fprintf(stdout,"  Filter options:\n");
+  fprintf(stdout,"    -k              keep ALL frequencies (disables all filters)\n");
   fprintf(stdout,"  --lowpass freq         frequency(kHz), lowpass filter cutoff above freq\n");
   fprintf(stdout,"  --lowpass-width freq   frequency(kHz) - default 15%% of lowpass freq\n");
   fprintf(stdout,"  --highpass freq        frequency(kHz), highpass filter cutoff below freq\n");
   fprintf(stdout,"  --highpass-width freq  frequency(kHz) - default 15%% of highpass freq\n");
+  fprintf(stdout,"  --resample sfreq  sampling frequency of output file(kHz)- default=input sfreq\n");
+  fprintf(stdout,"  --cwlimit freq    compute tonality up to freq (in kHz)\n");
   fprintf(stdout,"\n");
+  fprintf(stdout,"  Operational options:\n");
+  fprintf(stdout,"    -m mode         (s)tereo, (j)oint, (f)orce or (m)ono  (default j)\n");
+  fprintf(stdout,"                    force = force ms_stereo on all frames. Faster\n");
+  fprintf(stdout,"    -a              downmix from stereo to mono file for mono encoding\n");
+  fprintf(stdout,"    -b bitrate      set the bitrate, default 128kbps\n");
+  fprintf(stdout,"    -h              higher quality, but a little slower\n");
+  fprintf(stdout,"    -f              fast mode (very low quality)\n");
+  fprintf(stdout,"    -d              allow channels to have different blocktypes\n");
+  fprintf(stdout,"    --athonly       only use the ATH for masking\n");
+  fprintf(stdout,"    --noath         disable the ATH for masking\n");
+  fprintf(stdout,"    --noshort       do not use short blocks\n");
+  fprintf(stdout,"    --voice         experimental voice mode\n");
+  fprintf(stdout,"    --preset type   type must be phone, voice, fm, tape, hifi, cd or studio\n");
+  fprintf(stdout,"                    help gives some more infos on these\n");
+  fprintf(stdout,"\n");
+  fprintf(stdout,"  VBR options:\n");
   fprintf(stdout,"    -v              use variable bitrate (VBR)\n");
   fprintf(stdout,"    -V n            quality setting for VBR.  default n=%i\n",gf.VBR_q);
   fprintf(stdout,"                    0=high quality,bigger files. 9=smaller files\n");
   fprintf(stdout,"    -b bitrate      specify minimum allowed bitrate, default 32kbs\n");
   fprintf(stdout,"    -B bitrate      specify maximum allowed bitrate, default 256kbs\n");
   fprintf(stdout,"    -t              disable Xing VBR informational tag\n");
+  fprintf(stdout,"    -S              don't print progress report, VBR histograms\n");
   fprintf(stdout,"    --nohist        disable VBR histogram display\n");
   fprintf(stdout,"\n");
-  fprintf(stdout,"    -h              higher quality, but a little slower\n");
-  fprintf(stdout,"    -f              fast mode (very low quality)\n");
-  fprintf(stdout,"    -k              keep ALL frequencies (disables all filters)\n");
-  fprintf(stdout,"    -d              allow channels to have different blocktypes\n");
-  fprintf(stdout,"  --athonly         only use the ATH for masking\n");
-  fprintf(stdout,"  --noath           disable the ATH for masking\n");
-  fprintf(stdout,"  --noshort         do not use short blocks\n");
-  fprintf(stdout,"  --nores           disable the bit reservoir\n");
-  fprintf(stdout,"  --cwlimit freq    compute tonality up to freq (in kHz)\n");
-  fprintf(stdout,"\n");
-  fprintf(stdout,"    -r              input is raw pcm\n");
-  fprintf(stdout,"    -x              force byte-swapping of input\n");
-  fprintf(stdout,"    -a              downmix from stereo to mono file for mono encoding\n");
+  fprintf(stdout,"  MP3 header/stream options:\n");
   fprintf(stdout,"    -e emp          de-emphasis n/5/c  (obsolete)\n");
-  fprintf(stdout,"    -p              error protection.  adds 16bit checksum to every frame\n");
-  fprintf(stdout,"                    (the checksum is computed correctly)\n");
   fprintf(stdout,"    -c              mark as copyright\n");
   fprintf(stdout,"    -o              mark as non-original\n");
-  fprintf(stdout,"    -S              don't print progress report, VBR histograms\n");
+  fprintf(stdout,"    -p              error protection.  adds 16bit checksum to every frame\n");
+  fprintf(stdout,"                    (the checksum is computed correctly)\n");
+  fprintf(stdout,"    --nores         disable the bit reservoir\n");
   fprintf(stdout,"\n");
   fprintf(stdout,"  Specifying any of the following options will add an ID3 tag:\n");
   fprintf(stdout,"     --tt \"title\"     title of song (max 30 chars)\n");
@@ -101,6 +107,98 @@ void lame_help(char *name)  /* print syntax & exit */
   fprintf(stdout,"    -g              run graphical analysis on <infile>\n");
 #endif
   display_bitrates(stdout);
+  exit(0);
+}
+
+
+
+/************************************************************************
+*
+* usage
+*
+* PURPOSE:  Writes presetting info to #stdout#
+*
+************************************************************************/
+
+void lame_presets_info(char *name)  /* print syntax & exit */
+{
+  lame_print_version(stdout);
+  fprintf(stdout,"\n");
+  fprintf(stdout,"Presets are some shortcuts for common settings.\n");
+  fprintf(stdout,"They can be combined with -v if you want VBR MP3s.\n");
+  fprintf(stdout,"\n");
+  fprintf(stdout,"  --preset phone    =>  --resample      16\n");
+  fprintf(stdout,"                        --highpass       0.260\n");
+  fprintf(stdout,"                        --highpasswidth  0.040\n");
+  fprintf(stdout,"                        --lowpass        3.700\n");
+  fprintf(stdout,"                        --lowpasswidth   0.300\n");
+  fprintf(stdout,"                        --noshort\n");
+  fprintf(stdout,"                        -m   m\n");
+  fprintf(stdout,"                        -b  16\n");
+  fprintf(stdout,"                  plus  -b   8  \\\n");
+  fprintf(stdout,"                        -B  56   > in combination with -v\n");
+  fprintf(stdout,"                        -V   5  /\n");
+  fprintf(stdout,"\n");
+  fprintf(stdout,"  --preset voice:   =>  --resample      24\n");
+  fprintf(stdout,"                        --highpass       0.100\n");
+  fprintf(stdout,"                        --highpasswidth  0.020\n");
+  fprintf(stdout,"                        --lowpass       12\n");
+  fprintf(stdout,"                        --lowpasswidth   2\n");
+  fprintf(stdout,"                        --noshort\n");
+  fprintf(stdout,"                        -m   m\n");
+  fprintf(stdout,"                        -b  56\n");
+  fprintf(stdout,"                  plus  -b   8  \\\n");
+  fprintf(stdout,"                        -B  96   > in combination with -v\n");
+  fprintf(stdout,"                        -V   4  /\n");
+  fprintf(stdout,"\n");
+  fprintf(stdout,"  --preset fm:      =>  --resample      32\n");
+  fprintf(stdout,"                        --highpass       0.030\n");
+  fprintf(stdout,"                        --highpasswidth  0\n");
+  fprintf(stdout,"                        --lowpass       15\n");
+  fprintf(stdout,"                        --lowpasswidth   0\n");
+  fprintf(stdout,"                        -m   j\n");
+  fprintf(stdout,"                        -b  96\n");
+  fprintf(stdout,"                  plus  -b  32  \\\n");
+  fprintf(stdout,"                        -B 192   > in combination with -v\n");
+  fprintf(stdout,"                        -V   4  /\n");
+  fprintf(stdout,"\n");
+  fprintf(stdout,"  --preset tape:    =>  --highpass       0.015\n");
+  fprintf(stdout,"                        --highpasswidth  0.015\n");
+  fprintf(stdout,"                        --lowpass       18\n");
+  fprintf(stdout,"                        --lowpasswidth   2\n");
+  fprintf(stdout,"                        -m   j\n");
+  fprintf(stdout,"                        -b 128\n");
+  fprintf(stdout,"                  plus  -b  32  \\\n");
+  fprintf(stdout,"                        -B 192   > in combination with -v\n");
+  fprintf(stdout,"                        -V   4  /\n");
+  fprintf(stdout,"\n");
+  fprintf(stdout,"  --preset hifi:    =>  --highpass       0.015\n");
+  fprintf(stdout,"                        --highpasswidth  0.015\n");
+  fprintf(stdout,"                        --lowpass       20\n");
+  fprintf(stdout,"                        --lowpasswidth   3\n");
+  fprintf(stdout,"                        -h\n");
+  fprintf(stdout,"                        -m   j\n");
+  fprintf(stdout,"                        -b 160\n");
+  fprintf(stdout,"                  plus  -b  32  \\\n");
+  fprintf(stdout,"                        -B 224   > in combination with -v\n");
+  fprintf(stdout,"                        -V   3  /\n");
+  fprintf(stdout,"\n");
+  fprintf(stdout,"  --preset cd:      =>  -k\n");
+  fprintf(stdout,"                        -h\n");
+  fprintf(stdout,"                        -m   s\n");
+  fprintf(stdout,"                        -b 192\n");
+  fprintf(stdout,"                  plus  -b  80  \\\n");
+  fprintf(stdout,"                        -B 256   > in combination with -v\n");
+  fprintf(stdout,"                        -V   2  /\n");
+  fprintf(stdout,"\n");
+  fprintf(stdout,"  --preset studio:  =>  -k\n");
+  fprintf(stdout,"                        -h\n");
+  fprintf(stdout,"                        -m   s\n");
+  fprintf(stdout,"                        -b 256\n");
+  fprintf(stdout,"                  plus  -b 112  \\\n");
+  fprintf(stdout,"                        -B 320   > in combination with -v\n");
+  fprintf(stdout,"                        -V   0  /\n");
+  fprintf(stdout,"\n");
   exit(0);
 }
 
@@ -267,14 +365,24 @@ void lame_parse_args(int argc, char **argv)
 	    fprintf(stderr,"Must specify cwlimit in kHz\n");
 	    exit(1);
 	  }
-	}
-	else if (strcmp(token, "help")==0) {
+	} /* some more GNU-ish options could be added
+	   * version       => complete name, version and license info (normal exit)  
+	   * quiet/silent  => no messages on screen
+	   * brief         => few messages on screen (name, status report)
+	   * verbose       => all infos to screen (brhist, internal flags/filters)
+	   * o/output file => specifies output filename
+	   * O             => stdout
+	   * i/input file  => specifies input filename
+	   * I             => stdin
+	   */
+	else if (strcmp(token, "help") ==0
+	       ||strcmp(token, "usage")==0){
 	  lame_help(programName);  /* doesn't return */
 	}
 	else if (strcmp(token, "preset")==0) {
 	  argUsed=1;
 	  if (strcmp(nextArg,"phone")==0)
-	  {
+	  { /* when making changes, please update help text too */
 	    gf.brate = 16; 
 	    gf.highpassfreq=260;
 	    gf.highpasswidth=40;
@@ -286,44 +394,48 @@ void lame_parse_args(int argc, char **argv)
 	    gf.no_short_blocks=1;
 	    gf.resamplerate =  16000;
 	    gf.mode = MPG_MD_MONO; 
+	    gf.mode_fixed = 1; 
 	    gf.quality = 5;
 	  }
 	  else if (strcmp(nextArg,"voice")==0)
-	  {
-	    gf.brate = 64; 
+	  { /* when making changes, please update help text too */
+	    gf.brate = 56; 
 	    gf.highpassfreq=100;
 	    gf.highpasswidth=20;
 	    gf.lowpassfreq=12000;
 	    gf.lowpasswidth=2000;
+	    gf.VBR_q=4;
 	    gf.VBR_min_bitrate_kbps=8;
 	    gf.VBR_max_bitrate_kbps=96;
 	    gf.no_short_blocks=1;
-	    gf.mode = MPG_MD_JOINT_STEREO; 
+	    gf.mode = MPG_MD_MONO; 
 	    gf.mode_fixed = 1; 
 	    gf.resamplerate =  24000;
 	    gf.quality = 5;
 	  }
 	  else if (strcmp(nextArg,"fm")==0)
-	  {
+	  { /* when making changes, please update help text too */
 	    gf.brate = 96; 
 	    gf.highpassfreq=30;
 	    gf.highpasswidth=0;
 	    gf.lowpassfreq=15000;
 	    gf.lowpasswidth=0;
+	    gf.VBR_q=4;
 	    gf.VBR_min_bitrate_kbps=32;
-	    gf.VBR_max_bitrate_kbps=160;
+	    gf.VBR_max_bitrate_kbps=192;
 	    gf.mode = MPG_MD_JOINT_STEREO; 
 	    gf.mode_fixed = 1; 
 	    gf.resamplerate =  32000;
 	    gf.quality = 5;
 	  }
 	  else if (strcmp(nextArg,"tape")==0)
-	  {
+	  { /* when making changes, please update help text too */
 	    gf.brate = 128; 
 	    gf.highpassfreq=15;
 	    gf.highpasswidth=15;
 	    gf.lowpassfreq=18000;
-	    gf.lowpasswidth=2500;
+	    gf.lowpasswidth=2000;
+	    gf.VBR_q=4;
 	    gf.VBR_min_bitrate_kbps=32;
 	    gf.VBR_max_bitrate_kbps=192;
 	    gf.mode = MPG_MD_JOINT_STEREO; 
@@ -331,7 +443,7 @@ void lame_parse_args(int argc, char **argv)
 	    gf.quality = 5;
 	  }
 	  else if (strcmp(nextArg,"hifi")==0)
-	  {
+	  { /* when making changes, please update help text too */
 	    gf.brate = 160; 
 	    gf.highpassfreq=15;
 	    gf.highpasswidth=15;
@@ -341,10 +453,11 @@ void lame_parse_args(int argc, char **argv)
 	    gf.VBR_min_bitrate_kbps=32;
 	    gf.VBR_max_bitrate_kbps=224;
 	    gf.mode = MPG_MD_JOINT_STEREO; 
-	    gf.quality = 5;
+	    gf.mode_fixed = 1; 
+	    gf.quality = 2;
 	  }
 	  else if (strcmp(nextArg,"cd")==0)
-	  {
+	  { /* when making changes, please update help text too */
 	    gf.brate = 192; 
 	    gf.VBR_q=2;
 	    gf.VBR_min_bitrate_kbps=80;
@@ -353,10 +466,11 @@ void lame_parse_args(int argc, char **argv)
 	    gf.lowpassfreq=-1;
 	    gf.highpassfreq=-1;
 	    gf.mode = MPG_MD_STEREO; 
+	    gf.mode_fixed = 1; 
 	    gf.quality = 2;
 	  }
 	  else if (strcmp(nextArg,"studio")==0)
-	  {
+	  { /* when making changes, please update help text too */
 	    gf.brate = 256; 
 	    gf.VBR_q=0;
 	    gf.VBR_min_bitrate_kbps=112;
@@ -365,7 +479,12 @@ void lame_parse_args(int argc, char **argv)
 	    gf.lowpassfreq=-1;
 	    gf.highpassfreq=-1;
 	    gf.mode = MPG_MD_STEREO; 
+	    gf.mode_fixed = 1; 
 	    gf.quality = 2; /* should be 0, but does not work now */
+	  }
+	  else if (strcmp(nextArg,"help")==0)
+	  {
+	    lame_presets_info(programName);  /* doesn't return */
 	  }
 	  else
 	    {
@@ -373,7 +492,7 @@ void lame_parse_args(int argc, char **argv)
 		      programName, nextArg);
 	      err = 1;
 	    }
-	}
+	} /* --preset */
 	else
 	  {
 	    fprintf(stderr,"%s: unrec option --%s\n",
@@ -530,9 +649,11 @@ void lame_parse_args(int argc, char **argv)
 	    err = 1;
 	  }
 	  break;
-	case 'c':       gf.copyright = 1; break;
-	case 'o':       gf.original  = 0; break;
-	default:        fprintf(stderr,"%s: unrec option %c\n",
+	case 'c':   gf.copyright = 1; break;
+	case 'o':   gf.original  = 0; break;
+	
+	case '?':   lame_help(programName);  /* doesn't return */
+	default:    fprintf(stderr,"%s: unrec option %c\n",
 				programName, c);
 	err = 1; break;
 	}
