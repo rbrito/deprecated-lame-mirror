@@ -123,21 +123,22 @@ void lame_usage(char *name)  /* print syntax & exit */
   fprintf(stderr,"OPTIONS :\n");
   fprintf(stderr,"    -m mode         (s)tereo, (j)oint, (f)orce or (m)ono  (default %c)\n",DFLT_MOD);
   fprintf(stderr,"                    force = force ms_stereo on all frames. Faster\n");
-  fprintf(stderr,"    -b <bitrate>    set the bitrate, default 128kbps\n");
+  fprintf(stderr,"    -b bitrate      set the bitrate, default 128kbps\n");
   fprintf(stderr,"    -s sfreq        sampling frequency of input file(kHz) - default %4.1f\n",DFLT_SFQ);
   fprintf(stderr,"  --resample sfreq  sampling frequency of output file(kHz)- default=input sfreq\n");
   fprintf(stderr,"  --mp3input        input file is a MP3 file\n");
   fprintf(stderr,"  --voice           experimental voice mode\n");
-  fprintf(stderr,"  --lowpass_l freq  lowpass  filter start frequency (hz)\n");
-  fprintf(stderr,"  --lowpass_h freq  lowpass  filter  end  frequency (hz), cutoff above\n");
-  fprintf(stderr,"  --highpass_l freq highpass filter start frequency (hz), cutoff below\n");
-  fprintf(stderr,"  --highpass_h freq highpass filter  end  frequency (hz)\n");
+  fprintf(stderr,"\n");
+  fprintf(stderr,"  --lowpass freq         frequency(kHz), lowpass filter cutoff above freq\n");
+  fprintf(stderr,"  --lowpass-width freq   frequency(kHz) - default 15%% of lowpass freq\n");
+  fprintf(stderr,"  --highpass freq        frequency(kHz), highpass filter cutoff below freq\n");
+  fprintf(stderr,"  --highpass-width freq  frequency(kHz) - default 15%% of highpass freq\n");
   fprintf(stderr,"\n");
   fprintf(stderr,"    -v              use variable bitrate (VBR)\n");
   fprintf(stderr,"    -V n            quality setting for VBR.  default n=%i\n",VBR_q);
   fprintf(stderr,"                    0=high quality,bigger files. 9=smaller files\n");
-  fprintf(stderr,"    -b <bitrate>    specify minimum allowed bitrate, default 32kbs\n");
-  fprintf(stderr,"    -B <bitrate>    specify maximum allowed bitrate, default 256kbs\n");
+  fprintf(stderr,"    -b bitrate      specify minimum allowed bitrate, default 32kbs\n");
+  fprintf(stderr,"    -B bitrate      specify maximum allowed bitrate, default 256kbs\n");
   fprintf(stderr,"    -t              disable Xing VBR informational tag\n");
   fprintf(stderr,"    --nohist        disable VBR histogram display\n");
   fprintf(stderr,"\n");
@@ -202,8 +203,10 @@ void lame_parse_args(int argc, char **argv)
   int num_channels;   /* number of channels of INPUT file */
   int stereo;           /* number of channels of MP3 file */
   int samplerate,resamplerate=0;
+  int lowpassrate=0, highpassrate=0; /* initialized to use defaults */
+  int lowpasswidth=-1, highpasswidth=-1; /* initialized to use defaults */
   int framesize;
-  FLOAT compression_ratio, lowpass_l=0, lowpass_h=0;
+  FLOAT compression_ratio;
 
   /* preset defaults */
   programName = argv[0]; 
@@ -330,21 +333,37 @@ void lame_parse_args(int argc, char **argv)
   		strncpy(id3tag.genre, &c, 1);
 	       }
 #endif
-	else if (strcmp(token, "highpass_l")==0) {
+	else if (strcmp(token, "lowpass")==0) {
 	  argUsed=1;
-	  highpass1 = atof( nextArg );
+	  lowpassrate =  (( 1000.0 * atof( nextArg ) ) + 0.5);
+	  if (lowpassrate  < 1) {
+	    fprintf(stderr,"Must specify lowpass with --lowpass freq, freq >= 0.001 kHz\n");
+	    exit(1);
+	  }
 	}
-	else if (strcmp(token, "highpass_h")==0) {
+	else if (strcmp(token, "lowpass-width")==0) {
 	  argUsed=1;
-	  highpass2 = atof( nextArg );
+	  lowpasswidth =  (( 1000.0 * atof( nextArg ) ) + 0.5);
+	  if (lowpasswidth  < 0) {
+	    fprintf(stderr,"Must specify lowpass width with --lowpass-width freq, freq >= 0 kHz\n");
+	    exit(1);
+	  }
 	}
-	else if (strcmp(token, "lowpass_l")==0) {
+	else if (strcmp(token, "highpass")==0) {
 	  argUsed=1;
-	  lowpass_l = atof( nextArg );
+	  highpassrate =  (( 1000.0 * atof( nextArg ) ) + 0.5);
+	  if (highpassrate  < 1) {
+	    fprintf(stderr,"Must specify highpass with --highpass freq, freq >= 0.001 kHz\n");
+	    exit(1);
+	  }
 	}
-	else if (strcmp(token, "lowpass_h")==0) {
+	else if (strcmp(token, "highpass-width")==0) {
 	  argUsed=1;
-	  lowpass_h = atof( nextArg );
+	  highpasswidth =  (( 1000.0 * atof( nextArg ) ) + 0.5);
+	  if (highpasswidth  < 0) {
+	    fprintf(stderr,"Must specify highpass width with --highpass-width freq, freq >= 0 kHz\n");
+	    exit(1);
+	  }
 	}
 	else
 	  {
@@ -747,44 +766,42 @@ case 't':  /* dont write VBR tag */
   */
   
   /* apply user driven filters, may override above calculations 
-   * ensure:  0 <= highpass1 < highpass2 <= lowpass1 < lowpass2
    */
 
-  if ( lowpass_h > 0.0 ) {
-    lowpass2 = Max( 1E-5, 2.0*lowpass_h/resamplerate );
-    lowpass1 = lowpass2 - 1E-6; /* lowpass1 has to be != lowpass2 ! */
-  }
-  if ( lowpass_l > 0.0 ) {
-    if ( lowpass_h <= 0 ) {
-      lowpass2 = 1.0;
-    }
-    lowpass1 = Max( 1E-6, Min( lowpass2-1E-6, 2.0*lowpass_l/resamplerate) );
-  }
-  if ( highpass2 > 0 ) {
-    if ( lowpass_l > 0 || lowpass_h > 0 ) {
-      highpass2 = Max( 1E-6, Min( lowpass1, 2.0*highpass2/resamplerate ));
+  if ( highpassrate > 0 ) {
+    highpass1 = 2.0*highpassrate/resamplerate; /* will always be >=0 */
+    if ( highpasswidth >= 0 ) {
+      highpass2 = 2.0*(highpassrate+highpasswidth)/resamplerate;
     } else {
-      highpass2 = Max( 1E-6, 2.0*highpass2/resamplerate );
+      highpass2 = 1.15*2.0*highpassrate/resamplerate; /* 15% above on default */
     }
+    if ( highpass1 == highpass2 ) { /* ensure highpass1 < highpass2 */
+      highpass2 += 1E-6;
+    }
+    highpass1 = Min( 1, highpass1 );
+    highpass2 = Min( 1, highpass2 );
   }
-  if ( highpass1 > 0 ) {
-    if ( highpass2 > 0 ) {
-      highpass1 = Max( 0.0, Min( highpass2-1E-6, 2.0*highpass1/resamplerate ));
-    } else {
-      if ( lowpass1 > 0 ) {
-        highpass1 = Max( 0.0, Min( lowpass1-1E-6, 2.0*highpass1/resamplerate ));
-      } else {
-        highpass1 = Max( 0.0, 2.0*highpass1/resamplerate );
+  if ( lowpassrate > 0 ) {
+    lowpass2 = 2.0*lowpassrate/resamplerate; /* will always be >=0 */
+    if ( lowpasswidth >= 0 ) { 
+      lowpass1 = 2.0*(lowpassrate-lowpasswidth)/resamplerate;
+      if ( lowpass1 < 0 ) { /* has to be >= 0 */
+	lowpass1 = 0;
       }
-      highpass2 = highpass1 + 5E-7; /* may violate: highpass2 <= lowpass1 ! */
+    } else {
+      lowpass1 = 0.85*2.0*lowpassrate/resamplerate; /* 15% below on default */
     }
+    if ( lowpass1 == lowpass2 ) { /* ensure lowpass1 < lowpass2 */
+      lowpass2 += 1E-6;
+    }
+    lowpass1 = Min( 1, lowpass1 );
+    lowpass2 = Min( 1, lowpass2 );
   }
   /* printf("%g %g %g %g\n", highpass1, highpass2, lowpass1, lowpass2 );
    */
   if ( highpass2>0 || lowpass1>0 ) {
     sfb21 = 0;
   }
-  
 
   /* choose a max bitrate for VBR */
   if (VBR) {
@@ -882,11 +899,11 @@ void lame_print_config(void)
 	    (strcmp(inPath, "-")? inPath : "stdin"),
 	    (strcmp(outPath, "-")? outPath : "stdout"));
     if (highpass2>0.0)
-      fprintf(stderr, "Highpass filter: cutoff below %g hz, increasing upto %g hz\n",
+      fprintf(stderr, "Highpass filter: cutoff below %g Hz, increasing upto %g Hz\n",
               highpass1*s_freq[info->version][info->sampling_frequency]*500, 
 	      highpass2*s_freq[info->version][info->sampling_frequency]*500);
     if (lowpass1>0.0)
-      fprintf(stderr, "Lowpass filter: cutoff above %g hz, decreasing from %g hz\n",
+      fprintf(stderr, "Lowpass filter: cutoff above %g Hz, decreasing from %g Hz\n",
               lowpass2*s_freq[info->version][info->sampling_frequency]*500, 
 	      lowpass1*s_freq[info->version][info->sampling_frequency]*500);
     if (VBR)
