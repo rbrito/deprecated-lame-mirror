@@ -1474,25 +1474,24 @@ VBR_3rd_bitalloc(lame_t gfc, gr_info *gi, FLOAT * xmin)
 static int
 VBR_noise_shaping(lame_t gfc, gr_info *gi, FLOAT * xmin)
 {
-    int vbrmax, sfb, j;
+    int vbrmax, sfb, j, gain;
     sfb = j = 0;
     vbrmax = -10000;
+    gain = gi->global_gain;
     do {
 	FLOAT maxXR = 0.0;
-	int width = gi->width[sfb], gain = gi->global_gain;
-	int i;
-
-	j -= width;
-	for (i = width; i < 0; i+=2) {
+	int i = gi->width[sfb];
+	j -= i;
+	do {
 	    if (maxXR < xr34[i+j])
 		maxXR = xr34[i+j];
 	    if (maxXR < xr34[i+j+1])
 		maxXR = xr34[i+j+1];
-	}
+	} while ((i += 2) < 0);
 
 	if (maxXR != 0.0) {
 	    gfc->maxXR[sfb] = (maxXR = IXMAX_VAL / maxXR);
-	    gain = find_scalefac(gfc, j, xmin[sfb], width, maxXR,
+	    gain = find_scalefac(gfc, j, xmin[sfb], gi->width[sfb], maxXR,
 				 gi->block_type == SHORT_TYPE, gain);
 	    if (gain <= 255 && vbrmax < gain)
 		vbrmax = gain;
@@ -1548,7 +1547,7 @@ VBR_iteration_loop(lame_t gfc, III_psy_ratio ratio[MAX_GRANULES][MAX_CHANNELS])
 
     for (gr = 0; gr < gfc->mode_gr; gr++) {
 	for (ch = 0; ch < gfc->channels_out; ch++) {
-	    calc_xmin (gfc, &ratio[gr][ch], &gfc->tt[gr][ch], xmin[gr][ch]);
+	    xmin[gr][ch][0] = -1.0;
 	}
     }
 
@@ -1561,11 +1560,11 @@ VBR_iteration_loop(lame_t gfc, III_psy_ratio ratio[MAX_GRANULES][MAX_CHANNELS])
 	for (ch = 0; ch < gfc->channels_out; ch++) {
 	    gr_info *gi = &gfc->tt[gr][ch];
 	    if (init_bitalloc(gfc, gi)) {
+		int ret;
+		if (xmin[gr][ch][0] < 0.0)
+		    calc_xmin (gfc, &ratio[gr][ch], gi, xmin[gr][ch]);
 		gi->global_gain = gfc->OldValue[ch];
-		for (;;) {
-		    int ret = VBR_noise_shaping(gfc, gi, xmin[gr][ch]);
-		    if (ret == 0)
-			break;
+		while ((ret = VBR_noise_shaping(gfc, gi, xmin[gr][ch])) < 0) {
 		    if (ret == -2)
 			bitpressure_strategy(gi, xmin[gr][ch]);
 		}
