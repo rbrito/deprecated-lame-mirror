@@ -45,7 +45,7 @@ typedef void (*FHT_PROC)(FLOAT *fz, int n);
 
 static FHT_PROC fht;
 
-#define ARCH_X86
+/* #define ARCH_X86 */
  
 #ifdef ARCH_X86
 void _cdecl fht_3DN(FLOAT *fz, int n);
