@@ -9,7 +9,6 @@
 #include "encoder.h"
 #include "lame.h"
 #include "gtkanal.h"
-#include <assert.h>
 
 /***********************************************************************
 *
@@ -382,8 +381,6 @@ extern void lame_errorf(const char *, ...);
 #define FLUSH_ERROR()	fflush(stderr)
 #define FLUSH_MSG()	fflush(stderr)
 #endif
-
-#define LAME_ASSERT(x)	assert(x)
 
 #define LAME_EXIT(n)		exit(n)
 #define LAME_NORMAL_EXIT()	exit(0)
