@@ -159,6 +159,15 @@ static HUFFBITS      t32HB[]   = {
 static HUFFBITS      t33HB[]   = {
  15, 14, 13, 12, 11, 10,  9,  8,  7,  6,  5,  4,  3,  2,  1,  0};
 
+static HUFFBITS      t32HB_t[]   = {
+  1 << 0,  5 << 1,  4 << 1,  5 << 2,  6 << 1,  5 << 2,  4 << 2,  4 << 3,
+  7 << 1,  3 << 2,  6 << 2,  0 << 3,  7 << 2,  2 << 3,  3 << 3,  1 << 4};
+
+static HUFFBITS      t33HB_t[]   = {
+ 15 << 0, 14 << 1, 13 << 1, 12 << 2, 11 << 1, 10 << 2,  9 << 2,  8 << 3,
+  7 << 1,  6 << 2,  5 << 2,  4 << 3,  3 << 2,  2 << 3,  1 << 3,  0 << 4};
+
+
 static unsigned char t1l[] = {
  1,  4, 
  3,  5};
@@ -377,6 +386,48 @@ struct huffcodetab ht[HTN] =
 
   { 0,   0,t32HB, t32l},
   { 0,   0,t33HB, t33l},
+};	
+
+struct huffcodetab ht_takehiro[HTN] =
+{
+  /* xlen, linmax, table, hlen */
+  { 0,   0,NULL,NULL},
+  { 2,   0,t1HB, t1l},
+  { 3,   0,t2HB, t2l},
+  { 3,   0,t3HB, t3l},
+  { 0,   0,NULL,NULL},/* Apparently not used */
+  { 4,   0,t5HB, t5l},
+  { 4,   0,t6HB, t6l},
+  { 6,   0,t7HB, t7l},
+  { 6,   0,t8HB, t8l},
+  { 6,   0,t9HB, t9l},
+  { 8,   0,t10HB, t10l},
+  { 8,   0,t11HB, t11l},
+  { 8,   0,t12HB, t12l},
+  {16,   0,t13HB, t13l},
+  { 0,   0,NULL,  t16_5l},/* Apparently not used */
+  {16,   0,t15HB, t15l},
+
+  { 1,   1,t16HB, t16l},
+  { 2,   3,t16HB, t16l},
+  { 3,   7,t16HB, t16l},
+  { 4,  15,t16HB, t16l},
+  { 6,  63,t16HB, t16l},
+  { 8, 255,t16HB, t16l},
+  {10,1023,t16HB, t16l},
+  {13,8191,t16HB, t16l},
+
+  { 4,  15,t24HB, t24l},
+  { 5,  31,t24HB, t24l},
+  { 6,  63,t24HB, t24l},
+  { 7, 127,t24HB, t24l},
+  { 8, 255,t24HB, t24l},
+  { 9, 511,t24HB, t24l},
+  {11,2047,t24HB, t24l},
+  {13,8191,t24HB, t24l},
+
+  { 0,   0,t32HB_t, t32l},
+  { 0,   0,t33HB_t, t33l},
 };	
 
 

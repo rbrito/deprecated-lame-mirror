@@ -35,6 +35,7 @@
 #include "quantize-pvt.h"
 #include "l3bitstream.h"
 #include "formatBitstream.h"
+#include "bitstream.h"
 #include "version.h"
 #include "VbrTag.h"
 #include "id3tag.h"
@@ -495,6 +496,25 @@ void lame_init_params(lame_global_flags *gfp)
   }
 
 
+  /* determine the mean bitrate for main data */
+  gfc->sideinfo_len = 4;
+  if ( gfc->version == 1 )
+    {   /* MPEG 1 */
+      if ( gfc->stereo == 1 )
+	gfc->sideinfo_len += 17;
+      else
+	gfc->sideinfo_len += 32;
+    }
+  else
+    {   /* MPEG 2 */
+      if ( gfc->stereo == 1 )
+	gfc->sideinfo_len += 9;
+      else
+	gfc->sideinfo_len += 17;
+    }
+  
+  if (gfp->error_protection) gfc->sideinfo_len += 2;
+  
 
   if (gfp->bWriteVbrTag)
     {
@@ -662,7 +682,6 @@ char *mp3buf, int mp3buf_size)
     int bit_rate = gfp->brate;
     gfc->lame_encode_frame_init=1;
 
-    gfc->sentBits = 0;
     avg_slots_per_frame = (bit_rate*gfc->framesize) /
            (sampfreq* 8);
     /* -f fast-math option causes some strange rounding here, be carefull: */
@@ -853,22 +872,19 @@ char *mp3buf, int mp3buf_size)
 
   /*  write the frame to the bitstream  */
   getframebits(gfp,&bitsPerFrame,&mean_bits);
+#define NEWFMTXX
+#ifdef NEWFMT
+  format_bitstream( gfp, bitsPerFrame, l3_enc, scalefac);
+#else
   III_format_bitstream( gfp,bitsPerFrame, l3_enc, scalefac);
+#endif
 
 
-  gfc->frameBits = gfc->bs.totbit - gfc->sentBits;
-
-
-  if ( gfc->frameBits % 8 )   /* a program failure */
-    fprintf( stderr, "Sent %ld bits = %ld slots plus %ld\n",
-	     gfc->frameBits, gfc->frameBits/8,
-	     gfc->frameBits%8 );
-  gfc->sentBits += gfc->frameBits;
 
   /* copy mp3 bit buffer into array */
   mp3count = copy_buffer(mp3buf,mp3buf_size,&gfc->bs);
 
-  if (gfp->bWriteVbrTag) AddVbrFrame((int)(gfc->sentBits/8));
+  if (gfp->bWriteVbrTag) AddVbrFrame((int)(gfc->bs.totbit/8));
 
 #ifdef HAVEGTK
   if (gfp->gtkflag) {
@@ -1151,8 +1167,12 @@ int lame_encode_finish(lame_global_flags *gfp,char *mp3buffer, int mp3buffer_siz
       fflush(stderr);
   }
 
-
+#ifdef NEWFMT
+  flush_bitstream(gfp);
+#else
   III_FlushBitstream();
+#endif
+
   mp3buffer_size_remaining = mp3buffer_size - mp3count;
   /* if user specifed buffer size = 0, dont check size */
   if (mp3buffer_size == 0) mp3buffer_size_remaining=0;  
@@ -1340,35 +1360,14 @@ int lame_init(lame_global_flags *gfp)
   gfp->inPath=NULL;
   gfp->outPath=NULL;
 
-  gfc->lame_init_params_init=0;
-  gfc->lame_encode_frame_init=0;
-  gfc->iteration_init_init=0;
-  gfc->fill_buffer_downsample_init=0;
-  gfc->fill_buffer_upsample_init=0;
-  gfc->mdct_sub48_init=0;
-
-  gfc->frameNum=0;
-  gfc->filter_type=0;
 
   gfc->resample_ratio=1;
-  gfc->lowpass1=0;
-  gfc->lowpass2=0;
-  gfc->highpass1=0;
-  gfc->highpass2=0;
   gfc->lowpass_band=32;
   gfc->highpass_band=-1;
-
-  gfc->padding=0;
-  gfc->totalframes=0;
   gfc->VBR_min_bitrate=1;
   gfc->VBR_max_bitrate=13;
-
   gfc->version = 1;   /* =1   Default: MPEG-1 */
 
-  gfc->ms_ener_ratio[0]=0;
-  gfc->ms_ener_ratio[1]=0;
-  gfc->ms_ratio[0]=0;
-  gfc->ms_ratio[1]=0;
   gfc->OldValue[0]=180;
   gfc->OldValue[1]=180;
   gfc->CurrentStep=4;

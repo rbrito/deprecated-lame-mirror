@@ -34,6 +34,9 @@ energies.
 */
 
 
+const int slen1_tab[16] = { 0, 0, 0, 0, 3, 1, 1, 1, 2, 2, 2, 3, 3, 3, 4, 4 };
+const int slen2_tab[16] = { 0, 1, 2, 3, 0, 1, 2, 3, 1, 2, 3, 1, 2, 3, 2, 3 };
+
 
 /*
   The following table is used to implement the scalefactor
@@ -457,10 +460,10 @@ int scale_bitcount( III_scalefac_t *scalefac, gr_info *cod_info)
     static const int slen1[16] = { 1, 1, 1, 1, 8, 2, 2, 2, 4, 4, 4, 8, 8, 8,16,16 };
     static const int slen2[16] = { 1, 2, 4, 8, 1, 2, 4, 8, 2, 4, 8, 2, 4, 8, 4, 8 };
 
-    static const int slen1_tab[16] = {0,
+    static const int slen1_value[16] = {0,
 	18, 36, 54, 54, 36, 54, 72, 54, 72, 90, 72, 90,108,108,126
     };
-    static const int slen2_tab[16] = {0,
+    static const int slen2_value[16] = {0,
 	10, 20, 30, 33, 21, 31, 41, 32, 42, 52, 43, 53, 63, 64, 74
     };
     const int *tab;
@@ -468,7 +471,7 @@ int scale_bitcount( III_scalefac_t *scalefac, gr_info *cod_info)
 
     if ( cod_info->block_type == SHORT_TYPE )
     {
-            tab = slen1_tab;
+            tab = slen1_value;
             /* a = 18; b = 18;  */
             for ( i = 0; i < 3; i++ )
             {
@@ -482,7 +485,7 @@ int scale_bitcount( III_scalefac_t *scalefac, gr_info *cod_info)
     }
     else
     { /* block_type == 1,2,or 3 */
-        tab = slen2_tab;
+        tab = slen2_value;
         /* a = 11; b = 10;   */
         for ( sfb = 0; sfb < 11; sfb++ )
             if ( scalefac->l[sfb] > max_slen1 )

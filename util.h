@@ -122,7 +122,7 @@ extern enum byte_order NativeByteOrder;
 /* "bit_stream.h" Type Definitions */
 
 typedef struct  bit_stream_struc {
-    FILE        *pt;            /* pointer to bit stream device */
+    int         bstype;  
     unsigned char *buf;         /* bit stream buffer */
     int         buf_size;       /* size of buffer (in number of bytes) */
     unsigned long        totbit;         /* bit counter of bit stream */
@@ -146,6 +146,7 @@ typedef struct  {
   int fill_buffer_downsample_init;
   int fill_buffer_upsample_init;
   int mdct_sub48_init;
+  int format_bitstream_init;
 
 
   long int frameNum;              /* frame counter */
@@ -199,8 +200,6 @@ typedef struct  {
   short int mfbuf[2][MFSIZE];
   int mf_size;
   int mf_samples_to_encode;
-  unsigned long frameBits;
-  unsigned long sentBits;
   FLOAT8 frac_SpF;
   FLOAT8 slot_lag;
   FLOAT8 ms_ener_ratio[2];
@@ -218,14 +217,23 @@ typedef struct  {
 #define OLDBUFSIZE 5
   FLOAT8 upsample_itime[2];
   short int upsample_inbuf_old[2][OLDBUFSIZE];
-
+  int sideinfo_len;
 
   /* variables for newmdct.c */
   FLOAT8 sb_sample[2][2][18][SBLIMIT];
   FLOAT8 mm[16][SBLIMIT - 1];
 
-
-
+  /* variables for bitstream.c */
+#define MAX_HEADER_BUF 32 /* 511 / 21 = 24, 255/13 = 19 */
+#define MAX_HEADER_LEN 40 /* max size of header is 38 */
+struct {
+    int write_timing;
+    int ptr;
+    char buf[MAX_HEADER_LEN];
+} header[MAX_HEADER_BUF];
+     int h_ptr;
+     int w_ptr;
+  
 
 
 } lame_internal_flags;

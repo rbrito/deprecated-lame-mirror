@@ -33,38 +33,16 @@ enum byte_order NativeByteOrder = order_unknown;
 void getframebits(lame_global_flags *gfp,int *bitsPerFrame, int *mean_bits) {
   int whole_SpF;
   FLOAT8 bit_rate,samp;
-  int bitsPerSlot;
-  int sideinfo_len;
   lame_internal_flags *gfc=gfp->internal_flags;
 
   
   samp =      gfp->out_samplerate/1000.0;
   bit_rate = bitrate_table[gfc->version][gfc->bitrate_index];
-  bitsPerSlot = 8;
 
-  /* determine the mean bitrate for main data */
-  sideinfo_len = 32;
-  if ( gfc->version == 1 )
-    {   /* MPEG 1 */
-      if ( gfc->stereo == 1 )
-	sideinfo_len += 136;
-      else
-	sideinfo_len += 256;
-    }
-  else
-    {   /* MPEG 2 */
-      if ( gfc->stereo == 1 )
-	sideinfo_len += 72;
-      else
-	sideinfo_len += 136;
-    }
-  
-  if (gfp->error_protection) sideinfo_len += 16;
-  
   /* -f fast-math option causes some strange rounding here, be carefull: */  
-  whole_SpF = floor( (gfc->framesize /samp)*(bit_rate /  (FLOAT8)bitsPerSlot) + 1e-9);
+  whole_SpF = floor( (gfc->framesize /samp)*(bit_rate /  8.0) + 1e-9);
   *bitsPerFrame = 8 * whole_SpF + (gfc->padding * 8);
-  *mean_bits = (*bitsPerFrame - sideinfo_len) / gfc->mode_gr;
+  *mean_bits = (*bitsPerFrame - 8*gfc->sideinfo_len) / gfc->mode_gr;
 }
 
 
@@ -246,23 +224,35 @@ void SwapBytesInWords( short *loc, int words )
 
 void empty_buffer(Bit_stream_struc *bs)
 {
-   int minimum=1+bs->buf_byte_idx;    /* end of the buffer to empty */
-   if (bs->buf_size-minimum <= 0) return;
-   bs->buf_byte_idx = bs->buf_size -1;
-   bs->buf_bit_idx = 8;
-
-   bs->buf[bs->buf_byte_idx] = 0;  /* what does this do? */
-
+  /* brain damaged ISO buffer type - counts down */
+  int minimum=1+bs->buf_byte_idx;    /* end of the buffer to empty */
+  if (bs->buf_size-minimum <= 0) return;
+  bs->buf_byte_idx = bs->buf_size -1;
+  bs->buf_bit_idx = 8;
+  
+  bs->buf[bs->buf_byte_idx] = 0;  /* what does this do? */
 }
+
+
 int copy_buffer(char *buffer,int size,Bit_stream_struc *bs)
 {
   int i,j=0;
-  if (size!=0 && (bs->buf_size-1 - bs->buf_byte_idx) > size ) return -1;
-  for (i=bs->buf_size-1 ; i > bs->buf_byte_idx ; (i-- ))
-    buffer[j++]=bs->buf[i];
-  assert(j == (bs->buf_size-1 - bs->buf_byte_idx));
-  empty_buffer(bs);  /* empty buffer, (changes bs->buf_size) */
-  return j;
+  if (bs->bstype) {
+    int minimum = bs->buf_byte_idx + 1;
+    if (minimum <= 0) return 0;
+    if (size!=0 && minimum>size) return -1; /* buffer is too small */
+    memcpy(buffer,bs->buf,minimum);
+    bs->buf_byte_idx = -1;
+    bs->buf_bit_idx = 0;
+    return minimum;
+  }else{
+    if (size!=0 && (bs->buf_size-1 - bs->buf_byte_idx) > size ) return -1;
+    for (i=bs->buf_size-1 ; i > bs->buf_byte_idx ; (i-- ))
+      buffer[j++]=bs->buf[i];
+    assert(j == (bs->buf_size-1 - bs->buf_byte_idx));
+    empty_buffer(bs);  /* empty buffer, (changes bs->buf_size) */
+    return j;
+  }
 }
 
 
@@ -393,7 +383,7 @@ int fill_buffer_downsample(lame_global_flags *gfp,short int *outbuf,int desired_
   /* time of j'th element in inbuf = itime + j/ifreq; */
   /* time of k'th element in outbuf   =  j/ofreq */
   for (k=0;k<desired_len;k++) {
-    FLOAT8 time0,sum;
+    FLOAT8 time0;
     
     time0 = k*gfc->resample_ratio;       /* time of k'th output sample */
     j = floor( time0 -gfc->itime[ch]  );

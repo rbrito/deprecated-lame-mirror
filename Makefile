@@ -237,6 +237,7 @@ endif
 CC_SWITCHES = -DNDEBUG -D__NO_MATH_INLINES $(CC_OPTS) $(SNDLIB) $(GTK) $(BRHIST_SWITCH)
 c_sources = \
         brhist.c \
+	bitstream.c \
 	formatBitstream.c \
 	fft.c \
 	get_audio.c \

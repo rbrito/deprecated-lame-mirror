@@ -144,8 +144,6 @@ III_FlushBitstream(void)
 		BF_FlushBitstream( frameData, frameResults );
 }
 
-static unsigned slen1_tab[16] = { 0, 0, 0, 0, 3, 1, 1, 1, 2, 2, 2, 3, 3, 3, 4, 4 };
-static unsigned slen2_tab[16] = { 0, 1, 2, 3, 0, 1, 2, 3, 1, 2, 3, 1, 2, 3, 2, 3 };
 
 static void
 encodeMainData( lame_global_flags *gfp,
@@ -179,23 +177,6 @@ encodeMainData( lame_global_flags *gfp,
 
 		if (gi->block_type == SHORT_TYPE)
 		{
-#ifdef ALLOW_MIXED
-		    if ( gi->mixed_block_flag )
-		    {
-			for ( sfb = 0; sfb < 8; sfb++ )
-			    *pph = BF_addEntry( *pph,  scalefac[gr][ch].l[sfb], slen1 );
-
-			for ( sfb = 3; sfb < 6; sfb++ )
-			    for ( window = 0; window < 3; window++ )
-				*pph = BF_addEntry( *pph,  scalefac[gr][ch].s[sfb][window], slen1 );
-
-			for ( sfb = 6; sfb < 12; sfb++ )
-			    for ( window = 0; window < 3; window++ )
-				*pph = BF_addEntry( *pph,  scalefac[gr][ch].s[sfb][window], slen2 );
-
-		    }
-		    else
-#endif
 		    {
 			for ( sfb = 0; sfb < 6; sfb++ )
 			    for ( window = 0; window < 3; window++ )
@@ -241,24 +222,6 @@ encodeMainData( lame_global_flags *gfp,
 
 	    if (gi->block_type == SHORT_TYPE)
 	    {
-#ifdef ALLOW_MIXED
-		if ( gi->mixed_block_flag )
-		{
-		    sfb_partition = 0;
-		    for ( sfb = 0; sfb < 8; sfb++ )
-			*pph = BF_addEntry( *pph,  scalefac[gr][ch].l[sfb], gi->slen[sfb_partition] );
-
-		    for ( sfb = 3, sfb_partition = 1; sfb_partition < 4; sfb_partition++ )
-		    {
-			int sfbs = gi->sfb_partition_table[ sfb_partition ] / 3;
-			int slen = gi->slen[ sfb_partition ];
-			for ( i = 0; i < sfbs; i++, sfb++ )
-			    for ( window = 0; window < 3; window++ )
-				*pph = BF_addEntry( *pph,  scalefac[gr][ch].s[sfb][window], slen );
-		    }
-		}
-		else
-#endif
 		{
 		    for ( sfb = 0, sfb_partition = 0; sfb_partition < 4; sfb_partition++ )
 		    {
@@ -527,7 +490,6 @@ Huffmancodebits( BF_PartHolder **pph, int *ix, gr_info *gi )
 	    ix_s = (I192_3 *) ix;
 	    region1Start = 12;
 	    region2Start = 576;
-
 	    for ( sfb = 0; sfb < 13; sfb++ )
 	    {
 		unsigned tableindex = 100;
@@ -554,52 +516,6 @@ Huffmancodebits( BF_PartHolder **pph, int *ix, gr_info *gi )
 	    }
 	}
 	else
-#ifdef ALLOW_MIXED
-	    if ( gi->mixed_block_flag && gi->block_type == SHORT_TYPE )
-	    {  /* Mixed blocks long, short */
-		int sfb, window, line, start, end;
-		unsigned tableindex;
-		I192_3 *ix_s;
-		
-		ix_s = (I192_3 *) ix;
-
-		/* Write the long block region */
-		tableindex = gi->table_select[0];
-		if ( tableindex )
-		    for ( i = 0; i < 36; i += 2 )
-		    {
-			x = ix[i];
-			y = ix[i + 1];
-			bits = HuffmanCode( tableindex, x, y, &code, &ext, &cbits, &xbits );
-			*pph = BF_addEntry( *pph,  code, cbits );
-			*pph = BF_addEntry( *pph,  ext, xbits );
-			bitsWritten += bits;
-			
-		    }
-		/* Write the short block region */
-		tableindex = gi->table_select[ 1 ];
-		assert( tableindex < 32 );
-
-		for ( sfb = 3; sfb < 13; sfb++ )
-		{
-		    start = scalefac_band.s[ sfb ];
-		    end   = scalefac_band.s[ sfb+1 ];           
-		    
-		    for ( window = 0; window < 3; window++ )
-			for ( line = start; line < end; line += 2 )
-			{
-			    x = (*ix_s)[line][window];
-			    y = (*ix_s)[line + 1][window];
-			    bits = HuffmanCode( tableindex, x, y, &code, &ext, &cbits, &xbits );
-			    *pph = BF_addEntry( *pph,  code, cbits );
-			    *pph = BF_addEntry( *pph,  ext, xbits );
-			    bitsWritten += bits;
-			}
-		}
-
-	    }
-	    else
-#endif
 	    { /* Long blocks */
 		unsigned scalefac_index = 100;
 		
@@ -819,6 +735,9 @@ HuffmanCode( int table_select, int x, int y, unsigned int *code, unsigned int *e
 	    *code |= signy;
 	}
     }
+
+
+
     assert( *cbits <= 32 );
     assert( *xbits <= 32 );
     return *cbits + *xbits;

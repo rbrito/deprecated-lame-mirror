@@ -20,6 +20,7 @@
 #ifndef TABLES_H_INCLUDED
 #define TABLES_H_INCLUDED
 #include "encoder.h"
+#include "machine.h"
 extern FLOAT8 psy_data[];
 
 #define HUFFBITS unsigned long int
@@ -33,6 +34,12 @@ struct huffcodetab {
 };
 
 extern struct huffcodetab ht[HTN];/* global memory block		*/
+				/* array of all huffcodtable headers	*/
+				/* 0..31 Huffman code table 0..31	*/
+				/* 32,33 count1-tables			*/
+
+
+extern struct huffcodetab ht_takehiro[HTN];/* global memory block		*/
 				/* array of all huffcodtable headers	*/
 				/* 0..31 Huffman code table 0..31	*/
 				/* 32,33 count1-tables			*/
