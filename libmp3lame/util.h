@@ -31,6 +31,7 @@
 #include "encoder.h"
 #include "lame.h"
 #include "lame-analysis.h"
+#include "id3tag.h"
 
 /***********************************************************************
 *
@@ -186,6 +187,10 @@ typedef struct  {
   /* used for padding */
   int frac_SpF;
   int slot_lag;
+
+
+  /* optional ID3 tags, used in id3tag.c  */
+  struct id3tag_spec tag_spec;
 
 
   /* variables used by quantize.c */

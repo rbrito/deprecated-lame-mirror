@@ -27,6 +27,7 @@
 #include "version.h"
 #include "tables.h"
 #include "quantize_pvt.h"
+#include "id3tag.h"
 
 #ifdef __riscos__
 #include "asmstuff.h"
@@ -620,7 +621,7 @@ int lame_init_params(lame_global_flags *gfp)
   /* this tag must be before the Xing VBR header */
   /* does id3v2 and Xing header really work??? */
   if (!gfp->ogg) {
-    id3tag_write_v2(gfp,&gfp->tag_spec);
+    id3tag_write_v2(gfp);
   }
 
   /* Write initial VBR Header to bitstream */
@@ -996,7 +997,7 @@ int    lame_encode_finish (
     /* mp3 related stuff.  bit buffer might still contain some mp3 data */
     flush_bitstream(gfp);
     /* write a id3 tag to the bitstream */
-    id3tag_write_v1(gfp,&gfp->tag_spec);
+    id3tag_write_v1(gfp);
     imp3= copy_buffer(mp3buffer,mp3buffer_size_remaining,&gfc->bs);
   }
   freegfc(gfc);

@@ -32,6 +32,8 @@
 #include <stddef.h>
 #include <stdlib.h>
 #include <string.h>
+#include "lame.h"
+#include "id3tag.h"
 #include "util.h"
 #include "bitstream.h"
 
@@ -102,8 +104,11 @@ id3tag_genre_list(void (*handler)(int, const char *, void *), void *cookie)
 #define GENRE_NUM_UNKNOWN 255
 
 void
-id3tag_init(struct id3tag_spec *spec)
+id3tag_init(lame_global_flags *gfp)
 {
+    lame_internal_flags *gfc=gfp->internal_flags;
+    struct id3tag_spec *spec = &gfc->tag_spec;
+
     if (spec) {
         memset(spec, 0, sizeof spec);
         spec->genre = GENRE_NUM_UNKNOWN;
@@ -118,8 +123,11 @@ id3tag_init(struct id3tag_spec *spec)
 #define PAD_V2_FLAG     (1U << 5)
 
 void
-id3tag_add_v2(struct id3tag_spec *spec)
+id3tag_add_v2(lame_global_flags *gfp)
 {
+    lame_internal_flags *gfc=gfp->internal_flags;
+    struct id3tag_spec *spec = &gfc->tag_spec;
+
     if (spec) {
         spec->flags &= ~V1_ONLY_FLAG;
         spec->flags |= ADD_V2_FLAG;
@@ -127,8 +135,11 @@ id3tag_add_v2(struct id3tag_spec *spec)
 }
 
 void
-id3tag_v1_only(struct id3tag_spec *spec)
+id3tag_v1_only(lame_global_flags *gfp)
 {
+    lame_internal_flags *gfc=gfp->internal_flags;
+    struct id3tag_spec *spec = &gfc->tag_spec;
+
     if (spec) {
         spec->flags &= ~(ADD_V2_FLAG | V2_ONLY_FLAG);
         spec->flags |= V1_ONLY_FLAG;
@@ -136,8 +147,11 @@ id3tag_v1_only(struct id3tag_spec *spec)
 }
 
 void
-id3tag_v2_only(struct id3tag_spec *spec)
+id3tag_v2_only(lame_global_flags *gfp)
 {
+    lame_internal_flags *gfc=gfp->internal_flags;
+    struct id3tag_spec *spec = &gfc->tag_spec;
+
     if (spec) {
         spec->flags &= ~V1_ONLY_FLAG;
         spec->flags |= V2_ONLY_FLAG;
@@ -145,8 +159,11 @@ id3tag_v2_only(struct id3tag_spec *spec)
 }
 
 void
-id3tag_space_v1(struct id3tag_spec *spec)
+id3tag_space_v1(lame_global_flags *gfp)
 {
+    lame_internal_flags *gfc=gfp->internal_flags;
+    struct id3tag_spec *spec = &gfc->tag_spec;
+
     if (spec) {
         spec->flags &= ~V2_ONLY_FLAG;
         spec->flags |= SPACE_V1_FLAG;
@@ -154,8 +171,11 @@ id3tag_space_v1(struct id3tag_spec *spec)
 }
 
 void
-id3tag_pad_v2(struct id3tag_spec *spec)
+id3tag_pad_v2(lame_global_flags *gfp)
 {
+    lame_internal_flags *gfc=gfp->internal_flags;
+    struct id3tag_spec *spec = &gfc->tag_spec;
+
     if (spec) {
         spec->flags &= ~V1_ONLY_FLAG;
         spec->flags |= PAD_V2_FLAG;
@@ -163,8 +183,11 @@ id3tag_pad_v2(struct id3tag_spec *spec)
 }
 
 void
-id3tag_set_title(struct id3tag_spec *spec, const char *title)
+id3tag_set_title(lame_global_flags *gfp, const char *title)
 {
+    lame_internal_flags *gfc=gfp->internal_flags;
+    struct id3tag_spec *spec = &gfc->tag_spec;
+
     if (spec && title && *title) {
         spec->title = title;
         spec->flags |= CHANGED_FLAG;
@@ -172,8 +195,11 @@ id3tag_set_title(struct id3tag_spec *spec, const char *title)
 }
 
 void
-id3tag_set_artist(struct id3tag_spec *spec, const char *artist)
+id3tag_set_artist(lame_global_flags *gfp, const char *artist)
 {
+    lame_internal_flags *gfc=gfp->internal_flags;
+    struct id3tag_spec *spec = &gfc->tag_spec;
+
     if (spec && artist && *artist) {
         spec->artist = artist;
         spec->flags |= CHANGED_FLAG;
@@ -181,8 +207,11 @@ id3tag_set_artist(struct id3tag_spec *spec, const char *artist)
 }
 
 void
-id3tag_set_album(struct id3tag_spec *spec, const char *album)
+id3tag_set_album(lame_global_flags *gfp, const char *album)
 {
+    lame_internal_flags *gfc=gfp->internal_flags;
+    struct id3tag_spec *spec = &gfc->tag_spec;
+
     if (spec && album && *album) {
         spec->album = album;
         spec->flags |= CHANGED_FLAG;
@@ -190,8 +219,11 @@ id3tag_set_album(struct id3tag_spec *spec, const char *album)
 }
 
 void
-id3tag_set_year(struct id3tag_spec *spec, const char *year)
+id3tag_set_year(lame_global_flags *gfp, const char *year)
 {
+    lame_internal_flags *gfc=gfp->internal_flags;
+    struct id3tag_spec *spec = &gfc->tag_spec;
+
     if (spec && year && *year) {
         int num = atoi(year);
         if (num < 0) {
@@ -209,8 +241,11 @@ id3tag_set_year(struct id3tag_spec *spec, const char *year)
 }
 
 void
-id3tag_set_comment(struct id3tag_spec *spec, const char *comment)
+id3tag_set_comment(lame_global_flags *gfp, const char *comment)
 {
+    lame_internal_flags *gfc=gfp->internal_flags;
+    struct id3tag_spec *spec = &gfc->tag_spec;
+
     if (spec && comment && *comment) {
         spec->comment = comment;
         spec->flags |= CHANGED_FLAG;
@@ -218,8 +253,11 @@ id3tag_set_comment(struct id3tag_spec *spec, const char *comment)
 }
 
 void
-id3tag_set_track(struct id3tag_spec *spec, const char *track)
+id3tag_set_track(lame_global_flags *gfp, const char *track)
 {
+    lame_internal_flags *gfc=gfp->internal_flags;
+    struct id3tag_spec *spec = &gfc->tag_spec;
+
     if (spec && track && *track) {
         int num = atoi(track);
         if (num < 0) {
@@ -237,8 +275,11 @@ id3tag_set_track(struct id3tag_spec *spec, const char *track)
 }
 
 int
-id3tag_set_genre(struct id3tag_spec *spec, const char *genre)
+id3tag_set_genre(lame_global_flags *gfp, const char *genre)
 {
+    lame_internal_flags *gfc=gfp->internal_flags;
+    struct id3tag_spec *spec = &gfc->tag_spec;
+
     if (spec && genre && *genre) {
         char *str;
         int num = strtol(genre, &str, 10);
@@ -320,8 +361,11 @@ set_frame(unsigned char *frame, unsigned long id, const char *text,
 }
 
 int
-id3tag_write_v2(lame_global_flags *gfp,struct id3tag_spec *spec)
+id3tag_write_v2(lame_global_flags *gfp)
 {
+    lame_internal_flags *gfc=gfp->internal_flags;
+    struct id3tag_spec *spec = &gfc->tag_spec;
+
     if (!spec) return -1;
 
     if ((spec->flags & CHANGED_FLAG) && !(spec->flags & V1_ONLY_FLAG)) {
@@ -458,8 +502,11 @@ set_text_field(unsigned char *field, const char *text, size_t size, int pad)
 }
 
 int
-id3tag_write_v1(lame_global_flags *gfp,struct id3tag_spec *spec)
+id3tag_write_v1(lame_global_flags *gfp)
 {
+    lame_internal_flags *gfc=gfp->internal_flags;
+    struct id3tag_spec *spec = &gfc->tag_spec;
+
     if (!spec )  return -1;
 
     if ((spec->flags & CHANGED_FLAG) && !(spec->flags & V2_ONLY_FLAG)) {
