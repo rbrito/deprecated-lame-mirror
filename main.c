@@ -1,12 +1,5 @@
 #include "lame.h"
 
-#ifdef OS_AMIGAOS
-/*#include <memory.h>*/
-extern int __buffsize = 1000000;	/* performance increase of about 10% */
-#endif /* OS_AMIGAOS */
-
-
-
 #ifdef HAVEGTK
 #include "gtkanal.h"
 #include <gtk/gtk.h>
