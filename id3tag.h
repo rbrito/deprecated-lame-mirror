@@ -21,7 +21,11 @@
 #ifndef ID3TAG_H_
 #define ID3TAG_H_
 
+#ifdef ID3TAG_INDEPENDENCE
 #include <stdio.h>
+#else
+#include "lame.h"
+#endif
 
 #ifdef __cplusplus
 extern "C" {
@@ -31,6 +35,7 @@ extern "C" {
 extern void id3tag_genre_list(void (*handler)(int, const char *, void *),
     void *cookie);
 
+#ifdef ID3TAG_INDEPENDENCE
 struct id3tag_spec
 {
     /* private data members */
@@ -43,6 +48,7 @@ struct id3tag_spec
     int track;
     int genre;
 };
+#endif
 
 extern void id3tag_init(struct id3tag_spec *spec);
 
