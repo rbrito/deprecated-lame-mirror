@@ -233,13 +233,13 @@ typedef struct {
 
 preset_t Presets [] = {
    // name     fs      fo     dfo shrt qual  mode               cbr  vbr_mode/min/max
-    { "phone" ,  8000,  3400,    0,  1,  5, MPG_MD_MONO        ,  16,  6,   8,  56 },
+    { "phone" ,  8000,  3200, 1000,  1,  5, MPG_MD_MONO        ,  16,  6,   8,  56 },
     { "sw"    , 11025,  4800,  500,  0,  5, MPG_MD_MONO        ,  24,  5,   8,  64 },
     { "am"    , 16000,  7200,  500,  0,  5, MPG_MD_MONO        ,  32,  5,  16, 128 },
     { "fm"    , 22050,  9950,  880,  0,  5, MPG_MD_JOINT_STEREO,  64,  5,  24, 160 },
     { "voice" , 32000, 12300, 2000,  1,  5, MPG_MD_MONO        ,  56,  4,  32, 128 },
     { "radio" ,    -1, 15000,    0,  0,  5, MPG_MD_JOINT_STEREO, 112,  4,  64, 256 },
-    { "tape"  ,    -1, 18500, 2000,  0,  5, MPG_MD_JOINT_STEREO, 128,  4,  96, 128 },
+    { "tape"  ,    -1, 18500, 2000,  0,  5, MPG_MD_JOINT_STEREO, 128,  4,  96, 320 },
     { "hifi"  ,    -1, 20240, 2200,  0,  2, MPG_MD_JOINT_STEREO, 160,  3, 112, 320 },
     { "cd"    ,    -1,    -1,   -1,  0,  2, MPG_MD_STEREO      , 192,  2, 128, 320 },
     { "studio",    -1,    -1,   -1,  0,  2, MPG_MD_STEREO      , 256,  0, 160, 320 },
@@ -258,8 +258,8 @@ void lame_presets_info ( lame_global_flags* gfp, const char* ProgramName )  /* p
     
     PRINTF1 ("\n                ");
     for ( i = 0; i < sizeof(Presets)/sizeof(*Presets); i++)
-        PRINTF1 ( " %-5s", Presets[i].name );
-    PRINTF1 ("\n================");
+        PRINTF1 ( " %5s", Presets[i].name );
+    PRINTF1 ("\n=================");
     for ( i = 0; i < sizeof(Presets)/sizeof(*Presets); i++)
         PRINTF1 ( "======" );
     PRINTF1 ("\n--resample      ");
@@ -284,7 +284,7 @@ void lame_presets_info ( lame_global_flags* gfp, const char* ProgramName )  /* p
     for ( i = 0; i < sizeof(Presets)/sizeof(*Presets); i++)
         switch ( Presets[i].no_short_blocks ) {
         case  1: PRINTF1 ( "   yes" ); break;
-        case  0: PRINTF1 ( "   no " ); break;
+        case  0: PRINTF1 ( "    no" ); break;
         case -1: PRINTF1 ( "      " ); break;
         default: assert (0);           break;
         }
@@ -300,9 +300,9 @@ void lame_presets_info ( lame_global_flags* gfp, const char* ProgramName )  /* p
     PRINTF1 ("\n                ");
     for ( i = 0; i < sizeof(Presets)/sizeof(*Presets); i++)
         switch ( Presets[i].quality ) {
-	case  2: PRINTF1 ("   -h "); break;
+	case  2: PRINTF1 ("    -h"); break;
 	case  5: PRINTF1 ("      "); break;
-	case  7: PRINTF1 ("   -f "); break;
+	case  7: PRINTF1 ("    -f"); break;
 	default: assert (0);         break;
     }
     PRINTF1 ("\n-b              ");
@@ -311,7 +311,7 @@ void lame_presets_info ( lame_global_flags* gfp, const char* ProgramName )  /* p
     PRINTF1 ("\n-- PLUS WITH -v ");
     for ( i = 0; i < sizeof(Presets)/sizeof(*Presets); i++)
         PRINTF1 ( "------" );
-    PRINTF1 ("\n-v              ");
+    PRINTF1 ("-\n-v              ");
     for ( i = 0; i < sizeof(Presets)/sizeof(*Presets); i++)
         PRINTF1 ( "%6u", Presets[i].vbr_mode );
     PRINTF1 ("\n-b              ");
@@ -324,7 +324,7 @@ void lame_presets_info ( lame_global_flags* gfp, const char* ProgramName )  /* p
     for ( i = 0; i < sizeof(Presets)/sizeof(*Presets); i++)
         PRINTF1 ( "------" );
   
-    PRINTF1 ("\nEXAMPLES:\n");
+    PRINTF1 ("-\nEXAMPLES:\n");
     PRINTF1 (" a) --preset fm\n");
     PRINTF1 ("    equals: --resample 22.05 --lowpass 9.95 --lowpass-width 0.88 -mj -b64\n");
     PRINTF1 (" b) -v --preset studio\n");
@@ -598,10 +598,9 @@ void lame_parse_args(lame_global_flags *gfp,int argc, char **argv)
           double freq = atof (nextArg);
           argUsed=1;
           /* useful are 0.001 kHz...50 kHz, 50 Hz...50000 Hz */
-          /* Attention: This is stored as Kilohertz, not as Hertz (why?) */
-          gfp -> cwlimit = freq * ( freq <= 50. ? 1.e0 : 1.e-3 );
+          gfp -> cwlimit = freq * ( freq <= 50. ? 1.e3 : 1.e0 );
           if (gfp->cwlimit <= 0 ) {
-            ERRORF("Must specify cwlimit in kHz\n");
+            ERRORF("Must specify cwlimit with --cwlimit freq, freq >= 0.001 kHz\n");
             LAME_ERROR_EXIT();
           }
 	} 

@@ -157,7 +157,7 @@ typedef struct  {
   int ATHshort;                   /* only use ATH for short blocks */
   int noATH;                      /* disable ATH */
   int ATHlower;                   /* lower ATH by this many db */
-  float cwlimit;                  /* predictability limit */
+  int cwlimit;                  /* predictability limit */
   int allow_diff_short;       /* allow blocktypes to differ between channels ? */
   int no_short_blocks;        /* disable short blocks       */
   int emphasis;                   /* obsolete */
