@@ -622,14 +622,14 @@ int L3psycho_anal( lame_global_flags * gfp,
           
             /* stabilize tonality estimation */
             if ( vbr_mtrh == gfp->VBR ) {
-                FLOAT8 w;
-                if ( b > 5 ) {
-                    FLOAT8 const x = 1.77827941; /* pow(10.,2.5/10.) */
-                    w = gfc->PSY->prvTonRed[b/2] * x;
+                if ( b > 5 ) 
+                {
+                    FLOAT8 const x = 1.917973986; /* pow(10.,sqrt(8)/10.) */
+                    FLOAT8 w = gfc->PSY->prvTonRed[b/2] * x;
                     if (tbb > w) 
                         tbb = w;
-                    gfc->PSY->prvTonRed[b] = tbb;
                 }
+                gfc->PSY->prvTonRed[b] = tbb;
             }
             
 	  ecb *= tbb;

@@ -298,7 +298,6 @@ find_scalefac(const FLOAT8 *xr, const FLOAT8 *xr34, const int sfb,
       /* scalefactors too small */
       sf += delsf;
     }else{
-      if (sf_ok==10000) sf_ok=sf;  
       if (xfsf > l3_xmin)  {
 	/* distortion.  try a smaller scalefactor */
 	sf -= delsf;
@@ -313,7 +312,9 @@ find_scalefac(const FLOAT8 *xr, const FLOAT8 *xr34, const int sfb,
   assert(delsf==1);  /* when for loop goes up to 7 */
 #endif
 
-  return sf;
+    /*  returning a scalefac without distortion, if possible
+     */
+  return sf_ok > 45 ? sf : sf_ok;
 }
 
 static int
@@ -336,7 +337,6 @@ find_scalefac_ave(const FLOAT8 *xr, const FLOAT8 *xr34, const int sfb,
       /* scalefactors too small */
       sf += delsf;
     }else{
-      if (sf_ok==10000) sf_ok=sf;  
       if (xfsf > l3_xmin)  {
 	/* distortion.  try a smaller scalefactor */
 	sf -= delsf;
@@ -351,7 +351,9 @@ find_scalefac_ave(const FLOAT8 *xr, const FLOAT8 *xr34, const int sfb,
   assert(delsf==1);  /* when for loop goes up to 7 */
 #endif
 
-  return sf;
+    /*  returning a scalefac without distortion, if possible
+     */
+  return sf_ok > 45 ? sf : sf_ok;
 }
 
 
@@ -539,7 +541,6 @@ int scalefac[SBPSY_s][3],int sbg[3])
     if (minsf >0 ) sbg[i] = floor(.125*minsf + .001);
     if (maxsf1 > 0)  sbg[i] = Max(sbg[i],(maxsf1/8 + (maxsf1 % 8 != 0)));
     if (sbg[i] > 7) sbg[i]=7;
-
 
     for ( sfb = 0; sfb < SBPSY_s; sfb++ ) {
       sf[sfb][i] += 8*sbg[i];

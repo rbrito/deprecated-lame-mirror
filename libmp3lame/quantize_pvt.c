@@ -435,7 +435,7 @@ FLOAT8 athAdjust( FLOAT8 a, FLOAT8 x, FLOAT8 athFloor )
     /*  work in progress
      */
     FLOAT8 const o = 90.30873362;
-    FLOAT8 const p = 96.32946608;
+    FLOAT8 const p = 94.82444863;
     FLOAT8 u = 10. * log10(x); 
     FLOAT8 v = a*a;
     FLOAT8 w = 0.0;   
