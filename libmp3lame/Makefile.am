@@ -22,7 +22,7 @@ libmp3lame_la_LIBADD = $(nasm_ldadd) $(decoder_ldadd)
 libmp3lame_la_LDFLAGS = -version-info @LIB_MAJOR_VERSION@:@LIB_MINOR_VERSION@ \
 			-no-undefined
 
-INCLUDES = @INCLUDES@ -I$(top_srcdir)/mpglib/ -I$(top_builddir)
+INCLUDES = @INCLUDES@ -I$(top_srcdir)/mpglib -I$(top_builddir)
 
 DEFS = @DEFS@ @CONFIG_DEFS@
 
