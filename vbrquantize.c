@@ -921,9 +921,13 @@ VBR_quantize(lame_global_flags *gfp,
     }
     bits_ok=1;
     if (totbits>max_frame_bits) {
-      /* maybe doing a CBR encoding would speed up things at this point?
-       * but this is more in line with the VBR quality idea */
-      qadjust += Max(.25,(totbits-max_frame_bits)/300.0);
+      /* lower quality */
+      qadjust += Max(.125,Min(1,(totbits-max_frame_bits)/300.0));
+      /* adjusting minbits and maxbits is necessary too
+       * cos lowering quality is not enough in rare cases
+       * when each granule still needs almost maxbits, it wont fit */ 
+      minbits = Max(125,minbits*0.975);
+      maxbits = Min(minbits,maxbits*0.975);
       //      DEBUGF("%i totbits>max_frame_bits   totbits=%i  maxbits=%i \n",gfp->frameNum,totbits,max_frame_bits);
       //      DEBUGF("next masking_lower_db = %f \n",masking_lower_db + qadjust);
       bits_ok=0;
