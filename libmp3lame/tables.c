@@ -1411,6 +1411,10 @@ int psymodel_init(lame_global_flags *gfp)
 	extern void fht(FLOAT *fz, int n);
 	gfc->fft_fht = fht;
     }
+    if (gfc->CPU_features.AMD_E3DNow) {
+	extern void fht_E3DN(FLOAT *fz, int n);
+	gfc->fft_fht = fht_E3DN;
+    } else
     if (gfc->CPU_features.AMD_3DNow) {
 	extern void fht_3DN(FLOAT *fz, int n);
 	gfc->fft_fht = fht_3DN;
