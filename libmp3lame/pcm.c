@@ -17,22 +17,20 @@
 #include "bitstream.h"
 #include "id3tag.h"
 
-#define FN(x)    do { static unsigned int cnt = 0; if (cnt < 1000) fprintf (stderr,"[%3u]>>>%s<<<\n",++cnt,(x)), fflush(stderr); } while (0)
+#define FN(x)	do { static unsigned int cnt = 0; if (cnt < 100000) fprintf (stderr,"[%3u]>>>%s<<<\n",++cnt,(x)), fflush(stderr); } while (0)
 
 #ifdef KLEMM_44
 
 /*{{{ #includes                       */
 
+#include <assert.h>
+#include <stddef.h>
 #include <stdio.h>
+#include <stdlib.h>
 #include <limits.h>
 #include <math.h>
 #include <memory.h>
-#include <stdlib.h>
 #include <unistd.h>
-#include <assert.h>
-#include <stdio.h>
-#include <math.h>
-#include <assert.h>
 #include "pcm.h"
 
 /*}}}*/
@@ -66,7 +64,7 @@ int  octetstream_resize ( INOUT octetstream_t* const  os, OUT size_t  size )
         memset ( os -> data + os -> size, 0, size - os -> size );
         os -> size = size;
     } else if ( size < os->size ) {
-         os -> data = (uint8_t*) realloc ( os -> data, os->size = size );
+	os -> data = (uint8_t*) realloc ( os -> data, os->size = size );
     }
     return 0;
 }
@@ -98,14 +96,16 @@ static inline int  lame_encode_frame (
 {
     int  ret;
 #if 1
-    int i;
-    static j = 0;
-    fprintf (stderr, "last_ampl=%f ampl=%f\n", lame->last_ampl, lame->ampl);
-    for (i=0; i<1152; i++)
-        printf ("%6u %f %f\n", j++, inbuf[0][i], inbuf[1][i]);
+    int           i;
+    static int    j  = 0;
+    static FILE*  fp = NULL;
+    if ( fp == NULL )
+        fp = fopen ("pcm_data.txt", "w");
+    for ( i = 0; i < lame->frame_size; i++ )
+        fprintf ( fp, "%7d %11.4f %11.4f\n", j++, inbuf[0][i], inbuf[1][i] );
+    fprintf ( fp, "\n" );
+    fflush ( fp );
 #endif
-
-
     
     FN("lame_encode_frame");
 
@@ -142,12 +142,12 @@ static inline int  lame_encode_frame (
         ret = -5;
         break;
     }
+    
     if ( ret >= 0 ) {
         lame->frame_count++;
         if ( lame->analyzer_callback != NULL )
             lame->analyzer_callback ( lame, lame->frame_size );
     }
-    fprintf (stderr, "Lame_encode_frame liefert %d\n", ret );
     return ret;
 }
 
@@ -357,9 +357,9 @@ typedef void (*demux_t) ( IN sample_t* dst, OUT uint8_t* src, OUT ssize_t step, 
 #define FUNCTION(name,expr)       \
 static void  name (               \
         IN  sample_t*  dst,       \
-         OUT uint8_t*   src,       \
-         OUT ssize_t    step,      \
-         OUT size_t     len )      \
+	OUT uint8_t*   src,       \
+	OUT ssize_t    step,      \
+	OUT size_t     len )      \
 {                                 \
     size_t  i = len;              \
     do {                          \
@@ -597,26 +597,19 @@ static inline int  internal_lame_encoding_pcm (
         ampl_on = 0;
     }
 
-    FN("internal_lame_encoding_pcm 2");
-
-    while ( remaining > 0 ) {
+    while ( (int) remaining > 0 ) {
 
         FN("internal_lame_encoding_pcm 3");
 
         /* copy in new samples into mfbuf, with resampling if necessary */
-        if ( lame->sampfreq_in != lame->sampfreq_out )  {
-         
+        if ( lame->resample_in != NULL )  {
+	
             FN("internal_lame_encoding_pcm 10");
-         
-            if ( lame->resample_in == NULL )
-                lame->resample_in = resample_open ( lame->sampfreq_in, lame->sampfreq_out, -1. /*Auto*/, TAPS );
-
-            FN("internal_lame_encoding_pcm 11");
-
+	
             for ( ch = 0; ch < lame->channels_out; ch++ ) {
                 n_in  = remaining;
                 n_out = lame->frame_size;
-                 
+		
                 FN("internal_lame_encoding_pcm 12");
 
                 // resample filter virtually should have no delay !
@@ -629,14 +622,14 @@ static inline int  internal_lame_encoding_pcm (
                     return ret;
                 pdata [ch] += n_in;
             }
-            
+	    
             FN("internal_lame_encoding_pcm 13");
-            
+	    
         }
         else {
-         
+	
             FN("internal_lame_encoding_pcm 14");
-         
+	
             n_in = n_out = MIN ( lame->frame_size, remaining );
 
             FN("internal_lame_encoding_pcm 15");
@@ -647,9 +640,9 @@ static inline int  internal_lame_encoding_pcm (
                           n_out * sizeof (**mfbuf) );
                 pdata [ch] += n_in;
             }
-            
+	    
             FN("internal_lame_encoding_pcm 16");
-            
+	    
         }
 
         FN("internal_lame_encoding_pcm 4");
@@ -673,6 +666,8 @@ static inline int  internal_lame_encoding_pcm (
         }
 
         FN("internal_lame_encoding_pcm 4");
+
+        fprintf ( stderr, "n_in=%d, n_out=%d, remaining=%d, remaining=%d\n", n_in, n_out, remaining, remaining-n_in );
 
         remaining                  -= n_in;
         lame->mf_size              += n_out;
@@ -698,12 +693,12 @@ static inline int  internal_lame_encoding_pcm (
             lame->mf_samples_to_encode -= lame->frame_size;
             for ( ch = 0; ch < lame->channels_out; ch++ )
                 memmove ( mfbuf [ch] + 0, mfbuf [ch] + lame->frame_size, lame->mf_size * sizeof (**mfbuf) );
-                 
+		
             FN("internal_lame_encoding_pcm 6");
 
         }
     }
-
+    assert (remaining == 0);
     return 0;
 }
 
@@ -744,11 +739,6 @@ int  lame_encode_pcm (
     data[0] = (sample_t*) calloc (sizeof(sample_t), len);
     data[1] = (sample_t*) calloc (sizeof(sample_t), len);
 
-    FN("lame_encode_pcm 2");
-    fprintf (stderr, "%08X %08X %08X %08X %08X\n", lame, os, pcm, len, flags );
-    fprintf (stderr, "size=%u\n", size);
-    fflush (stderr);
-
     switch (flags >> 28) {
     case LAME_INTERLEAVED >> 28:
         p = (const uint8_t*) pcm;
@@ -776,7 +766,6 @@ int  lame_encode_pcm (
                 memcpy ( data[1], data[0], sizeof(sample_t)*len );
                 break;
             case 2:
-                fprintf (stderr, "hier %u\n", 2*size);
                 retf ( data[0], p+0*size, 2*size, len );
                 retf ( data[1], p+1*size, 2*size, len );
                 break;
@@ -872,11 +861,7 @@ int  lame_encode_pcm (
         return -1;
     }
 
-    FN("lame_encode_pcm 3");
-
     ret = internal_lame_encoding_pcm ( lame, os, (sample_t const* const*) data, len );
-
-    FN("lame_encode_pcm 4");
 
     free ( data[0] );
     free ( data[1] );
@@ -891,21 +876,22 @@ int  lame_encode_pcm_flush (
         octetstream_t* const  os )
 {
     int  ret;
-    int  ret2;
+    int  ret_cb;
 
     FN("lame_encode_pcm_flush");
 
-    ret = lame_encode_pcm ( lame, os, NULL, lame->mf_samples_to_encode + 1152, LAME_INTERLEAVED | LAME_SILENCE | 1 );
-                                                 /* this is an ugly hack ^^^^ */
+    ret = lame_encode_pcm ( lame, os, NULL, 
+                            lame->mf_samples_to_encode + lame->frame_size, 
+			    LAME_INTERLEAVED | LAME_SILENCE | 1 );
 
 
-    // Question: What happens here? Is there'n easier to do this?
-    flush_bitstream (lame -> global_flags);       /* mp3 related stuff. bit buffer might still contain some mp3 data */
-    id3tag_write_v1 (lame -> global_flags);       /* write a ID3 tag to the bitstream */
-    ret2 = copy_buffer (os->data, os->size - os->length, &lame->bs);
-    fprintf (stderr, "ret2=%d\n", ret2 );
-    if (ret2 < 0) return ret2;
-    os->length += ret2;
+    // ugly, not encapsulated
+    flush_bitstream (lame -> global_flags);       // mp3 related stuff. bit buffer might still contain some mp3 data
+    id3tag_write_v1 (lame -> global_flags);       // write a ID3 tag to the bitstream
+    ret_cb = copy_buffer (os->data, os->size - os->length, &lame->bs);
+    if (ret_cb < 0) 
+        return ret_cb;
+    os->length += ret_cb;
 
 
     return ret;
@@ -1384,9 +1370,9 @@ void  init_scalar_functions ( OUT lame_t* const lame )
 
 static double  factorize ( 
         OUT long double  f1, 
-        OUT long double  f2, 
-        IN  int* const   x1, 
-        IN  int* const   x2 )
+	OUT long double  f2, 
+	IN  int* const   x1, 
+	IN  int* const   x2 )
 {
     unsigned     i;
     long         ltmp;
@@ -1414,7 +1400,8 @@ static double  factorize (
 
 /*
  *  Some programmers and some file format only supporting integral sampling frequencies
- *  This patch tries to find the right sampling frequency for some know rounding victims
+ *  This patch tries to find the right sampling frequency for some know rounding victims.
+ *  Better is to support directly 64 or 80 bit FPU precision.
  */
 
 long double  unround_samplefrequency ( OUT long double freq )
@@ -1423,18 +1410,18 @@ long double  unround_samplefrequency ( OUT long double freq )
         return freq;
 
     switch ( (unsigned short)freq ) {
-    case 48662: case 48663: return 1411200/ 29.L;  // SB 128 "48 kHz"
-    case 44055: case 44056: return 2863636/ 65.L;  // NTSC PCM
-    case 32072: case 32073: return 1411200/ 44.L;  // SB 128 "32 kHz"
-    case 31468: case 31469: return 2863636/ 91.L;  // NTSC Hi8 Digital Audio
-    case 23918: case 23919: return 1411200/ 59.L;  // SB 128 "24 kHz"
-    case 22254: case 22255: return  244800/ 11.L;  // MAC HQ
-    case 16036: case 16037: return 1411200/ 88.L;  // SB 128 "16 kHz"
-    case 11959: case 11960: return 1411200/118.L;  // SB 128 "12 kHz"
-    case 11127: case 11128: return  122400/ 11.L;  // MAC LQ
-    case  8018: case  8019: return 1411200/176.L;  // SB 128  "8 kHz"
-    case  8012: case  8013: return  312500/ 39.L;  // NeXT/Telco
-    case  5512: case  5513: return   44100/  8.L;  // 1/8 CD
+    case 48662: case 48663: return 1411200/ 29.L;  // SB 128 "48 kHz"         48662.06896551724137931034
+    case 44055: case 44056: return 2863636/ 65.L;  // NTSC PCM/LD PCM         44055.93846153846153846153
+    case 32072: case 32073: return 1411200/ 44.L;  // SB 128 "32 kHz"         32072.72727272727272727272
+    case 31468: case 31469: return 2863636/ 91.L;  // NTSC Hi8 Digital Audio  31468.52747252747252747252
+    case 23918: case 23919: return 1411200/ 59.L;  // SB 128 "24 kHz"         23918.64406779661016949152
+    case 22254: case 22255: return  244800/ 11.L;  // MAC HQ                  22254.54545454545454545454
+    case 16036: case 16037: return 1411200/ 88.L;  // SB 128 "16 kHz"         16036.36363636363636363636
+    case 11959: case 11960: return 1411200/118.L;  // SB 128 "12 kHz"         11959.32203389830508474576
+    case 11127: case 11128: return  122400/ 11.L;  // MAC LQ                  11127.27272727272727272727
+    case  8018: case  8019: return 1411200/176.L;  // SB 128  "8 kHz"          8018.18181818181818181818
+    case  8012: case  8013: return  312500/ 39.L;  // NeXT/Telco               8012.82051282051282051282
+    case  5512: case  5513: return   44100/  8.L;  // 1/8 CD                   5512.50000000000000000000
     }
 
     return freq;
@@ -1482,6 +1469,9 @@ resample_t*  resample_open (
 
     FN("resample_open");
 
+    if ( sampfreq_in == sampfreq_out )
+        return NULL;
+
     err = factorize ( sampfreq_out, sampfreq_in, &(ret->scale_out), &(ret->scale_in) );
     fprintf ( stderr, "(%.6g => %.6g Hz, Ratio %d:%d",
               (double)sampfreq_in, (double)sampfreq_out, ret->scale_in, ret->scale_out );
@@ -1489,6 +1479,9 @@ resample_t*  resample_open (
         fprintf ( stderr, ", Error %+.3f ppm", 1.e6*err );
     fprintf ( stderr, ")\n" );
     fflush  ( stderr );
+
+    if ( ret->scale_out == ret->scale_in )
+        return NULL;
 
     ret->Class_ID        = RESAMPLE_ID;
     ret->samplefreq_in   = sampfreq_in;
@@ -1559,7 +1552,7 @@ int  resample_buffer (                          // return code, 0 for success
         INOUT size_t     *const   out_req_len,  // requested output data len/really written output data len
         OUT   sample_t   *const   in,           // where are the input data?
         INOUT size_t     *const   in_avail_len, // available input data len/consumed input data len
-        OUT   size_t              channel )     // number of the channel (needed for buffering)
+        OUT   size_t              channel )     // number of the channel (needed for internal buffering)
 {
     sample_t*  p           = out;
     sample_t*  in_old      = r->in_old [channel];
