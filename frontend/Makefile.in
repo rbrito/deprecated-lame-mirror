@@ -1,6 +1,6 @@
-# Makefile.in generated automatically by automake 1.4b from Makefile.am
+# Makefile.in generated automatically by automake 1.4d from Makefile.am
 
-# Copyright 1994, 1995, 1996, 1997, 1998, 1999, 2000
+# Copyright 1994, 1995, 1996, 1997, 1998, 1999, 2000, 2001
 # Free Software Foundation, Inc.
 # This Makefile.in is free software; the Free Software Foundation
 # gives unlimited permission to copy and/or distribute it,
@@ -48,6 +48,7 @@ INSTALL_PROGRAM = @INSTALL_PROGRAM@
 INSTALL_DATA = @INSTALL_DATA@
 INSTALL_SCRIPT = @INSTALL_SCRIPT@
 INSTALL_STRIP_FLAG =
+INSTALL_HEADER = $(INSTALL_DATA)
 transform = @program_transform_name@
 
 NORMAL_INSTALL = :
@@ -72,8 +73,6 @@ CC = @CC@
 CONFIG_DEFS = @CONFIG_DEFS@
 CPP = @CPP@
 CPUTYPE = @CPUTYPE@
-CXX = @CXX@
-CXXCPP = @CXXCPP@
 DEPDIR = @DEPDIR@
 DLLTOOL = @DLLTOOL@
 EXEEXT = @EXEEXT@
@@ -101,13 +100,14 @@ U = @U@
 VERSION = @VERSION@
 WITH_MP3RTP = @WITH_MP3RTP@
 WITH_MP3X = @WITH_MP3X@
+_am_include = @_am_include@
 install_sh = @install_sh@
 
 
 # global section for every Makefile.am
 
 
-AUTOMAKE_OPTIONS = 1.4b foreign $(top_srcdir)/ansi2knr
+AUTOMAKE_OPTIONS = 1.4d foreign $(top_srcdir)/ansi2knr
 
 bin_PROGRAMS = lame @WITH_MP3RTP@ @WITH_MP3X@
 EXTRA_PROGRAMS = mp3rtp mp3x
@@ -225,11 +225,12 @@ $(EXTRA_mp3rtp_SOURCES) $(mp3x_SOURCES) $(EXTRA_mp3x_SOURCES)
 HEADERS =  $(noinst_HEADERS)
 
 depcomp = $(SHELL) $(top_srcdir)/depcomp
-DEP_FILES =  @AMDEP@ $(DEPDIR)/brhist$U.Po $(DEPDIR)/get_audio$U.Po \
-$(DEPDIR)/gpkplotting$U.Po $(DEPDIR)/gtkanal$U.Po \
-$(DEPDIR)/lametime$U.Po $(DEPDIR)/main$U.Po $(DEPDIR)/mp3rtp$U.Po \
-$(DEPDIR)/mp3x$U.Po $(DEPDIR)/parse$U.Po $(DEPDIR)/portableio$U.Po \
-$(DEPDIR)/rtp$U.Po $(DEPDIR)/timestatus$U.Po
+@AMDEP@DEP_FILES =  $(DEPDIR)/brhist$U.Po $(DEPDIR)/get_audio$U.Po \
+@AMDEP@$(DEPDIR)/gpkplotting$U.Po $(DEPDIR)/gtkanal$U.Po \
+@AMDEP@$(DEPDIR)/lametime$U.Po $(DEPDIR)/main$U.Po \
+@AMDEP@$(DEPDIR)/mp3rtp$U.Po $(DEPDIR)/mp3x$U.Po $(DEPDIR)/parse$U.Po \
+@AMDEP@$(DEPDIR)/portableio$U.Po $(DEPDIR)/rtp$U.Po \
+@AMDEP@$(DEPDIR)/timestatus$U.Po
 DIST_COMMON =  $(noinst_HEADERS) Makefile.am Makefile.in depcomp
 
 
@@ -239,7 +240,7 @@ GZIP_ENV = --best
 SOURCES = $(lame_SOURCES) $(EXTRA_lame_SOURCES) $(mp3rtp_SOURCES) $(EXTRA_mp3rtp_SOURCES) $(mp3x_SOURCES) $(EXTRA_mp3x_SOURCES)
 OBJECTS = $(am_lame_OBJECTS) $(am_mp3rtp_OBJECTS) $(am_mp3x_OBJECTS)
 
-all: all-redirect
+all: all-am
 .SUFFIXES:
 .SUFFIXES: .c .h .lo .o
 $(srcdir)/Makefile.in: @MAINTAINER_MODE_TRUE@ Makefile.am $(top_srcdir)/configure.in $(ACLOCAL_M4) $(top_srcdir)/Makefile.am.global
@@ -247,7 +248,7 @@ $(srcdir)/Makefile.in: @MAINTAINER_MODE_TRUE@ Makefile.am $(top_srcdir)/configur
 
 Makefile: $(srcdir)/Makefile.in  $(top_builddir)/config.status
 	cd $(top_builddir) \
-	  && CONFIG_FILES=$(subdir)/$@ CONFIG_HEADERS= $(SHELL) ./config.status
+	  && CONFIG_FILES=$(subdir)/$@ CONFIG_HEADERS= CONFIG_LINKS= $(SHELL) ./config.status
 
 
 mostlyclean-binPROGRAMS:
@@ -281,12 +282,8 @@ uninstall-binPROGRAMS:
 mostlyclean-compile:
 	-rm -f *.o core *.core
 
-clean-compile:
-
 distclean-compile:
 	-rm -f *.tab.c
-
-maintainer-clean-compile:
 
 mostlyclean-libtool:
 	-rm -f *.lo
@@ -295,8 +292,7 @@ clean-libtool:
 	-rm -rf .libs _libs
 
 distclean-libtool:
-
-maintainer-clean-libtool:
+	-rm -f libtool
 $(top_srcdir)/ansi2knr: $(top_srcdir)/ansi2knr.o
 	cd $(top_srcdir) && $(MAKE) $(AM_MAKEFLAGS) ansi2knr
 
@@ -306,12 +302,6 @@ $(top_srcdir)/ansi2knr.o:
 
 mostlyclean-kr:
 	-rm -f *_.c
-
-clean-kr:
-
-distclean-kr:
-
-maintainer-clean-kr:
 
 lame$(EXEEXT): $(lame_OBJECTS) $(lame_DEPENDENCIES)
 	@rm -f lame$(EXEEXT)
@@ -365,7 +355,7 @@ ID: $(HEADERS) $(SOURCES) $(LISP) $(TAGS_FILES)
 	       END { for (i in files) print i; }'`; \
 	mkid -fID $$unique $(LISP)
 
-TAGS:  $(HEADERS) $(SOURCES)  $(TAGS_DEPENDENCIES) \
+TAGS: $(HEADERS) $(SOURCES)  $(TAGS_DEPENDENCIES) \
 		$(TAGS_FILES) $(LISP)
 	tags=; \
 	here=`pwd`; \
@@ -383,36 +373,24 @@ GTAGS:
 	  && cd $(top_srcdir) \
 	  && gtags -i $$here
 
-mostlyclean-tags:
-
-clean-tags:
-
 distclean-tags:
 	-rm -f TAGS ID
 
-maintainer-clean-tags:
-
-@AMDEP@include $(DEPDIR)/brhist$U.Po
-@AMDEP@include $(DEPDIR)/get_audio$U.Po
-@AMDEP@include $(DEPDIR)/gpkplotting$U.Po
-@AMDEP@include $(DEPDIR)/gtkanal$U.Po
-@AMDEP@include $(DEPDIR)/lametime$U.Po
-@AMDEP@include $(DEPDIR)/main$U.Po
-@AMDEP@include $(DEPDIR)/mp3rtp$U.Po
-@AMDEP@include $(DEPDIR)/mp3x$U.Po
-@AMDEP@include $(DEPDIR)/parse$U.Po
-@AMDEP@include $(DEPDIR)/portableio$U.Po
-@AMDEP@include $(DEPDIR)/rtp$U.Po
-@AMDEP@include $(DEPDIR)/timestatus$U.Po
-
-mostlyclean-depend:
-
-clean-depend:
+@AMDEP@@_am_include@ $(DEPDIR)/brhist$U.Po
+@AMDEP@@_am_include@ $(DEPDIR)/get_audio$U.Po
+@AMDEP@@_am_include@ $(DEPDIR)/gpkplotting$U.Po
+@AMDEP@@_am_include@ $(DEPDIR)/gtkanal$U.Po
+@AMDEP@@_am_include@ $(DEPDIR)/lametime$U.Po
+@AMDEP@@_am_include@ $(DEPDIR)/main$U.Po
+@AMDEP@@_am_include@ $(DEPDIR)/mp3rtp$U.Po
+@AMDEP@@_am_include@ $(DEPDIR)/mp3x$U.Po
+@AMDEP@@_am_include@ $(DEPDIR)/parse$U.Po
+@AMDEP@@_am_include@ $(DEPDIR)/portableio$U.Po
+@AMDEP@@_am_include@ $(DEPDIR)/rtp$U.Po
+@AMDEP@@_am_include@ $(DEPDIR)/timestatus$U.Po
 
 distclean-depend:
 	-rm -rf $(DEPDIR)
-
-maintainer-clean-depend:
 
 @AMDEP@CCDEPMODE = @CCDEPMODE@
 
@@ -430,6 +408,7 @@ maintainer-clean-depend:
 
 
 distdir = $(top_builddir)/$(PACKAGE)-$(VERSION)/$(subdir)
+
 
 distdir: $(DISTFILES)
 	@for file in $(DISTFILES); do \
@@ -463,7 +442,6 @@ install: install-am
 uninstall-am: uninstall-binPROGRAMS
 uninstall: uninstall-am
 all-am: Makefile $(PROGRAMS) $(HEADERS)
-all-redirect: all-am
 install-strip:
 	$(MAKE) $(AM_MAKEFLAGS) INSTALL_STRIP_FLAG=-s install
 installdirs:
@@ -480,48 +458,40 @@ distclean-generic:
 	-rm -f config.cache config.log stamp-h stamp-h[0-9]*
 
 maintainer-clean-generic:
+	@echo "This command is intended for maintainers to use"
+	@echo "it deletes files that may require special tools to rebuild."
 	-rm -f Makefile.in
-mostlyclean-am:  mostlyclean-binPROGRAMS mostlyclean-compile \
-		mostlyclean-libtool mostlyclean-kr mostlyclean-tags \
-		mostlyclean-depend mostlyclean-generic
-
-mostlyclean: mostlyclean-am
-
-clean-am:  clean-binPROGRAMS clean-compile clean-libtool clean-kr \
-		clean-tags clean-depend clean-generic mostlyclean-am
-
 clean: clean-am
 
-distclean-am:  distclean-binPROGRAMS distclean-compile distclean-libtool \
-		distclean-kr distclean-tags distclean-depend \
-		distclean-generic clean-am
-	-rm -f libtool
+clean-am: clean-binPROGRAMS clean-generic clean-libtool mostlyclean-am
 
 distclean: distclean-am
 
-maintainer-clean-am:  maintainer-clean-binPROGRAMS \
-		maintainer-clean-compile maintainer-clean-libtool \
-		maintainer-clean-kr maintainer-clean-tags \
-		maintainer-clean-depend maintainer-clean-generic \
-		distclean-am
-	@echo "This command is intended for maintainers to use;"
-	@echo "it deletes files that may require special tools to rebuild."
+distclean-am: clean-am distclean-binPROGRAMS distclean-compile \
+	distclean-depend distclean-generic distclean-libtool \
+	distclean-tags
 
 maintainer-clean: maintainer-clean-am
 
-.PHONY: mostlyclean-binPROGRAMS distclean-binPROGRAMS clean-binPROGRAMS \
-maintainer-clean-binPROGRAMS uninstall-binPROGRAMS install-binPROGRAMS \
-mostlyclean-compile distclean-compile clean-compile \
-maintainer-clean-compile mostlyclean-libtool distclean-libtool \
-clean-libtool maintainer-clean-libtool mostlyclean-kr distclean-kr \
-clean-kr maintainer-clean-kr tags mostlyclean-tags distclean-tags \
-clean-tags maintainer-clean-tags mostlyclean-depend distclean-depend \
-clean-depend maintainer-clean-depend distdir info-am info dvi-am dvi \
-check check-am installcheck-am installcheck install-exec-am \
-install-exec install-data-am install-data install-am install \
-uninstall-am uninstall all-redirect all-am all install-strip \
-installdirs mostlyclean-generic distclean-generic clean-generic \
-maintainer-clean-generic clean mostlyclean distclean maintainer-clean
+maintainer-clean-am: distclean-am maintainer-clean-binPROGRAMS \
+	maintainer-clean-generic
+
+mostlyclean: mostlyclean-am
+
+mostlyclean-am: mostlyclean-binPROGRAMS mostlyclean-compile \
+	mostlyclean-generic mostlyclean-kr mostlyclean-libtool
+
+.PHONY: check check-am clean clean-binPROGRAMS clean-generic \
+	clean-libtool distclean distclean-binPROGRAMS distclean-compile \
+	distclean-depend distclean-generic distclean-libtool \
+	distclean-tags distdir dvi dvi-am info info-am install \
+	install-am install-binPROGRAMS install-data install-data-am \
+	install-exec install-exec-am install-strip installcheck \
+	installcheck-am installdirs maintainer-clean \
+	maintainer-clean-binPROGRAMS maintainer-clean-generic \
+	mostlyclean mostlyclean-binPROGRAMS mostlyclean-compile \
+	mostlyclean-generic mostlyclean-kr mostlyclean-libtool tags \
+	uninstall uninstall-am uninstall-binPROGRAMS
 
 
 # end global section

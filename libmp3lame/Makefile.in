@@ -1,6 +1,6 @@
-# Makefile.in generated automatically by automake 1.4b from Makefile.am
+# Makefile.in generated automatically by automake 1.4d from Makefile.am
 
-# Copyright 1994, 1995, 1996, 1997, 1998, 1999, 2000
+# Copyright 1994, 1995, 1996, 1997, 1998, 1999, 2000, 2001
 # Free Software Foundation, Inc.
 # This Makefile.in is free software; the Free Software Foundation
 # gives unlimited permission to copy and/or distribute it,
@@ -48,6 +48,7 @@ INSTALL_PROGRAM = @INSTALL_PROGRAM@
 INSTALL_DATA = @INSTALL_DATA@
 INSTALL_SCRIPT = @INSTALL_SCRIPT@
 INSTALL_STRIP_FLAG =
+INSTALL_HEADER = $(INSTALL_DATA)
 transform = @program_transform_name@
 
 NORMAL_INSTALL = :
@@ -72,8 +73,6 @@ CC = @CC@
 CONFIG_DEFS = @CONFIG_DEFS@
 CPP = @CPP@
 CPUTYPE = @CPUTYPE@
-CXX = @CXX@
-CXXCPP = @CXXCPP@
 DEPDIR = @DEPDIR@
 DLLTOOL = @DLLTOOL@
 EXEEXT = @EXEEXT@
@@ -102,13 +101,14 @@ U = @U@
 VERSION = @VERSION@
 WITH_MP3RTP = @WITH_MP3RTP@
 WITH_MP3X = @WITH_MP3X@
+_am_include = @_am_include@
 install_sh = @install_sh@
 
 
 # global section for every Makefile.am
 
 
-AUTOMAKE_OPTIONS = 1.4b foreign $(top_srcdir)/ansi2knr
+AUTOMAKE_OPTIONS = 1.4d foreign $(top_srcdir)/ansi2knr
 
 SUBDIRS = i386
 
@@ -220,15 +220,16 @@ DIST_SOURCES =  $(libmp3lame_la_SOURCES)
 HEADERS =  $(noinst_HEADERS)
 
 depcomp = $(SHELL) $(top_srcdir)/depcomp
-DEP_FILES =  @AMDEP@ $(DEPDIR)/VbrTag$U.Plo $(DEPDIR)/bitstream$U.Plo \
-$(DEPDIR)/encoder$U.Plo $(DEPDIR)/fft$U.Plo $(DEPDIR)/id3tag$U.Plo \
-$(DEPDIR)/lame$U.Plo $(DEPDIR)/mpglib_interface$U.Plo \
-$(DEPDIR)/newmdct$U.Plo $(DEPDIR)/pcm$U.Plo $(DEPDIR)/psymodel$U.Plo \
-$(DEPDIR)/quantize$U.Plo $(DEPDIR)/quantize_pvt$U.Plo \
-$(DEPDIR)/reservoir$U.Plo $(DEPDIR)/tables$U.Plo \
-$(DEPDIR)/takehiro$U.Plo $(DEPDIR)/util$U.Plo \
-$(DEPDIR)/vbrquantize$U.Plo $(DEPDIR)/version$U.Plo \
-$(DEPDIR)/vorbis_interface$U.Plo
+@AMDEP@DEP_FILES =  $(DEPDIR)/VbrTag$U.Plo $(DEPDIR)/bitstream$U.Plo \
+@AMDEP@$(DEPDIR)/encoder$U.Plo $(DEPDIR)/fft$U.Plo \
+@AMDEP@$(DEPDIR)/id3tag$U.Plo $(DEPDIR)/lame$U.Plo \
+@AMDEP@$(DEPDIR)/mpglib_interface$U.Plo $(DEPDIR)/newmdct$U.Plo \
+@AMDEP@$(DEPDIR)/pcm$U.Plo $(DEPDIR)/psymodel$U.Plo \
+@AMDEP@$(DEPDIR)/quantize$U.Plo $(DEPDIR)/quantize_pvt$U.Plo \
+@AMDEP@$(DEPDIR)/reservoir$U.Plo $(DEPDIR)/tables$U.Plo \
+@AMDEP@$(DEPDIR)/takehiro$U.Plo $(DEPDIR)/util$U.Plo \
+@AMDEP@$(DEPDIR)/vbrquantize$U.Plo $(DEPDIR)/version$U.Plo \
+@AMDEP@$(DEPDIR)/vorbis_interface$U.Plo
 DIST_COMMON =  $(noinst_HEADERS) Makefile.am Makefile.in depcomp
 
 
@@ -239,7 +240,7 @@ DIST_SUBDIRS =  $(SUBDIRS)
 SOURCES = $(libmp3lame_la_SOURCES)
 OBJECTS = $(am_libmp3lame_la_OBJECTS)
 
-all: all-redirect
+all: all-recursive
 .SUFFIXES:
 .SUFFIXES: .c .lo .o
 $(srcdir)/Makefile.in: @MAINTAINER_MODE_TRUE@ Makefile.am $(top_srcdir)/configure.in $(ACLOCAL_M4) $(top_srcdir)/Makefile.am.global
@@ -247,7 +248,7 @@ $(srcdir)/Makefile.in: @MAINTAINER_MODE_TRUE@ Makefile.am $(top_srcdir)/configur
 
 Makefile: $(srcdir)/Makefile.in  $(top_builddir)/config.status
 	cd $(top_builddir) \
-	  && CONFIG_FILES=$(subdir)/$@ CONFIG_HEADERS= $(SHELL) ./config.status
+	  && CONFIG_FILES=$(subdir)/$@ CONFIG_HEADERS= CONFIG_LINKS= $(SHELL) ./config.status
 
 
 mostlyclean-libLTLIBRARIES:
@@ -279,12 +280,8 @@ uninstall-libLTLIBRARIES:
 mostlyclean-compile:
 	-rm -f *.o core *.core
 
-clean-compile:
-
 distclean-compile:
 	-rm -f *.tab.c
-
-maintainer-clean-compile:
 
 mostlyclean-libtool:
 	-rm -f *.lo
@@ -293,8 +290,7 @@ clean-libtool:
 	-rm -rf .libs _libs
 
 distclean-libtool:
-
-maintainer-clean-libtool:
+	-rm -f libtool
 $(top_srcdir)/ansi2knr: $(top_srcdir)/ansi2knr.o
 	cd $(top_srcdir) && $(MAKE) $(AM_MAKEFLAGS) ansi2knr
 
@@ -304,12 +300,6 @@ $(top_srcdir)/ansi2knr.o:
 
 mostlyclean-kr:
 	-rm -f *_.c
-
-clean-kr:
-
-distclean-kr:
-
-maintainer-clean-kr:
 
 libmp3lame.la: $(libmp3lame_la_OBJECTS) $(libmp3lame_la_DEPENDENCIES)
 	$(LINK) -rpath $(libdir) $(libmp3lame_la_LDFLAGS) $(libmp3lame_la_OBJECTS) $(libmp3lame_la_LIBADD) $(LIBS)
@@ -366,7 +356,6 @@ vorbis_interface_.lo : $(ANSI2KNR)
 # (1) if the variable is set in `config.status', edit `config.status'
 #     (which will cause the Makefiles to be regenerated when you run `make');
 # (2) otherwise, pass the desired values on the `make' command line.
-
 all-recursive install-data-recursive install-exec-recursive \
 installdirs-recursive install-recursive uninstall-recursive  \
 check-recursive installcheck-recursive info-recursive dvi-recursive:
@@ -452,43 +441,31 @@ GTAGS:
 	  && cd $(top_srcdir) \
 	  && gtags -i $$here
 
-mostlyclean-tags:
-
-clean-tags:
-
 distclean-tags:
 	-rm -f TAGS ID
 
-maintainer-clean-tags:
-
-@AMDEP@include $(DEPDIR)/VbrTag$U.Plo
-@AMDEP@include $(DEPDIR)/bitstream$U.Plo
-@AMDEP@include $(DEPDIR)/encoder$U.Plo
-@AMDEP@include $(DEPDIR)/fft$U.Plo
-@AMDEP@include $(DEPDIR)/id3tag$U.Plo
-@AMDEP@include $(DEPDIR)/lame$U.Plo
-@AMDEP@include $(DEPDIR)/mpglib_interface$U.Plo
-@AMDEP@include $(DEPDIR)/newmdct$U.Plo
-@AMDEP@include $(DEPDIR)/pcm$U.Plo
-@AMDEP@include $(DEPDIR)/psymodel$U.Plo
-@AMDEP@include $(DEPDIR)/quantize$U.Plo
-@AMDEP@include $(DEPDIR)/quantize_pvt$U.Plo
-@AMDEP@include $(DEPDIR)/reservoir$U.Plo
-@AMDEP@include $(DEPDIR)/tables$U.Plo
-@AMDEP@include $(DEPDIR)/takehiro$U.Plo
-@AMDEP@include $(DEPDIR)/util$U.Plo
-@AMDEP@include $(DEPDIR)/vbrquantize$U.Plo
-@AMDEP@include $(DEPDIR)/version$U.Plo
-@AMDEP@include $(DEPDIR)/vorbis_interface$U.Plo
-
-mostlyclean-depend:
-
-clean-depend:
+@AMDEP@@_am_include@ $(DEPDIR)/VbrTag$U.Plo
+@AMDEP@@_am_include@ $(DEPDIR)/bitstream$U.Plo
+@AMDEP@@_am_include@ $(DEPDIR)/encoder$U.Plo
+@AMDEP@@_am_include@ $(DEPDIR)/fft$U.Plo
+@AMDEP@@_am_include@ $(DEPDIR)/id3tag$U.Plo
+@AMDEP@@_am_include@ $(DEPDIR)/lame$U.Plo
+@AMDEP@@_am_include@ $(DEPDIR)/mpglib_interface$U.Plo
+@AMDEP@@_am_include@ $(DEPDIR)/newmdct$U.Plo
+@AMDEP@@_am_include@ $(DEPDIR)/pcm$U.Plo
+@AMDEP@@_am_include@ $(DEPDIR)/psymodel$U.Plo
+@AMDEP@@_am_include@ $(DEPDIR)/quantize$U.Plo
+@AMDEP@@_am_include@ $(DEPDIR)/quantize_pvt$U.Plo
+@AMDEP@@_am_include@ $(DEPDIR)/reservoir$U.Plo
+@AMDEP@@_am_include@ $(DEPDIR)/tables$U.Plo
+@AMDEP@@_am_include@ $(DEPDIR)/takehiro$U.Plo
+@AMDEP@@_am_include@ $(DEPDIR)/util$U.Plo
+@AMDEP@@_am_include@ $(DEPDIR)/vbrquantize$U.Plo
+@AMDEP@@_am_include@ $(DEPDIR)/version$U.Plo
+@AMDEP@@_am_include@ $(DEPDIR)/vorbis_interface$U.Plo
 
 distclean-depend:
 	-rm -rf $(DEPDIR)
-
-maintainer-clean-depend:
 
 @AMDEP@CCDEPMODE = @CCDEPMODE@
 
@@ -507,6 +484,7 @@ maintainer-clean-depend:
 
 distdir = $(top_builddir)/$(PACKAGE)-$(VERSION)/$(subdir)
 
+
 distdir: $(DISTFILES)
 	@for file in $(DISTFILES); do \
 	  d=$(srcdir); \
@@ -524,7 +502,8 @@ distdir: $(DISTFILES)
 	    test -d $(distdir)/$$subdir \
 	    || mkdir $(distdir)/$$subdir \
 	    || exit 1; \
-	    (cd $$subdir && $(MAKE) $(AM_MAKEFLAGS) top_distdir=../$(top_distdir) distdir=../$(distdir)/$$subdir distdir) \
+	    (cd $$subdir && \
+	      $(MAKE) $(AM_MAKEFLAGS) top_distdir=../$(top_distdir) distdir=../$(distdir)/$$subdir distdir) \
 	      || exit 1; \
 	  fi; \
 	done
@@ -548,7 +527,6 @@ install: install-recursive
 uninstall-am: uninstall-libLTLIBRARIES
 uninstall: uninstall-recursive
 all-am: Makefile $(LTLIBRARIES) $(HEADERS)
-all-redirect: all-recursive
 install-strip:
 	$(MAKE) $(AM_MAKEFLAGS) INSTALL_STRIP_FLAG=-s install
 installdirs: installdirs-recursive
@@ -566,55 +544,46 @@ distclean-generic:
 	-rm -f config.cache config.log stamp-h stamp-h[0-9]*
 
 maintainer-clean-generic:
+	@echo "This command is intended for maintainers to use"
+	@echo "it deletes files that may require special tools to rebuild."
 	-rm -f Makefile.in
-mostlyclean-am:  mostlyclean-libLTLIBRARIES mostlyclean-compile \
-		mostlyclean-libtool mostlyclean-kr mostlyclean-tags \
-		mostlyclean-depend mostlyclean-generic
-
-mostlyclean: mostlyclean-recursive
-
-clean-am:  clean-libLTLIBRARIES clean-compile clean-libtool clean-kr \
-		clean-tags clean-depend clean-generic mostlyclean-am
-
 clean: clean-recursive
 
-distclean-am:  distclean-libLTLIBRARIES distclean-compile \
-		distclean-libtool distclean-kr distclean-tags \
-		distclean-depend distclean-generic clean-am
-	-rm -f libtool
+clean-am: clean-generic clean-libLTLIBRARIES clean-libtool \
+	mostlyclean-am
 
 distclean: distclean-recursive
 
-maintainer-clean-am:  maintainer-clean-libLTLIBRARIES \
-		maintainer-clean-compile maintainer-clean-libtool \
-		maintainer-clean-kr maintainer-clean-tags \
-		maintainer-clean-depend maintainer-clean-generic \
-		distclean-am
-	@echo "This command is intended for maintainers to use;"
-	@echo "it deletes files that may require special tools to rebuild."
+distclean-am: clean-am distclean-compile distclean-depend \
+	distclean-generic distclean-libLTLIBRARIES distclean-libtool \
+	distclean-tags
 
 maintainer-clean: maintainer-clean-recursive
 
-.PHONY: mostlyclean-libLTLIBRARIES distclean-libLTLIBRARIES \
-clean-libLTLIBRARIES maintainer-clean-libLTLIBRARIES \
-uninstall-libLTLIBRARIES install-libLTLIBRARIES mostlyclean-compile \
-distclean-compile clean-compile maintainer-clean-compile \
-mostlyclean-libtool distclean-libtool clean-libtool \
-maintainer-clean-libtool mostlyclean-kr distclean-kr clean-kr \
-maintainer-clean-kr install-recursive uninstall-recursive \
-install-data-recursive uninstall-data-recursive install-exec-recursive \
-uninstall-exec-recursive installdirs-recursive uninstalldirs-recursive \
-all-recursive check-recursive installcheck-recursive info-recursive \
-dvi-recursive mostlyclean-recursive distclean-recursive clean-recursive \
-maintainer-clean-recursive tags tags-recursive mostlyclean-tags \
-distclean-tags clean-tags maintainer-clean-tags mostlyclean-depend \
-distclean-depend clean-depend maintainer-clean-depend distdir info-am \
-info dvi-am dvi check check-am installcheck-am installcheck \
-install-exec-am install-exec install-data-am install-data install-am \
-install uninstall-am uninstall all-redirect all-am all install-strip \
-installdirs-am installdirs mostlyclean-generic distclean-generic \
-clean-generic maintainer-clean-generic clean mostlyclean distclean \
-maintainer-clean
+maintainer-clean-am: distclean-am maintainer-clean-generic \
+	maintainer-clean-libLTLIBRARIES
+
+mostlyclean: mostlyclean-recursive
+
+mostlyclean-am: mostlyclean-compile mostlyclean-generic mostlyclean-kr \
+	mostlyclean-libLTLIBRARIES mostlyclean-libtool
+
+.PHONY: all-recursive check check-am check-recursive clean clean-generic \
+	clean-libLTLIBRARIES clean-libtool clean-recursive distclean \
+	distclean-compile distclean-depend distclean-generic \
+	distclean-libLTLIBRARIES distclean-libtool distclean-recursive \
+	distclean-tags distdir dvi dvi-am dvi-recursive info info-am \
+	info-recursive install install-am install-data install-data-am \
+	install-data-recursive install-exec install-exec-am \
+	install-exec-recursive install-libLTLIBRARIES install-recursive \
+	install-strip installcheck installcheck-am \
+	installcheck-recursive installdirs installdirs-am \
+	installdirs-recursive maintainer-clean maintainer-clean-generic \
+	maintainer-clean-libLTLIBRARIES maintainer-clean-recursive \
+	mostlyclean mostlyclean-compile mostlyclean-generic \
+	mostlyclean-kr mostlyclean-libLTLIBRARIES mostlyclean-libtool \
+	mostlyclean-recursive tags tags-recursive uninstall \
+	uninstall-am uninstall-libLTLIBRARIES uninstall-recursive
 
 
 # end global section
