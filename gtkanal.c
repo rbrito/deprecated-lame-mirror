@@ -24,6 +24,8 @@ static int mp3done = 0;         /* last frame has been read */
 static GtkWidget *frameprogress; /* progress bar */ 
 static GtkWidget *framecounter;  /* progress counter */ 
 
+static int subblock_draw[3] = { 1, 1, 1 };
+
 /* main window */
 GtkWidget *window;
 /* Backing pixmap for drawing areas */
@@ -415,14 +417,14 @@ void plot_frame(void)
     /* draw some hash marks showing scalefactor bands */
     if (gtkinfo.sfblines) {
       int fac,nsfb, *scalefac;
-      if (pplot1->blocktype[gr][ch]==SHORT_TYPE) {
+      if (blocktype[gr][ch]==SHORT_TYPE) {
 	nsfb=SBMAX_s;
 	fac=3;
-	scalefac = scalefac_band.l;
+	scalefac = scalefac_band.s;
       }else{
 	nsfb=SBMAX_l;
 	fac=1;
-	scalefac = scalefac_band.s;
+	scalefac = scalefac_band.l;
       }
       for (i=nsfb-7 ; i<nsfb; i++) {
 	ycord[0] = .8*ymx;  ycord[1] = ymn;
@@ -444,6 +446,8 @@ void plot_frame(void)
       }else{
 	coeff = ch ? data2[i] : data[i];
       }
+      if (blocktype[gr][ch]==SHORT_TYPE && !subblock_draw[i % 3])
+        coeff = 0;
       ycord[i]=coeff*coeff*1e10;
       ycord[i] = log10( MAX( ycord[i],(double) 1)); 
       ymx=(ycord[i] > ymx) ? ycord[i] : ymx;
@@ -492,7 +496,10 @@ void plot_frame(void)
       ymx=-9e20;
       for (i=0; i<n; i++) {
 	xcord[i] = i+1;
-	ycord[i] = log10( MAX( data[i],(double) 1));
+        if (blocktype[gr][ch]==SHORT_TYPE && !subblock_draw[i % 3])
+          ycord[i] = 0;
+        else
+	  ycord[i] = log10( MAX( data[i],(double) 1));
 	ymx=(ycord[i] > ymx) ? ycord[i] : ymx;
 	ymn=(ycord[i] < ymn) ? ycord[i] : ymn;
       }
@@ -531,7 +538,10 @@ void plot_frame(void)
       ymx=-9e20;
       for (i=0; i<n; i++) {
 	xcord[i] = i+1;
-	ycord[i] = log10( MAX( data[i],(double) 1));
+        if (blocktype[gr][ch]==SHORT_TYPE && !subblock_draw[i % 3])
+          ycord[i] = 0;
+        else
+	  ycord[i] = log10( MAX( data[i],(double) 1));
 	ymx=(ycord[i] > ymx) ? ycord[i] : ymx;
 	ymn=(ycord[i] < ymn) ? ycord[i] : ymn;
       }
@@ -557,7 +567,10 @@ void plot_frame(void)
 
       for (i=0; i<n; i++) {
 	xcord[i] = i+1;
-	ycord[i] = log10( MAX( data3[i], (double) 1));
+        if (blocktype[gr][ch]==SHORT_TYPE && !subblock_draw[i % 3])
+          ycord[i] = 0;
+        else
+	  ycord[i] = log10( MAX( data3[i], (double) 1));
 	ymx=(ycord[i] > ymx) ? ycord[i] : ymx;
 	ymn=(ycord[i] < ymn) ? ycord[i] : ymn;
       }
@@ -567,7 +580,10 @@ void plot_frame(void)
       
       for (i=0; i<n; i++) {
 	xcord[i] = i+1 + (.25*n)/SBMAX_l;
-	ycord[i] = log10( MAX( data2[i], (double) 1));
+        if (blocktype[gr][ch]==SHORT_TYPE && !subblock_draw[i % 3])
+          ycord[i] = 0;
+        else
+	  ycord[i] = log10( MAX( data2[i], (double) 1));
 	ymx=(ycord[i] > ymx) ? ycord[i] : ymx;
 	ymn=(ycord[i] < ymn) ? ycord[i] : ymn;
       }
@@ -595,7 +611,10 @@ void plot_frame(void)
       ymx=10;
       for (i=0; i<n; i++) {
 	xcord[i] = i+1;
-	ycord[i] = -data[i];
+        if (blocktype[gr][ch]==SHORT_TYPE && !subblock_draw[i % 3])
+          ycord[i] = 0;
+        else
+	  ycord[i] = -data[i];
 	ymx=(ycord[i] > ymx) ? ycord[i] : ymx;
 	ymn=(ycord[i] < ymn) ? ycord[i] : ymn;
       }
@@ -834,6 +853,33 @@ static void spec_option (GtkWidget *widget, gpointer data)
     break;
   }
   analyze();
+}
+
+static gint key_press_event (GtkWidget *widget, GdkEventKey *event)
+{
+  if (event->keyval == '1') {
+    subblock_draw[0] = 1;
+    subblock_draw[1] = 0;
+    subblock_draw[2] = 0;
+  }
+  else if (event->keyval == '2') {
+    subblock_draw[0] = 0;
+    subblock_draw[1] = 1;
+    subblock_draw[2] = 0;
+  }
+  else if (event->keyval == '3') {
+    subblock_draw[0] = 0;
+    subblock_draw[1] = 0;
+    subblock_draw[2] = 1;
+  }
+  else {
+    subblock_draw[0] = 1;
+    subblock_draw[1] = 1;
+    subblock_draw[2] = 1;
+  }
+
+  analyze();
+  return 0;
 }
 
 
@@ -1150,6 +1196,9 @@ int gtkcontrol(void)
     gtk_window_set_title (GTK_WINDOW (window), frameinfo);
     gtk_signal_connect (GTK_OBJECT (window), "delete_event",
 			GTK_SIGNAL_FUNC (delete_event), NULL);
+    gtk_signal_connect_object (GTK_OBJECT (window), "key_press_event",
+		      GTK_SIGNAL_FUNC(key_press_event),
+		      GTK_OBJECT (window));
     gtk_container_set_border_width (GTK_CONTAINER (window), 0);
 
 
