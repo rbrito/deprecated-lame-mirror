@@ -517,7 +517,7 @@ __declspec(dllexport) BE_ERR	beInitStream(PBE_CONFIG pbeConfig, PDWORD dwSamples
 
 	// Override Quality setting, use HIGHBYTE = NOT LOWBYTE to be backwards compatible
 	if (	( lameConfig.format.LHV1.nQuality & 0xFF ) ==
-			(~( lameConfig.format.LHV1.nQuality >> 8 )) & 0xFF )
+			((~( lameConfig.format.LHV1.nQuality >> 8 )) & 0xFF) )
 	{
 		lame_set_quality( gfp, lameConfig.format.LHV1.nQuality & 0xFF );
 	}
