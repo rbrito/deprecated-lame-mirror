@@ -1002,8 +1002,8 @@ void L3psycho_anal_ns( lame_global_flags * gfp,
 	const sample_t * const firbuf = &buffer[chn][576-350-NSFIRLEN+192];
 	for (i=0;i<576;i++) {
 	    FLOAT sum1, sum2;
-	    sum1 = firbuf[i + 10];
-	    sum2 = 0.0;
+	    sum1 = 0.0;
+	    sum2 = firbuf[i + 10];
 	    for (j=0;j<(NSFIRLEN-1)/2;j+=2) {
 		sum1 += fircoef[j  ] * (firbuf[i+j  ]+firbuf[i+NSFIRLEN-j  ]);
 		sum2 += fircoef[j+1] * (firbuf[i+j+1]+firbuf[i+NSFIRLEN-j-1]);
