@@ -31,7 +31,8 @@
 
 #include "encoder.h"
 #include "bitstream.h"
-#include "VbrTag.h"
+#include "tags.h"
+#include "util.h"
 #include "tables.h"
 
 typedef struct {
@@ -315,7 +316,7 @@ copy_buffer(lame_t gfc, unsigned char *buffer, int size)
     bs->bitidx = 0;
     minimum = pbuf - buffer;
 
-    UpdateMusicCRC(&gfc->nMusicCRC, buffer, minimum);
+    gfc->nMusicCRC = calculateCRC(buffer, minimum, gfc->nMusicCRC);
 #ifdef DECODE_ON_THE_FLY
     /* this is untested code;
        if, for somereason, we would like to decode the frame: */
@@ -556,31 +557,12 @@ writeheader(char *p, int val, int j, int ptr)
     return ptr + j;
 }
 
-static int
-CRC_update(int value, int crc)
-{
-    int i;
-    value <<= 8;
-    for (i = 0; i < 8; i++) {
-	value <<= 1;
-	crc <<= 1;
-
-	if (((crc ^ value) & 0x10000))
-	    crc ^= CRC16_POLYNOMIAL;
-    }
-    return crc;
-}
-
 void
 CRC_writeheader(char *header, int len)
 {
-    int crc = 0xffff; /* (jo) init crc16 for error_protection */
-    int i;
-
-    crc = CRC_update(0xff & header[2], crc);
-    crc = CRC_update(0xff & header[3], crc);
-    for (i = 6; i < len; i++)
-	crc = CRC_update(0xff & header[i], crc);
+    uint16_t crc = 0xffff; /* (jo) init crc16 for error_protection */
+    crc = calculateCRC(&header[2], 2, crc);
+    crc = calculateCRC(&header[6], len - 6, crc);
 
     header[4] = crc >> 8;
     header[5] = crc & 255;
@@ -915,4 +897,3 @@ format_bitstream(lame_t gfc, unsigned char *mp3buf, int mp3buf_size)
     /* copy mp3 bit buffer into array */
     return copy_buffer(gfc, mp3buf, mp3buf_size);
 }
-

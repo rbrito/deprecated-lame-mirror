@@ -24,15 +24,8 @@
 
 #include "lame.h"
 
-#ifdef __cplusplus
-extern "C" {
-#endif
-
 int	BitrateIndex(int, int);
 void	disable_FPE(void);
-
-#ifdef __cplusplus
-}
-#endif
+uint16_t calculateCRC(unsigned char *buffer, int size, uint16_t crc);
 
 #endif /* LAME_UTIL_H */

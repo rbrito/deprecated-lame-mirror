@@ -1,7 +1,10 @@
 /*
- * id3tag.c -- Write ID3 version 1 and 2 tags.
+ * tags.c --
+ *      Write ID3 version 1 and 2 tags, Xing VBR tag, and LAME tag.
  *
- * Copyright (C) 2000 Don Melton.
+ * Copyright (C) 1999 A.L. Faber
+ *           (C) 2000 Don Melton.
+ *           (c) 2004 Takehiro TOMINAGA
  *
  * This library is free software; you can redistribute it and/or
  * modify it under the terms of the GNU Library General Public
@@ -19,7 +22,8 @@
  */
 
 /*
- * HISTORY: This source file is part of LAME (see http://www.mp3dev.org/mp3/)
+ * id3 code HISTORY:
+ * This source file is part of LAME (see http://www.mp3dev.org/mp3/)
  * and was originally adapted by Conrad Sanderson <c.sanderson@me.gu.edu.au>
  * from mp3info by Ricardo Cerqueira <rmc@rccn.net> to write only ID3 version 1
  * tags.  Don Melton <don@blivet.com> COMPLETELY rewrote it to support version
@@ -36,6 +40,12 @@
 #ifdef WITH_DMALLOC
 # include <dmalloc.h>
 #endif
+
+#include <assert.h>
+#ifdef __sun__
+/* woraround for SunOS 4.x, it has SEEK_* defined here */
+# include <unistd.h>
+#endif
 #ifdef STDC_HEADERS
 # include <stddef.h>
 # include <stdlib.h>
@@ -43,11 +53,12 @@
 #endif
 
 #include "encoder.h"
-#include "id3tag.h"
+#include "util.h"
 #include "bitstream.h"
+#include "tags.h"
 
-static const char *const genre_names[] =
-{
+static const char *const
+genre_names[] = {
     /*
      * NOTE: The spelling of these genre names is identical to those found in
      * Winamp and mp3info.
@@ -97,6 +108,32 @@ static const int genre_alpha_map [] = {
 
 #define GENRE_ALPHA_COUNT ((int)(sizeof genre_alpha_map / sizeof (int)))
 
+#define CHANGED_FLAG    (1U << 0)
+#define ADD_V2_FLAG     (1U << 1)
+#define V1_ONLY_FLAG    (1U << 2)
+#define V2_ONLY_FLAG    (1U << 3)
+#define SPACE_V1_FLAG   (1U << 4)
+#define PAD_V2_FLAG     (1U << 5)
+
+static uint8_t*
+CreateI4(uint8_t *buf, int nValue)
+{
+    *buf++ = nValue >> 24;
+    *buf++ = nValue >> 16;
+    *buf++ = nValue >>  8;
+    *buf++ = nValue;
+    return buf;
+}
+
+static uint8_t*
+CreateI2(uint8_t *buf, int nValue)
+{
+    *buf++= nValue >> 8;
+    *buf++ = nValue;
+    return buf;
+}
+
+
 void
 id3tag_genre_list(void (*handler)(int, const char *, void *), void *cookie)
 {
@@ -119,8 +156,6 @@ id3tag_init(lame_t gfc)
     memset(&gfc->tag_spec, 0, sizeof gfc->tag_spec);
     gfc->tag_spec.genre = GENRE_NUM_UNKNOWN;
 }
-
-
 
 void
 id3tag_add_v2(lame_t gfc)
@@ -273,17 +308,6 @@ id3tag_set_genre(lame_t gfc, const char *genre)
     return 0;
 }
 
-static unsigned char *
-set_4_byte_value(unsigned char *bytes, unsigned long value)
-{
-    bytes[0] = (value >> 24) & 0xff;
-    bytes[1] = (value >> 16) & 0xff;
-    bytes[2] = (value >>  8) & 0xff;
-    bytes[3] = (value      ) & 0xff;
-
-    return bytes + 4;
-}
-
 #define FRAME_ID(a, b, c, d) \
     ( ((unsigned long)(a) << 24) \
     | ((unsigned long)(b) << 16) \
@@ -303,13 +327,12 @@ set_frame(unsigned char *frame, unsigned long id, const char *text,
 	  size_t length)
 {
     if (length) {
-        frame = set_4_byte_value(frame, id);
+        frame = CreateI4(frame, id);
         /* Set frame size = total size - header size.  Frame header and field
          * bytes include 2-byte header flags, 1 encoding descriptor byte, and
          * for comment frames: 3-byte language descriptor and 1 content
          * descriptor byte */
-        frame = set_4_byte_value(frame, ((id == COMMENT_FRAME_ID) ? 5 : 1)
-                + length);
+        frame = CreateI4(frame, ((id == COMMENT_FRAME_ID) ? 5 : 1) + length);
         /* clear 2-byte header flags */
         *frame++ = 0;
         *frame++ = 0;
@@ -330,6 +353,11 @@ set_frame(unsigned char *frame, unsigned long id, const char *text,
     return frame;
 }
 
+/*
+ * NOTE: A version 2 tag will NOT be added unless one of the text fields won't
+ * fit in a version 1 tag (e.g. the title string is longer than 30 characters),
+ * or the "id3tag_add_v2" or "id3tag_v2_only" functions are used.
+ */
 int
 id3tag_write_v2(lame_t gfc, unsigned char *buf, int size)
 {
@@ -350,7 +378,7 @@ id3tag_write_v2(lame_t gfc, unsigned char *buf, int size)
 	    || comment_length > 30
 	    || (gfc->tag_spec.track && comment_length > 28)
 	    || gfc->tag_spec.track > 255 || gfc->tag_spec.totaltrack > 0) {
-            size_t adjusted_tag_size, tag_size, i;
+            size_t adjusted_tag_size, tag_size;
             char encoder[20];
             size_t encoder_length;
             char year[5];
@@ -517,4 +545,368 @@ id3tag_write_v1(lame_t gfc, unsigned char *buf, int size)
 	    buf[i] = tag[i];
     }
     return i;
+}
+
+/*
+ *    4 bytes for Header Tag
+ *    4 bytes for Header Flags
+ *  100 bytes for entry (NUMTOCENTRIES)
+ *    4 bytes for FRAME SIZE
+ *    4 bytes for STREAM_SIZE
+ *    4 bytes for VBR SCALE. a VBR quality indicator: 0=best 100=worst
+ *   20 bytes for LAME tag.  for example, "LAME3.12 (beta 6)"
+ * ___________
+ *  140 bytes
+ */
+#define VBRHEADERSIZE (NUMTOCENTRIES+4+4+4+4+4)
+
+#define LAMEHEADERSIZE (VBRHEADERSIZE + 9 + 1 + 1 + 8 + 1 + 1 + 3 + 1 + 1 + 2 + 4 + 2 + 2)
+
+/* the size of the Xing header (MPEG1 and MPEG2) in kbps */
+#define XING_BITRATE1 128
+#define XING_BITRATE2  64
+#define XING_BITRATE25 32
+
+static const char	VBRTag[]={"Xing"};
+static const char	VBRTag2[]={"Info"};
+
+/***********************************************************************
+ *  Robert Hegemann 2001-01-17
+ ***********************************************************************/
+static void
+Xing_seek_table(VBR_seek_info_t * v, unsigned char *t)
+{
+    int i, idx, seek_point;
+    if (v->pos <= 0)
+        return;
+
+    for (i = 1; i < NUMTOCENTRIES; ++i) {
+	float j = i/(float)NUMTOCENTRIES, act, sum;
+        idx = (int)(floor(j * v->pos));
+        if (idx > v->pos-1)
+            idx = v->pos-1;
+        act = v->bag[idx];
+        sum = v->sum;
+        seek_point = (int)(256. * act / sum);
+        if (seek_point > 255)
+            seek_point = 255;
+        t[i] = seek_point;
+    }
+}
+
+/****************************************************************************
+ * AddVbrFrame: Add VBR entry, used to fill the VBR the TOC entries
+ ****************************************************************************/
+void
+AddVbrFrame(lame_t gfc)
+{
+    int i, bitrate = bitrate_table[gfc->version][gfc->bitrate_index];
+    assert(gfc->VBR_seek_table.bag);
+
+    gfc->VBR_seek_table.sum += bitrate;
+    gfc->VBR_seek_table.seen++;
+
+    if (gfc->VBR_seek_table.seen < gfc->VBR_seek_table.want)
+        return;
+
+    if (gfc->VBR_seek_table.pos < gfc->VBR_seek_table.size) {
+	gfc->VBR_seek_table.bag[gfc->VBR_seek_table.pos++]
+	    = gfc->VBR_seek_table.sum;
+        gfc->VBR_seek_table.seen = 0;
+    }
+    if (gfc->VBR_seek_table.pos == gfc->VBR_seek_table.size) {
+        for (i = 1; i < gfc->VBR_seek_table.size; i += 2)
+            gfc->VBR_seek_table.bag[i/2] = gfc->VBR_seek_table.bag[i]; 
+
+        gfc->VBR_seek_table.want *= 2;
+        gfc->VBR_seek_table.pos  /= 2;
+    }
+}
+
+
+/****************************************************************************
+ * InitVbrTag: Initializes the header, and write empty frame to stream
+ ****************************************************************************/
+int
+InitVbrTag(lame_t gfc)
+{
+#define MAXFRAMESIZE 2880 /* the max framesize freeformat 640 32kHz */
+    int bitrate, tot;
+
+    if (!gfc->bWriteVbrTag)
+	return 0;
+    /*
+     * Xing VBR pretends to be a 48kbs layer III frame.  (at 44.1kHz).
+     * (at 48kHz they use 56kbs since 48kbs frame not big enough for
+     * table of contents)
+     * let's always embed Xing header inside a 64kbs layer III frame.
+     * this gives us enough room for a LAME version string too.
+     * size determined by sampling frequency (MPEG1)
+     * 32kHz:    216 bytes@48kbs    288bytes@ 64kbs
+     * 44.1kHz:  156 bytes          208bytes@64kbs     (+1 if padding = 1)
+     * 48kHz:    144 bytes          192
+     *
+     * MPEG 2 values are the same since the framesize and samplerate
+     * are each reduced by a factor of 2.
+     */
+    bitrate = gfc->mean_bitrate_kbps;
+    if (gfc->VBR != cbr) {
+	bitrate = XING_BITRATE1;
+	if (gfc->version != 1) {
+	    bitrate = XING_BITRATE2;
+	    if (gfc->out_samplerate < 16000)
+		bitrate = XING_BITRATE25;
+	}
+    }
+
+    gfc->TotalFrameSize
+	= ((gfc->version+1)*72000*bitrate) / gfc->out_samplerate;
+
+    tot = (gfc->sideinfo_len+LAMEHEADERSIZE);
+    if (!(tot <= gfc->TotalFrameSize && gfc->TotalFrameSize <= MAXFRAMESIZE)) {
+	/* disable tag, it wont fit */
+	gfc->bWriteVbrTag = 0;
+	return 0;
+    }
+    if (!gfc->VBR_seek_table.bag
+	&& !(gfc->VBR_seek_table.bag  = malloc (400*sizeof(int)))) {
+	gfc->VBR_seek_table.size = 0;
+	gfc->bWriteVbrTag = 0;
+	gfc->report.errorf("Error: can't allocate VbrFrames buffer\n");
+	return -1;
+    }   
+
+    /*TOC shouldn't take into account the size of the VBR header itself, too*/
+    gfc->VBR_seek_table.sum  = 0;
+    gfc->VBR_seek_table.seen = 0;
+    gfc->VBR_seek_table.want = 1;
+    gfc->VBR_seek_table.pos  = 0;
+    gfc->VBR_seek_table.size = 400;
+
+    return gfc->TotalFrameSize;
+}
+
+/****************************************************************************
+ * Jonathan Dee 2001/08/31
+ * PutLameVBR: Write LAME info: mini version + info on various switches used
+ ***************************************************************************/
+/* -----------------------------------------------------------
+ * A Vbr header may be present in the ancillary
+ * data field of the first frame of an mp3 bitstream
+ * The Vbr header (optionally) contains
+ *      frames      total number of audio frames in the bitstream
+ *      bytes       total number of bytes in the bitstream
+ *      toc         table of contents
+
+ * toc (table of contents) gives seek points
+ * for random access
+ * the ith entry determines the seek point for
+ * i-percent duration
+ * seek point in bytes = (toc[i]/256.0) * total_bitstream_bytes
+ * e.g. half duration seek point = (toc[50]/256.0) * total_bitstream_bytes
+ */
+static void
+PutLameVBR(lame_t gfc, size_t nMusicLength, uint8_t *p, uint8_t *p0)
+{
+#define nRevision 0
+#define bExpNPsyTune 1
+#define bSafeJoint 0
+
+    int enc_delay = lame_get_encoder_delay(gfc);       /* encoder delay */
+    int enc_padding = lame_get_encoder_padding(gfc);   /* encoder padding  */
+    uint8_t vbr_type_translator[] = {1,5,3};
+
+    ieee754_float32_t fPeakSignalAmplitude = 0.0;	/*TODO... */
+    uint16_t nRadioReplayGain = 0;			/*TODO... */
+    uint16_t nAudioPhileReplayGain  = 0;		/*TODO... */
+
+    int	bNonOptimal = 0;
+    int nStereoMode, nSourceFreq;
+    int bNoGapMore	= 0;
+    int bNoGapPrevious	= 0;
+    int nNoGapCount = 0;/* gfc->nogap_total; TODO */
+    int nNoGapCurr  = 0;/* gfc->nogap_current; TODO */
+
+    /*nogap */
+    if (nNoGapCount != -1) {
+	if (nNoGapCurr > 0)
+	    bNoGapPrevious = 1;
+
+	if (nNoGapCurr < nNoGapCount-1)
+	    bNoGapMore = 1;
+    }
+
+    /*stereo mode field... a bit ugly.*/
+    switch(gfc->mode) {
+    case MONO:		nStereoMode = 0; break;
+    case STEREO:	nStereoMode = 1; break;
+    case DUAL_CHANNEL:	nStereoMode = 2; break;
+    case JOINT_STEREO:	nStereoMode = 3; break;
+    default:		nStereoMode = 7; break;
+    }
+    if (gfc->force_ms)
+	nStereoMode = 4;
+    if (gfc->use_istereo)
+	nStereoMode = 6;
+
+    nSourceFreq = 0;
+    if (gfc->in_samplerate == 48000)
+	nSourceFreq = 2;
+    else if (gfc->in_samplerate > 48000)
+	nSourceFreq = 3;
+    else if (gfc->in_samplerate == 44100)
+	nSourceFreq = 1;
+
+    /*Check if the user overrided the default LAME behaviour with some nasty options */
+
+    if ((gfc->lowpassfreq == -1 && gfc->highpassfreq == -1)
+	|| (gfc->scale_left != gfc->scale_right)
+	|| gfc->disable_reservoir
+	|| gfc->noATH
+	|| gfc->ATHonly
+	|| gfc->in_samplerate <= 32000)
+	bNonOptimal = 1;
+
+    if ((gfc->tag_spec.flags & CHANGED_FLAG)
+	&& !(gfc->tag_spec.flags & V2_ONLY_FLAG))
+	nMusicLength -= 128;                     /*id3v1 present. */
+
+    /*Write all this information into the stream*/
+    p = CreateI4(p, Max(100 - 10 * gfc->VBR_q - gfc->quality, 0));
+    strncpy(p, get_lame_very_short_version(), 9); p += 9;
+
+    *p++ = (nRevision << 4) + vbr_type_translator[lame_get_VBR(gfc)];
+    *p++ = Min((int)((gfc->lowpassfreq / 100.0)+.5), 255);
+    memcpy(p, &fPeakSignalAmplitude, 4); p += 4;
+
+    p = CreateI2(p, nRadioReplayGain);
+    p = CreateI2(p, nAudioPhileReplayGain);
+
+    *p++ = (((int)gfc->ATHcurve) & 15) /*nAthType*/
+	+ (bExpNPsyTune		<< 4)
+	+ (bSafeJoint		<< 5)
+	+ (bNoGapMore		<< 6)
+	+ (bNoGapPrevious	<< 7);
+
+    /* if ABR, {store bitrate <=255} else {store "-b"} */
+    *p++ = Min(gfc->mean_bitrate_kbps, 255);
+
+    *p++ = enc_delay >> 4;
+    *p++ = (enc_delay << 4) + (enc_padding >> 8);
+    *p++ = enc_padding;
+
+    *p++ = (gfc->noise_shaping_amp >= 0)
+	+ (nStereoMode << 2)
+	+ (bNonOptimal << 5)
+	+ (nSourceFreq << 6);
+
+    *p++ = 0;	/*unused in rev1 */
+
+    /* preset value for LAME4 is always 0 */
+    p = CreateI2(p, 0);
+    p = CreateI4(p, nMusicLength);
+    p = CreateI2(p, gfc->nMusicCRC);
+
+    /*Calculate tag CRC.... must be done here, since it includes
+     *previous information*/
+    /* work out CRC so far: initially crc = 0 */
+    p = CreateI2(p, calculateCRC(p0, p - p0, 0));
+}
+
+/***********************************************************************
+ * PutVbrTag: Write final VBR tag to the file
+ * Paramters:
+ *			fpStream: pointer to output file stream
+ ***********************************************************************/
+int
+PutVbrTag(lame_t gfc, FILE *fpStream)
+{
+    uint8_t buf[MAXFRAMESIZE] = {0}, *p, id3v2Header[10];
+    size_t id3v2TagSize, lFileSize;
+    int i, bitrate;
+
+    if (gfc->VBR_seek_table.pos <= 0 && gfc->VBR != cbr)
+	return -1;
+
+    /* Get file size */
+    fseek(fpStream, 0, SEEK_END);
+    if ((lFileSize=ftell(fpStream)) == 0)
+	return -1;
+
+    /*
+     * The VBR tag may NOT be located at the beginning of the stream.
+     * If an ID3v2 tag was added, then it must be skipped to write
+     * the VBR tag data.
+     */
+    /* read 10 bytes from very the beginning,
+       in case there's an ID3 version 2 header here */
+    fseek(fpStream, 0, SEEK_SET);
+    fread(id3v2Header, 1, sizeof id3v2Header, fpStream);
+
+    id3v2TagSize = 0;
+    if (!strncmp(id3v2Header, "ID3", 3)) {
+	/* the tag size (minus the 10-byte header) is encoded into four
+	 * bytes where the most significant bit is clear in each byte */
+	id3v2TagSize=(((id3v2Header[6] & 0x7f)<<21)
+		      | ((id3v2Header[7] & 0x7f)<<14)
+		      | ((id3v2Header[8] & 0x7f)<<7)
+		      | (id3v2Header[9] & 0x7f))
+	    + sizeof id3v2Header;
+    }
+
+    /* Read the header of the first valid frame */
+    fseek(fpStream, id3v2TagSize + gfc->TotalFrameSize, SEEK_SET);
+    fread(buf, 4, 1, fpStream);
+
+    /* the default VBR header. 48 kbps layer III, no padding, no crc */
+    /* but sampling freq, mode andy copyright/copy protection taken */
+    /* from first valid frame */
+    if (gfc->VBR != cbr) {
+	bitrate = XING_BITRATE1;
+	if (gfc->version != 1) {
+	    bitrate = XING_BITRATE2;
+	    if (gfc->out_samplerate < 16000)
+		bitrate = XING_BITRATE25;
+	}
+	assert(gfc->free_format == 0);
+	buf[2] = (BitrateIndex(bitrate, gfc->version) << 4) | (buf[2] & 0x0d);
+    }
+    /* note! Xing header specifies that Xing data goes in the
+     * ancillary data with NO ERROR PROTECTION.  If error protecton
+     * in enabled, the Xing data still starts at the same offset,
+     * and now it is in sideinfo data block, and thus will not
+     * decode correctly by non-Xing tag aware players */
+    p = &buf[gfc->sideinfo_len];
+    if (gfc->error_protection)
+	p -= 2;
+
+    /* Put Vbr tag */
+    CreateI4(p+ 4, FRAMES_FLAG+BYTES_FLAG+TOC_FLAG+VBR_SCALE_FLAG);
+    CreateI4(p+ 8, gfc->frameNum);
+    CreateI4(p+12, lFileSize);
+
+    /* Put TOC */
+    if (gfc->VBR == cbr) {
+	memcpy(p, VBRTag2, 4);
+	p += 16;
+	for (i = 0; i < NUMTOCENTRIES; ++i)
+	    *p++ = 255*i/100;
+    } else {
+	memcpy(p, VBRTag, 4);
+	p += 16;
+	Xing_seek_table(&gfc->VBR_seek_table, p);
+	p += NUMTOCENTRIES;
+    }
+
+    /* error_protection: add crc16 information to header !? */
+    if (gfc->error_protection)
+	CRC_writeheader(buf, gfc->sideinfo_len);
+
+    /* Put LAME VBR info */
+    PutLameVBR(gfc, lFileSize - id3v2TagSize, p, buf);
+
+    fseek(fpStream, id3v2TagSize, SEEK_SET);
+    if (fwrite(buf, gfc->TotalFrameSize, 1, fpStream) != 1)
+	return -1;
+    return 0;
 }

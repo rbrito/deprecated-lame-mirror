@@ -29,10 +29,9 @@ DEFS = @DEFS@ @CONFIG_DEFS@
 EXTRA_DIST = libmp3lame_vc6.dsp
 
 libmp3lame_la_SOURCES = \
-        VbrTag.c \
 	bitstream.c \
 	encoder.c \
-        id3tag.c \
+        tags.c \
         lame.c \
         newmdct.c \
 	psymodel.c \
@@ -45,10 +44,9 @@ libmp3lame_la_SOURCES = \
 	mpglib_interface.c
 
 noinst_HEADERS= \
-	VbrTag.h \
+	tags.h \
 	bitstream.h \
 	encoder.h \
-	id3tag.h \
 	lame-analysis.h \
 	machine.h \
 	newmdct.h \

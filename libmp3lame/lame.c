@@ -40,8 +40,7 @@
 #include "tables.h"
 #include "quantize.h"
 #include "psymodel.h"
-#include "VbrTag.h"
-#include "id3tag.h"
+#include "tags.h"
 
 #define LAME_DEFAULT_QUALITY 5
 
@@ -1206,7 +1205,7 @@ lame_init(void)
     gfc->VBR_min_bitrate_kbps = 0;
     gfc->VBR_max_bitrate_kbps = 0;
 
-    gfc->OldValue[0] = gfc->OldValue[1] = 180;
+    gfc->OldValue[0] = gfc->OldValue[1] = 210;
     gfc->CurrentStep[0] = gfc->CurrentStep[1] = 4;
 
     gfc->nsPsy.attackthre = -1.0;

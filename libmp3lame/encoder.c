@@ -35,8 +35,7 @@
 #include "quantize.h"
 #include "tables.h"
 #include "bitstream.h"
-#include "VbrTag.h"
-#include "id3tag.h"
+#include "tags.h"
 
 static void
 conv_istereo(lame_t gfc, gr_info *gi, int sfb, int i)

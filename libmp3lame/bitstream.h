@@ -22,8 +22,6 @@
 #ifndef LAME_BITSTREAM_H
 #define LAME_BITSTREAM_H
 
-#define         CRC16_POLYNOMIAL        0x8005
-
 int getframebytes(const lame_t gfc);
 int format_bitstream(lame_t gfc, unsigned char *buffer, int buffer_size);
 int flush_bitstream(lame_t gfc, unsigned char *, int);

@@ -1,7 +1,9 @@
 /*
- *	Xing VBR tagging for LAME.
+ *	ID3 and Xing VBR tagging for LAME.
  *
- *	Copyright (c) 1999 A.L. Faber
+ * Copyright (C) 1999 A.L. Faber
+ *           (C) 2000 Don Melton.
+ *           (c) 2004 Takehiro TOMINAGA
  *
  * This library is free software; you can redistribute it and/or
  * modify it under the terms of the GNU Library General Public
@@ -19,28 +21,15 @@
  * Boston, MA 02111-1307, USA.
  */
 
-#ifndef LAME_VRBTAG_H
-#define LAME_VRBTAG_H
-
-/* -----------------------------------------------------------
- * A Vbr header may be present in the ancillary
- * data field of the first frame of an mp3 bitstream
- * The Vbr header (optionally) contains
- *      frames      total number of audio frames in the bitstream
- *      bytes       total number of bytes in the bitstream
- *      toc         table of contents
-
- * toc (table of contents) gives seek points
- * for random access
- * the ith entry determines the seek point for
- * i-percent duration
- * seek point in bytes = (toc[i]/256.0) * total_bitstream_bytes
- * e.g. half duration seek point = (toc[50]/256.0) * total_bitstream_bytes
- */
+#ifndef LAME_TAGS_H
+#define LAME_TAGS_H
 
 int InitVbrTag(lame_t gfc);
 int PutVbrTag(lame_t gfc, FILE *fid);
 void AddVbrFrame(lame_t gfc);
-void UpdateMusicCRC(uint16_t *crc,unsigned char *buffer, int size);
+
+/* write tag into stream at current position */
+int id3tag_write_v2(lame_t gfc, unsigned char *buf, int size);
+int id3tag_write_v1(lame_t gfc, unsigned char *buf, int size);
 
 #endif
