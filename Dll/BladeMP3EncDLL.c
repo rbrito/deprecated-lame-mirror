@@ -94,8 +94,8 @@ __declspec(dllexport) BE_ERR	beInitStream(PBE_CONFIG pbeConfig, PDWORD dwSamples
 		lameConfig.format.LHV1.bCopyright	=pbeConfig->format.mp3.bCopyright;
 	
 		// Fill out the unknowns
-		lameConfig.format.LHV1.dwStructSize=CURRENT_STRUCT_VERSION;
-		lameConfig.format.LHV1.dwStructVersion=CURRENT_STRUCT_SIZE;
+		lameConfig.format.LHV1.dwStructSize=CURRENT_STRUCT_SIZE;
+		lameConfig.format.LHV1.dwStructVersion=CURRENT_STRUCT_VERSION;
 
 		// Get VBR setting from fourth nibble
 		if (nVBR>0)
