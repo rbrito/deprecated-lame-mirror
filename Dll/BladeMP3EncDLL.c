@@ -54,9 +54,10 @@ void dump_config( frame_params *fr_ps, int *psy, char *inPath, char *outPath);
 #endif
 
 // Taken from main.c
+#define MAX_NAME_SIZE 300
 static char			original_file_name[MAX_NAME_SIZE];
 static char			encoded_file_name[MAX_NAME_SIZE];
-static lame_global_flags *gf;
+lame_global_flags *gfp;
 
 extern Bit_stream_struc   bs;
 extern III_side_info_t l3_side;
@@ -71,7 +72,7 @@ static void InitParams()
     // Initialize output buffer
     bs.pbtOutBuf=NULL;
     bs.nOutBufPos=0;
-    gf=lame_init();
+    gfp=lame_init();
 
 }
 
@@ -246,7 +247,7 @@ __declspec(dllexport) BE_ERR	beInitStream(PBE_CONFIG pbeConfig, PDWORD dwSamples
 
 	// Set the encoder variables
 	lame_parse_args(nDllArgC,argv);
-	gf.silent=1;  /* disable status ouput */
+	gfp->silent=1;  /* disable status ouput */
 	lame_init_params();
 
 	// Set pointer to fr_ps header
@@ -399,7 +400,7 @@ __declspec(dllexport) BE_ERR	beEncodeChunk(HBE_STREAM hbeStream, DWORD nSamples,
 	// Set buffer size, in number of bytes
 	nBladeBufferSize=nSamples*sizeof(SHORT);
 
-	if (gf.stereo==2)
+	if (gfp->stereo==2)
 	{
 		for (iSampleIndex=0;iSampleIndex<nSamples/2;iSampleIndex++)
 		{
@@ -431,7 +432,7 @@ __declspec(dllexport) BE_ERR	beEncodeChunk(HBE_STREAM hbeStream, DWORD nSamples,
 
 __declspec(dllexport) BE_ERR beWriteVBRHeader(LPCSTR lpszFileName)
 {
-	if (gf.bWriteVbrTag)
+	if (gfp->bWriteVbrTag)
 	{
 		// Calculate relative quality of VBR stream 
 		// 0=best, 100=worst
@@ -488,7 +489,7 @@ extern int force_ms;
 	OutputDebugString("Encoding configuration:\n");
 
 
-	sprintf(strTmp,"Write VBR Header=%s\n",(gf.bWriteVbrTag)?"Yes":"No");
+	sprintf(strTmp,"Write VBR Header=%s\n",(gfp->bWriteVbrTag)?"Yes":"No");
 	OutputDebugString(strTmp);
 	sprintf(strTmp,"info->version=%d\n",info->version);
 	OutputDebugString(strTmp);
@@ -510,17 +511,17 @@ extern int force_ms;
 	sprintf(strTmp,"de-emph=%d   c/right=%d   orig=%d   errprot=%s\n",info->emphasis, info->copyright, info->original,((info->error_protection) ? "on" : "off"));
 	OutputDebugString(strTmp);
 
-	sprintf(strTmp,"16 Khz cut off is %s\n",(sfb21)?"enabled":"disabled");
-	OutputDebugString(strTmp);
+//	sprintf(strTmp,"16 Khz cut off is %s\n",(0)?"enabled":"disabled");
+//	OutputDebugString(strTmp);
 
-	sprintf(strTmp,"Fast mode is %s\n",(fast_mode)?"enabled":"disabled");
+	sprintf(strTmp,"Fast mode is %s\n",(gfp->quality==9)?"enabled":"disabled");
 	OutputDebugString(strTmp);
 
 	sprintf(strTmp,"Force ms %s\n",(force_ms)?"enabled":"disabled");
 	OutputDebugString(strTmp);
 
-	sprintf(strTmp,"GPsycho acoustic model is %s\n",(gpsycho)?"enabled":"disabled");
-	OutputDebugString(strTmp);
+//	sprintf(strTmp,"GPsycho acoustic model is %s\n",(gpsycho)?"enabled":"disabled");
+//	OutputDebugString(strTmp);
 
 	sprintf(strTmp,"VRB is %s, VBR_q value is  %d\n",(VBR)?"enabled":"disabled",VBR_q);
 	OutputDebugString(strTmp);
