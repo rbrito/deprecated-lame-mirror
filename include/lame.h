@@ -55,57 +55,51 @@ typedef enum vbr_mode_e {
 #define         MPG_MD_MS_I              3
 
 
-struct id3tag_spec
-{
-    /* private data members */
-    int flags;
-    const char *title;
-    const char *artist;
-    const char *album;
-    int year;
-    const char *comment;
-    int track;
-    int genre;
-};
 
 /***********************************************************************
 *
 *  Control Parameters set by User
 *
-*  substantiated by calling program
+*  instantiated by calling program
 *
-*  Initilized and default values set by lame_init(&gf)
+*  1.  call lame_init(&gf) to initialize to default values.
+*  2.  override any default values, if desired 
+*  3.  call lame_init_params(&gf) for more internal configuration
 *
 *
 ***********************************************************************/
 typedef struct  {
-  /* input file description */
+  /* input description */
   unsigned long num_samples;  /* number of samples. default=2^32-1    */
   int num_channels;           /* input number of channels. default=2  */
-  int in_samplerate;          /* input_samp_rate. default=44.1kHz     */
-  int out_samplerate;         /* output_samp_rate. (usually determined automatically)   */ 
-  float scale;                /* scale input by this amount */
+  int in_samplerate;          /* input_samp_rate in Hz. default=44100kHz     */
+  int out_samplerate;         /* output_samp_rate. default: LAME picks best value */
+  float scale;                /* scale input by this amount before encoding */
 
   /* general control params */
-  int analysis;               /* run frame analyzer?       */
+  int analysis;               /* collect data for a MP3 frame analyzer?       */
   int bWriteVbrTag;           /* add Xing VBR tag?         */
   int disable_waveheader;     /* disable writing of .wav header, when *decoding* */
-  int decode_only;            /* use lame/mpglib to convert mp3 to wav */
+  int decode_only;            /* use lame/mpglib to convert mp3/ogg to wav */
   int ogg;                    /* encode to Vorbis .ogg file */
 
-  int quality;                /* quality setting 0=best,  9=worst  */
-  int mode;                       /* 0,1,2,3 stereo,jstereo,dual channel,mono */
-  int mode_fixed;                 /* use specified the mode, do not use lame's opinion of the best mode */
-  int force_ms;                   /* force M/S mode.  requires mode=1 */
-  int brate;                      /* bitrate */
-  float compression_ratio;          /* user specified compression ratio, instead of brate */
-  int free_format;                /* use free format? */
+  int quality;                /* quality setting 0=best,  9=worst  default=5 */
+  int mode;                   /* 0,1,2,3 stereo,jstereo,dual channel,mono   */
+  int mode_fixed;             /* user specified the mode, do not use lame's opinion of the best mode */
+  int force_ms;               /* force M/S mode.  requires mode=1 */
+  int free_format;            /* use free format? default=0*/
+
+  /* set either brate>0  or compression_ratio>0, LAME will compute
+   * the value of the variable not set.  Default is compression_ratio=11 */
+  int brate;                  /* bitrate */
+  float compression_ratio;    /* sizeof(wav file)/sizeof(mp3 file) */
+
 
   /* frame params */
   int copyright;                  /* mark as copyright. default=0 */
   int original;                   /* mark as original. default=1 */
   int error_protection;           /* use 2 bytes per frame for a CRC checksum. default=0*/
-  int padding_type;               /* 0=no padding, 1=always pad, 2=adjust padding */
+  int padding_type;               /* 0=no padding, 1=always pad, 2=adjust padding default=2*/
   int extension;                  /* the MP3 'private extension' bit.  meaningless */
   int strict_ISO;                 /* enforce ISO spec as much as possible */
 
@@ -133,9 +127,6 @@ typedef struct  {
   int highpasswidth;              /* freq width of filter, in Hz (default=15%)*/
 
 
-  /* optional ID3 tags  */
-  int id3v1_enabled;
-  struct id3tag_spec tag_spec;
 
   /* psycho acoustics and other aguments which you should not change 
    * unless you know what you are doing  */
@@ -153,8 +144,8 @@ typedef struct  {
 
 
   /************************************************************************/
-  /* internal variables, do not set... */
-  /* provided because they may be of use to some applications   */
+  /* internal variables, do not set...                                    */
+  /* provided because they may be of use to calling application           */
   /************************************************************************/
 
   int version;                    /* 0=MPEG2  1=MPEG1 */
@@ -170,9 +161,9 @@ typedef struct  {
   int nVbrFrameBufferSize;
 
 
-  /************************************************************************/
+  /****************************************************************************/
   /* more internal variables, which will not exist after lame_encode_finish() */
-  /************************************************************************/
+  /****************************************************************************/
   void *internal_flags;
 
 } lame_global_flags;
@@ -271,7 +262,7 @@ int num_samples, char *mp3buffer,int  mp3buffer_size);
 /* REQUIRED:  lame_encode_finish will flush the buffers and may return a 
  * final few mp3 frames.  mp3buffer should be at least 7200 bytes.
  *
- * will also write id3 tags (if any) into the bitstream       
+ * will also write id3v1 tags (if any) into the bitstream       
  *
  * return code = number of bytes output to mp3buffer.  can be 0
  */
@@ -415,45 +406,33 @@ void AddVbrFrame(lame_global_flags *gfp);
  * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307, USA.
  */
 
-
-
 /* utility to obtain alphabetically sorted list of genre names with numbers */
 extern void id3tag_genre_list(void (*handler)(int, const char *, void *),
     void *cookie);
 
-
-extern void id3tag_init(struct id3tag_spec *spec);
+extern void id3tag_init(lame_global_flags *gfp);
 
 /* force addition of version 2 tag */
-extern void id3tag_add_v2(struct id3tag_spec *spec);
+extern void id3tag_add_v2(lame_global_flags *gfp);
 /* add only a version 1 tag */
-extern void id3tag_v1_only(struct id3tag_spec *spec);
+extern void id3tag_v1_only(lame_global_flags *gfp);
 /* add only a version 2 tag */
-extern void id3tag_v2_only(struct id3tag_spec *spec);
+extern void id3tag_v2_only(lame_global_flags *gfp);
 /* pad version 1 tag with spaces instead of nulls */
-extern void id3tag_space_v1(struct id3tag_spec *spec);
+extern void id3tag_space_v1(lame_global_flags *gfp);
 /* pad version 2 tag with extra 128 bytes */
-extern void id3tag_pad_v2(struct id3tag_spec *spec);
+extern void id3tag_pad_v2(lame_global_flags *gfp);
 
-extern void id3tag_set_title(struct id3tag_spec *spec, const char *title);
-extern void id3tag_set_artist(struct id3tag_spec *spec, const char *artist);
-extern void id3tag_set_album(struct id3tag_spec *spec, const char *album);
-extern void id3tag_set_year(struct id3tag_spec *spec, const char *year);
-extern void id3tag_set_comment(struct id3tag_spec *spec, const char *comment);
-extern void id3tag_set_track(struct id3tag_spec *spec, const char *track);
+extern void id3tag_set_title(lame_global_flags *gfp, const char *title);
+extern void id3tag_set_artist(lame_global_flags *gfp, const char *artist);
+extern void id3tag_set_album(lame_global_flags *gfp, const char *album);
+extern void id3tag_set_year(lame_global_flags *gfp, const char *year);
+extern void id3tag_set_comment(lame_global_flags *gfp, const char *comment);
+extern void id3tag_set_track(lame_global_flags *gfp, const char *track);
 
 /* return non-zero result if genre name or number is invalid */
-extern int id3tag_set_genre(struct id3tag_spec *spec, const char *genre);
+extern int id3tag_set_genre(lame_global_flags *gfp, const char *genre);
 
-/*
- * NOTE: A version 2 tag will NOT be added unless one of the text fields won't
- * fit in a version 1 tag (e.g. the title string is longer than 30 characters),
- * or the "id3tag_add_v2" or "id3tag_v2_only" functions are used.
- */
-
-/* write tag into stream at current position */
-extern int id3tag_write_v2(lame_global_flags *gfp,struct id3tag_spec *spec);
-extern int id3tag_write_v1(lame_global_flags *gfp,struct id3tag_spec *spec);
 
 
 

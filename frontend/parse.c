@@ -607,8 +607,7 @@ void parse_args ( lame_global_flags* gfp, int argc, char** argv )
     /* turn on display options. user settings may turn them off below */
     silent   = 0;
     brhist   = 1;
-    gfp -> id3v1_enabled = 1;
-    id3tag_init (&gfp->tag_spec);
+    id3tag_init (gfp);
 
     /* process args */
     for ( i = 0, err = 0; ++i < argc  &&  !err; ) {
@@ -748,49 +747,49 @@ void parse_args ( lame_global_flags* gfp, int argc, char** argv )
 		/* options for ID3 tag */
 		T_ELIF ("tt")
 		    argUsed=1;
-		    id3tag_set_title(&gfp->tag_spec, nextArg);
+		    id3tag_set_title(gfp, nextArg);
 		
 		T_ELIF ("ta")
 		    argUsed=1;
-		    id3tag_set_artist(&gfp->tag_spec, nextArg);
+		    id3tag_set_artist(gfp, nextArg);
 		
 		T_ELIF ("tl")
 		    argUsed=1;
-		    id3tag_set_album(&gfp->tag_spec, nextArg);
+		    id3tag_set_album(gfp, nextArg);
 		
 		T_ELIF ("ty")
 		    argUsed=1;
-		    id3tag_set_year(&gfp->tag_spec, nextArg);
+		    id3tag_set_year(gfp, nextArg);
 		
 		T_ELIF ("tc")
 		    argUsed=1;
-		    id3tag_set_comment(&gfp->tag_spec, nextArg);
+		    id3tag_set_comment(gfp, nextArg);
 		
 		T_ELIF ("tn")
 		    argUsed=1;
-		    id3tag_set_track(&gfp->tag_spec, nextArg);
+		    id3tag_set_track(gfp, nextArg);
 		
 		T_ELIF ("tg")
 		    argUsed=1;
-		    if (id3tag_set_genre(&gfp->tag_spec, nextArg)) {
+		    if (id3tag_set_genre(gfp, nextArg)) {
 			fprintf(stderr,"Unknown genre: %s.  Specify genre name or number\n", nextArg);
 			exit(1);
 		    }
 		
 		T_ELIF ("add-id3v2")
-		    id3tag_add_v2(&gfp->tag_spec);
+		    id3tag_add_v2(gfp);
 		
 		T_ELIF ("id3v1-only")
-		    id3tag_v1_only(&gfp->tag_spec);
+		    id3tag_v1_only(gfp);
 		
 		T_ELIF ("id3v2-only")
-		    id3tag_v2_only(&gfp->tag_spec);
+		    id3tag_v2_only(gfp);
 		
 		T_ELIF ("space-id3v1")
-		    id3tag_space_v1(&gfp->tag_spec);
+		    id3tag_space_v1(gfp);
 		
 		T_ELIF ("pad-id3v2")
-		    id3tag_pad_v2(&gfp->tag_spec);
+		    id3tag_pad_v2(gfp);
 		
 		T_ELIF ("genre-list")
 		    id3tag_genre_list(genre_list_handler, NULL);
@@ -1065,12 +1064,6 @@ void parse_args ( lame_global_flags* gfp, int argc, char** argv )
     /* some file options not allowed with stdout */
     if (outPath[0]=='-') {
 	gfp->bWriteVbrTag=0; /* turn off VBR tag */
-	if (gfp->id3v1_enabled) {
-	    gfp->id3v1_enabled=0;     /* turn off ID3 version 1 tagging */
-	    fprintf(stderr,"ID3 version 1 tagging not supported for stdout.\n");
-	    fprintf(stderr,"Converting any ID3 tag data to version 2 format.\n");
-	    id3tag_v2_only(&gfp->tag_spec);
-	}
     }
     
     /* if user did not explicitly specify input is mp3, check file name */
