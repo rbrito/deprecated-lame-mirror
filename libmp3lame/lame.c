@@ -1393,8 +1393,12 @@ int  lame_close (lame_global_flags *gfp)
 
     gfc->Class_ID = 0;
     
-    freegfc(gfp->internal_flags);    
+    freegfc(gfp->internal_flags);
+    
+    gfp->internal_flags = NULL;    
+    
     if (gfp->lame_allocated_gfp) free(gfp);
+    
     return 0;
 }
 
@@ -1654,11 +1658,13 @@ void lame_bitrate_hist(
     const lame_internal_flags *gfc;
     int i;
     
-    assert( NULL != gfp );
-    assert( NULL != gfp->internal_flags );
-    assert( NULL != bitrate_count );
-    
+    if (NULL == bitrate_count) 
+        return;
+    if (NULL == gfp) 
+        return;
     gfc = gfp->internal_flags;
+    if (NULL == gfc) 
+        return;
     
     for (i = 0; i < 14; i++) 
         bitrate_count [i] = gfc->bitrate_stereoMode_Hist [i+1][4];
@@ -1672,11 +1678,13 @@ void lame_bitrate_kbps(
     const lame_internal_flags *gfc;
     int i;
     
-    assert( NULL != gfp );
-    assert( NULL != gfp->internal_flags );
-    assert( NULL != bitrate_kbps );
-    
+    if (NULL == bitrate_kbps) 
+        return;
+    if (NULL == gfp) 
+        return;
     gfc = gfp->internal_flags;
+    if (NULL == gfc) 
+        return;
     
     for (i = 0; i < 14; i++) 
         bitrate_kbps [i] = bitrate_table [gfp->version] [i+1];
@@ -1691,11 +1699,13 @@ void lame_stereo_mode_hist(
     const lame_internal_flags * gfc;
     int i;
 
-    assert( gfp != NULL );
-    assert( gfp->internal_flags != NULL );
-    assert( stmode_count != NULL );
-    
+    if (NULL == stmode_count) 
+        return;
+    if (NULL == gfp) 
+        return;
     gfc = gfp->internal_flags;
+    if (NULL == gfc) 
+        return;
     
     for (i = 0; i < 4; i++) {
         int j, sum = 0;
@@ -1715,11 +1725,13 @@ void lame_bitrate_stereo_mode_hist (
     int  i;
     int  j;
 
-    assert ( NULL != gfp );
-    assert ( NULL != gfp->internal_flags );
-    assert ( NULL != bitrate_stmode_count );
-    
+    if (NULL == bitrate_stmode_count) 
+        return;
+    if (NULL == gfp) 
+        return;
     gfc = gfp->internal_flags;
+    if (NULL == gfc) 
+        return;
     
     for ( j = 0; j < 14; j++ )
         for ( i = 0; i < 4; i++ )

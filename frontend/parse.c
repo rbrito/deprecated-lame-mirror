@@ -33,13 +33,11 @@
 #include <string.h>
 
 #include "lame.h"
-#include "version.h"
 
 #include "brhist.h"
 #include "parse.h"
 #include "main.h"
 #include "get_audio.h"
-#include "version.h"
 
 /************************************************************************
 *

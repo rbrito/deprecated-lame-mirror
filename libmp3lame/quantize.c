@@ -767,7 +767,7 @@ balance_noise (
         status = 0;
     } else {
         if (cod_info->block_type == SHORT_TYPE
-#ifdef RH_SUBBLOCK
+#ifdef RH_AMP
          && gfc->noise_shaping > 0)
 #else
          && gfp->experimentalZ && gfc->noise_shaping > 1)
@@ -917,7 +917,7 @@ outer_loop (
         else
             age ++;
 
-#ifdef RH_OUTERLOOP
+#ifdef RH_AMP
         /* allow up to 3 unsuccesful tries in serial, then stop 
          * if our best quantization so far had no distorted bands. This
          * gives us more possibilities for different quant_compare modes.

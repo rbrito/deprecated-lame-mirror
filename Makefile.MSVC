@@ -1,13 +1,30 @@
 # Makefile.MSVC: MSVC Makefile for LAME 3.88
 
-!IF "$(CFG)" == ""
-CFG=LAME
-!MESSAGE No configuration specified.  Defaulting to LAME.
-!MESSAGE Pass CFG=MPX to build the frame analyzer.
-!MESSAGE 
-!ENDIF 
+PGM = lame dll
 
-PGM = lame
+# some default settings
+!IF "$(ASM)" == ""
+ASM = YES
+!ENDIF
+!IF "$(MMX)" == ""
+MMX = YES
+!ENDIF
+!IF "$(CFG)" == ""
+CFG = RH
+!ENDIF
+
+!MESSAGE ----------------------------------------------------------------------
+!MESSAGE BUILDING LAME featuring $(CFG)
+!IF "$(ASM)" == "YES"
+!MESSAGE + ASM
+!ENDIF 
+!IF "$(MMX)" == "YES"
+!MESSAGE + MMX
+!ENDIF 
+!IF "$(GTK)" == "YES"
+!MESSAGE + GTK
+!ENDIF 
+!MESSAGE ----------------------------------------------------------------------
 
 # Microsoft C options
 # CC = cl
@@ -41,7 +58,8 @@ LN = xilink
 # /QIfdiv 	enable patch for Pentium with FDIV erratum
 # /QI0f	 	enable patch for Pentium with 0f erratum
 # /Qip
-# /QaxM	    currently crashes at the end of encoding! so disabled by now, needs some attention
+# /QaxM	    currently crashes at the end of encoding! 
+#           so disabled by now, needs some attention
 CC_OPTS = /nologo /DNDEBUG /Qunroll /Ox /G5 /GA /Gs1024 /GF /QIfist /QIfdiv /QI0f /Qip 
 LN_OPTS = /nologo
 
@@ -65,14 +83,21 @@ CPP_OPTS = /DHAVE_CONFIG_H -I.
 # you need the above mentioned libraries 
 # and to uncomment the following lines
 #
-GTK = -I../src/glib     \
-      -I../src/gtk+     \
-      -I../src/gtk+/gtk \
-      -I../src/gtk+/gdk
-GTKLIBS = /LIBPATH:../src/gtk+/gtk \
-          /LIBPATH:../src/gtk+/gdk \
-          /LIBPATH:../src/glib     \
-          glib-1.3.lib gdk-1.3.lib gtk-1.3.lib
+!IF "$(GTK)" == "YES"
+GTK_OPTS = -I../src/glib     \
+           -I../src/gtk+     \
+           -I../src/gtk+/gtk \
+           -I../src/gtk+/gdk
+GTK_LIBS = /LIBPATH:../src/gtk+/gtk \
+           /LIBPATH:../src/gtk+/gdk \
+           /LIBPATH:../src/glib     \
+           glib-1.3.lib gdk-1.3.lib gtk-1.3.lib
+PGM = mp3x $(PGM)
+!ELSE
+!IF "$(GTK)" == ""
+!MESSAGE Pass GTK=YES to build the frame analyzer. (requires installed GTK)
+!ENDIF
+!ENDIF
 #==================================================== FRAME ANALYZER SUPPORT ==
 
 
@@ -105,21 +130,14 @@ CPP_OPTS = $(CPP_OPTS) /DTAKEHIRO_IEEE754_HACK
 #
 #	uncomment the following to enable some alternate code
 #
-CPP_OPTS = $(CPP_OPTS) /DRH_AMP /DRH_VALIDATE_MS /DRH_SUBBLOCK /DRH_OUTERLOOP
+!IF "$(CFG)" == "RH"
+CPP_OPTS = $(CPP_OPTS) /DRH_AMP /DRH
+!ENDIF
 #=================================================== Robert's alternate code ==
 
 
-!IF "$(CFG)" == "LAME"
-
 CC_SWITCHES = $(CC_OPTS) $(DISTRIB) $(SNDLIB) $(BRHIST_SWITCH) \
               /DBS_FORMAT=BINARY $(TIMER_SWITCH) $(VORBIS)
-
-!ELSE
-
-CC_SWITCHES = $(CC_OPTS) $(DISTRIB) $(SNDLIB) $(BRHIST_SWITCH) \
-              /DBS_FORMAT=BINARY $(TIMER_SWITCH) $(VORBIS) $(GTK)
-
-!ENDIF
 
 LN_SWITCHES = $(LN_OPTS)
 
@@ -142,7 +160,7 @@ common_sources = \
 	frontend/lametime.c \
 	frontend/brhist.c 
 
-lib_sources = \
+lamelib_sources = \
 	libmp3lame/bitstream.c \
 	libmp3lame/encoder.c \
 	libmp3lame/fft.c \
@@ -160,7 +178,9 @@ lib_sources = \
 	libmp3lame/vorbis_interface.c \
 	libmp3lame/mpglib_interface.c \
 	libmp3lame/VbrTag.c \
-	libmp3lame/version.c \
+	libmp3lame/version.c 
+
+mpglib_sources = \
 	mpglib/common.c \
 	mpglib/dct64_i386.c \
 	mpglib/decode_i386.c \
@@ -172,20 +192,22 @@ lib_sources = \
 
 
 
-LIB_OBJ = $(lib_sources:.c=.obj)
+LIB_OBJ = $(lamelib_sources:.c=.obj)
+MPG_OBJ = $(mpglib_sources:.c=.obj)
+CMMN_OBJ = $(common_sources:.c=.obj)
 LAME_OBJ = $(lame_sources:.c=.obj)
 MPX_OBJ = $(mpx_sources:.c=.obj)
-CMMN_OBJ = $(common_sources:.c=.obj)
 DLL_OBJ = $(dll_sources:.c=.obj)
 
 
-all : prg
+all :	$(PGM)
 
 #== NASM ======================================================================
 #
 #	uncomment the following if you have NASM 
 #	NASM: Netwide Assembler
 #
+!IF "$(ASM)" == "YES"
 libmp3lame/i386/cpu_feat.obj: libmp3lame/i386/cpu_feat.nas
 	@echo assemble CPU-feature detection, using NASM the Netwide Assembler
 	@nasmw -f win32 -i libmp3lame/i386/ -DWIN32 \
@@ -193,7 +215,8 @@ libmp3lame/i386/cpu_feat.obj: libmp3lame/i386/cpu_feat.nas
 		-o libmp3lame/i386/cpu_feat.obj
                 
 CC_SWITCHES = $(CC_SWITCHES) /DHAVE_NASM
-LIB_OBJ = $(LIB_OBJ) libmp3lame/i386/cpu_feat.obj
+ASM_OBJ = $(ASM_OBJ) libmp3lame/i386/cpu_feat.obj
+!ENDIF
 #====================================================================== NASM ==
 
 #== MMX =======================================================================
@@ -201,6 +224,8 @@ LIB_OBJ = $(LIB_OBJ) libmp3lame/i386/cpu_feat.obj
 #	uncomment the following if you have NASM and a processor with MMX 
 #	NASM: Netwide Assembler
 #
+!IF "$(ASM)" == "YES"
+!IF "$(MMX)" == "YES"
 libmp3lame/i386/choose_table.obj: libmp3lame/i386/choose_table.nas
 	@echo assemble MMX choose table, using NASM the Netwide Assembler
 	@nasmw -f win32 -i libmp3lame/i386/ -DWIN32 \
@@ -208,38 +233,50 @@ libmp3lame/i386/choose_table.obj: libmp3lame/i386/choose_table.nas
 		-o libmp3lame/i386/choose_table.obj
 
 CC_SWITCHES = $(CC_SWITCHES) /DMMX_choose_table
-LIB_OBJ = $(LIB_OBJ) libmp3lame/i386/choose_table.obj
+ASM_OBJ = $(ASM_OBJ) libmp3lame/i386/choose_table.obj
+!ENDIF
+!ENDIF
 #======================================================================= MMX ==
 
-
+!MESSAGE
 
 
 .c.obj: 
-	@$(CC) $(CC_SWITCHES) $(CPP_OPTS) -Iinclude -Impglib -Ilibmp3lame /c $< /Fo$@
+	@$(CC) $(CPP_OPTS) $(CC_SWITCHES) -Iinclude -Ilibmp3lame /c $< /Fo$@
 
+$(LIB_OBJ) : $(lamelib_sources)
+	@echo --- LAME MP3 ENCODING LIBRARY ---
+	@$(CC) $(CPP_OPTS) $(CC_SWITCHES) -Iinclude -Impglib /c $(lamelib_sources) /Folibmp3lame/
 
-!IF "$(CFG)" == "LAME"
+$(MPG_OBJ) : $(mpglib_sources)
+	@echo --- MPG123 DECODING LIBRARY ---
+	@$(CC) $(CPP_OPTS) $(CC_SWITCHES) -Iinclude -Ilibmp3lame /c $(mpglib_sources) /Fompglib/
 
-prg: config lib common Makefile.MSVC $(LAME_OBJ)
-	@echo lame.exe
-	@$(LN) $(LN_SWITCHES) $(LIB_OBJ) $(CMMN_OBJ) $(LAME_OBJ) $(LIBSNDFILE) $(VORBISLIB) \
-	       /out:lame.exe /map:lame.map
+$(CMMN_OBJ) : $(common_sources)
+	@echo --- FRONTEND STUFF ---
+	@$(CC) $(CPP_OPTS) $(CC_SWITCHES) -Iinclude /c $(common_sources) /Fofrontend/
 
-!ELSE
+$(MPX_OBJ) : $(mpx_sources)
+	@echo --- FRAME ANALYZER STUFF ---
+	@$(CC) $(CPP_OPTS) $(CC_SWITCHES) $(GTK_OPTS) \
+	       -Iinclude -Impglib -Ilibmp3lame /c $(mpx_sources) /Fofrontend/
 
-prg: config lib common Makefile.MSVC $(MPX_OBJ)
-	@echo mp3x.exe
-	@$(LN) $(LN_SWITCHES) $(LIB_OBJ) $(CMMN_OBJ) $(MPX_OBJ) $(LIBSNDFILE) $(VORBISLIB) \
-	       $(GTKLIBS) /out:mp3x.exe /map:mp3x.map
+lame: config lib common Makefile.MSVC $(LAME_OBJ)
+	@$(LN) $(LN_SWITCHES) $(LIBSNDFILE) $(VORBISLIB) \
+	       $(ASM_OBJ) $(LIB_OBJ) $(MPG_OBJ) $(CMMN_OBJ) $(LAME_OBJ) /out:lame.exe /map
+	@echo --- LAME ENCODER READY ---
 
-!ENDIF
+mp3x: config lib common Makefile.MSVC $(MPX_OBJ)
+	@$(LN) $(LN_SWITCHES) $(GTK_LIBS) $(LIBSNDFILE) $(VORBISLIB) \
+	       $(ASM_OBJ) $(LIB_OBJ) $(MPG_OBJ) $(CMMN_OBJ) $(MPX_OBJ) /out:mp3x.exe /map
+	@echo --- FRAME ANALYZER READY ---
 
 dll: config lib common Makefile.MSVC $(DLL_OBJ)
-	@echo lame.dll
-	@$(LN) $(LN_SWITCHES) $(LIB_OBJ) $(DLL_OBJ) $(VORBISLIB) \
-	       /DLL /out:lame_enc.dll /map
+	@$(LN) $(LN_SWITCHES) $(LIBSNDFILE) $(VORBISLIB) \
+	       $(ASM_OBJ) $(LIB_OBJ) $(MPG_OBJ) $(DLL_OBJ) /DLL /out:lame_enc.dll /map	
+	@echo --- LAME ENCODER DLL READY ---
 
-lib: config Makefile.MSVC $(LIB_OBJ)
+lib: config Makefile.MSVC $(ASM_OBJ) $(LIB_OBJ) $(MPG_OBJ)
 
 common: config Makefile.MSVC $(CMMN_OBJ)
 
@@ -247,12 +284,15 @@ config: configMS.h
 	@-copy configMS.h config.h
 
 clean:
-	@-del *.obj
 	@-del frontend\*.obj
+	@-del dll\*.obj
 	@-del libmp3lame\*.obj
 	@-del libmp3lame\i386\*.obj
-	@-del dll\*.obj
 	@-del mpglib\*.obj
+	@-del *.map
+	@-del lame_enc.*
+	@-del *.exe
+	
 
-rebuild: clean prg
+rebuild: clean all
 
