@@ -757,7 +757,7 @@ format_bitstream(lame_global_flags *gfp)
     drain_into_ancillary(gfp, l3_side->resvDrain_pre);
 
     encodeSideInfo2(gfp,bitsPerFrame);
-    bits = 8*l3_side->sideinfo_len;
+    bits = 8*l3_side->sideinfo_len + l3_side->resvDrain_pre;
     bits+=writeMainData(gfc);
     drain_into_ancillary(gfp, l3_side->resvDrain_post);
     bits += l3_side->resvDrain_post;

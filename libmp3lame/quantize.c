@@ -1048,7 +1048,7 @@ ABR_iteration_loop(
     }
     assert (gfc->bitrate_index <= gfc->VBR_max_bitrate);
 
-    ResvFrameEnd (gfc, mean_bits);
+    ResvFrameEnd(&gfc->l3_side, mean_bits * gfc->mode_gr);
 }
 
 
@@ -1091,7 +1091,7 @@ iteration_loop(
         }
     }
 
-    ResvFrameEnd (gfc, 0);
+    ResvFrameEnd(&gfc->l3_side, 0);
 }
 
 
@@ -1531,7 +1531,7 @@ VBR_iteration_loop(lame_global_flags *gfp, III_psy_ratio ratio[2][2])
 	    break;
     assert (gfc->bitrate_index <= gfc->VBR_max_bitrate);
 
-    ResvFrameEnd (gfc, mean_bits);
+    ResvFrameEnd(&gfc->l3_side, mean_bits * gfc->mode_gr);
 }
 
 

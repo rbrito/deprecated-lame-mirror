@@ -160,7 +160,7 @@ ResvFrameBegin(lame_global_flags *gfp, int *mean_bits)
     l3_side->resvDrain_pre = 0;
 #ifdef HAVE_GTK
     if (gfc->pinfo) {
-        gfc->pinfo->mean_bits = *mean_bits / 2;  /* expected bits per channel per granule [is this also right for mono/stereo, MPEG-1/2 ?] */
+        gfc->pinfo->mean_bits = *mean_bits / gfc->channels_out;
         gfc->pinfo->resvsize  = l3_side->ResvSize;
     }
 #endif
@@ -212,14 +212,11 @@ void ResvMaxBits(lame_internal_flags *gfc, int mean_bits, int *targ_bits, int *e
   bits.
 */
 void
-ResvFrameEnd(lame_internal_flags *gfc, int mean_bits)
+ResvFrameEnd(III_side_info_t *l3_side, int mean_bits)
 {
-    int stuffingBits;
-    int over_bits;
-    III_side_info_t     *l3_side = &gfc->l3_side;
+    int stuffingBits, over_bits;
 
-    l3_side->ResvSize += mean_bits * gfc->mode_gr;
-    l3_side->resvDrain_post = 0;
+    l3_side->ResvSize += mean_bits;
     l3_side->resvDrain_pre = 0;
 
     /* we must be byte aligned */
@@ -227,6 +224,7 @@ ResvFrameEnd(lame_internal_flags *gfc, int mean_bits)
     over_bits = (l3_side->ResvSize - stuffingBits) - l3_side->ResvMax;
     if (over_bits > 0) /* reservoir is overflowed */
 	stuffingBits += over_bits;
+    l3_side->ResvSize -= stuffingBits;
 
 #undef NEW_DRAIN
 #ifdef NEW_DRAIN
@@ -234,27 +232,20 @@ ResvFrameEnd(lame_internal_flags *gfc, int mean_bits)
      * In particular, in VBR mode ResvMax may have changed, and we have
      * to make sure main_data_begin does not create a reservoir bigger
      * than ResvMax  mt 4/00*/
-  {
-    int mdb_bytes = Min(l3_side->main_data_begin*8,stuffingBits)/8;
-    l3_side->resvDrain_pre += 8*mdb_bytes;
-    stuffingBits -= 8*mdb_bytes;
-    l3_side->ResvSize -= 8*mdb_bytes;
-    l3_side->main_data_begin -= mdb_bytes;
+    mean_bits = Min(l3_side->main_data_begin, stuffingBits/8);
+    l3_side->main_data_begin -= mean_bits;
 
+    mean_bits *= 8;
+    l3_side->resvDrain_pre = mean_bits;
+    stuffingBits -= mean_bits;
 
     /* drain just enough to be byte aligned.  The remaining bits will
      * be added to the reservoir, and we will deal with them next frame.
      * If the next frame is at a lower bitrate, it may have a larger ResvMax,
      * and we will not have to waste these bits!  mt 4/00 */
-    assert ( stuffingBits >= 0 );
-    l3_side->resvDrain_post += (stuffingBits % 8);
-    l3_side->ResvSize -= stuffingBits % 8;
-  }
-#else
-    /* drain the rest into this frames ancillary data*/
-    l3_side->resvDrain_post += stuffingBits;
-    l3_side->ResvSize -= stuffingBits;
 #endif
+    /* drain the rest into this frames ancillary data*/
+    l3_side->resvDrain_post = stuffingBits;
 
     return;
 }
