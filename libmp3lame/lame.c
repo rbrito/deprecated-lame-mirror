@@ -522,7 +522,7 @@ lame_init_params(lame_global_flags * const gfp)
 	    gfp->free_format = 1;
 	}
     }
-    if (gfp->VBR == cbr) {
+    if (gfp->VBR != vbr) {
 	/* automatic output sampling rate decision.
 	   round up with a margin of 3% */
 	if (gfp->mean_bitrate_kbps == 0) {
