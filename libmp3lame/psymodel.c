@@ -621,7 +621,7 @@ int L3psycho_anal( lame_global_flags * gfp,
 	  tbb = Min(gfc->minval[b], tbb);
           
             /* stabilize tonality estimation */
-            if ( vbr_mtrh == gfp->VBR ) {
+            if ( gfc->PSY->tonalityPatch ) {
                 if ( b > 5 ) 
                 {
                     FLOAT8 const x = 1.8699422;
@@ -886,8 +886,7 @@ int L3psycho_anal( lame_global_flags * gfp,
   }
 
 
-  if (gfc->channels_out==2) {
-    if (!gfc->PSY->allow_diff_short) {
+  if (gfc->PSY->force_same_blocks) {
       /* force both channels to use the same block type */
       /* this is necessary if the frame is to be encoded in ms_stereo.  */
       /* But even without ms_stereo, FhG  does this */
@@ -896,7 +895,6 @@ int L3psycho_anal( lame_global_flags * gfp,
 	uselongblock[0]=0;
 	uselongblock[1]=0;
       }
-    }
   }
 
   
@@ -1747,8 +1745,7 @@ int L3psycho_anal_ns( lame_global_flags * gfp,
     blocktype[chn] = NORM_TYPE;
   }
 
-  if (gfc->channels_out==2) {
-    if (!gfc->PSY->allow_diff_short) {
+  if (gfc->PSY->force_same_blocks) {
       /* force both channels to use the same block type */
       /* this is necessary if the frame is to be encoded in ms_stereo.  */
       /* But even without ms_stereo, FhG  does this */
@@ -1757,7 +1754,6 @@ int L3psycho_anal_ns( lame_global_flags * gfp,
 	uselongblock[0]=0;
 	uselongblock[1]=0;
       }
-    }
   }
 
   /* update the blocktype of the previous granule, since it depends on what

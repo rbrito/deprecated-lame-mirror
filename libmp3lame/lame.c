@@ -1036,6 +1036,8 @@ lame_init_params(lame_global_flags * const gfp)
 
     assert( gfp->VBR_q <= 9 );
     assert( gfp->VBR_q >= 0 );
+    
+    gfc->PSY->tonalityPatch = 0;
   
     switch (gfp->VBR) {
 
@@ -1044,6 +1046,7 @@ lame_init_params(lame_global_flags * const gfp)
         /*  tonality
          */
         if (gfp->cwlimit <= 0) gfp->cwlimit = 0.454 * gfp->out_samplerate;
+        gfc->PSY->tonalityPatch = 1;
 
         gfc->VBR->quality = Min( 9, Max( 0, gfp->quality ) );
              
@@ -1075,7 +1078,7 @@ lame_init_params(lame_global_flags * const gfp)
             gfp->quality = 7;     // needs psymodel
             ERRORF( gfc, "VBR needs a psymodel, switching to quality level 7\n");
         }
-        gfp->experimentalY = 1;        
+        gfp->experimentalY = gfp->experimentalY ? 0 : 1; // here -Y turns -Y off, so on by default       
         break;
         
     case vbr_mt:
@@ -1100,6 +1103,7 @@ lame_init_params(lame_global_flags * const gfp)
                 gfc->VBR->mask_adjust = dbQns[gfp->VBR_q];
             else
                 gfc->VBR->mask_adjust = dbQ[gfp->VBR_q]; 
+            gfc->PSY->tonalityPatch = 1;
         }
         gfc->VBR->bitpressure = 1;
         
@@ -1175,7 +1179,8 @@ lame_init_params(lame_global_flags * const gfp)
     
 
     gfc->PSY->cwlimit = gfp->cwlimit <= 0 ? 8871.7f : gfp->cwlimit;
-    gfc->PSY->allow_diff_short = gfp->allow_diff_short && gfp->mode == STEREO;
+    gfc->PSY->force_same_blocks = gfc->channels_out > 1 &&
+                        !(gfp->allow_diff_short && gfp->mode == STEREO);
     
     if ( gfp->adapt_thres_type < 0 ) gfp->adapt_thres_type = 2;
     
@@ -1343,8 +1348,8 @@ lame_print_internals( const lame_global_flags * gfp )
     MSGF( gfc, "\npsychoacoustic:\n\n" );
     
     MSGF( gfc, "\ttonality estimation limit: %f Hz\n", gfc->PSY->cwlimit );
-    pc = gfc->PSY->allow_diff_short ? "yes" : "no";
-    MSGF( gfc, "\tallow channels to have different block types: %s\n", pc );    
+    pc = gfc->PSY->force_same_blocks ? "yes" : "no";
+    MSGF( gfc, "\tforce channels to have same block types: %s\n", pc );    
     if ( gfp->no_short_blocks )
     MSGF( gfc, "\tforbid using short blocks\n" );
     

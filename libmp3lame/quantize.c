@@ -1228,10 +1228,10 @@ VBR_prepare (
         for (ch = 0; ch < gfc->channels_out; ch++) {
             gr_info *cod_info = &gfc->l3_side.gr[gr].ch[ch].tt;
       
-            if (cod_info->block_type == SHORT_TYPE) 
-                adjust = 5/(1+exp(3.5-pe[gr][ch]/300.))-0.14;
-            else 
+            if (cod_info->block_type == NORM_TYPE) 
                 adjust = 2/(1+exp(3.5-pe[gr][ch]/300.))-0.05;
+            else 
+                adjust = 5/(1+exp(3.5-pe[gr][ch]/300.))-0.14;
       
             masking_lower_db   = gfc->VBR->mask_adjust - adjust; 
             gfc->masking_lower = pow (10.0, masking_lower_db * 0.1);
