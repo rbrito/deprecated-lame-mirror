@@ -1114,7 +1114,7 @@ long_block_scalefacs(const lame_internal_flags * gfc, gr_info * cod_info,
  ***********************************************************************/
 
 static void
-block_xr34(const lame_internal_flags * gfc, const gr_info * cod_info,
+block_xr34(const lame_internal_flags * gfc,  gr_info * const cod_info,
 	   const FLOAT8 * xr34_orig, FLOAT8 * xr34)
 {
     int     sfb, j = 0, sfbmax, *scalefac = cod_info->scalefac;

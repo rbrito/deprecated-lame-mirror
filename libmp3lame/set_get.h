@@ -83,6 +83,8 @@ int CDECL lame_get_subblock_gain(const lame_global_flags *);
 
 
 
+/*presets*/
+int apply_preset(lame_global_flags*, int preset, int enforce);
 
 
 

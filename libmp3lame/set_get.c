@@ -1756,7 +1756,6 @@ lame_get_totalframes( const lame_global_flags*  gfp )
 int
 lame_set_preset( lame_global_flags*  gfp, int preset )
 {
-    extern int apply_preset();
     gfp->preset = preset;
     return apply_preset(gfp, preset, 1);
 }
