@@ -1,6 +1,10 @@
 
 % lame [options] inputfile [outputfile]
 
+For more options, just type:
+% lame --help
+
+
 =======================================================================
 Constant Bitrate Examples:
 =======================================================================
@@ -64,10 +68,6 @@ STREAMING EXAMPLES
 
 
 =======================================================================
-
-For more options, just type:
-% lame --help
-
 Scripts are included (in the 'misc' subdirectory)
 to run lame on multiple files:
 
@@ -75,6 +75,9 @@ bach script:  mlame     Run "mlame -?" for instructions.
 sh script:    auenc     Run auenc for instructions
 sh script:    mugeco.sh
 
+Windows scripts:
+lame4dos.bat
+Lame.vbs
 
 
 =======================================================================

@@ -43,12 +43,17 @@ You will end up with the following directory tree
 Change the active project settings (in MSVC) to "lame-Win32 Debug GTK" or 
 "lame-Win32 Release GTK", recompile everything, and you're done.
 
+Note: 1/2001:  The frame analyzer is no longer part of 'lame.exe',
+but a seperate program 'mp3x.exe'.  The MSVC project files
+may need to be updated to reflect this.  This should just be a matter
+of replacing frontend/main.c with frontend/mp3x.c
+
 
 ===========================================================================
 How to run and use the MP3 Frame analyzer
 ===========================================================================
 
-To run MP3x.exe, or lame.exe with MP3x support, you need
+To run MP3x.exe, you need
 the GTK DLL files:  Either instal them on your system,
 or put them in the same directory as mp3x.exe resides.
 

@@ -1,35 +1,15 @@
-0.
-
-./configure scripts;
-
-   library options:
-     ability to not compile in mpglib (decoder) probably broken
-     ability to disable layer 1 and layer 2 decoding - is this really needed?
-  
-   frontend:  
-     vbr historgram display broken
-     
-   Makefile.in (all directories):  OS specific options determined
-   by configure
- 
-
-code:
-library:  call backs for error messages and display messages.
-
-          bitrate_table[][] and samplerate_table[][] are in
-          lame.h.  Right now, if the user selects an invalid
-          bitrate, libmp3lame.a returns an error, and the
-          calling program looks at the tables and prints a list
-          of valid bitrates. 
-
- 
+library:  User defined call backs for error messages and 
+          display messages.  Right now this is a #define MACRO
+          which can be disabled at compile time.  Default
+          build will create a library which displays error messages
+          to stderr.
 
 frontend: a bunch of static variables (input_format, swapbytes,
           silent, brhist, update_inteval) are set in parse_args and used in
           get_audio.  should be cleaned up.
 
 
-Makefile.{B32,MSVC,DJGPP} all broken.
+Makefile.{B32,MSVC,DJGPP} all broken?
 
 These makefiles should only bother to build the static lib,
 (or compile everything without even using the library)
@@ -55,32 +35,11 @@ a frequency well below 20 Hz.  Not very important, but it should
 be fixed.
 
 
-2a.
-Combined LPC + FFT spectral analysis will solve perhaps solve problem 2.
-
-First the input signal is filtered with a simple low order IIR filter which
-imitates the spectral sensivity of the human ear. The result is the input of
-the windowed FFT. Then spectral power density is computed.
-
-Now there are 2 possibilties:
-
-  * The influence of the IIR is removed while computing the Spectral Power
-    Density
-
-  * The rest of the calculation is done with the preemphased SPD
-    coefficients.
-
-
-
 3. 
 modify mpglib to output
 floating point and have finaly quantization step a
 easy-to-change module so it can output other than 16bit.
 
-
-
-997. 
-RPC support for distributed computing
 
 
 998.
