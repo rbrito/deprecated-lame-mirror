@@ -71,7 +71,7 @@ on_pe(
     for ( bits = 0, ch = 0; ch < gfc->channels_out; ++ch ) {
 	targ_bits[ch] = tbits;
 	if (ratio[ch].pe > 700.0) {
-	    targ_bits[ch] += tbits * (ratio[ch].pe - 700.0) * (1.0/700.0);
+	    targ_bits[ch] = tbits * (ratio[ch].pe * (1.0/700.0));
 	    if (targ_bits[ch] > mean_bits) 
 		targ_bits[ch] = mean_bits;
 	}
@@ -895,16 +895,13 @@ balance_noise (
  *  outer_loop ()                                                       
  *
  *  Function: The outer iteration loop controls the masking conditions  
- *  of all scalefactorbands. It computes the best scalefac and          
- *  global gain. This module calls the inner iteration loop             
+ *  of all scalefactorbands. It computes the best scalefac and global gain.
  * 
  *  mt 5/99 completely rewritten to allow for bit reservoir control,   
  *  mid/side channels with L/R or mid/side masking thresholds, 
  *  and chooses best quantization instead of last quantization when 
  *  no distortion free quantization can be found.  
  *  
- *  added VBR support mt 5/99
- *
  *  some code shuffle rh 9/00
  ************************************************************************/
 
