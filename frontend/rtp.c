@@ -40,7 +40,11 @@ char *strchr (), *strrchr ();
 #endif
 
 #include <sys/types.h>
+# ifndef _WIN32
 #include <sys/socket.h>
+# else
+#  include <winsock2.h>
+# endif
 #include <netinet/in.h>
 #include <arpa/inet.h>
 
