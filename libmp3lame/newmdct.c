@@ -431,10 +431,10 @@ window_subband(const sample_t *x1, FLOAT8 a[SBLIMIT])
 	t = a[14];
 	s = a[15] - t;
 
-	a[31] = v + t;   // A0
-	a[30] = u + s;   // A1
-	a[15] = u - s;   // A2
-	a[14] = v - t;   // A3
+	a[31] = v + t;   /* A0 */
+	a[30] = u + s;   /* A1 */
+	a[15] = u - s;   /* A2 */
+	a[14] = v - t;   /* A3 */
     }
 {
     FLOAT8 xr;
@@ -613,7 +613,7 @@ inline static void mdct_long(FLOAT8 *out, FLOAT8 *in)
     FLOAT8 ct,st;
   {
     FLOAT8 tc1, tc2, tc3, tc4, ts5, ts6, ts7, ts8;
-    // 1,2, 5,6, 9,10, 13,14, 17
+    /* 1,2, 5,6, 9,10, 13,14, 17 */
     tc1 = in[17]-in[ 9];
     tc3 = in[15]-in[11];
     tc4 = in[14]-in[12];
@@ -776,3 +776,4 @@ void mdct_sub48(
 	}
     }
 }
+

@@ -229,8 +229,8 @@ void II_step_two(unsigned int *bit_alloc,real fraction[2][4][SBLIMIT],int *scale
 */
     }
 
-//  if(sblimit > (fr->down_sample_sblimit) )
-//    sblimit = fr->down_sample_sblimit;
+/*  if(sblimit > (fr->down_sample_sblimit) ) */
+/*    sblimit = fr->down_sample_sblimit; */
 
   for(i=sblimit;i<SBLIMIT;i++)
     for (j=0;j<stereo;j++)
@@ -265,7 +265,7 @@ static void II_select_table(struct frame *fr)
 
 
 int do_layer2( PMPSTR mp,unsigned char *pcm_sample,int *pcm_point)
-//int do_layer2(struct frame *fr,int outmode,struct audio_info_struct *ai)
+/*int do_layer2(struct frame *fr,int outmode,struct audio_info_struct *ai) */
 {
   int clip=0;
   int i,j;
@@ -307,3 +307,4 @@ int do_layer2( PMPSTR mp,unsigned char *pcm_sample,int *pcm_point)
 
 
 #endif
+

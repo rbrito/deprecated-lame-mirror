@@ -228,7 +228,7 @@ init_outer_loop(
     cod_info->subblock_gain[0]    = 0;
     cod_info->subblock_gain[1]    = 0;
     cod_info->subblock_gain[2]    = 0;
-    cod_info->subblock_gain[3]    = 0;    // this one is always 0
+    cod_info->subblock_gain[3]    = 0;    /* this one is always 0 */
     cod_info->region0_count       = 0;
     cod_info->region1_count       = 0;
     cod_info->preflag             = 0;
@@ -244,7 +244,7 @@ init_outer_loop(
     for (sfb = 0; sfb < SBMAX_l; sfb++) {
 	cod_info->width[sfb]
 	    = gfc->scalefac_band.l[sfb+1] - gfc->scalefac_band.l[sfb];
-	cod_info->window[sfb] = 3; // which is always 0.
+	cod_info->window[sfb] = 3; /* which is always 0. */
     }
     if (cod_info->block_type == SHORT_TYPE) {
 	FLOAT8 ixwork[576];
@@ -471,13 +471,13 @@ trancate_smallspectrums(
 	if (trancateThreshold == 0.0)
 	    continue;
 
-//	printf("%e %e %e\n",
-//	       trancateThreshold/l3_xmin[sfb],
-//	       trancateThreshold/(l3_xmin[sfb]*start),
-//	       trancateThreshold/(l3_xmin[sfb]*(start+width))
-//	    );
-//	if (trancateThreshold > 1000*l3_xmin[sfb]*start)
-//	    trancateThreshold = 1000*l3_xmin[sfb]*start;
+/*	printf("%e %e %e\n", */
+/*	       trancateThreshold/l3_xmin[sfb], */
+/*	       trancateThreshold/(l3_xmin[sfb]*start), */
+/*	       trancateThreshold/(l3_xmin[sfb]*(start+width)) */
+/*	    ); */
+/*	if (trancateThreshold > 1000*l3_xmin[sfb]*start) */
+/*	    trancateThreshold = 1000*l3_xmin[sfb]*start; */
 
 	do {
 	    if (fabs(gi->xr[j - width]) <= trancateThreshold)
@@ -1875,6 +1875,7 @@ iteration_loop(
 
     ResvFrameEnd (gfc, mean_bits);
 }
+
 
 
 

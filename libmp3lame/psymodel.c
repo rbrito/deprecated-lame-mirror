@@ -1341,7 +1341,7 @@ int L3psycho_anal_ns( lame_global_flags * gfp,
 	masking_ratio    [gr_out] [chn]  .thm = gfc -> thm [chn];
 	if (numchn > 2) {
 	    /* MS maskings  */
-	    //percep_MS_entropy         [chn-2]     = gfc -> pe  [chn]; 
+	    /*percep_MS_entropy         [chn-2]     = gfc -> pe  [chn];  */
 	    masking_MS_ratio [gr_out] [chn].en  = gfc -> en  [chn+2];
 	    masking_MS_ratio [gr_out] [chn].thm = gfc -> thm [chn+2];
 	}
@@ -1580,7 +1580,7 @@ int L3psycho_anal_ns( lame_global_flags * gfp,
 	    while (++kk <= gfc->s3ind[b][1])
 		ecb = mask_add(ecb, gfc->s3_ll[k++] * eb2[kk], kk, kk-b, gfc);
 
-	    ecb *= 0.158489319246111; // pow(10,-0.8)
+	    ecb *= 0.158489319246111; /* pow(10,-0.8) */
 
 	    /****   long block pre-echo control   ****/
 	    /* dont use long block pre-echo control if previous granule was 
@@ -1904,9 +1904,9 @@ int psymodel_init(lame_global_flags *gfp)
 	for (k=0; k < gfc->numlines_l[i]; k++, j++) {
 	    FLOAT8  freq = sfreq*j/(1000.0*BLKSIZE);
 	    FLOAT8  level;
-	    //	freq = Min(.1,freq);       // ATH below 100 Hz constant, not further climbing
-	    level  = ATHformula (freq*1000, gfp) - 20;   // scale to FFT units; returned value is in dB
-	    level  = pow ( 10., 0.1*level );   // convert from dB -> energy
+	    /*	freq = Min(.1,freq);       // ATH below 100 Hz constant, not further climbing */
+	    level  = ATHformula (freq*1000, gfp) - 20;   /* scale to FFT units; returned value is in dB */
+	    level  = pow ( 10., 0.1*level );   /* convert from dB -> energy */
 	    level *= gfc->numlines_l [i];
 	    if (x > level)
 		x = level;
@@ -2017,3 +2017,4 @@ int psymodel_init(lame_global_flags *gfp)
 
     return 0;
 }
+

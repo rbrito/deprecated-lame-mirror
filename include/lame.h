@@ -1008,7 +1008,7 @@ typedef enum {
     
     FRONTEND_READERROR    = -80,
     FRONTEND_WRITEERROR   = -81,
-    FRONTEND_FILETOOLARGE = -82,
+    FRONTEND_FILETOOLARGE = -82
     
 } lame_errorcodes_t;
 
@@ -1016,3 +1016,4 @@ typedef enum {
 }
 #endif
 #endif /* LAME_LAME_H */
+

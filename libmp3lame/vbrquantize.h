@@ -32,3 +32,4 @@ int VBR_noise_shaping(
                     int                 ch );
 
 #endif /* LAME_VBRQUANTIZE_H */
+

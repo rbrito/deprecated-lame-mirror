@@ -34,3 +34,4 @@ typedef struct {
 #endif /* LAME_CONSOLE_H */
 
 /* end of console.h */
+

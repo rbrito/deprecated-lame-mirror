@@ -131,3 +131,4 @@ int lame_decode_fromfile(FILE *fd, short pcm_l[], short pcm_r[], mp3data_struct 
 }
 
 #endif /* AMIGA_MPEGA */
+

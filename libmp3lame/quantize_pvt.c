@@ -36,7 +36,7 @@
 #endif
 
 
-#define NSATHSCALE 100 // Assuming dynamic range=96dB, this value should be 92
+#define NSATHSCALE 100 /* Assuming dynamic range=96dB, this value should be 92 */
 
 /*
   The following table is used to implement the scalefactor
@@ -492,11 +492,11 @@ static FLOAT8 athAdjust( FLOAT8 a, FLOAT8 x, FLOAT8 athFloor )
     FLOAT8 u = FAST_LOG10_X(x, 10.0); 
     FLOAT8 v = a*a;
     FLOAT8 w = 0.0;   
-    u -= athFloor;                                  // undo scaling
+    u -= athFloor;                                  /* undo scaling */
     if ( v > 1E-20 ) w = 1. + FAST_LOG10_X(v, 10.0 / o);
     if ( w < 0  )    w = 0.; 
     u *= w; 
-    u += athFloor + o-p;                            // redo scaling
+    u += athFloor + o-p;                            /* redo scaling */
 
     return pow( 10., 0.1*u );
 }
@@ -602,17 +602,17 @@ int calc_xmin(
 /*            calc_noise                                                 */
 /*************************************************************************/
 
-// -oo dB  =>  -1.00
-// - 6 dB  =>  -0.97
-// - 3 dB  =>  -0.80
-// - 2 dB  =>  -0.64
-// - 1 dB  =>  -0.38
-//   0 dB  =>   0.00
-// + 1 dB  =>  +0.49
-// + 2 dB  =>  +1.06
-// + 3 dB  =>  +1.68
-// + 6 dB  =>  +3.69
-// +10 dB  =>  +6.45
+/* -oo dB  =>  -1.00 */
+/* - 6 dB  =>  -0.97 */
+/* - 3 dB  =>  -0.80 */
+/* - 2 dB  =>  -0.64 */
+/* - 1 dB  =>  -0.38 */
+/*   0 dB  =>   0.00 */
+/* + 1 dB  =>  +0.49 */
+/* + 2 dB  =>  +1.06 */
+/* + 3 dB  =>  +1.68 */
+/* + 6 dB  =>  +3.69 */
+/* +10 dB  =>  +6.45 */
 
 int  calc_noise( 
         const lame_internal_flags * const gfc,
@@ -650,13 +650,13 @@ int  calc_noise(
 
 	noise = FAST_LOG10(Max(noise,1E-20));
 	/* multiplying here is adding in dB, but can overflow */
-	//tot_noise *= Max(noise, 1E-20);
+	/*tot_noise *= Max(noise, 1E-20); */
 	tot_noise_db += noise;
 
 	if (noise > 0.0) {
 	    over++;
 	    /* multiplying here is adding in dB -but can overflow */
-	    //over_noise *= noise;
+	    /*over_noise *= noise; */
 	    over_noise_db += noise;
 	}
 	max_noise=Max(max_noise,noise);
@@ -845,4 +845,5 @@ void set_frame_pinfo(
     }    /* for gr */
 }
 #endif /* ifdef HAVE_GTK */
+
 

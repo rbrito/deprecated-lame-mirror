@@ -36,3 +36,4 @@ extern int id3tag_write_v1(lame_global_flags *gfp);
  */
 
 #endif
+

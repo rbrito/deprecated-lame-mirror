@@ -53,3 +53,4 @@ void         get_lame_version_numerical ( lame_version_t *const lvp );
 #endif  /* LAME_VERSION_H */
 
 /* End of version.h */
+

@@ -1,7 +1,7 @@
 /*
- *	MP3 bitstream Output interface for LAME
+ *	Fast Fourier Transform include file
  *
- *	Copyright (c) 1999 Takehiro TOMINAGA
+ *	Copyright (c) 2000 Mark Taylor
  *
  * This library is free software; you can redistribute it and/or
  * modify it under the terms of the GNU Library General Public
@@ -19,22 +19,20 @@
  * Boston, MA 02111-1307, USA.
  */
 
-#ifndef LAME_BITSTREAM_H
-#define LAME_BITSTREAM_H
-#include "util.h"
+#ifndef LAME_FFT_H
+#define LAME_FFT_H
 
-int getframebits(const lame_global_flags *gfp);
+#include "encoder.h"
 
-int format_bitstream(lame_global_flags *gfp);
+void fft_long(lame_internal_flags* const gfc, FLOAT x_real[BLKSIZE], 
+               int chn, const sample_t *data[2] );
 
-void flush_bitstream(lame_global_flags *gfp);
-void add_dummy_byte ( lame_global_flags* const gfp, unsigned char val );
+void fft_short(lame_internal_flags* const gfc, FLOAT x_real[3][BLKSIZE_s], 
+               int chn, const sample_t *data[2] );
 
-int  copy_buffer(lame_internal_flags *gfc,unsigned char *buffer,int buffer_size,int update_crc);
-void init_bit_stream_w(lame_internal_flags *gfc);
-void CRC_writeheader (lame_internal_flags *gfc, char *buffer);
-int compute_flushbits(const lame_global_flags *gfp, int *nbytes);
-
+void init_fft(lame_internal_flags* const gfc );
 
 #endif
+
+/* End of fft.h */
 

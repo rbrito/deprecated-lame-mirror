@@ -50,3 +50,4 @@ void gpk_bargraph_draw(GtkWidget *widget,
 void setcolor(GtkWidget *widget, GdkColor *color,int red,int green,int blue);
 
 #endif
+

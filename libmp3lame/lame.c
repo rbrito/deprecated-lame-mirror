@@ -185,9 +185,9 @@ optimum_bandwidth(double *const lowerlimit,
                        1 ? (9 + 4) * 8 : (17 + 4) * 8) * samplefreq / 576;
 
     if (channels >= 2.)
-        br /= 1.75 + 0.25 * (channels - 2.); // MS needs 1.75x mono, LR needs 2.00x mono (experimental data of a lot of albums)
+        br /= 1.75 + 0.25 * (channels - 2.); /* MS needs 1.75x mono, LR needs 2.00x mono (experimental data of a lot of albums) */
 
-    br *= 0.5;          // the sine and cosine term must share the bitrate
+    br *= 0.5;          /* the sine and cosine term must share the bitrate */
 
 /* 
  *  So, now we have the bitrate for every spectral line.
@@ -224,7 +224,7 @@ optimum_bandwidth(double *const lowerlimit,
  *       muffled sound.
  */
 
-    f_low = br / log10(br * 4.425e-3); // Tests with 8, 16, 32, 64, 112 and 160 kbps
+    f_low = br / log10(br * 4.425e-3); /* Tests with 8, 16, 32, 64, 112 and 160 kbps */
  
 /*
 GB 04/04/01
@@ -287,7 +287,7 @@ limited bandwidth is increasing quality
      */
 
     if (lowerlimit != NULL)
-        *lowerlimit = (f_low>0.5 * samplefreq ? 0.5 * samplefreq : f_low); // roel - fixes mono "-b320 -a"
+        *lowerlimit = (f_low>0.5 * samplefreq ? 0.5 * samplefreq : f_low); /* roel - fixes mono "-b320 -a" */
     if (upperlimit != NULL)
         *upperlimit = f_high;
 /*
@@ -367,10 +367,10 @@ lame_init_qval(lame_global_flags * gfp)
         gfc->psymodel = 1;
         gfc->quantization = 1;
         gfc->noise_shaping = 1;
-//        gfc->substep_shaping = 1; // use substep shaping (not coded yet)
+/*        gfc->substep_shaping = 1; // use substep shaping (not coded yet) */
         gfc->noise_shaping_amp = 1;
         gfc->noise_shaping_stop = 1;
-        gfc->use_best_huffman = 2; // inner loop
+        gfc->use_best_huffman = 2; /* inner loop */
         break;
 
     case 1:
@@ -501,7 +501,7 @@ lame_init_params(lame_global_flags * const gfp)
         gfc->ATH = calloc(1, sizeof(ATH_t));
 
     if (NULL == gfc->ATH)
-        return -2;  // maybe error codes should be enumerated in lame.h ??
+        return -2;  /* maybe error codes should be enumerated in lame.h ?? */
 
     if (NULL == gfc->VBR)
         gfc->VBR = calloc(1, sizeof(VBR_t));
@@ -524,7 +524,7 @@ lame_init_params(lame_global_flags * const gfp)
     gfc->channels_out = (gfp->mode == MONO) ? 1 : 2;
     gfc->mode_ext = MPG_MD_LR_LR;
     if (gfp->mode == MONO)
-        gfp->force_ms = 0; // don't allow forced mid/side stereo for mono output
+        gfp->force_ms = 0; /* don't allow forced mid/side stereo for mono output */
 
 
     if (gfp->VBR != vbr_off)
@@ -604,7 +604,7 @@ lame_init_params(lame_global_flags * const gfp)
         gfc->coding = coding_Ogg_Vorbis;
     }
     else {
-        gfc->mode_gr = gfp->out_samplerate <= 24000 ? 1 : 2; // Number of granules per frame
+        gfc->mode_gr = gfp->out_samplerate <= 24000 ? 1 : 2; /* Number of granules per frame */
         gfp->framesize = 576 * gfc->mode_gr;
         gfp->encoder_delay = ENCDELAY;
         gfc->coding = coding_MPEG_Layer_3;
@@ -717,7 +717,7 @@ lame_init_params(lame_global_flags * const gfp)
             channels = 3.;
             break;
         default:    
-            channels = 1.;  // just to make data flow analysis happy :-)
+            channels = 1.;  /* just to make data flow analysis happy :-) */
             assert(0);
             break;
         }
@@ -828,8 +828,8 @@ lame_init_params(lame_global_flags * const gfp)
     }
 
     /* for CBR, we will write an "info" tag. */
-    //    if ((gfp->VBR == vbr_off)) 
-    //  gfp->bWriteVbrTag = 0;
+    /*    if ((gfp->VBR == vbr_off))  */
+    /*  gfp->bWriteVbrTag = 0; */
 
     if (gfp->ogg)
         gfp->bWriteVbrTag = 0;
@@ -895,7 +895,7 @@ lame_init_params(lame_global_flags * const gfp)
         if (gfp->ATHtype < 0) gfp->ATHtype = 4;
         if (gfp->quality < 0) gfp->quality = DEFAULT_QUALITY;
         if (gfp->quality > 7) {
-            gfp->quality = 7;     // needs psymodel
+            gfp->quality = 7;     /* needs psymodel */
             ERRORF( gfc, "VBR needs a psymodel, switching to quality level 7\n");
         }
 
@@ -939,7 +939,7 @@ lame_init_params(lame_global_flags * const gfp)
                 static float const dbQ[10] = { -6,-4.75,-3.5,-2.25,-1,.25,1.5,2.75,4,5.25 };
                 gfc->VBR->quality = 4;
                 gfc->VBR->mask_adjust = dbQ[gfp->VBR_q];
-                gfc->VBR->smooth = 1;   // not finally
+                gfc->VBR->smooth = 1;   /* not finally */
             }
             break;        
         case 5: {
@@ -953,7 +953,7 @@ lame_init_params(lame_global_flags * const gfp)
                 static float const dbQ[10] = { -6,-4.75,-3.5,-2.25,-1,.25,1.5,2.75,4,5.25 };
                 gfc->VBR->quality = 4;
                 gfc->VBR->mask_adjust = dbQ[gfp->VBR_q];
-                gfc->VBR->smooth = 0;   // not finally
+                gfc->VBR->smooth = 0;   /* not finally */
             }
             break;        
         }
@@ -1073,7 +1073,7 @@ lame_init_params(lame_global_flags * const gfp)
     
     if ( gfp->athaa_loudapprox < 0 ) gfp->athaa_loudapprox = 2;
     
-    if (gfp->useTemporal < 0 ) gfp->useTemporal = 1;  // on by default
+    if (gfp->useTemporal < 0 ) gfp->useTemporal = 1;  /* on by default */
 
 
     if ( gfp->preset_expopts && gfc->presetTune.use < 1 )
@@ -1386,7 +1386,7 @@ lame_encode_buffer_sample_t(lame_global_flags * gfp,
 
     /* copy out any tags that may have been written into bitstream */
     mp3out = copy_buffer(gfc,mp3buf,mp3buf_size,0);
-    if (mp3out<0) return mp3out;  // not enough buffer space
+    if (mp3out<0) return mp3out;  /* not enough buffer space */
     mp3buf += mp3out;
     mp3size += mp3out;
 
@@ -1468,13 +1468,13 @@ lame_encode_buffer_sample_t(lame_global_flags * gfp,
 
         if (gfc->mf_size >= mf_needed) {
             /* encode the frame.  */
-            // mp3buf              = pointer to current location in buffer
-            // mp3buf_size         = size of original mp3 output buffer
-            //                     = 0 if we should not worry about the
-            //                       buffer size because calling program is 
-            //                       to lazy to compute it
-            // mp3size             = size of data written to buffer so far
-            // mp3buf_size-mp3size = amount of space avalable 
+            /* mp3buf              = pointer to current location in buffer */
+            /* mp3buf_size         = size of original mp3 output buffer */
+            /*                     = 0 if we should not worry about the */
+            /*                       buffer size because calling program is  */
+            /*                       to lazy to compute it */
+            /* mp3size             = size of data written to buffer so far */
+            /* mp3buf_size-mp3size = amount of space avalable  */
 
             int buf_size=mp3buf_size - mp3size;
             if (mp3buf_size==0) buf_size=0;
@@ -1920,7 +1920,7 @@ lame_close(lame_global_flags * gfp)
 
     gfc->Class_ID = 0;
 
-    // this routien will free all malloc'd data in gfc, and then free gfc:
+    /* this routien will free all malloc'd data in gfc, and then free gfc: */
     freegfc(gfc);
 
     gfp->internal_flags = NULL;
@@ -1994,7 +1994,7 @@ lame_init_old(lame_global_flags * gfp)
 {
     lame_internal_flags *gfc;
 
-    disable_FPE();      // disable floating point exceptions
+    disable_FPE();      /* disable floating point exceptions */
 
     memset(gfp, 0, sizeof(lame_global_flags));
 
@@ -2070,7 +2070,7 @@ lame_init_old(lame_global_flags * gfp)
     gfc->last_ampl = gfc->ampl = +1.0;
 #endif
 #ifdef DECODE_ON_THE_FLY
-    lame_decode_init()  // initialize the decoder 
+    lame_decode_init()  /* initialize the decoder  */
 #endif
     gfp->asm_optimizations.mmx = 1;
     gfp->asm_optimizations.amd3dnow = 1;
@@ -2237,3 +2237,4 @@ lame_bitrate_block_type_hist(const lame_global_flags * const gfp,
 #endif
 
 /* end of lame.c */
+

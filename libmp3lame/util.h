@@ -171,40 +171,40 @@ typedef struct {
 
 /* variables used for --alt-preset */
 typedef struct {
-  // indicates the use of alt-preset
+  /* indicates the use of alt-preset */
   int     use;
 
-  // adjustment to joint stereo
+  /* adjustment to joint stereo */
   FLOAT8  ms_maskadjust;
 
-  // adjustments to quantization selection
-  FLOAT8  quantcomp_adjust_rh_tot;    // adjustments for tot_noise with vbr-old
-  FLOAT8  quantcomp_adjust_rh_max;    // adjustments for max_noise with vbr-old
-  FLOAT8  quantcomp_adjust_mtrh;      // adjustments for calc_scalefac "c" with vbr-mtrh
-  int     quantcomp_type_s;           // quantization comparison to switch to on non-normal blocks
-  int     quantcomp_alt_type;          // third quantization comparison to use for special cases
-                                       // such as high athadjust values, or long blocks, etc
+  /* adjustments to quantization selection */
+  FLOAT8  quantcomp_adjust_rh_tot;    /* adjustments for tot_noise with vbr-old */
+  FLOAT8  quantcomp_adjust_rh_max;    /* adjustments for max_noise with vbr-old */
+  FLOAT8  quantcomp_adjust_mtrh;      /* adjustments for calc_scalefac "c" with vbr-mtrh */
+  int     quantcomp_type_s;           /* quantization comparison to switch to on non-normal blocks */
+  int     quantcomp_alt_type;          /* third quantization comparison to use for special cases */
+                                       /* such as high athadjust values, or long blocks, etc */
 
-  // tunings reliant upon athadjust
-//FLOAT8  athadjust_max_val;           // maximum value of athadjust before limit is applied
-  FLOAT8  athadjust_switch_level;      // level of athadjust at which to apply tunings at
-                                       // x <= 0 == never switch, x >= 1 == always switch
-  int     athadjust_safe_noiseshaping; // if 0, noise shaping 2 will not be used no matter what
-                                       // the noise shaping type would normally be set to
-  FLOAT8  athadjust_safe_noiseshaping_thre; // value which max_pow_alt must be greater than
-                                            // for noise shaping 2 to be used "safely"                                                     
-  FLOAT8  athadjust_safe_athaasensitivity; // used for second determination if it is safe to switch
-	                                      // to noise shaping 2
+  /* tunings reliant upon athadjust */
+/*FLOAT8  athadjust_max_val;           // maximum value of athadjust before limit is applied */
+  FLOAT8  athadjust_switch_level;      /* level of athadjust at which to apply tunings at */
+                                       /* x <= 0 == never switch, x >= 1 == always switch */
+  int     athadjust_safe_noiseshaping; /* if 0, noise shaping 2 will not be used no matter what */
+                                       /* the noise shaping type would normally be set to */
+  FLOAT8  athadjust_safe_noiseshaping_thre; /* value which max_pow_alt must be greater than */
+                                            /* for noise shaping 2 to be used "safely"                                                      */
+  FLOAT8  athadjust_safe_athaasensitivity; /* used for second determination if it is safe to switch */
+	                                      /* to noise shaping 2 */
 } presetTune_t;
 
 typedef struct 
 {
-    int sum;    // what we have seen so far
-    int seen;   // how many frames we have seen in this chunk
-    int want;   // how many frames we want to collect into one chunk
-    int pos;    // actual position in our bag
-    int size;   // size of our bag
-    int *bag;   // pointer to our bag
+    int sum;    /* what we have seen so far */
+    int seen;   /* how many frames we have seen in this chunk */
+    int want;   /* how many frames we want to collect into one chunk */
+    int pos;    /* actual position in our bag */
+    int size;   /* size of our bag */
+    int *bag;   /* pointer to our bag */
 } VBR_seek_info_t;
 
 
@@ -214,14 +214,14 @@ typedef struct
  */
 typedef struct
 {
-    int     use_adjust;     // method for the auto adjustment 
-    FLOAT8  adjust;         // lowering based on peak volume, 1 = no lowering
-    FLOAT8  adjust_limit;   // limit for dynamic ATH adjust
-    FLOAT8  decay;          // determined to lower x dB each second
-    FLOAT8  floor;          // lowest ATH value
-    FLOAT8  l[SBMAX_l];     // ATH for sfbs in long blocks
-    FLOAT8  s[SBMAX_s];     // ATH for sfbs in short blocks
-    FLOAT8  cb[CBANDS];     // ATH for convolution bands
+    int     use_adjust;     /* method for the auto adjustment  */
+    FLOAT8  adjust;         /* lowering based on peak volume, 1 = no lowering */
+    FLOAT8  adjust_limit;   /* limit for dynamic ATH adjust */
+    FLOAT8  decay;          /* determined to lower x dB each second */
+    FLOAT8  floor;          /* lowest ATH value */
+    FLOAT8  l[SBMAX_l];     /* ATH for sfbs in long blocks */
+    FLOAT8  s[SBMAX_s];     /* ATH for sfbs in short blocks */
+    FLOAT8  cb[CBANDS];     /* ATH for convolution bands */
     FLOAT eql_w[BLKSIZE/2];/* equal loudness weights (based on ATH) */
 } ATH_t;
 
@@ -230,9 +230,9 @@ typedef struct
  */
 typedef struct
 {
-    FLOAT8  mask_adjust;    // the dbQ stuff
+    FLOAT8  mask_adjust;    /* the dbQ stuff */
     int     quality;
-    int     smooth;         // 0=no, 1=peaks, 2=+-4
+    int     smooth;         /* 0=no, 1=peaks, 2=+-4 */
 } VBR_t;
 
 /**
@@ -240,7 +240,7 @@ typedef struct
  */
 typedef struct
 {
-    int     tonalityPatch;      // temporaly needed by VBR
+    int     tonalityPatch;      /* temporaly needed by VBR */
     FLOAT   cwlimit;
     FLOAT8  prvTonRed[CBANDS];
 } PSY_t; 
@@ -279,7 +279,7 @@ typedef struct {
                                        fir, */
     unsigned char* src_step;
     sample_t*      in_old       [MAX_CHANNELS];
-    //    uint64_t       sample_count [MAX_CHANNELS];
+    /*    uint64_t       sample_count [MAX_CHANNELS]; */
     unsigned       fir_stepper  [MAX_CHANNELS];
     int            inp_stepper  [MAX_CHANNELS];
 
@@ -534,9 +534,9 @@ struct lame_internal_flags {
   
   unsigned crcvalue;
   
-  VBR_seek_info_t VBR_seek_table; // used for Xing VBR header
+  VBR_seek_info_t VBR_seek_table; /* used for Xing VBR header */
   
-  ATH_t *ATH;   // all ATH related stuff
+  ATH_t *ATH;   /* all ATH related stuff */
   VBR_t *VBR;
   PSY_t *PSY;
 
@@ -621,3 +621,4 @@ extern void lame_msgf  (const lame_internal_flags *gfc, const char *, ...);
 #endif
 
 #endif /* LAME_UTIL_H */
+

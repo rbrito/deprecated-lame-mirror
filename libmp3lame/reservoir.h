@@ -28,3 +28,4 @@ void ResvAdjust(lame_internal_flags *gfc,gr_info *gi);
 void ResvFrameEnd(lame_internal_flags *gfc, int mean_bits );
 
 #endif /* LAME_RESERVOIR_H */
+

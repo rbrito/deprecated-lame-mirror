@@ -146,3 +146,4 @@ int  lame_encode_mp3_frame (
 	int                 mp3buf_size );
 
 #endif /* LAME_ENCODER_H */
+

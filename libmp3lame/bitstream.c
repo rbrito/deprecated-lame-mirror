@@ -319,7 +319,7 @@ encodeSideInfo2(lame_global_flags *gfp,int bitsPerFrame)
 		writeheader(gfc,gi->scalefac_compress,     4);
 
 		if (gi->block_type != NORM_TYPE) {
-		    writeheader(gfc, 1, 1); // window_switching_flag
+		    writeheader(gfc, 1, 1); /* window_switching_flag */
 		    writeheader(gfc,gi->block_type,       2);
 		    writeheader(gfc,gi->mixed_block_flag, 1);
 
@@ -334,7 +334,7 @@ encodeSideInfo2(lame_global_flags *gfp,int bitsPerFrame)
 		    writeheader(gfc,gi->subblock_gain[1], 3);
 		    writeheader(gfc,gi->subblock_gain[2], 3);
 		} else {
-		    writeheader(gfc, 0, 1); // window_switching_flag
+		    writeheader(gfc, 0, 1); /* window_switching_flag */
 		    if (gi->table_select[0] == 14)
 			gi->table_select[0] = 16;
 		    writeheader(gfc,gi->table_select[0], 5);
@@ -370,7 +370,7 @@ encodeSideInfo2(lame_global_flags *gfp,int bitsPerFrame)
 	    writeheader(gfc,gi->scalefac_compress,     9);
 
 	    if (gi->block_type != NORM_TYPE) {
-		writeheader(gfc, 1, 1); // window_switching_flag
+		writeheader(gfc, 1, 1); /* window_switching_flag */
 		writeheader(gfc,gi->block_type,       2);
 		writeheader(gfc,gi->mixed_block_flag, 1);
 
@@ -385,7 +385,7 @@ encodeSideInfo2(lame_global_flags *gfp,int bitsPerFrame)
 		writeheader(gfc,gi->subblock_gain[1], 3);
 		writeheader(gfc,gi->subblock_gain[2], 3);
 	    } else {
-		writeheader(gfc, 0, 1); // window_switching_flag
+		writeheader(gfc, 0, 1); /* window_switching_flag */
 		if (gi->table_select[0] == 14)
 		    gi->table_select[0] = 16;
 		writeheader(gfc,gi->table_select[0], 5);
@@ -638,7 +638,7 @@ writeMainData ( lame_global_flags * const gfp)
 #endif
 		for (sfb = 0; sfb < gi->sfbdivide; sfb++) {
 		    if (gi->scalefac[sfb] == -1)
-			continue; // scfsi is used
+			continue; /* scfsi is used */
 		    if (gi->scalefac[sfb] == -2)
 			gi->scalefac[sfb] = 0;
 		    putbits2(gfc, gi->scalefac[sfb], slen1);
@@ -646,7 +646,7 @@ writeMainData ( lame_global_flags * const gfp)
 		}
 		for (; sfb < gi->sfbmax; sfb++) {
 		    if (gi->scalefac[sfb] == -1)
-			continue; // scfsi is used
+			continue; /* scfsi is used */
 		    if (gi->scalefac[sfb] == -2)
 			gi->scalefac[sfb] = 0;
 		    putbits2(gfc, gi->scalefac[sfb], slen2);
@@ -763,7 +763,7 @@ compute_flushbits( const lame_global_flags * gfp, int *total_bytes_output )
   bitsPerFrame = getframebits(gfp);
   flushbits += bitsPerFrame;
   *total_bytes_output += bitsPerFrame;
-  // round up:  
+  /* round up:   */
   if (*total_bytes_output % 8) 
       *total_bytes_output = 1 + (*total_bytes_output/8);
   else
@@ -953,16 +953,16 @@ int copy_buffer(lame_internal_flags *gfc,unsigned char *buffer,int size,int mp3d
               /* mp3out = number of samples output */
               
               if (mp3out==-1) {
-                  // error decoding.  Not fatal, but might screw up are
-                  // ReplayVolume Info tag.  
-                  // what should we do?  ignore for now
+                  /* error decoding.  Not fatal, but might screw up are */
+                  /* ReplayVolume Info tag.   */
+                  /* what should we do?  ignore for now */
                   mp3out=0;
               }
               if (mp3out>0) {
-                  // process the PCM data.  
+                  /* process the PCM data.   */
                   if (mp3out>1152) {
-                      // this should not be possible, and indicates we have
-                      // overflowed the pcm_out buffer.  Fatal error.
+                      /* this should not be possible, and indicates we have */
+                      /* overflowed the pcm_out buffer.  Fatal error. */
                       return -6;
                   }
               }
@@ -988,3 +988,4 @@ void init_bit_stream_w(lame_internal_flags *gfc)
 }
 
 /* end of bitstream.c */
+

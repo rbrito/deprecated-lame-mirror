@@ -25,3 +25,4 @@ int synth_1to1_mono(PMPSTR mp, real *bandPtr,unsigned char *samples,int *pnt);
 int synth_1to1(PMPSTR mp, real *bandPtr,int channel,unsigned char *out,int *pnt);
 
 #endif
+

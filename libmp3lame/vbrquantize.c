@@ -465,7 +465,7 @@ find_scalefac_ave(
 inline int
 calc_scalefac(FLOAT8 l3_xmin, int bw, FLOAT8 preset_tune)
 {
-    FLOAT8 const c = (preset_tune > 0 ? preset_tune : 5.799142446); // 10 * 10^(2/3) * log10(4/3)
+    FLOAT8 const c = (preset_tune > 0 ? preset_tune : 5.799142446); /* 10 * 10^(2/3) * log10(4/3) */
     return 210 + (int) (c * log10(l3_xmin / bw) - .5);
 }
 
@@ -1234,3 +1234,4 @@ VBR_noise_shaping(lame_internal_flags * gfc, FLOAT8 * xr34orig, int minbits, int
 
     return 0;
 }
+

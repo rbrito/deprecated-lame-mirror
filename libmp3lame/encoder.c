@@ -136,7 +136,7 @@ adjust_ATH( lame_global_flags* const  gfp,
         /*  this code reduces slowly the ATH (speed of 12 dB per second)
          */
         FLOAT8 
-        //x = Max (640, 320*(int)(max_val/320));
+        /*x = Max (640, 320*(int)(max_val/320)); */
         x = Max (32, 32*(int)(max_val/32));
         x = x/32768;
         gfc->ATH->adjust *= gfc->ATH->decay;
@@ -299,12 +299,12 @@ FFT's                    <---------1024---------->
 
 typedef FLOAT8 chgrdata[2][2];
 
-int  lame_encode_mp3_frame (				// Output
-	lame_global_flags* const  gfp,			// Context
-	sample_t*                 inbuf_l,              // Input
-	sample_t*                 inbuf_r,              // Input
-	unsigned char*            mp3buf, 		// Output
-	int                    mp3buf_size )		// Output
+int  lame_encode_mp3_frame (				/* Output */
+	lame_global_flags* const  gfp,			/* Context */
+	sample_t*                 inbuf_l,              /* Input */
+	sample_t*                 inbuf_r,              /* Input */
+	unsigned char*            mp3buf, 		/* Output */
+	int                    mp3buf_size )		/* Output */
 {
   int mp3count;
   III_psy_ratio masking_LR[2][2];    /*LR masking & energy */
@@ -626,3 +626,4 @@ change the following to
 
   return mp3count;
 }
+

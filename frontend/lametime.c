@@ -154,3 +154,4 @@ off_t  lame_get_file_size ( const char* const filename )
 }
 
 /* End of lametime.c */
+

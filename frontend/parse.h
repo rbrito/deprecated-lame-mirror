@@ -9,3 +9,4 @@ int  parse_args(lame_global_flags* gfp, int argc, char** argv, char * const inPa
 void print_config(lame_global_flags* gfp);
 
 /* end of parse.h */
+

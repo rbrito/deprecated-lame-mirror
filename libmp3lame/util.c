@@ -82,6 +82,15 @@ void  freegfc ( lame_internal_flags* const gfc )   /* bit stream structure */
     if ( gfc->VBR_seek_table.bag ) {
         free ( gfc->VBR_seek_table.bag );
     }
+    if ( gfc->ATH ) {
+        free ( gfc->ATH );
+    }
+    if ( gfc->VBR ) {
+        free ( gfc->VBR );
+    }
+    if ( gfc->PSY ) {
+        free ( gfc->PSY );
+    }
     if ( gfc->s3_ll ) {
         /* XXX allocated in psymodel_init() */
         free ( gfc->s3_ll );
@@ -127,7 +136,7 @@ bitrate is more balanced according to the -V value.*/
   if (f < -.3)
       f=3410;
 
-  f /= 1000;  // convert to khz
+  f /= 1000;  /* convert to khz */
   f  = Max(0.01, f);
   f  = Min(18.0, f);
 
@@ -295,7 +304,7 @@ S.D. Stearns and R.A. David, Prentice-Hall, 1992
 
 int gcd ( int i, int j )
 {
-//    assert ( i > 0  &&  j > 0 );
+/*    assert ( i > 0  &&  j > 0 ); */
     return j ? gcd(j, i % j) : i;
 }
 
@@ -756,3 +765,4 @@ void init_log_table(void)
 #endif
 
 /* end of util.c */
+

@@ -66,7 +66,7 @@ Console_IO_t*  open_console ( int debug )
 
     mfp -> Console_buff = calloc ( 1, REPORT_BUFF_SIZE );
     setvbuf ( mfp -> Console_fp, mfp -> Console_buff, _IOFBF, REPORT_BUFF_SIZE );
-//  setvbuf ( mfp -> Error_fp  , NULL                   , _IONBF, 0                                );
+/*  setvbuf ( mfp -> Error_fp  , NULL                   , _IONBF, 0                                ); */
 
 #if defined(_WIN32)  &&  !defined(__CYGWIN__) 
     mfp -> Console_Handle = GetStdHandle (STD_ERROR_HANDLE);
@@ -184,3 +184,4 @@ int  close_console ( Console_IO_t* const mfp )
 }
 
 /* end of console.c */
+

@@ -26,7 +26,7 @@
 #include <dmalloc.h>
 #endif
 
-// In C++ the array first must be prototyped, why ?
+/* In C++ the array first must be prototyped, why ? */
 
 extern const int tabsel_123 [2] [3] [16];
 
@@ -322,3 +322,4 @@ int set_pointer( PMPSTR mp, long backstep)
   bitindex = 0;
   return MP3_OK;
 }
+

@@ -49,6 +49,14 @@
  * $Id$
  *
  * $Log$
+ * Revision 1.2.4.1  2002/10/26 20:41:27  robert
+ * changed C++ comments into C style comments for
+ * configMS.h
+ * include/*.h
+ * frontend/*.[ch]
+ * mpglib/*.[ch]
+ * libmp3lame/*.[ch]
+ *
  * Revision 1.2  2000/11/18 04:24:06  markt
  * Removed ieeefloat.*
  *
@@ -116,3 +124,4 @@ extern CLINK void WriteIeeeExtendedHighLow(FILE *fp, double num);
 #define	Read32BitsLowHigh(f)	Read32Bits(f)
 #define WriteString(f,s)	fwrite(s,strlen(s),sizeof(char),f)
 #endif
+

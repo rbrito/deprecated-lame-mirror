@@ -295,3 +295,4 @@ ResvFrameEnd(lame_internal_flags *gfc, int mean_bits)
 }
 
 
+

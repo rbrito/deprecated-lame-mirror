@@ -42,3 +42,4 @@ unsigned int getbits_fast(int number_of_bits);
 int set_pointer( PMPSTR mp, long backstep);
 
 #endif
+

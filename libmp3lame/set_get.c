@@ -810,7 +810,7 @@ lame_set_exp_nspsytune2_pointer( lame_global_flags*  gfp,
  * VBR control
  ***********************************************************************/
 
-// Types of VBR.  default = vbr_off = CBR
+/* Types of VBR.  default = vbr_off = CBR */
 int
 lame_set_VBR( lame_global_flags*  gfp,
               vbr_mode            VBR )
@@ -1463,8 +1463,8 @@ lame_get_totalframes( const lame_global_flags*  gfp )
               ((double)gfp->in_samplerate * gfp->framesize);
 
     /* check to see if we underestimated totalframes */
-    //    if (totalframes < gfp->frameNum)
-    //        totalframes = gfp->frameNum;
+    /*    if (totalframes < gfp->frameNum) */
+    /*        totalframes = gfp->frameNum; */
 
     return totalframes;
 }
@@ -1548,13 +1548,13 @@ lame_set_preset_expopts( lame_global_flags*  gfp, int preset_expopts )
 
           lame_set_exp_nspsytune(gfp, lame_get_exp_nspsytune(gfp) | 1);
           lame_set_experimentalX(gfp, 3);
-          lame_set_exp_nspsytune(gfp, lame_get_exp_nspsytune(gfp) | 2); // safejoint
+          lame_set_exp_nspsytune(gfp, lame_get_exp_nspsytune(gfp) | 2); /* safejoint */
           lame_set_ATHtype(gfp, 2);
 
           gfc->presetTune.ms_maskadjust = .5;
 	  gfc->presetTune.quantcomp_type_s = 3;
           gfc->presetTune.quantcomp_alt_type = 3;
-          gfc->presetTune.athadjust_switch_level = 2; // Always switch
+          gfc->presetTune.athadjust_switch_level = 2; /* Always switch */
 
           break;
 
@@ -1579,9 +1579,9 @@ lame_set_preset_expopts( lame_global_flags*  gfp, int preset_expopts )
           lame_set_exp_nspsytune(gfp, lame_get_exp_nspsytune(gfp) | 1);
           lame_set_experimentalZ(gfp, 1);
           lame_set_VBR_q(gfp, 2);
-          lame_set_exp_nspsytune(gfp, lame_get_exp_nspsytune(gfp) | 2); // safejoint
+          lame_set_exp_nspsytune(gfp, lame_get_exp_nspsytune(gfp) | 2); /* safejoint */
           lame_set_ATHtype(gfp, 2);				
-          // modify sfb21 by 3 dB plus ns-treble=0                 
+          /* modify sfb21 by 3 dB plus ns-treble=0                  */
           lame_set_exp_nspsytune(gfp, lame_get_exp_nspsytune(gfp) | (12 << 20));
 
           gfc->presetTune.ms_maskadjust = .5;
@@ -1611,10 +1611,10 @@ lame_set_preset_expopts( lame_global_flags*  gfp, int preset_expopts )
           lame_set_experimentalZ(gfp, 1);
           lame_set_experimentalX(gfp, 1);
           lame_set_VBR_q(gfp, 2);
-          lame_set_exp_nspsytune(gfp, lame_get_exp_nspsytune(gfp) | 2); // safejoint
+          lame_set_exp_nspsytune(gfp, lame_get_exp_nspsytune(gfp) | 2); /* safejoint */
 	  (void) lame_set_msfix( gfp, 2.13 );
           lame_set_ATHtype(gfp, 4);
-          // modify sfb21 by 3.75 dB plus ns-treble=0                 
+          /* modify sfb21 by 3.75 dB plus ns-treble=0                  */
           lame_set_exp_nspsytune(gfp, lame_get_exp_nspsytune(gfp) | (15 << 20));
           gfc->presetTune.ms_maskadjust = .5;
           gfc->presetTune.athadjust_switch_level = 1;
@@ -1631,7 +1631,7 @@ lame_set_preset_notune( lame_global_flags*  gfp, int preset_notune )
 {
     lame_internal_flags *gfc = gfp->internal_flags;
 
-    gfc->presetTune.use = 0;  // Turn off specialized preset tunings
+    gfc->presetTune.use = 0;  /* Turn off specialized preset tunings */
 
     return 0;
 }
@@ -1667,3 +1667,4 @@ lame_set_asm_optimizations( lame_global_flags*  gfp, int optim, int mode)
         default: return optim;
     }
 }
+
