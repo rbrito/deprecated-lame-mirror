@@ -1503,6 +1503,7 @@ VBR_noise_shaping2 (
     }
     if (cod_info->part2_3_length > maxbits) {
         huffbits = maxbits - cod_info->part2_length;
+        if (huffbits < 0) huffbits = 0;
         bits = bin_search_StepSize (gfc, cod_info, huffbits, 
                                     gfc->OldValue[ch], xr34, l3_enc);
         gfc->OldValue[ch] = cod_info->global_gain;

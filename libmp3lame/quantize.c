@@ -1108,14 +1108,14 @@ calc_min_bits (
     lame_internal_flags *gfc=gfp->internal_flags;
     int min_bits, min_pe_bits;
     
-    if (gfc->nsPsy.use) return 125;
-                    /*  changed minimum from 1 to 125 bits
+    if (gfc->nsPsy.use) return 126;
+                    /*  changed minimum from 1 to 126 bits
                      *  the iteration loops require a minimum of bits
                      *  for each granule to start with; robert 2001-07-02 */
 
     /*  base amount of minimum bits
      */
-    min_bits = Max (125, min_mean_bits);
+    min_bits = Max (126, min_mean_bits);
 
     if (gfc->mode_ext == MPG_MD_MS_LR && ch == 1)  
         min_bits = Max (min_bits, mch_bits/5);
@@ -1247,7 +1247,7 @@ VBR_prepare (
         } /* for ch */
     }  /* for gr */
     
-    *min_mean_bits = Max(*min_mean_bits, 125);
+    *min_mean_bits = Max(*min_mean_bits, 126);
 
     return analog_silence;
 }
@@ -1357,7 +1357,7 @@ VBR_iteration_loop (
              */
             ret = init_outer_loop(cod_info, &scalefac[gr][ch], gfc->is_mpeg1,
 				  xr[gr][ch], xrpow);
-            if (ret == 0) {
+            if (ret == 0 || max_bits[gr][ch] == 0) {
                 /*  xr contains no energy 
                  *  l3_enc, our encoding data, will be quantized to zero
                  */
