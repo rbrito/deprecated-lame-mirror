@@ -42,7 +42,7 @@ typedef enum vbr_mode_e {
   vbr_mt=1,
   vbr_rh=2,
   vbr_abr=3,
-  vbr_default=vbr_mt  /* change this to change the default VBR mode of LAME */ 
+  vbr_default=vbr_rh  /* change this to change the default VBR mode of LAME */ 
 } vbr_mode;
 
 
