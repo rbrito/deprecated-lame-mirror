@@ -12,7 +12,7 @@
 DLL_NAME = lame_enc
 LAME_SRC_ROOT = ..
 OFILES = BladeMP3EncDLL.o $(DLL_NAME)_exp.o
-CFLAGS = -I$(LAME_SRC_ROOT)/include -I$(LAME_SRC_ROOT)
+CFLAGS = -I$(LAME_SRC_ROOT)/include
 CC = gcc
 LD = gcc
 LFLAGS = -L$(LAME_SRC_ROOT)/libmp3lame -o $(DLL_NAME).dll -mdll -s
