@@ -697,6 +697,7 @@ int  parse_args ( lame_global_flags* gfp, int argc, char** argv, char* const inP
 
 		T_ELIF ("r3mix")
 		    gfp->VBR = vbr_rh; 
+                    gfp->VBR_q = 1;
 		    gfp->quality = 2;
                     gfp->lowpassfreq = 19000;
                     gfp->mode=MPG_MD_JOINT_STEREO;
