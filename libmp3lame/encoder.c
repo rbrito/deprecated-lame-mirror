@@ -334,7 +334,7 @@ int  lame_encode_mp3_frame (				// Output
         }
 #endif    
 
-        if ( ms_ratio_ave1 < threshold1  &&  ms_ratio_ave2 < threshold2 ) {
+        if ((ms_ratio_ave1 < threshold1  &&  ms_ratio_ave2 < threshold2) || gfc->nsPsy.use) {
             int  sum_pe_MS = pe_MS[0][0] + pe_MS[0][1] + pe_MS[1][0] + pe_MS[1][1];
             int  sum_pe_LR = pe   [0][0] + pe   [0][1] + pe   [1][0] + pe   [1][1];
             
@@ -380,6 +380,27 @@ int  lame_encode_mp3_frame (				// Output
     pe_use = &pe;
   }
 
+
+  if (gfc->nsPsy.use && gfp->VBR == vbr_off) {
+    static FLOAT fircoef[19] = {
+      -0.0207887,-0.0378413,-0.0432472,-0.031183,
+      7.79609e-18,0.0467745,0.10091,0.151365,
+      0.187098,0.2,0.187098,0.151365,
+      0.10091,0.0467745,7.79609e-18,-0.031183,
+      -0.0432472,-0.0378413,-0.0207887,
+    };
+    int i;
+    FLOAT8 f;
+
+    for(i=0;i<18;i++) gfc->nsPsy.pefirbuf[i] = gfc->nsPsy.pefirbuf[i+1];
+    gfc->nsPsy.pefirbuf[18] = ((*pe_use)[0][0] + (*pe_use)[0][1] + (*pe_use)[1][0] + (*pe_use)[1][1]) * 0.25;
+    f = 0;
+    for(i=0;i<19;i++) f += gfc->nsPsy.pefirbuf[i] * fircoef[i];
+    (*pe_use)[0][0] *= 650 / f;
+    (*pe_use)[0][1] *= 650 / f;
+    (*pe_use)[1][0] *= 650 / f;
+    (*pe_use)[1][1] *= 650 / f;
+  }
 
   switch (gfp->VBR){ 
   default:

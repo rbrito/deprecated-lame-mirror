@@ -735,6 +735,10 @@ int  parse_args ( lame_global_flags* gfp, int argc, char** argv, char* const inP
 		    argUsed=1;
 		    gfp->ATHlower = atoi(nextArg);
 		
+		T_ELIF ("athtype")
+		    argUsed=1;
+		    gfp->ATHtype = atoi(nextArg);
+		
 		T_ELIF ("scale")
 		    argUsed=1;
 		    gfp->scale = atof(nextArg);
@@ -854,9 +858,12 @@ int  parse_args ( lame_global_flags* gfp, int argc, char** argv, char* const inP
 		    }
 		
 		T_ELIF ("nspsytune")
-		    gfp->exp_nspsytune = 1;
+		    gfp->exp_nspsytune |= 1;
 		    gfp->experimentalZ = 1;
 		    gfp->experimentalX = 1;
+		
+		T_ELIF ("nssafejoint")
+		    gfp->exp_nspsytune |= 2;
 		
 		/* some more GNU-ish options could be added
 		 * version       => complete name, version and license info (normal exit)  

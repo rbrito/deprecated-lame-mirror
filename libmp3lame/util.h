@@ -121,10 +121,12 @@ typedef struct  bit_stream_struc {
 /* variables used for --nspsytune */
 typedef struct {
   int   use; /* indicates the use of exp_nspsytune */
+  int   safejoint; /* safe joint stereo mode */
   FLOAT last_en_subshort[4][9];
   FLOAT last_attack_intensity[4][9];
   FLOAT	last_thm[4][SBMAX_s][3];
   int   last_attacks[4][3];
+  FLOAT pefirbuf[19];
 } nsPsy_t;
 
 
@@ -239,7 +241,6 @@ typedef struct  {
 
   int psymodel;             /* 0 = none   1=gpsycho */
   int use_best_huffman;     /* 0 = no.  1=outside loop  2=inside loop(slow) */
-
 
 
 
@@ -430,7 +431,7 @@ extern int            BitrateIndex(int, int,int);
 extern int            FindNearestBitrate(int,int,int);
 extern int            map2MP3Frequency(int freq);
 extern int            SmpFrqIndex(int, int*);
-extern FLOAT8         ATHformula(FLOAT8 f);
+extern FLOAT8         ATHformula(FLOAT8 f,lame_global_flags *gfp);
 extern FLOAT8         freq2bark(FLOAT8 freq);
 extern FLOAT8         freq2cbw(FLOAT8 freq);
 extern void freorder(int scalefac_band[],FLOAT8 ix_orig[576]);

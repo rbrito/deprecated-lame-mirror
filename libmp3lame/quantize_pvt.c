@@ -221,7 +221,7 @@ FLOAT8 ATHmdct( lame_global_flags *gfp, FLOAT8 f )
     lame_internal_flags *gfc = gfp->internal_flags;
     FLOAT8 ath;
   
-    ath = ATHformula( f );
+    ath = ATHformula( f , gfp );
 	  
     /* convert to energy */
     if (gfc->nsPsy.use) {
@@ -363,7 +363,7 @@ int targ_bits[2],int mean_bits, int gr)
     
     add_bits[ch]=(pe[gr][ch]-750)/1.4;
     /* short blocks us a little extra, no matter what the pe */
-    if (cod_info->block_type==SHORT_TYPE) {
+    if (cod_info->block_type==SHORT_TYPE && !gfc->nsPsy.use) {
       if (add_bits[ch]<mean_bits/4) add_bits[ch]=mean_bits/4;
     }
 

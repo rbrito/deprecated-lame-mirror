@@ -942,8 +942,8 @@ int L3psycho_anal( lame_global_flags * gfp,
 
       /* compare energies between sub-shortblocks */
 
-#define NSATTACKTHRE 200
-#define NSATTACKTHRE_S 400
+#define NSATTACKTHRE 150
+#define NSATTACKTHRE_S 300
 
       for(i=0;i<2;i++) {
 	attack_intensity[i] = en_subshort[i] / gfc->nsPsy.last_en_subshort[chn][7+i];
@@ -1008,8 +1008,10 @@ int L3psycho_anal( lame_global_flags * gfp,
 
       gfc->pinfo->ers[gr_out][chn]=gfc->ers_save[chn];
       gfc->ers_save[chn]=(mx/(1e-12+mn));
-      gfc->pinfo->pe[gr_out][chn]=gfc->pe_save[chn];
-      gfc->pe_save[chn]=gfc->pe[chn];
+      if (!gfc->nsPsy.use) {
+	gfc->pinfo->pe[gr_out][chn]=gfc->pe_save[chn];
+	gfc->pe_save[chn]=gfc->pe[chn];
+      }
     }
 
 
@@ -1071,32 +1073,38 @@ int L3psycho_anal( lame_global_flags * gfp,
 	    if (gfc->nsPsy.use) {
 		/* short block pre-echo control. */
 
+#define NS_PREECHO_ATT0 0.8
 #define NS_PREECHO_ATT1 0.5
-#define NS_PREECHO_ATT2 0.1
+#define NS_PREECHO_ATT2 0.3
 #define NS_INTERP(x,y,r) (pow((x),(r))*pow((y),1-(r)))
+
+		thmm *= NS_PREECHO_ATT0;
 
 		if (ns_attacks[sblock] >= 2) {
 		  if (sblock != 0) {
-		    FLOAT8 p = NS_INTERP(gfc->thm[chn].s[sb][sblock-1],thmm,NS_PREECHO_ATT1);
+		    double p = NS_INTERP(gfc->thm[chn].s[sb][sblock-1],thmm,NS_PREECHO_ATT1);
 		    thmm = Min(thmm,p);
 		  } else {
-		    FLOAT8 p = NS_INTERP(gfc->nsPsy.last_thm[chn][sb][2],thmm,NS_PREECHO_ATT1);
+		    double p = NS_INTERP(gfc->nsPsy.last_thm[chn][sb][2],thmm,NS_PREECHO_ATT1);
 		    thmm = Min(thmm,p);
 		  }
 		} else if (ns_attacks[sblock+1] == 1) {
 		  if (sblock != 0) {
-		    FLOAT8 p = NS_INTERP(gfc->thm[chn].s[sb][sblock-1],thmm,NS_PREECHO_ATT1);
+		    double p = NS_INTERP(gfc->thm[chn].s[sb][sblock-1],thmm,NS_PREECHO_ATT1);
 		    thmm = Min(thmm,p);
 		  } else {
-		    FLOAT8 p = NS_INTERP(gfc->nsPsy.last_thm[chn][sb][2],thmm,NS_PREECHO_ATT1);
+		    double p = NS_INTERP(gfc->nsPsy.last_thm[chn][sb][2],thmm,NS_PREECHO_ATT1);
 		    thmm = Min(thmm,p);
 		  }
 		}
 
-		if (ns_attacks[sblock] == 1 ||
-		    (sblock != 0 && ns_attacks[sblock-1] == 3) ||
-		    (sblock == 0 && gfc->nsPsy.last_attacks[chn][2] == 3)) {
-		  FLOAT8 p = sblock == 0 ? gfc->nsPsy.last_thm[chn][sb][2] : gfc->thm[chn].s[sb][sblock-1];
+		if (ns_attacks[sblock] == 1) {
+		  double p = sblock == 0 ? gfc->nsPsy.last_thm[chn][sb][2] : gfc->thm[chn].s[sb][sblock-1];
+		  p = NS_INTERP(p,thmm,NS_PREECHO_ATT2);
+		  thmm = Min(thmm,p);
+		} else if ((sblock != 0 && ns_attacks[sblock-1] == 3) ||
+			   (sblock == 0 && gfc->nsPsy.last_attacks[chn][2] == 3)) {
+		  double p = sblock <= 1 ? gfc->nsPsy.last_thm[chn][sb][sblock+1] : gfc->thm[chn].s[sb][0];
 		  p = NS_INTERP(p,thmm,NS_PREECHO_ATT2);
 		  thmm = Min(thmm,p);
 		}
@@ -1162,11 +1170,58 @@ int L3psycho_anal( lame_global_flags * gfp,
     }
   }
 
+#define NS_MSFIX 3.5
 
-  
+  if (gfc->nsPsy.use && numchn == 4) {
+    FLOAT msfix = NS_MSFIX;
+    if (gfc->nsPsy.safejoint) msfix = 1;
 
-  
-  
+    for ( sb = 0; sb < SBPSY_l; sb++ )
+      {
+	FLOAT8 thmL,thmR,thmM,thmS;
+	thmL = gfc->thm[0].l[sb];
+	thmR = gfc->thm[1].l[sb];
+	thmM = gfc->thm[2].l[sb];
+	thmS = gfc->thm[3].l[sb];
+	if (thmL*msfix < (thmM+thmS)/2) {
+	  FLOAT8 f = thmL*msfix / ((thmM+thmS)/2);
+	  thmM *= f;
+	  thmS *= f;
+	}
+	if (thmR*msfix < (thmM+thmS)/2) {
+	  FLOAT8 f = thmR*msfix / ((thmM+thmS)/2);
+	  thmM *= f;
+	  thmS *= f;
+	}
+
+	gfc->thm[2].l[sb] = thmM;
+	gfc->thm[3].l[sb] = thmS;
+      }
+
+    for ( sb = 0; sb < SBPSY_s; sb++ ) {
+      for ( sblock = 0; sblock < 3; sblock++ ) {
+	FLOAT8 thmL,thmR,thmM,thmS;
+	thmL = gfc->thm[0].s[sb][sblock];
+	thmR = gfc->thm[1].s[sb][sblock];
+	thmM = gfc->thm[2].s[sb][sblock];
+	thmS = gfc->thm[3].s[sb][sblock];
+	if (thmL*msfix < (thmM+thmS)/2) {
+	  FLOAT8 f = thmL*msfix / ((thmM+thmS)/2);
+	  thmM *= f;
+	  thmS *= f;
+	}
+	if (thmR*msfix < (thmM+thmS)/2) {
+	  FLOAT8 f = thmR*msfix / ((thmM+thmS)/2);
+	  thmM *= f;
+	  thmS *= f;
+	}
+
+	gfc->thm[2].s[sb][sblock] = thmM;
+	gfc->thm[3].s[sb][sblock] = thmS;
+      }
+    }
+  }
+
   if (gfp->mode == MPG_MD_JOINT_STEREO)  {
     /* determin ms_ratio from masking thresholds*/
     /* use ms_stereo (ms_ratio < .35) if average thresh. diff < 5 db */
@@ -1197,6 +1252,68 @@ int L3psycho_anal( lame_global_flags * gfp,
       }
     ms_ratio_s = (sidetot/tot)*0.7; /* was .35*(sidetot/tot)/5.0*10 */
     ms_ratio_s = Min(ms_ratio_s,.5);
+  }
+
+  if (gfc->nsPsy.use) {
+    for(chn=0;chn<numchn;chn++)
+      {
+	if ((chn < 2 && uselongblock[chn]) || (chn >= 2 && uselongblock[0] && uselongblock[1])) {
+	  static FLOAT8 regcoef[] = {
+	    1124.23,10.0583,10.7484,7.29006,16.2714,6.2345,4.09743,3.05468,3.33196,2.54688,3.68168,5.83109,2.93817,-8.03277,-10.8458,8.48777,9.13182,2.05212,8.6674,50.3937,73.267,97.5664,
+	  };
+
+	  FLOAT8 msum = regcoef[0]/4;
+	  int sb;
+
+	  for ( sb = 0; sb < SBPSY_l; sb++ )
+	    {
+	      FLOAT8 t;
+	      
+	      if (gfc->thm[chn].l[sb]*gfc->masking_lower != 0 &&
+		  gfc->en[chn].l[sb]/(gfc->thm[chn].l[sb]*gfc->masking_lower) > 1)
+		t = log(gfc->en[chn].l[sb]/(gfc->thm[chn].l[sb]*gfc->masking_lower));
+	      else
+		t = 0;
+	      msum += regcoef[sb+1] * t;
+	    }
+
+	  gfc->pe[chn] = msum;
+	} else {
+	  static FLOAT8 regcoef[] = {
+	    //2049.03,0,0,0,-3.54037,-32.5363,-34.8312,65.0099,-35.6621,-168.262,-5.07112,228.4,101.533
+	    //1236.28,0,0,0,0.434542,25.0738,-5.75228,-14.5415,-22.3858,19.5442,19.7486,60.4249,59.3272
+	    //1236.28,0,0,0,0.434542,25.0738,0,0,0,19.5442,19.7486,60.4249,59.3272
+	    1236.28,0,0,0,0.434542,25.0738,0,0,0,19.5442,19.7486,60,100
+	  };
+
+	  FLOAT8 msum = regcoef[0]/4;
+	  int sb,sblock;
+
+	  for(sblock=0;sblock<3;sblock++)
+	    {
+	      for ( sb = 0; sb < SBPSY_s; sb++ )
+		{
+		  FLOAT8 t;
+	      
+		  if (gfc->thm[chn].s[sb][sblock] * gfc->masking_lower != 0 &&
+		      gfc->en[chn].s[sb][sblock] / (gfc->thm[chn].s[sb][sblock] * gfc->masking_lower) > 1)
+		    t = log(gfc->en[chn].s[sb][sblock] / (gfc->thm[chn].s[sb][sblock] * gfc->masking_lower));
+		  else
+		    t = 0;
+		  msum += regcoef[sb+1] * t;
+		}
+	    }
+
+	  gfc->pe[chn] = msum;
+	}
+
+	//gfc->pe[chn] -= 150;
+
+	if (gfp->analysis) {
+	  gfc->pinfo->pe[gr_out][chn]=gfc->pe_save[chn];
+	  gfc->pe_save[chn]=gfc->pe[chn];
+	}
+      }
   }
 
   /*************************************************************** 
@@ -1542,7 +1659,7 @@ i,*npart_l_orig,freq,numlines_l[i],j2-j,j,j2-1,bark1,bark2);
 	FLOAT8  level;
 	assert( freq <= 24 );              // or only '<'
 	//	freq = Min(.1,freq);       // ATH below 100 Hz constant, not further climbing
-	level  = ATHformula (freq) - 20;   // scale to FFT units; returned value is in dB
+	level  = ATHformula (freq, gfp) - 20;   // scale to FFT units; returned value is in dB
 	level  = pow ( 10., 0.1*level );   // convert from dB -> energy
 	level *= numlines_l [i];
 	if ( level < gfc->ATH_partitionbands [i] )

@@ -204,7 +204,8 @@ static void  optimum_bandwidth (
         double* const   upperlimit, 
         const unsigned  bitrate, 
         const int       samplefreq, 
-        const double    channels )
+        const double    channels,
+	lame_global_flags *gfp )
 {
 /* 
  *  Input:
@@ -308,7 +309,7 @@ static void  optimum_bandwidth (
 	// fflush (stdout);
 	
 	while ( f_low > f_low_sw ) {
-	    double  dATH = ATHformula (f_low*1.e-3) - ATHformula (f_low_sw*1.e-3);	// [dB]
+	    double  dATH = ATHformula (f_low*1.e-3, gfp) - ATHformula (f_low_sw*1.e-3, gfp);	// [dB]
 	    double  dNMR = br / f_low - br_sw / f_low_sw;		// bit
 
   	    // printf ("br   =%f  f_low   =%f\n", br   , f_low    );
@@ -615,7 +616,8 @@ int lame_init_params ( lame_global_flags* const gfp )
 	                    &highpass, 
 			    gfp->out_samplerate * 16 * gfc->channels_out / gfp->compression_ratio,
 			    gfp->out_samplerate,
-			    channels );
+			    channels,
+			    gfp );
 			
         if ( lowpass < 0.5 * gfp->out_samplerate ) {
             fprintf (stderr, "Lowpass @ %7.1f Hz\n", lowpass );
@@ -932,7 +934,21 @@ int lame_init_params ( lame_global_flags* const gfp )
     gfc->sfb21_extra = ( gfp->VBR == vbr_rh  ||  gfp->VBR == vbr_mtrh  ||  gfp->VBR == vbr_mt )
                     && ( gfp->out_samplerate >= 32000 );
   
-    gfc->nsPsy.use = gfp->exp_nspsytune;
+    if (gfp->exp_nspsytune) {
+      int i;
+
+      gfc->nsPsy.use = 1;
+      gfc->nsPsy.safejoint = (gfp->exp_nspsytune & 2) != 0;
+#ifdef RH_AMP
+      if (gfp->VBR != vbr_off) gfp->experimentalY = 1;
+#endif
+      for(i=0;i<19;i++) gfc->nsPsy.pefirbuf[i] = 700;
+
+      if (gfp->VBR == vbr_mtrh || gfp->VBR == vbr_mt) {
+	ERRORF ("nspsytune doesn't support --vbr-new.\n");
+	gfp->VBR = vbr_rh;
+      }
+    }
 
     /* estimate total frames.  */
     gfp->totalframes           = 2 + gfp->num_samples/(gfc->resample_ratio * gfp->framesize);
@@ -1602,6 +1618,7 @@ int lame_init_old(lame_global_flags *gfp)
   gfc->CurrentStep=4;
   gfc->masking_lower=1;
 
+  gfp->ATHtype = 1;
 
 //  memset(&gfc->bs, 0, sizeof(Bit_stream_struc));
 //  memset(&gfc->l3_side,0x00,sizeof(III_side_info_t));

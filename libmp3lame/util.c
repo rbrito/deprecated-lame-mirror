@@ -68,9 +68,7 @@ void  freegfc ( lame_internal_flags* const gfc )   /* bit stream structure */
     free ( gfc );
 }
 
-
-#if 0
-FLOAT8 ATHformula(FLOAT8 f)
+FLOAT8 ATHformula_old(FLOAT8 f)
 {
   FLOAT8 ath;
   f  = Max(0.01, f);
@@ -83,9 +81,6 @@ FLOAT8 ATHformula(FLOAT8 f)
          + 0.001 * pow(f,4.0);
   return ath;
 }
-#endif
-
-
 
 /* 
  *  Klemm 1994 and 1997. Experimental data. Sorry, data looks a little bit
@@ -94,7 +89,7 @@ FLOAT8 ATHformula(FLOAT8 f)
  *  ATH is not good even if it's theoretically inaudible).
  */
 
-FLOAT8  ATHformula( FLOAT8 freq )
+FLOAT8  ATHformula_Frank( FLOAT8 freq )
 {
     /* short [MilliBel] is also sufficient */
     static FLOAT tab [] = {
@@ -147,7 +142,18 @@ FLOAT8  ATHformula( FLOAT8 freq )
     return tab [index] * (1 + index - freq_log) + tab [index+1] * (freq_log - index);
 }
 
+FLOAT8 ATHformula(FLOAT8 f,lame_global_flags *gfp)
+{
+  switch(gfp->ATHtype)
+    {
+    case 0:
+      return ATHformula_old(f);
+    case 1:
+      return ATHformula_Frank(f);
+    }
 
+  return ATHformula_Frank(f);
+}
 
 /* see for example "Zwicker: Psychoakustik, 1982; ISBN 3-540-11401-7 */
 FLOAT8 freq2bark(FLOAT8 freq)
