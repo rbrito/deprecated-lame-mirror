@@ -385,9 +385,6 @@ VBR_iteration_loop (lame_global_flags *gfp, FLOAT8 pe[2][2],
         } else {
           adjust = 2/(1+exp(3.5-pe[gr][ch]/300.))-0.05;
         }
-        if (gfc->noise_shaping==2) {
-          adjust = Max(1.25,adjust);
-        }
         masking_lower_db = dbQ[gfp->VBR_q]-adjust; 
         gfc->masking_lower = pow(10.0,masking_lower_db/10);
       }
@@ -468,6 +465,10 @@ VBR_iteration_loop (lame_global_flags *gfp, FLOAT8 pe[2][2],
         min_pe_bits = (pe[gr][ch]-350) * bands[gr][ch]/39.;
       } else {
         min_pe_bits = (pe[gr][ch]-350) * bands[gr][ch]/22.;
+      }
+      if (gfc->mode_ext==MPG_MD_MS_LR && ch==1) { 
+        FLOAT8 fac = .33*(.5-ms_ener_ratio[gr])/.5;
+        min_pe_bits *= ((1-fac)/(1+fac));
       }
       min_pe_bits=Min(min_pe_bits,(1820*gfp->out_samplerate/44100));
 
