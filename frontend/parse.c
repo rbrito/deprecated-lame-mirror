@@ -275,7 +275,7 @@ int  usage ( const lame_global_flags* gfp, FILE* const fp, const char* ProgramNa
               " or:\n"
               "     \"%s --longhelp\"\n"
               "  or \"%s -?\"              for a complete options list\n\n",
-              ProgramName, ProgramName, ProgramName, ProgramName, ProgramName, ProgramName ); 
+              ProgramName, ProgramName, ProgramName, ProgramName, ProgramName ); 
     return 0;
 }
 
