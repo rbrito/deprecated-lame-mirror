@@ -5,6 +5,13 @@
  * $Id$
  *
  * $Log$
+ * Revision 1.8  1999/12/14 04:38:08  markt
+ * Takehiro's fft's back in.  fft_short2(), fft_long2() will call original
+ * fft's  (with one minor change:  0 protection for ax[] and bx[] was not
+ * needed and has been removed).  Takehiro's routines are fft_short() and
+ * fft_long().  They dont give bit-for-bit identical answers, and I still
+ * want to track this down before making them the defaults.  .
+ *
  * Revision 1.7  1999/12/08 05:46:52  markt
  * avoid bounds check on xr[] for non-hq mode, from Mat.
  * spelling error in psymodel.c fixed :-)
@@ -93,96 +100,6 @@ void L3para_read( FLOAT8 sfreq, int numlines[CBANDS],int numlines_s[CBANDS], int
 
 
 
-void L3psycho_energy( short int *buffer[2], 
-    FLOAT energy[HBLKSIZE],
-    FLOAT ax[HBLKSIZE], FLOAT bx[HBLKSIZE],
-    FLOAT energy_s[3][HBLKSIZE_s],
-    FLOAT ax_s[3][HBLKSIZE_s], FLOAT bx_s[3][HBLKSIZE_s],
-     int chn,int gr_out , layer * info)
-{
-  static FLOAT window_s[BLKSIZE_s];
-  static FLOAT window[BLKSIZE];
-  static int firstcall=1;
-
-#ifdef HAVEGTK
-  static FLOAT energy_save[4][HBLKSIZE];
-#endif
-
-  int i,j,k,sblock;
-  
-  FLOAT wsamp_r[BLKSIZE];
-  FLOAT wsamp_rs[256];
-  
- if(firstcall) {
-   firstcall=0;
-    /* calculate HANN window coefficients */
-    /* note: ISO DOCS use i-.5 because their i starts at 1, not 0 */
-   for(i=0;i<BLKSIZE;i++)  window[i]  =0.5*(1-cos(2.0*PI*(i+0.5)/BLKSIZE));
-   for(i=0;i<BLKSIZE_s;i++)window_s[i]=0.5*(1-cos(2.0*PI*(i+0.5)/BLKSIZE_s));
-  }
-
-
-  /**********************************************************************
-   *  compute FFTs
-   **********************************************************************/
-  if (chn<2) { /* the most common option */
-    for ( j = 0; j < BLKSIZE; j++ ) 
-      wsamp_r[j] = window[j] * buffer[chn][j];
-  } else {
-    if (chn==2) {
-      for ( j = 0; j < BLKSIZE; j++ )
-        wsamp_r[j] = window[j] * (buffer[0][j] + buffer[1][j] )/SQRT2;
-    } else {/* if (chn==3)   */
-      for ( j = 0; j < BLKSIZE; j++ )
-	wsamp_r[j] = window[j] * (buffer[0][j] - buffer[1][j] )/SQRT2;
-    }
-  }
-  
-
-  fft( wsamp_r, energy, ax, bx, 1024 );
-  /* mt 7/99
-    Note: fft_side() can be used to compute energy, ax & bx for the
-    mid and side channels (chn=2,3) without calling additional FFTs. 
-    But it requires wsamp_r to be saved from channels 0 and 1.  
-    My tests show that the FFT is so fast that this gives no savings.
-    Probably the extra memory hurts the cache performance.
-  */
-
-
-  
-#ifdef HAVEGTK
-  if(gtkflag) {
-    for (j=0; j<HBLKSIZE ; j++) {
-      pinfo->energy[gr_out][chn][j]=energy_save[chn][j];
-      energy_save[chn][j]=energy[j];
-    }
-  }
-#endif
-  for ( sblock = 0; sblock < 3; sblock++ ) {
-    int shlen = 192;
-    int shoff = 1;
-    if (chn<2) 
-      for ( j = 0, k = shlen * (shoff + sblock); j < 256; j++, k++ ) 
-        wsamp_rs[j] = window_s[j]* buffer[chn][k];
-    if (chn==2) 
-      for ( j = 0, k = shlen * (shoff + sblock); j < 256; j++, k++ ) 
-        wsamp_rs[j] = window_s[j] *
-	  ((buffer[0][k]+buffer[1][k])/2)*SQRT2;
-    if (chn==3) 
-      for ( j = 0, k = shlen * (shoff + sblock); j < 256; j++, k++ ) 
-        wsamp_rs[j] = window_s[j] *
-	  ((buffer[0][k]-buffer[1][k])/2)*SQRT2;
-
-    fft( wsamp_rs, energy_s[sblock], ax_s[sblock], bx_s[sblock], 256 );
-  }
-
-}
-
-
-
-
- 
-
 
 
  
@@ -203,6 +120,7 @@ void L3psycho_anal( short int *buffer[2], int stereo,
   static FLOAT8 ratio[4][SBPSY_l];
   static FLOAT8 ratio_s[4][SBPSY_s][3];
 #ifdef HAVEGTK
+  static FLOAT energy_save[4][HBLKSIZE];
   static FLOAT8 pe_save[4];
   static FLOAT8 ers_save[4];
   static FLOAT8 en_save[4][SBPSY_l];
@@ -217,13 +135,13 @@ void L3psycho_anal( short int *buffer[2], int stereo,
   int   b, i, j, k;
   FLOAT8 ms_ratio_l=0,ms_ratio_s=0;
   FLOAT8 estot[4][3];
+  FLOAT wsamp[BLKSIZE];
+  FLOAT wsamp_s[3][BLKSIZE_s];
 
 
   FLOAT/*FLOAT8*/   thr[CBANDS];
-  FLOAT ax[HBLKSIZE], bx[HBLKSIZE];
   FLOAT energy[HBLKSIZE];
   FLOAT energy_s[3][HBLKSIZE_s];
-  FLOAT ax_s[3][HBLKSIZE_s], bx_s[3][HBLKSIZE_s]; /* 256 samples not 129. */
 
   static float mld_l[SBPSY_l],mld_s[SBPSY_s];
   
@@ -404,6 +322,7 @@ void L3psycho_anal( short int *buffer[2], int stereo,
 	SNR_s[b]=exp( (FLOAT8) SNR_s[b] * LN_TO_LOG10 );
       }
     }
+    init_fft();
   }
   /************************* End of Initialization *****************************/
   
@@ -438,8 +357,17 @@ void L3psycho_anal( short int *buffer[2], int stereo,
     /**********************************************************************
      *  compute FFTs
      **********************************************************************/
-    L3psycho_energy( buffer, energy, ax, bx, energy_s, ax_s, bx_s,
-		     chn,gr_out,info);
+
+    fft_long2( wsamp, energy, chn, buffer);
+  
+#ifdef HAVEGTK
+  if(gtkflag) {
+    for (j=0; j<HBLKSIZE ; j++) {
+      pinfo->energy[gr_out][chn][j]=energy_save[chn][j];
+      energy_save[chn][j]=energy[j];
+    }
+  }
+#endif
     
     /**********************************************************************
      *    compute unpredicatability of first six spectral lines            * 
@@ -457,8 +385,8 @@ void L3psycho_anal( short int *buffer[2], int stereo,
 	a1 = ax_sav[chn][1][j] = ax_sav[chn][0][j];
 	b1 = bx_sav[chn][1][j] = bx_sav[chn][0][j];
 	r1 = rx_sav[chn][1][j] = rx_sav[chn][0][j];
-	an = ax_sav[chn][0][j] = ax[j];
-	bn = bx_sav[chn][0][j] = bx[j];
+	an = ax_sav[chn][0][j] = wsamp[j];
+	bn = bx_sav[chn][0][j] = j==0 ? wsamp[0] : wsamp[BLKSIZE-j];  // bx[j]; 
 	rn = rx_sav[chn][0][j] = sqrt(energy[j]);
 	
 	{ /* square (x1,y1) */
@@ -500,7 +428,9 @@ void L3psycho_anal( short int *buffer[2], int stereo,
 	}
 	
       }
-    
+
+
+    fft_short2( wsamp_s, energy_s, chn, buffer);
     /**********************************************************************
      *     compute unpredicatibility of next 200 spectral lines            *
      **********************************************************************/ 
@@ -514,8 +444,8 @@ void L3psycho_anal( short int *buffer[2], int stereo,
 	{ /* square (x1,y1) */
 	  r1 = sqrt((FLOAT8)energy_s[0][k]);
 	  if( r1 != 0.0 ) {
-	    FLOAT8 a1 = ax_s[0][k];
-	    FLOAT8 b1 = bx_s[0][k];
+	    FLOAT8 a1 = wsamp_s[0][k]; 
+	    FLOAT8 b1 = wsamp_s[0][BLKSIZE_s-k]; /* k is never 0 */
 	    numre = (a1*b1);
 	    numim = (a1*a1-b1*b1)*0.5;
 	    den = r1*r1;
@@ -530,8 +460,9 @@ void L3psycho_anal( short int *buffer[2], int stereo,
 	{ /* multiply by (x2,-y2) */
 	  r2 = sqrt((FLOAT8)energy_s[2][k]);
 	  if( r2 != 0.0 ) {
-	    FLOAT8 a2 = ax_s[2][k];
-	    FLOAT8 b2 = bx_s[2][k];
+	    FLOAT8 a2 = wsamp_s[2][k]; 
+	    FLOAT8 b2 = wsamp_s[2][BLKSIZE_s-k];
+	    
 	    
 	    FLOAT8 tmp2 = (numim+numre)*(a2+b2)*0.5;
 	    FLOAT8 tmp1 = -a2*numre+tmp2;
@@ -552,8 +483,8 @@ void L3psycho_anal( short int *buffer[2], int stereo,
 	
 	rn = sqrt((FLOAT8)energy_s[1][k]);
 	if( (den=rn+fabs(2.0*r1-r2)) != 0.0 ) {
-	  FLOAT8 an = ax_s[1][k];
-	  FLOAT8 bn = bx_s[1][k];
+	  FLOAT8 an = wsamp_s[1][k]; 
+	  FLOAT8 bn = wsamp_s[1][BLKSIZE_s-k];
 	  numre = (an+bn)/2.0-numre;
 	  numim = (an-bn)/2.0-numim;
 	  cw[j] = sqrt(numre*numre+numim*numim)/den;
@@ -872,7 +803,7 @@ void L3psycho_anal( short int *buffer[2], int stereo,
       /* thresholds difference in db */
       if (x2 >= 1000*x1)  db=30;
       else db = 10*log10(x2/x1);  
-      //      printf("db = %f %e %e  \n",db,thm_save[0][sb],thm_save[1][sb]);
+      /*  printf("db = %f %e %e  \n",db,thm_save[0][sb],thm_save[1][sb]);*/
       sidetot += db;
       tot++;
     }

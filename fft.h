@@ -3,14 +3,10 @@
 
 #include "encoder.h"
 
-void fft(FLOAT x_real[BLKSIZE],
-         FLOAT energy[BLKSIZE],
-         FLOAT ax[BLKSIZE],FLOAT  bx[BLKSIZE],
-         int N);
-
-void fft_side(FLOAT x_real0[BLKSIZE],FLOAT x_real1[BLKSIZE],
-         FLOAT energy[BLKSIZE],
-         FLOAT ax[BLKSIZE],FLOAT  bx[BLKSIZE],
-         int N,int sign);
+void fft_long(FLOAT x_real[BLKSIZE], FLOAT energy[HBLKSIZE], int, short **);
+void fft_short(FLOAT x_real[BLKSIZE], FLOAT energy_s[3][HBLKSIZE_s], int, short **);
+void fft_long2(FLOAT x_real[BLKSIZE], FLOAT energy[HBLKSIZE], int, short **);
+void fft_short2(FLOAT x_real[3][BLKSIZE_s], FLOAT energy_s[3][HBLKSIZE_s], int, short **);
+void init_fft(void);
 
 #endif

@@ -270,12 +270,12 @@ TAGS: ${c_sources}
 
 -include $(DEP)
 
-test19: $(PGM)
+test21: $(PGM)
 	./lame  ../test/castanets.wav
-	cmp -l ../test/castanets.wav.mp3 ../test/castanets.ref19.mp3 | head
-test19h: $(PGM)
+	cmp -l ../test/castanets.wav.mp3 ../test/castanets.ref21.mp3 | head
+test21h: $(PGM)
 	./lame  -h  ../test/castanets.wav
-	cmp -l ../test/castanets.wav.mp3 ../test/castanets.ref19h.mp3 | head
+	cmp -l ../test/castanets.wav.mp3 ../test/castanets.ref21h.mp3 | head
 test20: $(PGM)
 	./lame  ../test/castanets.wav
 	cmp -l ../test/castanets.wav.mp3 ../test/castanets.ref20.mp3 | head
