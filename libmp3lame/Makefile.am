@@ -27,7 +27,6 @@ INCLUDES = @INCLUDES@ -I$(top_srcdir)/mpglib/ -I$(top_builddir)
 DEFS = @DEFS@ @CONFIG_DEFS@
 
 EXTRA_DIST = \
-	libmp3lame.dsp \
 	libmp3lame_vc6.dsp \
 	vbrquantize.h
 

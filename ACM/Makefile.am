@@ -6,7 +6,6 @@ SUBDIRS = ADbg ddk tinyxml
 
 EXTRA_DIST = \
 	ACM.cpp \
-	ACM.dsw \
 	ACM.h \
 	ACMStream.cpp \
 	ACMStream.h \
@@ -20,7 +19,6 @@ EXTRA_DIST = \
 	adebug.h \
 	lame.ico \
 	lameACM.def \
-	lameACM.dsp \
 	lameACM_vc6.dsp \
 	lame_acm.xml \
 	main.cpp \
