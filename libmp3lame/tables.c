@@ -1221,7 +1221,7 @@ int psymodel_init(lame_global_flags *gfp)
 		gfc->masking_next[1][i].thm.s[sb][j] = 1e20;
 	    }
 	}
-	for (j=0;j<6;j++)
+	for (j=0;j<12;j++)
 	    gfc->nsPsy.subbk_ene[i][j] = 1.0;
 	gfc->blocktype_next[0][i] = gfc->blocktype_next[1][i] = NORM_TYPE;
 
@@ -1301,6 +1301,7 @@ int psymodel_init(lame_global_flags *gfp)
 	norm[i] = db2pow(-0.25);
 
 	gfc->endlines_s[i] = numlines_s[i];
+
 	if (i != 0)
 	    gfc->endlines_s[i] += gfc->endlines_s[i-1];
 	if (gfp->ATHonly || gfp->ATHshort)

@@ -374,7 +374,7 @@ struct lame_internal_flags {
 
     struct {
 	/* short block tuning */
-	FLOAT	subbk_ene[MAX_CHANNELS*2][6];
+	FLOAT	subbk_ene[MAX_CHANNELS*2][12];
 	FLOAT	attackthre;
 	int	switching_band;
 
