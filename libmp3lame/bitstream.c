@@ -608,10 +608,11 @@ format_bitstream(lame_global_flags *gfp)
     encodeBitStream(gfp);
     gfc->bs.bitidx += drainbits - drainPre;
 
-    l3_side->main_data_begin = (l3_side->ResvSize -= drainbits) / 8;
+    l3_side->main_data_begin = (l3_side->ResvSize -= drainbits) >> 3;
 
     assert(gfc->bs.bitidx % 8 == 0);
     assert(l3_side->ResvSize % 8 == 0);
+    assert(l3_side->ResvSize >= 0);
     return 0;
 }
 
