@@ -39,7 +39,6 @@ libmp3lame_la_SOURCES = \
         newmdct.c \
 	psymodel.c \
 	quantize.c \
-	reservoir.c \
 	set_get.c \
 	tables.c \
 	takehiro.c \
@@ -59,7 +58,6 @@ noinst_HEADERS= \
 	psymodel.h \
 	quantize.h  \
 	quantize_pvt.h \
-	reservoir.h \
 	set_get.h \
 	tables.h \
 	util.h \

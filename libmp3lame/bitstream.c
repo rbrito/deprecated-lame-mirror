@@ -756,7 +756,6 @@ void  add_dummy_byte ( lame_global_flags* const gfp, unsigned char val )
 	gfc->bs.header[i].write_timing += 8;
 }
 
-
 /*
   format_bitstream()
 
@@ -772,16 +771,44 @@ format_bitstream(lame_global_flags *gfp)
 {
     lame_internal_flags *gfc=gfp->internal_flags;
     int bits, nbytes, bitsPerFrame;
+    int stuffingBits, over_bits;
+    int resvDrain_pre = 0, resvDrain_post;
     III_side_info_t *l3_side = &gfc->l3_side;
 
-    bitsPerFrame = getframebits(gfp);
-    drain_into_ancillary(gfp, l3_side->resvDrain_pre);
+    /* we must be byte aligned */
+    stuffingBits = l3_side->ResvSize % 8;
+    over_bits = (l3_side->ResvSize - stuffingBits) - l3_side->ResvMax;
+    if (over_bits > 0) /* reservoir is overflowed */
+	stuffingBits += over_bits;
+    l3_side->ResvSize -= stuffingBits;
 
-    encodeSideInfo2(gfp,bitsPerFrame);
-    bits = 8*l3_side->sideinfo_len + l3_side->resvDrain_pre;
-    bits+=writeMainData(gfc);
-    drain_into_ancillary(gfp, l3_side->resvDrain_post);
-    bits += l3_side->resvDrain_post;
+#undef NEW_DRAIN
+#ifdef NEW_DRAIN
+    /* drain as many bits as possible into previous frame ancillary data
+     * In particular, in VBR mode ResvMax may have changed, and we have
+     * to make sure main_data_begin does not create a reservoir bigger
+     * than ResvMax  mt 4/00*/
+    over_bits = Min(l3_side->main_data_begin, stuffingBits/8);
+    l3_side->main_data_begin -= over_bits;
+
+    over_bits *= 8;
+    resvDrain_pre = over_bits;
+    stuffingBits -= over_bits;
+
+    /* drain just enough to be byte aligned.  The remaining bits will
+     * be added to the reservoir, and we will deal with them next frame.
+     * If the next frame is at a lower bitrate, it may have a larger ResvMax,
+     * and we will not have to waste these bits!  mt 4/00 */
+#endif
+    /* drain the rest into this frames ancillary data*/
+    resvDrain_post = stuffingBits;
+
+    bitsPerFrame = getframebits(gfp);
+    drain_into_ancillary(gfp, resvDrain_pre);
+    encodeSideInfo2(gfp, bitsPerFrame);
+    bits = 8*l3_side->sideinfo_len + resvDrain_pre + resvDrain_post
+	+ writeMainData(gfc);
+    drain_into_ancillary(gfp, resvDrain_post);
 
     l3_side->main_data_begin += (bitsPerFrame-bits)/8;
 
@@ -792,7 +819,7 @@ format_bitstream(lame_global_flags *gfp)
 
     /* compare main_data_begin for the next frame with what we
      * think the resvsize is: */
-    if ((l3_side->main_data_begin * 8) != l3_side->ResvSize ) {
+    if (l3_side->main_data_begin * 8 != l3_side->ResvSize) {
 	ERRORF(gfc,"bit reservoir error: \n"
 	       "l3_side->main_data_begin: %i \n"
 	       "Resvoir size:             %i \n"
@@ -805,10 +832,10 @@ format_bitstream(lame_global_flags *gfp)
 
 	       8*l3_side->main_data_begin,
 	       l3_side->ResvSize,
-	       l3_side->resvDrain_post,
-	       l3_side->resvDrain_pre,
+	       resvDrain_post,
+	       resvDrain_pre,
 	       8*l3_side->sideinfo_len,
-	       bits-l3_side->resvDrain_post-8*l3_side->sideinfo_len,
+	       bits - resvDrain_post - 8*l3_side->sideinfo_len,
 	       bits, bits % 8,
 	       bitsPerFrame
 	    );
@@ -834,10 +861,10 @@ format_bitstream(lame_global_flags *gfp)
 
    mp3data=0      indicates data in buffer is an id3tags and VBR tags
    mp3data=1      data is real mp3 frame data. 
-
-
 */
-int copy_buffer(lame_internal_flags *gfc,unsigned char *buffer,int size,int mp3data) 
+int
+copy_buffer(
+    lame_internal_flags *gfc,unsigned char *buffer,int size,int mp3data)
 {
     Bit_stream_struc *bs=&gfc->bs;
     int minimum = bs->buf_byte_idx + 1;

@@ -540,7 +540,7 @@ int PutLameVBR(lame_global_flags *gfp, FILE *fpStream, uint8_t *pbtStreamBuffer,
     uint16_t nRadioReplayGain		= 0;				/*TODO... */
     uint16_t nAudioPhileReplayGain  = 0;				/*TODO... */
 
-    uint8_t nNoiseShaping	= gfp->internal_flags->psymodel >= 2;
+    uint8_t nNoiseShaping	= gfp->internal_flags->noise_shaping_amp >= 0;
     uint8_t nStereoMode				= 0;
     int		bNonOptimal				= 0;
     uint8_t nSourceFreq				= 0;

@@ -227,10 +227,9 @@ typedef struct {
     gr_info tt[2][2];
     int main_data_begin; 
     int private_bits;
-    int resvDrain_pre;
-    int resvDrain_post;
     int ResvSize; /* in bits */
     int ResvMax;  /* in bits */
+    int maxmp3buf; /* in bits */
     int sideinfo_len;
     int scfsi[2][4];
 } III_side_info_t;

@@ -196,7 +196,6 @@ libmp3lame_la_SOURCES = \
         newmdct.c \
 	psymodel.c \
 	quantize.c \
-	reservoir.c \
 	set_get.c \
 	tables.c \
 	takehiro.c \
@@ -217,7 +216,6 @@ noinst_HEADERS = \
 	psymodel.h \
 	quantize.h  \
 	quantize_pvt.h \
-	reservoir.h \
 	set_get.h \
 	tables.h \
 	util.h \
@@ -253,7 +251,7 @@ LTLIBRARIES = $(lib_LTLIBRARIES)
 @HAVE_NASM_TRUE@@LIB_WITH_DECODER_FALSE@	$(top_builddir)/libmp3lame/@CPUTYPE@/liblameasmroutines.la
 am_libmp3lame_la_OBJECTS = VbrTag$U.lo bitstream$U.lo encoder$U.lo \
 	id3tag$U.lo lame$U.lo newmdct$U.lo psymodel$U.lo quantize$U.lo \
-	reservoir$U.lo set_get$U.lo tables$U.lo takehiro$U.lo util$U.lo \
+	set_get$U.lo tables$U.lo takehiro$U.lo util$U.lo \
 	version$U.lo mpglib_interface$U.lo
 libmp3lame_la_OBJECTS = $(am_libmp3lame_la_OBJECTS)
 
@@ -268,7 +266,6 @@ am__depfiles_maybe = depfiles
 @AMDEP_TRUE@	./$(DEPDIR)/newmdct$U.Plo \
 @AMDEP_TRUE@	./$(DEPDIR)/psymodel$U.Plo \
 @AMDEP_TRUE@	./$(DEPDIR)/quantize$U.Plo \
-@AMDEP_TRUE@	./$(DEPDIR)/reservoir$U.Plo \
 @AMDEP_TRUE@	./$(DEPDIR)/set_get$U.Plo ./$(DEPDIR)/tables$U.Plo \
 @AMDEP_TRUE@	./$(DEPDIR)/takehiro$U.Plo ./$(DEPDIR)/util$U.Plo \
 @AMDEP_TRUE@	./$(DEPDIR)/version$U.Plo
@@ -355,7 +352,6 @@ mostlyclean-kr:
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/newmdct$U.Plo@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/psymodel$U.Plo@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/quantize$U.Plo@am__quote@
-@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/reservoir$U.Plo@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/set_get$U.Plo@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/tables$U.Plo@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/takehiro$U.Plo@am__quote@
@@ -415,8 +411,6 @@ psymodel_.c: psymodel.c $(ANSI2KNR)
 	$(CPP) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) `if test -f $(srcdir)/psymodel.c; then echo $(srcdir)/psymodel.c; else echo psymodel.c; fi` | sed 's/^# \([0-9]\)/#line \1/' | $(ANSI2KNR) > $@ || rm -f $@
 quantize_.c: quantize.c $(ANSI2KNR)
 	$(CPP) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) `if test -f $(srcdir)/quantize.c; then echo $(srcdir)/quantize.c; else echo quantize.c; fi` | sed 's/^# \([0-9]\)/#line \1/' | $(ANSI2KNR) > $@ || rm -f $@
-reservoir_.c: reservoir.c $(ANSI2KNR)
-	$(CPP) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) `if test -f $(srcdir)/reservoir.c; then echo $(srcdir)/reservoir.c; else echo reservoir.c; fi` | sed 's/^# \([0-9]\)/#line \1/' | $(ANSI2KNR) > $@ || rm -f $@
 set_get_.c: set_get.c $(ANSI2KNR)
 	$(CPP) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) `if test -f $(srcdir)/set_get.c; then echo $(srcdir)/set_get.c; else echo set_get.c; fi` | sed 's/^# \([0-9]\)/#line \1/' | $(ANSI2KNR) > $@ || rm -f $@
 tables_.c: tables.c $(ANSI2KNR)
@@ -431,8 +425,8 @@ VbrTag_.$(OBJEXT) VbrTag_.lo bitstream_.$(OBJEXT) bitstream_.lo \
 encoder_.$(OBJEXT) encoder_.lo id3tag_.$(OBJEXT) id3tag_.lo \
 lame_.$(OBJEXT) lame_.lo mpglib_interface_.$(OBJEXT) \
 mpglib_interface_.lo newmdct_.$(OBJEXT) newmdct_.lo psymodel_.$(OBJEXT) \
-psymodel_.lo quantize_.$(OBJEXT) quantize_.lo reservoir_.$(OBJEXT) \
-reservoir_.lo set_get_.$(OBJEXT) set_get_.lo tables_.$(OBJEXT) \
+psymodel_.lo quantize_.$(OBJEXT) quantize_.lo \
+set_get_.$(OBJEXT) set_get_.lo tables_.$(OBJEXT) \
 tables_.lo takehiro_.$(OBJEXT) takehiro_.lo util_.$(OBJEXT) util_.lo \
 version_.$(OBJEXT) version_.lo : $(ANSI2KNR)
 

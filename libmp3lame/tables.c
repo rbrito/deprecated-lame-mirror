@@ -1459,4 +1459,26 @@ void init_bit_stream_w(lame_global_flags *gfp)
 	gfc->slot_lag = gfc->frac_SpF
 	    = ((gfp->version+1)*72000L*gfp->mean_bitrate_kbps)
 	    % gfp->out_samplerate;
+
+    /* resv. size */
+    if (gfp->mean_bitrate_kbps >= 320) {
+        /* in freeformat the buffer is constant*/
+        gfc->l3_side.maxmp3buf
+	    = 8*((int)((gfp->mean_bitrate_kbps*1000 * 1152/8)
+		       /gfp->out_samplerate +.5));
+    } else {
+        /* maximum allowed frame size.  dont use more than this number of
+           bits, even if the frame has the space for them: */
+        /* Bouvigne suggests this more lax interpretation of the ISO doc 
+           instead of using 8*960. */
+
+	/*all mp3 decoders should have enough buffer to handle this value: size of a 320kbps 32kHz frame*/
+	gfc->l3_side.maxmp3buf = 8*1440;
+
+        if (gfp->strict_ISO)
+	    gfc->l3_side.maxmp3buf
+		= ((int)(320000*1152 / gfp->out_samplerate + 4)) & (~7);
+	if (gfp->disable_reservoir)
+	    gfc->l3_side.maxmp3buf = 0;
+    }
 }

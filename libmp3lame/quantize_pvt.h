@@ -24,7 +24,7 @@
 
 #define scalefactor(gi, sfb) \
     (gi->global_gain \
-     - ((gi->scalefac[sfb] + (gi->preflag ? pretab[sfb] : 0)) \
+     - ((gi->scalefac[sfb] + ((gi->preflag > 0) ? pretab[sfb] : 0)) \
         << (gi->scalefac_scale + 1)) \
      - gi->subblock_gain[gi->window[sfb]]*8)
 
