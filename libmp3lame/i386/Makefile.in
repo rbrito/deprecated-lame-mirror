@@ -199,11 +199,7 @@ CLEANFILES = \
 	quantSSE.lo.lst
 
 
-EXTRA_DIST = \
-	fft.nas \
-	fftfpu.nas \
-	fftsse.nas \
-	ffttbl.nas
+EXTRA_DIST =
 
 NASMFLAGS = @NASM_FORMAT@ -i $(top_srcdir)/libmp3lame/@CPUTYPE@/
 subdir = libmp3lame/i386
