@@ -170,7 +170,7 @@ get_bitrate(lame_t gfc)
 {
     /* assume 16bit linear PCM input, and in_sample = out_sample */
     return (int)(gfc->in_samplerate * 16 * gfc->channels_out
-		 / (FLOAT)(1000 * gfc->compression_ratio) + (FLOAT)0.5);
+		 / (FLOAT)((FLOAT)1e3 * gfc->compression_ratio) + (FLOAT)0.5);
 }
 
 static void
