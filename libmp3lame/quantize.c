@@ -570,7 +570,7 @@ trancate_smallspectrums(
 	int nsame, start, width2 = 0, k = j, width = gi->width[sfb];
 	j += width;
 
-	if (distort[sfb] >= 1.0)
+	if (distort[sfb] >= xmin[sfb])
 	    continue;
 
 	do {
