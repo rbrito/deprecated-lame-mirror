@@ -505,7 +505,7 @@ main(int argc, char **argv)
     argc = ccommand(&argv);
 #endif
 
-#if defined(_MSC_VER)
+#if defined(_WIN32)
    /* set affinity back to all CPUs.  Fix for EAC/lame on SMP systems from
      "Todd Richmond" <todd.richmond@openwave.com> */
     typedef BOOL (WINAPI *SPAMFunc)(HANDLE, DWORD);
