@@ -1484,7 +1484,7 @@ VBR_noise_shaping(lame_t gfc, gr_info *gi, FLOAT * xmin)
 		maxXR = xr34[i+j+1];
 	} while ((i += 2) < 0);
 
-	if (maxXR != 0.0) {
+	if (maxXR > (FLOAT)(IXMAX_VAL / FLOAT_MAX)) {
 	    gfc->maxXR[sfb] = (maxXR = IXMAX_VAL / maxXR);
 	    gain = find_scalefac(gfc, j, xmin[sfb], gi->wi[sfb].width, maxXR,
 				 sfmin, gain);
