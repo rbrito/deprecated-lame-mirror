@@ -6,13 +6,13 @@
 #export DH_VERBOSE=1
 
 # This is the debhelper compatability version to use.
-export DH_COMPAT=1
+export DH_COMPAT=2
 
 configure: configure-stamp
 configure-stamp:
 	dh_testdir
 	# Add here commands to configure the package.
-	
+	./configure --prefix=/usr --with-fileio=lame --enable-mp3x --enable-mp3rtp --without-vorbis
 
 	touch configure-stamp
 
@@ -21,7 +21,7 @@ build-stamp:
 	dh_testdir
 
 	# Add here commands to compile the package.
-	$(MAKE) lame mp3rtp mp3x
+	$(MAKE)
 	#/usr/bin/docbook-to-man debian/lame.sgml > lame.1
 
 	touch build-stamp
@@ -32,7 +32,8 @@ clean:
 	rm -f build-stamp configure-stamp
 
 	# Add here commands to clean up after the build process.
-	-$(MAKE) clean
+	-$(MAKE) distclean
+	-rm -f confcache libmp3lame/i386/choose_table.nas.lst libmp3lame/i386/cpu_feat.nas.lst libmp3lame/i386/scalar.nas.lst
 
 	dh_clean
 
@@ -43,11 +44,7 @@ install: build
 	dh_installdirs
 
 	# Add here commands to install the package into debian/tmp.
-	# $(MAKE) install DESTDIR=`pwd`/debian/tmp
-	echo `pwd`
-	pwd
-	install lame auenc mlame mp3rtp mp3x `pwd`/debian/tmp/usr/bin
-	install doc/man/lame.1 `pwd`/debian/tmp/usr/man/man1/lame.1
+	$(MAKE) DESTDIR=`pwd`/debian/tmp install
 
 
 # Build architecture-independent files here.
@@ -59,25 +56,26 @@ binary-arch: build install
 #	dh_testversion
 	dh_testdir
 	dh_testroot
+	dh_movefiles
 #	dh_installdebconf	
 	dh_installdocs
-	dh_installexamples
-	dh_installmenu
+#	dh_installexamples
+#	dh_installmenu
 #	dh_installemacsen
 #	dh_installpam
 #	dh_installinit
-	dh_installcron
-	dh_installmanpages
-	dh_installinfo
-#	dh_undocumented
-	dh_installchangelogs 
-	dh_link
+#	dh_installcron
+	dh_installmanpages -Nlame-extras -Nliblame0 -Nliblame-dev
+#	dh_installinfo
+	dh_undocumented -Nlame -Nliblame0 -Nliblame-dev mp3rtp.1 mp3x.1
+	dh_installchangelogs doc/html/history.html
+#	dh_link
 	dh_strip
 	dh_compress
 	dh_fixperms
 	# You may want to make some executables suid here.
-	dh_suidregister
-#	dh_makeshlibs
+#	dh_suidregister
+	dh_makeshlibs
 	dh_installdeb
 #	dh_perl
 	dh_shlibdeps
