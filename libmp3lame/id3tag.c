@@ -326,6 +326,7 @@ set_4_byte_value(unsigned char *bytes, unsigned long value)
 #define COMMENT_FRAME_ID FRAME_ID('C', 'O', 'M', 'M')
 #define TRACK_FRAME_ID FRAME_ID('T', 'R', 'C', 'K')
 #define GENRE_FRAME_ID FRAME_ID('T', 'C', 'O', 'N')
+#define ENCODER_FRAME_ID FRAME_ID('T', 'S', 'S', 'E')
 
 static unsigned char *
 set_frame(unsigned char *frame, unsigned long id, const char *text,
@@ -381,6 +382,8 @@ id3tag_write_v2(lame_global_flags *gfp)
                 || (comment_length > 30)
                 || (gfc->tag_spec.track && (comment_length > 28))) {
             size_t tag_size;
+            char encoder[20];
+            size_t encoder_length;
             char year[5];
             size_t year_length;
             char track[3];
@@ -393,6 +396,8 @@ id3tag_write_v2(lame_global_flags *gfp)
             unsigned int index;
             /* calulate size of tag starting with 10-byte tag header */
             tag_size = 10;
+            encoder_length = sprintf(encoder, "LAME v%s", get_lame_short_version());
+            tag_size += 11 + encoder_length;
             if (title_length) {
                 /* add 10-byte frame header, 1 encoding descriptor byte ... */
                 tag_size += 11 + title_length;
@@ -461,6 +466,7 @@ id3tag_write_v2(lame_global_flags *gfp)
              */
 
             /* set each frame in tag */
+            p = set_frame(p, ENCODER_FRAME_ID, encoder, encoder_length);
             p = set_frame(p, TITLE_FRAME_ID, gfc->tag_spec.title, title_length);
             p = set_frame(p, ARTIST_FRAME_ID, gfc->tag_spec.artist,
                     artist_length);
