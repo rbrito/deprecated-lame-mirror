@@ -1,38 +1,126 @@
-1. bug in resample code:  downsampling from 44101 to 44100 causes
-   a seg fault.  Workaround in place for now:  resampling disabled 
-   if input/output samplerates agree to 4 digits.  
+encoding core:
+1.
+Better VBR code. LAME4's VBR is based on vbr-new. It assumes
+the noise is monotone function of the scalefactor, but it is not true.
+It occasionary makes sound very bad.
 
 
-1.  New Xing VBR header is incompable with MS Media Player.  but works
+2. New Xing VBR header is incompable with MS Media Player.  but works
 with most other players.  Most likely MS took some shortcuts and
 made some invalid assumptions about VBR header.  Should we
 track this down and see if we can come up with a work around?
-
-2.  high bitrate encodings have trouble on some hardware players.
-Track this down.  Probably caused by --strictly-enforce-ISO and
-IXMAX_VAL.  Try setting IXMAX_VAL back to 8191 and/or
-maxmp3buf=8*960 to see if there is a working combination.
+VBRfix code may give us an answer.
 
 
-3 frontend: code is a complete mess. But it has so many debugged
-  features it will be a lot of work to re-write.
 
-4. MSVC project files.  It would be nice to create a working
-   MSVC6 workspace, which included all the projects as possible
-   targets:
-          lame.exe
-          mp3x.exe   (require GTK libs)
-          lame_enc.dll   
-          ACM codec
-          directshow codec
+3. Some switches to support the "BUGGY" decoders.
+--strictly-enforce-ISO is not perfect to these players.
+It seems it needs forcing coupling block type, lower IXMAX_VAL, no
+scfsi, no scalefact_scale, and so on. 
 
-   I think the only MSVC5 project that we need to preserve is
-   for lame_enc.dll, since Albert Faber (still?) doesn't use VC6?
-   But no reason we cant have VC5 and VC6 project files for the dll.
 
-   
 
-   
+5.
+Better intensity stereo. This is a must-have for low bitrates, but if the
+algorythm is very good it could also be used in every case.
+Note: mpg123 (and all derivatives, like xmms and lame/mpglib)
+have bugs in the intensity stereo decoding.  Bugs have been there
+for years since there are very few intensity stereo mp3's out there.
+
+6. 
+LAME has a 31 point FIR filter used for resampling, which
+can also be used as a lowpass.  When resampling is done, 
+use that filter to also lowpass instead of the polyphase filter.
+
+7.
+Even when resampling is not needed, should we use an FIR filter
+for the lowpass?  If it is not too much slower, yes.  If it
+is slower, then it should be an option since it will produce
+higher quality.  
+
+8.
+We should consider moving the experts options from the *long
+help* text into an *experts only* help text. The average Joe gets
+knocked down by the huge number of possibilities to setup lame.
+
+9.
+Clipping detection: This could be done by decoding on the fly
+and adjusting the replay gain flag of the INFO tag.
+
+
+10.
+better highpass/lowpass filter:
+We need to first replace the polyphase filter with an FIR filter.
+And setting highpass filtering to enhance the playback frequency range.
+
+
+20.
+bug in resample code:  downsampling from 44101 to 44100 causes a seg
+fault.  Workaround in place for now:  resampling disabled if
+input/output samplerates agree to 4 digits.
+
+I plan to replace the resampling code of ssrc (Shibatch sampling rate
+conv.) and solve this problem.
+
+
+
+
+20.
+LAME has problems with pure DC input.  i.e. a square wave with
+a frequency well below 20 Hz.  Not very important, but it should
+be fixed.
+
+
+
+20.
+Tuning for low bitrates: Right now the default sampling freq
+and lowpass are way too low for very low bitrates (less than 50kbps)
+
+
+
+
+50.
+Better tonality estimation.
+Gpsycho uses predictability, and so needs a delay to detect the tonality
+of a sound.
+Nspsytune seems to miss tonals when several of them are too narrow.
+We would probably need the best of both.
+
+
+
+
+60.
+Different ATH handling for sfb21. We are using the minimum value of
+ath in each whole sfb. in sfb21 this leads to very high bitrates.
+We could perhaps use 2 or 3 ath partitions in sfb21 (pseudo
+scalefactor band)
+
+
+
+
+70.
+Use mixed blocks.
+
+
+
+
+998.
+Merge GOGO's fast assembler routines.
+
+
+
+
+1500.
+Integrate plusV extensions
+
+
+
+2000.
+2 pass VBR/ABR support. It may improve the quality, but I am not sure.
+
+
+
+
 
 
 NOGAP encoding:
@@ -55,99 +143,39 @@ get_audio.c:  We need a way to open a second mp3 file, without
               tags at the beginning of file2.mp3 and file3.mp3.
 
 
+frontend code:
 
 1.
 Does stdin work when LAME is compiled to use libsndfile? 
 (new version of libsndfile will support this - try this out)
 
-
-2. 
-LAME has problems with pure DC input.  i.e. a square wave with
-a frequency well below 20 Hz.  Not very important, but it should
-be fixed.
+2.
+Code is a complete mess. But it has so many debugged features it will
+be a lot of work to re-write.
 
 
-3. 
+
+999.
+It would be nice to save some information whilst encoding when
+wave <-> mp3
+	a RIFF/wave can contain LIST chunks with information
+	about author, title, etc. 
+	id3tag in mp3 can contain these information, too.
+
+	auto converting each of them may be good.
+
+
+
+decoding core:
+1. 
 modify mpglib to output
 floating point and have finaly quantization step a
 easy-to-change module so it can output other than 16bit.
 (replace mpglib with MAD?  MAD has agreed to write a call back
 which will return all data needed by the frame analyzer)
 
-3.1  mgplib has bugs with i-stereo.  flag denoting invalid
+1.1  mgplib has bugs with i-stereo.  flag denoting invalid
 i-stereo value (= frame is m/s stereo) is not correct.  
-
-4.
-Clipping detection: This could be done by decoding on the fly
-and adjusting the replay gain flag of the INFO tag.
-
-
-5.
-lowpass filter: for M/S stereo, use more filtering for the side
-channel, less filtering for mid channel.  We need to first replace
-the polyphase filter with an FIR lowpass filter with finer frequency
-resolution before implementing this. 
-
-6. 
-LAME has a 31 point FIR filter used for resampling, which
-can also be used as a lowpass.  When resampling is done, 
-use that filter to also lowpass instead of the polyphase filter.
-
-7.
-Even when resampling is not needed, should we use an FIR filter
-for the lowpass?  If it is not too much slower, yes.  If it
-is slower, then it should be an option since it will produce
-higher quality.  
-
-8.
-We should consider moving the experts options from the *long
-help* text into an *experts only* help text. The average Joe gets
-knocked down by the huge number of possibilities to setup lame.
-
-
-
-
-
-
-20.
-Tuning for low bitrates: Right now the default sampling freq
-and lowpass are way too low for very low bitrates (less than 50kbps)
- 
-
-
-
-50.
-Better tonality estimation.
-Gpsycho uses predictability, and so needs a delay to detect the tonality
-of a sound.
-Nspsytune seems to miss tonals when several of them are too narrow.
-We would probably need the best of both.
-
-
-
-
-60.
-Different ATH handling for sfb21. We are using the minimum value of ath
-in each whole sfb. in sfb21 this leads to very high bitrates.
-We could perhaps use 2 or 3 ath partitions in sfb21
-
-
-
-
-70.
-Use mixed blocks.
-
-
-
-
-90.
-Better intensity stereo. This is a must-have for low bitrates, but if the
-algorythm is very good it could also be used in every case.
-Note: mpg123 (and all derivatives, like xmms and lame/mpglib)
-have bugs in the intensity stereo decoding.  Bugs have been there
-for years since there are very few intensity stereo mp3's out there.
-
-
 
 997.
 ACM wrapper for LAME.  Steve Lhomme has joied thed project
@@ -164,29 +192,22 @@ he is working on the VorbisACM.
 
 
 
-998.
-Merge GOGO's fast assembler routines.
+Build environment
+1. MSVC project files.  It would be nice to create a working
+   MSVC6 workspace, which included all the projects as possible
+   targets:
+          lame.exe
+          mp3x.exe   (require GTK libs)
+          lame_enc.dll   
+          ACM codec
+          directshow codec
 
+   I think the only MSVC5 project that we need to preserve is
+   for lame_enc.dll, since Albert Faber (still?) doesn't use VC6?
+   But no reason we cant have VC5 and VC6 project files for the dll.
 
+2. more 64 bit environment support.
 
+3. check the "HACKY and FAST" code on many environments. They are
+really fast, but are not confirmed to run on all environments.
 
-999.
-It would be nice to save some information whilst encoding
-a: wave -> mp3
-	a RIFF/wave can contain LIST chunks with information
-	about author, title, etc. 
-	==> could go into TAG fields of resulting mp3
-b: mp3 -> mp3
-	==> we could copy the TAG directly
-c: mp3 -> wave
-	==> copy TAG into LIST chunk
-
-
-
-1500.
-Integrate plusV extensions
-
-
-
-2000.
-To be able to encode as fast as FastEnc
