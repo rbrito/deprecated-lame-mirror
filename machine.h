@@ -87,13 +87,13 @@
    precision long doubles, as supported by ICL), you will need
    to disable the ASM routines (or fix them :) */
 
-#define FLOAT8_is_double
+#ifdef FLOAT8_is_double
 typedef double FLOAT8;
-
-/*#define FLOAT8_is_float*/
-/*typedef float FLOAT8;  */
-
-
+#elifdef FLOAT8_is_float
+typedef float FLOAT8;
+#else
+#error "oops!  set FLOAT8_is_float or FLOAT8_is_double"
+#endif
 
 
 #if defined _WIN32 && !defined __CYGWIN__

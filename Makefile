@@ -30,6 +30,12 @@ RM = rm -f
 ##########################################################################
 CPP_OPTS = -DHAVEMPGLIB 
 
+##########################################################################
+# -DFLOAT8_is_float will FLOAT8 as float
+# -DFLOAT_is_float will FLOAT8 as float
+##########################################################################
+CPP_OPTS += -DFLOAT8_is_float
+
 
 
 
@@ -309,8 +315,13 @@ ASFLAGS=-f elf -i i386/
 	gcc -c $< -o $@
 
 ## use MMX extension. you need nasm and MMX supported CPU.
-#CC_SWITCCH += -DMMX_choose_table
+#CC_SWITCHES += -DMMX_choose_table
 #OBJ += i386/choose_table.o
+
+## use SSE/3DNow! extension or FPU natie code.
+## you need nasm
+#CC_SWITCHES += -DASM_QUANTIZE
+#OBJ += i386/quantize.o
 
 %.o: %.c 
 	$(CC) $(CPP_OPTS) $(CC_SWITCHES) -c $< -o $@
