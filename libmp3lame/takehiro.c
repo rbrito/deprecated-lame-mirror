@@ -1132,60 +1132,81 @@ void best_scalefac_store(
     /* check if l3_enc=0 */
     j = 0;
     for ( sfb = 0; sfb < gi->sfbmax; sfb++ ) {
-	int width = gi->width[sfb];
-    assert( width >= 0 );
-	j += width;
-	for (l = -width; l < 0; l++)
+        int width = gi->width[sfb];
+        assert( width >= 0 );
+        j += width;
+        for (l = -width; l < 0; l++) {
 	    if (gi->l3_enc[l+j]!=0)
-		break;
-	if (l==0)
-	    gi->scalefac[sfb] = recalc = -2; /* anything goes. */
+            break;
+        }
+       	if (l==0)
+            gi->scalefac[sfb] = recalc = -2; /* anything goes. */
+            /*  only best_scalefac_store and calc_scfsi 
+             *  know--and only they should know--about the magic number -2. 
+             */
     }
 
     if (!gi->scalefac_scale && !gi->preflag) {
-	int s = 0;
-	for (sfb = 0; sfb < gi->sfbmax; sfb++)
-	    if (gi->scalefac[sfb] > 0)
-		s |= gi->scalefac[sfb];
+    int s = 0;
+    for (sfb = 0; sfb < gi->sfbmax; sfb++)
+        if (gi->scalefac[sfb] > 0)
+            s |= gi->scalefac[sfb];
 
-	if (!(s & 1) && s != 0) {
-	    for (sfb = 0; sfb < gi->sfbmax; sfb++)
-		if (gi->scalefac[sfb] > 0)
-		    gi->scalefac[sfb] >>= 1;
-
-	    gi->scalefac_scale = recalc = 1;
-	}
+        if (!(s & 1) && s != 0) {
+            for (sfb = 0; sfb < gi->sfbmax; sfb++)
+                if (gi->scalefac[sfb] > 0)
+                    gi->scalefac[sfb] >>= 1;
+                    
+            gi->scalefac_scale = recalc = 1;
+        }
     }
 
     if (!gi->preflag && gi->block_type != SHORT_TYPE && gfc->mode_gr==2) {
-	for (sfb = 11; sfb < SBPSY_l; sfb++)
-	    if (gi->scalefac[sfb] < pretab[sfb] && gi->scalefac[sfb] != -2)
-		break;
-	if (sfb == SBPSY_l) {
-	    for (sfb = 11; sfb < SBPSY_l; sfb++)
-		if (gi->scalefac[sfb] > 0)
-		    gi->scalefac[sfb] -= pretab[sfb];
+        for (sfb = 11; sfb < SBPSY_l; sfb++)
+            if (gi->scalefac[sfb] < pretab[sfb] && gi->scalefac[sfb] != -2)
+            	break;
+        if (sfb == SBPSY_l) {
+            for (sfb = 11; sfb < SBPSY_l; sfb++)
+                if (gi->scalefac[sfb] > 0)
+                    gi->scalefac[sfb] -= pretab[sfb];
 
-	    gi->preflag = recalc = 1;
-	}
+            gi->preflag = recalc = 1;
+        }
     }
 
     for ( i = 0; i < 4; i++ )
-	l3_side->scfsi[ch][i] = 0;
+        l3_side->scfsi[ch][i] = 0;
 
     if (gfc->mode_gr==2 && gr == 1
-	&& l3_side->tt[0][ch].block_type != SHORT_TYPE
-	&& l3_side->tt[1][ch].block_type != SHORT_TYPE) {
+      && l3_side->tt[0][ch].block_type != SHORT_TYPE
+      && l3_side->tt[1][ch].block_type != SHORT_TYPE) {
       	scfsi_calc(ch, l3_side);
-    } else if (recalc) {
-	if (gfc->mode_gr == 2) {
-	    scale_bitcount(gi);
-	} else {
-	    scale_bitcount_lsf(gfc, gi);
-	}
+        recalc = 0;
+    }    
+    for ( sfb = 0; sfb < gi->sfbmax; sfb++ ) {
+        if ( gi->scalefac[sfb] == -2 ) {
+            gi->scalefac[sfb] = 0;  /* if anything goes, then 0 is a good choice */
+        }
+    }     
+    if (recalc) {    
+        if (gfc->mode_gr == 2) {
+            scale_bitcount(gi);
+        } else {
+            scale_bitcount_lsf(gfc, gi);
+        }
     }
 }
 
+
+static int all_scalefactors_not_negative( int const* scalefac, int n )
+{
+    int i;
+    for ( i = 0; i < n; ++i ) {
+        if ( scalefac[i] < 0 ) return 0;
+    }
+    return 1;
+}
+ 
 
 /* number of bits used to encode scalefacs */
 
@@ -1215,7 +1236,9 @@ int scale_bitcount(gr_info * const cod_info)
     /* maximum values */
     const int *tab;
     int *scalefac = cod_info->scalefac;
-
+    
+    assert( all_scalefactors_not_negative( scalefac, cod_info->sfbmax ) );
+    
     if ( cod_info->block_type == SHORT_TYPE ) {
 	tab = scale_short;
 	if (cod_info->mixed_block_flag)
