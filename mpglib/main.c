@@ -3,8 +3,11 @@
 
 #ifdef OS_AMIGAOS
 #include "/lame.h"
+#include "/util.h"
 #else
 #include "../lame.h"
+#include "../util.h"
+#include "../VbrTag.h"
 #endif /* OS_AMIGAOS */
 
 #include <stdlib.h>
@@ -61,11 +64,17 @@ return
 }
 
 
-int lame_decode_initfile(FILE *fd, int *stereo, int *samp, int *bitrate)
+int lame_decode_initfile(FILE *fd, int *stereo, int *samp, int *bitrate, 
+unsigned long *num_samples)
 {
   extern int tabsel_123[2][3][16];
-  int ret,size;
-  size_t len;
+  VBRTAGDATA pTagData;
+  int ret,size,framesize;
+  unsigned long num_frames=0;
+  size_t len,len2;
+  int xing_header;
+
+
   InitMP3(&mp);
   memset(buf, 0, sizeof(buf));
   
@@ -75,24 +84,43 @@ int lame_decode_initfile(FILE *fd, int *stereo, int *samp, int *bitrate)
     buf[0]=buf[1]; 
     if (fread(&buf[1],1,1,fd) <= 0) return -1;  /* failed */
   }
-  ret = decodeMP3(&mp,buf,2,out,FSIZE,&size);
+  /*  ret = decodeMP3(&mp,buf,2,out,FSIZE,&size); */
 
   /* read the header */
-  len = fread(buf,1,8,fd);
+  len = fread(&buf[2],1,46,fd);
   if (len <=0 ) return -1;
+  len +=2;
+
+  /* check for Xing header */
+  xing_header = GetVbrTag(&pTagData,buf);
+  if (xing_header) {
+    num_frames=pTagData.frames;
+    fprintf(stderr,"frames  = %i %i \n",num_frames,len);
+  }
+
+  size=0;
   ret = decodeMP3(&mp,buf,len,out,FSIZE,&size);
+  if (size>0 && !xing_header) {
+    fprintf(stderr,"Opps: first frame of mpglib output will be lost \n");
+  }
 
   *stereo = mp.fr.stereo;
   *samp = freqs[mp.fr.sampling_frequency];
   *bitrate = tabsel_123[mp.fr.lsf][mp.fr.lay-1][mp.fr.bitrate_index];
-
+  framesize = (mp.fr.lsf == 0) ? 1152 : 576;
+  *num_samples=MAX_U_32_NUM;
+  if (xing_header && num_frames) {
+    *num_samples=framesize * num_frames;
+  }
 
   /*
   printf("ret = %i NEED_MORE=%i \n",ret,MP3_NEED_MORE);
   printf("stereo = %i \n",mp.fr.stereo);
   printf("samp = %i  \n",(int)freqs[mp.fr.sampling_frequency]);
+  printf("framesize = %i  \n",framesize);
+  printf("num frames = %i  \n",(int)num_frames);
+  printf("num samp = %i  \n",(int)*num_samples);
   */
-
   return 0;
 }
 

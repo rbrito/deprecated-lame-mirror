@@ -73,7 +73,8 @@ int lame_decode_init(void);
 int lame_decode(char *mp3buf,int len,short pcm[][1152]);
 
 /* read mp3 file until mpglib returns one frame of PCM data */
-int lame_decode_initfile(FILE *fd,int *stereo,int *samp,int *bitrate);
+int lame_decode_initfile(FILE *fd,int *stereo,int *samp,int *bitrate, 
+unsigned long *nsamp);
 int lame_decode_fromfile(FILE *fd,short int mpg123pcm[2][1152]);
 /*
 For lame_decode_*:  return code

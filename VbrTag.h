@@ -75,6 +75,7 @@ typedef struct
 
 #define VBRHEADERSIZE (NUMTOCENTRIES+4+4+4+4+4)
 
+int CheckVbrTag(unsigned char *buf);
 int GetVbrTag(VBRTAGDATA *pTagData,  unsigned char *buf);
 int SeekPoint(unsigned char TOC[NUMTOCENTRIES], int file_bytes, float percent);
 int InitVbrTag(Bit_stream_struc* pBs,int nVersion,int nMode, int SampIndex);

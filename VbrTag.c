@@ -106,6 +106,39 @@ void CreateI4(unsigned char *buf, int nValue)
 
 
 /*-------------------------------------------------------------*/
+/* Same as GetVbrTag below, but only checks for the Xing tag.
+   requires buf to contain only 40 bytes */
+/*-------------------------------------------------------------*/
+int CheckVbrTag(unsigned char *buf)
+{
+	int			h_id, h_mode, h_sr_index;
+
+	/* get selected MPEG header data */
+	h_id       = (buf[1] >> 3) & 1;
+	h_sr_index = (buf[2] >> 2) & 3;
+	h_mode     = (buf[3] >> 6) & 3;
+
+	/*  determine offset of header */
+	if( h_id ) 
+	{
+                /* mpeg1 */
+		if( h_mode != 3 )	buf+=(32+4);
+		else				buf+=(17+4);
+	}
+	else
+	{
+                /* mpeg2 */
+		if( h_mode != 3 ) buf+=(17+4);
+		else              buf+=(9+4);
+	}
+
+	if( buf[0] != VBRTag[0] ) return 0;    /* fail */
+	if( buf[1] != VBRTag[1] ) return 0;    /* header not found*/
+	if( buf[2] != VBRTag[2] ) return 0;
+	if( buf[3] != VBRTag[3] ) return 0;
+	return 1;
+}
+
 int GetVbrTag(VBRTAGDATA *pTagData,  unsigned char *buf)
 {
 	int			i, head_flags;

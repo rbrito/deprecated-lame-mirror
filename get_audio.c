@@ -316,11 +316,11 @@ int default_channels)
       fprintf(stderr, "Could not find \"%s\".\n", lpszFileName);
       exit(1);
     }
-    if (-1==lame_decode_initfile(musicin,&num_channels,&samp_freq,&input_bitrate)) {
+    if (-1==lame_decode_initfile(musicin,&num_channels,&samp_freq,&input_bitrate,&num_samples)) {
       fprintf(stderr,"Error reading headers in mp3 input file %s.\n", lpszFileName);
       exit(1);
     }
-    gs_wfInfo.samples=MAX_U_32_NUM;
+    gs_wfInfo.samples=num_samples;
     gs_wfInfo.channels=num_channels;
     gs_wfInfo.samplerate=samp_freq;
 
@@ -510,7 +510,7 @@ int default_channels)
 
   input_bitrate=0;
   if (input_format==sf_mp3) {
-    if (-1==lame_decode_initfile(musicin,&num_channels,&samp_freq,&input_bitrate)) {
+    if (-1==lame_decode_initfile(musicin,&num_channels,&samp_freq,&input_bitrate,&num_samples)) {
       fprintf(stderr,"Error reading headers in mp3 input file %s.\n", inPath);
       exit(1);
     }
