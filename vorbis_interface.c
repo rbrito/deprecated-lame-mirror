@@ -314,7 +314,7 @@ int lame_encode_ogg_init(lame_global_flags *gfp)
   
   /* add a comment */
   vorbis_comment_init(&vc);
-  vorbis_comment_add(&vc,"Track encoded by L.A.M.E.");
+  vorbis_comment_add(&vc,"Track encoded by L.A.M.E. libvorbis interface.");
   
   /* set up the analysis state and auxiliary encoding storage */
   vorbis_analysis_init(&vd,vi_ptr);
@@ -454,6 +454,7 @@ int lame_encode_ogg_frame(lame_global_flags *gfp,
       */
       memcpy(mp3buf,og.header,og.header_len);
       memcpy(mp3buf+og.header_len,og.body,og.body_len);
+      mp3buf += og.header_len + og.body_len;
       
       if(ogg_page_eos(&og))eos=1;
     } while (1);

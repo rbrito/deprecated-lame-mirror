@@ -125,6 +125,7 @@ Operational:
 -g             run MP3x, the graphical frame analyzer
 --strictly-enforce-ISO   comply as much as possible to ISO MPEG spec
 
+--ogg          Encode using Ogg Vorbis (.ogg) instead of mp3.
 
 id3 tagging:
 

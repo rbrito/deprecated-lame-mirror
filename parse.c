@@ -120,9 +120,9 @@ void lame_help(lame_global_flags *gfp,char *name)  /* print syntax & exit */
   fprintf(stdout,"    -a              downmix from stereo to mono file for mono encoding\n");
   fprintf(stdout,"    -d              allow channels to have different blocktypes\n");
   fprintf(stdout,"    -S              don't print progress report, VBR histograms\n");
-  fprintf(stdout,"    --decode        input=mp3 file, output=raw pcm\n");
-  fprintf(stdout,"    --ogg           encode using Ogg Vorbis\n");
+  fprintf(stdout,"    --ogg           encode to Ogg Vorbis instead of MP3\n");
   fprintf(stdout,"    --freeformat    produce a free format bitstream\n");
+  fprintf(stdout,"    --decode        input=mp3 file, output=raw pcm\n");
   fprintf(stdout,"    --comp  <arg>   choose bitrate to achive a compression ratio of <arg>\n");
   fprintf(stdout,"    --athonly       only use the ATH for masking\n");
   fprintf(stdout,"    --noath         disable the ATH for masking\n");
