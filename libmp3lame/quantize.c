@@ -811,6 +811,8 @@ amp_scalefac_bands(
 
 extern FLOAT
 calc_sfb_noise_fast_3DN(lame_internal_flags *gfc, int j, int bw, int sf);
+extern FLOAT
+calc_sfb_noise_3DN(lame_internal_flags *gfc, int j, int bw, int sf);
 
 inline static FLOAT
 calc_sfb_noise_fast(lame_internal_flags *gfc, int j, int bw, int sf)
@@ -848,9 +850,14 @@ calc_sfb_noise_fast(lame_internal_flags *gfc, int j, int bw, int sf)
 inline static FLOAT
 calc_sfb_noise(lame_internal_flags *gfc, int j, int bw, int sf)
 {
-    FLOAT xfsf = 0.0;
-    FLOAT sfpow = POW20(sf);  /*pow(2.0,sf/4.0); */
-    FLOAT sfpow34 = IPOW20(sf); /*pow(sfpow,-3.0/4.0); */
+    FLOAT xfsf, sfpow, sfpow34;
+#ifdef HAVE_NASM
+    if (gfc->CPU_features.AMD_3DNow)
+	return calc_sfb_noise_3DN(gfc, j, bw, sf);
+#endif
+    xfsf = 0.0;
+    sfpow = POW20(sf);  /*pow(2.0,sf/4.0); */
+    sfpow34 = IPOW20(sf); /*pow(sfpow,-3.0/4.0); */
 
     do {
 #ifdef TAKEHIRO_IEEE754_HACK

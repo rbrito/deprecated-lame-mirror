@@ -59,12 +59,14 @@ extern const int mdctorder[SBLIMIT];
 
 #define PRECALC_SIZE (IXMAX_VAL+2)
 
-extern FLOAT pow43[PRECALC_SIZE];
 #ifdef TAKEHIRO_IEEE754_HACK
-extern FLOAT adj43asm[PRECALC_SIZE];
+extern FLOAT pow43[PRECALC_SIZE*3];
+# define adj43asm (&pow43[PRECALC_SIZE*2])
 #else
-extern FLOAT adj43[PRECALC_SIZE];
+extern FLOAT pow43[PRECALC_SIZE*2];
 #endif
+
+#define adj43 (&pow43[PRECALC_SIZE])
 
 #define Q_MAX (256+1)
 #define Q_MAX2 116 /* minimam possible number of

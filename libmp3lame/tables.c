@@ -606,12 +606,12 @@ const int scfsi_band[5] = { 0, 6, 11, 16, 21 };
 /* for fast quantization */
 FLOAT pow20[Q_MAX+Q_MAX2];
 FLOAT ipow20[Q_MAX+Q_MAX2];
-FLOAT pow43[PRECALC_SIZE];
+
 /* initialized in first call to iteration_init */
 #ifdef TAKEHIRO_IEEE754_HACK
-FLOAT adj43asm[PRECALC_SIZE];
+FLOAT pow43[PRECALC_SIZE*3];
 #else
-FLOAT adj43[PRECALC_SIZE];
+FLOAT pow43[PRECALC_SIZE*2];
 #endif
 
 /* psymodel window */
@@ -990,11 +990,11 @@ iteration_init( lame_global_flags *gfp)
     adj43asm[0] = 0.0;
     for (i = 1; i < PRECALC_SIZE; i++)
 	adj43asm[i] = i - 0.5 - pow(0.5 * (pow(i-1.0,4.0/3.0) + pow(i,4.0/3.0)), 0.75);
-#else
+#endif
     for (i = 0; i < PRECALC_SIZE-1; i++)
 	adj43[i] = (i + 1) - pow(0.5 * (pow43[i] + pow43[i + 1]), 0.75);
     adj43[i] = 0.5;
-#endif
+
     for (i = 0; i < Q_MAX+Q_MAX2; i++) {
 	ipow20[i] = pow(2.0, (double)(i - 210 - Q_MAX2) * -0.1875);
 	pow20[i] = pow(2.0, (double)(i - 210 - Q_MAX2) * 0.25);
