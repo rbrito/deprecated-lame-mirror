@@ -26,17 +26,15 @@ the LGPL:
    you must obtain such license.
 
 
-***IMPORTANT NOTE***
+*** IMPORTANT NOTE ***
 
-The decoding functions provided in LAME use the mpglib decoding 
-engine which is under the GPL.  They may not be used by any
-program not released under the GPL unless you obtain such 
-permission from the MPG123 project.  (www.mpg123.de).
+The decoding functions provided in LAME use the mpglib decoding engine which
+is under the GPL.  They may not be used by any program not released under the
+GPL unless you obtain such permission from the MPG123 project (www.mpg123.de).
 
-LAME has built in support to read raw pcm and some wav and aiff files.
-More robust file I/O can be handled by compiling in LIBSNDFILE,
-but LIBSNDFILE is also under the GPL and my not be used by other
-programs not under the GPL.
+LAME has built-in support to read raw pcm and some wav and aiff files. More
+robust file I/O can be handled by compiling in LIBSNDFILE, but LIBSNDFILE is
+also under the GPL and may not be used by other programs not under the GPL.
 
 
 

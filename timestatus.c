@@ -1,7 +1,14 @@
 #include "lame.h"
 #include "timestatus.h"
 #include "util.h"
+#include <assert.h>
 #include <time.h>
+
+#ifdef __unix__
+   #include <sys/time.h>
+   #include <unistd.h>
+#endif
+
 
 #if defined(CLOCKS_PER_SEC)
 /* ANSI/ISO systems */
@@ -15,6 +22,8 @@
 #else
 # error no suitable value for TS_CLOCKS_PER_SEC
 #endif
+
+
 /* divide process time by TS_CLOCKS_PER_TIC to reduce overflow threshold */
 #define TS_CLOCKS_PER_TIC ((CLOCKS_PER_SEC + 63) / 64)
 #define TS_SECS_PER_TIC ((FLOAT) TS_CLOCKS_PER_TIC / TS_CLOCKS_PER_SEC)
@@ -22,18 +31,36 @@
 /*********************************************************/
 /* ts_real_time: real time elapsed in seconds            */
 /*********************************************************/
-FLOAT ts_real_time(long frame) {
 
-  static time_t initial_time;
-  time_t current_time;
+FLOAT ts_real_time (long frame) 
+{
+#ifdef __unix__
 
-  time(&current_time);
+   static long double  initial_time;
+   long double         current_time;
+   struct timeval      t;
 
-  if (frame==0) {
-    initial_time = current_time;
-  }
+   gettimeofday (&t, NULL);
 
-  return (FLOAT) difftime(current_time, initial_time);
+   current_time = t.tv_sec + 1.e-6l * t.tv_usec;
+   if (frame == 0)
+       initial_time = current_time;
+
+   return (FLOAT)(current_time - initial_time);
+
+#else
+
+   static time_t  initial_time;
+   time_t         current_time;
+
+   time (&current_time);
+
+   if (frame == 0)
+       initial_time = current_time;
+
+   return (FLOAT) difftime (current_time, initial_time);
+
+#endif
 }
 
 /*********************************************************/
@@ -127,7 +154,6 @@ void ts_calc_times(ts_times *tstime, int samp_rate, long frame, long frames,int 
 /*********************************************************/
 /* timestatus: display encoding process time information */
 /*********************************************************/
-#include <assert.h>
 
 static void  ts_time_decompose ( const unsigned long time_in_sec, const char padded_char )
 {
@@ -148,15 +174,15 @@ void timestatus ( unsigned long samp_rate,
                   unsigned long totalframes,
                   int           framesize )
 {
-  ts_times real_time, process_time;
-  int percent;
-    unsigned dropped_frames = samp_rate <= 16000  || 
-                              samp_rate == 32000  ?  2  :  1;  
-                              /* ugly and nasty work around, only obscuring another bug? */
-                              /* values of 1...3 are possible, why ??? */
+    ts_times  real_time;
+    ts_times  process_time;
+    int       percent;
+    unsigned  dropped_frames = samp_rate <= 16000  || samp_rate == 32000  ?  2  :  1;  
+                               /* ugly and nasty work around, only obscuring another bug? */
+                               /* values of 1...3 are possible, why ??? */
 
-  real_time.so_far = ts_real_time(frameNum);
-  process_time.so_far = ts_process_time(frameNum);
+    real_time   .so_far = ts_real_time    (frameNum);
+    process_time.so_far = ts_process_time (frameNum);
 
     if ( frameNum == 0 ) {
         fputs ( "    Frame          |  CPU time/estim | REAL time/estim | play/CPU |  remain \n"
@@ -164,8 +190,8 @@ void timestatus ( unsigned long samp_rate,
         return;
     }  
 
-  ts_calc_times(&real_time, samp_rate, frameNum, totalframes, framesize);
-  ts_calc_times(&process_time, samp_rate, frameNum, totalframes, framesize);
+    ts_calc_times ( &real_time   , samp_rate, frameNum, totalframes, framesize );
+    ts_calc_times ( &process_time, samp_rate, frameNum, totalframes, framesize );
 
     if ( frameNum < totalframes - dropped_frames ) {
         percent = (int) (100.0 * frameNum / (totalframes - dropped_frames) + 0.5 );

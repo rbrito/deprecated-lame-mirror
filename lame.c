@@ -22,6 +22,11 @@
 
 #include <assert.h>
 #include <time.h>
+#ifdef __unix__
+   #include <sys/time.h>
+   #include <unistd.h>
+#endif
+
 
 #include "gtkanal.h"
 #include "lame.h"
@@ -966,16 +971,39 @@ char *mp3buf, int mp3buf_size)
 
   /********************** status display  *****************************/
   if (!gfp->silent) {
+  
+  
+#ifdef __unix  
+      long double curr_time;
+      struct timeval      t;
+
+      gettimeofday (&t, NULL);
+      curr_time = t.tv_sec + 1.e-6l * t.tv_usec;
+
+
+      /* Update display once per 2 seconds */
+      if ( curr_time - gfc->last_time >= gfp->display_update_interval  ||  gfp->frameNum == 0  ||  gfp->frameNum == 9 ) {
+	timestatus(gfp->out_samplerate,gfp->frameNum,gfp->totalframes,gfp->framesize);
+	
+	if (gfp->brhist_disp)
+	  brhist_disp(gfp->totalframes);
+
+        gettimeofday (&t, NULL);
+        gfc->last_time = t.tv_sec + 1.e-6l * t.tv_usec;
+      }
+  
+#else  
       time_t         curr_time = time (NULL);
       
-      /* Update display once per second */
-      if ( difftime ( curr_time, gfc->last_time ) >= gfp->display_update_interval  ||  gfp->frameNum < 2 ) {
+      /* Update display once per 2 seconds */
+      if ( difftime ( curr_time, gfc->last_time ) >= gfp->display_update_interval  ||  gfp->frameNum == 0  ||  gfp->frameNum == 9 ) {
 	timestatus(gfp->out_samplerate,gfp->frameNum,gfp->totalframes,gfp->framesize);
 	
 	if (gfp->brhist_disp)
 	  brhist_disp(gfp->totalframes);
 	gfc->last_time = time (NULL);
       }
+#endif
   }
 
   if (gfc->psymodel) {

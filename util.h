@@ -330,7 +330,7 @@ typedef struct  {
   plotting_data *pinfo;
 
   /* variables used for the status display */
-  time_t  last_time;
+  long double  last_time;
 
 } lame_internal_flags;
 
