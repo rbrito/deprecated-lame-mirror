@@ -1745,17 +1745,7 @@ VBR_quantize(lame_global_flags *gfp,
 
   for (gr = 0; gr < gfc->mode_gr; ++gr) {
     for (ch = 0; ch < gfc->channels_out; ++ch) {
-      cod_info = &l3_side->tt[gr][ch];
-
-
-      ResvAdjust (gfc, cod_info, l3_side, mean_bits);
-      
-      /*******************************************************************
-       * set the sign of l3_enc from the sign of xr
-       *******************************************************************/
-      for ( i = 0; i < 576; ++i) {
-	  if (cod_info->xr[i] < 0) cod_info->l3_enc[i] *= -1;
-      }
+      ResvAdjust (gfc, &l3_side->tt[gr][ch], l3_side, mean_bits);
     }
   }
   ResvFrameEnd (gfc, l3_side, mean_bits);

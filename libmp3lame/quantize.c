@@ -924,7 +924,7 @@ iteration_finish (
     const int       mean_bits )
 {
     III_side_info_t *l3_side = &gfc->l3_side;
-    int gr, ch, i;
+    int gr, ch;
     
     for (gr = 0; gr < gfc->mode_gr; gr++) {
         for (ch = 0; ch < gfc->channels_out; ch++) {
@@ -942,13 +942,7 @@ iteration_finish (
             /*  update reservoir status after FINAL quantization/bitrate
              */
             ResvAdjust (gfc, cod_info, l3_side, mean_bits);
-      
-            /*  set the sign of l3_enc from the sign of xr
-             */
-            for (i = 0; i < 576; i++) {
-                if (cod_info->xr[i] < 0) cod_info->l3_enc[i] *= -1; 
-            }
-        } /* for ch */
+	} /* for ch */
     }    /* for gr */
     
     ResvFrameEnd (gfc, l3_side, mean_bits);
@@ -1738,11 +1732,6 @@ iteration_loop(
 #ifndef NORES_TEST
             ResvAdjust (gfc, cod_info, l3_side, mean_bits);
 #endif      
-            /*  set the sign of l3_enc from the sign of xr
-             */
-            for (i = 0; i < 576; i++) {
-                if (cod_info->xr[i] < 0) cod_info->l3_enc[i] *= -1; 
-            }
         } /* for ch */
     }    /* for gr */
     
