@@ -1327,7 +1327,6 @@ short_block_scalefacs(gr_info * gi, int vbrmax)
 	vbrmax = 0;
     if (vbrmax > 255)
 	vbrmax = 255;
-    gi->global_gain = vbrmax;
 
     for (b = 0; b < 3; b++) {
 	int sbg = (vbrmax - maxov[gi->scalefac_scale][b] + 7) / 8;
@@ -1336,6 +1335,19 @@ short_block_scalefacs(gr_info * gi, int vbrmax)
 	assert(sbg <= 7);
 	gi->subblock_gain[b] = sbg;
     }
+
+    b = vbrmax/8;
+    if (b > gi->subblock_gain[0])
+	b = gi->subblock_gain[0];
+    if (b > gi->subblock_gain[1])
+	b = gi->subblock_gain[1];
+    if (b > gi->subblock_gain[2])
+	b = gi->subblock_gain[2];
+
+    gi->global_gain = vbrmax-b*8;
+    gi->subblock_gain[0] -= b;
+    gi->subblock_gain[1] -= b;
+    gi->subblock_gain[2] -= b;
 }
 
 
