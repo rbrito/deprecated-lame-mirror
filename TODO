@@ -3,11 +3,6 @@ frontend: a bunch of static variables (input_format, swapbytes,
           get_audio.  should be cleaned up.
 
 
-1.
-ACM wrapper for LAME.
-
-Contact "Florian Bruckner" <h9651030@miraculix.wu-wien.ac.at> for info - 
-he is working on the VorbisACM.
 
 
 1.
@@ -32,6 +27,11 @@ possible clipping during decoding.  Suggest using --scale .98
 or something.  
 
 
+997..
+ACM wrapper for LAME.
+
+Contact "Florian Bruckner" <h9651030@miraculix.wu-wien.ac.at> for info - 
+he is working on the VorbisACM.
 
 998.
 Merge GOGO's fast assembler routines.
