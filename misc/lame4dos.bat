@@ -25,25 +25,22 @@ rem  please set LAME and LAMEOPTS
 rem  LAME - where the executeable is
 rem  OPTS - options you like LAME to use
 
-        set LAME=lame.exe
-	set OPTS=-v --preset hifi -b 80 --abr 148
+        set LAME=c:\progra~1\sound&~1\lame\lame.exe
+        set OPTS=-h --lowpass-width 2 --lowpass 20.5 -b 112 --abr 180
 
 rem  ---------------------------------------------
 
 	set thecmd=%LAME% %OPTS%
-:processArgs
-	if "%1"=="" goto endmark
-	for %%f in (%1) do (%thecmd% %@if[%@ext[%%f]==mp3,--mp3input ]%%f^ren %%f.mp3 "%@lfn[%%f].mp3")
-	if errorlevel 1 goto errormark
-	shift
-	goto processArgs
+        for %%f in (%&) do (%thecmd% %@sfn[%%f]^(ren %@sfn[%%f].mp3 "%@lfn[%%f].mp_">NUL))
+        ren *.mp3.mp_ *.new.mp3 >& NUL
+        ren *.wav.mp_ *.mp3 >& NUL
+        goto endmark
 :errormark
 	echo.
 	echo.
 	echo ERROR processing %1
 	echo. 
 :endmark
-	ren *.wav.mp3 *.mp3 > NUL
 rem
 rem	finished
 rem
