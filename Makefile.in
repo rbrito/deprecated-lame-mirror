@@ -100,7 +100,7 @@ SUBDIRS = mpglib libmp3lame frontend Dll doc include misc dshow
 CLEANFILES = testcase.new.mp3
 AUTOMAKE_OPTIONS = foreign ansi2knr
 
-EXTRA_DIST =  	API HACKING 	INSTALL.configure 	LICENSE 	Lame.vbs 	Makefile.B32 	Makefile.DJGPP 	Makefile.MSVC 	PRESETS.draft 	README.B32 	README.DJGPP 	STYLEGUIDE 	USAGE 	auenc 	lame.bat 	lame.spec.in 	lame4dos.bat 	mlame 	mlame_corr.c 	testcase.mp3 	testcase.wav
+EXTRA_DIST =  	API HACKING 	INSTALL.configure 	LICENSE 	Lame.vbs 	Makefile.B32 	Makefile.DJGPP 	Makefile.MSVC 	PRESETS.draft 	README.B32 	README.DJGPP 	STYLEGUIDE 	USAGE 	auenc 	configMS.h 	lame.bat 	lame.spec.in 	lame4dos.bat 	mlame 	mlame_corr.c 	testcase.mp3 	testcase.wav
 
 ACLOCAL_M4 = $(top_srcdir)/aclocal.m4
 mkinstalldirs = $(SHELL) $(top_srcdir)/mkinstalldirs
