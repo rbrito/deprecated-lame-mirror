@@ -216,6 +216,9 @@ libmpgdecoder_la_SOURCES = common.c \
 	tabinit.c
 
 noinst_HEADERS = common.h \
+	layer1.h \
+	layer2.h \
+	layer3.h \
 	dct64_i386.h \
 	decode_i386.h \
 	huffman.h \
