@@ -41,9 +41,9 @@
 static FLOAT costab[TRI_SIZE*2];
 static FLOAT window[BLKSIZE / 2], window_s[BLKSIZE_s / 2];
 
-static INLINE void fht(FLOAT *fz, int n)
+static INLINE void fht(FLOAT *fz, short n)
 {
-    int k4;
+    short k4;
     FLOAT *fi, *fn, *gi;
     FLOAT *tri;
 
@@ -52,7 +52,7 @@ static INLINE void fht(FLOAT *fz, int n)
     k4 = 4;
     do {
 	FLOAT s1, c1;
-	int i, k1, k2, k3, kx;
+	short i, k1, k2, k3, kx;
 	kx  = k4 >> 1;
 	k1  = k4;
 	k2  = k4 << 1;
@@ -85,8 +85,8 @@ static INLINE void fht(FLOAT *fz, int n)
 	s1 = tri[1];
 	for (i = 1; i < kx; i++) {
 	    FLOAT c2,s2;
-	    c2 = 1.0 - (2.0*s1)*s1;
-	    s2 = (2.0*s1)*c1;
+	    c2 = 1 - (2*s1)*s1;
+	    s2 = (2*s1)*c1;
 	    fi = fz + i;
 	    gi = fz + k1 - i;
 	    do {
@@ -126,7 +126,7 @@ static INLINE void fht(FLOAT *fz, int n)
     } while (k4<n);
 }
 
-static const int rv_tbl[] = {
+static const short rv_tbl[] = {
     0x00,    0x80,    0x40,    0xc0,    0x20,    0xa0,    0x60,    0xe0,
     0x10,    0x90,    0x50,    0xd0,    0x30,    0xb0,    0x70,    0xf0,
     0x08,    0x88,    0x48,    0xc8,    0x28,    0xa8,    0x68,    0xe8,
@@ -149,8 +149,8 @@ static const int rv_tbl[] = {
 
 
 #define ch01(index)  (buffer[chn][index])
-#define ch2(index)  ((0.5*SQRT2)*(buffer[0][index] + buffer[1][index]))
-#define ch3(index)  ((0.5*SQRT2)*(buffer[0][index] - buffer[1][index]))
+#define ch2(index)  (((FLOAT)(0.5*SQRT2))*(buffer[0][index] + buffer[1][index]))
+#define ch3(index)  (((FLOAT)(0.5*SQRT2))*(buffer[0][index] - buffer[1][index]))
 
 #define ml00(f)	(window[i        ] * f(i))
 #define ml10(f)	(window[0x1ff - i] * f(i + 0x200))
@@ -177,17 +177,17 @@ static const int rv_tbl[] = {
 void fft_short(
     FLOAT x_real[3][BLKSIZE_s], int chn, short *buffer[2])
 {
-    int i, j, b;
+    short i, j, b;
 
     for (b = 0; b < 3; b++) {
 	FLOAT *x = &x_real[b][BLKSIZE_s / 2];
-	int k = (576 / 3) * (b + 1);
+	short k = (576 / 3) * (b + 1);
 	j = BLKSIZE_s / 8 - 1;
 	if (chn < 2) {
 	    do {
 		FLOAT f0,f1,f2,f3, w;
 
-		i = rv_tbl[j * 4];
+		i = rv_tbl[j << 2];
 
 		f0 = ms00(ch01); w = ms10(ch01); f1 = f0 - w; f0 = f0 + w;
 		f2 = ms20(ch01); w = ms30(ch01); f3 = f2 - w; f2 = f2 + w;
@@ -210,7 +210,7 @@ void fft_short(
 	    do {
 		FLOAT f0,f1,f2,f3, w;
 
-		i = rv_tbl[j * 4];
+		i = rv_tbl[j << 2];
 
 		f0 = ms00(ch2); w = ms10(ch2); f1 = f0 - w; f0 = f0 + w;
 		f2 = ms20(ch2); w = ms30(ch2); f3 = f2 - w; f2 = f2 + w;
@@ -233,7 +233,7 @@ void fft_short(
 	    do {
 		FLOAT f0,f1,f2,f3, w;
 
-		i = rv_tbl[j * 4];
+		i = rv_tbl[j << 2];
 
 		f0 = ms00(ch3); w = ms10(ch3); f1 = f0 - w; f0 = f0 + w;
 		f2 = ms20(ch3); w = ms30(ch3); f3 = f2 - w; f2 = f2 + w;
@@ -261,7 +261,7 @@ void fft_short(
 void fft_long(
     FLOAT x[BLKSIZE], int chn, short *buffer[2])
 {
-    int i,jj = BLKSIZE / 8 - 1;
+    short i,jj = BLKSIZE / 8 - 1;
     x += BLKSIZE / 2;
 
     if (chn < 2) {
