@@ -380,7 +380,7 @@ int PutVbrTag(lame_global_flags *gfp,FILE *fpStream,int nVbrScale)
 	char abyte,bbyte;
 	u_char		btToc[NUMTOCENTRIES];
 	u_char pbtStreamBuffer[MAXFRAMESIZE];
-	char str1[80];
+	char str1[80] = "LAME";
         unsigned char id3v2Header[10];
         size_t id3v2TagSize;
 
@@ -517,7 +517,7 @@ int PutVbrTag(lame_global_flags *gfp,FILE *fpStream,int nVbrScale)
 	nStreamIndex+=4;
 
 	/* Put LAME id */
-	sprintf(str1,"LAME%s",get_lame_short_version());
+	get_lame_short_version(str1+4, sizeof(str1)-4);
 	strncpy((char *)&pbtStreamBuffer[nStreamIndex],str1,(size_t) 20);
 	nStreamIndex+=20;
 

@@ -25,6 +25,7 @@
 #include <config.h>
 #endif
 
+#include <string.h>
 #include "version.h"    // macros of version numbers
 
 #if defined(MMX_choose_table)
@@ -34,25 +35,26 @@
 #endif
 
 
-const char*  get_lame_version ( void )  // primary for reports on screen
+void get_lame_version ( char *strbuf, size_t buflen )  // primary for reports on screen
 {
-    static char ret [48];
+    char str [48];
 
     /* Here we can also add informations about compile time configurations */
     
     if (LAME_ALPHA_VERSION > 0)
-        sprintf ( ret, "%u.%02d " V1 "(alpha %u, %6.6s %5.5s)", LAME_MAJOR_VERSION, LAME_MINOR_VERSION, LAME_ALPHA_VERSION, __DATE__, __TIME__ );
+        sprintf ( str, "%u.%02d " V1 "(alpha %u, %6.6s %5.5s)", LAME_MAJOR_VERSION, LAME_MINOR_VERSION, LAME_ALPHA_VERSION, __DATE__, __TIME__ );
     else if (LAME_BETA_VERSION > 0)
-        sprintf ( ret, "%u.%02d " V1 "(beta %u, %s)", LAME_MAJOR_VERSION, LAME_MINOR_VERSION, LAME_BETA_VERSION, __DATE__ );
+        sprintf ( str, "%u.%02d " V1 "(beta %u, %s)", LAME_MAJOR_VERSION, LAME_MINOR_VERSION, LAME_BETA_VERSION, __DATE__ );
     else
-        sprintf ( ret, "%u.%02d " V1, LAME_MAJOR_VERSION, LAME_MINOR_VERSION );
+        sprintf ( str, "%u.%02d " V1, LAME_MAJOR_VERSION, LAME_MINOR_VERSION );
         
-    return ret;
+    strncpy ( strbuf, str, buflen - 1 );
+    strbuf [buflen - 1] = 0;
 }
 
-const char*  get_lame_short_version ( void )  // primary to write into MP3 files
+void get_lame_short_version ( char *strbuf, size_t buflen )  // primary to write into MP3 files
 {
-    static char ret [32];
+    char str [32];
     
     /* adding date and time to version string makes it harder for
      * output validation
@@ -62,57 +64,61 @@ const char*  get_lame_short_version ( void )  // primary to write into MP3 files
 #if  (LAME_MINOR_VERSION == 88)  /* to avoid changes in the coded MP3 files until minor is changed to != 88 */
     
     if (LAME_ALPHA_VERSION > 0)
-        sprintf ( ret, "%u.%02d (alpha 1)", LAME_MAJOR_VERSION, LAME_MINOR_VERSION );
+        sprintf ( str, "%u.%02d (alpha 1)", LAME_MAJOR_VERSION, LAME_MINOR_VERSION );
     else if (LAME_BETA_VERSION > 0)
-        sprintf ( ret, "%u.%02d (beta 1)", LAME_MAJOR_VERSION, LAME_MINOR_VERSION );
+        sprintf ( str, "%u.%02d (beta 1)", LAME_MAJOR_VERSION, LAME_MINOR_VERSION );
     else
-        sprintf ( ret, "%u.%02d", LAME_MAJOR_VERSION, LAME_MINOR_VERSION );
+        sprintf ( str, "%u.%02d", LAME_MAJOR_VERSION, LAME_MINOR_VERSION );
     
 #else
 
     if (LAME_ALPHA_VERSION > 0)
-        sprintf ( ret, "%u.%02d (alpha)", LAME_MAJOR_VERSION, LAME_MINOR_VERSION );
+        sprintf ( str, "%u.%02d (alpha)", LAME_MAJOR_VERSION, LAME_MINOR_VERSION );
     else if (LAME_BETA_VERSION > 0)
-        sprintf ( ret, "%u.%02d (beta)", LAME_MAJOR_VERSION, LAME_MINOR_VERSION );
+        sprintf ( str, "%u.%02d (beta)", LAME_MAJOR_VERSION, LAME_MINOR_VERSION );
     else
-        sprintf ( ret, "%u.%02d", LAME_MAJOR_VERSION, LAME_MINOR_VERSION );
+        sprintf ( str, "%u.%02d", LAME_MAJOR_VERSION, LAME_MINOR_VERSION );
 
 #endif    
         
-    return ret;
+    strncpy ( strbuf, str, buflen - 1 );
+    strbuf [buflen - 1] = 0;
 }
 
-const char*  get_psy_version ( void )
+void get_psy_version ( char *strbuf, size_t buflen )
 {
-    static char ret [48];
+    char str [48];
     
     if (PSY_ALPHA_VERSION > 0)
-        sprintf ( ret, "%u.%02d (alpha %u, %6.6s %5.5s)", PSY_MAJOR_VERSION, PSY_MINOR_VERSION, PSY_ALPHA_VERSION, __DATE__, __TIME__ );
+        sprintf ( str, "%u.%02d (alpha %u, %6.6s %5.5s)", PSY_MAJOR_VERSION, PSY_MINOR_VERSION, PSY_ALPHA_VERSION, __DATE__, __TIME__ );
     else if (PSY_BETA_VERSION > 0)
-        sprintf ( ret, "%u.%02d (beta %u, %s)", PSY_MAJOR_VERSION, PSY_MINOR_VERSION, PSY_BETA_VERSION, __DATE__ );
+        sprintf ( str, "%u.%02d (beta %u, %s)", PSY_MAJOR_VERSION, PSY_MINOR_VERSION, PSY_BETA_VERSION, __DATE__ );
     else
-        sprintf ( ret, "%u.%02d", PSY_MAJOR_VERSION, PSY_MINOR_VERSION );
+        sprintf ( str, "%u.%02d", PSY_MAJOR_VERSION, PSY_MINOR_VERSION );
         
-    return ret;
+    strncpy ( strbuf, str, buflen - 1 );
+    strbuf [buflen - 1] = 0;
 }
 
-const char*  get_mp3x_version ( void )
+void get_mp3x_version ( char *strbuf, size_t buflen )
 {
-    static char ret [48];
+    char str [48];
     
     if (MP3X_ALPHA_VERSION > 0)
-        sprintf ( ret, "%u:%02u (alpha %u, %6.6s %5.5s)", MP3X_MAJOR_VERSION, MP3X_MINOR_VERSION, MP3X_ALPHA_VERSION, __DATE__, __TIME__ );
+        sprintf ( str, "%u:%02u (alpha %u, %6.6s %5.5s)", MP3X_MAJOR_VERSION, MP3X_MINOR_VERSION, MP3X_ALPHA_VERSION, __DATE__, __TIME__ );
     else if (MP3X_BETA_VERSION > 0)
-        sprintf ( ret, "%u:%02u (beta %u, %s)", MP3X_MAJOR_VERSION, MP3X_MINOR_VERSION, MP3X_BETA_VERSION, __DATE__ );
+        sprintf ( str, "%u:%02u (beta %u, %s)", MP3X_MAJOR_VERSION, MP3X_MINOR_VERSION, MP3X_BETA_VERSION, __DATE__ );
     else
-        sprintf ( ret, "%u:%02u", MP3X_MAJOR_VERSION, MP3X_MINOR_VERSION );
+        sprintf ( str, "%u:%02u", MP3X_MAJOR_VERSION, MP3X_MINOR_VERSION );
                 
-    return ret;
+    strncpy ( strbuf, str, buflen - 1 );
+    strbuf [buflen - 1] = 0;
 }
 
-const char*  get_lame_url ( void )
+void get_lame_url ( char *strbuf, size_t buflen )
 {
-    return "http://www.mp3dev.org/";
+    strncpy ( strbuf, LAME_URL, buflen - 1 );
+    strbuf [buflen - 1] = 0;
 }    
 
 /* End of version.c */

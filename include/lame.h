@@ -195,14 +195,14 @@ int lame_init_params(lame_global_flags *);
 
 /* OPTIONAL:  get the version number, in a string. of the form:  
    "3.63 (beta)" or just "3.63". */
-const char *get_lame_version       ( void );
-const char *get_lame_short_version ( void );
+void get_lame_version       ( char *strbuf, size_t buflen );
+void get_lame_short_version ( char *strbuf, size_t buflen );
 
 /* For final versions both functions returning the same value */
 /* get_lame_short_version() aim is to ease file compare, because subnumber, date and time is NOT reported */
 /* get_lame_version() aim is to ease version tracking, because subnumber, date and time is reported */
 
-const char* get_lame_url ( void );   /* Removes the nasty LAME_URL macro */
+void get_lame_url ( char *strbuf, size_t buflen );   /* Removes the nasty LAME_URL macro */
 
 /* OPTIONAL:  print internal lame configuration to message handler */
 void lame_print_config(const lame_global_flags *);

@@ -148,12 +148,12 @@ putbits_noheaders(lame_global_flags *gfp, int val, int j)
 static INLINE void drain_into_ancillary ( lame_global_flags* const gfp, int remainingBits )
 {
     lame_internal_flags*  gfc = gfp->internal_flags;
-    char                  buffer [80];
-    char*                 p;
+    char                  buffer [80] = "LAME";
+    char*                 p = buffer;
     
     assert (remainingBits >= 0);
     
-    sprintf ( p = buffer, "LAME%s", get_lame_short_version () );
+    get_lame_short_version ( p + 4, sizeof(buffer) - 4 );
 
     for (; *p != '\0'  &&  remainingBits >= 8; p++, remainingBits -= 8 )
         putbits2 ( gfp, *p, 8 );
@@ -397,8 +397,8 @@ drain_into_ancillary(lame_global_flags *gfp,int remainingBits)
     }
       
     if (remainingBits >= 32) {
-      const char * version;
-      version = get_lame_short_version();
+      char version[80];
+      get_lame_short_version( version, sizeof(version) );
       if (remainingBits >= 32) 
 	for (i=0; i<(int)strlen(version) && remainingBits >=8 ; ++i) {
 	  remainingBits -= 8;
