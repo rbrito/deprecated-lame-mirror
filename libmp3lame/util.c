@@ -74,7 +74,6 @@ void  freegfc ( lame_internal_flags* const gfc )   /* bit stream structure */
     if ( gfc->s3_ss ) {
         free ( gfc->s3_ss );
     }
-    free ( gfc );
 }
 
 

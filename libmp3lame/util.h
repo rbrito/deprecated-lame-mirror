@@ -305,6 +305,7 @@ struct lame_internal_flags {
 
 #  define  LAME_ID   0xFFF88E3B
   unsigned long Class_ID;
+  int alignment;
 
   int lame_encode_frame_init;
   int iteration_init_init;

@@ -1417,6 +1417,7 @@ lame_close(lame_global_flags * gfp)
 
     // this routien will free all malloc'd data in gfc, and then free gfc:
     freegfc(gfc);
+    free((lame_internal_flags*)((int)gfc - gfc->alignment));
 
     gfp->internal_flags = NULL;
 
@@ -1479,13 +1480,17 @@ int
 lame_init_old(lame_global_flags * gfp)
 {
     lame_internal_flags *gfc;
+    int align;
 
     disable_FPE();      // disable floating point exceptions
 
     memset(gfp, 0, sizeof(lame_global_flags));
 
-    if (!(gfc = gfp->internal_flags =
-	  calloc(1, sizeof(lame_internal_flags)))) return -1;
+    if (!(gfc = calloc(1, sizeof(lame_internal_flags) + 16))) return -1;
+
+    align = (((int)gfc + 15) & ~15) - (int)gfc;
+    gfp->internal_flags = gfc = (lame_internal_flags*)((int)gfc + align);
+    gfc->alignment = align;
 
     /* Global flags.  set defaults here for non-zero values */
     /* see lame.h for description */
