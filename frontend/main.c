@@ -281,7 +281,8 @@ decoder(lame_t gfp, FILE * outf, int skip, char *inPath, char *outPath)
 			tmp_num_channels, 16);
     fclose(outf);
 
-    decoder_progress_finish();
+    if (silent <= 0)
+	decoder_progress_finish();
     return 0;
 }
 
