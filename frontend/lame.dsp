@@ -42,7 +42,7 @@ RSC=rc.exe
 # PROP Ignore_Export_Lib 0
 # PROP Target_Dir ""
 # ADD BASE CPP /nologo /W3 /GX /O2 /D "WIN32" /D "HAVE_CONFIG_H" /D "NDEBUG" /D "_CONSOLE" /D "_MBCS" /YX /FD /c
-# ADD CPP /nologo /Zp8 /W3 /GX- /O2 /I "./WinGTK/gtk-plus" /I "./WinGTK/glib-1.2" /I "../" /I "../mp3x" /I "../frontend" /I "../include" /I ".." /D "NDEBUG" /D "LAMEPARSE" /D "_CONSOLE" /D "_MBCS" /D "HAVE_MPGLIB" /D "LAMESNDFILE" /D "BRHIST" /D "WIN32" /D "HAVE_CONFIG_H" /FD /c
+# ADD CPP /nologo /W3 /O2 /I "./WinGTK/gtk-plus" /I "./WinGTK/glib-1.2" /I "../" /I "../mp3x" /I "../frontend" /I "../include" /I ".." /D "NDEBUG" /D "LAMEPARSE" /D "_CONSOLE" /D "_MBCS" /D "HAVE_MPGLIB" /D "LAMESNDFILE" /D "BRHIST" /D "WIN32" /D "HAVE_CONFIG_H" /FD /c
 # SUBTRACT CPP /YX
 # ADD BASE RSC /l 0x409 /d "NDEBUG"
 # ADD RSC /l 0x409 /d "NDEBUG"

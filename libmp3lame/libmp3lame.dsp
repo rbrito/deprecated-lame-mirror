@@ -41,7 +41,7 @@ RSC=rc.exe
 # PROP Intermediate_Dir "Release"
 # PROP Target_Dir ""
 # ADD BASE CPP /nologo /W3 /GX /O2 /D "WIN32" /D "HAVE_CONFIG_H" /D "NDEBUG" /D "_WINDOWS" /YX /FD /c
-# ADD CPP /nologo /Zp8 /W3 /GX- /O2 /I "../" /I "../mpglib" /I "../include" /I ".." /D "NDEBUG" /D "_WINDOWS" /D "HAVE_MPGLIB" /D "WIN32" /D "HAVE_CONFIG_H" /FD /c
+# ADD CPP /nologo /W3 /O2 /I "../" /I "../mpglib" /I "../include" /I ".." /D "NDEBUG" /D "_WINDOWS" /D "HAVE_MPGLIB" /D "WIN32" /D "HAVE_CONFIG_H" /FD /c
 # SUBTRACT CPP /YX
 # ADD BASE RSC /l 0x409
 # ADD RSC /l 0x409
@@ -131,6 +131,7 @@ SOURCE=.\reservoir.c
 # Begin Source File
 
 SOURCE=.\tables.c
+# ADD CPP /W1
 # End Source File
 # Begin Source File
 
@@ -165,6 +166,14 @@ SOURCE=.\bitstream.h
 SOURCE=..\configMS.h
 
 !IF  "$(CFG)" == "libmp3lame - Win32 Release"
+
+# Begin Custom Build
+InputPath=..\configMS.h
+
+"..\config.h" : $(SOURCE) "$(INTDIR)" "$(OUTDIR)"
+	copy ..\configMS.h ..\config.h
+
+# End Custom Build
 
 !ELSEIF  "$(CFG)" == "libmp3lame - Win32 Debug"
 
