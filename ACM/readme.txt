@@ -1,15 +1,20 @@
 In order to build this codec, you need the Windows98 DDK from Microsoft. It can also work
-with the Windows2000/ME DDK :
+with the Windows2000/ME/XP/2003 DDK:
 
 http://www.microsoft.com/ddk/
-http://www.microsoft.com/ddk/ddk98.asp
-http://www.microsoft.com/ddk/W2kDDK.asp
 
 Alternatively, the required headers are also available in CYGWIN+w32api, MINGW32 or Wine :
 
 http://www.cygwin.com/
 http://www.mingw.org/
 http://www.winehq.com/
+
+
+If you do not have a ddk, you should be able to use the alternative msacmdrv.h provided
+with this ACM codec. It is not used by default because it would probably broke any real
+DDK already installed.
+
+
 
 ---------------
 
