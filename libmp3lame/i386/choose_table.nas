@@ -74,7 +74,7 @@
 	movq	mm5, [edx+ecx+8]
 	add	ecx, 16
 ; below operations should be done as dword (32bit),
-; but an MMX has no such instruction.
+; but an MMX2 has no such instruction.
 ; but! because the maximum value of IX is 8191+15,
 ; we can safely use "word(16bit)" operation.
 	pmaxsw	mm0, mm4

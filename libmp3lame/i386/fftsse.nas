@@ -7,19 +7,31 @@
 %include "nasm.h"
 
 	globaldef fht_SSE
-	globaldef fft_side_SSE
-	externdef costab_fft
-	externdef sintab_fft
 
 	segment_data
 	align 16
 Q_MMPP	dd	0x0,0x0,0x80000000,0x80000000
 Q_MPMP	dd	0x0,0x80000000,0x0,0x80000000
-Q_002	dd	0.02236068, 0.02236068, 0.02236068, 0.02236068
 D_SQRT2	dd	1.414213562,1.414213562
-S_025	dd	0.25
-S_05	DD	0.5
-S_00005	DD	0.0005
+costab_fft:
+	dd 0.000000000000
+	dd 1.000000000000
+	dd 0.707106781187
+	dd 0.707106781187
+	dd 9.238795325112867e-01
+	dd 3.826834323650898e-01
+	dd 0.980785280403
+	dd 0.195090322016
+	dd 9.951847266721969e-01
+	dd 9.801714032956060e-02
+	dd 0.998795456205
+	dd 0.049067674327
+	dd 9.996988186962042e-01
+	dd 2.454122852291229e-02
+	dd 0.999924701839
+	dd 0.012271538286
+	dd 9.999811752836011e-01
+	dd 6.135884649154475e-03
 
 	segment_code
 ;------------------------------------------------------------------------
@@ -42,9 +54,7 @@ fht_SSE:
 	;2つ目のループ
 	mov	eax,[esp+_P+4]	;eax=fz
 	mov	ebp,[esp+_P+8]	;=n
-	shl	ebp,1			;UZI added - update n on the stack... It is being used down the road
-	mov [esp+_P+8], ebp ;UZI added - update n on the stack...
-	shl	ebp,2
+	shl	ebp,3
 	add	ebp,eax		; fn  = fz + n, この関数終了まで不変
 
 	xor	ecx,ecx		; ecx=k=0
@@ -57,8 +67,8 @@ fht_SSE:
 	align	16
 .lp2:				; do{
 	add	cl,2		; k  += 2;
-	shl	eax,2
 	shl	edx,2
+	shl	eax,2
 
 	mov	esi,[esp+_P+4]	;esi=fi=fz
 	mov	edi,eax
@@ -142,8 +152,8 @@ fht_SSE:
 ;               i = 1; //for (i=1;i<kx;i++){
 ;                       c1 = 1.0*t_c - 0.0*t_s;
 ;                       s1 = 0.0*t_c + 1.0*t_s;
-	movss	xmm6,[costab_fft + ecx*4]
-	movss	xmm1,[sintab_fft + ecx*4]
+	movss	xmm6,[costab_fft + ecx*8]
+	movss	xmm1,[costab_fft + ecx*8 + 4]
 	shufps	xmm6,xmm1,0x00	; = {s1, s1, c1, c1}
 	shufps	xmm6,xmm6,0x28	; = {+c1, +s1, +s1, +c1}
 ;                       c2 = c1*c1 - s1*s1;
@@ -268,8 +278,8 @@ fht_SSE:
 ; at here, xmm6 is {c3, s3, s3, c3}
 ;                       c1 = c3*t_c - s3*t_s;
 ;                       s1 = c3*t_s + s3*t_c;
-	movss	xmm0,[costab_fft + ecx*4]
-	movss	xmm1,[sintab_fft + ecx*4]
+	movss	xmm0,[costab_fft + ecx*8]
+	movss	xmm1,[costab_fft + ecx*8 + 4]
 	shufps	xmm0,xmm1,0x00	; = {t_s, t_s, t_c, t_c}
 	mulps	xmm6,xmm0
 	movhlps	xmm4,xmm6
@@ -438,105 +448,11 @@ fht_SSE:
 .F22:
 
 	cmp	eax,[esp+_P+8]	; while ((k1 * 4)<n);
-	jl	near .lp2
+	jle	near .lp2
 	pop	ebp
 	pop	edi
 	pop	esi
 	pop	ebx
 	ret
-
-;------------------------------------------------------------------------
-;	99/11/12	Initial version for SSE by K. SAKAI, 4300clk@P3
-; This routine is very slow when wsamp_r_int is not aligned to 16byte boundary.
-;
-;void fft_side_SSE( float in[2][1024], int s, float *ret)
-;        energy = (in[0][512] - in[1][512])^2;
-;        energy = (in[0][1024-s] - in[1][1024-s])^2;
-;        for (i=s,j=1024-s;i<512;i++,j--){
-;                a = in[0][i] - in[1][i];
-;                energy += a*a;
-;                b = in[0][j-1] - in[1][j-1];
-;                energy += b*b;
-;        }
-;        *ret = energy * 0.25;
-
-	align	16
-fft_side_SSE:
-	mov	ecx,[esp+8]	; = i = s
-	mov	edx,1024
-	sub	edx,ecx		; = j
-	mov	eax,[esp+4]	; = in
-	movss	xmm7,[eax+1024*0*4+512*4]
-	movss	xmm1,[eax+1024*1*4+512*4]
-	subss	xmm7,xmm1
-	mulss	xmm7,xmm7
-	movss	xmm2,[eax+1024*0*4+edx*4]
-	movss	xmm3,[eax+1024*1*4+edx*4]
-	subss	xmm2,xmm3
-	mulss	xmm2,xmm2
-	addss	xmm7,xmm2
-
-	test	cl,1
-	jz	.even
-
-.odd:	dec	edx
-	movss	xmm0,[eax+1024*0*4+ecx*4]
-	movss	xmm1,[eax+1024*1*4+ecx*4]
-	inc	ecx
-	movss	xmm2,[eax+1024*0*4+edx*4]
-	movss	xmm3,[eax+1024*1*4+edx*4]
-	cmp	ecx,edx
-	subss	xmm0,xmm1
-	subss	xmm2,xmm3
-	mulss	xmm0,xmm0
-	mulss	xmm2,xmm2
-	addss	xmm7,xmm0
-	addss	xmm7,xmm2
-	je	near .exit1
-
-.even:	test	cl,2
-	jz	.f0
-	sub	edx,2
-	movlps	xmm0,[eax+1024*0*4+ecx*4]
-	movlps	xmm1,[eax+1024*1*4+ecx*4]
-	add	ecx,2
-	movhps	xmm0,[eax+1024*0*4+edx*4]
-	movhps	xmm1,[eax+1024*1*4+edx*4]
-	cmp	ecx,edx
-	subps	xmm0,xmm1
-	mulps	xmm0,xmm0
-	addps	xmm7,xmm0
-	je	.exit4
-	jmp	short .f0
-
-	align	16
-.f0:
-.lp0:
-	sub	edx,4
-	movaps	xmm0,[eax+1024*0*4+ecx*4]
-	movaps	xmm1,[eax+1024*1*4+ecx*4]
-	add	ecx,4
-	subps	xmm0,xmm1
-	mulps	xmm0,xmm0
-	addps	xmm7,xmm0
-	movaps	xmm2,[eax+1024*0*4+edx*4]
-	movaps	xmm3,[eax+1024*1*4+edx*4]
-	cmp	ecx,edx
-	subps	xmm2,xmm3
-	mulps	xmm2,xmm2
-	addps	xmm7,xmm2
-	jne	.lp0
-
-.exit4:	movhlps	xmm6,xmm7
-	addps	xmm7,xmm6
-	movaps	xmm6,xmm7
-	shufps	xmm6,xmm6,01010101B
-	addss	xmm7,xmm6
-
-.exit1:	mulss	xmm7,[S_025]
-	mov	eax,[esp+12]
-	movss	[eax],xmm7
-	ret
-
 
 	end
