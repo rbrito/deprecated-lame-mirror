@@ -2,7 +2,7 @@
 -h --nohist --abr 92
 -h --nohist --abr 128 
 -h --nohist -p --abr 180 
---nohist  
+-q5 --nohist  
 -h
 
 

@@ -1121,10 +1121,10 @@ lame_init_params(lame_global_flags * const gfp)
          */
         gfc->sfb21_extra = 0;
 
-        /*  default quality setting for CBR/ABR is 5
+        /*  default quality setting for CBR/ABR is 2
          */
         if (gfp->quality < 0)
-            gfp->quality = 5;
+            gfp->quality = 2;
 
         break;
     }
