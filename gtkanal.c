@@ -583,7 +583,7 @@ void plot_frame(void)
       }
 
       ymn=-1;
-      ymx=15;
+      ymx=10;
       for (i=0; i<n; i++) {
 	xcord[i] = i+1;
 	ycord[i] = -data[i];

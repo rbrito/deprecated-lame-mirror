@@ -1196,7 +1196,6 @@ int lame_encode(short int Buffer[2][1152],char *mpg123bs)
       }
     }
   }
-
 #ifndef _BLADEDLL
   /********************** status display  *****************************/
   if (!gf.gtkflag && !silent) {
