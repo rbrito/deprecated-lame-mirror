@@ -214,23 +214,29 @@ HRESULT CEncoder::Encode(LPVOID pSrc, DWORD dwSrcSize, LPVOID pDst, LPDWORD lpdw
 
 	int nsamples = dwSrcSize/(m_wfex.wBitsPerSample*m_wfex.nChannels/8);
 
-	lData = lame_encode_buffer_interleaved(pgf,(short*)pSrc,nsamples,pData,lData);
+	if (pgf) {
+		lData = lame_encode_buffer_interleaved(pgf,(short*)pSrc,nsamples,pData,lData);
 
-	if(m_mabsi.dwPES && lData > 0)
-	{
-		// Write PES header
-		Reset();
-		CreatePESHdr((LPBYTE)pDst, MakePTS(m_rtLast), lData);
-		pDst = (LPBYTE)pDst + 0x0e;			// add PES header size
+		if(m_mabsi.dwPES && lData > 0)
+		{
+			// Write PES header
+			Reset();
+			CreatePESHdr((LPBYTE)pDst, MakePTS(m_rtLast), lData);
+			pDst = (LPBYTE)pDst + 0x0e;			// add PES header size
 
-		m_bLast = false;
-		m_rtLast = rt;
+			m_bLast = false;
+			m_rtLast = rt;
+		}
+		else
+			m_bLast = true;
+
+		memcpy(pDst,pData,lData);
+		*lpdwDstSize = lData;
 	}
-	else
-		m_bLast = true;
+	else {
+		*lpdwDstSize = 0;
+	}
 
-	memcpy(pDst,pData,lData);
-	*lpdwDstSize = lData;
 
 	return S_OK;
 }
