@@ -11,7 +11,7 @@ Constant Bitrate Examples:
 fixed bit rate jstereo 128 kbps encoding:
 % lame sample.wav  sample.mp3      
 
-fixed bit rate jstereo 128 kbps encoding, highest quality:  (recommended)
+fixed bit rate jstereo 128 kbps encoding, higher quality:  (recommended)
 % lame -h sample.wav  sample.mp3      
 
 Fast encode, low quality  (no noise shaping)
@@ -20,7 +20,7 @@ Fast encode, low quality  (no noise shaping)
 =======================================================================
 Variable Bitrate Examples:
 =======================================================================
-LAME has two types of variable bitrate: ABR and CBR.
+LAME has two types of variable bitrate: ABR and VBR.
 
 ABR is the type of variable bitrate encoding usually found in other
 MP3 encoders, Vorbis and AAC.  The number of bits is determined by
