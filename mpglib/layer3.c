@@ -26,8 +26,6 @@
 extern plotting_data *mpg123_pinfo;
 #endif
 
-#define MPEG1
-
 static struct III_sideinfo sideinfo; /* XXX REENTRANT */
 
 static real ispow[8207];
@@ -324,7 +322,6 @@ void init_layer3(int down_sample_sblimit)
 /*
  * read additional side information
  */
-#ifdef MPEG1 
 static void
 III_get_side_info_1(PMPSTR mp, struct III_sideinfo *si,int channels,
 		    int ms_stereo,long sfreq,int single)
@@ -418,7 +415,6 @@ III_get_side_info_1(PMPSTR mp, struct III_sideinfo *si,int channels,
      }
    }
 }
-#endif
 
 /*
  * Side Info for MPEG 2.0 / LSF
@@ -522,7 +518,6 @@ static void III_get_side_info_2(PMPSTR mp, struct III_sideinfo *si,int channels,
 /*
  * read scalefactors
  */
-#ifdef MPEG1
 static int
 III_get_scale_factors_1(PMPSTR mp, int *scf,struct gr_info_s *gr_infos)
 {
@@ -607,7 +602,6 @@ III_get_scale_factors_1(PMPSTR mp, int *scf,struct gr_info_s *gr_infos)
     }
     return numbits;
 }
-#endif
 
 static int
 III_get_scale_factors_2(PMPSTR mp, int *scf, struct gr_info_s *gr_infos,
@@ -1571,11 +1565,7 @@ int do_layer3_sideinfo(PMPSTR mp)
   }
   else {
     granules = 2;
-#ifdef MPEG1
     III_get_side_info_1(mp, &sideinfo,channels,ms_stereo,sfreq,single);
-#else
-    fprintf(stderr,"Not supported\n");
-#endif
   }
 
   databits=0;
@@ -1590,9 +1580,10 @@ int do_layer3_sideinfo(PMPSTR mp)
 
 
 
-int  do_layer3( PMPSTR mp,unsigned char *pcm_sample,int *pcm_point,
-                int (*synth_1to1_mono_ptr)(PMPSTR,real *,unsigned char *,int *),
-                int (*synth_1to1_ptr)(PMPSTR,real *,int,unsigned char *, int *) )
+int
+do_layer3( PMPSTR mp,unsigned char *pcm_sample,int *pcm_point,
+	   int (*synth_1to1_mono_ptr)(PMPSTR,real *,unsigned char *,int *),
+	   int (*synth_1to1_ptr)(PMPSTR,real *,int,unsigned char *, int *) )
 {
   int gr, ch, ss,clip=0;
   int scalefacs[2][39]; /* max 39 for short[13][3] mode, mixed: 38, long: 22 */
@@ -1644,11 +1635,7 @@ int  do_layer3( PMPSTR mp,unsigned char *pcm_sample,int *pcm_point,
       if(fr->lsf)
 	  part2bits = III_get_scale_factors_2(mp, scalefacs[0],gr_infos,0);
       else {
-#ifdef MPEG1
 	  part2bits = III_get_scale_factors_1(mp, scalefacs[0],gr_infos);
-#else
-	  fprintf(stderr,"Not supported\n");
-#endif
       }
 
 #ifndef NOANALYSIS
@@ -1670,11 +1657,7 @@ int  do_layer3( PMPSTR mp,unsigned char *pcm_sample,int *pcm_point,
       if(fr->lsf) 
 	  part2bits = III_get_scale_factors_2(mp, scalefacs[1],gr_infos,i_stereo);
       else {
-#ifdef MPEG1
 	  part2bits = III_get_scale_factors_1(mp, scalefacs[1],gr_infos);
-#else
-	  fprintf(stderr,"Not supported\n");
-#endif
       }
 #ifndef NOANALYSIS
       if (mpg123_pinfo!=NULL) {
