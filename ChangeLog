@@ -8,6 +8,946 @@
 
 -- 
 
+2001-03-14 10:40  aleidinger
+
+	* doc/html/Makefile.in, doc/man/Makefile.in,
+	libmp3lame/i386/Makefile.in:
+
+	regen with automake 1.4d instead of 1.4
+	
+2001-03-13 06:15  markt
+
+	* libmp3lame/util.c:
+
+	added assert() to resampling code
+	
+2001-03-12 20:58  markt
+
+	* libmp3lame/psymodel.c:
+
+	a few more comments added to psymodel.c
+	
+2001-03-12 20:40  markt
+
+	* libmp3lame/: psymodel.c, tables.c:
+
+	removed ISO TABLE reading code from psymodel.c,
+	and ISO psy data from tables.c
+	
+2001-03-12 20:31  markt
+
+	* libmp3lame/psymodel.c:
+
+	removed shortlived MINTHMM experiment
+	
+2001-03-12 18:52  markt
+
+	* USAGE, configure:
+
+	updated USAGE.
+	ran configuer with --enable-maintainer-mode which seems to
+	have touched all this .in files, sorry about that...
+	
+2001-03-12 07:26  markt
+
+	* API, libmp3lame/vbrquantize.c:
+
+	a few updates to API
+	
+2001-03-12 04:38  markt
+
+	* frontend/get_audio.c, include/lame.h, libmp3lame/bitstream.c,
+	libmp3lame/bitstream.h, libmp3lame/encoder.c, libmp3lame/encoder.h,
+	libmp3lame/lame.c, libmp3lame/set_get.c:
+
+	fixed a few compiler warnings and the assert in lame_get_mode().
+	added NOT_SET value to MPEG_mode_e
+	
+2001-03-11 11:25  aleidinger
+
+	* DEFINES:
+
+	  - remove outdated entries
+	  - add OLD_ATH_AUTO_ADJUST
+	
+2001-03-11 11:24  aleidinger
+
+	* Makefile.in:
+
+	- regen from Makefile.am (testupdate target)
+	
+2001-03-11 11:24  aleidinger
+
+	* frontend/: depcomp, get_audio.c, gtkanal.c, main.c, mp3x.c,
+	parse.c, timestatus.c:
+
+	 *.c:
+	  - use set/get functions
+	  *** lame_set_quality(): should it check for <0 and >9 itself? (parse.c)
+	
+	 depcomp:
+	  - update (autotools)
+	
+2001-03-11 11:23  aleidinger
+
+	* libmp3lame/: depcomp, encoder.c, lame.c, psymodel.c, util.c,
+	util.h:
+
+	 libmp3lame/encoder.c:
+	  - MPEG_mode (JOINT_STEREO) change (related to set/get functions change)
+	  - J.D.s improvements to Gabriels ath auto adjust code (VBR)
+	  - move ath auto adjust code into seperate function
+	
+	 libmp3lame/lame.c:
+	  - errorf/msgf/debugf changes
+	  - MPEG_mode (JOINT_STEREO/...) change (related to set/get functions change)
+	  - remove prototypes of set/get functions
+	
+	 libmp3lame/psymodel.c:
+	  - MPEG_mode (JOINT_STEREO/...) change (related to set/get functions change)
+	
+	 libmp3lame/util.[ch]:
+	  - new errorf/msgf/debugf implementation
+	
+	 libmp3lame/depcomp:
+	  - update (autotools)
+	
+2001-03-11 11:22  aleidinger
+
+	* include/lame.h:
+
+	  - set/get functions related cleanup
+	  - errorf/msgf/debugf
+	
+2001-03-11 11:21  aleidinger
+
+	* libmp3lame/Makefile.in:
+
+	regen
+	
+2001-03-11 11:21  aleidinger
+
+	* libmp3lame/Makefile.am:
+
+	- add set_get.c
+	
+2001-03-11 11:20  aleidinger
+
+	* libmp3lame/set_get.c:
+
+	- set and get functions for the gfp
+	
+2001-03-10 19:15  markt
+
+	* libmp3lame/encoder.c:
+
+	a little more tuning of tot_energy for ATH adjust
+	
+2001-03-10 19:06  markt
+
+	* libmp3lame/encoder.c:
+
+	modified ATH adjustment code to use tot_ener returned by psy model
+	and not the maximum of the PCM sample values.
+	
+	We need to replace this with JD's formula.   We need to decide
+	if this is really worth while.  My preference is to take the
+	most conservative ATH possible, but this seems to produce too
+	high bitrates for VBR modes. (this may no longer be true
+	not that masings are computed in all scalefactor bands)
+	
+2001-03-10 18:33  markt
+
+	* frontend/get_audio.c:
+
+	added 127 also, on recommendation of JD, to 8bit -> 16bit
+	conversion routine
+	
+2001-03-10 18:29  markt
+
+	* frontend/get_audio.c:
+
+	fix from "J.D." <jodaman@cegt201.bradley.edu> for
+	8 bit input support.
+	
+2001-03-09 17:56  markt
+
+	* test/lametest.py:
+
+	'os.pathsep' changed to 'os.sep'
+	
+	For example, on unix:
+	
+	os.pathsep = ":"  - the character that seperaters search paths in
+	                    the PATH environment variable
+	
+	os.sep = "/"      - the charcter that seperates directories
+	
+2001-03-07 12:32  aleidinger
+
+	* test/lametest.py:
+
+	- use OS independent path seperator
+	
+2001-03-07 12:31  aleidinger
+
+	* DEFINES:
+
+	- NOTABELS is now the default
+	
+2001-03-05 20:29  markt
+
+	* libmp3lame/: lame.c, psymodel.c, quantize_pvt.c:
+
+	code (disabled) to use minimum value when going from partition
+	bands to scalefactor bands (instead of average value)
+	
+2001-03-05 18:21  markt
+
+	* testcase.mp3, libmp3lame/psymodel.c, libmp3lame/quantize_pvt.c:
+
+	Noise calculation:  had to switch calculation of tot_noise and
+	over_noise back to being done in db units.  Multiply (to save
+	the 22 log10() function calls) was overflowing.
+	
+	updated testcases to reflect changes
+	
+2001-03-05 01:44  markt
+
+	* testcase.mp3:
+
+	updated testcase.mp3 for NOTABLES code
+	
+2001-03-05 01:26  markt
+
+	* libmp3lame/psymodel.c:
+
+	NOTABLES enabled by default.
+	
+	Psycho acoustics computed in *all* scalefactor bands.
+	
+	cvs tag before this change:  before_notables
+	cvs tag after this change:   notables
+	
+2001-03-05 01:25  markt
+
+	* libmp3lame/psymodel.c:
+
+	The last commit before NOTABLES becomes the default.
+	tagged with "before.notables"
+	
+2001-03-04 20:03  markt
+
+	* libmp3lame/: encoder.c, psymodel.c, psymodel.h, util.h:
+
+	More prep work for enabling NOTABLES.
+	Will now compute masking for all scalefactor bands
+	
+2001-03-04 15:30  markt
+
+	* testcase.mp3, libmp3lame/psymodel.c, libmp3lame/util.c:
+
+	Finished proper normalization of spreading function.
+	
+	updated testcases
+	
+2001-03-04 06:56  markt
+
+	* libmp3lame/psymodel.c:
+
+	more tweaking of s3 normalization
+	
+2001-03-04 06:48  markt
+
+	* libmp3lame/psymodel.c:
+
+	spreading function moved into seperate routine, s3_func().
+	s3 normalized so that:
+	
+	         +inf
+	           /
+	           |  s3 [ bark ]  d(bark)   =  1
+	           /
+	         -inf
+	
+	which resulted in dividing the result by 0.66.
+	
+	This is the first step in fixing the long outstanding bug
+	mentioned by Takehiro:  s3[i][j] is normalized improperly for
+	values of i near the partition band boundaries.  For these values,
+	the computed 'norm' is much too small since a lot of the data is
+	missing, resulting in artificially increasing the spreading function
+	(and thus the masking)
+	
+	--nspsytune: s3_l function is used with a normalization of .5
+	(instead of computing the norm).  So I changed this to a .5*.66
+	to compensate for the above change.
+	
+	Next step:
+	
+	1.
+	s3[i][j] will be multiplied by the width (in barks) of the
+	j'th partition band (about .35).  Once this is done, we will not need to
+	compute and divide by 'norm' later.
+	
+	2.
+	Make NOTABLES the default
+	
+	3.
+	compute psymodel all the way up to 22khz.
+	
+2001-03-04 05:51  markt
+
+	* API, libmp3lame/lame.c, libmp3lame/util.c, libmp3lame/util.h:
+
+	added prototypes to lame.c  (but functions not yet written)
+	
+2001-03-04 05:13  markt
+
+	* include/lame.h:
+
+	finished last of the prototypes
+	
+2001-03-04 05:02  markt
+
+	* frontend/get_audio.c:
+
+	changed to:
+	
+	        gfp->num_samples = data_length / (channels * ((bits_per_sample+7) / 8));
+	
+	thanks J.D.!
+	
+2001-03-04 00:20  markt
+
+	* include/lame.h, libmp3lame/lame.c:
+
+	added:
+	lame_encode_buffer_sample_t, which is called by the following functions
+	in the API:
+	
+	lame_encode_buffer                 (original, short int interface)
+	lame_encode_buffer_float
+	lame_encode_buffer_long
+	
+2001-03-02 22:39  markt
+
+	* frontend/get_audio.c, test/lametest.py:
+
+	get_audio.c: fixed num_samples computation for case when
+	bits_per_sample < 8.  (althouth this case is already trapped for
+	earlier)
+	
+	lametest.py:  slight change to reference mp3 filename generation
+	so lametest.py can be run from another directory.
+	
+2001-03-02 18:28  markt
+
+	* Makefile.am, testcase.mp3, doc/html/Makefile.in,
+	doc/man/Makefile.in, frontend/get_audio.c,
+	libmp3lame/i386/Makefile.in:
+
+	error message about non-PCM wave files from
+	"J.D." <jodaman@cegt201.bradley.edu>
+	
+	Added "make testupdate" to Makefile.am, which updates
+	the test file in the CVS repository
+	
+2001-02-27 11:54  robert
+
+	* include/lame.h, libmp3lame/lame.c:
+
+	lame.h  typo
+	lame.c  fix for possibility of calling lame_init_parms twice
+	
+2001-02-27 11:39  aleidinger
+
+	* DEFINES:
+
+	remove KLEMM_42
+	
+2001-02-27 11:38  aleidinger
+
+	* configure, Makefile.in, frontend/Makefile.in, misc/Makefile.in:
+
+	regen
+	
+2001-02-27 11:37  aleidinger
+
+	* frontend/Makefile.am, misc/Makefile.am:
+
+	remove EXTRA_PROGRAMS on make clean
+	
+2001-02-27 11:36  aleidinger
+
+	* Makefile.am:
+
+	remove testcase.new.mp3 on error
+	
+2001-02-27 11:36  aleidinger
+
+	* configure.in:
+
+	display version of gcc
+	
+2001-02-27 11:35  aleidinger
+
+	* include/lame.h:
+
+	fix typo in comment
+	
+2001-02-27 11:33  aleidinger
+
+	* libmp3lame/util.c:
+
+	include machine/floatingpoint.h on FreeBSD
+	
+2001-02-27 09:59  robert
+
+	* libmp3lame/: VbrTag.c, bitstream.c, lame.c, quantize_pvt.h,
+	takehiro.c, util.c, util.h:
+
+	VbrTag.c   fixed gfp/gfc typo
+	lame.c     made data flow analysis happier: there was a possible path to use channels before definition. Even though it would be an error following this path, but the compiler doesn't know it
+	util.hc    message functions are not intended to change gfc?!?
+	takehiro.c fixed a warning
+	bitstream.c fixed a warning
+	
+2001-02-27 06:14  markt
+
+	* frontend/gtkanal.c, include/lame.h, libmp3lame/VbrTag.c,
+	libmp3lame/bitstream.c, libmp3lame/lame.c, libmp3lame/psymodel.c,
+	libmp3lame/quantize.c, libmp3lame/quantize_pvt.h,
+	libmp3lame/takehiro.c, libmp3lame/util.c, libmp3lame/util.h,
+	libmp3lame/vbrquantize.c:
+
+	
+	Implmented Frank's excellent idea about error messages:
+	
+	gfc->errorf, gfc->msgf and gfc->debugf are all FILE *.
+	default is stderr.  If you want to disable all internal library
+	messages, set these to NULL with lame_set_errorf(), lame_set_msgf() etc...
+	
+	For a GUI, you can set these to regular files, and then read
+	the files and display the messages in an pop up window.
+	
+	Maybe the default should be NULL?
+	
+2001-02-27 05:17  markt
+
+	* include/lame.h:
+
+	plugging away at a few more prototypes
+	
+2001-02-26 22:45  robert
+
+	* frontend/parse.c, libmp3lame/util.c:
+
+	little change to Roel's --r3mix setting, on request by Roel
+	
+2001-02-26 19:08  markt
+
+	* libmp3lame/VbrTag.c:
+
+	non RH_SEEKTABLE code removed from VbrTag.c
+	
+2001-02-26 18:57  markt
+
+	* frontend/lametime.c:
+
+	removed to //include lines
+	
+2001-02-26 18:52  markt
+
+	* frontend/: get_audio.c, lametime.c:
+
+	
+	incomprehensible gobbledygook replaced by call to standard
+	'stat' function for file size.
+	
+2001-02-26 08:06  markt
+
+	* include/lame.h:
+
+	more prototypes added to lame.h
+	
+2001-02-26 07:38  markt
+
+	* USAGE, frontend/parse.c, libmp3lame/lame.c:
+
+	useTemporal turned on by default
+	--notemp option added.
+	
+2001-02-26 07:26  markt
+
+	* include/lame.h:
+
+	added more of the lame_get/lame_set prototypes to lame.h
+	
+	also added this:
+	
+	// I give up. Klemm has worn me down on this one...
+	typedef lame_global_flags lame_t;
+	
+2001-02-26 06:34  markt
+
+	* misc/Lame.vbs:
+
+	lame.vbs changes submitted by "Paul Reedy" <ka5pmv@webzone.net>
+	
+2001-02-25 22:47  markt
+
+	* libmp3lame/vorbis_interface.c:
+
+	removed a klemm_42 from vorbis_interface.c
+	
+2001-02-25 22:47  markt
+
+	* INSTALL, libmp3lame/lame.c, libmp3lame/vorbis_interface.c:
+
+	klemm_42 enabled by default.
+	
+	This code uses a different formula to choose the lowpass
+	filter.  It takes into account stereo vs. jstereo
+	(jstereo gets 25% more bandwidth).  This has the effect
+	of stereo 128kbps using a 14khz lowpass filter, which some
+	people may not like.
+	
+2001-02-25 22:02  markt
+
+	* libmp3lame/lame.c, test/CBRABR.op:
+
+	made allow_diff_short the default if mode=stereo and
+	allow_diff_short has not been set to 0 or 1 by the calling
+	program.
+	
+	addes these notes to lame_init_params() :
+	 *
+	 * We first have some complex code to determine bitrate,
+	 * output samplerate and mode.  It is complicated by the fact
+	 * that we allow the user to set some or all of these parameters,
+	 * and need to determine best possible values for the rest of them:
+	 *
+	 *   set some CPU related flags
+	 *   check if we are mono->mono, stereo->mono or stereo->stereo
+	 *   compute bitrate and output samplerate:
+	 *          user may have set compression ratio
+	 *          user may have set a bitrate
+	 *          user may have set a output samplerate
+	 *   set some options which depend on output samplerate
+	 *   compute the actual compression ratio
+	 *   set mode based on compression ratio
+	 *
+	 *  The remaining code is much simpler - it just sets options
+	 *  based on the mode & compression ratio:
+	 *
+	 *   set allow_diff_short based on mode
+	 *   select lowpass filter based on compression ratio & mode
+	 *   set the bitrate index, and min/max bitrates for VBR modes
+	 *   disable VBR tag if it is not appropriate
+	 *   initialize the bitstream
+	 *   initialize scalefac_band data
+	 *   set sideinfo_len (based on channels, CRC, out_samplerate)
+	 *   write an id3v2 tag into the bitstream
+	 *   write VBR tag into the bitstream
+	 *   set mpeg1/2 flag
+	 *   estimate the number of frames (based on a lot of data)
+	 *
+	 *   now we set more flags:
+	 *   nspsytune:
+	 *      see code
+	 *   VBR modes
+	 *      see code
+	 *   CBR/ABR
+	 *      see code
+	
+2001-02-25 21:28  markt
+
+	* frontend/parse.c:
+
+	removed VBR warning
+	
+2001-02-25 20:24  markt
+
+	* libmp3lame/psymodel.c:
+
+	edited a few comments in psymodel.c
+	
+2001-02-25 20:17  markt
+
+	* libmp3lame/encoder.c, libmp3lame/psymodel.c,
+	libmp3lame/psymodel.h, libmp3lame/util.h, test/nores.op:
+
+	Started some re-originization of psymodel.c
+	created:
+	
+	psymodel_init() function, called by both psymodel and psymodel_ns.
+	
+	I was carefull to make sure no binary changes were introduced
+	with --nspsytune.
+	
+	Modified both psymodel and psymodel_ns to return the
+	energy in each channel.  I'm going to request that the
+	ATH level adjust be based on the energy comptuted by the
+	psymodel, rather than computing a magnitude in encoder.c
+	
+2001-02-25 17:37  markt
+
+	* Dll/BladeMP3EncDLL.c, frontend/parse.c, include/lame.h,
+	libmp3lame/lame.c, libmp3lame/util.c, libmp3lame/util.h:
+
+	removed mode_fixed variable.  If calling program selects a mode
+	(mono, stereo, jstereo) then that mode is used, otherwise
+	lame picks best mode to use.
+	
+2001-02-25 01:58  markt
+
+	* include/lame.h:
+
+	started adding more prototypes into lame.h:
+	
+	int lame_set_variable_name(lame_global_flags *, int)
+	int lame_get_variable_name(lame_global_flags *)
+	
+	_get will return the value (instead of an error code)
+	as suggested.
+	
+	_set will return an error code.  But right now, the way lame
+	works there is no error checking until lame_init_params() is
+	called.  This is because, for example, bitrate=135
+	is not an error if free_format=1, but it is an error
+	for CBR.  So many errors cannot be detected until all options
+	are set.
+	
+2001-02-24 19:35  markt
+
+	* include/lame.h, libmp3lame/util.h:
+
+	commented out a uint_64_t field in util.h to get lame to
+	compile.  Do we really need these types of variables?
+	
+	removed some stuff from lame.h.  Note that many decisions have
+	already been made about the library interface, so if you are
+	planning on changing this, you need to check with me
+	(mark taylor) first.  In particular,
+	there is going to be no file I/O, and all data is in
+	machine order. (no endian stuff in the library).
+	
+2001-02-24 13:55  robert
+
+	* Makefile.unix, configMS.h:
+
+	get Makefile.unix working again (tested for Linux, not for OS/2 etc.)
+	
+2001-02-21 21:17  robert
+
+	* libmp3lame/lame.c:
+
+	--vbr-mtrh related
+	
+2001-02-21 17:07  robert
+
+	* libmp3lame/vbrquantize.c:
+
+	take sfb21 into consideration for median search
+	
+2001-02-21 17:06  robert
+
+	* libmp3lame/util.c:
+
+	index transformation in select_kth_int()
+	
+2001-02-21 14:59  aleidinger
+
+	* test/lametest.py:
+
+	do not print the passed/failed statistic in the makeref case
+	
+2001-02-21 13:49  robert
+
+	* frontend/parse.c, libmp3lame/lame.c:
+
+	default quality handling fix
+	
+2001-02-21 12:39  aleidinger
+
+	* Dll/BladeMP3EncDLL.c:
+
+	lame.h has to be included before version.h
+	
+2001-02-20 18:34  aleidinger
+
+	* Makefile.in, config.h.in, configure, configure.in,
+	frontend/brhist.c:
+
+	 - Patch (#103821) from guy_hutchison:
+	    Fixes compilation problem on systems with ncurses dir
+	 - add ChangeLog to Makefile.in
+	
+2001-02-20 18:23  aleidinger
+
+	* libmp3lame/: encoder.h, version.h:
+
+	[no log message]
+	
+2001-02-20 18:20  aleidinger
+
+	* doc/html/: Makefile.am, Makefile.in:
+
+	  - add basic.html
+	
+2001-02-20 18:20  aleidinger
+
+	* configMS.h:
+
+	  - add LAME_LIBRARY_BUILD
+	
+2001-02-20 18:20  aleidinger
+
+	* libmp3lame/util.h:
+
+	  - more documentation, seems to be partially truncated  (Frank)
+	  - CPU_features is now a struct
+	
+2001-02-20 18:19  aleidinger
+
+	* libmp3lame/takehiro.c:
+
+	  - CPU_features is now a struct
+	
+2001-02-20 18:19  aleidinger
+
+	* libmp3lame/lame.c:
+
+	  - CPU_features is now a struct, no need to waste space for those
+	    bolean values (Frank)
+	  - introduce some KLEMM_44 protected code
+	
+2001-02-20 18:18  aleidinger
+
+	* libmp3lame/util.c:
+
+	  - fixes + docu for ATHformula_Frank()       (Frank)
+	  - don't compile old resampling in KLEMM_44 case
+	
+2001-02-20 18:17  aleidinger
+
+	* libmp3lame/version.c:
+
+	  - doxygen parseable documentation
+	  - better lclint flags
+	  - enable get_lame_version_numerical()
+	
+2001-02-20 18:17  aleidinger
+
+	* include/lame.h:
+
+	  - delete prototype of already removed get_lame_about()
+	  - add get_lame_version_numerical() and lame_version_t
+	    (now dshow didn't needs to include version.h to get the numerical
+	     version of lame (dshow not changed, I let pgubanov do this))
+	  - introduce some KLEMM_44 protected code  (Frank)
+	  - rework formatting and documentation to be more (IMO much more) readable
+	    (no lines longer than 80 chars, consistent formatting, looks alot cleaner)
+	
+2001-02-20 10:41  aleidinger
+
+	* DEFINES:
+
+	Remove KLEMM_04, there was a previous commit which handled it, see
+	ChangeLog.
+	
+2001-02-20 01:56  markt
+
+	* DEFINES, frontend/brhist.c, frontend/get_audio.c,
+	frontend/timestatus.c:
+
+	KLEMM 5,6,7 made the default & removed
+	
+2001-02-20 00:40  markt
+
+	* libmp3lame/lame.c:
+
+	simplified lame_encoder_buffer_interleaved: it now always calls
+	lame_encoder_buffer()
+	
+2001-02-20 00:30  markt
+
+	* libmp3lame/: encoder.c, lame.c, util.c, util.h:
+
+	fix for --scale problem?
+	
+	made a new routine:  fill_buffer()
+	
+	This is the generic routine used to copy data from the input buffer
+	into lame's internal buffer, 'mfbuf[]'.
+	
+	It also calls the resample code if necessary, and the user selected
+	rescaling code if necessary.
+	
+2001-02-20 00:26  markt
+
+	* frontend/parse.c:
+
+	added comment to vbr warning message
+	
+2001-02-20 00:24  markt
+
+	* frontend/parse.c:
+
+	re-added the warning about VBR modes. It seems to have been deleted
+	at some point.
+	
+	This is because this website:
+	
+	http://www.kuro5hin.org/?op=displaystory;sid=2001/1/25/164540/759
+	
+	is comparing Vorbis with lame -V4.
+	
+	While many people like the high bitrate VBR modes,
+	lame -V4 is *often* of lower quality than CBR.
+	
+2001-02-19 18:29  aleidinger
+
+	* test/VBR.op:
+
+	 - remove "--silent", lametest.py now handles this
+	
+	 Aproved by: robert
+	
+2001-02-19 18:28  aleidinger
+
+	* test/lametest.py:
+
+	 - allow relative paths in a more portable manner
+	 - should be more OS independand now
+	 - more file checks (readable/executable)
+	 - internally adds new option "--quiet" to the options
+	
+	 This works on my system, it also should work on systems where the
+	 previous version worked. It's not as portable as it could be,
+	 search for XXX in the source.
+	
+2001-02-18 21:18  robert
+
+	* frontend/main.c, frontend/parse.c, libmp3lame/lame.c,
+	libmp3lame/version.h, test/VBR.op:
+
+	new options --silent and --quiet to be really quiet
+	new option --verbose (default) to turn -S/--silent off again
+	--vbr-mtrh and --vbr-new use now ATH type 2
+	for VBR modes it is allowed to use different block types in stereo mode (not yet joint stereo)
+	bumped version to 3.88 alpha 10
+	
+2001-02-18 12:11  aleidinger
+
+	* dshow/: Makefile.am, Makefile.in:
+
+	Add recently added files to the makefile.
+	
+2001-02-17 15:45  pgubanov
+
+	* dshow/Encoder.cpp:
+
+	gfp is sometimes zero in CEncoder::Encode() - why???
+	
+2001-02-17 14:30  aleidinger
+
+	* libmp3lame/: pcm.c, pcm.h:
+
+	New code from Frank, some needed parts in different files aren't commited
+	yet, they produce huge differences with lametest.py even if KLEMM_44 isn't
+	defined. -> KLEMM_44 (new API + resampling) isn't usable yet
+	
+2001-02-17 14:27  aleidinger
+
+	* test/lametest.py:
+
+	 - use "/usr/bin/env python" instead of "/usr/bin/python" in shebang line
+	   (portability)
+	 - use "-l" instead of "--lines" for wc
+	   (portability, has to run on every IEEE 1003.2 ("POSIX.2") compliant
+	   system)
+	 - bugfix, check for lame2 instead for lame1 in the lame2 part
+	   (Note: the entire test didn't work for me if I use e.g.
+	    ./lametest.py XXX.op ../../testcases/XXX ../../build.org/frontend/lame ...)
+	
+2001-02-17 14:17  pgubanov
+
+	* dshow/: aboutprp.cpp, aboutprp.h:
+
+	Elecard copyrigth added (executives need it for some reason)
+	
+2001-02-17 13:58  pgubanov
+
+	* dshow/: Mpegac.cpp, Property.rc, UIDS.H, dshow.dsp, dshow.dsw,
+	elogo.ico, resource.h:
+
+	Some stability improvements + Elecard copyrigth added (executives need it for some reason)
+	
+2001-02-16 17:23  markt
+
+	* doc/html/basic.html:
+
+	added basic.html to cvs
+	
+2001-02-16 10:35  pgubanov
+
+	* dshow/dshow.dsp:
+
+	STDC_HEADERS defined in project settings
+	
+2001-02-16 10:33  pgubanov
+
+	* libmp3lame/lame.c:
+
+	mono handling in encode_buffer_interleaved caused access violation - fixed
+	
+2001-02-14 22:22  aleidinger
+
+	* ChangeLog:
+
+	Now we have a ChangeLog, generated from the output of "cvs log"
+	
+2001-02-14 22:21  aleidinger
+
+	* ChangeLog.header:
+
+	Header for the ChangeLog, not included at "make dist"
+	
+2001-02-14 22:20  aleidinger
+
+	* TODO:
+
+	remove Makefile.MSVC, robert seems to keep it up to date
+	
+2001-02-14 22:20  aleidinger
+
+	* Makefile.B32:
+
+	try to unbreak it, add configMS.h -> config.h (untested)
+	
+2001-02-14 22:20  aleidinger
+
+	* DEFINES:
+
+	add USE_FFT3DN
+	
+2001-02-14 22:19  aleidinger
+
+	* INSTALL:
+
+	   * add some more info how to use some advanced features of our
+	     configure script
+	   * add some info for Cygwin users (use configure)
+	   * add some info about faster code with nasm
+	
+2001-02-14 20:50  robert
+
+	* frontend/parse.c:
+
+	added -V1 to Roel's --remix preset, I assume it was missing by accident
+	
 2001-02-14 16:38  aleidinger
 
 	* Makefile.am.global, Makefile.in, aclocal.m4, configure,
