@@ -15,7 +15,7 @@ ac_help="$ac_help
   --enable-maintainer-mode enable make rules and dependencies not useful
                           (and sometimes confusing) to the casual installer"
 ac_help="$ac_help
-  --enable-shared[=PKGS]  build shared libraries [default=yes]"
+  --enable-shared[=PKGS]  build shared libraries [default=no]"
 ac_help="$ac_help
   --enable-static[=PKGS]  build static libraries [default=yes]"
 ac_help="$ac_help
@@ -965,7 +965,6 @@ fi
   MAINT=$MAINTAINER_MODE_TRUE
   
 
-cflags_safe="${CFLAGS}"
 # Check whether --enable-shared or --disable-shared was given.
 if test "${enable_shared+set}" = set; then
   enableval="$enable_shared"
@@ -986,9 +985,10 @@ no) enable_shared=no ;;
   ;;
 esac
 else
-  enable_shared=yes
+  enable_shared=no
 fi
 
+cflags_safe="${CFLAGS}"
 # Check whether --enable-static or --disable-static was given.
 if test "${enable_static+set}" = set; then
   enableval="$enable_static"
@@ -3461,6 +3461,10 @@ yes)
 		echo "$ac_t""yes" 1>&6
 	else
 		LDADD="${LDADD} ${HAVE_EFENCE}"
+		cat >> confdefs.h <<\EOF
+#define HAVE_EFENCE 1
+EOF
+
 		echo "$ac_t"""${CONFIG_EFENCE}"" 1>&6
 	fi
 	;;
@@ -3474,7 +3478,7 @@ esac
 
 
 echo $ac_n "checking use of file io""... $ac_c" 1>&6
-echo "configure:3478: checking use of file io" >&5
+echo "configure:3482: checking use of file io" >&5
 WARNING=
 # Check whether --with-fileio or --without-fileio was given.
 if test "${with_fileio+set}" = set; then
@@ -3552,7 +3556,7 @@ fi
 
 
 echo $ac_n "checking use of analyzer hooks""... $ac_c" 1>&6
-echo "configure:3556: checking use of analyzer hooks" >&5
+echo "configure:3560: checking use of analyzer hooks" >&5
 # Check whether --enable-analyzer-hooks or --disable-analyzer-hooks was given.
 if test "${enable_analyzer_hooks+set}" = set; then
   enableval="$enable_analyzer_hooks"
@@ -3579,7 +3583,7 @@ echo "$ac_t""$CONFIG_ANALYZER" 1>&6
 
 
 echo $ac_n "checking use of mpg123 decoder""... $ac_c" 1>&6
-echo "configure:3583: checking use of mpg123 decoder" >&5
+echo "configure:3587: checking use of mpg123 decoder" >&5
 # Check whether --enable-decoder or --disable-decoder was given.
 if test "${enable_decoder+set}" = set; then
   enableval="$enable_decoder"
@@ -3642,7 +3646,7 @@ echo "$ac_t""$CONFIG_DECODER" 1>&6
 
 
 echo $ac_n "checking use of vorbis""... $ac_c" 1>&6
-echo "configure:3646: checking use of vorbis" >&5
+echo "configure:3650: checking use of vorbis" >&5
 WARNING=
 # Check whether --with-vorbis or --without-vorbis was given.
 if test "${with_vorbis+set}" = set; then
@@ -3717,7 +3721,7 @@ fi
 
 
 echo $ac_n "checking if mp3x is requested""... $ac_c" 1>&6
-echo "configure:3721: checking if mp3x is requested" >&5
+echo "configure:3725: checking if mp3x is requested" >&5
 # Check whether --enable-mp3x or --disable-mp3x was given.
 if test "${enable_mp3x+set}" = set; then
   enableval="$enable_mp3x"
@@ -3744,7 +3748,7 @@ if test "${HAVE_GTK}" = "no"; then
 fi
 
 echo $ac_n "checking if mp3rtp is requested""... $ac_c" 1>&6
-echo "configure:3748: checking if mp3rtp is requested" >&5
+echo "configure:3752: checking if mp3rtp is requested" >&5
 # Check whether --enable-mp3rtp or --disable-mp3rtp was given.
 if test "${enable_mp3rtp+set}" = set; then
   enableval="$enable_mp3rtp"
@@ -3771,7 +3775,7 @@ case $target in
 	# the buggy version
 
 	cat > conftest.$ac_ext <<EOF
-#line 3775 "configure"
+#line 3779 "configure"
 #include "confdefs.h"
 
 		#define __LIBC_INTERNAL_MATH_INLINES 1
@@ -3791,10 +3795,10 @@ rm -f conftest*
 
 
 	echo $ac_n "checking glibc mathinline bug""... $ac_c" 1>&6
-echo "configure:3795: checking glibc mathinline bug" >&5
+echo "configure:3799: checking glibc mathinline bug" >&5
 	if test ${bad} = "maybe" ;then
 	      cat > conftest.$ac_ext <<EOF
-#line 3798 "configure"
+#line 3802 "configure"
 #include "confdefs.h"
 
 				#define __LIBC_INTERNAL_MATH_INLINES 1
@@ -3841,7 +3845,7 @@ esac
 
 
 echo $ac_n "checking use of VBR bitrate histogram""... $ac_c" 1>&6
-echo "configure:3845: checking use of VBR bitrate histogram" >&5
+echo "configure:3849: checking use of VBR bitrate histogram" >&5
 if test "x${HAVE_TERMCAP}" != "x"; then
   BRH_DEFAULT="yes"
 else
@@ -3897,7 +3901,7 @@ esac
 
 
 echo $ac_n "checking for FLOAT8 as float""... $ac_c" 1>&6
-echo "configure:3901: checking for FLOAT8 as float" >&5
+echo "configure:3905: checking for FLOAT8 as float" >&5
 # Check whether --enable-all-float or --disable-all-float was given.
 if test "${enable_all_float+set}" = set; then
   enableval="$enable_all_float"
@@ -3926,7 +3930,7 @@ echo "$ac_t""${CONFIG_ALLFLOAT}" 1>&6
 # Extract the first word of "nasm", so it can be a program name with args.
 set dummy nasm; ac_word=$2
 echo $ac_n "checking for $ac_word""... $ac_c" 1>&6
-echo "configure:3930: checking for $ac_word" >&5
+echo "configure:3934: checking for $ac_word" >&5
 if eval "test \"`echo '$''{'ac_cv_path_NASM'+set}'`\" = set"; then
   echo $ac_n "(cached) $ac_c" 1>&6
 else
@@ -3964,7 +3968,7 @@ no)
 	;;
 *)
 	echo $ac_n "checking for assembler routines for this processor type""... $ac_c" 1>&6
-echo "configure:3968: checking for assembler routines for this processor type" >&5
+echo "configure:3972: checking for assembler routines for this processor type" >&5
 	for recurse_over in ${ASM_FOR_ARCH}
 	{
 		if test "${CPUTYPE}" = "${recurse_over}"; then
@@ -3999,7 +4003,7 @@ fi
 
 
 echo $ac_n "checking for additional optimizations""... $ac_c" 1>&6
-echo "configure:4003: checking for additional optimizations" >&5
+echo "configure:4007: checking for additional optimizations" >&5
 # Check whether --enable-expopt or --disable-expopt was given.
 if test "${enable_expopt+set}" = set; then
   enableval="$enable_expopt"
@@ -4067,7 +4071,7 @@ fi
 
 
 echo $ac_n "checking for debug options""... $ac_c" 1>&6
-echo "configure:4071: checking for debug options" >&5
+echo "configure:4075: checking for debug options" >&5
 # Check whether --enable-debug or --disable-debug was given.
 if test "${enable_debug+set}" = set; then
   enableval="$enable_debug"
