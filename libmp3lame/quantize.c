@@ -1424,10 +1424,7 @@ noisesfb(lame_internal_flags *gfc, gr_info *gi, FLOAT * xmin, int startsfb)
 }
 
 static void
-VBR_2nd_bitalloc(
-    lame_internal_flags * gfc,
-    gr_info *gi,
-    FLOAT * xmin)
+VBR_2nd_bitalloc(lame_internal_flags * gfc, gr_info *gi, FLOAT * xmin)
 {
     /* note: we cannot use calc_noise() because l3_enc[] is not calculated
        at this point */

@@ -982,8 +982,7 @@ lame_encode_buffer_sample_t(
             int buf_size=mp3buf_size - mp3size;
             if (mp3buf_size==0) buf_size=0;
 
-            ret =
-                lame_encode_frame(gfp, mfbuf[0], mfbuf[1], mp3buf,buf_size);
+            ret = lame_encode_frame(gfp, mfbuf[0], mfbuf[1], mp3buf,buf_size);
 
             if (ret < 0) return ret;
             mp3buf += ret;

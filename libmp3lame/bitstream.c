@@ -58,7 +58,7 @@ int getframebytes(const lame_global_flags * gfp)
 
 /*write j bits into the bit stream */
 inline static void
-putbits24(Bit_stream_struc *bs, int val, int j)
+putbits24(bit_stream_t *bs, int val, int j)
 {
     char *p = &bs->buf[bs->bitidx >> 3];
 
@@ -72,7 +72,7 @@ putbits24(Bit_stream_struc *bs, int val, int j)
 }
 
 inline static void
-putbits(Bit_stream_struc *bs, int val, int j)
+putbits(bit_stream_t *bs, int val, int j)
 {
     if (j > 25) {
 	putbits24(bs, val>>16, j-16);
@@ -83,7 +83,7 @@ putbits(Bit_stream_struc *bs, int val, int j)
 }
 
 inline static void
-Huf_count1(Bit_stream_struc *bs, gr_info *gi)
+Huf_count1(bit_stream_t *bs, gr_info *gi)
 {
     int index;
     const unsigned char * const hcode = quadcode[gi->count1table_select];
@@ -117,7 +117,7 @@ Huf_count1(Bit_stream_struc *bs, gr_info *gi)
 
 /* Implements the pseudocode of page 98 of the IS */
 static void
-Huffmancode_esc(Bit_stream_struc *bs, const struct huffcodetab* h,
+Huffmancode_esc(bit_stream_t *bs, const struct huffcodetab* h,
 		int index, int end, gr_info *gi)
 {
     do {
@@ -163,7 +163,7 @@ Huffmancode_esc(Bit_stream_struc *bs, const struct huffcodetab* h,
 }
 
 static void
-Huffmancode(Bit_stream_struc *bs, const struct huffcodetab* h,
+Huffmancode(bit_stream_t *bs, const struct huffcodetab* h,
 	    int index, int end, gr_info *gi)
 {
     do {
@@ -184,8 +184,7 @@ Huffmancode(Bit_stream_struc *bs, const struct huffcodetab* h,
 }
 
 inline static void
-Huf_bigvalue(Bit_stream_struc *bs, int tablesel,
-	     int start, int end, gr_info *gi)
+Huf_bigvalue(bit_stream_t *bs, int tablesel, int start, int end, gr_info *gi)
 {
     if (tablesel == 0 || start >= end)
 	return;
@@ -477,7 +476,7 @@ int
 compute_flushbits(const lame_global_flags * gfp, int *total_bytes_output)
 {
     lame_internal_flags *gfc=gfp->internal_flags;
-    Bit_stream_struc *bs = &gfc->bs;
+    bit_stream_t *bs = &gfc->bs;
     int flushbits;
     int bitsPerFrame;
     int last_ptr = (bs->h_ptr - 1) & (MAX_HEADER_BUF-1);
@@ -521,7 +520,7 @@ flush_bitstream(
 void
 add_dummy_byte(lame_internal_flags* gfc, unsigned char val)
 {
-    Bit_stream_struc *bs = &gfc->bs;
+    bit_stream_t *bs = &gfc->bs;
     int i;
     assert((bs->bitidx & 7) == 0);
     bs->buf[bs->bitidx>>3] = val;
@@ -539,7 +538,7 @@ add_dummy_byte(lame_internal_flags* gfc, unsigned char val)
 inline static void
 drain_into_ancillary(lame_internal_flags *gfc, int remainingBits)
 {
-    Bit_stream_struc *bs = &gfc->bs;
+    bit_stream_t *bs = &gfc->bs;
     int i, pad;
     assert(remainingBits >= 0);
 
@@ -627,7 +626,7 @@ int
 copy_buffer(
     lame_internal_flags *gfc, unsigned char *buffer, int size, int mp3data)
 {
-    Bit_stream_struc *bs=&gfc->bs;
+    bit_stream_t *bs=&gfc->bs;
     int spec_idx, minimum;
     unsigned char *pbuf, *pend;
     if (bs->bitidx <= 0)

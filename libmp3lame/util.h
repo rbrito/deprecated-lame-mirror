@@ -161,7 +161,7 @@ typedef struct {
     } header[MAX_HEADER_BUF];
     int h_ptr;
     int w_ptr;
-} Bit_stream_struc;
+} bit_stream_t;
 
 /* max scalefactor band, max(SBMAX_l, SBMAX_s*3, (SBMAX_s-3)*3+8) */
 #define SFBMAX (SBMAX_s*3)
@@ -247,32 +247,6 @@ typedef struct
 
 #define MAX_CHANNELS  2
 
-typedef struct {
-    unsigned long  Class_ID;        /* Class ID to recognize a resample_t
-                                       object */
-    FLOAT   sample_freq_in;  /* Input sample frequency in Hz */
-    FLOAT   sample_freq_out; /* requested Output sample frequency in Hz */
-    FLOAT   lowpass_freq;    /* lowpass frequency, this is the -6 dB
-                                       point */
-    int            scale_in;        /* the resampling is actually done by
-                                       scale_out: */
-    int            scale_out;       /* frequency is
-				       samplefreq_in * scale_out / scal */
-    int            taps;            /* number of taps for every FIR resample
-                                       filter */
-
-    sample_t**     fir;             /* the FIR resample filters:
-                                         fir [scale_out] [taps */
-    void*          firfree;         /* start address of the alloced memory for
-                                       fir, */
-    unsigned char* src_step;
-    sample_t*      in_old       [MAX_CHANNELS];
-    unsigned       fir_stepper  [MAX_CHANNELS];
-    int            inp_stepper  [MAX_CHANNELS];
-
-} resample_t;
-
-
 /********************************************************************
  * internal variables NOT set by calling program, and should not be *
  * modified by the calling program                                  *
@@ -320,8 +294,6 @@ struct lame_internal_flags {
     int mode_gr;        /* granules per frame */
     int channels_in;	/* number of channels in the input data stream (PCM or decoded PCM) */
     int channels_out;   /* number of channels in the output data stream (not used for decoding) */
-    resample_t*  resample_in;  /* context for coding (PCM=>MP3) resampling */
-    resample_t*  resample_out; /* context for decoding (MP3=>PCM) resampling */
     FLOAT samplefreq_in;
     FLOAT samplefreq_out;
     FLOAT resample_ratio;      /* input_samp_rate/output_samp_rate */
@@ -443,7 +415,7 @@ struct lame_internal_flags {
     int cutoff_sfb_s;
 
     /* variables for bitstream.c */
-    Bit_stream_struc   bs;
+    bit_stream_t bs;
 
     /* optional ID3 tags, used in id3tag.c  */
     struct id3tag_spec {
@@ -461,7 +433,7 @@ struct lame_internal_flags {
 
     unsigned int crcvalue;
     VBR_seek_info_t VBR_seek_table; /* used for Xing VBR header */
-  
+
     int nogap_total;
     int nogap_current;  
 
