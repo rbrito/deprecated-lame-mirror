@@ -25,12 +25,6 @@
 /* table of huffman coding */
 extern const char htESC_xlen[];
 extern const unsigned char quadcode[2][16*2];
-extern const unsigned int largetbl[16*16];
-extern const unsigned int table13[2*2];
-extern const uint64_t table7B89[];
-extern const uint64_t table7B89[];
-extern const uint64_t table5967[];
-extern const uint64_t tableDxEF[];
 
 extern const int scfsi_band[5];
 
