@@ -30,7 +30,8 @@ EXTRA_DIST = \
 	libmp3lame.dsp \
 	lameerror.h \
 	tools.c \
-	tools.h
+	tools.h \
+	vbrquantize.h
 
 libmp3lame_la_SOURCES = \
         VbrTag.c \
