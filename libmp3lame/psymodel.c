@@ -738,8 +738,8 @@ static inline int trancate(FLOAT x)
 	float f;
 	int i;
     } fi;
-    fi.f = x+(0.5+65536*128);
-    return fi.i - 0x4b000001;
+    fi.f = x+(0.5+MAGIC_FLOAT);
+    return fi.i - MAGIC_INT - 1;
 }
 #else /* TAKEHIRO_IEEE754_HACK */
 # define trancate(x) (int)x

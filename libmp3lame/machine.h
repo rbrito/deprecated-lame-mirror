@@ -141,8 +141,16 @@ typedef FLOAT     sample_t;
 
 /* log/log10 approximations */
 #ifdef TAKEHIRO_IEEE754_HACK
-#define USE_FAST_LOG
+# define USE_FAST_LOG
+# define MAGIC_FLOAT (65536*128)
+# define MAGIC_INT 0x4b000000
+# define ROUNDFAC_NEAR (ROUNDFAC-0.5)
 #endif
+
+typedef union {
+    float f;
+    int i;
+} fi_union;
 
 #ifdef USE_FAST_LOG
 # define LOG2_SIZE       (256)

@@ -46,11 +46,6 @@ extern void quantize_sfb_3DN(const FLOAT *, int, int, int *);
 #define LARGE_BITS	100000
 #define	MAX_BITS	4095
 
-typedef union {
-    float f;
-    int i;
-} fi_union;
-
 /*********************************************************************
  * XRPOW_FTOI is a macro to convert floats to ints.
  * when converting float->int by nearest_int(x)
@@ -60,11 +55,5 @@ typedef union {
  *      round offset = ROUNDFAC =  0.4054, QUANTFAC(x)=asj43[x]
  *********************************************************************/
 #define ROUNDFAC 0.4054
-
-#ifdef TAKEHIRO_IEEE754_HACK
-# define MAGIC_FLOAT (65536*128)
-# define MAGIC_INT 0x4b000000
-# define ROUNDFAC_NEAR (ROUNDFAC-0.5)
-#endif
 
 #endif /* LAME_QUANTIZE_PVT_H */
