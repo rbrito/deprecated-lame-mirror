@@ -740,7 +740,7 @@ int L3psycho_anal( lame_global_flags *gfp,
 	if (gfp->exp_nspsytune) {
 	  tbb = exp(-LN_TO_LOG10 * NMT);
 	  ecb *= tbb;
-	  ecb *= pow(10,4/20);   /* tuned by hearing tests */
+	  ecb *= 1.58489319246111;   /* pow(10.0,4/20.0) tuned by hearing tests */
 	} else {
 	  tbb = Min(gfc->minval[b], tbb);
 	  ecb *= tbb;
