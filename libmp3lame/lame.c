@@ -524,8 +524,6 @@ lame_init_params(lame_global_flags * const gfp)
     gfp->framesize = 576 * gfc->mode_gr;
     gfp->encoder_delay = ENCDELAY;
     gfc->resample_ratio = (double) gfp->in_samplerate / gfp->out_samplerate;
-    if (.9999 < gfc->resample_ratio && gfc->resample_ratio < 1.0001)
-	gfc->resample_ratio = 1.0;
 
     /*******************************************************
      * bitrate index

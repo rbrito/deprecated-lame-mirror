@@ -525,15 +525,6 @@ void fill_buffer(lame_global_flags *gfp,
 		 sample_t *in_buffer[2],
 		 int nsamples, int *n_in, int *n_out);
 
-int  fill_buffer_resample (
-        lame_global_flags *gfp,
-        sample_t*  outbuf,
-        int        desired_len,
-        sample_t*  inbuf,
-        int        len,
-        int*       num_used,
-        int        channels );
-
 /* same as lame_decode1 (look in lame.h), but returns 
    unclipped raw floating-point samples. It is declared
    here, not in lame.h, because it returns LAME's 
