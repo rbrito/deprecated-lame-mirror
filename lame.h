@@ -391,6 +391,7 @@ typedef struct {
   int bitrate;     /* bitrate */
   int mode;               /* mp3 frame type */
   int mode_ext;           /* mp3 frame type */
+  int framesize;          /* number of samples per mp3 frame */
   unsigned long nsamp;    /* number of samples in mp3 file.  */
 } mp3data_struct;
 
@@ -415,31 +416,6 @@ int lame_decode1(char *mp3buf,int len,short pcm_l[],short pcm_r[]);
 int lame_decode1_headers(char *mp3buf,int len,short pcm_l[],short pcm_r[],
 mp3data_struct *mp3data);
 
-
-
-
-/* read mp3 file until mpglib returns one frame of PCM data */
-#ifdef AMIGA_MPEGA
-int lame_decode_initfile(const char *fullname,mp3data_struct *mp3data);
-int lame_decode_fromfile(FILE *fd,short int pcm_l[], short int pcm_r[],mp3data_struct *mp3data);
-#else
-int lame_decode_initfile(FILE *fd,mp3data_struct *mp3data);
-int lame_decode_fromfile(FILE *fd,short int pcm_l[],short int pcm_r[],mp3data_struct *mp3data);
-#endif
-
-/* and for Vorbis: */
-int lame_decode_ogg_initfile(FILE *fd,mp3data_struct *mp3data);
-int lame_decode_ogg_fromfile(FILE *fd,short int pcm_l[],short int pcm_r[],mp3data_struct *mp3data);
-
-/* the simple lame decoder (interface to above routines) */
-/* After calling lame_init(), lame_init_params() and
- * lame_init_infile(), call this routine to read the input MP3 file 
- * and output .wav data to the specified file pointer*/
-/* lame_decoder will ignore the first 528 samples, since these samples
- * represent the mpglib delay (and are all 0).  skip = number of additional
- * samples to skip, to (for example) compensate for the encoder delay,
- * only used when decoding mp3 */
-int lame_decoder(lame_global_flags *gfp,FILE *outf,int skip);
 
 
 #if defined(__cplusplus)

@@ -40,6 +40,33 @@
 #endif
 
 
+
+
+/* read mp3 file until mpglib returns one frame of PCM data */
+#ifdef AMIGA_MPEGA
+int lame_decode_initfile(const char *fullname,mp3data_struct *mp3data);
+int lame_decode_fromfile(FILE *fd,short int pcm_l[], short int pcm_r[],mp3data_struct *mp3data);
+#else
+int lame_decode_initfile(FILE *fd,mp3data_struct *mp3data);
+int lame_decode_fromfile(FILE *fd,short int pcm_l[],short int pcm_r[],mp3data_struct *mp3data);
+#endif
+
+/* and for Vorbis: */
+int lame_decode_ogg_initfile(FILE *fd,mp3data_struct *mp3data);
+int lame_decode_ogg_fromfile(FILE *fd,short int pcm_l[],short int pcm_r[],mp3data_struct *mp3data);
+
+/* the simple lame decoder (interface to above routines) */
+/* After calling lame_init(), lame_init_params() and
+ * lame_init_infile(), call this routine to read the input MP3 file 
+ * and output .wav data to the specified file pointer*/
+/* lame_decoder will ignore the first 528 samples, since these samples
+ * represent the mpglib delay (and are all 0).  skip = number of additional
+ * samples to skip, to (for example) compensate for the encoder delay,
+ * only used when decoding mp3 */
+int lame_decoder(lame_global_flags *gfp,FILE *outf,int skip);
+
+
+
 int read_samples_pcm(lame_global_flags *gfp,short sample_buffer[2304],int frame_size, int samples_to_read);
 int read_samples_mp3(lame_global_flags *gfp,FILE *musicin,short int mpg123pcm[2][1152],int num_chan);
 int read_samples_ogg(lame_global_flags *gfp,FILE *musicin,short int mpg123pcm[2][1152],int num_chan);
@@ -1136,3 +1163,143 @@ FILE * OpenSndFile(lame_global_flags *gfp)
 #endif  /* LAMESNDFILE */
 
 
+
+
+
+#ifdef HAVEMPGLIB
+int lame_decode_initfile(FILE *fd, mp3data_struct *mp3data)
+{
+#include "VbrTag.h"
+  VBRTAGDATA pTagData;
+  char buf[1000];
+  int ret,size,framesize;
+  unsigned long num_frames=0;
+  int len,len2,xing_header,aid_header;
+  short int pcm_l[1152],pcm_r[1152];
+
+  lame_decode_init();
+
+  len=4;
+  if (fread(&buf,1,len,fd) == 0) return -1;  /* failed */
+  aid_header = check_aid(buf);
+  if (aid_header) {
+    if (fread(&buf,1,2,fd) == 0) return -1;  /* failed */
+    aid_header = (unsigned char) buf[0] + 256*(unsigned char)buf[1];
+    fprintf(stderr,"Album ID found.  length=%i \n",aid_header);
+    /* skip rest of AID, except for 6 bytes we have already read */
+    fskip(fd,aid_header-6,1);
+
+    /* read 2 more bytes to set up buffer for MP3 header check */
+    if (fread(&buf,1,2,fd) == 0) return -1;  /* failed */
+    len =2;
+  }
+
+
+
+  /* look for sync word  FFF */
+  if (len<2) return -1;
+  while (!is_syncword(buf)) {
+    int i;
+    for (i=0; i<len-1; i++)
+      buf[i]=buf[i+1]; 
+    if (fread(&buf[len-1],1,1,fd) == 0) return -1;  /* failed */
+  }
+
+
+  
+  /* read the rest of header and enough bytes to check for Xing header */
+  len2 = fread(&buf[len],1,48-len,fd);
+  if (len2 ==0 ) return -1;
+  len +=len2;
+
+
+  /* check first 48 bytes for Xing header */
+  xing_header = GetVbrTag(&pTagData,(unsigned char*)buf);
+  if (xing_header && pTagData.headersize >= 48) {
+    num_frames=pTagData.frames;
+    
+    fskip(fd,pTagData.headersize-48 ,1);
+    /* look for next sync word in buffer*/
+    len=2;
+    buf[0]=buf[1]=0;
+    while (!is_syncword(buf)) {
+      buf[0]=buf[1]; 
+      if (fread(&buf[1],1,1,fd) == 0) return -1;  /* fread failed */
+    }
+    /* read the rest of header */
+    len2 = fread(&buf[2],1,2,fd);
+    if (len2 ==0 ) return -1;
+    len +=len2;
+
+
+  } else {
+    /* rewind file back what we read looking for Xing headers */
+    if (fseek(fd, -44, SEEK_CUR) != 0) {
+      /* backwards fseek failed.  input is probably a pipe */
+    } else {
+      len=4;
+    }
+  }
+
+
+  /* now parse the current buffer looking for MP3 headers */
+  size=0;
+  ret = lame_decode1_headers(buf,len,pcm_l,pcm_r,mp3data);
+  if (-1==ret) return -1;
+  if (ret>0 && !xing_header) 
+    fprintf(stderr,"Oops: first frame of mpglib output will be lost \n"); 
+
+  /* repeat until we decode a valid mp3 header */
+  while (mp3data->header_parsed) {
+    len = fread(buf,1,2,fd);
+    if (len ==0 ) return -1;
+    ret = lame_decode1_headers(buf,len,pcm_l,pcm_r,mp3data);
+    if (-1==ret) return -1;
+
+    if (ret>0 && !xing_header)
+      fprintf(stderr,"Oops: first frame of mpglib output will be lost \n"); 
+  }
+
+  mp3data->nsamp=MAX_U_32_NUM;
+  if (xing_header && num_frames) {
+    mp3data->nsamp=mp3data->framesize * num_frames;
+  }
+
+
+  /*
+  fprintf(stderr,"ret = %i NEED_MORE=%i \n",ret,MP3_NEED_MORE);
+  fprintf(stderr,"stereo = %i \n",mp.fr.stereo);
+  fprintf(stderr,"samp = %i  \n",freqs[mp.fr.sampling_frequency]);
+  fprintf(stderr,"framesize = %i  \n",framesize);
+  fprintf(stderr,"bitrate = %i  \n",mp3data->bitrate);
+  fprintf(stderr,"num frames = %ui  \n",num_frames);
+  fprintf(stderr,"num samp = %ui  \n",mp3data->nsamp);
+  fprintf(stderr,"mode     = %i  \n",mp.fr.mode);
+  */
+
+  return 0;
+}
+
+
+
+
+/*
+For lame_decode_fromfile:  return code
+  -1     error
+   0     ok, but need more data before outputing any samples
+   n     number of samples output.  either 576 or 1152 depending on MP3 file.
+*/
+int lame_decode_fromfile(FILE *fd, short pcm_l[], short pcm_r[],mp3data_struct *mp3data)
+{
+  int ret=0,len;
+  char buf[100];
+  /* read until we get a valid output frame */
+  while(0==ret) {
+    len = fread(buf,1,100,fd);
+    if (len ==0 ) return -1;
+    ret = lame_decode1_headers(buf,len,pcm_l,pcm_r,mp3data);
+    if (ret == -1) return -1;
+  }
+  return ret;
+}
+#endif
