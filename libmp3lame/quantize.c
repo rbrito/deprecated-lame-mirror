@@ -196,7 +196,7 @@ int calc_xmin(
     for (gsfb = 0; gsfb < cod_info->psy_lmax; gsfb++) {
 	FLOAT en0, xmin;
 	int width, l;
-	if (gfp->VBR == vbr_rh || gfp->VBR == vbr_mtrh)
+	if (gfp->VBR == vbr_mtrh)
 	    xmin = athAdjust(gfc->ATH.adjust, gfc->ATH.l[gsfb], gfc->ATH.floor);
 	else
 	    xmin = gfc->ATH.adjust * gfc->ATH.l[gsfb];
@@ -224,7 +224,7 @@ int calc_xmin(
     for (sfb = cod_info->sfb_smin; gsfb < cod_info->psymax; sfb++, gsfb += 3) {
 	int width, b;
 	FLOAT tmpATH;
-	if ( gfp->VBR == vbr_rh || gfp->VBR == vbr_mtrh )
+	if (gfp->VBR == vbr_mtrh)
 	    tmpATH = athAdjust(gfc->ATH.adjust, gfc->ATH.s[sfb], gfc->ATH.floor);
 	else
 	    tmpATH = gfc->ATH.adjust * gfc->ATH.s[sfb];
