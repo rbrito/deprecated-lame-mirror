@@ -577,18 +577,10 @@ lame_init_params(lame_global_flags * const gfp)
         }
     }
 
-    if (gfp->ogg) {
-        gfp->framesize = 1024;
-        gfp->encoder_delay = ENCDELAY;
-        gfc->coding = coding_Ogg_Vorbis;
-    }
-    else {
-        gfc->mode_gr = gfp->out_samplerate <= 24000 ? 1 : 2; /* Number of granules per frame */
-        gfp->framesize = 576 * gfc->mode_gr;
-        gfp->encoder_delay = ENCDELAY;
-        gfc->coding = coding_MPEG_Layer_3;
-    }
-
+    gfc->mode_gr = gfp->out_samplerate <= 24000 ? 1 : 2; /* Number of granules per frame */
+    gfp->framesize = 576 * gfc->mode_gr;
+    gfp->encoder_delay = ENCDELAY;
+    gfc->coding = coding_MPEG_Layer_3;
     gfc->frame_size = gfp->framesize;
 
     gfc->resample_ratio = (double) gfp->in_samplerate / gfp->out_samplerate;
@@ -803,8 +795,6 @@ lame_init_params(lame_global_flags * const gfp)
     /*    if ((gfp->VBR == vbr_off))  */
     /*  gfp->bWriteVbrTag = 0; */
 
-    if (gfp->ogg)
-        gfp->bWriteVbrTag = 0;
 #if defined(HAVE_GTK)
     if (gfp->analysis)
         gfp->bWriteVbrTag = 0;
@@ -1303,19 +1293,7 @@ lame_encode_frame(lame_global_flags * gfp,
                   unsigned char *mp3buf, int mp3buf_size)
 {
     int     ret;
-    if (gfp->ogg) {
-#ifdef HAVE_VORBIS_ENCODER
-        ret = lame_encode_ogg_frame(gfp, inbuf_l, inbuf_r, mp3buf, mp3buf_size);
-#else
-        return -5;      /* wanna encode ogg without vorbis */
-#endif
-    }
-    else {
-        ret = lame_encode_mp3_frame(gfp, inbuf_l, inbuf_r, mp3buf, mp3buf_size);
-    }
-
-
-
+    ret = lame_encode_mp3_frame(gfp, inbuf_l, inbuf_r, mp3buf, mp3buf_size);
     gfp->frameNum++;
     return ret;
 }
@@ -1761,8 +1739,7 @@ lame_init_bitstream(lame_global_flags * gfp)
     lame_internal_flags *gfc = gfp->internal_flags;
     gfp->frameNum=0;
 
-    if (!gfp->ogg)
-	id3tag_write_v2(gfp);
+    id3tag_write_v2(gfp);
 #ifdef BRHIST
     /* initialize histogram data optionally used by frontend */
     memset(gfc->bitrate_stereoMode_Hist, 0,
@@ -1836,32 +1813,23 @@ lame_encode_flush(lame_global_flags * gfp,
     if (mp3buffer_size == 0)
         mp3buffer_size_remaining = 0;
 
-    if (gfp->ogg) {
-#ifdef HAVE_VORBIS_ENCODER
-        /* ogg related stuff */
-        imp3 = lame_encode_ogg_finish(gfp, mp3buffer, mp3buffer_size_remaining);
-#endif
+    /* mp3 related stuff.  bit buffer might still contain some mp3 data */
+    flush_bitstream(gfp);
+    imp3 = copy_buffer(gfc,mp3buffer, mp3buffer_size_remaining, 1);
+    if (imp3 < 0) {
+	/* some type of fatal error */
+	return imp3;
     }
-    else {
-        /* mp3 related stuff.  bit buffer might still contain some mp3 data */
-        flush_bitstream(gfp);
-        imp3 = copy_buffer(gfc,mp3buffer, mp3buffer_size_remaining, 1);
-        if (imp3 < 0) {
-            /* some type of fatal error */
-            return imp3;
-        }
-        mp3buffer += imp3;
-        mp3count += imp3;
-        mp3buffer_size_remaining = mp3buffer_size - mp3count;
-        /* if user specifed buffer size = 0, dont check size */
-        if (mp3buffer_size == 0)
-            mp3buffer_size_remaining = 0;
+    mp3buffer += imp3;
+    mp3count += imp3;
+    mp3buffer_size_remaining = mp3buffer_size - mp3count;
+    /* if user specifed buffer size = 0, dont check size */
+    if (mp3buffer_size == 0)
+	mp3buffer_size_remaining = 0;
 
-
-        /* write a id3 tag to the bitstream */
-        id3tag_write_v1(gfp);
-        imp3 = copy_buffer(gfc,mp3buffer, mp3buffer_size_remaining, 0);
-    }
+    /* write a id3 tag to the bitstream */
+    id3tag_write_v1(gfp);
+    imp3 = copy_buffer(gfc,mp3buffer, mp3buffer_size_remaining, 0);
 
     if (imp3 < 0) {
         return imp3;

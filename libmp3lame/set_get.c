@@ -243,7 +243,7 @@ lame_get_bWriteVbrTag( const lame_global_flags*  gfp )
 
 
 
-/* decode only, use lame/mpglib to convert mp3/ogg to wav */
+/* decode only, use lame/mpglib to convert mp3 to wav */
 int
 lame_set_decode_only( lame_global_flags*  gfp,
                       int                 decode_only )
@@ -275,25 +275,13 @@ int
 lame_set_ogg( lame_global_flags*  gfp,
               int                 ogg )
 {
-    /* default = 0 (disabled) */
-
-    /* enforce disable/enable meaning, if we need more than two values
-       we need to switch to an enum to have an apropriate representation
-       of the possible meanings of the value */
-    if ( 0 > ogg || 1 < ogg )
-        return -1;
-
-    gfp->ogg = ogg;
-
-    return 0;
+    return -1;
 }
 
 int
 lame_get_ogg( const lame_global_flags*  gfp )
 {
-    assert( 0 <= gfp->ogg && 1 >= gfp->ogg );
-
-    return gfp->ogg;
+    return 0;
 }
 
 

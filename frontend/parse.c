@@ -78,7 +78,7 @@ int mp3_delay_set;          /* user specified the value of the mp3 encoder
 int enc_delay;
 int enc_padding;
 int disable_wav_header;
-mp3data_struct mp3input_data; /* used by Ogg and MP3 */
+mp3data_struct mp3input_data; /* used by MP3 */
 
 int in_signed=1;
 int in_unsigned=0;
@@ -376,9 +376,6 @@ int  long_help ( const lame_global_flags* gfp, FILE* const fp, const char* Progr
               "    --mp1input      input file is a MPEG Layer I   file\n"
               "    --mp2input      input file is a MPEG Layer II  file\n"
               "    --mp3input      input file is a MPEG Layer III file\n"
-#if defined(HAVE_VORBIS)
-              "    --ogginput      input file is a Ogg Vorbis file\n"
-#endif
  	      "    --nogap <file1> <file2> <...>\n"
  	      "                    gapless encoding for a set of contiguous files\n"
  	      "    --nogapout <dir>\n"
@@ -393,9 +390,6 @@ int  long_help ( const lame_global_flags* gfp, FILE* const fp, const char* Progr
               "                    force = force ms_stereo on all frames.\n"
               "                    auto = jstereo, with varialbe mid/side threshold\n"
               "    -a              downmix from stereo to mono file for mono encoding\n"
-#if defined(HAVE_VORBIS_ENCODER)
-              "    --ogg           encode to Ogg Vorbis instead of MP3\n"
-#endif
               "    --freeformat    produce a free format bitstream\n"
               "    --decode        input=mp3 file, output=wav\n"
               "    -t              disable writing wav header when using --decode\n"
@@ -539,11 +533,6 @@ int  long_help ( const lame_global_flags* gfp, FILE* const fp, const char* Progr
               "    won't fit in a version 1 tag (e.g. the title string is longer than 30\n"
               "    characters), or the '--add-id3v2' or '--id3v2-only' options are used,\n"
               "    or output is redirected to stdout.\n"
-#if defined(HAVE_VORBIS_ENCODER)
-              "\n\n"
-              "    Note: All '--t*' options (except those for track and genre) work for Ogg\n"
-              "    Vorbis output, but other ID3-specific options are ignored."
-#endif              
 #if defined(__OS2__)
               "\n\nOS/2-specific options:\n"
               "    --priority <type>     sets the process priority:\n"
@@ -931,9 +920,6 @@ static int filename_to_type ( const char* FileName )
     if ( 0 == local_strcasecmp ( FileName, ".mp1" ) ) return sf_mp1;
     if ( 0 == local_strcasecmp ( FileName, ".mp2" ) ) return sf_mp2;
     if ( 0 == local_strcasecmp ( FileName, ".mp3" ) ) return sf_mp3;
-#if defined(HAVE_VORBIS)
-    if ( 0 == local_strcasecmp ( FileName, ".ogg" ) ) return sf_ogg;
-#endif
     if ( 0 == local_strcasecmp ( FileName, ".wav" ) ) return sf_wave;
     if ( 0 == local_strcasecmp ( FileName, ".aif" ) ) return sf_aiff;
     if ( 0 == local_strcasecmp ( FileName, ".raw" ) ) return sf_raw;
@@ -1094,19 +1080,8 @@ char* const inPath, char* const outPath, char **nogap_inPath, int *num_nogap)
                     input_format=sf_mp3;
                 
                 T_ELIF ("ogginput")
-#if defined(HAVE_VORBIS)
-                    input_format=sf_ogg;
-#else
-                    fprintf(stderr,"Error: LAME not compiled with Vorbis support\n");
+		    fprintf(stderr, "sorry, vorbis support in LAME is desperated.\n");
                     return -1;
-#endif
-                T_ELIF ("ogg")
-#if defined(HAVE_VORBIS_ENCODER)
-                    (void) lame_set_ogg( gfp, 1 );
-#else
-                    fprintf(stderr,"Error: LAME not compiled with Vorbis Encoder support\n");
-                    return -1;
-#endif
                 T_ELIF ("phone")
                     if (presets_set( gfp, 0, 0, token, ProgramName ) < 0)
                         return -1;
@@ -1729,8 +1704,6 @@ char* const inPath, char* const outPath, char **nogap_inPath, int *num_nogap)
             strncpy(outPath, inPath, PATH_MAX + 1 - 4);
             if ( lame_get_decode_only( gfp ) ) {
                 strncat (outPath, ".wav", 4 );
-            } else if( lame_get_ogg( gfp ) ) {
-                strncat (outPath, ".ogg", 4 );
             } else {
                 strncat (outPath, ".mp3", 4 );
             }
@@ -1755,12 +1728,10 @@ char* const inPath, char* const outPath, char **nogap_inPath, int *num_nogap)
     }
 #endif
 
-#if !(defined HAVE_VORBIS)
     if ( input_format == sf_ogg ) {
-        fprintf(stderr,"Error: LAME not compiled with Vorbis support\n");
+        fprintf(stderr, "sorry, vorbis support in LAME is desperated.\n");
         return -1;
     }
-#endif
     /* default guess for number of channels */
     if (autoconvert) 
         (void) lame_set_num_channels( gfp, 2 ); 

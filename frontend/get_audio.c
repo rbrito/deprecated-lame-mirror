@@ -91,23 +91,11 @@ int     lame_decode_initfile(FILE * fd, mp3data_struct * mp3data);
 int     lame_decode_fromfile(FILE * fd, short int pcm_l[], short int pcm_r[],
                              mp3data_struct * mp3data);
 
-/* and for Vorbis: */
-int     lame_decode_ogg_initfile( lame_global_flags*  gfp,
-                                  FILE*               fd,
-                                  mp3data_struct*     mp3data );
-int     lame_decode_ogg_fromfile( lame_global_flags*  gfc,
-                                  FILE*               fd,
-                                  short int           pcm_l[],
-                                  short int           pcm_r[],
-                                  mp3data_struct*     mp3data );
-
 
 static int read_samples_pcm(FILE * musicin, int sample_buffer[2304],
                             int frame_size, int samples_to_read);
 static int read_samples_mp3(lame_global_flags * const gfp, FILE * const musicin,
                             short int mpg123pcm[2][1152], int num_chan);
-static int read_samples_ogg(lame_global_flags * const gfp, FILE * const musicin,
-                            short int mpg123pcm[2][1152], const int num_chan);
 void    CloseSndFile(sound_file_format input, FILE * musicin);
 FILE   *OpenSndFile(lame_global_flags * gfp, char *);
 
@@ -342,14 +330,6 @@ get_audio_common( lame_global_flags * const gfp,
 	    samples_read = read_samples_mp3( gfp, musicin,
 					     buffer16, num_channels );
         break;
-    case sf_ogg:
-	if( buffer != NULL )
-	    samples_read = read_samples_ogg( gfp, musicin,
-					     buf_tmp16, num_channels );
-	else
-	    samples_read = read_samples_ogg( gfp, musicin,
-					     buffer16, num_channels );
-        break;
     default:
         samples_read =
             read_samples_pcm(musicin, insamp, num_channels * framesize,
@@ -385,9 +365,9 @@ get_audio_common( lame_global_flags * const gfp,
 	}
     }
 
-    /* LAME mp3 and ogg output 16bit -  convert to int, if necessary */
+    /* LAME mp3 output 16bit -  convert to int, if necessary */
     if( input_format == sf_mp1 || input_format == sf_mp2 || 
-        input_format == sf_mp3 || input_format == sf_ogg ) {
+        input_format == sf_mp3) {
 	if( buffer != NULL ) {
 	    for( i = samples_read; --i >= 0; )
 		buffer[0][i] = buf_tmp16[0][i] << (8 * sizeof(int) - 16);
@@ -410,50 +390,6 @@ get_audio_common( lame_global_flags * const gfp,
     return samples_read;
 }
 
-
-
-int
-read_samples_ogg(lame_global_flags * const gfp,
-                 FILE * const musicin,
-                 short int oggpcm[2][1152], const int stereo)
-{
-    int     out = 0;
-
-#ifdef HAVE_VORBIS
-    static const char type_name[] = "Ogg Vorbis file";
-
-    out =
-        lame_decode_ogg_fromfile( gfp,
-                                  musicin,
-                                  oggpcm[0],
-                                  oggpcm[1],
-                                  &mp3input_data );
-    /*
-     * out < 0:  error, probably EOF
-     * out = 0:  not possible with lame_decode_fromfile() ???
-     * out > 0:  number of output samples
-     */
-
-    if (out < 0) {
-        memset(oggpcm, 0, sizeof(**oggpcm) * 2 * 1152);
-        return 0;
-    }
-
-    if (lame_get_num_channels( gfp ) != mp3input_data.stereo)
-        fprintf(stderr,
-                "Error: number of channels has changed in %s - not supported\n",
-                type_name);
-    if ( lame_get_in_samplerate( gfp ) != mp3input_data.samplerate )
-        fprintf(stderr,
-                "Error: sample frequency has changed in %s - not supported\n",
-                type_name);
-
-#else
-    out = -1;           /* wanna read ogg without vorbis support? */
-#endif
-
-    return out;
-}
 
 
 int
@@ -621,24 +557,8 @@ OpenSndFile(lame_global_flags * gfp, char *inPath)
         (void) lame_set_num_samples( gfp, mp3input_data.nsamp );
     }
     else if (input_format == sf_ogg) {
-#ifdef HAVE_VORBIS
-        if ((musicin = fopen(lpszFileName, "rb")) == NULL) {
-            fprintf(stderr, "Could not find \"%s\".\n", lpszFileName);
-            exit(1);
-        }
-        if ( -1 == lame_decode_ogg_initfile( gfp,
-                                             musicin,
-                                             &mp3input_data ) ) {
-            fprintf(stderr, "Error reading headers in mp3 input file %s.\n",
-                    lpszFileName);
-            exit(1);
-        }
-#else
-        fprintf(stderr, "LAME not compiled with libvorbis support.\n");
+        fprintf(stderr, "sorry, vorbis support in LAME is desperated.\n");
         exit(1);
-#endif
-
-
     }
     else {
 
@@ -1371,26 +1291,8 @@ OpenSndFile(lame_global_flags * gfp, char *inPath)
         (void) lame_set_num_samples( gfp, mp3input_data.nsamp );
     }
     else if (input_format == sf_ogg) {
-#ifdef HAVE_VORBIS
-        if ( -1 == lame_decode_ogg_initfile( gfp,
-                                             musicin,
-                                             &mp3input_data ) ) {
-            fprintf(stderr, "Error reading headers in ogg input file %s.\n",
-                    inPath);
-            exit(1);
-        }
-        if( -1 == lame_set_num_channels( gfp, mp3input_data.stereo ) ) {
-            fprintf( stderr,
-                     "Unsupported number of channels: %ud\n",
-                     mp3input_data.stereo );
-            exit( 1 );
-        }
-        (void) lame_set_in_samplerate( gfp, mp3input_data.samplerate );
-        (void) lame_set_num_samples( gfp, mp3input_data.nsamp );
-#else
-        fprintf(stderr, "LAME not compiled with libvorbis support.\n");
+        fprintf(stderr, "sorry, vorbis support in LAME is desperated.\n");
         exit(1);
-#endif
     }
     else {
         if (input_format != sf_raw) {

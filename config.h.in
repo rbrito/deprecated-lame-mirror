@@ -182,9 +182,6 @@
 /* Define to 1 if you have the <unistd.h> header file. */
 #undef HAVE_UNISTD_H
 
-/* build with vorbis support */
-#undef HAVE_VORBIS
-
 /* requested by Frank, seems to be temporary needed for a smooth transition */
 #undef LAME_LIBRARY_BUILD
 

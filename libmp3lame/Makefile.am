@@ -53,8 +53,7 @@ libmp3lame_la_SOURCES = \
 	util.c \
 	vbrquantize.c \
 	version.c \
-	mpglib_interface.c \
-	vorbis_interface.c
+	mpglib_interface.c
 
 noinst_HEADERS= \
 	VbrTag.h \

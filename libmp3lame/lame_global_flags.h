@@ -41,9 +41,7 @@ struct lame_global_struct {
   /* general control params */
   int analysis;               /* collect data for a MP3 frame analyzer?      */
   int bWriteVbrTag;           /* add Xing VBR tag?                           */
-  int decode_only;            /* use lame/mpglib to convert mp3/ogg to wav   */
-  int ogg;                    /* encode to Vorbis .ogg file                  */
-
+  int decode_only;            /* use lame/mpglib to convert mp3 to wav       */
   int quality;                /* quality setting 0=best,  9=worst  default=5 */
   MPEG_mode mode;             /* see enum in lame.h
                                  default = LAME picks best value             */
