@@ -25,6 +25,9 @@
 #include "tables.h"
 #include "quantize-pvt.h"
 
+static const int slen1_tab[16] = { 0, 0, 0, 0, 3, 1, 1, 1, 2, 2, 2, 3, 3, 3, 4, 4 };
+static const int slen2_tab[16] = { 0, 1, 2, 3, 0, 1, 2, 3, 1, 2, 3, 1, 2, 3, 2, 3 };
+
 struct
 {
     unsigned region0_count;
@@ -335,15 +338,10 @@ int count_bits_long(lame_internal_flags *gfc, int ix[576], gr_info *gi)
 
     gi->count1bits = bits;
     gi->big_values = i;
-    if (i == 0 )
+    if (i == 0)
 	return bits;
 
-    if (gi->block_type == SHORT_TYPE) {
-      a1=3*gfc->scalefac_band.s[3];
-      if (a1 > gi->big_values) a1 = gi->big_values;
-      a2 = gi->big_values;
-
-    }else if (gi->block_type == NORM_TYPE) {
+    if (gi->block_type == NORM_TYPE) {
 	a1 = gi->region0_count = gfc->bv_scf[i-2];
 	a2 = gi->region1_count = gfc->bv_scf[i-1];
 
@@ -547,6 +545,9 @@ void best_huffman_divide(lame_internal_flags *gfc, int gr, int ch, gr_info *gi, 
     }
 }
 
+static const int slen1_n[16] = { 1, 1, 1, 1, 8, 2, 2, 2, 4, 4, 4, 8, 8, 8,16,16 };
+static const int slen2_n[16] = { 1, 2, 4, 8, 1, 2, 4, 8, 2, 4, 8, 2, 4, 8, 4, 8 };
+
 void
 scfsi_calc(int ch,
 	   III_side_info_t *l3_side,
@@ -557,9 +558,6 @@ scfsi_calc(int ch,
     gr_info *gi = &l3_side->gr[1].ch[ch].tt;
 
     static const int scfsi_band[5] = { 0, 6, 11, 16, 21 };
-
-    static const int slen1_n[16] = { 0, 1, 1, 1, 8, 2, 2, 2, 4, 4, 4, 8, 8, 8,16,16 };
-    static const int slen2_n[16] = { 0, 2, 4, 8, 1, 2, 4, 8, 2, 4, 8, 2, 4, 8, 4, 8 };
 
     for (i = 0; i < 4; i++) 
 	l3_side->scfsi[ch][i] = 0;
@@ -693,11 +691,6 @@ void best_scalefac_store(lame_global_flags *gfp,int gr, int ch,
     gi->part2_3_length += gi->part2_length;
 }
 
-static const int slen1_tab[16] = { 0, 0, 0, 0, 3, 1, 1, 1, 2, 2, 2, 3, 3, 3, 4, 4 };
-static const int slen2_tab[16] = { 0, 1, 2, 3, 0, 1, 2, 3, 1, 2, 3, 1, 2, 3, 2, 3 };
-
-static const int slen1[16] = { 1, 1, 1, 1, 8, 2, 2, 2, 4, 4, 4, 8, 8, 8,16,16 };
-static const int slen2[16] = { 1, 2, 4, 8, 1, 2, 4, 8, 2, 4, 8, 2, 4, 8, 4, 8 };
 
 /* number of bits used to encode scalefacs */
 static int scale_short[16];
@@ -712,7 +705,7 @@ static int scale_mixed[16];
 
 int scale_bitcount( III_scalefac_t *scalefac, gr_info *cod_info)
 {
-    int i, k, sfb, max_slen1 = 0, max_slen2 = 0, /*a, b, */ ep = 2;
+    int i, k, sfb, max_slen1 = 0, max_slen2 = 0, ep = 2;
 
     /* maximum values */
     const int *tab;
@@ -720,7 +713,6 @@ int scale_bitcount( III_scalefac_t *scalefac, gr_info *cod_info)
 
     if ( cod_info->block_type == SHORT_TYPE ) {
 	tab = scale_short;
-	/* a = 18; b = 18;  */
 	for ( i = 0; i < 3; i++ )
 	{
 	    for ( sfb = 0; sfb < 6; sfb++ )
@@ -734,7 +726,6 @@ int scale_bitcount( III_scalefac_t *scalefac, gr_info *cod_info)
     else
     { /* block_type == 1,2,or 3 */
         tab = scale_long;
-        /* a = 11; b = 10;   */
         for ( sfb = 0; sfb < 11; sfb++ )
             if ( scalefac->l[sfb] > max_slen1 )
                 max_slen1 = scalefac->l[sfb];
@@ -757,7 +748,6 @@ int scale_bitcount( III_scalefac_t *scalefac, gr_info *cod_info)
     }
 
 
-
     /* from Takehiro TOMINAGA <tominaga@isoternet.org> 10/99
      * loop over *all* posible values of scalefac_compress to find the
      * one which uses the smallest number of bits.  ISO would stop
@@ -765,7 +755,7 @@ int scale_bitcount( III_scalefac_t *scalefac, gr_info *cod_info)
     cod_info->part2_length = LARGE_BITS;
     for ( k = 0; k < 16; k++ )
     {
-        if ( (max_slen1 < slen1[k]) && (max_slen2 < slen2[k]) &&
+        if ( (max_slen1 < slen1_n[k]) && (max_slen2 < slen2_n[k]) &&
              ((int)cod_info->part2_length > tab[k])) {
 	  cod_info->part2_length=tab[k];
 	  cod_info->scalefac_compress=k;
@@ -977,8 +967,11 @@ void huffman_init(lame_global_flags *gfp)
     }
 #endif
     for (i = 0; i < 16; i++) {
+	/* a = 18; b = 18;  */
 	scale_short[i] = slen1_tab[i] * 18 + slen2_tab[i] * 18;
+        /* a = 17; b = 18;   */
 	scale_mixed[i] = slen1_tab[i] * 17 + slen2_tab[i] * 18;
+        /* a = 11; b = 10;   */
 	scale_long [i] = slen1_tab[i] * 11 + slen2_tab[i] * 10;
     }
 
@@ -990,17 +983,21 @@ void huffman_init(lame_global_flags *gfp)
 	index = subdv_table[scfb_anz].region0_count;
 	while (gfc->scalefac_band.l[index + 1] > i)
 	    index--;
+#if 0
 	if (index < 0) {
 	    index = 0;
 	}
+#endif
 	gfc->bv_scf[i-2] = index;
 
 	index = subdv_table[scfb_anz].region1_count;
 	while (gfc->scalefac_band.l[index + gfc->bv_scf[i-2] + 2] > i)
 	    index--;
+#if 0
 	if (index < 0) {
 	    index = 0;
 	}
+#endif
 	gfc->bv_scf[i-1] = index;
     }
 }
