@@ -111,7 +111,7 @@ static const char max_range_long[SBMAX_l] = {
  *          maximum allowed granule/channel size times 4 = 8*2047 bits.,
  *          so this is the absolute maximum supported by the format.
  *
- *      mean_bytes:         target number of bytes.
+ *      mean_bytes:     target number of bytes.
  *      gfc->ResvMax:   maximum allowed reservoir 
  *      gfc->ResvSize:  current reservoir size
  */
@@ -1424,8 +1424,11 @@ VBR_2nd_bitalloc(lame_t gfc, gr_info *gi, FLOAT * xmin)
 static int
 VBR_3rd_bitalloc(lame_t gfc, gr_info *gi, FLOAT * xmin)
 {
-    /* note: we cannot use calc_noise() because l3_enc[] is not calculated
-       at this point */
+    /*
+     * This code is basically based on the same idea of CBR_2nd_bitalloc().
+     * But we cannot use calc_noise() because l3_enc[] is not calculated
+     * at this point.
+     */
     int sfb, j, r = 0;
     for (j = sfb = 0; sfb < gi->psymax; sfb++) {
 	if (IPOW20(scalefactor(gi, sfb)) > gfc->maxXR[sfb]) {
@@ -1612,16 +1615,20 @@ ABR_iteration_loop(lame_t gfc, III_psy_ratio ratio[MAX_GRANULES][MAX_CHANNELS])
 	- gfc->mean_bitrate_kbps;
     gfc->bytes_diff += bytes;
 
-    threshold = gfc->mean_bitrate_kbps * gfc->frameNum * 0.2;
-    if (gfc->bytes_diff > threshold
-    || (gfc->bytes_diff > threshold*0.25
-	&& gfc->masking_lower < gfc->masklower_base*2.0)) {
-	gfc->masking_lower *= 1.01;
-    } else if (gfc->masking_lower >= gfc->masklower_base) {
+    threshold = (FLOAT)0.2 * gfc->mean_bitrate_kbps * gfc->frameNum;
+    if (bytes > 0
+	&& (gfc->bytes_diff > threshold
+	    || (gfc->bytes_diff > 0
+		&& gfc->masking_lower < gfc->masklower_base*(FLOAT)1.2))) {
+	gfc->masking_lower *= (FLOAT)1.01;
+    } else {
 	if (gfc->bytes_diff < -threshold) {
-	    gfc->masking_lower *= 0.97;
-	} else if (gfc->bytes_diff < -threshold*0.5) {
-	    gfc->masking_lower *= 0.99;
+	    gfc->masking_lower *= (FLOAT)0.97;
+	} else if (gfc->bytes_diff < -threshold*(FLOAT)0.5) {
+	    gfc->masking_lower *= (FLOAT)0.99;
+	}
+	if (gfc->masking_lower < gfc->masklower_base) {
+	    gfc->masking_lower = gfc->masklower_base;
 	}
     }
 }
