@@ -340,39 +340,6 @@ FLOAT8 freq2cbw(FLOAT8 freq)
 
 
 
-/***********************************************************************
- * compute bitsperframe and mean_bits for a layer III frame 
- **********************************************************************/
-void getframebits(const lame_global_flags * gfp, int *bitsPerFrame, int *mean_bits) 
-{
-  lame_internal_flags *gfc=gfp->internal_flags;
-  int  whole_SpF;  /* integral number of Slots per Frame without padding */
-  int  bit_rate;
-  
-  /* get bitrate in kbps [?] */
-  if (gfc->bitrate_index) 
-    bit_rate = bitrate_table[gfp->version][gfc->bitrate_index];
-  else
-    bit_rate = gfp->brate;
-  assert ( bit_rate <= 550 );
-  
-  // bytes_per_frame = bitrate * 1000 / ( gfp->out_samplerate / (gfp->version == 1  ?  1152  :  576 )) / 8;
-  // bytes_per_frame = bitrate * 1000 / gfp->out_samplerate * (gfp->version == 1  ?  1152  :  576 ) / 8;
-  // bytes_per_frame = bitrate * ( gfp->version == 1  ?  1152/8*1000  :  576/8*1000 ) / gfp->out_samplerate;
-  
-  whole_SpF = (gfp->version+1)*72000*bit_rate / gfp->out_samplerate;
-  
-  /* main encoding routine toggles padding on and off */
-  /* one Layer3 Slot consists of 8 bits */
-  *bitsPerFrame = 8 * (whole_SpF + gfc->padding);
-  
-  // sideinfo_len
-  *mean_bits = (*bitsPerFrame - 8*gfc->sideinfo_len) / gfc->mode_gr;
-}
-
-
-
-
 #define ABS(A) (((A)>0) ? (A) : -(A))
 
 int FindNearestBitrate(

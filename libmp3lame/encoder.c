@@ -267,7 +267,7 @@ int  lame_encode_mp3_frame (				// Output
   chgrdata pe,pe_MS;
   chgrdata *pe_use;
 
-  int ch,gr,mean_bits;
+  int ch,gr;
   int bitsPerFrame;
 
   int check_ms_stereo;
@@ -608,8 +608,6 @@ int  lame_encode_mp3_frame (				// Output
   }
 
   /*  write the frame to the bitstream  */
-  getframebits(gfp, &bitsPerFrame, &mean_bits);
-
   format_bitstream( gfp, bitsPerFrame);
 
   /* copy mp3 bit buffer into array */

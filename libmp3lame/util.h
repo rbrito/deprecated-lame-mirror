@@ -578,9 +578,6 @@ extern FLOAT8         freq2bark(FLOAT8 freq);
 extern FLOAT8         freq2cbw(FLOAT8 freq);
 void disable_FPE(void);
 
-extern void 
-getframebits( const lame_global_flags *gfp, int *bitsPerFrame, int *mean_bits);
-
 void fill_buffer(lame_global_flags *gfp,
 		 sample_t *mfbuf[2],
 		 sample_t *in_buffer[2],

@@ -85,7 +85,8 @@ ResvFrameBegin(lame_global_flags *gfp, int *mean_bits)
     III_side_info_t     *l3_side = &gfc->l3_side;
     int frameLength;
 
-    getframebits(gfp, &frameLength, mean_bits);
+    frameLength = getframebits(gfp);
+    *mean_bits = (frameLength - gfc->sideinfo_len * 8) / gfc->mode_gr;
 
 /*
  *  Meaning of the variables:
@@ -151,8 +152,8 @@ ResvFrameBegin(lame_global_flags *gfp, int *mean_bits)
     }
 
     fullFrameBits = *mean_bits * gfc->mode_gr + Min ( gfc->ResvSize, gfc->ResvMax );
-    
-    if ( fullFrameBits > maxmp3buf )
+
+    if (fullFrameBits > maxmp3buf)
         fullFrameBits = maxmp3buf;
 
     assert ( 0 == gfc->ResvMax % 8 );

@@ -1047,25 +1047,25 @@ get_framebits (
     int             frameBits[15] )
 {
     lame_internal_flags *gfc=gfp->internal_flags;
-    int bitsPerFrame, mean_bits, i;
+    int bitsPerFrame, i;
     III_side_info_t *l3_side = &gfc->l3_side;
     
     /*  always use at least this many bits per granule per channel 
      *  unless we detect analog silence, see below 
      */
     gfc->bitrate_index = gfc->VBR_min_bitrate;
-    getframebits (gfp, &bitsPerFrame, &mean_bits);
-    *min_mean_bits = mean_bits / gfc->channels_out;
+    bitsPerFrame = getframebits(gfp);
+    *min_mean_bits = (bitsPerFrame - gfc->sideinfo_len * 8) / (gfc->mode_gr*gfc->channels_out);
 
     /*  bits for analog silence 
      */
     gfc->bitrate_index = 1;
-    getframebits (gfp, &bitsPerFrame, &mean_bits);
-    *analog_mean_bits = mean_bits / gfc->channels_out;
+    bitsPerFrame = getframebits(gfp);
+    *analog_mean_bits = (bitsPerFrame - gfc->sideinfo_len * 8) / (gfc->mode_gr*gfc->channels_out);
 
     for (i = 1; i <= gfc->VBR_max_bitrate; i++) {
         gfc->bitrate_index = i;
-        frameBits[i] = ResvFrameBegin (gfp, &mean_bits);
+        frameBits[i] = ResvFrameBegin (gfp, &bitsPerFrame);
     }
 }
 
@@ -1308,7 +1308,6 @@ VBR_iteration_loop (
     FLOAT8    xrpow[576];
     int       bands[2][2];
     int       frameBits[15];
-    int       bitsPerFrame;
     int       save_bits[2][2];
     int       used_bits, used_bits2;
     int       bits;
@@ -1425,13 +1424,13 @@ calc_target_bits (
     lame_internal_flags *gfc=gfp->internal_flags;
     III_side_info_t *l3_side = &gfc->l3_side;
     FLOAT8 res_factor;
-    int gr, ch, totbits, mean_bits, bitsPerFrame;
+    int gr, ch, totbits, mean_bits;
     
     gfc->bitrate_index = gfc->VBR_max_bitrate;
     *max_frame_bits = ResvFrameBegin (gfp, &mean_bits);
 
     gfc->bitrate_index = 1;
-    getframebits (gfp, &bitsPerFrame, &mean_bits);
+    mean_bits = (getframebits(gfp) - gfc->sideinfo_len * 8) / gfc->mode_gr;
     *analog_silence_bits = mean_bits / gfc->channels_out;
 
     mean_bits  = gfp->VBR_mean_bitrate_kbps * gfp->framesize * 1000;
@@ -1546,7 +1545,7 @@ ABR_iteration_loop(
     III_psy_xmin l3_xmin;
     FLOAT8    xrpow[576];
     int       targ_bits[2][2];
-    int       bitsPerFrame, mean_bits, totbits, max_frame_bits;
+    int       mean_bits, totbits, max_frame_bits;
     int       ch, gr, ath_over;
     int       analog_silence_bits;
     gr_info             *cod_info;
@@ -1625,7 +1624,6 @@ iteration_loop(
     III_psy_xmin l3_xmin;
     FLOAT8 xrpow[576];
     int    targ_bits[2];
-    int    bitsPerFrame;
     int    mean_bits, max_bits;
     int    gr, ch;
     III_side_info_t     *l3_side = &gfc->l3_side;
