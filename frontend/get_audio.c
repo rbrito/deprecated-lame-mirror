@@ -317,12 +317,12 @@ get_audio_common( lame_global_flags * const gfp,
      * are using LIBSNDFILE, this is not necessary 
      */
     if (count_samples_carefully) {
+	/* in case the input is a FIFO (at least it's reproducible with
+	   a FIFO) tmp_num_samples may be 0 and therefore remaining
+	   would be 0, but we need to read some samples, so don't
+	   change samples_to_read to the wrong value in this case */
         remaining = tmp_num_samples - Min(tmp_num_samples, num_samples_read);
-	if (remaining < framesize && 0 != remaining)
-	    /* in case the input is a FIFO (at least it's reproducible with
-	       a FIFO) tmp_num_samples may be 0 and therefore remaining
-	       would be 0, but we need to read some samples, so don't
-	       change samples_to_read to the wrong value in this case */
+	if (remaining < framesize && 0 != tmp_num_samples)
 	    samples_to_read = remaining;
     }
 
