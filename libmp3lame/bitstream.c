@@ -826,7 +826,7 @@ flush_bitstream(lame_global_flags *gfp)
 
   /* save the ReplayGain value */
   if (gfp->internal_flags->findReplayGain) {
-    FLOAT RadioGain = (FLOAT) GetTitleGain();
+    FLOAT RadioGain = (FLOAT) GetTitleGain(gfc->rgdata);
     assert(RadioGain != GAIN_NOT_ENOUGH_SAMPLES); 
     gfp->internal_flags->RadioGain = (int) floor( RadioGain * 10.0 + 0.5 ); /* round to nearest */
   }
@@ -1015,7 +1015,7 @@ int copy_buffer(lame_internal_flags *gfc,unsigned char *buffer,int size,int mp3d
             }
 
             if (gfc->gfp->ReplayGain_decode)
-              if (AnalyzeSamples(pcm_out[0], pcm_out[1], mp3out, gfc->channels_out) == GAIN_ANALYSIS_ERROR)
+              if (AnalyzeSamples(gfc->rgdata, pcm_out[0], pcm_out[1], mp3out, gfc->channels_out) == GAIN_ANALYSIS_ERROR)
                  return -6;
 
           } /* if (mp3out>0) */

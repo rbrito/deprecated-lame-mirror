@@ -28,8 +28,14 @@
 #ifndef GAIN_ANALYSIS_H
 #define GAIN_ANALYSIS_H
 
+#ifdef HAVE_CONFIG_H
+# include <config.h>
+#endif
+
+
 #include <stddef.h>
 #include "util.h"
+
 
 #define GAIN_NOT_ENOUGH_SAMPLES  -24601
 #define GAIN_ANALYSIS_ERROR           0
@@ -38,17 +44,20 @@
 #define INIT_GAIN_ANALYSIS_ERROR      0
 #define INIT_GAIN_ANALYSIS_OK         1
 
+#define PINK_REF                64.82       /* 298640883795 */         /* calibration value */
+
+
 #ifdef __cplusplus
 extern "C" {
 #endif
 
-typedef sample_t Float_t;         /* Type used for filtering */
 
-int     InitGainAnalysis ( long samplefreq );
-int     AnalyzeSamples   ( const Float_t* left_samples, const Float_t* right_samples, size_t num_samples, int num_channels );
-int		ResetSampleFrequency ( long samplefreq );
-Float_t   GetTitleGain     ( void );
-Float_t   GetAlbumGain     ( void );
+int     InitGainAnalysis (replaygain_t* rgData, long samplefreq );
+int     AnalyzeSamples   (replaygain_t* rgData, const Float_t* left_samples, const Float_t* right_samples, size_t num_samples, int num_channels );
+int		ResetSampleFrequency (replaygain_t* rgData, long samplefreq );
+Float_t   GetTitleGain     (replaygain_t* rgData);
+Float_t   GetAlbumGain     (replaygain_t* rgData);
+
 
 #ifdef __cplusplus
 }
