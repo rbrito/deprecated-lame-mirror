@@ -61,6 +61,7 @@ int no_short_blocks;
 sound_file_format input_format;
 int lame_nowrite;
 FLOAT lowpass1,lowpass2;
+FLOAT highpass1,highpass2;
 FLOAT resample_ratio;
 int sfb21;
 int silent;
@@ -127,6 +128,10 @@ void lame_usage(char *name)  /* print syntax & exit */
   fprintf(stderr,"  --resample sfreq  sampling frequency of output file(kHz)- default=input sfreq\n");
   fprintf(stderr,"  --mp3input        input file is a MP3 file\n");
   fprintf(stderr,"  --voice           experimental voice mode\n");
+  fprintf(stderr,"  --lowpass_l freq  lowpass  filter start frequency (hz)\n");
+  fprintf(stderr,"  --lowpass_h freq  lowpass  filter  end  frequency (hz), cutoff above\n");
+  fprintf(stderr,"  --highpass_l freq highpass filter start frequency (hz), cutoff below\n");
+  fprintf(stderr,"  --highpass_h freq highpass filter  end  frequency (hz)\n");
   fprintf(stderr,"\n");
   fprintf(stderr,"    -v              use variable bitrate (VBR)\n");
   fprintf(stderr,"    -V n            quality setting for VBR.  default n=%i\n",VBR_q);
@@ -198,7 +203,7 @@ void lame_parse_args(int argc, char **argv)
   int stereo;           /* number of channels of MP3 file */
   int samplerate,resamplerate=0;
   int framesize;
-  FLOAT compression_ratio;
+  FLOAT compression_ratio, lowpass_l=0, lowpass_h=0;
 
   /* preset defaults */
   programName = argv[0]; 
@@ -325,6 +330,22 @@ void lame_parse_args(int argc, char **argv)
   		strncpy(id3tag.genre, &c, 1);
 	       }
 #endif
+	else if (strcmp(token, "highpass_l")==0) {
+	  argUsed=1;
+	  highpass1 = atof( nextArg );
+	}
+	else if (strcmp(token, "highpass_h")==0) {
+	  argUsed=1;
+	  highpass2 = atof( nextArg );
+	}
+	else if (strcmp(token, "lowpass_l")==0) {
+	  argUsed=1;
+	  lowpass_l = atof( nextArg );
+	}
+	else if (strcmp(token, "lowpass_h")==0) {
+	  argUsed=1;
+	  lowpass_h = atof( nextArg );
+	}
 	else
 	  {
 	    fprintf(stderr,"%s: unrec option --%s\n",
@@ -724,6 +745,21 @@ case 't':  /* dont write VBR tag */
   lowpass1 = .73-.10;
   lowpass2 = .73+.05;
   */
+  
+  /* apply user driven filters */
+  
+  if (highpass1>0)
+    highpass1 = Max( 0.0, Min( 1.0, 2.0*highpass1/resamplerate));
+  else 
+    highpass1 = 0;
+  highpass2 = Max( highpass1, Min( 1.0, 2.0*highpass2/resamplerate));
+  
+  if (lowpass_l>0)
+    lowpass1 = Max( 0.0, Min( 1.0, 2.0*lowpass_l/resamplerate));
+  if (lowpass_h>0) {
+    lowpass2 = Max( 0.0, Min( 1.0, 2.0*lowpass_h/resamplerate));
+    lowpass1 = Min( lowpass1, lowpass2 );
+  }
 
   /* choose a max bitrate for VBR */
   if (VBR) {
@@ -820,6 +856,14 @@ void lame_print_config(void)
     fprintf(stderr, "Encoding %s to %s\n",
 	    (strcmp(inPath, "-")? inPath : "stdin"),
 	    (strcmp(outPath, "-")? outPath : "stdout"));
+    if (highpass2>0.0)
+      fprintf(stderr, "Highpass filter: cutoff below %g hz, increasing upto %g hz\n",
+              highpass1*s_freq[info->version][info->sampling_frequency]*500, 
+	      highpass2*s_freq[info->version][info->sampling_frequency]*500);
+    if (lowpass1>0.0)
+      fprintf(stderr, "Lowpass filter: cutoff above %g hz, decreasing from %g hz\n",
+              lowpass2*s_freq[info->version][info->sampling_frequency]*500, 
+	      lowpass1*s_freq[info->version][info->sampling_frequency]*500);
     if (VBR)
       fprintf(stderr, "Encoding as %.1fkHz VBR(q=%i) %s MPEG%i LayerIII file\n",
 	      s_freq[info->version][info->sampling_frequency],
@@ -1185,7 +1229,7 @@ FFT's                      <---------1024---------->
   mdct_sub48(mfbuf[0], mfbuf[1], xr, stereo, &l3_side, mode_gr);
 
   /* lowpass MDCT filtering */
-  if (sfb21 || voice_mode || lowpass1>0) 
+  if (sfb21 || voice_mode || lowpass1>0 || highpass2>0) 
     filterMDCT(xr,&l3_side,&fr_ps);
 
 
@@ -1393,6 +1437,8 @@ void lame_init(int nowrite)
   lame_nowrite=nowrite;
   lowpass1=0;
   lowpass2=0;
+  highpass1=0;
+  highpass2=0;
   no_short_blocks=0;
   resample_ratio=1;
   sfb21=1;
