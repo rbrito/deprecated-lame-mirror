@@ -31,6 +31,7 @@
 #include "encoder.h"
 #include "lame.h"
 #include "lame-analysis.h"
+#include "id3tag.h"
 
 /***********************************************************************
 *

@@ -33,6 +33,7 @@
 #include <stdlib.h>
 #include <string.h>
 #include "lame.h"
+#include "id3tag.h"
 #include "util.h"
 #include "bitstream.h"
 
