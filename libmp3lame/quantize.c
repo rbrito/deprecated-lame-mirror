@@ -583,8 +583,8 @@ better_quant(
     /*
        noise is given in decibels (dB) relative to masking thesholds.
 
-       over_noise:  ??? (the previous comment is fully wrong)
-       tot_noise:   ??? (the previous comment is fully wrong)
+       over_noise:  sum of noise which exceed the threshold.
+       tot_noise:   sum of noise, including "not exceeded" noise.
        max_noise:   max quantization noise 
      */
 
@@ -611,11 +611,7 @@ better_quant(
 	    better = calc.max_noise < best->max_noise; 
 	    break;
 
-        case 3:
-	    better = (calc.tot_noise < best->tot_noise)
-		&&   (calc.max_noise < best->max_noise);
-	    break;
-
+        case 3:	    /* for backward compatibility, pass through */
         case 6:
 	    better =  calc.over_noise  < best->over_noise
 		||  ( calc.over_noise == best->over_noise
@@ -624,12 +620,7 @@ better_quant(
 			     && calc.tot_noise  <= best->tot_noise )
 			  ));
 	    break;
-
-        case 10:
-	    better = (calc.over_noise < best->over_noise)
-		&&   (calc.max_noise < best->max_noise);
-	    break;
-    }   
+    }
     if (better)
 	*best = calc;
     return better;
