@@ -385,7 +385,7 @@ void plot_frame(void)
     gpk_rectangle_draw(pcmbox,xcord,ycord,xmn,ymn,xmx,ymx,&yellow);
   }
   for (gr = 0 ; gr < mode_gr ; gr++) {
-    if (blocktype[gr][ch]==2) 
+    if (blocktype[gr][ch]==SHORT_TYPE) 
       for (i=1 ; i<=2; i++) {
 	xcord[0] = 223.5+gr*576 + i*192; 
 	xcord[1] = 223.5+gr*576 + i*192; 
@@ -444,7 +444,7 @@ void plot_frame(void)
     gpk_rectangle_draw(winbox,xcord,ycord,xmn,ymn,xmx,ymx,&yellow);
   }
   for (gr = 0 ; gr < 2 ; gr++) {
-    if (blocktype[gr][ch]==2) 
+    if (blocktype[gr][ch]==SHORT_TYPE) 
       for (i=1 ; i<=2; i++) {
 	xcord[0] = 223.5+gr*576 + i*192; 
 	xcord[1] = 223.5+gr*576 + i*192; 

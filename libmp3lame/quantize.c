@@ -43,13 +43,14 @@
 static const int max_range_short[SBMAX_s*3] = {
     15, 15, 15, 15, 15, 15, 15, 15, 15, 15, 15, 15, 15, 15, 15, 15, 15, 15,
     7, 7, 7, 7, 7, 7, 7, 7, 7, 7, 7, 7, 7, 7, 7, 7, 7, 7,
-    0, 0, 0 };
-
+    0, 0, 0
+};
 static const int max_range_long[SBMAX_l] = {
-    15, 15, 15, 15, 15, 15, 15, 15, 15, 15, 15, 7, 7, 7, 7, 7, 7, 7, 7, 7, 7, 0 };
-
+    15, 15, 15, 15, 15, 15, 15, 15, 15, 15, 15, 7, 7, 7, 7, 7, 7, 7, 7, 7, 7, 0
+};
 static const int max_range_long_lsf_pretab[SBMAX_l] = {
-    7, 7, 7, 7, 7, 7, 3, 3, 3, 3, 3, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0 };
+    7, 7, 7, 7, 7, 7, 3, 3, 3, 3, 3, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0
+};
 
 /************************************************************************
  * allocate bits among 2 channels based on PE
@@ -940,9 +941,9 @@ outer_loop (
 static void 
 ABR_calc_target_bits (
     lame_global_flags * gfp,
-    III_psy_ratio      ratio        [2][2],
-    FLOAT               ms_ener_ratio [2],
-    int                  targ_bits     [2][2]
+    III_psy_ratio     ratio        [2][2],
+    FLOAT             ms_ener_ratio[2],
+    int               targ_bits    [2][2]
     )
 {
     lame_internal_flags *gfc=gfp->internal_flags;
@@ -1111,7 +1112,7 @@ iteration_loop(
         on_pe (gfc, ratio[gr], targ_bits, mean_bits);
 
         for (ch=0 ; ch < gfc->channels_out ; ch ++) {
-	    gr_info *gi = &gfc->l3_side.tt[gr][ch]; 
+	    gr_info *gi = &gfc->l3_side.tt[gr][ch];
 	    outer_loop(gfc, gi, ch, targ_bits[ch], &ratio[gr][ch]);
 	    iteration_finish_one(gfc, gr, ch);
 	    ResvAdjust(gfc,
@@ -1570,11 +1571,9 @@ set_pinfo (
     const int           gr,
     const int           ch )
 {
-    int sfb, sfb2, over = 0;
-    int j,i,end,bw;
+    int i, j, end, bw, sfb, sfb2, over = 0;
     FLOAT en0,en1,tot_noise=0.0;
     FLOAT ifqstep = 0.5 * (1+gi->scalefac_scale);
-
     FLOAT l3_xmin[SFBMAX], distort[SFBMAX];
     calc_noise_result noise;
 
@@ -1582,71 +1581,50 @@ set_pinfo (
     calc_noise (gi, l3_xmin, distort, &noise);
 
     j = 0;
-    sfb2 = gi->sfb_lmax;
-    if (gi->block_type != SHORT_TYPE)
-	sfb2 = SBMAX_l;
-    for (sfb = 0; sfb < sfb2; sfb++) {
-	bw = gi->width[sfb];
+    for (sfb2 = 0; sfb2 < gi->psy_lmax; sfb2++) {
+	bw = gi->width[sfb2];
 	end   = j + bw;
 	for (en0 = 0.0; j < end; j++) 
 	    en0 += gi->xr[j] * gi->xr[j];
-	en0=Max(en0/bw,1e-20);
+	en0=Max(en0, 1e-20);
 	/* convert to MDCT units */
-	en1=1e15;  /* scaling so it shows up on FFT plot */
-	gfc->pinfo->  en[gr][ch][sfb] = en1*en0;
-	gfc->pinfo->xfsf[gr][ch][sfb] = en1*l3_xmin[sfb]*distort[sfb]/bw;
-
-	if (ratio->en.l[sfb]>0)
-	    en0 = en0/ratio->en.l[sfb];
-	else
-	    en0=0.0;
-
-	gfc->pinfo->thr[gr][ch][sfb] =
-	    en1*Max(en0*ratio->thm.l[sfb],gfc->ATH.l[sfb]);
-
-	gfc->pinfo->LAMEsfb[gr][ch][sfb] = 0;
-	if (gi->preflag>0 && sfb>=11)
-	    gfc->pinfo->LAMEsfb[gr][ch][sfb] = -ifqstep*pretab[sfb];
-
-	if (distort[sfb] > 1.0)
+	en1=1e15/bw;  /* scaling so it shows up on FFT plot */
+	gfc->pinfo->  en[gr][ch][sfb2] = en1*en0;
+	gfc->pinfo-> thr[gr][ch][sfb2] = en1*l3_xmin[sfb2];
+	gfc->pinfo->xfsf[gr][ch][sfb2] = en1*l3_xmin[sfb2]*distort[sfb2];
+	if (distort[sfb2] > 1.0)
 	    over++;
-	tot_noise += distort[sfb];
-	assert(gi->scalefac[sfb]>=0); /*scfsi should be decoded by the caller*/
-	gfc->pinfo->LAMEsfb[gr][ch][sfb] -= ifqstep*gi->scalefac[sfb];
+	tot_noise += distort[sfb2];
+
+	gfc->pinfo->LAMEsfb[gr][ch][sfb2] = 0;
+	if (gi->preflag>0 && sfb2>=11)
+	    gfc->pinfo->LAMEsfb[gr][ch][sfb2] = -ifqstep*pretab[sfb2];
+	gfc->pinfo->LAMEsfb[gr][ch][sfb2] -= ifqstep*gi->scalefac[sfb2];
+	assert(gi->scalefac[sfb2]>=0); /* should be decoded by the caller*/
     } /* for sfb */
 
-    if (gi->block_type == SHORT_TYPE) {
-	sfb2 = sfb;
-	for (sfb = gi->sfb_smin; sfb < SBMAX_s; sfb++) {
-	    for (i = 0; i < 3; i++) {
-		bw = gi->width[sfb2];
-		end = j + bw;
-		for (en0 = 0.0; j < end; j++)
-		    en0 += gi->xr[j] * gi->xr[j];
+    for (sfb = gi->sfb_smin; sfb2 < gi->psymax; sfb++) {
+	for (i = 0; i < 3; i++, sfb2++) {
+	    bw = gi->width[sfb2];
+	    end = j + bw;
+	    for (en0 = 0.0; j < end; j++)
+		en0 += gi->xr[j] * gi->xr[j];
 
-                en0=Max(en0/bw,1e-20);
-                /* convert to MDCT units */
-                en1=1e15;  /* scaling so it shows up on FFT plot */
-		gfc->pinfo->  en_s[gr][ch][3*sfb+i] = en1*en0;
-		gfc->pinfo->xfsf_s[gr][ch][3*sfb+i] = en1*l3_xmin[sfb2]*distort[sfb2]/bw;
-		if (ratio->en.s[sfb][i]>0)
-		    en0 = en0/ratio->en.s[sfb][i];
-                else
-                    en0=0.0;
+	    en0 = Max(en0, 1e-20);
+	    /* convert to MDCT units */
+	    en1=1e15/bw;  /* scaling so it shows up on FFT plot */
+	    gfc->pinfo->  en_s[gr][ch][3*sfb+i] = en1*en0;
+	    gfc->pinfo-> thr_s[gr][ch][3*sfb+i] = en1*l3_xmin[sfb2];
+	    gfc->pinfo->xfsf_s[gr][ch][3*sfb+i] = en1*l3_xmin[sfb2]*distort[sfb2];
+	    if (distort[sfb2] > 1.0)
+		over++;
+	    tot_noise += distort[sfb2];
 
-		gfc->pinfo->thr_s[gr][ch][3*sfb+i]
-		    = en1*Max(en0*ratio->thm.s[sfb][i],gfc->ATH.s[sfb]);
-
-                gfc->pinfo->LAMEsfb_s[gr][ch][3*sfb+i]
-		    = -2.0*gi->subblock_gain[i] - ifqstep*gi->scalefac[sfb2];
-
-		if (distort[sfb2] > 1.0)
-		    over++;
-		tot_noise += distort[sfb2];
-		sfb2++;
-            }
-        }
+	    gfc->pinfo->LAMEsfb_s[gr][ch][3*sfb+i]
+		= -2.0*gi->subblock_gain[i] - ifqstep*gi->scalefac[sfb2];
+	}
     } /* block type short */
+
     gfc->pinfo->LAMEqss     [gr][ch] = gi->global_gain;
     gfc->pinfo->LAMEmainbits[gr][ch] = gi->part2_3_length + gi->part2_length;
     gfc->pinfo->LAMEsfbits  [gr][ch] = gi->part2_length;
@@ -1669,13 +1647,19 @@ set_pinfo (
  ************************************************************************/
 
 void
-set_frame_pinfo(lame_global_flags *gfp, III_psy_ratio   ratio    [2][2])
+set_frame_pinfo(lame_internal_flags *gfc, III_psy_ratio   ratio    [2][2])
 {
-    lame_internal_flags *gfc=gfp->internal_flags;
     int gr, ch;
 
     /* for every granule and channel patch l3_enc and set info
      */
+    memset(gfc->pinfo->  en_s, 0, sizeof(gfc->pinfo->  en_s));
+    memset(gfc->pinfo-> thr_s, 0, sizeof(gfc->pinfo-> thr_s));
+    memset(gfc->pinfo->xfsf_s, 0, sizeof(gfc->pinfo->xfsf_s));
+    memset(gfc->pinfo->    en, 0, sizeof(gfc->pinfo->    en));
+    memset(gfc->pinfo->   thr, 0, sizeof(gfc->pinfo->   thr));
+    memset(gfc->pinfo->  xfsf, 0, sizeof(gfc->pinfo->  xfsf));
+
     for (gr = 0; gr < gfc->mode_gr; gr ++) {
         for (ch = 0; ch < gfc->channels_out; ch ++) {
             gr_info *gi = &gfc->l3_side.tt[gr][ch];

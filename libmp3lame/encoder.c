@@ -552,7 +552,7 @@ int  lame_encode_mp3_frame (				/* Output */
 
 #if defined(HAVE_GTK)
     if (gfc->pinfo)
-	set_frame_pinfo (gfp, masking);
+	set_frame_pinfo (gfc, masking);
 #endif
 
 #ifdef BRHIST
