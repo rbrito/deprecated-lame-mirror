@@ -164,11 +164,19 @@ SOURCE=.\layer2.h
 # End Source File
 # Begin Source File
 
+SOURCE=.\layer3.h
+# End Source File
+# Begin Source File
+
 SOURCE=.\mpg123.h
 # End Source File
 # Begin Source File
 
 SOURCE=.\mpglib.h
+# End Source File
+# Begin Source File
+
+SOURCE=.\tabinit.h
 # End Source File
 # End Group
 # End Target

@@ -3,6 +3,8 @@
 
 #include "common.h"
 #include "interface.h"
+#include "tabinit.h"
+#include "layer3.h"
 
 #ifdef USE_LAYER_1
 	#include "layer1.h"
@@ -11,6 +13,7 @@
 #ifdef USE_LAYER_2
 	#include "layer2.h"
 #endif
+
 
 /* Global mp .. it's a hack */
 struct mpstr *gmp;

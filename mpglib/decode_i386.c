@@ -20,6 +20,7 @@
 
 #include "mpg123.h"
 #include "mpglib.h"
+#include "tabinit.h"
 
 extern struct mpstr *gmp;
 

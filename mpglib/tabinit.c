@@ -1,15 +1,10 @@
 #include <stdlib.h>
-
+#include "tabinit.h"
 #include "mpg123.h"
 
 real decwin[512+32];
 static real cos64[16],cos32[8],cos16[4],cos8[2],cos4[1];
 real *pnts[] = { cos64,cos32,cos16,cos8,cos4 };
-
-#if 0
-static unsigned char *conv16to8_buf = NULL;
-unsigned char *conv16to8;
-#endif
 
 const double dewin[512] = {
    0.000000000,-0.000015259,-0.000015259,-0.000015259,

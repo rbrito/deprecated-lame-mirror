@@ -27,8 +27,6 @@ const int tabsel_123 [2] [3] [16] = {
      {0,8,16,24,32,40,48,56,64,80,96,112,128,144,160,} }
 };
 
-const struct parameter param = { 1 , 1 , 0 , 0 };
-
 const long freqs[9] = { 44100, 48000, 32000,
                         22050, 24000, 16000,
                         11025, 12000,  8000 };
@@ -38,6 +36,10 @@ unsigned char *wordpointer;
 unsigned char *pcm_sample;
 int pcm_point = 0;
 
+
+#if defined( USE_LAYER_1 ) || defined ( USE_LAYER_1 )
+  real muls[27][64];
+#endif
 
 #if 0
 static void get_II_stuff(struct frame *fr)

@@ -7,6 +7,7 @@
  */
 
 #include "mpg123.h"
+#include "tabinit.h"
 
 static void dct64_1(real *out0,real *out1,real *b1,real *b2,real *samples)
 {

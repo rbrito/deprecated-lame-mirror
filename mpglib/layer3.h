@@ -16,25 +16,12 @@
 ** Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
 */
 
+#ifndef LAYER3_H_INCLUDED
+#define LAYER3_H_INCLUDED
 
-#ifndef COMMON_H_INCLUDED
-#define COMMON_H_INCLUDED
-
-#include "mpg123.h"
-#include "mpglib.h"
-
-extern const int  tabsel_123[2][3][16];
-extern const long freqs[9];
-
-#if defined( USE_LAYER_1 ) || defined ( USE_LAYER_1 )
-  extern real muls[27][64];
-#endif
-
-int head_check(unsigned long head);
-int decode_header(struct frame *fr,unsigned long newhead);
-void print_header(struct frame *fr);
-void print_header_compact(struct frame *fr);
-unsigned int getbits(int number_of_bits);
-unsigned int getbits_fast(int number_of_bits);
+void init_layer3(int);
+int  do_layer3(struct frame *fr,unsigned char *,int *);
+int  do_layer3_sideinfo(struct frame *fr);
 
 #endif
+
