@@ -8,6 +8,7 @@ htmldir = $(docdir)/html
 pkghtmldir = $(pkgdocdir)/html
 
 pkghtml_DATA = \
+        basic.html \
 	contributors.html \
 	examples.html \
 	history.html \
