@@ -415,10 +415,10 @@ struct lame_internal_flags {
     uint16_t nMusicCRC;
 
     unsigned int crcvalue;
-    VBR_seek_info_t VBR_seek_table; /* used for Xing VBR header */
 
-    int nogap_total;
-    int nogap_current;  
+    /* VBR tags. */
+    VBR_seek_info_t VBR_seek_table; /* used for Xing VBR header */
+    int TotalFrameSize;
 
     struct {
 	void (*msgf)  (const char *format, va_list ap);
@@ -545,9 +545,6 @@ struct lame_internal_flags {
     int encoder_padding;  /* number of samples of padding appended to input */
     int framesize;
     int frameNum;                   /* number of frames encoded             */
-
-    /* VBR tags. */
-    int TotalFrameSize;
 
     struct {
 	int mmx;

@@ -318,8 +318,8 @@ PutLameVBR(lame_t gfc, FILE *fpStream,
     unsigned char bNoGapMore		= 0;
     unsigned char bNoGapPrevious	= 0;
 
-    int		 nNoGapCount	= gfc->nogap_total;
-    int		 nNoGapCurr		= gfc->nogap_current;
+    int nNoGapCount = 0;// gfc->nogap_total;
+    int nNoGapCurr  = 0;// gfc->nogap_current;
 
     uint8_t  nFlags			= 0;
 
