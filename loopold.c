@@ -179,7 +179,7 @@ void outer_loop_dual(
   int status[2],notdone[2]={0,0},count[2]={0,0},bits_found[2];
   int targ_bits[2],real_bits,tbits,extra_bits; 
   III_scalefac_t scalesave[2];
-  int sfb, bits, huff_bits;
+  int bits, huff_bits;
   FLOAT8 xfsf[2][4][SBPSY_l];
   FLOAT8 xrpow[2][576],temp;
   FLOAT8 distort[2][4][SBPSY_l];
@@ -319,10 +319,10 @@ void outer_loop_dual(
 	  if (iteration==1) {
 	    if(bits_found[ch]>huff_bits) {
 	      cod_info[ch]->global_gain++;
-	      real_bits = inner_loop( xr, xrpow[ch], l3_enc, huff_bits, cod_info[ch], gr, ch );
+	      real_bits = inner_loop(xrpow[ch], l3_enc[gr][ch], huff_bits, cod_info[ch], gr, ch );
 	    } else real_bits=bits_found[ch];
 	  } else
-	    real_bits=inner_loop( xr, xrpow[ch], l3_enc, huff_bits, cod_info[ch], gr, ch );
+	    real_bits=inner_loop(xrpow[ch], l3_enc[gr][ch], huff_bits, cod_info[ch], gr, ch );
 
 	  cod_info[ch]->part2_3_length = real_bits;
 	}
@@ -407,11 +407,11 @@ void outer_loop_dual(
     /* check to make sure we have not amplified too much */
     for (ch=0 ; ch < gf.stereo ; ch ++ ) {
       if (notdone[ch]) {
-	if ( (status[ch] = loop_break(scalefac, cod_info[ch], gr, ch)) == 0 ) {
+	if ( (status[ch] = loop_break(&scalefac[gr][ch], cod_info[ch])) == 0 ) {
 	  if ( fr_ps->header->version == 1 ) {
-	    status[ch] = scale_bitcount( scalefac, cod_info[ch], gr, ch );
+	    status[ch] = scale_bitcount(&scalefac[gr][ch], cod_info[ch]);
 	  }else{
-	    status[ch] = scale_bitcount_lsf( scalefac, cod_info[ch], gr, ch );
+	    status[ch] = scale_bitcount_lsf(&scalefac[gr][ch], cod_info[ch]);
 	  }
         }
 	notdone[ch] = !status[ch];
@@ -457,13 +457,10 @@ void calc_noise2( FLOAT8 xr[2][576], int ix[2][576], gr_info *cod_info[2],
             FLOAT8 over_noise[2], FLOAT8 tot_noise[2], FLOAT8 max_noise[2])
 {
     int start, end, sfb, l, i;
-    FLOAT8 sum[2],step_0,step_1,step[2],bw;
-
-    D192_3 *xr_s[2];
-    I192_3 *ix_s[2];
+    FLOAT8 sum0, sum1,step_0,step_1,bw;
 
     int ch;
-    FLOAT8 diff[2];
+    FLOAT8 diff0, diff1;
     FLOAT8 noise;
     int index;
     
@@ -478,121 +475,112 @@ void calc_noise2( FLOAT8 xr[2][576], int ix[2][576], gr_info *cod_info[2],
 
     /* calc_noise2: we can assume block types of both channels must be the same
 */
+    step_0 = POW20(cod_info[0]->global_gain);
+    step_1 = POW20(cod_info[1]->global_gain);
+
     if (cod_info[0]->block_type != 2) {
-    for (ch=0 ; ch < gf.stereo ; ch ++ ) {
-      step[ch] = POW20(cod_info[ch]->global_gain);
-    }
-    for ( sfb = 0; sfb < SBPSY_l; sfb++ ) {
-      start = scalefac_band.l[ sfb ];
-      end   = scalefac_band.l[ sfb+1 ];
-      bw = end - start;
+      for ( sfb = 0; sfb < SBPSY_l; sfb++ ) {
+	start = scalefac_band.l[ sfb ];
+	end   = scalefac_band.l[ sfb+1 ];
+	bw = end - start;
 
-      for ( sum[0]=0, sum[1]=0, l = start; l < end; l++ ) {
+	for ( sum0 = sum1 = 0.0, l = start; l < end; l++ ) {
           index=ix[0][l];
-          if (index==0) {
-            diff[0]=xr[0][l];
-          } else {
-            if (xr[0][l]<0) {
-              diff[0]=xr[0][l] + pow43[index] * step[0];
+	  diff0=xr[0][l];
+          if (index!=0) {
+            if (diff0<0) {
+              diff0 += pow43[index] * step_0;
             } else
-              diff[0]=xr[0][l] - pow43[index] * step[0];
+              diff0 -= pow43[index] * step_0;
           }
+	  diff1=xr[1][l];
           index=ix[1][l];
-          if (index==0) {
-            diff[1]=xr[1][l];
-          } else {
-            if (xr[1][l]<0) {
-              diff[1]=xr[1][l] + pow43[index] * step[1];
+          if (index!=0) {
+	    if (diff1<0) {
+              diff1 += pow43[index] * step_1;
             } else
-              diff[1]=xr[1][l] - pow43[index] * step[1];
+              diff1 -= pow43[index] * step_1;
           }
-        sum[0] += (diff[0]+diff[1])*(diff[0]+diff[1]);
-        sum[1] += (diff[0]-diff[1])*(diff[0]-diff[1]);
-      }      
-      sum[0] *= 0.5;
-      sum[1] *= 0.5;
+	  sum0 += (diff0+diff1)*(diff0+diff1);
+	  sum1 += (diff0-diff1)*(diff0-diff1);
+	}
+	sum0 *= 0.5;
+	sum1 *= 0.5;
 
-      for (ch=0 ; ch < gf.stereo ; ch ++ ) {
-        xfsf[ch][0][sfb] = sum[ch] / bw;
-        noise = 10*log10(Max(.001,xfsf[ch][0][sfb]/l3_xmin[gr][ch].l[sfb]));
-        distort[ch][0][sfb] =  noise;
-        if (noise>0) {
-          over[ch]++;
-          over_noise[ch] += noise;
-        }
-        tot_noise[ch] += noise;
-        max_noise[ch] = Max(max_noise[ch],noise);
-      }
+	xfsf[0][0][sfb] = sum0 / bw;
+	xfsf[1][0][sfb] = sum1 / bw;
+	for (ch=0 ; ch < gf.stereo ; ch ++ ) {
+	  noise = 10*log10(Max(.001,xfsf[ch][0][sfb]/l3_xmin[gr][ch].l[sfb]));
+	  distort[ch][0][sfb] =  noise;
+	  if (noise>0) {
+	    over[ch]++;
+	    over_noise[ch] += noise;
+	  }
+	  tot_noise[ch] += noise;
+	  max_noise[ch] = Max(max_noise[ch],noise);
+	}
 
-      /* if there is audible distortion in left or right channel, set flags
-       * to denote distortion in both mid and side channels */
-      for (ch=0 ; ch < gf.stereo ; ch ++ ) {
-        distort[ch][0][sfb] = Max(distort[0][0][sfb],distort[1][0][sfb]);
+	/* if there is audible distortion in left or right channel, set flags
+	 * to denote distortion in both mid and side channels */
+	distort[0][0][sfb] = distort[1][0][sfb]
+	  = Max(distort[0][0][sfb],distort[1][0][sfb]);
       }
-    }
     }
 
     /* calc_noise2: we can assume block types of both channels must be the same
 */
-    if (cod_info[0]->block_type == 2) {
-      step_0 = POW20(cod_info[0]->global_gain);
-      step_1 = POW20(cod_info[1]->global_gain);
-
-      for (ch=0 ; ch < gf.stereo ; ch ++ ) {
-	xr_s[ch] = (D192_3 *) xr[ch];
-	ix_s[ch] = (I192_3 *) ix[ch];
-      }
-
-    for ( sfb = 0 ; sfb < SBPSY_s; sfb++ ) {
-      start = scalefac_band.s[ sfb ];
-      end   = scalefac_band.s[ sfb+1 ];
-      bw = end - start;
-      for ( i = 0; i < 3; i++ ) {           
-        for (ch=0 ; ch < gf.stereo ; ch ++ ) sum[ch] = 0.0;
-        for ( l = start; l < end; l++ )           {
-            index=(*ix_s[0])[l][i];
-            if (index==0)
-              diff[0] = (*xr_s[0])[l][i];
-            else {
-              if ((*xr_s[0])[l][i] < 0) {
-                diff[0] = (*xr_s[0])[l][i] + pow43[index] * step_0; 
+    else {
+      for ( sfb = 0 ; sfb < SBPSY_s; sfb++ ) {
+	start = scalefac_band.s[ sfb ];
+	end   = scalefac_band.s[ sfb+1 ];
+	bw = end - start;
+	for ( i = 0; i < 3; i++ ) {           
+	  sum0 = sum1 = 0.0;
+	  for ( l = start; l < end; l++ )           {
+            index = ix[0][l * 3 + i];
+	    diff0 = xr[0][l * 3 + l];
+            if (index!=0) {
+              if (diff0 < 0) {
+                diff0 += pow43[index] * step_0; 
               } else {
-                diff[0] = (*xr_s[0])[l][i] - pow43[index] * step_0; 
+                diff0 -= pow43[index] * step_0; 
               }
-            }
-            index=(*ix_s[1])[l][i];
-            if (index==0)
-              diff[1] = (*xr_s[1])[l][i];
-            else {
-              if ((*xr_s[1])[l][i] < 0) {
-                diff[1] = (*xr_s[1])[l][i] + pow43[index] * step_1; 
+	    }
+            index = ix[1][l * 3 + i];
+	    diff1 = xr[1][l * 3 + i];
+            if (index!=0) {
+              if (diff1 < 0) {
+                diff1 += pow43[index] * step_1; 
               } else {
-                diff[1] = (*xr_s[1])[l][i] - pow43[index] * step_1; 
+                diff1 -= pow43[index] * step_1; 
               }
-            }     
-          sum[0] += (diff[0]+diff[1])*(diff[0]+diff[1])/(2.0);
-          sum[1] += (diff[0]-diff[1])*(diff[0]-diff[1])/(2.0);
-        }
+	    }
+	    sum0 += (diff0+diff1)*(diff0+diff1);
+	    sum1 += (diff0-diff1)*(diff0-diff1);
+	  }
 
-        for (ch=0 ; ch < gf.stereo ; ch ++ ) {
-          xfsf[ch][i+1][sfb] = sum[ch] / bw;
-          noise =
-	    10*log10(Max(.001,xfsf[ch][i+1][sfb]/l3_xmin[gr][ch].s[sfb][i]));
-          distort[ch][i+1][sfb] = noise>0;
-          if (noise>0) {
-            over[ch]++;
-            over_noise[ch] += noise;
-          }
-          tot_noise[ch] += noise;
-          max_noise[ch]=Max(max_noise[ch],noise);
-        }
-        /* if there is audible distortion in left or right channel, set flags
-         * to denote distortion in both mid and side channels */
-        for (ch=0 ; ch < gf.stereo ; ch ++ ) 
-          distort[ch][i+1][sfb] = Max
-            (distort[0][i+1][sfb],distort[1][i+1][sfb]  );
+	  sum0 *= 0.5;
+	  sum1 *= 0.5;
+
+	  xfsf[0][i+1][sfb] = sum0 / bw;
+	  xfsf[1][i+1][sfb] = sum1 / bw;
+	  for (ch=0 ; ch < gf.stereo ; ch ++ ) {
+	    noise =
+	      10*log10(Max(.001,xfsf[ch][i+1][sfb]/l3_xmin[gr][ch].s[sfb][i]));
+	    distort[ch][i+1][sfb] = noise>0;
+	    if (noise>0) {
+	      over[ch]++;
+	      over_noise[ch] += noise;
+	    }
+	    tot_noise[ch] += noise;
+	    max_noise[ch]=Max(max_noise[ch],noise);
+	  }
+	  /* if there is audible distortion in left or right channel, set flags
+	   * to denote distortion in both mid and side channels */
+	  distort[0][i+1][sfb] = distort[1][i+1][sfb] =
+	    Max(distort[0][i+1][sfb],distort[1][i+1][sfb]  );
+	}
       }
-    }
     }
 }
 

@@ -37,18 +37,18 @@ int targ_bits[2],int mean_bits, int gr);
 void reduce_side(int targ_bits[2],FLOAT8 ms_ener_ratio,int mean_bits);
 
 
-void outer_loop( FLOAT8 xr[2][2][576],     /*vector of the magnitudees of the spectral values */
+void outer_loop( FLOAT8 xr[576],     /*vector of the magnitudees of the spectral values */
                 int bits,
 		FLOAT8 noise[4],
                 FLOAT8 targ_noise[4],    /* VBR target noise info */
                 int sloppy,              /* 1=quit as soon as noise < targ_noise */
-                III_psy_xmin l3_xmin[2][2], /* the allowed distortion of the scalefactor */
-                int l3_enc[2][2][576],    /* vector of quantized values ix(0..575) */
+                III_psy_xmin *l3_xmin, /* the allowed distortion of the scalefactor */
+                int l3_enc[576],    /* vector of quantized values ix(0..575) */
 		frame_params *fr_ps,
-                III_scalefac_t scalefac[2][2], /* scalefactors */
+		 III_scalefac_t *scalefac, /* scalefactors */
                 int gr,
 		III_side_info_t *l3_side,
-		III_psy_ratio ratio[2][2], 
+		III_psy_ratio *ratio, 
 		FLOAT8 ms_ratio,
 		int ch);
 
@@ -75,8 +75,8 @@ void iteration_init( FLOAT8 xr_org[2][2][576],
 		III_side_info_t *l3_side, int l3_enc[2][2][576],
 		frame_params *fr_ps);
 
-int inner_loop( FLOAT8 xr[2][2][576], FLOAT8 xrpow[576],
-                int l3_enc[2][2][576],
+int inner_loop( FLOAT8 xrpow[576],
+                int l3_enc[576],
                 int max_bits,
                 gr_info *cod_info,
                 int gr,
@@ -88,19 +88,14 @@ int calc_xmin( FLOAT8 xr[576],
                III_psy_xmin *l3_xmin);
 
 
-int scale_bitcount( III_scalefac_t scalefac[2][2],
-                    gr_info *cod_info,
-                    int gr,
-                    int ch );
-int scale_bitcount_lsf( III_scalefac_t scalefac[2][2], gr_info *cod_info,
-                    int gr, int ch );
+int scale_bitcount( III_scalefac_t *scalefac, gr_info *cod_info);
+int scale_bitcount_lsf( III_scalefac_t *scalefac, gr_info *cod_info);
 int calc_noise1( FLOAT8 xr[576],
                  int ix[576],
                  gr_info *cod_info,
                  FLOAT8 xfsf[4][SBPSY_l], 
 		 FLOAT8 distort[4][SBPSY_l],
-                 III_psy_xmin l3_xmin[2][2],
-		 int gr, int ch, 
+                 III_psy_xmin *l3_xmin,
                  FLOAT8 *noise, FLOAT8 *tot_noise, FLOAT8 *max_noise);
 
 void calc_noise2( FLOAT8 xr[2][576],
@@ -113,16 +108,8 @@ void calc_noise2( FLOAT8 xr[2][576],
                  FLOAT8 noise[2], FLOAT8 tot_noise[2], FLOAT8 max_noise[2]);
 
 
-int loop_break( III_scalefac_t scalefac[2][2],
-                gr_info *cod_info,
-                int gr,
-                int ch );
-int preemphasis( FLOAT8 xr[576], FLOAT8 xrpow[576],
-                  III_psy_xmin l3_xmin[2][2],
-                  int gr,
-                  int ch,
-		  III_side_info_t *l3_side,
-                  FLOAT8 distort[4][SBPSY_l] );
+int loop_break( III_scalefac_t *scalefac, gr_info *cod_info);
+
 int amp_scalefac_bands( FLOAT8 xr[576], FLOAT8 xrpow[576],
                         III_psy_xmin *l3_xmin,
 			gr_info *cod_info,

@@ -719,9 +719,9 @@ void best_scalefac_store(int gr, int ch,
 	    gi->scalefac_scale = 1;
 	    gi->part2_length = 99999999;
 	    if (gf.mode_gr == 2) {
-	        scale_bitcount( scalefac, gi, gr, ch );
+	        scale_bitcount(&scalefac[gr][ch], gi);
 	    } else {
-		scale_bitcount_lsf( scalefac, gi, gr, ch );
+		scale_bitcount_lsf(&scalefac[gr][ch], gi);
 	    }
 	}
     }

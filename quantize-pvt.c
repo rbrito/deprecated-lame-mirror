@@ -439,8 +439,8 @@ int numchn=2;
  * The code selects the best global gain for a particular set of scalefacs */
  
 int
-inner_loop( FLOAT8 xr[2][2][576], FLOAT8 xrpow[576],
-	    int l3_enc[2][2][576], int max_bits,
+inner_loop( FLOAT8 xrpow[576],
+	    int l3_enc[576], int max_bits,
 	    gr_info *cod_info, int gr, int ch )
 {
     int bits;
@@ -449,7 +449,7 @@ inner_loop( FLOAT8 xr[2][2][576], FLOAT8 xrpow[576],
     do
     {
       cod_info->global_gain++;
-      bits = count_bits(l3_enc[gr][ch], xrpow, cod_info);
+      bits = count_bits(l3_enc, xrpow, cod_info);
     }
     while ( bits > max_bits );
     return bits;
@@ -463,8 +463,7 @@ inner_loop( FLOAT8 xr[2][2][576], FLOAT8 xrpow[576],
 
 /* Also calculates the number of bits necessary to code the scalefactors. */
 
-int scale_bitcount( III_scalefac_t scalefac[2][2], gr_info *cod_info,
-		int gr, int ch )
+int scale_bitcount( III_scalefac_t *scalefac, gr_info *cod_info)
 {
     int i, k, sfb, max_slen1 = 0, max_slen2 = 0, /*a, b, */ ep = 2;
 
@@ -487,11 +486,11 @@ int scale_bitcount( III_scalefac_t scalefac[2][2], gr_info *cod_info,
             for ( i = 0; i < 3; i++ )
             {
                 for ( sfb = 0; sfb < 6; sfb++ )
-                    if ( scalefac[gr][ch].s[sfb][i] > max_slen1 )
-                        max_slen1 = scalefac[gr][ch].s[sfb][i];
+                    if (scalefac->s[sfb][i] > max_slen1 )
+                        max_slen1 = scalefac->s[sfb][i];
                 for (sfb = 6; sfb < SBPSY_s; sfb++ )
-                    if ( scalefac[gr][ch].s[sfb][i] > max_slen2 )
-                        max_slen2 = scalefac[gr][ch].s[sfb][i];
+                    if ( scalefac->s[sfb][i] > max_slen2 )
+                        max_slen2 = scalefac->s[sfb][i];
             }
     }
     else
@@ -499,24 +498,24 @@ int scale_bitcount( III_scalefac_t scalefac[2][2], gr_info *cod_info,
         tab = slen2_tab;
         /* a = 11; b = 10;   */
         for ( sfb = 0; sfb < 11; sfb++ )
-            if ( scalefac[gr][ch].l[sfb] > max_slen1 )
-                max_slen1 = scalefac[gr][ch].l[sfb];
+            if ( scalefac->l[sfb] > max_slen1 )
+                max_slen1 = scalefac->l[sfb];
 
 	if (!cod_info->preflag) {
 	    for ( sfb = 11; sfb < SBPSY_l; sfb++ )
-		if (scalefac[gr][ch].l[sfb] < pretab[sfb])
+		if (scalefac->l[sfb] < pretab[sfb])
 		    break;
 
 	    if (sfb == SBPSY_l) {
 		cod_info->preflag = 1;
 		for ( sfb = 11; sfb < SBPSY_l; sfb++ )
-		    scalefac[gr][ch].l[sfb] -= pretab[sfb];
+		    scalefac->l[sfb] -= pretab[sfb];
 	    }
 	}
 
         for ( sfb = 11; sfb < SBPSY_l; sfb++ )
-            if ( scalefac[gr][ch].l[sfb] > max_slen2 )
-                max_slen2 = scalefac[gr][ch].l[sfb];
+            if ( scalefac->l[sfb] > max_slen2 )
+                max_slen2 = scalefac->l[sfb];
     }
 
 
@@ -581,8 +580,7 @@ static unsigned max_range_sfac_tab[6][4] =
 /*  This is reverse-engineered from section 2.4.3.2 of the MPEG2 IS,     */
 /* "Audio Decoding Layer III"                                            */
 
-int scale_bitcount_lsf( III_scalefac_t scalefac[2][2], gr_info *cod_info,
-		    int gr, int ch )
+int scale_bitcount_lsf(III_scalefac_t *scalefac, gr_info *cod_info)
 {
     int table_number, row_in_table, partition, nr_sfb, window, over;
     int i, sfb, max_sfac[ 4 ];
@@ -609,8 +607,8 @@ int scale_bitcount_lsf( III_scalefac_t scalefac[2][2], gr_info *cod_info,
 		nr_sfb = partition_table[ partition ] / 3;
 		for ( i = 0; i < nr_sfb; i++, sfb++ )
 		    for ( window = 0; window < 3; window++ )
-			if ( scalefac[gr][ch].s[sfb][window] > max_sfac[partition] )
-			    max_sfac[partition] = scalefac[gr][ch].s[sfb][window];
+			if ( scalefac->s[sfb][window] > max_sfac[partition] )
+			    max_sfac[partition] = scalefac->s[sfb][window];
 	    }
     }
     else
@@ -621,8 +619,8 @@ int scale_bitcount_lsf( III_scalefac_t scalefac[2][2], gr_info *cod_info,
 	{
 	    nr_sfb = partition_table[ partition ];
 	    for ( i = 0; i < nr_sfb; i++, sfb++ )
-		if ( scalefac[gr][ch].l[sfb] > max_sfac[partition] )
-		    max_sfac[partition] = scalefac[gr][ch].l[sfb];
+		if ( scalefac->l[sfb] > max_sfac[partition] )
+		    max_sfac[partition] = scalefac->l[sfb];
 	}
     }
 
@@ -784,18 +782,17 @@ int calc_xmin( FLOAT8 xr[576], III_psy_ratio *ratio,
     amplified. Otherwise it returns one. 
 */
 
-int loop_break( III_scalefac_t scalefac[2][2], gr_info *cod_info,
-	    int gr, int ch )
+int loop_break( III_scalefac_t *scalefac, gr_info *cod_info)
 {
     int i, sfb;
 
     for ( sfb = 0; sfb < cod_info->sfb_lmax; sfb++ )
-        if ( scalefac[gr][ch].l[sfb] == 0 )
+        if ( scalefac->l[sfb] == 0 )
 	    return 0;
 
     for ( sfb = cod_info->sfb_smax; sfb < SBPSY_s; sfb++ )
         for ( i = 0; i < 3; i++ )
-            if ( scalefac[gr][ch].s[sfb][i] == 0 )
+            if ( scalefac->s[sfb][i] == 0 )
 		return 0;
 
     return 1;
