@@ -90,8 +90,8 @@ void L3psycho_anal( short int *buffer[2],
 
 
   FLOAT/*FLOAT8*/   thr[CBANDS];
-  FLOAT energy[HBLKSIZE];
-  FLOAT energy_s[3][HBLKSIZE_s];
+  static FLOAT energy[HBLKSIZE];
+  static FLOAT energy_s[3][HBLKSIZE_s];
 
   static float mld_l[SBPSY_l],mld_s[SBPSY_s];
   
@@ -318,8 +318,8 @@ void L3psycho_anal( short int *buffer[2],
       /**********************************************************************
        *  compute FFTs
        **********************************************************************/
-      fft_long ( *wsamp_l, energy,   chn, buffer);
-      fft_short( *wsamp_s, energy_s, chn, buffer); 
+      fft_long ( *wsamp_l, chn, buffer);
+      fft_short( *wsamp_s, chn, buffer); 
       
       /* LR maskings  */
       percep_entropy[chn] = pe[chn]; 
@@ -331,33 +331,51 @@ void L3psycho_anal( short int *buffer[2],
       masking_MS_ratio[gr_out][chn-2].en = en[chn];
       masking_MS_ratio[gr_out][chn-2].thm = thm[chn];
       
-      fft_long ( *wsamp_l, energy,   chn, buffer);
-      fft_short( *wsamp_s, energy_s, chn, buffer); 
-#if 0
       if (chn == 2)
       {
         for (j = BLKSIZE-1; j >=0 ; --j)
-	{
-	  FLOAT l = wsamp_L[0][j];
-	  FLOAT r = wsamp_L[1][j];
-	  wsamp_L[0][j] = (l+r)*(SQRT2*0.5);
-	  wsamp_L[1][j] = (l-r)*(SQRT2*0.5);
-	}
-	for (b = 2; b >= 0; --b)
-	{
+        {
+          FLOAT l = wsamp_L[0][j];
+          FLOAT r = wsamp_L[1][j];
+          wsamp_L[0][j] = (l+r)*(SQRT2*0.5);
+          wsamp_L[1][j] = (l-r)*(SQRT2*0.5);
+        }
+        for (b = 2; b >= 0; --b)
+        {
           for (j = BLKSIZE_s-1; j >= 0 ; --j)
-	  {
-	    FLOAT l = wsamp_S[0][b][j];
-	    FLOAT r = wsamp_S[1][b][j];
-	    wsamp_S[0][b][j] = (l+r)*(SQRT2*0.5);
-	    wsamp_S[1][b][j] = (l-r)*(SQRT2*0.5);
-	  }
-	}
+          {
+            FLOAT l = wsamp_S[0][b][j];
+            FLOAT r = wsamp_S[1][b][j];
+            wsamp_S[0][b][j] = (l+r)*(SQRT2*0.5);
+            wsamp_S[1][b][j] = (l-r)*(SQRT2*0.5);
+          }
+        }
       }
-#endif
     }
-
-
+    for (j=1; j < BLKSIZE/2; j++)
+    {
+      FLOAT re = (*wsamp_l)[BLKSIZE/2-j];
+      FLOAT im = (*wsamp_l)[BLKSIZE/2+j];
+      energy[BLKSIZE/2-j] = (re * re + im * im) * 0.5;
+    }
+    energy[0]  = (*wsamp_l)[0];
+    energy[0] *= energy[0];
+    energy[BLKSIZE/2]  = (*wsamp_l)[BLKSIZE/2];
+    energy[BLKSIZE/2] *= energy[BLKSIZE/2];
+      
+    for (b = 0; b < 3; b++)
+    {
+      for (j=1; j < BLKSIZE_s/2; j++)
+      {
+        FLOAT re = (*wsamp_s)[b][BLKSIZE_s/2-j];
+        FLOAT im = (*wsamp_s)[b][BLKSIZE_s/2+j];
+        energy_s[b][BLKSIZE_s/2-j] = (re * re + im * im) * 0.5;
+      }
+      energy_s[b][0]  = (*wsamp_s)[b][0];
+      energy_s[b][0] *=  energy_s [b][0];
+      energy_s[b][BLKSIZE_s/2]  = (*wsamp_s)[b][BLKSIZE_s/2];
+      energy_s[b][BLKSIZE_s/2] *=  energy_s [b][BLKSIZE_s/2];
+    }
 
     if (check_ms_stereo) {
       /* used for MS stereo criterion */

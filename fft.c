@@ -175,7 +175,7 @@ static const int rv_tbl[] = {
 
 
 void fft_short(
-    FLOAT x_real[3][BLKSIZE_s], FLOAT energy[3][HBLKSIZE_s], int chn, short *buffer[2])
+    FLOAT x_real[3][BLKSIZE_s], int chn, short *buffer[2])
 {
     int i, j, b;
 
@@ -255,22 +255,11 @@ void fft_short(
 	}
 
 	fht(x, BLKSIZE_s);
-
-	energy[b][0] = x[0] * x[0];
-	i = 1; j = BLKSIZE_s - 1;
-	do {
-	    FLOAT re, im;
-	    re = x[i];
-	    im = x[j];
-	    energy[b][i] = (re * re + im * im) * 0.5;
-	    i++; j--;
-	} while (i != j);
-	energy[b][i] = x[i] * x[i];
     }
 }
 
 void fft_long(
-    FLOAT x[BLKSIZE], FLOAT energy[HBLKSIZE], int chn, short *buffer[2])
+    FLOAT x[BLKSIZE], int chn, short *buffer[2])
 {
     int i, j, jj = BLKSIZE / 8 - 1;
     x += BLKSIZE / 2;
@@ -344,17 +333,6 @@ void fft_long(
     }
 
     fht(x, BLKSIZE);
-
-    energy[0] = x[0] * x[0];
-    i = 1; j = BLKSIZE - 1;
-    do {
-	FLOAT re, im;
-	re = x[i];
-	im = x[j];
-	energy[i] = (re * re + im * im) * 0.5;
-	i++; j--;
-    } while (i != j);
-    energy[i] = x[i] * x[i];
 }
 
 
