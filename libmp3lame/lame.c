@@ -37,7 +37,7 @@
 #include "quantize_pvt.h"
 #include "VbrTag.h"
 
-#ifdef __FreeBSD__
+#if defined(__FreeBSD__) && !defined(__alpha__)
 #include <floatingpoint.h>
 #endif
 #ifdef __riscos__
@@ -1480,7 +1480,7 @@ int lame_init_old(lame_global_flags *gfp)
   /*
    *  Disable floating point exceptions
    */
-#ifdef __FreeBSD__
+#if defined(__FreeBSD__) && !defined(__alpha__)
   {
   /* seet floating point mask to the Linux default */
   fp_except_t mask;
