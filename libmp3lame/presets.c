@@ -133,6 +133,8 @@ int apply_abr_preset(lame_global_flags*  gfp, int preset, int enforce)
 
 int apply_preset(lame_global_flags*  gfp, int preset, int enforce)
 {
+    gfp->preset = preset;
+
     switch (preset) {
     case STREAMING: {
 	    lame_set_VBR(gfp, vbr_rh);
@@ -405,6 +407,7 @@ int apply_preset(lame_global_flags*  gfp, int preset, int enforce)
         return apply_abr_preset(gfp, preset, enforce);
 
 
+    gfp->preset = 0; /*no corresponding preset found*/
     return preset;
 }
 

@@ -812,7 +812,7 @@ int PutLameVBR(lame_global_flags *gfp, FILE *fpStream, uint8_t *pbtStreamBuffer,
 	nBytesWritten++;
 
 
-	pbtStreamBuffer[nBytesWritten++] = 0;	/*unused in rev1 */
+	pbtStreamBuffer[nBytesWritten++] = 0;	/*unused in rev0 */
 
 	CreateI2(&pbtStreamBuffer[nBytesWritten], gfp->preset);
 	nBytesWritten+=2;
