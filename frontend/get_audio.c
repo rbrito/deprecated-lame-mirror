@@ -68,9 +68,6 @@
 /* global data for get_audio.c. */
 static unsigned int num_samples_read;
 static int count_samples_carefully;
-#ifndef LIBSNDFILE
-static int pcmbitwidth;
-#endif
 static int pcmswapbytes = 0;
 FILE   *musicin;
 int id3v2taglen = 0;
@@ -195,9 +192,6 @@ init_infile(lame_t gfp, char *inPath)
     /* open the input file */
     count_samples_carefully = 0;
     num_samples_read=0;
-#ifndef LIBSNDFILE
-    pcmbitwidth=in_bitwidth;
-#endif
     pcmswapbytes=swapbytes;
     musicin = OpenSndFile(gfp, inPath);
 }
@@ -442,7 +436,7 @@ OpenSndFile(lame_t gfp, char *inPath)
         musicin = (FILE *) gs_pSndFileIn;
 
         /* Check result */
-        if (gs_pSndFileIn == NULL) {
+        if (!gs_pSndFileIn) {
             sf_perror(gs_pSndFileIn);
             fprintf(stderr, "Could not open sound file \"%s\".\n",
                     inPath);
@@ -693,15 +687,15 @@ read_samples_pcm(FILE * const musicin, int sample_buffer[1152*2],
     int     iswav = (input_format == sf_wave);
     int     swapflag = 0;
 
-    if( (32 == pcmbitwidth) || (24 == pcmbitwidth) || (16 == pcmbitwidth) ) {
+    if( (32 == in_bitwidth) || (24 == in_bitwidth) || (16 == in_bitwidth) ) {
 	/* assume only recognized wav files are */
 	/*  in little endian byte order */
 	swapflag = (!iswav == !pcmswapbytes);
     } else {
-	assert(pcmbitwidth == 8);
+	assert(in_bitwidth == 8);
     }
 
-    samples_read = unpack_read_samples(samples_to_read, pcmbitwidth/8,
+    samples_read = unpack_read_samples(samples_to_read, in_bitwidth/8,
 				       swapflag, sample_buffer, musicin);
 
     if (ferror(musicin)) {
@@ -876,7 +870,7 @@ parse_wave_header(lame_t gfp, FILE * sf)
 	}
 	if (lame_get_in_samplerate(gfp) < 0)
 	    lame_set_in_samplerate(gfp, samples_per_sec);
-	pcmbitwidth = bits_per_sample;
+	in_bitwidth = bits_per_sample;
 	lame_set_num_samples(
 	    gfp, data_length / (channels * ((bits_per_sample+7) / 8)));
 
