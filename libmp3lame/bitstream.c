@@ -654,7 +654,7 @@ format_bitstream(lame_global_flags *gfp)
 
     drain_into_ancillary(gfc, drainPre);
     encodeBitStream(gfp);
-    drain_into_ancillary(gfc, drainbits - drainPre);
+    gfc->bs.bitidx += drainbits - drainPre;
 
     l3_side->main_data_begin = (l3_side->ResvSize -= drainbits) / 8;
 
