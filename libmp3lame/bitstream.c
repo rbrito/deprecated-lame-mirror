@@ -38,7 +38,8 @@
 /***********************************************************************
  * compute bits-per-frame
  **********************************************************************/
-int getframebytes(const lame_t gfc)
+int
+getframebytes(const lame_t gfc)
 {
     int  bit_rate;
 

@@ -278,7 +278,8 @@ FFT's                    <---------1024---------->
     FFT starts at 576-224-MDCTDELAY (304)  = 576-FFTOFFSET
 */
 
-int  lame_encode_mp3_frame (		/* Output */
+int
+lame_encode_mp3_frame (		/* Output */
     const lame_t	gfc,		/* Context */
     sample_t*           inbuf_l,	/* Input */
     sample_t*           inbuf_r,	/* Input */

@@ -629,11 +629,7 @@ scfsi_calc(int ch, III_side_info_t *l3_side)
   chosen and the channel/granule will not be re-encoded.
  */
 static void
-best_scalefac_store(
-    lame_t  const gfc,
-    const int             gr,
-    const int             ch
-    )
+best_scalefac_store(lame_t gfc, int gr, int ch)
 {
     /* use scalefac_scale if we can */
     III_side_info_t * const l3_side = &gfc->l3_side;

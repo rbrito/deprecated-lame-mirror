@@ -1267,7 +1267,7 @@ init_s3_values(
 }
 
 int
-psymodel_init(const lame_t gfc)
+psymodel_init(lame_t gfc)
 {
     int i,j,sb,k;
     int bm[SBMAX_l];

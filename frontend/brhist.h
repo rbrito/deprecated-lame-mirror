@@ -27,9 +27,9 @@
 #endif
 #include "lame.h"
 
-int   brhist_init       ( const lame_t, const int bitrate_kbps_min, const int bitrate_kbps_max );
-void  brhist_disp       ( const lame_t );
-void  brhist_disp_total ( const lame_t );
+int   brhist_init       ( lame_t, const int bitrate_kbps_min, const int bitrate_kbps_max );
+void  brhist_disp       ( lame_t );
+void  brhist_disp_total ( lame_t );
 void  brhist_jump_back  ( void );
 
 typedef struct {

@@ -95,7 +95,8 @@ gcd(int i, int j)
    if necessary.  n_in = number of samples from the input buffer that
    were used.  n_out = number of samples copied into mfbuf  */
 
-static int fill_buffer_resample(
+static int
+fill_buffer_resample(
     lame_t gfc,
     sample_t *outbuf,
     int desired_len,
