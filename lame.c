@@ -976,6 +976,8 @@ char *mp3buf, int mp3buf_size)
 	gfc->l3_side.gr[gr].ch[ch].tt.block_type=blocktype[ch];
 
     }
+    /* at LSF there is no 2cnd granule */
+    gfc->ms_ratio[1]=gfc->ms_ratio[gfc->mode_gr-1];
   }else{
     for (gr=0; gr < gfc->mode_gr ; gr++)
       for ( ch = 0; ch < gfc->stereo; ch++ ) {
@@ -1013,7 +1015,6 @@ char *mp3buf, int mp3buf_size)
 
 
 
-
   /* use m/s gfc->stereo? */
   check_ms_stereo =  (gfp->mode == MPG_MD_JOINT_STEREO);
   if (check_ms_stereo) {
@@ -1026,6 +1027,7 @@ char *mp3buf, int mp3buf_size)
     /* ms_ratio = is like the ratio of side_energy/total_energy */
     FLOAT8 ms_ratio_ave;
     /*     ms_ratio_ave = .5*(ms_ratio[0] + ms_ratio[1]);*/
+
     ms_ratio_ave = .25*(gfc->ms_ratio[0] + gfc->ms_ratio[1]+
 			 ms_ratio_prev + ms_ratio_next);
     if ( (ms_ratio_ave <.35) && (.5*(gfc->ms_ratio[0]+gfc->ms_ratio[1])<.45) )
