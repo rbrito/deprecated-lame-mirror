@@ -502,7 +502,7 @@ msfix_l(lame_internal_flags *gfc, int gr)
     int sb;
     III_psy_ratio *mr = &gfc->masking_next[gr][0];
     for (sb = 0; sb < SBMAX_l; sb++) {
-	/* use this fix if L & R masking differs by 2db (*1.58) or less */
+	/* use ns-msfix if L & R masking differs larger than 2db (*1.58) */
 	FLOAT thmS, thmM, x;
 	if (mr[0].thm.l[sb] > 1.58*mr[1].thm.l[sb]
 	 || mr[1].thm.l[sb] > 1.58*mr[0].thm.l[sb])
@@ -710,11 +710,11 @@ compute_masking_s(
 }
 
 static int
-block_type_set(int old, int current, int next)
+block_type_set(int prev, int next)
 {
     /* update the blocktype of the previous/next granule,
        since it depends on what happend in this granule */
-    return current | ((next>>1)&1) | ((old<<1)&2);
+    return ((next>>1)&1) | ((prev<<1)&2);
 }
 
 /* mask_add optimization */
@@ -757,9 +757,7 @@ static inline int trancate(FLOAT x)
 #endif /* TAKEHIRO_IEEE754_HACK */
 
 void
-init_mask_add_max_values(
-    lame_internal_flags * const gfc
-    )
+init_mask_add_max_values(lame_internal_flags * const gfc)
 {
     int i;
     ma_max_i1 = db2pow((I1LIMIT+1)/16.0*10.0);
@@ -1476,10 +1474,9 @@ psycho_analysis(
     )
 {
     lame_internal_flags *gfc=gfp->internal_flags;
-    int gr, ch, blocktype_old[MAX_CHANNELS];
+    int gr, ch, blocktype_old[MAX_CHANNELS], numchn;
     const sample_t *bufp[MAX_CHANNELS];
     FLOAT adjATH[CBANDS];
-    int numchn;
 
     /* next frame data -> current frame data (aging) */
     gfc->mode_ext = gfc->mode_ext_next;
@@ -1593,23 +1590,21 @@ psycho_analysis(
     for (ch = 0; ch < gfc->channels_out; ch++) {
 	if (gfc->mode_gr == 1)
 	    gfc->l3_side.tt[0][ch].block_type
-		= block_type_set(blocktype_old[ch],
-				 gfc->l3_side.tt[0][ch].block_type,
-				 gfc->blocktype_next[0][ch]);
+		|= block_type_set(blocktype_old[ch],
+				  gfc->blocktype_next[0][ch]);
 	else {
 	    gfc->l3_side.tt[0][ch].block_type
-		= block_type_set(blocktype_old[ch],
-				 gfc->l3_side.tt[0][ch].block_type,
-				 gfc->l3_side.tt[1][ch].block_type);
+		|= block_type_set(blocktype_old[ch],
+				  gfc->l3_side.tt[1][ch].block_type);
 
 	    gfc->l3_side.tt[1][ch].block_type
-		= block_type_set(gfc->l3_side.tt[0][ch].block_type,
-				 gfc->l3_side.tt[1][ch].block_type,
-				 gfc->blocktype_next[0][ch]);
+		|= block_type_set(gfc->l3_side.tt[0][ch].block_type,
+				  gfc->blocktype_next[0][ch]);
 	}
     }
-    assert(gfc->l3_side.tt[0][0].block_type
-	   == gfc->l3_side.tt[0][1].block_type || !gfc->mode_ext);
-    assert(gfc->l3_side.tt[gfc->mode_gr-1][0].block_type
-	   == gfc->l3_side.tt[gfc->mode_gr-1][1].block_type || !gfc->mode_ext);
+    assert(!gfc->mode_ext
+	   || (gfc->l3_side.tt[0][0].block_type
+	       == gfc->l3_side.tt[0][1].block_type
+	       && gfc->l3_side.tt[gfc->mode_gr-1][0].block_type
+	       == gfc->l3_side.tt[gfc->mode_gr-1][1].block_type));
 }
