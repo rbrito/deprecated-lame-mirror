@@ -186,6 +186,7 @@ writeheader(lame_internal_flags *gfc,unsigned int val, int j)
     gfc->header[gfc->h_ptr].ptr = ptr;
 }
 
+#if 1  /* Set to 0 for new CRC function, but speed improvement is around 0.2% */
 
 /* (jo) this wrapper function for BF_addEntry() updates also the crc */
 static void
@@ -201,6 +202,64 @@ CRC_writeheader(lame_internal_flags *gfc,unsigned int value, int length,unsigned
    *crc &= 0xffff;
    writeheader(gfc,value, length);
 }
+
+void main_CRC_init (void) {}
+
+#else
+
+static unsigned short CRC_table [256];
+
+static void CRC_init ( unsigned short polynom )
+{
+    int            i;
+    int            j;
+    unsigned long  val;
+    
+    i = 0;
+    do {
+        val = 0;
+        j = 0x80;
+        do {
+            val <<= 1;
+            if ( !(val & 0x10000) ^ !(i & j) )
+		val ^= polynom;
+   	} while ( j >>= 1 );
+   	CRC_table [i] = val;
+    } while ( ++i < 0x100 );
+}
+
+static void CRC_writeheader ( lame_internal_flags*  gfc,
+                              unsigned int          val, 
+                              unsigned              len,
+                              unsigned int*         crc )
+{
+    unsigned long c = *crc;
+    
+    assert ( len <= 16 );
+    assert ( val < (1 << len) );
+    assert ( c < 0x10000 );
+    
+    if ( len > 8 ) {
+        c <<= len-8;
+        c  ^= CRC_table [ (c>>16) ^ (val >> 8) ];
+        c  &= 0xFFFF;
+        c <<= 8;
+        c  ^= CRC_table [ (c>>16) ^ (val & 0xFF) ];
+    } else {
+        c <<= len;
+        c  ^= CRC_table [ (c>>16) ^ val ];
+    }
+    
+    *crc = c & 0xFFFF;
+    writeheader ( gfc, val, len );
+}
+
+void main_CRC_init ( void )
+{
+    CRC_init ( CRC16_POLYNOMIAL );
+}
+
+#endif
 
 static INLINE void
 encodeSideInfo2(lame_global_flags *gfp,int bitsPerFrame)

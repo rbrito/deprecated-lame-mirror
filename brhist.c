@@ -1,4 +1,5 @@
 #include <string.h>
+#include <assert.h>
 #include "brhist.h"
 #include "util.h"
 
@@ -6,41 +7,26 @@
 #include <termcap.h>
 #endif
 
+#ifndef BRHIST_BARMAX
+# define  BRHIST_BARMAX 50
+#endif
 
-#define BRHIST_BARMAX 50
-long brhist_count[15];
-int brhist_vbrmin;
-int brhist_vbrmax;
-long brhist_max;
-char brhist_bps[15][5];
-char brhist_backcur[200];
-char brhist_bar[BRHIST_BARMAX+10];
-char brhist_spc[BRHIST_BARMAX+1];
+unsigned long  brhist_count   [15];
+unsigned long  brhist_count_max;
+unsigned       brhist_vbrmin;
+unsigned       brhist_vbrmax;
+char           brhist_kbps    [15] [4];
+char           brhist_bar     [BRHIST_BARMAX + 1];
+char           brhist_up      [10] = "\033[A";
+char           brhist_clreoln [10] = "";
 
-char stderr_buff[BUFSIZ];
-
+char           stderr_buff   [576];
 
 #ifdef _WIN32  
 COORD Pos;
 HANDLE CH;
 CONSOLE_SCREEN_BUFFER_INFO CSBI;
 #endif
-
-#ifdef NOTERMCAP
-/* tgetstr */
-char *
-tgetstr(char id[2], char **area)
-{
-      char *result;
-      result = NULL;
-      if (strncmp(id, "up", 2) == 0) {
-              result = "\033[A";
-      }
-      *area = result;
-      return result;
-}
-#endif /* NOTERMCAP */
-
 
 void brhist_init(lame_global_flags *gfp,int br_min, int br_max)
 {
@@ -55,21 +41,18 @@ void brhist_init(lame_global_flags *gfp,int br_min, int br_max)
 
   for(i = 0; i < 15; i++)
     {
-      sprintf(brhist_bps[i], "%3d", bitrate_table[gfp->version][i]);
+      assert ( (unsigned) bitrate_table[gfp->version][i] < 1000u );
+      sprintf(brhist_kbps[i], "%3d", bitrate_table[gfp->version][i]);
       brhist_count[i] = 0;
     }
 
   brhist_vbrmin = br_min;
   brhist_vbrmax = br_max;
 
-  brhist_max = 0;
+  brhist_count_max = 0;
 
 #ifdef BRHIST
-  memset(&brhist_bar[0], '*', BRHIST_BARMAX);
-  brhist_bar[BRHIST_BARMAX] = '\0';
-  memset(&brhist_spc[0], ' ', BRHIST_BARMAX);
-  brhist_spc[BRHIST_BARMAX] = '\0';
-  brhist_backcur[0] = '\0';
+  memset ( brhist_bar, '*', sizeof (brhist_bar)-1 );
 
 #ifndef NOTERMCAP
   if ((termname = getenv("TERM")) == NULL)
@@ -85,62 +68,78 @@ void brhist_init(lame_global_flags *gfp,int br_min, int br_max)
       gfp->brhist_disp = 0;
       return;
     }
-#endif /* !NOTERMCAP */
+    
+    *(tp = tc) = '\0';
+    tp = tgetstr ("up", &tp);
+    if (tp)
+        strcpy ( brhist_up, tp );
 
-  tc[0] = '\0';
-  tp = &tc[0];
-  tp=tgetstr("up", &tp);
-  brhist_backcur[0] = '\0';
+    *(tp = tc) = '\0';
+    tp = tgetstr ("ce", &tp);
+    if (tp)
+        strcpy ( brhist_clreoln, tp );
+
+    setbuf ( stderr, stderr_buff );
+
+#endif /* NOTERMCAP */
+
 #ifdef _WIN32  
   CH= GetStdHandle(STD_ERROR_HANDLE);
-#else
-  for(i = br_min-1; i <= br_max; i++)
-    strcat(brhist_backcur, tp);
-  setbuf(stderr, stderr_buff);
 #endif
+
 #endif
 }
 
 void brhist_add_count(int i)
 {
-  ++brhist_count[i];
-  if (brhist_count[i] > brhist_max)
-    brhist_max = brhist_count[i];
+    if ( ++brhist_count [i] > brhist_count_max )
+        brhist_count_max = brhist_count [i];
 }
 
 void brhist_disp(long totalframes)
 {
-  int i;
-  long full;
-  int barlen;
-  char brpercent[10];
+    unsigned       i;
+    unsigned       percent;
+    unsigned long  full;
+    int            barlen;
+    char           brpercent [16];
+    
 #ifdef BRHIST
-  full = (brhist_max < BRHIST_BARMAX) ? BRHIST_BARMAX : brhist_max;
-  fputc('\n', stderr);
-  for(i = brhist_vbrmin; i <= brhist_vbrmax; i++)
-    {
-      barlen = (brhist_count[i]*BRHIST_BARMAX+full-1) / full;
-      fputs(brhist_bps[i], stderr);
-      sprintf(brpercent,"[%3i%%]",(int)(100*brhist_count[i]/totalframes));
-      fputs(brpercent, stderr);
+    full = brhist_count_max < BRHIST_BARMAX  ?  BRHIST_BARMAX  :  brhist_count_max;
 
-      fputs(&brhist_bar[BRHIST_BARMAX - barlen], stderr);
-      fputs(&brhist_spc[barlen], stderr);
-      fputc('\n', stderr);
+    for ( i = brhist_vbrmin; i <= brhist_vbrmax; i++ ) {
+        barlen  = ( brhist_count[i]*BRHIST_BARMAX + full-1  ) / full;		/* round up */
+        percent = ( 100lu * brhist_count[i] + totalframes/2 ) / totalframes;	/* round nearest */
+      
+        if ( brhist_count [i] == 0 )
+            sprintf ( brpercent,  " [   ]" );
+        else if ( percent < 100 )
+            sprintf ( brpercent," [%2u%%]", percent );
+        else
+            sprintf ( brpercent, "[%3u%%]", percent );
+          
+        if ( brhist_clreoln [0] ) /* ClearEndOfLine available */
+            fprintf ( stderr, "\n%s%s%.*s%s", brhist_kbps [i], brpercent, 
+                      barlen, brhist_bar, brhist_clreoln );
+        else
+            fprintf ( stderr, "\n%s%s%.*s%*s ", brhist_kbps [i], brpercent, 
+                      barlen, brhist_bar, BRHIST_BARMAX - barlen, "" );
     }
-#ifdef _WIN32  
-  //fflush is not needed
+# ifdef _WIN32  
+  /* fflush is not needed */
   if(GetFileType(CH)!= FILE_TYPE_PIPE)
   {
     GetConsoleScreenBufferInfo(CH, &CSBI);
-    Pos.Y= CSBI.dwCursorPosition.Y-(brhist_vbrmax- brhist_vbrmin)- 2;
+    Pos.Y= CSBI.dwCursorPosition.Y-(brhist_vbrmax- brhist_vbrmin)- 1;
     Pos.X= 0;
     SetConsoleCursorPosition(CH, Pos);
   }
-#else
-  fputs(brhist_backcur, stderr);
-  fflush(stderr);
-#endif  
+# else
+    fputc  ( '\r', stderr );
+    for ( i = brhist_vbrmin; i <= brhist_vbrmax; i++ )
+        fputs ( brhist_up, stderr );
+    fflush ( stderr );
+# endif  
 #endif
 }
 
@@ -166,13 +165,8 @@ void brhist_disp_total(lame_global_flags *gfp)
 #endif
   ave=0;
   for(i = brhist_vbrmin; i <= brhist_vbrmax; i++)
-    ave += bitrate_table[gfp->version][i]*
-      (FLOAT)brhist_count[i] / gfp->totalframes;
-  fprintf(stderr, "\naverage: %2.0f kbs\n",ave);
+    ave += bitrate_table[gfp->version][i]* (FLOAT)brhist_count[i] ;
+  fprintf ( stderr, "\naverage: %5.1f kbps\n", ave / gfp->totalframes );
 
   fflush(stderr);
 }
-
-
-
-

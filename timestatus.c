@@ -127,47 +127,61 @@ void ts_calc_times(ts_times *tstime, int samp_rate, long frame, long frames,int 
 /*********************************************************/
 /* timestatus: display encoding process time information */
 /*********************************************************/
-void timestatus(int samp_rate,long frameNum,long totalframes,int framesize)
+#include <assert.h>
+
+static void  ts_time_decompose ( const unsigned long time_in_sec, const char padded_char )
+{
+    unsigned long hour = time_in_sec / 3600;
+    unsigned int  min  = time_in_sec / 60 % 60;
+    unsigned int  sec  = time_in_sec % 60;
+
+    if ( hour == 0 )
+        fprintf ( stderr,    "   %2u:%02u%c",       min, sec, padded_char );
+    else if ( hour < 100 )
+        fprintf ( stderr, "%2lu:%02u:%02u%c", hour, min, sec, padded_char );
+    else
+        fprintf ( stderr,         "%6lu h%c", hour,           padded_char );
+}
+
+void timestatus ( unsigned long samp_rate, 
+                  unsigned long frameNum,
+                  unsigned long totalframes,
+                  int           framesize )
 {
   ts_times real_time, process_time;
   int percent;
+    unsigned dropped_frames = samp_rate <= 16000  || 
+                              samp_rate == 32000  ?  2  :  1;  
+                              /* ugly and nasty work around, only obscuring another bug? */
+                              /* values of 1...3 are possible, why ??? */
 
   real_time.so_far = ts_real_time(frameNum);
   process_time.so_far = ts_process_time(frameNum);
 
-  if (frameNum == 0) {
-    fprintf(stderr, "    Frame          |  CPU/estimated  |  time/estimated | play/CPU |   ETA\n");
-    return;
-  }  
+    if ( frameNum == 0 ) {
+        fputs ( "    Frame          |  CPU time/estim | REAL time/estim | play/CPU |  remain \n"
+                "     0/       ( 0%)|    0:00/     :  |    0:00/     :  |    .    x|     :   \r", stderr );
+        return;
+    }  
 
   ts_calc_times(&real_time, samp_rate, frameNum, totalframes, framesize);
   ts_calc_times(&process_time, samp_rate, frameNum, totalframes, framesize);
 
-  if (totalframes > 1) {
-    percent = (int)(100.0 * frameNum / (totalframes - 1));
-  } else {
-    percent = 100;
-  }
+    if ( frameNum < totalframes - dropped_frames ) {
+        percent = (int) (100.0 * frameNum / (totalframes - dropped_frames) + 0.5 );
+    } else {
+        percent = 100;
+    }
 
-#  define TS_TIME_DECOMPOSE(time) \
-    (int)((long)(time+.5) / 3600), \
-    (int)((long)((time+.5) / 60) % 60), \
-    (int)((long)(time+.5) % 60)
-
-  fprintf(stderr,
-    "\r%6ld/%6ld(%3d%%)|%2d:%02d:%02d/%2d:%02d:%02d|%2d:%02d:%02d/%2d:%02d:%02d|%10.4f|%2d:%02d:%02d ",
-    frameNum,
-    totalframes - 1,
-    percent,
-    TS_TIME_DECOMPOSE(process_time.so_far),
-    TS_TIME_DECOMPOSE(process_time.estimated),
-    TS_TIME_DECOMPOSE(real_time.so_far),
-	TS_TIME_DECOMPOSE(real_time.estimated),
-    process_time.speed,
-    TS_TIME_DECOMPOSE(real_time.eta)
-  );
-
-  fflush(stderr);
+    fprintf ( stderr, "\r%6ld/%-6ld", frameNum, totalframes - dropped_frames );
+    fprintf ( stderr, percent < 100 ? " (%2d%%)|" : "(%3.3d%%)|", percent );
+    ts_time_decompose ( process_time.so_far   , '/' );
+    ts_time_decompose ( process_time.estimated, '|' );
+    ts_time_decompose ( real_time   .so_far   , '/' );
+    ts_time_decompose ( real_time   .estimated, '|' );
+    fprintf ( stderr, process_time.speed <= 9999.9999 ? "%9.4fx|" : "%9.3ex|", process_time.speed );
+    ts_time_decompose ( real_time   .eta      , ' ' );
+    fflush ( stderr );
 }
 
 
@@ -221,5 +235,3 @@ void decoder_progress_finish ( lame_global_flags* gfp )
 }
 
 #endif
-
-

@@ -304,12 +304,12 @@ void lame_parse_args(lame_global_flags *gfp,int argc, char **argv)
 	if (strcmp(token, "resample")==0) {
 	  argUsed=1;
 	  srate = atof( nextArg );
-	  /* samplerate = rint( 1000.0 * srate ); $A  */
-	  gfp->out_samplerate =  (( 1000.0 * srate ) + 0.5);
-	  if (srate  < 1) {
+	  if (srate <= 0) {
 	    ERRORF("Must specify a samplerate with --resample\n");
 	    LAME_ERROR_EXIT();
 	  }
+	  /* useful are 0.001 ... 384 kHz, 384 Hz ... 192000 Hz */
+	  gfp -> out_samplerate =  ( srate * (srate <= 384. ? 1.e3 : 1.e0 ) + 0.5 );
 	}
 	else if (strcmp(token, "vbr-old")==0) {
 	  gfp->VBR = vbr_rh; 
@@ -323,6 +323,10 @@ void lame_parse_args(lame_global_flags *gfp,int argc, char **argv)
 	  argUsed=1;
 	  gfp->VBR = vbr_abr; 
 	  gfp->VBR_mean_bitrate_kbps = atoi(nextArg);
+	  /* values larger than 4000 are bps (like Fraunhofer), so it's strange
+             to get 320000 bps MP3 when specifying 8000 bps MP3 */
+	  if ( gfp -> VBR_mean_bitrate_kbps >= 4000 )
+	      gfp -> VBR_mean_bitrate_kbps = ( gfp -> VBR_mean_bitrate_kbps + 500 ) / 1000;
 	  gfp->VBR_mean_bitrate_kbps = Min(gfp->VBR_mean_bitrate_kbps,310); 
 	  gfp->VBR_mean_bitrate_kbps = Max(gfp->VBR_mean_bitrate_kbps,4); 
 	}
@@ -435,9 +439,11 @@ void lame_parse_args(lame_global_flags *gfp,int argc, char **argv)
 	  LAME_NORMAL_EXIT();
  	}
 	else if (strcmp(token, "lowpass")==0) {
+	  double freq = atof( nextArg );
 	  argUsed=1;
-	  gfp->lowpassfreq =  (( 1000.0 * atof( nextArg ) ) + 0.5);
-	  if (gfp->lowpassfreq  < 1) {
+	  /* useful are 0.001 kHz...50 kHz, 50 Hz...50000 Hz */
+	  gfp -> lowpassfreq = freq * (freq < 50. ? 1.e3 : 1.e0 ) + 0.5;
+	  if ( freq < 0.001 || freq > 50000. ) {
 	    ERRORF("Must specify lowpass with --lowpass freq, freq >= 0.001 kHz\n");
 	    LAME_ERROR_EXIT();
 	  }
@@ -451,9 +457,11 @@ void lame_parse_args(lame_global_flags *gfp,int argc, char **argv)
 	  }
 	}
 	else if (strcmp(token, "highpass")==0) {
+	  double freq = atof( nextArg );
 	  argUsed=1;
-	  gfp->highpassfreq =  (( 1000.0 * atof( nextArg ) ) + 0.5);
-	  if (gfp->highpassfreq  < 1) {
+	  /* useful are 0.001 kHz...16 kHz, 16 Hz...50000 Hz */
+	  gfp->highpassfreq =  freq * (freq < 16. ? 1.e3 : 1.e0 ) + 0.5;
+	  if ( freq < 0.001 || freq > 50000. ) {
 	    ERRORF("Must specify highpass with --highpass freq, freq >= 0.001 kHz\n");
 	    LAME_ERROR_EXIT();
 	  }
@@ -467,12 +475,15 @@ void lame_parse_args(lame_global_flags *gfp,int argc, char **argv)
 	  }
 	}
 	else if (strcmp(token, "cwlimit")==0) {
-	  argUsed=1;
-	  gfp->cwlimit =  atof( nextArg );
-	  if (gfp->cwlimit <= 0 ) {
-	    ERRORF("Must specify cwlimit in kHz\n");
-	    LAME_ERROR_EXIT();
-	  }
+          double freq = atof (nextArg);
+          argUsed=1;
+          /* useful are 0.001 kHz...50 kHz, 50 Hz...50000 Hz */
+          /* Attention: This is stored as Kilohertz, not as Hertz (why?) */
+          gfp -> cwlimit = freq * ( freq <= 50. ? 1.e0 : 1.e-3 );
+          if (gfp->cwlimit <= 0 ) {
+            ERRORF("Must specify cwlimit in kHz\n");
+            LAME_ERROR_EXIT();
+          }
 	} 
 	else if (strcmp(token, "comp")==0) {
 	  argUsed=1;

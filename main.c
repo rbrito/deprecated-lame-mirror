@@ -52,7 +52,10 @@ int main(int argc, char **argv)
   argc = ccommand(&argv);
 #endif
 
+  extern void main_CRC_init (void);
 
+  main_CRC_init ();  /* ulgy, it's C, not Ada, C++ or Modula */
+  
   /* initialize libmp3lame */
   if (lame_init(&gf)<0) {
     ERRORF("fatal error during initialization\n");
@@ -71,7 +74,15 @@ int main(int argc, char **argv)
 #endif
   lame_parse_args(&gf,argc, argv);
 
-
+  /* Mostly it is not useful to use the same input and output name.
+     This test is very easy and buggy and don't recognize different names
+     assigning the same file
+   */
+  if ( 0 != strcmp ( "-"      , gf.outPath )  && 
+       0 == strcmp ( gf.inPath, gf.outPath ) ) {
+      ERRORF ( "Input file and Output file are the same. Abort.\n" );
+      LAME_ERROR_EXIT ();
+  }
 
   /* open the wav/aiff/raw pcm or mp3 input file.  This call will
    * open the file with name gf.inFile, try to parse the headers and
@@ -79,6 +90,7 @@ int main(int argc, char **argv)
    * if you want to do your own file input, skip this call and set
    * these values yourself.
    */
+  
   lame_init_infile(&gf);
 
   /* Now that all the options are set, lame needs to analyze them and
@@ -183,6 +195,3 @@ int main(int argc, char **argv)
   lame_close_infile(&gf);            /* close the input file */
   return 0;
 }
-
-
-

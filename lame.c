@@ -21,7 +21,7 @@
 
 
 #include <assert.h>
-
+#include <time.h>
 
 #include "gtkanal.h"
 #include "lame.h"
@@ -41,6 +41,10 @@
 
 #ifdef __riscos__
 #include "asmstuff.h"
+#endif
+
+#ifndef DISPLAY_UPDATE_TIME
+# define DISPLAY_UPDATE_TIME  2.0
 #endif
 
 /* lame_init_params_ppflt_lowpass */
@@ -925,13 +929,16 @@ char *mp3buf, int mp3buf_size)
 
   /********************** status display  *****************************/
   if (!gfp->gtkflag && !gfp->silent) {
-    int mod = gfp->version == 0 ? 100 : 50;
-    if (gfp->frameNum%mod==0) {
+      static time_t  last_time = 0;
+      time_t         curr_time = time (NULL);
+      
+      /* Update display once per second */
+      if ( difftime ( curr_time, last_time ) >= DISPLAY_UPDATE_TIME  ||  last_time == 0 ) {
       timestatus(gfp->out_samplerate,gfp->frameNum,gfp->totalframes,gfp->framesize);
 
       if (gfp->brhist_disp)
 	  brhist_disp(gfp->totalframes);
-
+          last_time = time (NULL);
     }
   }
 
