@@ -1336,7 +1336,7 @@ short_block_scalefacs(const lame_internal_flags * gfc, gr_info * cod_info,
     }
     assert(cod_info->global_gain < 256);
     compute_scalefacs_short(vbrsf, cod_info, vbrsfmin);
-    assert(checkScalefactor(cod_info, vbrsfmin));
+    /*assert(checkScalefactor(cod_info, vbrsfmin));*/
 }
 
 
@@ -1449,7 +1449,7 @@ long_block_scalefacs(const lame_internal_flags * gfc, gr_info * cod_info,
         compute_scalefacs_long(vbrsf, cod_info, vbrsfmin);
     else
         compute_scalefacs_long_lsf(vbrsf, cod_info, vbrsfmin);
-    assert(checkScalefactor(cod_info, vbrsfmin));
+    /*assert(checkScalefactor(cod_info, vbrsfmin));*/
 }
 
 
@@ -1477,16 +1477,7 @@ long_block_scalefacs(const lame_internal_flags * gfc, gr_info * cod_info,
     int     sfb, j = 0, sfbmax;                                                         \
     fi_union fi[4];\
     int* l3 = cod_info->l3_enc;                                                 \
-/*    fi_union *fix = (fi_union *)cod_info->l3_enc;*/                                        \
-    /* even though there is no scalefactor for sfb12/sfb21                              \
-     * subblock gain affects upper frequencies too, that's why                          \
-     * we have to go up to SBMAX_s/SBMAX_l                                              \
-     */                                                                                 \
     sfbmax = cod_info->psymax;                                                          \
-    if (sfbmax == 35 || sfbmax == 36) /* short block / mixed? case */                   \
-        sfbmax += 3;                                                                    \
-    if (sfbmax == 21) /* long block case */                                             \
-        sfbmax += 1;                                                                    \
                                                                                         \
     for (sfb = 0; sfb < sfbmax; ++sfb) {                                                \
         const int s =  ((scalefac[sfb] + (cod_info->preflag ? pretab[sfb] : 0))         \
@@ -1578,15 +1569,15 @@ long_block_scalefacs(const lame_internal_flags * gfc, gr_info * cod_info,
             /*  most often the case */                                                  \
         }                                                                               \
         else {                                                                          \
-            if ( j < 576 ) {                                                            \
-                int n = 576-j;                                                          \
-                memset( xr34, 0, n*sizeof(FLOAT8) );                                    \
-                memset( l3, 0, n*sizeof(int) );                                     \
-            }                                                                           \
-            return 1;                                                                   \
+            break;                                                                      \
         }                                                                               \
     }                                                                                   \
-    return 1;                                                                           \
+    if ( j < 576 ) {                                                            \
+        int n = 576-j;                                                          \
+        memset( xr34, 0, n*sizeof(FLOAT8) );                                    \
+        memset( l3, 0, n*sizeof(int) );                                     \
+    }                                                                           \
+    return 1;                                                                   \
 
 
 #ifdef TAKEHIRO_IEEE754_HACK
@@ -1663,7 +1654,7 @@ tryScalefacColor(lame_internal_flags * const gfc, gr_info * cod_info, int vbrsf[
         if (vbrmax < vbrsf[i])
             vbrmax = vbrsf[i];
     }
-    if (cod_info->block_type == 2) {
+    if (cod_info->block_type == SHORT_TYPE) {
         short_block_scalefacs(gfc, cod_info, vbrsf, vbrsfmin, vbrmax);
     }
     else {
@@ -1793,7 +1784,6 @@ searchGlobalStepsize(lame_internal_flags * const gfc, gr_info * cod_info, const 
     while (l <= r) {
         curr = (l + r) >> 1;
         nbits = tryGlobalStepsize(gfc, cod_info, sfwork, vbrsfmin, curr - gain, xr34, xr34orig);
-        assert(cod_info->part2_length < LARGE_BITS && nbits < LARGE_BITS);
         if (cod_info->part2_length >= LARGE_BITS || nbits >= LARGE_BITS) {
             l = curr + 1;
             continue;

@@ -357,7 +357,7 @@ static void quantize_xrpow(const FLOAT8 *xp, int *pi, FLOAT8 istep, gr_info * co
                     sizeof(int)*(576-cod_info->max_nonzero_coeff));
                 l = usefullsize;
 
-                // no need to compute higher sfb values 
+                /* no need to compute higher sfb values */
                 sfb = sfbmax + 1;
             }
             if ( l <= 0 ) {
