@@ -27,7 +27,7 @@
 
 #include <math.h>
 #include <assert.h>
-#include "util.h"
+#include "bitstream.h"
 #include "l3side.h"
 #include "quantize.h"
 #include "reservoir.h"
@@ -689,7 +689,6 @@ balance_noise (
 {
     lame_internal_flags *const gfc = (lame_internal_flags *)gfp->internal_flags;
     int status;
-    III_scalefac_t * const scalefac = &cod_info->scalefac;
     
     amp_scalefac_bands ( gfp, cod_info, distort, xrpow);
     
@@ -1040,7 +1039,6 @@ get_framebits (
 {
     lame_internal_flags *gfc=gfp->internal_flags;
     int bitsPerFrame, i;
-    III_side_info_t *l3_side = &gfc->l3_side;
     
     /*  always use at least this many bits per granule per channel 
      *  unless we detect analog silence, see below 
@@ -1175,7 +1173,7 @@ VBR_prepare (
     FLOAT8  masking_lower_db, adjust = 0.0;
     int     gr, ch;
     int     analog_silence = 1;
-    int     bpf, avg, mxb, bits = 0;
+    int     avg, mxb, bits = 0;
   
     gfc->bitrate_index = gfc->VBR_max_bitrate;
     avg = ResvFrameBegin (gfp, &avg) / gfc->mode_gr;

@@ -830,7 +830,6 @@ flush_bitstream(lame_global_flags *gfp)
   III_side_info_t *l3_side;
   int nbytes;
   int flushbits;
-  int bitsPerFrame;
   int last_ptr,first_ptr;
   first_ptr=gfc->w_ptr;           /* first header to add to bitstream */
   last_ptr = gfc->h_ptr - 1;   /* last header to add to bitstream */

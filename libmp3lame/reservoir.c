@@ -26,7 +26,7 @@
 #endif
 
 #include <assert.h>
-#include "util.h"
+#include "bitstream.h"
 #include "reservoir.h"
 
 #ifdef WITH_DMALLOC

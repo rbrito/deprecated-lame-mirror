@@ -302,6 +302,8 @@ int CDECL lame_get_experimentalZ(const lame_global_flags *);
 int CDECL lame_set_exp_nspsytune(lame_global_flags *, int);
 int CDECL lame_get_exp_nspsytune(const lame_global_flags *);
 
+void CDECL lame_set_msfix(lame_global_flags *, double);
+
 int lame_set_exp_nspsytune2_int( lame_global_flags*, int, int);
 float lame_set_exp_nspsytune2_real( lame_global_flags*, int, float);
 void * lame_set_exp_nspsytune2_pointer( lame_global_flags*, int, void *);
@@ -331,6 +333,9 @@ int CDECL lame_get_VBR_max_bitrate_kbps(const lame_global_flags *);
 // analog silence
 int CDECL lame_set_VBR_hard_min(lame_global_flags *, int);
 int CDECL lame_get_VBR_hard_min(const lame_global_flags *);
+
+// for preset
+int CDECL lame_set_preset_expopts(lame_global_flags *, int);
 
 
 /********************************************************************
