@@ -121,6 +121,10 @@ SOURCE=.\encoder.c
 # End Source File
 # Begin Source File
 
+SOURCE=.\fft.c
+# End Source File
+# Begin Source File
+
 SOURCE=.\id3tag.c
 # End Source File
 # Begin Source File
@@ -224,6 +228,10 @@ InputPath=..\configMS.h
 # Begin Source File
 
 SOURCE=.\encoder.h
+# End Source File
+# Begin Source File
+
+SOURCE=.\fft.h
 # End Source File
 # Begin Source File
 
@@ -413,7 +421,6 @@ SOURCE=.\i386\ffttbl.nas
 !ENDIF 
 
 # End Source File
-
 !ENDIF 
 
 # End Source File
