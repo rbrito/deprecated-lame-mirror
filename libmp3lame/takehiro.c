@@ -806,7 +806,8 @@ scfsi_calc(int ch,
 
     for (i = 0; i < (sizeof(scfsi_band) / sizeof(int)) - 1; i++) {
 	for (sfb = scfsi_band[i]; sfb < scfsi_band[i + 1]; sfb++) {
-	    if (g0->scalefac[sfb] != gi->scalefac[sfb])
+	    if (g0->scalefac[sfb] != gi->scalefac[sfb]
+		&& gi->scalefac[sfb] >= 0)
 		break;
 	}
 	if (sfb == scfsi_band[i + 1]) {
@@ -819,7 +820,7 @@ scfsi_calc(int ch,
 
     s1 = c1 = 0;
     for (sfb = 0; sfb < 11; sfb++) {
-	if (gi->scalefac[sfb] < 0)
+	if (gi->scalefac[sfb] == -1)
 	    continue;
 	c1++;
 	if (s1 < gi->scalefac[sfb])
@@ -828,7 +829,7 @@ scfsi_calc(int ch,
 
     s2 = c2 = 0;
     for (; sfb < SBPSY_l; sfb++) {
-	if (gi->scalefac[sfb] < 0)
+	if (gi->scalefac[sfb] == -1)
 	    continue;
 	c2++;
 	if (s2 < gi->scalefac[sfb])
@@ -857,7 +858,6 @@ void best_scalefac_store(
     const int             ch,
           III_side_info_t * const l3_side)
 {
-
     /* use scalefac_scale if we can */
     gr_info *gi = &l3_side->tt[gr][ch];
     int sfb,i,j,l;
@@ -869,24 +869,23 @@ void best_scalefac_store(
     for ( sfb = 0; sfb < gi->sfbmax; sfb++ ) {
 	int width = gi->width[sfb];
 	j += width;
-	if (gi->scalefac[sfb] == 0)
-	    continue;
-
 	for (l = -width; l < 0; l++)
 	    if (gi->l3_enc[l+j]!=0)
 		break;
 	if (l==0)
-	    gi->scalefac[sfb]=0;
+	    gi->scalefac[sfb]=-2; // anything goes.
     }
 
     if (!gi->scalefac_scale && !gi->preflag) {
 	int s = 0;
 	for (sfb = 0; sfb < gi->sfbmax; sfb++)
-	    s |= gi->scalefac[sfb];
+	    if (gi->scalefac[sfb] > 0)
+		s |= gi->scalefac[sfb];
 
 	if (!(s & 1) && s != 0) {
 	    for (sfb = 0; sfb < gi->sfbmax; sfb++)
-		gi->scalefac[sfb] /= 2;
+		if (gi->scalefac[sfb] > 0)
+		    gi->scalefac[sfb] >>= 1;
 
 	    gi->scalefac_scale = 1;
 	    gi->part2_length = LARGE_BITS;
@@ -900,7 +899,7 @@ void best_scalefac_store(
 
 
     for ( i = 0; i < 4; i++ )
-      l3_side->scfsi[ch][i] = 0;
+	l3_side->scfsi[ch][i] = 0;
 
     if (gfc->mode_gr==2 && gr == 1
 	&& l3_side->tt[0][ch].block_type != SHORT_TYPE
@@ -1157,7 +1156,7 @@ void huffman_init(lame_internal_flags * const gfc)
 	    index--;
 
 	if (index < 0) {
-	  index = subdv_table[scfb_anz].region1_count;
+	    index = subdv_table[scfb_anz].region1_count;
 	}
 
 	gfc->bv_scf[i-1] = index;

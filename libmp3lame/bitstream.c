@@ -640,14 +640,18 @@ writeMainData ( lame_global_flags * const gfp)
 		hogege = gfc->bs.totbit;
 #endif
 		for (sfb = 0; sfb < gi->sfbdivide; sfb++) {
-		    if (gi->scalefac[sfb] < 0)
+		    if (gi->scalefac[sfb] == -1)
 			continue; // scfsi is used
+		    if (gi->scalefac[sfb] == -2)
+			gi->scalefac[sfb] = 0;
 		    putbits2(gfc, gi->scalefac[sfb], slen1);
 		    data_bits += slen1;
 		}
 		for (; sfb < gi->sfbmax; sfb++) {
-		    if (gi->scalefac[sfb] < 0)
+		    if (gi->scalefac[sfb] == -1)
 			continue; // scfsi is used
+		    if (gi->scalefac[sfb] == -2)
+			gi->scalefac[sfb] = 0;
 		    putbits2(gfc, gi->scalefac[sfb], slen2);
 		    data_bits += slen2;
 		}
