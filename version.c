@@ -20,10 +20,10 @@
  */
 
 
+#include <stdio.h>
 #include "version.h"
 #include "lame.h"
 #include "get_audio.h"
-#include <stdio.h>
 
 void lame_print_version ( FILE* fp )
 {

@@ -108,6 +108,7 @@ int main ( int argc, char** argv )
 #ifdef ONLYVORBIS
   gf.ogg=1;
 #endif
+
   lame_parse_args(&gf,argc, argv);
 
   /* Mostly it is not useful to use the same input and output name.
@@ -126,7 +127,7 @@ int main ( int argc, char** argv )
    * if you want to do your own file input, skip this call and set
    * these values yourself.
    */
-  
+
   lame_init_infile(&gf);
 
   /* Now that all the options are set, lame needs to analyze them and
@@ -185,7 +186,7 @@ int main ( int argc, char** argv )
 	if ( imp3 < 0 ) encoder_error ( imp3 );
 
 	/* imp3 is not negative, but fwrite needs an size_t here */
-	if ( imp3 != fwrite ( mp3buffer, 1, (size_t)imp3, outf ) ) {
+	if ( (size_t)imp3 != fwrite ( mp3buffer, 1, (size_t)imp3, outf ) ) {
 	  fprintf ( stderr, "Error writing mp3 output, disk full?\n" );
 	  return -1;
 	}
@@ -195,7 +196,7 @@ int main ( int argc, char** argv )
 
       if ( imp3 < 0 ) encoder_error ( imp3 );
 
-      if ( imp3 != fwrite ( mp3buffer, 1, (size_t)imp3, outf ) ) {
+      if ( (size_t)imp3 != fwrite ( mp3buffer, 1, (size_t)imp3, outf ) ) {
 	  fprintf ( stderr, "Error writing mp3 output, disk full? (final)\n" );
 	  return -1;
       }

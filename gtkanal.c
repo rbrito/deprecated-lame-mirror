@@ -169,13 +169,13 @@ void plot_frame(void)
   double *data,*data2,*data3;
   char title2[80];
   char label[80],label2[80];
-  char *title;
+  const char* title;
   plotting_data *pplot1;
   plotting_data *pplot2 = NULL;
 
   double en,samp;
   int sampindex;
-  MPEG_version_t version = 0;
+  MPEG_version_t version = MPEG_2;
   int barthick;
   static int firstcall=1;
   static GdkColor *barcolor,*color,*grcolor[2];
@@ -237,8 +237,8 @@ void plot_frame(void)
   ch = gtkinfo.chflag;
   
   headbits = 32 + ((pplot1->channels==2) ? 256 : 136);
-  gtkinfo.approxbits = (pplot1->bitrate*1000*1152.0/samp) - headbits;
-  sprintf(title2,"%3.1fkHz %ikbs ",samp/1000,pplot1->bitrate);
+  gtkinfo.approxbits = (pplot1->bitrate*1000*1152/samp) - headbits;
+  sprintf(title2,"%g kHz  %i kbps",samp/1000,pplot1->bitrate);
   gtk_text_freeze (GTK_TEXT(headerbox));
   gtk_text_backward_delete(GTK_TEXT(headerbox),
 			    gtk_text_get_length(GTK_TEXT(headerbox)));

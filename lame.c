@@ -19,7 +19,6 @@
  * Boston, MA 02111-1307, USA.
  */
 
-
 #include <assert.h>
 #include <time.h>
 #ifdef __unix__
@@ -218,8 +217,8 @@ int lame_init_params(lame_global_flags *gfp)
   if (gfp->num_channels==1) {
     gfp->mode = MPG_MD_MONO;
   }
-  gfc->channels=2;
-  if (gfp->mode == MPG_MD_MONO) gfc->channels=1;
+  
+    gfc -> channels =  (gfp -> mode == MPG_MD_MONO) ? 1 : 2;
 
   if (gfp->gtkflag) 
     gfp->silent=1;
@@ -238,8 +237,7 @@ int lame_init_params(lame_global_flags *gfp)
         /* CBR/ABR, no bitrate or compression ratio specified, use 11.025 (CD => 128 kbps) */
         gfp->compression_ratio = 44100.0 * 16 * 2 / 128000;
     }
-
-
+    
   /* find bitrate if user specify a compression ratio */
   if (gfp->VBR==vbr_off && gfp->compression_ratio > 0) {
     
@@ -260,8 +258,6 @@ int lame_init_params(lame_global_flags *gfp)
       gfp->brate = FindNearestBitrate(gfp->brate,gfp->version,gfp->out_samplerate);
   }
   if (gfp->brate >= 320) gfp->VBR=vbr_off;  /* dont bother with VBR at 320kbs */
-
-
 
   /* set the output sampling rate, and resample options if necessary
      samplerate = input sample rate
@@ -292,7 +288,7 @@ int lame_init_params(lame_global_flags *gfp)
       }
     }
   }
-
+  
   gfc->mode_gr = (gfp->out_samplerate <= 24000) ? 1 : 2;  /* mode_gr = 2 */
   gfp->encoder_delay = ENCDELAY;
   gfp->framesize = gfc->mode_gr*576;
@@ -366,10 +362,45 @@ int lame_init_params(lame_global_flags *gfp)
      */
      
     if ( ! gfp -> mode_fixed  &&  gfp -> mode != MPG_MD_MONO ) {
-        // 160 kbps and stereo instead of j-stereo is a bad idea
-        if ( gfp -> compression_ratio < 7.35 ) {  // switch to stereo for > 192 kbps
+
+	// pfk
+        // For 44.1 kHz
+	//   1... 96 kbps: Mono                 better than ugly stereo °)
+	//  97...160 kbps: Joint Stereo
+	// 161...192 kbps: Force Joint Stereo   bandwidth not enough for LR stereo, but reducing switching artefacts
+	// 193...    kbps: Stereo               enough bandwidth for LR stereo
+        //
+        // °) mostly prevent by automatic downsampling
+
+        if      ( gfp -> compression_ratio <   7.35 )
             gfp -> mode = MPG_MD_STEREO;
-        }
+        else if ( gfp -> compression_ratio <   8.82 )
+            gfp -> force_ms = 1,
+            gfp -> mode = MPG_MD_JOINT_STEREO;
+        else if ( gfp -> compression_ratio <= 14.70 )
+            gfp -> mode = MPG_MD_JOINT_STEREO;
+        else
+            gfp -> mode = MPG_MD_MONO;
+
+        // Note: File sizes with -V0 for several files
+	//	-mm    -mj      -mf      -ms          korr
+	//	100%   170.6%   170.6%   198.2%       68%     
+	//	100%   163.8%   163.8%   198.6%       78%     
+	//	100%   177.1%   177.1%   198.5%       71%     
+	//	100%   168.7%   168.6%   199.4%       54%     
+	//	100%   172.6%   172.6%   198.0%       73%     
+	//	100%   167.5%   167.5%   199.0%       57%     
+	//	100%   175.2%   175.2%   198.3%       76%     
+	//	100%   177.4%   177.4%   200.3%       37%     
+	//	100%   167.3%   167.3%   198.6%       74%     
+	//	100%   180.5%   180.5%   198.4%       67%     
+	//	100%   175.0%   175.0%   199.1%       77%     
+	//	100%   187.2%   187.2%   197.4%       58%     
+	//	100%   177.1%   177.1%   197.1%       82%     
+	//	100%   183.9%   184.1%   199.5%       75%     
+	//	100%   191.0%   191.0%   198.4%       57%     
+                      
+	// avg	100%   175.6%   175.6%   198.5%  
     }
 
 
@@ -393,7 +424,7 @@ int lame_init_params(lame_global_flags *gfp)
 
 
     /* Should we use some lowpass filters? */
-    int band = 1+floor(.5 + 14-18*log(gfp->compression_ratio/16.0));
+    int band = (int) floor ( 1.5 + 14 - 18*log (gfp->compression_ratio/16.0) );
     if (gfc->resample_ratio != 1.0) {
       /* resampling.  if we are resampling, add lowpass at least 90% */
       band = Min(band,29);
@@ -438,7 +469,6 @@ int lame_init_params(lame_global_flags *gfp)
   /* compute info needed for polyphase filter (filter type==0, default)   */
   /***************************************************************/
   lame_init_params_ppflt(gfc);
-
 
   /***************************************************************/
   /* compute info needed for FIR filter (filter_type==1) */
@@ -509,8 +539,6 @@ int lame_init_params(lame_global_flags *gfp)
             break;
         }     
 
-
-
   }
 
   /* VBR needs at least the output of GPSYCHO,
@@ -539,8 +567,6 @@ int lame_init_params(lame_global_flags *gfp)
   if (gfp->outPath==NULL || gfp->outPath[0]=='-' ) {
     gfp->id3v1_enabled=0;       /* turn off ID3 version 1 tagging */
   }
-
-
 
   if (gfc->pinfo != NULL) {
     gfp->bWriteVbrTag=0;  /* disable Xing VBR tag */
@@ -633,10 +659,10 @@ int lame_init_params(lame_global_flags *gfp)
     gfc -> sideinfo_len = 4;
   
     switch ( gfp -> version ) {
-    case 1: /* MPEG 1 */
+    case MPEG_1:
         gfc -> sideinfo_len += gfc->channels == 1  ?  17  :  32;
         break;
-    case 0: /* MPEG 2 */
+    case MPEG_2:
         gfc -> sideinfo_len += gfc->channels == 1  ?   9  :  17;
         break;
     default:
@@ -922,6 +948,9 @@ char *mp3buf, size_t mp3buf_size)
   FLOAT8 ms_ratio_next=0;
   FLOAT8 ms_ratio_prev=0;
 
+  /* End of variable definitions */
+  
+
   memset((char *) masking_ratio, 0, sizeof(masking_ratio));
   memset((char *) masking_MS_ratio, 0, sizeof(masking_MS_ratio));
   memset((char *) scalefac, 0, sizeof(scalefac));
@@ -1020,14 +1049,13 @@ char *mp3buf, size_t mp3buf_size)
     }
   }
 
-
   /********************** status display  *****************************/
   if (!gfp->silent) {
   
   
 #ifdef __unix  
-      long double curr_time;
-      struct timeval      t;
+      long double     curr_time;
+      struct timeval  t;
 
       gettimeofday (&t, NULL);
       curr_time = t.tv_sec + 1.e-6l * t.tv_usec;
@@ -1036,7 +1064,7 @@ char *mp3buf, size_t mp3buf_size)
       /* Update display once per 2 seconds */
       if ( curr_time - gfc->last_time >= gfp->display_update_interval  ||  gfp->frameNum == 0  ||  gfp->frameNum == 9 ) {
 	timestatus(gfp->out_samplerate,gfp->frameNum,gfp->totalframes,gfp->framesize);
-	
+
 	if (gfp->brhist_disp)
 	  brhist_disp(gfp->totalframes);
 
@@ -1093,7 +1121,6 @@ char *mp3buf, size_t mp3buf_size)
       }
   }
 
-
   /* block type flags */
   for( gr = 0; gr < gfc->mode_gr; gr++ ) {
     for ( ch = 0; ch < gfc->channels; ch++ ) {
@@ -1119,8 +1146,6 @@ char *mp3buf, size_t mp3buf_size)
     }
   }
   
-
-
 
   /* use m/s gfc->stereo? */
   check_ms_stereo =  (gfp->mode == MPG_MD_JOINT_STEREO);
@@ -1149,8 +1174,6 @@ char *mp3buf, size_t mp3buf_size)
          gfc->mode_ext = MPG_MD_MS_LR;
   }
 
-
-
   if (gfp->gtkflag && gfc->pinfo != NULL) {
     for ( gr = 0; gr < gfc->mode_gr; gr++ ) {
       for ( ch = 0; ch < gfc->channels; ch++ ) {
@@ -1169,9 +1192,6 @@ char *mp3buf, size_t mp3buf_size)
       }
     }
   }
-
-
-
 
   /* bit and noise allocation */
   if (MPG_MD_MS_LR == gfc->mode_ext) {
@@ -1211,7 +1231,6 @@ char *mp3buf, size_t mp3buf_size)
   mp3count = copy_buffer(mp3buf,mp3buf_size,&gfc->bs);
 
   if (gfp->bWriteVbrTag) AddVbrFrame(gfp);
-
 
   if (gfp->gtkflag && gfc->pinfo != NULL) {
     int j;
@@ -1305,8 +1324,7 @@ int lame_encode_buffer(lame_global_flags *gfp,
       in_buffer[1][i]=0;
     }
   }
-
-
+  
   while (nsamples > 0) {
     int n_in=0;
     int n_out=0;
@@ -1326,7 +1344,7 @@ int lame_encode_buffer(lame_global_flags *gfp,
       }
       in_buffer[ch] += n_in;
     }
-
+    
     nsamples -= n_in;
     gfc->mf_size += n_out;
     assert(gfc->mf_size<=MFSIZE);

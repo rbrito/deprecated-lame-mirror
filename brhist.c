@@ -13,8 +13,8 @@
 
 unsigned long  brhist_count   [15];
 unsigned long  brhist_count_max;
-unsigned       brhist_vbrmin;
-unsigned       brhist_vbrmax;
+unsigned int   brhist_vbrmin;
+unsigned int   brhist_vbrmax;
 char           brhist_kbps    [15] [4];
 char           brhist_bar     [BRHIST_BARMAX + 1];
 char           brhist_up      [10] = "\033[A";
@@ -96,7 +96,7 @@ void brhist_add_count(int i)
         brhist_count_max = brhist_count [i];
 }
 
-void brhist_disp(long totalframes)
+void brhist_disp ( long totalframes )
 {
     unsigned       i;
     unsigned       percent;
@@ -143,30 +143,29 @@ void brhist_disp(long totalframes)
 #endif
 }
 
-void brhist_disp_total(lame_global_flags *gfp)
+void   brhist_disp_total ( lame_global_flags* gfp )
 {
-  int i;
-  FLOAT ave;
-  /*  lame_internal_flags *gfc=gfp->internal_flags;*/
+    unsigned int  i;
+    double        sum;
 
 #ifdef BRHIST
-  for(i = brhist_vbrmin; i <= brhist_vbrmax; i++)
-    fputc('\n', stderr);
+    for ( i = brhist_vbrmin; i <= brhist_vbrmax; i++ )
+        fputc ( '\n', stderr );
 #else
-  fprintf(stderr, "\n----- bitrate statistics -----\n");
-  fprintf(stderr, " [kbps]      frames\n");
-  for(i = brhist_vbrmin; i <= brhist_vbrmax; i++)
-    {
-      fprintf(stderr, "   %3d  %8ld (%.1f%%)\n",
-	      index_to_bitrate [gfp->version] [i],
-	      brhist_count[i],
-	      (FLOAT)brhist_count[i] / gfp->totalframes * 100.0);
+    fprintf ( stderr, "\n----- bitrate statistics -----\n"
+                      " [kbps]      frames\n" );
+    for ( i = brhist_vbrmin; i <= brhist_vbrmax; i++ ) {
+        fprintf ( stderr, "%5u%10ld (%4.1f%%)\n",
+	          index_to_bitrate [gfp->version] [i],
+	          brhist_count [i],
+	          100. * brhist_count[i] / gfp->totalframes );
     }
 #endif
-  ave=0;
-  for(i = brhist_vbrmin; i <= brhist_vbrmax; i++)
-    ave += index_to_bitrate [gfp->version] [i] * (FLOAT)brhist_count[i] ;
-  fprintf ( stderr, "\naverage: %5.1f kbps\n", ave / gfp->totalframes );
 
-  fflush(stderr);
+    sum = 0.;
+    for ( i = brhist_vbrmin; i <= brhist_vbrmax; i++ )
+        sum += (double) index_to_bitrate [gfp->version] [i] * brhist_count [i] ;
+        
+    fprintf ( stderr, "\naverage: %5.1f kbps\n", sum / gfp->totalframes );
+    fflush  ( stderr );
 }

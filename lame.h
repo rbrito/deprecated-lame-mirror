@@ -41,32 +41,31 @@ extern "C" {
 
 /* Type which holds one PCM sample, should be moved to 32 bit float */
 
-typedef signed short int sample_t;
-typedef long double      freq_t;
-typedef sample_t         mono_t;
-typedef sample_t         stereo_t [2];
-
+typedef signed short int       sample_t;
+typedef long double            freq_t;
+typedef sample_t               mono_t;
+typedef sample_t               stereo_t [2];
+typedef unsigned char*         string;
+typedef const unsigned char*   cstring;
 
 typedef enum sound_file_format_e {
-  sf_unknown, 
-  sf_raw, 
-  sf_wave, 
-  sf_aiff, 
-  sf_mp1,  /* MPEG Layer 1, aka mpg */
-  sf_mp2,  /* MPEG Layer 2 */
-  sf_mp3,  /* MPEG Layer 3 */
-  sf_ogg 
+    sf_unknown, 
+    sf_mp1,  /* MPEG Layer 1, aka mpg */
+    sf_mp2,  /* MPEG Layer 2 */
+    sf_mp3,  /* MPEG Layer 3 */
+    sf_ogg,
+    sf_raw, 
+    sf_wave, 
+    sf_aiff 
 } sound_file_format;
 
-
 typedef enum vbr_mode_e {
-  vbr_off=0,
-  vbr_mt=1,
-  vbr_rh=2,
-  vbr_abr=3,
-  vbr_default=vbr_rh  /* change this to change the default VBR mode of LAME */ 
+    vbr_off,
+    vbr_mt,
+    vbr_rh,
+    vbr_abr,
+    vbr_default = vbr_rh  /* change this to change the default VBR mode of LAME */ 
 } vbr_mode;
-
 
 typedef enum {
     ch_stereo  = 0,
@@ -94,9 +93,6 @@ struct id3tag_spec
     int genre;
 };
 
-
-
-
 /***********************************************************************
 *
 *  Control Parameters set by User
@@ -107,6 +103,7 @@ struct id3tag_spec
 *
 *
 ***********************************************************************/
+
 typedef struct  {
   /* input file description */
   unsigned long num_samples;  /* number of samples. default=2^32-1    */
@@ -223,11 +220,15 @@ typedef struct  {
 
 
 
-/*
-
-The LAME API
-
- */
+/*********************************************************************
+ *********************************************************************
+ *********************************************************************
+ ******                                                         ******
+ ******            The  LAME  Application  Interface            ******
+ ******                                                         ******
+ *********************************************************************
+ *********************************************************************
+ *********************************************************************/
 
 
 /* REQUIRED: initialize the encoder.  sets default for all encoder paramters,
@@ -332,6 +333,13 @@ int    lame_encode_buffer (
 /* as above, but input has L & R channel data interleaved.  Note: 
  * num_samples = number of samples in the L (or R)
  * channel, not the total number of samples in pcm []  
+ *
+ * Note: This function has an patch around for 1 channel data.
+ *       Then this function calls secretly and quietly lame_encode_buffer(),
+ *       and the pcm[] data then is handled as mono signal
+ *       so the data type of pcm[] depends on the contents of
+ *       gfp. So a variant record for pcm is the only right type
+ *       for it.
  */
 int    lame_encode_buffer_interleaved (
                 lame_global_flags* gfp,
@@ -467,7 +475,7 @@ int    lame_decode_ogg_fromfile (
 		FILE*            fp,
 		sample_t         pcm_l [],
 		sample_t         pcm_r [],
-		mp3data_struct*  mp3data);
+		mp3data_struct*  mp3data );
 
 /* the simple lame decoder (interface to above routines) */
 /* After calling lame_init(), lame_init_params() and

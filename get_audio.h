@@ -21,6 +21,8 @@
 #ifndef GET_AUDIO_H_INCLUDED
 #define GET_AUDIO_H_INCLUDED
 
+#include "machine.h"
+
 #if (defined LIBSNDFILE || defined LAMESNDFILE)
 
 
