@@ -215,13 +215,7 @@ ResetSampleFrequency (replaygain_t* rgData, long samplefreq ) {
         default:    return INIT_GAIN_ANALYSIS_ERROR;
     }
 
-#if defined (__GNUC__) && defined (__OPTIMIZE__) && defined (__i386__)
-    /* workaround for the floating-point trouble with x86's extended 
-       precision when compiled by GCC with optimizations */
-    rgData->sampleWindow = (long) ceil ((float)((double)samplefreq * (double)RMS_WINDOW_TIME));
-#else
-    rgData->sampleWindow = (long) ceil (samplefreq * RMS_WINDOW_TIME);
-#endif
+    rgData->sampleWindow = (samplefreq * RMS_WINDOW_TIME_NUMERATOR + RMS_WINDOW_TIME_DENOMINATOR-1) / RMS_WINDOW_TIME_DENOMINATOR;
 
     rgData->lsum         = 0.;
     rgData->rsum         = 0.;

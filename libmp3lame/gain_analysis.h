@@ -58,13 +58,14 @@ typedef sample_t Float_t;         /* Type used for filtering */
 #define YULE_FILTER     filterYule
 #define BUTTER_FILTER   filterButter
 #define RMS_PERCENTILE      0.95        /* percentile which is louder than the proposed level */
-#define MAX_SAMP_FREQ   48000.          /* maximum allowed sample frequency [Hz] */
-#define RMS_WINDOW_TIME     0.050       /* Time slice size [s] */
+#define MAX_SAMP_FREQ   48000           /* maximum allowed sample frequency [Hz] */
+#define RMS_WINDOW_TIME_NUMERATOR     1  
+#define RMS_WINDOW_TIME_DENOMINATOR  20 /* numerator / denominator = time slice size [s] */
 #define STEPS_per_dB      100.          /* Table entries per dB */
 #define MAX_dB            120.          /* Table entries for 0...MAX_dB (normal max. values are 70...80 dB) */
 
 #define MAX_ORDER               (BUTTER_ORDER > YULE_ORDER ? BUTTER_ORDER : YULE_ORDER)
-#define MAX_SAMPLES_PER_WINDOW  (size_t) (MAX_SAMP_FREQ * RMS_WINDOW_TIME +1)      /* max. Samples per Time slice */
+#define MAX_SAMPLES_PER_WINDOW  (size_t) ((MAX_SAMP_FREQ * RMS_WINDOW_TIME_NUMERATOR) / RMS_WINDOW_TIME_DENOMINATOR + 1)      /* max. Samples per Time slice */
 
 
 
