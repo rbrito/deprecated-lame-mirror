@@ -309,7 +309,7 @@ CPP_OPTS = $(CPP_OPTS) /DTAKEHIRO_IEEE754_HACK
 
 #__ Robert's alternate code ___________________________________________________
 !	IF "$(CFG)" == "RH"
-!CPP_OPTS = $(CPP_OPTS) /DRH_AMP /DRH
+CPP_OPTS = $(CPP_OPTS) 
 !MESSAGE there is currently no alternate code by RH
 !	ENDIF
 #___________________________________________________ Robert's alternate code __
