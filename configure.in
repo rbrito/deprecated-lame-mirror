@@ -84,7 +84,8 @@ AC_MSG_RESULT($CONFIG_DECODER)
 
 if test "$CONFIG_DECODER" != "no" ; then
   CONFIG_DECODER=yes
-  CONFIG_LIBS="mpglib/mpglib.a $CONFIG_LIBS"
+  #add code to include this in libmp3lame  
+  #CONFIG_LIBS="mpglib/mpglib.a $CONFIG_LIBS"
   CONFIG_OPTS="-DHAVEMPGLIB $CONFIG_OPTS"
 fi
 
