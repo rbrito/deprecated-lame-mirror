@@ -639,7 +639,8 @@ set_istereo_sfb(lame_t gfc, int gr)
 
 static void
 compute_masking_s(
-    lame_t gfc, FLOAT fft_s[BLKSIZE_s], III_psy_ratio *mr, int ch, int sblock)
+    lame_t gfc, FLOAT fft_s[BLKSIZE_s], III_psy_ratio *mr, int ch, int sblock,
+    FLOAT adjust)
 {
     int j, b, sb;
     FLOAT eb[CBANDS], ecb, enn, thmm;
@@ -676,7 +677,7 @@ compute_masking_s(
 	    thmm = gfc->ATH.s_avg[sb] * gfc->ATH.adjust[ch];
 	    enn  = -enn;
 	}
-	mr->en.s[sb][sblock] = enn; mr->thm.s[sb][sblock] = thmm;
+	mr->en.s[sb][sblock] = enn; mr->thm.s[sb][sblock] = thmm * adjust;
 	enn  = .5*eb[b];
 	thmm = .5*ecb;
 	sb++;
@@ -687,7 +688,7 @@ compute_masking_s(
 		thmm = gfc->ATH.s_avg[sb] * gfc->ATH.adjust[ch];
 		enn  = -enn;
 	    }
-	    mr->en.s[sb][sblock] = enn; mr->thm.s[sb][sblock] = thmm;
+	    mr->en.s[sb][sblock] = enn; mr->thm.s[sb][sblock] = thmm * adjust;
 	    break;
 	}
     }
@@ -975,24 +976,24 @@ mp3x display               <------LONG------>
 	mr->en.s[0][0] = mr->en.s[0][1] = mr->en.s[0][2] = -1.0;
 	gfc->blocktype_next[gr][ch] = NORM_TYPE;
 
-	for (sb = 2; sb < 8; sb++) {
+	for (sb = 0; sb < 6; sb++) {
 	    /* calculate energies of each sub-shortblocks */
 	    FLOAT adjust
-		= (Max(gfc->nsPsy.subbk_ene[ch][sb],
-		      gfc->nsPsy.subbk_ene[ch][sb-1])
-		   + gfc->nsPsy.decay * gfc->nsPsy.subbk_ene[ch][sb-2])
+		= (Max(gfc->nsPsy.subbk_ene[ch][sb+2],
+		      gfc->nsPsy.subbk_ene[ch][sb+1])
+		   + gfc->nsPsy.decay * gfc->nsPsy.subbk_ene[ch][sb])
 		* gfc->nsPsy.attackthre;
-	    if (gfc->nsPsy.subbk_ene[ch][sb+1] < adjust)
+	    if (gfc->nsPsy.subbk_ene[ch][sb+3] < adjust)
 		continue;
 
 	    current_is_short |= (1 << ch);
-	    adjust /= gfc->nsPsy.subbk_ene[ch][sb+1];
+	    adjust /= gfc->nsPsy.subbk_ene[ch][sb+3];
 	    if (adjust < 0.01)
 		adjust = 0.01;
-	    if (mr->en.s[0][(sb-1)/3] > adjust || mr->en.s[0][(sb-1)/3] < 0)
-		mr->en.s[0][(sb-1)/3] = adjust;
-	    if (mr->en.s[0][(sb-2)/3] < 0)
-		mr->en.s[0][(sb-2)/3] = 1.0;
+	    if (mr->en.s[0][(sb+1)/3] > adjust || mr->en.s[0][(sb+1)/3] < 0)
+		mr->en.s[0][(sb+1)/3] = adjust;
+	    if (mr->en.s[0][(sb  )/3] < 0)
+		mr->en.s[0][(sb  )/3] = 1.0;
 	}
 #ifndef NOANALYSIS
 	if (gfc->pinfo) {
@@ -1033,10 +1034,7 @@ mp3x display               <------LONG------>
 		continue;
 
 	    /* energy/threshold calculation   */
-	    compute_masking_s(gfc, wsamp_S[ch&1][sb], mr, ch, sb);
-
-	    for (j = 0; j < SBMAX_s; j++)
-		mr->thm.s[j][sb] *= adjust;
+	    compute_masking_s(gfc, wsamp_S[ch&1][sb], mr, ch, sb, adjust);
 	}
 	if ((current_is_short -= (1 << ch)) == 0)
 	    break;
