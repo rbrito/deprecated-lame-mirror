@@ -1,3 +1,10 @@
+lame (3.92-1) unstable; urgency=low
+
+  * New upstream release.
+  * Closes: #578135.
+
+ -- Rogério Brito <linuxsup@ig.com.br>  Sun, 28 Jul 2002 03:08:04 -0300
+
 lame (3.91-1) unstable; urgency=low
 
   * New upstream release.
