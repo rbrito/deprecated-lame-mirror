@@ -1306,7 +1306,7 @@ int L3psycho_anal_ns( lame_global_flags * gfp,
     FLOAT wsamp_S[2][3][BLKSIZE_s];
 
     /* block type  */
-    int blocktype[2],uselongblock[4];
+    int blocktype[2],uselongblock[2];
 
     /* usual variables like loop indices, etc..    */
     int numchn, chn;
@@ -1473,7 +1473,12 @@ int L3psycho_anal_ns( lame_global_flags * gfp,
 	    if (ns_attacks[2] && ns_attacks[1]) ns_attacks[2] = 0;
 	    if (ns_attacks[3] && ns_attacks[2]) ns_attacks[3] = 0;
 	}
-	uselongblock[chn] = ns_uselongblock;
+    if (chn < 2) {
+    	uselongblock[chn] = ns_uselongblock;
+    }
+    else if (ns_uselongblock == 0) {
+        uselongblock[0] = uselongblock[1] = 0;
+    }
 
 	/* there is a one granule delay.  Copy maskings computed last call
 	 * into masking_ratio to return to calling program.
