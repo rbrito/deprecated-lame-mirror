@@ -551,8 +551,23 @@ msfix1(
 
 /*************************************************************** 
  * Adjust M/S maskings if user set "msfix"
+ * Naoki Shibata 2000
+ * 
+ * The noise in L-ch (Lerr) with MS coding mode will be
+ *      Lerr = 1/sqrt(2) (Merr + Serr)
+ *           = 1/sqrt(2) (thM + thS) ... (1)   (worst case)
+ *        or = 1/2       (thM + thS) ... (2)   (typical case)
+ * Because Merr and Serr will have no correlation(white noise)
+ * where Merr and Serr are the noise in M=1/sqrt(2)(L+R) and S=1/sqrt(2)(L-R).
+ *
+ * and, with LR coding mode,
+ *      Lerr = thL                   ... (3)
+ * Therefore,
+ *      alpha (thM+thS) < thL
+ * where alpha is a constant, between 1/sqrt(2) and 1/2
+ * And with same way,
+ *      alpha (thM+thS) < thR
  ***************************************************************/
-/* Naoki Shibata 2000 */
 static void
 ns_msfix(
     lame_internal_flags *gfc,
@@ -565,9 +580,9 @@ ns_msfix(
 
     for ( sb = 0; sb < SBMAX_l; sb++ ) {
 	FLOAT thmLR, thmM, thmS, x;
-	thmLR = thmM = thmS = gfc->ATH.l_avg[sb] * gfc->ATH.adjust;
-	thmLR = Max(mr[0].thm.l[sb], thmLR);
-	thmLR = Max(mr[1].thm.l[sb], thmLR);
+	thmM = thmS = gfc->ATH.l_avg[sb] * gfc->ATH.adjust;
+	thmLR = Min(mr[0].thm.l[sb], mr[1].thm.l[sb]);
+	thmLR = Max(thmLR, thmM);
 	thmM = Max(mr[2].thm.l[sb], thmM);
 	thmS = Max(mr[3].thm.l[sb], thmS);
 	x = thmM + thmS;
@@ -586,9 +601,9 @@ ns_msfix(
     for (sb = 0; sb < SBMAX_s; sb++) {
 	for (sblock = 0; sblock < 3; sblock++) {
 	    FLOAT thmLR, thmM, thmS, x;
-	    thmLR = thmM = thmS = gfc->ATH.s_avg[sb] * gfc->ATH.adjust;
-	    thmLR = Max(mr[0].thm.s[sb][sblock], thmLR);
-	    thmLR = Max(mr[1].thm.s[sb][sblock], thmLR);
+	    thmM = thmS = gfc->ATH.s_avg[sb] * gfc->ATH.adjust;
+	    thmLR = Min(mr[0].thm.s[sb][sblock], mr[1].thm.s[sb][sblock]);
+	    thmLR = Max(thmLR, thmM);
 	    thmM = Max(mr[2].thm.s[sb][sblock], thmM);
 	    thmS = Max(mr[3].thm.s[sb][sblock], thmS);
 	    x = thmM + thmS;
