@@ -10,6 +10,8 @@
 # include <config.h>
 #endif
 
+#ifdef KLEMM_44
+
 #include <stdio.h>
 #include <stdint.h>
 #include <limits.h>
@@ -37,7 +39,8 @@ typedef enum {
     coding_MPEG_Layer_2 = 2,
     coding_MPEG_Layer_3 = 3,
     coding_MPEG_AAC     = 4,
-    coding_Ogg_Vorbis   = 5
+    coding_Ogg_Vorbis   = 5,
+    coding_MPEG_Layer_3_plus = 6
 } coding_t;
 
 typedef struct {
@@ -84,26 +87,27 @@ typedef lame_internal_flags  lame_t;
 # error Machines with CHAR_BIT != 8 not yet supported
 #endif
 
-int  fill_buffer_resample_NEW (   	 // return code, 0 for success
-        INOUT resample_t * r,            // internal context structure
+int  fill_buffer_resample_NEW_MORPHED (  // return code, 0 for success
+//      INOUT resample_t * r,            // internal context structure
+	INOUT lame_global_flags * gfp,
         IN    sample_t   * out,          // where to write the output data
         INOUT size_t     * out_req_len,  // requested output data len/really written output data len
         OUT   sample_t   * in,           // where are the input data?
         INOUT size_t     * in_avail_len, // available input data len/consumed input data len
         OUT   size_t       channel );    // number of the channel (needed for buffering)
 
-int  lame_encode_mp3_frame (		 // return code, 0 for success
-        INOUT lame_global_flags*,	 // internal context structure
-        OUT   sample_t * inbuf_l,	 // data for left  channel
-        OUT   sample_t * inbuf_r,	 // data for right channel
-        IN    uint8_t  * mp3buf,	 // where to write the coded data
+int  lame_encode_mp3_frame (             // return code, 0 for success
+        INOUT lame_global_flags*,        // internal context structure
+        /*OUT*/sample_t * inbuf_l,        // data for left  channel
+        /*OUT*/sample_t * inbuf_r,        // data for right channel
+        IN    uint8_t  * mp3buf,         // where to write the coded data
         OUT   size_t     mp3buf_size );  // maximum size of coded data
 
-int  lame_encode_ogg_frame (		 // return code, 0 for success
-        INOUT lame_global_flags,	 // internal context structure
-        OUT   sample_t * inbuf_l,	 // data for left  channel
-        OUT   sample_t * inbuf_r,	 // data for right channel
-        IN    uint8_t  * mp3buf,	 // where to write the coded data
+int  lame_encode_ogg_frame (             // return code, 0 for success
+        INOUT lame_global_flags,         // internal context structure
+        OUT   sample_t * inbuf_l,        // data for left  channel
+        OUT   sample_t * inbuf_r,        // data for right channel
+        IN    uint8_t  * mp3buf,         // where to write the coded data
         OUT   size_t     mp3buf_size );  // maximum size of coded data
 
 /*
@@ -308,10 +312,10 @@ static INLINE int  select_demux ( uint32_t mode, demux_t* retf, ssize_t* size )
     demux_info_t*  tabptr = demux_info + ((mode >> 16) & 0x1F);
 
 #ifndef WORDS_BIGENDIAN
-    					// 0=little, 1=big, 2=little, 3=big
+                                        // 0=little, 1=big, 2=little, 3=big
 #else
     /* big endian */
-    big  = (big >> 1) ^ big ^ 1;	// 0=big, 1=little, 2=little, 3=big
+    big  = (big >> 1) ^ big ^ 1;        // 0=big, 1=little, 2=little, 3=big
 #endif
 
     *size = tabptr -> size;
@@ -365,12 +369,12 @@ int  close_octetstream ( octetstream_t* const os )
         return 1;
     if ( os -> data != NULL ) {
         free (os -> data);
-	os -> data = NULL;
-	free (os);
-	return 0;
+        os -> data = NULL;
+        free (os);
+        return 0;
     } else {
-	free (os);
-	return 1;
+        free (os);
+        return 1;
     }
 }
 
@@ -379,7 +383,7 @@ int  close_octetstream ( octetstream_t* const os )
  *  encoding engine. All buffering, resampling, etc, handled by calling program.
  */
 
-inline int  lame_encode_frame ( 
+inline int  lame_encode_frame_NEW ( 
         lame_t*     lame,
         sample_t*   inbuf_l, 
         sample_t*   inbuf_r,
@@ -401,7 +405,13 @@ inline int  lame_encode_frame (
 #endif
     case coding_MPEG_Layer_3:
         ret = lame_encode_mp3_frame ( lame->gfp, inbuf_l, inbuf_r, mp3buf, mp3buf_size );
-	break;
+        break;
+#ifdef HAVE_MPEG_LAYER3_PLUS
+    case coding_MPEG_Layer_3_plus:
+        ret = lame_encode_mp3plus_frame 
+	                            ( lame->gfp, inbuf_l, inbuf_r, mp3buf, mp3buf_size );
+        break;
+#endif
 #ifdef HAVE_AAC
     case coding_MPEG_AAC:
         ret = lame_encode_aac_frame ( lame->gfp, inbuf_l, inbuf_r, mp3buf, mp3buf_size );
@@ -414,7 +424,7 @@ inline int  lame_encode_frame (
 #endif
     default:
         ret = -5;
-	break;
+        break;
     }
     if ( ret >= 0 )
         lame->frame_count++;
@@ -424,6 +434,10 @@ inline int  lame_encode_frame (
 
 int  internal_lame_encoding_pcm ( lame_t* const lame, octetstream_t* const os, const sample_t * const * const data, size_t len )
 {
+    size_t           i;
+    double           ampl;
+    double           dampl;
+    int              ampl_on;
     int              ch;
     int              mf_needed;
     int              ret;
@@ -453,64 +467,79 @@ int  internal_lame_encoding_pcm ( lame_t* const lame, octetstream_t* const os, c
     mfbuf [1]    = lame->mfbuf [1];
 
     if ( lame->ampl != lame->last_ampl ) {
-    	// fading
+        // fading
+        ampl_on = 1;
+	ampl    = lame->last_ampl;
+	dampl   = len  ?  (lame->ampl - lame->last_ampl) / len * lame->resample_ratio /* ??? */
+	               :  0;
+	lame->last_ampl = lame->ampl;
     } else if ( lame->ampl != 1. ) {
-	// constant amplification
+        // constant amplification
+        ampl_on = 1;
+	ampl    = lame->last_ampl;
+	dampl   = 0.;
     } else {
         // no manipulation (fastest)
+        ampl_on = 0;
     }
     
     while ( len > 0 ) {
 
-	/* copy in new samples into mfbuf, with resampling if necessary */
-	if ( lame->resample_ratio != 1. )  {
-	    for ( ch = 0; ch < lame->channels_out; ch++ ) {
+        /* copy in new samples into mfbuf, with resampling if necessary */
+        if ( lame->resample_ratio != 1. )  {
+            for ( ch = 0; ch < lame->channels_out; ch++ ) {
                 n_in  = len;
                 n_out = lame->frame_size;
 
-		ret   = fill_buffer_resample_NEW ( lame->resample_in, 
-                                               mfbuf [ch] + lame->mf_size, &n_out, 
-                                               pdata [ch]                , &n_in, 
-                                               ch );
+                ret   = fill_buffer_resample_NEW_MORPHED ( 
+                	    lame->resample_in, 
+                            mfbuf [ch] + lame->mf_size, &n_out, 
+                            pdata [ch]                , &n_in, 
+                            ch );
                 if ( ret < 0 )
                     return ret;
-		pdata [ch] += n_in;
-	    }
-	}
-	else {
-	    n_in = n_out = Min ( lame->frame_size, len );
+                pdata [ch] += n_in;
+            }
+        }
+        else {
+            n_in = n_out = Min ( lame->frame_size, len );
 
-	    for ( ch = 0; ch < lame->channels_out; ch++ ) {
+            for ( ch = 0; ch < lame->channels_out; ch++ ) {
                 memcpy (  mfbuf [ch] + lame->mf_size, 
                           pdata [ch], 
                           n_out * sizeof (**mfbuf) );
                 pdata [ch] += n_in;
-	    }
-	}
+            }
+        }
 	
-	len                        -= n_in;
-	lame->mf_size              += n_out;
-	lame->mf_samples_to_encode += n_out;
+	if ( ampl_on )
+	    for ( i = 0; i < n_out; i++, ampl += dampl )
+                for ( ch = 0; ch < lame->channels_out; ch++ )
+		    mfbuf [ch] [lame->mf_size + i] *= ampl;
+        
+        len                        -= n_in;
+        lame->mf_size              += n_out;
+        lame->mf_samples_to_encode += n_out;
 
-	// encode ONE frame if enough data available
-	if ( lame->mf_size >= mf_needed ) {  
+        // encode ONE frame if enough data available
+        if ( lame->mf_size >= mf_needed ) {  
             // Enlarge octetstream buffer if (possibly) needed by (25% + 16K)
             if ( os->size < 16384 + os->length )
                 resize_octetstream ( os, os->size + os->size/4 + 16384 );
-	    // Encode one frame
-	    ret = lame_encode_frame ( lame, mfbuf[0], mfbuf[1], 
-                                      os->data + os->length, os->size - os->length );
+            // Encode one frame
+            ret = lame_encode_frame_NEW ( lame, mfbuf[0], mfbuf[1], 
+                                          os->data + os->length, os->size - os->length );
 
-	    if (ret < 0) 
-		return ret;
-	    os->length += ret;
+            if (ret < 0) 
+                return ret;
+            os->length += ret;
 
-	    // shift out old samples
-	    lame->mf_size              -= lame->frame_size;
-	    lame->mf_samples_to_encode -= lame->frame_size;
-	    for ( ch = 0; ch < lame->channels_out; ch++ )
+            // shift out old samples
+            lame->mf_size              -= lame->frame_size;
+            lame->mf_samples_to_encode -= lame->frame_size;
+            for ( ch = 0; ch < lame->channels_out; ch++ )
                 memmove ( mfbuf [ch] + 0, mfbuf [ch] + lame->frame_size, lame->mf_size * sizeof (**mfbuf) );
-	}
+        }
     }
 
     return 0;
@@ -548,35 +577,35 @@ int  lame_encode_pcm (
         p = (const uint8_t*) pcm;
         switch ( lame->channels_out ) {
         case 1:
-	    switch ( channels_in ) {
-	    case 1:
-	        retf ( data[0], p+0*size, 1*size, len );
-		break;
-	    case 2:
-	        retf ( data[0], p+0*size, 2*size, len );
-	        retf ( data[1], p+1*size, 2*size, len );
-		average ( data[0], data[0], data[1], len );
-		memset ( data[1], 0, sizeof(sample_t)*len );
-		break;
-	    default:
-	        return -1;
-	        break;
-	    }
+            switch ( channels_in ) {
+            case 1:
+                retf ( data[0], p+0*size, 1*size, len );
+                break;
+            case 2:
+                retf ( data[0], p+0*size, 2*size, len );
+                retf ( data[1], p+1*size, 2*size, len );
+                average ( data[0], data[0], data[1], len );
+                memset ( data[1], 0, sizeof(sample_t)*len );
+                break;
+            default:
+                return -1;
+                break;
+            }
             break;
         case 2:
-	    switch ( channels_in ) {
-	    case 1:
-	        retf ( data[0], p+0*size, 1*size, len );
-		memcpy ( data[1], data[0], sizeof(sample_t)*len );
-		break;
-	    case 2:
-	        retf ( data[0], p+0*size, 2*size, len );
-	        retf ( data[1], p+1*size, 2*size, len );
-		break;
-	    default:
-	        return -1;
-	        break;
-	    }
+            switch ( channels_in ) {
+            case 1:
+                retf ( data[0], p+0*size, 1*size, len );
+                memcpy ( data[1], data[0], sizeof(sample_t)*len );
+                break;
+            case 2:
+                retf ( data[0], p+0*size, 2*size, len );
+                retf ( data[1], p+1*size, 2*size, len );
+                break;
+            default:
+                return -1;
+                break;
+            }
             break;
         default:
             return -1;
@@ -586,35 +615,35 @@ int  lame_encode_pcm (
         q = (const uint8_t* const*) pcm;
         switch ( lame->channels_out ) {
         case 1:
-	    switch ( channels_in ) {
-	    case 1:
-	        retf ( data[0], q[0], 1*size, len );
-		break;
-	    case 2:
-	        retf ( data[0], q[0], 2*size, len );
-	        retf ( data[1], q[1], 2*size, len );
-		average ( data[0], data[0], data[1], len );
-		memset ( data[1], 0, sizeof(sample_t)*len );
-		break;
-	    default:
-	        return -1;
-	        break;
-	    }
+            switch ( channels_in ) {
+            case 1:
+                retf ( data[0], q[0], 1*size, len );
+                break;
+            case 2:
+                retf ( data[0], q[0], 2*size, len );
+                retf ( data[1], q[1], 2*size, len );
+                average ( data[0], data[0], data[1], len );
+                memset ( data[1], 0, sizeof(sample_t)*len );
+                break;
+            default:
+                return -1;
+                break;
+            }
             break;
         case 2:
-	    switch ( channels_in ) {
-	    case 1:
-	        retf ( data[0], q[0], 1*size, len );
-		memcpy ( data[1], data[0], sizeof(sample_t)*len );
-		break;
-	    case 2:
-	        retf ( data[0], q[0], 2*size, len );
-	        retf ( data[1], q[1], 2*size, len );
-		break;
-	    default:
-	        return -1;
-	        break;
-	    }
+            switch ( channels_in ) {
+            case 1:
+                retf ( data[0], q[0], 1*size, len );
+                memcpy ( data[1], data[0], sizeof(sample_t)*len );
+                break;
+            case 2:
+                retf ( data[0], q[0], 2*size, len );
+                retf ( data[1], q[1], 2*size, len );
+                break;
+            default:
+                return -1;
+                break;
+            }
             break;
         default:
             return -1;
@@ -673,7 +702,7 @@ int  LEGACY_lame_encode_buffer (
     
     ret     = lame_encode_pcm ( lame, os, pcm, nsamples, 
                                 LAME_INDIRECT | LAME_NATIVE_ENDIAN | LAME_INT16 | 
-				lame->channels_in ); 
+                                lame->channels_in ); 
     
     memcpy ( mp3buf, os->data, os->length );
     close_octetstream (os);
@@ -697,7 +726,7 @@ int  LEGACY_lame_encode_buffer_interleaved (
     
     ret     = lame_encode_pcm ( lame, os, buffer, nsamples, 
                                 LAME_INTERLEAVED | LAME_NATIVE_ENDIAN | LAME_INT16 | 
-				lame->channels_in ); 
+                                lame->channels_in ); 
     
     memcpy ( mp3buf, os->data, os->length );
     close_octetstream (os);
@@ -754,24 +783,24 @@ int  fill_buffer_resample_NEW_MORPHED (
     blacksize = filter_l + 1;  // size of data needed for FIR
   
     if ( gfc -> inbuf_old [0] == NULL ) {
-	gfc -> inbuf_old [0] = calloc ( blacksize, sizeof (gfc->inbuf_old[0][0]) );
-	gfc -> inbuf_old [1] = calloc ( blacksize, sizeof (gfc->inbuf_old[0][0]) );
-	for ( i = 0; i <= 2 * bpc; i++ )
-	    gfc->blackfilt [i] = calloc ( blacksize, sizeof (gfc->blackfilt[0][0]) );
+        gfc -> inbuf_old [0] = calloc ( blacksize, sizeof (gfc->inbuf_old[0][0]) );
+        gfc -> inbuf_old [1] = calloc ( blacksize, sizeof (gfc->inbuf_old[0][0]) );
+        for ( i = 0; i <= 2 * bpc; i++ )
+            gfc->blackfilt [i] = calloc ( blacksize, sizeof (gfc->blackfilt[0][0]) );
 
-	gfc->itime [0] = 0;
-	gfc->itime [1] = 0;
+        gfc->itime [0] = 0;
+        gfc->itime [1] = 0;
 
-	// precompute blackman filter coefficients
-	for ( j = 0; j <= 2*bpc; j++ ) {
-	    offset = (j-bpc) / (2.*bpc);
-	    sum    = 0.;
-	    for ( i = 0; i <= filter_l; i++ ) 
-		sum += 
-		gfc->blackfilt [j] [i]  = blackman ( i, offset, fcn, filter_l );
-	    for ( i = 0; i <= filter_l; i++ ) 
-		gfc->blackfilt [j] [i] /= sum;
-	}
+        // precompute blackman filter coefficients
+        for ( j = 0; j <= 2*bpc; j++ ) {
+            offset = (j-bpc) / (2.*bpc);
+            sum    = 0.;
+            for ( i = 0; i <= filter_l; i++ ) 
+                sum += 
+                gfc->blackfilt [j] [i]  = blackman ( i, offset, fcn, filter_l );
+            for ( i = 0; i <= filter_l; i++ ) 
+                gfc->blackfilt [j] [i] /= sum;
+        }
     }
   
     inbuf_old = gfc->inbuf_old [channel];
@@ -780,25 +809,25 @@ int  fill_buffer_resample_NEW_MORPHED (
     // time of k'th element in out = j/ofreq
     j = 0;
     for ( k = 0; k < desired_len; k++ ) {
-	time0 = k * ratio;       // time of k'th output sample
-	j     = floor ( time0 - gfc->itime [channel]  );
+        time0 = k * ratio;       // time of k'th output sample
+        j     = floor ( time0 - gfc->itime [channel]  );
 
-	// channeleck if we need more input data
-	if ( (filter_l + j - filter_l2) >= len ) 
-	    break;
+        // channeleck if we need more input data
+        if ( (filter_l + j - filter_l2) >= len ) 
+            break;
 
-	// blackman filter.  by default, window centered at j+.5(filter_l%2)
-	// but we want a window centered at time0.
-	offset = time0 - gfc->itime [channel] - (j + 0.5 * (filter_l%2) );
-	joff   = floor ( offset * 2 * bpc + bpc + 0.5 );
-	sum    = 0.;
-	
-	for ( i = 0 ; i <= filter_l ; i++) {
-	    j2   = i + j - filter_l2;
-	    y    = j2 < 0  ?  inbuf_old [blacksize + j2]  :  in [j2];
-	    sum += y * gfc->blackfilt [joff] [i];
-	}
-	out [k] = sum;
+        // blackman filter.  by default, window centered at j+.5(filter_l%2)
+        // but we want a window centered at time0.
+        offset = time0 - gfc->itime [channel] - (j + 0.5 * (filter_l%2) );
+        joff   = floor ( offset * 2 * bpc + bpc + 0.5 );
+        sum    = 0.;
+        
+        for ( i = 0 ; i <= filter_l ; i++) {
+            j2   = i + j - filter_l2;
+            y    = j2 < 0  ?  inbuf_old [blacksize + j2]  :  in [j2];
+            sum += y * gfc->blackfilt [joff] [i];
+        }
+        out [k] = sum;
     }
 
     // k = number of samples added to out
@@ -809,9 +838,11 @@ int  fill_buffer_resample_NEW_MORPHED (
     *in_avail_len         = Min ( len, filter_l + j - filter_l2 );
     gfc->itime [channel] += *in_avail_len - k * ratio;
     for ( i = 0; i < blacksize; i++ )
-	inbuf_old [i]     = in [*in_avail_len + i - blacksize];
+        inbuf_old [i]     = in [*in_avail_len + i - blacksize];
     *out_req_len          = k;
     return 0;
 }
+
+#endif /* KLEMM_44 */
 
 /* end of pcm.c */
