@@ -245,6 +245,7 @@ int check_vbr_header(PMPSTR mp,int bytes)
 
     /*fprintf(stderr,"\rmpglib: delays: %i %i \n",mp->enc_delay,mp->enc_padding); */
     /* fprintf(stderr,"\rmpglib: Xing VBR header dectected.  MP3 file has %i frames\n", pTagData.frames); */
+    if ( pTagData.headersize < 1 ) return 1;
     return pTagData.headersize;
   }
   return 0;
