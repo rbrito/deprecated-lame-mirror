@@ -475,10 +475,10 @@ lib_sources = \
         mpglib/interface.c 
 
 
-ifeq ($(UNAME),MSDOS)
-  frontend_sources := $(subst /,\,$(frontend_sources))
-  lib_sources := $(subst /,\,$(lib_sources))
-endif
+#ifeq ($(UNAME),MSDOS)
+#  frontend_sources := $(subst /,\,$(frontend_sources))
+#  lib_sources := $(subst /,\,$(lib_sources))
+#endif
 
 frontend_obj = $(frontend_sources:.c=.o)
 lib_obj = $(lib_sources:.c=.o)
@@ -539,7 +539,7 @@ endif
 	$(SHELL) -ec '$(CC) $(MAKEDEP)  $(CPP_OPTS) $(CC_SWITCHES)  $< | sed '\''s;$*.o;& $@;g'\'' > $@'
   endif
 
-all: $(PGM)
+all: frontend/$(PGM)
 
 $(lib_sources) $(frontend_sources) $(gtk_sources) : config.h
 
@@ -550,7 +550,7 @@ config.h: configMS.h
 	cp configMS.h config.h
   endif
 
-$(PGM):	frontend/main.o $(frontend_obj)  $(MP3LIB)
+frontend/$(PGM):	frontend/main.o $(frontend_obj)  $(MP3LIB)
 	$(CC) $(CC_OPTS) -o frontend/$(PGM)  frontend/main.o $(frontend_obj) \
         $(MP3LIB) $(LIBS) $(LIBSNDFILE) $(LIBTERMCAP) \
         $(VORBIS_LIB)
@@ -571,8 +571,8 @@ libmp3lame/libmp3lame.a:  $(lib_obj)
 libmp3lame/libmp3lame.so:  $(lib_obj)
 	gcc -shared -Wl,-soname,libmp3lame/libmp3lame.so -o libmp3lame/libmp3lame.so $(lib_obj)
 
-install:  $(PGM) #libmp3lame.a
-	cp $(PGM) /usr/bin
+install:  frontend/$(PGM) #libmp3lame.a
+	cp frontend/$(PGM) /usr/bin
 	#cp libmp3lame.a /usr/lib
 	#cp lame.h /usr/lib
 
@@ -580,13 +580,15 @@ install:  $(PGM) #libmp3lame.a
 
 clean:
   ifeq ($(UNAME),MSDOS)
-	-del $(frontend_obj)
-	-del $(lib_obj)
-	-del $(gtk_obj)
-	-del $(DEP)
-	-del $(PGM)
+	-del $(subst /,\,$(frontend_obj))
+	-del $(subst /,\,$(lib_obj))
+	-del $(subst /,\,$(gtk_obj))
+	-del $(subst /,\,$(DEP))
+	-del frontend\$(PGM)
+	-del frontend\main.o
+	-del libmp3lame\libmp3lame.a
   else
-	-$(RM) $(gtk_obj) $(frontend_obj) $(lib_obj) $(DEP) $(PGM) \
+	-$(RM) $(gtk_obj) $(frontend_obj) $(lib_obj) $(DEP) frontend/$(PGM) \
           frontend/main.o frontend/lame libmp3lame/libmp3lame.a \
           frontend/mp3x.o frontend/mp3x
   endif
@@ -611,11 +613,11 @@ endif
 #  number of bytes which are different may not be zero, but
 #  should be at most 30.
 #
-test: $(PGM)
-	frontend/lame  --nores -h testcase.wav testcase.new.mp3
+test: frontend/$(PGM)
+	frontend/$(PGM)  --nores -h testcase.wav testcase.new.mp3
 	cmp -l testcase.new.mp3 testcase.mp3 | wc -l
 
-testg: $(PGM)
-	frontend/lame -g -h ../test/castanets.wav
+testg: frontend/$(PGM)
+	frontend/$(PGM) -g -h ../test/castanets.wav
 
         
