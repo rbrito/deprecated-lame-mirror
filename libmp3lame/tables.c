@@ -686,9 +686,7 @@ static void compute_ath( lame_global_flags *gfp )
     FLOAT ATH_f, samp_freq = gfp->out_samplerate;
     int sfb, i, start, end;
 
-    /*  no-ATH mode:
-     *  reduce ATH to -200 dB
-     */
+    /*  no-ATH mode: reduce ATH to -370 dB */
     if (gfp->noATH) {
         for (sfb = 0; sfb < SBMAX_l; sfb++) {
             gfc->ATH.l[sfb] = 1E-37;
@@ -948,10 +946,8 @@ iteration_init( lame_global_flags *gfp)
 	= gfc->is_start_sfb_s[0] = gfc->is_start_sfb_s[1]
 	= gfc->cutoff_sfb_s;
     if (gfp->mode != MONO && gfp->compression_ratio > 12.0
-	&& gfp->internal_flags->mode_gr == 2) {
-	/* currently only MPEG1 */
+	&& gfc->mode_gr == 2 /* currently only MPEG1 */)
 	gfp->use_istereo = 1;
-    }
 
     l3_side->main_data_begin = 0;
     compute_ath(gfp);
