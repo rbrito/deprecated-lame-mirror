@@ -1442,10 +1442,7 @@ VBR_2nd_bitalloc(lame_t gfc, gr_info *gi, FLOAT * xmin)
 	int width = gi->wi[sfb].width;
 	j -= width;
 	if (s > MAX_GLOBAL_GAIN) {
-	    memset(&xr34[j + width], 0, -sizeof(float)*width);
-	    memset(&gi->l3_enc[j + width], 0, -sizeof(int)*width);
-	    //XXX: This should be SCALEFAC_ANYTHING_GOES, not 0
-	    gi->scalefac[sfb] = 0;
+	    gi->scalefac[sfb] = SCALEFAC_ANYTHING_GOES;
 	    continue;
 	}
 

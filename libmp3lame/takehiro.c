@@ -224,7 +224,7 @@ quantize_01(const FLOAT *xp, gr_info *gi, fi_union *fi, int sfb,
 #ifdef USE_IEEE754_HACK
 	{
 	    fi_union thre;
-	    thre.f = (FLOAT)(1.0-ROUNDFAC) / istep;
+	    thre.f = istep;
 	    while (xp < xend) {
 		(fi++)->i = ((int*)xp)[0] > thre.i ? 1:0;
 		(fi++)->i = ((int*)xp)[1] > thre.i ? 1:0;
@@ -699,8 +699,7 @@ count_bits(lame_t gfc, gr_info * const gi)
 	    memset(fi, 0, sizeof(int)*(xe - xp));
 	    fi += (xe-xp);
 	    xp = xe;
-	    continue;
-	}
+	} else
 #ifdef HAVE_NASM
 	if (gfc->CPU_features.AMD_3DNow) {
 	    fi -= xp-xe;
