@@ -94,7 +94,7 @@ RSC=rc.exe
 # ADD RSC /l 0x409
 # ADD BASE CPP /nologo /W3 /O2 /I "../" /I "../mpglib" /I "../include" /I ".." /D "NDEBUG" /D "_WINDOWS" /D "HAVE_MPGLIB" /D "WIN32" /D "HAVE_CONFIG_H" /FD /c
 # SUBTRACT BASE CPP /YX
-# ADD CPP /nologo /W3 /O2 /I "../" /I "../mpglib" /I "../include" /I ".." /D "NDEBUG" /D "_WINDOWS" /D "HAVE_MPGLIB" /D "WIN32" /D "HAVE_CONFIG_H" /D "HAVE_NASM" /D "MMX_choose_table" /FD /c
+# ADD CPP /nologo /W3 /O2 /I "../" /I "../mpglib" /I "../include" /I ".." /D "NDEBUG" /D "_WINDOWS" /D "HAVE_MPGLIB" /D "WIN32" /D "HAVE_CONFIG_H" /D "HAVE_NASM" /D "MMX_choose_table" /D "USE_FFT3DN" /FD /c
 # SUBTRACT CPP /YX
 BSC32=bscmake.exe
 # ADD BASE BSC32 /nologo
@@ -276,7 +276,7 @@ InputName=choose_table
 
 "$(OutDir)/$(InputName).obj" : $(SOURCE) "$(INTDIR)" "$(OUTDIR)"
 	nasmw -f win32 -i $(InputDir)/ -DWIN32 $(InputPath) -o\
- $(OutDir)/$(InputName).obj
+  $(OutDir)/$(InputName).obj
 
 # End Custom Build
 
@@ -301,7 +301,7 @@ InputName=cpu_feat
 
 "$(OutDir)/$(InputName).obj" : $(SOURCE) "$(INTDIR)" "$(OUTDIR)"
 	nasmw -f win32 -i $(InputDir)/ -DWIN32 $(InputPath) -o\
- $(OutDir)/$(InputName).obj
+  $(OutDir)/$(InputName).obj
 
 # End Custom Build
 
@@ -401,7 +401,7 @@ InputName=scalar
 
 "$(OutDir)/$(InputName).obj" : $(SOURCE) "$(INTDIR)" "$(OUTDIR)"
 	nasmw -f win32 -i $(InputDir)/ -DWIN32 $(InputPath) -o\
- $(OutDir)/$(InputName).obj
+  $(OutDir)/$(InputName).obj
 
 # End Custom Build
 
