@@ -600,7 +600,7 @@ lame_init_params(lame_global_flags * const gfp)
 #endif
 
     if (gfp->ReplayGain_input) {
-      if (InitGainAnalysis(gfp->in_samplerate) == INIT_GAIN_ANALYSIS_ERROR)
+      if (InitGainAnalysis(gfp->out_samplerate) == INIT_GAIN_ANALYSIS_ERROR)
         return -6;
     }
 #ifdef DECODE_ON_THE_FLY
@@ -1483,12 +1483,6 @@ lame_encode_buffer_sample_t(lame_global_flags * gfp,
 	}
 
 
-    /* compute ReplayGain of input if requested */
-    if (gfp->ReplayGain_input) 
-        if (AnalyzeSamples(in_buffer[0], in_buffer[1], nsamples, gfc->channels_out) == GAIN_ANALYSIS_ERROR) 
-           return -6;
-
-
     /* some sanity checks */
 #if ENCDELAY < MDCTDELAY
 # error ENCDELAY is less than MDCTDELAY, see encoder.h
@@ -1513,6 +1507,13 @@ lame_encode_buffer_sample_t(lame_global_flags * gfp,
 
         /* copy in new samples into mfbuf, with resampling */
         fill_buffer(gfp, mfbuf, in_buffer, nsamples, &n_in, &n_out);
+
+        /* compute ReplayGain of resampled input if requested */
+        if (gfp->ReplayGain_input) 
+            if (AnalyzeSamples(mfbuf[0], mfbuf[1], n_out, gfc->channels_out) == GAIN_ANALYSIS_ERROR) 
+                return -6;
+
+
 
         /* update in_buffer counters */
         nsamples -= n_in;
