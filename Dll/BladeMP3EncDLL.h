@@ -23,6 +23,9 @@
 #ifndef ___BLADEDLL_H_INCLUDED___
 #define ___BLADEDLL_H_INCLUDED___
 
+/* non-MSVC need this for BOOL and DWORD definitions */
+#include  <sys/types.h>
+
 #pragma pack(push)
 #pragma pack(1)
 
@@ -34,7 +37,7 @@
 /* type definitions */
 
 typedef		unsigned long			HBE_STREAM;
-typedef		HBE_STREAM				*PHBE_STREAM;
+typedef		HBE_STREAM			*PHBE_STREAM;
 typedef		unsigned long			BE_ERR;
 
 /* error codes */
