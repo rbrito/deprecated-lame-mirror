@@ -1030,6 +1030,10 @@ psymodel_init(lame_t gfc)
     if (gfc->CPU_features.AMD_3DNow) {
 	extern void fht_3DN(FLOAT *fz, int n);
 	gfc->fft_fht = fht_3DN;
+    } else
+    if (gfc->CPU_features.SSE) {
+	extern void fht_SSE(FLOAT *fz, int n);
+	gfc->fft_fht = fht_SSE;
     }
 #endif
 

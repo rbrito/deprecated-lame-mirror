@@ -8,6 +8,8 @@ nasm_sources = \
 	choose_table.nas \
 	cpu_feat.nas \
 	fft3dn.nas \
+	fftsse.nas \
+	ffttbl.nas \
 	quantSSE.nas
 
 if HAVE_NASM
@@ -17,6 +19,8 @@ am_liblameasmroutines_la_OBJECTS = \
 	choose_table$U.lo \
 	cpu_feat$U.lo \
 	fft3dn$U.lo \
+	fftsse$U.lo \
+	ffttbl$U.lo \
 	quantSSE$U.lo
 endif
 
@@ -35,6 +39,10 @@ CLEANFILES = \
 	cpu_feat.lo.lst \
 	fft3dn.o.lst \
 	fft3dn.lo.lst \
+	fftsse.o.lst \
+	fftsse.lo.lst \
+	ffttbl.o.lst \
+	ffttbl.lo.lst \
 	quantSSE.o.lst \
 	quantSSE.lo.lst
 
