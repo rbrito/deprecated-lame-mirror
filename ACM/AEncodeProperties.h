@@ -40,6 +40,10 @@
 #include "tinyxml/tinyxml.h"
 //#include "AParameters/AParameters.h"
 
+typedef const struct {
+	UINT id;
+	const char *tip;
+} ToolTipItem;
 /**
   \class AEncodeProperties
   \brief the AEncodeProperties class is responsible for handling all the encoding properties
@@ -376,6 +380,7 @@ public:
 	*/
 	void UpdateDlgFromSlides(HWND parent_window) const;
 
+	static ToolTipItem Tooltips[13];
 private:
 
 	bool bCopyright;

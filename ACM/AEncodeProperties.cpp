@@ -55,6 +55,21 @@ const unsigned int AEncodeProperties::the_ChannelModes[3] = { STEREO, JOINT_STER
 //const LAME_QUALTIY_PRESET AEncodeProperties::the_Presets[] = {LQP_NOPRESET, LQP_R3MIX_QUALITY, LQP_NORMAL_QUALITY, LQP_LOW_QUALITY, LQP_HIGH_QUALITY, LQP_VERYHIGH_QUALITY, LQP_VOICE_QUALITY, LQP_PHONE, LQP_SW, LQP_AM, LQP_FM, LQP_VOICE, LQP_RADIO, LQP_TAPE, LQP_HIFI, LQP_CD, LQP_STUDIO};
 //const unsigned int AEncodeProperties::the_SamplingFreqs[9] = { 48000, 44100, 32000, 24000, 22050, 16000, 12000, 11025, 8000 };
 
+ToolTipItem AEncodeProperties::Tooltips[13]={
+	{ IDC_CHECK_ENC_ABR, "Allow encoding with an average bitrate\r\ninstead of a constant one.\r\n\r\nIt can improve the quality for the same bitrate." },
+	{ IDC_CHECK_COPYRIGHT, "Mark the encoded data as copyrighted." },
+	{ IDC_CHECK_CHECKSUM, "Put a checksum in the encoded data.\r\n\r\nThis can make the file less sensitive to data loss." },
+	{ IDC_CHECK_ORIGINAL, "Mark the encoded data as an original file." },
+	{ IDC_CHECK_PRIVATE, "Mark the encoded data as private." },
+	{ IDC_COMBO_ENC_STEREO, "Select the type of stereo mode used for encoding:\r\n\r\n- Stereo : the usual one\r\n- Joint-Stereo : mix both channel to achieve better compression\r\n- Dual Channel : treat both channel as separate" },
+	{ IDC_STATIC_DECODING, "Decoding not supported for the moment by the codec." },
+	{ IDC_CHECK_ENC_SMART, "Disable bitrate when there is too much compression.\r\n(default 1:15 ratio)" },
+	{ IDC_STATIC_CONFIG_VERSION, "Version of this codec.\r\n\r\nvX.X.X is the version of the codec interface.\r\nX.XX is the version of the encoding engine." },
+	{ IDC_SLIDER_AVERAGE_MIN, "Select the minimum Average Bitrate allowed." },
+	{ IDC_SLIDER_AVERAGE_MAX, "Select the maximum Average Bitrate allowed." },
+	{ IDC_SLIDER_AVERAGE_STEP, "Select the step of Average Bitrate between the min and max.\r\n\r\nA step of 5 between 152 and 165 means you have :\r\n165, 160 and 155" },
+	{ IDC_SLIDER_AVERAGE_SAMPLE, "Check the resulting values of the (min,max,step) combination.\r\n\r\nUse the keyboard to navigate (right -> left)." },
+};
 //int AEncodeProperties::tst = 0;
 
 /*
@@ -191,6 +206,24 @@ static BOOL CALLBACK ConfigProc(
 			else if ((HWND)lParam == GetDlgItem(hwndDlg,IDC_SLIDER_AVERAGE_SAMPLE))
 			{
 				the_prop->UpdateDlgFromSlides(hwndDlg);
+			}
+			break;
+
+		case WM_NOTIFY:
+			if (TTN_GETDISPINFO == ((LPNMHDR)lParam)->code) {
+				NMTTDISPINFO *lphdr = (NMTTDISPINFO *)lParam;
+				UINT id = (lphdr->uFlags & TTF_IDISHWND) ? GetWindowLong((HWND)lphdr->hdr.idFrom, GWL_ID) : lphdr->hdr.idFrom;
+
+				*lphdr->lpszText = 0;
+
+				SendMessage(lphdr->hdr.hwndFrom, TTM_SETMAXTIPWIDTH, 0, 5000);
+
+				for(int i=0; i<sizeof AEncodeProperties::Tooltips/sizeof AEncodeProperties::Tooltips[0]; ++i) {
+					if (id == AEncodeProperties::Tooltips[i].id)
+						lphdr->lpszText = const_cast<char *>(AEncodeProperties::Tooltips[i].tip);
+				}
+
+				return TRUE;
 			}
 			break;
 
@@ -446,6 +479,47 @@ bool AEncodeProperties::InitConfigDlg(HWND HwndDlg)
 	SendMessage(GetDlgItem( HwndDlg, IDC_SLIDER_AVERAGE_MAX), TBM_SETRANGE, TRUE, MAKELONG(8,320));
 	SendMessage(GetDlgItem( HwndDlg, IDC_SLIDER_AVERAGE_STEP), TBM_SETRANGE, TRUE, MAKELONG(1,16));
 
+	// Tool-Tip initialiasiation
+	TOOLINFO ti;
+	HWND ToolTipWnd;
+	char DisplayStr[30] = "test tooltip";
+
+	ToolTipWnd = CreateWindowEx(WS_EX_TOPMOST,
+        TOOLTIPS_CLASS,
+        NULL,
+        WS_POPUP | TTS_NOPREFIX | TTS_ALWAYSTIP|TTS_BALLOON ,		
+        CW_USEDEFAULT,
+        CW_USEDEFAULT,
+        CW_USEDEFAULT,
+        CW_USEDEFAULT,
+        HwndDlg,
+        NULL,
+        NULL,
+        NULL
+        );
+
+	SetWindowPos(ToolTipWnd,
+        HWND_TOPMOST,
+        0,
+        0,
+        0,
+        0,
+        SWP_NOMOVE | SWP_NOSIZE | SWP_NOACTIVATE);
+
+    /* INITIALIZE MEMBERS OF THE TOOLINFO STRUCTURE */
+	ti.cbSize		= sizeof(TOOLINFO);
+	ti.uFlags		= TTF_SUBCLASS | TTF_IDISHWND;
+	ti.hwnd			= HwndDlg;
+	ti.lpszText		= LPSTR_TEXTCALLBACK;
+    
+    /* SEND AN ADDTOOL MESSAGE TO THE TOOLTIP CONTROL WINDOW */
+	for(i=0; i<sizeof Tooltips/sizeof Tooltips[0]; ++i) {
+		ti.uId			= (WPARAM)GetDlgItem(HwndDlg, Tooltips[i].id);
+
+		if (ti.uId)
+			SendMessage(ToolTipWnd, TTM_ADDTOOL, 0, (LPARAM)&ti);
+	}
+
 my_debug.OutPut("call UpdateConfigs");
 
 	UpdateConfigs(HwndDlg);
@@ -454,7 +528,9 @@ my_debug.OutPut("call UpdateDlgFromValue");
 
 	UpdateDlgFromValue(HwndDlg);
 
-my_debug.OutPut("finished InitConfigDlg");
+
+	my_debug.OutPut("finished InitConfigDlg");
+
 
 	return true;
 }
@@ -1119,14 +1195,14 @@ void AEncodeProperties::GetValuesFromKey(const std::string & config_name, const 
 
 /**
 	\todo save the parameters
-*/
+* /
 void AEncodeProperties::SaveParams(const HWND hParentWnd)
 {
 	char string[MAX_PATH];
 /*	int nIdx = SendMessage(::GetDlgItem( hParentWnd ,IDC_COMBO_SETTINGS ), CB_GETCURSEL, NULL, NULL);
 	::SendMessage(::GetDlgItem( hParentWnd ,IDC_COMBO_SETTINGS ), CB_GETLBTEXT , nIdx, (LPARAM) string);
-*/
-}
+* /
+}*/
 
 bool AEncodeProperties::operator !=(const AEncodeProperties & the_instance) const
 {
