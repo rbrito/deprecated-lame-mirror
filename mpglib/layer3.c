@@ -329,25 +329,25 @@ static void
 III_get_side_info_1(PMPSTR mp, struct III_sideinfo *si,int channels,
 		    int ms_stereo,long sfreq,int single)
 {
-   int ch, gr;
-   int powdiff = (single == 3) ? 4 : 0;
+    int ch, gr;
+    int powdiff = (single == 3) ? 4 : 0;
 
-   si->main_data_begin = getbits(mp,9);
-   if (channels == 1)
-     si->private_bits = getbits_fast(mp,5);
-   else 
-     si->private_bits = getbits_fast(mp,3);
+    si->main_data_begin = getbits(mp,9);
+    if (channels == 1)
+	si->private_bits = getbits_fast(mp,5);
+    else
+	si->private_bits = getbits_fast(mp,3);
 
-   for (ch=0; ch<channels; ch++) {
-       si->ch[ch].gr[0].scfsi = -1;
-       si->ch[ch].gr[1].scfsi = getbits_fast(mp,4);
+    for (ch=0; ch<channels; ch++) {
+	si->gi[ch][0].scfsi = -1;
+	si->gi[ch][1].scfsi = getbits_fast(mp,4);
    }
 
    for (gr=0; gr<2; gr++) 
    {
      for (ch=0; ch<channels; ch++) 
      {
-       struct gr_info_s *gr_infos = &(si->ch[ch].gr[gr]);
+       struct gr_info_s *gr_infos = &(si->gi[ch][gr]);
 
        gr_infos->part2_3_length = getbits(mp,12);
        gr_infos->big_values = getbits_fast(mp,9);
@@ -438,7 +438,7 @@ static void III_get_side_info_2(PMPSTR mp, struct III_sideinfo *si,int channels,
 
    for (ch=0; ch<channels; ch++) 
    {
-       struct gr_info_s *gr_infos = &(si->ch[ch].gr[0]);
+       struct gr_info_s *gr_infos = &(si->gi[ch][0]);
        unsigned int qss;
 
        gr_infos->part2_3_length = getbits(mp,12);
@@ -1581,7 +1581,7 @@ int do_layer3_sideinfo(PMPSTR mp)
   databits=0;
   for (gr=0 ; gr < granules ; ++gr) {
     for (ch=0; ch < channels ; ++ch) {
-      struct gr_info_s *gr_infos = &(sideinfo.ch[ch].gr[gr]);
+      struct gr_info_s *gr_infos = &(sideinfo.gi[ch][gr]);
       databits += gr_infos->part2_3_length;
     }
   }
@@ -1638,7 +1638,7 @@ int  do_layer3( PMPSTR mp,unsigned char *pcm_sample,int *pcm_point,
     static real hybridOut[2][SSLIMIT][SBLIMIT];
 
     {
-      struct gr_info_s *gr_infos = &(sideinfo.ch[0].gr[gr]);
+      struct gr_info_s *gr_infos = &(sideinfo.gi[0][gr]);
       long part2bits;
 
       if(fr->lsf)
@@ -1665,7 +1665,7 @@ int  do_layer3( PMPSTR mp,unsigned char *pcm_sample,int *pcm_point,
 	  return clip;
     }
     if(channels == 2) {
-      struct gr_info_s *gr_infos = &(sideinfo.ch[1].gr[gr]);
+      struct gr_info_s *gr_infos = &(sideinfo.gi[1][gr]);
       long part2bits;
       if(fr->lsf) 
 	  part2bits = III_get_scale_factors_2(mp, scalefacs[1],gr_infos,i_stereo);
@@ -1704,10 +1704,10 @@ int  do_layer3( PMPSTR mp,unsigned char *pcm_sample,int *pcm_point,
         III_i_stereo(hybridIn,scalefacs[1],gr_infos,sfreq,ms_stereo,fr->lsf);
 
       if(ms_stereo || i_stereo || (single == 3) ) {
-        if(gr_infos->maxb > sideinfo.ch[0].gr[gr].maxb) 
-          sideinfo.ch[0].gr[gr].maxb = gr_infos->maxb;
+        if(gr_infos->maxb > sideinfo.gi[0][gr].maxb) 
+          sideinfo.gi[0][gr].maxb = gr_infos->maxb;
         else
-          gr_infos->maxb = sideinfo.ch[0].gr[gr].maxb;
+          gr_infos->maxb = sideinfo.gi[0][gr].maxb;
       }
 
       switch(single) {
@@ -1748,7 +1748,7 @@ int  do_layer3( PMPSTR mp,unsigned char *pcm_sample,int *pcm_point,
     mpg123_pinfo->maindata = sideinfo.main_data_begin;
 
     for(ch=0;ch<channels1;ch++) {
-      struct gr_info_s *gr_infos = &(sideinfo.ch[ch].gr[gr]);
+      struct gr_info_s *gr_infos = &(sideinfo.gi[ch][gr]);
       mpg123_pinfo->big_values[gr][ch]=gr_infos->big_values;
       mpg123_pinfo->scalefac_scale[gr][ch]=gr_infos->scalefac_scale;
       mpg123_pinfo->mixed[gr][ch] = gr_infos->mixed_block_flag;
@@ -1760,7 +1760,7 @@ int  do_layer3( PMPSTR mp,unsigned char *pcm_sample,int *pcm_point,
 
 
     for (ch=0;ch<channels1;ch++) {
-      struct gr_info_s *gr_infos = &(sideinfo.ch[ch].gr[gr]);
+      struct gr_info_s *gr_infos = &(sideinfo.gi[ch][gr]);
       ifqstep = ( mpg123_pinfo->scalefac_scale[gr][ch] == 0 ) ? .5 : 1.0;
       if (2==gr_infos->block_type) {
 	for (i=0; i<3; i++) {
@@ -1799,7 +1799,7 @@ int  do_layer3( PMPSTR mp,unsigned char *pcm_sample,int *pcm_point,
 
 
     for(ch=0;ch<channels1;ch++) {
-      struct gr_info_s *gr_infos = &(sideinfo.ch[ch].gr[gr]);
+      struct gr_info_s *gr_infos = &(sideinfo.gi[ch][gr]);
       III_antialias(hybridIn[ch],gr_infos);
       III_hybrid(mp, hybridIn[ch], hybridOut[ch], ch,gr_infos);
     }

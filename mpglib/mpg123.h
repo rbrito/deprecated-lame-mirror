@@ -20,7 +20,6 @@
 /* AF: ADDED FOR LAYER1/LAYER2 */
 #define         SCALE_BLOCK             12
 
-
 /* Pre Shift fo 16 to 8 bit converter table */
 #define AUSHIFT (3)
 
@@ -44,15 +43,13 @@ struct frame {
     int emphasis;
     int framesize; /* computed framesize */
 
-	/* AF: ADDED FOR LAYER1/LAYER2 */
+    /* AF: ADDED FOR LAYER1/LAYER2 */
 #if defined(USE_LAYER_2) || defined(USE_LAYER_1)
     int II_sblimit;
     struct al_table2 *alloc;
-	int down_sample_sblimit;
-	int	down_sample;
-
+    int down_sample_sblimit;
+    int	down_sample;
 #endif
-
 };
 
 struct gr_info_s {
@@ -80,10 +77,6 @@ struct III_sideinfo
 {
     unsigned main_data_begin;
     unsigned private_bits;
-    struct {
-	struct gr_info_s gr[2];
-    } ch[2];
+    struct gr_info_s gi[2][2];
 };
-
-
 #endif
