@@ -56,23 +56,23 @@ int apply_abr_preset(lame_global_flags*  gfp, int preset, int enforce)
     /* Switch mappings for ABR mode */
     const abr_presets_t abr_switch_map [] = {
         /* kbps  quant q_s safejoint nsmsfix st_lrm  st_s  ns-bass scale ath4_curve, interch */
-        {   8,   1,    0,  0,        0   ,    4.50, 30   ,  0,      0.95,        11,  0.0012 }, /*   8, impossible to use in stereo */
-        {  16,   1,    0,  0,        0   ,    4.50, 30   ,  0,      0.95,        11,  0.0010 }, /*  16 */
-        {  24,   1,    0,  0,        0   ,    4.50, 30   ,  0,      0.95,        11,  0.0010 }, /*  24 */
-        {  32,   1,    0,  0,        0   ,    4.50, 30   ,  0,      0.95,        11,  0.0010 }, /*  32 */
-        {  40,   1,    0,  0,        0   ,    4.50, 30   ,  0,      0.95,        11,  0.0009 }, /*  40 */
-        {  48,   1,    0,  0,        0   ,    4.50, 30   ,  0,      0.95,        11,  0.0009 }, /*  48 */
-        {  56,   1,    0,  0,        0   ,    4.50, 30   ,  0,      0.95,        11,  0.0008 }, /*  56 */
-        {  64,   1,    0,  0,        0   ,    4.50, 30   ,  0,      0.95,        11,  0.0008 }, /*  64 */
-        {  80,   1,    0,  0,        0   ,    4.50, 30   ,  0,      0.95,        10,  0.0007 }, /*  80 */
-        {  96,   1,    0,  0,        0   ,    4.50, 30   , -2,      0.95,         8,  0.0006 }, /*  96 */
-        { 112,   1,    0,  0,        0   ,    4.50, 30   , -4,      0.95,         7,  0.0005 }, /* 112 */
-        { 128,   1,    0,  0,        0   ,    4.40, 25   , -6,      0.95,         5,  0.0002 }, /* 128 */
-        { 160,   1,    0,  1,        1.64,    4.25, 15   , -4,      0.95,         4,  0      }, /* 160 */
-        { 192,   1,    0,  1,        1.38,    3.50, 15   , -2,      0.97,         3,  0      }, /* 192 */
-        { 224,   3,    0,  1,        1.10,    3.20, 15   ,  0,      0.98,         2,  0      }, /* 224 */
-        { 256,   3,    3,  1,        0.85,    3.10, 15   ,  0,      1.00,         1,  0      }, /* 256 */
-        { 320,   3,    3,  1,        0.6 ,    3.00, 15   ,  0,      1.00,         0,  0      }  /* 320 */
+        {   8,   1,    0,  0,        0   ,    6.20, 45   ,  0,      0.95,        11,  0.0012 }, /*   8, impossible to use in stereo */
+        {  16,   1,    0,  0,        0   ,    6.20, 45   ,  0,      0.95,        11,  0.0010 }, /*  16 */
+        {  24,   1,    0,  0,        0   ,    6.20, 45   ,  0,      0.95,        11,  0.0010 }, /*  24 */
+        {  32,   1,    0,  0,        0   ,    6.20, 45   ,  0,      0.95,        11,  0.0010 }, /*  32 */
+        {  40,   1,    0,  0,        0   ,    6.20, 45   ,  0,      0.95,        11,  0.0009 }, /*  40 */
+        {  48,   1,    0,  0,        0   ,    6.20, 45   ,  0,      0.95,        11,  0.0009 }, /*  48 */
+        {  56,   1,    0,  0,        0   ,    6.20, 45   ,  0,      0.95,        11,  0.0008 }, /*  56 */
+        {  64,   1,    0,  0,        0   ,    6.20, 45   ,  0,      0.95,        11,  0.0008 }, /*  64 */
+        {  80,   1,    0,  0,        0   ,    6.20, 45   ,  0,      0.95,        10,  0.0007 }, /*  80 */
+        {  96,   1,    0,  0,        0   ,    6.20, 45   , -2,      0.95,         8,  0.0006 }, /*  96 */
+        { 112,   1,    0,  0,        0   ,    6.20, 45   , -4,      0.95,         7,  0.0005 }, /* 112 */
+        { 128,   1,    0,  0,        0   ,    5.90, 40   , -6,      0.95,         5,  0.0002 }, /* 128 */
+        { 160,   1,    0,  1,        1.64,    5.00, 35   , -4,      0.95,         4,  0      }, /* 160 */
+        { 192,   1,    0,  1,        1.38,    4.30, 25   , -2,      0.97,         3,  0      }, /* 192 */
+        { 224,   3,    0,  1,        1.10,    4.20, 25   ,  0,      0.98,         2,  0      }, /* 224 */
+        { 256,   3,    3,  1,        0.85,    4.20, 25   ,  0,      1.00,         1,  0      }, /* 256 */
+        { 320,   3,    3,  1,        0.6 ,    4.20, 25   ,  0,      1.00,         0,  0      }  /* 320 */
                                        };
 
     
@@ -184,8 +184,8 @@ int apply_preset(lame_global_flags*  gfp, int preset, int enforce)
         lame_set_VBR_q(gfp, 9);
         switch (lame_get_VBR(gfp)) {
         case vbr_rh: {
-            SET_OPTION(short_threshold_lrm, 4.50f, -1);
-            SET_OPTION(short_threshold_s, 30.0f, -1);
+            SET_OPTION(short_threshold_lrm, 6.20f, -1);
+            SET_OPTION(short_threshold_s, 45.0f, -1);
             SET_OPTION(quant_comp, 1, -1);
             SET_OPTION(quant_comp_short, 0, -1);
             SET_OPTION(psy_model, PSY_NSPSYTUNE, -1);
@@ -203,8 +203,8 @@ int apply_preset(lame_global_flags*  gfp, int preset, int enforce)
         default: {
             SET_OPTION(vbr_smooth, 0, -1);
 
-            SET_OPTION(short_threshold_lrm, 4.50f, -1);
-            SET_OPTION(short_threshold_s, 30.0f, -1);
+            SET_OPTION(short_threshold_lrm, 6.20f, -1);
+            SET_OPTION(short_threshold_s, 45.0f, -1);
             SET_OPTION(quant_comp, 0, -1);
             SET_OPTION(quant_comp_short, 0, -1);
             SET_OPTION(psy_model, PSY_NSPSYTUNE, -1);
@@ -225,8 +225,8 @@ int apply_preset(lame_global_flags*  gfp, int preset, int enforce)
         lame_set_VBR_q(gfp, 8);
         switch (lame_get_VBR(gfp)) {
         case vbr_rh: {
-            SET_OPTION(short_threshold_lrm, 4.50f, -1);
-            SET_OPTION(short_threshold_s, 30.0f, -1);
+            SET_OPTION(short_threshold_lrm, 6.20f, -1);
+            SET_OPTION(short_threshold_s, 45.0f, -1);
             SET_OPTION(quant_comp, 1, -1);
             SET_OPTION(quant_comp_short, 0, -1);
             SET_OPTION(psy_model, PSY_NSPSYTUNE, -1);
@@ -244,8 +244,8 @@ int apply_preset(lame_global_flags*  gfp, int preset, int enforce)
         default: {
             SET_OPTION(vbr_smooth, 0, -1);
 
-            SET_OPTION(short_threshold_lrm, 4.50f, -1);
-            SET_OPTION(short_threshold_s, 30.0f, -1);
+            SET_OPTION(short_threshold_lrm, 6.20f, -1);
+            SET_OPTION(short_threshold_s, 45.0f, -1);
             SET_OPTION(quant_comp, 0, -1);
             SET_OPTION(quant_comp_short, 0, -1);
             SET_OPTION(psy_model, PSY_NSPSYTUNE, -1);
@@ -266,8 +266,8 @@ int apply_preset(lame_global_flags*  gfp, int preset, int enforce)
         lame_set_VBR_q(gfp, 7);
         switch (lame_get_VBR(gfp)) {
         case vbr_rh: {
-            SET_OPTION(short_threshold_lrm, 4.50f, -1);
-            SET_OPTION(short_threshold_s, 30.0f, -1);
+            SET_OPTION(short_threshold_lrm, 6.20f, -1);
+            SET_OPTION(short_threshold_s, 45.0f, -1);
             SET_OPTION(quant_comp, 1, -1);
             SET_OPTION(quant_comp_short, 0, -1);
             SET_OPTION(psy_model, PSY_NSPSYTUNE, -1);
@@ -285,8 +285,8 @@ int apply_preset(lame_global_flags*  gfp, int preset, int enforce)
         default: {
             SET_OPTION(vbr_smooth, 0, -1);
 
-            SET_OPTION(short_threshold_lrm, 4.50f, -1);
-            SET_OPTION(short_threshold_s, 30.0f, -1);
+            SET_OPTION(short_threshold_lrm, 6.20f, -1);
+            SET_OPTION(short_threshold_s, 45.0f, -1);
             SET_OPTION(quant_comp, 0, -1);
             SET_OPTION(quant_comp_short, 0, -1);
             SET_OPTION(psy_model, PSY_NSPSYTUNE, -1);
@@ -307,8 +307,8 @@ int apply_preset(lame_global_flags*  gfp, int preset, int enforce)
         lame_set_VBR_q(gfp, 6);
         switch (lame_get_VBR(gfp)) {
         case vbr_rh: {
-            SET_OPTION(short_threshold_lrm, 4.45f, -1);
-            SET_OPTION(short_threshold_s, 27.5f, -1);
+            SET_OPTION(short_threshold_lrm, 6.20f, -1);
+            SET_OPTION(short_threshold_s, 45.0f, -1);
             SET_OPTION(quant_comp, 1, -1);
             SET_OPTION(quant_comp_short, 0, -1);
             SET_OPTION(psy_model, PSY_NSPSYTUNE, -1);
@@ -326,8 +326,8 @@ int apply_preset(lame_global_flags*  gfp, int preset, int enforce)
         default: {
             SET_OPTION(vbr_smooth, 0, -1);
 
-            SET_OPTION(short_threshold_lrm, 4.45f, -1);
-            SET_OPTION(short_threshold_s, 27.5f, -1);
+            SET_OPTION(short_threshold_lrm, 6.20f, -1);
+            SET_OPTION(short_threshold_s, 45.0f, -1);
             SET_OPTION(quant_comp, 0, -1);
             SET_OPTION(quant_comp_short, 0, -1);
             SET_OPTION(psy_model, PSY_NSPSYTUNE, -1);
@@ -348,8 +348,8 @@ int apply_preset(lame_global_flags*  gfp, int preset, int enforce)
         lame_set_VBR_q(gfp, 5);
         switch (lame_get_VBR(gfp)) {
             case vbr_rh: {
-            SET_OPTION(short_threshold_lrm, 4.40f, -1);
-            SET_OPTION(short_threshold_s, 25.0f, -1);
+            SET_OPTION(short_threshold_lrm, 5.90f, -1);
+            SET_OPTION(short_threshold_s, 40.0f, -1);
             SET_OPTION(quant_comp, 1, -1);
             SET_OPTION(quant_comp_short, 0, -1);
             SET_OPTION(psy_model, PSY_NSPSYTUNE, -1);
@@ -367,8 +367,8 @@ int apply_preset(lame_global_flags*  gfp, int preset, int enforce)
         default: {
             SET_OPTION(vbr_smooth, 0, -1);
 
-            SET_OPTION(short_threshold_lrm, 4.40f, -1);
-            SET_OPTION(short_threshold_s, 25.0f, -1);
+            SET_OPTION(short_threshold_lrm, 5.90f, -1);
+            SET_OPTION(short_threshold_s, 40.0f, -1);
             SET_OPTION(quant_comp, 0, -1);
             SET_OPTION(quant_comp_short, 0, -1);
             SET_OPTION(psy_model, PSY_NSPSYTUNE, -1);
@@ -389,8 +389,8 @@ int apply_preset(lame_global_flags*  gfp, int preset, int enforce)
         lame_set_VBR_q(gfp, 4);
         switch (lame_get_VBR(gfp)) {
         case vbr_rh: {
-            SET_OPTION(short_threshold_lrm, 4.25f, -1);
-            SET_OPTION(short_threshold_s, 15.0f, -1);
+            SET_OPTION(short_threshold_lrm, 5.00f, -1);
+            SET_OPTION(short_threshold_s, 35.0f, -1);
             SET_OPTION(quant_comp, 3, -1);
             SET_OPTION(quant_comp_short, 3, -1);
             SET_OPTION(psy_model, PSY_NSPSYTUNE, -1);
@@ -409,8 +409,8 @@ int apply_preset(lame_global_flags*  gfp, int preset, int enforce)
         default: {
             SET_OPTION(vbr_smooth, 1, -1);
 
-            SET_OPTION(short_threshold_lrm, 4.25f, -1);
-            SET_OPTION(short_threshold_s, 15.0f, -1);
+            SET_OPTION(short_threshold_lrm, 5.00f, -1);
+            SET_OPTION(short_threshold_s, 35.0f, -1);
             SET_OPTION(quant_comp, 0, -1);
             SET_OPTION(quant_comp_short, 0, -1);
             SET_OPTION(psy_model, PSY_NSPSYTUNE, -1);
@@ -432,8 +432,8 @@ int apply_preset(lame_global_flags*  gfp, int preset, int enforce)
         lame_set_VBR_q(gfp, 3);
         switch (lame_get_VBR(gfp)) {
         case vbr_rh: {
-            SET_OPTION(short_threshold_lrm, 3.75f, -1);
-            SET_OPTION(short_threshold_s, 15.0f, -1);
+            SET_OPTION(short_threshold_lrm, 4.70f, -1);
+            SET_OPTION(short_threshold_s, 30.0f, -1);
             SET_OPTION(quant_comp, 3, -1);
             SET_OPTION(quant_comp_short, 3, -1);
             SET_OPTION(psy_model, PSY_NSPSYTUNE, -1);
@@ -454,8 +454,8 @@ int apply_preset(lame_global_flags*  gfp, int preset, int enforce)
         default: {
             SET_OPTION(vbr_smooth, 1, -1);
 
-            SET_OPTION(short_threshold_lrm, 3.75f, -1);
-            SET_OPTION(short_threshold_s, 15.0f, -1);
+            SET_OPTION(short_threshold_lrm, 4.70f, -1);
+            SET_OPTION(short_threshold_s, 30.0f, -1);
             SET_OPTION(quant_comp, 0, -1);
             SET_OPTION(quant_comp_short, 0, -1);
             SET_OPTION(psy_model, PSY_NSPSYTUNE, -1);
@@ -481,8 +481,8 @@ int apply_preset(lame_global_flags*  gfp, int preset, int enforce)
         case vbr_rh: {
             SET_OPTION(VBR_min_bitrate_kbps, 96, 0); /*ideally, we should get rid of this*/
 
-            SET_OPTION(short_threshold_lrm, 3.5f, -1);
-            SET_OPTION(short_threshold_s, 15.0f, -1);
+            SET_OPTION(short_threshold_lrm, 4.3f, -1);
+            SET_OPTION(short_threshold_s, 25.0f, -1);
             SET_OPTION(quant_comp, 3, -1);
             SET_OPTION(quant_comp_short, 3, -1);
             SET_OPTION(psy_model, PSY_NSPSYTUNE, -1);
@@ -501,8 +501,8 @@ int apply_preset(lame_global_flags*  gfp, int preset, int enforce)
             SET_OPTION(VBR_min_bitrate_kbps, 96, 0); /*ideally, we should get rid of this*/
             SET_OPTION(vbr_smooth, 2, -1);
 
-            SET_OPTION(short_threshold_lrm, 3.5f, -1);
-            SET_OPTION(short_threshold_s, 15.0f, -1);
+            SET_OPTION(short_threshold_lrm, 4.3f, -1);
+            SET_OPTION(short_threshold_s, 25.0f, -1);
             SET_OPTION(quant_comp, 0, -1);
             SET_OPTION(quant_comp_short, 0, -1);
             SET_OPTION(psy_model, PSY_NSPSYTUNE, -1);
@@ -525,8 +525,8 @@ int apply_preset(lame_global_flags*  gfp, int preset, int enforce)
         case vbr_rh: {
             SET_OPTION(VBR_min_bitrate_kbps, 112, 0); /*ideally, we should get rid of this*/
 
-            SET_OPTION(short_threshold_lrm, 3.3f, -1);
-            SET_OPTION(short_threshold_s, 15.0f, -1);
+            SET_OPTION(short_threshold_lrm, 4.2f, -1);
+            SET_OPTION(short_threshold_s, 25.0f, -1);
             SET_OPTION(quant_comp, 3, -1);
             SET_OPTION(quant_comp_short, 3, -1);
             SET_OPTION(psy_model, PSY_NSPSYTUNE, -1);
@@ -545,8 +545,8 @@ int apply_preset(lame_global_flags*  gfp, int preset, int enforce)
             SET_OPTION(VBR_min_bitrate_kbps, 112, 0);
             SET_OPTION(vbr_smooth, 2, -1);
 
-            SET_OPTION(short_threshold_lrm, 3.3f, -1);
-            SET_OPTION(short_threshold_s, 15.0f, -1);
+            SET_OPTION(short_threshold_lrm, 4.2f, -1);
+            SET_OPTION(short_threshold_s, 25.0f, -1);
             SET_OPTION(quant_comp, 0, -1);
             SET_OPTION(quant_comp_short, 0, -1);
             SET_OPTION(psy_model, PSY_NSPSYTUNE, -1);
@@ -569,8 +569,8 @@ int apply_preset(lame_global_flags*  gfp, int preset, int enforce)
         case vbr_rh: {
             SET_OPTION(VBR_min_bitrate_kbps, 128, 0);
 
-            SET_OPTION(short_threshold_lrm, 3.1f, -1);
-            SET_OPTION(short_threshold_s, 15.0f, -1);
+            SET_OPTION(short_threshold_lrm, 4.2f, -1);
+            SET_OPTION(short_threshold_s, 25.0f, -1);
             SET_OPTION(quant_comp, 3, -1);
             SET_OPTION(quant_comp_short, 3, -1);
             SET_OPTION(psy_model, PSY_NSPSYTUNE, -1);
@@ -589,8 +589,8 @@ int apply_preset(lame_global_flags*  gfp, int preset, int enforce)
             SET_OPTION(VBR_min_bitrate_kbps, 128, 0);
             SET_OPTION(vbr_smooth, 2, -1);
 
-            SET_OPTION(short_threshold_lrm, 3.1f, -1);
-            SET_OPTION(short_threshold_s, 15.0f, -1);
+            SET_OPTION(short_threshold_lrm, 4.2f, -1);
+            SET_OPTION(short_threshold_s, 25.0f, -1);
             SET_OPTION(quant_comp, 0, -1);
             SET_OPTION(quant_comp_short, 0, -1);
             SET_OPTION(psy_model, PSY_NSPSYTUNE, -1);
