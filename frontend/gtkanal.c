@@ -119,7 +119,7 @@ gtkmakeframe(void)
     int iread = 0;
     static int init=0;
     static int mpglag;
-    static short int  Buffer[2][1152];
+    static int Buffer[2][1152];
     short int  mpg123pcm[2][1152];
     int ch,j;
     int mp3count = 0;
@@ -143,7 +143,7 @@ gtkmakeframe(void)
     if (input_format == sf_mp1
 	|| input_format == sf_mp2
 	|| input_format == sf_mp3) {
-	iread = get_audio16(global_gfp, Buffer);
+	iread = get_audio(global_gfp, Buffer);
 	/* add a delay of framesize-DECDELAY, which will make the total delay
 	 * exactly one frame, so we can sync MP3 output with WAV input */
 	pinfo->frameNum123 = frameNum-1;
@@ -163,7 +163,7 @@ gtkmakeframe(void)
 		lame_decode_init(global_gfp);
 	    }
 
-	    iread = get_audio16(global_gfp, Buffer);
+	    iread = get_audio(global_gfp, Buffer);
 	    if (feof(musicin))
 		break;
 
@@ -173,8 +173,8 @@ gtkmakeframe(void)
 	     * multiple frames breaking this loop.
 	     */
 	    assert(iread <= framesize);
-	    mp3count=lame_encode_buffer(global_gfp,Buffer[0],Buffer[1],iread,
-					mp3buffer,(int)sizeof(mp3buffer));
+	    mp3count=lame_encode_buffer_int(global_gfp,Buffer[0],Buffer[1],
+					    iread,mp3buffer,sizeof(mp3buffer));
 
 	    assert(mp3count <= 0
 		   || lame_get_frameNum(global_gfp) != pinfo->frameNum);

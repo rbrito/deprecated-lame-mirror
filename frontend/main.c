@@ -182,7 +182,7 @@ WriteShort(FILE * fp, char *p)
 static int
 decoder(lame_t gfp, FILE * outf, int skip, char *inPath, char *outPath)
 {
-    short int Buffer[2][1152];
+    short Buffer[2][1152];
     int     iread;
     double  wavsize;
     int     i;
