@@ -1080,7 +1080,7 @@ int    lame_encode_finish (
 /*****************************************************************/
 void lame_mp3_tags_fid(lame_global_flags *gfp,FILE *fpStream)
 {
-  if (gfp->bWriteVbrTag && (gf.VBR!=vbr_off))
+  if (gfp->bWriteVbrTag && (gfp->VBR!=vbr_off))
     {
       /* Calculate relative quality of VBR stream
        * 0=best, 100=worst */
