@@ -57,15 +57,6 @@
 	typedef double ieee754_float64_t;
 #endif
 
-/* system has 80 bit floats */
-#undef HAVE_IEEE854_FLOAT80
-
-/* add ieee854_float80_t type */
-#undef HAVE_IEEE854_FLOAT80_T
-#ifndef HAVE_IEEE854_FLOAT80_T
-	typedef long double ieee854_float80_t;
-#endif
-
 /* add int16_t type */
 #undef HAVE_INT16_T
 #ifndef HAVE_INT16_T
