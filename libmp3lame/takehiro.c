@@ -517,8 +517,16 @@ recalc_divide_init(
 	    }
 	}
     }
-    for (r0 = 2; r0 < SBMAX_l - 1; r0++) {
+    for (r0 = 0; r0 < SBMAX_l - 1; r0++) {
 	int r1;
+
+	r1 = r01_info[r0];
+	if (gfc->scalefac_band.l[r0+2+1+1] <= gi->big_values && r0 < 16 - 1
+	    && ((r1 >> 8) & 0xff) == (r1 & 0xff)) {
+	    r01_bits[r0] = LARGE_BITS;
+	    continue;
+	}
+
 	for (r1 = r0 + 1; r1 < SBMAX_l; r1++) {
 	    if (r01_bits[r0] >= r01_bits[r1]) {
 		r01_bits[r0] = LARGE_BITS;
