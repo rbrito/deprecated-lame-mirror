@@ -296,6 +296,7 @@ copy_buffer(lame_t gfc, unsigned char *buffer, int size)
     bs->bitidx >>= 3;
     spec_idx = 0;
     do {
+	int copy_len;
 	if (bs->totbyte + spec_idx == bs->header[bs->w_ptr].write_timing) {
 	    int i = gfc->sideinfo_len;
 	    if (pbuf+i >= pend) return -1; /* buffer is too small */
@@ -303,8 +304,13 @@ copy_buffer(lame_t gfc, unsigned char *buffer, int size)
 	    pbuf += i;
 	    bs->w_ptr = (bs->w_ptr + 1) & (MAX_HEADER_BUF-1);
 	}
-	if (pbuf >= pend) return -1; /* buffer is too small */
-	*pbuf++ = bs->buf[spec_idx++];
+	copy_len = bs->header[bs->w_ptr].write_timing - bs->totbyte - spec_idx;
+	if (copy_len > bs->bitidx - spec_idx)
+	    copy_len = bs->bitidx - spec_idx;
+	if (pbuf + copy_len >= pend) return -1; /* buffer is too small */
+	memcpy(pbuf, &bs->buf[spec_idx], copy_len);
+	spec_idx += copy_len;
+	pbuf += copy_len;
     } while (spec_idx < bs->bitidx);
     bs->totbyte += spec_idx;
 
