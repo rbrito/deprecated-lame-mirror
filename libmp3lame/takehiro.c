@@ -517,6 +517,15 @@ recalc_divide_init(
 	    }
 	}
     }
+    for (r0 = 2; r0 < SBMAX_l - 1; r0++) {
+	int r1;
+	for (r1 = r0 + 1; r1 < SBMAX_l; r1++) {
+	    if (r01_bits[r0] >= r01_bits[r1]) {
+		r01_bits[r0] = LARGE_BITS;
+		break;
+	    }
+	}
+    }
 }
 
 inline static int
