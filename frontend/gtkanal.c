@@ -244,7 +244,7 @@ plot_frame(void)
   /* find the frame where mpg123 produced output coming from input frame
    * pinfo.  i.e.:   out_frame + out_frame_lag = input_frame  */
   for (i=1; i<=MAXMPGLAG; i++ ) {
-    if ((pplot-i)->frameNum123 == pplot->frameNum ) {
+    if ((pplot-i)->frameNum123 == pplot->frameNum+1) {
       pplot2 = pplot-i;
       break;
     }
