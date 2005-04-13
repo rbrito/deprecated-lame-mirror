@@ -244,7 +244,7 @@ plot_frame(void)
   /* find the frame where mpg123 produced output coming from input frame
    * pinfo.  i.e.:   out_frame + out_frame_lag = input_frame  */
   for (i=1; i<=MAXMPGLAG; i++ ) {
-    if ((pplot-i)->frameNum123 == pplot->frameNum+1) {
+    if ((pplot-i)->frameNum123 == pplot->frameNum) {
       pplot2 = pplot-i;
       break;
     }
@@ -403,10 +403,10 @@ plot_frame(void)
   for (i=0; i<n; i++) {
     xcord[i] = i;
     if (gtkinfo.msflag) 
-      ycord[i] = ch ? .5*(pplot->pcmdata[0][i]-pplot->pcmdata[1][i]) : 
-      .5*(pplot->pcmdata[0][i]+pplot->pcmdata[1][i]);
+      ycord[i] = ch ? .5*(pplot[1].pcmdata[0][i]-pplot[1].pcmdata[1][i]) : 
+      .5*(pplot[1].pcmdata[0][i]+pplot[1].pcmdata[1][i]);
     else 
-      ycord[i]=pplot->pcmdata[ch][i];
+      ycord[i]=pplot[1].pcmdata[ch][i];
   }
 
   /* skip plot if we are doing an mp3 file */
@@ -508,9 +508,6 @@ plot_frame(void)
     strcpy(label,blockname);
     if (pplot1->mixed[gr][ch]) strcat(label,"(mixed)");
 
-    
-    
-    
     n = 576;
     if (gtkinfo.flag123) {
       data = pplot1->mpg123xr[gr][0];
@@ -519,7 +516,6 @@ plot_frame(void)
       data = pplot->xr[gr][0];
       data2 = pplot->xr[gr][1];
     }
-    
 
     xmn = 0;
     xmx = n-1;
