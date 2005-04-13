@@ -579,7 +579,7 @@ best_huffman_divide(lame_t gfc, gr_info * const gi)
     int r01_bits[SBMAX_l];
     int r01_info[SBMAX_l];
     int max_info[SBMAX_l];
-#if 0
+
     if ((gi->big_values == 0
 	 || gi->big_values == gfc->scalefac_band.l[1]
 	 || gi->big_values == gfc->scalefac_band.l[2])
@@ -607,7 +607,7 @@ best_huffman_divide(lame_t gfc, gr_info * const gi)
 	gi->count1bits = a1;
 	return;
     }
-#endif
+
     if (gi->big_values == 0)
 	return;
 
