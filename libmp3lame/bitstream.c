@@ -448,8 +448,8 @@ Huf_count1(bit_stream_t *bs, gr_info *gi)
     assert((unsigned int)gi->table_select[3] < 2u);
     for (i = gi->big_values; i < gi->count1; i += 4) {
 	int huffbits = 0, p = 0;
-	assert((gi->l3_enc[i] | gi->l3_enc[i+1]
-		| gi->l3_enc[i+2] | gi->l3_enc[i+3]) <= 1u);
+	assert((unsigned int)(gi->l3_enc[i] | gi->l3_enc[i+1]
+			      | gi->l3_enc[i+2] | gi->l3_enc[i+3]) <= 1u);
 
 	if (gi->l3_enc[i  ]) {
 	    p = 8;

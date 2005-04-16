@@ -363,7 +363,7 @@ encoder(lame_t gfp, FILE * outf, int nogap, char *inPath, char *outPath)
             return 1;
         }
 
-        if (fwrite(mp3buffer, 1, imp3, outf) != imp3) {
+        if (fwrite(mp3buffer, 1, imp3, outf) != (unsigned int)imp3) {
             fprintf(stderr, "Error writing mp3 output  %d\n", imp3);
             return 1;
         }

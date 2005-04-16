@@ -366,7 +366,7 @@ stats_head(double x, const char *txt)
 
 
 static void
-stats_line(lame_t gfp, double *stat)
+stats_line(double *stat)
 {
     int     n = 1;
     fprintf(Console_IO.Console_fp, "\n   kbps     ");
@@ -475,7 +475,7 @@ brhist_disp(lame_t gfp)
         stat[8] = 100. * bl_type[4] / bl_type[5];
     }
     progress_line(gfp, lame_get_totalframes(gfp), frames);
-    stats_line(gfp, stat);
+    stats_line(stat);
 
     fputs ( "\r", Console_IO.Console_fp );
     fflush ( Console_IO.Console_fp );   /* fflush is ALSO needed for Windows! */
