@@ -169,10 +169,10 @@ static inline FLOAT POW20core(int x)
 #ifdef USE_FAST_LOG
 # define LOG2_SIZE_L2    (8)
 # define LOG2_SIZE       (1 << LOG2_SIZE_L2)
-# define FAST_LOG10(x)       (fast_log2(x)*(LOG2/LOG10))
-# define FAST_LOG(x)         (fast_log2(x)*LOG2)
-# define FAST_LOG10_X(x,y)   (fast_log2(x)*(LOG2/LOG10*(y)))
-# define FAST_LOG_X(x,y)     (fast_log2(x)*(LOG2*(y)))
+# define FAST_LOG10(x)       (fast_log2(x)*(FLOAT)(LOG2/LOG10))
+# define FAST_LOG(x)         (fast_log2(x)*(FLOAT)LOG2)
+# define FAST_LOG10_X(x,y)   (fast_log2(x)*(FLOAT)(LOG2/LOG10*(y)))
+# define FAST_LOG_X(x,y)     (fast_log2(x)*(FLOAT)(LOG2*(y)))
 
 extern ieee754_float32_t log_table[LOG2_SIZE*2];
 inline static ieee754_float32_t fast_log2(ieee754_float32_t xx)
