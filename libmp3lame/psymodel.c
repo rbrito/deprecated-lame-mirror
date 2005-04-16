@@ -746,7 +746,7 @@ void
 init_mask_add_max_values(lame_t gfc)
 {
     int i;
-    ma_max_i1 = db2pow((I1LIMIT+1)/16.0*10.0);
+    ma_max_i1 = db2pow((I1LIMIT+1)/16.0*10.0) + 1.0;
     ma_max_i2 = db2pow((I2LIMIT+1)/16.0*10.0);
     ma_max_m  = db2pow(MLIMIT);
     for (i = 0; i < gfc->npart_l; i++)
@@ -766,17 +766,13 @@ mask_add_samebark(FLOAT m1, FLOAT m2)
 	1.14758*1.14758, 1.0
     };
 
-    if (m2 > m1) {
-	if (m2 >= m1*ma_max_i1)
-	    return m;
-	m1 = m2/m1;
-    } else {
-	if (m1 >= m2*ma_max_i1)
-	    return m;
-	m1 = m1/m2;
-    }
+    if (m2 > m1)
+	m2 = m1;
 
-    return m * table2[trancate(FAST_LOG10_X(m1, (FLOAT)16.0))];
+    if (m < m2*ma_max_i1)
+	m *= table2[trancate(FAST_LOG10_X(m/m2 - (FLOAT)1.0, (FLOAT)16.0))];
+
+    return m;
 }
 
 inline static FLOAT
@@ -1238,18 +1234,18 @@ psycho_anal_ns(lame_t gfc, int gr, int numchn)
 	    FLOAT ecb;
 	    int kk = gfc->s3ind[b][0];
 	    p -= kk;
-/* calculate same bark masking 1st */
 	    ecb = p[b] * eb2[b];
 
+	    /* calculate same bark masking 1st */
 	    for (kk = 1; kk <= 3; kk++) {
 		int k2;
 
 		k2 = b + kk;
-		if (k2 <= gfc->s3ind[b][1] && eb2[k2] != (FLOAT)0.0)
+		if (k2 <= gfc->s3ind[b][1] && eb2[k2] > adjATH[k2])
 		    ecb = mask_add_samebark(ecb, p[k2] * eb2[k2]);
 
 		k2 = b - kk;
-		if (k2 >= gfc->s3ind[b][0] && eb2[k2] != (FLOAT)0.0)
+		if (k2 >= gfc->s3ind[b][0] && eb2[k2] > adjATH[k2])
 		    ecb = mask_add_samebark(ecb, p[k2] * eb2[k2]);
 	    }
 	    for (kk = gfc->s3ind[b][0]; kk <= gfc->s3ind[b][1]; kk++) {
