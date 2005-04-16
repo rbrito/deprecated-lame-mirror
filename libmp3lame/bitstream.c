@@ -32,6 +32,7 @@
 #include "encoder.h"
 #include "bitstream.h"
 #include "util.h"
+#include "quantize_pvt.h"
 #include "tables.h"
 
 typedef struct {
@@ -699,13 +700,13 @@ encodeBitStream(lame_t gfc)
 		slen = s1bits[gi->scalefac_compress];
 		if (slen)
 		    for (sfb = 0; sfb < gi->sfbdivide; sfb++)
-			if (gi->scalefac[sfb] != -1)
-			    putbits24(&gfc->bs, Max(gi->scalefac[sfb],0), slen);
+			if (gi->scalefac[sfb] != SCALEFAC_SCFSI_FLAG)
+			    putbits16(&gfc->bs, Max(gi->scalefac[sfb],0), slen);
 		slen = s2bits[gi->scalefac_compress];
 		if (slen)
 		    for (sfb = gi->sfbdivide; sfb < gi->sfbmax; sfb++)
-			if (gi->scalefac[sfb] != -1)
-			    putbits24(&gfc->bs, Max(gi->scalefac[sfb],0), slen);
+			if (gi->scalefac[sfb] != SCALEFAC_SCFSI_FLAG)
+			    putbits16(&gfc->bs, Max(gi->scalefac[sfb],0), slen);
 		assert(headerbits == gfc->bs.bitidx);
 		Huffmancodebits(gfc, gi);
 	    } /* for ch */
@@ -776,7 +777,7 @@ encodeBitStream(lame_t gfc)
 		int slen = gi->slen[partition];
 		if (slen)
 		    for (; sfb < sfbend; sfb++)
-			putbits24(&gfc->bs, Max(gi->scalefac[sfb], 0), slen);
+			putbits16(&gfc->bs, Max(gi->scalefac[sfb], 0), slen);
 		sfb = sfbend;
 	    }
 	    assert(headerbits == gfc->bs.bitidx);
@@ -883,37 +884,38 @@ drain_into_ancillary(lame_t gfc, int remainingBits)
     assert(remainingBits >= 0);
 
     if (remainingBits >= 8) {
-	putbits24(bs,0x4c,8);
+	putbits16(bs,0x4c,8);
 	remainingBits -= 8;
     }
     if (remainingBits >= 8) {
-	putbits24(bs,0x41,8);
+	putbits16(bs,0x41,8);
 	remainingBits -= 8;
     }
     if (remainingBits >= 8) {
-	putbits24(bs,0x4d,8);
+	putbits16(bs,0x4d,8);
 	remainingBits -= 8;
     }
     if (remainingBits >= 8) {
-	putbits24(bs,0x45,8);
+	putbits16(bs,0x45,8);
 	remainingBits -= 8;
     }
 
 #define PADDING_PATTERN 0xaa
     if (remainingBits >= 8) {
 	const char *version = get_lame_short_version ();
-	int len = strlen(version), i;
-	for (i=0; remainingBits >=8 ; ++i) {
+	int len = strlen(version), i = 0;
+	do {
 	    if (i < len)
-		putbits24(bs,version[i],8);
+		putbits16(bs,version[i],8);
 	    else
-		putbits24(bs,PADDING_PATTERN,8);
+		putbits16(bs,PADDING_PATTERN,8);
 	    remainingBits -= 8;
-	}
+	    i++;
+	} while ((remainingBits -= 8) >= 8);
     }
 
     if (remainingBits)
-	putbits24(bs, PADDING_PATTERN >> (8 - remainingBits), remainingBits);
+	putbits16(bs, 0, remainingBits);
 }
 
 /*
