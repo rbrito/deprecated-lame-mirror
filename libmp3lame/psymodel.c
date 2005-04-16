@@ -842,12 +842,12 @@ pecalc_s(III_psy_ratio *mr, int sb)
 	FLOAT xx = (FLOAT)0.0;
 	for (sblock=0;sblock<3;sblock++) {
 	    FLOAT x = mr->thm.s[sb][sblock], en = fabs(mr->en.s[sb][sblock]);
-	    FLOAT f = (FLOAT)0.9 + (sblock*(FLOAT)0.1);
+	    FLOAT f = (FLOAT)0.1 * (9 + sblock);
 	    if (en <= x)
 		continue;
 
 	    if (en > x*(FLOAT)1e10)
-		xx += (FLOAT)(10.0 * LOG10) * f;
+		xx += (FLOAT)(10.0 * LOG10);
 	    else
 		xx += FAST_LOG10(en / x) * f;
 	}
@@ -1216,7 +1216,8 @@ psycho_anal_ns(lame_t gfc, int gr, int numchn)
 	} else {
 	    /* M/S channels use the lesser one of adjustment values for L/R */
 	    if (ch == 2) {
-		FLOAT loudness = Min(gfc->ATH.adjust[0], gfc->ATH.adjust[1]);
+		FLOAT loudness = Min(gfc->ATH.adjust[0], gfc->ATH.adjust[1])
+		    * (FLOAT)(0.5);
 		for (b = 0; b < gfc->npart_l; b++)
 		    adjATH[b] = gfc->ATH.cb[b] * loudness;
 		gfc->ATH.adjust[2] = gfc->ATH.adjust[3] = loudness;
