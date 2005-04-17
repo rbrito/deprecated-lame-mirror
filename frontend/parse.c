@@ -75,9 +75,7 @@ int experimentalZ = 0;
 
 /* GLOBAL VARIABLES.  set by parse_args() */
 /* we need to clean this up */
-sound_file_format input_format;
 int keeptag=0;
-int pcmswapbytes=0;         /* force byte swapping   default=0*/
 int silent;                 /* Verbosity */
 int disp_brhist;
 float update_interval;      /* time status display interval */
@@ -90,10 +88,16 @@ int enc_delay;
 int enc_padding;
 int disable_wav_header;
 
+int startSample = 0;
+int endSample = MAX_U_32_NUM;
+
+sound_file_format input_format;
+int outputPCMendian=order_nativeEndian;
+int in_endian=0;
 int in_signed=1;
-int in_endian=order_littleEndian;
 int in_bitwidth=16;
 int decode_only=0;
+
 static int ignore_tag_errors; /* Ignore errors in values passed for tags */
 int print_clipping_info;      /* print info whether waveform clips */
 
@@ -921,10 +925,10 @@ int  parse_args (lame_t gfp, int argc, char** argv,
 		in_signed=0;
 	    }
 	    T_ELIF ("little-endian") {
-		in_endian=order_littleEndian;
+		outputPCMendian = in_endian = order_littleEndian;
 	    }
 	    T_ELIF ("big-endian") {
-		in_endian=order_bigEndian;
+		outputPCMendian = in_endian = order_bigEndian;
 	    }
 	    T_ELIF ("mp1input") {
 		input_format=sf_mp1;
@@ -1289,7 +1293,9 @@ int  parse_args (lame_t gfp, int argc, char** argv,
 	    }
 	    T_ELIF ("start") {
 		
-		nogap=1;
+	    }
+	    T_ELIF ("end") {
+		
 	    }
 	    T_ELSE {
 		fprintf(stderr,"%s: unrec option --%s\n", ProgramName, token);
@@ -1368,7 +1374,8 @@ int  parse_args (lame_t gfp, int argc, char** argv,
 		input_format=sf_raw;
 		break;
 	    case 'x':  /* force byte swapping */
-		pcmswapbytes=1;
+		outputPCMendian ^= 1;
+		in_endian ^= 1;
 		break;
 	    case 'p': /* error_protection: add crc16 information to stream */
 		lame_set_error_protection(gfp,1);
@@ -1499,6 +1506,7 @@ int  parse_args (lame_t gfp, int argc, char** argv,
 	}
     }
     if (num_nogap) *num_nogap=count_nogap;
+
     return 0;
 }
 

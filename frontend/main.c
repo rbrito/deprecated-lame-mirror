@@ -161,7 +161,7 @@ WriteShort(FILE * fp, short s)
 	char c[2];
     } sc;
     sc.s = s;
-    if (pcmswapbytes) {
+    if (outputPCMendian != order_nativeEndian) {
 	int l = sc.c[0];
 	sc.c[0] = sc.c[1];
 	sc.c[1] = l;

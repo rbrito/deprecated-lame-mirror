@@ -622,7 +622,7 @@ returns: number of samples read
 */
 static int
 unpack_read_samples( const int samples_to_read, const int bytes_per_sample,
-		     const int littleendian, int *sample_buffer)
+		     int *sample_buffer)
 {
     int samples_read;
     int i;
@@ -641,7 +641,7 @@ unpack_read_samples( const int samples_to_read, const int bytes_per_sample,
     GA_URS_IFLOOP(1)
 	*--op = (ip[i] ^ 0x80)<<(B-8) | 0x7f<<(B-16);/* convert from unsigned*/
 
-    if (littleendian) {
+    if (in_endian == order_littleEndian) {
 	GA_URS_IFLOOP(2)
 	    *--op = ip[i]<<(B-16) | ip[i+1]<<(B-8);
 	GA_URS_IFLOOP(3)
@@ -677,22 +677,12 @@ static int
 read_samples_pcm(int sample_buffer[1152*2], int samples_to_read)
 {
     int samples_read;
-    int littleendian;
 
-    if (input_format == sf_wave)
-	littleendian = 1;
-    else {
-#ifdef WORDS_BIGENDIAN
-	littleendian = pcmswapbytes;
-#else
-	littleendian = !pcmswapbytes;
-#endif
-    }
     assert((32 == in_bitwidth) || (24 == in_bitwidth) || (16 == in_bitwidth)
 	   || (in_bitwidth == 8));
 
     samples_read = unpack_read_samples(samples_to_read, in_bitwidth/8,
-				       littleendian, sample_buffer);
+				       sample_buffer);
 
     if (ferror((FILE *)g_inputHandler)) {
         fprintf(stderr, "Error reading input file\n");
@@ -914,25 +904,10 @@ OpenSndFile(lame_t gfp, char *inPath)
 		    "Unsigned input only supported with bitwidth 8\n");
 	    exit(1);
 	}
-	if (in_endian != order_unknown) {
-	    if (in_endian == order_littleEndian)
-		gs_wfInfo.format = SF_ENDIAN_LITTLE;
-	    else
-		gs_wfInfo.format = SF_ENDIAN_BIG;
-	} else {
-# ifndef WORDS_BIGENDIAN
-	    /* little endian */
-	    if (pcmswapbytes)
-		gs_wfInfo.format = SF_ENDIAN_BIG;
-	    else
-		gs_wfInfo.format = SF_ENDIAN_LITTLE;
-# else
-	    if (pcmswapbytes)
-		gs_wfInfo.format = SF_ENDIAN_LITTLE;
-	    else
-		gs_wfInfo.format = SF_ENDIAN_BIG;
-# endif
-	}
+	if (in_endian == order_littleEndian)
+	    gs_wfInfo.format = SF_ENDIAN_LITTLE;
+	else
+	    gs_wfInfo.format = SF_ENDIAN_BIG;
     }
 #endif /* LIBSNDFILE */
 
@@ -943,10 +918,10 @@ OpenSndFile(lame_t gfp, char *inPath)
     if (input_format == sf_raw && silent < 10) {
 	/* assume raw PCM */
 	fprintf(stderr, "Assuming raw pcm input file");
-	if (pcmswapbytes)
-	    fprintf(stderr, " : Forcing byte-swapping\n");
+	if (in_endian == order_littleEndian)
+	    fprintf(stderr, " : Little Endian\n");
 	else
-	    fprintf(stderr, "\n");
+	    fprintf(stderr, " : Big Endian\n");
     }
 
 #ifdef LIBSNDFILE
@@ -1030,6 +1005,9 @@ init_infile(lame_t gfp, char *inPath)
     count_samples_carefully = 0;
     num_samples_read=0;
     OpenSndFile(gfp, inPath);
+
+    if (input_format == sf_wave)
+	in_endian = order_littleEndian;
 }
 
 /* end of get_audio.c */

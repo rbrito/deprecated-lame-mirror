@@ -34,7 +34,7 @@
 /* GLOBAL VARIABLES used by parse.c and main.c.  
    instantiated in parce.c.  ugly, ugly */
 extern int keeptag;
-extern int pcmswapbytes;           /* force byte swapping   default=0*/
+extern int outputPCMendian;
 extern int silent;
 extern int disp_brhist;
 
