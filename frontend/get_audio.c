@@ -45,8 +45,6 @@
 # endif
 #endif
 
-#define         MAX_U_32_NUM            0xFFFFFFFFu
-
 #include <sys/stat.h>
 
 #if defined(_WIN32) || defined(__CYGWIN__)

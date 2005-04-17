@@ -60,6 +60,12 @@ extern sound_file_format input_format;
 #define order_bigEndian 1
 #define order_unknown 2
 
+#ifdef UINT_MAX
+# define         MAX_U_32_NUM            UINT_MAX
+#else
+# define         MAX_U_32_NUM            0xFFFFFFFF
+#endif
+
 #ifdef LIBSNDFILE
 # include <sndfile.h>
 #endif /* ifdef LIBSNDFILE */
