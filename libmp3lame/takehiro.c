@@ -605,6 +605,13 @@ best_huffman_divide(lame_t gfc, gr_info * const gi)
 		break;
 	if (i == gi->big_values)
 	    return;
+
+	if (gi->big_values == 0)
+	    gi->table_select[0] = 0;
+	if (gi->big_values <= gfc->scalefac_band.l[1])
+	    gi->table_select[1] = 0;
+	gi->table_select[2] = gi->table_select[3] = 0;
+
 	gi->big_values = i;
 	a1 = a2 = 0;
 	for (; i < gi->count1; i += 4) {
@@ -612,7 +619,7 @@ best_huffman_divide(lame_t gfc, gr_info * const gi)
 	    a1 += quadcode[0][p];
 	    a2 += quadcode[1][p];
 	}
-	gi->table_select[3] = 0;
+
 	if (a1 > a2) {
 	    a1 = a2;
 	    gi->table_select[3] = 1;
