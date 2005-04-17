@@ -494,23 +494,34 @@ recalc_divide_init(
 	r01_bits[r0] = LARGE_BITS;
     }
 
-    for (r0 = 0; r0 < 16; r0++) {
+    r0 = 0;
+    if (!max_info[r0])
+	for (; r0 < 16-1; r0++)
+	    if (max_info[r0+1])
+		break;
+
+    for (; r0 < 16; r0++) {
 	int a1, r0bits, r1, r0t, r1t, bits;
 	if (gfc->scalefac_band.l[r0 + 2] >= gi->big_values)
 	    break;
 	a1 = gfc->scalefac_band.l[r0 + 1];
 	r0t = ix_max2(&max_info[0], &max_info[r0+1]);
 	r0bits = choose_table(gi->l3_enc, &gi->l3_enc[a1], &r0t);
+	if (r0bits >= gi->part2_3_length - gi->count1bits - 6)
+	    break;
 
 	for (r1 = 0; r1 < 8; r1++) {
 	    int a2 = gfc->scalefac_band.l[r0 + r1 + 2];
 	    if (a2 >= gi->big_values)
 		break;
-	    if (r01_bits[r0 + r1] <= r0bits + ((a1-a2)>>1) + 2)
-		continue;
-
 	    r1t = ix_max2(&max_info[r0+1], &max_info[r0+r1+2]);
-	    bits = r0bits + choose_table(&gi->l3_enc[a1], &gi->l3_enc[a2], &r1t);
+	    bits = r0bits;
+	    if (r1t) {
+		if (bits + 2 + ((a2-a1)>>1) >= r01_bits[r0 + r1]
+		 || bits + 2 + ((gi->big_values-a1)>>1) >= gi->part2_3_length - gi->count1bits)
+		    continue;
+		bits += choose_table(&gi->l3_enc[a1], &gi->l3_enc[a2], &r1t);
+	    }
 	    if (r01_bits[r0 + r1] > bits) {
 		r01_bits[r0 + r1] = bits;
 		r01_info[r0 + r1] = (r0 << 16) + (r0t << 8) + r1t;
@@ -518,9 +529,7 @@ recalc_divide_init(
 	}
     }
     for (r0 = 0; r0 < SBMAX_l - 1; r0++) {
-	int r1;
-
-	r1 = r01_info[r0];
+	int r1 = r01_info[r0];
 	if (gfc->scalefac_band.l[r0+2+1+1] <= gi->big_values && r0 < 16 - 1
 	    && ((r1 >> 8) & 0xff) == (r1 & 0xff)) {
 	    r01_bits[r0] = LARGE_BITS;
@@ -551,7 +560,13 @@ recalc_divide_sub(
 	if (a2 >= gi->big_values)
 	    break;
 	bits = r01_bits[r2] + gi->count1bits;
-	if (gi->part2_3_length <= bits + ((gi->big_values - a2) >> 1) + 2)
+	/* in the region2, there must be the ix larger than 1
+	 * (if not, the region will be count1 region).
+	 * So the smallest number of bits to encode the region2 is
+	 *   (length of region2 - 2)/2 + 6 = (length of region2)/2 + 5
+	 * with huffman table 2 or 3.
+	 */
+	if (gi->part2_3_length <= bits + ((gi->big_values - a2) >> 1) + 5)
 	    continue;
 
 	r2t = ix_max2(&max_info[r2+2], &max_info[SBMAX_l]);
@@ -615,11 +630,10 @@ best_huffman_divide(lame_t gfc, gr_info * const gi)
 	recalc_divide_init(gfc, gi, r01_bits, r01_info, max_info);
 	recalc_divide_sub(gfc, gi, r01_bits, r01_info, max_info);
     }
-
-    i = gi->big_values;
-    if ((unsigned int)(ix[i-2] | ix[i-1]) > 1)
+#ifndef EXPERIMENTAL
+    if ((unsigned int)(ix[gi->big_values-2] | ix[gi->big_values-1]) > 1)
 	return;
-
+#endif
     i = gi->count1 + 2;
     if (i > 576)
 	return;
@@ -628,7 +642,10 @@ best_huffman_divide(lame_t gfc, gr_info * const gi)
     gi_w = *gi;
     gi_w.count1 = i;
     gi_w.big_values -= 2;
-
+#ifdef EXPERIMENTAL
+    if ((unsigned int)(ix[gi->big_values-2] | ix[gi->big_values-1]) > 1)
+	gi_w.big_values = gi->big_values + 2;
+#endif
     a1 = a2 = 0;
     for (; i > gi_w.big_values; i -= 4) {
 	int p = ((ix[i-4] * 2 + ix[i-3]) * 2 + ix[i-2]) * 2 + ix[i-1];
