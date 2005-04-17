@@ -607,9 +607,9 @@ static void  presets_longinfo_dm ( FILE* msgfp )
 {
     fprintf ( msgfp,
 	      "\n"
-	      "  --preset medium   => -v 6\n"
-	      "  --preset standard => -v 4\n"
-	      "  --preset extreme  => -v 2\n"
+	      "  --preset medium   => -V 6\n"
+	      "  --preset standard => -V 4\n"
+	      "  --preset extreme  => -V 2\n"
 	      "  --preset insane   => -b 320\n"
 	      "  --preset XXX      => --abr XXX\n"
 	      "  --preset cbr XXX  => -b XXX\n"
@@ -923,7 +923,7 @@ int  parse_args (lame_t gfp, int argc, char** argv,
                 T_ELIF ("keeptag")
                     keeptag=1;
 
-                T_ELIF ("mixedblock")
+                T_ELIF_INTERNAL ("mixedblock")
                     lame_set_use_mixed_blocks( gfp, 2);
 
                 T_ELIF_INTERNAL ("allshort")
@@ -931,9 +931,8 @@ int  parse_args (lame_t gfp, int argc, char** argv,
 
                 T_ELIF_INTERNAL ("shortthreshold")
 		{
-		    float x;
-		    if (sscanf(nextArg, "%f", &x) == 1) {
-			lame_set_short_threshold(gfp, x);
+		    if (sscanf(nextArg, "%lf", &val) == 1) {
+			lame_set_short_threshold(gfp, val);
 			argUsed=1;
 		    }
 		}
@@ -1161,7 +1160,7 @@ int  parse_args (lame_t gfp, int argc, char** argv,
 
                 T_ELIF_INTERNAL ("substep")
                     argUsed=1;
-                    lame_set_substep( gfp, atof(nextArg) );
+                    lame_set_substep( gfp, atoi(nextArg) );
 
                 T_ELIF_INTERNAL ("sfscale")
 		{
@@ -1186,7 +1185,7 @@ int  parse_args (lame_t gfp, int argc, char** argv,
                 T_ELIF ("nspsytune")
 		    fprintf(stderr, "note: nspsytune is defaulted and no need to specify the option.\n");
 
-                T_ELIF ("nsmsfix")
+                T_ELIF_INTERNAL ("nsmsfix")
                     argUsed=1;
                     lame_set_msfix( gfp, atof(nextArg) );
                 
@@ -1517,12 +1516,10 @@ int  parse_args (lame_t gfp, int argc, char** argv,
 #endif
 
     /* default guess for number of channels */
-    if (autoconvert) 
+    if (autoconvert || lame_get_mode(gfp) != MONO)
 	lame_set_num_channels(gfp, 2); 
-    else if (MONO == lame_get_mode(gfp))
-        lame_set_num_channels(gfp, 1);
-    else 
-        lame_set_num_channels(gfp, 2);
+    else
+	lame_set_num_channels(gfp, 1);
 
     if (lame_get_free_format(gfp)) {
 	if (lame_get_brate(gfp) < 8 || lame_get_brate(gfp) > 640) {
