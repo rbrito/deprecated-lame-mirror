@@ -747,7 +747,7 @@ lame_print_config(lame_t gfc)
 void 
 lame_print_internals(lame_t gfc)
 {
-    const char * pc = "";
+    const char * pc;
 
     /*  compiler/processor optimizations, operational, etc.
      */
@@ -781,23 +781,23 @@ lame_print_internals(lame_t gfc)
 	gfc->report.msgf("\t ^ using intensity stereo, the ratio is %f\n",
 			 1.0-gfc->istereo_ratio);
 
+    pc = "";
     if (gfc->free_format)    pc = "(free format)";
-    else pc = "";
     switch ( gfc->VBR ) {
     case cbr : gfc->report.msgf("\tconstant bitrate - CBR %s\n", pc ); break;
-    case abr : gfc->report.msgf("\tvariable bitrate - ABR %s\n", pc ); break;
+    case abr : gfc->report.msgf("\tvariable bitrate - ABR\n"        ); break;
     case vbr : gfc->report.msgf("\tvariable bitrate - VBR\n"        ); break;
     default  : gfc->report.msgf("\t ?? oops, some new one ?? \n"    ); break;
     }
     if (gfc->bWriteVbrTag) 
-    gfc->report.msgf("\tusing LAME Tag\n" );
+	gfc->report.msgf("\tusing LAME Tag\n" );
     gfc->report.msgf("\t...\n" );
 
     /*  everything controlling psychoacoustic settings, like ATH, etc.
      */
     gfc->report.msgf("\npsychoacoustic:\n\n" );
     gfc->report.msgf("\tshort block switching threshold: %f\n",
-	  gfc->nsPsy.attackthre);
+		     gfc->nsPsy.attackthre);
     gfc->report.msgf("\tpsymodel: %s\n", gfc->psymodel ? "used" : "not used");
     
     pc = "using";
