@@ -914,8 +914,10 @@ psymodel_init(lame_t gfc)
 	    l += gfc->numlines_l[i-1];
 	if (i != gfc->npart_l-1)
 	    l += gfc->numlines_l[i+1];
-
 	norm[i] = 0.11749/5.0;
+	if (i < 8) {
+	    norm[i] /= 30*(9-i);
+	}
 	if (i > 50)
 	    norm[i] *= 2;
 	gfc->rnumlines_ls[i] = 20.0/(l-1);
