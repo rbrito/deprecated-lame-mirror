@@ -810,11 +810,11 @@ init_numline_l2s(int *bo, FLOAT sfreq, int blksize, short *scalepos,
     }
 }
 
-static int
-init_s3_values(lame_t gfc, FLOAT **p, int (*s3ind)[2],
+static FLOAT *
+init_s3_values(lame_t gfc, int (*s3ind)[2],
 	       int npart, FLOAT *bval, FLOAT *norm)
 {
-    FLOAT s3[CBANDS][CBANDS];
+    FLOAT s3[CBANDS][CBANDS], *p;
     int i, j, k;
     int numberOfNoneZero = 0;
 
@@ -839,9 +839,8 @@ init_s3_values(lame_t gfc, FLOAT **p, int (*s3ind)[2],
 	s3ind[i][1] = j;
 	numberOfNoneZero += (s3ind[i][1] - s3ind[i][0] + 1);
     }
-    *p = malloc(sizeof(FLOAT)*numberOfNoneZero);
-    if (!*p)
-	return -1;
+    if (!(p = malloc(sizeof(FLOAT)*numberOfNoneZero)))
+	return p;
 
     k = 0;
     for (i = 0; i < npart; i++) {
@@ -860,9 +859,9 @@ init_s3_values(lame_t gfc, FLOAT **p, int (*s3ind)[2],
 	}
 	fact = db2pow(fact*0.25);
 	for (j = s3ind[i][0]; j <= s3ind[i][1]; j++)
-	    (*p)[k++] = s3[i][j] * fact;
+	    p[k++] = s3[i][j] * fact;
     }
-    return 0;
+    return p;
 }
 
 int
@@ -917,8 +916,6 @@ psymodel_init(lame_t gfc)
 	    l += gfc->numlines_l[i+1];
 
 	norm[i] = 0.11749/5.0;
-	if (i < 8)
-	    norm[i] = 0.001;
 	if (i > 50)
 	    norm[i] *= 2;
 	gfc->rnumlines_ls[i] = 20.0/(l-1);
@@ -926,9 +923,9 @@ psymodel_init(lame_t gfc)
 	if (gfc->ATHonly)
 	    norm[i] = 1e-37;
     }
-    i = init_s3_values(gfc, &gfc->s3_ll, gfc->s3ind, gfc->npart_l, bval, norm);
-    if (i)
-	return i;
+    gfc->s3_ll = init_s3_values(gfc, gfc->s3ind, gfc->npart_l, bval, norm);
+    if (!gfc->s3_ll)
+	return LAME_NOMEM;
 
     /* compute long block specific values, ATH */
     j = 0;
@@ -977,9 +974,9 @@ psymodel_init(lame_t gfc)
 	gfc->ATH.s_avg[i]
 	    = gfc->ATH.cb[bm[i]] * (BLKSIZE_s*BLKSIZE_s) / (BLKSIZE*BLKSIZE);
 
-    i = init_s3_values(gfc, &gfc->s3_ss, gfc->s3ind_s, npart_s, bval, norm);
-    if (i)
-	return i;
+    gfc->s3_ss = init_s3_values(gfc, gfc->s3ind_s, npart_s, bval, norm);
+    if (!gfc->s3_ss)
+	return LAME_NOMEM;
 
     assert(gfc->bo_l[SBMAX_l-1] <= gfc->npart_l);
     assert(gfc->bo_s[SBMAX_s-1] <= npart_s);
