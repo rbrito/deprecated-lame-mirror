@@ -395,7 +395,7 @@ getframebytes(const lame_t gfc)
 }
 
 #ifndef NDEBUG
-# define putbits24(a,b,c) assert(((unsigned int)c) <= 25u), assert(((unsigned int)b) <= (1ul << (c))), putbits24main(a,b,c)
+# define putbits24(a,b,c) assert(((unsigned int)c) <= 25u), assert(((unsigned int)b) < (1ul << (c))), putbits24main(a,b,c)
 #else
 # define putbits24(a,b,c) putbits24main(a,b,c)
 #endif
@@ -909,7 +909,6 @@ drain_into_ancillary(lame_t gfc, int remainingBits)
 		putbits16(bs,version[i],8);
 	    else
 		putbits16(bs,PADDING_PATTERN,8);
-	    remainingBits -= 8;
 	    i++;
 	} while ((remainingBits -= 8) >= 8);
     }
