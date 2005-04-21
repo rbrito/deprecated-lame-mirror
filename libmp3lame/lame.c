@@ -755,7 +755,12 @@ lame_print_internals(lame_t gfc)
     gfc->report.msgf("\tscaling: \n");
     gfc->report.msgf("\t ^ ch0 (left) : %f\n", gfc->scale_left );
     gfc->report.msgf("\t ^ ch1 (right): %f\n", gfc->scale_right );
-    gfc->report.msgf("\tfilter type: %d\n", gfc->filter_type );
+    switch (gfc->filter_type) {
+    case 0:  pc = "Polyphase"; break;
+    case 1:  pc = "MDCT";      break;
+    default: pc = "none";      break;
+    }
+    gfc->report.msgf("\tfilter type: %s\n", pc);
     gfc->report.msgf("\t...\n" );
 
     /*  everything controlling the stream format 
@@ -805,8 +810,8 @@ lame_print_internals(lame_t gfc)
     if ( gfc->ATHonly  ) pc = "the only masking";
     if ( gfc->noATH    ) pc = "not used";
     gfc->report.msgf("\tATH: %s\n", pc );
-    gfc->report.msgf("\t ^ shape: %g\n", gfc->ATHcurve);
-    gfc->report.msgf("\t ^ level adjustement: %f (dB)\n", gfc->ATHlower );
+    gfc->report.msgf("\t ^ shape factor: %g\n", gfc->ATHcurve);
+    gfc->report.msgf("\t ^ level adjustement: %f (dB)\n", gfc->ATHlower);
     gfc->report.msgf("\t ^ adaptive adjustment decay (dB): %f\n",
 		     FAST_LOG10(gfc->ATH.aa_decay) * 10.0);
 
@@ -817,7 +822,7 @@ lame_print_internals(lame_t gfc)
 		     gfc->nsPsy.tuneTreble*0.25,
 		     gfc->nsPsy.tuneSFB21*0.25);
 
-    gfc->report.msgf("\ttemporal masking sustain factor: %f\n", gfc->nsPsy.decay);
+/*    gfc->report.msgf("\ttemporal masking sustain factor: %f\n", gfc->nsPsy.decay);*/
     gfc->report.msgf("\tinterchannel masking ratio: %f\n", gfc->interChRatio );
     gfc->report.msgf("\treduce side channel PE factor: %f\n", 1.0-gfc->reduce_side);
     gfc->report.msgf("\tnarrowen stereo factor: %f\n", gfc->narrowStereo*2.0);
