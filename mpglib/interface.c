@@ -216,10 +216,11 @@ static int ExtractI4(unsigned char *buf)
 }
 
 static int
-GetVbrTag(VBRTAGDATA *pTagData,  unsigned char *buf)
+GetVbrTag(PMPSTR mp,unsigned char *buf)
 {
+    VBRTAGDATA TagData;
     int	i, head_flags, h_bitrate,h_id, h_mode, h_sr_index;
-    int enc_delay, enc_padding; 
+    int enc_delay, enc_padding, frames = 0;
 
     /* Xing VBR Header is only suuported Layer 3 */
     if ((buf[1] & 0x06) != 0x01*2)
@@ -233,13 +234,13 @@ GetVbrTag(VBRTAGDATA *pTagData,  unsigned char *buf)
     h_bitrate = bitrate_table[h_id][h_bitrate];
 
     /* get Vbr header data */
-    pTagData->flags = 0;
+    TagData.flags = 0;
 
     /* check for FFE syncword */
     if ((buf[1]>>4)==0xE) 
-	pTagData->samprate = samplerate_table[2][h_sr_index];
+	TagData.samprate = samplerate_table[2][h_sr_index];
     else
-	pTagData->samprate = samplerate_table[h_id][h_sr_index];
+	TagData.samprate = samplerate_table[h_id][h_sr_index];
 
     /*  determine offset of header */
     if (h_id) {
@@ -258,30 +259,30 @@ GetVbrTag(VBRTAGDATA *pTagData,  unsigned char *buf)
 	return 0;
     buf+=4;
 
-    pTagData->h_id = h_id;
-    head_flags = pTagData->flags = ExtractI4(buf); buf+=4;      /* get flags */
+    TagData.h_id = h_id;
+    head_flags = TagData.flags = ExtractI4(buf); buf+=4;      /* get flags */
 
     if (head_flags & FRAMES_FLAG)
-	pTagData->frames   = ExtractI4(buf); buf+=4;
+	frames   = ExtractI4(buf); buf+=4;
 
     if (head_flags & BYTES_FLAG)
-	pTagData->bytes = ExtractI4(buf); buf+=4;
+	TagData.bytes = ExtractI4(buf); buf+=4;
 
     if (head_flags & TOC_FLAG){
-	if(pTagData->toc)
+	if(TagData.toc)
 	{
 	    for(i=0;i<NUMTOCENTRIES;i++)
-		pTagData->toc[i] = buf[i];
+		TagData.toc[i] = buf[i];
 	}
 	buf+=NUMTOCENTRIES;
     }
 
-    pTagData->vbr_scale = -1;
+    TagData.vbr_scale = -1;
 
     if (head_flags & VBR_SCALE_FLAG)
-	pTagData->vbr_scale = ExtractI4(buf); buf+=4;
+	TagData.vbr_scale = ExtractI4(buf); buf+=4;
 
-    pTagData->headersize = ((h_id+1)*72000*h_bitrate) / pTagData->samprate;
+    TagData.headersize = ((h_id+1)*72000*h_bitrate) / TagData.samprate;
 
     buf+=21;
     enc_delay = buf[0] << 4;
@@ -293,10 +294,12 @@ GetVbrTag(VBRTAGDATA *pTagData,  unsigned char *buf)
     if (enc_delay<0 || enc_delay > 3000) enc_delay=-1;
     if (enc_padding<0 || enc_padding > 3000) enc_padding=-1;
 
-    pTagData->enc_delay=enc_delay;
-    pTagData->enc_padding=enc_padding;
+    mp->num_frames  = frames;
+    mp->enc_delay   = enc_delay;
+    mp->enc_padding = enc_padding;
 
-    return 1;       /* success */
+    if (TagData.headersize < 1) return 1;
+    return TagData.headersize;
 }
 
 
@@ -316,7 +319,6 @@ check_vbr_header(PMPSTR mp,int bytes)
     int i,pos;
     struct buf *buf=mp->tail;
     unsigned char xing[XING_HEADER_SIZE];
-    VBRTAGDATA pTagData;
 
     pos = buf->pos;
     /* skip to valid header */
@@ -340,18 +342,7 @@ check_vbr_header(PMPSTR mp,int bytes)
     }
 
     /* check first bytes for Xing header */
-    mp->vbr_header = GetVbrTag(&pTagData,xing);
-    if (mp->vbr_header) {
-	mp->num_frames=pTagData.frames;
-	mp->enc_delay=pTagData.enc_delay;
-	mp->enc_padding=pTagData.enc_padding;
-
-	/*fprintf(stderr,"\rmpglib: delays: %i %i \n",mp->enc_delay,mp->enc_padding); */
-	/* fprintf(stderr,"\rmpglib: Xing VBR header dectected.  MP3 file has %i frames\n", pTagData.frames); */
-	if ( pTagData.headersize < 1 ) return 1;
-	return pTagData.headersize;
-    }
-    return 0;
+    return GetVbrTag(mp, xing);
 }
 
 
