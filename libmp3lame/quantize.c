@@ -1539,7 +1539,7 @@ VBR_noise_shaping(lame_t gfc, gr_info *gi, FLOAT * xmin)
     int vbrmax, sfb, j, gain, sfmin;
     sfb = j = 0;
     vbrmax = -10000;
-    gain = gi->global_gain - 10;
+    gain = gi->global_gain;
 
     /* search range of sf.
        on shoft blocks, it is large because of subblock_gain */
@@ -1579,6 +1579,7 @@ VBR_noise_shaping(lame_t gfc, gr_info *gi, FLOAT * xmin)
 		gain = MAX_GLOBAL_GAIN;
 	}
     } while (++sfb < gi->psymax);
+
     if (vbrmax == -10000)
 	vbrmax = MAX_GLOBAL_GAIN;
 
@@ -1631,7 +1632,7 @@ VBR_iteration_loop(lame_t gfc, III_psy_ratio ratio[MAX_GRANULES][MAX_CHANNELS])
 	for (ch = 0; ch < gfc->channels_out; ch++) {
 	    gr_info *gi = &gfc->tt[gr][ch];
 	    if (init_bitalloc(gfc, gi)) {
-		int retry = 0;
+		int retry = 0, next;
 		calc_xmin(gfc, &ratio[gr][ch], gi, xmin[gr][ch]);
 		gi->global_gain = gfc->OldValue[ch];
 		while (VBR_noise_shaping(gfc, gi, xmin[gr][ch])) {
@@ -1639,7 +1640,10 @@ VBR_iteration_loop(lame_t gfc, III_psy_ratio ratio[MAX_GRANULES][MAX_CHANNELS])
 			goto do_CBR_encoding;
 		    bitpressure_strategy(gi, xmin[gr][ch]);
 		}
-		gfc->OldValue[ch] = gi->global_gain;
+		next = gi->global_gain - Max(gi->scalefac[0]<<(gi->scalefac_scale+1), 0);
+		if (next < -116)
+		    next = -116;
+		gfc->OldValue[ch] = next;
 	    }
 	    used_bits += iteration_finish_one(gfc, gr, ch);
 	}
