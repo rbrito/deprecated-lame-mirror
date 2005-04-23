@@ -1060,7 +1060,7 @@ CBR_1st_bitalloc (
 		&& bestNoise
 		> (newNoise = quantEstimate(gfc, &gi_w, rxmin, distort))) {
 		bestNoise = newNoise;
-		*gi = gi_w;
+		gi_work_l3_copy(gi, &gi_w);
 		if (bestNoise < (FLOAT)1.0 && current_method == 0) {
 		    if (gfc->noise_shaping_amp == 0)
 			break;
@@ -1082,7 +1082,7 @@ CBR_1st_bitalloc (
 	if (current_method == gfc->noise_shaping_amp)
 	    break;
 	current_method++;
-	gi_w = *gi;
+	gi_work_l3_copy(&gi_w, gi);
 	age = current_method*3+2;
 	newNoise = bestNoise;
     }

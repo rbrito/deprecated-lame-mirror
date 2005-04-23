@@ -44,6 +44,11 @@ inline static void gi_work_copy(gr_info *gi_w, const gr_info *gi)
 	   sizeof(*gi_w) -  sizeof(gi_w->xr) - sizeof(gi_w->l3_enc));
 }
 
+inline static void gi_work_l3_copy(gr_info *gi_w, const gr_info *gi)
+{
+    memcpy(&gi_w->l3_enc, &gi->l3_enc, sizeof(*gi_w) -  sizeof(gi_w->xr));
+}
+
 #if HAVE_NASM
 int ix_max(const int *ix, const int *end);
 void quantize_sfb_3DN(const FLOAT *, int, int, int *);
