@@ -75,9 +75,9 @@ decode_init_for_replaygain(lame_t gfc)
 static int
 decode1_headersB_clipchoice(
     PMPSTR pmp, unsigned char *buffer, int len,
-    char pcm_l_raw[], char pcm_r_raw[], mp3data_struct * mp3data,
+    void *pcm_l_raw, void *pcm_r_raw, mp3data_struct * mp3data,
     int *enc_delay, int *enc_padding, 
-    char *p, size_t psize, int decoded_sample_size,
+    void *p, size_t psize, int decoded_sample_size,
     int (*decodeMP3_ptr)(PMPSTR,unsigned char *,int,char *,int,int*) )
 {
     static const int smpls[2][4] = {
@@ -157,7 +157,7 @@ decode1_headersB_clipchoice(
         case 2: 
             processed_samples = (processed_bytes / decoded_sample_size) >> 1; 
             if (decoded_sample_size == sizeof(short)) {
-              COPY_STEREO(short,short)
+              COPY_STEREO(short, short)
             }
             else {
               COPY_STEREO(sample_t,FLOAT)
@@ -174,12 +174,12 @@ decode1_headersB_clipchoice(
         processed_samples = 0;
         break;
 
-    default:
-        assert(0);
     case MP3_ERR:
         processed_samples = -1;
         break;
 
+    default:
+        assert(0);
     }
 
     /*fprintf(stderr,"ok, more, err:  %i %i %i\n", MP3_OK, MP3_NEED_MORE, MP3_ERR );*/
@@ -188,31 +188,33 @@ decode1_headersB_clipchoice(
 }
 
 
-#define OUTSIZE_CLIPPED   4096*sizeof(short)
-
 int
 lame_decode1_headersB(lame_t gfc, unsigned char *buffer, int len,
 		      short pcm_l[], short pcm_r[], mp3data_struct * mp3data,
 		      int *enc_delay, int *enc_padding)
 {
-    char out[OUTSIZE_CLIPPED];
+    short out[2048*2];
 
-    return decode1_headersB_clipchoice(gfc->pmp, buffer, len, (char *)pcm_l, (char *)pcm_r, mp3data, enc_delay, enc_padding, out, OUTSIZE_CLIPPED, sizeof(short), decodeMP3 );
+    return decode1_headersB_clipchoice(gfc->pmp, buffer, len, pcm_l, pcm_r,
+				       mp3data, enc_delay, enc_padding, out,
+				       sizeof(out), sizeof(short),
+				       decodeMP3 );
 }
 
 
 /* we forbid input with more than 1152 samples per channel for output in the unclipped mode */
-#define OUTSIZE_UNCLIPPED 1152*2*sizeof(FLOAT)
-
 int 
 decode1_unclipped(PMPSTR pmp, unsigned char *buffer, int len,
 		  sample_t pcm_l[], sample_t pcm_r[])
 {
-    char out[OUTSIZE_UNCLIPPED];
+    FLOAT out[1152*STEREO];
     mp3data_struct mp3data;
-    int enc_delay,enc_padding;
+    int enc_delay, enc_padding;
 
-    return decode1_headersB_clipchoice(pmp, buffer, len, (char *)pcm_l, (char *)pcm_r, &mp3data, &enc_delay, &enc_padding, out, OUTSIZE_UNCLIPPED, sizeof(FLOAT), decodeMP3_unclipped  );
+    return decode1_headersB_clipchoice(pmp, buffer, len, pcm_l, pcm_r,
+				       &mp3data, &enc_delay, &enc_padding, out,
+				       sizeof(out), sizeof(FLOAT),
+				       decodeMP3_unclipped  );
 }
 
 
