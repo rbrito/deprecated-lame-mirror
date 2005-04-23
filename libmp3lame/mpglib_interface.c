@@ -147,9 +147,10 @@ decode1_headersB_clipchoice(
 
     switch (ret) {
     case MP3_OK:
+	processed_samples = processed_bytes
+	    / (decoded_sample_size << pmp->fr.channels);
         switch (pmp->fr.channels) {
         case 1: 
-            processed_samples = processed_bytes / decoded_sample_size;
             if (decoded_sample_size == sizeof(short)) {
               COPY_MONO(short,short)
             }
@@ -177,16 +178,13 @@ decode1_headersB_clipchoice(
         processed_samples = 0;
         break;
 
+    default:
+        assert(0); /* fall */
     case MP3_ERR:
         processed_samples = -1;
         break;
-
-    default:
-        assert(0);
     }
 
-    /*fprintf(stderr,"ok, more, err:  %i %i %i\n", MP3_OK, MP3_NEED_MORE, MP3_ERR );*/
-    /*fprintf(stderr,"ret = %i out=%i\n", ret, processed_samples );*/
     return processed_samples;
 }
 
