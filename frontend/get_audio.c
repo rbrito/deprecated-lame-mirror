@@ -398,10 +398,7 @@ get_file_size(const char* const filename)
 
 #ifdef HAVE_MPGLIB
 static int decode_initfile(lame_t gfp, FILE * fd, mp3data_struct * mp3data);
-/* read mp3 file until mpglib returns one frame of PCM data */
-static int decode_fromfile(lame_t gfp,
-			   FILE * fd, short int pcm_l[], short int pcm_r[],
-			   mp3data_struct * mp3data);
+
 static int
 check_aid(const unsigned char *header)
 {
@@ -556,24 +553,22 @@ decode_fromfile(lame_t gfp, FILE * fd, short pcm_l[], short pcm_r[],
 
     /* first see if we still have data buffered in the decoder: */
     ret = lame_decode1_headers(gfp, buf, len, pcm_l, pcm_r, mp3data);
-    if (ret != 0) return ret;
+    if (ret > 0) return ret;
 
     /* read until we get a valid output frame */
     do {
-        len = fread(buf, 1, 1024, fd);
-        if (len == 0) {
+	len = fread(buf, 1, 1024, fd);
+	ret = lame_decode1_headers(gfp, buf, len, pcm_l, pcm_r, mp3data);
+	if (ret == -1) {
+	    return ret;
+	}
+	if (len == 0) {
 	    /* we are done reading the file, but check for buffered data */
-	    ret = lame_decode1_headers(gfp, buf, len, pcm_l, pcm_r, mp3data);
 	    if (ret<=0) {
-                return -1;  /* done with file */
-            }
+		return -1;  /* done with file */
+	    }
 	    break;
 	}
-
-        ret = lame_decode1_headers(gfp, buf, len, pcm_l, pcm_r, mp3data);
-        if (ret == -1) {
-            return ret;
-        }
     } while (ret == 0);
     return ret;
 }
@@ -745,7 +740,7 @@ get_audio(lame_t gfp, int buffer[2][1152])
 	/* LAME mp3 output 16bit -  convert to int */
 	for (j = 0; j < num_channels; j++) {
 	    for (i = samples_read; --i >= 0; )
-		buffer[j][i] = buf_tmp16[j*1152+i] << (8 * sizeof(int) - 16);
+		buffer[j][i] = buf_tmp16[j*1152+i];
 	}
 	if (num_channels == 1)
 	    memset(buffer[1], 0, samples_read * sizeof(int));
@@ -913,8 +908,9 @@ OpenSndFile(lame_t gfp, char *inPath)
 
     if (input_format == sf_wave) {
 	parse_file_header(gfp, fp);
+	if (input_format == sf_wave)
+	    in_endian = order_littleEndian;
     }
-
     if (input_format == sf_raw && silent < 10) {
 	/* assume raw PCM */
 	fprintf(stderr, "Assuming raw pcm input file");
@@ -926,10 +922,10 @@ OpenSndFile(lame_t gfp, char *inPath)
 
 #ifdef LIBSNDFILE
     if (useLibsndfile) {
-        g_inputHandler = gs_pSndFileIn = sf_open(inPath, SFM_READ, &gs_wfInfo);
+	g_inputHandler = gs_pSndFileIn = sf_open(inPath, SFM_READ, &gs_wfInfo);
 
-        /* Check result */
-        if (!gs_pSndFileIn) {
+	/* Check result */
+	if (!gs_pSndFileIn) {
 	    sf_perror(gs_pSndFileIn);
 	    fprintf(stderr, "Could not open sound file \"%s\".\n", inPath);
 	    exit(1);
@@ -946,21 +942,21 @@ OpenSndFile(lame_t gfp, char *inPath)
 #endif /* LIBSNDFILE */
 
     if (lame_get_num_samples(gfp) == MAX_U_32_NUM) {
-        /* try to figure out num_samples */
-        double  flen = get_file_size(inPath);
+	/* try to figure out num_samples */
+	double  flen = get_file_size(inPath);
 	unsigned long tmp_num_samples;
 
-        if (flen >= 0) {
+	if (flen >= 0) {
 	    /* try file size, assume 2 bytes per sample */
 	    int bps = 2*lame_get_num_channels(gfp);
-            if (IS_MPEG123(input_format) && mp3input_data.bitrate > 0) {
+	    if (IS_MPEG123(input_format) && mp3input_data.bitrate > 0) {
 		/* if input is mp3, use its bitrate */
 		bps = mp3input_data.bitrate * (1000/8);
 		flen *= lame_get_in_samplerate(gfp);
-            }
+	    }
 	    tmp_num_samples = flen / bps;
 	    lame_set_num_samples(gfp, tmp_num_samples);
-            if (IS_MPEG123(input_format)
+	    if (IS_MPEG123(input_format)
 		&& mp3input_data.nsamp == MAX_U_32_NUM)
 		mp3input_data.nsamp = tmp_num_samples;
 	}
@@ -1005,9 +1001,6 @@ init_infile(lame_t gfp, char *inPath)
     count_samples_carefully = 0;
     num_samples_read=0;
     OpenSndFile(gfp, inPath);
-
-    if (input_format == sf_wave)
-	in_endian = order_littleEndian;
 }
 
 /* end of get_audio.c */
