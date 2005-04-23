@@ -32,9 +32,12 @@ lame_decode_exit(lame_t gfc)
 int
 lame_decode_init(lame_t gfc)
 {
-    gfc->pmp = InitMP3();
-    if (gfc->pmp)
-	return 0;
+    if (!gfc->pmp) {
+	if (!(gfc->pmp = InitMP3()))
+	    return -1;
+	else
+	    return 0;
+    }
     return 1;
 }
 
