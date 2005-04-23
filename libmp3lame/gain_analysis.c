@@ -308,7 +308,7 @@ AnalyzeSamples (replaygain_t* rgData, const Float_t* left_samples, const Float_t
             int     ival = (int) val;
             if (ival < 0)
 		ival = 0;
-            if (ival > sizeof(rgData->A)/sizeof(*(rgData->A)) - 1)
+            if (ival > (int)(sizeof(rgData->A)/sizeof(*(rgData->A)) - 1))
 		ival = sizeof(rgData->A)/sizeof(*(rgData->A)) - 1;
             rgData->A [ival]++;
             rgData->lsum = rgData->rsum = 0.;
@@ -367,7 +367,7 @@ GetTitleGain (replaygain_t* rgData)
 
     retval = analyzeResult ( rgData->A, sizeof(rgData->A)/sizeof(*(rgData->A)) );
 
-    for ( i = 0; i < sizeof(rgData->A)/sizeof(*(rgData->A)); i++ ) {
+    for ( i = 0; i < (int)(sizeof(rgData->A)/sizeof(*(rgData->A))); i++ ) {
         rgData->B[i] += rgData->A[i];
         rgData->A[i]  = 0;
     }
