@@ -210,7 +210,7 @@ int
 decode1_unclipped(PMPSTR pmp, unsigned char *buffer, int len,
 		  sample_t pcm_l[], sample_t pcm_r[])
 {
-    FLOAT out[1152*STEREO];
+    FLOAT out[1152*2];
     mp3data_struct mp3data;
     int enc_delay, enc_padding;
 
@@ -229,6 +229,20 @@ decode1_unclipped(PMPSTR pmp, unsigned char *buffer, int len,
  *   n     number of samples output.  Will be at most one frame of
  *         MPEG data.  
  */
+
+int
+lame_decode1_headers_noclip(
+    lame_t gfc, unsigned char *buffer, int len,
+    FLOAT pcm_l[], FLOAT pcm_r[], mp3data_struct * mp3data)
+{
+    FLOAT out[1152*2];
+    int enc_delay,enc_padding;
+    return decode1_headersB_clipchoice(gfc->pmp, buffer, len, pcm_l, pcm_r,
+				       mp3data, &enc_delay, &enc_padding, out,
+				       sizeof(out), sizeof(FLOAT),
+				       decodeMP3_unclipped );
+}
+
 
 int
 lame_decode1_headers(lame_t gfc, unsigned char *buffer, int len,

@@ -546,20 +546,20 @@ For lame_decode1_headers():  return code
    n     number of samples output.  either 576 or 1152 depending on MP3 file.
 */
 static int
-decode_fromfile(lame_t gfp, FILE * fd, short pcm_l[], short pcm_r[],
+decode_fromfile(lame_t gfp, FILE * fd, float pcm_l[], float pcm_r[],
 		mp3data_struct * mp3data)
 {
     int     ret, len = 0;
     unsigned char buf[1024];
 
     /* first see if we still have data buffered in the decoder: */
-    ret = lame_decode1_headers(gfp, buf, len, pcm_l, pcm_r, mp3data);
+    ret = lame_decode1_headers_noclip(gfp, buf, len, pcm_l, pcm_r, mp3data);
     if (ret > 0) return ret;
 
     /* read until we get a valid output frame */
     do {
 	len = fread(buf, 1, 1024, fd);
-	ret = lame_decode1_headers(gfp, buf, len, pcm_l, pcm_r, mp3data);
+	ret = lame_decode1_headers_noclip(gfp, buf, len, pcm_l, pcm_r, mp3data);
 	if (ret == -1) {
 	    return ret;
 	}
@@ -576,14 +576,14 @@ decode_fromfile(lame_t gfp, FILE * fd, short pcm_l[], short pcm_r[],
 #endif /* defined(HAVE_MPGLIB) */
 
 static int
-read_samples_mp3(lame_t gfp, short mpg123pcm[2*1152])
+read_samples_mp3(lame_t gfp, float mpg123pcm[2][1152])
 {
 #ifndef HAVE_MPGLIB
     return -1;
 #else
     int     out;
 
-    out = decode_fromfile(gfp, g_inputHandler, &mpg123pcm[0], &mpg123pcm[1152],
+    out = decode_fromfile(gfp, g_inputHandler, mpg123pcm[0], mpg123pcm[1],
 			  &mp3input_data);
     /*
      * out < 0:  error, probably EOF
@@ -591,8 +591,8 @@ read_samples_mp3(lame_t gfp, short mpg123pcm[2*1152])
      * out > 0:  number of output samples
      */
     if (out < 0) {
-        memset(mpg123pcm, 0, sizeof(*mpg123pcm) * 2 * 1152);
-        return 0;
+	memset(mpg123pcm, 0, sizeof(float) * 2 * 1152);
+	return 0;
     }
 
     if (lame_get_num_channels(gfp) != mp3input_data.channels)
@@ -618,11 +618,11 @@ returns: number of samples read
 */
 static int
 unpack_read_samples( const int samples_to_read, const int bytes_per_sample,
-		     int *sample_buffer)
+		     float *sample_buffer)
 {
     int samples_read;
     int i;
-    int *op;			/* output pointer */
+    float *op;			/* output pointer */
     unsigned char *ip = (unsigned char *) sample_buffer; /* input pointer */
 #define B (sizeof(int) * 8)
 
@@ -630,7 +630,7 @@ unpack_read_samples( const int samples_to_read, const int bytes_per_sample,
     if (bytes_per_sample == ga_urs_bps) \
 	for (i = samples_read * bytes_per_sample; (i -= bytes_per_sample) >=0;)
 
-    samples_read = fread(sample_buffer, bytes_per_sample,
+    samples_read = fread(ip, bytes_per_sample,
 			 samples_to_read, g_inputHandler);
     op = sample_buffer + samples_read;
 
@@ -646,7 +646,7 @@ unpack_read_samples( const int samples_to_read, const int bytes_per_sample,
 	    *--op = ip[i]<<(B-32) | ip[i+1]<<(B-24) | ip[i+2]<<(B-16) | ip[i+3] << (B-8);
     } else {
 	GA_URS_IFLOOP(2)
-	    *--op = ip[i]<<(B-8) | ip[i+1]<<(B-16); 
+	    *--op = ip[i]<<(B-8) | ip[i+1]<<(B-16);
 	GA_URS_IFLOOP(3)
 	    *--op = ip[i]<<(B-8) | ip[i+1]<<(B-16) | ip[i+2]<<(B-24);
 	GA_URS_IFLOOP(4)
@@ -670,7 +670,7 @@ unpack_read_samples( const int samples_to_read, const int bytes_per_sample,
 ************************************************************************/
 
 static int
-read_samples_pcm(int sample_buffer[1152*2], int samples_to_read)
+read_samples_pcm(float sample_buffer[1152*2], int samples_to_read)
 {
     int samples_read;
 
@@ -702,14 +702,14 @@ read_samples_pcm(int sample_buffer[1152*2], int samples_to_read)
  * returns: samples read
  ***********************************************************************/
 int
-get_audio(lame_t gfp, int buffer[2][1152])
+get_audio(lame_t gfp, float buffer[2][1152])
 {
     int num_channels = lame_get_num_channels(gfp), samples_read;
     unsigned int tmp_num_samples = lame_get_num_samples(gfp);
     unsigned int samples_to_read = lame_get_framesize(gfp);
     unsigned int remaining;
-    char    tmpbuf[2 * 1152 * sizeof(int)];
-    int     i, j;
+    float    tmpbuf[2 * 1152];
+    int     i;
 
     assert(samples_to_read <= 1152);
 
@@ -736,22 +736,21 @@ get_audio(lame_t gfp, int buffer[2][1152])
     }
 
     if (IS_MPEG123(input_format)) {
-	short   *buf_tmp16 = (short*)tmpbuf;
-	samples_read = read_samples_mp3(gfp, buf_tmp16);
-	/* LAME mp3 output 16bit -  convert to int */
+	int j;
+	samples_read = read_samples_mp3(gfp, buffer);
 	for (j = 0; j < num_channels; j++) {
 	    for (i = samples_read; --i >= 0; )
-		buffer[j][i] = buf_tmp16[j*1152+i];
+		buffer[j][i] *= 65536.0;
 	}
 	if (num_channels == 1)
 	    memset(buffer[1], 0, samples_read * sizeof(int));
     } else {
-	int     *insamp = (int*)tmpbuf;
+	float     *insamp = tmpbuf;
 #ifdef LIBSNDFILE
 	if (useLibsndfile) {
 	    samples_read
-		= sf_read_int(g_inputHandler, insamp,
-			      num_channels * samples_to_read);
+		= sf_read_float(g_inputHandler, insamp,
+				num_channels * samples_to_read);
 	} else 
 #endif
 	{

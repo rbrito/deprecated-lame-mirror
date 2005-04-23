@@ -916,8 +916,36 @@ lame_encode_buffer_float(lame_t gfc,
     /* make a copy of input buffer, changing type to sample_t */
     for (i = 0; i < nsamples; i++) {
         gfc->in_buffer[i] = buffer_l[i] * gfc->scale_left;
-        if (gfc->channels_in>1)
+    }
+    if (gfc->channels_in>1)
+	for (i = 0; i < nsamples; i++)
 	    gfc->in_buffer[i+nsamples] = buffer_r[i] * gfc->scale_right;
+
+    return encode_buffer_sample(gfc, nsamples, mp3buf, mp3buf_size);
+}
+
+int
+lame_encode_buffer_float2(lame_t gfc,
+			  const float buffer_l[], const float buffer_r[],
+			  const int nsamples, unsigned char *mp3buf,
+			  const int mp3buf_size)
+{
+    int     ret, i;
+    FLOAT scale;
+
+    ret = update_buffer(gfc, nsamples);
+    if (ret <= 0)
+        return ret;
+
+    /* make a copy of input buffer, changing type to sample_t */
+    scale = gfc->scale_left * (FLOAT)(1.0 / 65536.0);
+    for (i = 0; i < nsamples; i++) {
+	gfc->in_buffer[i] = buffer_l[i] * scale;
+    }
+    if (gfc->channels_in>1) {
+	scale = gfc->scale_right * (FLOAT)(1.0 / 65536.0);
+	for (i = 0; i < nsamples; i++)
+	    gfc->in_buffer[i+nsamples] = buffer_r[i] * scale;
     }
 
     return encode_buffer_sample(gfc, nsamples, mp3buf, mp3buf_size);
@@ -1162,18 +1190,20 @@ lame_t
 lame_init(void)
 {
     lame_t gfc;
-    void *work = calloc(1, sizeof(struct lame_internal_flags) + 16);
-    if (!work)
-        return NULL;
+    void *work;
 #ifndef NDEBUG
-    if (sizeof(gr_info) & 15) {
+    if (sizeof(gr_info) & 63) {
 	printf("alignment error. gr_info size = %d\n", (int)sizeof(gr_info));
 	return NULL;
     }
 #endif
     disable_FPE();      /* disable floating point exceptions */
 
-    gfc = (lame_t)(((unsigned long)work + 15) & ~15);
+    work = calloc(1, sizeof(struct lame_internal_flags) + 64);
+    if (!work)
+	return NULL;
+
+    gfc = (lame_t)(((unsigned long)work + 63) & ~63);
     gfc->alignment = (unsigned char*)gfc - (unsigned char*)work;
 
     gfc->report.debugf = gfc->report.msgf = gfc->report.errorf = msgf;

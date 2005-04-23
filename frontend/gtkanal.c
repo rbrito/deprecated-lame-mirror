@@ -119,7 +119,7 @@ gtkmakeframe(void)
     int iread = 0;
     static int init=0;
     static int mpglag;
-    static int Buffer[2][1152];
+    float Buffer[2][1152];
     short int  mpg123pcm[2][1152];
     int ch,j;
     int mp3count = 0;
@@ -150,7 +150,7 @@ gtkmakeframe(void)
 	    for (j = 0; j < framesize-DECDELAY; j++)
 		pinfo->pcmdata2[ch][j] = pinfo->pcmdata2[ch][j+framesize];
 	    for (j = 0; j < framesize; j++) /* rescale from int to short int */
-		pinfo->pcmdata2[ch][j+framesize-DECDELAY] = Buffer[ch][j];
+		pinfo->pcmdata2[ch][j+framesize-DECDELAY] = Buffer[ch][j]*(1.0/65536);
 	}
     } else {
 	/* feed data to encoder until encoder produces some output */
@@ -171,8 +171,9 @@ gtkmakeframe(void)
 	     * multiple frames breaking this loop.
 	     */
 	    assert(iread <= framesize);
-	    mp3count=lame_encode_buffer_int(global_gfp,Buffer[0],Buffer[1],
-					    iread,mp3buffer,sizeof(mp3buffer));
+	    mp3count=lame_encode_buffer_float2(global_gfp,
+					       Buffer[0], Buffer[1], iread,
+					       mp3buffer, sizeof(mp3buffer));
 
 	    assert(mp3count <= 0
 		   || lame_get_frameNum(global_gfp) != pinfo->frameNum);

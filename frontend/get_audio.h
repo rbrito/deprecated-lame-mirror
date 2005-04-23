@@ -46,7 +46,7 @@ typedef enum sound_file_format_e {
 FILE *init_outfile (char *outPath);
 void init_infile(lame_t , char *inPath);
 void close_infile(void);
-int get_audio(lame_t gfp, int buffer[2][1152]);
+int get_audio(lame_t gfp, float buffer[2][1152]);
 int WriteWaveHeader(FILE * const fp, const int pcmbytes,
 		    const int freq, const int channels, const int bits);
 extern int id3v2taglen;

@@ -561,6 +561,20 @@ int CDECL lame_encode_buffer_float(
 					  stream                        */
 
 
+/* as lame_encode_buffer, for 'float's.
+ * !! NOTE: !! data must be scaled to be in the same range as 
+ * short int, +/- 2^31
+ */
+int CDECL lame_encode_buffer_float2(
+        lame_t,
+        const float     buffer_l [],   /* PCM data for left channel     */
+        const float     buffer_r [],   /* PCM data for right channel    */
+        const int       nsamples,      /* number of samples per channel */
+        unsigned char*  mp3buf,        /* pointer to encoded MP3 stream */
+        const int       mp3buf_size ); /* number of valid octets in this
+					  stream                        */
+
+
 /* as lame_encode_buffer, but for long's 
  * !! NOTE: !! data must still be scaled to be in the same range as 
  * short int, +/- 32768  
@@ -817,6 +831,15 @@ int CDECL lame_decode1_headers(
     int              len,
     short            pcm_l[],
     short            pcm_r[],
+    mp3data_struct*  mp3data );
+
+/* same as lame_decode1_headers, but returns float values */
+int CDECL lame_decode1_headers_noclip(
+    lame_t,
+    unsigned char*  mp3buf,
+    int             len,
+    float           pcm_l[],
+    float           pcm_r[],
     mp3data_struct*  mp3data );
 
 /* same as lame_decode1_headers, but also returns enc_delay and enc_padding

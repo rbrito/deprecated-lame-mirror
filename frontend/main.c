@@ -154,13 +154,18 @@ init_files(lame_t gfp, char *inPath, char *outPath)
 
 
 static void
-WriteShort(FILE * fp, short s)
+WriteShort(FILE * fp, float s)
 {
     union {
 	short s;
 	char c[2];
     } sc;
-    sc.s = s;
+    s *= (1.0/65536);
+    if (s > 0.0)
+	sc.s = (int)(s+0.5);
+    else
+	sc.s = -(int)(-s+0.5);
+
     if (outputPCMendian != order_nativeEndian) {
 	int l = sc.c[0];
 	sc.c[0] = sc.c[1];
@@ -182,7 +187,7 @@ static int
 decoder(lame_t gfp, FILE * outf, int skip, char *inPath, char *outPath)
 {
     double  wavsize;
-    int Buffer[2][1152];
+    float Buffer[2][1152];
     int iread;
     int i;
     int tmp_num_channels = lame_get_num_channels( gfp );
@@ -291,7 +296,7 @@ static int
 encoder(lame_t gfp, FILE * outf, int nogap, char *inPath, char *outPath)
 {
     unsigned char mp3buffer[LAME_MAXMP3BUFFER];
-    int     Buffer[2][1152];
+    float   Buffer[2][1152];
     int     iread, imp3;
     static const char *mode_names[2][4] = {
         {"stereo", "j-stereo", "dual-ch", "single-ch"},
@@ -351,8 +356,8 @@ encoder(lame_t gfp, FILE * outf, int nogap, char *inPath, char *outPath)
         }
 
         /* encode */
-        imp3 = lame_encode_buffer_int(gfp, Buffer[0], Buffer[1], iread,
-                                      mp3buffer, sizeof(mp3buffer));
+        imp3 = lame_encode_buffer_float2(gfp, Buffer[0], Buffer[1], iread,
+					 mp3buffer, sizeof(mp3buffer));
 
         /* was our output buffer big enough? */
         if (imp3 < 0) {
