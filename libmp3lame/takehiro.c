@@ -646,7 +646,7 @@ best_huffman_divide(lame_t gfc, gr_info * const gi)
 	return;
 
     ix[i-2] = ix[i-1] = 0; /* this may not satisfied in some case */
-    gi_w = *gi;
+    gi_work_l3_copy(&gi_w, gi);
     gi_w.count1 = i;
     gi_w.big_values -= 2;
 #ifdef EXPERIMENTAL
@@ -671,7 +671,7 @@ best_huffman_divide(lame_t gfc, gr_info * const gi)
     if (gi_w.block_type == NORM_TYPE
 	&& gi->big_values > gfc->scalefac_band.l[2]) {
 	if (recalc_divide_sub(gfc, &gi_w, r01_bits, r01_info, max_info))
-	    *gi = gi_w;
+	    gi_work_copy(gi, &gi_w);
     } else {
 	/* Count the number of bits necessary to code the bigvalues region. */
 	gi_w.part2_3_length = a1;
@@ -692,7 +692,7 @@ best_huffman_divide(lame_t gfc, gr_info * const gi)
 	    }
 	}
 	if (gi->part2_3_length > gi_w.part2_3_length)
-	    *gi = gi_w;
+	    gi_work_copy(gi, &gi_w);
     }
 }
 
