@@ -450,7 +450,8 @@ decode_initfile(lame_t gfp, FILE * fd, mp3data_struct * mp3data)
     int freeformat = 0;
 
     memset(mp3data, 0, sizeof(mp3data_struct));
-    lame_decode_init(gfp);
+    if (lame_decode_init(gfp) < 0)
+	return -1;
 
     len = 4;
     if (fread(buf, len, 1, fd) != 1)
@@ -792,7 +793,7 @@ WriteWaveHeader(FILE * const fp, const int pcmbytes,
     Write32Bits(fp, pcmbytes + 44 - 8); /* length in bytes without header */
     fwrite("WAVEfmt ", 2, 4, fp); /* 2 labels */
     Write32Bits(fp, 2 + 2 + 4 + 4 + 2 + 2); /* length of PCM format declaration area */
-    Write16Bits(fp, 1); /* is PCM? */
+    Write16Bits(fp, 1); /* format ID 1, linear PCM */
     Write16Bits(fp, channels); /* number of channels */
     Write32Bits(fp, freq); /* sample frequency in [Hz] */
     Write32Bits(fp, freq * channels * bytes); /* bytes per second */
