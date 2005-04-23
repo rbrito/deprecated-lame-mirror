@@ -823,7 +823,7 @@ init_s3_values(lame_t gfc, int (*s3ind)[2],
      */
     for (i = 0; i < npart; i++)
 	for (j = 0; j < npart; j++) 
-	    s3[i][j] = s3_func(bval[i] - bval[j]) * norm[i] * 0.3;
+	    s3[i][j] = s3_func(bval[i] - bval[j]) * norm[i];
 
     for (i = 0; i < npart; i++) {
 	for (j = 0; j < npart; j++) {
@@ -914,12 +914,10 @@ psymodel_init(lame_t gfc)
 	    l += gfc->numlines_l[i-1];
 	if (i != gfc->npart_l-1)
 	    l += gfc->numlines_l[i+1];
-	norm[i] = 0.11749/5.0;
+	norm[i] = 0.11749/5.0*0.5;
 	if (i < 8) {
 	    norm[i] /= 30*(9-i);
 	}
-	if (i > 50)
-	    norm[i] *= 2;
 	gfc->rnumlines_ls[i] = 20.0/(l-1);
 	gfc->rnumlines_l[i] = 1.0 / (gfc->numlines_l[i] * 3);
 	if (gfc->ATHonly)
@@ -963,7 +961,7 @@ psymodel_init(lame_t gfc)
 
     /* SNR formula is removed. but we should tune s3_s more */
     for (i = 0; i < npart_s; i++) {
-	norm[i] = db2pow(-0.25);
+	norm[i] = db2pow(-0.25) * 0.1;
 
 	gfc->endlines_s[i] = numlines_s[i];
 
