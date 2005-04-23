@@ -968,7 +968,7 @@ CBR_2nd_bitalloc(lame_t gfc, gr_info *gi, FLOAT distort[])
 	return;
     assert(gi_w.part2_length + gi_w.part2_3_length
 	   <= gi->part2_length + gi->part2_3_length);
-    gi_work_copy(gi, &gi_w);
+    gi_work_l3_copy(gi, &gi_w);
 }
 
 static int
