@@ -160,12 +160,19 @@ WriteShort(FILE * fp, float s)
 	short s;
 	char c[2];
     } sc;
-    s *= (1.0/65536);
-    if (s > 0.0)
-	sc.s = (int)(s+0.5);
-    else
-	sc.s = -(int)(-s+0.5);
+    int i;
 
+    s *= (1.0/65536);
+    if (s > 0.0) {
+	i = (int)(s+0.5);
+	if (i > 32767)
+	    i = 32767;
+    } else {
+	i = -(int)(-s+0.5);
+	if (i < -32768)
+	    i = -32768;
+    }
+    sc.s = i;
     if (outputPCMendian != order_nativeEndian) {
 	int l = sc.c[0];
 	sc.c[0] = sc.c[1];
