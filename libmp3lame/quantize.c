@@ -227,13 +227,16 @@ calc_noise(
 	l = gi->wi[sfb].width;
 	j -= l;
 	if (noise < (FLOAT)0.0) {
+	    int sf = 255;
+	    if (gi->scalefac[sfb] >= 0)
+		sf = scalefactor(gi, sfb);
 #ifdef HAVE_NASM
 	    if (gfc->CPU_features.AMD_3DNow) {
-		calc_noise_sub_3DN(&absxr[j], &gi->l3_enc[j], l, scalefactor(gi, sfb), &noise);
+		calc_noise_sub_3DN(&absxr[j], &gi->l3_enc[j], l, sf, &noise);
 	    } else
 #endif
 	    {
-		FLOAT step = POW20(scalefactor(gi, sfb));
+		FLOAT step = POW20(sf);
 		noise = (FLOAT)0.0;
 		do {
 		    FLOAT temp;
@@ -256,7 +259,9 @@ calc_noise(
 	l = gi->wi[sfb].width;
 	j -= l;
 	if (noise < (FLOAT)0.0) {
-	    FLOAT step = POW20(scalefactor(gi, sfb)) * pow43[1];
+	    FLOAT step = (FLOAT)0.0;
+	    if (gi->scalefac[sfb] >= 0)
+		step = POW20(scalefactor(gi, sfb)) * pow43[1];
 	    noise = (FLOAT)0.0;
 	    do {
 		FLOAT t0 = absxr[j+l], t1 = absxr[j+l+1];
