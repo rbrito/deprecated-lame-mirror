@@ -812,7 +812,7 @@ amp_scalefac_bands(lame_t gfc, gr_info *const gi, FLOAT *distort,
     if (sfbmax > gi->psymax)
 	sfbmax = gi->psymax;
 
-    if (gi->block_type == SHORT_TYPE) {
+    if (gi->block_type == SHORT_TYPE || trigger <= (FLOAT)1.0) {
 	trigger = distort[0];
 	for (sfb = 1; sfb < sfbmax; sfb++) {
 	    if (trigger < distort[sfb])
