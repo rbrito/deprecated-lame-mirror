@@ -29509,7 +29509,6 @@ if test "x$GCC" = "xyes"; then
 				/usr/bin/isalist | grep sparcv8plus \
 					>/dev/null 2>&1 && \
 					OPTIMIZATION="${OPTIMIZATION} \
-						-mcpu=ultrasparc \
 						-mtune=ultrasparc"
 			fi
 			;;
