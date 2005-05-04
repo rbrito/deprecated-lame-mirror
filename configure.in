@@ -578,6 +578,7 @@ powerpc|alpha*)
 	# use internal knowledge of the IEEE 754 layout
 	AC_DEFINE(USE_IEEE754_HACK, 1, IEEE754 compatible machine)
 	;;
+# on sparc, IEEE754 hack makes slower binary generaly.
 esac
 
 
@@ -748,7 +749,6 @@ if test "x$GCC" = "xyes"; then
 				/usr/bin/isalist | grep sparcv8plus \
 					>/dev/null 2>&1 && \
 					OPTIMIZATION="${OPTIMIZATION} \
-						-mcpu=ultrasparc \
 						-mtune=ultrasparc"
 			fi
 			;;
