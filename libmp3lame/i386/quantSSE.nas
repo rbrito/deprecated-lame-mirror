@@ -31,7 +31,7 @@ proc	pow075_3DN
 	mov	eax, [esp+4]	; eax = xr
 	mov	edx, [esp+8]	; edx = xr34
 	mov	ecx, [esp+12]	; ecx = end
-	pxor	mm7, mm7	; srpow_sum
+	pxor	mm7, mm7	; srpow_max
 	lea	eax, [eax + ecx*4]
 	lea	edx, [edx + ecx*4]
 	neg	ecx
@@ -46,9 +46,9 @@ proc	pow075_3DN
 	movq		[edx+ecx*4+ 0+576*4], mm4 ; absxr
 	movq		[edx+ecx*4+ 8+576*4], mm5 ; absxr
 	movq		mm0, mm4
-	pfadd		mm7, mm4
+	pfmax		mm7, mm4
 	movq		mm1, mm5
-	pfadd		mm7, mm5
+	pfmax		mm7, mm5
 	punpckhdq	mm0, mm0
 	punpckhdq	mm1, mm1
 
@@ -108,7 +108,7 @@ proc	pow075_SSE
 	mov	ecx, [esp+_P+12]	; ecx = end
 	shl	ecx, 2
 	xorps	xm3, xm3
-	xorps	xm2, xm2		; xm2 = srpow_sum
+	xorps	xm2, xm2		; xm2 = srpow_max
 	add	eax, ecx
 	add	edx, ecx
 	neg	ecx
@@ -126,9 +126,9 @@ proc	pow075_SSE
 
 	;------x^(3/4)------
 	rsqrtps	xm4, xm0
-	addps	xm2, xm0
+	maxps	xm2, xm0
 	movaps	xm5, xm0
-	addps	xm2, xm1
+	maxps	xm2, xm1
 	rsqrtps	xm4, xm4
 	mulps	xm5, xm7		; -x/4
 	rcpps	xm4, xm4		; y = approx. x^-0.25
@@ -162,11 +162,11 @@ proc	pow075_SSE
 	jnz near	.lp
 
 	movhlps	xm4, xm2		;* * 3 2
-	addps	xm4, xm2		;* * 1 0
+	maxps	xm4, xm2		;* * 1 0
 	mov	eax, [esp+_P+16]	; psum
 	movaps	xm2, xm4
 	shufps	xm4, xm4, PACK(1,1,1,1)	;* * * 1
-	addps	xm4, xm2		;* * * 0
+	maxps	xm4, xm2		;* * * 0
 	movss	[eax], xm4
 	ret
 

@@ -367,13 +367,12 @@ static const char pow075_table1[] = {
     14  /* 1.00000 < mantissa < 1.28125 => -(64/512) < x-1 < (62/512) */
 };
 
-static void pow075(float fin, fi_union *p)
+static void pow075sub(fi_union *p)
 {
     int adj;
     int res;
     int exponent;
     int mantissa, x;
-    p->f = fin;
 
     exponent = p->i >> 23;
     if (exponent <= 0)
@@ -403,18 +402,40 @@ static void pow075(float fin, fi_union *p)
     p->f = ((long long)res * pow075_table0[adj*4 + (exponent&3)]) >> 32;
     p->i += ((exponent>>2)*3 - 55 + 32) << 23;
 }
-#else
-static void pow075(float fin, fi_union *p)
-{
-    p->f = sqrt(fin * sqrt(fin));
-}
 
+static void pow075(lame_t gfc, float *xr, float end, float *pmax)
+{
+    int i, max = 0;
+    for (i = 0; i < end; i++) {
+	int tmp = ((fi_union*)xr)[i].i & 0x7fffffff;
+	if (max < tmp)
+	    max = tmp;
+	((fi_union*)absxr)[i].i = ((fi_union*)xr34)[i].i = tmp;
+	pow075sub((fi_union*)&xr34[i]);
+    }
+    ((fi_union*)pmax)->i = max;
+}
+#else
+static void pow075(lame_t gfc, float *xr, float end, float *pmax)
+{
+    int i;
+    float max = 0.0;
+    for (i = 0; i < end; i++) {
+	float tmp = fabs(xr[i]);
+	if (max < tmp)
+	    max = tmp;
+	absxr[i] = tmp;
+	xr34[i] = sqrt(tmp * sqrt(tmp));
+    }
+    *pmax = max;
+}
 #endif
+
 static int 
 init_bitalloc(lame_t gfc, gr_info *const gi)
 {
-    FLOAT tmp, sum = (FLOAT)0.0;
-    int i, end = gi->xrNumMax;
+    FLOAT max;
+    int end = gi->xrNumMax;
 
     /*  check if there is some energy we have to quantize
      *  and calculate xr34(gfc->xrwork[0]) matching our fresh scalefactors */
@@ -422,28 +443,23 @@ init_bitalloc(lame_t gfc, gr_info *const gi)
     if (gfc->CPU_features.SSE) {
 	if (end) {
 	    end = (end + 7) & (~7);
-	    pow075_SSE(gi->xr, xr34, end, &sum);
+	    pow075_SSE(gi->xr, xr34, end, &max);
 	}
     } else if (gfc->CPU_features.AMD_3DNow) {
 	if (end) {
 	    end = (end + 3) & (~3);
-	    pow075_3DN(gi->xr, xr34, end, &sum);
+	    pow075_3DN(gi->xr, xr34, end, &max);
 	}
     } else
 #endif
     {
-	for (i = 0; i < end; i++) {
-	    tmp = fabs(gi->xr[i]);
-	    sum += tmp;
-	    absxr[i] = tmp;
-	    pow075(tmp, (fi_union*)&xr34[i]);
-	}
+	pow075(gfc, gi->xr, end, &max);
     }
     memset(&xr34[end], 0, sizeof(FLOAT)*(576-end));
     memset(&absxr[end], 0, sizeof(FLOAT)*(576-end));
 
-    if (sum > (FLOAT)1e-14) {
-	int j = 0;
+    if (max > (FLOAT)1e-14) {
+	int i, j = 0;
 	if (gfc->noise_shaping_amp >= 3)
 	    j = 1;
 
