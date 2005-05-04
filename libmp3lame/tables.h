@@ -52,7 +52,7 @@ extern FLOAT pow43[PRECALC_SIZE*2];
 #define adj43 (&pow43[PRECALC_SIZE])
 
 #define Q_MAX (256+1)
-#define Q_MAX2 116 /* minimam possible number of
+#define Q_MAX2 116 /* minimum possible number of
 		      -gi->global_gain
 		      + ((scalefac[] + (gi->preflag ? pretab[sfb] : 0))
 		      << (gi->scalefac_scale + 1))
