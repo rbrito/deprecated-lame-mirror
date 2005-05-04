@@ -1195,33 +1195,32 @@ psycho_anal_ns(lame_t gfc, int gr, int numchn)
 	/*********************************************************************
 	 * compute loudness approximation (used for ATH auto-level adjustment) 
 	 *********************************************************************/
-	if (ch < 2) {
-	    FLOAT loudness = (FLOAT)0.0;
-	    for (b = 0; b < gfc->npart_l; b++) {
-		FLOAT x = eb2[b] * gfc->ATH.eql_w[b];
-		loudness = Max(loudness, x);
-	    }
-	    if (loudness > (FLOAT)1.0)
-		loudness = (FLOAT)1.0;
-	    else {
-		FLOAT loudness_old = gfc->ATH.adjust[ch] * gfc->ATH.aa_decay;
-		if (loudness < loudness_old)
-		    loudness = loudness_old;
-		if (loudness < ATHAdjustLimit)
-		    loudness = ATHAdjustLimit;
-	    }
-	    gfc->ATH.adjust[ch] = loudness;
-	    for (b = 0; b < gfc->npart_l; b++)
-		adjATH[b] = gfc->ATH.cb[b] * loudness;
-	} else {
-	    /* M/S channels use the lesser one of adjustment values for L/R */
-	    if (ch == 2) {
-		FLOAT loudness = Min(gfc->ATH.adjust[0], gfc->ATH.adjust[1])
+	if (ch != 3) {
+	    FLOAT loudness;
+	    if (ch < 2) {
+		loudness = (FLOAT)0.0;
+		for (b = 0; b < gfc->npart_l; b++) {
+		    FLOAT x = eb2[b] * gfc->ATH.eql_w[b];
+		    loudness = Max(loudness, x);
+		}
+		if (loudness > (FLOAT)1.0)
+		    loudness = (FLOAT)1.0;
+		else {
+		    FLOAT old = gfc->ATH.adjust[ch] * gfc->ATH.aa_decay;
+		    if (loudness < old)
+			loudness = old;
+		    if (loudness < ATHAdjustLimit)
+			loudness = ATHAdjustLimit;
+		}
+		gfc->ATH.adjust[ch] = loudness;
+	    } else {
+		/* on M/S channels, use lesser one of adjustments for L/R */
+		loudness = Min(gfc->ATH.adjust[0], gfc->ATH.adjust[1])
 		    * (FLOAT)(0.5);
-		for (b = 0; b < gfc->npart_l; b++)
-		    adjATH[b] = gfc->ATH.cb[b] * loudness;
 		gfc->ATH.adjust[2] = gfc->ATH.adjust[3] = loudness;
 	    }
+	    for (b = 0; b < gfc->npart_l; b++)
+		adjATH[b] = gfc->ATH.cb[b] * loudness;
 	}
 
 	/*********************************************************************
