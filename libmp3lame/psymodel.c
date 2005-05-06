@@ -729,7 +729,7 @@ static FLOAT ma_max_m;
 
 #ifdef USE_IEEE754_HACK
 inline static int
-trancate(FLOAT x)
+truncate(FLOAT x)
 {
     union {
 	float f;
@@ -739,7 +739,7 @@ trancate(FLOAT x)
     return fi.i - MAGIC_INT - 1;
 }
 #else /* USE_IEEE754_HACK */
-# define trancate(x) (int)x
+# define truncate(x) (int)x
 #endif /* USE_IEEE754_HACK */
 
 void
@@ -770,7 +770,7 @@ mask_add_samebark(FLOAT m1, FLOAT m2)
 	m2 = m1;
 
     if (m < m2*ma_max_i1)
-	m *= table2[trancate(FAST_LOG10_X(m/m2 - (FLOAT)1.0, (FLOAT)16.0))];
+	m *= table2[truncate(FAST_LOG10_X(m/m2 - (FLOAT)1.0, (FLOAT)16.0))];
 
     return m;
 }
@@ -807,7 +807,7 @@ mask_add(FLOAT m1, FLOAT m2, FLOAT ATH)
 	    return m;
 	m1 = m1/m2;
     }
-    i = trancate(FAST_LOG10_X(m1, (FLOAT)16.0));
+    i = truncate(FAST_LOG10_X(m1, (FLOAT)16.0));
 
     /* 10% of total */
     if (m >= ATH)
@@ -1161,7 +1161,7 @@ psycho_anal_ns(lame_t gfc, int gr, int numchn)
 		m = (m-a) / a * gfc->rnumlines_ls[0];
 		a = eb[0];
 		if (m < (FLOAT)(sizeof(tab)/sizeof(tab[0])))
-		    a *= tab[trancate(m)];
+		    a *= tab[truncate(m)];
 	    }
 	    eb2[0] = a;
 
@@ -1174,7 +1174,7 @@ psycho_anal_ns(lame_t gfc, int gr, int numchn)
 		    m = (m-a) / a * gfc->rnumlines_ls[b];
 		    a = eb[b];
 		    if (m < (FLOAT)(sizeof(tab)/sizeof(tab[0])))
-			a *= tab[trancate(m)];
+			a *= tab[truncate(m)];
 		}
 		eb2[b] = a;
 	    }
@@ -1187,7 +1187,7 @@ psycho_anal_ns(lame_t gfc, int gr, int numchn)
 		m = (m-a) / a * gfc->rnumlines_ls[b];
 		a = eb[b];
 		if (m < (FLOAT)(sizeof(tab)/sizeof(tab[0])))
-		    a *= tab[trancate(m)];
+		    a *= tab[truncate(m)];
 	    }
 	    eb2[b] = a;
 	}
