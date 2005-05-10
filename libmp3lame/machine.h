@@ -174,6 +174,9 @@ static inline FLOAT POW20core(int x)
 # define FAST_LOG10_X(x,y)   (fast_log2(x)*(FLOAT)(LOG2/LOG10*(y)/(1<<23)))
 # define FAST_LOG_X(x,y)     (fast_log2(x)*(FLOAT)(LOG2*(y)/(1<<23)))
 
+# define FASTLOG fast_log2
+# define FASTLOG_TO_10 (FLOAT)(LOG2/LOG10/(1<<23))
+
 extern int log_table[LOG2_SIZE*2];
 inline static int fast_log2(ieee754_float32_t xx)
 {
@@ -192,6 +195,9 @@ inline static int fast_log2(ieee754_float32_t xx)
 # define         FAST_LOG(x)         log(x)
 # define         FAST_LOG10_X(x,y)   (log10(x)*(y))
 # define         FAST_LOG_X(x,y)     (log(x)*(y))
+
+# define         FASTLOG log10 /* really ? */
+# define         FASTLOG_TO_10 (FLOAT)1.0
 #endif
 
 /***********************************************************************

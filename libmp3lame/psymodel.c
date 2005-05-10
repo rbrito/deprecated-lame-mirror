@@ -770,7 +770,8 @@ mask_add_samebark(FLOAT m1, FLOAT m2)
 	m2 = m1;
 
     if (m < m2*ma_max_i1)
-	m *= table2[truncate(FAST_LOG10_X(m/m2 - (FLOAT)1.0, (FLOAT)16.0))];
+	m *= table2[truncate(FAST_LOG10_X((m-m2)/m2, (FLOAT)16.0))];
+//	m *= table2[fast_log2((m-m2)/m2) * (long long) (16.0*LOG2/LOG10/(1<<23)];
 
     return m;
 }
@@ -831,11 +832,22 @@ mask_add(FLOAT m1, FLOAT m2, FLOAT ATH)
 static FLOAT
 pecalc_s(III_psy_ratio *mr, int sb)
 {
-    FLOAT pe_s = 0;
+    FLOAT pe_s = (FLOAT)0.0;
     static const FLOAT regcoef_s[] = {
 	/* this value is tuned only for 44.1kHz... */
-	11.8,   13.6,   17.2,   32.0,   46.5,   51.3,   57.5,   67.1,
-	71.5,   84.6,   97.6,  130.0,  255.8
+	11.8*FASTLOG_TO_10,
+	13.6*FASTLOG_TO_10,
+	17.2*FASTLOG_TO_10,
+	32.0*FASTLOG_TO_10,
+	46.5*FASTLOG_TO_10,
+	51.3*FASTLOG_TO_10,
+	57.5*FASTLOG_TO_10,
+	67.1*FASTLOG_TO_10,
+	71.5*FASTLOG_TO_10,
+	84.6*FASTLOG_TO_10,
+	97.6*FASTLOG_TO_10,
+	130.0*FASTLOG_TO_10,
+	255.8*FASTLOG_TO_10
     };
     while (--sb >= 0) {
 	int sblock;
@@ -849,7 +861,7 @@ pecalc_s(III_psy_ratio *mr, int sb)
 	    if (en > x*(FLOAT)1e10)
 		xx += (FLOAT)(10.0 * LOG10);
 	    else
-		xx += FAST_LOG10(en / x) * f;
+		xx += FASTLOG(en / x) * f;
 	}
 	pe_s += regcoef_s[sb] * xx;
     }
@@ -864,9 +876,28 @@ pecalc_l(III_psy_ratio *mr, int sb)
     int ath_over = 0;
     static const FLOAT regcoef_l[] = {
 	/* this value is tuned only for 44.1kHz... */
-	 6.8,    5.8,    5.8,    6.4,    6.5,    9.9,   12.1,   14.4,   15.0,
-	18.9,   21.6,   26.9,   34.2,   40.2,   46.8,   56.5,   60.7,   73.9,
-	85.7,   93.4,  126.1,  241.3
+	6.8*FASTLOG_TO_10,
+	5.8*FASTLOG_TO_10,
+	5.8*FASTLOG_TO_10,
+	6.4*FASTLOG_TO_10,
+	6.5*FASTLOG_TO_10,
+	9.9*FASTLOG_TO_10,
+	12.1*FASTLOG_TO_10,
+	14.4*FASTLOG_TO_10,
+	15.0*FASTLOG_TO_10,
+	18.9*FASTLOG_TO_10,
+	21.6*FASTLOG_TO_10,
+	26.9*FASTLOG_TO_10,
+	34.2*FASTLOG_TO_10,
+	40.2*FASTLOG_TO_10,
+	46.8*FASTLOG_TO_10,
+	56.5*FASTLOG_TO_10,
+	60.7*FASTLOG_TO_10,
+	73.9*FASTLOG_TO_10,
+	85.7*FASTLOG_TO_10,
+	93.4*FASTLOG_TO_10,
+	126.1*FASTLOG_TO_10,
+	241.3*FASTLOG_TO_10
     };
     while (--sb >= 0) {
 	FLOAT x = mr->thm.l[sb], en = fabs(mr->en.l[sb]);
@@ -877,7 +908,7 @@ pecalc_l(III_psy_ratio *mr, int sb)
 	if (en > x*(FLOAT)1e10)
 	    pe_l += regcoef_l[sb] * (FLOAT)(10.0 * LOG10);
 	else
-	    pe_l += regcoef_l[sb] * FAST_LOG10(en / x);
+	    pe_l += regcoef_l[sb] * FASTLOG(en / x);
     }
 
     if (ath_over == 0)
