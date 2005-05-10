@@ -169,24 +169,23 @@ static inline FLOAT POW20core(int x)
 #ifdef USE_FAST_LOG
 # define LOG2_SIZE_L2    (8)
 # define LOG2_SIZE       (1 << LOG2_SIZE_L2)
-# define FAST_LOG10(x)       (fast_log2(x)*(FLOAT)(LOG2/LOG10))
-# define FAST_LOG(x)         (fast_log2(x)*(FLOAT)LOG2)
-# define FAST_LOG10_X(x,y)   (fast_log2(x)*(FLOAT)(LOG2/LOG10*(y)))
-# define FAST_LOG_X(x,y)     (fast_log2(x)*(FLOAT)(LOG2*(y)))
+# define FAST_LOG10(x)       (fast_log2(x)*(FLOAT)(LOG2/LOG10/(1<<23)))
+# define FAST_LOG(x)         (fast_log2(x)*(FLOAT)LOG2/(1<<23))
+# define FAST_LOG10_X(x,y)   (fast_log2(x)*(FLOAT)(LOG2/LOG10*(y)/(1<<23)))
+# define FAST_LOG_X(x,y)     (fast_log2(x)*(FLOAT)(LOG2*(y)/(1<<23)))
 
-extern ieee754_float32_t log_table[LOG2_SIZE*2];
-inline static ieee754_float32_t fast_log2(ieee754_float32_t xx)
+extern int log_table[LOG2_SIZE*2];
+inline static int fast_log2(ieee754_float32_t xx)
 {
-    ieee754_float32_t log2val;
-    int mantisse, i;
+    int mantisse, *p, i;
     fi_union x;
 
     x.f = xx;
-    mantisse = x.i & 0x7FFFFF;
-/*  assert(i > 0); */
-    log2val = x.i >> 23;
-    i = mantisse >> (23-LOG2_SIZE_L2);
-    return log2val + log_table[i*2] + log_table[i*2+1]*mantisse;
+    i = x.i;
+    mantisse = i & 0x7FFF;
+    p = (int*)((char*)log_table + ((i >> (23 - LOG2_SIZE_L2 - 3))
+				   & (((1<<LOG2_SIZE_L2) - 1)*sizeof(int)*2)));
+    return i + p[0] + ((unsigned int)(p[1] * mantisse) >> 16);
 }
 #else
 # define         FAST_LOG10(x)       log10(x)

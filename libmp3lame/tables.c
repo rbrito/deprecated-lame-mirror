@@ -193,7 +193,7 @@ FLOAT window[BLKSIZE], window_s[BLKSIZE_s];
  *
  ***********************************************************************/
 
-ieee754_float32_t log_table[LOG2_SIZE*2];
+int log_table[LOG2_SIZE*2];
 
 static void
 init_log_table(void)
@@ -208,8 +208,9 @@ init_log_table(void)
 
 	x = ((a + x) + (x + b)) / 4.0;
 	a = (b-a) * (1.0 / (1 << (23 - LOG2_SIZE_L2)));
-	log_table[j*2+1] = a;
-	log_table[j*2  ] = x - a*(1<<(23-LOG2_SIZE_L2-1))*(j*2+1) - 0x7f;
+	log_table[j*2+1] = (int)((a * (1<<30)) * (1<<9) + 0.5);
+	log_table[j*2  ] = (int)((x - 0x7f) * (1<<23) + 0.5)
+	    - (j << (23 - LOG2_SIZE_L2));
     }
 }
 #endif /* define FAST_LOG */
