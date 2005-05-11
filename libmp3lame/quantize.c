@@ -393,13 +393,13 @@ static void pow075sub(fi_union *p)
     /* when x \simeq 1, x^(3/4) = 1 + (x-1)*3/4 - ... */
     x = mantissa * 3;
     res = (1 << 29) + x;
-    x = ((x * 4) * (long long)mantissa) >> 32;
+    x = ((x * 4) * (uint64_t)mantissa) >> 32;
     res -= x;
-    x = ((int)((x * (long long)0x6AAAAAAB) >> 32) * (long long)mantissa) >> 32;
+    x = ((int)((x * (uint64_t)0x6AAAAAAB) >> 32) * (uint64_t)mantissa) >> 32;
     res += x << 5;
-    x = (((x*9) * (long long)mantissa) >> 32) << 6;
+    x = (((x*9) * (uint64_t)mantissa) >> 32) << 6;
     res -= x;
-    p->f = ((long long)res * pow075_table0[adj*4 + (exponent&3)]) >> 32;
+    p->f = ((uint64_t)res * pow075_table0[adj*4 + (exponent&3)]) >> 32;
     p->i += ((exponent>>2)*3 - 55 + 32) << 23;
 }
 
@@ -1871,7 +1871,7 @@ set_pinfo(lame_t gfc, gr_info *gi, const III_psy_ratio *ratio, int gr, int ch)
 	    tot_noise += distort[sfb2];
 
 	    gfc->pinfo->LAMEsfb_s[gr][ch][3*sfb+i]
-		= (FLOAT)-2.0*gi->subblock_gain[1+i]
+		= -2*gi->subblock_gain[1+i]
 		- ifqstep*gi->scalefac[sfb2];
 	}
     } /* block type short */

@@ -742,8 +742,8 @@ truncate(FLOAT x)
 inline static int
 trunc_log(FLOAT x)
 {
-    return (fast_log2(x) * (long long)(LOG2/LOG10*16.0*(1<<(32-23)) + 0.5))
-							 >> 32;
+    return (fast_log2(x) * (uint64_t)(LOG2/LOG10*16.0*(1<<(32-23)) + 0.5))
+							>> 32;
 }
 
 #else /* USE_IEEE754_HACK */
