@@ -738,8 +738,22 @@ truncate(FLOAT x)
     fi.f = x + (0.5+MAGIC_FLOAT);
     return fi.i - MAGIC_INT - 1;
 }
+
+inline static int
+trunc_log(FLOAT x)
+{
+    return (fast_log2(x) * (long long)(LOG2/LOG10*16.0*(1<<(32-23)) + 0.5))
+							 >> 32;
+}
+
 #else /* USE_IEEE754_HACK */
 # define truncate(x) (int)x
+
+inline static int
+trunc_log(FLOAT x)
+{
+    return truncate(FAST_LOG10_X(x, (FLOAT)16.0));
+}
 #endif /* USE_IEEE754_HACK */
 
 void
@@ -770,8 +784,7 @@ mask_add_samebark(FLOAT m1, FLOAT m2)
 	m2 = m1;
 
     if (m < m2*ma_max_i1)
-	m *= table2[truncate(FAST_LOG10_X((m-m2)/m2, (FLOAT)16.0))];
-//	m *= table2[fast_log2((m-m2)/m2) * (long long) (16.0*LOG2/LOG10/(1<<23)];
+	m *= table2[trunc_log((m-m2)/m2)];
 
     return m;
 }
@@ -805,7 +818,7 @@ mask_add(FLOAT m1, FLOAT m2, FLOAT ATH)
     if (m >= m2*ma_max_i2)
 	return m;
 
-    i = truncate(FAST_LOG10_X((m-m2)/m2, (FLOAT)16.0));
+    i = trunc_log((m-m2)/m2);
 
     if (m >= ATH)
 	return m*table1[i];
