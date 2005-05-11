@@ -1009,7 +1009,7 @@ mp3x display               <------LONG------>
 	for (sb = 0; sb < 6; sb++) {
 	    /* calculate energies of each sub-shortblocks */
 	    static const FLOAT subbk_w[] = {
-		0.258819045102521,
+		/*0.258819045102521,*/
 		0.5,
 		0.707106781186547,
 		0.866025403784439,
@@ -1018,14 +1018,14 @@ mp3x display               <------LONG------>
 		1.0,
 		0.965925826289068,
 		0.866025403784439,
-		0.707106781186547,
-		0.5,
-		0.258819045102521,
+		/*0.707106781186547,*/
+		/*0.5,*/
+		/*0.258819045102521,*/
 	    };
-	    FLOAT nextPow = gfc->nsPsy.subbk_ene[ch][sb+3]*subbk_w[sb+3];
+	    FLOAT nextPow = gfc->nsPsy.subbk_ene[ch][sb+3]*subbk_w[sb+2];
 	    FLOAT adjust
-		= (Max(gfc->nsPsy.subbk_ene[ch][sb+2]*subbk_w[sb+2],
-		       gfc->nsPsy.subbk_ene[ch][sb+1]*subbk_w[sb+1])
+		= (Max(gfc->nsPsy.subbk_ene[ch][sb+2]*subbk_w[sb+1],
+		       gfc->nsPsy.subbk_ene[ch][sb+1]*subbk_w[sb])
 		   + gfc->nsPsy.decay*gfc->nsPsy.subbk_ene[ch][sb])
 		* gfc->nsPsy.attackthre;
 	    if (nextPow < adjust)
