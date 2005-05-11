@@ -747,7 +747,7 @@ init_mask_add_max_values(lame_t gfc)
 {
     int i;
     ma_max_i1 = db2pow((I1LIMIT+1)/16.0*10.0) + 1.0;
-    ma_max_i2 = db2pow((I2LIMIT+1)/16.0*10.0);
+    ma_max_i2 = db2pow((I2LIMIT+1)/16.0*10.0) + 1.0;
     ma_max_m  = db2pow(MLIMIT);
     for (i = 0; i < gfc->npart_l; i++)
 	gfc->ATH.cb[i] *= ma_max_m;
@@ -799,23 +799,17 @@ mask_add(FLOAT m1, FLOAT m2, FLOAT ATH)
     int i;
     FLOAT m = m1+m2;
 
-    if (m2 > m1) {
-	if (m2 >= m1*ma_max_i2)
-	    return m;
-	m1 = m2/m1;
-    } else {
-	if (m1 >= m2*ma_max_i2)
-	    return m;
-	m1 = m1/m2;
-    }
-    i = truncate(FAST_LOG10_X(m1, (FLOAT)16.0));
+    if (m2 > m1)
+	m2 = m1;
 
-    /* 10% of total */
+    if (m >= m2*ma_max_i2)
+	return m;
+
+    i = truncate(FAST_LOG10_X((m-m2)/m2, (FLOAT)16.0));
+
     if (m >= ATH)
 	return m*table1[i];
 
-    /* 3% of the total */
-    /* Originally if (m > 0) { */
     ATH *= ma_max_m;
     if (m > ATH) {
 	FLOAT f = (FLOAT)1.0, r;
@@ -824,9 +818,10 @@ mask_add(FLOAT m1, FLOAT m2, FLOAT ATH)
 	return m * ((table1[i]-f)*r+f);
     }
 
-    /* very rare case */
-    if (i > 13) return m;
-    return m*table3[i];
+    if (i <= 13)
+	m *= table3[i];
+
+    return m;
 }
 
 static FLOAT
