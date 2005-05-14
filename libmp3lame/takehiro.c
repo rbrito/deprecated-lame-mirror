@@ -443,10 +443,12 @@ choose_table(const int *ix, const int * const end, int * const s)
 
     default:
 	/* try tables with linbits */
-	for (choice2 = 24; choice2 < 31; choice2++) {
+	for (choice2 = 24; choice2 < 32; choice2++) {
 	    if (linmax[choice2-16] > max)
 		break;
 	}
+	if (choice2 == 32)
+	    return max;
 	choice = choice2 - 8;
 	do {
 	    if (linmax[choice-16] > max)
