@@ -31,7 +31,7 @@
 # ifndef HAVE_MEMCPY
 #  define memcpy(d, s, n) bcopy ((s), (d), (n))
 #  define memmove(d, s, n) bcopy ((s), (d), (n))
-#  define memset(d, c, n) (assert(c==0), bzero(d, n))
+#  define memset(d, c, n) (assert((c)==0), bzero((d), (n)))
 # endif
 #endif
 
