@@ -733,23 +733,24 @@ truncate(FLOAT x)
     fi.f = x + (0.5+MAGIC_FLOAT);
     return fi.i - MAGIC_INT - 1;
 }
+#else /* USE_IEEE754_HACK */
+# define truncate(x) (int)x
+#endif /* USE_IEEE754_HACK */
 
+#ifdef USE_FAST_LOG
 inline static int
 trunc_log(FLOAT x)
 {
     return (fast_log2(x) * (uint64_t)(LOG2/LOG10*16.0*(1<<(32-23)) + 0.5))
 							>> 32;
 }
-
-#else /* USE_IEEE754_HACK */
-# define truncate(x) (int)x
-
+#else
 inline static int
 trunc_log(FLOAT x)
 {
     return truncate(FAST_LOG10_X(x, (FLOAT)16.0));
 }
-#endif /* USE_IEEE754_HACK */
+#endif
 
 static const FLOAT table1[] = {
     3.3246 *3.3246 , 3.23837*3.23837, 3.15437*3.15437, 3.00412*3.00412,
