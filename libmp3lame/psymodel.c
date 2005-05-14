@@ -193,12 +193,13 @@ be masked by strong maskers in the L or R channels.
 /* $Id$ */
 
 #define TRI_SIZE (5-1) /* 1024 =  4**5 */
+#define LONG_2_SHORT_FACTOR (FLOAT)(((double)BLKSIZE_s*BLKSIZE_s) / (BLKSIZE*BLKSIZE));
 
 static const FLOAT costab[TRI_SIZE*2] = {
-  9.238795325112867e-01, 3.826834323650898e-01,
-  9.951847266721969e-01, 9.801714032956060e-02,
-  9.996988186962042e-01, 2.454122852291229e-02,
-  9.999811752826011e-01, 6.135884649154475e-03
+    9.238795325112867e-01, 3.826834323650898e-01,
+    9.951847266721969e-01, 9.801714032956060e-02,
+    9.996988186962042e-01, 2.454122852291229e-02,
+    9.999811752826011e-01, 6.135884649154475e-03
 };
 
 #if !HAVE_NASM
@@ -703,25 +704,6 @@ block_type_set(int prev, int next)
     return ((next>>1) | (prev<<1)) & 3;
 }
 
-/* mask_add optimization */
-/* init the limit values used to avoid computing log in mask_add when it is not necessary */
-
-/* For example, with i = 10*log10(m2/m1)/10*16         (= log10(m2/m1)*16)
- *
- * abs(i)>8 is equivalent (as i is an integer) to
- * abs(i)>=9
- * i>=9 || i<=-9
- * equivalent to (as i is the biggest integer smaller than log10(m2/m1)*16 
- * or the smallest integer bigger than log10(m2/m1)*16 depending on the sign of log10(m2/m1)*16)
- * log10(m2/m1)>=9/16 || log10(m2/m1)<=-9/16
- * exp10 is strictly increasing thus this is equivalent to
- * m2/m1 >= 10^(9/16) || m2/m1<=10^(-9/16) which are comparisons to constants
- */
-
-static FLOAT ma_max_i1;
-static FLOAT ma_max_i2;
-static FLOAT ma_max_m;
-
 #ifdef USE_IEEE754_HACK
 inline static int
 truncate(FLOAT x)
@@ -739,24 +721,25 @@ truncate(FLOAT x)
 
 #ifdef USE_FAST_LOG
 inline static int
-trunc_log(FLOAT x, FLOAT y)
+trunc_log(FLOAT x, FLOAT y, FLOAT f)
 {
     int res;
     res = fast_log2(x) - fast_log2(y);
     if (res < 0)
 	res = 0;
-    res = (res * (uint64_t)(LOG2/LOG10*16.0*(1<<(32-23)) + 0.5))
-					      >> 32;
+    res = (res * (uint64_t)(LOG2/LOG10*(1<<(32-23))*f + (FLOAT)0.5))
+					 >> 32;
     return res;
 }
 #else
 inline static int
-trunc_log(FLOAT x, FLOAT y)
+trunc_log(FLOAT x, FLOAT y, FLOAT f)
 {
-    return truncate(FAST_LOG10_X(x/y, (FLOAT)16.0));
+    return truncate(FAST_LOG10_X(x/y, f));
 }
 #endif
 
+/* addition of simultaneous masking   Naoki Shibata 2000/7 */
 static const FLOAT table1[] = {
     3.3246 *3.3246 , 3.23837*3.23837, 3.15437*3.15437, 3.00412*3.00412,
     2.86103*2.86103, 2.65407*2.65407, 2.46209*2.46209, 2.284  *2.284  ,
@@ -780,6 +763,10 @@ static const FLOAT table3[] = {
     1.11084*1.11084, 1.03826*1.03826
 };
 
+static FLOAT ma_max_i1;
+static FLOAT ma_max_i2;
+static FLOAT ma_max_m;
+
 #define I1LIMIT (sizeof(table2)/sizeof(table2[0])-1)
 #define I2LIMIT (sizeof(table1)/sizeof(table1[0])-1)
 #define MLIMIT  15  /* as in if(m<15) */ 
@@ -797,7 +784,6 @@ init_mask_add_max_values(lame_t gfc)
     ma_max_m = (FLOAT)1.0 / ma_max_m;
 }
 
-/* addition of simultaneous masking   Naoki Shibata 2000/7 */
 inline static FLOAT
 mask_add_samebark(FLOAT m1, FLOAT m2)
 {
@@ -806,7 +792,7 @@ mask_add_samebark(FLOAT m1, FLOAT m2)
 	m2 = m1;
 
     if (m < m2*ma_max_i1)
-	m *= table2[trunc_log(m-m2, m2)];
+	m *= table2[trunc_log(m-m2, m2, (FLOAT)16.0)];
 
     return m;
 }
@@ -814,8 +800,8 @@ mask_add_samebark(FLOAT m1, FLOAT m2)
 inline static FLOAT
 mask_add(FLOAT m1, FLOAT m2, FLOAT ATH)
 {
+    FLOAT m = m1 + m2;
     int i;
-    FLOAT m = m1+m2;
 
     if (m2 > m1)
 	m2 = m1;
@@ -823,7 +809,7 @@ mask_add(FLOAT m1, FLOAT m2, FLOAT ATH)
     if (m >= m2*ma_max_i2)
 	return m;
 
-    i = trunc_log(m-m2, m2);
+    i = trunc_log(m-m2, m2, (FLOAT)16.0);
 
     if (m >= ATH)
 	return m*table1[i];
@@ -832,7 +818,7 @@ mask_add(FLOAT m1, FLOAT m2, FLOAT ATH)
     if (m > ATH) {
 	FLOAT f = (FLOAT)1.0, r;
 	if (i <= 13) f = table3[i];
-	r = FAST_LOG10_X(m / ATH, (FLOAT)(10.0/15.0));
+	r = trunc_log(m, ATH, (FLOAT)(10.0/15.0));
 	return m * ((table1[i]-f)*r+f);
     }
 
@@ -1118,7 +1104,7 @@ partially_convert_l2s(lame_t gfc, III_psy_ratio *mr, FLOAT *nb_1,
 	}
 	if (sfb != SBMAX_s-1)
 	    x += (FLOAT).5 * nb_1[b];
-	x *= (FLOAT)(((double)BLKSIZE_s*BLKSIZE_s) / (BLKSIZE*BLKSIZE));
+	x *= LONG_2_SHORT_FACTOR;
 	if (x < gfc->ATH.s_avg[sfb] * ATHadjust)
 	    x = gfc->ATH.s_avg[sfb] * ATHadjust;
 	mr->thm.s[sfb][0] = mr->thm.s[sfb][1] = mr->thm.s[sfb][2] = x;
@@ -1350,8 +1336,8 @@ psycho_anal_ns(lame_t gfc, int gr, int numchn)
 
 	    enn  -= (FLOAT).5*eb[b];
 	    thmm -= (FLOAT).5*tmp;
-	    thmm *= (FLOAT)(((double)BLKSIZE_s*BLKSIZE_s) / (BLKSIZE*BLKSIZE));
-	    enn  *= (FLOAT)(((double)BLKSIZE_s*BLKSIZE_s) / (BLKSIZE*BLKSIZE));
+	    thmm *= LONG_2_SHORT_FACTOR;
+	    enn  *= LONG_2_SHORT_FACTOR;
 	    if (thmm < gfc->ATH.s_avg[j] * gfc->ATH.adjust[ch]) {
 		thmm = gfc->ATH.s_avg[j] * gfc->ATH.adjust[ch];
 		enn  = -enn;
@@ -1367,9 +1353,8 @@ psycho_anal_ns(lame_t gfc, int gr, int numchn)
 	    if (b == gfc->bo_l2s[j])
 		break;
 	}
-
-	thmm *= (FLOAT)(((double)BLKSIZE_s*BLKSIZE_s) / (BLKSIZE*BLKSIZE));
-	enn  *= (FLOAT)(((double)BLKSIZE_s*BLKSIZE_s) / (BLKSIZE*BLKSIZE));
+	thmm *= LONG_2_SHORT_FACTOR;
+	enn  *= LONG_2_SHORT_FACTOR;
 	if (thmm < gfc->ATH.s_avg[j] * gfc->ATH.adjust[ch]) {
 	    thmm = gfc->ATH.s_avg[j] * gfc->ATH.adjust[ch];
 	    enn  = -enn;
@@ -1404,7 +1389,7 @@ psycho_analysis(
 	for (ch = 0; ch < gfc->channels_out; ch++) {
 	    gr_info *gi = &gfc->tt[gr][ch];
 	    masking_d[gr][ch] = gfc->masking_next[gr][ch + gfc->mode_ext];
-	    /* not good XXX */
+
 	    gi->ATHadjust = gfc->ATH.adjust[ch + gfc->mode_ext];
 	    gi->block_type = gfc->blocktype_next[gr][ch];
 	}
