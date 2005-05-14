@@ -706,17 +706,14 @@ block_type_set(int prev, int next)
 
 #ifdef USE_IEEE754_HACK
 inline static int
-truncate(FLOAT x)
+truncate(void *work, FLOAT x)
 {
-    union {
-	float f;
-	int i;
-    } fi;
-    fi.f = x + (0.5+MAGIC_FLOAT);
-    return fi.i - MAGIC_INT - 1;
+    fi_union *fi = work;
+    fi->f = x + MAGIC_FLOAT2;
+    return (fi->i - MAGIC_INT2) >> FIXEDPOINT;
 }
 #else /* USE_IEEE754_HACK */
-# define truncate(x) (int)x
+# define truncate(dummy, x) (int)x
 #endif /* USE_IEEE754_HACK */
 
 #ifdef USE_FAST_LOG
@@ -735,7 +732,7 @@ trunc_log(FLOAT x, FLOAT y, FLOAT f)
 inline static int
 trunc_log(FLOAT x, FLOAT y, FLOAT f)
 {
-    return truncate(FAST_LOG10_X(x/y, f));
+    return (int)(FAST_LOG10_X(x/y, f));
 }
 #endif
 
@@ -1191,7 +1188,7 @@ psycho_anal_ns(lame_t gfc, int gr, int numchn)
 		m = (m-a) / a * gfc->rnumlines_ls[0];
 		a = eb[0];
 		if (m < (FLOAT)(sizeof(tab)/sizeof(tab[0])))
-		    a *= tab[truncate(m)];
+		    a *= tab[truncate(&eb2[0], m)];
 	    }
 	    eb2[0] = a;
 
@@ -1204,7 +1201,7 @@ psycho_anal_ns(lame_t gfc, int gr, int numchn)
 		    m = (m-a) / a * gfc->rnumlines_ls[b];
 		    a = eb[b];
 		    if (m < (FLOAT)(sizeof(tab)/sizeof(tab[0])))
-			a *= tab[truncate(m)];
+			a *= tab[truncate(&eb2[b], m)];
 		}
 		eb2[b] = a;
 	    }
@@ -1217,7 +1214,7 @@ psycho_anal_ns(lame_t gfc, int gr, int numchn)
 		m = (m-a) / a * gfc->rnumlines_ls[b];
 		a = eb[b];
 		if (m < (FLOAT)(sizeof(tab)/sizeof(tab[0])))
-		    a *= tab[truncate(m)];
+		    a *= tab[truncate(&eb2[b], m)];
 	    }
 	    eb2[b] = a;
 	}
