@@ -739,16 +739,21 @@ truncate(FLOAT x)
 
 #ifdef USE_FAST_LOG
 inline static int
-trunc_log(FLOAT x)
+trunc_log(FLOAT x, FLOAT y)
 {
-    return (fast_log2(x) * (uint64_t)(LOG2/LOG10*16.0*(1<<(32-23)) + 0.5))
-							>> 32;
+    int res;
+    res = fast_log2(x) - fast_log2(y);
+    if (res < 0)
+	res = 0;
+    res = (res * (uint64_t)(LOG2/LOG10*16.0*(1<<(32-23)) + 0.5))
+					      >> 32;
+    return res;
 }
 #else
 inline static int
-trunc_log(FLOAT x)
+trunc_log(FLOAT x, FLOAT y)
 {
-    return truncate(FAST_LOG10_X(x, (FLOAT)16.0));
+    return truncate(FAST_LOG10_X(x/y, (FLOAT)16.0));
 }
 #endif
 
@@ -801,7 +806,7 @@ mask_add_samebark(FLOAT m1, FLOAT m2)
 	m2 = m1;
 
     if (m < m2*ma_max_i1)
-	m *= table2[trunc_log((m-m2)/m2)];
+	m *= table2[trunc_log(m-m2, m2)];
 
     return m;
 }
@@ -818,7 +823,7 @@ mask_add(FLOAT m1, FLOAT m2, FLOAT ATH)
     if (m >= m2*ma_max_i2)
 	return m;
 
-    i = trunc_log((m-m2)/m2);
+    i = trunc_log(m-m2, m2);
 
     if (m >= ATH)
 	return m*table1[i];
