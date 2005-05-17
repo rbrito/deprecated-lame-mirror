@@ -1274,11 +1274,16 @@ psycho_anal_ns(lame_t gfc, int gr, int numchn)
 		k2 = b - kk;
 		if (k2 >= gfc->s3ind[b][0] && eb2[k2] > adjATH[k2])
 		    ecb = mask_add_samebark(ecb, p[k2] * eb2[k2]);
+
+		if (kk*2 >= gfc->numlines_l[b])
+		    break;
 	    }
-	    for (kk = gfc->s3ind[b][0]; kk <= gfc->s3ind[b][1]; kk++) {
-		if ((unsigned int)(kk - b + 3) <= 6 || eb2[kk] == (FLOAT)0.0)
-		    continue;
-		ecb = mask_add(ecb, p[kk] * eb2[kk], adjATH[kk]);
+	    if (kk == 4) {
+		for (kk = gfc->s3ind[b][0]; kk <= gfc->s3ind[b][1]; kk++) {
+		    if ((unsigned int)(kk - b + 3) <= 6 || eb2[kk] == (FLOAT)0.0)
+			continue;
+		    ecb = mask_add(ecb, p[kk] * eb2[kk], adjATH[kk]);
+		}
 	    }
 	    p += gfc->s3ind[b][1] + 1;
 
