@@ -757,7 +757,8 @@ static const FLOAT table3[] = {
     2.35364*2.35364, 2.29259*2.29259, 2.23313*2.23313, 2.12675*2.12675,
     2.02545*2.02545, 1.87894*1.87894, 1.74303*1.74303, 1.61695*1.61695,
     1.49999*1.49999, 1.39148*1.39148, 1.29083*1.29083, 1.19746*1.19746,
-    1.11084*1.11084, 1.03826*1.03826
+    1.11084*1.11084, 1.03826*1.03826, 1.0, 1.0,
+    1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0
 };
 
 static FLOAT ma_max_i1;
@@ -812,17 +813,12 @@ mask_add(FLOAT m1, FLOAT m2, FLOAT ATH)
 	return m*table1[i];
 
     ATH *= ma_max_m;
+    m1 = table3[i];
     if (m > ATH) {
-	FLOAT f = (FLOAT)1.0, r;
-	if (i <= 13) f = table3[i];
-	r = trunc_log(m, ATH, (FLOAT)(10.0/15.0));
-	return m * ((table1[i]-f)*r+f);
+	m1 += (table1[i]-m1) * trunc_log(m, ATH, (FLOAT)(10.0/15.0));
     }
 
-    if (i <= 13)
-	m *= table3[i];
-
-    return m;
+    return m * m1;
 }
 
 static FLOAT
@@ -1274,16 +1270,11 @@ psycho_anal_ns(lame_t gfc, int gr, int numchn)
 		k2 = b - kk;
 		if (k2 >= gfc->s3ind[b][0] && eb2[k2] > adjATH[k2])
 		    ecb = mask_add_samebark(ecb, p[k2] * eb2[k2]);
-
-		if (kk*2 >= gfc->numlines_l[b])
-		    break;
 	    }
-	    if (kk == 4) {
-		for (kk = gfc->s3ind[b][0]; kk <= gfc->s3ind[b][1]; kk++) {
-		    if ((unsigned int)(kk - b + 3) <= 6 || eb2[kk] == (FLOAT)0.0)
-			continue;
-		    ecb = mask_add(ecb, p[kk] * eb2[kk], adjATH[kk]);
-		}
+	    for (kk = gfc->s3ind[b][0]; kk <= gfc->s3ind[b][1]; kk++) {
+		if ((unsigned int)(kk - b + 3) <= 6 || eb2[kk] == (FLOAT)0.0)
+		    continue;
+		ecb = mask_add(ecb, p[kk] * eb2[kk], adjATH[kk]);
 	    }
 	    p += gfc->s3ind[b][1] + 1;
 

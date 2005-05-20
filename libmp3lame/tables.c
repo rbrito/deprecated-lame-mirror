@@ -812,7 +812,7 @@ init_numline_l2s(int *bo, FLOAT sfreq, int blksize, short *scalepos,
 }
 
 static FLOAT *
-init_s3_values(lame_t gfc, int (*s3ind)[2],
+init_s3_values(lame_t gfc, int (*s3ind)[2], int *numlines,
 	       int npart, FLOAT *bval, FLOAT *norm)
 {
     FLOAT s3[CBANDS][CBANDS], *p;
@@ -822,9 +822,18 @@ init_s3_values(lame_t gfc, int (*s3ind)[2],
     /* s[i][j], the value of the spreading function,
      * centered at band j(masker), for band i(maskee)
      */
-    for (i = 0; i < npart; i++)
-	for (j = 0; j < npart; j++) 
-	    s3[i][j] = s3_func(bval[i] - bval[j]) * norm[i];
+    for (i = 0; i < npart; i++) {
+	for (j = 0; j < npart; j++) {
+	    int diff = (i - j) * 2;
+	    if (diff < 0)
+		diff = -diff;
+	    if (numlines[i] + 2 <= diff && diff <= 6) {
+		s3[i][j] = (FLOAT)0.0;
+	    } else {
+		s3[i][j] = s3_func(bval[i] - bval[j]) * norm[i];
+	    }
+	}
+    }
 
     for (i = 0; i < npart; i++) {
 	for (j = 0; j < npart; j++) {
@@ -916,15 +925,17 @@ psymodel_init(lame_t gfc)
 	if (i != gfc->npart_l-1)
 	    l += gfc->numlines_l[i+1];
 	norm[i] = 0.11749/5.0*0.5;
-	if (i < 8) {
+#if 0
+	if (i < 8)
 	    norm[i] /= 30*(9-i);
-	}
+#endif
 	gfc->rnumlines_ls[i] = 20.0/(l-1);
 	gfc->rnumlines_l[i] = 1.0 / (gfc->numlines_l[i] * 3);
 	if (gfc->ATHonly)
 	    norm[i] = 1e-37;
     }
-    gfc->s3_ll = init_s3_values(gfc, gfc->s3ind, gfc->npart_l, bval, norm);
+    gfc->s3_ll = init_s3_values(gfc, gfc->s3ind, gfc->numlines_l,
+				gfc->npart_l, bval, norm);
     if (!gfc->s3_ll)
 	return LAME_NOMEM;
 
@@ -975,7 +986,8 @@ psymodel_init(lame_t gfc)
 	gfc->ATH.s_avg[i]
 	    = gfc->ATH.cb[bm[i]] * (BLKSIZE_s*BLKSIZE_s) / (BLKSIZE*BLKSIZE);
 
-    gfc->s3_ss = init_s3_values(gfc, gfc->s3ind_s, npart_s, bval, norm);
+    gfc->s3_ss = init_s3_values(gfc, gfc->s3ind_s, numlines_s,
+				npart_s, bval, norm);
     if (!gfc->s3_ss)
 	return LAME_NOMEM;
 
