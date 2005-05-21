@@ -983,8 +983,7 @@ psymodel_init(lame_t gfc)
 	    norm[i] = 1e-37;
     }
     for (i = 0; i < SBMAX_s; i++)
-	gfc->ATH.s_avg[i]
-	    = gfc->ATH.cb[bm[i]] * (BLKSIZE_s*BLKSIZE_s) / (BLKSIZE*BLKSIZE);
+	gfc->ATH.s_avg[i] = gfc->ATH.cb[bm[i]] * LONG_2_SHORT_FACTOR;
 
     gfc->s3_ss = init_s3_values(gfc, gfc->s3ind_s, numlines_s,
 				npart_s, bval, norm);

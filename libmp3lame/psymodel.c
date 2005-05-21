@@ -193,7 +193,6 @@ be masked by strong maskers in the L or R channels.
 /* $Id$ */
 
 #define TRI_SIZE (5-1) /* 1024 =  4**5 */
-#define LONG_2_SHORT_FACTOR (FLOAT)(((double)BLKSIZE_s*BLKSIZE_s) / (BLKSIZE*BLKSIZE));
 
 static const FLOAT costab[TRI_SIZE*2] = {
     9.238795325112867e-01, 3.826834323650898e-01,

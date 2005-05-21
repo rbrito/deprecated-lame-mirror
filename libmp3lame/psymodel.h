@@ -35,6 +35,8 @@
 
 #define NS_MSFIX ((FLOAT)4.0)
 
+#define LONG_2_SHORT_FACTOR (FLOAT)(((double)BLKSIZE_s*BLKSIZE_s) / (BLKSIZE*BLKSIZE));
+
 void psycho_analysis(lame_t gfc,
 		     III_psy_ratio masking[MAX_GRANULES][MAX_CHANNELS],
 		     FLOAT sbsmpl[MAX_CHANNELS][1152] );
