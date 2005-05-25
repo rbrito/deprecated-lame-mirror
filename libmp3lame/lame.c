@@ -1303,7 +1303,7 @@ lame_print_internals( const lame_global_flags * gfp )
     MSGF( gfc, "\t ^ shape: %g%s\n", gfp->ATHcurve, " (only for type 4)" );
     MSGF( gfc, "\t ^ level adjustement: %g\n", gfp->ATHlower );
     MSGF( gfc, "\t ^ adjust type: %d\n", gfc->ATH->use_adjust );
-    MSGF( gfc, "\t ^ adjust sensitivity power: %d\n", gfc->ATH->aa_sensitivity_p );
+    MSGF( gfc, "\t ^ adjust sensitivity power: %f\n", gfc->ATH->aa_sensitivity_p );
     MSGF( gfc, "\t ^ adapt threshold type: %d\n", gfp->athaa_loudapprox );
     
     if ( gfp->psymodel == PSY_NSPSYTUNE ) {
