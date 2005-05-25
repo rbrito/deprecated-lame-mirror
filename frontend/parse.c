@@ -578,8 +578,7 @@ DEV_HELP(
               "    -X n[,m]        selects between different noise measurements\n"
 	      "                    n for long block, m for short. if m is omitted, m = n\n"
               "    -Y              lets LAME ignore noise in sfb21, like in CBR\n"
-              "    -Z [n]          toggles the scalefac-scale and subblock gain feature on\n"
-	      "                    if n is set and minus, only scalefac-scale is enabled \n"
+              "    -Z [n]          currently no effects\n"
             );
 
     wait_for ( fp, lessmode );  
