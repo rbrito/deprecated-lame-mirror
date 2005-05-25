@@ -1789,7 +1789,7 @@ char* const inPath, char* const outPath, char **nogap_inPath, int *num_nogap)
                         /*(void) lame_set_allow_diff_short( gfp, 1 );*/
                         break;
                     case 'S': 
-                        silent = 1;
+                        silent = 10;
                         break;
                     case 'X':
     	                {
