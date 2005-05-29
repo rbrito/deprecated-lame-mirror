@@ -411,7 +411,8 @@ ix_max(const int *ix, const int *end)
 static int
 choose_table(const int *ix, const int * const end, int * const s)
 {
-    int choice, choice2, max;
+    int choice, choice2;
+    unsigned int max;
     const uint64_t *ptable;
     static const short linmax[] = {
 	 2+15,  4+15,  8+15,  16+15,  64+15,  256+15,  1024+15,  8192+15,

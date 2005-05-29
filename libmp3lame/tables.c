@@ -323,6 +323,9 @@ static const char subdv_table[23] = {
     6 + 7*16, /* 22 bands */
 };
 
+#if HAVE_NASM
+extern int ix_max_MMX(const int *ix, const int *end);
+#endif
 static void
 huffman_init(lame_t gfc)
 {
@@ -331,12 +334,7 @@ huffman_init(lame_t gfc)
 #if HAVE_NASM
     gfc->ix_max = ix_max;
     if (gfc->CPU_features.MMX) {
-	extern int ix_max_MMX(const int *ix, const int *end);
 	gfc->ix_max = ix_max_MMX;
-    }
-    if (gfc->CPU_features.MMX2) {
-	extern int ix_max_MMX2(const int *ix, const int *end);
-	gfc->ix_max = ix_max_MMX2;
     }
 #endif
 
