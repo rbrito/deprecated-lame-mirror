@@ -51,6 +51,8 @@ clean:
 	# Add here commands to clean up after the build process.
 	-$(MAKE) distclean
 	-rm -f confcache \
+		libmp3lame/i386/fftsse.nas.lst \
+		libmp3lame/i386/quantSSE.nas.lst \
 		libmp3lame/i386/choose_table.nas.lst \
 		libmp3lame/i386/cpu_feat.nas.lst \
 		libmp3lame/i386/scalar.nas.lst
