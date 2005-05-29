@@ -1,7 +1,7 @@
-# generated automatically by aclocal 1.9.2 -*- Autoconf -*-
+# generated automatically by aclocal 1.9.5 -*- Autoconf -*-
 
-# Copyright (C) 1996, 1997, 1998, 1999, 2000, 2001, 2002, 2003, 2004
-# Free Software Foundation, Inc.
+# Copyright (C) 1996, 1997, 1998, 1999, 2000, 2001, 2002, 2003, 2004,
+# 2005  Free Software Foundation, Inc.
 # This file is free software; the Free Software Foundation
 # gives unlimited permission to copy and/or distribute it,
 # with or without modifications, as long as this notice is preserved.
@@ -11,9 +11,205 @@
 # even the implied warranty of MERCHANTABILITY or FITNESS FOR A
 # PARTICULAR PURPOSE.
 
+# Configure paths for GTK+
+# Owen Taylor     97-11-3
+
+dnl AM_PATH_GTK([MINIMUM-VERSION, [ACTION-IF-FOUND [, ACTION-IF-NOT-FOUND [, MODULES]]]])
+dnl Test for GTK, and define GTK_CFLAGS and GTK_LIBS
+dnl
+AC_DEFUN(AM_PATH_GTK,
+[dnl 
+dnl Get the cflags and libraries from the gtk-config script
+dnl
+AC_ARG_WITH(gtk-prefix,[  --with-gtk-prefix=PFX   Prefix where GTK is installed (optional)],
+            gtk_config_prefix="$withval", gtk_config_prefix="")
+AC_ARG_WITH(gtk-exec-prefix,[  --with-gtk-exec-prefix=PFX Exec prefix where GTK is installed (optional)],
+            gtk_config_exec_prefix="$withval", gtk_config_exec_prefix="")
+AC_ARG_ENABLE(gtktest, [  --disable-gtktest       Do not try to compile and run a test GTK program],
+		    , enable_gtktest=yes)
+
+  for module in . $4
+  do
+      case "$module" in
+         gthread) 
+             gtk_config_args="$gtk_config_args gthread"
+         ;;
+      esac
+  done
+
+  if test x$gtk_config_exec_prefix != x ; then
+     gtk_config_args="$gtk_config_args --exec-prefix=$gtk_config_exec_prefix"
+     if test x${GTK_CONFIG+set} != xset ; then
+        GTK_CONFIG=$gtk_config_exec_prefix/bin/gtk-config
+     fi
+  fi
+  if test x$gtk_config_prefix != x ; then
+     gtk_config_args="$gtk_config_args --prefix=$gtk_config_prefix"
+     if test x${GTK_CONFIG+set} != xset ; then
+        GTK_CONFIG=$gtk_config_prefix/bin/gtk-config
+     fi
+  fi
+
+  AC_PATH_PROG(GTK_CONFIG, gtk-config, no)
+  min_gtk_version=ifelse([$1], ,0.99.7,$1)
+  AC_MSG_CHECKING(for GTK - version >= $min_gtk_version)
+  no_gtk=""
+  if test "$GTK_CONFIG" = "no" ; then
+    no_gtk=yes
+  else
+    GTK_CFLAGS=`$GTK_CONFIG $gtk_config_args --cflags`
+    GTK_LIBS=`$GTK_CONFIG $gtk_config_args --libs`
+    gtk_config_major_version=`$GTK_CONFIG $gtk_config_args --version | \
+           sed 's/\([[0-9]]*\).\([[0-9]]*\).\([[0-9]]*\)/\1/'`
+    gtk_config_minor_version=`$GTK_CONFIG $gtk_config_args --version | \
+           sed 's/\([[0-9]]*\).\([[0-9]]*\).\([[0-9]]*\)/\2/'`
+    gtk_config_micro_version=`$GTK_CONFIG $gtk_config_args --version | \
+           sed 's/\([[0-9]]*\).\([[0-9]]*\).\([[0-9]]*\)/\3/'`
+    if test "x$enable_gtktest" = "xyes" ; then
+      ac_save_CFLAGS="$CFLAGS"
+      ac_save_LIBS="$LIBS"
+      CFLAGS="$CFLAGS $GTK_CFLAGS"
+      LIBS="$GTK_LIBS $LIBS"
+dnl
+dnl Now check if the installed GTK is sufficiently new. (Also sanity
+dnl checks the results of gtk-config to some extent
+dnl
+      rm -f conf.gtktest
+      AC_TRY_RUN([
+#include <gtk/gtk.h>
+#include <stdio.h>
+#include <stdlib.h>
+
+int 
+main ()
+{
+  int major, minor, micro;
+  char *tmp_version;
+
+  system ("touch conf.gtktest");
+
+  /* HP/UX 9 (%@#!) writes to sscanf strings */
+  tmp_version = g_strdup("$min_gtk_version");
+  if (sscanf(tmp_version, "%d.%d.%d", &major, &minor, &micro) != 3) {
+     printf("%s, bad version string\n", "$min_gtk_version");
+     exit(1);
+   }
+
+  if ((gtk_major_version != $gtk_config_major_version) ||
+      (gtk_minor_version != $gtk_config_minor_version) ||
+      (gtk_micro_version != $gtk_config_micro_version))
+    {
+      printf("\n*** 'gtk-config --version' returned %d.%d.%d, but GTK+ (%d.%d.%d)\n", 
+             $gtk_config_major_version, $gtk_config_minor_version, $gtk_config_micro_version,
+             gtk_major_version, gtk_minor_version, gtk_micro_version);
+      printf ("*** was found! If gtk-config was correct, then it is best\n");
+      printf ("*** to remove the old version of GTK+. You may also be able to fix the error\n");
+      printf("*** by modifying your LD_LIBRARY_PATH enviroment variable, or by editing\n");
+      printf("*** /etc/ld.so.conf. Make sure you have run ldconfig if that is\n");
+      printf("*** required on your system.\n");
+      printf("*** If gtk-config was wrong, set the environment variable GTK_CONFIG\n");
+      printf("*** to point to the correct copy of gtk-config, and remove the file config.cache\n");
+      printf("*** before re-running configure\n");
+    } 
+#if defined (GTK_MAJOR_VERSION) && defined (GTK_MINOR_VERSION) && defined (GTK_MICRO_VERSION)
+  else if ((gtk_major_version != GTK_MAJOR_VERSION) ||
+	   (gtk_minor_version != GTK_MINOR_VERSION) ||
+           (gtk_micro_version != GTK_MICRO_VERSION))
+    {
+      printf("*** GTK+ header files (version %d.%d.%d) do not match\n",
+	     GTK_MAJOR_VERSION, GTK_MINOR_VERSION, GTK_MICRO_VERSION);
+      printf("*** library (version %d.%d.%d)\n",
+	     gtk_major_version, gtk_minor_version, gtk_micro_version);
+    }
+#endif /* defined (GTK_MAJOR_VERSION) ... */
+  else
+    {
+      if ((gtk_major_version > major) ||
+        ((gtk_major_version == major) && (gtk_minor_version > minor)) ||
+        ((gtk_major_version == major) && (gtk_minor_version == minor) && (gtk_micro_version >= micro)))
+      {
+        return 0;
+       }
+     else
+      {
+        printf("\n*** An old version of GTK+ (%d.%d.%d) was found.\n",
+               gtk_major_version, gtk_minor_version, gtk_micro_version);
+        printf("*** You need a version of GTK+ newer than %d.%d.%d. The latest version of\n",
+	       major, minor, micro);
+        printf("*** GTK+ is always available from ftp://ftp.gtk.org.\n");
+        printf("***\n");
+        printf("*** If you have already installed a sufficiently new version, this error\n");
+        printf("*** probably means that the wrong copy of the gtk-config shell script is\n");
+        printf("*** being found. The easiest way to fix this is to remove the old version\n");
+        printf("*** of GTK+, but you can also set the GTK_CONFIG environment to point to the\n");
+        printf("*** correct copy of gtk-config. (In this case, you will have to\n");
+        printf("*** modify your LD_LIBRARY_PATH enviroment variable, or edit /etc/ld.so.conf\n");
+        printf("*** so that the correct libraries are found at run-time))\n");
+      }
+    }
+  return 1;
+}
+],, no_gtk=yes,[echo $ac_n "cross compiling; assumed OK... $ac_c"])
+       CFLAGS="$ac_save_CFLAGS"
+       LIBS="$ac_save_LIBS"
+     fi
+  fi
+  if test "x$no_gtk" = x ; then
+     AC_MSG_RESULT(yes)
+     ifelse([$2], , :, [$2])     
+  else
+     AC_MSG_RESULT(no)
+     if test "$GTK_CONFIG" = "no" ; then
+       echo "*** The gtk-config script installed by GTK could not be found"
+       echo "*** If GTK was installed in PREFIX, make sure PREFIX/bin is in"
+       echo "*** your path, or set the GTK_CONFIG environment variable to the"
+       echo "*** full path to gtk-config."
+     else
+       if test -f conf.gtktest ; then
+        :
+       else
+          echo "*** Could not run GTK test program, checking why..."
+          CFLAGS="$CFLAGS $GTK_CFLAGS"
+          LIBS="$LIBS $GTK_LIBS"
+          AC_TRY_LINK([
+#include <gtk/gtk.h>
+#include <stdio.h>
+],      [ return ((gtk_major_version) || (gtk_minor_version) || (gtk_micro_version)); ],
+        [ echo "*** The test program compiled, but did not run. This usually means"
+          echo "*** that the run-time linker is not finding GTK or finding the wrong"
+          echo "*** version of GTK. If it is not finding GTK, you'll need to set your"
+          echo "*** LD_LIBRARY_PATH environment variable, or edit /etc/ld.so.conf to point"
+          echo "*** to the installed location  Also, make sure you have run ldconfig if that"
+          echo "*** is required on your system"
+	  echo "***"
+          echo "*** If you have an old version installed, it is best to remove it, although"
+          echo "*** you may also be able to get things to work by modifying LD_LIBRARY_PATH"
+          echo "***"
+          echo "*** If you have a RedHat 5.0 system, you should remove the GTK package that"
+          echo "*** came with the system with the command"
+          echo "***"
+          echo "***    rpm --erase --nodeps gtk gtk-devel" ],
+        [ echo "*** The test program failed to compile or link. See the file config.log for the"
+          echo "*** exact error that occured. This usually means GTK was incorrectly installed"
+          echo "*** or that you have moved GTK since it was installed. In the latter case, you"
+          echo "*** may want to edit the gtk-config script: $GTK_CONFIG" ])
+          CFLAGS="$ac_save_CFLAGS"
+          LIBS="$ac_save_LIBS"
+       fi
+     fi
+     GTK_CFLAGS=""
+     GTK_LIBS=""
+     ifelse([$3], , :, [$3])
+  fi
+  AC_SUBST(GTK_CFLAGS)
+  AC_SUBST(GTK_LIBS)
+  rm -f conf.gtktest
+])
+
 # libtool.m4 - Configure libtool for the host system. -*-Autoconf-*-
 
 # serial 47 AC_PROG_LIBTOOL
+# Debian $Rev: 214 $
 
 
 # AC_PROVIDE_IFELSE(MACRO-NAME, IF-PROVIDED, IF-NOT-PROVIDED)
@@ -191,8 +387,6 @@ if test -n "$RANLIB"; then
   old_archive_cmds="$old_archive_cmds~\$RANLIB \$oldlib"
 fi
 
-cc_basename=`$echo X"$compiler" | $Xsed -e 's%^.*/%%'`
-
 # Only perform the check for file, if the check method requires it
 case $deplibs_check_method in
 file_magic*)
@@ -310,7 +504,7 @@ fi
 
 # The HP-UX ksh and POSIX shell print the target directory to stdout
 # if CDPATH is set.
-(unset CDPATH) >/dev/null 2>&1 && unset CDPATH
+if test "X${CDPATH+set}" = Xset; then CDPATH=:; export CDPATH; fi
 
 if test -z "$ECHO"; then
 if test "X${echo_test_string+set}" != Xset; then
@@ -669,25 +863,11 @@ AC_CACHE_VAL([lt_cv_sys_max_cmd_len], [dnl
     lt_cv_sys_max_cmd_len=8192;
     ;;
 
-  netbsd* | freebsd* | openbsd* | darwin* )
-    # This has been around since 386BSD, at least.  Likely further.
-    if test -x /sbin/sysctl; then
-      lt_cv_sys_max_cmd_len=`/sbin/sysctl -n kern.argmax`
-    elif test -x /usr/sbin/sysctl; then
-      lt_cv_sys_max_cmd_len=`/usr/sbin/sysctl -n kern.argmax`
-    else
-      lt_cv_sys_max_cmd_len=65536 # usable default for *BSD
-    fi
-    # And add a safety zone
-    lt_cv_sys_max_cmd_len=`expr $lt_cv_sys_max_cmd_len \/ 4`
-    ;;
-
  *)
     # If test is not a shell built-in, we'll probably end up computing a
     # maximum length that is only half of the actual maximum length, but
     # we can't tell.
-    SHELL=${SHELL-${CONFIG_SHELL-/bin/sh}}
-    while (test "X"`$SHELL [$]0 --fallback-echo "X$teststring" 2>/dev/null` \
+    while (test "X"`$CONFIG_SHELL [$]0 --fallback-echo "X$teststring" 2>/dev/null` \
 	       = "XX$teststring") >/dev/null 2>&1 &&
 	    new_result=`expr "X$teststring" : ".*" 2>&1` &&
 	    lt_cv_sys_max_cmd_len=$new_result &&
@@ -1021,8 +1201,8 @@ AC_DEFUN([AC_LIBTOOL_PROG_LD_HARDCODE_LIBPATH],
 [AC_MSG_CHECKING([how to hardcode library paths into programs])
 _LT_AC_TAGVAR(hardcode_action, $1)=
 if test -n "$_LT_AC_TAGVAR(hardcode_libdir_flag_spec, $1)" || \
-   test -n "$_LT_AC_TAGVAR(runpath_var, $1)" || \
-   test "X$_LT_AC_TAGVAR(hardcode_automatic, $1)" = "Xyes" ; then
+   test -n "$_LT_AC_TAGVAR(runpath_var $1)" || \
+   test "X$_LT_AC_TAGVAR(hardcode_automatic, $1)"="Xyes" ; then
 
   # We can hardcode non-existant directories.
   if test "$_LT_AC_TAGVAR(hardcode_direct, $1)" != no &&
@@ -1189,7 +1369,7 @@ beos*)
   shlibpath_var=LIBRARY_PATH
   ;;
 
-bsdi[[45]]*)
+bsdi4*)
   version_type=linux
   need_version=no
   library_names_spec='${libname}${release}${shared_ext}$versuffix ${libname}${release}${shared_ext}$major $libname${shared_ext}'
@@ -1463,6 +1643,18 @@ linux*)
   dynamic_linker='GNU/Linux ld.so'
   ;;
 
+netbsdelf*-gnu)
+  version_type=linux
+  need_lib_prefix=no
+  need_version=no
+  library_names_spec='${libname}${release}${shared_ext}$versuffix ${libname}${release}${shared_ext}$major ${libname}${shared_ext}'
+  soname_spec='${libname}${release}${shared_ext}$major'
+  shlibpath_var=LD_LIBRARY_PATH
+  shlibpath_overrides_runpath=no
+  hardcode_into_libs=yes
+  dynamic_linker='NetBSD ld.elf_so'
+  ;;
+
 knetbsd*-gnu)
   version_type=linux
   need_lib_prefix=no
@@ -1513,7 +1705,7 @@ nto-qnx*)
 openbsd*)
   version_type=sunos
   need_lib_prefix=no
-  need_version=no
+  need_version=yes
   library_names_spec='${libname}${release}${shared_ext}$versuffix ${libname}${shared_ext}$versuffix'
   finish_cmds='PATH="\$PATH:/sbin" ldconfig -m $libdir'
   shlibpath_var=LD_LIBRARY_PATH
@@ -1679,9 +1871,7 @@ if test -f "$ltmain" && test -n "$tagnames"; then
 
       case $tagname in
       CXX)
-	if test -n "$CXX" && ( test "X$CXX" != "Xno" &&
-	    ( (test "X$CXX" = "Xg++" && `g++ -v >/dev/null 2>&1` ) || 
-	    (test "X$CXX" != "Xg++"))) ; then
+	if test -n "$CXX" && test "X$CXX" != "Xno"; then
 	  AC_LIBTOOL_LANG_CXX_CONFIG
 	else
 	  tagname=""
@@ -2086,15 +2276,6 @@ case $reload_flag in
 *) reload_flag=" $reload_flag" ;;
 esac
 reload_cmds='$LD$reload_flag -o $output$reload_objs'
-case $host_os in
-  darwin*)
-    if test "$GCC" = yes; then
-      reload_cmds='$CC -nostdlib ${wl}-r -o $output$reload_objs'
-    else
-      reload_cmds='$LD$reload_flag -o $output$reload_objs'
-    fi
-    ;;
-esac
 ])# AC_PROG_LD_RELOAD_FLAG
 
 
@@ -2128,7 +2309,7 @@ beos*)
   lt_cv_deplibs_check_method=pass_all
   ;;
 
-bsdi[[45]]*)
+bsdi4*)
   lt_cv_deplibs_check_method='file_magic ELF [[0-9]][[0-9]]*-bit [[ML]]SB (shared object|dynamic lib)'
   lt_cv_file_magic_cmd='/usr/bin/file -L'
   lt_cv_file_magic_test_file=/shlib/libc.so
@@ -2204,7 +2385,7 @@ linux*)
   lt_cv_deplibs_check_method=pass_all
   ;;
 
-netbsd*)
+netbsd* | netbsdelf*-gnu | knetbsd*-gnu)
   if echo __ELF__ | $CC -E - | grep __ELF__ > /dev/null; then
     lt_cv_deplibs_check_method='match_pattern /lib[[^/]]+(\.so\.[[0-9]]+\.[[0-9]]+|_pic\.a)$'
   else
@@ -2223,10 +2404,12 @@ nto-qnx*)
   ;;
 
 openbsd*)
+  lt_cv_file_magic_cmd=/usr/bin/file
+  lt_cv_file_magic_test_file=`echo /usr/lib/libc.so.*`
   if test -z "`echo __ELF__ | $CC -E - | grep __ELF__`" || test "$host_os-$host_cpu" = "openbsd2.8-powerpc"; then
-    lt_cv_deplibs_check_method='match_pattern /lib[[^/]]+(\.so\.[[0-9]]+\.[[0-9]]+|\.so|_pic\.a)$'
+    lt_cv_deplibs_check_method='file_magic ELF [[0-9]][[0-9]]*-bit [[LM]]SB shared object'
   else
-    lt_cv_deplibs_check_method='match_pattern /lib[[^/]]+(\.so\.[[0-9]]+\.[[0-9]]+|_pic\.a)$'
+    lt_cv_deplibs_check_method='file_magic OpenBSD.* shared library'
   fi
   ;;
 
@@ -2416,21 +2599,10 @@ AC_DEFUN([AC_LIBTOOL_CXX],
 # ---------------
 AC_DEFUN([_LT_AC_LANG_CXX],
 [AC_REQUIRE([AC_PROG_CXX])
-AC_REQUIRE([_LT_AC_PROG_CXXCPP])
+AC_REQUIRE([AC_PROG_CXXCPP])
 _LT_AC_SHELL_INIT([tagnames=${tagnames+${tagnames},}CXX])
 ])# _LT_AC_LANG_CXX
 
-# _LT_AC_PROG_CXXCPP
-# ---------------
-AC_DEFUN([_LT_AC_PROG_CXXCPP],
-[
-AC_REQUIRE([AC_PROG_CXX])
-if test -n "$CXX" && ( test "X$CXX" != "Xno" &&
-    ( (test "X$CXX" = "Xg++" && `g++ -v >/dev/null 2>&1` ) || 
-    (test "X$CXX" != "Xg++"))) ; then
-  AC_PROG_CXXCPP
-fi
-])# _LT_AC_PROG_CXXCPP
 
 # AC_LIBTOOL_F77
 # --------------
@@ -2566,6 +2738,43 @@ aix4* | aix5*)
   if test "$host_cpu" != ia64 && test "$aix_use_runtimelinking" = no ; then
     test "$enable_shared" = yes && enable_static=no
   fi
+  ;;
+  darwin* | rhapsody*)
+  if test "$GCC" = yes; then
+    _LT_AC_TAGVAR(archive_cmds_need_lc, $1)=no
+    case "$host_os" in
+    rhapsody* | darwin1.[[012]])
+      _LT_AC_TAGVAR(allow_undefined_flag, $1)='-undefined suppress'
+      ;;
+    *) # Darwin 1.3 on
+      if test -z ${MACOSX_DEPLOYMENT_TARGET} ; then
+      	_LT_AC_TAGVAR(allow_undefined_flag, $1)='-flat_namespace -undefined suppress'
+      else
+        case ${MACOSX_DEPLOYMENT_TARGET} in
+          10.[[012]])
+            _LT_AC_TAGVAR(allow_undefined_flag, $1)='-flat_namespace -undefined suppress'
+            ;;
+          10.*)
+            _LT_AC_TAGVAR(allow_undefined_flag, $1)='-undefined dynamic_lookup'
+            ;;
+        esac
+      fi
+      ;;
+    esac
+    output_verbose_link_cmd='echo'
+    _LT_AC_TAGVAR(archive_cmds, $1)='$CC -dynamiclib $allow_undefined_flag -o $lib $libobjs $deplibs$compiler_flags -install_name $rpath/$soname $verstring'
+    _LT_AC_TAGVAR(module_cmds, $1)='$CC $allow_undefined_flag -o $lib -bundle $libobjs $deplibs$compiler_flags'
+    # Don't fix this by using the ld -exported_symbols_list flag, it doesn't exist in older darwin ld's
+    _LT_AC_TAGVAR(archive_expsym_cmds, $1)='sed -e "s,#.*,," -e "s,^[    ]*,," -e "s,^\(..*\),_&," < $export_symbols > $output_objdir/${libname}-symbols.expsym~$CC -dynamiclib $allow_undefined_flag  -o $lib $libobjs $deplibs$compiler_flags -install_name $rpath/$soname $verstring~nmedit -s $output_objdir/${libname}-symbols.expsym ${lib}'
+    _LT_AC_TAGVAR(module_expsym_cmds, $1)='sed -e "s,#.*,," -e "s,^[    ]*,," -e "s,^\(..*\),_&," < $export_symbols > $output_objdir/${libname}-symbols.expsym~$CC $allow_undefined_flag  -o $lib -bundle $libobjs $deplibs$compiler_flags~nmedit -s $output_objdir/${libname}-symbols.expsym ${lib}'
+    _LT_AC_TAGVAR(hardcode_direct, $1)=no
+    _LT_AC_TAGVAR(hardcode_automatic, $1)=yes
+    _LT_AC_TAGVAR(hardcode_shlibpath_var, $1)=unsupported
+    _LT_AC_TAGVAR(whole_archive_flag_spec, $1)='-all_load $convenience'
+    _LT_AC_TAGVAR(link_all_deplibs, $1)=yes
+  else
+    _LT_AC_TAGVAR(ld_shlibs, $1)=no
+  fi
     ;;
 esac
 AC_MSG_RESULT([$enable_shared])
@@ -2591,7 +2800,7 @@ AC_DEFUN([AC_LIBTOOL_LANG_CXX_CONFIG], [_LT_AC_LANG_CXX_CONFIG(CXX)])
 AC_DEFUN([_LT_AC_LANG_CXX_CONFIG],
 [AC_LANG_PUSH(C++)
 AC_REQUIRE([AC_PROG_CXX])
-AC_REQUIRE([_LT_AC_PROG_CXXCPP])
+AC_REQUIRE([AC_PROG_CXXCPP])
 
 _LT_AC_TAGVAR(archive_cmds_need_lc, $1)=no
 _LT_AC_TAGVAR(allow_undefined_flag, $1)=
@@ -2843,7 +3052,6 @@ case $host_os in
     esac
     ;;
 
-
   cygwin* | mingw* | pw32*)
     # _LT_AC_TAGVAR(hardcode_libdir_flag_spec, $1) is actually meaningless,
     # as there is no search path for DLLs.
@@ -2867,68 +3075,57 @@ case $host_os in
       _LT_AC_TAGVAR(ld_shlibs, $1)=no
     fi
   ;;
-      darwin* | rhapsody*)
-        case "$host_os" in
-        rhapsody* | darwin1.[[012]])
-         _LT_AC_TAGVAR(allow_undefined_flag, $1)='${wl}-undefined ${wl}suppress'
-         ;;
-       *) # Darwin 1.3 on
-         if test -z ${MACOSX_DEPLOYMENT_TARGET} ; then
-           _LT_AC_TAGVAR(allow_undefined_flag, $1)='${wl}-flat_namespace ${wl}-undefined ${wl}suppress'
-         else
-           case ${MACOSX_DEPLOYMENT_TARGET} in
-             10.[[012]])
-               _LT_AC_TAGVAR(allow_undefined_flag, $1)='${wl}-flat_namespace ${wl}-undefined ${wl}suppress'
-               ;;
-             10.*)
-               _LT_AC_TAGVAR(allow_undefined_flag, $1)='${wl}-undefined ${wl}dynamic_lookup'
-               ;;
-           esac
-         fi
-         ;;
-        esac
-      _LT_AC_TAGVAR(archive_cmds_need_lc, $1)=no
-      _LT_AC_TAGVAR(hardcode_direct, $1)=no
-      _LT_AC_TAGVAR(hardcode_automatic, $1)=yes
-      _LT_AC_TAGVAR(hardcode_shlibpath_var, $1)=unsupported
-      _LT_AC_TAGVAR(whole_archive_flag_spec, $1)=''
-      _LT_AC_TAGVAR(link_all_deplibs, $1)=yes
 
-    if test "$GXX" = yes ; then
-      lt_int_apple_cc_single_mod=no
-      output_verbose_link_cmd='echo'
-      if $CC -dumpspecs 2>&1 | $EGREP 'single_module' >/dev/null ; then
-       lt_int_apple_cc_single_mod=yes
-      fi
-      if test "X$lt_int_apple_cc_single_mod" = Xyes ; then
-       _LT_AC_TAGVAR(archive_cmds, $1)='$CC -dynamiclib -single_module $allow_undefined_flag -o $lib $libobjs $deplibs $compiler_flags -install_name $rpath/$soname $verstring'
+  darwin* | rhapsody*)
+  if test "$GXX" = yes; then
+    _LT_AC_TAGVAR(archive_cmds_need_lc, $1)=no
+    case "$host_os" in
+    rhapsody* | darwin1.[[012]])
+      _LT_AC_TAGVAR(allow_undefined_flag, $1)='-undefined suppress'
+      ;;
+    *) # Darwin 1.3 on
+      if test -z ${MACOSX_DEPLOYMENT_TARGET} ; then
+      	_LT_AC_TAGVAR(allow_undefined_flag, $1)='-flat_namespace -undefined suppress'
       else
-          _LT_AC_TAGVAR(archive_cmds, $1)='$CC -r -keep_private_externs -nostdlib -o ${lib}-master.o $libobjs~$CC -dynamiclib $allow_undefined_flag -o $lib ${lib}-master.o $deplibs $compiler_flags -install_name $rpath/$soname $verstring'
-        fi
-        _LT_AC_TAGVAR(module_cmds, $1)='$CC $allow_undefined_flag -o $lib -bundle $libobjs $deplibs$compiler_flags'
-        # Don't fix this by using the ld -exported_symbols_list flag, it doesn't exist in older darwin ld's
-          if test "X$lt_int_apple_cc_single_mod" = Xyes ; then
-            _LT_AC_TAGVAR(archive_expsym_cmds, $1)='sed -e "s,#.*,," -e "s,^[    ]*,," -e "s,^\(..*\),_&," < $export_symbols > $output_objdir/${libname}-symbols.expsym~$CC -dynamiclib -single_module $allow_undefined_flag -o $lib $libobjs $deplibs $compiler_flags -install_name $rpath/$soname $verstring~nmedit -s $output_objdir/${libname}-symbols.expsym ${lib}'
-          else
-            _LT_AC_TAGVAR(archive_expsym_cmds, $1)='sed -e "s,#.*,," -e "s,^[    ]*,," -e "s,^\(..*\),_&," < $export_symbols > $output_objdir/${libname}-symbols.expsym~$CC -r -keep_private_externs -nostdlib -o ${lib}-master.o $libobjs~$CC -dynamiclib $allow_undefined_flag -o $lib ${lib}-master.o $deplibs $compiler_flags -install_name $rpath/$soname $verstring~nmedit -s $output_objdir/${libname}-symbols.expsym ${lib}'
-          fi
-            _LT_AC_TAGVAR(module_expsym_cmds, $1)='sed -e "s,#.*,," -e "s,^[    ]*,," -e "s,^\(..*\),_&," < $export_symbols > $output_objdir/${libname}-symbols.expsym~$CC $allow_undefined_flag  -o $lib -bundle $libobjs $deplibs$compiler_flags~nmedit -s $output_objdir/${libname}-symbols.expsym ${lib}'
-      else
-      case "$cc_basename" in
-        xlc*)
-         output_verbose_link_cmd='echo'
-          _LT_AC_TAGVAR(archive_cmds, $1)='$CC -qmkshrobj ${wl}-single_module $allow_undefined_flag -o $lib $libobjs $deplibs $compiler_flags ${wl}-install_name ${wl}`echo $rpath/$soname` $verstring'
-          _LT_AC_TAGVAR(module_cmds, $1)='$CC $allow_undefined_flag -o $lib -bundle $libobjs $deplibs$compiler_flags'
-          # Don't fix this by using the ld -exported_symbols_list flag, it doesn't exist in older darwin ld's
-          _LT_AC_TAGVAR(archive_expsym_cmds, $1)='sed -e "s,#.*,," -e "s,^[    ]*,," -e "s,^\(..*\),_&," < $export_symbols > $output_objdir/${libname}-symbols.expsym~$CC -qmkshrobj ${wl}-single_module $allow_undefined_flag -o $lib $libobjs $deplibs $compiler_flags ${wl}-install_name ${wl}$rpath/$soname $verstring~nmedit -s $output_objdir/${libname}-symbols.expsym ${lib}'
-          _LT_AC_TAGVAR(module_expsym_cmds, $1)='sed -e "s,#.*,," -e "s,^[    ]*,," -e "s,^\(..*\),_&," < $export_symbols > $output_objdir/${libname}-symbols.expsym~$CC $allow_undefined_flag  -o $lib -bundle $libobjs $deplibs$compiler_flags~nmedit -s $output_objdir/${libname}-symbols.expsym ${lib}'
-          ;;
-       *)
-         _LT_AC_TAGVAR(ld_shlibs, $1)=no
-          ;;
-      esac
+        case ${MACOSX_DEPLOYMENT_TARGET} in
+          10.[[012]])
+            _LT_AC_TAGVAR(allow_undefined_flag, $1)='-flat_namespace -undefined suppress'
+            ;;
+          10.*)
+            _LT_AC_TAGVAR(allow_undefined_flag, $1)='-undefined dynamic_lookup'
+            ;;
+        esac
       fi
-        ;;
+      ;;
+    esac
+    lt_int_apple_cc_single_mod=no
+    output_verbose_link_cmd='echo'
+    if $CC -dumpspecs 2>&1 | grep 'single_module' >/dev/null ; then
+      lt_int_apple_cc_single_mod=yes
+    fi
+    if test "X$lt_int_apple_cc_single_mod" = Xyes ; then
+      _LT_AC_TAGVAR(archive_cmds, $1)='$CC -dynamiclib -single_module $allow_undefined_flag -o $lib $libobjs $deplibs $compiler_flags -install_name $rpath/$soname $verstring'
+    else
+      _LT_AC_TAGVAR(archive_cmds, $1)='$CC -r ${wl}-bind_at_load -keep_private_externs -nostdlib -o ${lib}-master.o $libobjs~$CC -dynamiclib $allow_undefined_flag -o $lib ${lib}-master.o $deplibs $compiler_flags -install_name $rpath/$soname $verstring'
+    fi
+    _LT_AC_TAGVAR(module_cmds, $1)='$CC ${wl}-bind_at_load $allow_undefined_flag -o $lib -bundle $libobjs $deplibs$compiler_flags'
+
+    # Don't fix this by using the ld -exported_symbols_list flag, it doesn't exist in older darwin ld's
+    if test "X$lt_int_apple_cc_single_mod" = Xyes ; then
+      _LT_AC_TAGVAR(archive_expsym_cmds, $1)='sed -e "s,#.*,," -e "s,^[    ]*,," -e "s,^\(..*\),_&," < $export_symbols > $output_objdir/${libname}-symbols.expsym~$CC -dynamiclib -single_module $allow_undefined_flag -o $lib $libobjs $deplibs $compiler_flags -install_name $rpath/$soname $verstring~nmedit -s $output_objdir/${libname}-symbols.expsym ${lib}'
+    else
+      _LT_AC_TAGVAR(archive_expsym_cmds, $1)='sed -e "s,#.*,," -e "s,^[    ]*,," -e "s,^\(..*\),_&," < $export_symbols > $output_objdir/${libname}-symbols.expsym~$CC -r ${wl}-bind_at_load -keep_private_externs -nostdlib -o ${lib}-master.o $libobjs~$CC -dynamiclib $allow_undefined_flag -o $lib ${lib}-master.o $deplibs $compiler_flags -install_name $rpath/$soname $verstring~nmedit -s $output_objdir/${libname}-symbols.expsym ${lib}'
+    fi
+    _LT_AC_TAGVAR(module_expsym_cmds, $1)='sed -e "s,#.*,," -e "s,^[    ]*,," -e "s,^\(..*\),_&," < $export_symbols > $output_objdir/${libname}-symbols.expsym~$CC $allow_undefined_flag  -o $lib -bundle $libobjs $deplibs$compiler_flags~nmedit -s $output_objdir/${libname}-symbols.expsym ${lib}'
+    _LT_AC_TAGVAR(hardcode_direct, $1)=no
+    _LT_AC_TAGVAR(hardcode_automatic, $1)=yes
+    _LT_AC_TAGVAR(hardcode_shlibpath_var, $1)=unsupported
+    _LT_AC_TAGVAR(whole_archive_flag_spec, $1)='-all_load $convenience'
+    _LT_AC_TAGVAR(link_all_deplibs, $1)=yes
+  else
+    _LT_AC_TAGVAR(ld_shlibs, $1)=no
+  fi
+    ;;
 
   dgux*)
     case $cc_basename in
@@ -3134,20 +3331,9 @@ case $host_os in
       icpc)
 	# Intel C++
 	with_gnu_ld=yes
-	# version 8.0 and above of icpc choke on multiply defined symbols
-	# if we add $predep_objects and $postdep_objects, however 7.1 and
-	# earlier do not add the objects themselves.
-	case `$CC -V 2>&1` in
-	*"Version 7."*)
-  	  _LT_AC_TAGVAR(archive_cmds, $1)='$CC -shared $predep_objects $libobjs $deplibs $postdep_objects $compiler_flags ${wl}-soname $wl$soname -o $lib'
-  	  _LT_AC_TAGVAR(archive_expsym_cmds, $1)='$CC -shared $predep_objects $libobjs $deplibs $postdep_objects $compiler_flags ${wl}-soname $wl$soname ${wl}-retain-symbols-file $wl$export_symbols -o $lib'
-	  ;;
-	*)  # Version 8.0 or newer
-  	  _LT_AC_TAGVAR(archive_cmds, $1)='$CC -shared $libobjs $deplibs $compiler_flags ${wl}-soname $wl$soname -o $lib'
-  	_LT_AC_TAGVAR(archive_expsym_cmds, $1)='$CC -shared $libobjs $deplibs $compiler_flags ${wl}-soname $wl$soname ${wl}-retain-symbols-file $wl$export_symbols -o $lib'
-	  ;;
-	esac
 	_LT_AC_TAGVAR(archive_cmds_need_lc, $1)=no
+	_LT_AC_TAGVAR(archive_cmds, $1)='$CC -shared $predep_objects $libobjs $deplibs $postdep_objects $compiler_flags ${wl}-soname $wl$soname -o $lib'
+	_LT_AC_TAGVAR(archive_expsym_cmds, $1)='$CC -shared $predep_objects $libobjs $deplibs $postdep_objects $compiler_flags ${wl}-soname $wl$soname ${wl}-retain-symbols-file $wl$export_symbols -o $lib'
 	_LT_AC_TAGVAR(hardcode_libdir_flag_spec, $1)='${wl}-rpath,$libdir'
 	_LT_AC_TAGVAR(export_dynamic_flag_spec, $1)='${wl}--export-dynamic'
 	_LT_AC_TAGVAR(whole_archive_flag_spec, $1)='${wl}--whole-archive$convenience ${wl}--no-whole-archive'
@@ -3193,7 +3379,7 @@ case $host_os in
 	;;
     esac
     ;;
-  netbsd*)
+  netbsd* | netbsdelf*-gnu | knetbsd*-gnu)
     if echo __ELF__ | $CC -E - | grep __ELF__ >/dev/null; then
       _LT_AC_TAGVAR(archive_cmds, $1)='$LD -Bshareable  -o $lib $predep_objects $libobjs $deplibs $postdep_objects $linker_flags'
       wlarc=
@@ -3203,22 +3389,6 @@ case $host_os in
     fi
     # Workaround some broken pre-1.5 toolchains
     output_verbose_link_cmd='$CC -shared $CFLAGS -v conftest.$objext 2>&1 | grep conftest.$objext | $SED -e "s:-lgcc -lc -lgcc::"'
-    ;;
-  openbsd2*)
-    # C++ shared libraries are fairly broken
-    _LT_AC_TAGVAR(ld_shlibs, $1)=no
-    ;;
-  openbsd*)
-    _LT_AC_TAGVAR(hardcode_direct, $1)=yes
-    _LT_AC_TAGVAR(hardcode_shlibpath_var, $1)=no
-    _LT_AC_TAGVAR(archive_cmds, $1)='$CC -shared $pic_flag $predep_objects $libobjs $deplibs $postdep_objects $compiler_flags -o $lib'
-    _LT_AC_TAGVAR(hardcode_libdir_flag_spec, $1)='${wl}-rpath,$libdir'
-    if test -z "`echo __ELF__ | $CC -E - | grep __ELF__`" || test "$host_os-$host_cpu" = "openbsd2.8-powerpc"; then
-      _LT_AC_TAGVAR(archive_expsym_cmds, $1)='$CC -shared $pic_flag $predep_objects $libobjs $deplibs $postdep_objects $compiler_flags ${wl}-retain-symbols-file,$export_symbols -o $lib'
-      _LT_AC_TAGVAR(export_dynamic_flag_spec, $1)='${wl}-E'
-      _LT_AC_TAGVAR(whole_archive_flag_spec, $1)="$wlarc"'--whole-archive$convenience '"$wlarc"'--no-whole-archive'
-    fi
-    output_verbose_link_cmd='echo'
     ;;
   osf3*)
     case $cc_basename in
@@ -3978,7 +4148,7 @@ Xsed="$SED -e s/^X//"
 
 # The HP-UX ksh and POSIX shell print the target directory to stdout
 # if CDPATH is set.
-(unset CDPATH) >/dev/null 2>&1 && unset CDPATH
+if test "X\${CDPATH+set}" = Xset; then CDPATH=:; export CDPATH; fi
 
 # The names of the tagged configurations supported by this script.
 available_tags=
@@ -4383,13 +4553,6 @@ hpux*) # Its linker distinguishes data from code symbols
   lt_cv_sys_global_symbol_to_cdecl="sed -n -e 's/^T .* \(.*\)$/extern int \1();/p' -e 's/^$symcode* .* \(.*\)$/extern char \1;/p'"
   lt_cv_sys_global_symbol_to_c_name_address="sed -n -e 's/^: \([[^ ]]*\) $/  {\\\"\1\\\", (lt_ptr) 0},/p' -e 's/^$symcode* \([[^ ]]*\) \([[^ ]]*\)$/  {\"\2\", (lt_ptr) \&\2},/p'"
   ;;
-linux*)
-  if test "$host_cpu" = ia64; then
-    symcode='[[ABCDGIRSTW]]'
-    lt_cv_sys_global_symbol_to_cdecl="sed -n -e 's/^T .* \(.*\)$/extern int \1();/p' -e 's/^$symcode* .* \(.*\)$/extern char \1;/p'"
-    lt_cv_sys_global_symbol_to_c_name_address="sed -n -e 's/^: \([[^ ]]*\) $/  {\\\"\1\\\", (lt_ptr) 0},/p' -e 's/^$symcode* \([[^ ]]*\) \([[^ ]]*\)$/  {\"\2\", (lt_ptr) \&\2},/p'"
-  fi
-  ;;
 irix* | nonstopux*)
   symcode='[[BCDEGRST]]'
   ;;
@@ -4617,16 +4780,6 @@ AC_MSG_CHECKING([for $compiler option to produce PIC])
 	  ;;
 	esac
 	;;
-       darwin*)
-         # PIC is the default on this platform
-         # Common symbols not allowed in MH_DYLIB files
-         case "$cc_basename" in
-           xlc*)
-           _LT_AC_TAGVAR(lt_prog_compiler_pic, $1)='-qnocommon'
-           _LT_AC_TAGVAR(lt_prog_compiler_wl, $1)='-Wl,'
-           ;;
-         esac
-       ;;
       dgux*)
 	case $cc_basename in
 	  ec++)
@@ -4716,7 +4869,7 @@ AC_MSG_CHECKING([for $compiler option to produce PIC])
 	    ;;
 	esac
 	;;
-      netbsd*)
+      netbsd* | netbsdelf*-gnu | knetbsd*-gnu)
 	;;
       osf3* | osf4* | osf5*)
 	case $cc_basename in
@@ -4880,16 +5033,6 @@ AC_MSG_CHECKING([for $compiler option to produce PIC])
 	_LT_AC_TAGVAR(lt_prog_compiler_static, $1)='-bnso -bI:/lib/syscalls.exp'
       fi
       ;;
-      darwin*)
-        # PIC is the default on this platform
-        # Common symbols not allowed in MH_DYLIB files
-       case "$cc_basename" in
-         xlc*)
-         _LT_AC_TAGVAR(lt_prog_compiler_pic, $1)='-qnocommon'
-         _LT_AC_TAGVAR(lt_prog_compiler_wl, $1)='-Wl,'
-         ;;
-       esac
-       ;;
 
     mingw* | pw32* | os2*)
       # This hack is so that the source file can tell whether it is being
@@ -5035,7 +5178,10 @@ ifelse([$1],[CXX],[
     _LT_AC_TAGVAR(export_symbols_cmds, $1)="$ltdll_cmds"
   ;;
   cygwin* | mingw*)
-    _LT_AC_TAGVAR(export_symbols_cmds, $1)='$NM $libobjs $convenience | $global_symbol_pipe | $SED -e '\''/^[[BCDGRS]] /s/.* \([[^ ]]*\)/\1 DATA/;/^.* __nm__/s/^.* __nm__\([[^ ]]*\) [[^ ]]*/\1 DATA/;/^I /d;/^[[AITW]] /s/.* //'\'' | sort | uniq > $export_symbols'
+    _LT_AC_TAGVAR(export_symbols_cmds, $1)='$NM $libobjs $convenience | $global_symbol_pipe | $SED -e '\''/^[[BCDGS]] /s/.* \([[^ ]]*\)/\1 DATA/'\'' | $SED -e '\''/^[[AITW]] /s/.* //'\'' | sort | uniq > $export_symbols'
+  ;;
+  linux*)
+    _LT_AC_TAGVAR(link_all_deplibs, $1)=no
   ;;
   *)
     _LT_AC_TAGVAR(export_symbols_cmds, $1)='$NM $libobjs $convenience | $global_symbol_pipe | $SED '\''s/.* //'\'' | sort | uniq > $export_symbols'
@@ -5148,7 +5294,7 @@ EOF
       _LT_AC_TAGVAR(allow_undefined_flag, $1)=unsupported
       _LT_AC_TAGVAR(always_export_symbols, $1)=no
       _LT_AC_TAGVAR(enable_shared_with_static_runtimes, $1)=yes
-      _LT_AC_TAGVAR(export_symbols_cmds, $1)='$NM $libobjs $convenience | $global_symbol_pipe | $SED -e '\''/^[[BCDGRS]] /s/.* \([[^ ]]*\)/\1 DATA/'\'' | $SED -e '\''/^[[AITW]] /s/.* //'\'' | sort | uniq > $export_symbols'
+      _LT_AC_TAGVAR(export_symbols_cmds, $1)='$NM $libobjs $convenience | $global_symbol_pipe | $SED -e '\''/^[[BCDGS]] /s/.* \([[^ ]]*\)/\1 DATA/'\'' | $SED -e '\''/^[[AITW]] /s/.* //'\'' | sort | uniq > $export_symbols'
 
       if $LD --help 2>&1 | grep 'auto-import' > /dev/null; then
         _LT_AC_TAGVAR(archive_cmds, $1)='$CC -shared $libobjs $deplibs $compiler_flags -o $output_objdir/$soname ${wl}--image-base=0x10000000 ${wl}--out-implib,$lib'
@@ -5166,7 +5312,7 @@ EOF
       fi
       ;;
 
-    netbsd*)
+    netbsd* | netbsdelf*-gnu | knetbsd*-gnu)
       if echo __ELF__ | $CC -E - | grep __ELF__ >/dev/null; then
 	_LT_AC_TAGVAR(archive_cmds, $1)='$LD -Bshareable $libobjs $deplibs $linker_flags -o $lib'
 	wlarc=
@@ -5224,6 +5370,7 @@ $echo "local: *; };" >> $output_objdir/$libname.ver~
       else
         _LT_AC_TAGVAR(archive_expsym_cmds, $1)="$tmp_archive_cmds"
       fi
+      _LT_AC_TAGVAR(link_all_deplibs, $1)=no
     else
       _LT_AC_TAGVAR(ld_shlibs, $1)=no
     fi
@@ -5391,7 +5538,7 @@ $echo "local: *; };" >> $output_objdir/$libname.ver~
       _LT_AC_TAGVAR(ld_shlibs, $1)=no
       ;;
 
-    bsdi[[45]]*)
+    bsdi4*)
       _LT_AC_TAGVAR(export_dynamic_flag_spec, $1)=-rdynamic
       ;;
 
@@ -5417,52 +5564,52 @@ $echo "local: *; };" >> $output_objdir/$libname.ver~
       ;;
 
     darwin* | rhapsody*)
-      case "$host_os" in
-        rhapsody* | darwin1.[[012]])
-         _LT_AC_TAGVAR(allow_undefined_flag, $1)='${wl}-undefined ${wl}suppress'
-         ;;
-       *) # Darwin 1.3 on
-         if test -z ${MACOSX_DEPLOYMENT_TARGET} ; then
-           _LT_AC_TAGVAR(allow_undefined_flag, $1)='${wl}-flat_namespace ${wl}-undefined ${wl}suppress'
-         else
-           case ${MACOSX_DEPLOYMENT_TARGET} in
-             10.[[012]])
-               _LT_AC_TAGVAR(allow_undefined_flag, $1)='${wl}-flat_namespace ${wl}-undefined ${wl}suppress'
-               ;;
-             10.*)
-               _LT_AC_TAGVAR(allow_undefined_flag, $1)='${wl}-undefined ${wl}dynamic_lookup'
-               ;;
-           esac
-         fi
-         ;;
-      esac
+    if test "$GXX" = yes ; then
       _LT_AC_TAGVAR(archive_cmds_need_lc, $1)=no
+      case "$host_os" in
+      rhapsody* | darwin1.[[012]])
+	_LT_AC_TAGVAR(allow_undefined_flag, $1)='-undefined suppress'
+	;;
+      *) # Darwin 1.3 on
+      if test -z ${MACOSX_DEPLOYMENT_TARGET} ; then
+      	_LT_AC_TAGVAR(allow_undefined_flag, $1)='-flat_namespace -undefined suppress'
+      else
+        case ${MACOSX_DEPLOYMENT_TARGET} in
+          10.[[012]])
+            _LT_AC_TAGVAR(allow_undefined_flag, $1)='-flat_namespace -undefined suppress'
+            ;;
+          10.*)
+            _LT_AC_TAGVAR(allow_undefined_flag, $1)='-undefined dynamic_lookup'
+            ;;
+        esac
+      fi
+	;;
+      esac
+    	lt_int_apple_cc_single_mod=no
+    	output_verbose_link_cmd='echo'
+    	if $CC -dumpspecs 2>&1 | grep 'single_module' >/dev/null ; then
+    	  lt_int_apple_cc_single_mod=yes
+    	fi
+    	if test "X$lt_int_apple_cc_single_mod" = Xyes ; then
+    	  _LT_AC_TAGVAR(archive_cmds, $1)='$CC -dynamiclib -single_module $allow_undefined_flag -o $lib $libobjs $deplibs $compiler_flags -install_name $rpath/$soname $verstring'
+    	else
+        _LT_AC_TAGVAR(archive_cmds, $1)='$CC -r ${wl}-bind_at_load -keep_private_externs -nostdlib -o ${lib}-master.o $libobjs~$CC -dynamiclib $allow_undefined_flag -o $lib ${lib}-master.o $deplibs $compiler_flags -install_name $rpath/$soname $verstring'
+      fi
+      _LT_AC_TAGVAR(module_cmds, $1)='$CC ${wl}-bind_at_load $allow_undefined_flag -o $lib -bundle $libobjs $deplibs$compiler_flags'
+      # Don't fix this by using the ld -exported_symbols_list flag, it doesn't exist in older darwin ld's
+        if test "X$lt_int_apple_cc_single_mod" = Xyes ; then
+          _LT_AC_TAGVAR(archive_expsym_cmds, $1)='sed -e "s,#.*,," -e "s,^[    ]*,," -e "s,^\(..*\),_&," < $export_symbols > $output_objdir/${libname}-symbols.expsym~$CC -dynamiclib -single_module $allow_undefined_flag -o $lib $libobjs $deplibs $compiler_flags -install_name $rpath/$soname $verstring~nmedit -s $output_objdir/${libname}-symbols.expsym ${lib}'
+        else
+          _LT_AC_TAGVAR(archive_expsym_cmds, $1)='sed -e "s,#.*,," -e "s,^[    ]*,," -e "s,^\(..*\),_&," < $export_symbols > $output_objdir/${libname}-symbols.expsym~$CC -r ${wl}-bind_at_load -keep_private_externs -nostdlib -o ${lib}-master.o $libobjs~$CC -dynamiclib $allow_undefined_flag -o $lib ${lib}-master.o $deplibs $compiler_flags -install_name $rpath/$soname $verstring~nmedit -s $output_objdir/${libname}-symbols.expsym ${lib}'
+        fi
+          _LT_AC_TAGVAR(module_expsym_cmds, $1)='sed -e "s,#.*,," -e "s,^[    ]*,," -e "s,^\(..*\),_&," < $export_symbols > $output_objdir/${libname}-symbols.expsym~$CC $allow_undefined_flag  -o $lib -bundle $libobjs $deplibs$compiler_flags~nmedit -s $output_objdir/${libname}-symbols.expsym ${lib}'
       _LT_AC_TAGVAR(hardcode_direct, $1)=no
       _LT_AC_TAGVAR(hardcode_automatic, $1)=yes
       _LT_AC_TAGVAR(hardcode_shlibpath_var, $1)=unsupported
-      _LT_AC_TAGVAR(whole_archive_flag_spec, $1)=''
+      _LT_AC_TAGVAR(whole_archive_flag_spec, $1)='-all_load $convenience'
       _LT_AC_TAGVAR(link_all_deplibs, $1)=yes
-    if test "$GCC" = yes ; then
-    	output_verbose_link_cmd='echo'
-        _LT_AC_TAGVAR(archive_cmds, $1)='$CC -dynamiclib $allow_undefined_flag -o $lib $libobjs $deplibs $compiler_flags -install_name $rpath/$soname $verstring'
-      _LT_AC_TAGVAR(module_cmds, $1)='$CC $allow_undefined_flag -o $lib -bundle $libobjs $deplibs$compiler_flags'
-      # Don't fix this by using the ld -exported_symbols_list flag, it doesn't exist in older darwin ld's
-      _LT_AC_TAGVAR(archive_expsym_cmds, $1)='sed -e "s,#.*,," -e "s,^[    ]*,," -e "s,^\(..*\),_&," < $export_symbols > $output_objdir/${libname}-symbols.expsym~$CC -dynamiclib $allow_undefined_flag -o $lib $libobjs $deplibs $compiler_flags -install_name $rpath/$soname $verstring~nmedit -s $output_objdir/${libname}-symbols.expsym ${lib}'
-      _LT_AC_TAGVAR(module_expsym_cmds, $1)='sed -e "s,#.*,," -e "s,^[    ]*,," -e "s,^\(..*\),_&," < $export_symbols > $output_objdir/${libname}-symbols.expsym~$CC $allow_undefined_flag  -o $lib -bundle $libobjs $deplibs$compiler_flags~nmedit -s $output_objdir/${libname}-symbols.expsym ${lib}'
     else
-      case "$cc_basename" in
-        xlc*)
-         output_verbose_link_cmd='echo'
-         _LT_AC_TAGVAR(archive_cmds, $1)='$CC -qmkshrobj $allow_undefined_flag -o $lib $libobjs $deplibs $compiler_flags ${wl}-install_name ${wl}`echo $rpath/$soname` $verstring'
-         _LT_AC_TAGVAR(module_cmds, $1)='$CC $allow_undefined_flag -o $lib -bundle $libobjs $deplibs$compiler_flags'
-          # Don't fix this by using the ld -exported_symbols_list flag, it doesn't exist in older darwin ld's
-         _LT_AC_TAGVAR(archive_expsym_cmds, $1)='sed -e "s,#.*,," -e "s,^[    ]*,," -e "s,^\(..*\),_&," < $export_symbols > $output_objdir/${libname}-symbols.expsym~$CC -qmkshrobj $allow_undefined_flag -o $lib $libobjs $deplibs $compiler_flags ${wl}-install_name ${wl}$rpath/$soname $verstring~nmedit -s $output_objdir/${libname}-symbols.expsym ${lib}'
-          _LT_AC_TAGVAR(module_expsym_cmds, $1)='sed -e "s,#.*,," -e "s,^[    ]*,," -e "s,^\(..*\),_&," < $export_symbols > $output_objdir/${libname}-symbols.expsym~$CC $allow_undefined_flag  -o $lib -bundle $libobjs $deplibs$compiler_flags~nmedit -s $output_objdir/${libname}-symbols.expsym ${lib}'
-          ;;
-       *)
-         _LT_AC_TAGVAR(ld_shlibs, $1)=no
-          ;;
-      esac
+      _LT_AC_TAGVAR(ld_shlibs, $1)=no
     fi
       ;;
 
@@ -5583,7 +5730,7 @@ $echo "local: *; };" >> $output_objdir/$libname.ver~
       _LT_AC_TAGVAR(link_all_deplibs, $1)=yes
       ;;
 
-    netbsd*)
+    netbsd* | netbsdelf*-gnu | knetbsd*-gnu)
       if echo __ELF__ | $CC -E - | grep __ELF__ >/dev/null; then
 	_LT_AC_TAGVAR(archive_cmds, $1)='$LD -Bshareable -o $lib $libobjs $deplibs $linker_flags'  # a.out
       else
@@ -5607,7 +5754,6 @@ $echo "local: *; };" >> $output_objdir/$libname.ver~
       _LT_AC_TAGVAR(hardcode_shlibpath_var, $1)=no
       if test -z "`echo __ELF__ | $CC -E - | grep __ELF__`" || test "$host_os-$host_cpu" = "openbsd2.8-powerpc"; then
 	_LT_AC_TAGVAR(archive_cmds, $1)='$CC -shared $pic_flag -o $lib $libobjs $deplibs $compiler_flags'
-	_LT_AC_TAGVAR(archive_expsym_cmds, $1)='$CC -shared $pic_flag -o $lib $libobjs $deplibs $compiler_flags ${wl}-retain-symbols-file,$export_symbols'
 	_LT_AC_TAGVAR(hardcode_libdir_flag_spec, $1)='${wl}-rpath,$libdir'
 	_LT_AC_TAGVAR(export_dynamic_flag_spec, $1)='${wl}-E'
       else
@@ -5971,28 +6117,16 @@ for lt_ac_sed in $lt_ac_sed_list /usr/xpg4/bin/sed; do
     fi
   done
 done
-])
 SED=$lt_cv_path_SED
+])
 AC_MSG_RESULT([$SED])
 ])
 
-#                                                        -*- Autoconf -*-
-# Copyright (C) 2002, 2003  Free Software Foundation, Inc.
-# Generated from amversion.in; do not edit by hand.
-
-# This program is free software; you can redistribute it and/or modify
-# it under the terms of the GNU General Public License as published by
-# the Free Software Foundation; either version 2, or (at your option)
-# any later version.
-
-# This program is distributed in the hope that it will be useful,
-# but WITHOUT ANY WARRANTY; without even the implied warranty of
-# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-# GNU General Public License for more details.
-
-# You should have received a copy of the GNU General Public License
-# along with this program; if not, write to the Free Software
-# Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA
+# Copyright (C) 2002, 2003, 2005  Free Software Foundation, Inc.
+#
+# This file is free software; the Free Software Foundation
+# gives unlimited permission to copy and/or distribute it,
+# with or without modifications, as long as this notice is preserved.
 
 # AM_AUTOMAKE_VERSION(VERSION)
 # ----------------------------
@@ -6005,26 +6139,15 @@ AC_DEFUN([AM_AUTOMAKE_VERSION], [am__api_version="1.9"])
 # Call AM_AUTOMAKE_VERSION so it can be traced.
 # This function is AC_REQUIREd by AC_INIT_AUTOMAKE.
 AC_DEFUN([AM_SET_CURRENT_AUTOMAKE_VERSION],
-	 [AM_AUTOMAKE_VERSION([1.9.2])])
+	 [AM_AUTOMAKE_VERSION([1.9.5])])
 
-# AM_AUX_DIR_EXPAND
+# AM_AUX_DIR_EXPAND                                         -*- Autoconf -*-
 
-# Copyright (C) 2001, 2003 Free Software Foundation, Inc.
-
-# This program is free software; you can redistribute it and/or modify
-# it under the terms of the GNU General Public License as published by
-# the Free Software Foundation; either version 2, or (at your option)
-# any later version.
-
-# This program is distributed in the hope that it will be useful,
-# but WITHOUT ANY WARRANTY; without even the implied warranty of
-# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-# GNU General Public License for more details.
-
-# You should have received a copy of the GNU General Public License
-# along with this program; if not, write to the Free Software
-# Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA
-# 02111-1307, USA.
+# Copyright (C) 2001, 2003, 2005  Free Software Foundation, Inc.
+#
+# This file is free software; the Free Software Foundation
+# gives unlimited permission to copy and/or distribute it,
+# with or without modifications, as long as this notice is preserved.
 
 # For projects using AC_CONFIG_AUX_DIR([foo]), Autoconf sets
 # $ac_aux_dir to `$srcdir/foo'.  In other projects, it is set to
@@ -6072,25 +6195,14 @@ am_aux_dir=`cd $ac_aux_dir && pwd`
 ])
 
 
-# Copyright (C) 1996, 1997, 1999, 2000, 2001, 2002, 2003
+# Copyright (C) 1996, 1997, 1999, 2000, 2001, 2002, 2003, 2005
 # Free Software Foundation, Inc.
+#
+# This file is free software; the Free Software Foundation
+# gives unlimited permission to copy and/or distribute it,
+# with or without modifications, as long as this notice is preserved.
 
-# This program is free software; you can redistribute it and/or modify
-# it under the terms of the GNU General Public License as published by
-# the Free Software Foundation; either version 2, or (at your option)
-# any later version.
-
-# This program is distributed in the hope that it will be useful,
-# but WITHOUT ANY WARRANTY; without even the implied warranty of
-# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-# GNU General Public License for more details.
-
-# You should have received a copy of the GNU General Public License
-# along with this program; if not, write to the Free Software
-# Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA
-# 02111-1307, USA.
-
-# serial 3
+# serial 4
 
 # This was merged into AC_PROG_CC in Autoconf.
 
@@ -6105,26 +6217,16 @@ am_cv_prog_cc_stdc=$ac_cv_prog_cc_stdc
 ])
 AU_DEFUN([fp_PROG_CC_STDC])
 
-# AM_CONDITIONAL                                              -*- Autoconf -*-
+# AM_CONDITIONAL                                            -*- Autoconf -*-
 
-# Copyright (C) 1997, 2000, 2001, 2003, 2004 Free Software Foundation, Inc.
+# Copyright (C) 1997, 2000, 2001, 2003, 2004, 2005
+# Free Software Foundation, Inc.
+#
+# This file is free software; the Free Software Foundation
+# gives unlimited permission to copy and/or distribute it,
+# with or without modifications, as long as this notice is preserved.
 
-# This program is free software; you can redistribute it and/or modify
-# it under the terms of the GNU General Public License as published by
-# the Free Software Foundation; either version 2, or (at your option)
-# any later version.
-
-# This program is distributed in the hope that it will be useful,
-# but WITHOUT ANY WARRANTY; without even the implied warranty of
-# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-# GNU General Public License for more details.
-
-# You should have received a copy of the GNU General Public License
-# along with this program; if not, write to the Free Software
-# Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA
-# 02111-1307, USA.
-
-# serial 6
+# serial 7
 
 # AM_CONDITIONAL(NAME, SHELL-CONDITION)
 # -------------------------------------
@@ -6148,33 +6250,21 @@ AC_CONFIG_COMMANDS_PRE(
 Usually this means the macro was only invoked conditionally.]])
 fi])])
 
-# serial 7						-*- Autoconf -*-
 
-# Copyright (C) 1999, 2000, 2001, 2002, 2003, 2004
+# Copyright (C) 1999, 2000, 2001, 2002, 2003, 2004, 2005
 # Free Software Foundation, Inc.
+#
+# This file is free software; the Free Software Foundation
+# gives unlimited permission to copy and/or distribute it,
+# with or without modifications, as long as this notice is preserved.
 
-# This program is free software; you can redistribute it and/or modify
-# it under the terms of the GNU General Public License as published by
-# the Free Software Foundation; either version 2, or (at your option)
-# any later version.
-
-# This program is distributed in the hope that it will be useful,
-# but WITHOUT ANY WARRANTY; without even the implied warranty of
-# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-# GNU General Public License for more details.
-
-# You should have received a copy of the GNU General Public License
-# along with this program; if not, write to the Free Software
-# Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA
-# 02111-1307, USA.
-
+# serial 8
 
 # There are a few dirty hacks below to avoid letting `AC_PROG_CC' be
 # written in clear, in which case automake, when reading aclocal.m4,
 # will think it sees a *use*, and therefore will trigger all it's
 # C support machinery.  Also note that it means that autoscan, seeing
 # CC etc. in the Makefile, will ask for an AC_PROG_CC use...
-
 
 
 # _AM_DEPENDENCIES(NAME)
@@ -6316,27 +6406,16 @@ AM_CONDITIONAL([AMDEP], [test "x$enable_dependency_tracking" != xno])
 AC_SUBST([AMDEPBACKSLASH])
 ])
 
-# Generate code to set up dependency tracking.   -*- Autoconf -*-
+# Generate code to set up dependency tracking.              -*- Autoconf -*-
 
-# Copyright (C) 1999, 2000, 2001, 2002, 2003, 2004
-#   Free Software Foundation, Inc.
+# Copyright (C) 1999, 2000, 2001, 2002, 2003, 2004, 2005
+# Free Software Foundation, Inc.
+#
+# This file is free software; the Free Software Foundation
+# gives unlimited permission to copy and/or distribute it,
+# with or without modifications, as long as this notice is preserved.
 
-# This program is free software; you can redistribute it and/or modify
-# it under the terms of the GNU General Public License as published by
-# the Free Software Foundation; either version 2, or (at your option)
-# any later version.
-
-# This program is distributed in the hope that it will be useful,
-# but WITHOUT ANY WARRANTY; without even the implied warranty of
-# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-# GNU General Public License for more details.
-
-# You should have received a copy of the GNU General Public License
-# along with this program; if not, write to the Free Software
-# Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA
-# 02111-1307, USA.
-
-#serial 2
+#serial 3
 
 # _AM_OUTPUT_DEPENDENCY_COMMANDS
 # ------------------------------
@@ -6396,25 +6475,14 @@ AC_DEFUN([AM_OUTPUT_DEPENDENCY_COMMANDS],
 ])
 
 
-# Copyright (C) 1996, 1998, 1999, 2000, 2001, 2002, 2003
+# Copyright (C) 1996, 1998, 1999, 2000, 2001, 2002, 2003, 2005
 # Free Software Foundation, Inc.
+#
+# This file is free software; the Free Software Foundation
+# gives unlimited permission to copy and/or distribute it,
+# with or without modifications, as long as this notice is preserved.
 
-# This program is free software; you can redistribute it and/or modify
-# it under the terms of the GNU General Public License as published by
-# the Free Software Foundation; either version 2, or (at your option)
-# any later version.
-
-# This program is distributed in the hope that it will be useful,
-# but WITHOUT ANY WARRANTY; without even the implied warranty of
-# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-# GNU General Public License for more details.
-
-# You should have received a copy of the GNU General Public License
-# along with this program; if not, write to the Free Software
-# Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA
-# 02111-1307, USA.
-
-# serial 2
+# serial 3
 
 AC_DEFUN([AM_WITH_DMALLOC],
 [AC_MSG_CHECKING([if malloc debugging is wanted])
@@ -6434,249 +6502,31 @@ fi], [AC_MSG_RESULT(no)])
 
 AU_DEFUN([fp_WITH_DMALLOC], [AM_WITH_DMALLOC])
 
-# Configure paths for GTK+
-# Owen Taylor     97-11-3
+# Copyright (C) 1996, 1997, 2000, 2001, 2003, 2005
+# Free Software Foundation, Inc.
+#
+# This file is free software; the Free Software Foundation
+# gives unlimited permission to copy and/or distribute it,
+# with or without modifications, as long as this notice is preserved.
 
-dnl AM_PATH_GTK([MINIMUM-VERSION, [ACTION-IF-FOUND [, ACTION-IF-NOT-FOUND [, MODULES]]]])
-dnl Test for GTK, and define GTK_CFLAGS and GTK_LIBS
-dnl
-AC_DEFUN(AM_PATH_GTK,
-[dnl 
-dnl Get the cflags and libraries from the gtk-config script
-dnl
-AC_ARG_WITH(gtk-prefix,[  --with-gtk-prefix=PFX   Prefix where GTK is installed (optional)],
-            gtk_config_prefix="$withval", gtk_config_prefix="")
-AC_ARG_WITH(gtk-exec-prefix,[  --with-gtk-exec-prefix=PFX Exec prefix where GTK is installed (optional)],
-            gtk_config_exec_prefix="$withval", gtk_config_exec_prefix="")
-AC_ARG_ENABLE(gtktest, [  --disable-gtktest       Do not try to compile and run a test GTK program],
-		    , enable_gtktest=yes)
-
-  for module in . $4
-  do
-      case "$module" in
-         gthread) 
-             gtk_config_args="$gtk_config_args gthread"
-         ;;
-      esac
-  done
-
-  if test x$gtk_config_exec_prefix != x ; then
-     gtk_config_args="$gtk_config_args --exec-prefix=$gtk_config_exec_prefix"
-     if test x${GTK_CONFIG+set} != xset ; then
-        GTK_CONFIG=$gtk_config_exec_prefix/bin/gtk-config
-     fi
-  fi
-  if test x$gtk_config_prefix != x ; then
-     gtk_config_args="$gtk_config_args --prefix=$gtk_config_prefix"
-     if test x${GTK_CONFIG+set} != xset ; then
-        GTK_CONFIG=$gtk_config_prefix/bin/gtk-config
-     fi
-  fi
-
-  AC_PATH_PROG(GTK_CONFIG, gtk-config, no)
-  min_gtk_version=ifelse([$1], ,0.99.7,$1)
-  AC_MSG_CHECKING(for GTK - version >= $min_gtk_version)
-  no_gtk=""
-  if test "$GTK_CONFIG" = "no" ; then
-    no_gtk=yes
-  else
-    GTK_CFLAGS=`$GTK_CONFIG $gtk_config_args --cflags`
-    GTK_LIBS=`$GTK_CONFIG $gtk_config_args --libs`
-    gtk_config_major_version=`$GTK_CONFIG $gtk_config_args --version | \
-           sed 's/\([[0-9]]*\).\([[0-9]]*\).\([[0-9]]*\)/\1/'`
-    gtk_config_minor_version=`$GTK_CONFIG $gtk_config_args --version | \
-           sed 's/\([[0-9]]*\).\([[0-9]]*\).\([[0-9]]*\)/\2/'`
-    gtk_config_micro_version=`$GTK_CONFIG $gtk_config_args --version | \
-           sed 's/\([[0-9]]*\).\([[0-9]]*\).\([[0-9]]*\)/\3/'`
-    if test "x$enable_gtktest" = "xyes" ; then
-      ac_save_CFLAGS="$CFLAGS"
-      ac_save_LIBS="$LIBS"
-      CFLAGS="$CFLAGS $GTK_CFLAGS"
-      LIBS="$GTK_LIBS $LIBS"
-dnl
-dnl Now check if the installed GTK is sufficiently new. (Also sanity
-dnl checks the results of gtk-config to some extent
-dnl
-      rm -f conf.gtktest
-      AC_TRY_RUN([
-#include <gtk/gtk.h>
-#include <stdio.h>
-#include <stdlib.h>
-
-int 
-main ()
-{
-  int major, minor, micro;
-  char *tmp_version;
-
-  system ("touch conf.gtktest");
-
-  /* HP/UX 9 (%@#!) writes to sscanf strings */
-  tmp_version = g_strdup("$min_gtk_version");
-  if (sscanf(tmp_version, "%d.%d.%d", &major, &minor, &micro) != 3) {
-     printf("%s, bad version string\n", "$min_gtk_version");
-     exit(1);
-   }
-
-  if ((gtk_major_version != $gtk_config_major_version) ||
-      (gtk_minor_version != $gtk_config_minor_version) ||
-      (gtk_micro_version != $gtk_config_micro_version))
-    {
-      printf("\n*** 'gtk-config --version' returned %d.%d.%d, but GTK+ (%d.%d.%d)\n", 
-             $gtk_config_major_version, $gtk_config_minor_version, $gtk_config_micro_version,
-             gtk_major_version, gtk_minor_version, gtk_micro_version);
-      printf ("*** was found! If gtk-config was correct, then it is best\n");
-      printf ("*** to remove the old version of GTK+. You may also be able to fix the error\n");
-      printf("*** by modifying your LD_LIBRARY_PATH enviroment variable, or by editing\n");
-      printf("*** /etc/ld.so.conf. Make sure you have run ldconfig if that is\n");
-      printf("*** required on your system.\n");
-      printf("*** If gtk-config was wrong, set the environment variable GTK_CONFIG\n");
-      printf("*** to point to the correct copy of gtk-config, and remove the file config.cache\n");
-      printf("*** before re-running configure\n");
-    } 
-#if defined (GTK_MAJOR_VERSION) && defined (GTK_MINOR_VERSION) && defined (GTK_MICRO_VERSION)
-  else if ((gtk_major_version != GTK_MAJOR_VERSION) ||
-	   (gtk_minor_version != GTK_MINOR_VERSION) ||
-           (gtk_micro_version != GTK_MICRO_VERSION))
-    {
-      printf("*** GTK+ header files (version %d.%d.%d) do not match\n",
-	     GTK_MAJOR_VERSION, GTK_MINOR_VERSION, GTK_MICRO_VERSION);
-      printf("*** library (version %d.%d.%d)\n",
-	     gtk_major_version, gtk_minor_version, gtk_micro_version);
-    }
-#endif /* defined (GTK_MAJOR_VERSION) ... */
-  else
-    {
-      if ((gtk_major_version > major) ||
-        ((gtk_major_version == major) && (gtk_minor_version > minor)) ||
-        ((gtk_major_version == major) && (gtk_minor_version == minor) && (gtk_micro_version >= micro)))
-      {
-        return 0;
-       }
-     else
-      {
-        printf("\n*** An old version of GTK+ (%d.%d.%d) was found.\n",
-               gtk_major_version, gtk_minor_version, gtk_micro_version);
-        printf("*** You need a version of GTK+ newer than %d.%d.%d. The latest version of\n",
-	       major, minor, micro);
-        printf("*** GTK+ is always available from ftp://ftp.gtk.org.\n");
-        printf("***\n");
-        printf("*** If you have already installed a sufficiently new version, this error\n");
-        printf("*** probably means that the wrong copy of the gtk-config shell script is\n");
-        printf("*** being found. The easiest way to fix this is to remove the old version\n");
-        printf("*** of GTK+, but you can also set the GTK_CONFIG environment to point to the\n");
-        printf("*** correct copy of gtk-config. (In this case, you will have to\n");
-        printf("*** modify your LD_LIBRARY_PATH enviroment variable, or edit /etc/ld.so.conf\n");
-        printf("*** so that the correct libraries are found at run-time))\n");
-      }
-    }
-  return 1;
-}
-],, no_gtk=yes,[echo $ac_n "cross compiling; assumed OK... $ac_c"])
-       CFLAGS="$ac_save_CFLAGS"
-       LIBS="$ac_save_LIBS"
-     fi
-  fi
-  if test "x$no_gtk" = x ; then
-     AC_MSG_RESULT(yes)
-     ifelse([$2], , :, [$2])     
-  else
-     AC_MSG_RESULT(no)
-     if test "$GTK_CONFIG" = "no" ; then
-       echo "*** The gtk-config script installed by GTK could not be found"
-       echo "*** If GTK was installed in PREFIX, make sure PREFIX/bin is in"
-       echo "*** your path, or set the GTK_CONFIG environment variable to the"
-       echo "*** full path to gtk-config."
-     else
-       if test -f conf.gtktest ; then
-        :
-       else
-          echo "*** Could not run GTK test program, checking why..."
-          CFLAGS="$CFLAGS $GTK_CFLAGS"
-          LIBS="$LIBS $GTK_LIBS"
-          AC_TRY_LINK([
-#include <gtk/gtk.h>
-#include <stdio.h>
-],      [ return ((gtk_major_version) || (gtk_minor_version) || (gtk_micro_version)); ],
-        [ echo "*** The test program compiled, but did not run. This usually means"
-          echo "*** that the run-time linker is not finding GTK or finding the wrong"
-          echo "*** version of GTK. If it is not finding GTK, you'll need to set your"
-          echo "*** LD_LIBRARY_PATH environment variable, or edit /etc/ld.so.conf to point"
-          echo "*** to the installed location  Also, make sure you have run ldconfig if that"
-          echo "*** is required on your system"
-	  echo "***"
-          echo "*** If you have an old version installed, it is best to remove it, although"
-          echo "*** you may also be able to get things to work by modifying LD_LIBRARY_PATH"
-          echo "***"
-          echo "*** If you have a RedHat 5.0 system, you should remove the GTK package that"
-          echo "*** came with the system with the command"
-          echo "***"
-          echo "***    rpm --erase --nodeps gtk gtk-devel" ],
-        [ echo "*** The test program failed to compile or link. See the file config.log for the"
-          echo "*** exact error that occured. This usually means GTK was incorrectly installed"
-          echo "*** or that you have moved GTK since it was installed. In the latter case, you"
-          echo "*** may want to edit the gtk-config script: $GTK_CONFIG" ])
-          CFLAGS="$ac_save_CFLAGS"
-          LIBS="$ac_save_LIBS"
-       fi
-     fi
-     GTK_CFLAGS=""
-     GTK_LIBS=""
-     ifelse([$3], , :, [$3])
-  fi
-  AC_SUBST(GTK_CFLAGS)
-  AC_SUBST(GTK_LIBS)
-  rm -f conf.gtktest
-])
-
-# Like AC_CONFIG_HEADER, but automatically create stamp file. -*- Autoconf -*-
-
-# Copyright (C) 1996, 1997, 2000, 2001, 2003 Free Software Foundation, Inc.
-
-# This program is free software; you can redistribute it and/or modify
-# it under the terms of the GNU General Public License as published by
-# the Free Software Foundation; either version 2, or (at your option)
-# any later version.
-
-# This program is distributed in the hope that it will be useful,
-# but WITHOUT ANY WARRANTY; without even the implied warranty of
-# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-# GNU General Public License for more details.
-
-# You should have received a copy of the GNU General Public License
-# along with this program; if not, write to the Free Software
-# Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA
-# 02111-1307, USA.
-
-# serial 7
+# serial 8
 
 # AM_CONFIG_HEADER is obsolete.  It has been replaced by AC_CONFIG_HEADERS.
 AU_DEFUN([AM_CONFIG_HEADER], [AC_CONFIG_HEADERS($@)])
 
-# Do all the work for Automake.                            -*- Autoconf -*-
+# Do all the work for Automake.                             -*- Autoconf -*-
 
-# This macro actually does too much some checks are only needed if
-# your package does certain things.  But this isn't really a big deal.
-
-# Copyright (C) 1996, 1997, 1998, 1999, 2000, 2001, 2002, 2003, 2004
+# Copyright (C) 1996, 1997, 1998, 1999, 2000, 2001, 2002, 2003, 2004, 2005
 # Free Software Foundation, Inc.
+#
+# This file is free software; the Free Software Foundation
+# gives unlimited permission to copy and/or distribute it,
+# with or without modifications, as long as this notice is preserved.
 
-# This program is free software; you can redistribute it and/or modify
-# it under the terms of the GNU General Public License as published by
-# the Free Software Foundation; either version 2, or (at your option)
-# any later version.
+# serial 12
 
-# This program is distributed in the hope that it will be useful,
-# but WITHOUT ANY WARRANTY; without even the implied warranty of
-# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-# GNU General Public License for more details.
-
-# You should have received a copy of the GNU General Public License
-# along with this program; if not, write to the Free Software
-# Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA
-# 02111-1307, USA.
-
-# serial 11
+# This macro actually does too much.  Some checks are only needed if
+# your package does certain things.  But this isn't really a big deal.
 
 # AM_INIT_AUTOMAKE(PACKAGE, VERSION, [NO-DEFINE])
 # AM_INIT_AUTOMAKE([OPTIONS])
@@ -6778,51 +6628,27 @@ for _am_header in $config_headers :; do
 done
 echo "timestamp for $1" >`AS_DIRNAME([$1])`/stamp-h[]$_am_stamp_count])
 
+# Copyright (C) 2001, 2003, 2005  Free Software Foundation, Inc.
+#
+# This file is free software; the Free Software Foundation
+# gives unlimited permission to copy and/or distribute it,
+# with or without modifications, as long as this notice is preserved.
+
 # AM_PROG_INSTALL_SH
 # ------------------
 # Define $install_sh.
-
-# Copyright (C) 2001, 2003 Free Software Foundation, Inc.
-
-# This program is free software; you can redistribute it and/or modify
-# it under the terms of the GNU General Public License as published by
-# the Free Software Foundation; either version 2, or (at your option)
-# any later version.
-
-# This program is distributed in the hope that it will be useful,
-# but WITHOUT ANY WARRANTY; without even the implied warranty of
-# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-# GNU General Public License for more details.
-
-# You should have received a copy of the GNU General Public License
-# along with this program; if not, write to the Free Software
-# Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA
-# 02111-1307, USA.
-
 AC_DEFUN([AM_PROG_INSTALL_SH],
 [AC_REQUIRE([AM_AUX_DIR_EXPAND])dnl
 install_sh=${install_sh-"$am_aux_dir/install-sh"}
 AC_SUBST(install_sh)])
 
-#                                                          -*- Autoconf -*-
-# Copyright (C) 2003  Free Software Foundation, Inc.
+# Copyright (C) 2003, 2005  Free Software Foundation, Inc.
+#
+# This file is free software; the Free Software Foundation
+# gives unlimited permission to copy and/or distribute it,
+# with or without modifications, as long as this notice is preserved.
 
-# This program is free software; you can redistribute it and/or modify
-# it under the terms of the GNU General Public License as published by
-# the Free Software Foundation; either version 2, or (at your option)
-# any later version.
-
-# This program is distributed in the hope that it will be useful,
-# but WITHOUT ANY WARRANTY; without even the implied warranty of
-# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-# GNU General Public License for more details.
-
-# You should have received a copy of the GNU General Public License
-# along with this program; if not, write to the Free Software
-# Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA
-# 02111-1307, USA.
-
-# serial 1
+# serial 2
 
 # Check whether the underlying file-system supports filenames
 # with a leading dot.  For instance MS-DOS doesn't.
@@ -6837,28 +6663,17 @@ fi
 rmdir .tst 2>/dev/null
 AC_SUBST([am__leading_dot])])
 
-# Add --enable-maintainer-mode option to configure.
+# Add --enable-maintainer-mode option to configure.         -*- Autoconf -*-
 # From Jim Meyering
 
-# Copyright (C) 1996, 1998, 2000, 2001, 2002, 2003, 2004
+# Copyright (C) 1996, 1998, 2000, 2001, 2002, 2003, 2004, 2005
 # Free Software Foundation, Inc.
+#
+# This file is free software; the Free Software Foundation
+# gives unlimited permission to copy and/or distribute it,
+# with or without modifications, as long as this notice is preserved.
 
-# This program is free software; you can redistribute it and/or modify
-# it under the terms of the GNU General Public License as published by
-# the Free Software Foundation; either version 2, or (at your option)
-# any later version.
-
-# This program is distributed in the hope that it will be useful,
-# but WITHOUT ANY WARRANTY; without even the implied warranty of
-# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-# GNU General Public License for more details.
-
-# You should have received a copy of the GNU General Public License
-# along with this program; if not, write to the Free Software
-# Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA
-# 02111-1307, USA.
-
-# serial 3
+# serial 4
 
 AC_DEFUN([AM_MAINTAINER_MODE],
 [AC_MSG_CHECKING([whether to enable maintainer-specific portions of Makefiles])
@@ -6877,26 +6692,15 @@ AC_DEFUN([AM_MAINTAINER_MODE],
 
 AU_DEFUN([jm_MAINTAINER_MODE], [AM_MAINTAINER_MODE])
 
-# Check to see how 'make' treats includes.	-*- Autoconf -*-
+# Check to see how 'make' treats includes.	            -*- Autoconf -*-
 
-# Copyright (C) 2001, 2002, 2003 Free Software Foundation, Inc.
+# Copyright (C) 2001, 2002, 2003, 2005  Free Software Foundation, Inc.
+#
+# This file is free software; the Free Software Foundation
+# gives unlimited permission to copy and/or distribute it,
+# with or without modifications, as long as this notice is preserved.
 
-# This program is free software; you can redistribute it and/or modify
-# it under the terms of the GNU General Public License as published by
-# the Free Software Foundation; either version 2, or (at your option)
-# any later version.
-
-# This program is distributed in the hope that it will be useful,
-# but WITHOUT ANY WARRANTY; without even the implied warranty of
-# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-# GNU General Public License for more details.
-
-# You should have received a copy of the GNU General Public License
-# along with this program; if not, write to the Free Software
-# Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA
-# 02111-1307, USA.
-
-# serial 2
+# serial 3
 
 # AM_MAKE_INCLUDE()
 # -----------------
@@ -6940,27 +6744,16 @@ AC_MSG_RESULT([$_am_result])
 rm -f confinc confmf
 ])
 
-#  -*- Autoconf -*-
+# Fake the existence of programs that GNU maintainers use.  -*- Autoconf -*-
 
+# Copyright (C) 1997, 1999, 2000, 2001, 2003, 2005
+# Free Software Foundation, Inc.
+#
+# This file is free software; the Free Software Foundation
+# gives unlimited permission to copy and/or distribute it,
+# with or without modifications, as long as this notice is preserved.
 
-# Copyright (C) 1997, 1999, 2000, 2001, 2003 Free Software Foundation, Inc.
-
-# This program is free software; you can redistribute it and/or modify
-# it under the terms of the GNU General Public License as published by
-# the Free Software Foundation; either version 2, or (at your option)
-# any later version.
-
-# This program is distributed in the hope that it will be useful,
-# but WITHOUT ANY WARRANTY; without even the implied warranty of
-# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-# GNU General Public License for more details.
-
-# You should have received a copy of the GNU General Public License
-# along with this program; if not, write to the Free Software
-# Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA
-# 02111-1307, USA.
-
-# serial 3
+# serial 4
 
 # AM_MISSING_PROG(NAME, PROGRAM)
 # ------------------------------
@@ -6986,27 +6779,16 @@ else
 fi
 ])
 
+# Copyright (C) 2003, 2004, 2005  Free Software Foundation, Inc.
+#
+# This file is free software; the Free Software Foundation
+# gives unlimited permission to copy and/or distribute it,
+# with or without modifications, as long as this notice is preserved.
+
 # AM_PROG_MKDIR_P
 # ---------------
 # Check whether `mkdir -p' is supported, fallback to mkinstalldirs otherwise.
-
-# Copyright (C) 2003, 2004 Free Software Foundation, Inc.
-
-# This program is free software; you can redistribute it and/or modify
-# it under the terms of the GNU General Public License as published by
-# the Free Software Foundation; either version 2, or (at your option)
-# any later version.
-
-# This program is distributed in the hope that it will be useful,
-# but WITHOUT ANY WARRANTY; without even the implied warranty of
-# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-# GNU General Public License for more details.
-
-# You should have received a copy of the GNU General Public License
-# along with this program; if not, write to the Free Software
-# Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA
-# 02111-1307, USA.
-
+#
 # Automake 1.8 used `mkdir -m 0755 -p --' to ensure that directories
 # created by `make install' are always world readable, even if the
 # installer happens to have an overly restrictive umask (e.g. 077).
@@ -7060,26 +6842,15 @@ else
 fi
 AC_SUBST([mkdir_p])])
 
-# Helper functions for option handling.                    -*- Autoconf -*-
+# Helper functions for option handling.                     -*- Autoconf -*-
 
-# Copyright (C) 2001, 2002, 2003  Free Software Foundation, Inc.
+# Copyright (C) 2001, 2002, 2003, 2005  Free Software Foundation, Inc.
+#
+# This file is free software; the Free Software Foundation
+# gives unlimited permission to copy and/or distribute it,
+# with or without modifications, as long as this notice is preserved.
 
-# This program is free software; you can redistribute it and/or modify
-# it under the terms of the GNU General Public License as published by
-# the Free Software Foundation; either version 2, or (at your option)
-# any later version.
-
-# This program is distributed in the hope that it will be useful,
-# but WITHOUT ANY WARRANTY; without even the implied warranty of
-# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-# GNU General Public License for more details.
-
-# You should have received a copy of the GNU General Public License
-# along with this program; if not, write to the Free Software
-# Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA
-# 02111-1307, USA.
-
-# serial 2
+# serial 3
 
 # _AM_MANGLE_OPTION(NAME)
 # -----------------------
@@ -7104,26 +6875,14 @@ AC_DEFUN([_AM_SET_OPTIONS],
 AC_DEFUN([_AM_IF_OPTION],
 [m4_ifset(_AM_MANGLE_OPTION([$1]), [$2], [$3])])
 
-
-# Copyright (C) 1996, 1997, 1998, 2000, 2001, 2002, 2003
+# Copyright (C) 1996, 1997, 1998, 2000, 2001, 2002, 2003, 2005
 # Free Software Foundation, Inc.
+#
+# This file is free software; the Free Software Foundation
+# gives unlimited permission to copy and/or distribute it,
+# with or without modifications, as long as this notice is preserved.
 
-# This program is free software; you can redistribute it and/or modify
-# it under the terms of the GNU General Public License as published by
-# the Free Software Foundation; either version 2, or (at your option)
-# any later version.
-
-# This program is distributed in the hope that it will be useful,
-# but WITHOUT ANY WARRANTY; without even the implied warranty of
-# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-# GNU General Public License for more details.
-
-# You should have received a copy of the GNU General Public License
-# along with this program; if not, write to the Free Software
-# Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA
-# 02111-1307, USA.
-
-# serial 3
+# serial 4
 
 AC_DEFUN([AM_C_PROTOTYPES],
 [AC_REQUIRE([AC_C_PROTOTYPES])
@@ -7141,28 +6900,16 @@ AC_SUBST(ANSI2KNR)dnl
 
 AU_DEFUN([fp_C_PROTOTYPES], [AM_C_PROTOTYPES])
 
+# Check to make sure that the build environment is sane.    -*- Autoconf -*-
+
+# Copyright (C) 1996, 1997, 2000, 2001, 2003, 2005
+# Free Software Foundation, Inc.
 #
-# Check to make sure that the build environment is sane.
-#
+# This file is free software; the Free Software Foundation
+# gives unlimited permission to copy and/or distribute it,
+# with or without modifications, as long as this notice is preserved.
 
-# Copyright (C) 1996, 1997, 2000, 2001, 2003 Free Software Foundation, Inc.
-
-# This program is free software; you can redistribute it and/or modify
-# it under the terms of the GNU General Public License as published by
-# the Free Software Foundation; either version 2, or (at your option)
-# any later version.
-
-# This program is distributed in the hope that it will be useful,
-# but WITHOUT ANY WARRANTY; without even the implied warranty of
-# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-# GNU General Public License for more details.
-
-# You should have received a copy of the GNU General Public License
-# along with this program; if not, write to the Free Software
-# Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA
-# 02111-1307, USA.
-
-# serial 3
+# serial 4
 
 # AM_SANITY_CHECK
 # ---------------
@@ -7205,25 +6952,14 @@ Check your system clock])
 fi
 AC_MSG_RESULT(yes)])
 
+# Copyright (C) 2001, 2003, 2005  Free Software Foundation, Inc.
+#
+# This file is free software; the Free Software Foundation
+# gives unlimited permission to copy and/or distribute it,
+# with or without modifications, as long as this notice is preserved.
+
 # AM_PROG_INSTALL_STRIP
-
-# Copyright (C) 2001, 2003 Free Software Foundation, Inc.
-
-# This program is free software; you can redistribute it and/or modify
-# it under the terms of the GNU General Public License as published by
-# the Free Software Foundation; either version 2, or (at your option)
-# any later version.
-
-# This program is distributed in the hope that it will be useful,
-# but WITHOUT ANY WARRANTY; without even the implied warranty of
-# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-# GNU General Public License for more details.
-
-# You should have received a copy of the GNU General Public License
-# along with this program; if not, write to the Free Software
-# Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA
-# 02111-1307, USA.
-
+# ---------------------
 # One issue with vendor `install' (even GNU) is that you can't
 # specify the program used to strip binaries.  This is especially
 # annoying in cross-compiling environments, where the build's strip
@@ -7246,25 +6982,13 @@ AC_SUBST([INSTALL_STRIP_PROGRAM])])
 
 # Check how to create a tarball.                            -*- Autoconf -*-
 
-# Copyright (C) 2004  Free Software Foundation, Inc.
+# Copyright (C) 2004, 2005  Free Software Foundation, Inc.
+#
+# This file is free software; the Free Software Foundation
+# gives unlimited permission to copy and/or distribute it,
+# with or without modifications, as long as this notice is preserved.
 
-# This program is free software; you can redistribute it and/or modify
-# it under the terms of the GNU General Public License as published by
-# the Free Software Foundation; either version 2, or (at your option)
-# any later version.
-
-# This program is distributed in the hope that it will be useful,
-# but WITHOUT ANY WARRANTY; without even the implied warranty of
-# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-# GNU General Public License for more details.
-
-# You should have received a copy of the GNU General Public License
-# along with this program; if not, write to the Free Software
-# Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA
-# 02111-1307, USA.
-
-# serial 1
-
+# serial 2
 
 # _AM_PROG_TAR(FORMAT)
 # --------------------
