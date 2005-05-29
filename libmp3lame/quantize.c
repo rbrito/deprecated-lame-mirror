@@ -557,13 +557,14 @@ static void
 init_global_gain(
     lame_t gfc, gr_info * const gi, int desired_rate, int CurrentStep)
 {
-    int nbits, flag_GoneOver = 0;
+    int nbits, flag_GoneOver = 4;
     assert(CurrentStep);
-    gi->big_values = gi->count1 = gi->xrNumMax;
     desired_rate -= gi->part2_length;
     do {
-	if (flag_GoneOver & 2)
+	if (flag_GoneOver & 4) {
 	    gi->big_values = gi->count1 = gi->xrNumMax;
+	    flag_GoneOver -= 4;
+	}
 	quantize_ISO(gfc, gi);
 	nbits = noquant_count_bits(gfc, gi);
 
@@ -578,9 +579,9 @@ init_global_gain(
 	    gi->global_gain += CurrentStep;
 	} else {
 	    /* decrease Quantize_StepSize */
-	    flag_GoneOver |= 2;
+	    flag_GoneOver |= 2 | 4;
 
-	    if (flag_GoneOver==3) CurrentStep >>= 1;
+	    if ((flag_GoneOver&3)==3) CurrentStep >>= 1;
 	    gi->global_gain -= CurrentStep;
 	}
     } while ((unsigned int)gi->global_gain < MAX_GLOBAL_GAIN+1);
@@ -1234,7 +1235,7 @@ CBR_bitalloc(
 	CBR_1st_bitalloc(gfc, &gfc->tt[gr][ch], ch,
 			 targ_bits[ch] + gfc->tt[gr][ch].part2_length,
 			 &ratio[ch]);
-	gfc->ResvSize -= iteration_finish_one(gfc, gr, ch);
+ 	gfc->ResvSize -= iteration_finish_one(gfc, gr, ch);
     }
 }
 
