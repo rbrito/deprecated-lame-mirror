@@ -1,4 +1,10 @@
-lame (0.97-0.1) unstable; urgency=low
+lame (3.97-0.2) unstable; urgency=low
+
+  * Fixed debian/control according to the Debian Library Packaging Guide
+
+ -- Jack Bates <ms419@freezone.co.uk>  Thu, 12 May 2005 13:41:28 -0700
+
+lame (3.97-0.1) unstable; urgency=low
 
   * Preparation for new upstream release.
   * debian/control: modified short descriptions to be lower case.
