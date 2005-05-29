@@ -922,7 +922,7 @@ psymodel_init(lame_t gfc)
 	    l += gfc->numlines_l[i-1];
 	if (i != gfc->npart_l-1)
 	    l += gfc->numlines_l[i+1];
-	norm[i] = 0.11749/5.0*0.5;
+	norm[i] = 0.5/5.0;
 #if 0
 	if (i < 8)
 	    norm[i] /= 30*(9-i);
@@ -971,7 +971,7 @@ psymodel_init(lame_t gfc)
 
     /* SNR formula is removed. but we should tune s3_s more */
     for (i = 0; i < npart_s; i++) {
-	norm[i] = db2pow(-0.25) * 0.1;
+	norm[i] = 1.0;
 
 	gfc->endlines_s[i] = numlines_s[i];
 
@@ -996,7 +996,7 @@ psymodel_init(lame_t gfc)
     /* setup temporal masking */
     gfc->nsPsy.decay = db2pow(-(576.0/3)/(TEMPORALMASK_SUSTAIN_SEC*sfreq)*20);
 
-    /* long/short switching, use subbandded sample in f > 2kHz */
+    /* long/short switching, use subbandded sample in f > 4kHz */
     i = (int) (4000.0 / (sfreq / 2.0 / SBLIMIT) + 0.5);
     gfc->nsPsy.switching_band = Min(i, 30);
 

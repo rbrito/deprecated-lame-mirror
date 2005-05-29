@@ -1120,8 +1120,7 @@ psycho_anal_ns(lame_t gfc, int gr, int numchn)
 	FLOAT enn, thmm, *p;
 	III_psy_ratio *mr = &gfc->masking_next[gr][ch];
 	static const FLOAT tab[] = {
-	    5.00/0.11749, 4.00/0.11749, 3.15/0.11749, 3.15/0.11749,
-	    3.15/0.11749, 3.15/0.11749, 3.15/0.11749, 1.25/0.11749,
+	    5.00, 4.00, 3.15, 3.15, 3.15, 3.15, 3.15, 1.25,
 	};
 	int b, i, j;
 	if (ch < 2)
@@ -1238,7 +1237,7 @@ psycho_anal_ns(lame_t gfc, int gr, int numchn)
 	    } else {
 		/* on M/S channels, use lesser one of adjustments for L/R */
 		loudness = Min(gfc->ATH.adjust[0], gfc->ATH.adjust[1])
-		    * (FLOAT)(0.5);
+		    * (FLOAT)(1.0/SQRT2);
 		gfc->ATH.adjust[2] = gfc->ATH.adjust[3] = loudness;
 	    }
 	    for (b = 0; b < gfc->npart_l; b++)
