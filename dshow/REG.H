@@ -1,7 +1,8 @@
 /*
- *	MPEG Audio Encoder for DirectShow
+ *  LAME MP3 encoder for DirectShow
+ *  Registry calls handling class
  *
- *	Copyright (c) 2000 Marie Orlova, Peter Gubanov, Elecard Ltd.
+ *  Copyright (c) 2000-2005 Marie Orlova, Peter Gubanov, Vitaly Ivanov, Elecard Ltd.
  *
  * This library is free software; you can redistribute it and/or
  * modify it under the terms of the GNU Library General Public
@@ -10,7 +11,7 @@
  *
  * This library is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.	 See the GNU
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the GNU
  * Library General Public License for more details.
  *
  * You should have received a copy of the GNU Library General Public
@@ -18,8 +19,6 @@
  * Free Software Foundation, Inc., 59 Temple Place - Suite 330,
  * Boston, MA 02111-1307, USA.
  */
-
-// File : REG.H
 
 #ifndef	__REG__
 #define	__REG__
