@@ -14,11 +14,26 @@ Package=<4>
     Begin Project Dependency
     Project_Dep_Name libmp3lame
     End Project Dependency
+    Begin Project Dependency
+    Project_Dep_Name mpglib
+    End Project Dependency
 }}}
 
 ###############################################################################
 
-Project: "libmp3lame"=..\libmp3lame\libmp3lame.dsp - Package Owner=<4>
+Project: "libmp3lame"=..\libmp3lame\libmp3lame_vc6.dsp - Package Owner=<4>
+
+Package=<5>
+{{{
+}}}
+
+Package=<4>
+{{{
+}}}
+
+###############################################################################
+
+Project: "mpglib"=..\mpglib\mpglib_vc6.dsp - Package Owner=<4>
 
 Package=<5>
 {{{

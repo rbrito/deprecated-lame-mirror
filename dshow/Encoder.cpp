@@ -1,7 +1,8 @@
 /*
- *	CEncoder wrapper for LAME
+ *  LAME MP3 encoder for DirectShow
+ *  LAME encoder wrapper
  *
- *	Copyright (c) 2000 Marie Orlova, Peter Gubanov, Elecard Ltd.
+ *  Copyright (c) 2000-2005 Marie Orlova, Peter Gubanov, Vitaly Ivanov, Elecard Ltd.
  *
  * This library is free software; you can redistribute it and/or
  * modify it under the terms of the GNU Library General Public
@@ -10,7 +11,7 @@
  *
  * This library is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.	 See the GNU
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the GNU
  * Library General Public License for more details.
  *
  * You should have received a copy of the GNU Library General Public
@@ -22,74 +23,69 @@
 #include <streams.h>
 #include "Encoder.h"
 
-DWORD dwBitRateValue[2][14] = {
-	{32,40,48,56,64,80,96,112,128,160,192,224,256,320},		// MPEG1 Layer 3
-	{8,16,24,32,40,48,56,64,80,96,112,128,144,160}			// MPEG2 Layer 3
-};
-
-#define	SIZE_OF_SHORT 2
-#define MPEG_TIME_DIVISOR	90000
-
-/////////////////////////////////////////////////////////////
-// MakePTS - converts DirectShow refrence time
-//			 to MPEG time stamp format
-/////////////////////////////////////////////////////////////
-LONGLONG MakePTS(REFERENCE_TIME rt)
-{
-	return llMulDiv(CRefTime(rt).GetUnits(),MPEG_TIME_DIVISOR,UNITS,0);
-}
 
 //////////////////////////////////////////////////////////////////////
 // Construction/Destruction
 //////////////////////////////////////////////////////////////////////
 CEncoder::CEncoder() :
-	m_bInpuTypeSet(FALSE),
-	m_bOutpuTypeSet(FALSE),
-	m_rtLast(0),
-	m_bLast(FALSE),
-	m_nCounter(0),
-	m_nPos(0),
-	m_pPos(NULL),
-	pgf(NULL)
+    m_bInpuTypeSet(FALSE),
+    m_bOutpuTypeSet(FALSE),
+    m_bFinished(FALSE),
+    m_outOffset(0),
+    m_outReadOffset(0),
+    m_frameCount(0),
+    pgf(NULL)
 {
+    m_outFrameBuf = new unsigned char[OUT_BUFFER_SIZE];
 }
 
 CEncoder::~CEncoder()
 {
-	Close();
+    Close();
+
+    if (m_outFrameBuf)
+        delete [] m_outFrameBuf;
 }
 
 //////////////////////////////////////////////////////////////////////
 // SetInputType - check if given input type is supported
 //////////////////////////////////////////////////////////////////////
-HRESULT CEncoder::SetInputType(LPWAVEFORMATEX lpwfex)
+HRESULT CEncoder::SetInputType(LPWAVEFORMATEX lpwfex, bool bJustCheck)
 {
-	CAutoLock l(this);
+    CAutoLock l(&m_lock);
 
-	if (lpwfex->wFormatTag			== WAVE_FORMAT_PCM) 
-	{
- 		if (lpwfex->nChannels			== 1 || 
-			lpwfex->nChannels			== 2	 ) 
-		{
- 			if (lpwfex->nSamplesPerSec		== 48000 ||
-				lpwfex->nSamplesPerSec		== 44100 ||
-				lpwfex->nSamplesPerSec		== 32000 ||
-				lpwfex->nSamplesPerSec		== 24000 ||
-				lpwfex->nSamplesPerSec		== 22050 ||
-				lpwfex->nSamplesPerSec		== 16000 ) 
-			{
-				if (lpwfex->wBitsPerSample		== 16)
-				{
-					memcpy(&m_wfex, lpwfex, sizeof(WAVEFORMATEX));
-					m_bInpuTypeSet = true;
+    if (lpwfex->wFormatTag == WAVE_FORMAT_PCM)
+    {
+        if (lpwfex->nChannels == 1 || lpwfex->nChannels == 2)
+        {
+            if (lpwfex->nSamplesPerSec  == 48000 ||
+                lpwfex->nSamplesPerSec  == 44100 ||
+                lpwfex->nSamplesPerSec  == 32000 ||
+                lpwfex->nSamplesPerSec  == 24000 ||
+                lpwfex->nSamplesPerSec  == 22050 ||
+                lpwfex->nSamplesPerSec  == 16000 ||
+                lpwfex->nSamplesPerSec  == 12000 ||
+                lpwfex->nSamplesPerSec  == 11025 ||
+                lpwfex->nSamplesPerSec  ==  8000)
+            {
+                if (lpwfex->wBitsPerSample == 16)
+                {
+                    if (!bJustCheck)
+                    {
+                        memcpy(&m_wfex, lpwfex, sizeof(WAVEFORMATEX));
+                        m_bInpuTypeSet = true;
+                    }
 
-					return S_OK;
-				}
-			}
-		}
-	}
-	m_bInpuTypeSet = false;
-	return E_INVALIDARG;
+                    return S_OK;
+                }
+            }
+        }
+    }
+
+    if (!bJustCheck)
+        m_bInpuTypeSet = false;
+
+    return E_INVALIDARG;
 }
 
 //////////////////////////////////////////////////////////////////////
@@ -97,11 +93,12 @@ HRESULT CEncoder::SetInputType(LPWAVEFORMATEX lpwfex)
 //////////////////////////////////////////////////////////////////////
 HRESULT CEncoder::SetOutputType(MPEG_ENCODER_CONFIG &mabsi)
 {
-	CAutoLock l(this);
+    CAutoLock l(&m_lock);
 
-	m_mabsi = mabsi;
-	m_bOutpuTypeSet = true;
-	return S_OK;
+    m_mabsi = mabsi;
+    m_bOutpuTypeSet = true;
+
+    return S_OK;
 }
 
 //////////////////////////////////////////////////////////////////////
@@ -110,89 +107,117 @@ HRESULT CEncoder::SetOutputType(MPEG_ENCODER_CONFIG &mabsi)
 //////////////////////////////////////////////////////////////////////
 HRESULT CEncoder::SetDefaultOutputType(LPWAVEFORMATEX lpwfex)
 {
-	CAutoLock l(this);
+    CAutoLock l(&m_lock);
 
-	if(lpwfex->nChannels == 1)
-		m_mabsi.dwChMode = MONO;
+    if(lpwfex->nChannels == 1 || m_mabsi.bForceMono)
+        m_mabsi.ChMode = MONO;
 
-	if((lpwfex->nSamplesPerSec < m_mabsi.dwSampleRate) || (lpwfex->nSamplesPerSec % m_mabsi.dwSampleRate != 0))
-		m_mabsi.dwSampleRate = lpwfex->nSamplesPerSec;
+    if((lpwfex->nSamplesPerSec < m_mabsi.dwSampleRate) || (lpwfex->nSamplesPerSec % m_mabsi.dwSampleRate != 0))
+        m_mabsi.dwSampleRate = lpwfex->nSamplesPerSec;
 
-	return S_OK;
+    return S_OK;
 }
 
 //////////////////////////////////////////////////////////////////////
 // Init - initialized or reiniyialized encoder SDK with given input 
 // and output settings
-//
-// NOTE: these should all be replaced with calls to the API functions
-// lame_set_*().  Applications should not directly access the 'pgf'
-// data structure. 
-//
 //////////////////////////////////////////////////////////////////////
 HRESULT CEncoder::Init()
 {
-	CAutoLock l(this);
+    CAutoLock l(&m_lock);
 
-	if(!pgf)
-	{
-		if (!m_bInpuTypeSet || !m_bOutpuTypeSet)
-			return E_UNEXPECTED;
+    m_outOffset     = 0;
+    m_outReadOffset = 0;
 
-		// Init Lame library
-		// note: newer, safer interface which doesn't 
-		// allow or require direct access to 'gf' struct is being written
-		// see the file 'API' included with LAME.
-		pgf = lame_init();
+    m_bFinished     = FALSE;
 
-		pgf->num_channels = m_wfex.nChannels;
-		pgf->in_samplerate = m_wfex.nSamplesPerSec;
-		pgf->out_samplerate = m_mabsi.dwSampleRate;
-		pgf->brate = m_mabsi.dwBitrate;
+    m_frameCount    = 0;
 
-		pgf->VBR = m_mabsi.vmVariable;
-		pgf->VBR_min_bitrate_kbps = m_mabsi.dwVariableMin;
-		pgf->VBR_max_bitrate_kbps = m_mabsi.dwVariableMax;
+    if (!pgf)
+    {
+        if (!m_bInpuTypeSet || !m_bOutpuTypeSet)
+            return E_UNEXPECTED;
 
-		pgf->copyright = m_mabsi.bCopyright;
-		pgf->original = m_mabsi.bOriginal;
-		pgf->error_protection = m_mabsi.bCRCProtect;
+        // Init Lame library
+        // note: newer, safer interface which doesn't 
+        // allow or require direct access to 'gf' struct is being written
+        // see the file 'API' included with LAME.
+        if (pgf = lame_init())
+        {
+            pgf->num_channels = m_wfex.nChannels;
 
-		pgf->no_short_blocks = m_mabsi.dwNoShortBlock;
+            pgf->in_samplerate = m_wfex.nSamplesPerSec;
+            pgf->out_samplerate = m_mabsi.dwSampleRate;
+            if ((pgf->out_samplerate >= 32000) && (m_mabsi.dwBitrate < 32))
+                pgf->brate = 32;
+            else
+                pgf->brate = m_mabsi.dwBitrate;
 
-                // note: directshow filter cannot write INFO
-                // tag since directshow has no mechanism to force
-                // the calling program to rewind the output stream
-                // when encoding is finished and write the necessary
-                // information.
-		pgf->bWriteVbrTag = 0; //m_mabsi.dwXingTag;
+            pgf->VBR = m_mabsi.vmVariable;
+            pgf->VBR_min_bitrate_kbps = m_mabsi.dwVariableMin;
+            pgf->VBR_max_bitrate_kbps = m_mabsi.dwVariableMax;
 
-		pgf->strict_ISO = m_mabsi.dwStrictISO;
-		pgf->VBR_hard_min = m_mabsi.dwEnforceVBRmin;
-		pgf->force_ms = m_mabsi.dwForceMS;
-		pgf->mode = m_mabsi.dwChMode;
-		pgf->mode_fixed = m_mabsi.dwModeFixed;
+            pgf->copyright = m_mabsi.bCopyright;
+            pgf->original = m_mabsi.bOriginal;
+            pgf->error_protection = m_mabsi.bCRCProtect;
 
-		if (m_mabsi.dwVoiceMode != 0)
-		{
-			pgf->lowpassfreq = 12000;
-			pgf->VBR_max_bitrate_kbps = 160;
-			pgf->no_short_blocks = 1;
-		}
+            pgf->bWriteVbrTag = m_mabsi.dwXingTag;
+            pgf->strict_ISO = m_mabsi.dwStrictISO;
+            pgf->VBR_hard_min = m_mabsi.dwEnforceVBRmin;
 
-		if (m_mabsi.dwKeepAllFreq != 0)
-		{
-			pgf->lowpassfreq = -1;
-			pgf->highpassfreq = -1;
-		}
+            if (pgf->num_channels == 2 && !m_mabsi.bForceMono)
+            {
+                int act_br = pgf->VBR ? pgf->VBR_min_bitrate_kbps + pgf->VBR_max_bitrate_kbps / 2 : pgf->brate;
+                int rel = pgf->out_samplerate / (act_br + 1);
 
-		pgf->quality = m_mabsi.dwQuality;
-		pgf->VBR_q = m_mabsi.dwVBRq;
+                pgf->mode = rel < 200 ? m_mabsi.ChMode : JOINT_STEREO;
+            }
+            else
+                pgf->mode = MONO;
 
-		lame_init_params(pgf);
-	}
+            if (pgf->mode == JOINT_STEREO)
+                pgf->force_ms = m_mabsi.dwForceMS;
+            else
+                pgf->force_ms = 0;
 
-	return S_OK;
+            pgf->mode_fixed = m_mabsi.dwModeFixed;
+
+            if (m_mabsi.dwVoiceMode != 0)
+            {
+                pgf->lowpassfreq = 12000;
+                pgf->VBR_max_bitrate_kbps = 160;
+            }
+
+            if (m_mabsi.dwKeepAllFreq != 0)
+            {
+                pgf->lowpassfreq = -1;
+                pgf->highpassfreq = -1;
+            }
+
+            pgf->quality = m_mabsi.dwQuality;
+            pgf->VBR_q = m_mabsi.dwVBRq;
+
+            lame_init_params(pgf);
+
+            // encoder delay compensation
+            {
+                short * start_padd = (short *)calloc(48, pgf->num_channels * sizeof(short));
+
+                if (pgf->num_channels == 2)
+                    lame_encode_buffer_interleaved(pgf, start_padd, 48, m_outFrameBuf, OUT_BUFFER_SIZE);
+                else
+                    lame_encode_buffer(pgf, start_padd, start_padd, 48, m_outFrameBuf, OUT_BUFFER_SIZE);
+
+                free(start_padd);
+            }
+
+            return S_OK;
+        }
+
+        return E_FAIL;
+    }
+
+    return S_OK;
 }
 
 //////////////////////////////////////////////////////////////////////
@@ -200,160 +225,202 @@ HRESULT CEncoder::Init()
 //////////////////////////////////////////////////////////////////////
 HRESULT CEncoder::Close()
 {
-	CAutoLock l(this);
+    CAutoLock l(&m_lock);
 
-	if(pgf) {
-		lame_close(pgf);
-		pgf = NULL;
-	}
-	return S_OK;
+    if (pgf)
+    {
+        lame_close(pgf);
+        pgf = NULL;
+    }
+
+    return S_OK;
 }
 
 //////////////////////////////////////////////////////////////////////
-// Encode - encodes data placed on pSrc with size dwSrcSize and returns
-// encoded data in pDst pointer. REFERENCE_TIME rt is a DirectShow refrence
-// time which is being converted in MPEG PTS and placed in PES header.
+// Encode - encodes data placed on pdata and returns
+// the number of processed bytes
 //////////////////////////////////////////////////////////////////////
-HRESULT CEncoder::Encode(LPVOID pSrc, DWORD dwSrcSize, LPVOID pDst, LPDWORD lpdwDstSize, REFERENCE_TIME rt)
+int CEncoder::Encode(const short * pdata, int data_size)
 {
-	CAutoLock l(this);
-	BYTE temp_buffer[OUTPUT_BUFF_SIZE];
+    CAutoLock l(&m_lock);
 
-	*lpdwDstSize = 0;// If data are insufficient to be converted, return 0 in lpdwDstSize
+    if (!pgf || !m_outFrameBuf || !pdata || data_size < 0 || (data_size & (sizeof(short) - 1)))
+        return -1;
 
-	LPBYTE pData = temp_buffer;
-	LONG lData = OUTPUT_BUFF_SIZE;
+    // some data left in the buffer, shift to start
+    if (m_outReadOffset > 0)
+    {
+        if (m_outOffset > m_outReadOffset)
+            memmove(m_outFrameBuf, m_outFrameBuf + m_outReadOffset, m_outOffset - m_outReadOffset);
 
-	int nsamples = dwSrcSize/(m_wfex.wBitsPerSample*m_wfex.nChannels/8);
+        m_outOffset -= m_outReadOffset;
+    }
 
-	if (pgf) {
-		lData = lame_encode_buffer_interleaved(pgf,(short*)pSrc,nsamples,pData,lData);
-
-		if(m_mabsi.dwPES && lData > 0)
-		{
-			// Write PES header
-			Reset();
-			CreatePESHdr((LPBYTE)pDst, MakePTS(m_rtLast), lData);
-			pDst = (LPBYTE)pDst + 0x0e;			// add PES header size
-
-			m_bLast = false;
-			m_rtLast = rt;
-		}
-		else
-			m_bLast = true;
-
-		memcpy(pDst,pData,lData);
-		*lpdwDstSize = lData;
-	}
-	else {
-		*lpdwDstSize = 0;
-	}
+    m_outReadOffset = 0;
 
 
-	return S_OK;
+
+    m_bFinished = FALSE;
+
+    int bytes_processed = 0;
+
+    while (1)
+    {
+        int nsamples = (data_size - bytes_processed) / (sizeof(short) * pgf->num_channels);
+
+        if (nsamples <= 0)
+            break;
+
+        if (nsamples > 1152)
+            nsamples = 1152;
+
+        if (m_outOffset >= OUT_BUFFER_MAX)
+            break;
+
+        int out_bytes = 0;
+
+        if (pgf->num_channels == 2)
+            out_bytes = lame_encode_buffer_interleaved(
+                                            pgf,
+                                            (short *)(pdata + (bytes_processed / sizeof(short))),
+                                            nsamples,
+                                            m_outFrameBuf + m_outOffset,
+                                            OUT_BUFFER_SIZE - m_outOffset);
+        else
+            out_bytes = lame_encode_buffer(
+                                            pgf,
+                                            pdata + (bytes_processed / sizeof(short)),
+                                            pdata + (bytes_processed / sizeof(short)),
+                                            nsamples,
+                                            m_outFrameBuf + m_outOffset,
+                                            OUT_BUFFER_SIZE - m_outOffset);
+
+        if (out_bytes < 0)
+            return -1;
+
+        m_outOffset     += out_bytes;
+        bytes_processed += nsamples * pgf->num_channels * sizeof(short);
+    }
+
+    return bytes_processed;
 }
 
 //
-// Finsh - flush the buffered samples. REFERENCE_TIME rt is a DirectShow refrence
-// time which is being converted in MPEG PTS and placed in PES header.
+// Finsh - flush the buffered samples
 //
-HRESULT CEncoder::Finish(LPVOID pDst, LPDWORD lpdwDstSize)
+HRESULT CEncoder::Finish()
 {
-	CAutoLock l(this);
-	BYTE temp_buffer[OUTPUT_BUFF_SIZE];
+    CAutoLock l(&m_lock);
 
-	*lpdwDstSize = 0;// If data are insufficient to be converted, return 0 in lpdwDstSize
+    if (!pgf || !m_outFrameBuf || (m_outOffset >= OUT_BUFFER_MAX))
+        return E_FAIL;
 
-	LPBYTE pData = temp_buffer;
-	LONG lData = OUTPUT_BUFF_SIZE;
+    m_outOffset += lame_encode_flush(pgf, m_outFrameBuf + m_outOffset, OUT_BUFFER_SIZE - m_outOffset);
 
-#pragma message (REMIND("Finish encoding right!"))
-	if (pgf) {
-		lData = lame_encode_flush(pgf,pData,lData);
+    m_bFinished = TRUE;
 
-		if(m_mabsi.dwPES && lData > 0)
-		{
-			// Write PES header
-			Reset();
-			CreatePESHdr((LPBYTE)pDst, MakePTS(m_rtLast), lData);
-			pDst = (LPBYTE)pDst + 0x0e;			// add PES header size
-		}
-		m_bLast = true;
-
-		memcpy(pDst,pData,lData);
-	}
-	else
-		lData = 0;
-
-	*lpdwDstSize = lData;
-
-	return S_OK;
+    return S_OK;
 }
 
-//////////////////////////////////////////////////////////////////////
-// PES headers routines
-//////////////////////////////////////////////////////////////////////
-// WriteBits - writes nVal in nBits bits on m_pPos address 
-//////////////////////////////////////////////////////////////////////
-void CEncoder::WriteBits(int nBits, int nVal)
+
+int getFrameLength(const unsigned char * pdata)
 {
-	int nCounter = m_nCounter + nBits,
-		nPos = (m_nPos << nBits)|(nVal & (~( (~0L) << nBits)));
-	while(nCounter >= 8)
-	{
-		nCounter -= 8;
-		*m_pPos++ = (BYTE)(nPos >> nCounter) & 0xff;
-	}
-	m_nCounter = nCounter;
-	m_nPos = nPos;
+    if (!pdata || pdata[0] != 0xff || (pdata[1] & 0xe0) != 0xe0)
+        return -1;
+
+    const int sample_rate_tab[4][4] =
+    {
+        {11025,12000,8000,1},
+        {1,1,1,1},
+        {22050,24000,16000,1},
+        {44100,48000,32000,1}
+    };
+
+#define MPEG_VERSION_RESERVED   1
+#define MPEG_VERSION_1          3
+
+#define LAYER_III               1
+
+#define BITRATE_FREE            0
+#define BITRATE_RESERVED        15
+
+#define SRATE_RESERVED          3
+
+#define EMPHASIS_RESERVED       2
+
+    int version_id      = (pdata[1] & 0x18) >> 3;
+    int layer           = (pdata[1] & 0x06) >> 1;
+    int bitrate_id      = (pdata[2] & 0xF0) >> 4;
+    int sample_rate_id  = (pdata[2] & 0x0C) >> 2;
+    int padding         = (pdata[2] & 0x02) >> 1;
+    int emphasis        =  pdata[3] & 0x03;
+
+    if (version_id      != MPEG_VERSION_RESERVED &&
+        layer           == LAYER_III &&
+        bitrate_id      != BITRATE_FREE &&
+        bitrate_id      != BITRATE_RESERVED &&
+        sample_rate_id  != SRATE_RESERVED &&
+        emphasis        != EMPHASIS_RESERVED)
+    {
+        int spf         = (version_id == MPEG_VERSION_1) ? 1152 : 576;
+        int sample_rate = sample_rate_tab[version_id][sample_rate_id];
+        int bitrate     = dwBitRateValue[version_id != MPEG_VERSION_1][bitrate_id - 1] * 1000;
+
+        return (bitrate * spf) / (8 * sample_rate) + padding;
+    }
+
+    return -1;
 }
 
-//////////////////////////////////////////////////////////////////////
-// CreatePESHdr - creates PES header on ppHdr address and writes PTS
-// and PES_packet_length fields
-//////////////////////////////////////////////////////////////////////
-void CEncoder::CreatePESHdr(LPBYTE ppHdr, LONGLONG dwPTS, int dwPacketSize)
+
+int CEncoder::GetFrame(const unsigned char ** pframe)
 {
-	m_pPos = ppHdr;
-	WriteBits(24, 0x000001);	// PES header start code prefix 0x000001
-	WriteBits(8 , 0x0000c0);	//	stream_id 192?
+    if (!pgf || !m_outFrameBuf || !pframe)
+        return -1;
 
-	WriteBits(16, dwPacketSize + 0x000008);	//	PES_packet_length -- A 16 bit field specifying the number of bytes in the PES packet following the last byte of the field.
+    while ((m_outOffset - m_outReadOffset) > 4)
+    {
+        int frame_length = getFrameLength(m_outFrameBuf + m_outReadOffset);
 
-	WriteBits(2 , 0x000002);	//	marker
-	WriteBits(2 , 0x000000);	//	PES_scrambling_control --  The 2 bit PES_scrambling_control indicates the scrambling mode of the PES 
+        if (frame_length < 0)
+        {
+            m_outReadOffset++;
+        }
+        else if (frame_length <= (m_outOffset - m_outReadOffset))
+        {
+            *pframe = m_outFrameBuf + m_outReadOffset;
+            m_outReadOffset += frame_length;
 
-	WriteBits(1 , 0x000000);	//	PES_priority 
-	WriteBits(1 , 0x000000);	//	data_alignment_indicator When set to a value of '0' it is not defined whether any such alignment occurs or not.
-	WriteBits(1 , 0x000000);	//	copyright
-	WriteBits(1 , 0x000000);	//	original_or_copy
+            m_frameCount++;
 
-	WriteBits(2 , 0x000002);	//	PTS_DTS_flags -- A 2 bit flag. If the PTS_DTS_flags field equals '10', a PTS field is present in the PES packet header
+            // don't deliver the first and the last frames
+            if (m_frameCount != 1 && !(m_bFinished && (m_outOffset - m_outReadOffset) < 5))
+                return frame_length;
+        }
+        else
+            break;
+    }
 
-	WriteBits(1 , 0x000000);	//	ESCR_flag
-	WriteBits(1 , 0x000000);	//	ES_rate_flag
-	WriteBits(1 , 0x000000);	//	DSM_trick_mode_flag
-	WriteBits(1 , 0x000000);	//	additional_copy_info_flag
-	WriteBits(1 , 0x000000);	//	PES_CRC_flag
-	WriteBits(1 , 0x000000);	//	PES_extension_flag
-
-	WriteBits(8 , 0x000005);	//	PES_header_data_length = 5 bytes
-	// PTS
-	WriteBits(4 , 0x000002);	//	marker
-	WriteBits(3 , (int)(((dwPTS) >> 0x1f) & 0x07));	//	PTS [32.30]
-	WriteBits(1 , 0x000001);	//	marker
-	WriteBits(15 , (int)(((dwPTS) >> 0xf) & 0x7fff));	//	PTS [29.15]
-	WriteBits(1 , 0x000001);	//	marker
-	WriteBits(15 , (int)((dwPTS) & 0x7fff));	//	PTS [14.0]
-	WriteBits(1 , 0x000001);	//	marker
+    return 0;
 }
 
-//////////////////////////////////////////////////////////////////////
-// Reset - resets all PES header stuff
-//////////////////////////////////////////////////////////////////////
-void CEncoder::Reset()
-{
-	m_nCounter = 0;
-	m_nPos  = 0;
-	m_pPos = NULL;
-}
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+

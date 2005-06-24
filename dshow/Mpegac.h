@@ -1,7 +1,8 @@
 /*
- *	MPEG Audio Encoder for DirectShow
+ *  LAME MP3 encoder for DirectShow
+ *  DirectShow filter implementation
  *
- *	Copyright (c) 2000 Marie Orlova, Peter Gubanov, Elecard Ltd.
+ *  Copyright (c) 2000-2005 Marie Orlova, Peter Gubanov, Vitaly Ivanov, Elecard Ltd.
  *
  * This library is free software; you can redistribute it and/or
  * modify it under the terms of the GNU Library General Public
@@ -10,7 +11,7 @@
  *
  * This library is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.	 See the GNU
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the GNU
  * Library General Public License for more details.
  *
  * You should have received a copy of the GNU Library General Public
@@ -19,79 +20,90 @@
  * Boston, MA 02111-1307, USA.
  */
 
-#include <mmreg.h>	
-#include "Encoder.h"	// Added by ClassView
+#include <mmreg.h>
+#include "Encoder.h"
 
-#define	KEY_LAME_ENCODER	"SOFTWARE\\GNU\\LAME MPEG Layer III Audio Encoder Filter"
+#define KEY_LAME_ENCODER            "SOFTWARE\\GNU\\LAME MPEG Layer III Audio Encoder Filter"
 
-#define	VALUE_BITRATE				"Bitrate"
-#define	VALUE_VARIABLE				"Variable"
-#define	VALUE_VARIABLEMIN			"VariableMin"
-#define	VALUE_VARIABLEMAX			"VariableMax"
-#define	VALUE_QUALITY				"Quality"
-#define VALUE_VBR_QUALITY			"VBR Quality"
-#define	VALUE_SAMPLE_RATE			"Sample Rate"
+#define VALUE_BITRATE               "Bitrate"
+#define VALUE_VARIABLE              "Variable"
+#define VALUE_VARIABLEMIN           "VariableMin"
+#define VALUE_VARIABLEMAX           "VariableMax"
+#define VALUE_QUALITY               "Quality"
+#define VALUE_VBR_QUALITY           "VBR Quality"
+#define VALUE_SAMPLE_RATE           "Sample Rate"
 
-#define	VALUE_STEREO_MODE			"Stereo Mode"
-#define VALUE_FORCE_MS				"Force MS"
+#define VALUE_STEREO_MODE           "Stereo Mode"
+#define VALUE_FORCE_MS              "Force MS"
 
-#define	VALUE_LAYER					"Layer"
-#define	VALUE_ORIGINAL				"Original"
-#define	VALUE_COPYRIGHT				"Copyright"
-#define	VALUE_CRC					"CRC"
-#define	VALUE_PES					"PES"
+#define VALUE_LAYER                 "Layer"
+#define VALUE_ORIGINAL              "Original"
+#define VALUE_COPYRIGHT             "Copyright"
+#define VALUE_CRC                   "CRC"
+#define VALUE_FORCE_MONO            "Force Mono"
+#define VALUE_SET_DURATION          "Set Duration"
+#define VALUE_PES                   "PES"
 
-#define	VALUE_ENFORCE_MIN			"EnforceVBRmin"
-#define	VALUE_VOICE					"Voice Mode"
-#define	VALUE_KEEP_ALL_FREQ			"Keep All Frequencies"
-#define	VALUE_STRICT_ISO			"Strict ISO"
-#define	VALUE_DISABLE_SHORT_BLOCK	"No Short Block"
-#define	VALUE_XING_TAG				"Xing Tag"
+#define VALUE_ENFORCE_MIN           "EnforceVBRmin"
+#define VALUE_VOICE                 "Voice Mode"
+#define VALUE_KEEP_ALL_FREQ         "Keep All Frequencies"
+#define VALUE_STRICT_ISO            "Strict ISO"
+#define VALUE_DISABLE_SHORT_BLOCK   "No Short Block"
+#define VALUE_XING_TAG              "Xing Tag"
 #define VALUE_MODE_FIXED            "Mode Fixed"
+
+
+typedef struct
+{
+    LONGLONG        sample;
+    REFERENCE_TIME  delta;
+
+    BOOL            applied;
+} resync_point_t;
 
 ///////////////////////////////////////////////////////////////////
 // CMpegAudEnc class - implementation for ITransformFilter interface
 ///////////////////////////////////////////////////////////////////
 class CMpegAudEncPropertyPage;
 class CMpegAudEnc : public CTransformFilter,
-					public ISpecifyPropertyPages,
-					public IAudioEncoderProperties,
-//					public IPersistPropertyBag,
-					public CPersistStream
+                    public ISpecifyPropertyPages,
+                    public IAudioEncoderProperties,
+                    public CPersistStream
 {
 public:
-	DECLARE_IUNKNOWN
+    DECLARE_IUNKNOWN
 
     static CUnknown *CreateInstance(LPUNKNOWN lpunk, HRESULT *phr);
 
-	LPAMOVIESETUP_FILTER GetSetupData();
+    LPAMOVIESETUP_FILTER GetSetupData();
 
-	HRESULT Reconnect();
+    HRESULT Reconnect();
 
-	// ITransformFilter interface methods
-	HRESULT Transform(IMediaSample * pIn, IMediaSample *pOut);    
-    HRESULT CheckInputType(const CMediaType* mtIn);    
-    HRESULT CheckTransform(const CMediaType* mtIn, const CMediaType* mtOut);    
-    HRESULT DecideBufferSize(IMemAllocator * pAllocator,
-							 ALLOCATOR_PROPERTIES *pprop);
+    HRESULT Receive(IMediaSample *pSample);
+
+    HRESULT CheckInputType(const CMediaType* mtIn);
+    HRESULT CheckTransform(const CMediaType* mtIn, const CMediaType* mtOut);
+    HRESULT DecideBufferSize(IMemAllocator * pAllocator, ALLOCATOR_PROPERTIES *pprop);
+
     HRESULT GetMediaType  (int iPosition, CMediaType *pMediaType);
-	HRESULT SetMediaType  (PIN_DIRECTION direction,const CMediaType *pmt);	
+    HRESULT SetMediaType  (PIN_DIRECTION direction,const CMediaType *pmt);
 
 
-	//
-	HRESULT StartStreaming();	
-	HRESULT EndOfStream();
-	HRESULT BeginFlush();
+    //
+    HRESULT StartStreaming();
+    HRESULT StopStreaming();
+    HRESULT EndOfStream();
+    HRESULT BeginFlush();
 
-	~CMpegAudEnc(void);
+    ~CMpegAudEnc(void);
 
-	// ISpecifyPropertyPages
-	STDMETHODIMP NonDelegatingQueryInterface(REFIID riid, void ** ppv);    
-	STDMETHODIMP GetPages(CAUUID *pPages);
+    // ISpecifyPropertyPages
+    STDMETHODIMP NonDelegatingQueryInterface(REFIID riid, void ** ppv);
+    STDMETHODIMP GetPages(CAUUID *pPages);
 
-	// IAudioEncoderProperties
-    STDMETHODIMP get_PESOutputEnabled(DWORD *dwEnabled);
-    STDMETHODIMP set_PESOutputEnabled(DWORD dwEnabled);
+    // IAudioEncoderProperties
+    STDMETHODIMP get_PESOutputEnabled(DWORD *dwEnabled);    // PES header. Obsolete
+    STDMETHODIMP set_PESOutputEnabled(DWORD dwEnabled);     // PES header. Obsolete
 
     STDMETHODIMP get_MPEGLayer(DWORD *dwLayer);
     STDMETHODIMP set_MPEGLayer(DWORD dwLayer);
@@ -100,85 +112,103 @@ public:
     STDMETHODIMP set_Bitrate(DWORD dwBitrate);   
     STDMETHODIMP get_Variable(DWORD *dwVariable);
     STDMETHODIMP set_Variable(DWORD dwVariable);
-	STDMETHODIMP get_VariableMin(DWORD *dwMin);
+    STDMETHODIMP get_VariableMin(DWORD *dwMin);
     STDMETHODIMP set_VariableMin(DWORD dwMin);
-	STDMETHODIMP get_VariableMax(DWORD *dwMax);
+    STDMETHODIMP get_VariableMax(DWORD *dwMax);
     STDMETHODIMP set_VariableMax(DWORD dwMax);
-	STDMETHODIMP get_Quality(DWORD *dwQuality);
+    STDMETHODIMP get_Quality(DWORD *dwQuality);
     STDMETHODIMP set_Quality(DWORD dwQuality);
-	STDMETHODIMP get_VariableQ(DWORD *dwVBRq);
+    STDMETHODIMP get_VariableQ(DWORD *dwVBRq);
     STDMETHODIMP set_VariableQ(DWORD dwVBRq);
     STDMETHODIMP get_SourceSampleRate(DWORD *dwSampleRate);
-	STDMETHODIMP get_SourceChannels(DWORD *dwChannels);
+    STDMETHODIMP get_SourceChannels(DWORD *dwChannels);
     STDMETHODIMP get_SampleRate(DWORD *dwSampleRate);
     STDMETHODIMP set_SampleRate(DWORD dwSampleRate);
 
     STDMETHODIMP get_ChannelMode(DWORD *dwChannelMode);
     STDMETHODIMP set_ChannelMode(DWORD dwChannelMode);
-	STDMETHODIMP get_ForceMS(DWORD *dwFlag);
+    STDMETHODIMP get_ForceMS(DWORD *dwFlag);
     STDMETHODIMP set_ForceMS(DWORD dwFlag);
-	STDMETHODIMP get_EnforceVBRmin(DWORD *dwFlag);
+    STDMETHODIMP get_EnforceVBRmin(DWORD *dwFlag);
     STDMETHODIMP set_EnforceVBRmin(DWORD dwFlag);
-	STDMETHODIMP get_VoiceMode(DWORD *dwFlag);
+    STDMETHODIMP get_VoiceMode(DWORD *dwFlag);
     STDMETHODIMP set_VoiceMode(DWORD dwFlag);
-	STDMETHODIMP get_KeepAllFreq(DWORD *dwFlag);
+    STDMETHODIMP get_KeepAllFreq(DWORD *dwFlag);
     STDMETHODIMP set_KeepAllFreq(DWORD dwFlag);
-	STDMETHODIMP get_StrictISO(DWORD *dwFlag);
+    STDMETHODIMP get_StrictISO(DWORD *dwFlag);
     STDMETHODIMP set_StrictISO(DWORD dwFlag);
-	STDMETHODIMP get_NoShortBlock(DWORD *dwNoShortBlock);
+    STDMETHODIMP get_NoShortBlock(DWORD *dwNoShortBlock);
     STDMETHODIMP set_NoShortBlock(DWORD dwNoShortBlock);
-	STDMETHODIMP get_XingTag(DWORD *dwXingTag);
+    STDMETHODIMP get_XingTag(DWORD *dwXingTag);
     STDMETHODIMP set_XingTag(DWORD dwXingTag);
-	STDMETHODIMP get_ModeFixed(DWORD *dwModeFixed);
+    STDMETHODIMP get_ModeFixed(DWORD *dwModeFixed);
     STDMETHODIMP set_ModeFixed(DWORD dwModeFixed);
 
 
-	STDMETHODIMP get_CRCFlag(DWORD *dwFlag);
+    STDMETHODIMP get_CRCFlag(DWORD *dwFlag);
     STDMETHODIMP set_CRCFlag(DWORD dwFlag);
+    STDMETHODIMP get_ForceMono(DWORD *dwFlag);
+    STDMETHODIMP set_ForceMono(DWORD dwFlag);
+    STDMETHODIMP get_SetDuration(DWORD *dwFlag);
+    STDMETHODIMP set_SetDuration(DWORD dwFlag);
     STDMETHODIMP get_OriginalFlag(DWORD *dwFlag);
     STDMETHODIMP set_OriginalFlag(DWORD dwFlag);
     STDMETHODIMP get_CopyrightFlag(DWORD *dwFlag);
     STDMETHODIMP set_CopyrightFlag(DWORD dwFlag);
 
-	STDMETHODIMP get_ParameterBlockSize(BYTE *pcBlock, DWORD *pdwSize);
+    STDMETHODIMP get_ParameterBlockSize(BYTE *pcBlock, DWORD *pdwSize);
     STDMETHODIMP set_ParameterBlockSize(BYTE *pcBlock, DWORD dwSize);
 
     STDMETHODIMP DefaultAudioEncoderProperties();
     STDMETHODIMP LoadAudioEncoderPropertiesFromRegistry();
     STDMETHODIMP SaveAudioEncoderPropertiesToRegistry();
-	STDMETHODIMP InputTypeDefined();
+    STDMETHODIMP InputTypeDefined();
 
-    // IPersistPropertyBag methods
-//    STDMETHODIMP InitNew();
-//    STDMETHODIMP Load(LPPROPERTYBAG pPropBag, LPERRORLOG pErrorLog);
-//    STDMETHODIMP Save(LPPROPERTYBAG pPropBag, BOOL fClearDirty, BOOL fSaveAllProperties);
+    STDMETHODIMP ApplyChanges();
 
     // CPersistStream
     HRESULT WriteToStream(IStream *pStream);
     HRESULT ReadFromStream(IStream *pStream);
+
     int SizeMax();
     STDMETHODIMP GetClassID(CLSID *pClsid);
 
 private:
-	CMpegAudEnc(LPUNKNOWN lpunk, HRESULT *phr);
+    CMpegAudEnc(LPUNKNOWN lpunk, HRESULT *phr);
 
-	void		SetOutMediaType();
+    HRESULT FlushEncodedSamples();
 
-	void ReadPresetSettings(MPEG_ENCODER_CONFIG *pmabsi);
+    void SetOutMediaType();
 
-	// Encoder object
-	CEncoder			m_VEncoder;
+    void ReadPresetSettings(MPEG_ENCODER_CONFIG *pmabsi);
 
-	// Current media out format
-	MPEG1WAVEFORMAT		m_mwf;
+    // Encoder object
+    CEncoder                    m_Encoder;
 
-	//
-	// Sample times
-	//
-	REFERENCE_TIME      m_rtLast;
+    // Current media out format
+    MPEGLAYER3WAVEFORMAT        m_mwf;
+
+    REFERENCE_TIME              m_rtStreamTime;
+    REFERENCE_TIME              m_rtFrameTime;
+    REFERENCE_TIME              m_rtEstimated;
+
+    // Synchronization data
+    LONGLONG                    m_samplesIn;
+    LONGLONG                    m_samplesOut;
+    int                         m_samplesPerFrame;
+    int                         m_bytesPerSample;
+    float                       m_bytesToDuration;
+    resync_point_t              m_sync;
+
+    BOOL                        m_hasFinished;
+
+    CCritSec                    m_cs;
+
+    DWORD                       m_setDuration;
+
 
 protected:
-	friend class CMpegAudEncPropertyPage;
+    friend class CMpegAudEncPropertyPage;
 };
 
 

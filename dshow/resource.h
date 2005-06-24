@@ -37,6 +37,11 @@
 #define IDC_CHECK_MODE_FIXED            1038
 #define IDC_RICHEDIT_LAME               1039
 #define IDC_EDIT_TEXT                   1044
+#define IDC_LAME_LA                     1044
+#define IDC_FORCE_MONO                  1045
+#define IDC_LAME_VER                    1046
+#define IDC_LAME_URL                    1047
+#define IDC_SET_DURATION                1048
 #define IDC_STATIC                      -1
 
 // Next default values for new objects
@@ -46,7 +51,7 @@
 #define _APS_NO_MFC                     1
 #define _APS_NEXT_RESOURCE_VALUE        107
 #define _APS_NEXT_COMMAND_VALUE         40001
-#define _APS_NEXT_CONTROL_VALUE         1045
+#define _APS_NEXT_CONTROL_VALUE         1049
 #define _APS_NEXT_SYMED_VALUE           101
 #endif
 #endif

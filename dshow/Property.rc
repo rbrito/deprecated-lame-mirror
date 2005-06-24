@@ -50,8 +50,6 @@ BEGIN
                     BS_AUTOCHECKBOX | WS_TABSTOP,151,51,59,10
     CONTROL         "CRC Protected",IDC_CHECK_CRC,"Button",BS_AUTOCHECKBOX | 
                     WS_TABSTOP,151,63,63,10
-    CONTROL         "PES",IDC_CHECK_PES,"Button",BS_AUTOCHECKBOX | 
-                    WS_TABSTOP,151,75,30,10
     CONTROL         "Slider1",IDC_SLIDER_QUALITY,"msctls_trackbar32",
                     TBS_BOTH | TBS_NOTICKS | WS_GROUP | WS_TABSTOP,66,101,96,
                     15
@@ -64,10 +62,14 @@ BEGIN
     COMBOBOX        IDC_COMBO_SAMPLE_RATE,151,14,59,104,CBS_DROPDOWNLIST | 
                     WS_VSCROLL | WS_TABSTOP
     CONTROL         "Target Sample Rate",IDC_STATIC,"Static",
-                    SS_LEFTNOWORDWRAP | WS_GROUP,152,2,66,8
+                    SS_LEFTNOWORDWRAP | NOT WS_VISIBLE | WS_GROUP,152,2,66,8
     COMBOBOX        IDC_COMBO_VBRq,52,80,76,90,CBS_DROPDOWNLIST | WS_VSCROLL | 
                     WS_TABSTOP
     LTEXT           "VBR Quality",IDC_STATIC,4,82,40,8
+    CONTROL         "Force Mono",IDC_FORCE_MONO,"Button",BS_AUTOCHECKBOX | 
+                    WS_TABSTOP,151,75,54,10
+    CONTROL         "Set Duration",IDC_SET_DURATION,"Button",BS_AUTOCHECKBOX | 
+                    WS_TABSTOP,151,88,55,10
 END
 
 
@@ -117,6 +119,52 @@ END
 #endif    // APSTUDIO_INVOKED
 
 
+#ifndef _MAC
+/////////////////////////////////////////////////////////////////////////////
+//
+// Version
+//
+
+VS_VERSION_INFO VERSIONINFO
+ FILEVERSION 1,0,54,50607
+ PRODUCTVERSION 1,0,54,50607
+ FILEFLAGSMASK 0x3fL
+#ifdef _DEBUG
+ FILEFLAGS 0x1L
+#else
+ FILEFLAGS 0x0L
+#endif
+ FILEOS 0x40004L
+ FILETYPE 0x2L
+ FILESUBTYPE 0x0L
+BEGIN
+    BLOCK "StringFileInfo"
+    BEGIN
+        BLOCK "040904b0"
+        BEGIN
+            VALUE "Comments", "LAME DirectShow Filter\0"
+            VALUE "CompanyName", "\0"
+            VALUE "FileDescription", "LAME Audio Encoder\0"
+            VALUE "FileVersion", "1, 0, 54, 50607\0"
+            VALUE "InternalName", "LAME Audio Encoder\0"
+            VALUE "LegalCopyright", "Copyright © 2005 Elecard Ltd.\0"
+            VALUE "LegalTrademarks", "\0"
+            VALUE "OriginalFilename", "lame.ax\0"
+            VALUE "PrivateBuild", "\0"
+            VALUE "ProductName", "LAME Audio Encoder\0"
+            VALUE "ProductVersion", "1, 0, 54, 50607\0"
+            VALUE "SpecialBuild", "\0"
+        END
+    END
+    BLOCK "VarFileInfo"
+    BEGIN
+        VALUE "Translation", 0x409, 1200
+    END
+END
+
+#endif    // !_MAC
+
+
 /////////////////////////////////////////////////////////////////////////////
 //
 // String Table
@@ -124,7 +172,7 @@ END
 
 STRINGTABLE DISCARDABLE 
 BEGIN
-    IDS_AUDIO_PROPS_TITLE   "MPEG-2 Audio Encoder"
+    IDS_AUDIO_PROPS_TITLE   "MPEG Layer III Audio Encoder"
     IDS_AUDIO_ADVANCED_TITLE "Advanced"
     IDS_ABOUT               "About"
 END
@@ -166,7 +214,7 @@ BEGIN
                     BS_AUTOCHECKBOX | WS_GROUP | WS_TABSTOP,7,21,85,10
     CONTROL         "Keep all frequencies",IDC_CHECK_KEEP_ALL_FREQ,"Button",
                     BS_AUTOCHECKBOX | WS_GROUP | WS_TABSTOP,7,37,80,10
-    CONTROL         "Strict ISO complience",IDC_CHECK_STRICT_ISO,"Button",
+    CONTROL         "Strict ISO compliance",IDC_CHECK_STRICT_ISO,"Button",
                     BS_AUTOCHECKBOX | WS_GROUP | WS_TABSTOP,7,53,84,10
     CONTROL         "Disable short blocks",IDC_CHECK_DISABLE_SHORT_BLOCK,
                     "Button",BS_AUTOCHECKBOX | WS_GROUP | WS_TABSTOP,7,69,79,
@@ -185,14 +233,11 @@ IDD_ABOUT DIALOG DISCARDABLE  0, 0, 228, 121
 STYLE WS_CHILD
 FONT 8, "MS Sans Serif"
 BEGIN
-    ICON            IDI_ICON2,IDC_STATIC,13,30,20,20
-    LTEXT           "LAME Ain't MP3 Encoder",IDC_STATIC,7,7,91,8
-    LTEXT           "Direct Show Filter",IDC_STATIC,7,18,70,8
-    LTEXT           "Copyrigt (c) 2000 - 2001 Elecard Ltd",IDC_STATIC,41,36,
-                    163,8
+    LTEXT           "LAME Ain't MP3 Encoder (3.96 engine)",IDC_LAME_VER,7,8,
+                    142,8
     LTEXT           "LAME Project Homepage: http://www.mp3dev.org",
-                    IDC_STATIC,7,55,192,8
-    EDITTEXT        IDC_EDIT_TEXT,7,74,214,40,ES_MULTILINE | ES_AUTOVSCROLL | 
+                    IDC_LAME_URL,7,19,192,8
+    EDITTEXT        IDC_LAME_LA,7,31,214,83,ES_MULTILINE | ES_AUTOVSCROLL | 
                     ES_AUTOHSCROLL | ES_READONLY | WS_VSCROLL
 END
 

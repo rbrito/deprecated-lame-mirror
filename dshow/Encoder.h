@@ -1,8 +1,8 @@
 /*
- *	MPEG Audio Encoder for DirectShow
- *	CEncoder definition
+ *  LAME MP3 encoder for DirectShow
+ *  LAME encoder wrapper
  *
- *	Copyright (c) 2000 Marie Orlova, Peter Gubanov, Elecard Ltd.
+ *  Copyright (c) 2000-2005 Marie Orlova, Peter Gubanov, Vitaly Ivanov, Elecard Ltd.
  *
  * This library is free software; you can redistribute it and/or
  * modify it under the terms of the GNU Library General Public
@@ -11,7 +11,7 @@
  *
  * This library is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.	 See the GNU
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the GNU
  * Library General Public License for more details.
  *
  * You should have received a copy of the GNU Library General Public
@@ -27,132 +27,144 @@
 #pragma once
 #endif // _MSC_VER >= 1000
 
-#include "lame.h"
+#include "..\include\lame.h"
+#include "..\libmp3lame\lame_global_flags.h"
+/*
+#define INPUT_BUFF_SIZE     65536 * 2
+#define OUTPUT_BUFF_SIZE    16384
+#define FRAME_SIZE_LAYER3   1152
+*/
 
-#define	INPUT_BUFF_SIZE		65536*2
-#define OUTPUT_BUFF_SIZE	16384
-#define	FRAME_SIZE_LAYER3	1152
+const int dwBitRateValue[2][14] =
+{
+    {32,40,48,56,64,80,96,112,128,160,192,224,256,320},     // MPEG-1
+    {8,16,24,32,40,48,56,64,80,96,112,128,144,160}          // MPEG-2/2.5
+};
+/*
+#define STEREO           0
+#define JOINT_STEREO     1
+#define DUAL_CHANNEL     2
+#define MONO             3
+*/
 
-extern DWORD dwBitRateValue[2][14];
-
+#define OUT_BUFFER_SIZE             16384
+#define OUT_BUFFER_GUARD            8192
+#define OUT_BUFFER_MAX              (OUT_BUFFER_SIZE - OUT_BUFFER_GUARD)
 
 typedef struct {
-	DWORD	dwSampleRate;					//SF in Hz
-	DWORD	dwBitrate;						//BR in bit per second
-	vbr_mode	vmVariable;
-	DWORD	dwVariableMin;                  //specify a minimum allowed bitrate
-	DWORD	dwVariableMax;                  //specify a maximum allowed bitrate
-	DWORD	dwQuality;                      //Encoding quality
-	DWORD   dwVBRq;                         // VBR quality setting (0=highest quality, 9=lowest)                         
-	long	lLayer;									//Layer: 1 or 2
+    DWORD   dwSampleRate;                   //SF in Hz
+    DWORD   dwBitrate;                      //BR in bit per second
+    vbr_mode    vmVariable;
+    DWORD   dwVariableMin;                  //specify a minimum allowed bitrate
+    DWORD   dwVariableMax;                  //specify a maximum allowed bitrate
+    DWORD   dwQuality;                      //Encoding quality
+    DWORD   dwVBRq;                         // VBR quality setting (0=highest quality, 9=lowest)                         
+    long    lLayer;                         //Layer: 1 or 2
 
-	DWORD	dwChMode;								//Channel coding mode: see doc
-	DWORD	dwForceMS;
+    MPEG_mode ChMode;                       //Channel coding mode: see doc
+    DWORD   dwForceMS;
 
-	DWORD	bCRCProtect;						//Is CRC protection activated?
-	DWORD	bCopyright;							//Is the stream protected by copyright?
-	DWORD	bOriginal;                          //Is the stream an original?
+    DWORD   bCRCProtect;                    //Is CRC protection activated?
+    DWORD   bForceMono;
+    DWORD   bSetDuration;
+    DWORD   bCopyright;                     //Is the stream protected by copyright?
+    DWORD   bOriginal;                      //Is the stream an original?
 
-	DWORD	dwPES; 
+    DWORD   dwPES;                          // PES header. Obsolete
 
-	DWORD	dwEnforceVBRmin;
-	DWORD	dwVoiceMode; 
-	DWORD	dwKeepAllFreq; 
-	DWORD	dwStrictISO; 
-	DWORD	dwNoShortBlock; 
-	DWORD	dwXingTag; 
-	DWORD   dwModeFixed;
-	
+    DWORD   dwEnforceVBRmin;
+    DWORD   dwVoiceMode;
+    DWORD   dwKeepAllFreq;
+    DWORD   dwStrictISO;
+    DWORD   dwNoShortBlock;
+    DWORD   dwXingTag;
+    DWORD   dwModeFixed;
 } MPEG_ENCODER_CONFIG;
 
-////////////////////////////////////////////////////////////////////////////////////////
-// CEncoder is a wraper class for VITEC audio encoder SDK
-////////////////////////////////////////////////////////////////////////////////////////
-class CEncoder : public CCritSec
+
+class CEncoder
 {
 public:
 
-	CEncoder();
-	virtual ~CEncoder();
+    CEncoder();
+    virtual ~CEncoder();
 
-	// Initialize encoder with PCM stream properties
-	HRESULT SetInputType(LPWAVEFORMATEX lpwfex);	// returns E_INVALIDARG if not supported
-	// GetInputType - returns current input type
-	HRESULT GetInputType(WAVEFORMATEX *pwfex)
-	{ 
-		if(m_bInpuTypeSet)
-		{
-			memcpy(pwfex, &m_wfex, sizeof(WAVEFORMATEX));
-			return S_OK;
-		}
-		else
-			return E_UNEXPECTED;
-	}
+    // Initialize encoder with PCM stream properties
+    HRESULT SetInputType(LPWAVEFORMATEX lpwfex, bool bJustCheck = FALSE);   // returns E_INVALIDARG if not supported
+    // GetInputType - returns current input type
+    HRESULT GetInputType(WAVEFORMATEX *pwfex)
+    {
+        if(m_bInpuTypeSet)
+        {
+            memcpy(pwfex, &m_wfex, sizeof(WAVEFORMATEX));
+            return S_OK;
+        }
+        else
+            return E_UNEXPECTED;
+    }
 
-	// Set MPEG audio parameters
-	HRESULT SetOutputType(MPEG_ENCODER_CONFIG &mabsi);		// returns E_INVALIDARG if not supported or
-														// not compatible with input type
-	// Return current MPEG audio settings
-	HRESULT GetOutputType(MPEG_ENCODER_CONFIG* pmabsi)		
-	{ 
-		if(m_bOutpuTypeSet)
-		{
-			memcpy(pmabsi, &m_mabsi, sizeof(MPEG_ENCODER_CONFIG));
-			return S_OK;
-		}
-		else
-			return E_UNEXPECTED;
-	}
-	
-	// Set if output stream is a PES
-	void SetPES(bool bPES)		
-	{ 
-		m_mabsi.dwPES = bPES;
-	}
-	// Is output stream a PES
-	BOOL IsPES()		
-	{ 
-		return (BOOL)m_mabsi.dwPES;
-	}
-	
-	// Initialize encoder SDK
-	HRESULT Init();
-	// Close encoder SDK
-	HRESULT Close();
+    // Set MPEG audio parameters
+    HRESULT SetOutputType(MPEG_ENCODER_CONFIG &mabsi);      // returns E_INVALIDARG if not supported or
+                                                            // not compatible with input type
+    // Return current MPEG audio settings
+    HRESULT GetOutputType(MPEG_ENCODER_CONFIG* pmabsi)
+    {
+        if (m_bOutpuTypeSet)
+        {
+            memcpy(pmabsi, &m_mabsi, sizeof(MPEG_ENCODER_CONFIG));
+            return S_OK;
+        }
+        else
+            return E_UNEXPECTED;
+    }
 
-	// Encode media sample data
-	HRESULT Encode(LPVOID pSrc, DWORD dwSrcSize, 
-					LPVOID pDst, LPDWORD lpdwDstSize, REFERENCE_TIME rt);
-	HRESULT Finish(LPVOID pDst, LPDWORD lpdwDstSize);
+    // Set if output stream is a PES. Obsolete
+    void SetPES(bool bPES)
+    {
+        m_mabsi.dwPES = false;//bPES;
+    }
+    // Is output stream a PES. Obsolete
+    BOOL IsPES() const
+    {
+        return (BOOL)m_mabsi.dwPES;
+    }
+
+    // Initialize encoder SDK
+    HRESULT Init();
+    // Close encoder SDK
+    HRESULT Close();
+
+    // Encode media sample data
+    int Encode(const short * pdata, int data_size);
+    int GetFrame(const unsigned char ** pframe);
+
+    HRESULT Finish();
+
 
 protected:
-	
-	HRESULT SetDefaultOutputType(LPWAVEFORMATEX lpwfex); // 
+    HRESULT SetDefaultOutputType(LPWAVEFORMATEX lpwfex);
 
-	// Input meida type
-	WAVEFORMATEX   m_wfex;
-	// Output media type
-	MPEG_ENCODER_CONFIG m_mabsi;
+    // Input media type
+    WAVEFORMATEX        m_wfex;
 
-	// Compressor private data
-	lame_global_flags *pgf;
+    // Output media type
+    MPEG_ENCODER_CONFIG m_mabsi;
 
-	// Compressor miscelaneous state
-	BOOL	m_bInpuTypeSet;
-	BOOL	m_bOutpuTypeSet;
+    // Compressor private data
+    lame_global_flags * pgf;
 
-	// Refrence times of media samples
-	REFERENCE_TIME		m_rtLast;
-	BOOL				m_bLast;
+    // Compressor miscelaneous state
+    BOOL                m_bInpuTypeSet;
+    BOOL                m_bOutpuTypeSet;
 
-	// PES headers routine
-	int			m_nPos;
-	int			m_nCounter;
-	LPBYTE		m_pPos;
+    BOOL                m_bFinished;
+    int                 m_frameCount;
 
-	void		Reset();
-	void		CreatePESHdr(LPBYTE ppHdr, LONGLONG dwPTS, int dwPacketSize);
-	void		WriteBits(int nBits, int nVal);
+    unsigned char *     m_outFrameBuf;
+    int                 m_outOffset;
+    int                 m_outReadOffset;
+
+    CCritSec            m_lock;
 };
 
 #endif // !defined(AFX_VITECENCODER_H__40DC8A44_B937_11D2_A381_A2FD7C37FA15__INCLUDED_)
