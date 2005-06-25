@@ -35,7 +35,7 @@
 #define FRAME_SIZE_LAYER3   1152
 */
 
-const int dwBitRateValue[2][14] =
+const unsigned int dwBitRateValue[2][14] =
 {
     {32,40,48,56,64,80,96,112,128,160,192,224,256,320},     // MPEG-1
     {8,16,24,32,40,48,56,64,80,96,112,128,144,160}          // MPEG-2/2.5

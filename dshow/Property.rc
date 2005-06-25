@@ -234,7 +234,7 @@ STYLE WS_CHILD
 FONT 8, "MS Sans Serif"
 BEGIN
     LTEXT           "LAME Ain't MP3 Encoder (3.96 engine)",IDC_LAME_VER,7,8,
-                    142,8
+                    208,8
     LTEXT           "LAME Project Homepage: http://www.mp3dev.org",
                     IDC_LAME_URL,7,19,192,8
     EDITTEXT        IDC_LAME_LA,7,31,214,83,ES_MULTILINE | ES_AUTOVSCROLL | 

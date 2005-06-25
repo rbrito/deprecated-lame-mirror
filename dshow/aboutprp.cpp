@@ -120,9 +120,9 @@ HRESULT CMAEAbout::OnActivate(void)
     SendDlgItemMessage(m_hwnd, IDC_LAME_LA, WM_SETTEXT, 0, (LPARAM)lpszText);
 
 
-    CHAR strbuf[100];
+    CHAR strbuf[250];
 
-    sprintf(strbuf, "LAME Ain't MP3 Encoder (%sengine)", get_lame_version());
+    sprintf(strbuf, "LAME Ain't MP3 Encoder (%s)", get_lame_version());
     SendDlgItemMessage(m_hwnd, IDC_LAME_VER, WM_SETTEXT, 0, (LPARAM)strbuf);
 
     sprintf(strbuf, "LAME Project Homepage: %s", get_lame_url());
