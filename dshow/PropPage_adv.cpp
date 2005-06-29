@@ -247,6 +247,8 @@ HRESULT CMpegAudEncPropertyPageAdv::OnApplyChanges()
     m_pAEProps->get_ModeFixed(&m_dwModeFixed);
     m_pAEProps->SaveAudioEncoderPropertiesToRegistry();
 
+    m_pAEProps->ApplyChanges();
+
     return S_OK;
 }
 

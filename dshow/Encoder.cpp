@@ -168,9 +168,12 @@ HRESULT CEncoder::Init()
             if (pgf->num_channels == 2 && !m_mabsi.bForceMono)
             {
                 int act_br = pgf->VBR ? pgf->VBR_min_bitrate_kbps + pgf->VBR_max_bitrate_kbps / 2 : pgf->brate;
-                int rel = pgf->out_samplerate / (act_br + 1);
 
-                pgf->mode = rel < 200 ? m_mabsi.ChMode : JOINT_STEREO;
+                // Disabled. It's for user's consideration now
+                //int rel = pgf->out_samplerate / (act_br + 1);
+                //pgf->mode = rel < 200 ? m_mabsi.ChMode : JOINT_STEREO;
+
+                pgf->mode = m_mabsi.ChMode;
             }
             else
                 pgf->mode = MONO;

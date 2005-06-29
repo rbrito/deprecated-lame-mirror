@@ -140,7 +140,6 @@ HRESULT CMpegAudEncPropertyPage::OnConnect(IUnknown *pUnknown)
     m_pAEProps->get_Quality(&m_dwQuality);
     m_pAEProps->get_VariableQ(&m_dwVBRq);
     m_pAEProps->get_SampleRate(&m_dwSampleRate);
-    m_pAEProps->get_ChannelMode(&m_dwChannelMode);
     m_pAEProps->get_CRCFlag(&m_dwCRC);
     m_pAEProps->get_ForceMono(&m_dwForceMono);
     m_pAEProps->get_SetDuration(&m_dwSetDuration);
@@ -168,7 +167,6 @@ HRESULT CMpegAudEncPropertyPage::OnDisconnect()
     m_pAEProps->set_Quality(m_dwQuality);
     m_pAEProps->set_VariableQ(m_dwVBRq);
     m_pAEProps->set_SampleRate(m_dwSampleRate);
-    m_pAEProps->set_ChannelMode(m_dwChannelMode);
     m_pAEProps->set_CRCFlag(m_dwCRC);
     m_pAEProps->set_ForceMono(m_dwForceMono);
     m_pAEProps->set_SetDuration(m_dwSetDuration);
@@ -390,7 +388,6 @@ HRESULT CMpegAudEncPropertyPage::OnApplyChanges()
     m_pAEProps->get_Quality(&m_dwQuality);
     m_pAEProps->get_VariableQ(&m_dwVBRq);
     m_pAEProps->get_SampleRate(&m_dwSampleRate);
-    m_pAEProps->get_ChannelMode(&m_dwChannelMode);
     m_pAEProps->get_CRCFlag(&m_dwCRC);
     m_pAEProps->get_ForceMono(&m_dwForceMono);
     m_pAEProps->get_SetDuration(&m_dwSetDuration);
