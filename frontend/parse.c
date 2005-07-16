@@ -534,6 +534,7 @@ long_help (lame_t gfc, FILE* const fp, const char* ProgramName, int lessmode )  
               "    --space-id3v1   pad version 1 tag with spaces instead of nulls\n"
               "    --pad-id3v2     pad version 2 tag with extra 128 bytes\n"
               "    --genre-list    print alphabetically sorted ID3 genre list and exit\n"
+              "    --u8            command line arguments are in UTF-8\n"
               "    --keeptag       keep ID3 tag of input file(mp3 only)\n"
               "    --ignore-tag-errors  ignore errors in values passed for tags\n"
               "\n"
@@ -1101,6 +1102,9 @@ int  parse_args (lame_t gfp, int argc, char** argv,
 	    }
 	    T_ELIF ("add-id3v2") {
 		id3tag_add_v2(gfp);
+	    }
+            T_ELIF ("u8") {
+		id3tag_u8(gfp);
 	    }
 	    T_ELIF ("id3v1-only") {
 		id3tag_v1_only(gfp);

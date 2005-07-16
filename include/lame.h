@@ -893,6 +893,9 @@ extern void id3tag_genre_list(
 
 extern void id3tag_init(lame_t);
 
+/* command line is in UTF-8 */
+extern void id3tag_u8       (lame_t);
+
 /* force addition of version 2 tag */
 extern void id3tag_add_v2   (lame_t);
 

@@ -29,6 +29,9 @@
  * tags.  Don Melton <don@blivet.com> COMPLETELY rewrote it to support version
  * 2 tags and be more conformant to other standards while remaining flexible.
  *
+ * Support for UTF-8 and UCS-2 tags was added by Edmund Grimley Evans in
+ * April 2005.
+ *
  * NOTE: See http://id3.org/ for more information about ID3 tag formats.
  */
 
@@ -158,6 +161,12 @@ id3tag_init(lame_t gfc)
 }
 
 void
+id3tag_u8(lame_t gfc)
+{
+    gfc->tag_spec.utf8 = 1;
+}
+
+void
 id3tag_add_v2(lame_t gfc)
 {
     gfc->tag_spec.flags &= ~V1_ONLY_FLAG;
@@ -256,10 +265,12 @@ id3tag_set_track(lame_t gfc, const char *track)
 
     n = sscanf(track, "%d/%d", &num, &totalnum);
     if (n >= 1) {
-	gfc->tag_spec.track = num;
+	gfc->tag_spec.tracknum = num;
+	if (n >= 2 || num > 255) {
+	    gfc->tag_spec.flags |= ADD_V2_FLAG;
+	}
+	gfc->tag_spec.track = track;  /* for ID3v2 tag */
 	gfc->tag_spec.flags |= CHANGED_FLAG;
-	if (n == 2)
-	    gfc->tag_spec.totaltrack = totalnum;
     }
 }
 
@@ -308,6 +319,17 @@ id3tag_set_genre(lame_t gfc, const char *genre)
     return 0;
 }
 
+static unsigned char *
+set_4_byte_value(unsigned char *bytes, unsigned long value)
+{
+    int index;
+    for (index = 3; index >= 0; --index) {
+        bytes[index] = value & 0xfful;
+        value >>= 8;
+    }
+    return bytes + 4;
+}
+
 #define FRAME_ID(a, b, c, d) \
     ( ((unsigned long)(a) << 24) \
     | ((unsigned long)(b) << 16) \
@@ -323,35 +345,186 @@ id3tag_set_genre(lame_t gfc, const char *genre)
 #define ENCODER_FRAME_ID FRAME_ID('T', 'S', 'S', 'E')
 #define TITLE_LENGTH_ID FRAME_ID('T', 'L', 'E', 'N')
 
-static unsigned char *
-set_frame(unsigned char *frame, unsigned long id, const char *text,
-	  size_t length)
+unsigned int
+read_utf8(const char **ptext, size_t *plength)
 {
-    if (length) {
-        frame = CreateI4(frame, id);
-        /* Set frame size = total size - header size.  Frame header and field
-         * bytes include 2-byte header flags, 1 encoding descriptor byte, and
-         * for comment frames: 3-byte language descriptor and 1 content
-         * descriptor byte */
-        frame = CreateI4(frame, ((id == COMMENT_FRAME_ID) ? 5 : 1) + length);
-        /* clear 2-byte header flags */
-        *frame++ = 0;
-        *frame++ = 0;
-        /* clear 1 encoding descriptor byte to indicate ISO-8859-1 format */
-        *frame++ = 0;
-        if (id == COMMENT_FRAME_ID) {
-            /* use id3lib-compatible bogus language descriptor */
-            *frame++ = 'X';
-            *frame++ = 'X';
-            *frame++ = 'X';
-            /* clear 1 byte to make content descriptor empty string */
-            *frame++ = 0;
-        }
-        while (length--) {
-            *frame++ = *text++;
+    const char *text = *ptext;
+    size_t length = *plength;
+    unsigned int wc;
+    int ulen;
+    unsigned char c;
+    if (!length) {
+        return 0;
+    }
+    ulen = 1;
+    wc = '?';
+    c = *text;
+    if (c < 0x80) {
+        wc = c;
+    } else if (c < 0xc0) {
+    } else if (c < 0xe0) {
+        ulen = 2;
+    } else if (c < 0xf0) {
+        ulen = 3;
+    } else if (c < 0xf8) {
+        ulen = 4;
+    } else if (c < 0xfc) {
+        ulen = 5;
+    } else if (c < 0xfe) {
+        ulen = 6;
+    }
+    if (ulen > length) {
+        ulen = 1;
+    }
+    if (ulen > 1) {
+        int i;
+        wc = c & ((1 << (7 - ulen)) - 1);
+        for (i = 1; i < ulen; i++) {
+          c = text[i];
+          if (c < 0x80 || c > 0xbf) {
+              ulen = 1;
+              wc = '?';
+              break;
+          }
+          wc = (wc << 6) | (c & 0x3f);
         }
     }
-    return frame;
+    *ptext = text + ulen;
+    *plength = length - ulen;
+    return wc;
+}
+
+static size_t
+convert_to_ucs2(unsigned char *p, int *platin1, const char *text, size_t length)
+{
+    size_t len = 2; /* BOM */
+    int latin1 = 1;
+    if (p) {
+        *p++ = 0xfe;
+        *p++ = 0xff;
+    }
+    while (length) {
+        unsigned int wc = read_utf8(&text, &length);
+        if (wc > 255) {
+            latin1 = 0;
+        }
+        if (p) {
+            if (wc > 65535) {
+                wc = '?';
+            }
+            *p++ = wc >> 8;
+            *p++ = wc;
+        }
+        len += 2;
+    }
+    if (platin1) {
+        *platin1 = latin1;
+    }
+    return len;
+}
+
+static size_t
+convert_to_latin1(unsigned char *p, const char *text, size_t length)
+{
+    size_t len = 0;
+    while (length) {
+        unsigned int wc = read_utf8(&text, &length);
+        if (p) {
+            if (wc > 255) {
+                wc = '?';
+            }
+            *p++ = wc;
+        }
+        ++len;
+    }
+    return len;
+}
+
+typedef struct frame_struct_t {
+    unsigned long id; /* type of frame */
+    const char *text; /* pointer to original string */
+    int utf;          /* text encoding: 0 = ISO-8859-1, 1 = UTF-8 */
+    int encoding;     /* target encoding: 0 = ISO-8859-1, 1 = UCS-2 */
+    size_t v1_len;    /* length of string, or 999 if the string is not pure ISO-8859-1 */
+    size_t length;    /* length of frame including header */
+} frame_struct;
+
+static void
+init_frame_struct(frame_struct *frame, unsigned long id, const char *text, int utf)
+{
+    frame->id = id;
+    frame->text = text;
+    frame->utf = utf;
+    if (text) {
+        size_t length = strlen(text);
+        if (utf) {
+            size_t ucs_length;
+            int latin1;
+            ucs_length = convert_to_ucs2(0, &latin1, text, length);
+            if (latin1) {
+                frame->encoding = 0;
+                frame->v1_len = convert_to_latin1(0, text, length);
+                frame->length = frame->v1_len + 11;
+            } else {
+                frame->encoding = 1;
+                frame->v1_len = 999;
+                frame->length = ucs_length + 11;
+            }
+        } else {
+            frame->encoding = 0;
+            frame->v1_len = length;
+            frame->length = length + 11;
+        }
+        if (frame->id == COMMENT_FRAME_ID) {
+            frame->length += 4 + frame->encoding;
+        }
+    } else {
+        frame->encoding = 0;
+        frame->v1_len = 0;
+        frame->length = 0;
+    }
+}
+
+static unsigned char *
+write_frame(unsigned char *p, frame_struct *frame)
+{
+    unsigned char *p0 = p;
+    if (frame->length) {
+        const char *text = frame->text;
+        size_t length = strlen(text);
+        p = set_4_byte_value(p, frame->id);
+        p = set_4_byte_value(p, frame->length - 10);
+        /* clear 2-byte header flags */
+        *p++ = 0;
+        *p++ = 0;
+        *p++ = frame->encoding;
+        if (frame->id == COMMENT_FRAME_ID) {
+            /* use id3lib-compatible bogus language descriptor */
+            *p++ = 'X';
+            *p++ = 'X';
+            *p++ = 'X';
+            /* clear 1 or 2 bytes to make content descriptor empty string */
+            *p++ = 0;
+            if (frame->encoding) {
+                *p++ = 0;
+            }
+        }
+        if (frame->utf) {
+            if (frame->encoding) {
+                p += convert_to_ucs2(p, 0, text, length);
+            } else {
+                p += convert_to_latin1(p, text, length);
+            }
+        } else {
+            memcpy(p, text, length);
+            p += length;
+        }
+    }
+    if (frame->length != p - p0) {
+        fprintf(stderr, "Internal error: %d != %d\n", frame->length, p - p0);
+        exit(1);
+    }
+    return p;
 }
 
 /*
@@ -362,94 +535,51 @@ set_frame(unsigned char *frame, unsigned long id, const char *text,
 int
 id3tag_write_v2(lame_t gfc, unsigned char *buf, size_t size)
 {
-    if (!(gfc->tag_spec.flags & V1_ONLY_FLAG)) {
-        /* calculate length of four fields which may not fit in verion 1 tag */
-        size_t title_length = gfc->tag_spec.title
-            ? strlen(gfc->tag_spec.title) : 0;
-        size_t artist_length = gfc->tag_spec.artist
-            ? strlen(gfc->tag_spec.artist) : 0;
-        size_t album_length = gfc->tag_spec.album
-            ? strlen(gfc->tag_spec.album) : 0;
-        size_t comment_length = gfc->tag_spec.comment
-            ? strlen(gfc->tag_spec.comment) : 0;
+    if ((gfc->tag_spec.flags & CHANGED_FLAG)
+            && !(gfc->tag_spec.flags & V1_ONLY_FLAG)) {
+        frame_struct encoder, title, artist, album;
+        frame_struct year, comment, track, genre;
+        char encoder_buf[20], year_buf[5], genre_buf[6];
+        int utf8 = gfc->tag_spec.utf8;
+        sprintf(encoder_buf, "LAME v%.13s", get_lame_short_version());
+        init_frame_struct(&encoder, ENCODER_FRAME_ID, encoder_buf, 0);
+        init_frame_struct(&title, TITLE_FRAME_ID,
+                          gfc->tag_spec.title, utf8);
+        init_frame_struct(&artist, ARTIST_FRAME_ID,
+                          gfc->tag_spec.artist, utf8);
+        init_frame_struct(&album, ALBUM_FRAME_ID,
+                          gfc->tag_spec.album, utf8);
+        sprintf(year_buf, "%d", gfc->tag_spec.year);
+        init_frame_struct(&year, YEAR_FRAME_ID,
+                          gfc->tag_spec.year ? year_buf : 0, 0);
+        init_frame_struct(&comment, COMMENT_FRAME_ID,
+                          gfc->tag_spec.comment, utf8);
+        init_frame_struct(&track, YEAR_FRAME_ID, gfc->tag_spec.track, 0);
+        sprintf(genre_buf, "(%d)", gfc->tag_spec.genre);
+        init_frame_struct(&genre, GENRE_FRAME_ID,
+                          gfc->tag_spec.genre != GENRE_NUM_UNKNOWN ?
+                          genre_buf : 0, 0);
         /* write tag if explicitly requested or if fields overflow */
         if ((gfc->tag_spec.flags & (ADD_V2_FLAG | V2_ONLY_FLAG))
-	    || title_length > 30 || artist_length > 30 || album_length > 30
-	    || comment_length > 30
-	    || (gfc->tag_spec.track && comment_length > 28)
-	    || gfc->tag_spec.track > 255 || gfc->tag_spec.totaltrack > 0) {
-            size_t adjusted_tag_size, tag_size;
-            char encoder[20];
-            char tlen[20];
-            size_t encoder_length;
-            char year[5];
-            size_t year_length;
-            char track[100];
-            size_t track_length;
-            char genre[6];
-            size_t genre_length;
+	    || title.v1_len > 30 || artist.v1_len > 30 || album.v1_len > 30
+	    || comment.v1_len > 30
+	    || (gfc->tag_spec.tracknum && comment.v1_len > 28)
+	    || gfc->tag_spec.tracknum > 255 || gfc->tag_spec.track) {
+            size_t tag_size;
             unsigned char *tag;
             unsigned char *p;
-
+            size_t adjusted_tag_size;
             /* calulate size of tag starting with 10-byte tag header */
-            tag_size = 10;
-	    strcpy(encoder, "LAME v");
-	    strncat(encoder, get_lame_short_version(), sizeof(encoder));
-	    encoder_length = strlen(encoder);
-            tag_size += 11 + encoder_length;
-            if (title_length) {
-                /* add 10-byte frame header, 1 encoding descriptor byte ... */
-                tag_size += 11 + title_length;
-            }
-            if (artist_length) {
-                tag_size += 11 + artist_length;
-            }
-            if (album_length) {
-                tag_size += 11 + album_length;
-            }
-            if (gfc->tag_spec.year) {
-		if (gfc->tag_spec.year > 9999)
-		    gfc->tag_spec.year = 9999;
-                year_length = sprintf(year, "%d", gfc->tag_spec.year);
-                tag_size += 11 + year_length;
-            } else {
-                year_length = 0;
-            }
-	    tag_size += 11 + sprintf(tlen, "%u",
-				     (unsigned int)(1000.0*gfc->num_samples
-						    /gfc->out_samplerate));
-            if (comment_length) {
-                /* add 10-byte frame header, 1 encoding descriptor byte,
-                 * 3-byte language descriptor, 1 content descriptor byte ... */
-                tag_size += 15 + comment_length;
-            }
-            if (gfc->tag_spec.track) {
-		if (gfc->tag_spec.track > 9999)
-		    gfc->tag_spec.track = 9999;
-		track_length = sprintf(track, "%d", gfc->tag_spec.track);
-		if (gfc->tag_spec.totaltrack > 0) {
-		    if (gfc->tag_spec.totaltrack > 9999)
-			gfc->tag_spec.totaltrack = 9999;
-		    track_length += sprintf(&track[track_length], "/%d",
-					    gfc->tag_spec.totaltrack);
-		}
-                tag_size += 11 + track_length;
-            } else {
-                track_length = 0;
-            }
-            if (gfc->tag_spec.genre != GENRE_NUM_UNKNOWN) {
-                genre_length = sprintf(genre, "(%d)", gfc->tag_spec.genre);
-                tag_size += 11 + genre_length;
-            } else {
-                genre_length = 0;
-            }
+            tag_size = 10 + encoder.length + title.length +
+              artist.length + album.length + year.length +
+              comment.length + track.length + genre.length;
             if (gfc->tag_spec.flags & PAD_V2_FLAG) {
                 /* add 128 bytes of padding */
                 tag_size += 128;
             }
             tag = (unsigned char *)malloc(tag_size);
             if (!tag) {
-                return LAME_NOMEM;
+                return -1;
             }
             p = tag;
             /* set tag header starting with file identifier */
@@ -478,20 +608,17 @@ id3tag_write_v2(lame_t gfc, unsigned char *buf, size_t size)
              */
 
             /* set each frame in tag */
-            p = set_frame(p, ENCODER_FRAME_ID, encoder, encoder_length);
-            p = set_frame(p, TITLE_FRAME_ID, gfc->tag_spec.title, title_length);
-            p = set_frame(p, TITLE_LENGTH_ID, tlen, strlen(tlen));
-            p = set_frame(p, ARTIST_FRAME_ID, gfc->tag_spec.artist,
-                    artist_length);
-            p = set_frame(p, ALBUM_FRAME_ID, gfc->tag_spec.album, album_length);
-            p = set_frame(p, YEAR_FRAME_ID, year, year_length);
-            p = set_frame(p, COMMENT_FRAME_ID, gfc->tag_spec.comment,
-                    comment_length);
-            p = set_frame(p, TRACK_FRAME_ID, track, track_length);
-            p = set_frame(p, GENRE_FRAME_ID, genre, genre_length);
+            p = write_frame(p, &encoder);
+            p = write_frame(p, &title);
+            p = write_frame(p, &artist);
+            p = write_frame(p, &album);
+            p = write_frame(p, &year);
+            p = write_frame(p, &comment);
+            p = write_frame(p, &track);
+            p = write_frame(p, &genre);
             /* clear any padding bytes */
             memset(p, 0, tag_size - (p - tag));
-            /* write tag directly into bitstream at current position */
+            /* output tags into output buffer */
 	    if (size && size <= tag_size)
 		return -1;
 
@@ -540,9 +667,9 @@ id3tag_write_v1(lame_t gfc, unsigned char *buf, size_t size)
     p = set_text_field(p, gfc->tag_spec.comment, 30, pad);
     /* limit comment field to 28 bytes if a track is specified */
     /* clear the last 2 bytes to indicate a version 1.1 tag */
-    if (gfc->tag_spec.track) {
+    if (gfc->tag_spec.tracknum <= 255) {
 	p[-2] = 0;
-	p[-1] = gfc->tag_spec.track;
+	p[-1] = gfc->tag_spec.tracknum;
     }
     *p++ = gfc->tag_spec.genre;
     /* write tag directly into bitstream at current position */

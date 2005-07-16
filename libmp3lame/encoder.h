@@ -420,11 +420,12 @@ struct lame_internal_flags {
 	const char *title;
 	const char *artist;
 	const char *album;
-	int year;
+	const char *track;
 	const char *comment;
-	int track;
-	int totaltrack;
+	int year;
+	int tracknum;
 	int genre;
+	int utf8;
     }  tag_spec;
     uint16_t nMusicCRC;
 
