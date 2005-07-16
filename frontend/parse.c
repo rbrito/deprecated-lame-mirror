@@ -535,6 +535,7 @@ long_help (lame_t gfc, FILE* const fp, const char* ProgramName, int lessmode )  
               "    --pad-id3v2     pad version 2 tag with extra 128 bytes\n"
               "    --genre-list    print alphabetically sorted ID3 genre list and exit\n"
               "    --keeptag       keep ID3 tag of input file(mp3 only)\n"
+              "    --ignore-tag-errors  ignore errors in values passed for tags\n"
               "\n"
               "    Note: A version 2 tag will NOT be added unless one of the input fields\n"
               "    won't fit in a version 1 tag (e.g. the title string is longer than 30\n"
