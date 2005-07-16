@@ -554,7 +554,7 @@ id3tag_write_v2(lame_t gfc, unsigned char *buf, size_t size)
                           gfc->tag_spec.year ? year_buf : 0, 0);
         init_frame_struct(&comment, COMMENT_FRAME_ID,
                           gfc->tag_spec.comment, utf8);
-        init_frame_struct(&track, YEAR_FRAME_ID, gfc->tag_spec.track, 0);
+        init_frame_struct(&track, TRACK_FRAME_ID, gfc->tag_spec.track, 0);
         sprintf(genre_buf, "(%d)", gfc->tag_spec.genre);
         init_frame_struct(&genre, GENRE_FRAME_ID,
                           gfc->tag_spec.genre != GENRE_NUM_UNKNOWN ?
