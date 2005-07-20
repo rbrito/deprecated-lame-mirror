@@ -273,15 +273,11 @@ struct lame_internal_flags {
 /*
  * Some remarks to the Class_ID field:
  * The Class ID is an Identifier for a pointer to this struct.
- * It is very unlikely that a pointer to lame_internal_flags has the same 32 bits
+ * It is very unlikely that a pointer to lame_t has the same 32 bits
  * in it's structure (large and other special properties, for instance prime).
  *
  * To test that the structure is right and initialized, use:
  *   if ( gfc -> Class_ID == LAME_ID ) ...
- * Other remark:
- *   If you set a flag to 0 for uninit data and 1 for init data, the right test
- *   should be "if (flag == 1)" and NOT "if (flag)". Unintended modification
- *   of this element will be otherwise misinterpreted as an init.
  */
 #define LAME_ID 0xFFF88E3B
 
