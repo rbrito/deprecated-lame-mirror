@@ -101,13 +101,16 @@ static const char max_range_long[SBMAX_l] = {
 
 /*
  *  Meaning of the variables:
- *      maxmp3buf: ( ??? ... 8*1951 (MPEG-1 and 2), 8*2047 (MPEG-2.5))
- *          Number of bits allowed to encode one frame (you can take 8*511 bit
- *          from the bit reservoir and at most 8*1440 bit from the current
- *          frame (320 kbps, 32 kHz), so 8*1951 bit is the largest possible
- *          value for MPEG-1 and -2)
- *       
- *          maximum allowed granule/channel size times 4 = 8*2047 bits,
+ *      maxmp3buf:
+ *          Number of bytes allowed to encode one frame. You can take 511 byte
+ *          from the bit reservoir and at most 1440 byte from the current
+ *          frame (320 kbps, 32 kHz), so 1951 byte is the largest possible
+ *          value of "buffer size" for MPEG-1 and -2. But the specification
+ *          says another limitation, i.e. "4095 is the maximum bits for one
+ *          granule". It means the buffer size can(and should) be as large as
+ *          1951 byte, but maximum usage of one granule is 4095 bits.
+ *
+ *          maximum allowed granule/channel size times 4 = 2047 bytes,
  *          so this is the absolute maximum supported by the format.
  *
  *      mean_bytes:     target number of bytes.
