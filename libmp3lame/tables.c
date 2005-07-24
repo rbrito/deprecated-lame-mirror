@@ -1085,9 +1085,6 @@ init_bitstream_w(lame_t gfc)
 	       bits, even if the frame has the space for them: */
 	    gfc->maxmp3buf
 		= (320000*1152 / gfc->out_samplerate + 7) >> 3;
-	    if (gfc->maxmp3buf > (MAX_BITS*gfc->mode_gr+7)/8)
-		gfc->maxmp3buf = (MAX_BITS*gfc->mode_gr+7)/8;
 	}
-	gfc->maxmp3buf -= gfc->sideinfo_len;
     }
 }
