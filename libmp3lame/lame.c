@@ -1610,7 +1610,6 @@ encode_mp3_frame(lame_t gfc, unsigned char* mp3buf, int mp3buf_size)
 	    gr_info *gi = &gfc->tt[gr][0];
 	    int sfb = gfc->is_start_sfb_l[gr];
 	    int end = gfc->scalefac_band.l[sfb];
-	    int i;
 	    if (gi->block_type == SHORT_TYPE) {
 		sfb = gfc->is_start_sfb_s[gr];
 		end = gfc->scalefac_band.s[sfb]*3;
