@@ -661,7 +661,7 @@ proc	quantize_ISO_SSE2
 	movss		xm0, [ipow20+116*4+edx*4] ; sfpow34
 	mov		eax, [esp+_P+4]			;xrend
 	mov		edx, [esp+_P+16]		;ixend
-	movss		xm1, [ROUNDFAC_NEAR]
+	movss		xm1, [D_ROUNDFAC]
 	mov		ecx, [esp+_P+8]		; bw
 	shufps		xm0, xm0, 0			;xm0 = [istep]
 	shufps		xm1, xm1, 0			;xm1 = [0.4054]
