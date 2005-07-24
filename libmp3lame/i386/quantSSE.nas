@@ -651,3 +651,41 @@ proc	quantize_ISO_SSE
 	movaps		[edx+4*12 + ecx*4-64], xm5
 	jnz		.lp
 	ret
+
+;
+; void qnatize_sfb_SSE2(FLOAT xr34end[], int -bw, int sf, int l3enc_end[])
+;
+proc	quantize_ISO_SSE2
+%assign _P 0
+	mov		edx, [esp+_P+12]
+	movss		xm0, [ipow20+116*4+edx*4] ; sfpow34
+	mov		eax, [esp+_P+4]			;xrend
+	mov		edx, [esp+_P+16]		;ixend
+	movss		xm1, [ROUNDFAC_NEAR]
+	mov		ecx, [esp+_P+8]		; bw
+	shufps		xm0, xm0, 0			;xm0 = [istep]
+	shufps		xm1, xm1, 0			;xm1 = [0.4054]
+.lp:
+	movaps		xm2, [eax+4* 0 + ecx*4]
+	movaps		xm3, [eax+4* 4 + ecx*4]
+	movaps		xm4, [eax+4* 8 + ecx*4]
+	movaps		xm5, [eax+4*12 + ecx*4]
+	add		ecx, byte 16
+	mulps		xm2, xm0
+	mulps		xm3, xm0
+	mulps		xm4, xm0
+	mulps		xm5, xm0
+	addps		xm2, xm1
+	addps		xm3, xm1
+	addps		xm4, xm1
+	addps		xm5, xm1
+	cvttps2dq	xm2, xm2
+	cvttps2dq	xm3, xm3
+	cvttps2dq	xm4, xm4
+	cvttps2dq	xm5, xm5
+	movaps		[edx+4* 0 + ecx*4-64], xm2
+	movaps		[edx+4* 4 + ecx*4-64], xm3
+	movaps		[edx+4* 8 + ecx*4-64], xm4
+	movaps		[edx+4*12 + ecx*4-64], xm5
+	jnz		.lp
+	ret

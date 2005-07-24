@@ -44,6 +44,7 @@ extern void sumofsqr_3DN(const float *, int, float *);
 extern void calc_noise_sub_3DN(const float *, const int *, int, int, float *);
 extern void quantize_ISO_3DN(const float *, int, int, int *, int);
 extern void quantize_ISO_SSE(const float *, int, int, int *);
+extern void quantize_ISO_SSE2(const float *, int, int, int *);
 extern float calc_sfb_noise_fast_3DN(lame_t gfc, int j, int bw, int sf);
 extern float calc_sfb_noise_3DN(lame_t gfc, int j, int bw, int sf);
 extern float xrmax_MMX(float *start, float *end);
@@ -498,7 +499,11 @@ quantize_ISO(lame_t gfc, gr_info *gi)
 	int len = (gi->count1+15)&(~15);
 	fi += len;
 	xp += len;
-	quantize_ISO_SSE(xp, -len, gi->global_gain, &fi[0].i);
+	if (gfc->CPU_features.SSE2) {
+	    quantize_ISO_SSE2(xp, -len, gi->global_gain, &fi[0].i);
+	} else {
+	    quantize_ISO_SSE(xp, -len, gi->global_gain, &fi[0].i);
+	}
 	xend = &xr34[gi->count1];
     } else
 #endif

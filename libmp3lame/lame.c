@@ -679,7 +679,7 @@ lame_print_config(lame_t gfc)
         if (gfc->CPU_features.MMX)
             gfc->report.msgf("MMX (ASM used)");
         if (gfc->CPU_features.MMX2)
-            gfc->report.msgf(", MMX2 (ASM used)");
+            gfc->report.msgf(", MMX2");
         if (gfc->CPU_features.AMD_3DNow)
             gfc->report.msgf(", 3DNow! (ASM used)");
         if (gfc->CPU_features.AMD_E3DNow)
@@ -687,7 +687,7 @@ lame_print_config(lame_t gfc)
         if (gfc->CPU_features.SSE)
             gfc->report.msgf(", SSE (ASM used)");
         if (gfc->CPU_features.SSE2)
-            gfc->report.msgf(", SSE2");
+            gfc->report.msgf(", SSE2 (ASM used)");
         gfc->report.msgf("\n");
     }
 #endif
