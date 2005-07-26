@@ -1711,6 +1711,7 @@ VBR_iteration_loop(lame_t gfc, III_psy_ratio ratio[MAX_GRANULES][MAX_CHANNELS])
     FLOAT xmin[MAX_GRANULES][MAX_CHANNELS][SFBMAX];
     gr_info gi_backup[MAX_GRANULES][MAX_CHANNELS];
     int max_frame_bits, used_bits, ch, gr, mean_bytes;
+    int retry = 0;
     memcpy(gi_backup, gfc->tt, sizeof(gi_backup));
 
     gfc->bitrate_index = gfc->VBR_max_bitrate;
@@ -1718,10 +1719,11 @@ VBR_iteration_loop(lame_t gfc, III_psy_ratio ratio[MAX_GRANULES][MAX_CHANNELS])
 
     used_bits = 0;
     for (gr = 0; gr < gfc->mode_gr; gr++) {
+	int used_bits_gr = 0;
 	for (ch = 0; ch < gfc->channels_out; ch++) {
 	    gr_info *gi = &gfc->tt[gr][ch];
 	    if (init_bitalloc(gfc, gi)) {
-		int retry = 0, next;
+		int next;
 		calc_xmin(gfc, &ratio[gr][ch], gi, xmin[gr][ch]);
 		gi->global_gain = gfc->OldValue[ch];
 		while (VBR_noise_shaping(gfc, gi, xmin[gr][ch])) {
@@ -1734,8 +1736,18 @@ VBR_iteration_loop(lame_t gfc, III_psy_ratio ratio[MAX_GRANULES][MAX_CHANNELS])
 		    next = -116;
 		gfc->OldValue[ch] = next;
 	    }
-	    used_bits += iteration_finish_one(gfc, gr, ch);
+	    used_bits_gr += iteration_finish_one(gfc, gr, ch);
 	}
+	if (used_bits_gr > MAX_BITS) {
+	    /* this is very rare case, but may happen */
+	    if (++retry > 5)
+		goto do_CBR_encoding;
+	    for (ch = 0; ch < gfc->channels_out; ch++)
+		bitpressure_strategy(&gfc->tt[gr][ch], xmin[gr][ch]);
+	    gr--;
+	    used_bits_gr = 0;
+	}
+	used_bits += used_bits_gr;
     }
 
     if (used_bits > max_frame_bits) {
