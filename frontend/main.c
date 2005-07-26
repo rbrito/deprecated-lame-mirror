@@ -42,6 +42,14 @@
 # include <unistd.h>
 #endif
 
+#ifdef HAVE_LANGINFO_CODESET
+#include <langinfo.h>
+#endif
+
+#ifdef HAVE_LOCALE_H
+#include <locale.h>
+#endif
+
 #if defined(__riscos__)
 # include <kernel.h>
 # include <sys/swis.h>
@@ -564,6 +572,34 @@ void print_trailing_info(lame_t gf)
     }
 }
 
+/*
+ * Determine whether we are (probably) in a UTF-8 locale.
+ */
+static int utf8_mode()
+{
+#if defined(HAVE_SETLOCALE) && defined(HAVE_LANGINFO_CODESET)
+    static int utf8 = -1;
+    if (utf8 < 0) {
+	setlocale(LC_ALL, "");
+	utf8 = !strcmp(nl_langinfo(CODESET), "UTF-8");
+    }
+    return utf8;
+#else
+#if defined(HAVE_GETENV)
+    static int utf8 = -1;
+    if (utf8 < 0) {
+	char *s;
+	if (((s = getenv("LC_ALL"))   && *s) ||
+	    ((s = getenv("LC_CTYPE")) && *s) ||
+	    ((s = getenv("LANG"))     && *s))
+	    utf8 = !!strstr(s, "UTF-8");
+    }
+    return utf8;
+#else
+    return 0;
+#endif
+#endif
+}
 
 int
 main(int argc, char **argv)
@@ -606,6 +642,9 @@ main(int argc, char **argv)
         usage(stderr, argv[0]); /* no command-line args, print usage, exit  */
         return 1;
     }
+
+    if (utf8_mode())
+	id3tag_u8(gfp);
 
     /* parse the command line arguments, setting various flags in the
      * encoding flags in 'gfp'.  If you want to parse your own arguments,

@@ -39,6 +39,9 @@
 /* Define to 1 if you have the <fcntl.h> header file. */
 #undef HAVE_FCNTL_H
 
+/* Define to 1 if you have the `getenv' function. */
+#undef HAVE_GETENV
+
 /* Define to 1 if you have the `gettimeofday' function. */
 #undef HAVE_GETTIMEOFDAY
 
@@ -64,11 +67,17 @@
 /* Define to 1 if you have the <inttypes.h> header file. */
 #undef HAVE_INTTYPES_H
 
+/* Define if you have <langinfo.h> and nl_langinfo(CODESET). */
+#undef HAVE_LANGINFO_CODESET
+
 /* Define to 1 if you have the <limits.h> header file. */
 #undef HAVE_LIMITS_H
 
 /* Define to 1 if you have the <linux/soundcard.h> header file. */
 #undef HAVE_LINUX_SOUNDCARD_H
+
+/* Define to 1 if you have the <locale.h> header file. */
+#undef HAVE_LOCALE_H
 
 /* Define to 1 if you have the <memory.h> header file. */
 #undef HAVE_MEMORY_H
@@ -81,6 +90,9 @@
 
 /* Define to 1 if you have the <ncurses/termcap.h> header file. */
 #undef HAVE_NCURSES_TERMCAP_H
+
+/* Define to 1 if you have the `setlocale' function. */
+#undef HAVE_SETLOCALE
 
 /* Define to 1 if you have the `socket' function. */
 #undef HAVE_SOCKET

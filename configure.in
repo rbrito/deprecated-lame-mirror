@@ -78,6 +78,7 @@ AC_CHECK_HEADERS( \
 		 errno.h \
 		 fcntl.h \
 		 limits.h \
+		 locale.h \
 		 stdint.h \
 		 string.h \
 		 sys/soundcard.h \
@@ -242,7 +243,7 @@ AC_HEADER_TIME
 
 dnl Checks for library functions.
 AC_FUNC_ALLOCA
-AC_CHECK_FUNCS(gettimeofday strtol)
+AC_CHECK_FUNCS(getenv gettimeofday setlocale strtol)
 
 if test "X${ac_cv_func_strtol}" != "Xyes"; then
 	AC_MSG_ERROR([function strtol is mandatory])
@@ -1057,6 +1058,8 @@ AC_SUBST(WITH_MP3RTP)
 AC_SUBST(CPUTYPE)
 
 AC_SUBST(CONFIG_DEFS)
+
+AM_LANGINFO_CODESET
 
 AC_CONFIG_FILES([Makefile libmp3lame/Makefile libmp3lame/i386/Makefile libmp3lame/ppc/Makefile frontend/Makefile mpglib/Makefile doc/Makefile doc/html/Makefile doc/man/Makefile include/Makefile Dll/Makefile misc/Makefile debian/Makefile dshow/Makefile ACM/Makefile ACM/ADbg/Makefile ACM/ddk/Makefile ACM/tinyxml/Makefile lame.spec mac/Makefile])
 AC_OUTPUT
