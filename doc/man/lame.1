@@ -62,9 +62,9 @@ this switch.
 .B \-\-mp3input
 Assume the input file is a MP3 file.
 .br
-Usefull for downsampling from one mp3 to another.
+Useful for downsampling from one mp3 to another.
 As an example,
-it can be usefull for streaming through an IceCast server.
+it can be useful for streaming through an IceCast server.
 .br
 If the filename ends in ".mp3" LAME will assume it is an MP3.
 For stdin or MP3 files which do not end in .mp3 you need to use this switch. 
@@ -131,7 +131,7 @@ input file has very little stereo separation.
 .B (d)ual channels
 .br
 In this mode,
-the 2 channels will be totally indenpendently encoded.
+the 2 channels will be totally independently encoded.
 Each channel will have exactly half of the bitrate.
 This mode is designed for applications like dual languages
 encoding (for example: English in one channel and French in the other).
@@ -309,7 +309,7 @@ available from
  
 By default, LAME performs ReplayGain analysis on the input data
 (after the user\(hyspecified volume scaling).
-This behaviour might give slightly inaccurate results
+This behavior might give slightly inaccurate results
 because the data on the output of a lossy compression/decompression sequence
 differs from the initial input data.
 When
@@ -342,7 +342,7 @@ into the sound.
 .RE
 .RS 7
  
-Only the "RadioGain" Replaygain value is computed,
+Only the "RadioGain" ReplayGain value is computed,
 it is stored in the LAME tag.
 The analysis is performed with the reference
 volume equal to 89dB.
@@ -460,7 +460,7 @@ The higher the bitrate,
 the higher the quality.
 But for a given bitrate,
 we have a choice of algorithms to determine the best scalefactors
-and huffman encoding (noise shaping).
+and Huffman encoding (noise shaping).
 
 .B -q 0:
 .br
@@ -500,7 +500,7 @@ Poor quality.
 Use some quality improvements.
 Encoding will be slower,
 but the result will be of higher quality.
-The behaviour is the same as the
+The behavior is the same as the
 .B -q 2
 switch.
 .br
@@ -509,7 +509,7 @@ This switch is always enabled when using VBR.
 .B -f
 This switch forces the encoder to use a faster encoding mode,
 but with a lower quality.
-The behaviour is the same as the
+The behavior is the same as the
 .B -q 7
 switch.
 
@@ -698,7 +698,7 @@ dB.
 .br
 Normally,
 humans are unable to hear any sound below this threshold,
-but for music recorded at very low level this option might be usefull.
+but for music recorded at very low level this option might be useful.
 .TP
 .BI \-\-athaa-type " n"
 ATH auto adjust types 1 - 3,
@@ -754,7 +754,7 @@ Adjust masking for sfbs 14 - 21 (long) 11 - 12 (short)
 Change ns-treble by x dB for sfb21
 
 .PP
-Experimantal options:
+Experimental options:
 .TP
 .BI -X " n"
 0 <=
@@ -769,7 +769,7 @@ The
 .B -X
 parameter selects between different approaches to make this decision,
 .B -X0
-beeing the default mode:
+being the default mode:
 
 .B -X0 
 .br
@@ -923,7 +923,7 @@ The default value is 15% of the highpass frequency.
 .I sfreq
 = 8, 11.025, 12, 16, 22.05, 24, 32, 44.1, 48
 .br
-Select ouptut sampling frequency (only supported for encoding).
+Select output sampling frequency (only supported for encoding).
 .br
 If not specified,
 LAME will automatically resample the input when using high compression ratios.
@@ -971,7 +971,7 @@ pad version 2 tag with extra 128 bytes
 print alphabetically sorted ID3 genre list and exit
 .TP
 .B \-\-ignore-tag-errors
-ignore errors in values passed for tags, use defaults in case an error occours
+ignore errors in values passed for tags, use defaults in case an error occurs
 
 .PP
 Analysis options:
@@ -985,17 +985,17 @@ Your binary may for speed reasons be compiled without this.)
 .SH ID3 TAGS
 LAME is able to embed ID3 v1,
 v1.1 or v2 tags inside the encoded MP3 file.
-This allows to have some usefull information about the music track
+This allows to have some useful information about the music track
 included inside the file.
 Those data can be read by most MP3 players.
 
-Lame will smartly choose wich tags to use.
+Lame will smartly choose which tags to use.
 It will add ID3 v2 tags only if the input comments won't fit in v1
 or v1.1 tags,
 i.e. if they are more than 30 characters.
 In this case,
 both v1 and v2 tags will be added,
-to ensure reading of tags by MP3 players wich are unable to read ID3 v2 tags.
+to ensure reading of tags by MP3 players which are unable to read ID3 v2 tags.
 
 .SH ENCODING MODES
 LAME is able to encode your music using one of its 3 encoding modes:
@@ -1008,7 +1008,7 @@ In this mode,
 the bitrate will be the same for the whole file.
 It means that each part of your mp3 file will be using the same
 number of bits.
-The musical passage beeing a difficult one to encode or an easy one,
+The musical passage being a difficult one to encode or an easy one,
 the encoder will use the same bitrate,
 so the quality of your mp3 is variable.
 Complex parts will be of a lower quality than the easiest ones.
@@ -1020,9 +1020,9 @@ In this mode,
 you choose the encoder will maintain an average bitrate while using
 higher bitrates for the parts of your music that need more bits.
 The result will be of higher quality than CBR encoding but the
-average file size will remain predictible,
+average file size will remain predictable,
 so this mode is highly recommended over CBR.
-This encoding mode is similar to what is reffered as vbr in AAC or
+This encoding mode is similar to what is referred as vbr in AAC or
 Liquid Audio (2 other compression technologies).
 .TP
 .B Variable bitrate (VBR)
@@ -1033,7 +1033,7 @@ Then encoder tries to maintain the given quality in the whole file by
 choosing the optimal number of bits to spend for each part of your music.
 The main advantage is that you are able to specify the quality level that
 you want to reach,
-but the inconvenient is that the final file size is totally unpredictible.
+but the inconvenient is that the final file size is totally unpredictable.
 
 .SH PRESETS
 The
@@ -1047,9 +1047,12 @@ These are continually updated to coincide with the latest developments that
 occur and as a result should provide you with nearly the best quality
 currently possible from LAME.
 
-To activate these prests:
+To activate these presets:
 .PP
 For VBR modes (generally highest quality):
+.TP
+.B \-\-preset medium
+This preset should provide near transparency to most people on most music.
 .TP
 .B \-\-preset standard
 This preset should generally be transparent to most people on most music and
@@ -1106,7 +1109,7 @@ you can use the
 .B cbr
 option to force CBR mode encoding instead of the standard ABR mode.
 ABR does provide higher quality but CBR may be useful in situations such as when
-streaming an MP3 over the internet may be important.
+streaming an MP3 over the Internet may be important.
 
 
 .SH EXAMPLES
