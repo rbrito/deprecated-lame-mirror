@@ -1,4 +1,4 @@
-.TH lame 1 "October 13, 2001" "" "LAME audio compressor"
+.TH lame 1 "July 27, 2005" "" "LAME audio compressor"
 .SH NAME
 lame \- create mp3 audio files
 .SH SYNOPSIS
@@ -313,7 +313,7 @@ This behaviour might give slightly inaccurate results
 because the data on the output of a lossy compression/decompression sequence
 differs from the initial input data.
 When
-.B --replaygain-accurate
+.B \-\-replaygain-accurate
 is specified the mp3 stream gets decoded on the fly and the analysis is
 performed on the decoded data stream.
 Although theoretically this method gives more accurate results,
@@ -334,7 +334,7 @@ The apparent advantage is that:
 .RS 8
 .IP "*" 4
 with
-.B --replaygain-accurate
+.B \-\-replaygain-accurate
 the real peak sample is determined and stored in the file.
 The knowledge of the peak sample can be useful to decoders (players)
 to prevent a negative effect called 'clipping' that introduces distortion
@@ -357,22 +357,22 @@ ReplayGain analysis is performed on the input data after user-specified
 volume scaling).
  
 See also:
-.B --replaygain-fast, --noreplaygain --clipdetect
+.B \-\-replaygain-fast, \-\-noreplaygain \-\-clipdetect
 .RE
 .TP
-.B --noreplaygain
+.B \-\-noreplaygain
 Disable ReplayGain analysis.
 
 By default ReplayGain analysis is enabled. This switch disables it.
 
 See also:
-.B --replaygain-fast, --replaygain-accurate
+.B \-\-replaygain-fast, \-\-replaygain-accurate
 .TP
-.B --clipdetect
+.B \-\-clipdetect
 Clipping detection.
 
 Enable
-.B --replaygain-accurate
+.B \-\-replaygain-accurate
 and print a message whether clipping occurs and how far in dB the waveform
 is from full scale.
   
@@ -381,9 +381,9 @@ This option is not usable if the MP3 decoder was
 disabled in the build of LAME.
 
 See also:
-.B --replaygain-accurate
+.B \-\-replaygain-accurate
 .TP
-.B --preset " [fast] type | [cbr] kbps"
+.B \-\-preset " [fast] type | [cbr] kbps"
 Use one of the built-in presets.
 
 Have a look at the PRESETS section below.
@@ -392,22 +392,22 @@ Have a look at the PRESETS section below.
 with the current version fast presets might result in too high bitrate
 compared to regular presets.
 
-.B --preset help
+.B \-\-preset help
 gives more infos about the the used options in these presets.
 .TP
-.B --alt-preset " [fast] type | [cbr] kbps"
+.B \-\-alt-preset " [fast] type | [cbr] kbps"
 Use one of the built-in  presets.
 
 This option is deprecated and offers the same as the
-.B --preset
+.B \-\-preset
 option above. Do not use it anymore, it will go away in a later version.
 .TP
-.B --r3mix
+.B \-\-r3mix
 Uses r3mix VBR preset.
 .br
 See http://www.r3mix.net/ for more details. 
 .TP
-.B --noasm " type"
+.B \-\-noasm " type"
 Disable specific assembly optimizations (
 .B mmx
 /
@@ -422,10 +422,10 @@ disabling mmx optimizations might solve your problem.
 .PP
 Verbosity:
 .TP
-.BI --disptime " n"
+.BI \-\-disptime " n"
 Set the delay in seconds between two display updates. 
 .TP
-.B --nohist
+.B \-\-nohist
 By default,
 LAME will display a bitrate histogram while producing VBR mp3 files.
 This will disable that feature.
@@ -435,16 +435,16 @@ Histogram display might not be available on your release.
 .B -S
 .PD 0
 .TP
-.B --silent
+.B \-\-silent
 .TP
-.B --quiet
+.B \-\-quiet
 Do not print anything on the screen.
 .PD
 .TP
-.B --verbose
+.B \-\-verbose
 Print a lot of information on the screen.
 .TP
-.B --help
+.B \-\-help
 Display a list of available options.
 
 .PP
@@ -533,13 +533,13 @@ For MPEG2 (sampling frequencies of 16, 22.05 and 24 kHz)
 
 Default is 128 for MPEG1 and 64 for MPEG2. 
 .TP
-.BI --cbr
+.BI \-\-cbr
 enforce use of constant bitrate
 
 .PP
 ABR (average bitrate) options:
 .TP
-.BI --abr " n"
+.BI \-\-abr " n"
 Turns on encoding with a targeted average bitrate of n kbits,
 allowing to use frames of different sizes.
 The allowed range of
@@ -552,7 +552,7 @@ It can be combined with the
 and
 .B -B
 switches like:
-.B lame --abr
+.B lame \-\-abr
 .I 123
 .B -b
 .I 64
@@ -575,9 +575,9 @@ VBR (variable bitrate) options:
 .TP
 .B -v
 use variable bitrate
-.B (--vbr-old)
+.B (\-\-vbr-old)
 .TP
-.B --vbr-old
+.B \-\-vbr-old
 Invokes the oldest,
 most tested VBR algorithm.
 It produces very good quality files,
@@ -586,14 +586,14 @@ This has,
 up through v3.89,
 been considered the "workhorse" VBR algorithm.
 .TP
-.B --vbr-new
+.B \-\-vbr-new
 Invokes the newest VBR algorithm.
 During the development of version 3.90,
 considerable tuning was done on this algorithm,
 and it is now considered to be on par with the original
-.B --vbr-old. 
+.B \-\-vbr-old. 
 It has the added advantage of being very fast (over twice as fast as
-.B --vbr-old).
+.B \-\-vbr-old).
 .TP
 .BI -V " n"
 0 <=
@@ -655,21 +655,21 @@ human hearing (ATH).
 .PP
 ATH related:
 .TP
-.B --noath
+.B \-\-noath
 Disable any use of the ATH (absolute threshold of hearing) for masking.
 Normally,
 humans are unable to hear any sound below this threshold. 
 .TP
-.B --athshort
+.B \-\-athshort
 Ignore psychoacoustic model for short blocks,
 use ATH only. 
 .TP
-.B --athonly
+.B \-\-athonly
 This option causes LAME to ignore the output of the psy-model and only
 use masking from the ATH (absolute threshold of hearing).
 Might be useful at very high bitrates or for testing the ATH. 
 .TP
-.BI --athtype " shape"
+.BI \-\-athtype " shape"
 The Absolute Threshold of Hearing is the minimum threshold under which
 humans are unable to hear any sound.
 .br
@@ -691,7 +691,7 @@ VBR selects one depending on the specified parameter to the
 .B -V
 option.
 .TP
-.BI --athlower " n"
+.BI \-\-athlower " n"
 Lower the ATH (absolute threshold of hearing) by
 .I n
 dB.
@@ -700,57 +700,57 @@ Normally,
 humans are unable to hear any sound below this threshold,
 but for music recorded at very low level this option might be usefull.
 .TP
-.BI --athaa-type " n"
+.BI \-\-athaa-type " n"
 ATH auto adjust types 1 - 3,
 else no adjustment
 .TP
-.BI --athaa-sensitivity " x"
+.BI \-\-athaa-sensitivity " x"
 activation offset in -/+ dB for ATH auto-adjustment
 
 .PP
 PSY related:
 .TP
-.B --short
+.B \-\-short
 Let LAME use short blocks when appropriate.
 It is the default setting.
 .TP
-.B --noshort
+.B \-\-noshort
 Encode all frames using long blocks only.
 This could increase quality when encoding at very low bitrates,
 but can produce serious pre-echo artefacts. 
 .TP
-.B --allshort
+.B \-\-allshort
 Use only short blocks,
 no long ones. 
 .TP
-.BI --cwlimit " freq"
+.BI \-\-cwlimit " freq"
 Compute tonality up to
 .I freq
 (in kHz).
 Default setting is 8.8717.
 .TP
-.B --notemp
+.B \-\-notemp
 Do not make use of the temporal masking effect. 
 .TP
-.B --nspsytune
+.B \-\-nspsytune
 Experimental PSY tunings by Naoki Shibata
 .TP
-.B --nssafejoint
+.B \-\-nssafejoint
 M/S switching criterion
 .TP
-.BI --nsmsfix " arg"
+.BI \-\-nsmsfix " arg"
 M/S switching tuning [effective 0-3.5]
 .TP
-.BI --ns-bass " x"
+.BI \-\-ns-bass " x"
 Adjust masking for sfbs  0 -  6 (long)  0 -  5 (short)
 .TP
-.BI --ns-alto " x"
+.BI \-\-ns-alto " x"
 Adjust masking for sfbs  7 - 13 (long)  6 - 10 (short)
 .TP
-.BI --ns-treble " x"
+.BI \-\-ns-treble " x"
 Adjust masking for sfbs 14 - 21 (long) 11 - 12 (short)
 .TP
-.BI --ns-sfb21 " x"
+.BI \-\-ns-sfb21 " x"
 Change ns-treble by x dB for sfb21
 
 .PP
@@ -876,12 +876,12 @@ However,
 it takes 16 bits per frame that would otherwise be used for encoding,
 and then will slightly reduce the sound quality. 
 .TP
-.B --nores
+.B \-\-nores
 Disable the bit reservoir.
 Each frame will then become independent from previous ones,
 but the quality will be lower. 
 .TP
-.B --strictly-enforce-ISO
+.B \-\-strictly-enforce-ISO
 With this option,
 LAME will enforce the 7680 bit limitation on total frame size.
 .br
@@ -903,23 +903,23 @@ Increasing the bandwidth from the default setting might produce
 ringing artefacts at low bitrates.
 Use with care! 
 .TP
-.BI --lowpass " freq"
+.BI \-\-lowpass " freq"
 Set a lowpass filtering frequency in kHz.
 Frequencies above the specified one will be cutoff. 
 .TP
-.BI --lowpass-width " freq"
+.BI \-\-lowpass-width " freq"
 Set the width of the lowpass filter.
 The default value is 15% of the lowpass frequency. 
 .TP
-.BI --highpass " freq"
+.BI \-\-highpass " freq"
 Set an highpass filtering frequency in kHz.
 Frequencies below the specified one will be cutoff. 
 .TP
-.BI --highpass-width " freq"
+.BI \-\-highpass-width " freq"
 Set the width of the highpass filter in kHz.
 The default value is 15% of the highpass frequency.
 .TP
-.BI --resample " sfreq"
+.BI \-\-resample " sfreq"
 .I sfreq
 = 8, 11.025, 12, 16, 22.05, 24, 32, 44.1, 48
 .br
@@ -931,52 +931,52 @@ LAME will automatically resample the input when using high compression ratios.
 .PP
 ID3 tag options:
 .TP
-.BI --tt " title"
+.BI \-\-tt " title"
 audio/song title (max 30 chars for version 1 tag)
 .TP
-.BI --ta " artist"
+.BI \-\-ta " artist"
 audio/song artist (max 30 chars for version 1 tag)
 .TP
-.BI --tl " album"
+.BI \-\-tl " album"
 audio/song album (max 30 chars for version 1 tag)
 .TP
-.BI --ty " year"
+.BI \-\-ty " year"
 audio/song year of issue (1 to 9999)
 .TP
-.BI --tc " comment"
+.BI \-\-tc " comment"
 user-defined text (max 30 chars for v1 tag, 28 for v1.1)
 .TP
-.BI --tn " track"
+.BI \-\-tn " track"
 audio/song track number (1 to 255, creates v1.1 tag)
 .TP
-.BI --tg " genre"
+.BI \-\-tg " genre"
 audio/song genre (name or number in list)
 .TP
-.B --add-id3v2
+.B \-\-add-id3v2
 force addition of version 2 tag
 .TP
-.B --id3v1-only
+.B \-\-id3v1-only
 add only a version 1 tag
 .TP
-.B --id3v2-only
+.B \-\-id3v2-only
 add only a version 2 tag
 .TP
-.B --space-id3v1
+.B \-\-space-id3v1
 pad version 1 tag with spaces instead of nulls
 .TP
-.B --pad-id3v2
+.B \-\-pad-id3v2
 pad version 2 tag with extra 128 bytes
 .TP
-.B --genre-list
+.B \-\-genre-list
 print alphabetically sorted ID3 genre list and exit
 .TP
-.B --ignore-tag-errors
+.B \-\-ignore-tag-errors
 ignore errors in values passed for tags, use defaults in case an error occours
 
 .PP
 Analysis options:
 .TP
-.B -g
+.B \-g
 run graphical analysis on <infile>.
 <infile> can also be a .mp3 file.
 (This feature is a compile time option.
@@ -1037,7 +1037,7 @@ but the inconvenient is that the final file size is totally unpredictible.
 
 .SH PRESETS
 The
-.B --preset
+.B \-\-preset
 switches are designed to provide the highest possible quality.
 
 They have for the most part been subject to and tuned via rigorous double blind
@@ -1051,28 +1051,28 @@ To activate these prests:
 .PP
 For VBR modes (generally highest quality):
 .TP
-.B --preset standard
+.B \-\-preset standard
 This preset should generally be transparent to most people on most music and
 is already quite high in quality.
 .TP
-.B --preset extreme
+.B \-\-preset extreme
 If you have extremely good hearing and similar equipment,
 this preset will generally provide slightly higher quality than the
 .B standard
 mode.
 .PP
 For CBR 320kbps (highest quality possible from the
-.B --preset
+.B \-\-preset
 switches):
 .TP
-.B --preset insane
+.B \-\-preset insane
 This preset will usually be overkill for most people and most situations,
 but if you must have the absolute highest quality with no regard to filesize,
 this is the way to go.
 .PP
 For ABR modes (high quality per given bitrate but not as high as VBR):
 .TP
-.B --preset " kbps"
+.B \-\-preset " kbps"
 Using this preset will usually give you good quality at a specified bitrate.
 Depending on the bitrate entered,
 this preset will determine the optimal settings for that particular situation.
@@ -1119,33 +1119,33 @@ Fixed bit rate jstereo 128kbs encoding:
 .LP
 Fixed bit rate jstereo 128 kbps encoding, highest quality (recommended):
 .IP
-.B lame -h
+.B lame \-h
 .I sample.wav sample.mp3
 
 .LP
 Fixed bit rate jstereo 112 kbps encoding:
 .IP
-.B lame -b
+.B lame \-b
 .I 112 sample.wav sample.mp3
 
 .LP
 To disable joint stereo encoding (slightly faster,
 but less quality at bitrates <= 128 kbps):
 .IP
-.B lame -m
+.B lame \-m
 .I s sample.wav sample.mp3
 
 .LP
 Fast encode,
 low quality (no psycho-acoustics):
 .IP
-.B lame -f
+.B lame \-f
 .I sample.wav sample.mp3
 
 .LP
-Variable bitrate (use -V n to adjust quality/filesize):
+Variable bitrate (use \-V n to adjust quality/filesize):
 .IP
-.B lame -h -V
+.B lame \-h \-V
 .I 6 sample.wav sample.mp3
 
 .LP
@@ -1153,12 +1153,12 @@ Streaming mono 22.05 kHz raw pcm, 24 kbps output:
 .IP
 .B cat
 .I inputfile
-.B | lame -r -m
+.B | lame \-r \-m
 .I m
-.B -b
+.B \-b
 .I 24
-.B -s
-.I 22.05 - -
+.B \-s
+.I 22.05 \- \-
 .B >
 .I output
 
@@ -1168,12 +1168,12 @@ with downsampling to 22.05 kHz:
 .IP
 .B cat
 .I inputfile
-.B | lame -r -m
+.B | lame \-r \-m
 .I m
-.B -b
+.B \-b
 .I 24
-.B --resample
-.I 22.05 - -
+.B \-\-resample
+.I 22.05 \- \-
 .B >
 .I output
 
@@ -1182,7 +1182,7 @@ Encode with the
 .B fast standard
 preset:
 .IP
-.B lame --preset fast standard
+.B lame \-\-preset fast standard
 .I sample.wav sample.mp3
 
 .SH BUGS
@@ -1198,5 +1198,6 @@ LAME originally developed by Mike Cheng and now maintained by
 Mark Taylor.  GPSYCHO psycho-acoustic model by Mark Taylor.
 (http://www.mp3dev.org/).
 mpglib by Michael Hipp
-Manual page by William Schelter, Nils Faerber, Alexander Leidinger
+Manual page by William Schelter, Nils Faerber, Alexander Leidinger.
+Small fixes on the manual page by Rogério Brito.
 .f

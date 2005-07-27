@@ -1,3 +1,10 @@
+lame (3.97-2) unstable; urgency=low
+
+  * debian/rules: use dh_installman instead of dh_installmanpages.
+  * doc/man/lame.1: escape minus signals with backslash.
+	
+ -- Rogério Brito <rbrito@users.sf.net>  Wed, 27 Jul 2005 04:58:39 -0300
+
 lame (3.97-1) unstable; urgency=low
 
   * Preparation for the beta release of lame 3.97.
