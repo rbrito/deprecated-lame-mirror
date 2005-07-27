@@ -1,3 +1,10 @@
+lame (3.97-1) unstable; urgency=low
+
+  * Preparation for the beta release of lame 3.97.
+  * Still more improvements to come.
+
+ -- Rogério Brito <rbrito@users.sf.net>  Tue, 26 Jul 2005 18:16:34 -0300
+
 lame (3.97-0.2) unstable; urgency=low
 
   * Fixed debian/control according to the Debian Library Packaging Guide
