@@ -13,7 +13,7 @@
         BGCOLOR=#F9FBFB LINK=#006666 VLINK=#4C4C4C
         ALINK=#995500>
 <H1>Full command line switch reference</H1>
-<P> <font size="-1">note: Options which could exist without beeing documented 
+<P> <font size="-1">note: Options which could exist without being documented 
   here are considered as experimental ones. Such experimental options should usually 
   not be used.</font> 
 <P> 
@@ -339,7 +339,7 @@
 <dl> 
   <dd>Lower the ATH (absolute threshold of hearing) by n dB.<br>
     Normally, humans are unable to hear any sound below this threshold, but for 
-    music recorded at very low level this option might be usefull. 
+    music recorded at very low level this option might be useful.
 </dl>
 <dl> 
   <dd>&nbsp; 
@@ -746,7 +746,7 @@
     of the input file has very little stereo separation.<br>
     <br>
     <b><i>dual channels </i></b><br>
-    In this mode, the 2 channels will be totally indenpendently encoded. Each 
+    In this mode, the 2 channels will be totally independently encoded. Each 
     channel will have exactly half of the bitrate. This mode is designed for applications 
     like dual languages encoding (ex: English in one channel and French in the 
     other). Using this encoding mode for regular stereo files will result in a 
@@ -795,8 +795,8 @@
     Layer III input file</a></strong> </dt>
 </dl>
 <dl> 
-  <dd> Assume the input file is a MP3 file. Usefull for downsampling from one 
-    mp3 to another. As an example, it can be usefull for streaming through an 
+  <dd> Assume the input file is a MP3 file. Useful for downsampling from one 
+    mp3 to another. As an example, it can be useful for streaming through an 
     IceCast server.<br>
     If the filename ends in ".mp3" LAME will assume it is an MP3 file. For stdin or 
     MP3 files which do not end in .mp3 you need to use this switch. 
@@ -821,7 +821,7 @@
   <br>
   <dl> </dl>
   <dt><strong>* <kbd>--noasm mmx/3dnow/sse</kbd><a name="-noasm">
-   &nbsp;&nbsp;&nbsp;&nbsp;disable assembly optimisations</a></strong> </dt>
+   &nbsp;&nbsp;&nbsp;&nbsp;disable assembly optimizations</a></strong> </dt>
 </dl>
 <dl> 
   <dd>Disable specific assembly optimizations. Quality will not increase, only
@@ -989,7 +989,7 @@
 <dl> 
   <dd> Bitrate is of course the main influence on quality. The higher the bitrate, 
     the higher the quality. But for a given bitrate, we have a choice of algorithms 
-    to determine the best scalefactors and huffman encoding (noise shaping).<br>
+    to determine the best scalefactors and Huffman encoding (noise shaping).<br>
     <br>
     -q 0: use slowest &amp; best possible version of all algorithms. -q 0 and -q 1 
     are slow and may not produce significantly higher quality.<br>
@@ -1039,7 +1039,7 @@
     <br>
     By default, LAME performs ReplayGain analysis on the input data 
     (after the user-specified volume scaling). This
-    behaviour might give slightly inaccurate results because the data on 
+    behavior might give slightly inaccurate results because the data on 
     the output of a lossy compression/decompression sequence differs from 
     the initial input data. When --replaygain-accurate is specified the
     mp3 stream gets decoded on the fly and the analysis is performed on the
@@ -1063,7 +1063,7 @@
       </li>
     </ul>    
     <br>
-    Only the "RadioGain" Replaygain value is computed. It is stored in the 
+    Only the "RadioGain" ReplayGain value is computed. It is stored in the 
     LAME tag. The analysis is  performed with the reference volume equal
     to 89dB. Note: the reference volume has been changed from 83dB on 
     transition from version 3.95 to 3.95.1.<br>
@@ -1096,7 +1096,7 @@
     algorithms used is available from 
     <a href="http://www.replaygain.org/">http://www.replaygain.org/</a><br>
     <br>
-    Only the "RadioGain" Replaygain value is computed. It is stored in the 
+    Only the "RadioGain" ReplayGain value is computed. It is stored in the 
     LAME tag. The analysis is  performed with the reference volume equal
     to 89dB. Note: the reference volume has been changed from 83dB on 
     transition from version 3.95 to 3.95.1.<br>
@@ -1116,7 +1116,7 @@
     sampling frequency in kHz</a></strong></dt>
 </dl>
 <dl> 
-  <dd> Select ouptut sampling frequency (for encoding only). <br>
+  <dd> Select output sampling frequency (for encoding only). <br>
     If not specified, LAME will automatically resample the input when using high 
     compression ratios. 
   <dt><br>
@@ -1279,7 +1279,7 @@
   </dt>
 </dl>
 <dl> 
-  <dd> Swap bytes in the input file or ouptut file when using --decode.<br>
+  <dd> Swap bytes in the input file or output file when using --decode.<br>
     For sorting out little endian/big endian type problems. If your encodings 
     sounds like static, try this first. 
   <dt><br>
@@ -1295,7 +1295,7 @@
   <dd> When LAME searches for a "good" quantization, it has to compare the actual 
     one with the best one found so far. The comparison says which one is better, 
     the best so far or the actual. The -X parameter selects between different 
-    approaches to make this decision, -X0 beeing the default mode:<br>
+    approaches to make this decision, -X0 being the default mode:<br>
     <br>
     <b>-X0 </b><br>
     The criterions are (in order of importance):<br>
