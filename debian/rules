@@ -18,7 +18,7 @@ configure-stamp:
 		--enable-mp3rtp \
 		--enable-nasm \
 		--with-pic \
-		--enable-expopt=full
+		--enable-expopt=norm
 
    # Patch the generated libtool to avoid passing -rpath when linking,
    # and to explicitly link libraries against the libraries they depend
