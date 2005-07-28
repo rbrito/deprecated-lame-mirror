@@ -208,7 +208,7 @@
   </tr>
   <tr valign="TOP"> 
     <td align="LEFT" nowrap><kbd><a href="#r">-r</a></kbd></td>
-    <td align="LEFT" nowrap>input file is raw pcm</td>
+    <td align="LEFT" nowrap>input file is raw PCM</td>
   </tr>
   <tr valign="TOP"> 
     <td align="LEFT" nowrap><kbd><a href="#-replaygain-accurate">--replaygain-accurate</a></kbd></td>
@@ -413,7 +413,7 @@
     For MPEG2 (sampling frequencies of 16, 22.05 and 24 kHz)<br>
     n = 8,16,24,32,40,48,56,64,80,96,112,128,144,160<br>
     <br>
-    Default is 128 kbs for MPEG1 and 64 kbs for MPEG2. <br>
+    Default is 128 kbps for MPEG1 and 64 kbps for MPEG2. <br>
     <br>
     When used with variable bitrate encoding (VBR), -b specifies the minimum bitrate 
     to be used. However, in order to avoid wasted space, the smallest frame size 
@@ -436,9 +436,9 @@
     <br>
     Specifies the maximum allowed bitrate when using VBR/ABR <br>
     <br>
-    The use of -B is NOT RECOMMENDED. A 128kbs CBR bitstream, because of the bit reservoir, 
-    can actually have frames which use as many bits as a 320kbs frame. VBR modes 
-    minimize the use of the bit reservoir, and thus need to allow 320kbs frames 
+    The use of -B is NOT RECOMMENDED. A 128kbps CBR bitstream, because of the bit reservoir, 
+    can actually have frames which use as many bits as a 320kbps frame. VBR modes 
+    minimize the use of the bit reservoir, and thus need to allow 320kbps frames 
     to get the same flexibility as CBR streams.<br>
     <br>
     <i>note: If you own an mp3 hardware player build upon a MAS 3503 chip, you 
@@ -524,11 +524,11 @@
     only</a></strong> </dt>
 </dl>
 <dl> 
-  <dd>Uses LAME for decoding to a wav file. The input file can be any input type 
+  <dd>Uses LAME for decoding to a WAV file. The input file can be any input type 
     supported by encoding, including layer I,II,III (MP3) and OGG files. In case 
     of MPEG files, LAME uses a bugfixed version of mpglib for decoding.<br>
     <br>
-    If -t is used (disable wav header), Lame will output raw pcm in native endian 
+    If -t is used (disable WAV header), Lame will output raw PCM in native endian 
     format. You can use -x to swap bytes order. <br>
     <br>
     This option is not usable if the MP3 decoder was <b>explicitly</b>
@@ -718,7 +718,7 @@
 </dl>
 <dl> 
   <dd> Joint-stereo is the default mode for stereo files with VBR when -V is more 
-     than 4 or fixed bitrates of 160kbs or less. At higher fixed bitrates or higher 
+     than 4 or fixed bitrates of 160kbps or less. At higher fixed bitrates or higher 
      VBR settings, the default is stereo. <b><i><br>
     <br>
     stereo</i></b> <br>
@@ -1009,10 +1009,10 @@
   <br>
   <dl> </dl>
   <dt><strong>* <kbd>-r</kbd><a name="r">&nbsp;&nbsp;&nbsp;&nbsp;input file is 
-    raw pcm</a></strong></dt>
+    raw PCM</a></strong></dt>
 </dl>
 <dl> 
-  <dd> Assume the input file is raw pcm. Sampling rate and mono/stereo/jstereo 
+  <dd> Assume the input file is raw PCM. Sampling rate and mono/stereo/jstereo 
     must be specified on the command line. Without -r, LAME will perform several 
     fseek()'s on the input file looking for WAV and AIFF headers.<br>
     Might not be available on your release. 
@@ -1217,7 +1217,7 @@
     correctly seek and compute playing times of VBR files.<br>
     <br>
     When '--decode' is specified (decode to WAV), this flag will disable writing 
-    of the WAV header. The output will be raw pcm, native endian format. Use -x 
+    of the WAV header. The output will be raw PCM, native endian format. Use -x 
     to swap bytes. 
   <dt><br>
     <br>
