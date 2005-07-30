@@ -324,7 +324,7 @@ quantEstimate(
     FLOAT noise = calc_noise(gfc, gi, rxmin, distort);
 
     if (noise <= (FLOAT)1.0) {
-	return (FLOAT) (-(MAX_BITS - gi->part2_3_length - gi->part2_length));
+	return (FLOAT) (-(LARGE_BITS - gi->part2_3_length - gi->part2_length));
     }
     return noise;
 }
@@ -1299,10 +1299,12 @@ CBR_iteration_loop(lame_t gfc, III_psy_ratio ratio[MAX_GRANULES][MAX_CHANNELS])
 	if (min_bits > max_bits)
 	    min_bits = max_bits;
 	/* check hard limit per granule (by spec) */
-	if (max_bits > MAX_BITS)
-	    max_bits = MAX_BITS;
-	if (min_bits > MAX_BITS)
-	    min_bits = MAX_BITS;
+        if (gfc->strict_ISO) {
+	    if (max_bits > MAX_BITS)
+		max_bits = MAX_BITS;
+	    if (min_bits > MAX_BITS)
+		min_bits = MAX_BITS;
+	}
 
 	CBR_bitalloc(gfc, ratio[gr], min_bits, max_bits, factor, gr);
     }
@@ -1691,12 +1693,10 @@ VBR_noise_shaping(lame_t gfc, gr_info *gi, FLOAT * xmin)
     /* encode scalefacs */
     gfc->scale_bitcounter(gi);
 
-    if (gi->part2_3_length + gi->part2_length > MAX_BITS
+    if ((gfc->strict_ISO && gi->part2_3_length + gi->part2_length > MAX_BITS)
 	|| (gi->block_type == SHORT_TYPE && (gfc->substep_shaping & 2))
 	|| (gi->block_type != SHORT_TYPE && (gfc->substep_shaping & 1))) {
 	trancate_smallspectrums(gfc, gi, xmin);
-	if (gi->part2_3_length + gi->part2_length > MAX_BITS)
-	    return -2;
     }
 
     assert((unsigned int)gi->global_gain <= (unsigned int)MAX_GLOBAL_GAIN);
@@ -1738,7 +1738,7 @@ VBR_iteration_loop(lame_t gfc, III_psy_ratio ratio[MAX_GRANULES][MAX_CHANNELS])
 	    }
 	    used_bits_gr += iteration_finish_one(gfc, gr, ch);
 	}
-	if (used_bits_gr > MAX_BITS) {
+	if (gfc->strict_ISO && used_bits_gr > MAX_BITS) {
 	    /* this is very rare case, but may happen */
 	    if (++retry > 5)
 		goto do_CBR_encoding;
