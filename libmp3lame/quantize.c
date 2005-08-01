@@ -60,18 +60,24 @@ static const char max_range_long[SBMAX_l] = {
 };
 
 /*
-  ResvFrameBegin:
-  Called (repeatedly) at the beginning of a frame. Updates the maximum
-  size of the reservoir, and checks to make sure main_data_begin
-  was set properly by the formatter
-*/
-
-/*
- *  Background information:
+ * ResvFrameBegin:
+ *  Called (repeatedly) at the beginning of a frame. Updates the maximum
+ *  size of the reservoir.
  *
- *  This is the original text from the ISO standard. Because of 
- *  sooo many bugs and irritations correcting comments are added 
- *  in brackets [].
+ * Meaning of the variables:
+ *    maxmp3buf:
+ *      Number of bytes allowed to encode one frame. You can take 511 byte
+ *      from the bit reservoir and at most 1440 byte from the current
+ *      frame (320 kbps, 32 kHz or 160kbps, 16kHz), so 1951 byte is the
+ *      largest possible value of "buffer size" for MPEG-1 and -2. But the
+ *      specification says another limitations. See "Background information".
+ *
+ *    mean_bytes:     target number of frame size (byte).
+ *    gfc->ResvMax:   maximum allowed reservoir size (byte).
+ *    gfc->ResvSize:  current reservoir size (byte).
+ *
+ * Background information:
+ *  This is the "corrected" text based on the ISO standard.
  *
  *  1) The following rule can be used to calculate the maximum 
  *     number of bits used for one frame:
@@ -95,27 +101,9 @@ static const char max_range_long[SBMAX_l] = {
  *     is allowed without restrictions except dual channel.
  *     Because of the constructed constraint on the buffer size
  *     main_data_end is always set to 0 in the case of bit_rate_index==14, 
- *     i.e. data rate 320 kbps. In this case all data are allocated
- *     between adjacent sync words, i.e. there is no buffering at all.
- */
-
-/*
- *  Meaning of the variables:
- *      maxmp3buf:
- *          Number of bytes allowed to encode one frame. You can take 511 byte
- *          from the bit reservoir and at most 1440 byte from the current
- *          frame (320 kbps, 32 kHz), so 1951 byte is the largest possible
- *          value of "buffer size" for MPEG-1 and -2. But the specification
- *          says another limitation, i.e. "4096 is the maximum bits for one
- *          granule". It means the buffer size can(and should) be as large as
- *          1951 byte, but maximum usage of one granule is 4096 bits.
- *
- *          maximum allowed granule size times 2 = 1024 bytes,
- *          so this is the absolute maximum supported by the format.
- *
- *      mean_bytes:     target number of bytes.
- *      gfc->ResvMax:   maximum allowed reservoir 
- *      gfc->ResvSize:  current reservoir size
+ *     i.e. bitrate is 320 kbps for MPEG-1, 160kbps for MPEG-2. In this
+ *     case all data are allocated between adjacent sync words, i.e. there
+ *     is no buffering at all.
  */
 static int
 ResvFrameBegin(lame_t gfc, int mean_bytes)
