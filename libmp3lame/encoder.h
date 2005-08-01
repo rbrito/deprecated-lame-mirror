@@ -113,7 +113,7 @@
 #define MPG_MD_MS_LR  2
 #define MPG_MD_MS_I   3
 
-#define	MAX_BITS	4095
+#define	MAX_BITS	4096
 
 #define MAX_CHANNELS  2
 #define MAX_GRANULES  2
