@@ -188,7 +188,7 @@ HRESULT CMpegAudEnc::Receive(IMediaSample * pSample)
             if (m_sync.applied && (rtStart - m_rtEstimated > 10000))
             {
                 m_sync.sample   = m_samplesIn;
-                m_sync.delta    = m_rtEstimated - rtStart;
+                m_sync.delta    = rtStart - m_rtEstimated;
                 m_sync.applied  = FALSE;
             }
         }
