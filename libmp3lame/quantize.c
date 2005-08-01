@@ -106,11 +106,11 @@ static const char max_range_long[SBMAX_l] = {
  *          from the bit reservoir and at most 1440 byte from the current
  *          frame (320 kbps, 32 kHz), so 1951 byte is the largest possible
  *          value of "buffer size" for MPEG-1 and -2. But the specification
- *          says another limitation, i.e. "4095 is the maximum bits for one
+ *          says another limitation, i.e. "4096 is the maximum bits for one
  *          granule". It means the buffer size can(and should) be as large as
- *          1951 byte, but maximum usage of one granule is 4095 bits.
+ *          1951 byte, but maximum usage of one granule is 4096 bits.
  *
- *          maximum allowed granule/channel size times 4 = 2047 bytes,
+ *          maximum allowed granule size times 2 = 1024 bytes,
  *          so this is the absolute maximum supported by the format.
  *
  *      mean_bytes:     target number of bytes.

@@ -1070,21 +1070,23 @@ init_bitstream_w(lame_t gfc)
 	    = ((gfc->version+1)*72000L*gfc->mean_bitrate_kbps)
 	    % gfc->out_samplerate;
 
+    /* reservoir size. */
+    /* we cannot use it over 320kbp or when indicated not to use */
     gfc->maxmp3buf = 0;
-    /* we cannot use reservoir over 320kbp or when indicated not to use */
     if ((gfc->VBR != cbr || gfc->mean_bitrate_kbps < 320)
 	&& !gfc->disable_reservoir) {
 	/* all mp3 decoders should have enough buffer to handle 1440byte:
 	 * size of a 320kbps 32kHz frame
 	 * Bouvigne suggests this more lax interpretation of the ISO doc 
-	 * instead of using 8*960.
+	 * instead of using 7680bit (=960byte).
 	 */
-	gfc->maxmp3buf = 1440;
-        if (gfc->strict_ISO) {
-	    /* maximum allowed frame size.  dont use more than this number of
-	       bits, even if the frame has the space for them: */
-	    gfc->maxmp3buf
-		= (320000*1152 / gfc->out_samplerate + 7) >> 3;
+	gfc->maxmp3buf = (320000*1152 / 32000 + 7) >> 3;
+	if (gfc->strict_ISO) {
+	    /* some decoder cannot support only 44.1kHz or some frequency. */
+	    /* such decoder may only have a limitted buffer size. */
+	    /* So dont use more than the number of bits spec says. */
+	    gfc->maxmp3buf = (320000*1152 / gfc->out_samplerate + 7) >> 3;
 	}
     }
+    gfc->maxmp3buf -= gfc->sideinfo_len;
 }
