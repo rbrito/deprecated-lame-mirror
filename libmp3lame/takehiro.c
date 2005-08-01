@@ -414,10 +414,6 @@ choose_table(const int *ix, const int * const end, int * const s)
     int choice, choice2;
     unsigned int max;
     const uint64_t *ptable;
-    static const short linmax[] = {
-	 2+15,  4+15,  8+15,  16+15,  64+15,  256+15,  1024+15,  8192+15,
-	16+15, 32+15, 64+15, 128+15, 256+15,  512+15,  2048+15,  8192+15
-    };
 
     max = *s;
     switch (max) {
@@ -445,14 +441,14 @@ choose_table(const int *ix, const int * const end, int * const s)
     default:
 	/* try tables with linbits */
 	for (choice2 = 24; choice2 < 32; choice2++) {
-	    if (linmax[choice2-16] > max)
+	    if (((max - 15) >> htESC_xlen[choice2-16]) <= 0)
 		break;
 	}
 	if (choice2 == 32)
 	    return max;
 	choice = choice2 - 8;
 	do {
-	    if (linmax[choice-16] > max)
+	    if (((max - 15) >> htESC_xlen[choice-16]) <= 0)
 		break;
 	} while (++choice < 24);
 	return count_bit_ESC(s, ix, end, choice, choice2);
