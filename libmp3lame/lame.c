@@ -520,6 +520,8 @@ lame_init_params(lame_t gfc)
 	    = BitrateIndex(gfc->mean_bitrate_kbps, gfc->version);
 	if (gfc->bitrate_index < 0)
 	    return LAME_BADBITRATE;
+	gfc->VBR_max_bitrate_kbps = gfc->VBR_min_bitrate_kbps
+	    = gfc->mean_bitrate_kbps;
     }
     if (gfc->VBR != cbr) {
 	/* choose a min/max bitrate for VBR */

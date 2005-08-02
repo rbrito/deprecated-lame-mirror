@@ -453,16 +453,11 @@ static void
 brhist_init_package(lame_t gfp)
 {
 #ifdef BRHIST
-    if (disp_brhist) {
-        if (brhist_init
-            (gfp, lame_get_VBR_min_bitrate_kbps(gfp),
-             lame_get_VBR_max_bitrate_kbps(gfp))) {
-            /* fail to initialize */
-            disp_brhist = 0;
-        }
-    }
-    else {
-        brhist_init(gfp, 128, 128); /* Dirty hack */
+    if (disp_brhist
+        && brhist_init(gfp, lame_get_VBR_min_bitrate_kbps(gfp),
+		       lame_get_VBR_max_bitrate_kbps(gfp))) {
+	/* fail to initialize */
+	disp_brhist = 0;
     }
 #endif
 }
@@ -695,7 +690,7 @@ main(int argc, char **argv)
         return i;
     }
 
-    if (silent > 0 || lame_get_VBR(gfp) == vbr_off) {
+    if (silent > 0) {
         disp_brhist = 0;     /* turn off VBR histogram */
     }
 
