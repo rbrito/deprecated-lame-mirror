@@ -36,6 +36,7 @@ BITS 32
 	%define segment_data segment .data
 	%define segment_bss  segment .bss
 %else
+	section .note.GNU-stack progbits noalloc noexec nowrite align=1
 	%define segment_code segment .text align=16 class=CODE use32
 	%define segment_data segment .data align=16 class=DATA use32
 	%define segment_bss  segment .bss align=16 class=DATA use32
