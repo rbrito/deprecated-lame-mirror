@@ -405,14 +405,17 @@ encoder(lame_t gfp, FILE * outf, int nogap, char *inPath, char *outPath)
 
     if (silent <= 0) {
 #ifdef BRHIST
-	brhist_jump_back();
+	if (disp_brhist)
+	    brhist_jump_back();
 #endif
         frames = lame_get_frameNum(gfp);
 	timestatus(lame_get_out_samplerate(gfp),
 		   frames, lame_get_totalframes(gfp), lame_get_framesize(gfp));
 #ifdef BRHIST
-	brhist_disp(gfp);
-	brhist_disp_total(gfp);
+	if (disp_brhist) {
+	    brhist_disp(gfp);
+	    brhist_disp_total(gfp);
+	}
 #endif
 	timestatus_finish();
     }
