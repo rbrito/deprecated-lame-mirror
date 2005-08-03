@@ -521,7 +521,7 @@ write_frame(unsigned char *p, frame_struct *frame)
         }
     }
     if (frame->length != p - p0) {
-        fprintf(stderr, "Internal error: %d != %d\n", frame->length, p - p0);
+        fprintf(stderr, "Internal error: %ld != %ld\n", frame->length, p - p0);
         exit(1);
     }
     return p;
