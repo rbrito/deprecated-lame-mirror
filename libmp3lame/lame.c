@@ -234,6 +234,11 @@ apply_preset(lame_t gfc, int bitrate, vbr_mode mode)
     int lower_range, lower_range_kbps, upper_range, upper_range_kbps;
     int r, b;
 
+    if (gfc->out_samplerate != 0 && gfc->out_samplerate <= 24000
+	&& gfc->VBR == vbr) {
+	bitrate /= 2;
+    }
+
     for (b = 1; b < (int) (sizeof(switch_map)/sizeof(switch_map[0])-1)
 	     && bitrate > switch_map[b].kbps; b++)
 	;
