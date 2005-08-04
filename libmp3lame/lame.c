@@ -246,7 +246,7 @@ apply_preset(lame_t gfc, int bitrate, vbr_mode mode)
     if (upper_range_kbps - bitrate > bitrate - lower_range_kbps)
         r = lower_range;
 
-    lame_set_VBR_mean_bitrate_kbps(gfc, bitrate);
+    lame_set_VBR_mean_bitrate_kbps(gfc, bitrate * gfc->mode_gr / 2);
     lame_set_brate(gfc, lame_get_VBR_mean_bitrate_kbps(gfc));
 
     if (mode != vbr) {
