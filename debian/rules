@@ -13,7 +13,7 @@ configure-stamp:
 	dh_testdir
 	# Add here commands to configure the package.
 	./configure --prefix=/usr \
-		--with-fileio=lame \
+		--with-fileio=sndfile \
 		--enable-mp3x \
 		--enable-mp3rtp \
 		--enable-nasm \

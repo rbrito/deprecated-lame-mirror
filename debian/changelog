@@ -1,3 +1,12 @@
+lame (3.97-3) unstable; urgency=low
+
+  * doc/man/lame.1: document the --{un,}signed options.
+  * doc/man/lame.1: document the --{big,little}-endian options.
+  * debian/control: include libsndfile0-dev as a build dependency.
+  * debian/rules: s/--with-fileio=lame/--with-fileio=sndfile/ .
+	
+ -- Rogério Brito <rbrito@users.sf.net>  Wed, 3 Ago 2005 21:35:17 -0300
+
 lame (3.97-2) unstable; urgency=low
 
   * debian/rules: use dh_installman instead of dh_installmanpages.
