@@ -1293,7 +1293,7 @@ lame_bitrate_hist(lame_t gfc, int bitrate_count[14])
 
     for (i = 0; i < 14; i++) {
 	int total = 0;
-	for (j = 0; j < 4; j++)
+	for (j = 0; j < 5; j++)
 	    total += gfc->bitrate_stereoMode_Hist[i+1][j];
 	bitrate_count[i] = total;
     }
@@ -1324,7 +1324,7 @@ lame_bitrate_stereo_mode_hist(lame_t gfc, int bitrate_stmode_count[14][4])
 	return;
 
     for (j = 0; j < 14; j++)
-	for (i = 0; i < 4; i++)
+	for (i = 0; i < 5; i++)
             bitrate_stmode_count[j][i] = gfc->bitrate_stereoMode_Hist[j+1][i];
 }
 
@@ -1375,6 +1375,8 @@ updateStats(lame_t gfc)
     /* count 'em for every mode extension in case of 2 channel encoding */
     if (gfc->channels_out == 2)
 	gfc->bitrate_stereoMode_Hist[gfc->bitrate_index] [gfc->mode_ext]++;
+    else
+	gfc->bitrate_stereoMode_Hist[gfc->bitrate_index][4]++;
 
     for (gr = 0; gr < gfc->mode_gr; gr++) {
 	for (ch = 0; ch < gfc->channels_out; ch++) {
