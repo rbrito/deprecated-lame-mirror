@@ -1467,14 +1467,14 @@ long_block_scalefacs(lame_t gfc, gr_info * gi, int vbrmax)
     gi->scalefac_scale = 0;
     if (maxov0 == vbrmax) {
     }
-    else if (maxov0p == vbrmax) {
+    else if (maxov0p == vbrmax && gfc->mode_gr != 1) {
 	gi->preflag = 1;
     }
     else {
 	gi->scalefac_scale = 1;
 	if (maxov1 == vbrmax) {
 	}
-	else if (maxov1p == vbrmax) {
+	else if (maxov1p == vbrmax && gfc->mode_gr != 1) {
 	    gi->preflag = 1;
 	} else {
 	    vbrmax = maxov1;
