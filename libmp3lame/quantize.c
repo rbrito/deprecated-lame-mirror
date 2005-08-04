@@ -577,7 +577,7 @@ init_global_gain(
 	    /* decrease Quantize_StepSize */
 	    flag_GoneOver |= 2 | 4;
 
-	    if ((flag_GoneOver&3)==3) CurrentStep >>= 1;
+	    if (flag_GoneOver == 7) CurrentStep >>= 1;
 	    gi->global_gain -= CurrentStep;
 	}
     } while ((unsigned int)gi->global_gain < MAX_GLOBAL_GAIN+1);
