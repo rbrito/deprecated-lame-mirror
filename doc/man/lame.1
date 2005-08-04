@@ -1,4 +1,4 @@
-.TH lame 1 "July 27, 2005" "" "LAME audio compressor"
+.TH lame 1 "August 03, 2005" "" "LAME audio compressor"
 .SH NAME
 lame \- create mp3 audio files
 .SH SYNOPSIS
@@ -51,6 +51,30 @@ Input bit width.
 
 Required only for raw PCM input files.
 Otherwise it will be determined from the header of the input file.
+.TP
+.BI \-\-signed
+Instructs LAME that the samples from the input are signed (the default).
+
+Required only for raw PCM input files
+and only available if LAME was compiled with libsndfile.
+.TP
+.BI \-\-unsigned
+Instructs LAME that the samples from the input are unsigned.
+
+Required only for raw PCM input files
+and only available if LAME was compiled with libsndfile.
+.TP
+.BI \-\-little-endian
+Instructs LAME that the samples from the input are in little-endian form.
+
+Required only for raw PCM input files
+and only available if LAME was compiled with libsndfile.
+.TP
+.BI \-\-big-endian
+Instructs LAME that the samples from the input are in big-endian form.
+
+Required only for raw PCM input files
+and only available if LAME was compiled with libsndfile.
 .TP
 .B \-\-mp2input
 Assume the input file is a MPEG Layer II (ie MP2) file.
@@ -138,7 +162,7 @@ encoding (for example: English in one channel and French in the other).
 Using this encoding mode for regular stereo files will result in a
 lower quality encoding.
 
-.B (mo)no
+.B (m)ono
 .br
 The input will be encoded as a mono signal.
 If it was a stereo signal,
