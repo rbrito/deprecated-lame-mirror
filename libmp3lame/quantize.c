@@ -768,23 +768,29 @@ inc_subblock_gain(gr_info * const gi, FLOAT distort[])
 }
 
 static int 
-inc_subblock_gain2(gr_info * const gi, int subwin)
+inc_subblock_gain2(lame_t gfc, gr_info * const gi, int subwin)
 {
     int sfb, ret = -1;
-    gi->subblock_gain[subwin]++;
-    for (sfb = gi->sfb_lmax+subwin-1; sfb < gi->psymax; sfb += 3) {
+    gr_info gi_w = *gi;
+    gi_work_l3_copy(&gi_w, gi);
+    gi_w.subblock_gain[subwin]++;
+    for (sfb = gi_w.sfb_lmax+subwin-1; sfb < gi_w.psymax; sfb += 3) {
 	int s;
-	if (gi->scalefac[sfb] < 0)
+	if (gi_w.scalefac[sfb] < 0)
 	    continue;
-	s = gi->scalefac[sfb] - (4 >> gi->scalefac_scale);
+	s = gi_w.scalefac[sfb] - (4 >> gi_w.scalefac_scale);
 	if (s < 0) {
 	    if (ret < 0)
 		ret = sfb;
 	    s = 0;
 	}
-	if (sfb < gi->sfbmax)
-	    gi->scalefac[sfb] = s;
+	if (sfb < gi_w.sfbmax)
+	    gi_w.scalefac[sfb] = s;
+	if (IPOW20(scalefactor(&gi_w, sfb)) >= gfc->maxXR[sfb]) {
+	    return -2;
+	}
     }
+    gi_work_l3_copy(gi, &gi_w);
     return ret;
 }
 
@@ -1569,9 +1575,8 @@ VBR_2nd_bitalloc(lame_t gfc, gr_info *gi, FLOAT * xmin)
 	    }
 	} else { /* noise in sfb21 */
 	    int win = gi_w.wi[sfb].window;
-	    if (win && gi_w.subblock_gain[win] < MAX_SUBBLOCK_GAIN) {
-		sfb = inc_subblock_gain2(&gi_w, win);
-	    } else {
+	    if (!win || gi_w.subblock_gain[win] >= MAX_SUBBLOCK_GAIN
+		|| (sfb = inc_subblock_gain2(gfc, &gi_w, win)) == -2) {
 		if (endflag == 2 || gi_w.global_gain == 0)
 		    return 0;
 		endflag = 1;
