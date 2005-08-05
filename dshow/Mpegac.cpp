@@ -183,13 +183,22 @@ HRESULT CMpegAudEnc::Receive(IMediaSample * pSample)
         }
         else
         {
+            resync_point_t * sync = m_sync + m_sync_in_idx;
+
             // if old sync data is applied and gap is greater than 1 ms
             // then make a new synchronization point
-            if (m_sync.applied && (rtStart - m_rtEstimated > 10000))
+            if (sync->applied && (rtStart - m_rtEstimated > 10000))
             {
-                m_sync.sample   = m_samplesIn;
-                m_sync.delta    = rtStart - m_rtEstimated;
-                m_sync.applied  = FALSE;
+                sync->sample    = m_samplesIn;
+                sync->delta     = rtStart - m_rtEstimated;
+                sync->applied   = FALSE;
+
+                m_rtEstimated  += sync->delta;
+
+                if (m_sync_in_idx < (RESYNC_COUNT - 1))
+                    m_sync_in_idx++;
+                else
+                    m_sync_in_idx = 0;
             }
         }
     }
@@ -232,10 +241,15 @@ HRESULT CMpegAudEnc::FlushEncodedSamples()
         if (frame_size <= 0 || !pframe)
             break;
 
-        if (!m_sync.applied && m_sync.sample <= m_samplesOut)
+        if (!m_sync[m_sync_out_idx].applied && m_sync[m_sync_out_idx].sample <= m_samplesOut)
         {
-            m_rtStreamTime += m_sync.delta;
-            m_sync.applied = TRUE;
+            m_rtStreamTime += m_sync[m_sync_out_idx].delta;
+            m_sync[m_sync_out_idx].applied = TRUE;
+
+            if (m_sync_out_idx < (RESYNC_COUNT - 1))
+                m_sync_out_idx++;
+            else
+                m_sync_out_idx = 0;
         }
 
         REFERENCE_TIME rtStart = m_rtStreamTime;
@@ -288,9 +302,15 @@ HRESULT CMpegAudEnc::StartStreaming()
 
     m_hasFinished   = FALSE;
 
-    m_sync.sample   = 0;
-    m_sync.delta    = 0;
-    m_sync.applied  = TRUE;
+    for (int i = 0; i < RESYNC_COUNT; i++)
+    {
+        m_sync[i].sample   = 0;
+        m_sync[i].delta    = 0;
+        m_sync[i].applied  = TRUE;
+    }
+
+    m_sync_in_idx = 0;
+    m_sync_out_idx = 0;
 
     get_SetDuration(&m_setDuration);
 

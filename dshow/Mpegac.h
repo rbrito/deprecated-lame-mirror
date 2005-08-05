@@ -61,6 +61,8 @@ typedef struct
     BOOL            applied;
 } resync_point_t;
 
+#define RESYNC_COUNT    4
+
 ///////////////////////////////////////////////////////////////////
 // CMpegAudEnc class - implementation for ITransformFilter interface
 ///////////////////////////////////////////////////////////////////
@@ -198,7 +200,10 @@ private:
     int                         m_samplesPerFrame;
     int                         m_bytesPerSample;
     float                       m_bytesToDuration;
-    resync_point_t              m_sync;
+
+    resync_point_t              m_sync[RESYNC_COUNT];
+    int                         m_sync_in_idx;
+    int                         m_sync_out_idx;
 
     BOOL                        m_hasFinished;
 
