@@ -61,10 +61,13 @@ extern FLOAT pow43[PRECALC_SIZE*2];
 		      for long block, 0+((15+3)<<2) = 18*4 = 72
 		      for short block, 0+(15<<2)+7*8 = 15*4+56 = 116
 		   */
-
+#if (defined(SMALL_CACHE) && defined(USE_IEEE754_HACK))
+const int pow20[4];
+const int ipow20[16];
+#else
 extern FLOAT pow20[Q_MAX+Q_MAX2];
 extern FLOAT ipow20[Q_MAX+Q_MAX2];
-
+#endif
 
 int psymodel_init(lame_t gfc);
 void iteration_init(lame_t gfc);

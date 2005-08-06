@@ -133,18 +133,18 @@ typedef union {
 static inline FLOAT IPOW20core(int x)
 {
     fi_union fi;
-    extern float ipow20[];
+    extern const int ipow20[];
 
-    fi.i = ((int*)ipow20)[x&15] - (x>>4)*(3*0x800000);
+    fi.i = ipow20[x&15] - (x>>4)*(3*0x800000);
     return fi.f;
 }
 
 static inline FLOAT POW20core(int x)
 {
     fi_union fi;
-    extern float pow20[];
+    extern const int pow20[];
 
-    fi.i = ((int*)pow20)[x&3] + (x>>2)*(0x800000);
+    fi.i = pow20[x&3] + (x>>2)*(0x800000);
 
     return fi.f;
 }

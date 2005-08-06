@@ -167,8 +167,20 @@ const unsigned char mdctorder[] = {
 };
 
 /* for fast quantization */
+#if (defined(SMALL_CACHE) && defined(USE_IEEE754_HACK))
+const int pow20[4] = {
+    0x16b504f3,    0x16d744fd,    0x17000000,    0x171837f0
+};
+const int ipow20[16] = {
+    0x5e0b95c2,    0x5df5257d,    0x5dd744fd,    0x5dbd08a4,
+    0x5da5fed7,    0x5d91c3d3,    0x5d800000,    0x5d60ccdf,
+    0x5d45672a,    0x5d2d583f,    0x5d1837f0,    0x5d05aac3,
+    0x5ceac0c7,    0x5cce248c,    0x5cb504f3,    0x5c9ef532
+};
+#else
 FLOAT pow20[Q_MAX+Q_MAX2];
 FLOAT ipow20[Q_MAX+Q_MAX2];
+#endif
 
 /* initialized in first call to iteration_init */
 #ifdef USE_IEEE754_HACK
@@ -638,11 +650,12 @@ iteration_init(lame_t gfc)
 	adj43asm[i] = (int)(adj43[i] * (1 << FIXEDPOINT)) - MAGIC_INT2;
 #endif
 
+#if !(defined(SMALL_CACHE) && defined(USE_IEEE754_HACK))
     for (i = 0; i < Q_MAX+Q_MAX2; i++) {
 	ipow20[i] = pow(2.0, (double)(i - 210 - Q_MAX2) * -0.1875);
 	pow20[i] = pow(2.0, (double)(i - 210 - Q_MAX2) * 0.25);
     }
-
+#endif
     huffman_init(gfc);
 
     if (gfc->resample.ratio != 1.0) {
