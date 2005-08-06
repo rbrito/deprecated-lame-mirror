@@ -463,7 +463,7 @@ choose_table(const int *ix, const int * const end, int * const s)
   the saved bits are kept in the bit reservoir.
  **********************************************************************/
 inline static int
-ix_max2(const int *ix, const int *end)
+ix_max2(const short *ix, const short *end)
 {
     int max = *ix++;
     while (ix < end) {
@@ -480,7 +480,7 @@ recalc_divide_init(
     gr_info *gi,
     int      r01_bits[],
     int      r01_info[],
-    int      max_info[]
+    short    max_info[]
     )
 {
     int r0;
@@ -489,6 +489,7 @@ recalc_divide_init(
 	if (gfc->scalefac_band.l[r0] < gi->big_values && gi->scalefac[r0] >= 0)
 	    m = ixmax(&gi->l3_enc[gfc->scalefac_band.l[r0]],
 		      &gi->l3_enc[gfc->scalefac_band.l[r0+1]]);
+	assert((unsigned int)m <= IXMAX);
 	max_info[r0] = m;
 	r01_bits[r0] = LARGE_BITS;
     }
@@ -550,7 +551,7 @@ recalc_divide_sub(
     gr_info *gi,
     const int     r01_bits[],
     const int     r01_info[],
-    const int     max_info[]
+    const short   max_info[]
     )
 {
     int bits, r2, r2t, old = gi->part2_3_length;
@@ -592,7 +593,7 @@ best_huffman_divide(lame_t gfc, gr_info * const gi)
 
     int r01_bits[SBMAX_l];
     int r01_info[SBMAX_l];
-    int max_info[SBMAX_l];
+    short max_info[SBMAX_l];
 
     if ((gi->big_values == 0
 	 || gi->big_values == gfc->scalefac_band.l[1]
