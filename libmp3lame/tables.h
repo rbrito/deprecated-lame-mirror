@@ -52,10 +52,10 @@ extern FLOAT pow43[PRECALC_SIZE*2];
 #define adj43 (&pow43[PRECALC_SIZE])
 
 #define Q_MAX (256+1)
-#define Q_MAX2 116 /* minimum possible number of
+#define Q_MAX2 116 /* maximum possible number of q-factor.
 		      -gi->global_gain
 		      + ((scalefac[] + (gi->preflag ? pretab[sfb] : 0))
-		      << (gi->scalefac_scale + 1))
+				<< (gi->scalefac_scale + 1))
 		      + gi->subblock_gain[gi->window[sfb]] * 8;
 
 		      for long block, 0+((15+3)<<2) = 18*4 = 72
