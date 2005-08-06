@@ -12,7 +12,7 @@ void sumofsqr_SSE(const float *end, int l, float *res)
 
     float *p = end+l;
     m = _mm_loadu_ps(p);
-    s = _mm_xor_ps(m, m);
+    s = _mm_xor_ps(s, s);
     if (l & 2) {
 	m = _mm_unpacklo_ps(m, s);
 	l += 2;

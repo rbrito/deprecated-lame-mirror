@@ -1225,7 +1225,7 @@ psycho_anal_ns(lame_t gfc, int gr, int numchn)
 	    } else {
 		/* on M/S channels, use lesser one of adjustments for L/R */
 		loudness = Min(gfc->ATH.adjust[0], gfc->ATH.adjust[1])
-		    * (FLOAT)(1.0/SQRT2);
+		    * (FLOAT)(SQRT2*0.5);
 		gfc->ATH.adjust[2] = gfc->ATH.adjust[3] = loudness;
 	    }
 	    for (b = 0; b < gfc->npart_l; b++)
