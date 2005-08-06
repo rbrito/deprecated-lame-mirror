@@ -603,11 +603,11 @@ init_global_gain(
 
 /************************************************************************
  *
- *      trancate_smallspectrums()
+ *      truncate_smallspectrums()
  *
  *  Takehiro TOMINAGA 2002-07-21
  *
- *  trancate smal nubmers into 0 as long as the noise threshold is allowed.
+ *  truncate smal nubmers into 0 as long as the noise threshold is allowed.
  *
  ************************************************************************/
 static int
@@ -624,7 +624,7 @@ floatcompare(const void *v1, const void *v2)
 }
 
 static void
-trancate_smallspectrums(lame_t gfc, gr_info* const gi, const FLOAT* const xmin)
+truncate_smallspectrums(lame_t gfc, gr_info* const gi, const FLOAT* const xmin)
 {
     int sfb, j;
     FLOAT distort[SFBMAX], work[192]; /* 192 is the width of the widest scale factor band(sfb 21 of 48kHz) */
@@ -1177,7 +1177,7 @@ CBR_1st_bitalloc (
     if ((gfc->substep_shaping & 0x80) == 0
 	&& ((gi->block_type == SHORT_TYPE && (gfc->substep_shaping & 2))
 	 || (gi->block_type != SHORT_TYPE && (gfc->substep_shaping & 1))))
-	trancate_smallspectrums(gfc, gi, xmin);
+	truncate_smallspectrums(gfc, gi, xmin);
 }
 
 
@@ -1689,7 +1689,7 @@ VBR_noise_shaping(lame_t gfc, gr_info *gi, FLOAT * xmin)
     if ((gfc->strict_ISO && gi->part2_3_length + gi->part2_length > MAX_BITS)
 	|| (gi->block_type == SHORT_TYPE && (gfc->substep_shaping & 2))
 	|| (gi->block_type != SHORT_TYPE && (gfc->substep_shaping & 1))) {
-	trancate_smallspectrums(gfc, gi, xmin);
+	truncate_smallspectrums(gfc, gi, xmin);
     }
 
     assert((unsigned int)gi->global_gain <= (unsigned int)MAX_GLOBAL_GAIN);
@@ -1748,7 +1748,7 @@ VBR_iteration_loop(lame_t gfc, III_psy_ratio ratio[MAX_GRANULES][MAX_CHANNELS])
 	for (gr = 0; gr < gfc->mode_gr; gr++) {
 	    for (ch = 0; ch < gfc->channels_out; ch++) {
 		gr_info *gi = &gfc->tt[gr][ch];
-		trancate_smallspectrums(gfc, gi, xmin[gr][ch]);
+		truncate_smallspectrums(gfc, gi, xmin[gr][ch]);
 		used_bits += gi->part2_3_length + gi->part2_length;
 	    }
 	}
