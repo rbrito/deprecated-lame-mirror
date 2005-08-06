@@ -184,14 +184,18 @@ timestatus_klemm(lame_t gfp)
     double diff = GetRealTime() - last_time;
     if (diff >= update_interval || diff < 0.0) {
 #ifdef BRHIST
-	brhist_jump_back();
+	if (disp_brhist) {
+	    brhist_jump_back();
+	}
 #endif
 	timestatus ( lame_get_out_samplerate(gfp),
 		     lame_get_frameNum(gfp),
 		     lame_get_totalframes(gfp),
 		     lame_get_framesize(gfp) );
 #ifdef BRHIST
-	brhist_disp ( gfp );
+	if (disp_brhist) {
+	    brhist_disp ( gfp );
+	}
 #endif
 	last_time = GetRealTime ();  /* from now! disp_time seconds */
     }
