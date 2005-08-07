@@ -771,8 +771,9 @@ static int
 inc_subblock_gain2(lame_t gfc, gr_info * const gi, int subwin)
 {
     int sfb, ret = -1;
-    gr_info gi_w = *gi;
-    gi_work_l3_copy(&gi_w, gi);
+    gr_info gi_w;
+
+    gi_work_copy(&gi_w, gi);
     gi_w.subblock_gain[subwin]++;
     for (sfb = gi_w.sfb_lmax+subwin-1; sfb < gi_w.psymax; sfb += 3) {
 	int s;
@@ -790,7 +791,7 @@ inc_subblock_gain2(lame_t gfc, gr_info * const gi, int subwin)
 	    return -2;
 	}
     }
-    gi_work_l3_copy(gi, &gi_w);
+    gi_work_copy(gi, &gi_w);
     return ret;
 }
 

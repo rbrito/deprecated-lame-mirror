@@ -646,52 +646,52 @@ best_huffman_divide(lame_t gfc, gr_info * const gi)
 	return;
 
     ix[i-2] = ix[i-1] = 0; /* this may not satisfied in some case */
-    gi_work_l3_copy(&gi_w, gi);
-    gi_w.count1 = i;
-    gi_w.big_values -= 2;
+    gi_work_copy(&gi_w, gi);
+    gi->count1 = i;
+    gi->big_values -= 2;
 #ifdef EXPERIMENTAL
     if ((unsigned int)(ix[gi->big_values-2] | ix[gi->big_values-1]) > 1)
-	gi_w.big_values = gi->big_values + 2;
+	gi->big_values += 2;
 #endif
     a1 = a2 = 0;
-    for (; i > gi_w.big_values; i -= 4) {
+    for (; i > gi->big_values; i -= 4) {
 	int p = ((ix[i-4] * 2 + ix[i-3]) * 2 + ix[i-2]) * 2 + ix[i-1];
 	a1 += quadcode[0][p];
 	a2 += quadcode[1][p];
     }
 
-    gi_w.table_select[3] = 0;
+    gi->table_select[3] = 0;
     if (a1 > a2) {
 	a1 = a2;
-	gi_w.table_select[3] = 1;
+	gi->table_select[3] = 1;
     }
 
-    gi_w.count1bits = a1;
+    gi->count1bits = a1;
 
-    if (gi_w.block_type == NORM_TYPE
+    if (gi->block_type == NORM_TYPE
 	&& gi->big_values > gfc->scalefac_band.l[2]) {
-	if (recalc_divide_sub(gfc, &gi_w, r01_bits, r01_info, max_info))
+	if (!recalc_divide_sub(gfc, gi, r01_bits, r01_info, max_info))
 	    gi_work_copy(gi, &gi_w);
     } else {
 	/* Count the number of bits necessary to code the bigvalues region. */
-	gi_w.part2_3_length = a1;
+	gi->part2_3_length = a1;
 	if (i > 0) {
 	    a1 = gfc->scalefac_band.l[gi->region0_count+1];
 
 	    if (a1 > i)
 		a1 = i;
 
-	    gi_w.table_select[0] = ixmax(ix, &ix[a1]);
-	    gi_w.part2_3_length
-		+= choose_table(ix, &ix[a1], &gi_w.table_select[0]);
+	    gi->table_select[0] = ixmax(ix, &ix[a1]);
+	    gi->part2_3_length
+		+= choose_table(ix, &ix[a1], &gi->table_select[0]);
 
 	    if (i > a1) {
-		gi_w.table_select[1] = ixmax(&ix[a1], &ix[i]);
-		gi_w.part2_3_length
-		    += choose_table(&ix[a1], &ix[i], &gi_w.table_select[1]);
+		gi->table_select[1] = ixmax(&ix[a1], &ix[i]);
+		gi->part2_3_length
+		    += choose_table(&ix[a1], &ix[i], &gi->table_select[1]);
 	    }
 	}
-	if (gi->part2_3_length > gi_w.part2_3_length)
+	if (gi->part2_3_length < gi_w.part2_3_length)
 	    gi_work_copy(gi, &gi_w);
     }
 }
