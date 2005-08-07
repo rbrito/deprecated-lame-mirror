@@ -489,7 +489,7 @@ recalc_divide_init(
 	if (gfc->scalefac_band.l[r0] < gi->big_values && gi->scalefac[r0] >= 0)
 	    m = ixmax(&gi->l3_enc[gfc->scalefac_band.l[r0]],
 		      &gi->l3_enc[gfc->scalefac_band.l[r0+1]]);
-	assert((unsigned int)m <= IXMAX);
+	assert((unsigned int)m <= IXMAX_VAL);
 	max_info[r0] = m;
 	r01_bits[r0] = LARGE_BITS;
     }
