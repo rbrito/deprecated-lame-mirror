@@ -717,9 +717,8 @@
     mode</a></strong> </dt>
 </dl>
 <dl> 
-  <dd> Joint-stereo is the default mode for stereo files with VBR when -V is more 
-     than 4 or fixed bitrates of 160kbps or less. At higher fixed bitrates or higher 
-     VBR settings, the default is stereo. <b><i><br>
+  <dd> Joint-stereo is the default mode for input files featuring two channels.. 
+    <b><i><br>
     <br>
     stereo</i></b> <br>
     In this mode, the encoder makes no use of potentially existing correlations 
@@ -728,11 +727,13 @@
     silence or needs less bits because of a lower complexity.<br>
     <br>
     <i><b>joint stereo</b></i><br>
-    In this mode, the encoder will make use of a correlation between both channels. 
+    In this mode, the encoder will make use of correlation between both channels. 
     The signal will be matrixed into a sum ("mid"), computed by L+R, and difference 
     ("side") signal, computed by L-R, and more bits are allocated to the mid channel.<br>
     This will effectively increase the bandwidth if the signal does not have too 
-    much stereo separation, thus giving a significant gain in encoding quality.<br>
+    much stereo separation, thus giving a significant gain in encoding quality. 
+    In joint stereo, the encoder can select between Left/Right and Mid/Side representation 
+    on a frame basis.<br>
     <br>
     Using mid/side stereo inappropriately can result in audible compression artifacts. 
     To much switching between mid/side and regular stereo can also sound bad. 
