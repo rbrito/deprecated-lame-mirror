@@ -462,18 +462,6 @@ choose_table(const int *ix, const int * const end, int * const s)
   best huffman table selection for scalefactor band
   the saved bits are kept in the bit reservoir.
  **********************************************************************/
-inline static int
-ix_max2(const short *ix, const short *end)
-{
-    int max = *ix++;
-    while (ix < end) {
-	int x1 = *ix++;
-	if (max < x1)
-	    max = x1;
-    }
-    return max;
-}
-
 inline static void
 recalc_divide_init(
     lame_t   gfc,
@@ -561,24 +549,27 @@ recalc_divide_sub(
     const short   max_info[]
     )
 {
-    int bits, r2, r2t, old = gi->part2_3_length, prev = 0;
+    int bits, r2, r2t, old = gi->part2_3_length, prev = 0, r2max = 0;
     for (r2 = SBMAX_l - 3; r2 >= 0; --r2) {
 	int a2 = gfc->scalefac_band.l[r2+2];
 	if (a2 >= gi->big_values)
 	    continue;
-	bits = r01_bits[r2] + gi->count1bits;
+	if (r2max < max_info[r2+2])
+	    r2max = max_info[r2+2];
+
 	/* in the region2, there must be the ix larger than 1
 	 * (if not, the region will be count1 region).
 	 * So the smallest number of bits to encode the region2 is
 	 *   (length of region2 - 2)/2 + 6 = (length of region2)/2 + 5
 	 * with huffman table 2 or 3.
 	 */
+	bits = r01_bits[r2] + gi->count1bits;
 	if (gi->part2_3_length <= bits + ((gi->big_values - a2) >> 1) + 5)
 	    continue;
-	if (gi->part2_3_length <= bits + prev)
+	if (gi->part2_3_length <= bits + prev + (a2-gfc->scalefac_band.l[r2+1])/2)
 	    continue;
 
-	r2t = ix_max2(&max_info[r2+2], &max_info[SBMAX_l]);
+	r2t = r2max;
 	prev = choose_table(&gi->l3_enc[a2], &gi->l3_enc[gi->big_values], &r2t);
 	bits += prev;
 	if (gi->part2_3_length <= bits)
