@@ -483,7 +483,7 @@ recalc_divide_init(
     short    max_info[]
     )
 {
-    int r0;
+    int r0, r0max;
     for (r0 = 0; r0 < SBMAX_l; r0++) {
 	int m = 0;
 	if (gfc->scalefac_band.l[r0] < gi->big_values && gi->scalefac[r0] >= 0)
@@ -495,28 +495,35 @@ recalc_divide_init(
     }
 
     r0 = 0;
-    if (!max_info[r0])
+    r0max = max_info[0];
+    if (!r0max)
 	for (; r0 < 16-1; r0++)
 	    if (max_info[r0+1])
 		break;
 
     for (; r0 < 16; r0++) {
-	int a1, r0bits, r1, r0t, r1t, bits;
+	int a1, r0bits, r1, r0t, r1t, bits, r1max;
 	if (gfc->scalefac_band.l[r0 + 2] >= gi->big_values)
 	    break;
 	a1 = gfc->scalefac_band.l[r0 + 1];
-	r0t = ix_max2(&max_info[0], &max_info[r0+1]);
+	if (r0max < max_info[r0])
+	    r0max = max_info[r0];
+	r0t = r0max;
 	r0bits = choose_table(gi->l3_enc, &gi->l3_enc[a1], &r0t);
 	if (r0bits >= gi->part2_3_length - gi->count1bits - 6)
 	    break;
 
+	r0t = (r0 << 16) + (r0t << 8);
+	r1max = max_info[r0+1];
 	for (r1 = 0; r1 < 8; r1++) {
 	    int a2 = gfc->scalefac_band.l[r0 + r1 + 2];
 	    if (a2 >= gi->big_values)
 		break;
-	    r1t = ix_max2(&max_info[r0+1], &max_info[r0+r1+2]);
 	    bits = r0bits;
-	    if (r1t) {
+	    if (r1max < max_info[r0+r1+1])
+		r1max = max_info[r0+r1+1];
+	    r1t = r1max;
+	    if (r1max) {
 		if (bits + 2 + ((a2-a1)>>1) >= r01_bits[r0 + r1]
 		 || bits + 2 + ((gi->big_values-a1)>>1) >= gi->part2_3_length - gi->count1bits)
 		    continue;
@@ -524,7 +531,7 @@ recalc_divide_init(
 	    }
 	    if (r01_bits[r0 + r1] > bits) {
 		r01_bits[r0 + r1] = bits;
-		r01_info[r0 + r1] = (r0 << 16) + (r0t << 8) + r1t;
+		r01_info[r0 + r1] = r0t + r1t;
 	    }
 	}
     }
@@ -554,11 +561,11 @@ recalc_divide_sub(
     const short   max_info[]
     )
 {
-    int bits, r2, r2t, old = gi->part2_3_length;
-    for (r2 = 0; r2 < SBMAX_l - 2; r2++) {
+    int bits, r2, r2t, old = gi->part2_3_length, prev = 0;
+    for (r2 = SBMAX_l - 3; r2 >= 0; --r2) {
 	int a2 = gfc->scalefac_band.l[r2+2];
 	if (a2 >= gi->big_values)
-	    break;
+	    continue;
 	bits = r01_bits[r2] + gi->count1bits;
 	/* in the region2, there must be the ix larger than 1
 	 * (if not, the region will be count1 region).
@@ -568,9 +575,12 @@ recalc_divide_sub(
 	 */
 	if (gi->part2_3_length <= bits + ((gi->big_values - a2) >> 1) + 5)
 	    continue;
+	if (gi->part2_3_length <= bits + prev)
+	    continue;
 
 	r2t = ix_max2(&max_info[r2+2], &max_info[SBMAX_l]);
-	bits += choose_table(&gi->l3_enc[a2], &gi->l3_enc[gi->big_values], &r2t);
+	prev = choose_table(&gi->l3_enc[a2], &gi->l3_enc[gi->big_values], &r2t);
+	bits += prev;
 	if (gi->part2_3_length <= bits)
 	    continue;
 
