@@ -540,6 +540,7 @@ Huf_bigvalue(bit_stream_t *bs, int tablesel, int start, int end, gr_info *gi)
 	};
 	const codetab_t *t = htTable[tablesel-1];
 	int xlen = t[0].len;
+	int wlen = 0, wcode = 0;
 	do {
 	    int code, clen;
 	    int x1 = gi->l3_enc[start], x2 = gi->l3_enc[start+1];
@@ -548,10 +549,17 @@ Huf_bigvalue(bit_stream_t *bs, int tablesel, int start, int end, gr_info *gi)
 	    code = x1*xlen + x2;
 	    clen = t[code+1].len;
 	    code = t[code+1].code;
+	    wlen += clen;
+	    if (wlen > 25) {
+		putbits24(bs, wcode, wlen - clen);
+		wlen = clen;
+		wcode = 0;
+	    }
 	    if (x1) code = code*2 + signbits(gi->xr[start  ]);
 	    if (x2) code = code*2 + signbits(gi->xr[start+1]);
-	    putbits24(bs, code, clen);
+	    wcode = (wcode << clen) + code;
 	} while ((start += 2) < end);
+	putbits24(bs, wcode, wlen);
     }
 }
 
