@@ -490,7 +490,7 @@ recalc_divide_init(
 		break;
 
     for (; r0 < 16; r0++) {
-	int a1, r0bits, r1, r0t, r1t, bits, r1max;
+	int a1, r0bits, r1, r0t, r1t, bits, r1max, prev;
 	if (gfc->scalefac_band.l[r0 + 2] >= gi->big_values)
 	    break;
 	a1 = gfc->scalefac_band.l[r0 + 1];
@@ -503,6 +503,7 @@ recalc_divide_init(
 
 	r0t = (r0 << 16) + (r0t << 8);
 	r1max = max_info[r0+1];
+	prev = 0;
 	for (r1 = 0; r1 < 8; r1++) {
 	    int a2 = gfc->scalefac_band.l[r0 + r1 + 2];
 	    if (a2 >= gi->big_values)
@@ -512,10 +513,14 @@ recalc_divide_init(
 		r1max = max_info[r0+r1+1];
 	    r1t = r1max;
 	    if (r1max) {
-		if (bits + 2 + ((a2-a1)>>1) >= r01_bits[r0 + r1]
-		 || bits + 2 + ((gi->big_values-a1)>>1) >= gi->part2_3_length - gi->count1bits)
+		if (prev == 0)
+		    prev = ((a2-a1)>>1) + 1;
+		prev += bits;
+		if (prev >= r01_bits[r0 + r1]
+		 || prev >= gi->part2_3_length - gi->count1bits - ((gi->big_values-a2)>>1) - 1)
 		    continue;
-		bits += choose_table(&gi->l3_enc[a1], &gi->l3_enc[a2], &r1t);
+		prev = choose_table(&gi->l3_enc[a1], &gi->l3_enc[a2], &r1t);
+		bits += prev;
 	    }
 	    if (r01_bits[r0 + r1] > bits) {
 		r01_bits[r0 + r1] = bits;
