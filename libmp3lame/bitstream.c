@@ -50,7 +50,6 @@ static const codetab_t ht2[] = {    {0, 3},
     {3, 4}, {1, 5}, {1, 7},
     {3, 6}, {2, 7}, {0, 8},
 };
-
 static const codetab_t ht3[] = {    {0, 3},
     {3, 2}, {2, 3}, {1, 7},
     {1, 4}, {1, 4}, {1, 7},
@@ -63,7 +62,6 @@ static const codetab_t ht5[] = {    {0, 4},
     {7,  7}, {5,  8}, {7,  9}, {1, 10},
     {6,  8}, {1,  8}, {1,  9}, {0, 10},
 };
-
 static const codetab_t ht6[] = {    {0, 4},
     {7, 3}, {3, 4}, {5, 6}, {1, 8},
     {6, 4}, {2, 4}, {3, 6}, {2, 7},
@@ -79,7 +77,6 @@ static const codetab_t ht7[] = {    {0, 6},
     { 7, 8}, { 6, 9}, { 9,10}, {14,11}, { 3,11}, { 1,12},
     { 6, 9}, { 4,10}, { 5,11}, { 3,12}, { 2,12}, { 0,12},
 };
-
 static const codetab_t ht8[] = {    {0, 6},
     { 3, 2}, { 4, 4}, { 6, 7}, {18, 9}, {12, 9}, { 5,10},
     { 5, 4}, { 1, 4}, { 2, 6}, {16,10}, { 9,10}, { 3,10},
@@ -88,7 +85,6 @@ static const codetab_t ht8[] = {    {0, 6},
     {13, 9}, { 5, 9}, { 8,10}, {11,11}, { 5,12}, { 1,12},
     {12,10}, { 4,10}, { 4,11}, { 1,11}, { 1,13}, { 0,13}
 };
-
 static const codetab_t ht9[] = {    {0, 6},
     { 7, 3}, { 5, 4}, { 9, 6}, {14, 7}, {15, 9}, { 7,10},
     { 6, 4}, { 4, 5}, { 5, 6}, { 5, 7}, { 6, 8}, { 7,10},
@@ -108,7 +104,6 @@ static const codetab_t ht10[] = {    {0, 8},
     {14, 9}, {13,10}, {10,11}, {11,12}, {16,12}, { 6,12}, { 5,13}, { 1,13},
     { 9,10}, { 8,10}, { 7,11}, { 8,12}, { 4,12}, { 4,13}, { 2,13}, { 0,13},
 };
-
 static const codetab_t ht11[] = {    {0, 8},
     { 3, 2}, { 4, 4}, {10, 6}, {24, 8}, {34, 9}, {33,10}, {21, 9}, {15,10},
     { 5, 4}, { 3, 5}, { 4, 6}, {10, 8}, {32,10}, {17,10}, {11, 9}, {10,10},
@@ -119,7 +114,6 @@ static const codetab_t ht11[] = {    {0, 8},
     {14, 9}, {12, 9}, { 9, 9}, {13,10}, {14,11}, { 9,12}, { 4,12}, { 1,12},
     {11, 9}, { 4, 9}, { 6,10}, { 6,11}, { 6,12}, { 3,12}, { 2,12}, { 0,12},
 };
-
 static const codetab_t ht12[] = {    {0, 8},
     { 9, 4}, { 6, 4}, {16, 6}, {33, 8}, {41, 9}, {39,10}, {38,10}, {26,10},
     { 7, 4}, { 5, 5}, { 6, 6}, { 9, 7}, {23, 9}, {16, 9}, {26,10}, {11,10},
@@ -165,7 +159,6 @@ static const codetab_t ht13[] = {    {0, 16},
     {16,13}, {15,14}, {17,15}, {27,16}, { 25,16}, {20,16}, { 29,17}, {11,16},
     {17,17}, {12,17}, {16,18}, { 8,18}, {  1,21}, { 1,20}, {  0,21}, { 1,18},
 };
-
 static const codetab_t ht15[] = {    {0, 16},
     {  7, 3},{ 12, 5},{ 18, 6},{ 53, 8},{ 47, 8},{76, 9},{124,10},{108,10},
     { 89,10},{123,11},{108,11},{119,12},{107,12},{81,12},{122,13},{ 63,14},
@@ -415,7 +408,18 @@ putbits24main(bit_stream_t *bs, unsigned int val, int j)
     p[3]  = val;
 }
 
-/*write j bits into the bit stream */
+inline static void
+putbits8(bit_stream_t *bs, unsigned int val, int j)
+{
+    char *p = &bs->buf[bs->bitidx >> 3];
+
+    val <<= (16 - j - (bs->bitidx & 7));
+    bs->bitidx += j;
+
+    p[0] |= val >> 8;
+    p[1]  = val;
+}
+
 inline static void
 putbits16(bit_stream_t *bs, unsigned int val, int j)
 {
@@ -433,9 +437,9 @@ inline static void
 putbits(bit_stream_t *bs, unsigned int val, int j)
 {
     if (j > 25) {
-	putbits16(bs, val>>16, j-16);
-	val &= 0xffff;
-	j = 16;
+	putbits8(bs, val>>24, j-24);
+	val &= 0xffffff;
+	j = 24;
     }
     putbits24(bs, val, j);
 }
@@ -443,9 +447,10 @@ putbits(bit_stream_t *bs, unsigned int val, int j)
 inline static void
 Huf_count1(bit_stream_t *bs, gr_info *gi)
 {
-    int i;
+    int i, wcode, wlen;
     const unsigned char * const hcode = quadcode[gi->table_select[3]];
 
+    wcode = wlen = 0;
     assert((unsigned int)gi->table_select[3] < 2u);
     for (i = gi->big_values; i < gi->count1; i += 4) {
 	int huffbits = 0, p = 0;
@@ -471,9 +476,16 @@ Huf_count1(bit_stream_t *bs, gr_info *gi)
 	    p++;
 	    huffbits = huffbits*2 + signbits(gi->xr[i+3]);
 	}
-	/* 0 < hcode[] <= 10 */
-	putbits16(bs, huffbits + hcode[p+16], hcode[p]);
+	/* 0 < hcode[p] <= 10 */
+	wlen += hcode[p];
+	wcode = (wcode << hcode[p]) + huffbits + hcode[p+16];
+	if (wlen > 25-10) {
+	    putbits24(bs, wcode, wlen);
+	    wcode = wlen = 0;
+	}
     }
+    if (wlen)
+	putbits24(bs, wcode, wlen);
     assert(i == gi->count1);
 }
 
@@ -519,9 +531,13 @@ Huffmancode_esc(bit_stream_t *bs, int tablesel, int i, int end, gr_info *gi)
 	}
 	x1 += tablesel;
 	/* 0 < escLen[] <= 17 */
-	putbits16(bs, escHB[x1], escLen[x1]);
-	if (xbits)      /* 0 <= xbits <= 28 */
-	    putbits(bs, ext, xbits);
+	if (escLen[x1] + xbits < 25 && xbits) {
+	    putbits24(bs, ext + (escHB[x1] << xbits), escLen[x1] + xbits);
+	} else {
+	    putbits16(bs, escHB[x1], escLen[x1]);
+	    if (xbits)      /* 0 <= xbits <= 28 */
+		putbits(bs, ext, xbits);
+	}
     } while ((i += 2) < end);
 }
 
@@ -709,12 +725,12 @@ encodeBitStream(lame_t gfc)
 		if (slen)
 		    for (sfb = 0; sfb < gi->sfbdivide; sfb++)
 			if (gi->scalefac[sfb] != SCALEFAC_SCFSI_FLAG)
-			    putbits16(&gfc->bs, Max(gi->scalefac[sfb],0), slen);
+			    putbits8(&gfc->bs, Max(gi->scalefac[sfb],0), slen);
 		slen = s2bits[gi->scalefac_compress];
 		if (slen)
 		    for (sfb = gi->sfbdivide; sfb < gi->sfbmax; sfb++)
 			if (gi->scalefac[sfb] != SCALEFAC_SCFSI_FLAG)
-			    putbits16(&gfc->bs, Max(gi->scalefac[sfb],0), slen);
+			    putbits8(&gfc->bs, Max(gi->scalefac[sfb],0), slen);
 		assert(headerbits == gfc->bs.bitidx);
 		Huffmancodebits(gfc, gi);
 	    } /* for ch */
@@ -785,7 +801,7 @@ encodeBitStream(lame_t gfc)
 		int slen = gi->slen[partition];
 		if (slen)
 		    for (; sfb < sfbend; sfb++)
-			putbits16(&gfc->bs, Max(gi->scalefac[sfb], 0), slen);
+			putbits8(&gfc->bs, Max(gi->scalefac[sfb], 0), slen);
 		sfb = sfbend;
 	    }
 	    assert(headerbits == gfc->bs.bitidx);
@@ -892,19 +908,19 @@ drain_into_ancillary(lame_t gfc, int remainingBits)
     assert(remainingBits >= 0);
 
     if (remainingBits >= 8) {
-	putbits16(bs,0x4c,8);
+	putbits8(bs,0x4c,8);
 	remainingBits -= 8;
     }
     if (remainingBits >= 8) {
-	putbits16(bs,0x41,8);
+	putbits8(bs,0x41,8);
 	remainingBits -= 8;
     }
     if (remainingBits >= 8) {
-	putbits16(bs,0x4d,8);
+	putbits8(bs,0x4d,8);
 	remainingBits -= 8;
     }
     if (remainingBits >= 8) {
-	putbits16(bs,0x45,8);
+	putbits8(bs,0x45,8);
 	remainingBits -= 8;
     }
 
@@ -914,15 +930,15 @@ drain_into_ancillary(lame_t gfc, int remainingBits)
 	int len = strlen(version), i = 0;
 	do {
 	    if (i < len)
-		putbits16(bs,version[i],8);
+		putbits8(bs,version[i],8);
 	    else
-		putbits16(bs,PADDING_PATTERN,8);
+		putbits8(bs,PADDING_PATTERN,8);
 	    i++;
 	} while ((remainingBits -= 8) >= 8);
     }
 
     if (remainingBits)
-	putbits16(bs, 0, remainingBits);
+	putbits8(bs, 0, remainingBits);
 }
 
 /*
