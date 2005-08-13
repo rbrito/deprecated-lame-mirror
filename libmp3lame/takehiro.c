@@ -229,14 +229,6 @@ static const unsigned int largetbl[16*16] = {
 0x0d0009, 0x0d0009, 0x0d0009, 0x0d000a, 0x0d000a, 0x0d000a, 0x0d000a, 0x0a0006
 };
 
-/*********************************************************************
- * nonlinear quantization of xr 
- * More accurate formula than the ISO formula.  Takes into account
- * the fact that we are quantizing xr -> ix, but we want ix^4/3 to be 
- * as close as possible to x^4/3.  (taking the nearest int would mean
- * ix is as close as possible to xr, which is different.)
- * From Segher Boessenkool <segher@eastsite.nl>  11/1999
- *********************************************************************/
 static void
 quantize_01(const FLOAT *xp, gr_info *gi, fi_union *fi, int sfb,
 	    const FLOAT *xend)
@@ -788,6 +780,14 @@ noquant_count_bits(lame_t gfc, gr_info * const gi)
     return gi->part2_3_length;
 }
 
+/*********************************************************************
+ * nonlinear quantization of xr 
+ * More accurate formula than the ISO formula.  Takes into account
+ * the fact that we are quantizing xr -> ix, but we want ix^4/3 to be 
+ * as close as possible to x^4/3.  (taking the nearest int would mean
+ * ix is as close as possible to xr, which is different.)
+ * From Segher Boessenkool <segher@eastsite.nl>  11/1999
+ *********************************************************************/
 int
 count_bits(lame_t gfc, gr_info * const gi)
 {
