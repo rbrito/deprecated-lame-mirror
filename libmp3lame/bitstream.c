@@ -372,12 +372,9 @@ copy_buffer(lame_t gfc, unsigned char *buffer, int size)
 int
 getframebytes(const lame_t gfc)
 {
-    int  bit_rate;
-
     /* get bitrate in kbps */
-    if (gfc->bitrate_index) 
-	bit_rate = bitrate_table[gfc->version][gfc->bitrate_index];
-    else
+    int bit_rate = bitrate_table[gfc->version][gfc->bitrate_index];
+    if (!bit_rate)
 	bit_rate = gfc->mean_bitrate_kbps;
     assert ( bit_rate <= 550 );
 
@@ -478,11 +475,12 @@ Huf_count1(bit_stream_t *bs, gr_info *gi)
 	}
 	/* 0 < hcode[p] <= 10 */
 	wlen += hcode[p];
-	wcode = (wcode << hcode[p]) + huffbits + hcode[p+16];
-	if (wlen > 25-10) {
-	    putbits24(bs, wcode, wlen);
-	    wcode = wlen = 0;
+	if (wlen > 25) {
+	    putbits24(bs, wcode, wlen - hcode[p]);
+	    wlen = hcode[p];
+	    wcode = 0;
 	}
+	wcode = (wcode << hcode[p]) + huffbits + hcode[p+16];
     }
     if (wlen)
 	putbits24(bs, wcode, wlen);
@@ -930,10 +928,9 @@ drain_into_ancillary(lame_t gfc, int remainingBits)
 	int len = strlen(version), i = 0;
 	do {
 	    if (i < len)
-		putbits8(bs,version[i],8);
+		putbits8(bs,version[i++],8);
 	    else
 		putbits8(bs,PADDING_PATTERN,8);
-	    i++;
 	} while ((remainingBits -= 8) >= 8);
     }
 
