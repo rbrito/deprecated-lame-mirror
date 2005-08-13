@@ -441,14 +441,35 @@ putbits(bit_stream_t *bs, unsigned int val, int j)
     putbits24(bs, val, j);
 }
 
+static const unsigned char quadcode[2][16*2]  = {
+    {
+	1+0,  4+1,  4+1,  5+2,  4+1,  6+2,  5+2,  6+3,
+	4+1,  5+2,  5+2,  6+3,  5+2,  6+3,  6+3,  6+4,
+
+	1 << 0,  5 << 1,  4 << 1,  5 << 2,  6 << 1,  5 << 2,  4 << 2,  4 << 3,
+	7 << 1,  3 << 2,  6 << 2,  0 << 3,  7 << 2,  2 << 3,  3 << 3,  1 << 4
+    },
+    {
+	4+0,  4+1,  4+1,  4+2,  4+1,  4+2,  4+2,  4+3,
+	4+1,  4+2,  4+2,  4+3,  4+2,  4+3,  4+3,  4+4,
+
+	15 << 0, 14 << 1, 13 << 1, 12 << 2, 11 << 1, 10 << 2,  9 << 2,  8 << 3,
+	 7 << 1,  6 << 2,  5 << 2,  4 << 3,  3 << 2,  2 << 3,  1 << 3,  0 << 4
+    }
+};
+
 inline static void
 Huf_count1(bit_stream_t *bs, gr_info *gi)
 {
-    int i, wcode, wlen;
+    int i, wcode, remain;
     const unsigned char * const hcode = quadcode[gi->table_select[3]];
-
-    wcode = wlen = 0;
+    unsigned char *ptr;
     assert((unsigned int)gi->table_select[3] < 2u);
+
+    ptr = &bs->buf[bs->bitidx >> 3];
+    remain = 32 - (bs->bitidx & 7);
+    bs->bitidx -= (bs->bitidx & 7);
+    wcode = *ptr << 24;
     for (i = gi->big_values; i < gi->count1; i += 4) {
 	int huffbits = 0, p = 0;
 	assert((unsigned int)(gi->l3_enc[i] | gi->l3_enc[i+1]
@@ -474,16 +495,22 @@ Huf_count1(bit_stream_t *bs, gr_info *gi)
 	    huffbits = huffbits*2 + signbits(gi->xr[i+3]);
 	}
 	/* 0 < hcode[p] <= 10 */
-	wlen += hcode[p];
-	if (wlen > 25) {
-	    putbits24(bs, wcode, wlen - hcode[p]);
-	    wlen = hcode[p];
-	    wcode = 0;
+	wcode |= (huffbits + hcode[p+16]) << (remain - hcode[p]);
+	remain -= hcode[p];
+	if (remain <= 16) {
+	    *ptr++ = wcode >> 24;
+	    *ptr++ = wcode >> 16;
+	    remain += 16;
+	    wcode <<= 16;
+	    bs->bitidx += 16;
 	}
-	wcode = (wcode << hcode[p]) + huffbits + hcode[p+16];
     }
-    if (wlen)
-	putbits24(bs, wcode, wlen);
+    remain -= 32;
+    if (remain) {
+	*ptr++ = wcode >> 24;
+	*ptr++ = wcode >> 16;
+	bs->bitidx -= remain;
+    }
     assert(i == gi->count1);
 }
 

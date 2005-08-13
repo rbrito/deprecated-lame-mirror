@@ -24,7 +24,6 @@
 
 /* table of huffman coding */
 extern const char htESC_xlen[];
-extern const unsigned char quadcode[2][16*2];
 
 extern FLOAT window[];
 extern FLOAT window_s[];
