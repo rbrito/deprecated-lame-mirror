@@ -590,6 +590,13 @@ recalc_divide_sub(
     return gi->part2_3_length - old;
 }
 
+static const unsigned int quadcodex2[16]  = {
+    0x00010004, 0x00050005, 0x00050005, 0x00070006,
+    0x00050005, 0x00080006, 0x00070006, 0x00090007,
+    0x00050005, 0x00070006, 0x00070006, 0x00090007,
+    0x00070006, 0x00090007, 0x00090007, 0x000a0008
+};
+
 static void
 best_huffman_divide(lame_t gfc, gr_info * const gi)
 {
@@ -619,13 +626,14 @@ best_huffman_divide(lame_t gfc, gr_info * const gi)
 	gi->table_select[2] = gi->table_select[3] = 0;
 
 	gi->big_values = i;
-	a1 = a2 = 0;
+	a2 = 0;
 	for (; i < gi->count1; i += 4) {
 	    int p = ((ix[i] * 2 + ix[i+1]) * 2 + ix[i+2]) * 2 + ix[i+3];
-	    a1 += quadcode[0][p];
-	    a2 += quadcode[1][p];
+	    a2 += quadcodex2[p];
 	}
 
+	a1 = a2 >> 16;
+	a2 = a2 & 0xffff;
 	if (a1 > a2) {
 	    a1 = a2;
 	    gi->table_select[3] = 1;
@@ -659,14 +667,15 @@ best_huffman_divide(lame_t gfc, gr_info * const gi)
     if ((unsigned int)(ix[gi->big_values-2] | ix[gi->big_values-1]) > 1)
 	gi->big_values += 2;
 #endif
-    a1 = a2 = 0;
+    a2 = 0;
     for (; i > gi->big_values; i -= 4) {
 	int p = ((ix[i-4] * 2 + ix[i-3]) * 2 + ix[i-2]) * 2 + ix[i-1];
-	a1 += quadcode[0][p];
-	a2 += quadcode[1][p];
+	a2 += quadcodex2[p];
     }
 
     gi->table_select[3] = 0;
+    a1 = a2 >> 16;
+    a2 = a2 & 0xffff;
     if (a1 > a2) {
 	a1 = a2;
 	gi->table_select[3] = 1;
@@ -715,7 +724,7 @@ noquant_count_bits(lame_t gfc, gr_info * const gi)
     gi->count1 = i;
 
     /* Determines the number of bits to encode the quadruples. */
-    a1 = a2 = 0;
+    a2 = 0;
     for (; i > 3; i -= 4) {
 	int p;
 	/* hack to check if all values <= 1 */
@@ -723,11 +732,12 @@ noquant_count_bits(lame_t gfc, gr_info * const gi)
 	    break;
 
 	p = ((ix[i-4] * 2 + ix[i-3]) * 2 + ix[i-2]) * 2 + ix[i-1];
-	a1 += quadcode[0][p];
-	a2 += quadcode[1][p];
+	a2 += quadcodex2[p];
     }
 
     gi->table_select[3] = 0;
+    a1 = a2 >> 16;
+    a2 = a2 & 0xffff;
     if (a1 > a2) {
 	a1 = a2;
 	gi->table_select[3] = 1;
