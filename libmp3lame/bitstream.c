@@ -435,10 +435,9 @@ putbits(bit_stream_t *bs, unsigned int val, int j)
 {
     if (j > 25) {
 	putbits8(bs, val>>24, j-24);
-	val &= 0xffffff;
 	j = 24;
     }
-    putbits24(bs, val, j);
+    putbits24main(bs, val, j);
 }
 
 static const unsigned char quadcode[2][16*2]  = {

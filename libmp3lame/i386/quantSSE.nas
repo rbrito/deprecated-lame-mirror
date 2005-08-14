@@ -24,7 +24,7 @@ D_IXMAXVAL	dd	8206.0,8206.0
 ROUNDFAC_NEAR	dd	-0.0946
 minus1		dd	-1.0
 magicfloat	dd	8388608.0
-maskpattern	dd	0xFFFFFF
+maskpattern	dd	(1<<23)-1
 
 	segment_code
 proc	pow075_3DN
