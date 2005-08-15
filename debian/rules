@@ -12,8 +12,12 @@ configure: configure-stamp
 configure-stamp:
 	dh_testdir
 	# Add here commands to configure the package.
-	./configure --prefix=/usr \
-		--with-fileio=sndfile \
+	CFLAGS="$(CFLAGS)" ./configure \
+		--prefix=/usr \
+		--mandir=/usr/share/man \
+		--with-fileio=lame \
+		--without-vorbis \
+		--enable-decode-layer1 \
 		--enable-mp3x \
 		--enable-mp3rtp \
 		--enable-nasm \
@@ -38,7 +42,6 @@ build-stamp:
 
         # Add here commands to compile the package.
 	$(MAKE)
-	#/usr/bin/docbook-to-man debian/lame.sgml > lame.1
 
 	touch build-stamp
 
@@ -48,13 +51,10 @@ clean:
 	rm -f build-stamp configure-stamp
 
 	# Add here commands to clean up after the build process.
-	-$(MAKE) distclean
-	-rm -f confcache \
-		libmp3lame/i386/choose_table.nas.lst \
-		libmp3lame/i386/cpu_feat.nas.lst \
-		libmp3lame/i386/scalar.nas.lst
-
-	dh_clean
+	# Parts of this taken from Christian Marillat's packaging.
+	[ ! -f Makefile ] || $(MAKE) distclean
+	dh_clean confcache libmp3lame/i386/choose_table.nas.lst \
+	libmp3lame/i386/cpu_feat.nas.lst libmp3lame/i386/scalar.nas.lst
 
 install: build
 	dh_testdir
@@ -75,10 +75,8 @@ binary-arch: build install
 	dh_testdir
 	dh_testroot
 	dh_movefiles
-#	dh_installdebconf	
 	dh_installdocs
-	dh_installman -Nliblame0 -Nliblame0-dev
-#	dh_undocumented -Nlame -Nliblame0 -Nlame-dev mp3rtp.1
+	dh_installman -Nlibmp3lame0 -Nlibmp3lame0-dev
 	dh_installchangelogs ChangeLog
 	dh_strip
 	dh_compress

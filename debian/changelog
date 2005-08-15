@@ -1,3 +1,21 @@
+lame (3.97-5) unstable; urgency=low
+
+  * debian/control: fix use of SONAME in the package;
+  * debian/liblame0.*: renamed to libmp3lame0.* as per above;
+  * debian/liblame-dev: idem;
+  * debian/rules: incorporate some changes by Christian Marillat.
+
+ -- Rogério Brito <rbrito@users.sf.net>  Mon, 15 Aug 2005 00:47:25 -0300
+
+lame (3.97-4) unstable; urgency=low
+
+  * debian/control: exclude libsndfile0-dev as a build dependency.
+  * debian/control: include libgtk1.2-dev as a build dependency.
+  * debian/rules: s/--with-fileio=sndfile/--with-fileio=lame/, since
+    grabbing input from stdin is a very important feature.
+
+ -- Rogério Brito <rbrito@users.sf.net>  Fri,  5 Aug 2005 02:01:40 -0300
+
 lame (3.97-3) unstable; urgency=low
 
   * doc/man/lame.1: document the --{un,}signed options.
@@ -5,7 +23,7 @@ lame (3.97-3) unstable; urgency=low
   * debian/control: include libsndfile0-dev as a build dependency.
   * debian/rules: s/--with-fileio=lame/--with-fileio=sndfile/ .
 	
- -- Rogério Brito <rbrito@users.sf.net>  Wed, 3 Ago 2005 21:35:17 -0300
+ -- Rogério Brito <rbrito@users.sf.net>  Wed,  3 Aug 2005 21:35:17 -0300
 
 lame (3.97-2) unstable; urgency=low
 
