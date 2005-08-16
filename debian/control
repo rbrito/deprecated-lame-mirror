@@ -22,6 +22,8 @@ Package: libmp3lame0
 Architecture: any
 Section: libs
 Depends: ${shlibs:Depends}
+Provides: liblame0
+Conflicts: liblame0
 Description: shared libraries for MP3 encoding
  Lame is a program which can be used to create compressed
  audio files. (Lame aint MP3 encoder). These audio files
@@ -45,4 +47,4 @@ Description: development files for lame
  stdout, use a "-" for <outfile>.
  .
  This package contains the static library and header files
- for developments with lame.
+ for development with lame.

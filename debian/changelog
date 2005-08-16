@@ -1,3 +1,11 @@
+lame (3.97-6) unstable; urgency=low
+
+  * debian/control: make libmp3lame0 provide liblame0 for legacy apps;
+  * debian/control: fix typo in description of libmp3lame0-dev;
+  * debian/libmp3lame0-dev.files: don't ship shared libraries.
+
+ -- Rogério Brito <rbrito@users.sf.net>  Tue, 16 Aug 2005 04:03:42 -0300
+
 lame (3.97-5) unstable; urgency=low
 
   * debian/control: fix use of SONAME in the package;
