@@ -345,42 +345,38 @@ calc_noise_allband(
 
 #ifdef USE_IEEE754_HACK
 static const int pow075_table0[] = {
-//  (16/ 9)^.75, (32/ 9)^.75, (64/ 9)^.75, (128/ 9)^.75
-    0x06288D0C,  0x0A5B6E9F,  0x116B28D7,  0x1D4B61EE,
-//  (16/11)^.75, (32/11)^.75, (64/11)^.75, (128/11)^.75
-    0x054C4481,  0x08E8F60C,  0x0EFC1AA2,  0x19338844,
-//  (16/14)^.75, (32/14)^.75, (64/14)^.75, (128/14)^.75
-    0x046BDCEE,  0x076F8F22,  0x0C81645F,  0x15081407,
+/*  (32/ 9)^.75, (64/ 9)^.75, (128/ 9)^.75,(256/ 9)^.75 */
+    0x0A5B6EB1,  0x116B28F5,  0x1D4B6220,  0x314468B9,
+/*  (32/11)^.75, (64/11)^.75, (128/11)^.75,(256/11)^.75 */
+    0x08E8F61B,  0x0EFC1ABC,  0x1933886F,  0x2A622451,
+/*  (32/14)^.75, (64/14)^.75, (128/14)^.75,(256/14)^.75 */
+    0x076F8F2F,  0x0C816474,  0x1508142B,  0x235EE7B5,
 };
-
+#if 0
 static const char pow075_table1[] = {
     9,  /* 1.62500 < mantissa < 2.00000 => -(44/512) < x-1 < (64/512) */
     11, /* 1.28125 < mantissa < 1.62500 => -(61/512) < x-1 < (60/512) */
     14  /* 1.00000 < mantissa < 1.28125 => -(64/512) < x-1 < (62/512) */
 };
-
+#endif
 static void pow075sub(fi_union *p)
 {
-    int adj;
-    int res;
-    int exponent;
-    int mantissa, x;
+    int mantissa, exponent;
+    int adj, res, x;
 
     exponent = p->i >> 23;
     if (exponent <= 0)
 	return; /* de-normalized number or zero or minus number */
 
-    mantissa = (p->i & 0x7fffff) | 0x800000;
-
-    adj = 0;
+    x = mantissa = (p->i & 0x7fffff) | 0x800000;
+    mantissa *= 9;
+    adj = exponent & 3;
     if (mantissa < 0x00A40000) /* 1.28125 * (1<<23) */
-	adj++;
+	mantissa += x*3, adj+=4;
     if (mantissa < 0x00D00000) /* 1.625 * (1<<23) */
-	adj++;
+	mantissa += x*2, adj+=4;
 
-    mantissa = mantissa * pow075_table1[adj] - (1 << 27);
-
-    exponent = (exponent - 127);
+    mantissa -= 1 << 27;
 
     /* when x \simeq 1, x^(3/4) = 1 + (x-1)*3/4 - ... */
     x = mantissa * 3;
@@ -391,8 +387,8 @@ static void pow075sub(fi_union *p)
     res += x << 5;
     x = (((x*9) * (uint64_t)mantissa) >> 32) << 6;
     res -= x;
-    p->f = ((uint64_t)res * pow075_table0[adj*4 + (exponent&3)]) >> 32;
-    p->i += ((exponent>>2)*3 - 55 + 32) << 23;
+    p->f = ((uint64_t)res * pow075_table0[adj]) >> 32;
+    p->i += ((exponent>>2)*3 - 32*3 - 55 + 32) << 23;
 }
 
 static void pow075(lame_t gfc, float *xr, float end, float *pmax)
