@@ -39,7 +39,7 @@ lr2ms_SSE(float *pl, float *pr, int i)
     }
 }
 
-void sumofsqr_SSEx(const float *end, int l, float *res)
+void sumofsqr_SSE(const float *end, int l, float *res)
 {
     union {
         __m128 m;
@@ -126,9 +126,9 @@ pow075_SSE(float *x, float *x34, int end, float *max)
 	x34 += 8;
     } while ((end -= 8) > 0);
 
-    _mm_movehl_ps(zero, srmax);
+    zero = _mm_movehl_ps(srmax, srmax);
     srmax = _mm_max_ps(srmax, zero);
-    _mm_shuffle_ps(zero, srmax, _MM_SHUFFLE(1,1,1,1));
+    zero = _mm_shuffle_ps(srmax, srmax, _MM_SHUFFLE(1,1,1,1));
     srmax = _mm_max_ps(srmax, zero);
     _mm_store_ss(max, srmax);
 }
