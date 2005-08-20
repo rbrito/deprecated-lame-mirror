@@ -12,7 +12,7 @@
 	align 16
 Q_MMPP	dd	0x0,0x0,0x80000000,0x80000000
 Q_MPMP	dd	0x0,0x80000000,0x0,0x80000000
-D_SQRT2	dd	1.414213562,1.414213562
+S_SQRT2	dd	1.414213562
 costab_fft:
 	dd 0.000000000000
 	dd 1.000000000000
@@ -59,12 +59,9 @@ fht_SSE:
 
 	xor	ecx,ecx		; ecx=k=0
 	xor	eax,eax
-	mov	al,4		; =k1=1*(sizeof float)	// 4, 16, 64, 256,...  
+	mov	al,4		; =k1=1*(sizeof float)	// 4, 16, 64, 256,...
 	xor	edx,edx
 	mov	dl,12		; =k3=3*k1
-	jmp	short .lp2
-
-	align	16
 .lp2:				; do{
 	add	cl,2		; k  += 2;
 	shl	edx,2
@@ -76,10 +73,6 @@ fht_SSE:
 	add	edi,esi		; edi=gi=fi+ki/2
 
 ; たかだか2並列しか期待できない部分はFPUのほうが速い。
-	movss	xmm7,[D_SQRT2]
-	jmp	short .lp20
-
-	align	16
 .lp20:				; do{
 ;                       f0     = fi[0 ] + fi[k1];
 ;                       f2     = fi[k2] + fi[k3];
@@ -124,12 +117,12 @@ fht_SSE:
 ;                       gi[k3] = g1     - g3;
 	fld	dword [edi]
 	fadd	dword [edi+eax]
-	fld	dword [D_SQRT2]
+	fld	dword [S_SQRT2]
 	fmul	dword [edi+eax*2]
 
 	fld	dword [edi]
 	fsub	dword [edi+eax]
-	fld	dword [D_SQRT2]
+	fld	dword [S_SQRT2]
 	fmul	dword [edi+edx]
 
 	fld	st1
@@ -278,9 +271,8 @@ fht_SSE:
 ; at here, xmm6 is {c3, s3, s3, c3}
 ;                       c1 = c3*t_c - s3*t_s;
 ;                       s1 = c3*t_s + s3*t_c;
-	movss	xmm0,[costab_fft + ecx*8]
-	movss	xmm1,[costab_fft + ecx*8 + 4]
-	shufps	xmm0,xmm1,0x00	; = {t_s, t_s, t_c, t_c}
+	movups	xmm0,[costab_fft + ecx*8]
+	shufps	xmm0,xmm0,0x50	; = {t_s, t_s, t_c, t_c}
 	mulps	xmm6,xmm0
 	movhlps	xmm4,xmm6
 	xorps	xmm4,[Q_MPMP]
