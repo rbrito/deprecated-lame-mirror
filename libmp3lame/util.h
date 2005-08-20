@@ -24,6 +24,6 @@
 
 void	disable_FPE(void);
 uint16_t calculateCRC(unsigned char *p, int size, uint16_t crc);
-void lr2ms(FLOAT *, FLOAT *, int);
+void lr2ms(lame_t gfc, FLOAT *, FLOAT *, int);
 
 #endif /* LAME_UTIL_H */

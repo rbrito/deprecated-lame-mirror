@@ -1624,7 +1624,7 @@ encode_mp3_frame(lame_t gfc, unsigned char* mp3buf, int mp3buf_size)
 		end = gfc->scalefac_band.s[sfb]*3;
 		sfb *= 3;
 	    }
-	    if (end) lr2ms(gi[0].xr, gi[1].xr, end);
+	    if (end) lr2ms(gfc, gi[0].xr, gi[1].xr, end);
 	    if (gfc->mode_ext == MPG_MD_MS_I)
 		conv_istereo(gfc, gi, sfb, end);
 	}

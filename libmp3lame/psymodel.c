@@ -1043,7 +1043,7 @@ mp3x display               <------LONG------>
 			  &gfc->mfbuf[ch][576/3*(3*gr+sb+1)]);
 	}
 	else if (ch == 2 && (current_is_short & 12)) {
-	    lr2ms(wsamp_S[0][0], wsamp_S[1][0], 3*BLKSIZE_s);
+	    lr2ms(gfc, wsamp_S[0][0], wsamp_S[1][0], 3*BLKSIZE_s);
 	}
 	if (!(current_is_short & (1 << ch)))
 	    continue;
@@ -1120,7 +1120,7 @@ psycho_anal_ns(lame_t gfc, int gr, int numchn)
 	    fft_long(gfc, wsamp_L[ch], &gfc->mfbuf[ch][576*gr]);
 	else if (ch == 2) {
 	    /* FFT data for mid and side channel is derived from L & R */
-	    lr2ms(wsamp_L[0], wsamp_L[1], BLKSIZE);
+	    lr2ms(gfc, wsamp_L[0], wsamp_L[1], BLKSIZE);
 	}
 	/*********************************************************************
 	 *    Calculate the energy and the tonality of each partition.
