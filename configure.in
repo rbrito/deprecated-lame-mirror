@@ -1061,5 +1061,5 @@ AC_SUBST(CONFIG_DEFS)
 
 AM_LANGINFO_CODESET
 
-AC_CONFIG_FILES([Makefile libmp3lame/Makefile libmp3lame/i386/Makefile libmp3lame/ppc/Makefile frontend/Makefile mpglib/Makefile doc/Makefile doc/html/Makefile doc/man/Makefile include/Makefile Dll/Makefile misc/Makefile debian/Makefile dshow/Makefile ACM/Makefile ACM/ADbg/Makefile ACM/ddk/Makefile ACM/tinyxml/Makefile lame.spec mac/Makefile])
+AC_CONFIG_FILES([Makefile libmp3lame/Makefile libmp3lame/i386/Makefile libmp3lame/ppc/Makefile libmp3lame/x86_64/Makefile frontend/Makefile mpglib/Makefile doc/Makefile doc/html/Makefile doc/man/Makefile include/Makefile Dll/Makefile misc/Makefile debian/Makefile dshow/Makefile ACM/Makefile ACM/ADbg/Makefile ACM/ddk/Makefile ACM/tinyxml/Makefile lame.spec mac/Makefile])
 AC_OUTPUT

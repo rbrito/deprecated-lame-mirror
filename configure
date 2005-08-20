@@ -29717,7 +29717,7 @@ _ACEOF
   fi
 
 
-                                                                                                                                                                                                        ac_config_files="$ac_config_files Makefile libmp3lame/Makefile libmp3lame/i386/Makefile libmp3lame/ppc/Makefile frontend/Makefile mpglib/Makefile doc/Makefile doc/html/Makefile doc/man/Makefile include/Makefile Dll/Makefile misc/Makefile debian/Makefile dshow/Makefile ACM/Makefile ACM/ADbg/Makefile ACM/ddk/Makefile ACM/tinyxml/Makefile lame.spec mac/Makefile"
+                                                                                                                                                                                                                  ac_config_files="$ac_config_files Makefile libmp3lame/Makefile libmp3lame/i386/Makefile libmp3lame/ppc/Makefile libmp3lame/x86_64/Makefile frontend/Makefile mpglib/Makefile doc/Makefile doc/html/Makefile doc/man/Makefile include/Makefile Dll/Makefile misc/Makefile debian/Makefile dshow/Makefile ACM/Makefile ACM/ADbg/Makefile ACM/ddk/Makefile ACM/tinyxml/Makefile lame.spec mac/Makefile"
 
 cat >confcache <<\_ACEOF
 # This file is a shell script that caches the results of configure
@@ -30307,6 +30307,7 @@ do
   "libmp3lame/Makefile" ) CONFIG_FILES="$CONFIG_FILES libmp3lame/Makefile" ;;
   "libmp3lame/i386/Makefile" ) CONFIG_FILES="$CONFIG_FILES libmp3lame/i386/Makefile" ;;
   "libmp3lame/ppc/Makefile" ) CONFIG_FILES="$CONFIG_FILES libmp3lame/ppc/Makefile" ;;
+  "libmp3lame/x86_64/Makefile" ) CONFIG_FILES="$CONFIG_FILES libmp3lame/x86_64/Makefile" ;;
   "frontend/Makefile" ) CONFIG_FILES="$CONFIG_FILES frontend/Makefile" ;;
   "mpglib/Makefile" ) CONFIG_FILES="$CONFIG_FILES mpglib/Makefile" ;;
   "doc/Makefile" ) CONFIG_FILES="$CONFIG_FILES doc/Makefile" ;;
