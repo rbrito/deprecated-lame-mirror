@@ -174,28 +174,23 @@ calculateCRC(unsigned char *buffer, int size, uint16_t crc)
     return crc;
 }
 
-void
-lr2ms(FLOAT *pl, FLOAT *pr, int i)
-{
-#if 1
-    do {
-	FLOAT l, r;
-	l = pl[0]; pl++;
-	r = pr[0]; pr++;
-	pl[-1] = (l + r) * (FLOAT)(SQRT2*0.5);
-	pr[-1] = (l - r) * (FLOAT)(SQRT2*0.5);
-	l = pl[0]; pl++;
-	r = pr[0]; pr++;
-	pl[-1] = (l + r) * (FLOAT)(SQRT2*0.5);
-	pr[-1] = (l - r) * (FLOAT)(SQRT2*0.5);
-    } while (i -= 2);
-#else
-    do {
-	FLOAT l, r;
-	l = pl[0]; pl++;
-	r = pr[0]; pr++;
-	pl[-1] = (l + r) * (FLOAT)(SQRT2*0.5);
-	pr[-1] = (l - r) * (FLOAT)(SQRT2*0.5);
-    } while (i--);
+#if HAVE_NASM
+extern void lr2ms_SSE(FLOAT *pl, FLOAT *pr, int i);
 #endif
+
+void
+lr2ms(lame_t gfc, FLOAT *pl, FLOAT *pr, int i)
+{
+#if HAVE_NASM
+    if (gfc->CPU_features.SSE) {
+	lr2ms_SSE(pl, pr, i);
+    } else 
+#endif
+	do {
+	    FLOAT l, r;
+	    l = pl[0]; pl++;
+	    r = pr[0]; pr++;
+	    pl[-1] = (l + r) * (FLOAT)(SQRT2*0.5);
+	    pr[-1] = (l - r) * (FLOAT)(SQRT2*0.5);
+	} while (--i);
 }

@@ -17,6 +17,7 @@
 Q_f1p25		dd	1.25, 1.25, 1.25, 1.25
 Q_fm0p25	dd	-0.25, -0.25, -0.25, -0.25
 Q_ABS		dd	0x7FFFFFFF, 0x7FFFFFFF, 0x7FFFFFFF, 0x7FFFFFFF
+Q_sqrt2		dd	1060439283,1060439283,1060439283,1060439283
 
 D_ROUNDFAC	dd	0.4054,0.4054
 D_1ROUNDFAC	dd	0.5946,0.5946
@@ -688,4 +689,47 @@ proc	quantize_ISO_SSE2
 	movaps		[edx+4* 8 + ecx*4-64], xm4
 	movaps		[edx+4*12 + ecx*4-64], xm5
 	jnz		.lp
+	ret
+
+;
+; void lr2ms(float l[], float r[], int len)
+;
+proc	lr2ms_SSE
+%assign _P 16
+	push	ebp
+	movaps	xm3, [Q_sqrt2]
+	push	edi
+	push	esi
+	push	ebx
+	mov	eax, [esp+_P+4]		; eax = l
+	mov	ecx, [esp+_P+8]		; ecx = r
+	mov	edx, [esp+_P+12]	; edx = len
+	mov	ebx, [eax+edx*4-4]
+	mov	esi, [eax+edx*4-8]
+	mov	edi, [ecx+edx*4-4]
+	mov	ebp, [ecx+edx*4-8]
+.lp:
+	movaps	xm0, [eax]
+	movaps	xm2, [ecx]
+	movaps	xm1, xm0
+	addps	xm0, xm2
+	subps	xm1, xm2
+	mulps	xm0, xm3
+	mulps	xm1, xm3
+	movaps	[eax], xm0
+	movaps	[ecx], xm1
+	add	eax, byte 16
+	add	ecx, byte 16
+	sub	edx, byte 4
+	jg near .lp
+	je near	.end
+	mov	[eax-12], ebx
+	mov	[eax-16], esi
+	mov	[ecx-12], edi
+	mov	[ecx-16], ebp
+.end:
+	pop	ebx
+	pop	esi
+	pop	edi
+	pop	ebp
 	ret
