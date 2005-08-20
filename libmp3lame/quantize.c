@@ -50,6 +50,10 @@ extern float calc_sfb_noise_3DN(lame_t gfc, int j, int bw, int sf);
 extern float xrmax_MMX(float *start, float *end);
 #endif
 
+#ifdef __x86_64__
+# include "x86_64/quantize_sub.c"
+#endif
+
 static const char max_range_short[SBMAX_s*3] = {
     15, 15, 15, 15, 15, 15, 15, 15, 15, 15, 15, 15, 15, 15, 15, 15, 15, 15,
     7, 7, 7, 7, 7, 7, 7, 7, 7, 7, 7, 7, 7, 7, 7, 7, 7, 7,
@@ -148,6 +152,9 @@ calc_xmin(
 	j -= l;
 	if (x > (FLOAT)0.0) {
 	    x = ratio->thm.l[gsfb] / x;
+#ifdef __x86_64__
+	    sumofsqr_SSE(&gi->xr[j], l, &x);
+#else
 #ifdef HAVE_NASM
 	    if (gfc->CPU_features.AMD_3DNow)
 		sumofsqr_3DN(&gi->xr[j], l, &x);
@@ -161,6 +168,7 @@ calc_xmin(
 		} while ((l+=2) < 0);
 		x *= en0;
 	    }
+#endif
 	    x *= gfc->masking_lower;
 	    if (threshold < x)
 		threshold = x;
@@ -177,6 +185,9 @@ calc_xmin(
 	    j -= l;
 	    if (x > (FLOAT)0.0) {
 		x = ratio->thm.s[sfb][b] / x;
+#ifdef __x86_64__
+		sumofsqr_SSE(&gi->xr[j], l, &x);
+#else
 #ifdef HAVE_NASM
 		if (gfc->CPU_features.AMD_3DNow)
 		    sumofsqr_3DN(&gi->xr[j], l, &x);
@@ -190,6 +201,7 @@ calc_xmin(
 		    } while ((l+=2) < 0);
 		    x *= en0;
 		}
+#endif
 		x *= gfc->masking_lower_short;
 		if (threshold < x)
 		    threshold = x;
@@ -272,6 +284,10 @@ calc_noise(
 	l = gi->wi[sfb].width;
 	j -= l;
 	if (noise < (FLOAT)0.0) {
+#ifdef __x86_64__
+	    noise = *rxmin;
+	    sumofsqr_SSE(&absxr[j], l, &noise);
+#else
 #ifdef HAVE_NASM
 	    if (gfc->CPU_features.AMD_3DNow) {
 		noise = *rxmin;
@@ -286,6 +302,7 @@ calc_noise(
 		} while ((l += 2) < 0);
 		noise *= *rxmin;
 	    }
+#endif
 	    *distort = noise;
 	}
 	max_noise = Max(max_noise, noise);
@@ -422,11 +439,17 @@ static void pow075(lame_t gfc, float *xr, float end, float *pmax)
 static int 
 init_bitalloc(lame_t gfc, gr_info *const gi)
 {
-    FLOAT max;
+    FLOAT max = 0.0;
     int end = gi->xrNumMax;
 
     /*  check if there is some energy we have to quantize
      *  and calculate xr34(gfc->xrwork[0]) matching our fresh scalefactors */
+#ifdef __x86_64__
+    if (end) {
+	end = (end + 7) & (~7);
+	pow075_SSE(gi->xr, xr34, end, &max);
+    }
+#else
 #ifdef HAVE_NASM
     if (gfc->CPU_features.SSE) {
 	if (end) {
@@ -443,6 +466,7 @@ init_bitalloc(lame_t gfc, gr_info *const gi)
     {
 	pow075(gfc, gi->xr, end, &max);
     }
+#endif
     memset(&xr34[end], 0, sizeof(FLOAT)*(576-end));
     memset(&absxr[end], 0, sizeof(FLOAT)*(576-end));
 
@@ -475,6 +499,15 @@ quantize_ISO(lame_t gfc, gr_info *gi)
     const FLOAT *xend = &xr34[gi->big_values];
     if (!gi->count1)
 	return;
+#ifdef __x86_64__
+    {
+	int len = (gi->count1+15)&(~15);
+	fi += len;
+	xp += len;
+	quantize_ISO_SSE2(xp, -len, gi->global_gain, &fi[0].i);
+	xend = &xr34[gi->count1];
+    }
+#else
 #ifdef HAVE_NASM
     if (gfc->CPU_features.AMD_3DNow) {
 	fi += gi->big_values;
@@ -531,6 +564,7 @@ quantize_ISO(lame_t gfc, gr_info *gi)
 	}
 #endif
     }
+#endif
     if (gfc->noise_shaping_amp >= 3) {
 	istep = (FLOAT)0.634521682242439 / IPOW20(gi->global_gain);
 	xp = xr34;
