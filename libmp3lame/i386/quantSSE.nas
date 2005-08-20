@@ -119,7 +119,6 @@ proc	pow075_SSE
 	movaps	xm0, [eax+ecx+ 0]
 	movaps	xm1, [eax+ecx+16]
 	andps	xm0, [Q_ABS]		; xm0 = |xr|
-	movaps	xm6, xm1
 	andps	xm1, [Q_ABS]
 	movaps	[edx+ecx+ 0+576*4], xm0 ; absxr[]
 	movaps	[edx+ecx+16+576*4], xm1
@@ -608,7 +607,7 @@ proc	quantize_ISO_3DN
 	ret
 
 ;
-; void qnatize_sfb_SSE(FLOAT xr34end[], int -bw, int sf, int l3enc_end[])
+; void qnatize_ISO_SSE(FLOAT xr34end[], int -bw, int sf, int l3enc_end[])
 ;
 proc	quantize_ISO_SSE
 %assign _P 0
@@ -654,7 +653,7 @@ proc	quantize_ISO_SSE
 	ret
 
 ;
-; void qnatize_sfb_SSE2(FLOAT xr34end[], int -bw, int sf, int l3enc_end[])
+; void qnatize_ISO_SSE2(FLOAT xr34end[], int -bw, int sf, int l3enc_end[])
 ;
 proc	quantize_ISO_SSE2
 %assign _P 0
