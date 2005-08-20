@@ -178,6 +178,7 @@ calculateCRC(unsigned char *buffer, int size, uint16_t crc)
 extern void lr2ms_SSE(FLOAT *pl, FLOAT *pr, int i);
 #endif
 
+#ifndef __x86_64__
 void
 lr2ms(lame_t gfc, FLOAT *pl, FLOAT *pr, int i)
 {
@@ -194,3 +195,4 @@ lr2ms(lame_t gfc, FLOAT *pl, FLOAT *pr, int i)
 	    pr[-1] = (l - r) * (FLOAT)(SQRT2*0.5);
 	} while (--i);
 }
+#endif

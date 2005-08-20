@@ -24,6 +24,11 @@
 
 void	disable_FPE(void);
 uint16_t calculateCRC(unsigned char *p, int size, uint16_t crc);
+#ifdef __x86_64__
+# define lr2ms(gfc, pl, pr, len) lr2ms_SSE(pl, pr, len)
+void lr2ms_SSE(FLOAT *, FLOAT *, int);
+#else
 void lr2ms(lame_t gfc, FLOAT *, FLOAT *, int);
+#endif
 
 #endif /* LAME_UTIL_H */
