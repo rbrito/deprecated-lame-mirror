@@ -41,13 +41,7 @@ lr2ms_SSE(float *pl, float *pr, int i)
 
 void sumofsqr_SSE(const float *end, int l, float *res)
 {
-    union {
-        __m128 m;
-        int i[4];
-	float f[4];
-    } u;
     __m128 m, s;
-    float x;
 
     const float *p = end+l;
     m = _mm_loadu_ps(p);
@@ -68,9 +62,13 @@ void sumofsqr_SSE(const float *end, int l, float *res)
     } while ((l += 4) < 0);
 
  exit:
-    _mm_storeu_ps(&u.m, s);
-    x = u.f[0] + u.f[1] + u.f[2] + u.f[3];
-    *res = *res * x;
+    m = _mm_movehl_ps(s, s);
+    s = _mm_add_ps(s, m);
+    m = _mm_shuffle_ps(s, s, _MM_SHUFFLE(1,1,1,1));
+    s = _mm_add_ss(s, m);
+    m = _mm_load_ss(res);
+    s = _mm_mul_ss(s, m);
+    _mm_store_ss(res, s);
 }
 
 void
