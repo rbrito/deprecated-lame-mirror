@@ -1684,8 +1684,7 @@ VBR_noise_shaping(lame_t gfc, gr_info *gi, FLOAT * xmin)
     gfc->scale_bitcounter(gi);
 
     if ((gfc->strict_ISO && gi->part2_3_length + gi->part2_length > MAX_BITS)
-	|| (gi->block_type == SHORT_TYPE && (gfc->substep_shaping & 2))
-	|| (gi->block_type != SHORT_TYPE && (gfc->substep_shaping & 1))) {
+	|| ((1+(gi->block_type == SHORT_TYPE)) & gfc->substep_shaping)) {
 	truncate_smallspectrums(gfc, gi, xmin);
     }
 
