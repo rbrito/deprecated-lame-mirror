@@ -1378,6 +1378,10 @@ psycho_analysis(
 	    gi->block_type = gfc->blocktype_next[gr][ch];
 	    gfc->start_sfb_l[ch][gr] = gfc->start_sfb_l_next[ch + gfc->mode_ext][gr];
 	    gfc->start_sfb_s[ch][gr] = gfc->start_sfb_s_next[ch + gfc->mode_ext][gr];
+	    gfc->start_sfb_l_next[ch][gr] = gfc->start_sfb_l_next[ch+2][gr]
+		= gfc->cutoff_sfb_l;
+	    gfc->start_sfb_s_next[ch][gr] = gfc->start_sfb_s_next[ch+2][gr]
+		= gfc->cutoff_sfb_s;
 	}
 
 	psycho_analysis_short(gfc, sbsmpl, gr, numchn);
