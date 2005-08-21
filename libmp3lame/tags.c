@@ -157,7 +157,8 @@ void
 id3tag_init(lame_t gfc)
 {
     memset(&gfc->tag_spec, 0, sizeof gfc->tag_spec);
-    gfc->tag_spec.genre = GENRE_NUM_UNKNOWN;
+    gfc->tag_spec.genrenum = GENRE_NUM_UNKNOWN;
+    gfc->tag_spec.genre = NULL;
 }
 
 void
@@ -308,12 +309,17 @@ id3tag_set_genre(lame_t gfc, const char *genre)
                 }
             }
             if (i == GENRE_NAME_COUNT) {
-                return LAME_GENERICERROR;
+		id3tag_add_v2(gfc);
+		gfc->tag_spec.genre = genre;
+		num = GENRE_NUM_UNKNOWN;
             }
-        } else if ((num < 0) || (num >= GENRE_NAME_COUNT)) {
-            return LAME_GENERICERROR;
+        } else {
+	    if ((num < 0) || (num >= GENRE_NAME_COUNT)) {
+		return LAME_GENERICERROR;
+	    }
+	    gfc->tag_spec.genre = genre_names[num];
         }
-        gfc->tag_spec.genre = num;
+        gfc->tag_spec.genrenum = num;
         gfc->tag_spec.flags |= CHANGED_FLAG;
     }
     return 0;
@@ -556,10 +562,14 @@ id3tag_write_v2(lame_t gfc, unsigned char *buf, size_t size)
         init_frame_struct(&comment, COMMENT_FRAME_ID,
                           gfc->tag_spec.comment, utf8);
         init_frame_struct(&track, TRACK_FRAME_ID, gfc->tag_spec.track, 0);
-        sprintf(genre_buf, "(%d)", gfc->tag_spec.genre);
-        init_frame_struct(&genre, GENRE_FRAME_ID,
-                          gfc->tag_spec.genre != GENRE_NUM_UNKNOWN ?
-                          genre_buf : 0, 0);
+	if (gfc->tag_spec.genrenum != GENRE_NUM_UNKNOWN) {
+	    sprintf(genre_buf, "(%d)", gfc->tag_spec.genrenum);
+	    init_frame_struct(&genre, GENRE_FRAME_ID,
+			      genre_buf, 0);
+	} else {
+	    init_frame_struct(&genre, GENRE_FRAME_ID,
+			      gfc->tag_spec.genre, utf8);
+	}
         /* write tag if explicitly requested or if fields overflow */
         if ((gfc->tag_spec.flags & (ADD_V2_FLAG | V2_ONLY_FLAG))
 	    || title.v1_len > 30 || artist.v1_len > 30 || album.v1_len > 30
@@ -672,7 +682,7 @@ id3tag_write_v1(lame_t gfc, unsigned char *buf, size_t size)
 	p[-2] = 0;
 	p[-1] = gfc->tag_spec.tracknum;
     }
-    *p++ = gfc->tag_spec.genre;
+    *p++ = gfc->tag_spec.genrenum;
     /* write tag directly into bitstream at current position */
     memcpy(buf, tag, 128);
     return 128;

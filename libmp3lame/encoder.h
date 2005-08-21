@@ -418,9 +418,10 @@ struct lame_internal_flags {
 	const char *album;
 	const char *track;
 	const char *comment;
+	const char *genre;
+	int genrenum;
 	int year;
 	int tracknum;
-	int genre;
 	int utf8;
     }  tag_spec;
     uint16_t nMusicCRC;
