@@ -26,6 +26,7 @@ EXTRA_DIST = \
 	lame.spec \
 	lame_projects_vc6.dsp \
 	lame_vc6.dsw \
+	lame_vc7.sln \
 	testcase.mp3 \
 	testcase.wav
 

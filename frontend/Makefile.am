@@ -12,7 +12,9 @@ EXTRA_DIST = \
 	console.c \
 	console.h \
 	lame_vc6.dsp \
+	lame_vc7.vcproj \
 	mp3x_vc6.dsp \
+	mp3x_vc7.vcproj \
 	amiga_mpega.c
 
 DEFS = @DEFS@ @CONFIG_DEFS@

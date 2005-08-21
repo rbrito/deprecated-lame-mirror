@@ -20,6 +20,7 @@ EXTRA_DIST = \
 	lame.ico \
 	lameACM.def \
 	lameACM_vc6.dsp \
+	lameACM_vc7.vcproj \
 	lame_acm.xml \
 	main.cpp \
 	readme.txt \
