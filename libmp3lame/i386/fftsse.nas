@@ -73,6 +73,7 @@ fht_SSE:
 	add	edi,esi		; edi=gi=fi+ki/2
 
 ; たかだか2並列しか期待できない部分はFPUのほうが速い。
+	loopalign	16
 .lp20:				; do{
 ;                       f0     = fi[0 ] + fi[k1];
 ;                       f2     = fi[k2] + fi[k3];
@@ -165,9 +166,8 @@ fht_SSE:
 	mov	esi,[esp+_P+4]	; = fz
 	lea	edi,[esi + eax - 4]	; edi = gi = fz +k1-i
 	add	esi,4		; esi = fi = fz + i
-	jmp	short .lp21
 
-	align	16
+	loopalign	16
 .lp21:				; do{
 ;                               a       = c2*fi[k1] + s2*gi[k1];
 ;                               b       = s2*fi[k1] - c2*gi[k1];
@@ -258,14 +258,12 @@ fht_SSE:
 	cmp	ebx,eax		; i < k1
 	jnl	near .F22
 
-	shufps	xmm6,xmm6,0x14	; = {c1, s1, s1, c1}
-	jmp	short .F220
+	shufps	xmm6,xmm6,R4(0,1,0,0) ; (--, --, s1, c1) => (--, s1, c1, --)
 
-	align	16
 ;               for (i=4;i<k1;i+=4){ // for (i=2;i<k1/2;i+=2){
+	loopalign	16
 .lp22:
-	shufps	xmm6,xmm6,0x69	; xmm6 = {c3, s3, s3, c3}
-.F220:
+	shufps	xmm6,xmm6,R4(1,2,2,1)	; (--,s3,c3,--) => {c3, s3, s3, c3}
 ; at here, xmm6 is {c3, s3, s3, c3}
 ;                       c1 = c3*t_c - s3*t_s;
 ;                       s1 = c3*t_s + s3*t_c;
