@@ -1412,11 +1412,11 @@ psycho_analysis(
 	    FLOAT pe;
 	    if (gfc->blocktype_next[gr][ch]) {
 		int sb = pecalc_s(mr, gfc->start_sfb_s_next[ch][gr]);
-		if (gfc->start_sfb_s_next[ch][gr] > SBMAX_s)
+		if (gfc->lowpass1 >= (FLOAT)1.0)
 		    gfc->start_sfb_s_next[ch][gr] = sb;
 	    } else {
 		int sb = pecalc_l(mr, gfc->start_sfb_l_next[ch][gr]);
-		if (gfc->start_sfb_l_next[ch][gr] > SBMAX_l)
+		if (gfc->lowpass1 >= (FLOAT)1.0)
 		    gfc->start_sfb_l_next[ch][gr] = sb;
 	    }
 	    pe = mr->pe;
