@@ -581,9 +581,9 @@ lame_init_params(lame_t gfc)
 
     gfc->Class_ID = LAME_ID;
 
-    if (gfc->VBR != cbr && gfc->quality != 5) {
-	gfc->quality = 5;
-	gfc->report.errorf("currently, VBR/ABR mode with -q setting is meaningless.\n");
+    if (gfc->VBR != cbr && gfc->quality > 7) {
+	gfc->quality = 7;
+	gfc->report.errorf("currently, VBR/ABR mode with -q > 7 setting is meaningless.\n");
     }
 
     if (gfc->noise_shaping_amp > 4)
