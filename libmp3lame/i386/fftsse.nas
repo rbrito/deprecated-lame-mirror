@@ -145,10 +145,8 @@ fht_SSE:
 ;               i = 1; //for (i=1;i<kx;i++){
 ;                       c1 = 1.0*t_c - 0.0*t_s;
 ;                       s1 = 0.0*t_c + 1.0*t_s;
-	movss	xmm6,[costab_fft + ecx*8]
-	movss	xmm1,[costab_fft + ecx*8 + 4]
-	shufps	xmm6,xmm1,0x00	; = {s1, s1, c1, c1}
-	shufps	xmm6,xmm6,0x28	; = {+c1, +s1, +s1, +c1}
+	movups	xmm6,[costab_fft + ecx*8]
+	shufps	xmm6,xmm6,R4(0,1,1,0)	; = {+c1, +s1, +s1, +c1}
 ;                       c2 = c1*c1 - s1*s1;
 ;                       s2 = c1*s1 + s1*c1;
 	movaps	xmm4,xmm6
