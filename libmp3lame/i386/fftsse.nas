@@ -251,19 +251,15 @@ fht_SSE:
 ; k4=  16,  64, 256, 1024
 ;       0, 6/2,30/2,126/2
 ; at here
-;	xmm6 = {--, --, s1, c1}
+;	xmm6 = {c1, s1, s1, c1}
 ;               c3 = c1; s3 = s1;
 	xor	ebx,ebx
 	mov	bl, 4*4		; = i = 4
 	cmp	ebx,eax		; i < k1
 	jnl	near .F22
-
-	shufps	xmm6,xmm6,R4(0,1,0,0) ; (--, --, s1, c1) => (--, s1, c1, --)
-
 ;               for (i=4;i<k1;i+=4){ // for (i=2;i<k1/2;i+=2){
 	loopalign	16
 .lp22:
-	shufps	xmm6,xmm6,R4(1,2,2,1)	; (--,s3,c3,--) => {c3, s3, s3, c3}
 ; at here, xmm6 is {c3, s3, s3, c3}
 ;                       c1 = c3*t_c - s3*t_s;
 ;                       s1 = c3*t_s + s3*t_c;
@@ -431,6 +427,7 @@ fht_SSE:
 
 	add	ebx,4*4		; i+= 4
 	cmp	ebx,eax		; i < k1
+	shufps	xmm6,xmm6,R4(1,2,2,1)	; (--,s3,c3,--) => {c3, s3, s3, c3}
 	jl	near .lp22
 ;               }
 .F22:

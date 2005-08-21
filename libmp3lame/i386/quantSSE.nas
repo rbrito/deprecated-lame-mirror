@@ -1,4 +1,3 @@
-; calculte xr^(3/4)
 ; from gogo3.12 (by shigeo, ururi, and kei)
 ; modified for LAME4 by takehiro.
 
@@ -6,11 +5,12 @@
 
 	globaldef pow075_SSE
 
+; calculte xr^(3/4)
 ;void pow075(
 ;	float xr[576],
 ;	float xr34[576*2],
 ;	int end,
-;	float *psum);
+;	float *pmax);
 
 	segment_data
 	align	16
@@ -23,7 +23,6 @@ D_ROUNDFAC	dd	0.4054,0.4054
 D_1ROUNDFAC	dd	0.5946,0.5946
 D_IXMAXVAL	dd	8206.0,8206.0
 ROUNDFAC_NEAR	dd	-0.0946
-minus1		dd	-1.0
 magicfloat	dd	8388608.0
 maskpattern	dd	(1<<23)-1
 
@@ -94,7 +93,7 @@ proc	pow075_3DN
 	movq		[edx+ecx*4- 8], mm5		; xr34
 	jnz	.lp
 
-	mov		eax, [esp+16]	; psum
+	mov		eax, [esp+16]	; pmax
 	pfacc		mm7, mm7
 	movd		[eax], mm7
 	femms
@@ -163,7 +162,7 @@ proc	pow075_SSE
 
 	movhlps	xm4, xm2		;* * 3 2
 	maxps	xm4, xm2		;* * 1 0
-	mov	eax, [esp+_P+16]	; psum
+	mov	eax, [esp+_P+16]	; pmax
 	movaps	xm2, xm4
 	shufps	xm4, xm4, PACK(1,1,1,1)	;* * * 1
 	maxps	xm4, xm2		;* * * 0
