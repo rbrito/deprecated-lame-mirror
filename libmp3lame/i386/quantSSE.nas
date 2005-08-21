@@ -80,6 +80,7 @@ proc	pow075_3DN
 	pfmul		mm0, [edx+ecx*4+ 0+576*4]
 	pfmul		mm5, [edx+ecx*4+ 8+576*4]
 	pfmul		mm1, [edx+ecx*4+ 8+576*4]
+	add	ecx, byte 4
 	pfmul		mm4, mm2 		; - 1/4 * x (y^4)
 	pfmul		mm5, mm2		; - 1/4 * x (y^4)
 	pfadd		mm4, mm3		; 5/4 - 1/4 * x (y^4)
@@ -89,10 +90,9 @@ proc	pow075_3DN
 	pfmul		mm5, mm1
 	pfmax		mm4, mm2
 	pfmax		mm5, mm2
-	movq		[edx+ecx*4+ 0], mm4		; xr34
-	movq		[edx+ecx*4+ 8], mm5		; xr34
-	add	ecx, 4
-	jnz	near .lp
+	movq		[edx+ecx*4-16], mm4		; xr34
+	movq		[edx+ecx*4- 8], mm5		; xr34
+	jnz	.lp
 
 	mov		eax, [esp+16]	; psum
 	pfacc		mm7, mm7
@@ -122,7 +122,7 @@ proc	pow075_SSE
 	andps	xm1, [Q_ABS]
 	movaps	[edx+ecx+ 0+576*4], xm0 ; absxr[]
 	movaps	[edx+ecx+16+576*4], xm1
-	add	ecx, 8*4
+	add	ecx, byte 8*4
 
 	;------x^(3/4)------
 	rsqrtps	xm4, xm0
@@ -159,7 +159,7 @@ proc	pow075_SSE
 
 	movaps	[edx+ecx+ 0-32], xm0	; xr34
 	movaps	[edx+ecx+16-32], xm1
-	jnz near	.lp
+	jnz	.lp
 
 	movhlps	xm4, xm2		;* * 3 2
 	maxps	xm4, xm2		;* * 1 0
@@ -190,7 +190,7 @@ proc	sumofsqr_3DN
 	test	ecx, 2
 	jz	.lp
 	movq	mm0, [eax+ecx*4]
-	add	ecx, 2
+	add	ecx, byte 2
 	pfmul	mm0, mm0
 	jz	.exit
 	loopalign 16
@@ -199,10 +199,10 @@ proc	sumofsqr_3DN
 	movq	mm3, [eax+ecx*4+ 8]
 	pfmul	mm2, mm2
 	pfmul	mm3, mm3
-	add	ecx, 4
+	add	ecx, byte 4
 	pfadd	mm0, mm2
 	pfadd	mm1, mm3
-	jnz near	.lp
+	jnz	.lp
 	pfadd	mm0, mm1
 .exit:
 	movd	mm2, [edx]
@@ -720,8 +720,8 @@ proc	lr2ms_SSE
 	add	eax, byte 16
 	add	ecx, byte 16
 	sub	edx, byte 4
-	jg near .lp
-	je near	.end
+	jg	.lp
+	je	.end
 	mov	[eax-12], ebx
 	mov	[eax-16], esi
 	mov	[ecx-12], edi

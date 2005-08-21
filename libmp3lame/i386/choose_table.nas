@@ -16,20 +16,18 @@
 	mov	ecx, [esp+4]	;ecx = begin
 	mov	edx, [esp+8]	;edx = end
 
+	movq	mm0, [ecx]
 	sub	ecx, edx	;ecx = begin-end(should be minus)
-	test	ecx, 8
- 	pxor	mm1, mm1	;mm1=[0:0]
-	movq	mm0, [edx+ecx]
-	jz	.lp
-
-	add	ecx,8
+	add	ecx, byte 8
 	jz	.exit
+	and	ecx, byte 0xf0
+ 	pxor	mm1, mm1	;mm1=[0:0]
 
 	loopalign	16
 .lp:
 	movq	mm4, [edx+ecx]
 	movq	mm5, [edx+ecx+8]
-	add	ecx, 16
+	add	ecx, byte 16
 ; below operations should be done as dword (32bit),
 ; but an MMX has no such instruction.
 ; but! because the maximum value of IX is 8191+15,
@@ -58,17 +56,17 @@
 	mov	ecx, [esp+4]	;ecx = begin
 	mov	edx, [esp+8]	;edx = end
 
+	movq	mm0, [ecx]
 	sub	ecx, edx	;ecx = begin-end(should be minus)
-	movq	mm0, [edx+ecx]
-	movq	mm1, mm0
-	add	ecx,8
-	and	ecx, 0xfffffff0
+	pxor	mm1, mm1
+	add	ecx, byte 8
+	and	ecx, byte 0xf0
 
 	loopalign	16
 .lp:
 	movq	mm4,[edx+ecx]
 	movq	mm5,[edx+ecx+8]
-	add	ecx, 16
+	add	ecx, byte 16
 	movq	mm2,mm0
 	movq	mm3,mm1
 	pcmpgtd	mm2,mm4
