@@ -360,7 +360,8 @@ calc_noise_allband(
  *  and returns 0 if all energies in xr are zero, else non-zero.
  ************************************************************************/
 
-#ifdef USE_IEEE754_HACK
+#ifndef __x86_64__
+# ifdef USE_IEEE754_HACK
 static const int pow075_table0[] = {
 /*  (32/ 9)^.75, (64/ 9)^.75, (128/ 9)^.75,(256/ 9)^.75 */
     0x0A5B6EB1,  0x116B28F5,  0x1D4B6220,  0x314468B9,
@@ -369,13 +370,7 @@ static const int pow075_table0[] = {
 /*  (32/14)^.75, (64/14)^.75, (128/14)^.75,(256/14)^.75 */
     0x076F8F2F,  0x0C816474,  0x1508142B,  0x235EE7B5,
 };
-#if 0
-static const char pow075_table1[] = {
-    9,  /* 1.62500 < mantissa < 2.00000 => -(44/512) < x-1 < (64/512) */
-    11, /* 1.28125 < mantissa < 1.62500 => -(61/512) < x-1 < (60/512) */
-    14  /* 1.00000 < mantissa < 1.28125 => -(64/512) < x-1 < (62/512) */
-};
-#endif
+
 static void pow075sub(fi_union *p)
 {
     int mantissa, exponent;
@@ -420,7 +415,7 @@ static void pow075(lame_t gfc, float *xr, float end, float *pmax)
     }
     ((fi_union*)pmax)->i = max;
 }
-#else
+# else /* USE_IEEE754_HACK */
 static void pow075(lame_t gfc, float *xr, float end, float *pmax)
 {
     int i;
@@ -434,7 +429,8 @@ static void pow075(lame_t gfc, float *xr, float end, float *pmax)
     }
     *pmax = max;
 }
-#endif
+# endif /* USE_IEEE754_HACK */
+#endif /* __x86_64__ */
 
 static int 
 init_bitalloc(lame_t gfc, gr_info *const gi)

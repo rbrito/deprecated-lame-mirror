@@ -127,7 +127,7 @@ pow075_SSE(float *x, float *x34, int end, float *max)
     zero = _mm_movehl_ps(srmax, srmax);
     srmax = _mm_max_ps(srmax, zero);
     zero = _mm_shuffle_ps(srmax, srmax, _MM_SHUFFLE(1,1,1,1));
-    srmax = _mm_max_ps(srmax, zero);
+    srmax = _mm_max_ss(srmax, zero);
     _mm_store_ss(max, srmax);
 }
 
