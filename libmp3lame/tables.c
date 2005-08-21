@@ -605,12 +605,12 @@ iteration_init(lame_t gfc)
     gfc->cutoff_sfb_s = i;
 
     gfc->use_istereo = 0;
-    gfc->is_start_sfb_l_next[0] = gfc->is_start_sfb_l_next[1]
-	= gfc->is_start_sfb_l[0] = gfc->is_start_sfb_l[1]
-	= gfc->cutoff_sfb_l;
-    gfc->is_start_sfb_s_next[0] = gfc->is_start_sfb_s_next[1]
-	= gfc->is_start_sfb_s[0] = gfc->is_start_sfb_s[1]
-	= gfc->cutoff_sfb_s;
+    for (i = 0; i < MAX_CHANNELS*2; i++) {
+	for (j = 0; j < MAX_GRANULES; j++) {
+	    gfc->start_sfb_l_next[i][j] = gfc->cutoff_sfb_l;
+	    gfc->start_sfb_s_next[i][j] = gfc->cutoff_sfb_s;
+	}
+    }
     if (gfc->mode != MONO && gfc->compression_ratio > 12.0
 	&& gfc->mode_gr == 2 /* currently only MPEG1 */)
 	gfc->use_istereo = 1;

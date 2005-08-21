@@ -446,7 +446,7 @@ init_bitalloc(lame_t gfc, gr_info *const gi)
 	pow075_SSE(gi->xr, xr34, end, &max);
     }
 #else
-#ifdef HAVE_NASM
+# ifdef HAVE_NASM
     if (gfc->CPU_features.SSE) {
 	if (end) {
 	    end = (end + 7) & (~7);
@@ -458,11 +458,11 @@ init_bitalloc(lame_t gfc, gr_info *const gi)
 	    pow075_3DN(gi->xr, xr34, end, &max);
 	}
     } else
-#endif
+# endif /* HAVE_NASM */
     {
 	pow075(gfc, gi->xr, end, &max);
     }
-#endif
+#endif /* __x86_64__ */
     memset(&xr34[end], 0, sizeof(FLOAT)*(576-end));
     memset(&absxr[end], 0, sizeof(FLOAT)*(576-end));
 

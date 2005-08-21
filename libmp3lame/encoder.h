@@ -356,10 +356,10 @@ struct lame_internal_flags {
     III_psy_ratio masking_next[MAX_GRANULES][MAX_CHANNELS*2];
     char blocktype_next[MAX_GRANULES][MAX_CHANNELS*2]; /* for block type */
     char mode_ext_next;
-    char is_start_sfb_l_next[MAX_GRANULES];
-    char is_start_sfb_s_next[MAX_GRANULES];
-    char is_start_sfb_l[MAX_GRANULES];
-    char is_start_sfb_s[MAX_GRANULES];
+    char start_sfb_l_next[MAX_CHANNELS*2][MAX_GRANULES];
+    char start_sfb_s_next[MAX_CHANNELS*2][MAX_GRANULES];
+    char start_sfb_l[MAX_CHANNELS*2][MAX_GRANULES];
+    char start_sfb_s[MAX_CHANNELS*2][MAX_GRANULES];
 
     struct {
 	/* short block tuning */

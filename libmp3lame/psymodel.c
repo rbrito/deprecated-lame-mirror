@@ -576,7 +576,6 @@ set_istereo_sfb(lame_t gfc, int gr)
     int sb;
     III_psy_ratio *mr = &gfc->masking_next[gr][0];
 
-    gfc->is_start_sfb_l[gr] = gfc->is_start_sfb_l_next[gr];
     sb = gfc->cutoff_sfb_l - 1;
     if (!gfc->blocktype_next[gr][0] && !gfc->blocktype_next[gr][1]) {
 	do {
@@ -597,13 +596,12 @@ set_istereo_sfb(lame_t gfc, int gr)
 		break;
 	} while (--sb >= 0);
     }
-    gfc->is_start_sfb_l_next[gr] = ++sb; assert(sb >= 0);
+    gfc->start_sfb_l_next[3][gr] = ++sb; assert(sb >= 0);
     for (; sb < gfc->cutoff_sfb_l; sb++) {
 	mr[0].en .l[sb] = mr[2].en .l[sb];
 	mr[0].thm.l[sb] = mr[2].thm.l[sb];
     }
 
-    gfc->is_start_sfb_s[gr] = gfc->is_start_sfb_s_next[gr];
     sb = gfc->cutoff_sfb_s-1;
     do {
 	int sblock;
@@ -627,7 +625,7 @@ set_istereo_sfb(lame_t gfc, int gr)
 	if (sblock != 3)
 	    break;
     } while (--sb >= 0);
-    gfc->is_start_sfb_s_next[gr] = ++sb; assert(sb >= 0);
+    gfc->start_sfb_s_next[3][gr] = ++sb; assert(sb >= 0);
 
     for (; sb < gfc->cutoff_sfb_s; sb++) {
 	mr[0].en .s[sb][0] = mr[2].en .s[sb][0];
@@ -824,6 +822,7 @@ static FLOAT
 pecalc_s(III_psy_ratio *mr, int sb)
 {
     FLOAT pe_s = (FLOAT)0.0;
+    int sbmax = -1;
     static const FLOAT regcoef_s[] = {
 	/* this value is tuned only for 44.1kHz... */
 	11.8*FASTLOG_TO_10,
@@ -849,6 +848,8 @@ pecalc_s(III_psy_ratio *mr, int sb)
 	    if (en <= x)
 		continue;
 
+	    if (sbmax < 0)
+		sbmax = sb;
 	    if (en > x*(FLOAT)1e10)
 		xx += (FLOAT)(10.0 * LOG10);
 	    else
@@ -857,14 +858,15 @@ pecalc_s(III_psy_ratio *mr, int sb)
 	pe_s += regcoef_s[sb] * xx;
     }
 
-    return pe_s;
+    mr->pe = pe_s;
+    return (sbmax+1);
 }
 
 static FLOAT
 pecalc_l(III_psy_ratio *mr, int sb)
 {
     FLOAT pe_l = (FLOAT)20.0;
-    int ath_over = 0;
+    int sbmax = -1;
     static const FLOAT regcoef_l[] = {
 	/* this value is tuned only for 44.1kHz... */
 	6.8*FASTLOG_TO_10,
@@ -894,17 +896,20 @@ pecalc_l(III_psy_ratio *mr, int sb)
 	FLOAT x = mr->thm.l[sb], en = fabs(mr->en.l[sb]);
 	if (en <= x)
 	    continue;
+	if (sbmax < 0)
+	    sbmax = sb;
 
-	ath_over++;
 	if (en > x*(FLOAT)1e10)
 	    pe_l += regcoef_l[sb] * (FLOAT)(10.0 * LOG10);
 	else
 	    pe_l += regcoef_l[sb] * FASTLOG(en / x);
     }
 
-    if (ath_over == 0)
-	return (FLOAT)0.0;
-    return pe_l;
+    if (sbmax < 0) {
+	pe_l = (FLOAT)0.0;
+    }
+    mr->pe = pe_l;
+    return sbmax + 1;
 }
 
 
@@ -1371,6 +1376,8 @@ psycho_analysis(
 
 	    gi->ATHadjust = gfc->ATH.adjust[ch + gfc->mode_ext];
 	    gi->block_type = gfc->blocktype_next[gr][ch];
+	    gfc->start_sfb_l[ch][gr] = gfc->start_sfb_l_next[ch + gfc->mode_ext][gr];
+	    gfc->start_sfb_s[ch][gr] = gfc->start_sfb_s_next[ch + gfc->mode_ext][gr];
 	}
 
 	psycho_analysis_short(gfc, sbsmpl, gr, numchn);
@@ -1394,22 +1401,21 @@ psycho_analysis(
 	    }
 	}
 	/*********************************************************************
-	 * compute the value of PE to return
+	 * compute the value of PE/cutoff to return
 	 *********************************************************************/
 	for (ch = 0; ch < numchn; ch++) {
 	    III_psy_ratio *mr = &gfc->masking_next[gr][ch];
 	    FLOAT pe;
 	    if (gfc->blocktype_next[gr][ch]) {
-		int sb = gfc->cutoff_sfb_s;
-		if (ch & 1)
-		    sb = gfc->is_start_sfb_s_next[gr];
-		pe = pecalc_s(mr, sb);
+		int sb = pecalc_s(mr, gfc->start_sfb_s_next[ch][gr]);
+		if (gfc->start_sfb_s_next[ch][gr] > SBMAX_s)
+		    gfc->start_sfb_s_next[ch][gr] = sb;
 	    } else {
-		int sb = gfc->cutoff_sfb_l;
-		if (ch & 1)
-		    sb = gfc->is_start_sfb_l_next[gr];
-		pe = pecalc_l(mr, sb);
+		int sb = pecalc_l(mr, gfc->start_sfb_l_next[ch][gr]);
+		if (gfc->start_sfb_l_next[ch][gr] > SBMAX_l)
+		    gfc->start_sfb_l_next[ch][gr] = sb;
 	    }
+	    pe = mr->pe;
 	    if (pe > (FLOAT)500.0)
 		pe = pe*(FLOAT)0.5 + (FLOAT)750;
 	    else
