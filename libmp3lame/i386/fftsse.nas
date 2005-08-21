@@ -12,7 +12,6 @@
 	align 16
 Q_MMPP	dd	0x0,0x0,0x80000000,0x80000000
 Q_MPMP	dd	0x0,0x80000000,0x0,0x80000000
-S_SQRT2	dd	1.414213562
 costab_fft:
 	dd 0.000000000000
 	dd 1.000000000000
@@ -32,6 +31,7 @@ costab_fft:
 	dd 0.012271538286
 	dd 9.999811752836011e-01
 	dd 6.135884649154475e-03
+S_SQRT2	dd	1.414213562
 
 	segment_code
 ;------------------------------------------------------------------------
@@ -145,7 +145,7 @@ fht_SSE:
 ;               i = 1; //for (i=1;i<kx;i++){
 ;                       c1 = 1.0*t_c - 0.0*t_s;
 ;                       s1 = 0.0*t_c + 1.0*t_s;
-	movups	xmm6,[costab_fft + ecx*8]
+	movlps	xmm6,[costab_fft + ecx*8]
 	shufps	xmm6,xmm6,R4(0,1,1,0)	; = {+c1, +s1, +s1, +c1}
 ;                       c2 = c1*c1 - s1*s1;
 ;                       s2 = c1*s1 + s1*c1;
@@ -269,7 +269,7 @@ fht_SSE:
 ; at here, xmm6 is {c3, s3, s3, c3}
 ;                       c1 = c3*t_c - s3*t_s;
 ;                       s1 = c3*t_s + s3*t_c;
-	movups	xmm0,[costab_fft + ecx*8]
+	movlps	xmm0,[costab_fft + ecx*8]
 	shufps	xmm0,xmm0,0x50	; = {t_s, t_s, t_c, t_c}
 	mulps	xmm6,xmm0
 	movhlps	xmm4,xmm6
