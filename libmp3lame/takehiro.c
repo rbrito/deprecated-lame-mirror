@@ -1093,7 +1093,8 @@ iteration_finish_one(lame_t gfc, int gr, int ch)
     gr_info *gi = &gfc->tt[gr][ch];
 
     /*  try some better scalefac storage  */
-    best_scalefac_store (gfc, gr, ch);
+    if (gfc->psymodel >= 2) 
+	best_scalefac_store (gfc, gr, ch);
 
     /*  best huffman_divide may save some bits too */
     if (gfc->use_best_huffman == 1)
