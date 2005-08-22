@@ -709,16 +709,13 @@ lame_print_config(lame_t gfc)
     }
 
 
-    if (gfc->filter_type == 0) {
-	gfc->report.msgf("Using polyphase  filter\n");
-    }
-    else if (gfc->filter_type == 1) {
-	gfc->report.msgf("Using MDCT filter\n");
-    }
-    else {
-        gfc->report.msgf("Filters are disabled\n");
-    }
     if (gfc->filter_type <= 1) {
+	if (gfc->filter_type == 0) {
+	    gfc->report.msgf("Using polyphase  filter\n");
+	}
+	else if (gfc->filter_type == 1) {
+	    gfc->report.msgf("Using MDCT filter\n");
+	}
         if ((FLOAT)0. < gfc->highpass2 && gfc->highpass2 < (FLOAT)1.0)
             gfc->report.msgf(
 		"  Highpass filter, transition band: %5.0f Hz - %5.0f Hz\n",
@@ -731,8 +728,10 @@ lame_print_config(lame_t gfc)
 		 (FLOAT)0.5 * gfc->lowpass2 * out_samplerate);
 	}
         else {
-            gfc->report.msgf("  No Lowpass filter\n");
+            gfc->report.msgf("dynamic lowpass filtering\n");
         }
+    } else {
+        gfc->report.msgf("lowpass/highpass filters are disabled\n");
     }
 
     if (gfc->free_format) {
