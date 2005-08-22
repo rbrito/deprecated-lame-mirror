@@ -873,12 +873,12 @@ PutLameVBR(lame_t gfc, size_t nMusicLength, uint8_t *p, uint8_t *p0)
 
     /*Check if the user overrided the default LAME behaviour with some nasty options */
 
-    if ((gfc->lowpassfreq == -1 && gfc->highpassfreq == -1)
+    if (gfc->highpassfreq != -1
 	|| (gfc->scale_left != gfc->scale_right)
 	|| gfc->disable_reservoir
 	|| gfc->noATH
 	|| gfc->ATHonly
-	|| gfc->in_samplerate <= 32000)
+	|| gfc->in_samplerate != gfc->out_samplerate)
 	bNonOptimal = 1;
 
     if ((gfc->tag_spec.flags & CHANGED_FLAG)
