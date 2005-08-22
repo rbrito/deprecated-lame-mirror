@@ -586,6 +586,9 @@ iteration_init(lame_t gfc)
     if (gfc->filter_type == 2)
 	init_filter2(gfc);
 #endif
+    if (gfc->lowpass1 >= 1.0 && gfc->highpass1 <= 0.0) {
+	gfc->filter_type == 0;
+    }
 
     /* scalefactor band start/end position */
     gfc->scalefac_band
