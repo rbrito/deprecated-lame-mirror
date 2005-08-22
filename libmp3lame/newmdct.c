@@ -677,9 +677,17 @@ mdct_sub48(lame_t gfc, int ch)
     for (gr = 0; gr < gfc->mode_gr; gr++) {
 	gr_info *gi = &gfc->tt[gr][ch];
 	int type = gi->block_type, band = 0;
-	FLOAT *mdct_enc = gi->xr, *endband = &gi->xr[gfc->xrNumMax_longblock];
-	if (gfc->xrNumMax_longblock < 576-18)
-	    endband += 18;
+	FLOAT *mdct_enc = gi->xr, *endband;
+	int maxband = gfc->scalefac_band.l[(int)gfc->start_sfb_l[ch][gr]];
+
+	if (type == SHORT_TYPE) {
+	    maxband = gfc->scalefac_band.s[(int)gfc->start_sfb_s[ch][gr]]*3;
+	}
+	if (maxband > gfc->xrNumMax_longblock)
+	    maxband = gfc->xrNumMax_longblock;
+	if (maxband < 576-18)
+	    maxband += 18;
+	endband = mdct_enc + maxband;
 	/*
 	 * Perform imdct of
 	 *  (18 previous subband samples) + (18 current subband samples)
