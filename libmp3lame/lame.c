@@ -263,7 +263,7 @@ apply_preset(lame_t gfc, int bitrate, vbr_mode mode)
 	 * value depending on bitrate
 	 */
 	if (gfc->scale == 0.0)
-	    (void) lame_set_scale( gfc, switch_map[r].scale );
+	    lame_set_scale( gfc, switch_map[r].scale );
     }
 
     if (gfc->ATHcurve < 0)
@@ -710,28 +710,31 @@ lame_print_config(lame_t gfc)
 
 
     if (gfc->filter_type <= 1) {
-	if (gfc->filter_type == 0) {
-	    gfc->report.msgf("Using polyphase  filter\n");
+        if (((FLOAT)0. < gfc->highpass2 && gfc->highpass2 < (FLOAT)1.0)
+	    || ((FLOAT)0. < gfc->lowpass1 && gfc->lowpass1 < (FLOAT)1.0)) {
+	    if (gfc->filter_type == 0) {
+		gfc->report.msgf("Using polyphase filter\n");
+	    }
+	    else if (gfc->filter_type == 1) {
+		gfc->report.msgf("Using MDCT filter\n");
+	    }
 	}
-	else if (gfc->filter_type == 1) {
-	    gfc->report.msgf("Using MDCT filter\n");
+	if (gfc->lowpass1 >= (FLOAT)1.0 && gfc->psymodel) {
+	    gfc->report.msgf("Adaptive lowpass filtering\n");
 	}
         if ((FLOAT)0. < gfc->highpass2 && gfc->highpass2 < (FLOAT)1.0)
-            gfc->report.msgf(
+	    gfc->report.msgf(
 		"  Highpass filter, transition band: %5.0f Hz - %5.0f Hz\n",
-                 (FLOAT)0.5 * gfc->highpass1 * out_samplerate,
-                 (FLOAT)0.5 * gfc->highpass2 * out_samplerate);
-        if ((FLOAT)0. < gfc->lowpass1 && gfc->lowpass1 < (FLOAT)1.0) {
+		(FLOAT)0.5 * gfc->highpass1 * out_samplerate,
+		(FLOAT)0.5 * gfc->highpass2 * out_samplerate);
+	if ((FLOAT)0. < gfc->lowpass1 && gfc->lowpass1 < (FLOAT)1.0) {
 	    gfc->report.msgf(
 		"  Lowpass  filter, transition band: %5.0f Hz - %5.0f Hz\n",
-		 (FLOAT)0.5 * gfc->lowpass1 * out_samplerate,
-		 (FLOAT)0.5 * gfc->lowpass2 * out_samplerate);
+		(FLOAT)0.5 * gfc->lowpass1 * out_samplerate,
+		(FLOAT)0.5 * gfc->lowpass2 * out_samplerate);
 	}
-        else {
-            gfc->report.msgf("dynamic lowpass filtering\n");
-        }
     } else {
-        gfc->report.msgf("lowpass/highpass filters are disabled\n");
+	gfc->report.msgf("lowpass/highpass filters are disabled\n");
     }
 
     if (gfc->free_format) {
@@ -1442,7 +1445,7 @@ init_gr_info(lame_t gfc, int gr, int ch)
     gi->sfbdivide          = 11;
     gi->xrNumMax           = gfc->xrNumMax_longblock;
 
-    j = gfc->start_sfb_l[ch][gr];
+    j = gfc->max_sfb_l[ch][gr];
     gi->psymax = gi->psy_lmax = j;
     gi->sfbmax = gi->sfb_lmax = SBPSY_l;
     gi->sfb_smin              = SBPSY_s;
@@ -1468,7 +1471,7 @@ init_gr_info(lame_t gfc, int gr, int ch)
 		gi->sfb_lmax    = gfc->mode_gr*2 + 4;
 		gi->wi = gfc->w_mixed;
 	    }
-	    j = gfc->start_sfb_s[ch][gr];
+	    j = gfc->max_sfb_s[ch][gr];
 	    gi->psymax = gi->sfb_lmax + 3*(j - gi->sfb_smin);
 	    gi->sfbmax = gi->sfb_lmax + 3*(SBPSY_s - gi->sfb_smin);
 	    gi->sfbdivide   = gi->sfbmax - 18;
@@ -1595,14 +1598,14 @@ encode_mp3_frame(lame_t gfc, unsigned char* mp3buf, int mp3buf_size)
 	/* convert from L/R -> Mid/Side */
 	if (1
 	    && (gfc->tt[0][0].block_type != SHORT_TYPE
-		|| gfc->start_sfb_s[1][0] == 0)
+		|| gfc->max_sfb_s[1][0] == 0)
 	    && (gfc->tt[1][0].block_type != SHORT_TYPE
-		|| gfc->start_sfb_s[1][1] == 0)
+		|| gfc->max_sfb_s[1][1] == 0)
 	    && gfc->use_istereo) {
 	    for (gr = 0; gr < gfc->mode_gr; gr++) {
-		int sfb = gfc->start_sfb_l[1][gr];
+		int sfb = gfc->max_sfb_l[1][gr];
 		if (gfc->tt[gr][0].block_type == SHORT_TYPE)
-		    sfb = gfc->start_sfb_s[1][gr];
+		    sfb = gfc->max_sfb_s[1][gr];
 		if (sfb && sfb < gfc->tt[gr][0].psymax) {
 		    gfc->mode_ext = MPG_MD_MS_I;
 		    break;
@@ -1612,10 +1615,10 @@ encode_mp3_frame(lame_t gfc, unsigned char* mp3buf, int mp3buf_size)
 
 	for (gr = 0; gr < gfc->mode_gr; gr++) {
 	    gr_info *gi = &gfc->tt[gr][0];
-	    int sfb = gfc->start_sfb_l[1][gr];
+	    int sfb = gfc->max_sfb_l[1][gr];
 	    int end = gfc->scalefac_band.l[sfb];
 	    if (gi->block_type == SHORT_TYPE) {
-		sfb = gfc->start_sfb_s[1][gr];
+		sfb = gfc->max_sfb_s[1][gr];
 		end = gfc->scalefac_band.s[sfb]*3;
 		sfb *= 3;
 	    }
@@ -1627,10 +1630,10 @@ encode_mp3_frame(lame_t gfc, unsigned char* mp3buf, int mp3buf_size)
 	gfc->mode_ext = MPG_MD_LR_I;
 	for (gr = 0; gr < gfc->mode_gr; gr++) {
 	    gr_info *gi = &gfc->tt[gr][0];
-	    int sfb = gfc->start_sfb_l[1][gr];
+	    int sfb = gfc->max_sfb_l[1][gr];
 	    int end = gfc->scalefac_band.l[sfb];
 	    if (gi->block_type == SHORT_TYPE) {
-		sfb = gfc->start_sfb_s[1][gr];
+		sfb = gfc->max_sfb_s[1][gr];
 		end = gfc->scalefac_band.s[sfb]*3;
 		sfb *= 3;
 	    }

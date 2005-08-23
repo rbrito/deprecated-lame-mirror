@@ -596,7 +596,7 @@ set_istereo_sfb(lame_t gfc, int gr)
 		break;
 	} while (--sb >= 0);
     }
-    gfc->start_sfb_l_next[3][gr] = ++sb; assert(sb >= 0);
+    gfc->max_sfb_l_next[3][gr] = ++sb; assert(sb >= 0);
     for (; sb < gfc->cutoff_sfb_l; sb++) {
 	mr[0].en .l[sb] = mr[2].en .l[sb];
 	mr[0].thm.l[sb] = mr[2].thm.l[sb];
@@ -625,7 +625,7 @@ set_istereo_sfb(lame_t gfc, int gr)
 	if (sblock != 3)
 	    break;
     } while (--sb >= 0);
-    gfc->start_sfb_s_next[3][gr] = ++sb; assert(sb >= 0);
+    gfc->max_sfb_s_next[3][gr] = ++sb; assert(sb >= 0);
 
     for (; sb < gfc->cutoff_sfb_s; sb++) {
 	mr[0].en .s[sb][0] = mr[2].en .s[sb][0];
@@ -1174,8 +1174,12 @@ psycho_anal_ns(lame_t gfc, int gr, int numchn)
 		a *= (FLOAT)(3.0/2.0);
 		m = (m-a) / a * gfc->rnumlines_ls[0];
 		a = eb[0];
-		if (m < (FLOAT)(sizeof(tab)/sizeof(tab[0])))
-		    a *= tab[mytruncate(&eb2[0], m)];
+		if (m < (FLOAT)(sizeof(tab)/sizeof(tab[0]))) {
+		    m = tab[mytruncate(&eb2[0], m)];
+#if 0
+		    a *= m*m * (FLOAT)0.2;
+#endif
+		}
 	    }
 	    eb2[0] = a;
 
@@ -1187,8 +1191,14 @@ psycho_anal_ns(lame_t gfc, int gr, int numchn)
 		    if (m < max[b+1]) m = max[b+1];
 		    m = (m-a) / a * gfc->rnumlines_ls[b];
 		    a = eb[b];
-		    if (m < (FLOAT)(sizeof(tab)/sizeof(tab[0])))
+		    if (m < (FLOAT)(sizeof(tab)/sizeof(tab[0]))) {
+			m = tab[mytruncate(&eb2[0], m)];
+#if 0
+			if (gfc->numlines_l[b] < 10)
+			    m *= m * (FLOAT)0.2;
+#endif
 			a *= tab[mytruncate(&eb2[b], m)];
+		    }
 		}
 		eb2[b] = a;
 	    }
@@ -1376,11 +1386,11 @@ psycho_analysis(
 
 	    gi->ATHadjust = gfc->ATH.adjust[ch + gfc->mode_ext];
 	    gi->block_type = gfc->blocktype_next[gr][ch];
-	    gfc->start_sfb_l[ch][gr] = gfc->start_sfb_l_next[ch + gfc->mode_ext][gr];
-	    gfc->start_sfb_s[ch][gr] = gfc->start_sfb_s_next[ch + gfc->mode_ext][gr];
-	    gfc->start_sfb_l_next[ch][gr] = gfc->start_sfb_l_next[ch+2][gr]
+	    gfc->max_sfb_l[ch][gr] = gfc->max_sfb_l_next[ch + gfc->mode_ext][gr];
+	    gfc->max_sfb_s[ch][gr] = gfc->max_sfb_s_next[ch + gfc->mode_ext][gr];
+	    gfc->max_sfb_l_next[ch][gr] = gfc->max_sfb_l_next[ch+2][gr]
 		= gfc->cutoff_sfb_l;
-	    gfc->start_sfb_s_next[ch][gr] = gfc->start_sfb_s_next[ch+2][gr]
+	    gfc->max_sfb_s_next[ch][gr] = gfc->max_sfb_s_next[ch+2][gr]
 		= gfc->cutoff_sfb_s;
 	}
 
@@ -1411,13 +1421,13 @@ psycho_analysis(
 	    III_psy_ratio *mr = &gfc->masking_next[gr][ch];
 	    FLOAT pe;
 	    if (gfc->blocktype_next[gr][ch]) {
-		int sb = pecalc_s(mr, gfc->start_sfb_s_next[ch][gr]);
+		int sb = pecalc_s(mr, gfc->max_sfb_s_next[ch][gr]);
 		if (gfc->lowpass1 >= (FLOAT)1.0)
-		    gfc->start_sfb_s_next[ch][gr] = sb;
+		    gfc->max_sfb_s_next[ch][gr] = sb;
 	    } else {
-		int sb = pecalc_l(mr, gfc->start_sfb_l_next[ch][gr]);
+		int sb = pecalc_l(mr, gfc->max_sfb_l_next[ch][gr]);
 		if (gfc->lowpass1 >= (FLOAT)1.0)
-		    gfc->start_sfb_l_next[ch][gr] = sb;
+		    gfc->max_sfb_l_next[ch][gr] = sb;
 	    }
 	    pe = mr->pe;
 	    if (pe > (FLOAT)500.0)

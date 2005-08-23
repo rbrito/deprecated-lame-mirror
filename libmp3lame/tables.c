@@ -587,7 +587,7 @@ iteration_init(lame_t gfc)
 	init_filter2(gfc);
 #endif
     if (gfc->lowpass1 >= 1.0 && gfc->highpass1 <= 0.0) {
-	gfc->filter_type == 0;
+	gfc->filter_type = 0;
     }
 
     /* scalefactor band start/end position */
@@ -610,8 +610,10 @@ iteration_init(lame_t gfc)
     gfc->use_istereo = 0;
     for (i = 0; i < MAX_CHANNELS*2; i++) {
 	for (j = 0; j < MAX_GRANULES; j++) {
-	    gfc->start_sfb_l_next[i][j] = gfc->cutoff_sfb_l;
-	    gfc->start_sfb_s_next[i][j] = gfc->cutoff_sfb_s;
+	    gfc->max_sfb_l_next[i][j] = gfc->cutoff_sfb_l;
+	    gfc->max_sfb_s_next[i][j] = gfc->cutoff_sfb_s;
+	    gfc->max_sfb_l[i][j] = gfc->cutoff_sfb_l;
+	    gfc->max_sfb_s[i][j] = gfc->cutoff_sfb_s;
 	}
     }
     if (gfc->mode != MONO && gfc->compression_ratio > 12.0
