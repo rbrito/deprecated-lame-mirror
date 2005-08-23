@@ -1117,9 +1117,6 @@ psycho_anal_ns(lame_t gfc, int gr, int numchn)
 	FLOAT eb2[CBANDS], eb[CBANDS], max[CBANDS], avg[CBANDS];
 	FLOAT enn, thmm, *p;
 	III_psy_ratio *mr = &gfc->masking_next[gr][ch];
-	static const FLOAT tab[] = {
-	    5.00, 4.00, 3.15, 3.15, 3.15, 3.15, 3.15, 1.25,
-	};
 	int b, i, j;
 	if (ch < 2)
 	    fft_long(gfc, wsamp_L[ch], &gfc->mfbuf[ch][576*gr]);
@@ -1170,15 +1167,14 @@ psycho_anal_ns(lame_t gfc, int gr, int numchn)
 	    FLOAT m,a;
 	    a = avg[0] + avg[1];
 	    if (a != (FLOAT)0.0) {
+		int im;
 		m = max[0]; if (m < max[1]) m = max[1];
 		a *= (FLOAT)(3.0/2.0);
 		m = (m-a) / a * gfc->rnumlines_ls[0];
 		a = eb[0];
-		if (m < (FLOAT)(sizeof(tab)/sizeof(tab[0]))) {
-		    m = tab[mytruncate(&eb2[0], m)];
-#if 0
-		    a *= m*m * (FLOAT)0.2;
-#endif
+		im = mytruncate(&eb2[0], m);
+		if (im < 10) {
+		    a *= POW20(210 + 10 - im);
 		}
 	    }
 	    eb2[0] = a;
@@ -1186,18 +1182,18 @@ psycho_anal_ns(lame_t gfc, int gr, int numchn)
 	    for (b = 1; b < gfc->npart_l-1; b++) {
 		a = avg[b-1] + avg[b] + avg[b+1];
 		if (a != (FLOAT)0.0) {
+		    int im, mmax;
 		    m = max[b-1];
 		    if (m < max[b  ]) m = max[b];
 		    if (m < max[b+1]) m = max[b+1];
 		    m = (m-a) / a * gfc->rnumlines_ls[b];
 		    a = eb[b];
-		    if (m < (FLOAT)(sizeof(tab)/sizeof(tab[0]))) {
-			m = tab[mytruncate(&eb2[0], m)];
-#if 0
-			if (gfc->numlines_l[b] < 10)
-			    m *= m * (FLOAT)0.2;
-#endif
-			a *= tab[mytruncate(&eb2[b], m)];
+		    im = mytruncate(&eb2[0], m);
+		    mmax = gfc->numlines_l[b];
+		    if (mmax > 10)
+			mmax = 10;
+		    if (im < mmax) {
+			a *= POW20(210 + mmax - im);
 		    }
 		}
 		eb2[b] = a;
@@ -1205,13 +1201,16 @@ psycho_anal_ns(lame_t gfc, int gr, int numchn)
 
 	    a = avg[b-1] + avg[b];
 	    if (a != (FLOAT)0.0) {
+		int im, mmax;
 		m = max[b-1];
 		if (m < max[b]) m = max[b];
 		a *= (FLOAT)(3.0/2.0);
 		m = (m-a) / a * gfc->rnumlines_ls[b];
 		a = eb[b];
-		if (m < (FLOAT)(sizeof(tab)/sizeof(tab[0])))
-		    a *= tab[mytruncate(&eb2[b], m)];
+		im = mytruncate(&eb2[0], m);
+		mmax = 10;
+		if (im < mmax)
+		    a *= POW20(210 + mmax - im);
 	    }
 	    eb2[b] = a;
 	}
