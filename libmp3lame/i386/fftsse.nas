@@ -12,23 +12,15 @@
 	align 16
 Q_MMPP	dd	0x0,0x0,0x80000000,0x80000000
 Q_MPMP	dd	0x0,0x80000000,0x0,0x80000000
-costab_fft:
-	dd 0.000000000000
+D_10	dd 0.000000000000
 	dd 1.000000000000
-	dd 0.707106781187
-	dd 0.707106781187
+costab_fft:
 	dd 9.238795325112867e-01
 	dd 3.826834323650898e-01
-	dd 0.980785280403
-	dd 0.195090322016
 	dd 9.951847266721969e-01
 	dd 9.801714032956060e-02
-	dd 0.998795456205
-	dd 0.049067674327
 	dd 9.996988186962042e-01
 	dd 2.454122852291229e-02
-	dd 0.999924701839
-	dd 0.012271538286
 	dd 9.999811752836011e-01
 	dd 6.135884649154475e-03
 S_SQRT2	dd	1.414213562
@@ -63,7 +55,7 @@ fht_SSE:
 	xor	edx,edx
 	mov	dl,12		; =k3=3*k1
 .lp2:				; do{
-	add	cl,2		; k  += 2;
+	add	cl,1		; k  += 2;
 	shl	edx,2
 	shl	eax,2
 
@@ -146,26 +138,28 @@ fht_SSE:
 ;               i = 1; //for (i=1;i<kx;i++){
 ;                       c1 = 1.0*t_c - 0.0*t_s;
 ;                       s1 = 0.0*t_c + 1.0*t_s;
-	movlps	xmm6,[costab_fft + ecx*8]
-	shufps	xmm6,xmm6,R4(0,1,1,0)	; = {+c1, +s1, +s1, +c1}
-;                       c2 = c1*c1 - s1*s1;
-;                       s2 = c1*s1 + s1*c1;
-	movaps	xmm4,xmm6
+	movlps	xmm6,[costab_fft-8+ecx*8] ; = { --,  --,  s1, c1}
 	movaps	xmm7,xmm6
-	unpcklps	xmm4,xmm4	; = {s1, s1, c1, c1}
-	shufps	xmm7,xmm7,0x41
-	mulps	xmm4,xmm6	; = {s1*c1, s1*s1, c1*s1, c1*c1}
-	xorps	xmm7,[Q_MMPP]	; = {-s1, -c1, +c1, +s1}
-	movhlps	xmm3,xmm4
-	xorps	xmm3,[Q_MPMP]
-	subps	xmm4,xmm3	; = {--, --, s2, c2}
-	movlhps	xmm4,xmm4	; = {+s2, +c2, +s2, +c2}
-	movaps	xmm5,xmm4
-	shufps	xmm5,xmm5,0x11
-	xorps	xmm5,[Q_MPMP]	; = {-c2, +s2, -c2, +s2}
+
 	mov	esi,[esp+_P+4]	; = fz
+	shufps	xmm6,xmm6,R4(0,1,1,0)	; = {+c1, +s1, +s1, +c1} -> 必要
+;                       c2 = c1*c1 - s1*s1 = 1 - (2*s1)*s1;
+;                       s2 = c1*s1 + s1*c1 = 2*s1*c1;
+	shufps	xmm7,xmm7,R4(1,0,0,1)
+	movss	xmm5,xmm7		; = { --,  --,  --, s1}
+	xorps	xmm7,[Q_MMPP]	; = {-s1, -c1, +c1, +s1} -> 必要
+
+	addss	xmm5,xmm5		; = (--, --,  --, 2*s1)
 	lea	edi,[esi + eax - 4]	; edi = gi = fz +k1-i
+	shufps	xmm5,xmm5,R4(0,0,0,0)	; = (--, --, 2*s1, 2*s1)
 	add	esi,4		; esi = fi = fz + i
+	mulps	xmm5,xmm6		; = (--, --, 2*s1*s1, 2*s1*c1)
+	subps	xmm5,[D_10]		; = (--, --, 2*s1*s1-1, 2*s1*c1) = (--, --, -c2, s2)
+	movaps	xmm4,xmm5
+	movlhps	xmm5,xmm5		; = {-c2, s2, -c2, s2} -> 必要
+
+	xorps	xmm4,[Q_MPMP]		; = {--, --, c2, s2}
+	shufps	xmm4,xmm4,R4(0,1,0,1)	; = {s2, c2, s2, c2} -> 必要
 
 	loopalign	16
 .lp21:				; do{
@@ -263,12 +257,12 @@ fht_SSE:
 ; at here, xmm6 is {c3, s3, s3, c3}
 ;                       c1 = c3*t_c - s3*t_s;
 ;                       s1 = c3*t_s + s3*t_c;
-	movlps	xmm0,[costab_fft + ecx*8]
-	shufps	xmm0,xmm0,0x50	; = {t_s, t_s, t_c, t_c}
-	mulps	xmm6,xmm0
-	movhlps	xmm4,xmm6
-	xorps	xmm4,[Q_MPMP]
-	subps	xmm6,xmm4	; = {--, --, s1, c1}
+	movlps	xmm0,[costab_fft-8 + ecx*8]
+	shufps	xmm0,xmm0,R4(1,1,0,0)	; = {t_s, t_s, t_c, t_c}
+	mulps	xmm6,xmm0	; = {c3*ts, s3*ts, s3*tc, c3*tc}
+	movhlps	xmm4,xmm6	; = {--,    --,    c3*ts, s3*ts}
+	xorps	xmm4,[Q_MPMP]	; = {--,    --,   -c3*ts, s3*ts}
+	subps	xmm6,xmm4	; = {--,    --,       s1,    c1}
 
 ;                       c3 = c1*t_c - s1*t_s;
 ;                       s3 = s1*t_c + c1*t_s;
