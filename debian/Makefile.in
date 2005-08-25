@@ -169,9 +169,9 @@ EXTRA_DIST = \
 	changelog \
 	control \
 	copyright \
-	liblame0-dev.docs \
-	liblame0-dev.files \
-	liblame0.files \
+	libmp3lame0-dev.docs \
+	libmp3lame0-dev.files \
+	libmp3lame0.files \
 	lame.docs \
 	lame.files \
 	rules
