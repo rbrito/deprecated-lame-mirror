@@ -688,8 +688,7 @@ esac
 AM_CONDITIONAL(HAVE_NASM, test "${NASM}" != "no")
 
 case $host_os in
-	*cygwin*)
-    *mingw32*)
+	*cygwin* | *mingw32*)
 		CYGWIN=yes
 		NASM_FORMAT="-f win32 -DWIN32"
 		;;

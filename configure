@@ -27602,7 +27602,7 @@ fi
 
 
 case $host_os in
-	*cygwin*)
+	*mingw32* | *cygwin*)
 		CYGWIN=yes
 		NASM_FORMAT="-f win32 -DWIN32"
 		;;
