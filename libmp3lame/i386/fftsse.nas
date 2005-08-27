@@ -12,6 +12,7 @@
 	align 16
 Q_MMPP	dd	0x0,0x0,0x80000000,0x80000000
 Q_MPMP	dd	0x0,0x80000000,0x0,0x80000000
+D_1100	dd 0.0, 0.0, 1.0, 1.0
 D_10	dd 0.000000000000
 	dd 1.000000000000
 costab_fft:
@@ -229,16 +230,16 @@ fht_SSE:
 
 ; unroll前のdo loopは43+4命令
 
-; 最内周ではないforループをunrollingした
+; 最内周ではないforループのi=2から先をunrollingした
 ; kx=   2,   8,  32,  128
 ; k4=  16,  64, 256, 1024
 ;       0, 6/2,30/2,126/2
 
 	xor	ebx,ebx
-	mov	bl, 4*2		; = i = 4 ebx も半分に
+	mov	bl, 4*2		; = i = 4
 	cmp	ebx,eax		; i < k1
 	jnl	near .F22
-;               for (i=4;i<k1;i+=4){ // for (i=2;i<k1/2;i+=2){
+;               for (i=2;i<kx;i+=2){
 	loopalign	16
 .lp22:
 ; at here, xmm6 is {c3, s3, s3, c3}
@@ -249,39 +250,32 @@ fht_SSE:
 	mulps	xmm6,xmm0	; = {c3*ts, s3*ts, s3*tc, c3*tc}
 	movhlps	xmm4,xmm6	; = {--,    --,    c3*ts, s3*ts}
 	xorps	xmm4,[Q_MPMP]	; = {--,    --,   -c3*ts, s3*ts}
-	subps	xmm6,xmm4	; = {--,    --,       s1,    c1}
+	subps	xmm6,xmm4	; = {-,-, c3*ts+s3*tc, c3*tc-s3*ts}={-,-,s1,c1}
 
 ;                       c3 = c1*t_c - s1*t_s;
 ;                       s3 = s1*t_c + c1*t_s;
 	shufps	xmm6,xmm6,0x14	; = {c1, s1, s1, c1}
-	mulps	xmm0,xmm6
+	mulps	xmm0,xmm6	; = {ts*c1 ts*s1 tc*s1 tc*c1}
 	movhlps	xmm3,xmm0
 	xorps	xmm3,[Q_MPMP]
 	subps	xmm0,xmm3	; = {--, --, s3, c3}
 
+; {s2 s4 c4 c2} = {2*s1*c1 2*s3*c3 1-2*s3*s3 1-2*s1*s1}
 	unpcklps	xmm6,xmm0	; xmm6 = {s3, s1, c3, c1}
-	shufps	xmm6,xmm6,0xB4	; xmm6 = {s1, s3, c3, c1}
+	shufps	xmm6,xmm6,R4(2,3,1,0)	; xmm6 = {s1, s3, c3, c1}
 
-;                       c2 = c1*c1 - s1*s1;
-;                       c4 = c3*c3 - s3*s3;
-;                       s4 = s3*c3 + s3*c3;
-;                       s2 = s1*c1 + s1*c1;
-	movaps	xmm7,xmm6
-	movaps	xmm4,xmm6
-	shufps	xmm7,xmm7,0x14
-	shufps	xmm4,xmm4,0xEB
-	xorps	xmm4,[Q_MMPP]	; = {-c3,-c1, s3, s1}
-	mulps	xmm7,xmm6
-	mulps	xmm4,xmm6
-	shufps	xmm4,xmm4,0x1B
-	addps	xmm7,xmm4	; xmm7 = {s2, s4, c4, c2}
+	movaps	xmm7, xmm6
+	addps	xmm7, xmm7		; {s1*2, s3*2,   --,   --}
+	mov	edi,[esp+_P+4]		; = fz
+	shufps	xmm7, xmm7, R4(3,2,2,3)	; {s1*2, s3*2, s3*2, s1*2}
+	sub	edi,ebx			; edi = fz - i/2
+	mulps	xmm7, xmm6		; {s1*s1*2, s3*s3*2, s3*c3*2, s1*c1*2}
+	lea	esi,[edi + ebx*2]	; esi = fi = fz +i/2
+	subps	xmm7, [D_1100]		; {-c2, -c4, s4, s2}
+	lea	edi,[edi + eax*2-4]	; edi = gi = fz +k1-i/2
 
 ;                       fi = fz +i;
 ;                       gi = fz +k1-i;
-	mov	edi,[esp+_P+4]	; = fz
-	sub	edi,ebx		; edi = fz - i/2
-	lea	esi,[edi + ebx*2]	; esi = fi = fz +i/2
-	lea	edi,[edi + eax*2-4]		; edi = gi = fz +k1-i/2
 ;                       do{
 .lp220:
 ; unroll後のdo loopは51+4命令
@@ -294,9 +288,9 @@ fht_SSE:
 ;                               h       = s4*fi[k3+1] - c4*gi[k3-1];
 ;                               d       = s2*fi[k3  ] - c2*gi[k3  ];
 
-	movaps	xmm4,xmm7	; xmm7 = {s2, s4, c4, c2}
-	shufps	xmm4,xmm4,0x1B
-	xorps	xmm4,[Q_MMPP]
+	movaps	xmm4,xmm7	; = {-c2 -c4  s4  s2}
+	xorps	xmm4,[Q_MMPP]	; = { c2  c4  s4  s2}
+	shufps	xmm4,xmm4,0x1B	; = { s2  s4  c4  c2}
 	movlps	xmm0,[esi+eax*2]
 	movlps	xmm1,[edi+eax*2]
 	movlps	xmm2,[esi+edx*2]
@@ -305,10 +299,10 @@ fht_SSE:
 	shufps	xmm1,xmm1,0x41
 	shufps	xmm2,xmm2,0x14
 	shufps	xmm3,xmm3,0x41
-	mulps	xmm0,xmm7
-	mulps	xmm1,xmm4
-	mulps	xmm2,xmm7
-	mulps	xmm3,xmm4
+	mulps	xmm0,xmm4
+	mulps	xmm1,xmm7
+	mulps	xmm2,xmm4
+	mulps	xmm3,xmm7
 	addps	xmm0,xmm1	; xmm0 = {b, f, e, a}
 	addps	xmm2,xmm3	; xmm2 = {d, h, g, c}
 ;17
@@ -329,13 +323,13 @@ fht_SSE:
 ;                               f7      = fi[k2+1]    - g;
 ;                               g7      = gi[k2-1]    - h;
 ;                               g3      = gi[k2  ]    - d;
-	movlps	xmm4,[esi      ]
-	movhps	xmm4,[edi      ]
-	movaps	xmm1,xmm4
+	movlps	xmm1,[esi      ]
+	movhps	xmm1,[edi      ]
+	movaps	xmm4,xmm1
 	subps	xmm1,xmm0	; xmm1 = {g1, g5, f5, f1}
-	movlps	xmm5,[esi+eax*4]
-	movhps	xmm5,[edi+eax*4]
-	movaps	xmm3,xmm5
+	movlps	xmm3,[esi+eax*4]
+	movhps	xmm3,[edi+eax*4]
+	movaps	xmm5,xmm3
 	subps	xmm3,xmm2	; xmm3 = {g3, g7, f7, f3}
 	addps	xmm0,xmm4	; xmm0 = {g0, g4, f4, f0}
 	addps	xmm2,xmm5	; xmm2 = {g2, g6, f6, f2}
