@@ -55,6 +55,7 @@ fht_SSE:
 .lp2:				; do{
 	mov	esi,[esp+_P+4]	; esi=fi=fz
 	lea	edx,[eax+eax*2]
+	mov	ebx, esi
 
 ; たかだか2並列しか期待できない部分はFPUのほうが速い。
 	loopalign	16
@@ -67,30 +68,30 @@ fht_SSE:
 ;                       fi[k1] = f1     + f3;
 ;                       fi[k2] = f0     - f2;
 ;                       fi[k3] = f1     - f3;
-	lea	edi,[esi+eax]	; edi=gi=fi+ki/2
-	fld	dword [esi]
-	fadd	dword [esi+eax*2]
-	fld	dword [esi+eax*4]
-	fadd	dword [esi+edx*2]
+	lea	edi,[ebx+eax]	; edi=gi=fi+ki/2
+	fld	dword [ebx]
+	fadd	dword [ebx+eax*2]
+	fld	dword [ebx+eax*4]
+	fadd	dword [ebx+edx*2]
 
-	fld	dword [esi]
-	fsub	dword [esi+eax*2]
-	fld	dword [esi+eax*4]
-	fsub	dword [esi+edx*2]
-
-	fld	st1
-	fadd	st0,st1
-	fstp	dword [esi+eax*2]
-	fsubp	st1,st0
-	fstp	dword [esi+edx*2]
+	fld	dword [ebx]
+	fsub	dword [ebx+eax*2]
+	fld	dword [ebx+eax*4]
+	fsub	dword [ebx+edx*2]
 
 	fld	st1
 	fadd	st0,st1
-	fstp	dword [esi]
+	fstp	dword [ebx+eax*2]
 	fsubp	st1,st0
-	fstp	dword [esi+eax*4]
+	fstp	dword [ebx+edx*2]
 
-	lea	esi,[esi + eax*8]	; = fi += (k1 * 4);
+	fld	st1
+	fadd	st0,st1
+	fstp	dword [ebx]
+	fsubp	st1,st0
+	fstp	dword [ebx+eax*4]
+
+	lea	ebx,[ebx + eax*8]	; = fi += (k1 * 4);
 ;                       g0     = gi[0 ] + gi[k1];
 ;                       g2     = SQRT2  * gi[k2];
 ;                       g1     = gi[0 ] - gi[k1];
@@ -121,7 +122,7 @@ fht_SSE:
 	fsubp	st1,st0
 	fstp	dword [edi+eax*4]
 
-	cmp	esi,ebp
+	cmp	ebx,ebp
 	jl	near .lp20		; while (fi<fn);
 
 
@@ -131,7 +132,6 @@ fht_SSE:
 	movlps	xmm6,[ecx] ; = { --,  --,  s1, c1}
 	movaps	xmm7,xmm6
 
-	mov	esi,[esp+_P+4]	; = fz
 	shufps	xmm6,xmm6,R4(0,1,1,0)	; = {+c1, +s1, +s1, +c1} -> 必要
 ;                       c2 = c1*c1 - s1*s1 = 1 - (2*s1)*s1;
 ;                       s2 = c1*s1 + s1*c1 = 2*s1*c1;
@@ -140,9 +140,8 @@ fht_SSE:
 	xorps	xmm7,[Q_MMPP]	; = {-s1, -c1, +c1, +s1} -> 必要
 
 	addss	xmm5,xmm5		; = (--, --,  --, 2*s1)
-	lea	edi,[esi + eax*2 - 4]	; edi = gi = fz +k1-i
-	shufps	xmm5,xmm5,R4(0,0,0,0)	; = (--, --, 2*s1, 2*s1)
 	add	esi,4		; esi = fi = fz + i
+	shufps	xmm5,xmm5,R4(0,0,0,0)	; = (--, --, 2*s1, 2*s1)
 	mulps	xmm5,xmm6		; = (--, --, 2*s1*s1, 2*s1*c1)
 	subps	xmm5,[D_10]		; = (--, --, 2*s1*s1-1, 2*s1*c1) = (--, --, -c2, s2)
 	movaps	xmm4,xmm5
@@ -165,6 +164,7 @@ fht_SSE:
 ;                               g1      = gi[0 ]        - b;
 ;                               f3      = fi[k1 * 2]    - c;
 ;                               g3      = gi[k1 * 2]    - d;
+	lea	edi,[esi + eax*2 - 8]	; edi = gi = fz +k1-i
 
 	movss	xmm0,[esi + eax*2]	; = fi[k1]
 	movss	xmm2,[esi + edx*2]	; = fi[k3]
@@ -221,7 +221,6 @@ fht_SSE:
 	movss	[edi+edx*2],xmm0
 	shufps	xmm0,xmm0,0x55
 	movss	[edi+eax*4],xmm2
-	lea	edi,[edi + eax*8] ; gi += (k1 * 4);
 	movss	[esi+edx*2],xmm0
 	lea	esi,[esi + eax*8] ; fi += (k1 * 4);
 	cmp	esi,ebp
@@ -404,7 +403,7 @@ fht_SSE:
 	jl	near .lp220		; while (fi<fn);
 ;                       } while (fi<fn);
 
-	add	ebx,2*4		; i+= 4
+	add	ebx,byte 2*4	; i+= 4
 	cmp	ebx,eax		; i < k1
 	shufps	xmm6,xmm6,R4(1,2,2,1)	; (--,s3,c3,--) => {c3, s3, s3, c3}
 	jl	near .lp22
