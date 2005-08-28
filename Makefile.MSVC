@@ -36,17 +36,29 @@
 
 
 #	targets <-> DOS filenames
+
 T_LAME = lame.exe
 T_LDLL = lame_enc.dll
 T_MP3X = mp3x.exe
 
 #	default targets
+
 PGM = $(T_LDLL) $(T_LAME)
 
 #	some default settings
 
+!	IF "$(MSVCVER)" != ""
+COMP = MS
+!	IF "$(MSVCVER)" == "Win64"
+!	IF "$(ASM)" == ""
+ASM = NO # or it could be ML64 if we want to use it...
+GTK = NO
+!	ENDIF
+!	ENDIF
+!	ELSE
 !	IF "$(COMP)" == ""
 COMP = INTEL
+!	ENDIF
 !	ENDIF
 
 !	IF "$(ASM)" == ""
@@ -77,42 +89,67 @@ PREC = DOUBLE
 OFF = win32
 
 !	MESSAGE ----------------------------------------------------------------------
-!	MESSAGE building LAME featuring $(CFG)
+!	IF "$(CFG)" == ""
+!	 MESSAGE building LAME
+!	ELSE
+!	 MESSAGE building LAME featuring $(CFG)
+!	ENDIF
 !	IF "$(ASM)" == "YES"
-!	MESSAGE + ASM
-!	IF "$(MMX)" == "YES"
-!	MESSAGE + MMX
-!	ENDIF 
+!	 MESSAGE + ASM
+!	 IF "$(MMX)" == "YES"
+!	  MESSAGE + MMX
+!	 ENDIF 
 !	ENDIF 
 !	IF "$(GTK)" == "YES"
-!	MESSAGE + GTK
+!	 MESSAGE + GTK
 !	ENDIF 
 !	IF "$(COMP)" == "INTEL"
-!	MESSAGE using INTEL COMPILER
-!	IF "$(CPU)" == "P1"
-!	MESSAGE + optimizing for Pentium (MMX)
+!	 MESSAGE using INTEL COMPILER
+!	 IF "$(CPU)" == "P1"
+!	  MESSAGE + optimizing for Pentium (MMX)
+!	 ELSE
+!	  IF "$(CPU)" == "P2"
+!	   MESSAGE + you need a Pentium II or better
+!	  ELSE
+!	   IF "$(CPU)" == "P3"
+!	    MESSAGE + you need a Pentium III or better
+!	   ELSE
+!	    MESSAGE + optimizing for Pentium II/III
+!	   ENDIF
+!	  ENDIF
+!	 ENDIF
 !	ELSE
-!	IF "$(CPU)" == "P2"
-!	MESSAGE + you need a Pentium II or better
-!	ELSE
-!	IF "$(CPU)" == "P3"
-!	MESSAGE + you need a Pentium III or better
-!	ELSE
-!	MESSAGE + otimizing for Pentium II/III
+!	 IF "$(MSVCVER)" == "6.0"
+!	  MESSAGE + using MSVC 6.0 32-Bit Compiler
+!	  IF "$(CPU)" == "P1"
+!	   MESSAGE + optimizing for Pentium (MMX) (may slow down PIII a few percent)
+!	  ELSE
+!	   MESSAGE + optimizing for Pentium II/III
+!	  ENDIF
+!	 ELSEIF "$(MSVCVER)" == "8.0"
+!	  MESSAGE + using MSVC 8.0 32-Bit Compiler
+!	  IF "$(CPU)" == "P1"
+!	   MESSAGE + optimizing for Pentium (MMX) (may slow down PIII a few percent)
+!	  ELSE
+!	   MESSAGE + optimizing for Pentium II/III
+!	  ENDIF
+!	 ELSE
+!	  IF "$(MSVCVER)" == "Win64"
+!	   MESSAGE + using MS 64-Bit Compiler
+!	  ELSE
+!	   MESSAGE using MS COMPILER
+!	   IF "$(CPU)" == "P1"
+!	    MESSAGE + optimizing for Pentium (MMX) (may slow down PIII a few percent)
+!	   ELSE
+!	    MESSAGE + optimizing for Pentium II/III
+!	   ENDIF
+!	  ENDIF
+!	 ENDIF
 !	ENDIF
-!	ENDIF
-!	ENDIF
-!	ELSE
-!	MESSAGE using MS COMPILER
-!	IF "$(CPU)" == "P1"
-!	MESSAGE + optimizing for Pentium (MMX) (may slow down PIII a few percent)
-!	ELSE
-!	MESSAGE + optimizing for Pentium II/III
-!	ENDIF
+!	IF "$(PREC)" == "SINGLE"
+!	 MESSAGE + using Single precision
 !	ENDIF
 !	MESSAGE ----------------------------------------------------------------------
-
-
 
 !	IF "$(COMP)" != "INTEL"
 !	IF "$(COMP)" != "BCC"
@@ -149,31 +186,77 @@ OFF = win32
 # LN_OPTS = /nologo /debug:full /debugtype:cv /fixed:no /profile
 
 # release options
+!	IF "$(MSVCVER)" == "Win64"
+CC_OPTS = /nologo /DWin64 /O2b2ity /GAy /Gs1024 /Zp8 /GL /GS- /Zi
+!	ELSEIF "$(MSVCVER)" == "8.0"
+CC_OPTS = /nologo /DNDEBUG /O2 /Ob2 /GAy /Gs1024 /Zp8 /GL /Zi
+!	ELSE
 CC_OPTS = /nologo /DNDEBUG /O2 /Ob2 /GAy /Gs1024 /QIfdiv /QI0f /YX
-LN_OPTS = /nologo /DNDEBUG
+!	ENDIF
 
+!	IF "$(NODEBUG)" == "1"
+CC_OPTS = $(CC_OPTS) /DNDEBUG
+!	ENDIF
+
+!	IF "$(MSVCVER)" == "6.0"
 !	IF "$(CPU)" == "P1"
 CC_OPTS = $(CC_OPTS) /G5
 !	ELSE
 CC_OPTS = $(CC_OPTS) /G6
 !	ENDIF
+!	ENDIF
 
 !	IF "$(WARN)" == "OFF"
 CC_OPTS = $(CC_OPTS) /w
 !	ELSE
-CC_OPTS = $(CC_OPTS) /W2 
+CC_OPTS = $(CC_OPTS) /W$(WARN)
 !	ENDIF
 
 !	IF "$(PREC)" == "SINGLE"
 CC_OPTS = $(CC_OPTS) /DFLOAT8=float /DREAL_IS_FLOAT=1
 !	ENDIF
 
-LN_DLL = /LD
-LN_OUT = /Fe
 CC_OUT = /Fo
 
+!	IF "$(MSVCVER)" == "Win64"
+!	IF "$(NODEBUG)" == "1"
+LN_OPTS = /nologo /map:lame.map
+LN_DLL = /DLL
+LN_OUT = /OUT:
+!	ELSE
+LN_OPTS = /nologo /DEBUG /pdb:lame.pdb /map:lame.map 
+LN_DLL = /DLL /DEBUG
+LN_OUT = /OUT:
+!	ENDIF
+!	ELSEIF "$(MSVCVER)" == "8.0"
+!	IF "$(NODEBUG)" == "1"
+LN_OPTS = /nologo /map:lame.map 
+LN_DLL = /DLL
+LN_OUT = /OUT:
+!	ELSE
+LN_OPTS = /nologo /DEBUG /pdb:lame.pdb /map:lame.map 
+LN_DLL = /DLL /DEBUG
+LN_OUT = /OUT:
+!	ENDIF
+!	ELSE
+!	IF "$(NODEBUG)" == "1"
+LN_OPTS = /nologo /map:lame.map
+LN_DLL = /DLL
+LN_OUT = /OUT:
+!	ELSE
+LN_OPTS = /nologo
+LN_DLL = /DLL /DEBUG /pdb:lame.pdb /map:lame.map 
+LN_OUT = /OUT:
+!	ENDIF
+!	ENDIF
+
+!	IF "$(MSVCVER)" == "Win64"
 CC = cl
-LN = cl
+LN = link
+!	ELSE
+CC = cl
+LN = link
+!	ENDIF
 #_______________________________________________________ Microsoft C options __
 
 
@@ -411,6 +494,9 @@ mpglib_sources = \
 	mpglib/interface.c
 
 
+!IF "$(MSVCVER)" == "Win64"
+ADDL_OBJ = bufferoverflowU.lib
+!ENDIF
 
 LIB_OBJ = $(lamelib_sources:.c=.obj)
 MPG_OBJ = $(mpglib_sources:.c=.obj)
@@ -419,15 +505,43 @@ LAME_OBJ = $(lame_sources:.c=.obj)
 MPX_OBJ = $(mpx_sources:.c=.obj)
 DLL_OBJ = $(dll_sources:.c=.obj)
 
+
 .c.obj: 
 	@$(CC) $(CPP_OPTS) $(CC_SWITCHES) -Iinclude -Ilibmp3lame -Impglib \
 	       $(CC_OUT)$@  -c $<
+
+
+#__ MASM ______________________________________________________________________
+#
+#	MASM: Microsoft Assembler
+#
+!	IF "$(ASM)" == "ML64"
+#
+.SUFFIXES : .nas
+.nas.obj:
+	@echo $< 
+	@ml64 -Ilibmp3lame\i386 -Sf -DWIN32 -DWIN64 $< -Fo$@
+                                
+CC_SWITCHES = $(CC_SWITCHES) -DHAVE_NASM
+ASM_OBJ = $(ASM_OBJ) libmp3lame\i386\cpu_feat.obj
+
+ASM_OBJ = $(ASM_OBJ) libmp3lame\i386\fft3dn.obj
+
+#	not yet coded
+#CC_SWITCHES = $(CC_SWITCHES) -DUSE_FFTSSE
+#ASM_OBJ = $(ASM_OBJ) libmp3lame\i386\fftsse.obj
+
+#CC_SWITCHES = $(CC_SWITCHES) -DUSE_FFTFPU
+#ASM_OBJ = $(ASM_OBJ) libmp3lame\i386\fftfpu.obj
+#______________________________________________________________________ MASM __
+
 
 #__ NASM ______________________________________________________________________
 #
 #	NASM: Netwide Assembler
 #
-!	IF "$(ASM)" == "YES"
+!	ELSEIF "$(ASM)" == "YES"
+#
 .SUFFIXES : .nas
 .nas.obj:
 	@echo $< 
@@ -445,9 +559,11 @@ ASM_OBJ = $(ASM_OBJ) libmp3lame/i386/fft3dn.obj
 
 #CC_SWITCHES = $(CC_SWITCHES) /DUSE_FFTFPU
 #ASM_OBJ = $(ASM_OBJ) libmp3lame/i386/fftfpu.obj
-!	ENDIF
 #______________________________________________________________________ NASM __
 
+!	ELSE
+!	MESSAGE Pass ASM=YES to build the assembler optimizations
+!	ENDIF
 
 
 #__ MMX _______________________________________________________________________
@@ -492,21 +608,21 @@ lib: $(ASM_OBJ) libA libB
 
 $(T_LAME) : config.h lib common $(LAME_OBJ)
 	@$(LN) $(LN_OUT)$@ $(LN_SWITCHES) $(LIBSNDFILE) \
-	       $(ASM_OBJ) $(LIB_OBJ) $(MPG_OBJ) $(CMMN_OBJ) $(LAME_OBJ)
+	       $(ASM_OBJ) $(LIB_OBJ) $(MPG_OBJ) $(CMMN_OBJ) $(LAME_OBJ) $(ADDL_OBJ)
 	@echo.
 	@echo --=*  $@ ready  *=--
 	@echo.
 
 $(T_MP3X) : config.h lib common $(MPX_OBJ)
 	@$(LN) $(LN_OUT)$@ $(LN_SWITCHES) $(GTK_LIBS) $(LIBSNDFILE) \
-	       $(ASM_OBJ) $(LIB_OBJ) $(MPG_OBJ) $(CMMN_OBJ) $(MPX_OBJ)
+	       $(ASM_OBJ) $(LIB_OBJ) $(MPG_OBJ) $(CMMN_OBJ) $(MPX_OBJ) $(ADDL_OBJ)
 	@echo.
 	@echo --=*  $@ ready  *=--
 	@echo.
 
 $(T_LDLL) : config.h lib $(DLL_OBJ)
 	@$(LN) $(LN_OUT)$@ $(LN_SWITCHES) $(LN_DLL) $(LIBSNDFILE) \
-	       $(ASM_OBJ) $(LIB_OBJ) $(MPG_OBJ) $(DLL_OBJ)
+	       $(ASM_OBJ) $(LIB_OBJ) $(MPG_OBJ) $(DLL_OBJ) $(ADDL_OBJ)
 	@echo.
 	@echo --=*  $@ ready  *=--
 	@echo.
@@ -515,7 +631,8 @@ config.h : configMS.h
 	@-copy configMS.h config.h
 
 clean:
-	@-del *.exe
+	@-del lame.exe
+	@-del lame.pdb
 	@-del icl.pch
 	@-del lame_enc.*
 	@-del frontend\*.obj

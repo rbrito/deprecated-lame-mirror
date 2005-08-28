@@ -33,6 +33,7 @@
 
 # define LAME_URL              "http://www.mp3dev.org/"
 
+
 # define LAME_MAJOR_VERSION      3      /* Major version number */
 # define LAME_MINOR_VERSION     97      /* Minor version number */
 # define LAME_TYPE_VERSION       0      /* 0:alpha 1:beta 2:release */
@@ -52,6 +53,7 @@ const char*  get_lame_short_version ( void );
 const char*  get_psy_version        ( void );
 const char*  get_lame_url           ( void );
 void         get_lame_version_numerical ( lame_version_t *const lvp );
+const char*  get_lame_os_bitness    ( void );
 
 #endif  /* LAME_VERSION_H */
 

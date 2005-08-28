@@ -211,5 +211,24 @@ void get_lame_version_numerical ( lame_version_t *const lvp )
     /*@=mustfree@*/
 }
 
+
+const char*  get_lame_os_bitness ( void )
+{
+    static /*@observer@*/ const char *const strXX = "";
+    static /*@observer@*/ const char *const str32 = "32bits";
+    static /*@observer@*/ const char *const str64 = "64bits";
+
+    switch (sizeof(void*)){
+    case 4:
+        return str32;
+        break;
+    case 8:
+        return str64;
+        break;
+    default:
+        return strXX;
+    }
+}    
+
 /* end of version.c */
 
