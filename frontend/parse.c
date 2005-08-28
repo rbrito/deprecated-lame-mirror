@@ -834,8 +834,6 @@ extern void lame_set_msfix( lame_t gfp, double msfix );
 
 
 
-/*  some presets thanks to Dibrom
- */
 static int  presets_set( lame_t gfp, int fast, int cbr, const char* preset_name, const char* ProgramName )
 {
     int mono = 0;
@@ -888,31 +886,26 @@ static int  presets_set( lame_t gfp, int fast, int cbr, const char* preset_name,
     }
 
     if (strcmp(preset_name, "medium") == 0) {
-	if (fast > 0)
-	    lame_set_preset(gfp, MEDIUM_FAST);
-        else
-	    lame_set_preset(gfp, MEDIUM);
-
-	return 0;
+        lame_set_VBR_q(gfp, 4);
+        if (fast > 0) {
+            lame_set_VBR(gfp, vbr_mtrh);
+        }
+        return 0;
     }
 
     if (strcmp(preset_name, "standard") == 0) {
-
-        if (fast > 0)
-           lame_set_preset(gfp, STANDARD_FAST);
-        else
-           lame_set_preset(gfp, STANDARD);
-
+        lame_set_VBR_q(gfp, 2);
+        if (fast > 0) {
+            lame_set_VBR(gfp, vbr_mtrh);
+        }
         return 0;
     }
     
     else if (strcmp(preset_name, "extreme") == 0){
-
-        if (fast > 0)
-           lame_set_preset(gfp, EXTREME_FAST);
-        else
-           lame_set_preset(gfp, EXTREME);
-
+        lame_set_VBR_q(gfp, 0);
+        if (fast > 0) {
+            lame_set_VBR(gfp, vbr_mtrh);
+        }
         return 0;
     }
     					
