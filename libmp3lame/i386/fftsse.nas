@@ -262,12 +262,11 @@ fht_SSE:
 
 ; {s2 s4 c4 c2} = {2*s1*c1 2*s3*c3 1-2*s3*s3 1-2*s1*s1}
 	unpcklps	xmm6,xmm0	; xmm6 = {s3, s1, c3, c1}
-	shufps	xmm6,xmm6,R4(2,3,1,0)	; xmm6 = {s1, s3, c3, c1}
-
 	movaps	xmm7, xmm6
-	addps	xmm7, xmm7		; {s1*2, s3*2,   --,   --}
+	shufps	xmm6,xmm6,R4(2,3,1,0)	; xmm6 = {s1, s3, c3, c1}
+	addps	xmm7, xmm7		; {s3*2, s1*2,   --,   --}
 	mov	edi,[esp+_P+4]		; = fz
-	shufps	xmm7, xmm7, R4(3,2,2,3)	; {s1*2, s3*2, s3*2, s1*2}
+	shufps	xmm7, xmm7, R4(2,3,3,2)	; {s1*2, s3*2, s3*2, s1*2}
 	sub	edi,ebx			; edi = fz - i/2
 	mulps	xmm7, xmm6		; {s1*s1*2, s3*s3*2, s3*c3*2, s1*c1*2}
 	lea	esi,[edi + ebx*2]	; esi = fi = fz +i/2
