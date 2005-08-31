@@ -77,6 +77,7 @@ typedef struct {
   int mainbits[2][2];
   int sfbits[2][2];
   int LAMEmainbits[2][2];
+  int LAMEmainbits_count1[2][2];
   int LAMEsfbits[2][2];
   int channels,js,ms_stereo,i_stereo,emph,bitrate,sampfreq,maindata;
   int crc,padding;

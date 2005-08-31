@@ -1917,7 +1917,9 @@ set_pinfo(lame_t gfc, gr_info *gi, const III_psy_ratio *ratio, int gr, int ch)
     } /* block type short */
 
     gfc->pinfo->LAMEqss     [gr][ch] = gi->global_gain;
+    gfc->pinfo->LAMEmainbits[gr][ch] = gi->part2_3_length;
     gfc->pinfo->LAMEmainbits[gr][ch] = gi->part2_3_length + gi->part2_length;
+    gfc->pinfo->LAMEmainbits_count1[gr][ch] = gi->count1bits;
     gfc->pinfo->LAMEsfbits  [gr][ch] = gi->part2_length;
 
     gfc->pinfo->over      [gr][ch] = over;

@@ -498,7 +498,7 @@ plot_frame(void)
   /* draw the MDCT energy spectrum */
   /*******************************************************************/
   for (gr = 0 ; gr < mode_gr ; gr ++) {
-    int bits,bits2;
+    int bits,bits1,bits2;
     char *blockname="";
     switch (blocktype[gr][ch]) {
     case  NORM_TYPE: blockname = "normal"; 	break;
@@ -527,11 +527,14 @@ plot_frame(void)
     if (gtkinfo.flag123) {
       bits=pplot1->mainbits[gr][ch];
       bits2=pplot1->sfbits[gr][ch];
+      sprintf(title2,"MDCT%1i(%s) bits=%i+%i ",gr,label,bits-bits2,bits2);
     }else{
       bits=pplot->LAMEmainbits[gr][ch];
+      bits1=pplot->LAMEmainbits_count1[gr][ch];
       bits2=pplot->LAMEsfbits[gr][ch];
+      sprintf(title2,"MDCT%1i(%s) bits=%i+%i+%i ",gr,label,
+	      bits-bits1-bits2,bits1,bits2);
     }
-    sprintf(title2,"MDCT%1i(%s) bits=%i/%i ",gr,label,bits,bits2);
     gpk_bargraph_draw(mdctbox[gr],0,xcord,ycord,
 		      xmn,ymn,xmx,ymx,1,title2,0,barcolor);
 
