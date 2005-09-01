@@ -682,7 +682,7 @@ int PutLameVBR(lame_global_flags *gfp, FILE *fpStream, uint8_t *pbtStreamBuffer,
 		gfp->short_blocks == short_block_dispensed 		||
 		((gfp->lowpassfreq == -1) && (gfp->highpassfreq == -1))	|| /* "-k" */
 		(gfp->scale_left != gfp->scale_right)			||
-		gfp->disable_reservoir		||
+		(gfp->disable_reservoir	 && gfp->brate < 320)	||
 		gfp->noATH			||
 		gfp->ATHonly			||
 		(nAthType == 0)    ||
