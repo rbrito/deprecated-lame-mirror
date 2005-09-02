@@ -889,6 +889,8 @@ static int  presets_set( lame_t gfp, int fast, int cbr, const char* preset_name,
         lame_set_VBR_q(gfp, 4);
         if (fast > 0) {
             lame_set_VBR(gfp, vbr_mtrh);
+        } else {
+            lame_set_VBR(gfp, vbr_rh);
         }
         return 0;
     }
@@ -897,6 +899,8 @@ static int  presets_set( lame_t gfp, int fast, int cbr, const char* preset_name,
         lame_set_VBR_q(gfp, 2);
         if (fast > 0) {
             lame_set_VBR(gfp, vbr_mtrh);
+        } else {
+            lame_set_VBR(gfp, vbr_rh);
         }
         return 0;
     }
@@ -905,6 +909,8 @@ static int  presets_set( lame_t gfp, int fast, int cbr, const char* preset_name,
         lame_set_VBR_q(gfp, 0);
         if (fast > 0) {
             lame_set_VBR(gfp, vbr_mtrh);
+        } else {
+            lame_set_VBR(gfp, vbr_rh);
         }
         return 0;
     }
