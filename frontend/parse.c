@@ -408,8 +408,8 @@ long_help (lame_t gfc, FILE* const fp, const char* ProgramName, int lessmode )  
               );
 
     fprintf ( fp,
-              "    --noreplaygain         disable ReplayGain analysis\n"
-              "    --replaygain-fast      compute RG fast but slightly inaccurately (default)\n"
+              "    --noreplaygain         disable ReplayGain analysis (default)\n"
+              "    --replaygain-fast      compute RG fast but slightly inaccurately\n"
 #ifdef HAVE_MPGLIB
               "    --replaygain-accurate  compute RG more accurately and find the peak sample\n"
               "    --clipdetect    enable --replaygain-accurate and print a message whether\n"
@@ -840,7 +840,6 @@ int  parse_args (lame_t gfp, int argc, char** argv,
     int         nogap=0;
     int         nogap_tags=0;  /* set to 1 to use VBR tags in NOGAP mode */
     int		count_nogap=0;
-    int 	noreplaygain=0;  /* is RG explicitly disabled by the user */
     const char* ProgramName=argv[0]; 
 
     inPath [0] = '\0';   
@@ -1026,7 +1025,6 @@ int  parse_args (lame_t gfp, int argc, char** argv,
 		lame_set_findReplayGain(gfp,1);
 	    }
 	    T_ELIF ("noreplaygain") {
-		noreplaygain = 1;
 		lame_set_findReplayGain(gfp,0);
 	    }
 	    T_ELIF ("freeformat") {
@@ -1471,10 +1469,6 @@ int  parse_args (lame_t gfp, int argc, char** argv,
         }
     }
     
-    /* RG is enabled by default */
-    if (!noreplaygain) 
-	lame_set_findReplayGain(gfp,1);
-
     /* disable VBR tags with nogap unless the VBR tags are forced */
     if (nogap && lame_get_bWriteVbrTag(gfp) && nogap_tags==0) {
 	fprintf(stderr,"Note: Disabling VBR Xing/Info tag since it interferes with --nogap\n");
