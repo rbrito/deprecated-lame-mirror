@@ -40,6 +40,7 @@
 #ifdef HAVE_NASM
 extern void pow075_SSE(float *, float *, int, float*);
 extern void pow075_3DN(float *, float *, int, float*);
+extern void sumofsqr_SSE(const float *, int, float *);
 extern void sumofsqr_3DN(const float *, int, float *);
 extern void calc_noise_sub_3DN(const float *, const int *, int, int, float *);
 extern void quantize_ISO_3DN(const float *, int, int, int *, int);
@@ -159,6 +160,8 @@ calc_xmin(
 #ifdef HAVE_NASM
 	    if (gfc->CPU_features.AMD_3DNow)
 		sumofsqr_3DN(&gi->xr[j], l, &x);
+	    else if (gfc->CPU_features.SSE)
+		sumofsqr_SSE(&gi->xr[j], l, &x);
 	    else
 #endif
 	    {
@@ -192,6 +195,8 @@ calc_xmin(
 #ifdef HAVE_NASM
 		if (gfc->CPU_features.AMD_3DNow)
 		    sumofsqr_3DN(&gi->xr[j], l, &x);
+		else if (gfc->CPU_features.SSE)
+		    sumofsqr_SSE(&gi->xr[j], l, &x);
 		else
 #endif
 		{
@@ -293,6 +298,9 @@ calc_noise(
 	    if (gfc->CPU_features.AMD_3DNow) {
 		noise = *rxmin;
 		sumofsqr_3DN(&absxr[j], l, &noise);
+	    } else if (gfc->CPU_features.SSE) {
+		noise = *rxmin;
+		sumofsqr_SSE(&absxr[j], l, &noise);
 	    } else
 #endif
 	    {
@@ -1668,8 +1676,7 @@ VBR_noise_shaping(lame_t gfc, gr_info *gi, FLOAT * xmin)
 # ifdef HAVE_NASM
 	if (gfc->CPU_features.SSE) {
 	    maxXR = xrmax_SSE(&xr34[j], width);
-	} else
-	if (gfc->CPU_features.MMX) {
+	} else if (gfc->CPU_features.MMX) {
 	    maxXR = xrmax_MMX(&xr34[j+width], &xr34[j]);
 	} else
 # endif

@@ -719,3 +719,43 @@ proc	lr2ms_SSE
 	movlps	[ecx+edx*4-8], xmm5
 .end:
 	ret
+
+;
+; void sumofsqr_SSE(const float *end, int l, float *res)
+;
+proc	sumofsqr_SSE
+	mov	ecx, [esp+4]	; end
+	xorps	xmm1, xmm1
+	mov	edx, [esp+8]	; l
+	mov	eax, [esp+12]	; res
+
+	test	ecx, 8
+	je	.evenend
+	sub	ecx, 8
+	add	edx, 2
+	movhps	xmm1, [ecx]
+.evenend:
+	test	edx, 2
+	je	.evenlen
+	movlps	xmm1, [ecx+edx*4]
+	add	edx, 2
+.evenlen:
+	mulps	xmm1, xmm1
+	test	edx, edx
+	je	.end
+.loop:
+	movaps	xmm0, [ecx+edx*4]
+	add	edx,4
+	mulps	xmm0, xmm0
+	addps	xmm1, xmm0
+	js	.loop
+.end:
+	movss	xmm2, [eax]
+	movhlps	xmm0, xmm1
+	addps	xmm1, xmm0
+	movaps	xmm0, xmm1
+	shufps	xmm0, xmm0, R4(1,1,1,1)
+	addss	xmm0, xmm1
+	mulss	xmm0, xmm2
+	movss	[eax], xmm0
+	ret
