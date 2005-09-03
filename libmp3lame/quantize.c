@@ -1662,14 +1662,17 @@ VBR_noise_shaping(lame_t gfc, gr_info *gi, FLOAT * xmin)
 	FLOAT maxXR;
 	int width = gi->wi[sfb].width;
 	j -= width;
-#ifdef HAVE_NASM
+#ifdef __x86_64__
+	maxXR = xrmax_SSE(&xr34[j], width);
+#else
+# ifdef HAVE_NASM
 	if (gfc->CPU_features.SSE) {
 	    maxXR = xrmax_SSE(&xr34[j], width);
 	} else
 	if (gfc->CPU_features.MMX) {
 	    maxXR = xrmax_MMX(&xr34[j+width], &xr34[j]);
 	} else
-#endif
+# endif
 	{
 	    int i = width;
 	    maxXR = (FLOAT)0.0;
@@ -1680,6 +1683,7 @@ VBR_noise_shaping(lame_t gfc, gr_info *gi, FLOAT * xmin)
 		    maxXR = xr34[i+j+1];
 	    } while ((i += 2) < 0);
 	}
+#endif
 	gi->scalefac[sfb] = MAX_GLOBAL_GAIN+1;
 	gfc->maxXR[sfb] = FLOAT_MAX;
 	if (maxXR > MINIMUM_XR) {
