@@ -693,19 +693,13 @@ proc	quantize_ISO_SSE2
 ; void lr2ms(float l[], float r[], int len)
 ;
 proc	lr2ms_SSE
-%assign _P 16
-	push	ebp
+%assign _P 0
 	movaps	xm3, [Q_sqrt2]
-	push	edi
-	push	esi
-	push	ebx
 	mov	eax, [esp+_P+4]		; eax = l
 	mov	ecx, [esp+_P+8]		; ecx = r
 	mov	edx, [esp+_P+12]	; edx = len
-	mov	ebx, [eax+edx*4-4]
-	mov	esi, [eax+edx*4-8]
-	mov	edi, [ecx+edx*4-4]
-	mov	ebp, [ecx+edx*4-8]
+	movlps	xmm4, [eax+edx*4-8]
+	movlps	xmm5, [ecx+edx*4-8]
 .lp:
 	movaps	xm0, [eax]
 	movaps	xm2, [ecx]
@@ -721,13 +715,7 @@ proc	lr2ms_SSE
 	sub	edx, byte 4
 	jg	.lp
 	je	.end
-	mov	[eax-12], ebx
-	mov	[eax-16], esi
-	mov	[ecx-12], edi
-	mov	[ecx-16], ebp
+	movlps	[eax+edx*4-8], xmm4
+	movlps	[ecx+edx*4-8], xmm5
 .end:
-	pop	ebx
-	pop	esi
-	pop	edi
-	pop	ebp
 	ret

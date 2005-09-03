@@ -16,12 +16,9 @@ void
 lr2ms_SSE(float *pl, float *pr, int i)
 {
     __m128 c = _mm_load_ps(Qfsqrt2);
-    int l0, l1, r0, r1;
-
-    l0 = ((int*)pl)[i-1];
-    l1 = ((int*)pl)[i-2];
-    r0 = ((int*)pr)[i-1];
-    r1 = ((int*)pr)[i-2];
+    __m128 oldval;
+    oldval = _mm_loadh_pi(oldval, pl+i-2);
+    oldval = _mm_loadl_pi(oldval, pr+i-2);
     do {
 	__m128 l, r;
 	l = _mm_load_ps(pl);
@@ -32,10 +29,8 @@ lr2ms_SSE(float *pl, float *pr, int i)
 	pr += 4;
     } while ((i -= 4) > 0);
     if (i) {
-	((int*)pl)[-3] = l0;
-	((int*)pl)[-4] = l1;
-	((int*)pr)[-3] = r0;
-	((int*)pr)[-4] = r1;
+	_mm_storeh_pi(pl-4, oldval);
+	_mm_storel_pi(pr-4, oldval);
     }
 }
 
