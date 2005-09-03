@@ -121,7 +121,7 @@
 	test	edx, edx
 	je	.end
 .loop:
-	movups	xmm0, [eax+edx*4]
+	movaps	xmm0, [ecx+edx*4]
 	add	edx, 4
 	maxps	xmm1, xmm0
 	js	.loop
@@ -135,5 +135,3 @@
 	movss	[esp+4], xmm0
 	fld	dword [esp+4]
 	ret
-
-	end
