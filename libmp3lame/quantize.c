@@ -48,6 +48,7 @@ extern void quantize_ISO_SSE2(const float *, int, int, int *);
 extern float calc_sfb_noise_fast_3DN(lame_t gfc, int j, int bw, int sf);
 extern float calc_sfb_noise_3DN(lame_t gfc, int j, int bw, int sf);
 extern float xrmax_MMX(float *start, float *end);
+extern float xrmax_SSE(float *start, int width);
 #endif
 
 #ifdef __x86_64__
@@ -1662,6 +1663,9 @@ VBR_noise_shaping(lame_t gfc, gr_info *gi, FLOAT * xmin)
 	int width = gi->wi[sfb].width;
 	j -= width;
 #ifdef HAVE_NASM
+	if (gfc->CPU_features.SSE) {
+	    maxXR = xrmax_SSE(&xr34[j], width);
+	} else
 	if (gfc->CPU_features.MMX) {
 	    maxXR = xrmax_MMX(&xr34[j+width], &xr34[j]);
 	} else

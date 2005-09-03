@@ -39,6 +39,36 @@ lr2ms_SSE(float *pl, float *pr, int i)
     }
 }
 
+float xrmax_SSE(const float *end, int l)
+{
+    __m128 m, w;
+    float res;
+
+    m = _mm_xor_ps(m, m);
+    if ((unsigned long)end & 8) {
+	end -= 2;
+	l += 2;
+	m = _mm_loadl_pi(m, end);
+    }
+    if (l & 2) {
+	m = _mm_loadh_pi(m, end + l);
+	l += 2;
+    }
+    if (!l)
+	goto exit;
+
+    do {
+	m = _mm_max_ps(m, _mm_load_ps(end+l));
+    } while ((l += 4) < 0);
+ exit:
+    w = _mm_movehl_ps(m, m);
+    m = _mm_max_ps(w, m);
+    w = _mm_shuffle_ps(m, m, _MM_SHUFFLE(1,1,1,1));
+    m = _mm_max_ss(w, m);
+    _mm_store_ss(&res, w);
+    return res;
+}
+
 void sumofsqr_SSE(const float *end, int l, float *res)
 {
     __m128 m, s;

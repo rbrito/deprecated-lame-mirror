@@ -99,4 +99,41 @@
 	fld	dword [esp+4]
 	ret
 
+;
+; int xrmax_SSE(float *end, int -len)
+;
+	proc	xrmax_SSE
+	mov	ecx, [esp+4]	;ecx = end
+	xorps	xmm1, xmm1
+	mov	edx, [esp+8]	;edx = -len
+
+	test	ecx, 8
+	je	.evenend
+	sub	ecx, 8
+	add	edx, 2
+	movhps	xmm1, [ecx]
+.evenend:
+	test	edx, 2
+	je	.evenlen
+	movlps	xmm1, [ecx+edx*4]
+	add	edx, 2
+.evenlen:
+	test	edx, edx
+	je	.end
+.loop:
+	movups	xmm0, [eax+edx*4]
+	add	edx, 4
+	maxps	xmm1, xmm0
+	js	.loop
+.end:
+	movaps	xmm0, xmm1
+	movhlps	xmm0, xmm0
+	maxps	xmm1, xmm0
+	movaps	xmm0, xmm1
+	shufps	xmm0, xmm0, R4(1,1,1,1)
+	maxss	xmm0, xmm1
+	movss	[esp+4], xmm0
+	fld	dword [esp+4]
+	ret
+
 	end
