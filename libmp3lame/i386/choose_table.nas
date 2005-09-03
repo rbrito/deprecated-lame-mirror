@@ -50,23 +50,22 @@
 	ret
 
 ;
-; int xrmax_MMX(float *ix, float *end)
+; int xrmax_MMX(float *end, int -len)
 ;
 	proc	xrmax_MMX
-	mov	ecx, [esp+4]	;ecx = begin
-	mov	edx, [esp+8]	;edx = end
+	mov	ecx, [esp+8]	;ecx = -l
+	mov	edx, [esp+4]	;edx = end
 
-	movq	mm0, [ecx]
-	sub	ecx, edx	;ecx = begin-end(should be minus)
+	movq	mm0, [edx+ecx*4]
 	pxor	mm1, mm1
-	add	ecx, byte 8
-	and	ecx, byte 0xf0
+	add	ecx, byte 2
+	and	ecx, byte 0xfffffffc
 
 	loopalign	16
 .lp:
-	movq	mm4,[edx+ecx]
-	movq	mm5,[edx+ecx+8]
-	add	ecx, byte 16
+	movq	mm4,[edx+ecx*4]
+	movq	mm5,[edx+ecx*4+8]
+	add	ecx, byte 4
 	movq	mm2,mm0
 	movq	mm3,mm1
 	pcmpgtd	mm2,mm4
