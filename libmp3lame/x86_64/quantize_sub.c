@@ -72,26 +72,23 @@ float xrmax_SSE(const float *end, int l)
 void sumofsqr_SSE(const float *end, int l, float *res)
 {
     __m128 m, s;
-
-    const float *p = end+l;
-    m = _mm_loadu_ps(p);
     s = _mm_xor_ps(s, s);
-    if (l & 2) {
-	m = _mm_unpacklo_ps(m, s);
+    if ((unsigned long)end & 8) {
+	end -= 2;
 	l += 2;
-	if (l == 0)
-	    goto exit;
-	p += 2;
-	s = _mm_mul_ps(m,m);
+	s = _mm_loadl_pi(s, end);
     }
-    do {
-	m = _mm_loadu_ps(p);
-	p += 4;
+    if (l & 2) {
+	s = _mm_loadh_pi(s, end + l);
+	l += 2;
+    }
+    s = _mm_mul_ps(s, s);
+    for (; l < 0; l += 4) {
+	m = _mm_load_ps(end + l);
 	m = _mm_mul_ps(m,m);
 	s = _mm_add_ps(s,m);
-    } while ((l += 4) < 0);
+    }
 
- exit:
     m = _mm_movehl_ps(s, s);
     s = _mm_add_ps(s, m);
     m = _mm_shuffle_ps(s, s, _MM_SHUFFLE(1,1,1,1));
