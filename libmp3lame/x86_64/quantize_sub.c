@@ -49,14 +49,11 @@ float xrmax_SSE(const float *end, int l)
 	m = _mm_loadh_pi(m, end + l);
 	l += 2;
     }
-    if (!l)
-	goto exit;
-
-    do {
+    for (; l < 0; l += 4) {
 	m = _mm_max_ps(m, _mm_load_ps(end+l));
-    } while ((l += 4) < 0);
- exit:
-    w = _mm_movehl_ps(m, m);
+    }
+
+    w = _mm_movehl_ps(w, m);
     m = _mm_max_ps(w, m);
     w = _mm_shuffle_ps(m, m, _MM_SHUFFLE(1,1,1,1));
     m = _mm_max_ss(w, m);
@@ -84,7 +81,7 @@ void sumofsqr_SSE(const float *end, int l, float *res)
 	s = _mm_add_ps(s,m);
     }
 
-    m = _mm_movehl_ps(s, s);
+    m = _mm_movehl_ps(m, s);
     s = _mm_add_ps(s, m);
     m = _mm_shuffle_ps(s, s, _MM_SHUFFLE(1,1,1,1));
     s = _mm_add_ss(s, m);
@@ -146,7 +143,7 @@ pow075_SSE(float *x, float *x34, int end, float *max)
 	x34 += 8;
     } while ((end -= 8) > 0);
 
-    zero = _mm_movehl_ps(srmax, srmax);
+    zero = _mm_movehl_ps(zero, srmax);
     srmax = _mm_max_ps(srmax, zero);
     zero = _mm_shuffle_ps(srmax, srmax, _MM_SHUFFLE(1,1,1,1));
     srmax = _mm_max_ss(srmax, zero);

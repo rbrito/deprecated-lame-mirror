@@ -126,8 +126,7 @@
 	maxps	xmm1, xmm0
 	js	.loop
 .end:
-	movaps	xmm0, xmm1
-	movhlps	xmm0, xmm0
+	movhlps	xmm0, xmm1
 	maxps	xmm1, xmm0
 	movaps	xmm0, xmm1
 	shufps	xmm0, xmm0, R4(1,1,1,1)
