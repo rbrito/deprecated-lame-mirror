@@ -605,12 +605,10 @@ best_huffman_divide(lame_t gfc, gr_info * const gi)
 	 || gi->big_values == gfc->scalefac_band.l[2])
 	&& gi->block_type == NORM_TYPE && gi->count1 != gi->big_values) {
 	for (i = gi->big_values; i < gi->count1 - 4; i += 4)
-	    if (gi->l3_enc[i] + gi->l3_enc[i+1]
-		+ gi->l3_enc[i+2] + gi->l3_enc[i+3])
+	    if (ix[i] + ix[i+1] + ix[i+2] + ix[i+3])
 		break;
 	if (i == gi->big_values)
 	    return;
-
 	if (gi->big_values == 0)
 	    gi->table_select[0] = 0;
 	if (gi->big_values <= gfc->scalefac_band.l[1])
@@ -642,6 +640,33 @@ best_huffman_divide(lame_t gfc, gr_info * const gi)
     if (gi->block_type == NORM_TYPE) {
 	recalc_divide_init(gfc, gi, r01_bits, r01_info, max_info);
 	recalc_divide_sub(gfc, gi, r01_bits, r01_info, max_info);
+
+	if (gi->table_select[2] == 0) {
+	    /* trim count1 region */
+	    for (i = gi->big_values; i < gi->count1; i += 4) {
+		if (ix[i] + ix[i+1] + ix[i+2] + ix[i+3])
+		    break;
+	    }
+	    if (i != gi->big_values) {
+		gi->big_values = i;
+		a2 = 0;
+		for (; i < gi->count1; i += 4) {
+		    int p = ((ix[i]*2 + ix[i+1])*2 + ix[i+2])*2 + ix[i+3];
+		    a2 += quadcodex2[p];
+		}
+
+		a1 = a2 >> 16;
+		a2 = a2 & 0xffff;
+		gi->table_select[3] = 0;
+		if (a1 > a2) {
+		    a1 = a2;
+		    gi->table_select[3] = 1;
+		}
+		a2 = gi->count1bits - a1;
+		gi->part2_3_length -= a2;
+		gi->count1bits = a1;
+	    }
+	}
     }
 #ifndef EXPERIMENTAL
     if ((unsigned int)(ix[gi->big_values-2] | ix[gi->big_values-1]) > 1)
