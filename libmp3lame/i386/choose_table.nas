@@ -144,10 +144,10 @@
 	movq	xmm0, [ecx]
 	add	ecx, byte 8
 	movq	xmm1, [edx-8]
-	psubusw	xmm0, xmm1
-	paddusw	xmm0, xmm1
 	and	ecx, byte 0xfffffff0
+	psubusw	xmm0, xmm1
 	and	edx, byte 0xfffffff0
+	paddusw	xmm0, xmm1
 	sub	ecx, edx	;ecx = begin-end(should be minus)
 	jz	.exit
 
@@ -156,20 +156,18 @@
 	movdqa	xmm1, [edx+ecx]
 	add	ecx, byte 16
 ; below operations should be done as dword (32bit),
-; but an MMX has no such instruction.
+; but an MMX/SSE2 has no such instruction.
 ; but! because the maximum value of IX is 8191+15,
 ; we can safely use "word(16bit)" operation.
 	psubusw	xmm0, xmm1
 	paddusw	xmm0, xmm1
 	jnz	.lp
 
-	movdqa	xmm1, xmm0
-	psrldq	xmm0, 8
+	pshufd	xmm1, xmm0, R4(2,3,2,3)
 	psubusw	xmm0, xmm1
 	paddusw	xmm0, xmm1
 .exit:
-	movdqa	xmm1, xmm0
-	psrldq	xmm0, 4
+	pshufd	xmm1, xmm0, R4(1,1,1,1)
 	psubusw	xmm0, xmm1
 	paddusw	xmm0, xmm1
 	movd	eax, xmm0
