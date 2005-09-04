@@ -757,8 +757,7 @@ if test "x$GCC" = "xyes"; then
 		# default
 		OPTIMIZATION="-O3 ${OMIT_FRAME_POINTER} -ffast-math \
 			-funroll-loops"
-		OPTIMIZATION_FULL="-fmove-all-movables -freduce-all-givs \
-				-fbranch-count-reg -fforce-addr -fforce-mem"
+		OPTIMIZATION_FULL="-fbranch-count-reg -fforce-addr -fforce-mem"
 		;;
 	esac
 
