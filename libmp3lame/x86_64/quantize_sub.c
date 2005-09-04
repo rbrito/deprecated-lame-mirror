@@ -12,8 +12,7 @@ static const int Q_ABS[4] __attribute__((aligned(16))) = {
 static float Q_ROUNDFAC[4]  __attribute__((aligned(16))) = {
     0.4054,0.4054,0.4054,0.4054};
 
-void
-lr2ms_SSE(float *pl, float *pr, int i)
+void lr2ms_SSE(float *pl, float *pr, int i)
 {
     __m128 c = _mm_load_ps(Qfsqrt2);
     __m128 oldval;
@@ -39,7 +38,7 @@ float xrmax_SSE(const float *end, int l)
     __m128 m, w;
     float res;
 
-    m = _mm_xor_ps(m, m);
+    m = _mm_setzero_ps();
     if ((unsigned long)end & 8) {
 	end -= 2;
 	l += 2;
@@ -64,7 +63,7 @@ float xrmax_SSE(const float *end, int l)
 void sumofsqr_SSE(const float *end, int l, float *res)
 {
     __m128 m, s;
-    s = _mm_xor_ps(s, s);
+    s = _mm_setzero_ps();
     if ((unsigned long)end & 8) {
 	end -= 2;
 	l += 2;
@@ -95,7 +94,7 @@ pow075_SSE(float *x, float *x34, int end, float *max)
 {
     __m128 srmax, zero;
     __m128 fm0p25 = _mm_load_ps(Qfm0p25);
-    zero = srmax = _mm_xor_ps(srmax, srmax);
+    zero = srmax = _mm_setzero_ps();
 
     do {
 	__m128 w0, w1;
@@ -180,4 +179,30 @@ void quantize_ISO_SSE2(float xrend[], int bw, int sf, int ixend[])
 	_mm_store_ps(ixend+bw-16+ 8, w2);
 	_mm_store_ps(ixend+bw-16+12, w3);
     } while (bw < 0);
+}
+
+int
+ixmax_SSE2(const int *ix, const int *end)
+{
+    __m128i m0, res;
+    res = _mm_loadl_epi64(end-2);
+    end = (int*)((unsigned long)end & ~7);
+    m0 = _mm_loadl_epi64(ix);
+    ix  = (int*)((unsigned long)(ix+2) & ~7);
+    res = _mm_srli_si128(res, 8);
+    res = _mm_adds_epu16(res, m0);
+    for (; ix < end; ix += 4) {
+	m0  = _mm_load_si128(ix);
+	m0  = _mm_subs_epu16(m0, res);
+	res = _mm_adds_epu16(res, m0);
+    }
+    m0 = _mm_srli_si128(res, 8);
+    res = _mm_subs_epu16(res, m0);
+    res = _mm_adds_epu16(res, m0);
+
+    m0 = _mm_srli_si128(res, 4);
+    res = _mm_subs_epu16(res, m0);
+    res = _mm_adds_epu16(res, m0);
+
+    return _mm_cvtsi128_si32(res);
 }
