@@ -84,8 +84,6 @@ void sumofsqr_SSE(const float *end, int l, float *res)
     s = _mm_add_ps(s, m);
     m = _mm_shuffle_ps(s, s, _MM_SHUFFLE(1,1,1,1));
     s = _mm_add_ss(s, m);
-    m = _mm_load_ss(res);
-    s = _mm_mul_ss(s, m);
     _mm_store_ss(res, s);
 }
 

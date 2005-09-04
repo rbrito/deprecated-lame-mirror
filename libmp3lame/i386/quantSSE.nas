@@ -204,9 +204,7 @@ proc	sumofsqr_3DN
 	jnz	.lp
 	pfadd	mm0, mm1
 .exit:
-	movd	mm2, [edx]
 	pfacc	mm0, mm0
-	pfmul	mm0, mm2
 	movd	[edx], mm0
 	femms
 	ret
@@ -750,12 +748,10 @@ proc	sumofsqr_SSE
 	addps	xmm1, xmm0
 	js	.loop
 .end:
-	movss	xmm2, [eax]
 	movhlps	xmm0, xmm1
 	addps	xmm1, xmm0
 	movaps	xmm0, xmm1
 	shufps	xmm0, xmm0, R4(1,1,1,1)
 	addss	xmm0, xmm1
-	mulss	xmm0, xmm2
 	movss	[eax], xmm0
 	ret

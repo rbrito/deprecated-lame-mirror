@@ -155,13 +155,13 @@ calc_xmin(
 	if (x > (FLOAT)0.0) {
 	    x = ratio->thm.l[gsfb] / x;
 #ifdef __x86_64__
-	    sumofsqr_SSE(&gi->xr[j], l, &x);
+	    sumofsqr_SSE(&gi->xr[j], l, &gfc->sfbEnergy[gsfb]);
 #else
 #ifdef HAVE_NASM
 	    if (gfc->CPU_features.AMD_3DNow)
-		sumofsqr_3DN(&gi->xr[j], l, &x);
+		sumofsqr_3DN(&gi->xr[j], l, &gfc->sfbEnergy[gsfb]);
 	    else if (gfc->CPU_features.SSE)
-		sumofsqr_SSE(&gi->xr[j], l, &x);
+		sumofsqr_SSE(&gi->xr[j], l, &gfc->sfbEnergy[gsfb]);
 	    else
 #endif
 	    {
@@ -170,10 +170,10 @@ calc_xmin(
 		    en0 += gi->xr[j+l  ] * gi->xr[j+l  ];
 		    en0 += gi->xr[j+l+1] * gi->xr[j+l+1];
 		} while ((l+=2) < 0);
-		x *= en0;
+		gfc->sfbEnergy[gsfb] = en0;
 	    }
 #endif
-	    x *= gfc->masking_lower;
+	    x *= gfc->masking_lower * gfc->sfbEnergy[gsfb];
 	    if (threshold < x)
 		threshold = x;
 	}
@@ -190,13 +190,13 @@ calc_xmin(
 	    if (x > (FLOAT)0.0) {
 		x = ratio->thm.s[sfb][b] / x;
 #ifdef __x86_64__
-		sumofsqr_SSE(&gi->xr[j], l, &x);
+		sumofsqr_SSE(&gi->xr[j], l, &gfc->sfbEnergy[gsfb+b]);
 #else
 #ifdef HAVE_NASM
 		if (gfc->CPU_features.AMD_3DNow)
-		    sumofsqr_3DN(&gi->xr[j], l, &x);
+		    sumofsqr_3DN(&gi->xr[j], l, &gfc->sfbEnergy[gsfb+b]);
 		else if (gfc->CPU_features.SSE)
-		    sumofsqr_SSE(&gi->xr[j], l, &x);
+		    sumofsqr_SSE(&gi->xr[j], l, &gfc->sfbEnergy[gsfb+b]);
 		else
 #endif
 		{
@@ -205,10 +205,9 @@ calc_xmin(
 			en0 += gi->xr[j+l  ] * gi->xr[j+l  ];
 			en0 += gi->xr[j+l+1] * gi->xr[j+l+1];
 		    } while ((l+=2) < 0);
-		    x *= en0;
 		}
 #endif
-		x *= gfc->masking_lower_short;
+		x *= gfc->sfbEnergy[gsfb+b]*gfc->masking_lower_short;
 		if (threshold < x)
 		    threshold = x;
 	    }
@@ -287,32 +286,8 @@ calc_noise(
 
     for (;sfb < gi->psymax; rxmin++, distort++, sfb++) {
 	FLOAT noise = *distort;
-	l = gi->wi[sfb].width;
-	j -= l;
 	if (noise < (FLOAT)0.0) {
-#ifdef __x86_64__
-	    noise = *rxmin;
-	    sumofsqr_SSE(&absxr[j], l, &noise);
-#else
-#ifdef HAVE_NASM
-	    if (gfc->CPU_features.AMD_3DNow) {
-		noise = *rxmin;
-		sumofsqr_3DN(&absxr[j], l, &noise);
-	    } else if (gfc->CPU_features.SSE) {
-		noise = *rxmin;
-		sumofsqr_SSE(&absxr[j], l, &noise);
-	    } else
-#endif
-	    {
-		noise = (FLOAT)0.0;
-		do {
-		    FLOAT t0 = absxr[j+l], t1 = absxr[j+l+1];
-		    noise += t0*t0 + t1*t1;
-		} while ((l += 2) < 0);
-		noise *= *rxmin;
-	    }
-#endif
-	    *distort = noise;
+	    *distort = noise = gfc->sfbEnergy[sfb] * *rxmin;
 	}
 	max_noise = Max(max_noise, noise);
     }
