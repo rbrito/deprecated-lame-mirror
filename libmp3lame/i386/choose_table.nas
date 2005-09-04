@@ -99,7 +99,7 @@
 	ret
 
 ;
-; int xrmax_SSE(float *end, int -len)
+; float xrmax_SSE(float *end, int -len)
 ;
 	proc	xrmax_SSE
 	mov	ecx, [esp+4]	;ecx = end
@@ -121,7 +121,7 @@
 	je	.end
 .loop:
 	movaps	xmm0, [ecx+edx*4]
-	add	edx, 4
+	add	edx, byte 4
 	maxps	xmm1, xmm0
 	js	.loop
 .end:
@@ -132,4 +132,45 @@
 	maxss	xmm0, xmm1
 	movss	[esp+4], xmm0
 	fld	dword [esp+4]
+	ret
+
+;
+; int ixmax_SSE2(int *ix, int *end)
+;
+	proc	ix_max_SSE2
+	mov	ecx, [esp+4]	;ecx = begin
+	mov	edx, [esp+8]	;edx = end
+
+	movq	xmm0, [ecx]
+	add	ecx, byte 8
+	movq	xmm1, [edx-8]
+	psubusw	xmm0, xmm1
+	paddusw	xmm0, xmm1
+	and	ecx, byte 0xfffffff0
+	and	edx, byte 0xfffffff0
+	sub	ecx, edx	;ecx = begin-end(should be minus)
+	jz	.exit
+
+	loopalign	16
+.lp:
+	movdqa	xmm1, [edx+ecx]
+	add	ecx, byte 16
+; below operations should be done as dword (32bit),
+; but an MMX has no such instruction.
+; but! because the maximum value of IX is 8191+15,
+; we can safely use "word(16bit)" operation.
+	psubusw	xmm0, xmm1
+	paddusw	xmm0, xmm1
+	jnz	.lp
+
+	movdqa	xmm1, xmm0
+	psrldq	xmm0, 8
+	psubusw	xmm0, xmm1
+	paddusw	xmm0, xmm1
+.exit:
+	movdqa	xmm1, xmm0
+	psrldq	xmm0, 4
+	psubusw	xmm0, xmm1
+	paddusw	xmm0, xmm1
+	movd	eax, xmm0
 	ret

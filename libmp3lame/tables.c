@@ -320,6 +320,7 @@ static const char subdv_table[23] = {
 
 #if HAVE_NASM
 extern int ix_max_MMX(const int *ix, const int *end);
+extern int ix_max_SSE2(const int *ix, const int *end);
 #endif
 static void
 huffman_init(lame_t gfc)
@@ -328,7 +329,9 @@ huffman_init(lame_t gfc)
 
 #if HAVE_NASM
     gfc->ix_max = ix_max;
-    if (gfc->CPU_features.MMX) {
+    if (gfc->CPU_features.SSE2) {
+	gfc->ix_max = ix_max_SSE2;
+    } else if (gfc->CPU_features.MMX) {
 	gfc->ix_max = ix_max_MMX;
     }
 #endif
@@ -923,11 +926,12 @@ psymodel_init(lame_t gfc)
 	    l += gfc->numlines_l[i-1];
 	if (i != gfc->npart_l-1)
 	    l += gfc->numlines_l[i+1];
-	norm[i] = 0.5/5.0;
-#if 0
-	if (i < 8)
-	    norm[i] /= 30*(9-i);
-#endif
+	norm[i] = 0.5/5.;
+//#define lowfreq 15
+#define lowfreq 0
+	if (i < lowfreq)
+	    norm[i] /= 30*(lowfreq+1-i);
+
 	gfc->rnumlines_ls[i] = 20.0/(l-1);
 	gfc->rnumlines_l[i] = 1.0 / (gfc->numlines_l[i] * 3);
 	if (gfc->ATHonly)
