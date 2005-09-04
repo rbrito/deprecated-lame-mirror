@@ -224,7 +224,7 @@
 /* Define to the version of this package. */
 #undef PACKAGE_VERSION
 
-/* Define if compiler has function prototypes */
+/* Define to 1 if the C compiler supports function prototypes. */
 #undef PROTOTYPES
 
 /* The size of a `double', as computed by sizeof. */
@@ -263,9 +263,9 @@
 /* If using the C implementation of alloca, define if you know the
    direction of stack growth for your system; otherwise it will be
    automatically deduced at run-time.
-        STACK_DIRECTION > 0 => grows toward higher addresses
-        STACK_DIRECTION < 0 => grows toward lower addresses
-        STACK_DIRECTION = 0 => direction of growth unknown */
+	STACK_DIRECTION > 0 => grows toward higher addresses
+	STACK_DIRECTION < 0 => grows toward lower addresses
+	STACK_DIRECTION = 0 => direction of growth unknown */
 #undef STACK_DIRECTION
 
 /* Define to 1 if you have the ANSI C header files. */
@@ -325,12 +325,17 @@
 /* work around a glibc bug */
 #undef __NO_MATH_INLINES
 
+/* Define like PROTOTYPES; this can be used by system headers. */
+#undef __PROTOTYPES
+
 /* Define to empty if `const' does not conform to ANSI C. */
 #undef const
 
-/* Define as `__inline' if that's what the C compiler calls it, or to nothing
-   if it is not supported. */
+/* Define to `__inline__' or `__inline' if that's what the C compiler
+   calls it, or to nothing if 'inline' is not supported under any name.  */
+#ifndef __cplusplus
 #undef inline
+#endif
 
 /* Define to `unsigned' if <sys/types.h> does not define. */
 #undef size_t
