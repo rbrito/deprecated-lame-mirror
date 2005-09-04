@@ -329,7 +329,7 @@ void fht(FLOAT *fz, int n)
 	    c2 = c1;
 	    c1 = c2 * tri[0] - s1 * tri[1];
 	    s1 = c2 * tri[1] + s1 * tri[0];
-        }
+	}
 	tri += 2;
 	kx = kx*4;
     } while (kx<n);
@@ -802,7 +802,7 @@ mask_add(FLOAT m1, FLOAT m2, FLOAT ATH)
 }
 
 static FLOAT
-pecalc_s(III_psy_ratio *mr, int sb)
+pecalc_s(lame_t gfc, III_psy_ratio *mr, int sb)
 {
     FLOAT pe_s = (FLOAT)0.0;
     int sbmax = -1;
@@ -828,11 +828,11 @@ pecalc_s(III_psy_ratio *mr, int sb)
 	for (sblock=0;sblock<3;sblock++) {
 	    FLOAT x = mr->thm.s[sb][sblock], en = fabs(mr->en.s[sb][sblock]);
 	    FLOAT f = (FLOAT)0.1 * (9 + sblock);
+	    if (en > x*gfc->masking_lower_short && sbmax < 0)
+		sbmax = sb;
 	    if (en <= x)
 		continue;
 
-	    if (sbmax < 0)
-		sbmax = sb;
 	    if (en > x*(FLOAT)1e10)
 		xx += (FLOAT)(10.0 * LOG10);
 	    else
@@ -846,7 +846,7 @@ pecalc_s(III_psy_ratio *mr, int sb)
 }
 
 static FLOAT
-pecalc_l(III_psy_ratio *mr, int sb)
+pecalc_l(lame_t gfc, III_psy_ratio *mr, int sb)
 {
     FLOAT pe_l = (FLOAT)20.0;
     int sbmax = -1;
@@ -877,10 +877,10 @@ pecalc_l(III_psy_ratio *mr, int sb)
     };
     while (--sb >= 0) {
 	FLOAT x = mr->thm.l[sb], en = fabs(mr->en.l[sb]);
+	if (en > x*gfc->masking_lower && sbmax < 0)
+	    sbmax = sb;
 	if (en <= x)
 	    continue;
-	if (sbmax < 0)
-	    sbmax = sb;
 
 	if (en > x*(FLOAT)1e10)
 	    pe_l += regcoef_l[sb] * (FLOAT)(10.0 * LOG10);
@@ -1061,6 +1061,7 @@ partially_convert_l2s(lame_t gfc, III_psy_ratio *mr, FLOAT *nb_1,
     for (sfb = 0; sfb < SBMAX_s; sfb++) {
 	FLOAT x = (mr->en.s[sfb][0] + mr->en.s[sfb][1] + mr->en.s[sfb][2])
 	    * (FLOAT)(1.0/4.0);
+
 	if (x > mr->en.s[sfb][0]
 	    || x > mr->en.s[sfb][1]
 	    || x > mr->en.s[sfb][2])
@@ -1403,11 +1404,11 @@ psycho_analysis(
 	    III_psy_ratio *mr = &gfc->masking_next[gr][ch];
 	    FLOAT pe;
 	    if (gfc->blocktype_next[gr][ch]) {
-		int sb = pecalc_s(mr, gfc->max_sfb_s_next[ch][gr]);
+		int sb = pecalc_s(gfc, mr, gfc->max_sfb_s_next[ch][gr]);
 		if (gfc->lowpass1 >= (FLOAT)1.0)
 		    gfc->max_sfb_s_next[ch][gr] = sb;
 	    } else {
-		int sb = pecalc_l(mr, gfc->max_sfb_l_next[ch][gr]);
+		int sb = pecalc_l(gfc, mr, gfc->max_sfb_l_next[ch][gr]);
 		if (gfc->lowpass1 >= (FLOAT)1.0)
 		    gfc->max_sfb_l_next[ch][gr] = sb;
 	    }
