@@ -18,14 +18,14 @@ dnl FRONTEND_CFLAGS
 dnl FRONTEND_LDADD
 
 AC_PREREQ(2.53)
-AC_INIT
+AC_INIT(lame,3.97,lame-dev@lists.sf.net)
 AC_CONFIG_SRCDIR([libmp3lame/lame.c])
 
 dnl check system
 AC_CANONICAL_HOST
 
 dnl automake
-AM_INIT_AUTOMAKE(lame,3.97)
+AM_INIT_AUTOMAKE
 AM_CONFIG_HEADER(config.h)
 AM_MAINTAINER_MODE
 AM_MAKE_INCLUDE
@@ -42,6 +42,7 @@ esac
 dnl libtool
 # AC_DISABLE_SHARED
 AC_PROG_LIBTOOL
+AC_SUBST(LIBTOOL_DEPS)
 CFLAGS="${ac_save_CFLAGS}"
 
 # increase this when the shared lib becomes totally incompatible
@@ -688,7 +689,7 @@ esac
 AM_CONDITIONAL(HAVE_NASM, test "${NASM}" != "no")
 
 case $host_os in
-	*cygwin* | *mingw32*)
+	*cygwin*|*mingw32*)
 		CYGWIN=yes
 		NASM_FORMAT="-f win32 -DWIN32"
 		;;
