@@ -715,8 +715,8 @@ proc	lr2ms_SSE
 	sub	edx, byte 4
 	jg	.lp
 	je	.end
-	movlps	[eax+edx*4-8], xmm4
-	movlps	[ecx+edx*4-8], xmm5
+	movlps	[eax-8], xmm4
+	movlps	[ecx-8], xmm5
 .end:
 	ret
 
@@ -745,7 +745,7 @@ proc	sumofsqr_SSE
 	je	.end
 .loop:
 	movaps	xmm0, [ecx+edx*4]
-	add	edx,4
+	add	edx, byte 4
 	mulps	xmm0, xmm0
 	addps	xmm1, xmm0
 	js	.loop
