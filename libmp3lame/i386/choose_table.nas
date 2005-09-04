@@ -103,21 +103,17 @@
 ;
 	proc	xrmax_SSE
 	mov	ecx, [esp+4]	;ecx = end
-	xorps	xmm1, xmm1
 	mov	edx, [esp+8]	;edx = -len
+	movhps	xmm1, [ecx-8]
+	movlps	xmm1, [ecx+edx*4]
 
 	test	ecx, 8
 	je	.evenend
 	sub	ecx, 8
 	add	edx, 2
-	movhps	xmm1, [ecx]
 .evenend:
-	test	edx, 2
-	je	.evenlen
-	movlps	xmm1, [ecx+edx*4]
-	add	edx, 2
-.evenlen:
-	test	edx, edx
+	add	edx, byte 2
+	and	edx, byte -4
 	je	.end
 .loop:
 	movaps	xmm0, [ecx+edx*4]
