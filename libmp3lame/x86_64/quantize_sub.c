@@ -28,8 +28,8 @@ void lr2ms_SSE(float *pl, float *pr, int i)
 	pr += 4;
     } while ((i -= 4) > 0);
     if (i) {
-	_mm_storeh_pi(pl-4, oldval);
-	_mm_storel_pi(pr-4, oldval);
+	_mm_storeh_pi(pl-2, oldval);
+	_mm_storel_pi(pr-2, oldval);
     }
 }
 
