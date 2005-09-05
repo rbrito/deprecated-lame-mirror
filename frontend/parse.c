@@ -367,7 +367,8 @@ int  short_help ( const lame_global_flags* gfp, FILE* const fp, const char* Prog
               "    -h              higher quality, but a little slower.  Recommended.\n"
               "    -f              fast mode (lower quality)\n"
               "    -V n            quality setting for VBR.  default n=%i\n"
-              "\n", lame_get_VBR_q(gfp) );
+              "                    0=high quality,bigger files. 9=smaller files\n"
+              , lame_get_VBR_q(gfp) );
     fprintf ( fp, 
               "    --preset type   type must be \"medium\", \"standard\", \"extreme\", \"insane\",\n"
               "                    or a value for an average desired bitrate and depending\n"                       
