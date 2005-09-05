@@ -21,25 +21,50 @@ Starting with LAME 3.0: <br>
 <br>
 black = usability, portability, other 
 <hr>
-<h3>LAME 3.97 alpha (CVS)</h3>
+<h3>LAME 3.97 beta &nbsp; &nbsp;September 12 2005</h3>
 <ul>
+  <li>Takehiro Tominaga: 
+    <ul>
+      <li>Fixed display when using --silent</li>
+    </ul>
+  </li>
+  <li>Vitaly Ivanov: 
+    <ul>
+      <li>Updated DirectShow interface</li>
+    </ul>
+  </li>
   <li>Robert Hegemann: 
     <ul>
       <li><font color="#ff0000">Fixed and out of array access</font></li>
       <li><font color="#ff0000">Fixed some small rounding problem in vbr-new quantization routines</font></li>
+      <li><font color="#ff0000">Fixed a bug in vbr-new regarding high frequencies (sfb21) when using -Y</font></li>
+      <li><font color="#ff0000">Fixed a few bugs in vbr-new when using -Y</font></li>
       <li><font color="#ff0000">Updated scalefactors allocation scheme in vbr-new</font></li>
       <li>Fixed mingw32 configure problems</li>
       <li>Resolved some compiler warnings</li>
+      <li>Updated command-line visualisation</li>
     </ul>
   </li>
   <li>Gabriel Bouvigne: 
     <ul>
       <li>Changed some FLOAT8 to FLOAT</li>
+      <li>Added project files for VC7</li>
       <li><font color="#ff0000">Reworked -q1 and -q0</font></li>
       <li><font color="#ff0000">Updated presets</font></li>
       <li><font color="#ff0000">Fixed an error in ISO quantization on systems not using the IEEE754 hack</font></li>
       <li><font color="#3366ff">Faster quantization</font></li>
       <li><font color="#3366ff">SSE version of init_xrpow</font></li>
+    </ul>
+  </li>
+  <li>Rogério Brito: 
+    <ul>
+      <li>Updated Debian packaging</li>
+      <li>Documentation work</li>
+    </ul>
+  </li>
+  <li>Chris Miller: 
+    <ul>
+      <li>Support for x64 platform SDK in makefile.msvc</li>
     </ul>
   </li>
 </ul>
