@@ -1404,13 +1404,11 @@ psycho_analysis(
 	    III_psy_ratio *mr = &gfc->masking_next[gr][ch];
 	    FLOAT pe;
 	    if (gfc->blocktype_next[gr][ch]) {
-		int sb = pecalc_s(gfc, mr, gfc->max_sfb_s_next[ch][gr]);
-		if (gfc->lowpass1 >= (FLOAT)1.0)
-		    gfc->max_sfb_s_next[ch][gr] = sb;
+		gfc->max_sfb_s_next[ch][gr]
+		    = pecalc_s(gfc, mr, gfc->max_sfb_s_next[ch][gr]);
 	    } else {
-		int sb = pecalc_l(gfc, mr, gfc->max_sfb_l_next[ch][gr]);
-		if (gfc->lowpass1 >= (FLOAT)1.0)
-		    gfc->max_sfb_l_next[ch][gr] = sb;
+		gfc->max_sfb_l_next[ch][gr]
+		    = pecalc_l(gfc, mr, gfc->max_sfb_l_next[ch][gr]);
 	    }
 	    pe = mr->pe;
 	    if (pe > (FLOAT)500.0)
