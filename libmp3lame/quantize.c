@@ -46,7 +46,7 @@ extern void calc_noise_sub_3DN(const float *, const int *, int, int, float *);
 extern void quantize_ISO_3DN(const float *, int, int, int *, int);
 extern void quantize_ISO_SSE(const float *, int, int, int *);
 extern void quantize_ISO_SSE2(const float *, int, int, int *);
-extern float calc_sfb_noise_fast_3DN(lame_t gfc, int j, int bw, int sf);
+extern float calc_sfb_noise_fast_3DN(lame_t gfc, int j, int bw, int sf, float xfsf);
 extern float calc_sfb_noise_3DN(lame_t gfc, int j, int bw, int sf);
 extern float xrmax_MMX(float *start, int width);
 extern float xrmax_SSE(float *start, int width);
@@ -896,9 +896,8 @@ amp_scalefac_bands(lame_t gfc, gr_info *const gi, FLOAT *distort,
 
 
 inline static FLOAT
-calc_sfb_noise_fast(lame_t gfc, int j, int bw, int sf)
+calc_sfb_noise_fast(lame_t gfc, int j, int bw, int sf, FLOAT xfsf)
 {
-    FLOAT xfsf = (FLOAT)0.0;
     FLOAT sfpow = POW20(sf);  /*pow(2.0,sf/4.0); */
     FLOAT sfpow34 = IPOW20(sf); /*pow(sfpow,-3.0/4.0); */
 
@@ -923,7 +922,7 @@ calc_sfb_noise_fast(lame_t gfc, int j, int bw, int sf)
 	t1 = absxr[j+bw+1] - pow43[i1] * sfpow;
 #endif
 	xfsf += t0*t0 + t1*t1;
-    } while ((bw += 2) < 0);
+    } while ((bw += 2) < 0 && xfsf <= (FLOAT)0.0);
     return xfsf;
 }
 
@@ -1355,12 +1354,12 @@ find_scalefac(lame_t gfc, int j, FLOAT xmin, int bw, FLOAT maxXR,
 	    goto illegal_sf;
 #ifdef HAVE_NASM
 	if (gfc->CPU_features.AMD_3DNow)
-	    xfsf = calc_sfb_noise_fast_3DN(gfc, j, bw, sf);
+	    xfsf = calc_sfb_noise_fast_3DN(gfc, j, bw, sf, -xmin);
 	else
 #endif
-	    xfsf = calc_sfb_noise_fast(gfc, j, bw, sf);
+	    xfsf = calc_sfb_noise_fast(gfc, j, bw, sf, -xmin);
 
-	if (xfsf > xmin) {
+	if (xfsf > 0.0) {
 	    /* there's noticible noise. try a smaller scalefactor */
 	    endflag |= 1;
 	    if (endflag == 3)
@@ -1371,7 +1370,7 @@ find_scalefac(lame_t gfc, int j, FLOAT xmin, int bw, FLOAT maxXR,
 		endflag = 3;
 	    }
 	} else {
-	    assert(xfsf >= (FLOAT)0.0);
+//	    assert(xfsf >= (FLOAT)0.0);
 	    if (sf >= MAX_GLOBAL_GAIN+1) {
 		return MAX_GLOBAL_GAIN+1;
 	    }

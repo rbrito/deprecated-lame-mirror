@@ -280,7 +280,7 @@ proc	calc_noise_sub_3DN
 	ret
 
 ;
-; FLOAT calc_sfb_noise_fast(FLOAT xr[576*2], int end, int bw, int sf)
+; FLOAT calc_sfb_noise_fast(FLOAT xr[576*2], int end, int bw, int sf, float xfsf)
 ;
 proc	calc_sfb_noise_fast_3DN
 %assign _P 12
@@ -297,7 +297,7 @@ proc	calc_sfb_noise_fast_3DN
 	movq		mm2, [D_ROUNDFAC]
 	mov		edx, [esp+_P+12] ; -n
 
-	pxor		mm4, mm4
+	movd		mm4, [esp+_P+20] ; xfsf
 	pxor		mm1, mm1
 	punpckldq	mm6, mm6
 	punpckldq	mm7, mm7
