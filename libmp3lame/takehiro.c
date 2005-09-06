@@ -641,7 +641,7 @@ best_huffman_divide(lame_t gfc, gr_info * const gi)
 	recalc_divide_init(gfc, gi, r01_bits, r01_info, max_info);
 	recalc_divide_sub(gfc, gi, r01_bits, r01_info, max_info);
 
-	if (gi->table_select[2] == 0) {
+	if (gi->table_select[2] == 0 && gi->big_values > gfc->scalefac_band.l[2]) {
 	    /* trim count1 region */
 	    for (i = gi->big_values; i < gi->count1; i += 4) {
 		if (ix[i] + ix[i+1] + ix[i+2] + ix[i+3])
