@@ -600,14 +600,16 @@ best_huffman_divide(lame_t gfc, gr_info * const gi)
     int r01_info[SBMAX_l];
     short max_info[SBMAX_l];
 
-    if ((gi->big_values == 0
-	 || gi->big_values == gfc->scalefac_band.l[1]
-	 || gi->big_values == gfc->scalefac_band.l[2])
-	&& gi->block_type == NORM_TYPE && gi->count1 != gi->big_values) {
-	for (i = gi->big_values; i < gi->count1 - 4; i += 4)
+    i = gi->big_values;
+    if ((i & 2) && ix[i-1] + ix[i-2] == 0)
+	i -= 2;
+    if ((i == 0
+	 || i == gfc->scalefac_band.l[1] || i == gfc->scalefac_band.l[2])
+	&& gi->block_type == NORM_TYPE) {
+	for (; i < gi->count1 - 4; i += 4)
 	    if (ix[i] + ix[i+1] + ix[i+2] + ix[i+3])
 		break;
-	if (i == gi->big_values)
+	if (i <= gi->big_values)
 	    return;
 	if (gi->big_values == 0)
 	    gi->table_select[0] = 0;
