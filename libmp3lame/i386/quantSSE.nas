@@ -19,7 +19,8 @@ Q_fm0p25	dd	-0.25, -0.25, -0.25, -0.25
 Q_ABS		dd	0x7FFFFFFF, 0x7FFFFFFF, 0x7FFFFFFF, 0x7FFFFFFF
 Q_sqrt2		dd	1060439283,1060439283,1060439283,1060439283
 
-D_ROUNDFAC	dd	0.4054,0.4054
+Q_ROUNDFAC	dd	0.4054,0.4054,0.4054,0.4054
+Q_1ROUNDFAC	dd	0.5946,0.5946
 D_1ROUNDFAC	dd	0.5946,0.5946
 D_IXMAXVAL	dd	8206.0,8206.0
 ROUNDFAC_NEAR	dd	-0.0946
@@ -294,7 +295,7 @@ proc	calc_sfb_noise_fast_3DN
 	mov		edx, [esp+_P+16] ; scalefact
 	movd		mm6, [ipow20+116*4+edx*4] ; sfpow34
 	movd		mm7, [pow20+116*4+edx*4]  ; sfpow
-	movq		mm2, [D_ROUNDFAC]
+	movq		mm2, [Q_ROUNDFAC]
 	mov		edx, [esp+_P+12] ; -n
 
 	movd		mm4, [esp+_P+20] ; xfsf
@@ -549,7 +550,7 @@ proc	quantize_ISO_3DN
 	mov		eax, [esp+_P+4]  ; xend[]
 	mov		ecx, [esp+_P+16] ; l3_enc[]
 	mov		edx, [esp+_P+12] ; scalefact
-	movq		mm5, [D_ROUNDFAC]
+	movq		mm5, [Q_ROUNDFAC]
 	movd		mm4, [ipow20+116*4+edx*4] ; sfpow34
 	mov		edx, [esp+_P+8]	; -n
 	test		edx, edx
@@ -658,10 +659,9 @@ proc	quantize_ISO_SSE2
 	movss		xm0, [ipow20+116*4+edx*4] ; sfpow34
 	mov		eax, [esp+_P+4]			;xrend
 	mov		edx, [esp+_P+16]		;ixend
-	movss		xm1, [D_ROUNDFAC]
+	movaps		xm1, [Q_ROUNDFAC]		;xm1 = [0.4054]
 	mov		ecx, [esp+_P+8]		; bw
 	shufps		xm0, xm0, 0			;xm0 = [istep]
-	shufps		xm1, xm1, 0			;xm1 = [0.4054]
 .lp:
 	movaps		xm2, [eax+4* 0 + ecx*4]
 	movaps		xm3, [eax+4* 4 + ecx*4]
@@ -755,3 +755,151 @@ proc	sumofsqr_SSE
 	addss	xmm0, xmm1
 	movss	[eax], xmm0
 	ret
+
+
+%if 0
+;
+; FLOAT calc_sfb_noise_fast(FLOAT xr[576*2], int end, int bw, int sf)
+;
+proc	calc_sfb_noise_fast_SSE2
+%assign _P 16
+	push		ebx
+	push		edi
+	push		ebp
+	push		esi
+
+	mov		eax, [esp+_P+4]  ; xr
+	mov		edx, [esp+_P+8]  ; end
+	lea		eax, [eax+edx*4] ; &xr[end]
+	mov		edx, [esp+_P+16] ; scalefact
+	movss		xmm6, [ipow20+116*4+edx*4] ; sfpow34
+	movss		xmm7, [pow20+116*4+edx*4]  ; sfpow
+	shufps		xmm6, xmm6, 0
+	shufps		xmm7, xmm7, 0
+	mov		edx, [esp+_P+12] ; -len
+
+	lea		esi, [pow43]
+	xorps		xmm4, xmm4
+	xorps		xmm0, xmm0	; noise sum
+
+	test		eax, 8
+	jz		.evenstart
+
+	sub		eax, byte 8
+	movlps		xmm4, [eax]		; xr34
+	movlps		xmm0, [eax + 0 + 576*4]	; absxr
+.evenstart:
+	test		edx, 2
+	jz		.lp4start
+	movhps		xmm4, [eax + edx*4]		; xr34
+	movhps		xmm0, [eax + edx*4 + 576*4]	; absxr
+	add		edx, 2
+.lp4start:
+	test		edx, edx
+
+	mulps		xmm4, xmm6	; xr34 * sfpow34
+	addps		xmm4, [Q_ROUNDFAC]
+	cvttps2dq	xmm4, xmm4	; (int)xr34 * sfpow34 + ROUNDFAC
+	movaps		[eax-16+576*4*3], xmm4
+	mov		ebp, [eax-16+576*4*3]	; ix[0]
+	mov		edi, [eax-12+576*4*3]	; ix[1]
+	mov		ebx, [eax- 8+576*4*3]	; ix[2]
+	mov		ecx, [eax- 4+576*4*3]	; ix[3]
+	movss		xmm1, [esi + ebp*4]	; pow43[ix[0]
+	movss		xmm2, [esi + edi*4]	; pow43[ix[1]
+	movss		xmm3, [esi + ebx*4]	; pow43[ix[2]
+	movss		xmm4, [esi + ecx*4]	; pow43[ix[3]
+	unpcklps	xmm1, xmm2	; -- -- pow43[ix[1]] pow43[ix[0]]
+	unpcklps	xmm3, xmm4	; -- -- pow43[ix[3]] pow43[ix[2]]
+	movlhps		xmm1, xmm3
+	mulps		xmm1, xmm7
+
+	subps		xmm0, xmm1
+	mulps		xmm0, xmm0
+	jz	near	.exit2
+
+	movaps		xmm5, [Q_ROUNDFAC]
+	xorps		xmm1, xmm1
+	test		edx, 4
+	jz		.lp8
+	movaps		xmm4, [eax + edx*4]
+	add		edx, byte 4
+	mulps		xmm4, xmm6	; xr34 * sfpow34
+	addps		xmm4, xmm5
+	cvttps2dq	xmm4, xmm4	; (int)xr34 * sfpow34 + ROUNDFAC
+	movaps		[eax-16+576*4*3], xmm4
+	mov		ebp, [eax-16+576*4*3]	; ix[0]
+	mov		edi, [eax-12+576*4*3]	; ix[1]
+	mov		ebx, [eax- 8+576*4*3]	; ix[2]
+	mov		ecx, [eax- 4+576*4*3]	; ix[3]
+	movss		xmm1, [esi + ebp*4]	; pow43[ix[0]
+	movss		xmm2, [esi + edi*4]	; pow43[ix[1]
+	movss		xmm3, [esi + ebx*4]	; pow43[ix[2]
+	movss		xmm4, [esi + ecx*4]	; pow43[ix[3]
+	unpcklps	xmm1, xmm2	; -- -- pow43[ix[1]] pow43[ix[0]]
+	unpcklps	xmm3, xmm4	; -- -- pow43[ix[3]] pow43[ix[2]]
+	movlhps		xmm1, xmm3
+	mulps		xmm1, xmm7
+
+	subps		xmm1, [eax + edx*4 + 576*4 - 16]
+	mulps		xmm1, xmm1
+	jz	near	.exit
+.lp8:
+	addps		xmm0, xmm1
+	movaps		xmm4, [eax + edx*4]
+	movaps		xmm3, [eax + edx*4 + 16]
+	add		edx, byte 8
+	mulps		xmm4, xmm6	; xr34 * sfpow34
+	mulps		xmm3, xmm6	; xr34 * sfpow34
+	addps		xmm4, xmm5
+	addps		xmm3, xmm5
+	cvttps2dq	xmm4, xmm4	; (int)xr34 * sfpow34 + ROUNDFAC
+	cvttps2dq	xmm3, xmm3	; (int)xr34 * sfpow34 + ROUNDFAC
+	pextrw		ebp, xmm4, 0		; ix[0]
+	pextrw		ecx, xmm3, 0		; ix[0]
+	pextrw		edi, xmm4, 2		; ix[1]
+	pextrw		ebx, xmm3, 2		; ix[1]
+	movss		xmm2, [esi+ ebp*4]	; pow43[ix[0]
+	movss		xmm1, [esi+ ecx*4]	; pow43[ix[0]
+	pinsrw		xmm2, [esi+ edi*4  ], 2	; pow43[ix[1]
+	pinsrw		xmm1, [esi+ ebx*4  ], 2	; pow43[ix[1]
+	pinsrw		xmm2, [esi+ edi*4+2], 3	; pow43[ix[1]
+	pinsrw		xmm1, [esi+ ebx*4+2], 3	; pow43[ix[1]
+
+	pextrw		ebx, xmm4, 4		; ix[2]
+	pextrw		edi, xmm3, 4		; ix[2]
+	pextrw		ecx, xmm4, 6		; ix[3]
+	pextrw		ebp, xmm3, 6		; ix[3]
+	movhps		xmm2, [esi+ ebx*4  ]	; pow43[ix[2]
+	movhps		xmm1, [esi+ edi*4  ]	; pow43[ix[2]
+	pinsrw		xmm2, [esi+ ecx*4  ], 6	; pow43[ix[3]
+	pinsrw		xmm1, [esi+ ebp*4  ], 6	; pow43[ix[3]
+	pinsrw		xmm2, [esi+ ecx*4+2], 7	; pow43[ix[3]
+	pinsrw		xmm1, [esi+ ebp*4+2], 7	; pow43[ix[3]
+
+	mulps		xmm2, xmm7
+	mulps		xmm1, xmm7
+
+	subps		xmm2, [eax + edx*4 + 576*4 +  0 - 32]
+	subps		xmm1, [eax + edx*4 + 576*4 + 16 - 32]
+	mulps		xmm2, xmm2
+	mulps		xmm1, xmm1
+	addps		xmm0, xmm2
+	jnz		.lp8
+
+.exit:
+	addps		xmm0, xmm1
+.exit2:
+	movhlps		xmm1, xmm0
+	addps		xmm1, xmm0
+	pshufd		xmm0, xmm1, R4(1,1,1,1)
+	addss		xmm0, xmm1
+
+	pop		esi
+	pop		ebp
+	pop		edi
+	pop		ebx
+	movss		[esp+4], xmm0
+	fld		dword [esp+4]
+	ret
+%endif
