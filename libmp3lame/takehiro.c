@@ -623,7 +623,7 @@ best_huffman_divide(lame_t gfc, gr_info * const gi)
 	    int p = ((ix[i] * 2 + ix[i+1]) * 2 + ix[i+2]) * 2 + ix[i+3];
 	    a2 += quadcodex2[p];
 	}
-
+	gi->count1 = i;
 	a1 = a2 >> 16;
 	a2 = a2 & 0xffff;
 	if (a1 > a2) {
