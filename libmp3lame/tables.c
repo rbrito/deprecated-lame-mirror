@@ -293,29 +293,29 @@ compute_ath(lame_t gfc)
 /*  initialization for iteration_loop */
 /************************************************************************/
 static const char subdv_table[23] = {
-    0 + 0*16, /* 0 bands */
-    0 + 0*16, /* 1 bands */
-    0 + 0*16, /* 2 bands */
-    0 + 0*16, /* 3 bands */
-    0 + 0*16, /* 4 bands */
-    0 + 1*16, /* 5 bands */
-    1 + 1*16, /* 6 bands */
-    1 + 1*16, /* 7 bands */
-    1 + 2*16, /* 8 bands */
-    2 + 2*16, /* 9 bands */
-    2 + 3*16, /* 10 bands */
-    2 + 3*16, /* 11 bands */
-    3 + 4*16, /* 12 bands */
-    3 + 4*16, /* 13 bands */
-    3 + 4*16, /* 14 bands */
-    4 + 5*16, /* 15 bands */
-    4 + 5*16, /* 16 bands */
-    4 + 6*16, /* 17 bands */
-    5 + 6*16, /* 18 bands */
-    5 + 6*16, /* 19 bands */
-    5 + 7*16, /* 20 bands */
-    6 + 7*16, /* 21 bands */
-    6 + 7*16, /* 22 bands */
+    0 + 0*16, /*  0 => 1+1+1 */
+    0 + 0*16, /*  1 => 1+1+1 */
+    0 + 0*16, /*  2 => 1+1+1 */
+    0 + 0*16, /*  3 => 1+1+1 */
+    0 + 0*16, /*  4 => 1+1+2 */
+    0 + 1*16, /*  5 => 1+2+2 */
+    1 + 1*16, /*  6 => 2+2+2 */
+    1 + 1*16, /*  7 => 2+2+3 */
+    1 + 2*16, /*  8 => 2+3+3 */
+    2 + 2*16, /*  9 => 3+3+3 */
+    2 + 3*16, /* 10 => 3+4+3 */
+    2 + 3*16, /* 11 => 3+4+4 */
+    3 + 4*16, /* 12 => 4+5+3 */
+    3 + 4*16, /* 13 => 4+5+4 */
+    3 + 4*16, /* 14 => 4+5+4 */
+    4 + 5*16, /* 15 => 5+6+4 */
+    4 + 5*16, /* 16 => 5+6+5 */
+    4 + 6*16, /* 17 => 5+7+5 */
+    5 + 6*16, /* 18 => 6+7+5 */
+    5 + 6*16, /* 19 => 6+7+6 */
+    5 + 7*16, /* 20 => 6+8+6 */
+    6 + 7*16, /* 21 => 6+8+7 */
+    6 + 7*16, /* 22 => 6+8+8 */
 };
 
 #if HAVE_NASM
@@ -344,29 +344,30 @@ huffman_init(lame_t gfc)
 	int scfb_anz = 0, j, k;
 	while (gfc->scalefac_band.l[++scfb_anz] < i)
 	    ;
-
-	j = subdv_table[scfb_anz] & 0xf;
-	while (gfc->scalefac_band.l[j + 1] > i)
-	    j--;
-
-	if (j < 0) {
+	
+	k = subdv_table[scfb_anz] & 0xf;
+	while (gfc->scalefac_band.l[k + 1] > i)
+	    k--;
+	
+	if (k < 0) {
 	    /* this is an indication that everything is going to
 	       be encoded as region0:  bigvalues < region0 < region1
 	       so lets set region0, region1 to some value larger
 	       than bigvalues */
-	    j = subdv_table[scfb_anz] & 0xf;
+	    k = subdv_table[scfb_anz] & 0xf;
 	}
-
-	gfc->bv_scf[i-2] = k = j;
-
+	
 	j = subdv_table[scfb_anz] >> 4;
 	while (gfc->scalefac_band.l[j + k + 2] > i)
 	    j--;
-
+	
 	if (j < 0)
 	    j = subdv_table[scfb_anz] >> 4;
-
-	gfc->bv_scf[i-1] = j;
+	
+	gfc->bv_scf[i-1] = (k << 4) + j;
+	if (k < 15) k++;
+	if (j < 7) j++;
+	gfc->bv_scf[i-2] = (k << 4) + j;
     }
 }
 

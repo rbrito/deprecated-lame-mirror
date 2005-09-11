@@ -400,7 +400,7 @@ struct lame_internal_flags {
     short CurrentStep[MAX_CHANNELS];
     scalefac_struct scalefac_band;
 
-    char bv_scf[576];
+    unsigned char bv_scf[576];
     char pseudohalf[SFBMAX];
 
     /* default cutoff(the max sfb where we should do noise-shaping) */

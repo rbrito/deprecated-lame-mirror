@@ -603,9 +603,9 @@ best_huffman_divide(lame_t gfc, gr_info * const gi)
     i = gi->big_values;
     if ((i & 2) && ix[i-1] + ix[i-2] == 0)
 	i -= 2;
-    if ((i == 0
-	 || i == gfc->scalefac_band.l[1] || i == gfc->scalefac_band.l[2])
-	&& gi->block_type == NORM_TYPE) {
+    if (gi->block_type == NORM_TYPE
+	&& (i == 0
+	    || i == gfc->scalefac_band.l[1] || i == gfc->scalefac_band.l[2])) {
 	for (; i < gi->count1 - 4; i += 4)
 	    if (ix[i] + ix[i+1] + ix[i+2] + ix[i+3])
 		break;
@@ -636,7 +636,7 @@ best_huffman_divide(lame_t gfc, gr_info * const gi)
 	return;
     }
 
-    if (gi->big_values == 0)
+    if (i == 0)
 	return;
 
     if (gi->block_type == NORM_TYPE) {
@@ -769,8 +769,13 @@ noquant_count_bits(lame_t gfc, gr_info * const gi)
 
     if (gi->block_type == NORM_TYPE) {
 	assert(i <= 576); /* bv_scf has 576 entries (0..575) */
-	a1 = gi->region0_count = gfc->bv_scf[i-2];
-	a2 = gi->region1_count = gfc->bv_scf[i-1];
+	if (gi->big_values * 2 < gi->count1) {
+	    a1 = gi->region0_count = (gfc->bv_scf[i-1]) >> 4;
+	    a2 = gi->region1_count =  gfc->bv_scf[i-1] & 0xf;
+	} else {
+	    a1 = gi->region0_count = (gfc->bv_scf[i-2]) >> 4;
+	    a2 = gi->region1_count =  gfc->bv_scf[i-2] & 0xf;
+	}
 
 	assert(a1+a2+2 < SBPSY_l);
         a2 = gfc->scalefac_band.l[a1 + a2 + 2];
