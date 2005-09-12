@@ -769,13 +769,13 @@ noquant_count_bits(lame_t gfc, gr_info * const gi)
 
     if (gi->block_type == NORM_TYPE) {
 	assert(i <= 576); /* bv_scf has 576 entries (0..575) */
-	if (gi->big_values * 2 < gi->count1) {
-	    a1 = gi->region0_count = (gfc->bv_scf[i-1]) >> 4;
-	    a2 = gi->region1_count =  gfc->bv_scf[i-1] & 0xf;
+	if (i * 2 < gi->count1) {
+	    a1 = gfc->bv_scf[i-1];
 	} else {
-	    a1 = gi->region0_count = (gfc->bv_scf[i-2]) >> 4;
-	    a2 = gi->region1_count =  gfc->bv_scf[i-2] & 0xf;
+	    a1 = gfc->bv_scf[i-2];
 	}
+	a2 = gi->region1_count = a1 & 0xf;
+	a1 = gi->region0_count = a1 >> 4;
 
 	assert(a1+a2+2 < SBPSY_l);
         a2 = gfc->scalefac_band.l[a1 + a2 + 2];
