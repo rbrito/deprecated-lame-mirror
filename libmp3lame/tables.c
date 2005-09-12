@@ -363,10 +363,11 @@ huffman_init(lame_t gfc)
 	
 	if (j < 0)
 	    j = subdv_table[scfb_anz] >> 4;
-	
 	gfc->bv_scf[i-1] = (k << 4) + j;
-	if (k < 15) k++;
-	if (j < 7) j++;
+	if (gfc->scalefac_band.l[k+j+2+2] < i) {
+	    if (k < 15) k++;
+	    if (j < 7) j++;
+	}
 	gfc->bv_scf[i-2] = (k << 4) + j;
     }
 }
