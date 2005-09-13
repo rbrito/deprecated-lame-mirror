@@ -344,26 +344,16 @@ huffman_init(lame_t gfc)
 	int scfb_anz = 0, j, k;
 	while (gfc->scalefac_band.l[++scfb_anz] < i)
 	    ;
-	
+
 	k = subdv_table[scfb_anz] & 0xf;
-	while (gfc->scalefac_band.l[k + 1] > i)
+	while (gfc->scalefac_band.l[k + 1] > i && k > 0)
 	    k--;
-	
-	if (k < 0) {
-	    /* this is an indication that everything is going to
-	       be encoded as region0:  bigvalues < region0 < region1
-	       so lets set region0, region1 to some value larger
-	       than bigvalues */
-	    k = subdv_table[scfb_anz] & 0xf;
-	}
-	
+
 	j = subdv_table[scfb_anz] >> 4;
-	while (gfc->scalefac_band.l[j + k + 2] > i)
+	while (gfc->scalefac_band.l[j + k + 2] > i && j > 0)
 	    j--;
-	
-	if (j < 0)
-	    j = subdv_table[scfb_anz] >> 4;
 	gfc->bv_scf[i-1] = (k << 4) + j;
+
 	if (gfc->scalefac_band.l[k+j+2+2] < i) {
 	    if (k < 15) k++;
 	    if (j < 7) j++;
