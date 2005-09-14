@@ -608,31 +608,19 @@ case $host_os in
 		CYGWIN=yes
 		NASM_FORMAT="-f win32 -DWIN32"
 		;;
+	*86-*-linux*)
+		CYGWIN=no
+		NASM_FORMAT="-f elf -DLINUX"
+		;;
 	*)
 		CYGWIN=no
 		NASM_FORMAT="-f elf"
 		;;
 esac
 
-AC_PATH_PROG(NASM, nasm, no)
-case $host_cpu in
-x86_64)
-	NASM_FORMAT="$NASM_FORMAT -m amd64"
-	NASM=no
-esac
-
-case "${NASM}" in
-no)
-	AC_PATH_PROG(YASM, yasm, no)
-	if test "${YASM}" != "no"; then
-		NASM_FORMAT="$NASM_FORMAT -DYASM"
-		NASM=${YASM}
-	fi
-	;;
-esac
-
-case "${NASM}" in
-no)
+AC_CHECK_PROGS( NASM, nasm yasm nasmw)
+case "x${NASM}" in
+x)
 	;;
 *)
 	AC_MSG_CHECKING(for assembler routines for this processor type)
@@ -651,7 +639,10 @@ no)
 	AC_MSG_RESULT(${include_asm_routines})
 	;;
 esac
-AM_CONDITIONAL(HAVE_NASM, test "${NASM}" != "no")
+if test "x${NASM}" = "xyasm"; then
+	NASM_FORMAT="${NASM_FORMAT} -DYASM"
+fi
+AM_CONDITIONAL(HAVE_NASM, test "x${NASM}" != "x")
 
 #
 # 'expopt' is used for "additional optimizations", not for optimizations which
