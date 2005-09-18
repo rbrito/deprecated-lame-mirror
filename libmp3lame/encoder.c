@@ -563,22 +563,7 @@ lame_encode_mp3_frame(       /* Output */
             }
         }
     }
-
-    switch (gfp->VBR) {
-    default:
-    case vbr_off:
-        CBR_iteration_loop(gfp, *pe_use, ms_ener_ratio, *masking);
-        break;
-    case vbr_mt:
-    case vbr_rh:
-    case vbr_mtrh:
-        VBR_iteration_loop(gfp, *pe_use, ms_ener_ratio, *masking);
-        break;
-    case vbr_abr:
-        ABR_iteration_loop(gfp, *pe_use, ms_ener_ratio, *masking);
-        break;
-    }
-
+    gfc->iteration_loop(gfp, *pe_use, ms_ener_ratio, *masking);
 
 
     /****************************************

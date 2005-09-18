@@ -40,6 +40,7 @@
 #include "machine.h"
 #include "gain_analysis.h"
 #include "set_get.h"
+#include "quantize.h"
 
 #if defined(__FreeBSD__) && !defined(__alpha__)
 #include <floatingpoint.h>
@@ -911,7 +912,8 @@ lame_init_params(lame_global_flags * const gfp)
             gfc->sfb21_extra = 0;
         else 
             gfc->sfb21_extra = (gfp->out_samplerate > 44000);
-            
+
+        gfc->iteration_loop = &VBR_new_iteration_loop;            
         break;
         
     }
@@ -944,6 +946,7 @@ lame_init_params(lame_global_flags * const gfp)
         if (gfp->quality < 0)
             gfp->quality = LAME_DEFAULT_QUALITY;
 
+        gfc->iteration_loop = &VBR_old_iteration_loop;            
         break;
     }
 
@@ -968,6 +971,12 @@ lame_init_params(lame_global_flags * const gfp)
         gfc->PSY->mask_adjust = gfp->maskingadjust;
         gfc->PSY->mask_adjust_short = gfp->maskingadjust_short;
 
+        if (vbrmode == vbr_off) {
+            gfc->iteration_loop = &CBR_iteration_loop;            
+        }
+        else {
+            gfc->iteration_loop = &ABR_iteration_loop;            
+        }    
         break;
     }
     }

@@ -34,6 +34,7 @@
 #include "lame-analysis.h"
 #include "id3tag.h"
 #include "gain_analysis.h"
+#include "l3side.h"
 
 #if HAVE_INTTYPES_H
 # include <inttypes.h>
@@ -128,6 +129,10 @@ extern  "C" {
 *
 ***********************************************************************/
 
+typedef void (*iteration_loop_t)( lame_global_flags *gfp,
+			 FLOAT pe[2][2],
+			 FLOAT ms_ratio[2], 
+			 III_psy_ratio ratio[2][2]);
 
 
     /* "bit_stream.h" Type Definitions */
@@ -480,6 +485,8 @@ extern  "C" {
         int     in_buffer_nsamples;
         sample_t *in_buffer_0;
         sample_t *in_buffer_1;
+        
+        iteration_loop_t iteration_loop;
     };
 
 

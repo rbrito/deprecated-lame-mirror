@@ -1149,46 +1149,6 @@ searchScalefacColorMax(const algo_t * that, int sfwork[SFBMAX],
 }
 
 
-#if 0
-static void
-searchScalefacColorMin(const algo_t * that, int sfwork[SFBMAX],
-                       const int sfcalc[SFBMAX], const int vbrsfmin[SFBMAX], int bits)
-{
-    int const psymax = that->cod_info->psymax;
-    int     nbits, last, i, ok = -1, l = 0, r, vbrmin = 255, vbrmax = 0, M, target;
-    for (i = 0; i < psymax; ++i) {
-        if (vbrmin > sfcalc[i]) {
-            vbrmin = sfcalc[i];
-        }
-        if (vbrmax < sfcalc[i]) {
-            vbrmax = sfcalc[i];
-        }
-    }
-    M = vbrmax - vbrmin;
-
-    if (M == 0) {
-        return;
-    }
-    target = vbrmin;
-    for (l = 0, r = M, last = i = M / 2; l <= r; i = (l + r) / 2) {
-        nbits = tryScalefacColor(that, sfwork, sfcalc, vbrsfmin, i, M, target);
-        if (nbits > bits) {
-            ok = i;
-            r = i - 1;
-        }
-        else {
-            l = i + 1;
-        }
-        last = i;
-    }
-    if (last != ok) {
-        if (ok == -1) {
-            ok = 0;
-        }
-        nbits = tryScalefacColor(that, sfwork, sfcalc, vbrsfmin, ok, M, target);
-    }
-}
-#endif
 
 
 static int
@@ -1237,11 +1197,7 @@ searchGlobalStepsizeMax(const algo_t * that, const int sfwork[SFBMAX],
     while (l <= r) {
         curr = (l + r) >> 1;
         nbits = tryGlobalStepsize(that, sfwork, vbrsfmin, curr - gain);
-        if (cod_info->part2_length >= LARGE_BITS || nbits >= LARGE_BITS) {
-            l = curr + 1;
-            continue;
-        }
-        if (nbits + cod_info->part2_length < target) {
+        if (nbits == 0 || (nbits + cod_info->part2_length) < target) {
             r = curr - 1;
             gain_ok = curr;
         }
@@ -1258,44 +1214,37 @@ searchGlobalStepsizeMax(const algo_t * that, const int sfwork[SFBMAX],
     }
 }
 
-#if 0
-static void
-searchGlobalStepsizeMin(const algo_t * that, const int sfwork[SFBMAX],
-                        const int vbrsfmin[SFBMAX], int target)
+
+extern void
+trancate_smallspectrums(
+    lame_internal_flags *gfc,
+    gr_info		* const gi,
+    const FLOAT	* const l3_xmin,
+    FLOAT		* work
+    );
+
+void reduce_bit_usage(lame_internal_flags * gfc, const FLOAT xr34orig[576],
+                  const FLOAT l3_xmin[576], int maxbits, int gr, int ch)
 {
-    gr_info *cod_info = that->cod_info;
-    const int gain = cod_info->global_gain;
-    int     curr = gain;
-    int     gain_ok = 1024;
-    int     nbits = LARGE_BITS;
-    int     l = 0, r = gain;
+    gr_info *cod_info = &gfc->l3_side.tt[gr][ch];
+    /*  try some better scalefac storage
+     */
+    best_scalefac_store (gfc, gr, ch, &gfc->l3_side);
 
-    assert(gain >= 0);
-    while (l <= r) {
-        curr = (l + r) >> 1;
-        nbits = tryGlobalStepsize(that, sfwork, vbrsfmin, curr - gain);
-        if (cod_info->part2_length >= LARGE_BITS || nbits >= LARGE_BITS) {
-            l = curr + 1;
-            continue;
-        }
-        if (nbits + cod_info->part2_length < target) {
-            l = curr + 1;
-            if (gain_ok == 1024) {
-                gain_ok = curr;
-            }
-        }
-        else {
-            r = curr - 1;
-            gain_ok = curr;
-        }
+    /*  best huffman_divide may save some bits too
+     */
+    if (gfc->use_best_huffman == 1) 
+    best_huffman_divide (gfc, cod_info);
+    /*
+        truncate small spectrum seems to introduce pops, disabled (RH 050918)
+    if (gfc->substep_shaping & 1) {
+        trancate_smallspectrums(gfc, cod_info, l3_xmin, xr34orig);
+	}
+    else if ( cod_info->part2_3_length > maxbits - cod_info->part2_length ){
+        trancate_smallspectrums(gfc, cod_info, l3_xmin, xr34orig);
     }
-    if (gain_ok != curr) {
-        curr = gain_ok;
-        nbits = tryGlobalStepsize(that, sfwork, vbrsfmin, curr - gain);
-    }
+    */
 }
-#endif
-
 
 /************************************************************************
  *
@@ -1348,20 +1297,26 @@ VBR_noise_shaping(lame_internal_flags * gfc, const FLOAT xr34orig[576],
         return -1;
     }
     quantizeAndCountBits(&that);
+    reduce_bit_usage(gfc,xr34orig,l3_xmin,maxbits,gr,ch);
+
     if (cod_info->part2_3_length > maxbits - cod_info->part2_length) {
         searchScalefacColorMax(&that, sfwork, sfcalc, vbrsfmin, maxbits);
+        reduce_bit_usage(gfc,xr34orig,l3_xmin,maxbits,gr,ch);
     }
     if (cod_info->part2_3_length > maxbits - cod_info->part2_length) {
         searchGlobalStepsizeMax(&that, sfwork, vbrsfmin, maxbits);
-    }
-    if (gfc->use_best_huffman == 2) {
-        best_huffman_divide(gfc, cod_info);
+        reduce_bit_usage(gfc,xr34orig,l3_xmin,maxbits,gr,ch);
     }
     assert(cod_info->global_gain < 256u);
 
     if (cod_info->part2_3_length + cod_info->part2_length >= LARGE_BITS) {
         cod_info->part2_3_length = LARGE_BITS;
         return -2;      /* Houston, we have a problem */
+    }
+    if (cod_info->part2_3_length > maxbits - cod_info->part2_length) {
+        ERRORF(gfc,"INTERNAL ERROR IN VBR NEW CODE (1323), please send bug report\n"
+        "maxbits=%d usedbits=%d\n",maxbits,cod_info->part2_3_length + cod_info->part2_length);
+        exit(-1);
     }
     return 0;
 }
