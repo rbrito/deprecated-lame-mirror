@@ -54,8 +54,8 @@ struct algo_s {
     const FLOAT *xr34orig;
     lame_internal_flags *gfc;
     gr_info *cod_info;
-    int mingain_l;
-    int mingain_s[3];
+    int     mingain_l;
+    int     mingain_s[3];
 };
 
 
@@ -495,13 +495,13 @@ block_sf(algo_t * that, const FLOAT l3_xmin[576], int vbrsf[SFBMAX], int vbrsfmi
     that->mingain_s[1] = 0;
     that->mingain_s[2] = 0;
     while (j <= max_nonzero_coeff) {
-        int l, w = l = width[sfb];
-        int m = max_nonzero_coeff - j + 1, m1, m2;
+        int     l, w = l = width[sfb];
+        int     m = max_nonzero_coeff - j + 1, m1, m2;
         if (l > m) {
             l = m;
         }
         max_xr34 = max_x34(&xr34_orig[j], l);
-        
+
         m1 = find_lowest_scalefac(max_xr34);
         vbrsfmin[sfb] = m1;
         if (that->mingain_l < m1) {
@@ -569,7 +569,7 @@ quantize_x34(const algo_t * that)
         const int sfac = valid_sf(cod_info->global_gain - s);
         const FLOAT sfpow34 = IPOW20(sfac);
         int     remaining;
-        int     l , w = l = cod_info->width[sfb];
+        int     l, w = l = cod_info->width[sfb];
         int     m = max_nonzero_coeff - j + 1;
         if (l > m) {
             l = m;
@@ -859,8 +859,8 @@ short_block_constrain(const algo_t * that, int vbrsf[SFBMAX],
     int     psymax = cod_info->psymax;
 
     for (sfb = 0; sfb < psymax; ++sfb) {
-        assert( vbrsf[sfb] >= vbrsfmin[sfb] );
-        v  = vbrmax - vbrsf[sfb];
+        assert(vbrsf[sfb] >= vbrsfmin[sfb]);
+        v = vbrmax - vbrsf[sfb];
         if (delta < v) {
             delta = v;
         }
@@ -941,7 +941,7 @@ long_block_constrain(const algo_t * that, int vbrsf[SFBMAX], const int vbrsfmin[
     maxover1p = 0;      /* pretab */
 
     for (sfb = 0; sfb < psymax; ++sfb) {
-        assert( vbrsf[sfb] >= vbrsfmin[sfb] );
+        assert(vbrsf[sfb] >= vbrsfmin[sfb]);
         v = vbrmax - vbrsf[sfb];
         if (delta < v) {
             delta = v;
@@ -1216,34 +1216,31 @@ searchGlobalStepsizeMax(const algo_t * that, const int sfwork[SFBMAX],
 
 
 extern void
-trancate_smallspectrums(
-    lame_internal_flags *gfc,
-    gr_info		* const gi,
-    const FLOAT	* const l3_xmin,
-    FLOAT		* work
-    );
+        trancate_smallspectrums(lame_internal_flags * gfc,
+                                gr_info * const gi, const FLOAT * const l3_xmin, FLOAT * work);
 
-void reduce_bit_usage(lame_internal_flags * gfc, const FLOAT xr34orig[576],
-                  const FLOAT l3_xmin[576], int maxbits, int gr, int ch)
+static void
+reduce_bit_usage(lame_internal_flags * gfc, const FLOAT xr34orig[576],
+                 const FLOAT l3_xmin[576], int maxbits, int gr, int ch)
 {
     gr_info *cod_info = &gfc->l3_side.tt[gr][ch];
     /*  try some better scalefac storage
      */
-    best_scalefac_store (gfc, gr, ch, &gfc->l3_side);
+    best_scalefac_store(gfc, gr, ch, &gfc->l3_side);
 
     /*  best huffman_divide may save some bits too
      */
-    if (gfc->use_best_huffman == 1) 
-    best_huffman_divide (gfc, cod_info);
-    /*
-        truncate small spectrum seems to introduce pops, disabled (RH 050918)
+    if (gfc->use_best_huffman == 1)
+        best_huffman_divide(gfc, cod_info);
+#if 0
+    /* truncate small spectrum seems to introduce pops, disabled(RH 050918) */
     if (gfc->substep_shaping & 1) {
         trancate_smallspectrums(gfc, cod_info, l3_xmin, xr34orig);
-	}
-    else if ( cod_info->part2_3_length > maxbits - cod_info->part2_length ){
+    }
+    else if (cod_info->part2_3_length > maxbits - cod_info->part2_length) {
         trancate_smallspectrums(gfc, cod_info, l3_xmin, xr34orig);
     }
-    */
+#endif
 }
 
 /************************************************************************
@@ -1256,7 +1253,7 @@ void reduce_bit_usage(lame_internal_flags * gfc, const FLOAT xr34orig[576],
  *
  ***********************************************************************/
 
-int
+void
 VBR_noise_shaping(lame_internal_flags * gfc, const FLOAT xr34orig[576],
                   const FLOAT l3_xmin[576], int maxbits, int gr, int ch)
 {
@@ -1265,8 +1262,9 @@ VBR_noise_shaping(lame_internal_flags * gfc, const FLOAT xr34orig[576],
     int     vbrsfmin[SFBMAX];
     algo_t  that;
     int     vbrmax;
-    gr_info *cod_info = &gfc->l3_side.tt[gr][ch];
 
+    that.gfc = gfc;
+    that.cod_info = &gfc->l3_side.tt[gr][ch];
     that.xr34orig = xr34orig;
     if (gfc->quantization) {
         that.find = find_scalefac_x34;
@@ -1276,16 +1274,14 @@ VBR_noise_shaping(lame_internal_flags * gfc, const FLOAT xr34orig[576],
         that.find = find_scalefac_ISO;
         that.quantize = quantize_ISO;
     }
-    if (cod_info->block_type == SHORT_TYPE) {
+    if (that.cod_info->block_type == SHORT_TYPE) {
         that.alloc = short_block_constrain;
     }
     else {
         that.alloc = long_block_constrain;
     }
-    that.gfc = gfc;
-    that.cod_info = &gfc->l3_side.tt[gr][ch];
 
-    memset(cod_info->l3_enc, 0, 576 * sizeof(int));
+    memset(that.cod_info->l3_enc, 0, 576 * sizeof(int));
 
     vbrmax = block_sf(&that, l3_xmin, sfcalc, vbrsfmin);
     memcpy(sfwork, sfcalc, SFBMAX * sizeof(int));
@@ -1293,30 +1289,26 @@ VBR_noise_shaping(lame_internal_flags * gfc, const FLOAT xr34orig[576],
     if (0 != bitcount(&that)) {
         /*  this should not happen due to the way the scalefactors are selected
          */
-        cod_info->part2_3_length = LARGE_BITS;
-        return -1;
-    }
-    quantizeAndCountBits(&that);
-    reduce_bit_usage(gfc,xr34orig,l3_xmin,maxbits,gr,ch);
-
-    if (cod_info->part2_3_length > maxbits - cod_info->part2_length) {
-        searchScalefacColorMax(&that, sfwork, sfcalc, vbrsfmin, maxbits);
-        reduce_bit_usage(gfc,xr34orig,l3_xmin,maxbits,gr,ch);
-    }
-    if (cod_info->part2_3_length > maxbits - cod_info->part2_length) {
-        searchGlobalStepsizeMax(&that, sfwork, vbrsfmin, maxbits);
-        reduce_bit_usage(gfc,xr34orig,l3_xmin,maxbits,gr,ch);
-    }
-    assert(cod_info->global_gain < 256u);
-
-    if (cod_info->part2_3_length + cod_info->part2_length >= LARGE_BITS) {
-        cod_info->part2_3_length = LARGE_BITS;
-        return -2;      /* Houston, we have a problem */
-    }
-    if (cod_info->part2_3_length > maxbits - cod_info->part2_length) {
-        ERRORF(gfc,"INTERNAL ERROR IN VBR NEW CODE (1323), please send bug report\n"
-        "maxbits=%d usedbits=%d\n",maxbits,cod_info->part2_3_length + cod_info->part2_length);
+        ERRORF(gfc, "INTERNAL ERROR IN VBR NEW CODE (1292), please send bug report\n");
         exit(-1);
     }
-    return 0;
+    quantizeAndCountBits(&that);
+    reduce_bit_usage(gfc, xr34orig, l3_xmin, maxbits, gr, ch);
+
+    if (that.cod_info->part2_3_length > maxbits - that.cod_info->part2_length) {
+        searchScalefacColorMax(&that, sfwork, sfcalc, vbrsfmin, maxbits);
+        reduce_bit_usage(gfc, xr34orig, l3_xmin, maxbits, gr, ch);
+    }
+    if (that.cod_info->part2_3_length > maxbits - that.cod_info->part2_length) {
+        searchGlobalStepsizeMax(&that, sfwork, vbrsfmin, maxbits);
+        reduce_bit_usage(gfc, xr34orig, l3_xmin, maxbits, gr, ch);
+    }
+    assert(that.cod_info->global_gain < 256u);
+
+    if (that.cod_info->part2_3_length > maxbits - that.cod_info->part2_length) {
+        ERRORF(gfc, "INTERNAL ERROR IN VBR NEW CODE (1309), please send bug report\n"
+               "maxbits=%d usedbits=%d\n", maxbits,
+               that.cod_info->part2_3_length + that.cod_info->part2_length);
+        exit(-1);
+    }
 }
