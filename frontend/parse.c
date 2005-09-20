@@ -1678,7 +1678,12 @@ char* const inPath, char* const outPath, char **nogap_inPath, int *num_nogap)
                             return -1;
                         }
                     }
-                 
+
+                T_ELIF_INTERNAL ("quantization-type")   /*  switch for developing, no DOCU */
+                    argUsed=1;        /* 0:depending on quality, 1:ISO, 2:x^3/4 */                                        
+                    {extern void lame_set_quantization_type(lame_t,int);
+                    lame_set_quantization_type( gfp, atoi(nextArg) );/* now: 0:off else:Jon */
+                    }
 
                 T_ELSE
                     fprintf(stderr,"%s: unrec option --%s\n", ProgramName, token);

@@ -1108,6 +1108,22 @@ lame_init_params(lame_global_flags * const gfp)
     if ( gfc->sparseB < 0 ) gfc->sparseB = 0;
     if ( gfc->sparseB > gfc->sparseA ) gfc->sparseB = gfc->sparseA;
 
+    switch (gfp->quantization_type) {
+    default:
+    case 0:
+        /* nothing to change */
+        break;
+    case 1:
+        gfc->quantization = 0;
+        gfc->PSY->mask_adjust += 0.68125;
+        gfc->PSY->mask_adjust_short += 0.68125;
+        break;
+    case 2:
+        gfc->quantization = 1;
+        break;
+    }
+        
+
     iteration_init(gfp);
     psymodel_init(gfp);
 

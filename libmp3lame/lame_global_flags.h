@@ -143,6 +143,8 @@ struct lame_global_struct {
   FLOAT sparse_low;
   FLOAT sparse_high;
   
+  int   quantization_type;  /* 0 depending on quality, 1 ISO, 2 nonlinear */
+  
   struct {
     void (*msgf)  (const char *format, va_list ap);
     void (*debugf)(const char *format, va_list ap);

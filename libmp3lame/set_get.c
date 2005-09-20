@@ -1920,3 +1920,16 @@ lame_set_preset_notune( lame_global_flags*  gfp, int preset_notune )
     return 0;
 }
 
+
+void
+lame_set_quantization_type( lame_global_flags* gfp, int type )
+{
+    gfp->quantization_type = type;
+}
+
+
+int
+lame_get_quantization_type( lame_global_flags* gfp )
+{
+    return gfp->quantization_type;
+}
