@@ -129,6 +129,16 @@ extern  "C" {
 *
 ***********************************************************************/
 
+typedef struct {
+    void*   aligned;    /* pointer to ie. 128 bit aligned memory */
+    void*   pointer;    /* to use with malloc/free */
+} aligned_pointer_t;
+
+void malloc_aligned( aligned_pointer_t* ptr, unsigned int size, unsigned int bytes );
+void free_aligned( aligned_pointer_t* ptr );
+
+
+
 typedef void (*iteration_loop_t)( lame_global_flags *gfp,
 			 FLOAT pe[2][2],
 			 FLOAT ms_ratio[2], 
@@ -212,8 +222,6 @@ typedef void (*iteration_loop_t)( lame_global_flags *gfp,
 
 
 #define MAX_CHANNELS  2
-
-
 
 
 
