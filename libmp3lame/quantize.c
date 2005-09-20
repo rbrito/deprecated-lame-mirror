@@ -173,7 +173,7 @@ ms_convert(III_side_info_t *l3_side, int gr)
  *
  ************************************************************************/
 
-
+static
 void init_xrpow_core_c(gr_info *const cod_info, 
                         FLOAT xrpow[576],
                         int upper,
@@ -203,7 +203,7 @@ typedef union {
 } vecfloat_union;
 
 
-
+static
 void init_xrpow_core_sse(gr_info *const cod_info, 
                         FLOAT xrpow[576],
                         int upper,
@@ -612,7 +612,7 @@ trancate_smallspectrums(
     lame_internal_flags *gfc,
     gr_info		* const gi,
     const FLOAT	* const l3_xmin,
-    FLOAT		* work
+    const FLOAT	* const work
     )
 {
     int sfb, j, width;
@@ -1961,37 +1961,15 @@ VBR_new_iteration_loop (
             /*  init_outer_loop sets up cod_info, scalefac and xrpow 
              */
             if ( 0 == init_xrpow(gfc, cod_info, xrpow[gr][ch]) ) {
-                max_bits[gr][ch] = 0;
+                max_bits[gr][ch] = 0;   /* silent granule needs no bits */
             }
         } /* for ch */
     }    /* for gr */
-
+    
     /*  quantize granules with lowest possible number of bits
      */
     
-    used_bits = 0;
-   
-    for (gr = 0; gr < gfc->mode_gr; gr++) {
-        for (ch = 0; ch < gfc->channels_out; ch++) {
-	        gr_info *cod_info = &l3_side->tt[gr][ch];
-      
-            /*  init_outer_loop sets up cod_info, scalefac and xrpow 
-             */
-            if (max_bits[gr][ch] != 0) {
-                VBR_noise_shaping (gfc, xrpow[gr][ch], l3_xmin[gr][ch],
-                                   max_bits[gr][ch], gr, ch );
-
-                used_bits += cod_info->part2_3_length + cod_info->part2_length;
-            }
-            else {
-                /*  xr contains no energy 
-                 *  l3_enc, our encoding data, will be quantized to zero
-                 */
-                continue; /* with next channel */
-            }
-        } /* for ch */
-    }    /* for gr */
-    
+    used_bits = VBR_encode_frame(gfc, xrpow, l3_xmin, max_bits);
 
     /*  find lowest bitrate able to hold used bits
      */

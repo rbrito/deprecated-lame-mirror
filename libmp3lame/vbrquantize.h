@@ -22,7 +22,7 @@
 #ifndef LAME_VBRQUANTIZE_H
 #define LAME_VBRQUANTIZE_H
 
-void    VBR_noise_shaping(lame_internal_flags * gfc, const FLOAT xr34orig[576],
-                          const FLOAT l3_xmin[576], int maxbits, int gr, int ch);
+int     VBR_encode_frame(lame_internal_flags * gfc, FLOAT xr34orig[2][2][576],
+                         FLOAT l3_xmin[2][2][SFBMAX], int maxbits[2][2]);
 
 #endif /* LAME_VBRQUANTIZE_H */
