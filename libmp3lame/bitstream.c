@@ -460,14 +460,14 @@ static const unsigned char quadcode[2][16*2]  = {
 inline static void
 Huf_count1(bit_stream_t *bs, gr_info *gi)
 {
-    int i, wcode, remain;
+    int i, wcode, remain, bitidx;
     const unsigned char * const hcode = quadcode[gi->table_select[3]];
     unsigned char *ptr;
     assert((unsigned int)gi->table_select[3] < 2u);
 
     ptr = &bs->buf[bs->bitidx >> 3];
     remain = 32 - (bs->bitidx & 7);
-    bs->bitidx -= (bs->bitidx & 7);
+    bitidx = bs->bitidx - (bs->bitidx & 7);
     wcode = *ptr << 24;
     for (i = gi->big_values; i < gi->count1; i += 4) {
 	int huffbits = 0, p = 0;
@@ -501,15 +501,16 @@ Huf_count1(bit_stream_t *bs, gr_info *gi)
 	    *ptr++ = wcode >> 16;
 	    remain += 16;
 	    wcode <<= 16;
-	    bs->bitidx += 16;
+	    bitidx += 16;
 	}
     }
     remain -= 32;
     if (remain) {
 	*ptr++ = wcode >> 24;
 	*ptr++ = wcode >> 16;
-	bs->bitidx -= remain;
+	bitidx -= remain;
     }
+    bs->bitidx = bitidx;
     assert(i == gi->count1);
 }
 
