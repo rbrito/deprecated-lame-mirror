@@ -636,7 +636,7 @@ x)
 		AC_DEFINE(HAVE_NASM, 1, have nasm)
 	else
 		include_asm_routines="no"
-		NASM="no"
+		NASM=""
 	fi
 	AC_MSG_RESULT(${include_asm_routines})
 	;;
