@@ -463,7 +463,7 @@ ac_includes_default="\
 # include <unistd.h>
 #endif"
 
-ac_subst_vars='SHELL PATH_SEPARATOR PACKAGE_NAME PACKAGE_TARNAME PACKAGE_VERSION PACKAGE_STRING PACKAGE_BUGREPORT exec_prefix prefix program_transform_name bindir sbindir libexecdir datadir sysconfdir sharedstatedir localstatedir libdir includedir oldincludedir infodir mandir build_alias host_alias target_alias DEFS ECHO_C ECHO_N ECHO_T LIBS build build_cpu build_vendor build_os host host_cpu host_vendor host_os CC CFLAGS LDFLAGS CPPFLAGS ac_ct_CC EXEEXT OBJEXT CPP EGREP INSTALL_PROGRAM INSTALL_SCRIPT INSTALL_DATA CYGPATH_W PACKAGE VERSION ACLOCAL AUTOCONF AUTOMAKE AUTOHEADER MAKEINFO install_sh STRIP ac_ct_STRIP INSTALL_STRIP_PROGRAM mkdir_p AWK SET_MAKE am__leading_dot AMTAR am__tar am__untar DEPDIR am__include am__quote AMDEP_TRUE AMDEP_FALSE AMDEPBACKSLASH CCDEPMODE am__fastdepCC_TRUE am__fastdepCC_FALSE MAINTAINER_MODE_TRUE MAINTAINER_MODE_FALSE MAINT LN_S ECHO AR ac_ct_AR RANLIB ac_ct_RANLIB CXX CXXFLAGS ac_ct_CXX CXXDEPMODE am__fastdepCXX_TRUE am__fastdepCXX_FALSE CXXCPP F77 FFLAGS ac_ct_F77 LIBTOOL U ANSI2KNR ALLOCA GTK_CONFIG GTK_CFLAGS GTK_LIBS LIB_WITH_DECODER_TRUE LIB_WITH_DECODER_FALSE WITH_BRHIST_TRUE WITH_BRHIST_FALSE NASM YASM HAVE_NASM_TRUE HAVE_NASM_FALSE INCLUDES FRONTEND_LDFLAGS FRONTEND_CFLAGS FRONTEND_LDADD LDADD LIB_MAJOR_VERSION LIB_MINOR_VERSION NASM_FORMAT MAKEDEP RM_F LIBTOOL_DEPS WITH_FRONTEND WITH_MP3X WITH_MP3RTP CPUTYPE CONFIG_DEFS LIBOBJS LTLIBOBJS'
+ac_subst_vars='SHELL PATH_SEPARATOR PACKAGE_NAME PACKAGE_TARNAME PACKAGE_VERSION PACKAGE_STRING PACKAGE_BUGREPORT exec_prefix prefix program_transform_name bindir sbindir libexecdir datadir sysconfdir sharedstatedir localstatedir libdir includedir oldincludedir infodir mandir build_alias host_alias target_alias DEFS ECHO_C ECHO_N ECHO_T LIBS build build_cpu build_vendor build_os host host_cpu host_vendor host_os CC CFLAGS LDFLAGS CPPFLAGS ac_ct_CC EXEEXT OBJEXT CPP EGREP INSTALL_PROGRAM INSTALL_SCRIPT INSTALL_DATA CYGPATH_W PACKAGE VERSION ACLOCAL AUTOCONF AUTOMAKE AUTOHEADER MAKEINFO install_sh STRIP ac_ct_STRIP INSTALL_STRIP_PROGRAM mkdir_p AWK SET_MAKE am__leading_dot AMTAR am__tar am__untar DEPDIR am__include am__quote AMDEP_TRUE AMDEP_FALSE AMDEPBACKSLASH CCDEPMODE am__fastdepCC_TRUE am__fastdepCC_FALSE MAINTAINER_MODE_TRUE MAINTAINER_MODE_FALSE MAINT LN_S ECHO AR ac_ct_AR RANLIB ac_ct_RANLIB CXX CXXFLAGS ac_ct_CXX CXXDEPMODE am__fastdepCXX_TRUE am__fastdepCXX_FALSE CXXCPP F77 FFLAGS ac_ct_F77 LIBTOOL U ANSI2KNR ALLOCA GTK_CONFIG GTK_CFLAGS GTK_LIBS LIB_WITH_DECODER_TRUE LIB_WITH_DECODER_FALSE WITH_BRHIST_TRUE WITH_BRHIST_FALSE NASM HAVE_NASM_TRUE HAVE_NASM_FALSE INCLUDES FRONTEND_LDFLAGS FRONTEND_CFLAGS FRONTEND_LDADD LDADD LIB_MAJOR_VERSION LIB_MINOR_VERSION NASM_FORMAT MAKEDEP RM_F LIBTOOL_DEPS WITH_FRONTEND WITH_MP3X WITH_MP3RTP CPUTYPE CONFIG_DEFS LIBOBJS LTLIBOBJS'
 ac_subst_files=''
 
 # Initialize some variables set by options.
@@ -29073,39 +29073,42 @@ case $host_os in
 		NASM_FORMAT="-f elf"
 		;;
 esac
+case $host in
+	*86-*-linux*)
+		CYGWIN=no
+		NASM_FORMAT="-f elf -DLINUX"
+		;;
+esac
 
-# Extract the first word of "nasm", so it can be a program name with args.
-set dummy nasm; ac_word=$2
+for ac_prog in nasm yasm nasmw
+do
+  # Extract the first word of "$ac_prog", so it can be a program name with args.
+set dummy $ac_prog; ac_word=$2
 echo "$as_me:$LINENO: checking for $ac_word" >&5
 echo $ECHO_N "checking for $ac_word... $ECHO_C" >&6
-if test "${ac_cv_path_NASM+set}" = set; then
+if test "${ac_cv_prog_NASM+set}" = set; then
   echo $ECHO_N "(cached) $ECHO_C" >&6
 else
-  case $NASM in
-  [\\/]* | ?:[\\/]*)
-  ac_cv_path_NASM="$NASM" # Let the user override the test with a path.
-  ;;
-  *)
-  as_save_IFS=$IFS; IFS=$PATH_SEPARATOR
+  if test -n "$NASM"; then
+  ac_cv_prog_NASM="$NASM" # Let the user override the test.
+else
+as_save_IFS=$IFS; IFS=$PATH_SEPARATOR
 for as_dir in $PATH
 do
   IFS=$as_save_IFS
   test -z "$as_dir" && as_dir=.
   for ac_exec_ext in '' $ac_executable_extensions; do
   if $as_executable_p "$as_dir/$ac_word$ac_exec_ext"; then
-    ac_cv_path_NASM="$as_dir/$ac_word$ac_exec_ext"
+    ac_cv_prog_NASM="$ac_prog"
     echo "$as_me:$LINENO: found $as_dir/$ac_word$ac_exec_ext" >&5
     break 2
   fi
 done
 done
 
-  test -z "$ac_cv_path_NASM" && ac_cv_path_NASM="no"
-  ;;
-esac
 fi
-NASM=$ac_cv_path_NASM
-
+fi
+NASM=$ac_cv_prog_NASM
 if test -n "$NASM"; then
   echo "$as_me:$LINENO: result: $NASM" >&5
 echo "${ECHO_T}$NASM" >&6
@@ -29114,63 +29117,11 @@ else
 echo "${ECHO_T}no" >&6
 fi
 
-case $host_cpu in
-x86_64)
-	NASM_FORMAT="$NASM_FORMAT -m amd64"
-	NASM=no
-esac
-
-case "${NASM}" in
-no)
-	# Extract the first word of "yasm", so it can be a program name with args.
-set dummy yasm; ac_word=$2
-echo "$as_me:$LINENO: checking for $ac_word" >&5
-echo $ECHO_N "checking for $ac_word... $ECHO_C" >&6
-if test "${ac_cv_path_YASM+set}" = set; then
-  echo $ECHO_N "(cached) $ECHO_C" >&6
-else
-  case $YASM in
-  [\\/]* | ?:[\\/]*)
-  ac_cv_path_YASM="$YASM" # Let the user override the test with a path.
-  ;;
-  *)
-  as_save_IFS=$IFS; IFS=$PATH_SEPARATOR
-for as_dir in $PATH
-do
-  IFS=$as_save_IFS
-  test -z "$as_dir" && as_dir=.
-  for ac_exec_ext in '' $ac_executable_extensions; do
-  if $as_executable_p "$as_dir/$ac_word$ac_exec_ext"; then
-    ac_cv_path_YASM="$as_dir/$ac_word$ac_exec_ext"
-    echo "$as_me:$LINENO: found $as_dir/$ac_word$ac_exec_ext" >&5
-    break 2
-  fi
-done
+  test -n "$NASM" && break
 done
 
-  test -z "$ac_cv_path_YASM" && ac_cv_path_YASM="no"
-  ;;
-esac
-fi
-YASM=$ac_cv_path_YASM
-
-if test -n "$YASM"; then
-  echo "$as_me:$LINENO: result: $YASM" >&5
-echo "${ECHO_T}$YASM" >&6
-else
-  echo "$as_me:$LINENO: result: no" >&5
-echo "${ECHO_T}no" >&6
-fi
-
-	if test "${YASM}" != "no"; then
-		NASM_FORMAT="$NASM_FORMAT -DYASM"
-		NASM=${YASM}
-	fi
-	;;
-esac
-
-case "${NASM}" in
-no)
+case "x${NASM}" in
+x)
 	;;
 *)
 	echo "$as_me:$LINENO: checking for assembler routines for this processor type" >&5
@@ -29189,15 +29140,18 @@ _ACEOF
 
 	else
 		include_asm_routines="no"
-		NASM="no"
+		NASM=""
 	fi
 	echo "$as_me:$LINENO: result: ${include_asm_routines}" >&5
 echo "${ECHO_T}${include_asm_routines}" >&6
 	;;
 esac
+if test "x${NASM}" = "xyasm"; then
+	NASM_FORMAT="${NASM_FORMAT} -DYASM"
+fi
 
 
-if test "${NASM}" != "no"; then
+if test "x${NASM}" != "x"; then
   HAVE_NASM_TRUE=
   HAVE_NASM_FALSE='#'
 else
@@ -30490,7 +30444,6 @@ s,@LIB_WITH_DECODER_FALSE@,$LIB_WITH_DECODER_FALSE,;t t
 s,@WITH_BRHIST_TRUE@,$WITH_BRHIST_TRUE,;t t
 s,@WITH_BRHIST_FALSE@,$WITH_BRHIST_FALSE,;t t
 s,@NASM@,$NASM,;t t
-s,@YASM@,$YASM,;t t
 s,@HAVE_NASM_TRUE@,$HAVE_NASM_TRUE,;t t
 s,@HAVE_NASM_FALSE@,$HAVE_NASM_FALSE,;t t
 s,@INCLUDES@,$INCLUDES,;t t
