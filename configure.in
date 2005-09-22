@@ -608,17 +608,19 @@ case $host_os in
 		CYGWIN=yes
 		NASM_FORMAT="-f win32 -DWIN32"
 		;;
-	*86-*-linux*)
-		CYGWIN=no
-		NASM_FORMAT="-f elf -DLINUX"
-		;;
 	*)
 		CYGWIN=no
 		NASM_FORMAT="-f elf"
 		;;
 esac
+case $host in
+	*86-*-linux*)
+		CYGWIN=no
+		NASM_FORMAT="-f elf -DLINUX"
+		;;
+esac
 
-AC_CHECK_PROGS( NASM, nasm yasm nasmw)
+AC_CHECK_PROGS(NASM, nasm yasm nasmw)
 case "x${NASM}" in
 x)
 	;;
