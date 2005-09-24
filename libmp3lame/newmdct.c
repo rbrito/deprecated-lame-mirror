@@ -680,9 +680,8 @@ mdct_sub48(lame_t gfc, int ch)
 	FLOAT *mdct_enc = gi->xr, *endband;
 	int maxband = gfc->scalefac_band.l[(int)gfc->max_sfb_l[ch][gr]];
 
-	if (type == SHORT_TYPE) {
+	if (type == SHORT_TYPE)
 	    maxband = gfc->scalefac_band.s[(int)gfc->max_sfb_s[ch][gr]]*3;
-	}
 	if (maxband > gfc->xrNumMax_longblock)
 	    maxband = gfc->xrNumMax_longblock;
 	if (maxband < 576-18)
@@ -695,7 +694,7 @@ mdct_sub48(lame_t gfc, int ch)
 	do {
 	    FLOAT *prev = &gfc->w.sb_smpl[ch][gr  ][0][mdctorder[band]];
 	    FLOAT *next = &gfc->w.sb_smpl[ch][gr+1][0][mdctorder[band]];
-	    if (type != SHORT_TYPE || (gi->mixed_block_flag && band < 2)) {
+	    if (type != SHORT_TYPE) {
 		FLOAT work[18];
 		for (k = -NL/4; k < 0; k++) {
 		    FLOAT a, b;
@@ -733,6 +732,9 @@ mdct_sub48(lame_t gfc, int ch)
 		    mdct_enc[j*3+11] = next[(11-j)*32] * w + next[( 6+j)*32];
 		}
 		mdct_short(mdct_enc);
+		if (gi->mixed_block_flag && band == 2) {
+		    type = NORM_TYPE;
+		}
 	    }
 	} while (++band, (mdct_enc += 18) < endband);
 	if (gfc->filter_type == 1) {
