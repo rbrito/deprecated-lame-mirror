@@ -116,13 +116,13 @@ proc	pow075_SSE
 	movaps	xm7, [Q_fm0p25]
 	loopalign 16
 .lp:
-	movaps	xm0, [eax+ecx+ 0]
-	movaps	xm1, [eax+ecx+16]
-	andps	xm0, [Q_ABS]		; xm0 = |xr|
-	andps	xm1, [Q_ABS]
-	movaps	[edx+ecx+ 0+576*4], xm0 ; absxr[]
-	movaps	[edx+ecx+16+576*4], xm1
+	movaps	xm0, [Q_ABS]		; xm0 = |xr|
 	add	ecx, byte 8*4
+	movaps	xm1, xm0
+	andps	xm0, [eax+ecx+ 0 - 32]
+	andps	xm1, [eax+ecx+16 - 32]
+	movaps	[edx+ecx+ 0+576*4-32], xm0 ; absxr[]
+	movaps	[edx+ecx+16+576*4-32], xm1
 
 	;------x^(3/4)------
 	rsqrtps	xm4, xm0
