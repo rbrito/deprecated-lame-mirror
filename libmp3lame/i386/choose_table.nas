@@ -59,7 +59,7 @@
 	movq	mm0, [edx+ecx*4]
 	pxor	mm1, mm1
 	add	ecx, byte 2
-	and	ecx, byte 0xfffffffc
+	and	ecx, byte -4   ;0xfffffffc
 
 	loopalign	16
 .lp:
@@ -113,7 +113,7 @@
 	add	edx, 2
 .evenend:
 	add	edx, byte 2
-	and	edx, byte -4
+	and	edx, byte -4   ;0xfffffffc
 	je	.end
 .loop:
 	movaps	xmm0, [ecx+edx*4]
@@ -140,9 +140,9 @@
 	movq	xmm0, [ecx]
 	add	ecx, byte 8
 	movq	xmm1, [edx-8]
-	and	ecx, byte 0xfffffff0
+	and	ecx, byte -16   ;0xfffffff0
 	psubusw	xmm0, xmm1
-	and	edx, byte 0xfffffff0
+	and	edx, byte -16   ;0xfffffff0
 	paddusw	xmm0, xmm1
 	sub	ecx, edx	;ecx = begin-end(should be minus)
 	jz	.exit
