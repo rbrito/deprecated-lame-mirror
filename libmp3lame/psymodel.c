@@ -483,6 +483,11 @@ calc_interchannel_masking(lame_t  gfc, int gr)
  *      alpha (thM+thS) < thR
  * Therefore,
  *      alpha (thM+thS) < min(thR, thL)
+ *
+ * TODO:
+ *  In the narrow scalefactor band, "alpha" should be choosen as big,
+ *  because the probability of M/S channel having correlations is supposed
+ *  to be big.
  ***************************************************************/
 
 static void
