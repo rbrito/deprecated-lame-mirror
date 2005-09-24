@@ -40,6 +40,12 @@ typedef struct {
     unsigned char len;
 } codetab_t;
 
+#define PADDING_PATTERN 0xaa
+#define PADM_PATTERN 0x4c
+#define PADB_PATTERN 0x41
+#define PADN_PATTERN 0x4d
+#define PADF_PATTERN 0x45
+
 static const codetab_t ht1[] = {    {0, 2},
     {1, 1}, {1, 4},
     {1, 3}, {0, 5},
@@ -930,39 +936,28 @@ inline static void
 drain_into_ancillary(lame_t gfc, int remainingBits)
 {
     bit_stream_t *bs = &gfc->bs;
-    assert(remainingBits >= 0);
+    char *p, *end;
 
-    if (remainingBits >= 8) {
-	putbits8(bs,0x4c,8);
-	remainingBits -= 8;
-    }
-    if (remainingBits >= 8) {
-	putbits8(bs,0x41,8);
-	remainingBits -= 8;
-    }
-    if (remainingBits >= 8) {
-	putbits8(bs,0x4d,8);
-	remainingBits -= 8;
-    }
-    if (remainingBits >= 8) {
-	putbits8(bs,0x45,8);
-	remainingBits -= 8;
-    }
+    p = &bs->buf[(bs->bitidx + 7) >> 3];
+    bs->bitidx += remainingBits;
+    end = &bs->buf[bs->bitidx >> 3];
+    if (p == end) return;
 
-#define PADDING_PATTERN 0xaa
-    if (remainingBits >= 8) {
+    *p++ = PADM_PATTERN; if (p == end) return;
+    *p++ = PADB_PATTERN; if (p == end) return;
+    *p++ = PADN_PATTERN; if (p == end) return;
+    *p++ = PADF_PATTERN; if (p == end) return;
+
+    {
 	const char *version = get_lame_short_version ();
-	int len = strlen(version), i = 0;
-	do {
-	    if (i < len)
-		putbits8(bs,version[i++],8);
-	    else
-		putbits8(bs,PADDING_PATTERN,8);
-	} while ((remainingBits -= 8) >= 8);
+	int len = strlen(version);
+	if (len < end - p) {
+	    memcpy(p, version, len);
+	    p += len;
+	}
     }
-
-    if (remainingBits)
-	putbits8(bs, 0, remainingBits);
+    while (p != end)
+	*p++ = PADDING_PATTERN;
 }
 
 /*
