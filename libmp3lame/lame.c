@@ -683,8 +683,11 @@ lame_print_config(lame_t gfc)
         || gfc->CPU_features.SSE || gfc->CPU_features.SSE2) {
 	gfc->report.msgf("CPU features:");
 
-        if (gfc->CPU_features.MMX)
-            gfc->report.msgf("MMX (ASM used)");
+        if (gfc->CPU_features.MMX) {
+            gfc->report.msgf("MMX");
+	    if (!gfc->asm_optimizations.sse || !gfc->CPU_features.SSE2)
+		gfc->report.msgf(" (ASM used)");
+	}
         if (gfc->CPU_features.MMX2)
             gfc->report.msgf(", MMX2");
         if (gfc->CPU_features.AMD_3DNow)
