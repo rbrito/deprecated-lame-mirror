@@ -612,7 +612,7 @@ trancate_smallspectrums(
     lame_internal_flags *gfc,
     gr_info		* const gi,
     const FLOAT	* const l3_xmin,
-    const FLOAT	* const work
+    FLOAT	* const work
     )
 {
     int sfb, j, width;
