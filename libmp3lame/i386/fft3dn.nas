@@ -22,7 +22,7 @@ costab	dd	0x80000000, 0
 	dd	6.135884819898878e-03, 6.135884819898878e-03
 D_1_0_0_0	dd	0.0		, 1.0
 
-	segment_text
+	segment_code
 
 ;void fht_3DN(float *fz, int nn);
 
