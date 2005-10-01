@@ -66,8 +66,8 @@ rm -f config.cache
 %configure \
 	--enable-nasm \
 	--enable-decoder \
-	--without-vorbis \
 	--enable-analyzer=no \
+	--disable-analysis-hook \
 	--enable-brhist \
 	--disable-debug
 
