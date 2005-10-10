@@ -1,11 +1,10 @@
 #!/usr/bin/make -f
-# Sample debian/rules that uses debhelper.
-# GNU copyright 1997 to 1999 by Joey Hess.
+# Sample debian/rules that uses debhelper, GNU copyright 1997 to 1999 by Joey Hess.
+# Adapted by Rogério Brito for the lame project.
 
 # Uncomment this to turn on verbose mode.
 #export DHVERBOSE=1
 
-# This is the debhelper compatibility version to use.
 export DH_COMPAT=4
 
 configure: configure-stamp
@@ -51,7 +50,6 @@ clean:
 	rm -f build-stamp configure-stamp
 
 	# Add here commands to clean up after the build process.
-	# Parts of this taken from Christian Marillat's packaging.
 	[ ! -f Makefile ] || $(MAKE) distclean
 	dh_clean confcache libmp3lame/i386/choose_table.nas.lst \
 	libmp3lame/i386/cpu_feat.nas.lst libmp3lame/i386/scalar.nas.lst

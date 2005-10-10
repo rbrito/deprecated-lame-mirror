@@ -1,3 +1,11 @@
+lame (3.98-1) unstable; urgency=low
+
+  * debian/copyright: updated FSF real address;
+  * debian/rules: small fixes;
+  * doc/man/lame.1: used accented characters in troff format.
+
+ -- Rogério Brito <rbrito@users.sf.net>  Mon, 10 Oct 2005 03:33:31 -0300
+
 lame (3.97-8) unstable; urgency=low
 
   * debian/rules: enable full optimization, now that it works with GCC 4.
