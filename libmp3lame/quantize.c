@@ -1245,6 +1245,7 @@ outer_loop (
         do {
 	        calc_noise_result noise_info;
             int search_limit;
+            int maxggain = 255;
 
             /* When quantization with no distorted bands is found,
              * allow up to X new unsuccesful tries in serial. This
@@ -1279,6 +1280,8 @@ outer_loop (
 	        /* try a new scalefactor conbination on cod_info_w */
 	        if (balance_noise (gfp, &cod_info_w, distort, xrpow, bRefine) == 0)
 	            break;
+            if (cod_info_w.scalefac_scale)
+                maxggain = 254;
 
             /* inner_loop starts with the initial quantization step computed above
              * and slowly increases until the bits < huff_bits.
@@ -1293,20 +1296,20 @@ outer_loop (
 	         */
 	        while ((cod_info_w.part2_3_length
 		        = count_bits(gfc, xrpow, &cod_info_w, &prev_noise)) > huff_bits
-	               && cod_info_w.global_gain < 256u)
+	               && cod_info_w.global_gain <= maxggain)
 	            cod_info_w.global_gain++;
 
-	        if (cod_info_w.global_gain >= 256)
+	        if (cod_info_w.global_gain > maxggain)
 	            break;
 
             if (best_noise_info.over_count == 0) {
 
 	            while ((cod_info_w.part2_3_length
 		            = count_bits(gfc, xrpow, &cod_info_w, &prev_noise)) > best_part2_3_length
-	                   && cod_info_w.global_gain < 256u)
+	                   && cod_info_w.global_gain <= maxggain)
 	                cod_info_w.global_gain++;
 
-	            if (cod_info_w.global_gain >= 256)
+	            if (cod_info_w.global_gain > maxggain)
 	                break;
             }
                 
@@ -1351,7 +1354,7 @@ outer_loop (
                 }
 	        }
         }
-        while (cod_info_w.global_gain < 255u);
+        while ((cod_info_w.global_gain + cod_info_w.scalefac_scale) < 255);
 
         if (gfc->noise_shaping_amp == 3) {
             if (!bRefine) {
@@ -1372,7 +1375,7 @@ outer_loop (
         }
     }
 
-    assert (cod_info->global_gain < 256);
+    assert ((cod_info->global_gain + cod_info->scalefac_scale) <= 255);
     /*  finish up
      */
     if (gfp->VBR == vbr_rh || gfp->VBR == vbr_mtrh)
