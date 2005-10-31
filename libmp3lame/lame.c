@@ -240,7 +240,26 @@ optimum_samplefreq(int lowpassfreq, int input_samplefreq)
  *  - if possible, sfb21 should NOT be used
  *
  */
-    int suggested_samplefreq = input_samplefreq;
+    int suggested_samplefreq;
+    
+    if (input_samplefreq >= 48000)
+        suggested_samplefreq = 48000;
+    else if (input_samplefreq >= 44100)
+        suggested_samplefreq = 44100;
+    else if (input_samplefreq >= 32000)
+        suggested_samplefreq = 32000;
+    else if (input_samplefreq >= 24000)
+        suggested_samplefreq = 24000;
+    else if (input_samplefreq >= 22050)
+        suggested_samplefreq = 22050;
+    else if (input_samplefreq >= 16000)
+        suggested_samplefreq = 16000;
+    else if (input_samplefreq >= 12000)
+        suggested_samplefreq = 12000;
+    else if (input_samplefreq >= 11025)
+        suggested_samplefreq = 11025;
+    else if (input_samplefreq >= 8000)
+        suggested_samplefreq = 8000;
 
     if (lowpassfreq == -1)
         return suggested_samplefreq;
@@ -661,7 +680,7 @@ lame_init_params(lame_global_flags * const gfp)
        if we can't store them */
     if (!gfp->bWriteVbrTag){
         gfp->findReplayGain = 0;
-	gfp->decode_on_the_fly = 0;
+        gfp->decode_on_the_fly = 0;
         gfc->findPeakSample = 0;
     }
     gfc->findReplayGain = gfp->findReplayGain;
