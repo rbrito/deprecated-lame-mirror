@@ -48,19 +48,25 @@ char   *strchr(), *strrchr();
 static int
 my_console_printing(FILE * fp, const char *format, va_list ap)
 {
-    return vfprintf(fp, format, ap);
+    if (fp != NULL)
+        return vfprintf(fp, format, ap);
+    return 0;
 }
 
 static int
 my_error_printing(FILE * fp, const char *format, va_list ap)
 {
-    return vfprintf(fp, format, ap);
+    if (fp != NULL)
+        return vfprintf(fp, format, ap);
+    return 0;
 }
 
 static int
 my_report_printing(FILE * fp, const char *format, va_list ap)
 {
-    return vfprintf(fp, format, ap);
+    if (fp != NULL)
+        return vfprintf(fp, format, ap);
+    return 0;
 }
 
 
