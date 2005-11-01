@@ -20,7 +20,6 @@
 #define LAME_GTKCONTROL_H
 
 
-int gtkcontrol(lame_global_flags *gfp2,char *inPath);
+int     gtkcontrol(lame_global_flags * gfp2, char *inPath);
 
 #endif
-

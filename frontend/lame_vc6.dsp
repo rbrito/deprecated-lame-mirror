@@ -134,6 +134,10 @@ SOURCE=.\parse.c
 # End Source File
 # Begin Source File
 
+SOURCE=.\console.c
+# End Source File
+# Begin Source File
+
 SOURCE=.\portableio.c
 # End Source File
 # Begin Source File
@@ -163,6 +167,10 @@ SOURCE=.\main.h
 # Begin Source File
 
 SOURCE=.\parse.h
+# End Source File
+# Begin Source File
+
+SOURCE=.\console.h
 # End Source File
 # Begin Source File
 

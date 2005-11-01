@@ -21,16 +21,13 @@
 
 #ifndef LAME_TIMESTATUS_H
 #define LAME_TIMESTATUS_H
-void timestatus_klemm(const lame_global_flags * const gfp);
+void    timestatus_klemm(const lame_global_flags * const gfp);
 
-void timestatus ( const int samp_rate, 
-                  const int frameNum, 
-                  const int totalframes, 
-                  const int           framesize);
-void timestatus_finish(void);
+void    timestatus(const int samp_rate,
+                   const int frameNum, const int totalframes, const int framesize);
+void    timestatus_finish(void);
 
-void decoder_progress(const lame_global_flags * const gfp,const mp3data_struct * const);
-void decoder_progress_finish(const lame_global_flags * const gfp);
+void    decoder_progress(const mp3data_struct * const);
+void    decoder_progress_finish();
 
 #endif /* LAME_TIMESTATUS_H */
-

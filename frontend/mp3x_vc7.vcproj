@@ -971,6 +971,73 @@
 				</FileConfiguration>
 			</File>
 			<File
+				RelativePath="console.c">
+				<FileConfiguration
+					Name="Release GTK|Win32">
+					<Tool
+						Name="VCCLCompilerTool"
+						Optimization="2"
+						AdditionalIncludeDirectories=""
+						PreprocessorDefinitions=""/>
+				</FileConfiguration>
+				<FileConfiguration
+					Name="Debug GTK|Win32">
+					<Tool
+						Name="VCCLCompilerTool"
+						Optimization="0"
+						AdditionalIncludeDirectories=""
+						PreprocessorDefinitions=""/>
+				</FileConfiguration>
+				<FileConfiguration
+					Name="LAME debug|Win32">
+					<Tool
+						Name="VCCLCompilerTool"
+						Optimization="0"
+						AdditionalIncludeDirectories=""
+						PreprocessorDefinitions=""/>
+				</FileConfiguration>
+				<FileConfiguration
+					Name="LAME release|Win32">
+					<Tool
+						Name="VCCLCompilerTool"
+						Optimization="0"
+						AdditionalIncludeDirectories=""
+						PreprocessorDefinitions=""/>
+				</FileConfiguration>
+				<FileConfiguration
+					Name="LAME release Nasm|Win32">
+					<Tool
+						Name="VCCLCompilerTool"
+						Optimization="0"
+						AdditionalIncludeDirectories=""
+						PreprocessorDefinitions=""/>
+				</FileConfiguration>
+				<FileConfiguration
+					Name="dll debug|Win32">
+					<Tool
+						Name="VCCLCompilerTool"
+						Optimization="0"
+						AdditionalIncludeDirectories=""
+						PreprocessorDefinitions=""/>
+				</FileConfiguration>
+				<FileConfiguration
+					Name="dll release|Win32">
+					<Tool
+						Name="VCCLCompilerTool"
+						Optimization="0"
+						AdditionalIncludeDirectories=""
+						PreprocessorDefinitions=""/>
+				</FileConfiguration>
+				<FileConfiguration
+					Name="dll release Nasm|Win32">
+					<Tool
+						Name="VCCLCompilerTool"
+						Optimization="0"
+						AdditionalIncludeDirectories=""
+						PreprocessorDefinitions=""/>
+				</FileConfiguration>
+			</File>
+			<File
 				RelativePath="portableio.c">
 				<FileConfiguration
 					Name="Release GTK|Win32">
@@ -1125,6 +1192,9 @@
 			</File>
 			<File
 				RelativePath="parse.h">
+			</File>
+			<File
+				RelativePath="console.h">
 			</File>
 			<File
 				RelativePath="portableio.h">

@@ -49,6 +49,7 @@
 #if defined(BRHIST)
 # include "brhist.h"
 #endif
+#include "console.h"
 
 #ifdef WITH_DMALLOC
 #include <dmalloc.h>
@@ -98,11 +99,11 @@ ts_time_decompose(const unsigned long time_in_sec, const char padded_char)
     const unsigned int sec = time_in_sec % 60;
 
     if (hour == 0)
-        fprintf(stderr, "   %2u:%02u%c", min, sec, padded_char);
+        console_printf("   %2u:%02u%c", min, sec, padded_char);
     else if (hour < 100)
-        fprintf(stderr, "%2lu:%02u:%02u%c", hour, min, sec, padded_char);
+        console_printf("%2lu:%02u:%02u%c", hour, min, sec, padded_char);
     else
-        fprintf(stderr, "%6lu h%c", hour, padded_char);
+        console_printf("%6lu h%c", hour, padded_char);
 }
 
 void
@@ -141,12 +142,11 @@ timestatus(int samp_rate, int frameNum, int totalframes, int framesize)
     proc_time.last_time = tmx;
 
     if (frameNum == 0 && init == 0) {
-        fprintf(stderr,
-                "\r"
-                "    Frame          |  CPU time/estim | REAL time/estim | play/CPU |    ETA \n"
-                "     0/       ( 0%%)|    0:00/     :  |    0:00/     :  |         " SPEED_CHAR
-                "|     :  \r"
-                /* , Console_IO.str_clreoln, Console_IO.str_clreoln */ );
+        console_printf("\r"
+                       "    Frame          |  CPU time/estim | REAL time/estim | play/CPU |    ETA \n"
+                       "     0/       ( 0%%)|    0:00/     :  |    0:00/     :  |         "
+                       SPEED_CHAR "|     :  \r"
+                       /* , Console_IO.str_clreoln, Console_IO.str_clreoln */ );
         init = 1;
         return;
     }
@@ -164,23 +164,22 @@ timestatus(int samp_rate, int frameNum, int totalframes, int framesize)
         percent = 100;
     }
 
-    fprintf(stderr, "\r%6i/%-6i", frameNum, totalframes);
-    fprintf(stderr, percent < 100 ? " (%2d%%)|" : "(%3.3d%%)|", percent);
+    console_printf("\r%6i/%-6i", frameNum, totalframes);
+    console_printf(percent < 100 ? " (%2d%%)|" : "(%3.3d%%)|", percent);
     ts_time_decompose((unsigned long) proc_time.elapsed_time, '/');
     ts_time_decompose((unsigned long) proc_time.estimated_time, '|');
     ts_time_decompose((unsigned long) real_time.elapsed_time, '/');
     ts_time_decompose((unsigned long) real_time.estimated_time, '|');
-    fprintf(stderr, proc_time.speed_index <= 1. ?
-            "%9.4f" SPEED_CHAR "|" : "%#9.5g" SPEED_CHAR "|", SPEED_MULT * proc_time.speed_index);
+    console_printf(proc_time.speed_index <= 1. ?
+                   "%9.4f" SPEED_CHAR "|" : "%#9.5g" SPEED_CHAR "|",
+                   SPEED_MULT * proc_time.speed_index);
     ts_time_decompose((unsigned long) (real_time.estimated_time - real_time.elapsed_time), ' ');
-    fflush(stderr);
 }
 
 void
 timestatus_finish(void)
 {
-    fprintf(stderr, "\n");
-    fflush(stderr);
+    console_printf("\n");
 }
 
 void
@@ -209,11 +208,11 @@ timestatus_klemm(const lame_global_flags * const gfp)
 /* these functions are used in get_audio.c */
 
 void
-decoder_progress(const lame_global_flags * const gfp, const mp3data_struct * const mp3data)
+decoder_progress(const mp3data_struct * const mp3data)
 {
     static int last;
-    fprintf(stderr, "\rFrame#%6i/%-6i %3i kbps",
-            mp3data->framenum, mp3data->totalframes, mp3data->bitrate);
+    console_printf("\rFrame#%6i/%-6i %3i kbps",
+                   mp3data->framenum, mp3data->totalframes, mp3data->bitrate);
 
     /* Programmed with a single frame hold delay */
     /* Attention: static data */
@@ -224,22 +223,21 @@ decoder_progress(const lame_global_flags * const gfp, const mp3data_struct * con
 
     if (mp3data->mode == JOINT_STEREO) {
         int     curr = mp3data->mode_ext;
-        fprintf(stderr, "  %s  %c",
-                curr & 2 ? last & 2 ? " MS " : "LMSR" : last & 2 ? "LMSR" : "L  R",
-                curr & 1 ? last & 1 ? 'I' : 'i' : last & 1 ? 'i' : ' ');
+        console_printf("  %s  %c",
+                       curr & 2 ? last & 2 ? " MS " : "LMSR" : last & 2 ? "LMSR" : "L  R",
+                       curr & 1 ? last & 1 ? 'I' : 'i' : last & 1 ? 'i' : ' ');
         last = curr;
     }
     else {
-        fprintf(stderr, "         ");
+        console_printf("         ");
         last = 0;
     }
-/*    fprintf ( stderr, "%s", Console_IO.str_clreoln ); */
-    fprintf(stderr, "        \b\b\b\b\b\b\b\b");
-    fflush(stderr);
+/*    console_printf ("%s", Console_IO.str_clreoln ); */
+    console_printf("        \b\b\b\b\b\b\b\b");
 }
 
 void
-decoder_progress_finish(const lame_global_flags * const gfp)
+decoder_progress_finish()
 {
-    fprintf(stderr, "\n");
+    console_printf("\n");
 }

@@ -1,11 +1,11 @@
 /*
  * frontend/console.h
  *
- * This 
+ * This
  *
  *
  */
- 
+
 #ifndef LAME_CONSOLE_H
 #define LAME_CONSOLE_H
 
@@ -14,24 +14,44 @@
 #endif
 
 typedef struct {
-    unsigned long  ClassID;
-    unsigned long  ClassProt;
-    FILE*          Console_fp;  /* filepointer to stream reporting information */
-    FILE*          Error_fp;    /* filepointer to stream fatal error reporting information */
-    FILE*          Report_fp;   /* filepointer to stream reports (normally a text file or /dev/null) */
-    char*          Console_buff;
-#if defined(_WIN32)  &&  !defined(__CYGWIN__) 
-    HANDLE         Console_Handle;
+    unsigned long ClassID;
+    unsigned long ClassProt;
+    FILE   *Console_fp;      /* filepointer to stream reporting information */
+    FILE   *Error_fp;        /* filepointer to stream fatal error reporting information */
+    FILE   *Report_fp;       /* filepointer to stream reports (normally a text file or /dev/null) */
+#if defined(_WIN32)  &&  !defined(__CYGWIN__)
+    HANDLE  Console_Handle;
 #endif
-    int            disp_width;
-    int            disp_height;
-    char           str_up         [10];
-    char           str_clreoln    [10];
-    char           str_emph       [10];
-    char           str_norm       [10];
+    int     disp_width;
+    int     disp_height;
+    char    str_up[10];
+    char    str_clreoln[10];
+    char    str_emph[10];
+    char    str_norm[10];
+    char    Console_buff[2048];
+    int     Console_file_type;
 } Console_IO_t;
+
+extern Console_IO_t Console_IO;
+extern int frontend_open_console();
+extern void frontend_close_console();
+
+extern void frontend_msgf();
+extern void frontend_debugf();
+extern void frontend_errorf();
+
+int     console_printf(const char *format, ...);
+int     error_printf(const char *format, ...);
+int     report_printf(const char *format, ...);
+
+void    console_flush();
+void    error_flush();
+void    report_flush();
+
+void    console_up(int n_lines);
+
+void    set_debug_file(const char* fn);
 
 #endif /* LAME_CONSOLE_H */
 
 /* end of console.h */
-
