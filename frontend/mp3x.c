@@ -16,6 +16,7 @@
 #include "lametime.h"
 
 #include "main.h"
+#include "console.h"
 
 #ifdef WITH_DMALLOC
 #include <dmalloc.h>
