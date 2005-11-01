@@ -2,6 +2,8 @@
 
 #ifdef HAVE_CONFIG_H
 # include <config.h>
+/* std int types already defined in config.h */
+# define _STDINT_H
 #endif
 
 #ifndef __GNUC__
