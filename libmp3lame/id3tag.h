@@ -22,6 +22,7 @@ struct id3tag_spec
     int year;
     const char *comment;
     int track;
+    int trackcount;
     int genre;
 };
 

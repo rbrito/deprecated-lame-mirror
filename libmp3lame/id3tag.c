@@ -260,6 +260,22 @@ id3tag_set_track(lame_global_flags *gfp, const char *track)
             gfc->tag_spec.track = num;
             gfc->tag_spec.flags |= CHANGED_FLAG;
         }
+
+        /* Look for the total track count after a "/", same restrictions */
+        char *trackcount = strchr(track, '/');
+        if (trackcount && *trackcount) {
+            num = atoi(trackcount + 1);
+            if (num < 0) {
+                num = 0;
+            }
+            if (num > 255) {
+                num = 255;
+            }
+            if (num) {
+                gfc->tag_spec.trackcount = num;
+                gfc->tag_spec.flags |= CHANGED_FLAG;
+            }
+        }
     }
 }
 
@@ -396,7 +412,7 @@ id3tag_write_v2(lame_global_flags *gfp)
 	    size_t playlength_length;
             char year[5];
             size_t year_length;
-            char track[3];
+            char track[7];
             size_t track_length;
             char genre[6];
             size_t genre_length;
@@ -412,7 +428,9 @@ id3tag_write_v2(lame_global_flags *gfp)
 #if defined(__hpux) || defined(__svr4__) || defined(M_UNIX) || defined(_AIX)
             encoder_length = sprintf(encoder,
                             "LAME v%s", get_lame_short_version());
+	    if (encoder_length+1 > sizeof(encoder)) abort();
 	    playlength_length = sprintf(playlength, "%lu", playlength_ms);
+	    if (playlength_length+1 > sizeof(playlength)) abort();
 #else
 #if defined(__sun__)
             (void) sprintf(encoder, "LAME v%s", get_lame_short_version());
@@ -439,6 +457,7 @@ id3tag_write_v2(lame_global_flags *gfp)
             }
             if (gfc->tag_spec.year) {
                 year_length = sprintf(year, "%d", gfc->tag_spec.year);
+		if (year_length+1 > sizeof(year)) abort();
                 tag_size += 11 + year_length;
             } else {
                 year_length = 0;
@@ -449,13 +468,20 @@ id3tag_write_v2(lame_global_flags *gfp)
                 tag_size += 15 + comment_length;
             }
             if (gfc->tag_spec.track) {
-                track_length = sprintf(track, "%d", gfc->tag_spec.track);
+                if (gfc->tag_spec.trackcount) {
+                    track_length = sprintf(track, "%d/%d", gfc->tag_spec.track,
+                                  gfc->tag_spec.trackcount);
+                } else {
+                    track_length = sprintf(track, "%d", gfc->tag_spec.track);
+                }
+		if (track_length+1 > sizeof(track)) abort();
                 tag_size += 11 + track_length;
             } else {
                 track_length = 0;
             }
             if (gfc->tag_spec.genre != GENRE_NUM_UNKNOWN) {
                 genre_length = sprintf(genre, "(%d)", gfc->tag_spec.genre);
+		if (genre_length+1 > sizeof(genre_length)) abort();
                 tag_size += 11 + genre_length;
             } else {
                 genre_length = 0;
@@ -542,6 +568,7 @@ id3tag_write_v1(lame_global_flags *gfp)
         unsigned char *p = tag;
         int pad = (gfc->tag_spec.flags & SPACE_V1_FLAG) ? ' ' : 0;
         char year[5];
+	int year_length;
         unsigned int index;
         /* set tag identifier */
         *p++ = 'T'; *p++ = 'A'; *p++ = 'G';
@@ -549,7 +576,8 @@ id3tag_write_v1(lame_global_flags *gfp)
         p = set_text_field(p, gfc->tag_spec.title, 30, pad);
         p = set_text_field(p, gfc->tag_spec.artist, 30, pad);
         p = set_text_field(p, gfc->tag_spec.album, 30, pad);
-        sprintf(year, "%d", gfc->tag_spec.year);
+        year_length = sprintf(year, "%d", gfc->tag_spec.year);
+	if (year_length+1 > sizeof(year)) abort();
         p = set_text_field(p, gfc->tag_spec.year ? year : NULL, 4, pad);
         /* limit comment field to 28 bytes if a track is specified */
         p = set_text_field(p, gfc->tag_spec.comment, gfc->tag_spec.track
