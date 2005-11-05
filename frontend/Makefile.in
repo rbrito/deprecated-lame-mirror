@@ -56,10 +56,10 @@ CONFIG_CLEAN_FILES =
 am__installdirs = "$(DESTDIR)$(bindir)"
 binPROGRAMS_INSTALL = $(INSTALL_PROGRAM)
 PROGRAMS = $(bin_PROGRAMS)
-am__lame_SOURCES_DIST = main.c get_audio.c lametime.c parse.c \
-	portableio.c timestatus.c brhist.c brhist.h
-am__objects_1 = get_audio$U.$(OBJEXT) lametime$U.$(OBJEXT) \
-	parse$U.$(OBJEXT) portableio$U.$(OBJEXT) \
+am__lame_SOURCES_DIST = main.c console.c get_audio.c lametime.c \
+	parse.c portableio.c timestatus.c brhist.c brhist.h
+am__objects_1 = console$U.$(OBJEXT) get_audio$U.$(OBJEXT) \
+	lametime$U.$(OBJEXT) parse$U.$(OBJEXT) portableio$U.$(OBJEXT) \
 	timestatus$U.$(OBJEXT)
 am__objects_2 = brhist$U.$(OBJEXT)
 @WITH_BRHIST_FALSE@am_lame_OBJECTS = main$U.$(OBJEXT) $(am__objects_1)
@@ -68,8 +68,8 @@ am__objects_2 = brhist$U.$(OBJEXT)
 lame_OBJECTS = $(am_lame_OBJECTS)
 lame_LDADD = $(LDADD)
 lame_DEPENDENCIES = $(top_builddir)/libmp3lame/libmp3lame.la
-am__mp3rtp_SOURCES_DIST = mp3rtp.c rtp.c rtp.h get_audio.c lametime.c \
-	parse.c portableio.c timestatus.c brhist.c brhist.h
+am__mp3rtp_SOURCES_DIST = mp3rtp.c rtp.c rtp.h console.c get_audio.c \
+	lametime.c parse.c portableio.c timestatus.c brhist.c brhist.h
 @WITH_BRHIST_FALSE@am_mp3rtp_OBJECTS = mp3rtp$U.$(OBJEXT) \
 @WITH_BRHIST_FALSE@	rtp$U.$(OBJEXT) $(am__objects_1)
 @WITH_BRHIST_TRUE@am_mp3rtp_OBJECTS = mp3rtp$U.$(OBJEXT) \
@@ -78,8 +78,9 @@ am__mp3rtp_SOURCES_DIST = mp3rtp.c rtp.c rtp.h get_audio.c lametime.c \
 mp3rtp_OBJECTS = $(am_mp3rtp_OBJECTS)
 mp3rtp_LDADD = $(LDADD)
 mp3rtp_DEPENDENCIES = $(top_builddir)/libmp3lame/libmp3lame.la
-am__mp3x_SOURCES_DIST = mp3x.c gtkanal.c gpkplotting.c get_audio.c \
-	lametime.c parse.c portableio.c timestatus.c brhist.c brhist.h
+am__mp3x_SOURCES_DIST = mp3x.c gtkanal.c gpkplotting.c console.c \
+	get_audio.c lametime.c parse.c portableio.c timestatus.c \
+	brhist.c brhist.h
 @WITH_BRHIST_FALSE@am_mp3x_OBJECTS = mp3x$U.$(OBJEXT) \
 @WITH_BRHIST_FALSE@	gtkanal$U.$(OBJEXT) gpkplotting$U.$(OBJEXT) \
 @WITH_BRHIST_FALSE@	$(am__objects_1)
@@ -241,8 +242,6 @@ AUTOMAKE_OPTIONS = 1.5 foreign $(top_srcdir)/ansi2knr
 brhist_sources = brhist.c brhist.h
 EXTRA_DIST = \
 	$(brhist_sources) \
-	console.c \
-	console.h \
 	lame_vc6.dsp \
 	lame_vc7.vcproj \
 	mp3x_vc6.dsp \
@@ -250,13 +249,16 @@ EXTRA_DIST = \
 	amiga_mpega.c
 
 common_sources = \
+	console.c \
 	get_audio.c \
 	lametime.c \
 	parse.c \
 	portableio.c \
 	timestatus.c
 
-noinst_HEADERS = get_audio.h \
+noinst_HEADERS = \
+	console.h \
+	get_audio.h \
 	gtkanal.h \
 	gpkplotting.h \
 	lametime.h \
@@ -370,6 +372,7 @@ mostlyclean-kr:
 	-test "$U" = "" || rm -f *_.c
 
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/brhist$U.Po@am__quote@
+@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/console$U.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/get_audio$U.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/gpkplotting$U.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/gtkanal$U.Po@am__quote@
@@ -404,6 +407,8 @@ mostlyclean-kr:
 @am__fastdepCC_FALSE@	$(LTCOMPILE) -c -o $@ $<
 brhist_.c: brhist.c $(ANSI2KNR)
 	$(CPP) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) `if test -f $(srcdir)/brhist.c; then echo $(srcdir)/brhist.c; else echo brhist.c; fi` | sed 's/^# \([0-9]\)/#line \1/' | $(ANSI2KNR) > $@ || rm -f $@
+console_.c: console.c $(ANSI2KNR)
+	$(CPP) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) `if test -f $(srcdir)/console.c; then echo $(srcdir)/console.c; else echo console.c; fi` | sed 's/^# \([0-9]\)/#line \1/' | $(ANSI2KNR) > $@ || rm -f $@
 get_audio_.c: get_audio.c $(ANSI2KNR)
 	$(CPP) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) `if test -f $(srcdir)/get_audio.c; then echo $(srcdir)/get_audio.c; else echo get_audio.c; fi` | sed 's/^# \([0-9]\)/#line \1/' | $(ANSI2KNR) > $@ || rm -f $@
 gpkplotting_.c: gpkplotting.c $(ANSI2KNR)
@@ -426,11 +431,12 @@ rtp_.c: rtp.c $(ANSI2KNR)
 	$(CPP) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) `if test -f $(srcdir)/rtp.c; then echo $(srcdir)/rtp.c; else echo rtp.c; fi` | sed 's/^# \([0-9]\)/#line \1/' | $(ANSI2KNR) > $@ || rm -f $@
 timestatus_.c: timestatus.c $(ANSI2KNR)
 	$(CPP) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) `if test -f $(srcdir)/timestatus.c; then echo $(srcdir)/timestatus.c; else echo timestatus.c; fi` | sed 's/^# \([0-9]\)/#line \1/' | $(ANSI2KNR) > $@ || rm -f $@
-brhist_.$(OBJEXT) brhist_.lo get_audio_.$(OBJEXT) get_audio_.lo \
-gpkplotting_.$(OBJEXT) gpkplotting_.lo gtkanal_.$(OBJEXT) gtkanal_.lo \
-lametime_.$(OBJEXT) lametime_.lo main_.$(OBJEXT) main_.lo \
-mp3rtp_.$(OBJEXT) mp3rtp_.lo mp3x_.$(OBJEXT) mp3x_.lo parse_.$(OBJEXT) \
-parse_.lo portableio_.$(OBJEXT) portableio_.lo rtp_.$(OBJEXT) rtp_.lo \
+brhist_.$(OBJEXT) brhist_.lo console_.$(OBJEXT) console_.lo \
+get_audio_.$(OBJEXT) get_audio_.lo gpkplotting_.$(OBJEXT) \
+gpkplotting_.lo gtkanal_.$(OBJEXT) gtkanal_.lo lametime_.$(OBJEXT) \
+lametime_.lo main_.$(OBJEXT) main_.lo mp3rtp_.$(OBJEXT) mp3rtp_.lo \
+mp3x_.$(OBJEXT) mp3x_.lo parse_.$(OBJEXT) parse_.lo \
+portableio_.$(OBJEXT) portableio_.lo rtp_.$(OBJEXT) rtp_.lo \
 timestatus_.$(OBJEXT) timestatus_.lo : $(ANSI2KNR)
 
 mostlyclean-libtool:
