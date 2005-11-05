@@ -261,13 +261,13 @@ close_console(Console_IO_t * const mfp)
 Console_IO_t Console_IO;
 
 int
-frontend_open_console()
+frontend_open_console(void)
 {
     return init_console(&Console_IO);
 }
 
 void
-frontend_close_console()
+frontend_close_console(void)
 {
     deinit_console(&Console_IO);
 }
