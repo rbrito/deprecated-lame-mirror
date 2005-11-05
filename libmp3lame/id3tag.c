@@ -333,6 +333,7 @@ set_4_byte_value(unsigned char *bytes, unsigned long value)
 #define TRACK_FRAME_ID FRAME_ID('T', 'R', 'C', 'K')
 #define GENRE_FRAME_ID FRAME_ID('T', 'C', 'O', 'N')
 #define ENCODER_FRAME_ID FRAME_ID('T', 'S', 'S', 'E')
+#define PLAYLENGTH_FRAME_ID FRAME_ID('T', 'L', 'E', 'N')
 
 static unsigned char *
 set_frame(unsigned char *frame, unsigned long id, const char *text,
@@ -390,6 +391,9 @@ id3tag_write_v2(lame_global_flags *gfp)
             size_t tag_size;
             char encoder[20];
             size_t encoder_length;
+	    unsigned long playlength_ms;
+	    char playlength[20];
+	    size_t playlength_length;
             char year[5];
             size_t year_length;
             char track[3];
@@ -400,21 +404,29 @@ id3tag_write_v2(lame_global_flags *gfp)
             unsigned char *p;
             size_t adjusted_tag_size;
             unsigned int index;
+	    /* calculate playlength in milliseconds */
+	    playlength_ms = (unsigned long) ((double)gfp->num_samples * 1000.0) / 
+                (gfp->num_channels * gfp->in_samplerate);
             /* calulate size of tag starting with 10-byte tag header */
             tag_size = 10;
 #if defined(__hpux) || defined(__svr4__) || defined(M_UNIX) || defined(_AIX)
             encoder_length = sprintf(encoder,
                             "LAME v%s", get_lame_short_version());
+	    playlength_length = sprintf(playlength, "%lu", playlength_ms);
 #else
 #if defined(__sun__)
             (void) sprintf(encoder, "LAME v%s", get_lame_short_version());
             encoder_length = strlen(encoder);
+	    (void) sprintf(playlength, "%lu", playlength_ms);
+	    playlength_length = strlen(playlength);
 #else
             encoder_length = snprintf(encoder, sizeof(encoder),
                             "LAME v%s", get_lame_short_version());
+	    playlength_length = snprintf(playlength, sizeof(playlength), "%lu", playlength_ms);
 #endif
 #endif
             tag_size += 11 + encoder_length;
+            tag_size += 11 + playlength_length;
             if (title_length) {
                 /* add 10-byte frame header, 1 encoding descriptor byte ... */
                 tag_size += 11 + title_length;
@@ -484,6 +496,7 @@ id3tag_write_v2(lame_global_flags *gfp)
 
             /* set each frame in tag */
             p = set_frame(p, ENCODER_FRAME_ID, encoder, encoder_length);
+            p = set_frame(p, PLAYLENGTH_FRAME_ID, playlength, playlength_length);
             p = set_frame(p, TITLE_FRAME_ID, gfc->tag_spec.title, title_length);
             p = set_frame(p, ARTIST_FRAME_ID, gfc->tag_spec.artist,
                     artist_length);
