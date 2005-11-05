@@ -33,20 +33,20 @@ typedef struct {
 } Console_IO_t;
 
 extern Console_IO_t Console_IO;
-extern int frontend_open_console();
-extern void frontend_close_console();
+extern int frontend_open_console(void);
+extern void frontend_close_console(void);
 
-extern void frontend_msgf();
-extern void frontend_debugf();
-extern void frontend_errorf();
+extern void frontend_msgf(const char *format, va_list ap);
+extern void frontend_debugf(const char *format, va_list ap);
+extern void frontend_errorf(const char *format, va_list ap);
 
 int     console_printf(const char *format, ...);
 int     error_printf(const char *format, ...);
 int     report_printf(const char *format, ...);
 
-void    console_flush();
-void    error_flush();
-void    report_flush();
+void    console_flush(void);
+void    error_flush(void);
+void    report_flush(void);
 
 void    console_up(int n_lines);
 
