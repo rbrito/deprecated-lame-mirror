@@ -40,7 +40,6 @@
 #include "machine.h"
 #include "gain_analysis.h"
 #include "set_get.h"
-#include "quantize.h"
 
 #if defined(__FreeBSD__) && !defined(__alpha__)
 #include <floatingpoint.h>
@@ -240,7 +239,26 @@ optimum_samplefreq(int lowpassfreq, int input_samplefreq)
  *  - if possible, sfb21 should NOT be used
  *
  */
-    int suggested_samplefreq = input_samplefreq;
+    int suggested_samplefreq;
+    
+    if (input_samplefreq >= 48000)
+        suggested_samplefreq = 48000;
+    else if (input_samplefreq >= 44100)
+        suggested_samplefreq = 44100;
+    else if (input_samplefreq >= 32000)
+        suggested_samplefreq = 32000;
+    else if (input_samplefreq >= 24000)
+        suggested_samplefreq = 24000;
+    else if (input_samplefreq >= 22050)
+        suggested_samplefreq = 22050;
+    else if (input_samplefreq >= 16000)
+        suggested_samplefreq = 16000;
+    else if (input_samplefreq >= 12000)
+        suggested_samplefreq = 12000;
+    else if (input_samplefreq >= 11025)
+        suggested_samplefreq = 11025;
+    else if (input_samplefreq >= 8000)
+        suggested_samplefreq = 8000;
 
     if (lowpassfreq == -1)
         return suggested_samplefreq;
@@ -912,8 +930,7 @@ lame_init_params(lame_global_flags * const gfp)
             gfc->sfb21_extra = 0;
         else 
             gfc->sfb21_extra = (gfp->out_samplerate > 44000);
-
-        gfc->iteration_loop = &VBR_new_iteration_loop;            
+            
         break;
         
     }
@@ -946,7 +963,6 @@ lame_init_params(lame_global_flags * const gfp)
         if (gfp->quality < 0)
             gfp->quality = LAME_DEFAULT_QUALITY;
 
-        gfc->iteration_loop = &VBR_old_iteration_loop;            
         break;
     }
 
@@ -971,12 +987,6 @@ lame_init_params(lame_global_flags * const gfp)
         gfc->PSY->mask_adjust = gfp->maskingadjust;
         gfc->PSY->mask_adjust_short = gfp->maskingadjust_short;
 
-        if (vbrmode == vbr_off) {
-            gfc->iteration_loop = &CBR_iteration_loop;            
-        }
-        else {
-            gfc->iteration_loop = &ABR_iteration_loop;            
-        }    
         break;
     }
     }
@@ -1107,22 +1117,6 @@ lame_init_params(lame_global_flags * const gfp)
     if ( gfc->sparseA < 0 ) gfc->sparseA = 0;
     if ( gfc->sparseB < 0 ) gfc->sparseB = 0;
     if ( gfc->sparseB > gfc->sparseA ) gfc->sparseB = gfc->sparseA;
-
-    switch (gfp->quantization_type) {
-    default:
-    case 0:
-        /* nothing to change */
-        break;
-    case 1:
-        gfc->quantization = 0;
-        gfc->PSY->mask_adjust += 0.68125;
-        gfc->PSY->mask_adjust_short += 0.68125;
-        break;
-    case 2:
-        gfc->quantization = 1;
-        break;
-    }
-        
 
     iteration_init(gfp);
     psymodel_init(gfp);
