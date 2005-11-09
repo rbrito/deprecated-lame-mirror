@@ -21,6 +21,7 @@ char   *alloca();
 #endif
 
 #include <stdio.h>
+#include <stdarg.h>
 
 #ifdef STDC_HEADERS
 # include <stdlib.h>
