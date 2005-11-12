@@ -144,7 +144,8 @@ filterYule (const Float_t* input, Float_t* output, size_t nSamples, const Float_
     /*register double  y;*/
 
     while (nSamples--) {
-        *output =  input [0]  * kernel[0]
+        *output =  1e-10  /* 1e-10 is a hack to avoid slowdown because of denormals */
+         +  input [0]  * kernel[0]
          - output[-1] * kernel[1]
          + input [-1] * kernel[2]
          - output[-2] * kernel[3]
