@@ -248,7 +248,7 @@ InitGainAnalysis (replaygain_t* rgData, long samplefreq )
 
 /* returns GAIN_ANALYSIS_OK if successful, GAIN_ANALYSIS_ERROR if not */
 
-static __inline double fsqr(const double d)
+static inline double fsqr(const double d)
 {  return d*d;
 }
 
