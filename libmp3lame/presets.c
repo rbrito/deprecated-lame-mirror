@@ -1,7 +1,7 @@
 /*
  * presets.c -- Apply presets
  *
- * Copyright (C) 2002 Gabriel Bouvigne / Lame project
+ *	Copyright (c) 2002-2005 Gabriel Bouvigne
  *
  * This library is free software; you can redistribute it and/or
  * modify it under the terms of the GNU Library General Public

@@ -1,7 +1,8 @@
 /*
  *	MP3 huffman table selecting and bit counting
  *
- *	Copyright (c) 1999 Takehiro TOMINAGA
+ *	Copyright (c) 1999-2005 Takehiro TOMINAGA
+ *	Copyright (c) 2002-2005 Gabriel Bouvigne
  *
  * This library is free software; you can redistribute it and/or
  * modify it under the terms of the GNU Library General Public

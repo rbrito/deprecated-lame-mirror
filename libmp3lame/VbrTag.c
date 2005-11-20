@@ -2,6 +2,7 @@
  *	Xing VBR tagging for LAME.
  *
  *	Copyright (c) 1999 A.L. Faber
+ *	Copyright (c) 2001 Jonathan Dee
  *
  * This library is free software; you can redistribute it and/or
  * modify it under the terms of the GNU Library General Public

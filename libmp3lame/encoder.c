@@ -2,6 +2,10 @@
  *	LAME MP3 encoding engine
  *
  *	Copyright (c) 1999 Mark Taylor
+ *	Copyright (c) 2000-2002 Takehiro Tominaga
+ *	Copyright (c) 2000-2005 Robert Hegemann
+ *	Copyright (c) 2001 Gabriel Bouvigne
+ *	Copyright (c) 2001 John Dahlstrom
  *
  * This library is free software; you can redistribute it and/or
  * modify it under the terms of the GNU Library General Public
@@ -563,7 +567,22 @@ lame_encode_mp3_frame(       /* Output */
             }
         }
     }
-    gfc->iteration_loop(gfp, *pe_use, ms_ener_ratio, *masking);
+
+    switch (gfp->VBR) {
+    default:
+    case vbr_off:
+        CBR_iteration_loop(gfp, *pe_use, ms_ener_ratio, *masking);
+        break;
+    case vbr_mt:
+    case vbr_rh:
+    case vbr_mtrh:
+        VBR_iteration_loop(gfp, *pe_use, ms_ener_ratio, *masking);
+        break;
+    case vbr_abr:
+        ABR_iteration_loop(gfp, *pe_use, ms_ener_ratio, *masking);
+        break;
+    }
+
 
 
     /****************************************

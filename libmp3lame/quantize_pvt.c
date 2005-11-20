@@ -1,7 +1,10 @@
 /*
  *	quantize_pvt source file
  *
- *	Copyright (c) 1999 Takehiro TOMINAGA
+ *	Copyright (c) 1999-2002 Takehiro Tominaga
+ *	Copyright (c) 2000-2002 Robert Hegemann
+ *	Copyright (c) 2001 Naoki Shibata
+ *	Copyright (c) 2002-2005 Gabriel Bouvigne
  *
  * This library is free software; you can redistribute it and/or
  * modify it under the terms of the GNU Library General Public

@@ -1,7 +1,7 @@
 /*
  *	MP3 window subband -> subband filtering -> mdct routine
  *
- *	Copyright (c) 1999 Takehiro TOMINAGA
+ *	Copyright (c) 1999-2000 Takehiro Tominaga
  *
  *
  * This library is free software; you can redistribute it and/or

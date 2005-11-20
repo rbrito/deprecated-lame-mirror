@@ -2,7 +2,7 @@
 /*
  * set/get functions for lame_global_flags
  *
- * Copyright (c) 2001 Alexander Leidinger
+ * Copyright (c) 2001-2005 Alexander Leidinger
  *
  * This library is free software; you can redistribute it and/or
  * modify it under the terms of the GNU Library General Public
@@ -1920,16 +1920,3 @@ lame_set_preset_notune( lame_global_flags*  gfp, int preset_notune )
     return 0;
 }
 
-
-void
-lame_set_quantization_type( lame_global_flags* gfp, int type )
-{
-    gfp->quantization_type = type;
-}
-
-
-int
-lame_get_quantization_type( lame_global_flags* gfp )
-{
-    return gfp->quantization_type;
-}
