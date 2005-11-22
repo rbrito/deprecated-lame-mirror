@@ -370,15 +370,15 @@ console_up(int n_lines)
 
 
 void
-set_debug_file(const char* fn)
+set_debug_file(const char *fn)
 {
     if (Console_IO.Report_fp == NULL) {
         Console_IO.Report_fp = fopen(fn, "a");
         if (Console_IO.Report_fp != NULL) {
-            error_printf("writing debug info into: %s\n",fn);
+            error_printf("writing debug info into: %s\n", fn);
         }
         else {
-            error_printf("Error: can't open for debug info: %s\n",fn);
+            error_printf("Error: can't open for debug info: %s\n", fn);
         }
     }
 }

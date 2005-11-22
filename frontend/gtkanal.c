@@ -1076,7 +1076,7 @@ spec_option(GtkWidget * widget, gpointer data)
     analyze();
 }
 
-static gint
+static  gint
 key_press_event(GtkWidget * widget, GdkEventKey * event)
 {
     /* is a switch() statement in lame forbidden? */

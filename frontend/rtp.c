@@ -188,7 +188,8 @@ struct rtpheader {           /* in network byte order */
 };
 
 void
-        rtp_initialization(struct rtpheader *foo) {
+rtp_initialization(struct rtpheader *foo)
+{
     foo->b.v = 2;
     foo->b.p = 0;
     foo->b.x = 0;
@@ -207,7 +208,8 @@ void
 }
 
 int
-        rtp_send(SOCKET s, struct rtpheader *foo, void *data, int len) {
+rtp_send(SOCKET s, struct rtpheader *foo, void *data, int len)
+{
     char   *buffer = malloc(len + sizeof(struct rtpheader));
     int    *cast = (int *) foo;
     int    *outcast = (int *) buffer;
@@ -229,7 +231,8 @@ int
 
 /* create a sender socket. */
 int
-        rtp_socket(SOCKET * ps, char *address, unsigned short port, int TTL) {
+rtp_socket(SOCKET * ps, char *address, unsigned short port, int TTL)
+{
 /*    int iRet ; */
     int     iLoop = 1;
 /*    struct  sockaddr_in sin ; */

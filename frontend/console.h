@@ -50,7 +50,7 @@ void    report_flush(void);
 
 void    console_up(int n_lines);
 
-void    set_debug_file(const char* fn);
+void    set_debug_file(const char *fn);
 
 #endif /* LAME_CONSOLE_H */
 

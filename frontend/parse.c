@@ -97,8 +97,6 @@ int     mp3_delay;           /* to adjust the number of samples truncated
 int     mp3_delay_set;       /* user specified the value of the mp3 encoder
                                 delay to assume for decoding */
 
-int     enc_delay;
-int     enc_padding;
 int     disable_wav_header;
 mp3data_struct mp3input_data; /* used by MP3 */
 int     print_clipping_info; /* print info whether waveform clips */
@@ -537,7 +535,8 @@ long_help(const lame_global_flags * gfp, FILE * const fp, const char *ProgramNam
              fprintf(fp, "    --athaa-type n  ATH auto adjust: 0 'no' else 'loudness based'\n"
 /** OBSOLETE "    --athaa-loudapprox n   n=1 total energy or n=2 equal loudness curve\n"*/
                      "    --athaa-sensitivity x  activation offset in -/+ dB for ATH auto-adjustment\n"
-                     "\n");)
+                     "\n");
+        )
         fprintf(fp,
                 "  PSY related:\n"
                 "    --short         use short blocks when appropriate\n"
@@ -1060,8 +1059,6 @@ parse_args(lame_global_flags * gfp, int argc, char **argv,
     silent = 0;
     ignore_tag_errors = 0;
     brhist = 1;
-    enc_padding = -1;
-    enc_delay = -1;
     mp3_delay = 0;
     mp3_delay_set = 0;
     print_clipping_info = 0;
@@ -1571,7 +1568,8 @@ parse_args(lame_global_flags * gfp, int argc, char **argv,
                     lame_set_tune(gfp, atof(nextArg));
                 }
 
-                T_ELIF_INTERNAL("psymodel") /*without helptext */
+                T_ELIF_INTERNAL("psymodel")
+                    /*without helptext */
                     /* 1 gpsycho, 2 nspsytune */
                     argUsed = 1;
                 lame_set_psy_model(gfp, atoi(nextArg));
@@ -1676,9 +1674,9 @@ parse_args(lame_global_flags * gfp, int argc, char **argv,
                     set_debug_file(nextArg);
                 }
 
-                T_ELSE error_printf("%s: unrec option --%s\n", ProgramName, token);
+                T_ELSE  error_printf("%s: unrec option --%s\n", ProgramName, token);
 
-                T_END i += argUsed;
+                T_END   i += argUsed;
 
             }
             else {

@@ -130,7 +130,7 @@ parse_args_from_string(lame_global_flags * const gfp, const char *p, char *inPat
 
 
 static FILE *
-init_files(lame_global_flags * gf, char *inPath, char *outPath)
+init_files(lame_global_flags * gf, char *inPath, char *outPath, int *enc_delay, int *enc_padding)
 {
     FILE   *outf;
     /* Mostly it is not useful to use the same input and output name.
@@ -148,7 +148,7 @@ init_files(lame_global_flags * gf, char *inPath, char *outPath)
      * if you want to do your own file input, skip this call and set
      * samplerate, num_channels and num_samples yourself.
      */
-    init_infile(gf, inPath);
+    init_infile(gf, inPath, enc_delay, enc_padding);
     if ((outf = init_outfile(outPath, lame_get_decode_only(gf))) == NULL) {
         error_printf("Can't init outfile '%s'\n", outPath);
         return NULL;
@@ -171,10 +171,12 @@ init_files(lame_global_flags * gf, char *inPath, char *outPath)
  * samples to skip, to (for example) compensate for the encoder delay */
 
 int
-lame_decoder(lame_global_flags * gfp, FILE * outf, int skip, char *inPath, char *outPath)
+lame_decoder(lame_global_flags * gfp, FILE * outf, int skip_start, char *inPath, char *outPath,
+             int *enc_delay, int *enc_padding)
 {
     short int Buffer[2][1152];
     int     iread;
+    int     skip_end = 0;
     double  wavsize;
     int     i;
     void    (*WriteFunction) (FILE * fp, char *p, int n);
@@ -191,15 +193,19 @@ lame_decoder(lame_global_flags * gfp, FILE * outf, int skip, char *inPath, char 
 
     switch (input_format) {
     case sf_mp3:
-        if (skip == 0) {
-            if (enc_delay > -1)
-                skip = enc_delay + 528 + 1;
+        if (skip_start == 0) {
+            if (*enc_delay > -1 || *enc_padding > -1) {
+                if (*enc_delay > -1)
+                    skip_start = *enc_delay + 528 + 1;
+                if (*enc_padding > -1)
+                    skip_end = *enc_padding - (528 + 1);
+            }
             else
-                skip = lame_get_encoder_delay(gfp) + 528 + 1;
+                skip_start = lame_get_encoder_delay(gfp) + 528 + 1;
         }
         else {
             /* user specified a value of skip. just add for decoder */
-            skip += 528 + 1; /* mp3 decoder has a 528 sample delay, plus user supplied "skip" */
+            skip_start += 528 + 1; /* mp3 decoder has a 528 sample delay, plus user supplied "skip" */
         }
 
         if (silent < 10)
@@ -207,13 +213,13 @@ lame_decoder(lame_global_flags * gfp, FILE * outf, int skip, char *inPath, char 
                            lame_get_out_samplerate(gfp) < 16000 ? ".5" : "", "III");
         break;
     case sf_mp2:
-        skip += 240 + 1;
+        skip_start += 240 + 1;
         if (silent < 10)
             console_printf("MPEG-%u%s Layer %s", 2 - lame_get_version(gfp),
                            lame_get_out_samplerate(gfp) < 16000 ? ".5" : "", "II");
         break;
     case sf_mp1:
-        skip += 240 + 1;
+        skip_start += 240 + 1;
         if (silent < 10)
             console_printf("MPEG-%u%s Layer %s", 2 - lame_get_version(gfp),
                            lame_get_out_samplerate(gfp) < 16000 ? ".5" : "", "I");
@@ -223,28 +229,28 @@ lame_decoder(lame_global_flags * gfp, FILE * outf, int skip, char *inPath, char 
             console_printf("raw PCM data");
         mp3input_data.nsamp = lame_get_num_samples(gfp);
         mp3input_data.framesize = 1152;
-        skip = 0;       /* other formats have no delay *//* is += 0 not better ??? */
+        skip_start = 0; /* other formats have no delay *//* is += 0 not better ??? */
         break;
     case sf_wave:
         if (silent < 10)
             console_printf("Microsoft WAVE");
         mp3input_data.nsamp = lame_get_num_samples(gfp);
         mp3input_data.framesize = 1152;
-        skip = 0;       /* other formats have no delay *//* is += 0 not better ??? */
+        skip_start = 0; /* other formats have no delay *//* is += 0 not better ??? */
         break;
     case sf_aiff:
         if (silent < 10)
             console_printf("SGI/Apple AIFF");
         mp3input_data.nsamp = lame_get_num_samples(gfp);
         mp3input_data.framesize = 1152;
-        skip = 0;       /* other formats have no delay *//* is += 0 not better ??? */
+        skip_start = 0; /* other formats have no delay *//* is += 0 not better ??? */
         break;
     default:
         if (silent < 10)
             console_printf("unknown");
         mp3input_data.nsamp = lame_get_num_samples(gfp);
         mp3input_data.framesize = 1152;
-        skip = 0;       /* other formats have no delay *//* is += 0 not better ??? */
+        skip_start = 0; /* other formats have no delay *//* is += 0 not better ??? */
         assert(0);
         break;
     }
@@ -254,15 +260,17 @@ lame_decoder(lame_global_flags * gfp, FILE * outf, int skip, char *inPath, char 
                        strcmp(outPath, "-") ? outPath : "<stdout>",
                        strlen(outPath) > 45 ? "\n\t" : "  ");
 
-        if (skip > 0)
-            console_printf("skipping initial %i samples (encoder+decoder delay)\n", skip);
+        if (skip_start > 0)
+            console_printf("skipping initial %i samples (encoder+decoder delay)\n", skip_start);
+        if (skip_end > 0)
+            console_printf("skipping final %i samples (encoder padding-decoder delay)\n", skip_end);
     }
 
     if (0 == disable_wav_header)
         WriteWaveHeader(outf, 0x7FFFFFFF, lame_get_in_samplerate(gfp), tmp_num_channels, 16);
     /* unknown size, so write maximum 32 bit signed value */
 
-    wavsize = -skip;
+    wavsize = -(skip_start + skip_end);
     WriteFunction = swapbytes ? WriteBytesSwapped : WriteBytes;
     mp3input_data.totalframes = mp3input_data.nsamp / mp3input_data.framesize;
 
@@ -278,7 +286,14 @@ lame_decoder(lame_global_flags * gfp, FILE * outf, int skip, char *inPath, char 
             console_flush();
         }
 
-        skip -= (i = skip < iread ? skip : iread); /* 'i' samples are to skip in this frame */
+        skip_start -= (i = skip_start < iread ? skip_start : iread); /* 'i' samples are to skip in this frame */
+
+        if (skip_end > 1152 && mp3input_data.framenum + 2 > mp3input_data.totalframes) {
+            iread -= (skip_end - 1152);
+            skip_end = 1152;
+        }
+        else if (mp3input_data.framenum == mp3input_data.totalframes && iread != 0)
+            iread -= skip_end;
 
         for (; i < iread; i++) {
             if (disable_wav_header) {
@@ -653,6 +668,10 @@ main(int argc, char **argv)
     char    nogapdir[PATH_MAX + 1];
     char    inPath[PATH_MAX + 1];
 
+    /* add variables for encoder delay/padding */
+    int     enc_delay = -1;
+    int     enc_padding = -1;
+
     /* support for "nogap" encoding of up to 200 .wav files */
 #define MAX_NOGAP 200
     int     nogapout = 0;
@@ -738,10 +757,10 @@ main(int argc, char **argv)
         /* for nogap encoding of multiple input files, it is not possible to
          * specify the output file name, only an optional output directory. */
         parse_nogap_filenames(nogapout, nogap_inPath[0], outPath, nogapdir);
-        outf = init_files(gf, nogap_inPath[0], outPath);
+        outf = init_files(gf, nogap_inPath[0], outPath, &enc_delay, &enc_padding);
     }
     else {
-        outf = init_files(gf, inPath, outPath);
+        outf = init_files(gf, inPath, outPath, &enc_delay, &enc_padding);
     }
     if (outf == NULL) {
         lame_close(gf);
@@ -775,9 +794,9 @@ main(int argc, char **argv)
     if (lame_get_decode_only(gf)) {
         /* decode an mp3 file to a .wav */
         if (mp3_delay_set)
-            lame_decoder(gf, outf, mp3_delay, inPath, outPath);
+            lame_decoder(gf, outf, mp3_delay, inPath, outPath, &enc_delay, &enc_padding);
         else
-            lame_decoder(gf, outf, 0, inPath, outPath);
+            lame_decoder(gf, outf, 0, inPath, outPath, &enc_delay, &enc_padding);
 
     }
     else {
@@ -791,7 +810,7 @@ main(int argc, char **argv)
                     parse_nogap_filenames(nogapout, nogap_inPath[i], outPath, nogapdir);
                     /* note: if init_files changes anything, like
                        samplerate, num_channels, etc, we are screwed */
-                    outf = init_files(gf, nogap_inPath[i], outPath);
+                    outf = init_files(gf, nogap_inPath[i], outPath, &enc_delay, &enc_padding);
                 }
                 brhist_init_package(gf);
                 lame_set_nogap_total(gf, max_nogap);

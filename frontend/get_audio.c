@@ -85,7 +85,7 @@ FILE   *musicin;
 #ifdef AMIGA_MPEGA
 int     lame_decode_initfile(const char *fullname, mp3data_struct * const mp3data);
 #else
-int     lame_decode_initfile(FILE * fd, mp3data_struct * mp3data);
+int     lame_decode_initfile(FILE * fd, mp3data_struct * mp3data, int *enc_delay, int *enc_padding);
 #endif
 
 /* read mp3 file until mpglib returns one frame of PCM data */
@@ -98,7 +98,7 @@ static int read_samples_pcm(FILE * musicin, int sample_buffer[2304],
 static int read_samples_mp3(lame_global_flags * const gfp, FILE * const musicin,
                             short int mpg123pcm[2][1152], int num_chan);
 void    CloseSndFile(sound_file_format input, FILE * musicin);
-FILE   *OpenSndFile(lame_global_flags * gfp, char *);
+FILE   *OpenSndFile(lame_global_flags * gfp, char *, int *enc_delay, int *enc_padding);
 
 
 /* Replacement for forward fseek(,,SEEK_CUR), because fseek() fails on pipes */
@@ -174,14 +174,14 @@ init_outfile(char *outPath, int decode)
 
 
 void
-init_infile(lame_global_flags * gfp, char *inPath)
+init_infile(lame_global_flags * gfp, char *inPath, int *enc_delay, int *enc_padding)
 {
     /* open the input file */
     count_samples_carefully = 0;
     num_samples_read = 0;
     pcmbitwidth = in_bitwidth;
     pcmswapbytes = swapbytes;
-    musicin = OpenSndFile(gfp, inPath);
+    musicin = musicin = OpenSndFile(gfp, inPath, enc_delay, enc_padding);
 }
 
 void
@@ -518,7 +518,7 @@ CloseSndFile(sound_file_format input, FILE * musicin)
 
 
 FILE   *
-OpenSndFile(lame_global_flags * gfp, char *inPath)
+OpenSndFile(lame_global_flags * gfp, char *inPath, int *enc_delay, int *enc_padding)
 {
     char   *lpszFileName = inPath;
     FILE   *musicin;
@@ -541,7 +541,7 @@ OpenSndFile(lame_global_flags * gfp, char *inPath)
             }
             exit(1);
         }
-        if (-1 == lame_decode_initfile(musicin, &mp3input_data)) {
+        if (-1 == lame_decode_initfile(musicin, &mp3input_data, &enc_delay, &enc_padding)) {
             if (silent < 10) {
                 error_printf("Error reading headers in mp3 input file %s.\n", lpszFileName);
             }
@@ -1268,7 +1268,7 @@ CloseSndFile(sound_file_format input, FILE * musicin)
 
 
 FILE   *
-OpenSndFile(lame_global_flags * gfp, char *inPath)
+OpenSndFile(lame_global_flags * gfp, char *inPath, int *enc_delay, int *enc_padding)
 {
     FILE   *musicin;
 
@@ -1298,7 +1298,7 @@ OpenSndFile(lame_global_flags * gfp, char *inPath)
         }
 #endif
 #ifdef HAVE_MPGLIB
-        if (-1 == lame_decode_initfile(musicin, &mp3input_data)) {
+        if (-1 == lame_decode_initfile(musicin, &mp3input_data, enc_delay, enc_padding)) {
             if (silent < 10) {
                 error_printf("Error reading headers in mp3 input file %s.\n", inPath);
             }
@@ -1421,7 +1421,7 @@ is_syncword_mp123(const void *const headerptr)
 }
 
 int
-lame_decode_initfile(FILE * fd, mp3data_struct * mp3data)
+lame_decode_initfile(FILE * fd, mp3data_struct * mp3data, int *enc_delay, int *enc_padding)
 {
     /*  VBRTAGDATA pTagData; */
     /* int xing_header,len2,num_frames; */
@@ -1492,7 +1492,7 @@ lame_decode_initfile(FILE * fd, mp3data_struct * mp3data)
     /* so mp3data->bitrate will be 0 until we have decoded the first */
     /* frame.  Cannot decode first frame here because we are not */
     /* yet prepared to handle the output. */
-    ret = lame_decode1_headersB(buf, len, pcm_l, pcm_r, mp3data, &enc_delay, &enc_padding);
+    ret = lame_decode1_headersB(buf, len, pcm_l, pcm_r, mp3data, enc_delay, enc_padding);
     if (-1 == ret)
         return -1;
 
@@ -1501,7 +1501,7 @@ lame_decode_initfile(FILE * fd, mp3data_struct * mp3data)
         len = fread(buf, 1, sizeof(buf), fd);
         if (len != sizeof(buf))
             return -1;
-        ret = lame_decode1_headersB(buf, len, pcm_l, pcm_r, mp3data, &enc_delay, &enc_padding);
+        ret = lame_decode1_headersB(buf, len, pcm_l, pcm_r, mp3data, enc_delay, enc_padding);
         if (-1 == ret)
             return -1;
     }
@@ -1510,7 +1510,7 @@ lame_decode_initfile(FILE * fd, mp3data_struct * mp3data)
         if (silent < 10) {
             error_printf("fail to sync...\n");
         }
-        return lame_decode_initfile(fd, mp3data);
+        return lame_decode_initfile(fd, mp3data, enc_delay, enc_padding);
     }
 
     if (mp3data->totalframes > 0) {

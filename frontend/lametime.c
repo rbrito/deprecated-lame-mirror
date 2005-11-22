@@ -140,7 +140,7 @@ lame_set_stream_binary_mode(FILE * const fp)
 #elif defined _WIN32
     _setmode(_fileno(fp), _O_BINARY);
 #else
-    (void) fp; /* doing nothing here, silencing the compiler only. */
+    (void) fp;          /* doing nothing here, silencing the compiler only. */
 #endif
     return 0;
 }
