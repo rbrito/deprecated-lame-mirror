@@ -607,7 +607,7 @@ lame_set_brate( lame_global_flags*  gfp,
 {
     gfp->brate = brate;
 
-    if (brate >= 320) {
+    if (brate > 320) {
         gfp->disable_reservoir = 1;
     }
 
