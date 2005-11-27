@@ -2,6 +2,7 @@
  *	lame utility library source file
  *
  *	Copyright (c) 1999 Albert L Faber
+ *	Copyright (c) 2000-2005 Alexander Leidinger
  *
  * This library is free software; you can redistribute it and/or
  * modify it under the terms of the GNU Library General Public

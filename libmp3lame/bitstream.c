@@ -1,7 +1,8 @@
 /*
  *	MP3 bitstream Output interface for LAME
  *
- *	Copyright (c) 1999 Takehiro TOMINAGA
+ *	Copyright (c) 1999-2000 Mark Taylor
+ *	Copyright (c) 1999-2002 Takehiro Tominaga
  *
  * This library is free software; you can redistribute it and/or
  * modify it under the terms of the GNU Library General Public

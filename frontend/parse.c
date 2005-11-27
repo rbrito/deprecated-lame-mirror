@@ -1643,8 +1643,8 @@ parse_args(lame_global_flags * gfp, int argc, char **argv,
                     argUsed = 1; /* once was 1:Gaby, 2:Robert, 3:Jon, else:off */
                 lame_set_athaa_type(gfp, atoi(nextArg)); /* now: 0:off else:Jon */
 
-                T_ELIF_INTERNAL("athaa-sensitivity")
-                    argUsed = 1;
+                T_ELIF ("athaa-sensitivity")
+                    argUsed=1;
                 lame_set_athaa_sensitivity(gfp, atof(nextArg));
 
                 T_ELIF_INTERNAL("cwlimit")

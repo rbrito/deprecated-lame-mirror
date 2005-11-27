@@ -1,7 +1,7 @@
 /*
  * presets.c -- Apply presets
  *
- * Copyright (C) 2002 Gabriel Bouvigne / Lame project
+ *	Copyright (c) 2002-2005 Gabriel Bouvigne
  *
  * This library is free software; you can redistribute it and/or
  * modify it under the terms of the GNU Library General Public
@@ -370,7 +370,7 @@ int apply_preset(lame_global_flags*  gfp, int preset, int enforce)
             SET_OPTION(interChRatio, 0.0002, -1);
             SET_OPTION(ATHlower, -7.5, 0);
             SET_OPTION(ATHcurve, 4, -1);
-            SET_OPTION(athaa_sensitivity, -16, 0);
+            SET_OPTION(athaa_sensitivity, -12, 0);
 
             lame_set_experimentalY(gfp, 1);
 
@@ -388,7 +388,7 @@ int apply_preset(lame_global_flags*  gfp, int preset, int enforce)
             SET_OPTION(interChRatio, 0.0002, -1);
             SET_OPTION(ATHlower, -7.7, 0);
             SET_OPTION(ATHcurve, 4, -1);
-            SET_OPTION(athaa_sensitivity, -16, 0);
+            SET_OPTION(athaa_sensitivity, -12, 0);
 
             lame_set_experimentalY(gfp, 1);
 

@@ -1,7 +1,7 @@
 /*
  *	bit reservoir source file
  *
- *	Copyright (c) 1999 Mark Taylor
+ *	Copyright (c) 1999-2000 Mark Taylor
  *
  * This library is free software; you can redistribute it and/or
  * modify it under the terms of the GNU Library General Public
@@ -128,20 +128,19 @@ ResvFrameBegin(lame_global_flags *gfp, int *mean_bits)
     /* main_data_begin has 9 bits in MPEG-1, 8 bits MPEG-2 */
     resvLimit = (8*256)*gfc->mode_gr-8;
 
-    if (gfp->brate >= 320) {
+    /* maximum allowed frame size.  dont use more than this number of
+       bits, even if the frame has the space for them: */
+    if (gfp->brate > 320) {
         /* in freeformat the buffer is constant*/
-        maxmp3buf=8*((int)((gfp->brate*1000)/(gfp->out_samplerate / (FLOAT)1152)/8 +.5));
+        maxmp3buf = 8*((int)((gfp->brate*1000)/(gfp->out_samplerate / (FLOAT)1152)/8 +.5));
     } else {
-        /* maximum allowed frame size.  dont use more than this number of
-           bits, even if the frame has the space for them: */
+        /*all mp3 decoders should have enough buffer to handle this value: size of a 320kbps 32kHz frame*/
+        maxmp3buf = 8*1440;
+
         /* Bouvigne suggests this more lax interpretation of the ISO doc 
            instead of using 8*960. */
-
-	/*all mp3 decoders should have enough buffer to handle this value: size of a 320kbps 32kHz frame*/
-	maxmp3buf = 8*1440;
-
         if (gfp->strict_ISO)
-	    maxmp3buf=8*((int)(320000/(gfp->out_samplerate / (FLOAT)1152)/8 +.5));
+	        maxmp3buf = 8*((int)(320000/(gfp->out_samplerate / (FLOAT)1152)/8 +.5));
     }
 
     gfc->ResvMax = maxmp3buf - frameLength;
