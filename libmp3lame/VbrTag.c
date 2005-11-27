@@ -70,8 +70,8 @@
 
 
 
-const static char	VBRTag[]={"Xing"};
-const static char	VBRTag2[]={"Info"};
+const static char	VBRTag0[]={"Xing"};
+const static char	VBRTag1[]={"Info"};
 
 
 
@@ -235,6 +235,17 @@ static void CreateI2(unsigned char *buf, int nValue)
 	buf[1]=(nValue    )&0xff;
 }
 
+/* check for magic strings*/
+int IsVbrTag(const unsigned char* buf)
+{
+    int isTag0, isTag1;
+    
+    isTag0 = ((buf[0]==VBRTag0[0]) && (buf[1]==VBRTag0[1]) && (buf[2]==VBRTag0[2]) && (buf[3]==VBRTag0[3])); 
+    isTag1 = ((buf[0]==VBRTag1[0]) && (buf[1]==VBRTag1[1]) && (buf[2]==VBRTag1[2]) && (buf[3]==VBRTag1[3])); 
+
+    return (isTag0 || isTag1);
+}
+
 
 /*-------------------------------------------------------------*/
 /* Same as GetVbrTag below, but only checks for the Xing tag.
@@ -263,11 +274,7 @@ int CheckVbrTag(unsigned char *buf)
 		else              buf+=(9+4);
 	}
 
-	if( buf[0] != VBRTag[0] && buf[0] != VBRTag2[0] ) return 0;    /* fail */
-	if( buf[1] != VBRTag[1] && buf[1] != VBRTag2[1]) return 0;    /* header not found*/
-	if( buf[2] != VBRTag[2] && buf[2] != VBRTag2[2]) return 0;
-	if( buf[3] != VBRTag[3] && buf[3] != VBRTag2[3]) return 0;
-	return 1;
+    return IsVbrTag(buf);
 }
 
 int GetVbrTag(VBRTAGDATA *pTagData,  unsigned char *buf)
@@ -310,10 +317,8 @@ int GetVbrTag(VBRTAGDATA *pTagData,  unsigned char *buf)
 		else              buf+=(9+4);
 	}
 
-	if( buf[0] != VBRTag[0] && buf[0] != VBRTag2[0] ) return 0;    /* fail */
-	if( buf[1] != VBRTag[1] && buf[1] != VBRTag2[1]) return 0;    /* header not found*/
-	if( buf[2] != VBRTag[2] && buf[2] != VBRTag2[2]) return 0;
-	if( buf[3] != VBRTag[3] && buf[3] != VBRTag2[3]) return 0;
+    if (!IsVbrTag(buf))
+        return 0;
 
 	buf+=4;
 
@@ -907,18 +912,18 @@ int PutVbrTag(lame_global_flags *gfp,FILE *fpStream,int nVbrScale)
 	/* Put Vbr tag */
 	if (gfp->VBR == vbr_off)
 	{
-		pbtStreamBuffer[nStreamIndex++]=VBRTag2[0];
-		pbtStreamBuffer[nStreamIndex++]=VBRTag2[1];
-		pbtStreamBuffer[nStreamIndex++]=VBRTag2[2];
-		pbtStreamBuffer[nStreamIndex++]=VBRTag2[3];
+		pbtStreamBuffer[nStreamIndex++]=VBRTag1[0];
+		pbtStreamBuffer[nStreamIndex++]=VBRTag1[1];
+		pbtStreamBuffer[nStreamIndex++]=VBRTag1[2];
+		pbtStreamBuffer[nStreamIndex++]=VBRTag1[3];
 
 	}
 	else
 	{
-		pbtStreamBuffer[nStreamIndex++]=VBRTag[0];
-		pbtStreamBuffer[nStreamIndex++]=VBRTag[1];
-		pbtStreamBuffer[nStreamIndex++]=VBRTag[2];
-		pbtStreamBuffer[nStreamIndex++]=VBRTag[3];
+		pbtStreamBuffer[nStreamIndex++]=VBRTag0[0];
+		pbtStreamBuffer[nStreamIndex++]=VBRTag0[1];
+		pbtStreamBuffer[nStreamIndex++]=VBRTag0[2];
+		pbtStreamBuffer[nStreamIndex++]=VBRTag0[3];
 	}	
 
 	/* Put header flags */
