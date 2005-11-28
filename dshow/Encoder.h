@@ -79,6 +79,7 @@ typedef struct {
     DWORD   dwNoShortBlock;
     DWORD   dwXingTag;
     DWORD   dwModeFixed;
+    DWORD   bSampleOverlap;
 } MPEG_ENCODER_CONFIG;
 
 

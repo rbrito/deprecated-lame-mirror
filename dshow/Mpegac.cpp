@@ -57,6 +57,7 @@
 #define         DEFAULT_CRC                 0
 #define         DEFAULT_FORCE_MONO          0
 #define         DEFAULT_SET_DURATION        1
+#define         DEFAULT_SAMPLE_OVERLAP      1
 #define         DEFAULT_COPYRIGHT           0
 #define         DEFAULT_ORIGINAL            0
 #define         DEFAULT_VARIABLEMIN         80
@@ -185,20 +186,25 @@ HRESULT CMpegAudEnc::Receive(IMediaSample * pSample)
         {
             resync_point_t * sync = m_sync + m_sync_in_idx;
 
-            // if old sync data is applied and gap is greater than 1 ms
-            // then make a new synchronization point
-            if (sync->applied && (rtStart - m_rtEstimated > 10000))
+            if (sync->applied)
             {
-                sync->sample    = m_samplesIn;
-                sync->delta     = rtStart - m_rtEstimated;
-                sync->applied   = FALSE;
+                REFERENCE_TIME rtGap = rtStart - m_rtEstimated;
 
-                m_rtEstimated  += sync->delta;
+                // if old sync data is applied and gap is greater than 1 ms
+                // then make a new synchronization point
+                if (rtGap > 10000 || (m_allowOverlap && rtGap < -10000))
+                {
+                    sync->sample    = m_samplesIn;
+                    sync->delta     = rtGap;
+                    sync->applied   = FALSE;
 
-                if (m_sync_in_idx < (RESYNC_COUNT - 1))
-                    m_sync_in_idx++;
-                else
-                    m_sync_in_idx = 0;
+                    m_rtEstimated  += sync->delta;
+
+                    if (m_sync_in_idx < (RESYNC_COUNT - 1))
+                        m_sync_in_idx++;
+                    else
+                        m_sync_in_idx = 0;
+                }
             }
         }
     }
@@ -313,6 +319,7 @@ HRESULT CMpegAudEnc::StartStreaming()
     m_sync_out_idx = 0;
 
     get_SetDuration(&m_setDuration);
+    get_SampleOverlap(&m_allowOverlap);
 
     return S_OK;
 }
@@ -645,6 +652,7 @@ void CMpegAudEnc::ReadPresetSettings(MPEG_ENCODER_CONFIG * pmec)
     pmec->bCRCProtect       = rk.getDWORD(VALUE_CRC, DEFAULT_CRC);
     pmec->bForceMono        = rk.getDWORD(VALUE_FORCE_MONO, DEFAULT_FORCE_MONO);
     pmec->bSetDuration      = rk.getDWORD(VALUE_SET_DURATION, DEFAULT_SET_DURATION);
+    pmec->bSampleOverlap    = rk.getDWORD(VALUE_SAMPLE_OVERLAP, DEFAULT_SAMPLE_OVERLAP);
     pmec->bCopyright        = rk.getDWORD(VALUE_COPYRIGHT, DEFAULT_COPYRIGHT);
     pmec->bOriginal         = rk.getDWORD(VALUE_ORIGINAL, DEFAULT_ORIGINAL);
     pmec->dwSampleRate      = rk.getDWORD(VALUE_SAMPLE_RATE, DEFAULT_SAMPLE_RATE);
@@ -972,6 +980,15 @@ STDMETHODIMP CMpegAudEnc::get_SetDuration(DWORD *dwFlag)
     return S_OK;
 }
 
+STDMETHODIMP CMpegAudEnc::get_SampleOverlap(DWORD *dwFlag)
+{
+    MPEG_ENCODER_CONFIG mec;
+    m_Encoder.GetOutputType(&mec);
+    *dwFlag = mec.bSampleOverlap;
+    DbgLog((LOG_TRACE, 1, TEXT("get_SampleOverlap -> %d"), *dwFlag));
+    return S_OK;
+}
+
 STDMETHODIMP CMpegAudEnc::set_CRCFlag(DWORD dwFlag)
 {
     MPEG_ENCODER_CONFIG mec;
@@ -999,6 +1016,16 @@ STDMETHODIMP CMpegAudEnc::set_SetDuration(DWORD dwFlag)
     mec.bSetDuration = dwFlag;
     m_Encoder.SetOutputType(mec);
     DbgLog((LOG_TRACE, 1, TEXT("set_SetDuration(%d)"), dwFlag));
+    return S_OK;
+}
+
+STDMETHODIMP CMpegAudEnc::set_SampleOverlap(DWORD dwFlag)
+{
+    MPEG_ENCODER_CONFIG mec;
+    m_Encoder.GetOutputType(&mec);
+    mec.bSampleOverlap = dwFlag;
+    m_Encoder.SetOutputType(mec);
+    DbgLog((LOG_TRACE, 1, TEXT("set_SampleOverlap(%d)"), dwFlag));
     return S_OK;
 }
 
@@ -1230,11 +1257,12 @@ STDMETHODIMP CMpegAudEnc::DefaultAudioEncoderProperties()
     set_VariableQ(DEFAULT_VBR_QUALITY);
 
     set_SampleRate(dwSourceSampleRate);
-    set_CRCFlag(FALSE);
-    set_ForceMono(FALSE);
-    set_SetDuration(FALSE);
-    set_OriginalFlag(FALSE);
-    set_CopyrightFlag(FALSE);
+    set_CRCFlag(DEFAULT_CRC);
+    set_ForceMono(DEFAULT_FORCE_MONO);
+    set_SetDuration(DEFAULT_SET_DURATION);
+    set_SampleOverlap(DEFAULT_SAMPLE_OVERLAP);
+    set_OriginalFlag(DEFAULT_ORIGINAL);
+    set_CopyrightFlag(DEFAULT_COPYRIGHT);
 
     set_EnforceVBRmin(DEFAULT_ENFORCE_MIN);
     set_VoiceMode(DEFAULT_VOICE);
@@ -1281,6 +1309,7 @@ STDMETHODIMP CMpegAudEnc::SaveAudioEncoderPropertiesToRegistry()
         rk.setDWORD(VALUE_CRC, mec.bCRCProtect);
         rk.setDWORD(VALUE_FORCE_MONO, mec.bForceMono);
         rk.setDWORD(VALUE_SET_DURATION, mec.bSetDuration);
+        rk.setDWORD(VALUE_SAMPLE_OVERLAP, mec.bSampleOverlap);
         rk.setDWORD(VALUE_PES, mec.dwPES);
         rk.setDWORD(VALUE_COPYRIGHT, mec.bCopyright);
         rk.setDWORD(VALUE_ORIGINAL, mec.bOriginal);

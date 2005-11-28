@@ -36,6 +36,8 @@
 #define IDC_CHECK_FORCE_MS              1037
 #define IDC_CHECK_MODE_FIXED            1038
 #define IDC_RICHEDIT_LAME               1039
+#define IDC_CHECK_OVERLAP               1039
+#define IDC_CHECK_STOP                  1040
 #define IDC_EDIT_TEXT                   1044
 #define IDC_LAME_LA                     1044
 #define IDC_FORCE_MONO                  1045

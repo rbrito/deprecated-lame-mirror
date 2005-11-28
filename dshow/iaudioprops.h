@@ -237,21 +237,31 @@ extern "C" {
         STDMETHOD(DefaultAudioEncoderProperties) (THIS_
         ) PURE;
         // By default the modified properties are not saved to
-        // registry immediately, so the filter needs to be
-        // forced to do this. Omitting this steps may lead to
+        // the registry immediately, so the filter needs to be
+        // forced to do this. Omitting this step may lead to
         // misbehavior and confusing results.
         STDMETHOD(LoadAudioEncoderPropertiesFromRegistry) (THIS_
         ) PURE;
         STDMETHOD(SaveAudioEncoderPropertiesToRegistry) (THIS_
         ) PURE;
-        // Determine, whether the filter can be configured. If this
-        // functions returs E_FAIL, input format hasn't been
-        // specified and filter behavior unpredicated. If S_OK,
+        // Determine whether the filter can be configured. If this
+        // function returns E_FAIL then input format hasn't been
+        // specified and filter behavior is unpredictable. If S_OK,
         // the filter could be configured with correct values.
         STDMETHOD(InputTypeDefined) (THIS_
         ) PURE;
         // Reconnects output pin (crucial for Fraunhofer MPEG Layer-3 Decoder)
         STDMETHOD(ApplyChanges) (THIS_
+        ) PURE;
+
+        // Allow output sample overlap in terms of DirectShow
+        // timestamps (i.e. when sample's start time is less
+        // than previous sample's end time). Avi Mux doesn't like this
+        STDMETHOD(set_SampleOverlap) (THIS_
+            DWORD dwFlag
+        ) PURE;
+        STDMETHOD(get_SampleOverlap) (THIS_
+            DWORD *dwFlag
         ) PURE;
     };
 #ifdef __cplusplus

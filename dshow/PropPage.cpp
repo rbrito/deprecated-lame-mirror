@@ -142,7 +142,6 @@ HRESULT CMpegAudEncPropertyPage::OnConnect(IUnknown *pUnknown)
     m_pAEProps->get_SampleRate(&m_dwSampleRate);
     m_pAEProps->get_CRCFlag(&m_dwCRC);
     m_pAEProps->get_ForceMono(&m_dwForceMono);
-    m_pAEProps->get_SetDuration(&m_dwSetDuration);
     m_pAEProps->get_CopyrightFlag(&m_dwCopyright);
     m_pAEProps->get_OriginalFlag(&m_dwOriginal);
 
@@ -169,7 +168,6 @@ HRESULT CMpegAudEncPropertyPage::OnDisconnect()
     m_pAEProps->set_SampleRate(m_dwSampleRate);
     m_pAEProps->set_CRCFlag(m_dwCRC);
     m_pAEProps->set_ForceMono(m_dwForceMono);
-    m_pAEProps->set_SetDuration(m_dwSetDuration);
     m_pAEProps->set_CopyrightFlag(m_dwCopyright);
     m_pAEProps->set_OriginalFlag(m_dwOriginal);
     m_pAEProps->SaveAudioEncoderPropertiesToRegistry();
@@ -235,12 +233,12 @@ BOOL CMpegAudEncPropertyPage::OnReceiveMessage(HWND hwnd,UINT uMsg,WPARAM wParam
 
                 if (dwSampleRate >= 32000)
                 {
-                    // Consider MPEG 1
+                    // Consider MPEG-1
                     dwBitrate = dwBitRateValue[0][nBitrate];
                 }
                 else
                 {
-                    // Consider MPEG 2/2.5
+                    // Consider MPEG-2/2.5
                     dwBitrate = dwBitRateValue[1][nBitrate];
                 }
 
@@ -260,12 +258,12 @@ BOOL CMpegAudEncPropertyPage::OnReceiveMessage(HWND hwnd,UINT uMsg,WPARAM wParam
 
                 if (dwSampleRate >= 32000)
                 {
-                    // Consider MPEG 1
+                    // Consider MPEG-1
                     dwMin = dwBitRateValue[0][nVariableMin];
                 }
                 else
                 {
-                    // Consider MPEG 2/2.5
+                    // Consider MPEG-2/2.5
                     dwMin = dwBitRateValue[1][nVariableMin];
                 }
 
@@ -285,12 +283,12 @@ BOOL CMpegAudEncPropertyPage::OnReceiveMessage(HWND hwnd,UINT uMsg,WPARAM wParam
 
                 if (dwSampleRate >= 32000)
                 {
-                    // Consider MPEG 1
+                    // Consider MPEG-1
                     dwMax = dwBitRateValue[0][nVariableMax];
                 }
                 else
                 {
-                    // Consider MPEG 2/2.5
+                    // Consider MPEG-2/2.5
                     dwMax = dwBitRateValue[1][nVariableMax];
                 }
 
@@ -358,11 +356,6 @@ BOOL CMpegAudEncPropertyPage::OnReceiveMessage(HWND hwnd,UINT uMsg,WPARAM wParam
             m_pAEProps->set_ForceMono(IsDlgButtonChecked(hwnd, IDC_FORCE_MONO));
             SetDirty();
             break;
-
-        case IDC_SET_DURATION:
-            m_pAEProps->set_SetDuration(IsDlgButtonChecked(hwnd, IDC_SET_DURATION));
-            SetDirty();
-            break;
         }
         return TRUE;
 
@@ -390,7 +383,6 @@ HRESULT CMpegAudEncPropertyPage::OnApplyChanges()
     m_pAEProps->get_SampleRate(&m_dwSampleRate);
     m_pAEProps->get_CRCFlag(&m_dwCRC);
     m_pAEProps->get_ForceMono(&m_dwForceMono);
-    m_pAEProps->get_SetDuration(&m_dwSetDuration);
     m_pAEProps->get_CopyrightFlag(&m_dwCopyright);
     m_pAEProps->get_OriginalFlag(&m_dwOriginal);
     m_pAEProps->SaveAudioEncoderPropertiesToRegistry();
@@ -611,10 +603,6 @@ void CMpegAudEncPropertyPage::InitPropertiesDialog(HWND hwndParent)
     m_pAEProps->get_ForceMono(&dwForceMono);
     CheckDlgButton(hwndParent, IDC_FORCE_MONO, dwForceMono ? BST_CHECKED : BST_UNCHECKED);
 
-    DWORD dwSetDuration;
-    m_pAEProps->get_SetDuration(&dwSetDuration);
-    CheckDlgButton(hwndParent, IDC_SET_DURATION, dwSetDuration ? BST_CHECKED : BST_UNCHECKED);
-
     DWORD dwCopyright;
     m_pAEProps->get_CopyrightFlag(&dwCopyright);
     CheckDlgButton(hwndParent, IDC_CHECK_COPYRIGHT, dwCopyright ? BST_CHECKED : BST_UNCHECKED);
@@ -640,7 +628,6 @@ void CMpegAudEncPropertyPage::EnableControls(HWND hwndParent, bool bEnable)
     EnableWindow(GetDlgItem(hwndParent, IDC_CHECK_ORIGINAL), bEnable);
     EnableWindow(GetDlgItem(hwndParent, IDC_CHECK_CRC), bEnable);
     EnableWindow(GetDlgItem(hwndParent, IDC_FORCE_MONO), bEnable);
-    EnableWindow(GetDlgItem(hwndParent, IDC_SET_DURATION), bEnable);
     EnableWindow(GetDlgItem(hwndParent, IDC_SLIDER_QUALITY), bEnable);
     EnableWindow(GetDlgItem(hwndParent, IDC_COMBO_SAMPLE_RATE), bEnable);
 }
