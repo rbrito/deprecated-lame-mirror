@@ -41,6 +41,8 @@ main(int argc, char **argv)
     char    outPath[PATH_MAX + 1];
     char    inPath[PATH_MAX + 1];
     int     ret;
+    int     enc_delay = -1;
+    int     enc_padding = -1;
 
     frontend_open_console();
     gf = lame_init();
@@ -64,7 +66,7 @@ main(int argc, char **argv)
     }
     (void) lame_set_analysis(gf, 1);
 
-    init_infile(gf, inPath);
+    init_infile(gf, inPath, &enc_delay, &enc_padding);
     lame_init_params(gf);
     lame_print_config(gf);
 

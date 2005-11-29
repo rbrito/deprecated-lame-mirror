@@ -91,7 +91,7 @@ rtp_output(char *mp3buffer, int mp3size)
 
 
 
-unsigned int
+static unsigned int
 maxvalue(int Buffer[2][1152])
 {
     unsigned int max = 0;
@@ -106,15 +106,15 @@ maxvalue(int Buffer[2][1152])
     return max >> 16;
 }
 
-void
-levelmessage(unsigned int maxvalue)
+static void
+levelmessage(unsigned int maxv)
 {
     char    buff[] = "|  .  |  .  |  .  |  .  |  .  |  .  |  .  |  .  |  .  |  .  |  \r";
-    static int max = 0;
-    static int tmp = 0;
+    static unsigned int max = 0;
+    static unsigned int tmp = 0;
 
     buff[tmp] = '+';
-    tmp = (maxvalue * 61 + 16384) / (32767 + 16384 / 61);
+    tmp = (maxv * 61 + 16384) / (32767 + 16384 / 61);
     if (tmp > sizeof(buff) - 2)
         tmp = sizeof(buff) - 2;
     if (max < tmp)
@@ -154,6 +154,9 @@ main(int argc, char **argv)
     unsigned port = 5004;
     unsigned ttl = 2;
     char    dummy;
+
+    int     enc_delay = -1;
+    int     enc_padding = -1;
 
     frontend_open_console();
     if (argc <= 2) {
@@ -225,7 +228,7 @@ main(int argc, char **argv)
      * if you want to do your own file input, skip this call and set
      * these values yourself.  
      */
-    init_infile(gf, inPath);
+    init_infile(gf, inPath, &enc_delay, &enc_padding);
 
 
     /* Now that all the options are set, lame needs to analyze them and
