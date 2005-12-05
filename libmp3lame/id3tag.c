@@ -483,7 +483,7 @@ id3tag_write_v2(lame_global_flags *gfp)
             }
             if (gfc->tag_spec.genre != GENRE_NUM_UNKNOWN) {
                 genre_length = sprintf(genre, "(%d)", gfc->tag_spec.genre);
-		if (genre_length+1 > sizeof(genre_length)) abort();
+		if (genre_length+1 > sizeof(genre)) abort();
                 tag_size += 11 + genre_length;
             } else {
                 genre_length = 0;
