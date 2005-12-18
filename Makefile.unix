@@ -143,7 +143,7 @@ ifeq ($(CFG),RH)
   CPP_OPTS += -DFLOAT8=float -DREAL_IS_FLOAT=1
 # these options for gcc-3.2 & AthlonXP
    CC_OPTS = \
-	-ansic99 -pipe -O3 \
+	-pipe -O3 \
 	-Wall -W -Wmissing-declarations -Wfloat-equal \
 	-Wcast-qual -Wcast-align -Wdisabled-optimization -Wshadow \
 	-march=athlon-xp \
