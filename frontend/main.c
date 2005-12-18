@@ -2,7 +2,7 @@
  *      Command line frontend program
  *
  *      Copyright (c) 1999 Mark Taylor
- *                    2000 Takehiro TOMIANGA
+ *                    2000 Takehiro TOMINAGA
  *
  * This library is free software; you can redistribute it and/or
  * modify it under the terms of the GNU Library General Public
