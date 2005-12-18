@@ -192,7 +192,8 @@ progress_line(const lame_global_flags * gf, int full, int frames)
     char    rst[20] = "\0";
     int     barlen_TOT = 0, barlen_COD = 0, barlen_RST = 0;
     int     res = 1;
-    int     df = 0, hour, min, sec;
+    float   time_in_sec = 0;
+    unsigned int hour, min, sec;
     int     fsize = lame_get_framesize(gf);
     int     srate = lame_get_out_samplerate(gf);
 
@@ -200,22 +201,22 @@ progress_line(const lame_global_flags * gf, int full, int frames)
         full = frames;
     }
     if (srate > 0) {
-        df = full - frames;
-        df *= fsize;
-        df /= srate;
+        time_in_sec = full - frames;
+        time_in_sec *= fsize;
+        time_in_sec /= srate;
     }
-    hour = df / 3600;
-    df -= hour * 3600;
-    min = df / 60;
-    df -= min * 60;
-    sec = df;
+    hour = time_in_sec / 3600;
+    time_in_sec -= hour * 3600;
+    min = time_in_sec / 60;
+    time_in_sec -= min * 60;
+    sec = time_in_sec;
     if (full != 0) {
         if (hour > 0) {
-            sprintf(rst, "%*d:%02d:%02d", digits(hour), hour, min, sec);
+            sprintf(rst, "%*d:%02u:%02u", digits(hour), hour, min, sec);
             res += digits(hour) + 1 + 5;
         }
         else {
-            sprintf(rst, "%02d:%02d", min, sec);
+            sprintf(rst, "%02u:%02u", min, sec);
             res += 5;
         }
         /* some problems when br_hist_TOT \approx br_hist_LR: You can't see that there are still MS frames */
