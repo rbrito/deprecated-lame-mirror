@@ -152,13 +152,22 @@ BOOL SetPriorityClassMacro(DWORD p)
 
 static void setWin32Priority( lame_global_flags*  gfp, int Priority )
 {
-    if (Priority > 3) {
-	SetPriorityClassMacro(HIGH_PRIORITY_CLASS);
-        printf("==> Priority set to High.\n");
-    }
-    if (Priority < 3) {
-	SetPriorityClassMacro(IDLE_PRIORITY_CLASS);
-        printf("==> Priority set to Low.\n");
+    switch (Priority) {
+    case 0:
+    case 1:
+        SetPriorityClassMacro(IDLE_PRIORITY_CLASS);
+        console_printf("==> Priority set to Low.\n");
+        break;
+    default:
+    case 2:
+        SetPriorityClassMacro(NORMAL_PRIORITY_CLASS);
+        console_printf("==> Priority set to Normal.\n");
+        break;
+    case 3:
+    case 4:
+        SetPriorityClassMacro(HIGH_PRIORITY_CLASS);
+        console_printf("==> Priority set to High.\n");
+        break;
     }
 }
 #endif
