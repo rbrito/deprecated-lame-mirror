@@ -357,8 +357,8 @@ encoder(lame_t gfp, FILE * outf, int nogap, char *inPath, char *outPath)
 	lame_print_internals(gfp);
 
     fflush(stderr);
-    if (input_format == sf_mp3 && keeptag && id3v2taglen)
-	fseek(outf, id3v2taglen, SEEK_CUR);
+    if (input_format == sf_mp3 && keeptag && headingTagLen)
+	fseek(outf, headingTagLen, SEEK_CUR);
 
     /* encode until we hit eof */
     do {
@@ -422,8 +422,8 @@ encoder(lame_t gfp, FILE * outf, int nogap, char *inPath, char *outPath)
 
     fwrite(mp3buffer, 1, imp3, outf);
 
-    /* id3 tag */
     if (input_format == sf_mp3 && keeptag) {
+	/* copy original id3 tag */
 #define ID3TAGSIZE 128
 	char id3tag[ID3TAGSIZE];
 	fseek(g_inputHandler, -ID3TAGSIZE, SEEK_CUR);
@@ -431,18 +431,20 @@ encoder(lame_t gfp, FILE * outf, int nogap, char *inPath, char *outPath)
 	if (memcmp(id3tag, "TAG", 3) == 0)
 	    fwrite(id3tag, 1, ID3TAGSIZE, outf);
 
-	if (id3v2taglen) {
-	    char *id3v2tag = malloc(id3v2taglen);
-	    if (id3v2tag) {
+	if (headingTagLen) {
+	    char *headingTag = malloc(headingTagLen);
+	    if (headingTag) {
 		fseek(outf, 0, SEEK_SET);
 		fseek(g_inputHandler, 0, SEEK_SET);
-		fread(id3v2tag, 1, id3v2taglen, g_inputHandler);
-		fwrite(id3v2tag, 1, id3v2taglen, outf);
-		free(id3v2tag);
+		fread(headingTag, 1, headingTagLen, g_inputHandler);
+		fwrite(headingTag, 1, headingTagLen, outf);
+		free(headingTag);
 	    } else {
 		fprintf(stderr, "Oops, too big ID3v2 Tag to copy...\n");
 	    }
 	}
+    } else if (output_format == sf_riff_mp3) {
+	/* make RIFF wave header for mp3 */
     }
     return 0;
 }

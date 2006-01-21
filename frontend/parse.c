@@ -92,6 +92,7 @@ int startSample = 0;
 int endSample = MAX_U_32_NUM;
 
 sound_file_format input_format;
+sound_file_format output_format;
 int outputPCMendian=order_nativeEndian;
 int in_endian=0;
 int in_signed=1;

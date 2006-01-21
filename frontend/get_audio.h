@@ -29,9 +29,10 @@ typedef enum sound_file_format_e {
     sf_unknown, 
     sf_raw, 
     sf_wave, 
-    sf_mp1 = 0x11,  /* MPEG Layer 1, aka mpg */
-    sf_mp2 = 0x12,  /* MPEG Layer 2 */
-    sf_mp3 = 0x13   /* MPEG Layer 3 */
+    sf_mp1 = 0x11,	/* MPEG Layer 1, aka mpg */
+    sf_mp2 = 0x12,	/* MPEG Layer 2 */
+    sf_mp3 = 0x13,	/* MPEG Layer 3 */
+    sf_riff_mp3 = 0x23	/* MPEG Layer 3 in RIFF format */
 } sound_file_format;
 
 #define IS_MPEG123(x) ((x) & 0x10)
@@ -49,12 +50,13 @@ void close_infile(void);
 int get_audio(lame_t gfp, float buffer[2][1152]);
 int WriteWaveHeader(FILE * const fp, const int pcmbytes,
 		    const int freq, const int channels, const int bits);
-extern int id3v2taglen;
+extern int headingTagLen;
 extern void *g_inputHandler;
 extern int in_signed;
 extern int in_endian;
 extern int in_bitwidth;
 extern sound_file_format input_format;
+extern sound_file_format output_format;
 
 #define order_littleEndian 0
 #define order_bigEndian 1

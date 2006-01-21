@@ -64,7 +64,7 @@
 /* global data for get_audio.c. */
 mp3data_struct mp3input_data; /* used by MP3 */
 void *g_inputHandler;
-int id3v2taglen = 0;
+int headingTagLen = 0;
 
 static unsigned int num_samples_read;
 static int count_samples_carefully;
@@ -463,7 +463,7 @@ decode_initfile(lame_t gfp, FILE * fd, mp3data_struct * mp3data)
 	buf[2] &= 127; buf[3] &= 127; buf[4] &= 127; buf[5] &= 127;
 	len = (buf[2] << 21) + (buf[3] << 14) + (buf[4] << 7) + buf[5];
 	fskip(fd, len, SEEK_CUR);
-	id3v2taglen = ftell(fd);
+	headingTagLen = ftell(fd);
 	len = 4;
 	if (fread(&buf, len, 1, fd) != 1)
 	    return -1;      /* failed */
