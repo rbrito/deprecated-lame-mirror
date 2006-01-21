@@ -392,7 +392,7 @@ id3tag_write_v2(lame_global_flags *gfp)
             size_t encoder_length;
             char year[5];
             size_t year_length;
-            char track[3];
+            char track[4];
             size_t track_length;
             char genre[6];
             size_t genre_length;
