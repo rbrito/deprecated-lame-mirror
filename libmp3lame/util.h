@@ -129,20 +129,18 @@ extern  "C" {
 *
 ***********************************************************************/
 
-typedef struct {
-    void*   aligned;    /* pointer to ie. 128 bit aligned memory */
-    void*   pointer;    /* to use with malloc/free */
-} aligned_pointer_t;
+    typedef struct {
+        void   *aligned;     /* pointer to ie. 128 bit aligned memory */
+        void   *pointer;     /* to use with malloc/free */
+    } aligned_pointer_t;
 
-void malloc_aligned( aligned_pointer_t* ptr, unsigned int size, unsigned int bytes );
-void free_aligned( aligned_pointer_t* ptr );
+    void    malloc_aligned(aligned_pointer_t * ptr, unsigned int size, unsigned int bytes);
+    void    free_aligned(aligned_pointer_t * ptr);
 
 
 
-typedef void (*iteration_loop_t)( lame_global_flags *gfp,
-			 FLOAT pe[2][2],
-			 FLOAT ms_ratio[2], 
-			 III_psy_ratio ratio[2][2]);
+    typedef void (*iteration_loop_t) (lame_global_flags * gfp,
+                                      FLOAT pe[2][2], FLOAT ms_ratio[2], III_psy_ratio ratio[2][2]);
 
 
     /* "bit_stream.h" Type Definitions */
@@ -205,7 +203,8 @@ typedef void (*iteration_loop_t)( lame_global_flags *gfp,
         FLOAT   s[SBMAX_s];  /* ATH for sfbs in short blocks */
         FLOAT   psfb21[PSFB21]; /* ATH for partitionned sfb21 in long blocks */
         FLOAT   psfb12[PSFB12]; /* ATH for partitionned sfb12 in short blocks */
-        FLOAT   cb[CBANDS];  /* ATH for convolution bands */
+        FLOAT   cb_l[CBANDS]; /* ATH for long block convolution bands */
+        FLOAT   cb_s[CBANDS]; /* ATH for short block convolution bands */
         FLOAT   eql_w[BLKSIZE / 2]; /* equal loudness weights (based on ATH) */
     } ATH_t;
 
@@ -215,9 +214,7 @@ typedef void (*iteration_loop_t)( lame_global_flags *gfp,
     typedef struct {
         FLOAT   mask_adjust; /* the dbQ stuff */
         FLOAT   mask_adjust_short; /* the dbQ stuff */
-        int     tonalityPatch; /* temporaly needed by VBR */
         FLOAT   cwlimit;
-        FLOAT   prvTonRed[CBANDS];
     } PSY_t;
 
 
@@ -388,7 +385,8 @@ typedef void (*iteration_loop_t)( lame_global_flags *gfp,
 /* to be remembered for the unpredictability measure.  For "r" and        */
 /* "phi_sav", the first index from the left is the channel select and     */
 /* the second index is the "age" of the data.                             */
-        FLOAT   minval[CBANDS];
+        FLOAT   minval_l[CBANDS];
+        FLOAT   minval_s[CBANDS];
         FLOAT   nb_1[4][CBANDS], nb_2[4][CBANDS];
         FLOAT   nb_s1[4][CBANDS], nb_s2[4][CBANDS];
         FLOAT  *s3_ss;
@@ -464,11 +462,11 @@ typedef void (*iteration_loop_t)( lame_global_flags *gfp,
         int     nogap_total;
         int     nogap_current;
 
-        
+
         /* ReplayGain */
-        int     decode_on_the_fly : 1;
-        int     findReplayGain : 1;
-        int     findPeakSample : 1;
+        int     decode_on_the_fly:1;
+        int     findReplayGain:1;
+        int     findPeakSample:1;
         sample_t PeakSample;
         int     RadioGain;
         int     AudiophileGain;
@@ -483,17 +481,13 @@ typedef void (*iteration_loop_t)( lame_global_flags *gfp,
         int     bitrate_stereoMode_Hist[16][4 + 1];
         int     bitrate_blockType_Hist[16][4 + 1 + 1]; /*norm/start/short/stop/mixed(short)/sum */
 #endif
-#ifdef HAVE_GTK
         /* used by the frame analyzer */
         plotting_data *pinfo;
-        FLOAT   energy_save[4][HBLKSIZE];
-        FLOAT   ers_save[4];
-#endif
 
         int     in_buffer_nsamples;
         sample_t *in_buffer_0;
         sample_t *in_buffer_1;
-        
+
         iteration_loop_t iteration_loop;
     };
 

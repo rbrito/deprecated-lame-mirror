@@ -109,10 +109,8 @@ int     calc_noise (const lame_internal_flags * const gfc,
 		            calc_noise_result * const res,
                     calc_noise_data * prev_noise);
 
-#if defined(HAVE_GTK)
 void    set_frame_pinfo (lame_global_flags *gfp,
                          III_psy_ratio ratio[2][2]);
-#endif
 
 
 

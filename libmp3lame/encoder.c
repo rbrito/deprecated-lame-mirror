@@ -508,7 +508,6 @@ lame_encode_mp3_frame(       /* Output */
     }
 
 
-#if defined(HAVE_GTK)
     /* copy data for MP3 frame analyzer */
     if (gfp->analysis && gfc->pinfo != NULL) {
         for (gr = 0; gr < gfc->mode_gr; gr++) {
@@ -528,7 +527,6 @@ lame_encode_mp3_frame(       /* Output */
             }
         }
     }
-#endif
 
 
     /****************************************
@@ -588,7 +586,6 @@ lame_encode_mp3_frame(       /* Output */
         AddVbrFrame(gfp);
 
 
-#if defined(HAVE_GTK)
     if (gfp->analysis && gfc->pinfo != NULL) {
         for (ch = 0; ch < gfc->channels_out; ch++) {
             int     j;
@@ -600,7 +597,6 @@ lame_encode_mp3_frame(       /* Output */
         }
         set_frame_pinfo(gfp, *masking);
     }
-#endif
 
 #ifdef BRHIST
     updateStats(gfc);

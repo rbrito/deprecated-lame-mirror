@@ -45,12 +45,14 @@ typedef struct {
   double ms_ener_ratio[2];
 
   /* L,R, M and S values */
+  double energy_save[4][BLKSIZE]; /* psymodel is one ahead */
   double energy[2][4][BLKSIZE];
   double pe[2][4];
   double thr[2][4][SBMAX_l];
   double en[2][4][SBMAX_l];
   double thr_s[2][4][3*SBMAX_s];
   double en_s[2][4][3*SBMAX_s];
+  double ers_save[4];	/* psymodel is one ahead */
   double ers[2][4];
 
   double sfb[2][2][SBMAX_l];

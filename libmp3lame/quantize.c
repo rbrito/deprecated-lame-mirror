@@ -1896,7 +1896,7 @@ VBR_new_prepare (
     int     dummy_not_used_anymore;
   
     gfc->bitrate_index = gfc->VBR_max_bitrate;
-    avg = ResvFrameBegin (gfp, &avg) / gfc->mode_gr;
+    /*avg =*/ ResvFrameBegin (gfp, &avg) / gfc->mode_gr;
     
     get_framebits (gfp, &dummy_not_used_anymore, &dummy_not_used_anymore, frameBits);
 

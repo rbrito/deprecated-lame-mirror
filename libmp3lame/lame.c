@@ -840,14 +840,12 @@ lame_init_params(lame_global_flags * const gfp)
     /*    if ((gfp->VBR == vbr_off))  */
     /*  gfp->bWriteVbrTag = 0; */
 
-#if defined(HAVE_GTK)
     if (gfp->analysis)
         gfp->bWriteVbrTag = 0;
 
     /* some file options not allowed if output is: not specified or stdout */
     if (gfc->pinfo != NULL)
         gfp->bWriteVbrTag = 0; /* disable Xing VBR tag */
-#endif
 
     init_bit_stream_w(gfc);
 
@@ -904,8 +902,6 @@ lame_init_params(lame_global_flags * const gfp)
     assert( gfp->VBR_q <= 9 );
     assert( gfp->VBR_q >= 0 );
     
-    gfc->PSY->tonalityPatch = 0;
-  
     switch (gfp->VBR) {
 
     case vbr_mt:
@@ -924,7 +920,6 @@ lame_init_params(lame_global_flags * const gfp)
         /*  tonality
          */
         if (gfp->cwlimit <= 0) gfp->cwlimit = 0.42 * gfp->out_samplerate;
-        gfc->PSY->tonalityPatch = 1;
 
         gfc->PSY->mask_adjust = gfp->maskingadjust;
         gfc->PSY->mask_adjust_short = gfp->maskingadjust_short;
@@ -947,9 +942,6 @@ lame_init_params(lame_global_flags * const gfp)
         gfc->PSY->mask_adjust = gfp->maskingadjust;
         gfc->PSY->mask_adjust_short = gfp->maskingadjust_short;
 
-        if ( gfp->psymodel == PSY_GPSYCHO )
-            gfc->PSY->tonalityPatch = 1;
-        
         /*  sfb21 extra only with MPEG-1 at higher sampling rates
          */
         if ( gfp->experimentalY )

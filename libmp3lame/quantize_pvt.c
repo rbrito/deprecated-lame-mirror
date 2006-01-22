@@ -360,7 +360,6 @@ iteration_init( lame_global_flags *gfp)
         if (i >= 32)
             i -= 64;
         sfb21 = treble * pow(10, i / 4.0 / 10.0);
-
 	for (i = 0; i < SBMAX_l; i++) {
 	    FLOAT f;
 	    if      (i <=  6) f = bass;
@@ -812,7 +811,7 @@ int  calc_noise(
 
 
 
-#ifdef HAVE_GTK
+
 /************************************************************************
  *
  *  set_pinfo()
@@ -974,6 +973,6 @@ void set_frame_pinfo(
 	} /* for ch */
     }    /* for gr */
 }
-#endif /* ifdef HAVE_GTK */
+
 
 

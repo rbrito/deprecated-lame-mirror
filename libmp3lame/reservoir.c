@@ -159,12 +159,11 @@ ResvFrameBegin(lame_global_flags *gfp, int *mean_bits)
     assert ( gfc->ResvMax >= 0 );
 
     l3_side->resvDrain_pre = 0;
-#ifdef HAVE_GTK
+
     if (gfc->pinfo != NULL) {
         gfc->pinfo->mean_bits = *mean_bits / 2;  /* expected bits per channel per granule [is this also right for mono/stereo, MPEG-1/2 ?] */
         gfc->pinfo->resvsize  = gfc->ResvSize;
     }
-#endif
 
     return fullFrameBits;
 }
