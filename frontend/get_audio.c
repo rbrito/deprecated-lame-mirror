@@ -1050,30 +1050,30 @@ parse_wave_header(lame_global_flags * gfp, FILE * sf)
 ************************************************************************/
 
 int
-aiff_check2(const char *file_name, IFF_AIFF * const pcm_aiff_data)
+aiff_check2(IFF_AIFF * const pcm_aiff_data)
 {
     if (pcm_aiff_data->sampleType != IFF_ID_SSND) {
         if (silent < 10) {
-            error_printf("Sound data is not PCM in '%s'\n", file_name);
+            error_printf("ERROR: input sound data is not PCM\n");
         }
         return 1;
     }
     if (pcm_aiff_data->sampleSize != sizeof(short) * CHAR_BIT) {
         if (silent < 10) {
-            error_printf("Sound data is not %i bits in '%s'\n",
-                         sizeof(short) * CHAR_BIT, file_name);
+            error_printf("ERROR: input ound data is not %i bits\n",
+                         sizeof(short) * CHAR_BIT);
         }
         return 1;
     }
     if (pcm_aiff_data->numChannels != 1 && pcm_aiff_data->numChannels != 2) {
         if (silent < 10) {
-            error_printf("Sound data is not mono or stereo in '%s'\n", file_name);
+            error_printf("ERROR: input sound data is not mono or stereo\n");
         }
         return 1;
     }
     if (pcm_aiff_data->blkAlgn.blockSize != 0) {
         if (silent < 10) {
-            error_printf("Block size is not 0 bytes in '%s'\n", file_name);
+            error_printf("ERROR: block size of input sound data is not 0 bytes\n");
         }
         return 1;
     }
@@ -1176,7 +1176,7 @@ parse_aiff_header(lame_global_flags * gfp, FILE * sf)
     /* DEBUGF("Parsed AIFF %d\n", is_aiff); */
     if (is_aiff) {
         /* make sure the header is sane */
-        if (0 != aiff_check2("name" /*???????????? */ , &aiff_info))
+        if (0 != aiff_check2(&aiff_info))
             return 0;
         if (-1 == lame_set_num_channels(gfp, aiff_info.numChannels)) {
             if (silent < 10) {
