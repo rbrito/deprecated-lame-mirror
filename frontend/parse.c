@@ -156,17 +156,17 @@ static void setWin32Priority( lame_global_flags*  gfp, int Priority )
     case 0:
     case 1:
         SetPriorityClassMacro(IDLE_PRIORITY_CLASS);
-        console_printf("==> Priority set to Low.\n");
+        printf("==> Priority set to Low.\n");
         break;
     default:
     case 2:
         SetPriorityClassMacro(NORMAL_PRIORITY_CLASS);
-        console_printf("==> Priority set to Normal.\n");
+        printf("==> Priority set to Normal.\n");
         break;
     case 3:
     case 4:
         SetPriorityClassMacro(HIGH_PRIORITY_CLASS);
-        console_printf("==> Priority set to High.\n");
+        printf("==> Priority set to High.\n");
         break;
     }
 }
