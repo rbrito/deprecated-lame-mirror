@@ -181,7 +181,7 @@ init_infile(lame_global_flags * gfp, char *inPath, int *enc_delay, int *enc_padd
     num_samples_read = 0;
     pcmbitwidth = in_bitwidth;
     pcmswapbytes = swapbytes;
-    musicin = musicin = OpenSndFile(gfp, inPath, enc_delay, enc_padding);
+    musicin = OpenSndFile(gfp, inPath, enc_delay, enc_padding);
 }
 
 void
