@@ -325,9 +325,11 @@ lame_decoder(lame_global_flags * gfp, FILE * outf, int skip_start, char *inPath,
         wavsize *= i;
     }
 
-    if (0 == disable_wav_header)
-        if (!fseek(outf, 0l, SEEK_SET)) /* if outf is seekable, rewind and adjust length */
-            WriteWaveHeader(outf, (int) wavsize, lame_get_in_samplerate(gfp), tmp_num_channels, 16);
+    /* if outf is seekable, rewind and adjust length */
+    if (!disable_wav_header && strcmp("-", outPath)
+	&& !fseek(outf, 0l, SEEK_SET))
+	WriteWaveHeader(outf, (int) wavsize, lame_get_in_samplerate(gfp),
+			tmp_num_channels, 16);
     fclose(outf);
 
     if (silent <= 0)
