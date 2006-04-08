@@ -904,7 +904,7 @@ pecalc_l(lame_t gfc, III_psy_ratio *mr, int sb)
 static void
 psycho_analysis_short(lame_t gfc, FLOAT sbsmpl[2][1152], int gr, int numchn)
 {
-    FLOAT wsamp_S[2][3][BLKSIZE_s];
+    FLOAT wsamp_S[2][3][BLKSIZE_s] __attribute__((aligned(16)));
     int current_is_short = 0, ch, j, sb;
 
     /*************************************************************** 
@@ -1094,7 +1094,7 @@ static void
 psycho_anal_ns(lame_t gfc, int gr, int numchn)
 {
     FLOAT adjATH[CBANDS];
-    FLOAT wsamp_L[MAX_CHANNELS][BLKSIZE];    /* fft and energy calculation   */
+    FLOAT wsamp_L[MAX_CHANNELS][BLKSIZE] __attribute__((aligned(16)));    /* fft and energy calculation   */
     FLOAT nb_1[CBANDS];
     int ch;
 
