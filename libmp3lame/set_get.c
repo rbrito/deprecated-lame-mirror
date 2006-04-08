@@ -37,6 +37,7 @@
 
 #include "encoder.h"
 #include "bitstream.h"  /* because of compute_flushbits */
+#include "set_get.h"
 
 /*
  * input stream description

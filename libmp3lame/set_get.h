@@ -48,10 +48,6 @@ float CDECL lame_get_maskingadjust(lame_t);
 int CDECL lame_set_maskingadjust_short(lame_t, float);
 float CDECL lame_get_maskingadjust_short(lame_t);
 
-/* select ATH formula shape */
-int CDECL lame_set_ATHcurve(lame_t, float);
-int CDECL lame_get_ATHcurve(lame_t);
-
 /* substep shaping method */
 int CDECL lame_set_substep(lame_t, int);
 int CDECL lame_get_substep(lame_t);
@@ -71,7 +67,7 @@ int lame_set_narrowenStereo(lame_t, float);
 int lame_set_reduceSide(lame_t, float);
 
 /* for analyzer hook */
-int lame_set_analysis(lame_t, plotting_data *);
+void lame_set_analysis(lame_t, plotting_data *);
 
 #if defined(__cplusplus)
 }

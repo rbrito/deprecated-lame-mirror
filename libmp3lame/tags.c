@@ -328,9 +328,9 @@ id3tag_set_genre(lame_t gfc, const char *genre)
 static unsigned char *
 set_4_byte_value(unsigned char *bytes, unsigned long value)
 {
-    int index;
-    for (index = 3; index >= 0; --index) {
-        bytes[index] = value & 0xfful;
+    int idx;
+    for (idx = 3; idx >= 0; --idx) {
+        bytes[idx] = value & 0xfful;
         value >>= 8;
     }
     return bytes + 4;
@@ -351,7 +351,7 @@ set_4_byte_value(unsigned char *bytes, unsigned long value)
 #define ENCODER_FRAME_ID FRAME_ID('T', 'S', 'S', 'E')
 #define TITLE_LENGTH_ID FRAME_ID('T', 'L', 'E', 'N')
 
-unsigned int
+static unsigned int
 read_utf8(const char **ptext, size_t *plength)
 {
     const char *text = *ptext;

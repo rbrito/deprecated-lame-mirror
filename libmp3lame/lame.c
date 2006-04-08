@@ -384,13 +384,16 @@ optimum_samplefreq(int lowpassfreq, int input_samplefreq)
  *  init_qval(gfc);
  *
  ********************************************************************/
+#ifdef HAVE_NASM
+extern int  haveUNITa ( void );
+#endif
+
 int
 lame_init_params(lame_t gfc)
 {
     int gr, ch, sfb;
 
 #ifdef HAVE_NASM
-    extern int  haveUNITa ( void );
     int unit = haveUNITa ();
 
 #define MU_tFPU		(1<<0)
@@ -1215,7 +1218,7 @@ lame_init(void)
     if (!work)
 	return NULL;
 
-    gfc = (lame_t)(((unsigned long)work + 63) & ~63);
+    gfc = (lame_t)(((unsigned long)work + 63u) & ~63u);
     gfc->alignment = (unsigned char*)gfc - (unsigned char*)work;
 
     gfc->report.debugf = gfc->report.msgf = gfc->report.errorf = msgf;
