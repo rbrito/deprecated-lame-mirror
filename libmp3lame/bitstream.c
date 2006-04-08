@@ -549,16 +549,17 @@ Huffmancode_esc(bit_stream_t *bs, int tablesel, int i, int end, gr_info *gi)
 	}
 
 	if (x2 != 0) {
-	    if (x2 > 14) {
+	    x1 += x2;
+	    x2 -= 15;
+	    if (x2 >= 0) {
 		assert (x2 < linmax);
 		ext  <<= xlen;
-		ext   |= x2-15;
+		ext   |= x2;
 		xbits += xlen;
-		x2     = 15;
+		x1    -= x2;
 	    }
 	    ext = ext*2 + signbits(gi->xr[i+1]);
 	    xbits++;
-	    x1 += x2;
 	}
 	x1 += tablesel;
 	/* 0 < escLen[] <= 17 */
