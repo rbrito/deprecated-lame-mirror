@@ -204,19 +204,19 @@ static const char	VBRTag[]={"Xing"};
 static const char	VBRTag2[]={"Info"};
 
 /*-------------------------------------------------------------*/
-static int ExtractI4(unsigned char *buf)
+static int ExtractI4(char *buf)
 {
     int x;
     /* big endian extract */
-    x  = buf[0];    x <<= 8;
-    x |= buf[1];    x <<= 8;
-    x |= buf[2];    x <<= 8;
-    x |= buf[3];
+    x  = buf[0] & 0xff;    x <<= 8;
+    x |= buf[1] & 0xff;    x <<= 8;
+    x |= buf[2] & 0xff;    x <<= 8;
+    x |= buf[3] & 0xff;
     return x;
 }
 
 static int
-GetVbrTag(PMPSTR mp,unsigned char *buf)
+GetVbrTag(PMPSTR mp, char *buf)
 {
     VBRTAGDATA TagData;
     int	i, head_flags, h_bitrate,h_id, h_mode, h_sr_index;
@@ -318,7 +318,7 @@ check_vbr_header(PMPSTR mp,int bytes)
 {
     int i,pos;
     struct buf *buf=mp->tail;
-    unsigned char xing[XING_HEADER_SIZE];
+    char xing[XING_HEADER_SIZE];
 
     pos = buf->pos;
     /* skip to valid header */
