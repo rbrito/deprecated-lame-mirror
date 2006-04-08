@@ -166,7 +166,7 @@ static uint16_t crc16_lookup[256] = {
 };
 
 uint16_t
-calculateCRC(unsigned char *buffer, int size, uint16_t crc)
+calculateCRC(char *buffer, int size, uint16_t crc)
 {
     while (--size >= 0) {
 	crc = (crc << 8) ^ crc16_lookup[((crc >> 8) ^ *buffer++) & 0xff];

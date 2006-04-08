@@ -23,7 +23,7 @@
 #define LAME_UTIL_H
 
 void	disable_FPE(void);
-uint16_t calculateCRC(unsigned char *p, int size, uint16_t crc);
+uint16_t calculateCRC(char *p, int size, uint16_t crc);
 #ifdef __x86_64__
 # define lr2ms(gfc, pl, pr, len) lr2ms_SSE(pl, pr, len)
 void lr2ms_SSE(FLOAT *, FLOAT *, int);

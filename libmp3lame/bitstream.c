@@ -318,7 +318,7 @@ copy_buffer(lame_t gfc, unsigned char *buffer, int size)
     bs->bitidx = 0;
     minimum = pbuf - buffer;
 
-    gfc->nMusicCRC = calculateCRC(buffer, minimum, gfc->nMusicCRC);
+    gfc->nMusicCRC = calculateCRC((char*)buffer, minimum, gfc->nMusicCRC);
 #ifdef HAVE_MPGLIB
     if (gfc->decode_on_the_fly) {  /* decode the frame */
 	/* re-synthesis to pcm.  Repeat until we get a samples_out=0 */
@@ -400,7 +400,7 @@ getframebytes(const lame_t gfc)
 inline static void
 putbits24main(bit_stream_t *bs, unsigned int val, int j)
 {
-    char *p = &bs->buf[bs->bitidx >> 3];
+    unsigned char *p = &bs->buf[bs->bitidx >> 3];
 
     val <<= (32 - j - (bs->bitidx & 7));
     bs->bitidx += j;
@@ -414,7 +414,7 @@ putbits24main(bit_stream_t *bs, unsigned int val, int j)
 inline static void
 putbits8(bit_stream_t *bs, unsigned int val, int j)
 {
-    char *p = &bs->buf[bs->bitidx >> 3];
+    unsigned char *p = &bs->buf[bs->bitidx >> 3];
 
     val <<= (16 - j - (bs->bitidx & 7));
     bs->bitidx += j;
@@ -426,7 +426,7 @@ putbits8(bit_stream_t *bs, unsigned int val, int j)
 inline static void
 putbits16(bit_stream_t *bs, unsigned int val, int j)
 {
-    char *p = &bs->buf[bs->bitidx >> 3];
+    unsigned char *p = &bs->buf[bs->bitidx >> 3];
 
     val <<= (24 - j - (bs->bitidx & 7));
     bs->bitidx += j;
@@ -936,7 +936,7 @@ inline static void
 drain_into_ancillary(lame_t gfc, int remainingBits)
 {
     bit_stream_t *bs = &gfc->bs;
-    char *p, *end;
+    unsigned char *p, *end;
 
     p = &bs->buf[(bs->bitidx + 7) >> 3];
     bs->bitidx += remainingBits;

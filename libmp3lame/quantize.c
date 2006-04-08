@@ -46,6 +46,7 @@ extern void calc_noise_sub_3DN(const float *, const int *, int, int, float *);
 extern void quantize_ISO_3DN(const float *, int, int, int *, int);
 extern void quantize_ISO_SSE(const float *, int, int, int *);
 extern void quantize_ISO_SSE2(const float *, int, int, int *);
+extern float calc_sfb_noise_fast_SSE2(lame_t gfc, int j, int bw, int sf);
 extern float calc_sfb_noise_fast_3DN(lame_t gfc, int j, int bw, int sf, float xfsf);
 extern float calc_sfb_noise_3DN(lame_t gfc, int j, int bw, int sf);
 extern float xrmax_MMX(float *start, int width);
@@ -296,10 +297,10 @@ calc_noise(
 	distort -= sfb;
 	max_noise = (FLOAT)1.0;
 	for (sfb = gi->sfb_smin; sfb < gi->psymax; sfb += 3) {
-	    FLOAT noise = 1.0;
-	    if (distort[sfb  ] > 1.0) noise  = distort[sfb  ];
-	    if (distort[sfb+1] > 1.0) noise *= distort[sfb+1];
-	    if (distort[sfb+2] > 1.0) noise *= distort[sfb+2];
+	    FLOAT noise = (FLOAT)1.0;
+	    if (distort[sfb  ] > (FLOAT)1.0) noise  = distort[sfb  ];
+	    if (distort[sfb+1] > (FLOAT)1.0) noise *= distort[sfb+1];
+	    if (distort[sfb+2] > (FLOAT)1.0) noise *= distort[sfb+2];
 	    max_noise += FAST_LOG10(noise);
 	}
     }
@@ -1349,8 +1350,8 @@ find_scalefac(lame_t gfc, int j, FLOAT xmin, int bw, FLOAT maxXR,
 
     assert(sf >= sfmin);
     do {
-	FLOAT xfsf;
-	if (IPOW20(sf) > maxXR) /* pow(sf,0.1875) < maxXR / IXMAX */
+	FLOAT xfsf = IPOW20(sf);
+	if (xfsf >= maxXR) /* pow(sf,0.1875) < maxXR / IXMAX */
 	    goto illegal_sf;
 #ifdef HAVE_NASM
 	if (gfc->CPU_features.AMD_3DNow)
@@ -1646,9 +1647,9 @@ VBR_noise_shaping(lame_t gfc, gr_info *gi, FLOAT * xmin)
 	j -= width;
 	gi->scalefac[sfb] = MAX_GLOBAL_GAIN+1;
 	gfc->maxXR[sfb] = FLOAT_MAX;
-	if (xmin[sfb] >= gfc->sfbEnergy[sfb])
+	if (xmin[sfb] >= gfc->sfbEnergy[sfb]) {
 	    continue;
-
+	}
 #ifdef __x86_64__
 	maxXR = xrmax_SSE(&xr34[j], width);
 #else
