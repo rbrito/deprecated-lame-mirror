@@ -200,6 +200,16 @@ inline static int fast_log2(ieee754_float32_t xx)
 # define         FASTLOG_TO_10 (FLOAT)1.0
 #endif
 
+#ifdef HAVE_NASM
+# ifdef __GNUC__
+#  define align16 __attribute__((aligned(16)))
+# else
+#  define align16 __declspec(align(16))
+# endif
+#else
+# define align16
+#endif
+
 /***********************************************************************
 *
 *  Global Definitions
