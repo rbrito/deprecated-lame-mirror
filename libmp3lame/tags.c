@@ -71,27 +71,27 @@ genre_names[] = {
     "Rap", "Reggae", "Rock", "Techno", "Industrial", "Alternative", "Ska",
     "Death Metal", "Pranks", "Soundtrack", "Euro-Techno", "Ambient", "Trip-Hop",
     "Vocal", "Jazz+Funk", "Fusion", "Trance", "Classical", "Instrumental",
-    "Acid", "House", "Game", "Sound Clip", "Gospel", "Noise", "Alt. Rock",
+    "Acid", "House", "Game", "Sound Clip", "Gospel", "Noise", "Alternative Rock",
     "Bass", "Soul", "Punk", "Space", "Meditative", "Instrumental Pop",
     "Instrumental Rock", "Ethnic", "Gothic", "Darkwave", "Techno-Industrial",
     "Electronic", "Pop-Folk", "Eurodance", "Dream", "Southern Rock", "Comedy",
-    "Cult", "Gangsta Rap", "Top 40", "Christian Rap", "Pop/Funk", "Jungle",
-    "Native American", "Cabaret", "New Wave", "Psychedelic", "Rave",
+    "Cult", "Gangsta", "Top 40", "Christian Rap", "Pop/Funk", "Jungle",
+    "Native US", "Cabaret", "New Wave", "Psychedelic", "Rave",
     "Showtunes", "Trailer", "Lo-Fi", "Tribal", "Acid Punk", "Acid Jazz",
     "Polka", "Retro", "Musical", "Rock & Roll", "Hard Rock", "Folk",
-    "Folk/Rock", "National Folk", "Swing", "Fast-Fusion", "Bebob", "Latin",
+    "Folk-Rock", "National Folk", "Swing", "Fast Fusion", "Bebob", "Latin",
     "Revival", "Celtic", "Bluegrass", "Avantgarde", "Gothic Rock",
     "Progressive Rock", "Psychedelic Rock", "Symphonic Rock", "Slow Rock",
     "Big Band", "Chorus", "Easy Listening", "Acoustic", "Humour", "Speech",
     "Chanson", "Opera", "Chamber Music", "Sonata", "Symphony", "Booty Bass",
     "Primus", "Porn Groove", "Satire", "Slow Jam", "Club", "Tango", "Samba",
     "Folklore", "Ballad", "Power Ballad", "Rhythmic Soul", "Freestyle", "Duet",
-    "Punk Rock", "Drum Solo", "A Cappella", "Euro-House", "Dance Hall",
+    "Punk Rock", "Drum Solo", "Acappella", "Euro-House", "Dance Hall",
     "Goa", "Drum & Bass", "Club-House", "Hardcore", "Terror", "Indie",
-    "BritPop", "Negerpunk", "Polsk Punk", "Beat", "Christian Gangsta Rap",
+    "BritPop", "Negerpunk", "Polsk Punk", "Beat", "Christian Gangsta",
     "Heavy Metal", "Black Metal", "Crossover", "Contemporary Christian",
     "Christian Rock", "Merengue", "Salsa", "Thrash Metal", "Anime", "JPop",
-    "Synthpop"
+    "SynthPop"
 };
 
 #define GENRE_NAME_COUNT \
@@ -118,8 +118,8 @@ static const int genre_alpha_map [] = {
 #define SPACE_V1_FLAG   (1U << 4)
 #define PAD_V2_FLAG     (1U << 5)
 
-static uint8_t*
-CreateI4(uint8_t *buf, int nValue)
+static char*
+CreateI4(char *buf, int nValue)
 {
     *buf++ = nValue >> 24;
     *buf++ = nValue >> 16;
@@ -128,8 +128,8 @@ CreateI4(uint8_t *buf, int nValue)
     return buf;
 }
 
-static uint8_t*
-CreateI2(uint8_t *buf, int nValue)
+static char*
+CreateI2(char *buf, int nValue)
 {
     *buf++= nValue >> 8;
     *buf++ = nValue;
@@ -641,8 +641,8 @@ id3tag_write_v2(lame_t gfc, unsigned char *buf, size_t size)
     return 0;
 }
 
-static unsigned char *
-set_text_field(unsigned char *field, const char *text, size_t size, int pad)
+static char *
+set_text_field(char *field, const char *text, size_t size, int pad)
 {
     while (size--) {
         if (text && *text) {
@@ -657,7 +657,7 @@ set_text_field(unsigned char *field, const char *text, size_t size, int pad)
 int
 id3tag_write_v1(lame_t gfc, unsigned char *buf, size_t size)
 {
-    unsigned char tag[128], *p = tag, year[5];
+    char tag[128], *p = tag, year[5];
     int pad = (gfc->tag_spec.flags & SPACE_V1_FLAG) ? ' ' : 0;
 
     if (!(gfc->tag_spec.flags & CHANGED_FLAG)
@@ -820,7 +820,7 @@ InitVbrTag(lame_t gfc)
  * e.g. half duration seek point = (toc[50]/256.0) * total_bitstream_bytes
  */
 static void
-PutLameVBR(lame_t gfc, size_t nMusicLength, uint8_t *p, uint8_t *p0)
+PutLameVBR(lame_t gfc, size_t nMusicLength, char *p, char *p0)
 {
 #define nRevision 0
 #define bExpNPsyTune 1
@@ -955,7 +955,7 @@ PutLameVBR(lame_t gfc, size_t nMusicLength, uint8_t *p, uint8_t *p0)
 int
 lame_mp3_tags_fid(lame_t gfc, FILE * fpStream)
 {
-    uint8_t buf[MAXFRAMESIZE], *p;
+    char buf[MAXFRAMESIZE], *p;
     size_t id3v2TagSize, lFileSize, totalFrameSize;
     int i, idx, bitrate;
 
