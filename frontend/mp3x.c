@@ -32,7 +32,7 @@ extern plotting_data Pinfo[];
 ************************************************************************/
 int main(int argc, char **argv)
 {
-    char mp3buffer[LAME_MAXMP3BUFFER];
+    unsigned char mp3buffer[LAME_MAXMP3BUFFER];
     lame_t gf;
     char outPath[PATH_MAX + 1];
     char inPath[PATH_MAX + 1];

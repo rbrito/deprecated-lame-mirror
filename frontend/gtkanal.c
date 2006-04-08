@@ -125,7 +125,7 @@ gtkmakeframe(void)
     int mp3count = 0;
     int mp3out = 0;
     int channels_out;
-    char mp3buffer[LAME_MAXMP3BUFFER];
+    unsigned char mp3buffer[LAME_MAXMP3BUFFER];
     extern plotting_data *mpg123_pinfo;
     static int frameNum=0;
     int framesize = lame_get_framesize(global_gfp);
