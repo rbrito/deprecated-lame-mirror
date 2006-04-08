@@ -747,6 +747,7 @@ int
 InitVbrTag(lame_t gfc)
 {
 #define MAXFRAMESIZE 2880 /* the max framesize freeformat 640 32kHz */
+#define VBR_INDEXES 400
     int bitrate, tot, totalFrameSize;
 
     if (!gfc->bWriteVbrTag)
@@ -783,7 +784,7 @@ InitVbrTag(lame_t gfc)
 	return 0;
     }
     if (!gfc->seekTable.bag
-	&& !(gfc->seekTable.bag  = malloc (400*sizeof(int)))) {
+	&& !(gfc->seekTable.bag  = malloc (VBR_INDEXES*sizeof(int)))) {
 	gfc->seekTable.size = 0;
 	gfc->bWriteVbrTag = 0;
 	gfc->report.errorf("Error: can't allocate VbrFrames buffer\n");
@@ -795,7 +796,7 @@ InitVbrTag(lame_t gfc)
     gfc->seekTable.seen = 0;
     gfc->seekTable.want = 1;
     gfc->seekTable.pos  = 0;
-    gfc->seekTable.size = 400;
+    gfc->seekTable.size = VBR_INDEXES;
 
     return totalFrameSize;
 }
