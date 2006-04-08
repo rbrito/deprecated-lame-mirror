@@ -839,7 +839,7 @@ if test "x$GCC" = "xyes"; then
 		-Wcast-qual -Wchar-subscripts -Wconversion \
 		-Wmissing-prototypes -Wnested-externs -Wpointer-arith \
 		-Wredundant-decls -Wshadow -Wstrict-prototypes \
-		-Wwrite-strings -Winline \
+		-Wwrite-strings -Winline -Wpadded \
 		-Wformat -Wswitch -Waggregate-return -Wmissing-noreturn \
 		-Wimplicit-int -fno-builtin"
 
