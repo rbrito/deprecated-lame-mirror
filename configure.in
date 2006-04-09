@@ -1025,6 +1025,12 @@ CFLAGS="${OPTIMIZATION} ${CFLAGS}"
 LDADD="${LDADD}"
 FRONTEND_LDADD="${FRONTEND_LDADD} ${CONFIG_MATH_LIB}"
 
+AC_ARG_WITH(pkgconfigdir, AC_HELP_STRING([--with-pkgconfigdir],[Use the specified pkgconfig dir (default is prefix/lib/pkgconfig)]),[PKGCONFIGDIR=${withval}],[PKGCONFIGDIR='${prefix}/lib/pkgconfig'])
+
+AC_MSG_CHECKING([pkgconfig directory])
+AC_MSG_RESULT([$PKGCONFIGDIR])
+AC_SUBST([PKGCONFIGDIR])
+
 
 AC_SUBST(INCLUDES)
 
@@ -1054,5 +1060,5 @@ AC_SUBST(CONFIG_DEFS)
 
 AM_LANGINFO_CODESET
 
-AC_CONFIG_FILES([Makefile libmp3lame/Makefile libmp3lame/i386/Makefile libmp3lame/ppc/Makefile libmp3lame/x86_64/Makefile frontend/Makefile mpglib/Makefile doc/Makefile doc/html/Makefile doc/man/Makefile include/Makefile Dll/Makefile misc/Makefile debian/Makefile dshow/Makefile ACM/Makefile ACM/ADbg/Makefile ACM/ddk/Makefile ACM/tinyxml/Makefile lame.spec mac/Makefile])
+AC_CONFIG_FILES([Makefile libmp3lame/Makefile libmp3lame/i386/Makefile libmp3lame/ppc/Makefile libmp3lame/x86_64/Makefile frontend/Makefile mpglib/Makefile doc/Makefile doc/html/Makefile doc/man/Makefile include/Makefile Dll/Makefile misc/Makefile debian/Makefile dshow/Makefile ACM/Makefile ACM/ADbg/Makefile ACM/ddk/Makefile ACM/tinyxml/Makefile lame.spec mac/Makefile libmp3lame/libmp3lame.pc])
 AC_OUTPUT

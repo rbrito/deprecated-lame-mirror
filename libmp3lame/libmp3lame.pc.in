@@ -1,0 +1,10 @@
+prefix=@prefix@
+exec_prefix=@exec_prefix@
+libdir=@libdir@
+includedir=@includedir@
+
+Name: libmp3lame
+Description: MP3 decoding library
+Version: @PACKAGE_VERSION@
+Libs: -L${libdir} -lmp3lame
+Cflags: -I${includedir}/lame
