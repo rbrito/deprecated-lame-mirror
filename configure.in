@@ -250,25 +250,22 @@ if test "X${ac_cv_func_strtol}" != "Xyes"; then
 fi
 
 dnl Check if we are on a mingw system, which needs libwsock32
-case $host_os in
-mingw|mingw32)
-	AC_CHECK_FUNCS(socket)
-	if test $ac_cv_func_socket = no; then
-		# maybe it is in libsocket
-		AC_CHECK_LIB(socket, socket, [AC_DEFINE(HAVE_SOCKET)
-			LIBS="$LIBS -lsocket"])
-
-		if test "X${ac_cv_lib_socket_socket}" != "Xyes"; then
-			SOCKETFUNCTION=NO
-		else
-			case ${host_os} in
-			*solaris*)
-				LIBS="$LIBS -lnsl"
-				;;
-			esac
-		fi
+SOCKETFUNCTION=unknown
+AC_CHECK_FUNCS(socket)
+if test $ac_cv_func_socket = no; then
+	# maybe it is in libsocket
+	AC_CHECK_LIB(socket, socket, [AC_DEFINE(HAVE_SOCKET)
+	LIBS="$LIBS -lsocket"])
+	if test "X${ac_cv_lib_socket_socket}" != "Xyes"; then
+		SOCKETFUNCTION=NO
+	else
+		case ${host_os} in
+		*solaris*)
+			LIBS="$LIBS -lnsl"
+			;;
+		esac
 	fi
-esac
+fi
 
 dnl Initialize configuration variables for the Makefile
 CFLAGS=${CFLAGS}
