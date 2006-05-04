@@ -1435,6 +1435,7 @@ L3psycho_anal_ns(lame_global_flags * gfp,
         FLOAT(*wsamp_l)[BLKSIZE];
         FLOAT(*wsamp_s)[3][BLKSIZE_s];
         FLOAT   en_subshort[12];
+        FLOAT   en_short[4] = { 0 };
         FLOAT   attack_intensity[12];
         int     ns_uselongblock = 1;
         FLOAT   attackThreshold;
@@ -1484,6 +1485,7 @@ L3psycho_anal_ns(lame_global_flags * gfp,
             en_subshort[i] = gfc->nsPsy.last_en_subshort[chn][i + 6];
             attack_intensity[i]
                 = en_subshort[i] / gfc->nsPsy.last_en_subshort[chn][i + 4];
+            en_short[0] += en_subshort[i];
         }
 
         if (chn == 2) {
@@ -1504,6 +1506,7 @@ L3psycho_anal_ns(lame_global_flags * gfp,
                         p = fabs(*pf);
 
                 gfc->nsPsy.last_en_subshort[chn][i] = en_subshort[i + 3] = p;
+                en_short[1 + i/3] += p;
                 if (p > en_subshort[i + 3 - 2])
                     p = p / en_subshort[i + 3 - 2];
                 else if (en_subshort[i + 3 - 2] > p * 10.0)
@@ -1529,6 +1532,21 @@ L3psycho_anal_ns(lame_global_flags * gfp,
         for (i = 0; i < 12; i++)
             if (!ns_attacks[i / 3] && attack_intensity[i] > attackThreshold)
                 ns_attacks[i / 3] = (i % 3) + 1;
+
+        /* should have energy change between short blocks,
+            in order to avoid periodic signals */
+        for (i=1; i<4; i++) {
+            float ratio;
+            if (en_short[i-1] > en_short[i])
+                ratio = en_short[i-1]/en_short[i];
+            else
+                ratio = en_short[i]/en_short[i-1];
+            if (ratio < 2) {
+                ns_attacks[i] = 0;
+                if (i==1)
+                    ns_attacks[0] = 0;
+            }
+        }
 
         if (ns_attacks[0] && gfc->nsPsy.last_attacks[chn])
             ns_attacks[0] = 0;
