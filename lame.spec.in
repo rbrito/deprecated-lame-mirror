@@ -9,7 +9,7 @@ Summary(fr) : LAME n'est pas un encodeur MP3 ;->
 Name: %{name}
 Version: %{ver}
 Release: %{rel}
-Copyright: LGPL
+License: LGPL
 Vendor: The LAME Project
 Packager: Yosi Markovich <yosim@bigfoot.com>
 URL: http://www.mp3dev.org/mp3
@@ -17,7 +17,10 @@ Group: Applications/Multimedia
 Source: ftp://lame.sourceforge.net/pub/lame/src/%{name}-%{version}.tar.bz2
 BuildRoot: %{_tmppath}/%{name}-root
 Requires: ncurses >= 5.0
-BuildRequires: gcc3 = 3.0.1, /usr/bin/find, ncurses-devel
+BuildRequires: gcc => 3.0.1, /usr/bin/find, ncurses-devel
+%ifarch %{ix86} x86_64
+BuildRequires: nasm
+%endif
 Provides: mp3encoder
 
 %description
@@ -45,52 +48,46 @@ LAME project.
 You will also need to install the main lame package in order to install
 these libraries.
 
-%prep -q
-%setup -q
+%prep
+%setup
 
 %build
-
-# Optimize the mother-fucker to the bone
-export CC_OPTS="-O3 -march=i386 -mcpu=i686 -fomit-frame-pointer  -funroll-loops -ffast-math -finline-functions -Wall -pedantic"
-
-%ifarch i686
-	export CC_OPTS="-O3 -fomit-frame-pointer -mcpu=i686 -march=i686 -malign-functions=4 -funroll-loops -fexpensive-optimizations -fschedule-insns2 -Wall -mfancy-math-387 -pipe"
-%endif
-%ifarch athlon
-	export CC_OPTS="-O3 -fomit-frame-pointer -fno-strength-reduce -mcpu=athlon -march=athlon -malign-functions=4 -funroll-loops  -fexpensive-optimizations -fschedule-insns2 -Wall -mfancy-math-387 -pipe"
-%endif
 
 # Vorbis makes the build fail for now. . .
 rm -f config.cache
  
 %configure \
+%ifarch %{ix86} x86_64
 	--enable-nasm \
+%endif
 	--enable-decoder \
 	--without-vorbis \
 	--enable-analyzer=no \
 	--enable-brhist \
 	--disable-debug
-
-make CC="gcc3" CFLAGS="${CC_OPTS}" test
+%{__make} %{?_smp_mflags} test CFLAGS="%{optflags}"
 
 %install
-rm -rf %{buildroot}
-find . -name CVS | xargs rm -rf
-mkdir -p %{buildroot}%{_bindir}
+%{__rm} -rf %{buildroot}
 %makeinstall
 
-ln -sf lame/lame.h %{buildroot}%{_includedir}/lame.h
-install -D -m 644 doc/man/lame.1 %{buildroot}%{_mandir}/man/lame.1
+### Some apps still expect to find <lame.h>
+%{__ln_s} -f lame/lame.h %{buildroot}%{_includedir}/lame.h
 
-# move back lame.h
-mv %{buildroot}%{_includedir}/lame/lame.h %{buildroot}%{_includedir}/lame.h
+
 find doc/html -name "Makefile*" | xargs rm -f
+### make install really shouldn't install these
+%{__rm} -rf %{buildroot}%{_docdir}/lame/
 
-%post -p /sbin/ldconfig
-%postun -p /sbin/ldconfig
+
+%post
+/sbin/ldconfig 2>/dev/null
+
+%postun
+/sbin/ldconfig 2>/dev/null
 
 %clean
-rm -rf %{buildroot}
+%{__rm} -rf %{buildroot}
 
 %files
 %defattr (-,root,root)
@@ -106,10 +103,15 @@ rm -rf %{buildroot}
 %{_libdir}/libmp3lame.a
 %{_libdir}/libmp3lame.la
 %{_libdir}/libmp3lame.so
-%{_includedir}/lame
-%{_includedir}/lame.h
+%{_includedir}/*
 
 %changelog
+
+* Sun May 14 2006 Kyle VanderBeek <kylev@kylev.com>
+- Remove requirements for specific gcc versions, since modern ones "just work".
+- Remove out-dated hyper-optimizations (some of which weren't valid compiler
+  flags anymore).
+- Update to current RPM techniques and macros (inspired by freshrpms.net spec).
 
 * Sat May 11 2002 Yosi Markovich <yosim@bigfoot.com>
 - Fixes to the spec file that include:
