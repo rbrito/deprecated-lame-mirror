@@ -17,8 +17,8 @@ dnl FRONTEND_LDFLAGS
 dnl FRONTEND_CFLAGS
 dnl FRONTEND_LDADD
 
-AC_PREREQ(2.53)
-AC_INIT(lame,3.97,lame-dev@lists.sf.net)
+AC_PREREQ(2.59)
+AC_INIT([lame],[3.97],[lame-dev@lists.sf.net])
 AC_CONFIG_SRCDIR([libmp3lame/lame.c])
 
 dnl check system
@@ -26,7 +26,7 @@ AC_CANONICAL_HOST
 
 dnl automake
 AM_INIT_AUTOMAKE
-AM_CONFIG_HEADER(config.h)
+AC_CONFIG_HEADERS([config.h])
 AM_MAINTAINER_MODE
 AM_MAKE_INCLUDE
 
@@ -63,7 +63,8 @@ if test "${ac_cv_cygwin}" = "yes"; then
 fi
 
 dnl check programs
-AM_PROG_CC_STDC
+AC_PROG_CC()
+
 
 dnl more automake stuff
 AM_C_PROTOTYPES

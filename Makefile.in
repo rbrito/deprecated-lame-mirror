@@ -41,8 +41,7 @@ DIST_COMMON = README $(am__configure_deps) $(srcdir)/Makefile.am \
 	$(srcdir)/Makefile.in $(srcdir)/config.h.in \
 	$(srcdir)/lame.spec.in $(top_srcdir)/Makefile.am.global \
 	$(top_srcdir)/configure COPYING ChangeLog INSTALL TODO \
-	config.guess config.sub depcomp install-sh ltconfig ltmain.sh \
-	missing mkinstalldirs
+	config.guess config.sub depcomp install-sh ltmain.sh missing
 subdir = .
 ACLOCAL_M4 = $(top_srcdir)/aclocal.m4
 am__aclocal_m4_deps = $(top_srcdir)/acinclude.m4 \
@@ -51,7 +50,7 @@ am__configure_deps = $(am__aclocal_m4_deps) $(CONFIGURE_DEPENDENCIES) \
 	$(ACLOCAL_M4)
 am__CONFIG_DISTCLEAN_FILES = config.status config.cache config.log \
  configure.lineno configure.status.lineno
-mkinstalldirs = $(SHELL) $(top_srcdir)/mkinstalldirs
+mkinstalldirs = $(install_sh) -d
 CONFIG_HEADER = config.h
 CONFIG_CLEAN_FILES = lame.spec
 SOURCES =
@@ -203,7 +202,7 @@ sbindir = @sbindir@
 sharedstatedir = @sharedstatedir@
 sysconfdir = @sysconfdir@
 target_alias = @target_alias@
-AUTOMAKE_OPTIONS = 1.5 foreign $(top_srcdir)/ansi2knr
+AUTOMAKE_OPTIONS = 1.9 foreign $(top_srcdir)/ansi2knr
 SUBDIRS = mpglib libmp3lame frontend Dll debian doc include misc dshow ACM mac
 CLEANFILES = testcase.new.mp3
 EXTRA_DIST = \
