@@ -11,6 +11,845 @@
 
 -- 
 
+2006-06-03 13:14  aleidinger
+
+	* doc/html/history.html:
+
+	add todays history
+
+2006-06-03 13:12  aleidinger
+
+	* ltconfig, mkinstalldirs, stamp-h.in:
+
+	Remove obsolete files (at least after the use of the new autotools,
+	they are not created anymore).
+
+2006-06-03 13:11  aleidinger
+
+	* configure, config.h.in:
+
+	Update to:
+	 - libtool 1.5.22
+	 - automake 1.9
+	 - autoconf 2.59
+
+2006-06-03 13:07  aleidinger
+
+	* libmp3lame/i386/Makefile.am, Makefile.am.global, configure.in,
+	  aclocal.m4, ltmain.sh, Makefile.in, ACM/Makefile.in,
+	  ACM/ADbg/Makefile.in, ACM/ddk/Makefile.in,
+	  ACM/tinyxml/Makefile.in, Dll/Makefile.in, debian/Makefile.in,
+	  doc/Makefile.in, doc/html/Makefile.in, doc/man/Makefile.in,
+	  dshow/Makefile.in, frontend/Makefile.in, include/Makefile.in,
+	  libmp3lame/Makefile.in, libmp3lame/i386/Makefile.in,
+	  mac/Makefile.in, misc/Makefile.in, mpglib/Makefile.in:
+
+	Update to:
+	 - libtool 1.5.22
+	 - automake 1.9
+	 - autoconf 2.59
+
+2006-06-03 13:03  aleidinger
+
+	* libmp3lame/lame.c:
+
+	- Fix bug introduced in last revision.
+	- Don't segfault in lame_close() in case of an error on initialisation.
+
+2006-06-03 11:41  aleidinger
+
+	* libmp3lame/lame.c:
+
+	Plug some memory leaks in the error case.
+
+	Noticed by:	Christophe Fergeau <teuf@users.sf.net>
+	SF-Bug:		1443630
+
+2006-06-03 11:05  aleidinger
+
+	* lame.spec.in:
+
+	- Remove requirements for specific gcc versions, since modern ones "just work".
+	- Remove out-dated hyper-optimizations (some of which weren't valid compiler
+	  flags anymore).
+	- Update to current RPM techniques and macros (inspired by freshrpms.net spec).
+
+	Submitted by:	Kyle VanderBeek <kylev@kylev.com>
+	SF-Patch:	1488468
+
+2006-05-04 19:50  bouvigne
+
+	* libmp3lame/: reservoir.c, version.h:
+
+	restrict max mp3 buf to solve compatibility issue with FhG directshow filter
+
+2006-05-04 19:43  bouvigne
+
+	* libmp3lame/psymodel.c:
+
+	attack detection: workaround against "low freq" periodic signals (like trumpet)
+
+2006-04-16 12:18  takehiro
+
+	* configure (takehiro-2002_05_07-experimental):
+
+	regen
+
+2006-04-16 09:02  takehiro
+
+	* configure.in:
+
+	better socket library configuration.
+
+2006-04-16 08:23  takehiro
+
+	* configure.in (takehiro-2002_05_07-experimental):
+
+	better socket function configuration.
+
+2006-04-16 07:06  takehiro
+
+	* config.h.in, configure.in:
+
+	remove winsock check. It seems we do not need it anymore.
+
+2006-04-09 16:12  takehiro
+
+	* libmp3lame/.cvsignore (takehiro-2002_05_07-experimental):
+
+	ignore pkgconfig file.
+
+2006-04-09 16:11  takehiro
+
+	* Makefile.in, configure, configure.in, testcase.mp3,
+	  ACM/Makefile.in, ACM/ADbg/Makefile.in, ACM/ddk/Makefile.in,
+	  ACM/tinyxml/Makefile.in, Dll/Makefile.in, debian/Makefile.in,
+	  doc/Makefile.in, doc/html/Makefile.in, doc/man/Makefile.in,
+	  dshow/Makefile.in, frontend/Makefile.in, include/Makefile.in,
+	  libmp3lame/Makefile.in, libmp3lame/libmp3lame.pc.in,
+	  libmp3lame/i386/Makefile.in, mac/Makefile.in, misc/Makefile.in,
+	  mpglib/Makefile.in (takehiro-2002_05_07-experimental):
+
+	prepare for pkgconfig support
+
+2006-04-08 11:57  takehiro
+
+	* libmp3lame/bitstream.c (takehiro-2002_05_07-experimental):
+
+	tirivial hack of huffman coding with ESC code.
+
+2006-04-08 11:54  takehiro
+
+	* libmp3lame/: machine.h, psymodel.c
+	  (takehiro-2002_05_07-experimental):
+
+	add alignment macro for not gcc environment
+
+2006-04-08 09:08  takehiro
+
+	* libmp3lame/tags.c (takehiro-2002_05_07-experimental):
+
+	supress magic numbers
+
+2006-04-08 07:46  takehiro
+
+	* mpglib/: common.c, interface.c
+	  (takehiro-2002_05_07-experimental):
+
+	suppress warnings
+
+2006-04-08 07:46  takehiro
+
+	* libmp3lame/: lame.c, set_get.c, set_get.h, tags.c
+	  (takehiro-2002_05_07-experimental):
+
+	supress warnings
+
+2006-04-08 07:45  takehiro
+
+	* frontend/: gtkanal.c, mp3x.c (takehiro-2002_05_07-experimental):
+
+	supress singed/unsigned warnings with gcc4.x
+
+2006-04-08 07:45  takehiro
+
+	* configure.in (takehiro-2002_05_07-experimental):
+
+	add one more warning option
+
+2006-04-08 07:44  takehiro
+
+	* doc/html/id3.html (takehiro-2002_05_07-experimental):
+
+	fix typos
+
+2006-04-08 07:16  takehiro
+
+	* libmp3lame/: bitstream.c, gain_analysis.c, quantize.c, util.c,
+	  util.h (takehiro-2002_05_07-experimental):
+
+	fix singed/unsigned warning with gcc4.x
+
+2006-04-08 07:14  takehiro
+
+	* libmp3lame/psymodel.c (takehiro-2002_05_07-experimental):
+
+	fix alignment error when gcc4.x with SSE enabled build
+
+2006-04-08 07:13  takehiro
+
+	* libmp3lame/tags.c (takehiro-2002_05_07-experimental):
+
+	fix typos in genre list.
+	suppress signed/unsigned warining with gcc4.x
+
+2006-04-08 07:12  takehiro
+
+	* libmp3lame/id3tag.c:
+
+	fix genre tag spelling as reported by CrazySoul <hicrazysoul at gmail com>
+
+2006-04-08 07:08  takehiro
+
+	* doc/html/id3.html:
+
+	fix spelling as reported by CrazySoul <hicrazysoul at gmail com>
+
+2006-02-18 16:35  takehiro
+
+	* frontend/get_audio.c:
+
+	remove redundant description.
+
+2006-02-18 16:35  takehiro
+
+	* frontend/main.c:
+
+	fix decoding problem when the output is stdout, reported by john.edwards33
+	(sf.net bugid #1430719)
+
+2006-02-03 06:52  vitaly-ivanov
+
+	* dshow/README:
+
+	typo fix
+
+2006-02-02 21:04  robert
+
+	* frontend/parse.c (lame3_97):
+
+	"console_printf" replaced by "printf"
+
+2006-01-30 15:41  takehiro
+
+	* frontend/get_audio.c:
+
+	fix error message when unsupported format AIFF file.
+	(related bugid #1414515,
+	http://sourceforge.net/tracker/index.php?func=detail&aid=1414515&group_id=290&atid=100290
+	)
+
+2006-01-22 17:52  robert
+
+	* include/lame.h, libmp3lame/encoder.c, libmp3lame/lame-analysis.h,
+	  libmp3lame/lame.c, libmp3lame/psymodel.c, libmp3lame/quantize.c,
+	  libmp3lame/quantize_pvt.c, libmp3lame/quantize_pvt.h,
+	  libmp3lame/reservoir.c, libmp3lame/util.h, libmp3lame/version.h:
+
+	bug fixes: psy code used long block ATH in short block case
+	workaround: quantization routines of new vbr code failed on strong tonal
+	samples, due to over optimistic masking promises from psy model
+
+2006-01-21 16:39  takehiro
+
+	* frontend/: get_audio.c, get_audio.h, main.c, parse.c
+	  (takehiro-2002_05_07-experimental):
+
+	prepare for RIFF-wave MP3 file.
+
+2006-01-21 16:29  takehiro
+
+	* libmp3lame/id3tag.c (lame3_97):
+
+	backport of rev 1.28
+	- patch #1379187, "id3tag_write_v2 doesn't allocate enough memory for track"
+
+2006-01-21 13:10  takehiro
+
+	* libmp3lame/id3tag.c:
+
+	patch #1379187, "id3tag_write_v2 doesn't allocate enough memory for track"
+
+2005-12-21 21:40  robert
+
+	* frontend/: parse.c (lame3_97), parse.c:
+
+	bug fix: implementation of the priority commandline switch did not what
+	the documentation says (windows only)
+
+2005-12-18 18:49  robert
+
+	* frontend/: brhist.c, main.c (lame3_97):
+
+	fixing some display glitch for very long input files
+
+2005-12-18 18:39  robert
+
+	* Makefile.unix, configMS.h (lame3_97):
+
+	fixing some gcc 4.0.2 compiler issues to get LAME compiled again
+
+2005-12-18 18:26  robert
+
+	* frontend/brhist.c:
+
+	fixing display glitch with very long files
+
+2005-12-05 15:57  takehiro
+
+	* libmp3lame/id3tag.c:
+
+	fix id3v2 genre tag problem, reported by wylda@volny.
+	now LAME won't crash with "--id3v2-only --tg 14".
+
+2005-11-29 21:21  robert
+
+	* frontend/: mp3rtp.c, mp3x.c:
+
+	commit was pending, needed for John33's decoding patch
+
+2005-11-29 19:49  robert
+
+	* doc/html/history.html:
+
+	updating history
+
+2005-11-28 10:09  vitaly-ivanov
+
+	* dshow/: Encoder.h, Mpegac.cpp, Mpegac.h, PropPage.cpp,
+	  PropPage.h, PropPage_adv.cpp, PropPage_adv.h, Property.rc,
+	  README, iaudioprops.h, resource.h:
+
+	Property page update - moved "set duration" check box to the advanced page, added "allow sample overlap" check box (uncheck it if downstream filter is Avi Mux, otherwise use it for better video/audio synchronization - especially when capturing). Copying terms update (README file)
+
+2005-11-27 15:02  bouvigne
+
+	* libmp3lame/bitstream.c, libmp3lame/encoder.c, libmp3lame/fft.c,
+	  libmp3lame/lame.c, doc/html/history.html, libmp3lame/VbrTag.c,
+	  libmp3lame/mpglib_interface.c, libmp3lame/newmdct.c,
+	  libmp3lame/presets.c, libmp3lame/psymodel.c,
+	  libmp3lame/quantize.c, libmp3lame/quantize_pvt.c,
+	  libmp3lame/reservoir.c, libmp3lame/set_get.c,
+	  libmp3lame/takehiro.c, libmp3lame/util.c,
+	  libmp3lame/vbrquantize.c, doc/man/lame.1, frontend/parse.c:
+
+	merge from 3.97 branch
+
+2005-11-27 14:47  bouvigne
+
+	* doc/html/history.html, libmp3lame/gain_analysis.c (lame3_97):
+
+	hack against replayGain slowness on silent parts
+
+2005-11-27 10:20  bouvigne
+
+	* libmp3lame/VbrTag.c (lame3_97):
+
+	fixed Xing/Info tag parsing
+
+2005-11-26 18:43  bouvigne
+
+	* libmp3lame/version.h (lame3_97):
+
+	3.97b2
+
+2005-11-26 18:43  bouvigne
+
+	* doc/html/history.html (lame3_97):
+
+	history
+
+2005-11-26 18:37  bouvigne
+
+	* libmp3lame/: reservoir.c, set_get.c (lame3_97):
+
+	reinstated bit reservoir for 320kbps
+
+2005-11-26 14:21  bouvigne
+
+	* libmp3lame/presets.c (lame3_97):
+
+	slight change of athaa in V5
+
+2005-11-26 14:19  bouvigne
+
+	* frontend/parse.c (lame3_97):
+
+	restored availability of athaa-sensitivity in command line frontend,
+	as it was available in 3.96 release
+
+2005-11-22 22:15  robert
+
+	* frontend/: console.c, console.h, get_audio.c, get_audio.h,
+	  gtkanal.c, lametime.c, main.c, main.h, parse.c, rtp.c:
+
+	John33's lame decoding fix
+
+2005-11-20 14:25  takehiro
+
+	* libmp3lame/gain_analysis.c (takehiro-2002_05_07-experimental):
+
+	fix built problem on Sun Studio 10, reported by Moinak Ghosh
+
+2005-11-20 14:24  takehiro
+
+	* libmp3lame/gain_analysis.c:
+
+	fix built problem with Sun Studio 10, reported by Moinak Ghosh
+
+2005-11-20 14:08  bouvigne
+
+	* libmp3lame/: VbrTag.c, bitstream.c, encoder.c, fft.c, lame.c,
+	  mpglib_interface.c, newmdct.c, presets.c, psymodel.c, quantize.c,
+	  quantize_pvt.c, reservoir.c, set_get.c, takehiro.c, util.c,
+	  vbrquantize.c (lame3_97):
+
+	updated copyrights
+
+2005-11-12 18:52  bouvigne
+
+	* libmp3lame/gain_analysis.c:
+
+	speedup of silent parts analysis
+
+2005-11-12 18:33  bouvigne
+
+	* doc/html/history.html:
+
+	history from 3.97 branch
+
+2005-11-12 18:21  bouvigne
+
+	* Makefile.MSVC:
+
+	added console.c
+
+2005-11-09 18:56  aleidinger
+
+	* frontend/rtp.c:
+
+	Fix bug #1349332
+
+2005-11-09 18:40  aleidinger
+
+	* libmp3lame/id3tag.c:
+
+	Fix bug #1351021.
+
+2005-11-06 17:41  bouvigne
+
+	* doc/html/history.html, libmp3lame/lame.c, libmp3lame/quantize.c
+	  (lame3_97):
+
+	fixes from main branch
+
+2005-11-05 16:35  aleidinger
+
+	* doc/html/history.html:
+
+	add todays work
+
+2005-11-05 16:20  aleidinger
+
+	* libmp3lame/: id3tag.c, id3tag.h:
+
+	Add support for total number of tracks per album.
+
+	Submitted by:	 Kyle VanderBeek <kylev@users.sourceforge.>
+
+	While I'm here add some abort() calls in case we overflow some arrays
+	(this is only compile tested, so pass me the pointy hat if it fails).
+
+2005-11-05 15:54  aleidinger
+
+	* libmp3lame/id3tag.c:
+
+	Add id3v2 TLEN support.
+
+	Submitted by:	 Linus Walleij <snirkel@users.sourceforge.>
+
+2005-11-05 15:52  aleidinger
+
+	* frontend/console.c:
+
+	some compilers really want the void nowadays...
+
+2005-11-05 15:51  aleidinger
+
+	* frontend/Makefile.in:
+
+	regen
+
+2005-11-05 15:49  aleidinger
+
+	* frontend/console.h:
+
+	make some pseudo prototypes to real prototypes (fixes gcc warnings)
+
+2005-11-05 15:48  aleidinger
+
+	* frontend/Makefile.am:
+
+	console.[ch] is now mandatory, so build it
+
+2005-11-05 15:47  aleidinger
+
+	* include/lame.h:
+
+	remove redundant function prototypes (we need only one prototype)
+
+2005-11-01 20:17  robert
+
+	* frontend/console.c:
+
+	bug fix: FILE pointer may be NULL for DEBUGF
+
+2005-11-01 13:54  robert
+
+	* frontend/: mp3rtp.c, rtp.c:
+
+	getting mp3rtp working again
+
+2005-11-01 13:10  robert
+
+	* frontend/mp3x.c:
+
+	replacing (f)printf by console_printf, error_printf and report_printf. fixes the problem that some messages would be send to stdout instead of stderr. added internal switch '--debug-file <debugfile.txt>', allows to debug the code more comfortably by writing DEBUGF(xyz) at code hot spots.
+
+2005-11-01 13:01  robert
+
+	* frontend/: .indent.pro, amiga_mpega.c, brhist.c, brhist.h,
+	  console.c, console.h, get_audio.c, get_audio.h, gpkplotting.c,
+	  gpkplotting.h, gtkanal.c, gtkanal.h, lame_vc6.dsp,
+	  lame_vc7.vcproj, lametime.c, lametime.h, main.c, main.h,
+	  mp3rtp.c, mp3x.c, mp3x_vc6.dsp, mp3x_vc7.vcproj, parse.c,
+	  parse.h, portableio.c, portableio.h, rtp.c, rtp.h, timestatus.c,
+	  timestatus.h:
+
+	replacing (f)printf by console_printf, error_printf and report_printf. fixes the problem that some messages would be send to stdout instead of stderr. added internal switch '--debug-file <debugfile.txt>', allows to debug the code more comfortably by writing DEBUGF(xyz) at code hot spots.
+
+2005-11-01 12:51  robert
+
+	* Makefile.unix, configMS.h:
+
+	[no log message]
+
+2005-10-31 13:02  bouvigne
+
+	* libmp3lame/quantize.c:
+
+	fixed bug 1227632
+
+2005-10-31 13:01  bouvigne
+
+	* libmp3lame/lame.c:
+
+	fixed bug 1337556
+
+2005-10-31 13:00  bouvigne
+
+	* frontend/main.c:
+
+	spelling of Takehiro's name
+
+2005-10-10 07:05  rbrito
+
+	* COPYING, debian/changelog, debian/copyright, debian/rules,
+	  doc/man/lame.1:
+
+	Updated manpage to include accented characters;
+	Updated debian packaging;
+	Updated documentation to include the new FSF address.
+
+2005-10-01 09:03  takehiro
+
+	* lame.spec.in (takehiro-2002_05_07-experimental):
+
+	update configure options
+
+2005-09-29 21:21  robert
+
+	* libmp3lame/i386/: fft3dn.nas (lame3_97), fft3dn.nas:
+
+	taken from lame4 branch:
+	fix possible link problem on cygwin
+
+2005-09-25 22:09  glessard
+
+	* libmp3lame/quantize.c:
+
+	GCC 4 on OS X was choking on line 615.
+	Given the assignment on line 630, clearly 'work' isn't a pointer to an array
+	of constants anyway.
+
+2005-09-24 10:20  takehiro
+
+	* libmp3lame/i386/choose_table.nas
+	  (takehiro-2002_05_07-experimental):
+
+	suppress warnings for YASM.
+
+2005-09-24 10:20  takehiro
+
+	* libmp3lame/i386/nasm.h (takehiro-2002_05_07-experimental):
+
+	added LINUX detection for non-executable stack suuport.
+
+2005-09-24 09:34  takehiro
+
+	* libmp3lame/bitstream.c (takehiro-2002_05_07-experimental):
+
+	simplify drain_into_ancillary()
+
+2005-09-24 08:45  takehiro
+
+	* libmp3lame/i386/quantSSE.nas (takehiro-2002_05_07-experimental):
+
+	small optimization
+
+2005-09-24 08:28  takehiro
+
+	* libmp3lame/newmdct.c (takehiro-2002_05_07-experimental):
+
+	fixed window shape when mixed_block_flag is enabled.
+
+2005-09-24 08:01  takehiro
+
+	* libmp3lame/lame.c (takehiro-2002_05_07-experimental):
+
+	Now LAME4 does not use MMX when SSE2 is available.
+
+2005-09-24 07:54  takehiro
+
+	* libmp3lame/psymodel.c (takehiro-2002_05_07-experimental):
+
+	added TODO as comments
+
+2005-09-22 16:00  takehiro
+
+	* configure (takehiro-2002_05_07-experimental):
+
+	regen
+
+2005-09-22 15:48  takehiro
+
+	* configure.in (takehiro-2002_05_07-experimental):
+
+	fix when without nasm
+
+2005-09-22 14:03  takehiro
+
+	* configure.in (takehiro-2002_05_07-experimental):
+
+	i*86-linux detection for NASM code not to mark "exectable stack"
+
+2005-09-22 13:50  takehiro
+
+	* libmp3lame/bitstream.c (takehiro-2002_05_07-experimental):
+
+	cache gfc->bitidx value.
+
+2005-09-20 19:51  robert
+
+	* libmp3lame/util.c:
+
+	fix wrong typing
+
+2005-09-20 19:41  robert
+
+	* libmp3lame/: quantize.c, vbrquantize.c, vbrquantize.h:
+
+	moved loop from quantize.c to vbrquantize.c
+
+2005-09-20 19:38  robert
+
+	* libmp3lame/: util.h, util.c:
+
+	malloc with n-bytes alignment
+
+2005-09-20 09:19  robert
+
+	* frontend/parse.c, libmp3lame/lame.c,
+	  libmp3lame/lame_global_flags.h, libmp3lame/set_get.c:
+
+	added internal developer switch to select between ISO and x^3/4 quantization
+
+	--quantization-type n n=0: no change, n=1: ISO, n=2: x^3/4
+
+2005-09-18 22:57  robert
+
+	* libmp3lame/: vbrquantize.c, vbrquantize.h, version.h:
+
+	vbr new noise shaping: let lame abort in exceptional cases
+
+	now on alpha 2
+
+2005-09-18 21:38  robert
+
+	* libmp3lame/: encoder.c, lame.c, quantize.c, quantize.h, util.h,
+	  vbrquantize.c:
+
+	vbr-new: bug fix for "searchGlobalStepSizeMax"
+
+	demangling vbr_old and vbr_new code
+
+2005-09-14 17:24  takehiro
+
+	* configure.in (takehiro-2002_05_07-experimental):
+
+	clean up assembler code support.
+	- nasmw support on cygwin.
+	- clean up yasm support, as I decided not to use yasm on x86-64.
+	- do not set "not exectable stack" flag not on linux environment.
+
+2005-09-13 15:38  takehiro
+
+	* libmp3lame/tables.c (takehiro-2002_05_07-experimental):
+
+	code clean up
+
+2005-09-12 15:51  takehiro
+
+	* libmp3lame/tables.c (takehiro-2002_05_07-experimental):
+
+	better region division point for lossless coding.
+
+2005-09-12 01:38  takehiro
+
+	* libmp3lame/takehiro.c (takehiro-2002_05_07-experimental):
+
+	code clean up.
+
+2005-09-11 17:12  takehiro
+
+	* libmp3lame/takehiro.c (takehiro-2002_05_07-experimental):
+
+	fix assertion failure at lossless coding.
+
+2005-09-11 17:07  takehiro
+
+	* libmp3lame/: encoder.h, tables.c, takehiro.c
+	  (takehiro-2002_05_07-experimental):
+
+	more efficient lossless coding when without brute force search.
+	And it makes little speed improvement when with brute force search.
+
+2005-09-11 10:20  bouvigne
+
+	* libmp3lame/version.h:
+
+	welcome to 3.98
+
+2005-09-11 09:57  bouvigne
+
+	* lame_vc7.sln:
+
+	missing file
+
+2005-09-11 09:14  bouvigne
+
+	* libmp3lame/version.h:
+
+	3.97b
+
+2005-09-11 07:35  takehiro
+
+	* libmp3lame/i386/quantSSE.nas (takehiro-2002_05_07-experimental):
+
+	experimental SSE2 support for calc_sfb_noise_fast.
+	but because it slows down the VBR encoding on Celeron-M, it is not enabled by
+	default.
+
+2005-09-10 17:08  takehiro
+
+	* libmp3lame/takehiro.c (takehiro-2002_05_07-experimental):
+
+	more efficient lossless coding, especially for low bitrate.
+
+2005-09-08 22:57  takehiro
+
+	* doc/html/history.html:
+
+	fixed style.
+
+2005-09-08 22:57  takehiro
+
+	* doc/html/history.html:
+
+	added my changes for 3.97.
+
+2005-09-08 02:44  rbrito
+
+	* doc/man/lame.1:
+
+	Fixed typo.
+
+2005-09-07 21:15  bouvigne
+
+	* testcase.mp3:
+
+	updated testcase for 3.97b1
+
+2005-09-06 18:24  bouvigne
+
+	* doc/html/history.html:
+
+	typo
+
+2005-09-06 15:34  takehiro
+
+	* libmp3lame/takehiro.c (takehiro-2002_05_07-experimental):
+
+	fix assertion failure in lossless coding.
+
+2005-09-05 21:24  bouvigne
+
+	* doc/html/: history.html, index.html:
+
+	updated history for 3.97b
+
+2005-09-05 20:49  bouvigne
+
+	* frontend/parse.c:
+
+	-Vx short help
+
+2005-09-05 04:29  rbrito
+
+	* debian/: changelog, rules:
+
+	Update generation of package with full optimization, now that compilation with GCC 4 works.
+
+2005-09-05 01:55  takehiro
+
+	* libmp3lame/psymodel.c (takehiro-2002_05_07-experimental):
+
+	always use adaptive cutoff
+
+2005-09-05 01:52  takehiro
+
+	* libmp3lame/: quantize.c, i386/quantSSE.nas
+	  (takehiro-2002_05_07-experimental):
+
+	optimized calc_sfb_noise_fast().
+	Exit the loop as soon as it detect the audible noise.
+
+2005-09-04 19:52  aleidinger
+
+	* ChangeLog:
+
+	Update with recent history.
+
 2005-09-04 19:45  aleidinger
 
 	* configure:
