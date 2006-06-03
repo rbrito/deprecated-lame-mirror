@@ -531,13 +531,19 @@ lame_init_params(lame_global_flags * const gfp)
 
     if (NULL == gfc->PSY)
         gfc->PSY = calloc(1, sizeof(PSY_t));
-    if (NULL == gfc->PSY)
+    if (NULL == gfc->PSY) {
+        freegfc(gfc);
+	gfp->internal_flags = NULL;
         return -2;
+    }
         
     if (NULL == gfc->rgdata)
         gfc->rgdata = calloc(1, sizeof(replaygain_t));
-    if (NULL == gfc->rgdata)
+    if (NULL == gfc->rgdata) {
+        freegfc(gfc);
+        gfp->internal_flags = NULL;
         return -2;
+    }
         
     gfc->channels_in = gfp->num_channels;
     if (gfc->channels_in == 1)
@@ -695,6 +701,8 @@ lame_init_params(lame_global_flags * const gfp)
 
     if (gfc->findReplayGain) {
       if (InitGainAnalysis(gfc->rgdata, gfp->out_samplerate) == INIT_GAIN_ANALYSIS_ERROR)
+        freegfc(gfc);
+        gfp->internal_flags = NULL;
         return -6;
     }
 
@@ -821,8 +829,11 @@ lame_init_params(lame_global_flags * const gfp)
    * samplerate and bitrate index
    *******************************************************/
     gfc->samplerate_index = SmpFrqIndex(gfp->out_samplerate, &gfp->version);
-    if (gfc->samplerate_index < 0)
+    if (gfc->samplerate_index < 0) {
+        freegfc(gfc);
+        gfp->internal_flags = NULL;
         return -1;
+    }
 
     if (gfp->VBR == vbr_off) {
         if (gfp->free_format) {
@@ -831,8 +842,11 @@ lame_init_params(lame_global_flags * const gfp)
         else {
             gfc->bitrate_index = BitrateIndex(gfp->brate, gfp->version,
                                               gfp->out_samplerate);
-            if (gfc->bitrate_index < 0)
+            if (gfc->bitrate_index < 0) {
+                freegfc(gfc);
+                gfp->internal_flags = NULL;
                 return -1;
+            }
         }
     }
 
