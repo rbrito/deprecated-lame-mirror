@@ -1,4 +1,3 @@
-
 #ifndef LAME_GLOBAL_FLAGS_H
 #define LAME_GLOBAL_FLAGS_H
 

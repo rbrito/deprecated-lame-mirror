@@ -144,18 +144,15 @@ blocktype_d[2]        block type to use for previous granule
 # include <config.h>
 #endif
 
-#include "util.h"
-#include "encoder.h"
-#include "psymodel.h"
-#include "l3side.h"
-#include <assert.h>
-#include "tables.h"
-#include "fft.h"
+#include "lame.h"
 #include "machine.h"
+#include "encoder.h"
+#include "util.h"
+#include "psymodel.h"
+#include "lame_global_flags.h"
+#include "fft.h"
+#include "lame-analysis.h"
 
-#ifdef WITH_DMALLOC
-#include <dmalloc.h>
-#endif
 
 #define NSFIRLEN 21
 

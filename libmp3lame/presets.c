@@ -18,13 +18,17 @@
  * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307, USA.
  */
 
-#include "set_get.h"
 
 #ifdef HAVE_CONFIG_H
 # include <config.h>
 #endif
-#include "util.h"
 
+#include "lame.h"
+#include "machine.h"
+#include "set_get.h"
+#include "encoder.h"
+#include "util.h"
+#include "lame_global_flags.h"
 
 #define SET_OPTION(opt, val, def) if (enforce) \
     lame_set_##opt(gfp, val); \

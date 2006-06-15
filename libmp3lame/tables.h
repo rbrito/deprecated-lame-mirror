@@ -22,7 +22,6 @@
 #ifndef LAME_TABLES_H
 #define LAME_TABLES_H
 
-#include "machine.h"
 
 typedef struct {
     unsigned char  no;

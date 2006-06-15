@@ -26,20 +26,17 @@
 # include <config.h>
 #endif
 
-#define PRECOMPUTE
-
+#include "lame.h"
+#include "machine.h"
+#include "encoder.h"
 #include "util.h"
-#include <ctype.h>
-#include <assert.h>
-#include <stdarg.h>
+#include "lame_global_flags.h"
 
+#define PRECOMPUTE
 #if defined(__FreeBSD__) && !defined(__alpha__)
 # include <machine/floatingpoint.h>
 #endif
 
-#ifdef WITH_DMALLOC
-#include <dmalloc.h>
-#endif
 
 /***********************************************************************
 *

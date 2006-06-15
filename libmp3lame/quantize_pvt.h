@@ -22,7 +22,6 @@
 #ifndef LAME_QUANTIZE_PVT_H
 #define LAME_QUANTIZE_PVT_H
 
-#include "l3side.h"
 #define IXMAX_VAL 8206  /* ix always <= 8191+15.    see count_bits() */
 
 /* buggy Winamp decoder cannot handle values > 8191 */

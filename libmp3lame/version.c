@@ -36,12 +36,11 @@
 #endif
 
 
-#include <stdio.h>
+#include "lame.h"
+#include "machine.h"
+
 #include "version.h"    /* macros of version numbers */
 
-#ifdef WITH_DMALLOC
-#include <dmalloc.h>
-#endif
 
 /*! Stringify \a x. */
 #define STR(x)   #x

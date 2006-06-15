@@ -30,13 +30,12 @@
 # include <config.h>
 #endif
 
+#include "lame.h"
+#include "machine.h"
+#include "encoder.h"
 #include "util.h"
-#include "l3side.h"
 #include "newmdct.h"
 
-#ifdef WITH_DMALLOC
-#include <dmalloc.h>
-#endif
 
 #define SCALE (32768.0/ 2.384e-06)
 

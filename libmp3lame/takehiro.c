@@ -26,15 +26,14 @@
 # include <config.h>
 #endif
 
-#include <assert.h>
-#include "util.h"
-#include "l3side.h"
-#include "tables.h"
-#include "quantize_pvt.h"
 
-#ifdef WITH_DMALLOC
-#include <dmalloc.h>
-#endif
+#include "lame.h"
+#include "machine.h"
+#include "encoder.h"
+#include "util.h"
+#include "quantize_pvt.h"
+#include "tables.h"
+
 
 static const struct
 {

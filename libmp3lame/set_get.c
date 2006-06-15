@@ -26,17 +26,14 @@
 # include <config.h>
 #endif
 
-#include <assert.h>
+#include "lame.h"
+#include "machine.h"
+#include "encoder.h"
 #include "util.h"
 #include "bitstream.h"  /* because of compute_flushbits */
 
-#ifdef WITH_DMALLOC
-#include <dmalloc.h>
-#endif
-
-
 #include "set_get.h"
-
+#include "lame_global_flags.h"
 
 /*
  * input stream description

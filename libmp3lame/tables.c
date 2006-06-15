@@ -25,12 +25,12 @@
 # include <config.h>
 #endif
 
+#include "lame.h"
+#include "machine.h"
+#include "encoder.h"
 #include "util.h"
 #include "tables.h"
 
-#ifdef WITH_DMALLOC
-#include <dmalloc.h>
-#endif
 
 static const short      t1HB[]   = {
   1, 1, 

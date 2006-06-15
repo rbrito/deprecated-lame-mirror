@@ -39,15 +39,16 @@
 #endif
 
 #include <math.h>
-#include "util.h"
+
+#include "lame.h"
+#include "machine.h"
+#include "encoder.h"
 #include "fft.h"
+#include "util.h"
 
 
 
  
-#ifdef WITH_DMALLOC
-#include <dmalloc.h>
-#endif
 
 #define TRI_SIZE (5-1) /* 1024 =  4**5 */
 

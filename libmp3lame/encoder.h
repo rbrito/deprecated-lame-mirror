@@ -137,9 +137,6 @@
 #define MPG_MD_MS_I   3
 
 
-#include "machine.h"
-#include "lame.h"
-
 int  lame_encode_mp3_frame (
         lame_global_flags*  const gfp,
         sample_t*           inbuf_l,

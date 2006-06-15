@@ -28,22 +28,17 @@
 # include <config.h>
 #endif
 
-#include <math.h>
-#include <assert.h>
-#include <stdlib.h>
-#include "bitstream.h"
-#include "l3side.h"
-#include "quantize.h"
-#include "reservoir.h"
-#include "quantize_pvt.h"
-#include "lame-analysis.h"
-#include "vbrquantize.h"
+#include "lame.h"
 #include "machine.h"
+#include "encoder.h"
 #include "util.h"
+#include "quantize_pvt.h"
+#include "lame_global_flags.h"
+#include "reservoir.h"
+#include "bitstream.h"
+#include "vbrquantize.h"
 
-#ifdef WITH_DMALLOC
-#include <dmalloc.h>
-#endif
+
 
 /* Robert Hegemann - 2002-10-24
  * sparsing of mid side channels
@@ -1896,7 +1891,7 @@ VBR_new_prepare (
     int     dummy_not_used_anymore;
   
     gfc->bitrate_index = gfc->VBR_max_bitrate;
-    /*avg =*/ ResvFrameBegin (gfp, &avg) / gfc->mode_gr;
+    ResvFrameBegin (gfp, &avg);
     
     get_framebits (gfp, &dummy_not_used_anymore, &dummy_not_used_anymore, frameBits);
 

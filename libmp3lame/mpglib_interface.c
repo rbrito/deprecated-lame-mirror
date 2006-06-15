@@ -29,16 +29,11 @@
 
 #ifdef HAVE_MPGLIB
 
-#include <limits.h>
-#include <stdlib.h>
-#include <assert.h>
-
-#include "interface.h"
 #include "lame.h"
+#include "machine.h"
+#include "encoder.h"
+#include "interface.h"
 
-#ifdef WITH_DMALLOC
-#include <dmalloc.h>
-#endif
 
 
 MPSTR   mp;

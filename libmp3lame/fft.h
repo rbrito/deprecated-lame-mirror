@@ -22,8 +22,6 @@
 #ifndef LAME_FFT_H
 #define LAME_FFT_H
 
-#include "encoder.h"
-
 void fft_long(lame_internal_flags* const gfc, FLOAT x_real[BLKSIZE], 
                int chn, const sample_t *data[2] );
 

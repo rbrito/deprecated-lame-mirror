@@ -22,7 +22,6 @@
 #ifndef LAME_QUANTIZE_H
 #define LAME_QUANTIZE_H
 
-#include "util.h"
 
 void CBR_iteration_loop( lame_global_flags *gfp,
                      FLOAT pe[2][2],

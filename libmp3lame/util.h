@@ -22,27 +22,8 @@
 #ifndef LAME_UTIL_H
 #define LAME_UTIL_H
 
-/***********************************************************************
-*
-*  Global Include Files
-*
-***********************************************************************/
-#include "machine.h"
-#include "encoder.h"
-#include "lame.h"
-#include "lame_global_flags.h"
-#include "lame-analysis.h"
-#include "id3tag.h"
-#include "gain_analysis.h"
 #include "l3side.h"
-
-#if HAVE_INTTYPES_H
-# include <inttypes.h>
-#else
-# if HAVE_STDINT_H
-#  include <stdint.h>
-# endif
-#endif
+#include "id3tag.h"
 
 #ifdef __cplusplus
 extern  "C" {
@@ -121,7 +102,11 @@ extern  "C" {
 #endif
 
 
+struct replaygain_data;
+typedef struct replaygain_data replaygain_t;
 
+struct plotting_data;
+typedef struct plotting_data plotting_data;
 
 /***********************************************************************
 *
@@ -155,7 +140,6 @@ extern  "C" {
         /* format of file in rd mode (BINARY/ASCII) */
     } Bit_stream_struc;
 
-#include "l3side.h"
 
 
     /* variables used for --nspsytune */
@@ -464,9 +448,9 @@ extern  "C" {
 
 
         /* ReplayGain */
-        int     decode_on_the_fly:1;
-        int     findReplayGain:1;
-        int     findPeakSample:1;
+        unsigned int decode_on_the_fly:1;
+        unsigned int findReplayGain:1;
+        unsigned int findPeakSample:1;
         sample_t PeakSample;
         int     RadioGain;
         int     AudiophileGain;

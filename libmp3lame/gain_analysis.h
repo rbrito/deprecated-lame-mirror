@@ -70,7 +70,7 @@ typedef sample_t Float_t;         /* Type used for filtering */
 
 
 
-typedef struct
+struct replaygain_data
 {
     Float_t          linprebuf [MAX_ORDER * 2];
     Float_t*         linpre;                                          /* left input samples, with pre-buffer */
@@ -93,9 +93,9 @@ typedef struct
     uint32_t  A [(size_t)(STEPS_per_dB * MAX_dB)];
     uint32_t  B [(size_t)(STEPS_per_dB * MAX_dB)];
 
-} replaygain_t;
+};
 
-
+typedef struct replaygain_data replaygain_t;
 
 
 

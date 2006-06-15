@@ -21,7 +21,6 @@
 
 #ifndef LAME_BITSTREAM_H
 #define LAME_BITSTREAM_H
-#include "util.h"
 
 int getframebits(const lame_global_flags *gfp);
 

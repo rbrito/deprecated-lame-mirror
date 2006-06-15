@@ -23,6 +23,7 @@
 #define LAME_MACHINE_H
 
 #include <stdio.h>
+#include <assert.h>
 
 #ifdef STDC_HEADERS
 # include <stdlib.h>
@@ -44,6 +45,7 @@ char *strchr (), *strrchr ();
 #else
 # include <math.h>
 #endif
+#include <limits.h>
 
 #include <ctype.h>
 
@@ -60,6 +62,18 @@ char *strchr (), *strrchr ();
 #else
 # include <sys/types.h>
 # include <sys/stat.h>
+#endif
+
+#if HAVE_INTTYPES_H
+# include <inttypes.h>
+#else
+# if HAVE_STDINT_H
+#  include <stdint.h>
+# endif
+#endif
+
+#ifdef WITH_DMALLOC
+#include <dmalloc.h>
 #endif
 
 /* 
@@ -139,6 +153,16 @@ typedef double  FLOAT8;
 /* sample_t must be floating point, at least 32 bits */
 typedef FLOAT     sample_t;
 typedef sample_t  stereo_t [2];
+
+#ifndef LAME_LAME_H
+struct lame_global_struct;
+#endif
+typedef struct lame_global_struct lame_global_flags;
+
+#ifndef LAME_UTIL_H
+struct lame_internal_flags;
+#endif
+typedef struct lame_internal_flags lame_internal_flags;
 
 #endif
 

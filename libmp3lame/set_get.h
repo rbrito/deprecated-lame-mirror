@@ -21,8 +21,6 @@
 #ifndef __SET_GET_H__
 #define __SET_GET_H__
 
-#include "lame.h"
-
 
 #if defined(__cplusplus)
 extern "C" {

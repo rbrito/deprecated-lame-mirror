@@ -26,17 +26,13 @@
 # include <config.h>
 #endif
 
-#include "machine.h"
-#include "bitstream.h"
 #include "lame.h"
+#include "machine.h"
+#include "encoder.h"
+#include "util.h"
+#include "bitstream.h"
 #include "VbrTag.h"
-#include "version.h"
-
-#include	<assert.h>
-
-#ifdef WITH_DMALLOC
-#include <dmalloc.h>
-#endif
+#include "lame_global_flags.h"
 
 #ifdef __sun__
 /* woraround for SunOS 4.x, it has SEEK_* defined here */

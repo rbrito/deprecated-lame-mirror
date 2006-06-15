@@ -57,13 +57,13 @@ char *strchr (), *strrchr ();
 
 
 #include "lame.h"
+#include "machine.h"
+#include "encoder.h"
 #include "id3tag.h"
+#include "lame_global_flags.h"
 #include "util.h"
 #include "bitstream.h"
 
-#ifdef WITH_DMALLOC
-#include <dmalloc.h>
-#endif
 
 static const char *const genre_names[] =
 {

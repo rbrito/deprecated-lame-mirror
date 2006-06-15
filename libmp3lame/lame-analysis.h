@@ -22,7 +22,6 @@
 #ifndef LAME_GTKANAL_H
 #define LAME_GTKANAL_H
 
-#include "encoder.h"
 
 #define READ_AHEAD 40             /* number of frames to read ahead */
 #define MAXMPGLAG READ_AHEAD      /* if the mpg123 lag becomes bigger than this
@@ -32,7 +31,7 @@
 
 
 
-typedef struct {
+struct plotting_data {
   int frameNum;           /* current frame number */
   int frameNum123;
   int num_samples;        /* number of pcm samples read for this frame */
@@ -86,8 +85,9 @@ typedef struct {
   int crc,padding;
   int scfsi[2],mean_bits,resvsize;
   int totbits;
-} plotting_data;
- 
+};
+
+typedef struct plotting_data plotting_data; 
 
 extern plotting_data *pinfo;
 

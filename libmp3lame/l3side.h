@@ -22,9 +22,6 @@
 #ifndef LAME_L3SIDE_H
 #define LAME_L3SIDE_H
 
-#include "encoder.h"
-#include "machine.h"
-
 /* max scalefactor band, max(SBMAX_l, SBMAX_s*3, (SBMAX_s-3)*3+8) */
 #define SFBMAX (SBMAX_s*3)
 

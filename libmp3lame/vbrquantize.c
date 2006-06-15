@@ -26,15 +26,14 @@
 #  include <config.h>
 #endif
 
-#include <assert.h>
-#include "util.h"
-#include "l3side.h"
-#include "quantize_pvt.h"
-#include "vbrquantize.h"
 
-#ifdef WITH_DMALLOC
-#  include <dmalloc.h>
-#endif
+#include "lame.h"
+#include "machine.h"
+#include "encoder.h"
+#include "util.h"
+#include "vbrquantize.h"
+#include "quantize_pvt.h"
+
 
 
 

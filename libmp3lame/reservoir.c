@@ -25,13 +25,16 @@
 # include <config.h>
 #endif
 
-#include <assert.h>
-#include "bitstream.h"
+
+#include "lame.h"
+#include "machine.h"
+#include "encoder.h"
+#include "util.h"
 #include "reservoir.h"
 
-#ifdef WITH_DMALLOC
-#include <dmalloc.h>
-#endif
+#include "bitstream.h"
+#include "lame-analysis.h"
+#include "lame_global_flags.h"
 
 /*
   ResvFrameBegin:
