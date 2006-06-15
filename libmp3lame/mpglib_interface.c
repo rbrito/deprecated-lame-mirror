@@ -62,7 +62,7 @@ lame_decode_init(void)
     DST_TYPE *pcm_l = (DST_TYPE *)pcm_l_raw;                                                    \
     SRC_TYPE const *p_samples = (SRC_TYPE const *)p;                                            \
     for (i = 0; i < processed_samples; i++)                                                     \
-      *pcm_l++ = (DST_TYPE)(*p_samples++); 
+      *pcm_l++ = (DST_TYPE)(*p_samples++);
 
 /* copy stereo samples */
 #define COPY_STEREO(DST_TYPE, SRC_TYPE)                                                         \
@@ -71,7 +71,7 @@ lame_decode_init(void)
     for (i = 0; i < processed_samples; i++) {                                                   \
       *pcm_l++ = (DST_TYPE)(*p_samples++);                                                      \
       *pcm_r++ = (DST_TYPE)(*p_samples++);                                                      \
-    }   
+    }
 
 
 
@@ -84,14 +84,15 @@ lame_decode_init(void)
 
 int
 lame_decode1_headersB_clipchoice(unsigned char *buffer, int len,
-                     char pcm_l_raw[], char pcm_r_raw[], mp3data_struct * mp3data,
-                     int *enc_delay, int *enc_padding, 
-                     char *p, size_t psize, int decoded_sample_size,
-                     int (*decodeMP3_ptr)(PMPSTR,unsigned char *,int,char *,int,int*) )
+                                 char pcm_l_raw[], char pcm_r_raw[], mp3data_struct * mp3data,
+                                 int *enc_delay, int *enc_padding,
+                                 char *p, size_t psize, int decoded_sample_size,
+                                 int (*decodeMP3_ptr) (PMPSTR, unsigned char *, int, char *, int,
+                                                       int *))
 {
     static const int smpls[2][4] = {
         /* Layer   I    II   III */
-        {0, 384, 1152, 1152}, /* MPEG-1     */ 
+        {0, 384, 1152, 1152}, /* MPEG-1     */
         {0, 384, 1152, 576} /* MPEG-2(.5) */
     };
 
@@ -102,8 +103,7 @@ lame_decode1_headersB_clipchoice(unsigned char *buffer, int len,
 
     mp3data->header_parsed = 0;
 
-    ret =
-        (*decodeMP3_ptr)(&mp, buffer, len, p, psize, &processed_bytes);
+    ret = (*decodeMP3_ptr) (&mp, buffer, len, p, psize, &processed_bytes);
     /* three cases:  
      * 1. headers parsed, but data not complete
      *       mp.header_parsed==1 
@@ -138,8 +138,7 @@ lame_decode1_headersB_clipchoice(unsigned char *buffer, int len,
             mp3data->bitrate = 8 * (4 + mp.framesize) * mp3data->samplerate /
                 (1.e3 * mp3data->framesize) + 0.5;
         else
-            mp3data->bitrate =
-                tabsel_123[mp.fr.lsf][mp.fr.lay - 1][mp.fr.bitrate_index];
+            mp3data->bitrate = tabsel_123[mp.fr.lsf][mp.fr.lay - 1][mp.fr.bitrate_index];
 
 
 
@@ -155,22 +154,22 @@ lame_decode1_headersB_clipchoice(unsigned char *buffer, int len,
     switch (ret) {
     case MP3_OK:
         switch (mp.fr.stereo) {
-        case 1: 
+        case 1:
             processed_samples = processed_bytes / decoded_sample_size;
             if (decoded_sample_size == sizeof(short)) {
-              COPY_MONO(short,short)
+                COPY_MONO(short, short)
             }
             else {
-              COPY_MONO(sample_t,FLOAT)                
+                COPY_MONO(sample_t, FLOAT)
             }
             break;
-        case 2: 
-            processed_samples = (processed_bytes / decoded_sample_size) >> 1; 
+        case 2:
+            processed_samples = (processed_bytes / decoded_sample_size) >> 1;
             if (decoded_sample_size == sizeof(short)) {
-              COPY_STEREO(short,short)
+                COPY_STEREO(short, short)
             }
             else {
-              COPY_STEREO(sample_t,FLOAT)
+                COPY_STEREO(sample_t, FLOAT)
             }
             break;
         default:
@@ -193,8 +192,8 @@ lame_decode1_headersB_clipchoice(unsigned char *buffer, int len,
         break;
     }
 
-    /*fprintf(stderr,"ok, more, err:  %i %i %i\n", MP3_OK, MP3_NEED_MORE, MP3_ERR );*/
-    /*fprintf(stderr,"ret = %i out=%i\n", ret, processed_samples );*/
+    /*fprintf(stderr,"ok, more, err:  %i %i %i\n", MP3_OK, MP3_NEED_MORE, MP3_ERR ); */
+    /*fprintf(stderr,"ret = %i out=%i\n", ret, processed_samples ); */
     return processed_samples;
 }
 
@@ -203,27 +202,31 @@ lame_decode1_headersB_clipchoice(unsigned char *buffer, int len,
 
 int
 lame_decode1_headersB(unsigned char *buffer,
-                     int len,
-                     short pcm_l[], short pcm_r[], mp3data_struct * mp3data,
-                     int *enc_delay, int *enc_padding)
+                      int len,
+                      short pcm_l[], short pcm_r[], mp3data_struct * mp3data,
+                      int *enc_delay, int *enc_padding)
 {
-  static char out[OUTSIZE_CLIPPED];
+    static char out[OUTSIZE_CLIPPED];
 
-  return lame_decode1_headersB_clipchoice(buffer, len, (char *)pcm_l, (char *)pcm_r, mp3data, enc_delay, enc_padding, out, OUTSIZE_CLIPPED, sizeof(short), decodeMP3 );
+    return lame_decode1_headersB_clipchoice(buffer, len, (char *) pcm_l, (char *) pcm_r, mp3data,
+                                            enc_delay, enc_padding, out, OUTSIZE_CLIPPED,
+                                            sizeof(short), decodeMP3);
 }
 
 
 /* we forbid input with more than 1152 samples per channel for output in the unclipped mode */
 #define OUTSIZE_UNCLIPPED (1152*2*sizeof(FLOAT))
 
-int 
+int
 lame_decode1_unclipped(unsigned char *buffer, int len, sample_t pcm_l[], sample_t pcm_r[])
 {
-  static char out[OUTSIZE_UNCLIPPED];
-  mp3data_struct mp3data;
-  int enc_delay,enc_padding;
+    static char out[OUTSIZE_UNCLIPPED];
+    mp3data_struct mp3data;
+    int     enc_delay, enc_padding;
 
-  return lame_decode1_headersB_clipchoice(buffer, len, (char *)pcm_l, (char *)pcm_r, &mp3data, &enc_delay, &enc_padding, out, OUTSIZE_UNCLIPPED, sizeof(FLOAT), decodeMP3_unclipped  );
+    return lame_decode1_headersB_clipchoice(buffer, len, (char *) pcm_l, (char *) pcm_r, &mp3data,
+                                            &enc_delay, &enc_padding, out, OUTSIZE_UNCLIPPED,
+                                            sizeof(FLOAT), decodeMP3_unclipped);
 }
 
 
@@ -238,11 +241,10 @@ lame_decode1_unclipped(unsigned char *buffer, int len, sample_t pcm_l[], sample_
 
 int
 lame_decode1_headers(unsigned char *buffer,
-                     int len,
-                     short pcm_l[], short pcm_r[], mp3data_struct * mp3data)
+                     int len, short pcm_l[], short pcm_r[], mp3data_struct * mp3data)
 {
-    int enc_delay,enc_padding;
-    return lame_decode1_headersB(buffer,len,pcm_l,pcm_r,mp3data,&enc_delay,&enc_padding);
+    int     enc_delay, enc_padding;
+    return lame_decode1_headersB(buffer, len, pcm_l, pcm_r, mp3data, &enc_delay, &enc_padding);
 }
 
 
@@ -264,16 +266,13 @@ lame_decode1(unsigned char *buffer, int len, short pcm_l[], short pcm_r[])
 
 int
 lame_decode_headers(unsigned char *buffer,
-                    int len,
-                    short pcm_l[], short pcm_r[], mp3data_struct * mp3data)
+                    int len, short pcm_l[], short pcm_r[], mp3data_struct * mp3data)
 {
     int     ret;
     int     totsize = 0;     /* number of decoded samples per channel */
 
     while (1) {
-        switch (ret =
-                lame_decode1_headers(buffer, len, pcm_l + totsize,
-                                     pcm_r + totsize, mp3data)) {
+        switch (ret = lame_decode1_headers(buffer, len, pcm_l + totsize, pcm_r + totsize, mp3data)) {
         case -1:
             return ret;
         case 0:
@@ -299,4 +298,3 @@ lame_decode(unsigned char *buffer, int len, short pcm_l[], short pcm_r[])
 #endif
 
 /* end of mpglib_interface.c */
-

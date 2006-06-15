@@ -1,7 +1,7 @@
 /*
- *	Machine dependent defines/includes for LAME.
+ *      Machine dependent defines/includes for LAME.
  *
- *	Copyright (c) 1999 A.L. Faber
+ *      Copyright (c) 1999 A.L. Faber
  *
  * This library is free software; you can redistribute it and/or
  * modify it under the terms of the GNU Library General Public
@@ -10,7 +10,7 @@
  *
  * This library is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.	 See the GNU
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
  * Library General Public License for more details.
  *
  * You should have received a copy of the GNU Library General Public
@@ -33,7 +33,7 @@
 #  define strchr index
 #  define strrchr rindex
 # endif
-char *strchr (), *strrchr ();
+char   *strchr(), *strrchr();
 # ifndef HAVE_MEMCPY
 #  define memcpy(d, s, n) bcopy ((s), (d), (n))
 #  define memmove(d, s, n) bcopy ((s), (d), (n))
@@ -76,7 +76,7 @@ char *strchr (), *strrchr ();
 #include <dmalloc.h>
 #endif
 
-/* 
+/*
  * 3 different types of pow() functions:
  *   - table lookup
  *   - pow()
@@ -126,7 +126,7 @@ char *strchr (), *strrchr ();
 # define FLOAT_MAX FLT_MAX
 #else
 # ifndef FLOAT
-typedef float   FLOAT;
+typedef float FLOAT;
 #  ifdef FLT_MAX
 #   define FLOAT_MAX FLT_MAX
 #  else
@@ -135,8 +135,8 @@ typedef float   FLOAT;
 # endif
 #endif
 
-#ifndef FLOAT8  /* NOTE: RH: 7/00:  if FLOAT8=float, it breaks resampling and VBR code */
-typedef double  FLOAT8;
+#ifndef FLOAT8          /* NOTE: RH: 7/00:  if FLOAT8=float, it breaks resampling and VBR code */
+typedef double FLOAT8;
 # ifdef DBL_MAX
 #  define FLOAT8_MAX DBL_MAX
 # else
@@ -151,16 +151,11 @@ typedef double  FLOAT8;
 #endif
 
 /* sample_t must be floating point, at least 32 bits */
-typedef FLOAT     sample_t;
-typedef sample_t  stereo_t [2];
+typedef FLOAT sample_t;
+typedef sample_t stereo_t[2];
 
 
-#ifndef LAME_UTIL_H
-struct lame_internal_flags;
-#endif
-typedef struct lame_internal_flags lame_internal_flags;
 
 #endif
 
 /* end of machine.h */
-

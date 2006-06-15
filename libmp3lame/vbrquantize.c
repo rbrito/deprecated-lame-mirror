@@ -481,9 +481,9 @@ static int
 block_sf(algo_t * that, const FLOAT l3_xmin[SFBMAX], int vbrsf[SFBMAX], int vbrsfmin[SFBMAX])
 {
     FLOAT   max_xr34;
-    const FLOAT * const xr = &that->cod_info->xr[0];
-    const FLOAT * const xr34_orig = &that->xr34orig[0];
-    const int * const width = &that->cod_info->width[0];
+    const FLOAT *const xr = &that->cod_info->xr[0];
+    const FLOAT *const xr34_orig = &that->xr34orig[0];
+    const int *const width = &that->cod_info->width[0];
     const int max_nonzero_coeff = that->cod_info->max_nonzero_coeff;
     int     maxsf = 0;
     int     sfb = 0, j = 0, i = 0;
@@ -557,7 +557,7 @@ quantize_x34(const algo_t * that)
 {
     DOUBLEX x[4];
     const FLOAT *xr34_orig = that->xr34orig;
-    gr_info * const cod_info = that->cod_info;
+    gr_info *const cod_info = that->cod_info;
     int    *l3 = cod_info->l3_enc;
     int     j = 0, sfb = 0;
     const int max_nonzero_coeff = cod_info->max_nonzero_coeff;
@@ -609,7 +609,7 @@ quantize_ISO(const algo_t * that)
 {
     DOUBLEX x[4];
     const FLOAT *xr34_orig = that->xr34orig;
-    gr_info * const cod_info = that->cod_info;
+    gr_info *const cod_info = that->cod_info;
     int    *l3 = cod_info->l3_enc;
     int     j = 0, sfb = 0;
     const int max_nonzero_coeff = cod_info->max_nonzero_coeff;
@@ -688,7 +688,7 @@ set_subblock_gain(gr_info * cod_info, const int mingain_s[3], int sf[])
 {
     const int maxrange1 = 15, maxrange2 = 7;
     const int ifqstepShift = (cod_info->scalefac_scale == 0) ? 1 : 2;
-    int    * const sbg = cod_info->subblock_gain;
+    int    *const sbg = cod_info->subblock_gain;
     int const psymax = cod_info->psymax;
     int     psydiv = 18;
     int     sbg0, sbg1, sbg2;
@@ -771,11 +771,11 @@ set_scalefacs(gr_info * cod_info, const int *vbrsfmin, int sf[], const int *max_
 {
     const int ifqstep = (cod_info->scalefac_scale == 0) ? 2 : 4;
     const int ifqstepShift = (cod_info->scalefac_scale == 0) ? 1 : 2;
-    int    * const scalefac = cod_info->scalefac;
+    int    *const scalefac = cod_info->scalefac;
     int const sfbmax = cod_info->sfbmax;
     int     sfb;
-    int const * const sbg = cod_info->subblock_gain;
-    int const * const window = cod_info->window;
+    int const *const sbg = cod_info->subblock_gain;
+    int const *const window = cod_info->window;
     int const preflag = cod_info->preflag;
 
     if (preflag) {
@@ -851,8 +851,8 @@ static int
 short_block_constrain(const algo_t * that, int vbrsf[SFBMAX],
                       const int vbrsfmin[SFBMAX], int vbrmax)
 {
-    gr_info * const cod_info = that->cod_info;
-    lame_internal_flags const * const gfc = that->gfc;
+    gr_info *const cod_info = that->cod_info;
+    lame_internal_flags const *const gfc = that->gfc;
     int const maxminsfb = that->mingain_l;
     int     mover, maxover0 = 0, maxover1 = 0, delta = 0;
     int     v, v0, v1;
@@ -925,8 +925,8 @@ short_block_constrain(const algo_t * that, int vbrsf[SFBMAX],
 static int
 long_block_constrain(const algo_t * that, int vbrsf[SFBMAX], const int vbrsfmin[SFBMAX], int vbrmax)
 {
-    gr_info * const cod_info = that->cod_info;
-    lame_internal_flags const * const gfc = that->gfc;
+    gr_info *const cod_info = that->cod_info;
+    lame_internal_flags const *const gfc = that->gfc;
     const int *max_rangep;
     int const maxminsfb = that->mingain_l;
     int     sfb;
@@ -1187,7 +1187,7 @@ static void
 searchGlobalStepsizeMax(const algo_t * that, const int sfwork[SFBMAX],
                         const int vbrsfmin[SFBMAX], int target)
 {
-    gr_info const * const cod_info = that->cod_info;
+    gr_info const *const cod_info = that->cod_info;
     const int gain = cod_info->global_gain;
     int     curr = gain;
     int     gain_ok = 1024;
@@ -1216,9 +1216,9 @@ searchGlobalStepsizeMax(const algo_t * that, const int sfwork[SFBMAX],
 }
 
 
-extern void 
-trancate_smallspectrums(lame_internal_flags * gfc, gr_info * const gi,
-                        const FLOAT * const l3_xmin, const FLOAT * work);
+extern void
+        trancate_smallspectrums(lame_internal_flags * gfc, gr_info * const gi,
+                                const FLOAT * const l3_xmin, const FLOAT * work);
 
 static void
 reduce_bit_usage(lame_internal_flags * gfc, int gr, int ch
@@ -1227,7 +1227,7 @@ reduce_bit_usage(lame_internal_flags * gfc, int gr, int ch
 #endif
     )
 {
-    gr_info * const cod_info = &gfc->l3_side.tt[gr][ch];
+    gr_info *const cod_info = &gfc->l3_side.tt[gr][ch];
     /*  try some better scalefac storage
      */
     best_scalefac_store(gfc, gr, ch, &gfc->l3_side);

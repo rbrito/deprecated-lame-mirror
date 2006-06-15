@@ -62,27 +62,29 @@
 
 #define LAME_DEFAULT_QUALITY 3
 
-static FLOAT
+static  FLOAT
 filter_coef(FLOAT x)
 {
-    if (x > 1.0) return 0.0;
-    if (x <= 0.0) return 1.0;
+    if (x > 1.0)
+        return 0.0;
+    if (x <= 0.0)
+        return 1.0;
 
-    return cos(PI/2 * x);
+    return cos(PI / 2 * x);
 }
 
 static void
-lame_init_params_ppflt(lame_global_flags const * gfp)
+lame_init_params_ppflt(lame_global_flags const *gfp)
 {
-    lame_internal_flags * const gfc = gfp->internal_flags;
+    lame_internal_flags *const gfc = gfp->internal_flags;
     /***************************************************************/
     /* compute info needed for polyphase filter (filter type==0, default) */
     /***************************************************************/
 
     int     band, maxband, minband;
     FLOAT   freq;
-    int lowpass_band = 32;
-    int highpass_band = -1;
+    int     lowpass_band = 32;
+    int     highpass_band = -1;
 
     if (gfc->lowpass1 > 0) {
         minband = 999;
@@ -114,8 +116,7 @@ lame_init_params_ppflt(lame_global_flags const * gfp)
         if (gfc->highpass2 < .9 * (.75 / 31.0)) {
             gfc->highpass1 = 0;
             gfc->highpass2 = 0;
-            MSGF(gfc, "Warning: highpass filter disabled.  "
-                 "highpass frequency too small\n");
+            MSGF(gfc, "Warning: highpass filter disabled.  " "highpass frequency too small\n");
         }
     }
 
@@ -154,9 +155,7 @@ lame_init_params_ppflt(lame_global_flags const * gfp)
 
 
 static void
-optimum_bandwidth(double *const lowerlimit,
-                  double *const upperlimit,
-                  const unsigned bitrate)
+optimum_bandwidth(double *const lowerlimit, double *const upperlimit, const unsigned bitrate)
 {
 /* 
  *  Input:
@@ -166,24 +165,24 @@ optimum_bandwidth(double *const lowerlimit,
  *      lowerlimit: best lowpass frequency limit for input filter in Hz
  *      upperlimit: best highpass frequency limit for input filter in Hz
  */
-    int index;
+    int     index;
 
     typedef struct {
-        int bitrate; /* only indicative value */
-        int lowpass;
+        int     bitrate;     /* only indicative value */
+        int     lowpass;
     } band_pass_t;
 
     const band_pass_t freq_map[] = {
-        {  8,  2000},
-        { 16,  3700},
-        { 24,  3900},
-        { 32,  5500},
-        { 40,  7000},
-        { 48,  7500},
-        { 56, 10000},
-        { 64, 11000},
-        { 80, 13500},
-        { 96, 15100},
+        {8, 2000},
+        {16, 3700},
+        {24, 3900},
+        {32, 5500},
+        {40, 7000},
+        {48, 7500},
+        {56, 10000},
+        {64, 11000},
+        {80, 13500},
+        {96, 15100},
         {112, 15600},
         {128, 17000},
         {160, 17500},
@@ -229,7 +228,7 @@ optimum_bandwidth(double *const lowerlimit,
      */
 
     /*if (upperlimit != NULL)
-        *upperlimit = f_high;*/
+     *upperlimit = f_high;*/
 }
 
 
@@ -241,8 +240,8 @@ optimum_samplefreq(int lowpassfreq, int input_samplefreq)
  *  - if possible, sfb21 should NOT be used
  *
  */
-    int suggested_samplefreq = 44100;
-    
+    int     suggested_samplefreq = 44100;
+
     if (input_samplefreq >= 48000)
         suggested_samplefreq = 48000;
     else if (input_samplefreq >= 44100)
@@ -296,7 +295,7 @@ optimum_samplefreq(int lowpassfreq, int input_samplefreq)
 void
 lame_init_qval(lame_global_flags * gfp)
 {
-    lame_internal_flags * const gfc = gfp->internal_flags;
+    lame_internal_flags *const gfc = gfp->internal_flags;
 
     switch (gfp->quality) {
     default:
@@ -388,7 +387,7 @@ lame_init_qval(lame_global_flags * gfp)
         if (gfc->noise_shaping == 0)
             gfc->noise_shaping = 1;
         if (gfc->substep_shaping == 0)
-                gfc->substep_shaping = 2;
+            gfc->substep_shaping = 2;
         gfc->noise_shaping_amp = 1;
         gfc->noise_shaping_stop = 1;
         if (gfc->subblock_gain == -1)
@@ -404,7 +403,7 @@ lame_init_qval(lame_global_flags * gfp)
         if (gfc->noise_shaping == 0)
             gfc->noise_shaping = 1;
         if (gfc->substep_shaping == 0)
-                gfc->substep_shaping = 2;
+            gfc->substep_shaping = 2;
         gfc->noise_shaping_amp = 2;
         gfc->noise_shaping_stop = 1;
         if (gfc->subblock_gain == -1)
@@ -420,17 +419,17 @@ lame_init_qval(lame_global_flags * gfp)
         if (gfc->noise_shaping == 0)
             gfc->noise_shaping = 1;
         if (gfc->substep_shaping == 0)
-                gfc->substep_shaping = 2;
+            gfc->substep_shaping = 2;
         gfc->noise_shaping_amp = 2;
         gfc->noise_shaping_stop = 1;
         if (gfc->subblock_gain == -1)
             gfc->subblock_gain = 1;
         gfc->use_best_huffman = 1; /*type 2 disabled because of it slowness,
-                                     in favor of full outer loop search */
+                                      in favor of full outer loop search */
         gfc->full_outer_loop = 1;
         break;
     }
-    
+
 }
 
 
@@ -493,30 +492,31 @@ lame_init_params(lame_global_flags * const gfp)
 
     int     i;
     int     j;
-    lame_internal_flags * const gfc = gfp->internal_flags;
+    lame_internal_flags *const gfc = gfp->internal_flags;
 
     gfc->Class_ID = 0;
 
     /* report functions */
-    gfc->report.msgf   = gfp->report.msgf;
+    gfc->report.msgf = gfp->report.msgf;
     gfc->report.debugf = gfp->report.debugf;
     gfc->report.errorf = gfp->report.errorf;
 
 
-    if (gfp->asm_optimizations.amd3dnow )
+    if (gfp->asm_optimizations.amd3dnow)
         gfc->CPU_features.AMD_3DNow = has_3DNow();
     else
         gfc->CPU_features.AMD_3DNow = 0;
 
-    if (gfp->asm_optimizations.mmx )
+    if (gfp->asm_optimizations.mmx)
         gfc->CPU_features.MMX = has_MMX();
-    else 
+    else
         gfc->CPU_features.MMX = 0;
 
-    if (gfp->asm_optimizations.sse ) {
+    if (gfp->asm_optimizations.sse) {
         gfc->CPU_features.SSE = has_SSE();
         gfc->CPU_features.SSE2 = has_SSE2();
-    } else {
+    }
+    else {
         gfc->CPU_features.SSE = 0;
         gfc->CPU_features.SSE2 = 0;
     }
@@ -526,7 +526,7 @@ lame_init_params(lame_global_flags * const gfp)
         gfc->ATH = calloc(1, sizeof(ATH_t));
 
     if (NULL == gfc->ATH)
-        return -2;  /* maybe error codes should be enumerated in lame.h ?? */
+        return -2;      /* maybe error codes should be enumerated in lame.h ?? */
 
     if (NULL == gfc->PSY)
         gfc->PSY = calloc(1, sizeof(PSY_t));
@@ -535,7 +535,7 @@ lame_init_params(lame_global_flags * const gfp)
         gfp->internal_flags = NULL;
         return -2;
     }
-        
+
     if (NULL == gfc->rgdata)
         gfc->rgdata = calloc(1, sizeof(replaygain_t));
     if (NULL == gfc->rgdata) {
@@ -543,7 +543,7 @@ lame_init_params(lame_global_flags * const gfp)
         gfp->internal_flags = NULL;
         return -2;
     }
-        
+
     gfc->channels_in = gfp->num_channels;
     if (gfc->channels_in == 1)
         gfp->mode = MONO;
@@ -552,8 +552,7 @@ lame_init_params(lame_global_flags * const gfp)
     if (gfp->mode == MONO)
         gfp->force_ms = 0; /* don't allow forced mid/side stereo for mono output */
 
-    if (gfp->VBR == vbr_off &&
-        gfp->VBR_mean_bitrate_kbps != 128 && gfp->brate == 0)
+    if (gfp->VBR == vbr_off && gfp->VBR_mean_bitrate_kbps != 128 && gfp->brate == 0)
         gfp->brate = gfp->VBR_mean_bitrate_kbps;
 
 
@@ -570,22 +569,18 @@ lame_init_params(lame_global_flags * const gfp)
     if (gfp->VBR == vbr_off && gfp->compression_ratio > 0) {
 
         if (gfp->out_samplerate == 0)
-            gfp->out_samplerate = map2MP3Frequency( (int)( 0.97 * gfp->in_samplerate ) ); /* round up with a margin of 3% */
+            gfp->out_samplerate = map2MP3Frequency((int) (0.97 * gfp->in_samplerate)); /* round up with a margin of 3% */
 
         /* choose a bitrate for the output samplerate which achieves
          * specified compression ratio 
          */
-        gfp->brate =
-            gfp->out_samplerate * 16 * gfc->channels_out / (1.e3 *
-                                                            gfp->
-                                                            compression_ratio);
+        gfp->brate = gfp->out_samplerate * 16 * gfc->channels_out / (1.e3 * gfp->compression_ratio);
 
         /* we need the version for the bitrate table look up */
         gfc->samplerate_index = SmpFrqIndex(gfp->out_samplerate, &gfp->version);
 
         if (!gfp->free_format) /* for non Free Format find the nearest allowed bitrate */
-            gfp->brate =
-                FindNearestBitrate(gfp->brate, gfp->version);
+            gfp->brate = FindNearestBitrate(gfp->brate, gfp->version);
     }
 
     if (gfp->VBR != vbr_off && gfp->brate >= 320)
@@ -595,66 +590,58 @@ lame_init_params(lame_global_flags * const gfp)
 
 
   /****************************************************************/
-  /* if a filter has not been enabled, see if we should add one: */
+    /* if a filter has not been enabled, see if we should add one: */
   /****************************************************************/
     if (gfp->lowpassfreq == 0) {
-        double lowpass = 16000;
-        double highpass;
+        double  lowpass = 16000;
+        double  highpass;
 
         switch (gfp->VBR) {
-        case vbr_off: {
-            optimum_bandwidth(&lowpass,
-                              &highpass,
-                              gfp->brate);
-            break;
-        }
-        case vbr_abr: {
-            optimum_bandwidth(&lowpass,
-                              &highpass,
-                              gfp->VBR_mean_bitrate_kbps);
-            break;
-        }
-        default: {
-            unsigned int const x[10] = {
-                19500, 19000, 18600, 18000, 17500, 16000, 15600, 14900, 12500, 10000
-            };
-            if ( 0 <= gfp->VBR_q && gfp->VBR_q <= 9 ) {
-                lowpass = x[gfp->VBR_q];
+        case vbr_off:{
+                optimum_bandwidth(&lowpass, &highpass, gfp->brate);
+                break;
             }
-            else {
-                lowpass = 19500;
+        case vbr_abr:{
+                optimum_bandwidth(&lowpass, &highpass, gfp->VBR_mean_bitrate_kbps);
+                break;
             }
-        }
+        default:{
+                unsigned int const x[10] = {
+                    19500, 19000, 18600, 18000, 17500, 16000, 15600, 14900, 12500, 10000
+                };
+                if (0 <= gfp->VBR_q && gfp->VBR_q <= 9) {
+                    lowpass = x[gfp->VBR_q];
+                }
+                else {
+                    lowpass = 19500;
+                }
+            }
         }
 
         if (gfp->mode == MONO && (gfp->VBR == vbr_off || gfp->VBR == vbr_abr))
             lowpass *= 1.5;
-        
+
         gfp->lowpassfreq = lowpass;
     }
 
 
     if (gfp->out_samplerate == 0)
-        gfp->out_samplerate = optimum_samplefreq( (int)gfp->lowpassfreq, gfp->in_samplerate);
+        gfp->out_samplerate = optimum_samplefreq((int) gfp->lowpassfreq, gfp->in_samplerate);
 
     gfp->lowpassfreq = Min(20500, gfp->lowpassfreq);
     gfp->lowpassfreq = Min(gfp->out_samplerate / 2, gfp->lowpassfreq);
 
     if (gfp->VBR == vbr_off) {
-        gfp->compression_ratio =
-            gfp->out_samplerate * 16 * gfc->channels_out / (1.e3 *
-                                                        gfp->brate);
+        gfp->compression_ratio = gfp->out_samplerate * 16 * gfc->channels_out / (1.e3 * gfp->brate);
     }
     if (gfp->VBR == vbr_abr) {
         gfp->compression_ratio =
-            gfp->out_samplerate * 16 * gfc->channels_out / (1.e3 *
-                                                            gfp->
-                                                            VBR_mean_bitrate_kbps);
+            gfp->out_samplerate * 16 * gfc->channels_out / (1.e3 * gfp->VBR_mean_bitrate_kbps);
     }
 
     /* do not compute ReplayGain values and do not find the peak sample
        if we can't store them */
-    if (!gfp->bWriteVbrTag){
+    if (!gfp->bWriteVbrTag) {
         gfp->findReplayGain = 0;
         gfp->decode_on_the_fly = 0;
         gfc->findPeakSample = 0;
@@ -662,20 +649,20 @@ lame_init_params(lame_global_flags * const gfp)
     gfc->findReplayGain = gfp->findReplayGain;
     gfc->decode_on_the_fly = gfp->decode_on_the_fly;
 
-    if (gfc->decode_on_the_fly) 
-      gfc->findPeakSample = 1;
+    if (gfc->decode_on_the_fly)
+        gfc->findPeakSample = 1;
 
     if (gfc->findReplayGain) {
-      if (InitGainAnalysis(gfc->rgdata, gfp->out_samplerate) == INIT_GAIN_ANALYSIS_ERROR) {
-        freegfc(gfc);
-        gfp->internal_flags = NULL;
-        return -6;
-      }
+        if (InitGainAnalysis(gfc->rgdata, gfp->out_samplerate) == INIT_GAIN_ANALYSIS_ERROR) {
+            freegfc(gfc);
+            gfp->internal_flags = NULL;
+            return -6;
+        }
     }
 
 #ifdef DECODE_ON_THE_FLY
     if (gfc->decode_on_the_fly && !gfp->decode_only)
-      (void) lame_decode_init();  /* initialize the decoder  */
+        (void) lame_decode_init(); /* initialize the decoder  */
 #endif
 
     gfc->mode_gr = gfp->out_samplerate <= 24000 ? 1 : 2; /* Number of granules per frame */
@@ -717,20 +704,17 @@ lame_init_params(lame_global_flags * const gfp)
     case vbr_rh:
     case vbr_mtrh:
         {
-            /*numbers are a bit strange, but they determine the lowpass value*/
+            /*numbers are a bit strange, but they determine the lowpass value */
             FLOAT const cmp[] = { 5.7, 6.5, 7.3, 8.2, 10, 11.9, 13, 14, 15, 16.5 };
             gfp->compression_ratio = cmp[gfp->VBR_q];
         }
         break;
     case vbr_abr:
         gfp->compression_ratio =
-            gfp->out_samplerate * 16 * gfc->channels_out / (1.e3 *
-                                                            gfp->
-                                                            VBR_mean_bitrate_kbps);
+            gfp->out_samplerate * 16 * gfc->channels_out / (1.e3 * gfp->VBR_mean_bitrate_kbps);
         break;
     default:
-        gfp->compression_ratio =
-            gfp->out_samplerate * 16 * gfc->channels_out / (1.e3 * gfp->brate);
+        gfp->compression_ratio = gfp->out_samplerate * 16 * gfc->channels_out / (1.e3 * gfp->brate);
         break;
     }
 
@@ -738,7 +722,7 @@ lame_init_params(lame_global_flags * const gfp)
     /* mode = -1 (not set by user) or 
      * mode = MONO (because of only 1 input channel).  
      * If mode has not been set, then select J-STEREO
-    */
+     */
     if (gfp->mode == NOT_SET) {
         gfp->mode = JOINT_STEREO;
     }
@@ -749,11 +733,9 @@ lame_init_params(lame_global_flags * const gfp)
         gfc->highpass1 = 2. * gfp->highpassfreq;
 
         if (gfp->highpasswidth >= 0)
-            gfc->highpass2 =
-                2. * (gfp->highpassfreq + gfp->highpasswidth);
+            gfc->highpass2 = 2. * (gfp->highpassfreq + gfp->highpasswidth);
         else            /* 0% above on default */
-            gfc->highpass2 =
-                (1 + 0.00) * 2. * gfp->highpassfreq;
+            gfc->highpass2 = (1 + 0.00) * 2. * gfp->highpassfreq;
 
         gfc->highpass1 /= gfp->out_samplerate;
         gfc->highpass2 /= gfp->out_samplerate;
@@ -763,14 +745,12 @@ lame_init_params(lame_global_flags * const gfp)
     if (gfp->lowpassfreq > 0) {
         gfc->lowpass2 = 2. * gfp->lowpassfreq;
         if (gfp->lowpasswidth >= 0) {
-            gfc->lowpass1 =
-                2. * (gfp->lowpassfreq - gfp->lowpasswidth);
+            gfc->lowpass1 = 2. * (gfp->lowpassfreq - gfp->lowpasswidth);
             if (gfc->lowpass1 < 0) /* has to be >= 0 */
                 gfc->lowpass1 = 0;
         }
         else {          /* 0% below on default */
-            gfc->lowpass1 =
-                (1 - 0.00) * 2. * gfp->lowpassfreq;
+            gfc->lowpass1 = (1 - 0.00) * 2. * gfp->lowpassfreq;
         }
         gfc->lowpass1 /= gfp->out_samplerate;
         gfc->lowpass2 /= gfp->out_samplerate;
@@ -780,15 +760,15 @@ lame_init_params(lame_global_flags * const gfp)
 
 
   /**********************************************************************/
-  /* compute info needed for polyphase filter (filter type==0, default) */
+    /* compute info needed for polyphase filter (filter type==0, default) */
   /**********************************************************************/
     lame_init_params_ppflt(gfp);
 
 
   /*******************************************************/
-  /* compute info needed for FIR filter (filter_type==1) */
+    /* compute info needed for FIR filter (filter_type==1) */
   /*******************************************************/
-   /* not yet coded */
+    /* not yet coded */
 
 
 
@@ -807,8 +787,7 @@ lame_init_params(lame_global_flags * const gfp)
             gfc->bitrate_index = 0;
         }
         else {
-            gfc->bitrate_index = BitrateIndex(gfp->brate, gfp->version,
-                                              gfp->out_samplerate);
+            gfc->bitrate_index = BitrateIndex(gfp->brate, gfp->version, gfp->out_samplerate);
             if (gfc->bitrate_index < 0) {
                 freegfc(gfc);
                 gfp->internal_flags = NULL;
@@ -830,14 +809,13 @@ lame_init_params(lame_global_flags * const gfp)
 
     init_bit_stream_w(gfc);
 
-    j = gfc->samplerate_index
-        + (3 * gfp->version) + 6 * (gfp->out_samplerate < 16000);
+    j = gfc->samplerate_index + (3 * gfp->version) + 6 * (gfp->out_samplerate < 16000);
     for (i = 0; i < SBMAX_l + 1; i++)
         gfc->scalefac_band.l[i] = sfBandIndex[j].l[i];
 
-    for (i = 0; i < PSFB21 + 1; i++){
-        int const size = (gfc->scalefac_band.l[ 22 ] - gfc->scalefac_band.l[ 21 ])/PSFB21;
-        int const start = gfc->scalefac_band.l[ 21 ] + i*size;
+    for (i = 0; i < PSFB21 + 1; i++) {
+        int const size = (gfc->scalefac_band.l[22] - gfc->scalefac_band.l[21]) / PSFB21;
+        int const start = gfc->scalefac_band.l[21] + i * size;
         gfc->scalefac_band.psfb21[i] = start;
     }
     gfc->scalefac_band.psfb21[PSFB21] = 576;
@@ -845,9 +823,9 @@ lame_init_params(lame_global_flags * const gfp)
     for (i = 0; i < SBMAX_s + 1; i++)
         gfc->scalefac_band.s[i] = sfBandIndex[j].s[i];
 
-    for (i = 0; i < PSFB12 + 1; i++){
-        int const size = (gfc->scalefac_band.s[ 13 ] - gfc->scalefac_band.s[ 12 ])/PSFB12;
-        int const start = gfc->scalefac_band.s[ 12 ] + i*size;
+    for (i = 0; i < PSFB12 + 1; i++) {
+        int const size = (gfc->scalefac_band.s[13] - gfc->scalefac_band.s[12]) / PSFB12;
+        int const start = gfc->scalefac_band.s[12] + i * size;
         gfc->scalefac_band.psfb12[i] = start;
     }
     gfc->scalefac_band.psfb12[PSFB12] = 192;
@@ -865,11 +843,11 @@ lame_init_params(lame_global_flags * const gfp)
 
     gfc->Class_ID = LAME_ID;
 
-    /*if (gfp->exp_nspsytune & 1)*/ {
+    /*if (gfp->exp_nspsytune & 1) */  {
         int     k;
 
         for (k = 0; k < 19; k++)
-            gfc->nsPsy.pefirbuf[k] = 700*gfc->mode_gr*gfc->channels_out;
+            gfc->nsPsy.pefirbuf[k] = 700 * gfc->mode_gr * gfc->channels_out;
 
         if (gfp->ATHtype == -1)
             gfp->ATHtype = 4;
@@ -880,140 +858,137 @@ lame_init_params(lame_global_flags * const gfp)
             gfc->nsPsy.pass1fp = NULL;
     }
 
-    assert( gfp->VBR_q <= 9 );
-    assert( gfp->VBR_q >= 0 );
-    
+    assert(gfp->VBR_q <= 9);
+    assert(gfp->VBR_q >= 0);
+
     switch (gfp->VBR) {
 
     case vbr_mt:
         gfp->VBR = vbr_mtrh;
         /*lint --fallthrough */
-    case vbr_mtrh: {
+    case vbr_mtrh:{
 
-        (void) apply_preset(gfp, 500 - (gfp->VBR_q*10), 0);
-        
-        if (gfp->quality < 0) gfp->quality = LAME_DEFAULT_QUALITY;
-        if (gfp->quality > 7) {
-            gfp->quality = 7;     /* needs psymodel */
-            ERRORF( gfc, "VBR needs a psymodel, switching to quality level 7\n");
+            (void) apply_preset(gfp, 500 - (gfp->VBR_q * 10), 0);
+
+            if (gfp->quality < 0)
+                gfp->quality = LAME_DEFAULT_QUALITY;
+            if (gfp->quality > 7) {
+                gfp->quality = 7; /* needs psymodel */
+                ERRORF(gfc, "VBR needs a psymodel, switching to quality level 7\n");
+            }
+
+            /*  tonality
+             */
+            if (gfp->cwlimit <= 0)
+                gfp->cwlimit = 0.42 * gfp->out_samplerate;
+
+            gfc->PSY->mask_adjust = gfp->maskingadjust;
+            gfc->PSY->mask_adjust_short = gfp->maskingadjust_short;
+
+            /*  sfb21 extra only with MPEG-1 at higher sampling rates
+             */
+            if (gfp->experimentalY)
+                gfc->sfb21_extra = 0;
+            else
+                gfc->sfb21_extra = (gfp->out_samplerate > 44000);
+
+            gfc->iteration_loop = VBR_new_iteration_loop;
+            break;
+
+        }
+    case vbr_rh:{
+
+            (void) apply_preset(gfp, 500 - (gfp->VBR_q * 10), 0);
+
+            gfc->PSY->mask_adjust = gfp->maskingadjust;
+            gfc->PSY->mask_adjust_short = gfp->maskingadjust_short;
+
+            /*  sfb21 extra only with MPEG-1 at higher sampling rates
+             */
+            if (gfp->experimentalY)
+                gfc->sfb21_extra = 0;
+            else
+                gfc->sfb21_extra = (gfp->out_samplerate > 44000);
+
+            /*  VBR needs at least the output of GPSYCHO,
+             *  so we have to garantee that by setting a minimum 
+             *  quality level, actually level 6 does it.
+             *  down to level 6
+             */
+            if (gfp->quality > 6)
+                gfp->quality = 6;
+
+
+            if (gfp->quality < 0)
+                gfp->quality = LAME_DEFAULT_QUALITY;
+
+            gfc->iteration_loop = VBR_old_iteration_loop;
+            break;
         }
 
-        /*  tonality
-         */
-        if (gfp->cwlimit <= 0) gfp->cwlimit = 0.42 * gfp->out_samplerate;
+    default:           /* cbr/abr */  {
+            vbr_mode vbrmode;
 
-        gfc->PSY->mask_adjust = gfp->maskingadjust;
-        gfc->PSY->mask_adjust_short = gfp->maskingadjust_short;
-        
-        /*  sfb21 extra only with MPEG-1 at higher sampling rates
-         */
-        if ( gfp->experimentalY )
+            /*  no sfb21 extra with CBR code
+             */
             gfc->sfb21_extra = 0;
-        else 
-            gfc->sfb21_extra = (gfp->out_samplerate > 44000);
 
-        gfc->iteration_loop = VBR_new_iteration_loop;            
-        break;
-        
-    }
-    case vbr_rh: {
-
-        (void) apply_preset(gfp, 500 - (gfp->VBR_q*10), 0);
-        
-        gfc->PSY->mask_adjust = gfp->maskingadjust;
-        gfc->PSY->mask_adjust_short = gfp->maskingadjust_short;
-
-        /*  sfb21 extra only with MPEG-1 at higher sampling rates
-         */
-        if ( gfp->experimentalY )
-            gfc->sfb21_extra = 0;
-        else 
-            gfc->sfb21_extra = (gfp->out_samplerate > 44000);
-
-        /*  VBR needs at least the output of GPSYCHO,
-         *  so we have to garantee that by setting a minimum 
-         *  quality level, actually level 6 does it.
-         *  down to level 6
-         */
-        if (gfp->quality > 6)
-            gfp->quality = 6;
+            if (gfp->quality < 0)
+                gfp->quality = LAME_DEFAULT_QUALITY;
 
 
-        if (gfp->quality < 0)
-            gfp->quality = LAME_DEFAULT_QUALITY;
+            vbrmode = lame_get_VBR(gfp);
+            if (vbrmode == vbr_off)
+                (void) lame_set_VBR_mean_bitrate_kbps(gfp, gfp->brate);
+            /* second, set parameters depending on bitrate */
+            (void) apply_preset(gfp, gfp->VBR_mean_bitrate_kbps, 0);
+            (void) lame_set_VBR(gfp, vbrmode);
 
-        gfc->iteration_loop = VBR_old_iteration_loop;            
-        break;
-    }
+            gfc->PSY->mask_adjust = gfp->maskingadjust;
+            gfc->PSY->mask_adjust_short = gfp->maskingadjust_short;
 
-    default: /* cbr/abr */{
-        vbr_mode vbrmode;
-
-        /*  no sfb21 extra with CBR code
-         */
-        gfc->sfb21_extra = 0;
-
-        if (gfp->quality < 0)
-            gfp->quality = LAME_DEFAULT_QUALITY;
-
-
-        vbrmode = lame_get_VBR(gfp);
-        if (vbrmode == vbr_off)
-            (void) lame_set_VBR_mean_bitrate_kbps(gfp, gfp->brate);
-        /* second, set parameters depending on bitrate */
-        (void) apply_preset(gfp, gfp->VBR_mean_bitrate_kbps, 0);
-        (void) lame_set_VBR(gfp, vbrmode);
-
-        gfc->PSY->mask_adjust = gfp->maskingadjust;
-        gfc->PSY->mask_adjust_short = gfp->maskingadjust_short;
-
-        if (vbrmode == vbr_off) {
-            gfc->iteration_loop = CBR_iteration_loop;            
+            if (vbrmode == vbr_off) {
+                gfc->iteration_loop = CBR_iteration_loop;
+            }
+            else {
+                gfc->iteration_loop = ABR_iteration_loop;
+            }
+            break;
         }
-        else {
-            gfc->iteration_loop = ABR_iteration_loop;            
-        }    
-        break;
-    }
     }
 
-    /*initialize default values common for all modes*/
+    /*initialize default values common for all modes */
 
 
-    if (lame_get_VBR(gfp) != vbr_off) {              /* choose a min/max bitrate for VBR */
+    if (lame_get_VBR(gfp) != vbr_off) { /* choose a min/max bitrate for VBR */
         /* if the user didn't specify VBR_max_bitrate: */
         gfc->VBR_min_bitrate = 1; /* default: allow   8 kbps (MPEG-2) or  32 kbps (MPEG-1) */
         gfc->VBR_max_bitrate = 14; /* default: allow 160 kbps (MPEG-2) or 320 kbps (MPEG-1) */
 
         if (gfp->VBR_min_bitrate_kbps)
-            if (
-                (gfc->VBR_min_bitrate =
-                 BitrateIndex(gfp->VBR_min_bitrate_kbps, gfp->version,
-                              gfp->out_samplerate)) < 0) return -1;
+            if ((gfc->VBR_min_bitrate =
+                 BitrateIndex(gfp->VBR_min_bitrate_kbps, gfp->version, gfp->out_samplerate)) < 0)
+                return -1;
         if (gfp->VBR_max_bitrate_kbps)
-            if (
-                (gfc->VBR_max_bitrate =
-                 BitrateIndex(gfp->VBR_max_bitrate_kbps, gfp->version,
-                              gfp->out_samplerate)) < 0) return -1;
+            if ((gfc->VBR_max_bitrate =
+                 BitrateIndex(gfp->VBR_max_bitrate_kbps, gfp->version, gfp->out_samplerate)) < 0)
+                return -1;
 
-        gfp->VBR_min_bitrate_kbps =
-            bitrate_table[gfp->version][gfc->VBR_min_bitrate];
-        gfp->VBR_max_bitrate_kbps =
-            bitrate_table[gfp->version][gfc->VBR_max_bitrate];
+        gfp->VBR_min_bitrate_kbps = bitrate_table[gfp->version][gfc->VBR_min_bitrate];
+        gfp->VBR_max_bitrate_kbps = bitrate_table[gfp->version][gfc->VBR_max_bitrate];
 
         gfp->VBR_mean_bitrate_kbps =
-            Min(bitrate_table[gfp->version][gfc->VBR_max_bitrate],
-                gfp->VBR_mean_bitrate_kbps);
+            Min(bitrate_table[gfp->version][gfc->VBR_max_bitrate], gfp->VBR_mean_bitrate_kbps);
         gfp->VBR_mean_bitrate_kbps =
-            Max(bitrate_table[gfp->version][gfc->VBR_min_bitrate],
-                gfp->VBR_mean_bitrate_kbps);
+            Max(bitrate_table[gfp->version][gfc->VBR_min_bitrate], gfp->VBR_mean_bitrate_kbps);
 
 
     }
 
 
     /*  just another daily changing developer switch  */
-    if ( gfp->tune ) gfc->PSY->mask_adjust = gfp->tune_value_a;
+    if (gfp->tune)
+        gfc->PSY->mask_adjust = gfp->tune_value_a;
 
     /* initialize internal qval settings */
     lame_init_qval(gfp);
@@ -1021,69 +996,77 @@ lame_init_params(lame_global_flags * const gfp)
 
     /*  automatic ATH adjustment on
      */
-    if ( gfp->athaa_type < 0 )
+    if (gfp->athaa_type < 0)
         gfc->ATH->use_adjust = 3;
     else
         gfc->ATH->use_adjust = gfp->athaa_type;
 
 
     /* initialize internal adaptive ATH settings  -jd */
-    gfc->ATH->aa_sensitivity_p = pow( 10.0, gfp->athaa_sensitivity / -10.0 );
+    gfc->ATH->aa_sensitivity_p = pow(10.0, gfp->athaa_sensitivity / -10.0);
 
 
     gfc->PSY->cwlimit = gfp->cwlimit <= 0 ? 8871.7f : gfp->cwlimit;
-    
+
     if (gfp->short_blocks == short_block_not_set) {
-        gfp->short_blocks =  short_block_allowed;
+        gfp->short_blocks = short_block_allowed;
     }
 
     /*Note Jan/2003: Many hardware decoders cannot handle short blocks in regular
-      stereo mode unless they are coupled (same type in both channels)
-      it is a rare event (1 frame per min. or so) that LAME would use
-      uncoupled short blocks, so lets turn them off until we decide
-      how to handle this.  No other encoders allow uncoupled short blocks,
-      even though it is in the standard.  */
+       stereo mode unless they are coupled (same type in both channels)
+       it is a rare event (1 frame per min. or so) that LAME would use
+       uncoupled short blocks, so lets turn them off until we decide
+       how to handle this.  No other encoders allow uncoupled short blocks,
+       even though it is in the standard.  */
     /* rh 20040217: coupling makes no sense for mono and dual-mono streams
      */
-    if (gfp->short_blocks == short_block_allowed && (gfp->mode == JOINT_STEREO || gfp->mode == STEREO) ) {
-        gfp->short_blocks =  short_block_coupled;
-    } 
+    if (gfp->short_blocks == short_block_allowed
+        && (gfp->mode == JOINT_STEREO || gfp->mode == STEREO)) {
+        gfp->short_blocks = short_block_coupled;
+    }
 
-    
-    if (lame_get_quant_comp(gfp) < 0 ) 
+
+    if (lame_get_quant_comp(gfp) < 0)
         (void) lame_set_quant_comp(gfp, 1);
-    if (lame_get_quant_comp_short(gfp) < 0 ) 
+    if (lame_get_quant_comp_short(gfp) < 0)
         (void) lame_set_quant_comp_short(gfp, 0);
 
-    if (lame_get_msfix(gfp) < 0 ) lame_set_msfix(gfp, 0);
+    if (lame_get_msfix(gfp) < 0)
+        lame_set_msfix(gfp, 0);
 
     /* select psychoacoustic model */
-    if ((lame_get_psy_model(gfp) < 0) ||
-        (lame_get_psy_model(gfp) == PSY_NSPSYTUNE)) {
+    if ((lame_get_psy_model(gfp) < 0) || (lame_get_psy_model(gfp) == PSY_NSPSYTUNE)) {
         (void) lame_set_psy_model(gfp, PSY_NSPSYTUNE);
         (void) lame_set_exp_nspsytune(gfp, lame_get_exp_nspsytune(gfp) | 1);
-    } else {
+    }
+    else {
         (void) lame_set_psy_model(gfp, PSY_GPSYCHO);
         (void) lame_set_exp_nspsytune(gfp, (lame_get_exp_nspsytune(gfp) >> 1) << 1);
     }
 
 
-    if (lame_get_short_threshold_lrm(gfp) < 0 )
+    if (lame_get_short_threshold_lrm(gfp) < 0)
         (void) lame_set_short_threshold_lrm(gfp, NSATTACKTHRE);
-    if (lame_get_short_threshold_s(gfp) < 0 ) 
+    if (lame_get_short_threshold_s(gfp) < 0)
         (void) lame_set_short_threshold_s(gfp, NSATTACKTHRE_S);
 
-    if ( gfp->scale < 0 ) gfp->scale = 1;
-    
-    if (gfp->ATHtype < 0) gfp->ATHtype = 4;
+    if (gfp->scale < 0)
+        gfp->scale = 1;
 
-    if ( gfp->ATHcurve < 0 ) gfp->ATHcurve = 4;
-    
-    if ( gfp->athaa_loudapprox < 0 ) gfp->athaa_loudapprox = 2;
-    
-    if (gfp->interChRatio < 0 ) gfp->interChRatio = 0;
+    if (gfp->ATHtype < 0)
+        gfp->ATHtype = 4;
 
-    if (gfp->useTemporal < 0 ) gfp->useTemporal = 1;  /* on by default */
+    if (gfp->ATHcurve < 0)
+        gfp->ATHcurve = 4;
+
+    if (gfp->athaa_loudapprox < 0)
+        gfp->athaa_loudapprox = 2;
+
+    if (gfp->interChRatio < 0)
+        gfp->interChRatio = 0;
+
+    if (gfp->useTemporal < 0)
+        gfp->useTemporal = 1; /* on by default */
 
 
 
@@ -1098,15 +1081,18 @@ lame_init_params(lame_global_flags * const gfp)
     gfc->slot_lag = gfc->frac_SpF = 0;
     if (gfp->VBR == vbr_off)
         gfc->slot_lag = gfc->frac_SpF
-            = ((gfp->version+1)*72000L*gfp->brate) % gfp->out_samplerate;
+            = ((gfp->version + 1) * 72000L * gfp->brate) % gfp->out_samplerate;
 
     /* mid side sparsing */
     gfc->sparsing = gfp->sparsing;
     gfc->sparseA = gfp->sparse_low;
-    gfc->sparseB = gfp->sparse_low-gfp->sparse_high;
-    if ( gfc->sparseA < 0 ) gfc->sparseA = 0;
-    if ( gfc->sparseB < 0 ) gfc->sparseB = 0;
-    if ( gfc->sparseB > gfc->sparseA ) gfc->sparseB = gfc->sparseA;
+    gfc->sparseB = gfp->sparse_low - gfp->sparse_high;
+    if (gfc->sparseA < 0)
+        gfc->sparseA = 0;
+    if (gfc->sparseB < 0)
+        gfc->sparseB = 0;
+    if (gfc->sparseB > gfc->sparseA)
+        gfc->sparseB = gfc->sparseA;
 
     switch (gfp->quantization_type) {
     default:
@@ -1122,7 +1108,7 @@ lame_init_params(lame_global_flags * const gfp)
         gfc->quantization = 1;
         break;
     }
-        
+
 
     iteration_init(gfp);
     (void) psymodel_init(gfp);
@@ -1142,7 +1128,7 @@ lame_init_params(lame_global_flags * const gfp)
 void
 lame_print_config(const lame_global_flags * gfp)
 {
-    lame_internal_flags const * const gfc = gfp->internal_flags;
+    lame_internal_flags const *const gfc = gfp->internal_flags;
     double const out_samplerate = gfp->out_samplerate;
     double const in_samplerate = gfp->out_samplerate * gfc->resample_ratio;
 
@@ -1152,8 +1138,7 @@ lame_print_config(const lame_global_flags * gfp)
         MSGF(gfc, "warning: alpha versions should be used for testing only\n");
 
     if (gfc->CPU_features.MMX
-        || gfc->CPU_features.AMD_3DNow
-        || gfc->CPU_features.SSE || gfc->CPU_features.SSE2) {
+        || gfc->CPU_features.AMD_3DNow || gfc->CPU_features.SSE || gfc->CPU_features.SSE2) {
         MSGF(gfc, "CPU features: ");
 
         if (gfc->CPU_features.MMX)
@@ -1180,9 +1165,7 @@ lame_print_config(const lame_global_flags * gfp)
     }
 
     if (gfp->num_channels == 2 && gfc->channels_out == 1 /* mono */ ) {
-        MSGF
-            (gfc,
-             "Autoconverting from stereo to mono. Setting encoding to mono mode.\n");
+        MSGF(gfc, "Autoconverting from stereo to mono. Setting encoding to mono mode.\n");
     }
 
     if (gfc->resample_ratio != 1.) {
@@ -1192,17 +1175,13 @@ lame_print_config(const lame_global_flags * gfp)
 
     if (gfc->filter_type == 0) {
         if (gfc->highpass2 > 0.)
-            MSGF
-                (gfc,
+            MSGF(gfc,
                  "Using polyphase highpass filter, transition band: %5.0f Hz - %5.0f Hz\n",
-                 0.5 * gfc->highpass1 * out_samplerate,
-                 0.5 * gfc->highpass2 * out_samplerate);
+                 0.5 * gfc->highpass1 * out_samplerate, 0.5 * gfc->highpass2 * out_samplerate);
         if (0. < gfc->lowpass1 && gfc->lowpass1 < 1.) {
-            MSGF
-                (gfc,
+            MSGF(gfc,
                  "Using polyphase lowpass filter, transition band: %5.0f Hz - %5.0f Hz\n",
-                 0.5 * gfc->lowpass1 * out_samplerate,
-                 0.5 * gfc->lowpass2 * out_samplerate);
+                 0.5 * gfc->lowpass1 * out_samplerate, 0.5 * gfc->lowpass2 * out_samplerate);
         }
         else {
             MSGF(gfc, "polyphase lowpass filter disabled\n");
@@ -1213,11 +1192,9 @@ lame_print_config(const lame_global_flags * gfp)
     }
 
     if (gfp->free_format) {
-        MSGF(gfc,
-             "Warning: many decoders cannot handle free format bitstreams\n");
+        MSGF(gfc, "Warning: many decoders cannot handle free format bitstreams\n");
         if (gfp->brate > 320) {
-            MSGF
-                (gfc,
+            MSGF(gfc,
                  "Warning: many decoders cannot handle free format bitrates >320 kbps (see documentation)\n");
         }
     }
@@ -1229,125 +1206,184 @@ lame_print_config(const lame_global_flags * gfp)
  *      so, if someone is willing to do so, please do it!
  *      add more, if you see more...
  */
-void 
-lame_print_internals( const lame_global_flags * gfp )
+void
+lame_print_internals(const lame_global_flags * gfp)
 {
-    lame_internal_flags const * const gfc = gfp->internal_flags;
-    const char * pc = "";
+    lame_internal_flags const *const gfc = gfp->internal_flags;
+    const char *pc = "";
 
     /*  compiler/processor optimizations, operational, etc.
      */
-    MSGF( gfc, "\nmisc:\n\n" );
-    
-    MSGF( gfc, "\tscaling: %g\n", gfp->scale );
-    MSGF( gfc, "\tch0 (left) scaling: %g\n", gfp->scale_left );
-    MSGF( gfc, "\tch1 (right) scaling: %g\n", gfp->scale_right );
-    MSGF( gfc, "\tfilter type: %d\n", gfc->filter_type );
+    MSGF(gfc, "\nmisc:\n\n");
+
+    MSGF(gfc, "\tscaling: %g\n", gfp->scale);
+    MSGF(gfc, "\tch0 (left) scaling: %g\n", gfp->scale_left);
+    MSGF(gfc, "\tch1 (right) scaling: %g\n", gfp->scale_right);
+    MSGF(gfc, "\tfilter type: %d\n", gfc->filter_type);
     pc = gfc->quantization ? "xr^3/4" : "ISO";
-    MSGF( gfc, "\tquantization: %s\n", pc );
-    switch( gfc->use_best_huffman ) {
-    default: pc = "normal"; break;
-    case  1: pc = "best (outside loop)"; break;
-    case  2: pc = "best (inside loop, slow)"; break;
-    } 
-    MSGF( gfc, "\thuffman search: %s\n", pc ); 
-    MSGF( gfc, "\texperimental Y=%d\n", gfp->experimentalY);
-    MSGF( gfc, "\t...\n" );
+    MSGF(gfc, "\tquantization: %s\n", pc);
+    switch (gfc->use_best_huffman) {
+    default:
+        pc = "normal";
+        break;
+    case 1:
+        pc = "best (outside loop)";
+        break;
+    case 2:
+        pc = "best (inside loop, slow)";
+        break;
+    }
+    MSGF(gfc, "\thuffman search: %s\n", pc);
+    MSGF(gfc, "\texperimental Y=%d\n", gfp->experimentalY);
+    MSGF(gfc, "\t...\n");
 
     /*  everything controlling the stream format 
      */
-    MSGF( gfc, "\nstream format:\n\n" );
-    switch ( gfp->version ) {
-    case 0:  pc = "2.5"; break;
-    case 1:  pc = "1";   break;
-    case 2:  pc = "2";   break;
-    default: pc = "?";   break;
+    MSGF(gfc, "\nstream format:\n\n");
+    switch (gfp->version) {
+    case 0:
+        pc = "2.5";
+        break;
+    case 1:
+        pc = "1";
+        break;
+    case 2:
+        pc = "2";
+        break;
+    default:
+        pc = "?";
+        break;
     }
-    MSGF( gfc, "\tMPEG-%s Layer 3\n", pc );
-    switch ( gfp->mode ) {
-    case JOINT_STEREO: pc = "joint stereo";   break;
-    case STEREO      : pc = "stereo";         break;
-    case DUAL_CHANNEL: pc = "dual channel";   break;
-    case MONO        : pc = "mono";           break;
-    case NOT_SET     : pc = "not set (error)"; break;
-    default          : pc = "unknown (error)"; break;
+    MSGF(gfc, "\tMPEG-%s Layer 3\n", pc);
+    switch (gfp->mode) {
+    case JOINT_STEREO:
+        pc = "joint stereo";
+        break;
+    case STEREO:
+        pc = "stereo";
+        break;
+    case DUAL_CHANNEL:
+        pc = "dual channel";
+        break;
+    case MONO:
+        pc = "mono";
+        break;
+    case NOT_SET:
+        pc = "not set (error)";
+        break;
+    default:
+        pc = "unknown (error)";
+        break;
     }
-    MSGF( gfc, "\t%d channel - %s\n", gfc->channels_out, pc );
-    
+    MSGF(gfc, "\t%d channel - %s\n", gfc->channels_out, pc);
+
     switch (gfp->VBR) {
-    case vbr_off   : pc = "off";    break;
-    default        : pc = "all";    break;
+    case vbr_off:
+        pc = "off";
+        break;
+    default:
+        pc = "all";
+        break;
     }
-    MSGF( gfc, "\tpadding: %s\n", pc );
-    
-    if ( vbr_default == gfp->VBR )  pc = "(default)";
-    else if ( gfp->free_format )    pc = "(free format)";
-    else pc = "";
-    switch ( gfp->VBR ) {
-    case vbr_off : MSGF( gfc, "\tconstant bitrate - CBR %s\n",      pc ); break;
-    case vbr_abr : MSGF( gfc, "\tvariable bitrate - ABR %s\n",      pc ); break;
-    case vbr_rh  : MSGF( gfc, "\tvariable bitrate - VBR rh %s\n",   pc ); break;
-    case vbr_mt  : MSGF( gfc, "\tvariable bitrate - VBR mt %s\n",   pc ); break;
-    case vbr_mtrh: MSGF( gfc, "\tvariable bitrate - VBR mtrh %s\n", pc ); break; 
-    default      : MSGF( gfc, "\t ?? oops, some new one ?? \n" );         break;
+    MSGF(gfc, "\tpadding: %s\n", pc);
+
+    if (vbr_default == gfp->VBR)
+        pc = "(default)";
+    else if (gfp->free_format)
+        pc = "(free format)";
+    else
+        pc = "";
+    switch (gfp->VBR) {
+    case vbr_off:
+        MSGF(gfc, "\tconstant bitrate - CBR %s\n", pc);
+        break;
+    case vbr_abr:
+        MSGF(gfc, "\tvariable bitrate - ABR %s\n", pc);
+        break;
+    case vbr_rh:
+        MSGF(gfc, "\tvariable bitrate - VBR rh %s\n", pc);
+        break;
+    case vbr_mt:
+        MSGF(gfc, "\tvariable bitrate - VBR mt %s\n", pc);
+        break;
+    case vbr_mtrh:
+        MSGF(gfc, "\tvariable bitrate - VBR mtrh %s\n", pc);
+        break;
+    default:
+        MSGF(gfc, "\t ?? oops, some new one ?? \n");
+        break;
     }
-    if (gfp->bWriteVbrTag) 
-        MSGF( gfc, "\tusing LAME Tag\n" );
-    MSGF( gfc, "\t...\n" );
-    
+    if (gfp->bWriteVbrTag)
+        MSGF(gfc, "\tusing LAME Tag\n");
+    MSGF(gfc, "\t...\n");
+
     /*  everything controlling psychoacoustic settings, like ATH, etc.
      */
-    MSGF( gfc, "\npsychoacoustic:\n\n" );
-    
-    MSGF( gfc, "\tusing psychoacoustic model: %d\n", gfc->psymodel);
-    MSGF( gfc, "\tpsychoacoustic model: %s\n", (gfp->psymodel == PSY_NSPSYTUNE) ? "NSPsytune" : "GPsycho" );
-    MSGF( gfc, "\ttonality estimation limit: %f Hz %s\n", gfc->PSY->cwlimit, (gfp->psymodel == PSY_NSPSYTUNE) ? "(not relevant)" : "");
-    switch ( gfp->short_blocks ) {
+    MSGF(gfc, "\npsychoacoustic:\n\n");
+
+    MSGF(gfc, "\tusing psychoacoustic model: %d\n", gfc->psymodel);
+    MSGF(gfc, "\tpsychoacoustic model: %s\n",
+         (gfp->psymodel == PSY_NSPSYTUNE) ? "NSPsytune" : "GPsycho");
+    MSGF(gfc, "\ttonality estimation limit: %f Hz %s\n", gfc->PSY->cwlimit,
+         (gfp->psymodel == PSY_NSPSYTUNE) ? "(not relevant)" : "");
+    switch (gfp->short_blocks) {
     default:
-    case short_block_not_set:   pc = "?";               break;
-    case short_block_allowed:   pc = "allowed";         break;
-    case short_block_coupled:   pc = "channel coupled"; break;
-    case short_block_dispensed: pc = "dispensed";       break;
-    case short_block_forced:    pc = "forced";          break;
+    case short_block_not_set:
+        pc = "?";
+        break;
+    case short_block_allowed:
+        pc = "allowed";
+        break;
+    case short_block_coupled:
+        pc = "channel coupled";
+        break;
+    case short_block_dispensed:
+        pc = "dispensed";
+        break;
+    case short_block_forced:
+        pc = "forced";
+        break;
     }
-    MSGF( gfc, "\tusing short blocks: %s\n", pc );    
-    MSGF( gfc, "\tsubblock gain: %d\n", gfc->subblock_gain );
-    MSGF( gfc, "\tadjust masking: %g dB\n", gfp->maskingadjust );
-    MSGF( gfc, "\tadjust masking short: %g dB\n", gfp->maskingadjust_short );
-    MSGF( gfc, "\tquantization comparison: %d\n", gfp->quant_comp );
-    MSGF( gfc, "\t ^ comparison short blocks: %d\n", gfp->quant_comp_short );
-    MSGF( gfc, "\tnoise shaping: %d\n", gfc->noise_shaping );
-    MSGF( gfc, "\t ^ amplification: %d\n", gfc->noise_shaping_amp );
-    MSGF( gfc, "\t ^ stopping: %d\n", gfc->noise_shaping_stop );
-    
+    MSGF(gfc, "\tusing short blocks: %s\n", pc);
+    MSGF(gfc, "\tsubblock gain: %d\n", gfc->subblock_gain);
+    MSGF(gfc, "\tadjust masking: %g dB\n", gfp->maskingadjust);
+    MSGF(gfc, "\tadjust masking short: %g dB\n", gfp->maskingadjust_short);
+    MSGF(gfc, "\tquantization comparison: %d\n", gfp->quant_comp);
+    MSGF(gfc, "\t ^ comparison short blocks: %d\n", gfp->quant_comp_short);
+    MSGF(gfc, "\tnoise shaping: %d\n", gfc->noise_shaping);
+    MSGF(gfc, "\t ^ amplification: %d\n", gfc->noise_shaping_amp);
+    MSGF(gfc, "\t ^ stopping: %d\n", gfc->noise_shaping_stop);
+
     pc = "using";
-    if ( gfp->ATHshort ) pc = "the only masking for short blocks";
-    if ( gfp->ATHonly  ) pc = "the only masking";
-    if ( gfp->noATH    ) pc = "not used";
-    MSGF( gfc, "\tATH: %s\n", pc );
-    MSGF( gfc, "\t ^ type: %d\n", gfp->ATHtype );
-    MSGF( gfc, "\t ^ shape: %g%s\n", gfp->ATHcurve, " (only for type 4)" );
-    MSGF( gfc, "\t ^ level adjustement: %g\n", gfp->ATHlower );
-    MSGF( gfc, "\t ^ adjust type: %d\n", gfc->ATH->use_adjust );
-    MSGF( gfc, "\t ^ adjust sensitivity power: %f\n", gfc->ATH->aa_sensitivity_p );
-    MSGF( gfc, "\t ^ adapt threshold type: %d\n", gfp->athaa_loudapprox );
-    
-    if ( gfp->psymodel == PSY_NSPSYTUNE ) {
-        MSGF(gfc, "\texperimental psy tunings by Naoki Shibata\n" );
-        MSGF(gfc, "\t   adjust masking bass=%g dB, alto=%g dB, treble=%g dB, sfb21=%g dB\n", 
-             10*log10(gfc->nsPsy.longfact[ 0]),
-             10*log10(gfc->nsPsy.longfact[ 7]),
-             10*log10(gfc->nsPsy.longfact[14]),
-             10*log10(gfc->nsPsy.longfact[21]));
+    if (gfp->ATHshort)
+        pc = "the only masking for short blocks";
+    if (gfp->ATHonly)
+        pc = "the only masking";
+    if (gfp->noATH)
+        pc = "not used";
+    MSGF(gfc, "\tATH: %s\n", pc);
+    MSGF(gfc, "\t ^ type: %d\n", gfp->ATHtype);
+    MSGF(gfc, "\t ^ shape: %g%s\n", gfp->ATHcurve, " (only for type 4)");
+    MSGF(gfc, "\t ^ level adjustement: %g\n", gfp->ATHlower);
+    MSGF(gfc, "\t ^ adjust type: %d\n", gfc->ATH->use_adjust);
+    MSGF(gfc, "\t ^ adjust sensitivity power: %f\n", gfc->ATH->aa_sensitivity_p);
+    MSGF(gfc, "\t ^ adapt threshold type: %d\n", gfp->athaa_loudapprox);
+
+    if (gfp->psymodel == PSY_NSPSYTUNE) {
+        MSGF(gfc, "\texperimental psy tunings by Naoki Shibata\n");
+        MSGF(gfc, "\t   adjust masking bass=%g dB, alto=%g dB, treble=%g dB, sfb21=%g dB\n",
+             10 * log10(gfc->nsPsy.longfact[0]),
+             10 * log10(gfc->nsPsy.longfact[7]),
+             10 * log10(gfc->nsPsy.longfact[14]), 10 * log10(gfc->nsPsy.longfact[21]));
     }
     pc = gfp->useTemporal ? "yes" : "no";
-    MSGF( gfc, "\tusing temporal masking effect: %s\n", pc );
-    MSGF( gfc, "\tinterchannel masking ratio: %g\n", gfp->interChRatio );
-    MSGF( gfc, "\t...\n" );
-    
+    MSGF(gfc, "\tusing temporal masking effect: %s\n", pc);
+    MSGF(gfc, "\tinterchannel masking ratio: %g\n", gfp->interChRatio);
+    MSGF(gfc, "\t...\n");
+
     /*  that's all ?
      */
-    MSGF( gfc, "\n" );
+    MSGF(gfc, "\n");
     return;
 }
 
@@ -1359,8 +1395,7 @@ program.
 */
 int
 lame_encode_frame(lame_global_flags * gfp,
-                  sample_t inbuf_l[], sample_t inbuf_r[],
-                  unsigned char *mp3buf, int mp3buf_size)
+                  sample_t inbuf_l[], sample_t inbuf_r[], unsigned char *mp3buf, int mp3buf_size)
 {
     int     ret;
     ret = lame_encode_mp3_frame(gfp, inbuf_l, inbuf_r, mp3buf, mp3buf_size);
@@ -1373,7 +1408,7 @@ update_inbuffer_size(lame_internal_flags * gfc, const int nsamples)
 {
     if (gfc->in_buffer_0 == 0 || gfc->in_buffer_nsamples < nsamples) {
         if (gfc->in_buffer_0) {
-            free(gfc->in_buffer_0);            
+            free(gfc->in_buffer_0);
         }
         if (gfc->in_buffer_1) {
             free(gfc->in_buffer_1);
@@ -1384,7 +1419,7 @@ update_inbuffer_size(lame_internal_flags * gfc, const int nsamples)
     }
     if (gfc->in_buffer_0 == NULL || gfc->in_buffer_1 == NULL) {
         if (gfc->in_buffer_0) {
-            free(gfc->in_buffer_0);            
+            free(gfc->in_buffer_0);
         }
         if (gfc->in_buffer_1) {
             free(gfc->in_buffer_1);
@@ -1421,13 +1456,13 @@ update_inbuffer_size(lame_internal_flags * gfc, const int nsamples)
 */
 int
 lame_encode_buffer_sample_t(lame_global_flags * gfp,
-                   sample_t buffer_l[],
-                   sample_t buffer_r[],
-                   int nsamples, unsigned char *mp3buf, const int mp3buf_size)
+                            sample_t buffer_l[],
+                            sample_t buffer_r[],
+                            int nsamples, unsigned char *mp3buf, const int mp3buf_size)
 {
-    lame_internal_flags * const gfc = gfp->internal_flags;
+    lame_internal_flags *const gfc = gfp->internal_flags;
     int     mp3size = 0, ret, i, ch, mf_needed;
-    int mp3out;
+    int     mp3out;
     sample_t *mfbuf[2];
     sample_t *in_buffer[2];
 
@@ -1438,44 +1473,45 @@ lame_encode_buffer_sample_t(lame_global_flags * gfp,
         return 0;
 
     /* copy out any tags that may have been written into bitstream */
-    mp3out = copy_buffer(gfc,mp3buf,mp3buf_size,0);
-    if (mp3out<0) return mp3out;  /* not enough buffer space */
+    mp3out = copy_buffer(gfc, mp3buf, mp3buf_size, 0);
+    if (mp3out < 0)
+        return mp3out;  /* not enough buffer space */
     mp3buf += mp3out;
     mp3size += mp3out;
 
 
-    in_buffer[0]=buffer_l;
-    in_buffer[1]=buffer_r;  
+    in_buffer[0] = buffer_l;
+    in_buffer[1] = buffer_r;
 
 
     /* Apply user defined re-scaling */
 
     /* user selected scaling of the samples */
     if (gfp->scale != 0 && gfp->scale != 1.0) {
-        for (i=0 ; i<nsamples; ++i) {
+        for (i = 0; i < nsamples; ++i) {
             in_buffer[0][i] *= gfp->scale;
             if (gfc->channels_out == 2)
                 in_buffer[1][i] *= gfp->scale;
-            }
+        }
     }
 
     /* user selected scaling of the channel 0 (left) samples */
     if (gfp->scale_left != 0 && gfp->scale_left != 1.0) {
-        for (i=0 ; i<nsamples; ++i) {
+        for (i = 0; i < nsamples; ++i) {
             in_buffer[0][i] *= gfp->scale_left;
-            }
+        }
     }
 
     /* user selected scaling of the channel 1 (right) samples */
     if (gfp->scale_right != 0 && gfp->scale_right != 1.0) {
-        for (i=0 ; i<nsamples; ++i) {
+        for (i = 0; i < nsamples; ++i) {
             in_buffer[1][i] *= gfp->scale_right;
         }
     }
 
     /* Downsample to Mono if 2 channels in and 1 channel out */
     if (gfp->num_channels == 2 && gfc->channels_out == 1) {
-        for (i=0; i<nsamples; ++i) {
+        for (i = 0; i < nsamples; ++i) {
             in_buffer[0][i] = 0.5 * ((FLOAT) in_buffer[0][i] + in_buffer[1][i]);
             in_buffer[1][i] = 0.0;
         }
@@ -1492,7 +1528,7 @@ lame_encode_buffer_sample_t(lame_global_flags * gfp,
 
     mf_needed = BLKSIZE + gfp->framesize - FFTOFFSET; /* amount needed for FFT */
     /*mf_needed = Max(mf_needed, 286 + 576 * (1 + gfc->mode_gr)); */
-    mf_needed = Max(mf_needed, 512+gfp->framesize-32 );
+    mf_needed = Max(mf_needed, 512 + gfp->framesize - 32);
 
     assert(MFSIZE >= mf_needed);
 
@@ -1508,8 +1544,10 @@ lame_encode_buffer_sample_t(lame_global_flags * gfp,
         fill_buffer(gfp, mfbuf, in_buffer, nsamples, &n_in, &n_out);
 
         /* compute ReplayGain of resampled input if requested */
-        if (gfc->findReplayGain && !gfc->decode_on_the_fly) 
-            if (AnalyzeSamples(gfc->rgdata, &mfbuf[0][gfc->mf_size], &mfbuf[1][gfc->mf_size], n_out, gfc->channels_out) == GAIN_ANALYSIS_ERROR) 
+        if (gfc->findReplayGain && !gfc->decode_on_the_fly)
+            if (AnalyzeSamples
+                (gfc->rgdata, &mfbuf[0][gfc->mf_size], &mfbuf[1][gfc->mf_size], n_out,
+                 gfc->channels_out) == GAIN_ANALYSIS_ERROR)
                 return -6;
 
 
@@ -1536,13 +1574,14 @@ lame_encode_buffer_sample_t(lame_global_flags * gfp,
             /* mp3size             = size of data written to buffer so far */
             /* mp3buf_size-mp3size = amount of space avalable  */
 
-            int buf_size=mp3buf_size - mp3size;
-            if (mp3buf_size==0) buf_size=0;
+            int     buf_size = mp3buf_size - mp3size;
+            if (mp3buf_size == 0)
+                buf_size = 0;
 
-            ret =
-                lame_encode_frame(gfp, mfbuf[0], mfbuf[1], mp3buf,buf_size);
+            ret = lame_encode_frame(gfp, mfbuf[0], mfbuf[1], mp3buf, buf_size);
 
-            if (ret < 0) return ret;
+            if (ret < 0)
+                return ret;
             mp3buf += ret;
             mp3size += ret;
 
@@ -1566,7 +1605,7 @@ lame_encode_buffer(lame_global_flags * gfp,
                    const short int buffer_r[],
                    const int nsamples, unsigned char *mp3buf, const int mp3buf_size)
 {
-    lame_internal_flags * const gfc = gfp->internal_flags;
+    lame_internal_flags *const gfc = gfp->internal_flags;
     int     i;
     sample_t *in_buffer[2];
 
@@ -1576,7 +1615,7 @@ lame_encode_buffer(lame_global_flags * gfp,
     if (nsamples == 0)
         return 0;
 
-    if (update_inbuffer_size( gfc, nsamples ) != 0) {
+    if (update_inbuffer_size(gfc, nsamples) != 0) {
         return -2;
     }
 
@@ -1586,21 +1625,22 @@ lame_encode_buffer(lame_global_flags * gfp,
     /* make a copy of input buffer, changing type to sample_t */
     for (i = 0; i < nsamples; i++) {
         in_buffer[0][i] = buffer_l[i];
-        if (gfc->channels_in>1) in_buffer[1][i] = buffer_r[i];
+        if (gfc->channels_in > 1)
+            in_buffer[1][i] = buffer_r[i];
     }
 
-    return lame_encode_buffer_sample_t(gfp,in_buffer[0],in_buffer[1],
-                                      nsamples, mp3buf, mp3buf_size);
+    return lame_encode_buffer_sample_t(gfp, in_buffer[0], in_buffer[1],
+                                       nsamples, mp3buf, mp3buf_size);
 }
 
 
 int
 lame_encode_buffer_float(lame_global_flags * gfp,
-                   const float buffer_l[],
-                   const float buffer_r[],
-                   const int nsamples, unsigned char *mp3buf, const int mp3buf_size)
+                         const float buffer_l[],
+                         const float buffer_r[],
+                         const int nsamples, unsigned char *mp3buf, const int mp3buf_size)
 {
-    lame_internal_flags * const gfc = gfp->internal_flags;
+    lame_internal_flags *const gfc = gfp->internal_flags;
     int     i;
     sample_t *in_buffer[2];
 
@@ -1610,7 +1650,7 @@ lame_encode_buffer_float(lame_global_flags * gfp,
     if (nsamples == 0)
         return 0;
 
-    if (update_inbuffer_size( gfc, nsamples ) != 0) {
+    if (update_inbuffer_size(gfc, nsamples) != 0) {
         return -2;
     }
 
@@ -1620,21 +1660,22 @@ lame_encode_buffer_float(lame_global_flags * gfp,
     /* make a copy of input buffer, changing type to sample_t */
     for (i = 0; i < nsamples; i++) {
         in_buffer[0][i] = buffer_l[i];
-        if (gfc->channels_in>1) in_buffer[1][i] = buffer_r[i];
+        if (gfc->channels_in > 1)
+            in_buffer[1][i] = buffer_r[i];
     }
 
-    return lame_encode_buffer_sample_t(gfp,in_buffer[0],in_buffer[1],
-                                      nsamples, mp3buf, mp3buf_size);
+    return lame_encode_buffer_sample_t(gfp, in_buffer[0], in_buffer[1],
+                                       nsamples, mp3buf, mp3buf_size);
 }
 
 
 int
 lame_encode_buffer_int(lame_global_flags * gfp,
-                   const int buffer_l[],
-                   const int buffer_r[],
-                   const int nsamples, unsigned char *mp3buf, const int mp3buf_size)
+                       const int buffer_l[],
+                       const int buffer_r[],
+                       const int nsamples, unsigned char *mp3buf, const int mp3buf_size)
 {
-    lame_internal_flags * const gfc = gfp->internal_flags;
+    lame_internal_flags *const gfc = gfp->internal_flags;
     int     i;
     sample_t *in_buffer[2];
 
@@ -1644,23 +1685,23 @@ lame_encode_buffer_int(lame_global_flags * gfp,
     if (nsamples == 0)
         return 0;
 
-    if (update_inbuffer_size( gfc, nsamples ) != 0) {
+    if (update_inbuffer_size(gfc, nsamples) != 0) {
         return -2;
     }
 
     in_buffer[0] = gfc->in_buffer_0;
     in_buffer[1] = gfc->in_buffer_1;
-    
+
     /* make a copy of input buffer, changing type to sample_t */
     for (i = 0; i < nsamples; i++) {
-                                /* internal code expects +/- 32768.0 */
-      in_buffer[0][i] = buffer_l[i] * (1.0 / ( 1L << (8 * sizeof(int) - 16)));
-      if (gfc->channels_in>1)
-          in_buffer[1][i] = buffer_r[i] * (1.0 / ( 1L << (8 * sizeof(int) - 16)));
+        /* internal code expects +/- 32768.0 */
+        in_buffer[0][i] = buffer_l[i] * (1.0 / (1L << (8 * sizeof(int) - 16)));
+        if (gfc->channels_in > 1)
+            in_buffer[1][i] = buffer_r[i] * (1.0 / (1L << (8 * sizeof(int) - 16)));
     }
 
-    return lame_encode_buffer_sample_t(gfp,in_buffer[0],in_buffer[1],
-                                      nsamples, mp3buf, mp3buf_size);
+    return lame_encode_buffer_sample_t(gfp, in_buffer[0], in_buffer[1],
+                                       nsamples, mp3buf, mp3buf_size);
 }
 
 
@@ -1668,11 +1709,11 @@ lame_encode_buffer_int(lame_global_flags * gfp,
 
 int
 lame_encode_buffer_long2(lame_global_flags * gfp,
-                   const long buffer_l[],
-                   const long buffer_r[],
-                   const int nsamples, unsigned char *mp3buf, const int mp3buf_size)
+                         const long buffer_l[],
+                         const long buffer_r[],
+                         const int nsamples, unsigned char *mp3buf, const int mp3buf_size)
 {
-    lame_internal_flags * const gfc = gfp->internal_flags;
+    lame_internal_flags *const gfc = gfp->internal_flags;
     int     i;
     sample_t *in_buffer[2];
 
@@ -1682,7 +1723,7 @@ lame_encode_buffer_long2(lame_global_flags * gfp,
     if (nsamples == 0)
         return 0;
 
-    if (update_inbuffer_size( gfc, nsamples ) != 0) {
+    if (update_inbuffer_size(gfc, nsamples) != 0) {
         return -2;
     }
 
@@ -1691,26 +1732,26 @@ lame_encode_buffer_long2(lame_global_flags * gfp,
 
     /* make a copy of input buffer, changing type to sample_t */
     for (i = 0; i < nsamples; i++) {
-                                /* internal code expects +/- 32768.0 */
-      in_buffer[0][i] = buffer_l[i] * (1.0 / ( 1L << (8 * sizeof(long) - 16)));
-      if (gfc->channels_in>1)
-          in_buffer[1][i] = buffer_r[i] * (1.0 / ( 1L << (8 * sizeof(long) - 16)));
+        /* internal code expects +/- 32768.0 */
+        in_buffer[0][i] = buffer_l[i] * (1.0 / (1L << (8 * sizeof(long) - 16)));
+        if (gfc->channels_in > 1)
+            in_buffer[1][i] = buffer_r[i] * (1.0 / (1L << (8 * sizeof(long) - 16)));
     }
 
-    return lame_encode_buffer_sample_t(gfp,in_buffer[0],in_buffer[1],
-                                      nsamples, mp3buf, mp3buf_size);
-    
+    return lame_encode_buffer_sample_t(gfp, in_buffer[0], in_buffer[1],
+                                       nsamples, mp3buf, mp3buf_size);
+
 }
 
 
 
 int
 lame_encode_buffer_long(lame_global_flags * gfp,
-                   const long buffer_l[],
-                   const long buffer_r[],
-                   const int nsamples, unsigned char *mp3buf, const int mp3buf_size)
+                        const long buffer_l[],
+                        const long buffer_r[],
+                        const int nsamples, unsigned char *mp3buf, const int mp3buf_size)
 {
-    lame_internal_flags * const gfc = gfp->internal_flags;
+    lame_internal_flags *const gfc = gfp->internal_flags;
     int     i;
     sample_t *in_buffer[2];
 
@@ -1720,7 +1761,7 @@ lame_encode_buffer_long(lame_global_flags * gfp,
     if (nsamples == 0)
         return 0;
 
-    if (update_inbuffer_size( gfc, nsamples ) != 0) {
+    if (update_inbuffer_size(gfc, nsamples) != 0) {
         return -2;
     }
 
@@ -1730,12 +1771,12 @@ lame_encode_buffer_long(lame_global_flags * gfp,
     /* make a copy of input buffer, changing type to sample_t */
     for (i = 0; i < nsamples; i++) {
         in_buffer[0][i] = buffer_l[i];
-        if (gfc->channels_in>1)
+        if (gfc->channels_in > 1)
             in_buffer[1][i] = buffer_r[i];
     }
 
-    return lame_encode_buffer_sample_t(gfp,in_buffer[0],in_buffer[1],
-                                      nsamples, mp3buf, mp3buf_size);
+    return lame_encode_buffer_sample_t(gfp, in_buffer[0], in_buffer[1],
+                                       nsamples, mp3buf, mp3buf_size);
 }
 
 
@@ -1751,14 +1792,13 @@ lame_encode_buffer_long(lame_global_flags * gfp,
 int
 lame_encode_buffer_interleaved(lame_global_flags * gfp,
                                short int buffer[],
-                               int nsamples,
-                               unsigned char *mp3buf, int mp3buf_size)
+                               int nsamples, unsigned char *mp3buf, int mp3buf_size)
 {
-    lame_internal_flags * const gfc = gfp->internal_flags;
+    lame_internal_flags *const gfc = gfp->internal_flags;
     int     i;
     sample_t *in_buffer[2];
 
-    if (update_inbuffer_size( gfc, nsamples ) != 0) {
+    if (update_inbuffer_size(gfc, nsamples) != 0) {
         return -2;
     }
 
@@ -1770,22 +1810,20 @@ lame_encode_buffer_interleaved(lame_global_flags * gfp,
         in_buffer[1][i] = buffer[2 * i + 1];
     }
     return lame_encode_buffer_sample_t(gfp, in_buffer[0], in_buffer[1], nsamples, mp3buf,
-                           mp3buf_size);
+                                       mp3buf_size);
 }
 
 
 int
 lame_encode(lame_global_flags * const gfp,
-            const short int in_buffer[2][1152],
-            unsigned char *const mp3buf, const int size)
+            const short int in_buffer[2][1152], unsigned char *const mp3buf, const int size)
 {
-    lame_internal_flags const * const gfc = gfp->internal_flags;
+    lame_internal_flags const *const gfc = gfp->internal_flags;
 
     if (gfc->Class_ID != LAME_ID)
         return -3;
 
-    return lame_encode_buffer(gfp, in_buffer[0], in_buffer[1], gfp->framesize,
-                              mp3buf, size);
+    return lame_encode_buffer(gfp, in_buffer[0], in_buffer[1], gfp->framesize, mp3buf, size);
 }
 
 /*****************************************************************
@@ -1798,12 +1836,11 @@ lame_encode(lame_global_flags * const gfp,
  with no errors. 
 *********************************************************************/
 int
-lame_encode_flush_nogap(lame_global_flags * gfp,
-                  unsigned char *mp3buffer, int mp3buffer_size)
+lame_encode_flush_nogap(lame_global_flags * gfp, unsigned char *mp3buffer, int mp3buffer_size)
 {
-    lame_internal_flags * const gfc = gfp->internal_flags;
+    lame_internal_flags *const gfc = gfp->internal_flags;
     flush_bitstream(gfp);
-    return copy_buffer(gfc,mp3buffer, mp3buffer_size,1);
+    return copy_buffer(gfc, mp3buffer, mp3buffer_size, 1);
 }
 
 
@@ -1812,22 +1849,20 @@ lame_encode_flush_nogap(lame_global_flags * gfp,
 int
 lame_init_bitstream(lame_global_flags * gfp)
 {
-    lame_internal_flags * const gfc = gfp->internal_flags;
-    gfp->frameNum=0;
+    lame_internal_flags *const gfc = gfp->internal_flags;
+    gfp->frameNum = 0;
 
     (void) id3tag_write_v2(gfp);
 #ifdef BRHIST
     /* initialize histogram data optionally used by frontend */
-    memset(gfc->bitrate_stereoMode_Hist, 0,
-           sizeof(gfc->bitrate_stereoMode_Hist));
-    memset(gfc->bitrate_blockType_Hist, 0,
-           sizeof(gfc->bitrate_blockType_Hist));
+    memset(gfc->bitrate_stereoMode_Hist, 0, sizeof(gfc->bitrate_stereoMode_Hist));
+    memset(gfc->bitrate_blockType_Hist, 0, sizeof(gfc->bitrate_blockType_Hist));
 #endif
 
     gfc->PeakSample = 0.0;
 
     /* Write initial VBR Header to bitstream and init VBR data */
-    if (gfp->bWriteVbrTag) 
+    if (gfp->bWriteVbrTag)
         (void) InitVbrTag(gfp);
 
 
@@ -1841,16 +1876,15 @@ lame_init_bitstream(lame_global_flags * gfp)
 /*****************************************************************/
 
 int
-lame_encode_flush(lame_global_flags * gfp,
-                  unsigned char *mp3buffer, int mp3buffer_size)
+lame_encode_flush(lame_global_flags * gfp, unsigned char *mp3buffer, int mp3buffer_size)
 {
-    lame_internal_flags * const gfc = gfp->internal_flags;
+    lame_internal_flags *const gfc = gfp->internal_flags;
     short int buffer[2][1152];
     int     imp3 = 0, mp3count, mp3buffer_size_remaining;
 
     /* we always add POSTDELAY=288 padding to make sure granule with real
      * data can be complety decoded (because of 50% overlap with next granule */
-    int end_padding=POSTDELAY;  
+    int     end_padding = POSTDELAY;
 
     memset(buffer, 0, sizeof(buffer));
     mp3count = 0;
@@ -1874,7 +1908,7 @@ lame_encode_flush(lame_global_flags * gfp,
         gfc->mf_samples_to_encode -= gfp->framesize;
         if (gfc->mf_samples_to_encode < 0) {
             /* we added extra padding to the end */
-            end_padding += -gfc->mf_samples_to_encode;  
+            end_padding += -gfc->mf_samples_to_encode;
         }
 
 
@@ -1893,7 +1927,7 @@ lame_encode_flush(lame_global_flags * gfp,
 
     /* mp3 related stuff.  bit buffer might still contain some mp3 data */
     flush_bitstream(gfp);
-    imp3 = copy_buffer(gfc,mp3buffer, mp3buffer_size_remaining, 1);
+    imp3 = copy_buffer(gfc, mp3buffer, mp3buffer_size_remaining, 1);
     if (imp3 < 0) {
         /* some type of fatal error */
         return imp3;
@@ -1907,13 +1941,13 @@ lame_encode_flush(lame_global_flags * gfp,
 
     /* write a id3 tag to the bitstream */
     (void) id3tag_write_v1(gfp);
-    imp3 = copy_buffer(gfc,mp3buffer, mp3buffer_size_remaining, 0);
+    imp3 = copy_buffer(gfc, mp3buffer, mp3buffer_size_remaining, 0);
 
     if (imp3 < 0) {
         return imp3;
     }
     mp3count += imp3;
-    gfp->encoder_padding=end_padding;
+    gfp->encoder_padding = end_padding;
     return mp3count;
 }
 
@@ -1928,14 +1962,14 @@ lame_encode_flush(lame_global_flags * gfp,
 int
 lame_close(lame_global_flags * gfp)
 {
-    lame_internal_flags * const gfc = gfp->internal_flags;
+    lame_internal_flags *const gfc = gfp->internal_flags;
 
     if (NULL == gfc || gfc->Class_ID != LAME_ID)
         return -3;
 
     if (gfp->exp_nspsytune2.pointer[0]) {
-      fclose((FILE *)gfp->exp_nspsytune2.pointer[0]);
-      gfp->exp_nspsytune2.pointer[0] = NULL;
+        fclose((FILE *) gfp->exp_nspsytune2.pointer[0]);
+        gfp->exp_nspsytune2.pointer[0] = NULL;
     }
 
     gfc->Class_ID = 0;
@@ -1958,8 +1992,7 @@ lame_close(lame_global_flags * gfp)
 /*****************************************************************/
 
 int
-lame_encode_finish(lame_global_flags * gfp,
-                   unsigned char *mp3buffer, int mp3buffer_size)
+lame_encode_finish(lame_global_flags * gfp, unsigned char *mp3buffer, int mp3buffer_size)
 {
     int const ret = lame_encode_flush(gfp, mp3buffer, mp3buffer_size);
 
@@ -1976,7 +2009,7 @@ lame_mp3_tags_fid(lame_global_flags * gfp, FILE * fpStream)
 {
     if (gfp->bWriteVbrTag) {
         /* Map VBR_q to Xing quality value: 0=worst, 100=best */
-        int const nQuality = ((9-gfp->VBR_q) * 100) / 9;
+        int const nQuality = ((9 - gfp->VBR_q) * 100) / 9;
 
         /* Write Xing header again */
         if (fpStream && !fseek(fpStream, 0, SEEK_SET))
@@ -2016,9 +2049,8 @@ lame_init_old(lame_global_flags * gfp)
 
     memset(gfp, 0, sizeof(lame_global_flags));
 
-    if (NULL ==
-        (gfc = gfp->internal_flags =
-         calloc(1, sizeof(lame_internal_flags)))) return -1;
+    if (NULL == (gfc = gfp->internal_flags = calloc(1, sizeof(lame_internal_flags))))
+        return -1;
 
     /* Global flags.  set defaults here for non-zero values */
     /* see lame.h for description */
@@ -2066,7 +2098,7 @@ lame_init_old(lame_global_flags * gfp)
     gfc->CurrentStep[0] = 4;
     gfc->CurrentStep[1] = 4;
     gfc->masking_lower = 1;
-    gfc->nsPsy.attackthre   = -1;
+    gfc->nsPsy.attackthre = -1;
     gfc->nsPsy.attackthre_s = -1;
 
     gfp->scale = -1;
@@ -2074,7 +2106,7 @@ lame_init_old(lame_global_flags * gfp)
     gfp->athaa_type = -1;
     gfp->ATHtype = -1;  /* default = -1 = set in lame_init_params */
     gfp->athaa_loudapprox = -1; /* 1 = flat loudness approx. (total energy) */
-                                /* 2 = equal loudness curve */
+    /* 2 = equal loudness curve */
     gfp->athaa_sensitivity = 0.0; /* no offset */
     gfp->useTemporal = -1;
     gfp->interChRatio = -1;
@@ -2110,13 +2142,13 @@ lame_init_old(lame_global_flags * gfp)
     gfp->asm_optimizations.sse = 1;
 
     gfp->preset = 0;
-    
+
     gfp->psymodel = -1;
 
     gfp->sparsing = 0;
     gfp->sparse_low = 9.0;
     gfp->sparse_high = 3.0;
-    
+
     return 0;
 }
 
@@ -2207,8 +2239,7 @@ lame_stereo_mode_hist(const lame_global_flags * const gfp, int stmode_count[4])
 
 
 void
-lame_bitrate_stereo_mode_hist(const lame_global_flags * const gfp,
-                              int bitrate_stmode_count[14][4])
+lame_bitrate_stereo_mode_hist(const lame_global_flags * const gfp, int bitrate_stmode_count[14][4])
 {
     const lame_internal_flags *gfc;
     int     i;
@@ -2249,13 +2280,12 @@ lame_block_type_hist(const lame_global_flags * const gfp, int btype_count[6])
 
 
 
-void 
-lame_bitrate_block_type_hist(const lame_global_flags * const gfp, 
-                             int bitrate_btype_count[14][6])
+void
+lame_bitrate_block_type_hist(const lame_global_flags * const gfp, int bitrate_btype_count[14][6])
 {
-    const lame_internal_flags * gfc;
+    const lame_internal_flags *gfc;
     int     i, j;
-    
+
     if (NULL == bitrate_btype_count)
         return;
     if (NULL == gfp)
@@ -2263,13 +2293,12 @@ lame_bitrate_block_type_hist(const lame_global_flags * const gfp,
     gfc = gfp->internal_flags;
     if (NULL == gfc)
         return;
-        
+
     for (j = 0; j < 14; ++j)
-    for (i = 0; i <  6; ++i)
-        bitrate_btype_count[j][i] = gfc->bitrate_blockType_Hist[j+1][i];
+        for (i = 0; i < 6; ++i)
+            bitrate_btype_count[j][i] = gfc->bitrate_blockType_Hist[j + 1][i];
 }
 
 #endif
 
 /* end of lame.c */
-

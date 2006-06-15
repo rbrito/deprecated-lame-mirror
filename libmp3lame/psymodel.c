@@ -232,7 +232,7 @@ future:  Data indicates that the shape of the equal loudness curve varies
          However, the potential gain may not be enough to justify an effort.
 */
 static  FLOAT
-psycho_loudness_approx(FLOAT const * energy, lame_internal_flags const * gfc)
+psycho_loudness_approx(FLOAT const *energy, lame_internal_flags const *gfc)
 {
     int     i;
     FLOAT   loudness_power;
@@ -247,7 +247,7 @@ psycho_loudness_approx(FLOAT const * energy, lame_internal_flags const * gfc)
 }
 
 static void
-compute_ffts(lame_global_flags const * gfp,
+compute_ffts(lame_global_flags const *gfp,
              FLOAT fftenergy[HBLKSIZE],
              FLOAT(*fftenergy_s)[HBLKSIZE_s],
              FLOAT(*wsamp_l)[BLKSIZE],
@@ -255,7 +255,7 @@ compute_ffts(lame_global_flags const * gfp,
     )
 {
     int     b, j;
-    lame_internal_flags * const gfc = gfp->internal_flags;
+    lame_internal_flags *const gfc = gfp->internal_flags;
     if (chn < 2) {
         fft_long(gfc, *wsamp_l, chn, buffer);
         fft_short(gfc, *wsamp_s, chn, buffer);
@@ -364,7 +364,7 @@ init_mask_add_max_values(void)
 
 /* addition of simultaneous masking   Naoki Shibata 2000/7 */
 inline static FLOAT
-mask_add(FLOAT m1, FLOAT m2, int kk, int b, lame_internal_flags const * gfc, int shortblock)
+mask_add(FLOAT m1, FLOAT m2, int kk, int b, lame_internal_flags const *gfc, int shortblock)
 {
     static const FLOAT table1[] = {
         3.3246 * 3.3246, 3.23837 * 3.23837, 3.15437 * 3.15437, 3.00412 * 3.00412, 2.86103 * 2.86103,
@@ -473,9 +473,9 @@ mask_add(FLOAT m1, FLOAT m2, int kk, int b, lame_internal_flags const * gfc, int
  * compute interchannel masking effects
  ***************************************************************/
 static void
-calc_interchannel_masking(lame_global_flags const * gfp, FLOAT ratio)
+calc_interchannel_masking(lame_global_flags const *gfp, FLOAT ratio)
 {
-    lame_internal_flags * const gfc = gfp->internal_flags;
+    lame_internal_flags *const gfc = gfp->internal_flags;
     int     sb, sblock;
     FLOAT   l, r;
     if (gfc->channels_out > 1) {
@@ -592,7 +592,7 @@ ns_msfix(lame_internal_flags * gfc, FLOAT msfix, FLOAT athadjust)
 
 /* longblock threshold calculation (part 2) */
 static void
-convert_partition2scalefac_l(lame_internal_flags * gfc, FLOAT const * eb, FLOAT const * thr, int chn)
+convert_partition2scalefac_l(lame_internal_flags * gfc, FLOAT const *eb, FLOAT const *thr, int chn)
 {
     FLOAT   enn, thmm;
     int     sb, b;
@@ -626,11 +626,11 @@ convert_partition2scalefac_l(lame_internal_flags * gfc, FLOAT const * eb, FLOAT 
 }
 
 static void
-compute_masking_s(lame_global_flags const * gfp,
+compute_masking_s(lame_global_flags const *gfp,
                   FLOAT const (*fftenergy_s)[HBLKSIZE_s],
                   FLOAT * eb, FLOAT * thr, int chn, int sblock)
 {
-    lame_internal_flags* const gfc = gfp->internal_flags;
+    lame_internal_flags *const gfc = gfp->internal_flags;
     FLOAT   max[CBANDS];
     int     i, j, b;
 
@@ -701,9 +701,9 @@ compute_masking_s(lame_global_flags const * gfp,
 }
 
 static void
-block_type_set(lame_global_flags const * gfp, int *uselongblock, int *blocktype_d, int *blocktype)
+block_type_set(lame_global_flags const *gfp, int *uselongblock, int *blocktype_d, int *blocktype)
 {
-    lame_internal_flags * const gfc = gfp->internal_flags;
+    lame_internal_flags *const gfc = gfp->internal_flags;
     int     chn;
 
     if (gfp->short_blocks == short_block_coupled
@@ -745,10 +745,10 @@ block_type_set(lame_global_flags const * gfp, int *uselongblock, int *blocktype_
 }
 
 static void
-determine_block_type(lame_global_flags const * gfp, FLOAT const fftenergy_s[3][HBLKSIZE_s], int uselongblock[],
-                     int chn, int gr_out, FLOAT * pe)
+determine_block_type(lame_global_flags const *gfp, FLOAT const fftenergy_s[3][HBLKSIZE_s],
+                     int uselongblock[], int chn, int gr_out, FLOAT * pe)
 {
-    lame_internal_flags const * const gfc = gfp->internal_flags;
+    lame_internal_flags const *const gfc = gfp->internal_flags;
     int     j;
     /*************************************************************** 
      * determine the block type (window type) based on L & R cannels
@@ -795,7 +795,7 @@ determine_block_type(lame_global_flags const * gfp, FLOAT const fftenergy_s[3][H
 }
 
 int
-L3psycho_anal(lame_global_flags const * gfp,
+L3psycho_anal(lame_global_flags const *gfp,
               const sample_t * buffer[2], int gr_out,
               FLOAT * ms_ratio,
               FLOAT * ms_ratio_next,
@@ -804,7 +804,7 @@ L3psycho_anal(lame_global_flags const * gfp,
               FLOAT percep_entropy[2], FLOAT percep_MS_entropy[2],
               FLOAT energy[4], int blocktype_d[2])
 {
-    lame_internal_flags * const gfc = gfp->internal_flags;
+    lame_internal_flags *const gfc = gfp->internal_flags;
 
     /* fft and energy calculation   */
     FLOAT   wsamp_L[2][BLKSIZE];
@@ -1058,7 +1058,7 @@ L3psycho_anal(lame_global_flags const * gfp,
                     tbb = exp(-LN_TO_LOG10 * TMN);
                 else
                     tbb = exp(-LN_TO_LOG10 * ((TMN - NMT) * tbb + NMT));
-                reduction = tbb*exp(LN_TO_LOG10 * NMT);
+                reduction = tbb * exp(LN_TO_LOG10 * NMT);
             }
             else {
                 reduction = 1.0f;
@@ -1232,7 +1232,7 @@ NS_INTERP(FLOAT x, FLOAT y, FLOAT r)
 
 
 static void
-nsPsy2dataRead(FILE * fp, FLOAT * eb2, FLOAT const * eb, int chn, int npart_l)
+nsPsy2dataRead(FILE * fp, FLOAT * eb2, FLOAT const *eb, int chn, int npart_l)
 {
     int     b;
     for (;;) {
@@ -1259,7 +1259,7 @@ nsPsy2dataRead(FILE * fp, FLOAT * eb2, FLOAT const * eb, int chn, int npart_l)
 }
 
 static  FLOAT
-pecalc_s(III_psy_ratio const * mr, FLOAT masking_lower)
+pecalc_s(III_psy_ratio const *mr, FLOAT masking_lower)
 {
     FLOAT   pe_s;
     static const FLOAT regcoef_s[] = {
@@ -1298,7 +1298,7 @@ pecalc_s(III_psy_ratio const * mr, FLOAT masking_lower)
 }
 
 static  FLOAT
-pecalc_l(III_psy_ratio const * mr, FLOAT masking_lower)
+pecalc_l(III_psy_ratio const *mr, FLOAT masking_lower)
 {
     FLOAT   pe_l;
     static const FLOAT regcoef_l[] = {
@@ -1346,7 +1346,7 @@ pecalc_l(III_psy_ratio const * mr, FLOAT masking_lower)
 
 
 int
-L3psycho_anal_ns(lame_global_flags const * gfp,
+L3psycho_anal_ns(lame_global_flags const *gfp,
                  const sample_t * buffer[2], int gr_out,
                  III_psy_ratio masking_ratio[2][2],
                  III_psy_ratio masking_MS_ratio[2][2],
@@ -1358,7 +1358,7 @@ L3psycho_anal_ns(lame_global_flags const * gfp,
  * (Note: these static variables have been moved to the gfc-> struct,
  * and their order in memory is layed out in util.h)
  */
-    lame_internal_flags * const gfc = gfp->internal_flags;
+    lame_internal_flags *const gfc = gfp->internal_flags;
 
     /* fft and energy calculation   */
     FLOAT   wsamp_L[2][BLKSIZE];
@@ -1495,14 +1495,14 @@ L3psycho_anal_ns(lame_global_flags const * gfp,
         {
             FLOAT const *pf = ns_hpfsmpl[chn & 1];
             for (i = 0; i < 9; i++) {
-                FLOAT const * const pfe = pf + 576 / 9;
-                FLOAT p = 1.;
+                FLOAT const *const pfe = pf + 576 / 9;
+                FLOAT   p = 1.;
                 for (; pf < pfe; pf++)
                     if (p < fabs(*pf))
                         p = fabs(*pf);
 
                 gfc->nsPsy.last_en_subshort[chn][i] = en_subshort[i + 3] = p;
-                en_short[1 + i/3] += p;
+                en_short[1 + i / 3] += p;
                 if (p > en_subshort[i + 3 - 2])
                     p = p / en_subshort[i + 3 - 2];
                 else if (en_subshort[i + 3 - 2] > p * 10.0)
@@ -1530,16 +1530,16 @@ L3psycho_anal_ns(lame_global_flags const * gfp,
                 ns_attacks[i / 3] = (i % 3) + 1;
 
         /* should have energy change between short blocks,
-            in order to avoid periodic signals */
-        for (i=1; i<4; i++) {
-            float ratio;
-            if (en_short[i-1] > en_short[i])
-                ratio = en_short[i-1]/en_short[i];
+           in order to avoid periodic signals */
+        for (i = 1; i < 4; i++) {
+            float   ratio;
+            if (en_short[i - 1] > en_short[i])
+                ratio = en_short[i - 1] / en_short[i];
             else
-                ratio = en_short[i]/en_short[i-1];
+                ratio = en_short[i] / en_short[i - 1];
             if (ratio < 2) {
                 ns_attacks[i] = 0;
-                if (i==1)
+                if (i == 1)
                     ns_attacks[0] = 0;
             }
         }
@@ -1603,21 +1603,21 @@ L3psycho_anal_ns(lame_global_flags const * gfp,
                 if (ns_attacks[sblock] >= 2 || ns_attacks[sblock + 1] == 1) {
                     int const idx = (sblock != 0) ? sblock - 1 : 2;
                     double const p = NS_INTERP(gfc->thm[chn].s[sb][idx],
-                                          thmm, NS_PREECHO_ATT1 * pcfact);
+                                               thmm, NS_PREECHO_ATT1 * pcfact);
                     thmm = Min(thmm, p);
                 }
 
                 if (ns_attacks[sblock] == 1) {
                     int const idx = (sblock != 0) ? sblock - 1 : 2;
                     double const p = NS_INTERP(gfc->thm[chn].s[sb][idx],
-                                          thmm, NS_PREECHO_ATT2 * pcfact);
+                                               thmm, NS_PREECHO_ATT2 * pcfact);
                     thmm = Min(thmm, p);
                 }
                 else if ((sblock != 0 && ns_attacks[sblock - 1] == 3)
                          || (sblock == 0 && gfc->nsPsy.last_attacks[chn] == 3)) {
                     int const idx = (sblock != 2) ? sblock + 1 : 0;
                     double const p = NS_INTERP(gfc->thm[chn].s[sb][idx],
-                                          thmm, NS_PREECHO_ATT2 * pcfact);
+                                               thmm, NS_PREECHO_ATT2 * pcfact);
                     thmm = Min(thmm, p);
                 }
 
@@ -1882,7 +1882,7 @@ init_numline(int *numlines, int *bo, int *bm,
              FLOAT * bval, FLOAT * bval_width, FLOAT * mld,
              FLOAT sfreq, int blksize, int const *scalepos, FLOAT deltafreq, int sbmax)
 {
-    int     partition[HBLKSIZE] = {0};
+    int     partition[HBLKSIZE] = { 0 };
     int     i, j, k;
     int     sfb;
 
@@ -1947,9 +1947,10 @@ init_numline(int *numlines, int *bo, int *bm,
 }
 
 static int
-init_s3_values(lame_internal_flags const * gfc,
+init_s3_values(lame_internal_flags const *gfc,
                FLOAT ** p,
-               int (*s3ind)[2], int npart, FLOAT const * bval, FLOAT const * bval_width, FLOAT const * norm)
+               int (*s3ind)[2], int npart, FLOAT const *bval, FLOAT const *bval_width,
+               FLOAT const *norm)
 {
     FLOAT   s3[CBANDS][CBANDS];
     /* The s3 array is not linear in the bark scale.
@@ -1997,7 +1998,7 @@ init_s3_values(lame_internal_flags const * gfc,
 int
 psymodel_init(lame_global_flags * gfp)
 {
-    lame_internal_flags * const gfc = gfp->internal_flags;
+    lame_internal_flags *const gfc = gfp->internal_flags;
     int     i, j, b, sb, k;
 
     FLOAT   bval[CBANDS];

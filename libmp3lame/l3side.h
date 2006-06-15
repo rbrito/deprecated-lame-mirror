@@ -26,18 +26,17 @@
 #define SFBMAX (SBMAX_s*3)
 
 /* Layer III side information. */
-typedef struct 
-{
-    int l[1+SBMAX_l];
-    int s[1+SBMAX_s];
-    int psfb21[1+PSFB21];
-    int psfb12[1+PSFB12];
+typedef struct {
+    int     l[1 + SBMAX_l];
+    int     s[1 + SBMAX_s];
+    int     psfb21[1 + PSFB21];
+    int     psfb12[1 + PSFB12];
 } scalefac_struct;
 
 
 typedef struct {
-    FLOAT	l[SBMAX_l];
-    FLOAT	s[SBMAX_s][3];
+    FLOAT   l[SBMAX_l];
+    FLOAT   s[SBMAX_s][3];
 } III_psy_xmin;
 
 typedef struct {
@@ -46,51 +45,50 @@ typedef struct {
 } III_psy_ratio;
 
 typedef struct {
-    FLOAT xr[576];
-    int l3_enc[576];
-    int scalefac[SFBMAX];
-    FLOAT xrpow_max;
+    FLOAT   xr[576];
+    int     l3_enc[576];
+    int     scalefac[SFBMAX];
+    FLOAT   xrpow_max;
 
-    int part2_3_length;
-    int big_values;
-    int count1;
-    int global_gain;
-    int scalefac_compress;
-    int block_type;
-    int mixed_block_flag;
-    int table_select[3];
-    int subblock_gain[3+1];
-    int region0_count;
-    int region1_count;
-    int preflag;
-    int scalefac_scale;
-    int count1table_select;
+    int     part2_3_length;
+    int     big_values;
+    int     count1;
+    int     global_gain;
+    int     scalefac_compress;
+    int     block_type;
+    int     mixed_block_flag;
+    int     table_select[3];
+    int     subblock_gain[3 + 1];
+    int     region0_count;
+    int     region1_count;
+    int     preflag;
+    int     scalefac_scale;
+    int     count1table_select;
 
-    int part2_length;
-    int sfb_lmax;
-    int sfb_smin;
-    int psy_lmax;
-    int sfbmax;
-    int psymax;
-    int sfbdivide;
-    int width[SFBMAX];
-    int window[SFBMAX];
-    int count1bits;
+    int     part2_length;
+    int     sfb_lmax;
+    int     sfb_smin;
+    int     psy_lmax;
+    int     sfbmax;
+    int     psymax;
+    int     sfbdivide;
+    int     width[SFBMAX];
+    int     window[SFBMAX];
+    int     count1bits;
     /* added for LSF */
     const int *sfb_partition_table;
-    int slen[4];
+    int     slen[4];
 
-    int max_nonzero_coeff;
+    int     max_nonzero_coeff;
 } gr_info;
 
 typedef struct {
-	gr_info tt[2][2];
-	int main_data_begin; 
-	int private_bits;
-	int resvDrain_pre;
-	int resvDrain_post;
-	int scfsi[2][4];
+    gr_info tt[2][2];
+    int     main_data_begin;
+    int     private_bits;
+    int     resvDrain_pre;
+    int     resvDrain_post;
+    int     scfsi[2][4];
 } III_side_info_t;
 
 #endif
-

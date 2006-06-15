@@ -53,7 +53,7 @@
  *   (gfc->ATH)
  */
 static void
-adjust_ATH(lame_internal_flags const * const gfc)
+adjust_ATH(lame_internal_flags const *const gfc)
 {
     FLOAT   gr2_max, max_pow;
 
@@ -78,7 +78,7 @@ adjust_ATH(lame_internal_flags const * const gfc)
     if (gfc->mode_gr == 2) {
         max_pow = Max(max_pow, gr2_max);
     }
-    max_pow *= 0.5; /* max_pow approaches 1.0 for full band noise */
+    max_pow *= 0.5;     /* max_pow approaches 1.0 for full band noise */
 
     /* jd - 2001 mar 31, jun 30 */
     /* user tuning of ATH adjustment region */
@@ -110,7 +110,7 @@ adjust_ATH(lame_internal_flags const * const gfc)
         }
         gfc->ATH->adjust_limit = 1.0;
     }
-    else {      /* adjustment curve */
+    else {              /* adjustment curve */
         /* about 32 dB maximum adjust (0.000625) */
         FLOAT const adj_lim_new = 31.98 * max_pow + 0.000625;
         if (gfc->ATH->adjust >= adj_lim_new) { /* descend gradually */
@@ -119,11 +119,11 @@ adjust_ATH(lame_internal_flags const * const gfc)
                 gfc->ATH->adjust = adj_lim_new;
             }
         }
-        else {  /* ascend */
+        else {          /* ascend */
             if (gfc->ATH->adjust_limit >= adj_lim_new) {
                 gfc->ATH->adjust = adj_lim_new;
             }
-            else { /* preceding frame has lower ATH adjust; */
+            else {      /* preceding frame has lower ATH adjust; */
                 /* ascend only to the preceding adjust_limit */
                 if (gfc->ATH->adjust < gfc->ATH->adjust_limit) {
                     gfc->ATH->adjust = gfc->ATH->adjust_limit;
@@ -183,9 +183,9 @@ updateStats(lame_internal_flags * const gfc)
 
 
 static void
-lame_encode_frame_init(lame_global_flags const * const gfp, const sample_t * inbuf[2])
+lame_encode_frame_init(lame_global_flags const *const gfp, const sample_t * inbuf[2])
 {
-    lame_internal_flags * const gfc = gfp->internal_flags;
+    lame_internal_flags *const gfc = gfp->internal_flags;
 
     int     ch, gr;
 
@@ -298,8 +298,8 @@ typedef FLOAT chgrdata[2][2];
 int
 lame_encode_mp3_frame(       /* Output */
                          lame_global_flags * const gfp, /* Context */
-                         sample_t const * inbuf_l, /* Input */
-                         sample_t const * inbuf_r, /* Input */
+                         sample_t const *inbuf_l, /* Input */
+                         sample_t const *inbuf_r, /* Input */
                          unsigned char *mp3buf, /* Output */
                          int mp3buf_size)
 {                       /* Output */
@@ -308,11 +308,13 @@ lame_encode_mp3_frame(       /* Output */
     III_psy_ratio masking_MS[2][2]; /*MS masking & energy */
     III_psy_ratio(*masking)[2][2]; /*pointer to selected maskings */
     const sample_t *inbuf[2];
-    lame_internal_flags * const gfc = gfp->internal_flags;
+    lame_internal_flags *const gfc = gfp->internal_flags;
 
     FLOAT   tot_ener[2][4];
     FLOAT   ms_ener_ratio[2] = { .5, .5 };
-    chgrdata pe = {{0.,0.},{0.,0.}}, pe_MS = {{0.,0.},{0.,0.}};
+    chgrdata pe = { {0., 0.}, {0., 0.} }, pe_MS = { {
+    0., 0.}, {
+    0., 0.}};
     chgrdata *pe_use;
 
     int     ch, gr;
@@ -389,7 +391,7 @@ lame_encode_mp3_frame(       /* Output */
 
             /* block type flags */
             for (ch = 0; ch < gfc->channels_out; ch++) {
-                gr_info * const cod_info = &gfc->l3_side.tt[gr][ch];
+                gr_info *const cod_info = &gfc->l3_side.tt[gr][ch];
                 cod_info->block_type = blocktype[ch];
                 cod_info->mixed_block_flag = 0;
             }
@@ -481,8 +483,8 @@ lame_encode_mp3_frame(       /* Output */
             if (((gfp->psymodel == PSY_GPSYCHO) && sum_pe_MS <= 1.07 * sum_pe_LR) ||
                 ((gfp->psymodel == PSY_NSPSYTUNE) && sum_pe_MS <= 1.00 * sum_pe_LR)) {
 
-                gr_info const * const gi0 = &gfc->l3_side.tt[0][0];
-                gr_info const * const gi1 = &gfc->l3_side.tt[gfc->mode_gr - 1][0];
+                gr_info const *const gi0 = &gfc->l3_side.tt[0][0];
+                gr_info const *const gi1 = &gfc->l3_side.tt[gfc->mode_gr - 1][0];
 
                 if (gi0[0].block_type == gi0[1].block_type &&
                     gi1[0].block_type == gi1[1].block_type) {

@@ -1,7 +1,7 @@
 /*
- *	lame utility library include file
+ *      lame utility library include file
  *
- *	Copyright (c) 1999 Albert L Faber
+ *      Copyright (c) 1999 Albert L Faber
  *
  * This library is free software; you can redistribute it and/or
  * modify it under the terms of the GNU Library General Public
@@ -10,7 +10,7 @@
  *
  * This library is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.	 See the GNU
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
  * Library General Public License for more details.
  *
  * You should have received a copy of the GNU Library General Public
@@ -102,11 +102,16 @@ extern  "C" {
 #endif
 
 
-struct replaygain_data;
-typedef struct replaygain_data replaygain_t;
-
-struct plotting_data;
-typedef struct plotting_data plotting_data;
+    struct replaygain_data;
+#ifndef replaygain_data_defined
+#define replaygain_data_defined
+    typedef struct replaygain_data replaygain_t;
+#endif
+    struct plotting_data;
+#ifndef plotting_data_defined
+#define plotting_data_defined
+    typedef struct plotting_data plotting_data;
+#endif
 
 /***********************************************************************
 *
@@ -213,10 +218,10 @@ typedef struct plotting_data plotting_data;
    * modified by the calling program                                  *
    ********************************************************************/
 
-        /*  
+        /*
          * Some remarks to the Class_ID field:
          * The Class ID is an Identifier for a pointer to this struct.
-         * It is very unlikely that a pointer to lame_global_flags has the same 32 bits 
+         * It is very unlikely that a pointer to lame_global_flags has the same 32 bits
          * in it's structure (large and other special properties, for instance prime).
          *
          * To test that the structure is right and initialized, use:
@@ -265,9 +270,9 @@ typedef struct plotting_data plotting_data;
 
         int     filter_type; /* 0=polyphase filter, 1= FIR filter 2=MDCT filter(bad) */
         int     quantization; /* 0 = ISO formual,  1=best amplitude */
-        int     noise_shaping; /* 0 = none 
+        int     noise_shaping; /* 0 = none
                                   1 = ISO AAC model
-                                  2 = allow scalefac_select=1  
+                                  2 = allow scalefac_select=1
                                 */
 
         int     noise_shaping_amp; /*  0 = ISO model: amplify all distorted bands
@@ -285,9 +290,9 @@ typedef struct plotting_data plotting_data;
         int     psymodel;    /* 1 = gpsycho. 0 = none */
         int     noise_shaping_stop; /* 0 = stop at over=0, all scalefacs amplified or
                                        a scalefac has reached max value
-                                       1 = stop when all scalefacs amplified or        
+                                       1 = stop when all scalefacs amplified or
                                        a scalefac has reached max value
-                                       2 = stop when all scalefacs amplified 
+                                       2 = stop when all scalefacs amplified
                                      */
 
         int     subblock_gain; /*  0 = no, 1 = yes */
@@ -340,7 +345,7 @@ typedef struct plotting_data plotting_data;
 
         /* variables for bitstream.c */
         /* mpeg1: buffer=511 bytes  smallest frame: 96-38(sideinfo)=58
-         * max number of frames in reservoir:  8 
+         * max number of frames in reservoir:  8
          * mpeg2: buffer=255 bytes.  smallest frame: 24-23bytes=1
          * with VBR, if you are encoding all silence, it is possible to
          * have 8kbs/24khz frames with 1byte of data each, which means we need
@@ -475,8 +480,10 @@ typedef struct plotting_data plotting_data;
         iteration_loop_t iteration_loop;
     };
 
-
-
+#ifndef lame_internal_flags_defined
+#define lame_internal_flags_defined
+    typedef struct lame_internal_flags lame_internal_flags;
+#endif
 
 
 /***********************************************************************
@@ -490,7 +497,7 @@ typedef struct plotting_data plotting_data;
     extern int map2MP3Frequency(int freq);
     extern int SmpFrqIndex(int, int *const);
     extern int nearestBitrateFullIndex(const int brate);
-    extern FLOAT ATHformula(FLOAT freq, lame_global_flags const * gfp);
+    extern FLOAT ATHformula(FLOAT freq, lame_global_flags const *gfp);
     extern FLOAT freq2bark(FLOAT freq);
     extern FLOAT freq2cbw(FLOAT freq);
     void    disable_FPE(void);
@@ -500,19 +507,19 @@ typedef struct plotting_data plotting_data;
     extern ieee754_float32_t fast_log2(ieee754_float32_t x);
 
 
-    void    fill_buffer(lame_global_flags const * gfp,
+    void    fill_buffer(lame_global_flags const *gfp,
                         sample_t * mfbuf[2],
-                        sample_t const * in_buffer[2], int nsamples, int *n_in, int *n_out);
+                        sample_t const *in_buffer[2], int nsamples, int *n_in, int *n_out);
 
-    int     fill_buffer_resample(lame_global_flags const * gfp,
+    int     fill_buffer_resample(lame_global_flags const *gfp,
                                  sample_t * outbuf,
                                  int desired_len,
-                                 sample_t const * inbuf, int len, int *num_used, int channels);
+                                 sample_t const *inbuf, int len, int *num_used, int channels);
 
-/* same as lame_decode1 (look in lame.h), but returns 
+/* same as lame_decode1 (look in lame.h), but returns
    unclipped raw floating-point samples. It is declared
-   here, not in lame.h, because it returns LAME's 
-   internal type sample_t. No more than 1152 samples 
+   here, not in lame.h, because it returns LAME's
+   internal type sample_t. No more than 1152 samples
    per channel are allowed. */
     int     lame_decode1_unclipped(unsigned char *mp3buf,
                                    int len, sample_t pcm_l[], sample_t pcm_r[]);
@@ -534,8 +541,8 @@ typedef struct plotting_data plotting_data;
     extern void lame_debugf(const lame_internal_flags * gfc, const char *, ...);
     extern void lame_msgf(const lame_internal_flags * gfc, const char *, ...);
 #define DEBUGF  lame_debugf
-#define ERRORF	lame_errorf
-#define MSGF	lame_msgf
+#define ERRORF  lame_errorf
+#define MSGF    lame_msgf
 
 
 #ifdef __cplusplus

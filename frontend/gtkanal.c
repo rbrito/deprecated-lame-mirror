@@ -1,7 +1,7 @@
 /*
- *	GTK plotting routines source file
+ *      GTK plotting routines source file
  *
- *	Copyright (c) 1999 Mark Taylor
+ *      Copyright (c) 1999 Mark Taylor
  *
  * This library is free software; you can redistribute it and/or
  * modify it under the terms of the GNU Library General Public
@@ -10,7 +10,7 @@
  *
  * This library is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.	 See the GNU
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
  * Library General Public License for more details.
  *
  * You should have received a copy of the GNU Library General Public
@@ -25,15 +25,17 @@
 # include <config.h>
 #endif
 
-#include <math.h>
 #include <gtk/gtk.h>
-#include <assert.h>
+
 #include "main.h"
 #include "lame.h"
+#include "machine.h"
+#include "encoder.h"
 #include "lame-analysis.h"
 #include "get_audio.h"
 #include "gtkanal.h"
 #include "gpkplotting.h"
+#include "lame_global_flags.h"
 
 /* this file should be removed. The few data items accessed in 'gfc'
    should be made accessable by writing a lame_set_variable() function */
@@ -1326,7 +1328,7 @@ text_window(GtkWidget * widget, gpointer data)
 */
 
 
-#define C(chr)	     "<control>" #chr
+#define C(chr)       "<control>" #chr
 #define func(name)   (GtkItemFactoryCallback) (name)
 
 static const GtkItemFactoryEntry menu_items[] = {

@@ -5,9 +5,8 @@
 #endif
 
 #include "lame.h"
-
-#include <stdio.h>
-
+#include "machine.h"
+#include "encoder.h"
 #include "lame-analysis.h"
 #include <gtk/gtk.h>
 #include "parse.h"
@@ -18,9 +17,6 @@
 #include "main.h"
 #include "console.h"
 
-#ifdef WITH_DMALLOC
-#include <dmalloc.h>
-#endif
 
 
 
@@ -29,7 +25,7 @@
 *
 * main
 *
-* PURPOSE:  MPEG-1,2 Layer III encoder with GPSYCHO 
+* PURPOSE:  MPEG-1,2 Layer III encoder with GPSYCHO
 * psychoacoustic model.
 *
 ************************************************************************/

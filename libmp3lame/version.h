@@ -33,28 +33,27 @@
 # define LAME_URL              "http://www.mp3dev.org/"
 
 
-# define LAME_MAJOR_VERSION      3      /* Major version number */
-# define LAME_MINOR_VERSION     98      /* Minor version number */
-# define LAME_TYPE_VERSION       0      /* 0:alpha 1:beta 2:release */
-# define LAME_PATCH_VERSION      4      /* Patch level */
+# define LAME_MAJOR_VERSION      3 /* Major version number */
+# define LAME_MINOR_VERSION     98 /* Minor version number */
+# define LAME_TYPE_VERSION       0 /* 0:alpha 1:beta 2:release */
+# define LAME_PATCH_VERSION      4 /* Patch level */
 # define LAME_ALPHA_VERSION     (LAME_TYPE_VERSION==0)
 # define LAME_BETA_VERSION      (LAME_TYPE_VERSION==1)
 # define LAME_RELEASE_VERSION   (LAME_TYPE_VERSION==2)
 
-# define PSY_MAJOR_VERSION       0      /* Major version number */
-# define PSY_MINOR_VERSION      90      /* Minor version number */
-# define PSY_ALPHA_VERSION       0      /* Set number if this is an alpha version, otherwise zero */
-# define PSY_BETA_VERSION        0      /* Set number if this is a beta version, otherwise zero */
+# define PSY_MAJOR_VERSION       0 /* Major version number */
+# define PSY_MINOR_VERSION      90 /* Minor version number */
+# define PSY_ALPHA_VERSION       0 /* Set number if this is an alpha version, otherwise zero */
+# define PSY_BETA_VERSION        0 /* Set number if this is a beta version, otherwise zero */
 
 
-const char*  get_lame_version       ( void );
-const char*  get_lame_short_version ( void );
-const char*  get_psy_version        ( void );
-const char*  get_lame_url           ( void );
-void         get_lame_version_numerical ( lame_version_t *const lvp );
-const char*  get_lame_os_bitness    ( void );
+const char *get_lame_version(void);
+const char *get_lame_short_version(void);
+const char *get_psy_version(void);
+const char *get_lame_url(void);
+void    get_lame_version_numerical(lame_version_t * const lvp);
+const char *get_lame_os_bitness(void);
 
-#endif  /* LAME_VERSION_H */
+#endif /* LAME_VERSION_H */
 
 /* End of version.h */
-

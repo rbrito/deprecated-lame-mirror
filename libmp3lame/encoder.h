@@ -53,7 +53,7 @@
  * suggested: 576
  * set to 1160 to sync with FhG.
  */
- 
+
 #define ENCDELAY      576
 
 
@@ -79,13 +79,13 @@
  * Takehiro's routines: 
  */
 
-#define MDCTDELAY     48  
+#define MDCTDELAY     48
 #define FFTOFFSET     (224+MDCTDELAY)
 
 /*
  * Most decoders, including the one we use, have a delay of 528 samples.  
  */
- 
+
 #define DECDELAY      528
 
 
@@ -130,19 +130,15 @@
  *  -mf: MPG_MD_MS_LR
  *  -mi: all
  */
- 
+
 #define MPG_MD_LR_LR  0
 #define MPG_MD_LR_I   1
 #define MPG_MD_MS_LR  2
 #define MPG_MD_MS_I   3
 
 
-int  lame_encode_mp3_frame (
-        lame_global_flags*  const gfp,
-        sample_t const *    inbuf_l,
-        sample_t const *    inbuf_r,
-        unsigned char*      mp3buf, 
-	int                 mp3buf_size );
+int     lame_encode_mp3_frame(lame_global_flags * const gfp,
+                              sample_t const *inbuf_l,
+                              sample_t const *inbuf_r, unsigned char *mp3buf, int mp3buf_size);
 
 #endif /* LAME_ENCODER_H */
-

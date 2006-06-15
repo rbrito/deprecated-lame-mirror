@@ -10,24 +10,23 @@
 #define SPACE_V1_FLAG   (1U << 4)
 #define PAD_V2_FLAG     (1U << 5)
 
-struct id3tag_spec
-{
+struct id3tag_spec {
     /* private data members */
-    int flags;
+    int     flags;
     const char *title;
     const char *artist;
     const char *album;
-    int year;
+    int     year;
     const char *comment;
-    int track;
-    int trackcount;
-    int genre;
+    int     track;
+    int     trackcount;
+    int     genre;
 };
 
 
 /* write tag into stream at current position */
-extern int id3tag_write_v2(lame_global_flags *gfp);
-extern int id3tag_write_v1(lame_global_flags *gfp);
+extern int id3tag_write_v2(lame_global_flags * gfp);
+extern int id3tag_write_v1(lame_global_flags * gfp);
 /*
  * NOTE: A version 2 tag will NOT be added unless one of the text fields won't
  * fit in a version 1 tag (e.g. the title string is longer than 30 characters),
@@ -35,4 +34,3 @@ extern int id3tag_write_v1(lame_global_flags *gfp);
  */
 
 #endif
-
