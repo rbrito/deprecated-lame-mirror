@@ -172,7 +172,7 @@ bitrate is more balanced according to the -V value.*/
 
 
 
-FLOAT ATHformula(FLOAT f,lame_global_flags *gfp)
+FLOAT ATHformula(FLOAT f,lame_global_flags const *gfp)
 {
   switch(gfp->ATHtype)
     {
@@ -186,6 +186,8 @@ FLOAT ATHformula(FLOAT f,lame_global_flags *gfp)
       return ATHformula_GB(f, 1) + 6;     /*modification of GB formula by Roel*/
     case 4:
       return ATHformula_GB(f,gfp->ATHcurve);
+    default:
+      break;
     }
 
   return ATHformula_GB(f, 0);
@@ -371,7 +373,7 @@ SIGNAL PROCESSING ALGORITHMS IN FORTRAN AND C
 S.D. Stearns and R.A. David, Prentice-Hall, 1992
   */
   FLOAT bkwn,x2;
-  FLOAT wcn = (PI * fcn);
+  FLOAT const wcn = (PI * fcn);
   
   x /= l;
   if (x<0) x=0;
@@ -401,12 +403,12 @@ int gcd ( int i, int j )
    if necessary.  n_in = number of samples from the input buffer that
    were used.  n_out = number of samples copied into mfbuf  */
 
-void fill_buffer(lame_global_flags *gfp,
+void fill_buffer(lame_global_flags const *gfp,
 		 sample_t *mfbuf[2],
-		 sample_t *in_buffer[2],
+		 sample_t const *in_buffer[2],
 		 int nsamples, int *n_in, int *n_out)
 {
-    lame_internal_flags *gfc = gfp->internal_flags;
+    lame_internal_flags const * const gfc = gfp->internal_flags;
     int ch,i;
 
     /* copy in new samples into mfbuf, with resampling if necessary */
@@ -433,17 +435,17 @@ void fill_buffer(lame_global_flags *gfp,
 
 
 int fill_buffer_resample(
-       lame_global_flags *gfp,
+       lame_global_flags const *gfp,
        sample_t *outbuf,
        int desired_len,
-       sample_t *inbuf,
+       sample_t const *inbuf,
        int len,
        int *num_used,
        int ch) 
 {
 
   
-  lame_internal_flags *gfc=gfp->internal_flags;
+  lame_internal_flags * const gfc=gfp->internal_flags;
   int BLACKSIZE;
   FLOAT offset,xvalue;
   int i,j=0,k;
@@ -511,12 +513,11 @@ int fill_buffer_resample(
 
     xvalue = 0.;
     for (i=0 ; i<=filter_l ; ++i) {
-      int j2 = i+j-filter_l/2;
+      int const j2 = i+j-filter_l/2;
       sample_t y;
       assert(j2<len);
       assert(j2+BLACKSIZE >= 0);
       y = (j2<0) ? inbuf_old[BLACKSIZE+j2] : inbuf[j2];
-#define PRECOMPUTE
 #ifdef PRECOMPUTE
       xvalue += y*gfc->blackfilt[joff][i];
 #else
@@ -544,7 +545,7 @@ int fill_buffer_resample(
 	  inbuf_old[i]=inbuf[*num_used + i -BLACKSIZE];
   }else{
       /* shift in *num_used samples into inbuf_old  */
-       int n_shift = BLACKSIZE-*num_used;  /* number of samples to shift */
+       int const n_shift = BLACKSIZE-*num_used;  /* number of samples to shift */
 
        /* shift n_shift samples by *num_used, to make room for the
 	* num_used new samples */

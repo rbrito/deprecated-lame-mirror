@@ -490,7 +490,7 @@ typedef struct plotting_data plotting_data;
     extern int map2MP3Frequency(int freq);
     extern int SmpFrqIndex(int, int *const);
     extern int nearestBitrateFullIndex(const int brate);
-    extern FLOAT ATHformula(FLOAT freq, lame_global_flags * gfp);
+    extern FLOAT ATHformula(FLOAT freq, lame_global_flags const * gfp);
     extern FLOAT freq2bark(FLOAT freq);
     extern FLOAT freq2cbw(FLOAT freq);
     void    disable_FPE(void);
@@ -500,14 +500,14 @@ typedef struct plotting_data plotting_data;
     extern ieee754_float32_t fast_log2(ieee754_float32_t x);
 
 
-    void    fill_buffer(lame_global_flags * gfp,
+    void    fill_buffer(lame_global_flags const * gfp,
                         sample_t * mfbuf[2],
-                        sample_t * in_buffer[2], int nsamples, int *n_in, int *n_out);
+                        sample_t const * in_buffer[2], int nsamples, int *n_in, int *n_out);
 
-    int     fill_buffer_resample(lame_global_flags * gfp,
+    int     fill_buffer_resample(lame_global_flags const * gfp,
                                  sample_t * outbuf,
                                  int desired_len,
-                                 sample_t * inbuf, int len, int *num_used, int channels);
+                                 sample_t const * inbuf, int len, int *num_used, int channels);
 
 /* same as lame_decode1 (look in lame.h), but returns 
    unclipped raw floating-point samples. It is declared

@@ -95,8 +95,8 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
-#include <math.h>
 
+#include "lame.h"
 #include "machine.h"
 #include "gain_analysis.h"
 
@@ -107,6 +107,7 @@
 #pragma warning ( disable : 4305 )
 #endif
 
+/*lint -save -e736 loss of precision */
 static const Float_t ABYule[9][2*YULE_ORDER + 1] = {
     {0.03857599435200, -3.84664617118067, -0.02160367184185,  7.81501653005538, -0.00123395316851,-11.34170355132042, -0.00009291677959, 13.05504219327545, -0.01655260341619,-12.28759895145294,  0.02161526843274,  9.48293806319790, -0.02074045215285, -5.87257861775999,  0.00594298065125,  2.75465861874613,  0.00306428023191, -0.86984376593551,  0.00012025322027,  0.13919314567432,  0.00288463683916 },
     {0.05418656406430, -3.47845948550071, -0.02911007808948,  6.36317777566148, -0.00848709379851, -8.54751527471874, -0.00851165645469,  9.47693607801280, -0.00834990904936, -8.81498681370155,  0.02245293253339,  6.85401540936998, -0.02596338512915, -4.39470996079559,  0.01624864962975,  2.19611684890774, -0.00240879051584, -0.75104302451432,  0.00674613682247,  0.13149317958808, -0.00187763777362 },
@@ -130,7 +131,7 @@ static const Float_t ABButter[9][2*BUTTER_ORDER + 1] = {
     {0.95856916599601, -1.91542108074780, -1.91713833199203,  0.91885558323625,  0.95856916599601 },
     {0.94597685600279, -1.88903307939452, -1.89195371200558,  0.89487434461664,  0.94597685600279 }
 };
-
+/*lint -restore */
 
 #ifdef WIN32
 #pragma warning ( default : 4305 )
@@ -139,7 +140,7 @@ static const Float_t ABButter[9][2*BUTTER_ORDER + 1] = {
 /* When calling this procedure, make sure that ip[-order] and op[-order] point to real data! */
 
 static void
-filterYule (const Float_t* input, Float_t* output, size_t nSamples, const Float_t* kernel)
+filterYule (const Float_t* input, Float_t* output, size_t nSamples, const Float_t* const kernel)
 {
     /*register double  y;*/
 
@@ -173,7 +174,7 @@ filterYule (const Float_t* input, Float_t* output, size_t nSamples, const Float_
 }
 
 static void
-filterButter (const Float_t* input, Float_t* output, size_t nSamples, const Float_t* kernel)
+filterButter (const Float_t* input, Float_t* output, size_t nSamples, const Float_t* const kernel)
 {   /*register double  y;*/
 
     while (nSamples--) {
@@ -338,7 +339,7 @@ AnalyzeSamples (replaygain_t* rgData, const Float_t* left_samples, const Float_t
         cursamplepos += cursamples;
         rgData->totsamp      += cursamples;
         if ( rgData->totsamp == rgData->sampleWindow ) {  /* Get the Root Mean Square (RMS) for this set of samples */
-            double  val  = STEPS_per_dB * 10. * log10 ( (rgData->lsum+rgData->rsum) / rgData->totsamp * 0.5 + 1.e-37 );
+            double const val  = STEPS_per_dB * 10. * log10 ( (rgData->lsum+rgData->rsum) / rgData->totsamp * 0.5 + 1.e-37 );
             int     ival = (int) val;
             if ( ival <                     0 ) ival = 0;
             if ( ival >= sizeof(rgData->A)/sizeof(*(rgData->A)) ) ival = sizeof(rgData->A)/sizeof(*(rgData->A)) - 1;
@@ -369,7 +370,7 @@ AnalyzeSamples (replaygain_t* rgData, const Float_t* left_samples, const Float_t
 
 
 static Float_t
-analyzeResult ( uint32_t* Array, size_t len )
+analyzeResult ( uint32_t const* Array, size_t len )
 {
     uint32_t  elems;
     int32_t   upper;
@@ -395,7 +396,7 @@ Float_t
 GetTitleGain (replaygain_t* rgData)
 {
     Float_t  retval;
-    int    i;
+    unsigned int i;
 
     retval = analyzeResult ( rgData->A, sizeof(rgData->A)/sizeof(*(rgData->A)) );
 

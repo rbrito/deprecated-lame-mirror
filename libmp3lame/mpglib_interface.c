@@ -1,9 +1,9 @@
 /* -*- mode: C; mode: fold -*- */
 /*
- *	LAME MP3 encoding engine
+ *      LAME MP3 encoding engine
  *
- *	Copyright (c) 1999-2000 Mark Taylor
- *	Copyright (c) 2003 Olcios
+ *      Copyright (c) 1999-2000 Mark Taylor
+ *      Copyright (c) 2003 Olcios
  *
  * This library is free software; you can redistribute it and/or
  * modify it under the terms of the GNU Library General Public
@@ -12,7 +12,7 @@
  *
  * This library is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.	 See the GNU
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
  * Library General Public License for more details.
  *
  * You should have received a copy of the GNU Library General Public
@@ -50,7 +50,7 @@ lame_decode_exit(void)
 int
 lame_decode_init(void)
 {
-    InitMP3(&mp);
+    (void) InitMP3(&mp);
     return 0;
 }
 
@@ -60,17 +60,17 @@ lame_decode_init(void)
 /* copy mono samples */
 #define COPY_MONO(DST_TYPE, SRC_TYPE)                                                           \
     DST_TYPE *pcm_l = (DST_TYPE *)pcm_l_raw;                                                    \
-    SRC_TYPE *p_samples = (SRC_TYPE *)p;                                                        \
+    SRC_TYPE const *p_samples = (SRC_TYPE const *)p;                                            \
     for (i = 0; i < processed_samples; i++)                                                     \
-      *pcm_l++ = (DST_TYPE)*p_samples++; 
+      *pcm_l++ = (DST_TYPE)(*p_samples++); 
 
 /* copy stereo samples */
 #define COPY_STEREO(DST_TYPE, SRC_TYPE)                                                         \
     DST_TYPE *pcm_l = (DST_TYPE *)pcm_l_raw, *pcm_r = (DST_TYPE *)pcm_r_raw;                    \
-    SRC_TYPE *p_samples = (SRC_TYPE *)p;                                                        \
+    SRC_TYPE const *p_samples = (SRC_TYPE const *)p;                                            \
     for (i = 0; i < processed_samples; i++) {                                                   \
-      *pcm_l++ = (DST_TYPE)*p_samples++;                                                        \
-      *pcm_r++ = (DST_TYPE)*p_samples++;                                                        \
+      *pcm_l++ = (DST_TYPE)(*p_samples++);                                                      \
+      *pcm_r++ = (DST_TYPE)(*p_samples++);                                                      \
     }   
 
 
@@ -122,15 +122,15 @@ lame_decode1_headersB_clipchoice(unsigned char *buffer, int len,
      *
      */
     if (mp.header_parsed || mp.fsizeold > 0 || mp.framesize > 0) {
-	mp3data->header_parsed = 1;
+        mp3data->header_parsed = 1;
         mp3data->stereo = mp.fr.stereo;
         mp3data->samplerate = freqs[mp.fr.sampling_frequency];
         mp3data->mode = mp.fr.mode;
         mp3data->mode_ext = mp.fr.mode_ext;
         mp3data->framesize = smpls[mp.fr.lsf][mp.fr.lay];
 
-	/* free format, we need the entire frame before we can determine
-	 * the bitrate.  If we haven't gotten the entire frame, bitrate=0 */
+        /* free format, we need the entire frame before we can determine
+         * the bitrate.  If we haven't gotten the entire frame, bitrate=0 */
         if (mp.fsizeold > 0) /* works for free format and fixed, no overrun, temporal results are < 400.e6 */
             mp3data->bitrate = 8 * (4 + mp.fsizeold) * mp3data->samplerate /
                 (1.e3 * mp3data->framesize) + 0.5;
@@ -184,12 +184,13 @@ lame_decode1_headersB_clipchoice(unsigned char *buffer, int len,
         processed_samples = 0;
         break;
 
-    default:
-        assert(0);
     case MP3_ERR:
         processed_samples = -1;
         break;
 
+    default:
+        assert(0);
+        break;
     }
 
     /*fprintf(stderr,"ok, more, err:  %i %i %i\n", MP3_OK, MP3_NEED_MORE, MP3_ERR );*/
@@ -198,7 +199,7 @@ lame_decode1_headersB_clipchoice(unsigned char *buffer, int len,
 }
 
 
-#define OUTSIZE_CLIPPED   4096*sizeof(short)
+#define OUTSIZE_CLIPPED   (4096*sizeof(short))
 
 int
 lame_decode1_headersB(unsigned char *buffer,
@@ -213,7 +214,7 @@ lame_decode1_headersB(unsigned char *buffer,
 
 
 /* we forbid input with more than 1152 samples per channel for output in the unclipped mode */
-#define OUTSIZE_UNCLIPPED 1152*2*sizeof(FLOAT)
+#define OUTSIZE_UNCLIPPED (1152*2*sizeof(FLOAT))
 
 int 
 lame_decode1_unclipped(unsigned char *buffer, int len, sample_t pcm_l[], sample_t pcm_r[])

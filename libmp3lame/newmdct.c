@@ -1,7 +1,7 @@
 /*
- *	MP3 window subband -> subband filtering -> mdct routine
+ *      MP3 window subband -> subband filtering -> mdct routine
  *
- *	Copyright (c) 1999-2000 Takehiro Tominaga
+ *      Copyright (c) 1999-2000 Takehiro Tominaga
  *
  *
  * This library is free software; you can redistribute it and/or
@@ -11,7 +11,7 @@
  *
  * This library is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.	 See the GNU
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
  * Library General Public License for more details.
  *
  * You should have received a copy of the GNU Library General Public
@@ -37,7 +37,6 @@
 #include "newmdct.h"
 
 
-#define SCALE (32768.0/ 2.384e-06)
 
 #ifndef USE_GOGO_SUBBAND
 static const FLOAT enwindow[] = 
@@ -380,60 +379,60 @@ window_subband(const sample_t *x1, FLOAT a[SBLIMIT])
     const sample_t *x2 = &x1[238-14-286];
 
     for (i = -15; i < 0; i++) {
-	FLOAT w, s, t;
+        FLOAT w, s, t;
 
-	w = wp[-10]; s = x2[-224] * w; t  = x1[ 224] * w;
-	w = wp[-9]; s += x2[-160] * w; t += x1[ 160] * w;
-	w = wp[-8]; s += x2[- 96] * w; t += x1[  96] * w;
-	w = wp[-7]; s += x2[- 32] * w; t += x1[  32] * w;
-	w = wp[-6]; s += x2[  32] * w; t += x1[- 32] * w;
-	w = wp[-5]; s += x2[  96] * w; t += x1[- 96] * w;
-	w = wp[-4]; s += x2[ 160] * w; t += x1[-160] * w;
-	w = wp[-3]; s += x2[ 224] * w; t += x1[-224] * w;
+        w = wp[-10]; s = x2[-224] * w; t  = x1[ 224] * w;
+        w = wp[-9]; s += x2[-160] * w; t += x1[ 160] * w;
+        w = wp[-8]; s += x2[- 96] * w; t += x1[  96] * w;
+        w = wp[-7]; s += x2[- 32] * w; t += x1[  32] * w;
+        w = wp[-6]; s += x2[  32] * w; t += x1[- 32] * w;
+        w = wp[-5]; s += x2[  96] * w; t += x1[- 96] * w;
+        w = wp[-4]; s += x2[ 160] * w; t += x1[-160] * w;
+        w = wp[-3]; s += x2[ 224] * w; t += x1[-224] * w;
 
-	w = wp[-2]; s += x1[-256] * w; t -= x2[ 256] * w;
-	w = wp[-1]; s += x1[-192] * w; t -= x2[ 192] * w;
-	w = wp[ 0]; s += x1[-128] * w; t -= x2[ 128] * w;
-	w = wp[ 1]; s += x1[- 64] * w; t -= x2[  64] * w;
-	w = wp[ 2]; s += x1[   0] * w; t -= x2[   0] * w;
-	w = wp[ 3]; s += x1[  64] * w; t -= x2[- 64] * w;
-	w = wp[ 4]; s += x1[ 128] * w; t -= x2[-128] * w;
-	w = wp[ 5]; s += x1[ 192] * w; t -= x2[-192] * w;
+        w = wp[-2]; s += x1[-256] * w; t -= x2[ 256] * w;
+        w = wp[-1]; s += x1[-192] * w; t -= x2[ 192] * w;
+        w = wp[ 0]; s += x1[-128] * w; t -= x2[ 128] * w;
+        w = wp[ 1]; s += x1[- 64] * w; t -= x2[  64] * w;
+        w = wp[ 2]; s += x1[   0] * w; t -= x2[   0] * w;
+        w = wp[ 3]; s += x1[  64] * w; t -= x2[- 64] * w;
+        w = wp[ 4]; s += x1[ 128] * w; t -= x2[-128] * w;
+        w = wp[ 5]; s += x1[ 192] * w; t -= x2[-192] * w;
 
-	/*
-	 * this multiplyer could be removed, but it needs more 256 FLOAT data.
-	 * thinking about the data cache performance, I think we should not
-	 * use such a huge table. tt 2000/Oct/25
-	 */
-	s *= wp[6];
-	w = t - s;
-	a[30+i*2] = t + s;
-	a[31+i*2] = wp[7] * w;
-	wp += 18;
-	x1--;
-	x2++;
+        /*
+         * this multiplyer could be removed, but it needs more 256 FLOAT data.
+         * thinking about the data cache performance, I think we should not
+         * use such a huge table. tt 2000/Oct/25
+         */
+        s *= wp[6];
+        w = t - s;
+        a[30+i*2] = t + s;
+        a[31+i*2] = wp[7] * w;
+        wp += 18;
+        x1--;
+        x2++;
     }
     {
-	FLOAT s,t,u,v;
-	t  =  x1[- 16] * wp[-10];              s  = x1[ -32] * wp[-2];
-	t += (x1[- 48] - x1[ 16]) * wp[-9];    s += x1[ -96] * wp[-1];
-	t += (x1[- 80] + x1[ 48]) * wp[-8];    s += x1[-160] * wp[ 0];
-	t += (x1[-112] - x1[ 80]) * wp[-7];    s += x1[-224] * wp[ 1];
-	t += (x1[-144] + x1[112]) * wp[-6];    s -= x1[  32] * wp[ 2];
-	t += (x1[-176] - x1[144]) * wp[-5];    s -= x1[  96] * wp[ 3];
-	t += (x1[-208] + x1[176]) * wp[-4];    s -= x1[ 160] * wp[ 4];
-	t += (x1[-240] - x1[208]) * wp[-3];    s -= x1[ 224];
+        FLOAT s,t,u,v;
+        t  =  x1[- 16] * wp[-10];              s  = x1[ -32] * wp[-2];
+        t += (x1[- 48] - x1[ 16]) * wp[-9];    s += x1[ -96] * wp[-1];
+        t += (x1[- 80] + x1[ 48]) * wp[-8];    s += x1[-160] * wp[ 0];
+        t += (x1[-112] - x1[ 80]) * wp[-7];    s += x1[-224] * wp[ 1];
+        t += (x1[-144] + x1[112]) * wp[-6];    s -= x1[  32] * wp[ 2];
+        t += (x1[-176] - x1[144]) * wp[-5];    s -= x1[  96] * wp[ 3];
+        t += (x1[-208] + x1[176]) * wp[-4];    s -= x1[ 160] * wp[ 4];
+        t += (x1[-240] - x1[208]) * wp[-3];    s -= x1[ 224];
 
-	u = s - t;
-	v = s + t;
+        u = s - t;
+        v = s + t;
 
-	t = a[14];
-	s = a[15] - t;
+        t = a[14];
+        s = a[15] - t;
 
-	a[31] = v + t;   /* A0 */
-	a[30] = u + s;   /* A1 */
-	a[15] = u - s;   /* A2 */
-	a[14] = v - t;   /* A3 */
+        a[31] = v + t;   /* A0 */
+        a[30] = u + s;   /* A1 */
+        a[15] = u - s;   /* A2 */
+        a[14] = v - t;   /* A3 */
     }
 {
     FLOAT xr;
@@ -575,39 +574,39 @@ inline static void mdct_short(FLOAT *inout)
 {
     int l;
     for ( l = 0; l < 3; l++ ) {
-	FLOAT tc0,tc1,tc2,ts0,ts1,ts2;
+        FLOAT tc0,tc1,tc2,ts0,ts1,ts2;
 
-	ts0 = inout[2*3] * win[SHORT_TYPE][0] - inout[5*3];
-	tc0 = inout[0*3] * win[SHORT_TYPE][2] - inout[3*3];
-	tc1 = ts0 + tc0;
-	tc2 = ts0 - tc0;
+        ts0 = inout[2*3] * win[SHORT_TYPE][0] - inout[5*3];
+        tc0 = inout[0*3] * win[SHORT_TYPE][2] - inout[3*3];
+        tc1 = ts0 + tc0;
+        tc2 = ts0 - tc0;
 
-	ts0 = inout[5*3] * win[SHORT_TYPE][0] + inout[2*3];
-	tc0 = inout[3*3] * win[SHORT_TYPE][2] + inout[0*3];
-	ts1 = ts0 + tc0;
-	ts2 = -ts0 + tc0;
+        ts0 = inout[5*3] * win[SHORT_TYPE][0] + inout[2*3];
+        tc0 = inout[3*3] * win[SHORT_TYPE][2] + inout[0*3];
+        ts1 = ts0 + tc0;
+        ts2 = -ts0 + tc0;
 
-	tc0 = (inout[1*3] * win[SHORT_TYPE][1] - inout[4*3]) * 2.069978111953089e-11; /* tritab_s[1] */
-	ts0 = (inout[4*3] * win[SHORT_TYPE][1] + inout[1*3]) * 2.069978111953089e-11; /* tritab_s[1] */
+        tc0 = (inout[1*3] * win[SHORT_TYPE][1] - inout[4*3]) * 2.069978111953089e-11; /* tritab_s[1] */
+        ts0 = (inout[4*3] * win[SHORT_TYPE][1] + inout[1*3]) * 2.069978111953089e-11; /* tritab_s[1] */
 
-	inout[3*0] = tc1 * 1.907525191737280e-11 /* tritab_s[2] */ + tc0;
-	inout[3*5] = -ts1 * 1.907525191737280e-11 /* tritab_s[0] */ + ts0;
+        inout[3*0] = tc1 * 1.907525191737280e-11 /* tritab_s[2] */ + tc0;
+        inout[3*5] = -ts1 * 1.907525191737280e-11 /* tritab_s[0] */ + ts0;
 
-	tc2 = tc2 * 0.86602540378443870761 * 1.907525191737281e-11 /* tritab_s[2] */;
-	ts1 = ts1 * 0.5 * 1.907525191737281e-11 + ts0;
-	inout[3*1] = tc2-ts1;
-	inout[3*2] = tc2+ts1;
+        tc2 = tc2 * 0.86602540378443870761 * 1.907525191737281e-11 /* tritab_s[2] */;
+        ts1 = ts1 * 0.5 * 1.907525191737281e-11 + ts0;
+        inout[3*1] = tc2-ts1;
+        inout[3*2] = tc2+ts1;
 
-	tc1 = tc1 * 0.5 * 1.907525191737281e-11 - tc0;
-	ts2 = ts2 * 0.86602540378443870761 * 1.907525191737281e-11 /* tritab_s[0] */;
-	inout[3*3] = tc1+ts2;
-	inout[3*4] = tc1-ts2;
+        tc1 = tc1 * 0.5 * 1.907525191737281e-11 - tc0;
+        ts2 = ts2 * 0.86602540378443870761 * 1.907525191737281e-11 /* tritab_s[0] */;
+        inout[3*3] = tc1+ts2;
+        inout[3*4] = tc1-ts2;
 
-	inout++;
+        inout++;
     }
 }
 
-inline static void mdct_long(FLOAT *out, FLOAT *in)
+inline static void mdct_long(FLOAT *out, FLOAT const *in)
 {
     FLOAT ct,st;
   {
@@ -691,88 +690,87 @@ void mdct_sub48(
     wk = w0 + 286;
     /* thinking cache performance, ch->gr loop is better than gr->ch loop */
     for (ch = 0; ch < gfc->channels_out; ch++) {
-	for (gr = 0; gr < gfc->mode_gr; gr++) {
-	    int	band;
-	    gr_info *gi = &(gfc->l3_side.tt[gr][ch]);
-	    FLOAT *mdct_enc = gi->xr;
-	    FLOAT *samp = gfc->sb_sample[ch][1 - gr][0];
+        for (gr = 0; gr < gfc->mode_gr; gr++) {
+            int band;
+            gr_info * const gi = &(gfc->l3_side.tt[gr][ch]);
+            FLOAT *mdct_enc = gi->xr;
+            FLOAT *samp = gfc->sb_sample[ch][1 - gr][0];
 
-	    for (k = 0; k < 18 / 2; k++) {
-		window_subband(wk, samp);
-		window_subband(wk + 32, samp + 32);
-		samp += 64;
-		wk += 64;
-		/*
-		 * Compensate for inversion in the analysis filter
-		 */
-		for (band = 1; band < 32; band+=2) {
-		    samp[band-32] *= -1;
-		}
-	    }
+            for (k = 0; k < 18 / 2; k++) {
+                window_subband(wk, samp);
+                window_subband(wk + 32, samp + 32);
+                samp += 64;
+                wk += 64;
+                /*
+                 * Compensate for inversion in the analysis filter
+                 */
+                for (band = 1; band < 32; band+=2) {
+                    samp[band-32] *= -1;
+                }
+            }
 
-	    /*
-	     * Perform imdct of 18 previous subband samples
-	     * + 18 current subband samples
-	     */
-	    for (band = 0; band < 32; band++, mdct_enc += 18) {
-		int type = gi->block_type;
-		FLOAT *band0, *band1;
-		band0 = gfc->sb_sample[ch][  gr][0] + order[band];
-		band1 = gfc->sb_sample[ch][1-gr][0] + order[band];
-		if (gi->mixed_block_flag && band < 2)
-		    type = 0;
-		if (gfc->amp_filter[band] == 0.0) {
-		    memset(mdct_enc, 0, 18*sizeof(FLOAT));
-		} else {
-		  if (gfc->amp_filter[band] != 1.0) {
-		      for (k=0; k<18; k++)
-			  band1[k*32] *= gfc->amp_filter[band];
-		  }
-		  if (type == SHORT_TYPE) {
-		    for (k = -NS/4; k < 0; k++) {
-			FLOAT w = win[SHORT_TYPE][k+3];
-			mdct_enc[k*3+ 9] = band0[( 9+k)*32] * w - band0[( 8-k)*32];
-			mdct_enc[k*3+18] = band0[(14-k)*32] * w + band0[(15+k)*32];
-			mdct_enc[k*3+10] = band0[(15+k)*32] * w - band0[(14-k)*32];
-			mdct_enc[k*3+19] = band1[( 2-k)*32] * w + band1[( 3+k)*32];
-			mdct_enc[k*3+11] = band1[( 3+k)*32] * w - band1[( 2-k)*32];
-			mdct_enc[k*3+20] = band1[( 8-k)*32] * w + band1[( 9+k)*32];
-		    }
-		    mdct_short(mdct_enc);
-		  } else {
-		    FLOAT work[18];
-		    for (k = -NL/4; k < 0; k++) {
-			FLOAT a, b;
-			a = win[type][k+27] * band1[(k+9)*32]
-			  + win[type][k+36] * band1[(8-k)*32];
-			b = win[type][k+ 9] * band0[(k+9)*32]
-			  - win[type][k+18] * band0[(8-k)*32];
-			work[k+ 9] = a - b*tantab_l[k+9];
-			work[k+18] = a*tantab_l[k+9] + b;
-		    }
+            /*
+             * Perform imdct of 18 previous subband samples
+             * + 18 current subband samples
+             */
+            for (band = 0; band < 32; band++, mdct_enc += 18) {
+                int type = gi->block_type;
+                FLOAT const * const band0 = gfc->sb_sample[ch][  gr][0] + order[band];
+                FLOAT * const band1 = gfc->sb_sample[ch][1-gr][0] + order[band];
+                if (gi->mixed_block_flag && band < 2)
+                    type = 0;
+                if (gfc->amp_filter[band] == 0.0) {
+                    memset(mdct_enc, 0, 18*sizeof(FLOAT));
+                } else {
+                  if (gfc->amp_filter[band] != 1.0) {
+                      for (k=0; k<18; k++)
+                          band1[k*32] *= gfc->amp_filter[band];
+                  }
+                  if (type == SHORT_TYPE) {
+                    for (k = -NS/4; k < 0; k++) {
+                        FLOAT const w = win[SHORT_TYPE][k+3];
+                        mdct_enc[k*3+ 9] = band0[( 9+k)*32] * w - band0[( 8-k)*32];
+                        mdct_enc[k*3+18] = band0[(14-k)*32] * w + band0[(15+k)*32];
+                        mdct_enc[k*3+10] = band0[(15+k)*32] * w - band0[(14-k)*32];
+                        mdct_enc[k*3+19] = band1[( 2-k)*32] * w + band1[( 3+k)*32];
+                        mdct_enc[k*3+11] = band1[( 3+k)*32] * w - band1[( 2-k)*32];
+                        mdct_enc[k*3+20] = band1[( 8-k)*32] * w + band1[( 9+k)*32];
+                    }
+                    mdct_short(mdct_enc);
+                  } else {
+                    FLOAT work[18];
+                    for (k = -NL/4; k < 0; k++) {
+                        FLOAT a, b;
+                        a = win[type][k+27] * band1[(k+9)*32]
+                          + win[type][k+36] * band1[(8-k)*32];
+                        b = win[type][k+ 9] * band0[(k+9)*32]
+                          - win[type][k+18] * band0[(8-k)*32];
+                        work[k+ 9] = a - b*tantab_l[k+9];
+                        work[k+18] = a*tantab_l[k+9] + b;
+                    }
 
-		    mdct_long(mdct_enc, work);
-		  }
-		}
-		/*
-		 * Perform aliasing reduction butterfly
-		 */
-		if (type != SHORT_TYPE && band != 0) {
-		  for (k = 7; k >= 0; --k) {
-		    FLOAT bu,bd;
-		    bu = mdct_enc[k] * ca[k] + mdct_enc[-1-k] * cs[k];
-		    bd = mdct_enc[k] * cs[k] - mdct_enc[-1-k] * ca[k];
-		    
-		    mdct_enc[-1-k] = bu;
-		    mdct_enc[k]    = bd;
-		  }
-		}
-	      }
-	}
-	wk = w1 + 286;
-	if (gfc->mode_gr == 1) {
-	    memcpy(gfc->sb_sample[ch][0], gfc->sb_sample[ch][1], 576 * sizeof(FLOAT));
-	}
+                    mdct_long(mdct_enc, work);
+                  }
+                }
+                /*
+                 * Perform aliasing reduction butterfly
+                 */
+                if (type != SHORT_TYPE && band != 0) {
+                  for (k = 7; k >= 0; --k) {
+                    FLOAT bu,bd;
+                    bu = mdct_enc[k] * ca[k] + mdct_enc[-1-k] * cs[k];
+                    bd = mdct_enc[k] * cs[k] - mdct_enc[-1-k] * ca[k];
+                    
+                    mdct_enc[-1-k] = bu;
+                    mdct_enc[k]    = bd;
+                  }
+                }
+              }
+        }
+        wk = w1 + 286;
+        if (gfc->mode_gr == 1) {
+            memcpy(gfc->sb_sample[ch][0], gfc->sb_sample[ch][1], 576 * sizeof(FLOAT));
+        }
     }
 }
 

@@ -326,7 +326,7 @@ void quantize_lines_xrpow_ISO(int l, FLOAT istep, const FLOAT* xr, int* ix)
  * proper quantization function
  *********************************************************************/
 
-static void quantize_xrpow(const FLOAT *xp, int *pi, FLOAT istep, gr_info * const cod_info, calc_noise_data* prev_noise, lame_internal_flags * const gfc)
+static void quantize_xrpow(const FLOAT *xp, int *pi, FLOAT istep, gr_info const * const cod_info, calc_noise_data const * prev_noise, lame_internal_flags const * const gfc)
 {
     /* quantize on xr^(3/4) instead of xr */
     int sfb;
@@ -484,8 +484,8 @@ ix_max(const int *ix, const int *end)
     int max1 = 0, max2 = 0;
 
     do {
-	int x1 = *ix++;
-	int x2 = *ix++;
+	int const x1 = *ix++;
+	int const x2 = *ix++;
 	if (max1 < x1) 
 	    max1 = x1;
 
@@ -513,7 +513,7 @@ count_bit_ESC(
           int * const s )
 {
     /* ESC-table is used */
-    int linbits = ht[t1].xlen * 65536 + ht[t2].xlen;
+    int const linbits = ht[t1].xlen * 65536 + ht[t2].xlen;
     int sum = 0, sum2;
 
     do {
@@ -557,10 +557,10 @@ count_bit_noESC(const int * ix, const int * const end, int * const s)
 {
     /* No ESC-words */
     int	sum1 = 0;
-    const char *hlen1 = ht[1].hlen;
+    const char * const hlen1 = ht[1].hlen;
 
     do {
-	int x = ix[0] * 2 + ix[1];
+	int const x = ix[0] * 2 + ix[1];
 	ix += 2;
 	sum1 += hlen1[x];
     } while (ix < end);
@@ -588,7 +588,7 @@ count_bit_noESC_from2(
 	hlen = table56;
 
     do {
-	int x = ix[0] * xlen + ix[1];
+	int const x = ix[0] * xlen + ix[1];
 	ix += 2;
 	sum += hlen[x];
     } while (ix < end);
@@ -618,13 +618,13 @@ count_bit_noESC_from3(
     int	sum2 = 0;
     int	sum3 = 0;
     const int xlen = ht[t1].xlen;
-    const char *hlen1 = ht[t1].hlen;
-    const char *hlen2 = ht[t1+1].hlen;
-    const char *hlen3 = ht[t1+2].hlen;
+    const char * const hlen1 = ht[t1].hlen;
+    const char * const hlen2 = ht[t1+1].hlen;
+    const char * const hlen3 = ht[t1+2].hlen;
     int t;
 
     do {
-	int x = ix[0] * xlen + ix[1];
+	int const x = ix[0] * xlen + ix[1];
 	ix += 2;
 	sum1 += hlen1[x];
 	sum2 += hlen2[x];
@@ -717,13 +717,13 @@ static int choose_table_nonMMX(
 /*	      count_bit							 */
 /*************************************************************************/
 int noquant_count_bits(
-          lame_internal_flags * const gfc, 
+          lame_internal_flags const * const gfc, 
           gr_info * const gi,
           calc_noise_data* prev_noise)
 {
     int bits = 0;
     int i, a1, a2;
-    int *const ix = gi->l3_enc;
+    int const *const ix = gi->l3_enc;
 
     i = Min(576, ((gi->max_nonzero_coeff+2)>>1)<<1);
 
@@ -811,7 +811,6 @@ int noquant_count_bits(
 
     if (prev_noise) {
         if (gi->block_type == NORM_TYPE) {
-            int line = 0;
             int sfb = 0;
             while (gfc->scalefac_band.l[sfb] < gi->big_values) {
                 sfb++;
@@ -824,7 +823,7 @@ int noquant_count_bits(
 }
 
 int count_bits(
-          lame_internal_flags * const gfc, 
+          lame_internal_flags const * const gfc, 
     const FLOAT  * const xr,
           gr_info * const gi,
           calc_noise_data* prev_noise
@@ -833,7 +832,7 @@ int count_bits(
     int *const ix = gi->l3_enc;
 
     /* since quantize_xrpow uses table lookup, we need to check this first: */
-    FLOAT w = (IXMAX_VAL) / IPOW20(gi->global_gain);
+    FLOAT const w = (IXMAX_VAL) / IPOW20(gi->global_gain);
 
     if (gi->xrpow_max > w)
         return LARGE_BITS;    
@@ -843,10 +842,11 @@ int count_bits(
     if (gfc->substep_shaping & 2) {
 	int sfb, j = 0;
 	/* 0.634521682242439 = 0.5946*2**(.5*0.1875) */
+        int const gain = gi->global_gain+gi->scalefac_scale;
 	const FLOAT roundfac =
-	    0.634521682242439 / IPOW20(gi->global_gain+gi->scalefac_scale);
+	    0.634521682242439 / IPOW20(gain);
 	for (sfb = 0; sfb < gi->sfbmax; sfb++) {
-	    int width = gi->width[sfb];
+	    int const width = gi->width[sfb];
 	    int l;
         assert( width >= 0 );
 	    j += width;
@@ -854,7 +854,7 @@ int count_bits(
 		continue;
 	    for (l = -width; l < 0; l++)
 		if (xr[j+l] < roundfac)
-		    ix[j+l] = 0.0;
+		    ix[j+l] = 0;
 	}
     }
     return noquant_count_bits(gfc, gi, prev_noise);
@@ -868,8 +868,8 @@ int count_bits(
 inline static void
 recalc_divide_init(
     const lame_internal_flags * const gfc,
-          gr_info         *cod_info,
-          int     * const ix,
+          gr_info const * cod_info,
+          int const * const ix,
           int             r01_bits[],
           int             r01_div [],
           int             r0_tbl  [],
@@ -884,14 +884,15 @@ recalc_divide_init(
     }
 
     for (r0 = 0; r0 < 16; r0++) {
-	int a1 = gfc->scalefac_band.l[r0 + 1], r0bits;
+	int const a1 = gfc->scalefac_band.l[r0 + 1];
+        int r0bits;
 	if (a1 >= bigv)
 	    break;
 	r0bits = 0;
 	r0t = gfc->choose_table(ix, ix + a1, &r0bits);
 
 	for (r1 = 0; r1 < 8; r1++) {
-	    int a2 = gfc->scalefac_band.l[r0 + r1 + 2];
+	    int const a2 = gfc->scalefac_band.l[r0 + r1 + 2];
 	    if (a2 >= bigv)
 		break;
 
@@ -954,7 +955,7 @@ void best_huffman_divide(
 {
     int i, a1, a2;
     gr_info cod_info2;
-    int * const ix = gi->l3_enc;
+    int const * const ix = gi->l3_enc;
 
     int r01_bits[7 + 15 + 1];
     int r01_div[7 + 15 + 1];
@@ -989,7 +990,7 @@ void best_huffman_divide(
     assert(i <= 576);
     
     for (; i > cod_info2.big_values; i -= 4) {
-	int p = ((ix[i-4] * 2 + ix[i-3]) * 2 + ix[i-2]) * 2 + ix[i-1];
+	int const p = ((ix[i-4] * 2 + ix[i-3]) * 2 + ix[i-2]) * 2 + ix[i-1];
 	a1 += t32l[p];
 	a2 += t33l[p];
     }
@@ -1034,8 +1035,8 @@ scfsi_calc(int ch,
 {
     int i, s1, s2, c1, c2;
     int sfb;
-    gr_info *gi = &l3_side->tt[1][ch];
-    gr_info *g0 = &l3_side->tt[0][ch];
+    gr_info * const gi = &l3_side->tt[1][ch];
+    gr_info const * const g0 = &l3_side->tt[0][ch];
 
     for (i = 0; i < (sizeof(scfsi_band) / sizeof(int)) - 1; i++) {
 	for (sfb = scfsi_band[i]; sfb < scfsi_band[i + 1]; sfb++) {
@@ -1071,7 +1072,7 @@ scfsi_calc(int ch,
 
     for (i = 0; i < 16; i++) {
 	if (s1 < slen1_n[i] && s2 < slen2_n[i]) {
-	    int c = slen1_tab[i] * c1 + slen2_tab[i] * c2;
+	    int const c = slen1_tab[i] * c1 + slen2_tab[i] * c2;
 	    if (gi->part2_length > c) {
 		gi->part2_length = c;
 		gi->scalefac_compress = i;
@@ -1092,7 +1093,7 @@ void best_scalefac_store(
           III_side_info_t * const l3_side)
 {
     /* use scalefac_scale if we can */
-    gr_info *gi = &l3_side->tt[gr][ch];
+    gr_info * const gi = &l3_side->tt[gr][ch];
     int sfb,i,j,l;
     int recalc = 0;
 
@@ -1101,7 +1102,7 @@ void best_scalefac_store(
     /* check if l3_enc=0 */
     j = 0;
     for ( sfb = 0; sfb < gi->sfbmax; sfb++ ) {
-        int width = gi->width[sfb];
+        int const width = gi->width[sfb];
         assert( width >= 0 );
         j += width;
         for (l = -width; l < 0; l++) {
@@ -1159,9 +1160,9 @@ void best_scalefac_store(
     }     
     if (recalc) {    
         if (gfc->mode_gr == 2) {
-            scale_bitcount(gi);
+            (void) scale_bitcount(gi);
         } else {
-            scale_bitcount_lsf(gfc, gi);
+            (void) scale_bitcount_lsf(gfc, gi);
         }
     }
 }
@@ -1206,7 +1207,7 @@ int scale_bitcount(gr_info * const cod_info)
 
     /* maximum values */
     const int *tab;
-    int *scalefac = cod_info->scalefac;
+    int * const scalefac = cod_info->scalefac;
     
     assert( all_scalefactors_not_negative( scalefac, cod_info->sfbmax ) );
     
@@ -1288,7 +1289,7 @@ int scale_bitcount_lsf(const lame_internal_flags *gfc,
     int table_number, row_in_table, partition, nr_sfb, window, over;
     int i, sfb, max_sfac[ 4 ];
     const int *partition_table;
-    int *scalefac = cod_info->scalefac;
+    int const * const scalefac = cod_info->scalefac;
 
     /*
       Set partition table. Note that should try to use table one,

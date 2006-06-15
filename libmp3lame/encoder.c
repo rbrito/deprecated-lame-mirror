@@ -1,11 +1,11 @@
 /*
- *	LAME MP3 encoding engine
+ *      LAME MP3 encoding engine
  *
- *	Copyright (c) 1999 Mark Taylor
- *	Copyright (c) 2000-2002 Takehiro Tominaga
- *	Copyright (c) 2000-2005 Robert Hegemann
- *	Copyright (c) 2001 Gabriel Bouvigne
- *	Copyright (c) 2001 John Dahlstrom
+ *      Copyright (c) 1999 Mark Taylor
+ *      Copyright (c) 2000-2002 Takehiro Tominaga
+ *      Copyright (c) 2000-2005 Robert Hegemann
+ *      Copyright (c) 2001 Gabriel Bouvigne
+ *      Copyright (c) 2001 John Dahlstrom
  *
  * This library is free software; you can redistribute it and/or
  * modify it under the terms of the GNU Library General Public
@@ -14,7 +14,7 @@
  *
  * This library is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.	 See the GNU
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
  * Library General Public License for more details.
  *
  * You should have received a copy of the GNU Library General Public
@@ -53,7 +53,7 @@
  *   (gfc->ATH)
  */
 static void
-adjust_ATH(lame_internal_flags * const gfc)
+adjust_ATH(lame_internal_flags const * const gfc)
 {
     FLOAT   gr2_max, max_pow;
 
@@ -112,7 +112,7 @@ adjust_ATH(lame_internal_flags * const gfc)
     }
     else {      /* adjustment curve */
         /* about 32 dB maximum adjust (0.000625) */
-        FLOAT adj_lim_new = 31.98 * max_pow + 0.000625;
+        FLOAT const adj_lim_new = 31.98 * max_pow + 0.000625;
         if (gfc->ATH->adjust >= adj_lim_new) { /* descend gradually */
             gfc->ATH->adjust *= adj_lim_new * 0.075 + 0.925;
             if (gfc->ATH->adjust < adj_lim_new) { /* stop descent */
@@ -169,8 +169,7 @@ updateStats(lame_internal_flags * const gfc)
     for (gr = 0; gr < gfc->mode_gr; ++gr) {
         for (ch = 0; ch < gfc->channels_out; ++ch) {
             int     bt = gfc->l3_side.tt[gr][ch].block_type;
-            int     mf = gfc->l3_side.tt[gr][ch].mixed_block_flag;
-            if (mf)
+            if (gfc->l3_side.tt[gr][ch].mixed_block_flag)
                 bt = 4;
             gfc->bitrate_blockType_Hist[gfc->bitrate_index][bt]++;
             gfc->bitrate_blockType_Hist[gfc->bitrate_index][5]++;
@@ -184,9 +183,9 @@ updateStats(lame_internal_flags * const gfc)
 
 
 static void
-lame_encode_frame_init(lame_global_flags * const gfp, const sample_t * inbuf[2])
+lame_encode_frame_init(lame_global_flags const * const gfp, const sample_t * inbuf[2])
 {
-    lame_internal_flags *gfc = gfp->internal_flags;
+    lame_internal_flags * const gfc = gfp->internal_flags;
 
     int     ch, gr;
 
@@ -299,8 +298,8 @@ typedef FLOAT chgrdata[2][2];
 int
 lame_encode_mp3_frame(       /* Output */
                          lame_global_flags * const gfp, /* Context */
-                         sample_t * inbuf_l, /* Input */
-                         sample_t * inbuf_r, /* Input */
+                         sample_t const * inbuf_l, /* Input */
+                         sample_t const * inbuf_r, /* Input */
                          unsigned char *mp3buf, /* Output */
                          int mp3buf_size)
 {                       /* Output */
@@ -309,11 +308,11 @@ lame_encode_mp3_frame(       /* Output */
     III_psy_ratio masking_MS[2][2]; /*MS masking & energy */
     III_psy_ratio(*masking)[2][2]; /*pointer to selected maskings */
     const sample_t *inbuf[2];
-    lame_internal_flags *gfc = gfp->internal_flags;
+    lame_internal_flags * const gfc = gfp->internal_flags;
 
     FLOAT   tot_ener[2][4];
     FLOAT   ms_ener_ratio[2] = { .5, .5 };
-    chgrdata pe, pe_MS;
+    chgrdata pe = {{0.,0.},{0.,0.}}, pe_MS = {{0.,0.},{0.,0.}};
     chgrdata *pe_use;
 
     int     ch, gr;
@@ -370,7 +369,6 @@ lame_encode_mp3_frame(       /* Output */
 
             if (gfp->psymodel == PSY_NSPSYTUNE) {
                 ret = L3psycho_anal_ns(gfp, bufp, gr,
-                                       &gfc->ms_ratio[gr], &ms_ratio_next,
                                        masking_LR, masking_MS,
                                        pe[gr], pe_MS[gr], tot_ener[gr], blocktype);
             }
@@ -391,7 +389,7 @@ lame_encode_mp3_frame(       /* Output */
 
             /* block type flags */
             for (ch = 0; ch < gfc->channels_out; ch++) {
-                gr_info *cod_info = &gfc->l3_side.tt[gr][ch];
+                gr_info * const cod_info = &gfc->l3_side.tt[gr][ch];
                 cod_info->block_type = blocktype[ch];
                 cod_info->mixed_block_flag = 0;
             }
@@ -449,8 +447,8 @@ lame_encode_mp3_frame(       /* Output */
         if (gfp->psymodel == PSY_GPSYCHO) {
             FLOAT   ms_ratio_ave1;
             FLOAT   ms_ratio_ave2;
-            FLOAT   threshold1 = 0.35;
-            FLOAT   threshold2 = 0.45;
+            FLOAT const threshold1 = 0.35;
+            FLOAT const threshold2 = 0.45;
 
             /* take an average */
             if (gfc->mode_gr == 1) {
@@ -483,8 +481,8 @@ lame_encode_mp3_frame(       /* Output */
             if (((gfp->psymodel == PSY_GPSYCHO) && sum_pe_MS <= 1.07 * sum_pe_LR) ||
                 ((gfp->psymodel == PSY_NSPSYTUNE) && sum_pe_MS <= 1.00 * sum_pe_LR)) {
 
-                gr_info *gi0 = &gfc->l3_side.tt[0][0];
-                gr_info *gi1 = &gfc->l3_side.tt[gfc->mode_gr - 1][0];
+                gr_info const * const gi0 = &gfc->l3_side.tt[0][0];
+                gr_info const * const gi1 = &gfc->l3_side.tt[gfc->mode_gr - 1][0];
 
                 if (gi0[0].block_type == gi0[1].block_type &&
                     gi1[0].block_type == gi1[1].block_type) {
@@ -533,7 +531,7 @@ lame_encode_mp3_frame(       /* Output */
 
     if (gfp->psymodel == PSY_NSPSYTUNE) {
         if (gfp->VBR == vbr_off || gfp->VBR == vbr_abr) {
-            static FLOAT fircoef[9] = {
+            static FLOAT const fircoef[9] = {
                 -0.0207887 * 5, -0.0378413 * 5, -0.0432472 * 5, -0.031183 * 5,
                 7.79609e-18 * 5, 0.0467745 * 5, 0.10091 * 5, 0.151365 * 5,
                 0.187098 * 5
@@ -572,7 +570,7 @@ lame_encode_mp3_frame(       /* Output */
 
 
     /*  write the frame to the bitstream  */
-    format_bitstream(gfp);
+    (void) format_bitstream(gfp);
 
     /* copy mp3 bit buffer into array */
     mp3count = copy_buffer(gfc, mp3buf, mp3buf_size, 1);

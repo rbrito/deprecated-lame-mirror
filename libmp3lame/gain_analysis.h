@@ -28,10 +28,10 @@
 #ifndef GAIN_ANALYSIS_H
 #define GAIN_ANALYSIS_H
 
-#if HAVE_INTTYPES_H
+#ifdef HAVE_INTTYPES_H
 # include <inttypes.h>
 #else
-# if HAVE_STDINT_H
+# ifdef HAVE_STDINT_H
 #  include <stdint.h>
 # endif
 #endif
@@ -43,12 +43,6 @@ extern "C" {
 
 typedef sample_t Float_t;         /* Type used for filtering */
 
-#define GAIN_NOT_ENOUGH_SAMPLES  -24601
-#define GAIN_ANALYSIS_ERROR           0
-#define GAIN_ANALYSIS_OK              1
-
-#define INIT_GAIN_ANALYSIS_ERROR      0
-#define INIT_GAIN_ANALYSIS_OK         1
 
 #define PINK_REF                64.82       /* 298640883795 */         /* calibration value for 89dB*/
 
@@ -64,11 +58,18 @@ typedef sample_t Float_t;         /* Type used for filtering */
 #define STEPS_per_dB      100.          /* Table entries per dB */
 #define MAX_dB            120.          /* Table entries for 0...MAX_dB (normal max. values are 70...80 dB) */
 
-#define MAX_ORDER               (BUTTER_ORDER > YULE_ORDER ? BUTTER_ORDER : YULE_ORDER)
-#define MAX_SAMPLES_PER_WINDOW  (size_t) ((MAX_SAMP_FREQ * RMS_WINDOW_TIME_NUMERATOR) / RMS_WINDOW_TIME_DENOMINATOR + 1)      /* max. Samples per Time slice */
+enum 
+{   GAIN_NOT_ENOUGH_SAMPLES = -24601
+,   GAIN_ANALYSIS_ERROR     =      0
+,   GAIN_ANALYSIS_OK        =      1
+,   INIT_GAIN_ANALYSIS_ERROR =     0
+,   INIT_GAIN_ANALYSIS_OK    =     1
+};
 
-
-
+enum 
+{   MAX_ORDER = (BUTTER_ORDER > YULE_ORDER ? BUTTER_ORDER : YULE_ORDER)
+,   MAX_SAMPLES_PER_WINDOW = ((MAX_SAMP_FREQ * RMS_WINDOW_TIME_NUMERATOR) / RMS_WINDOW_TIME_DENOMINATOR + 1)      /* max. Samples per Time slice */
+};
 
 struct replaygain_data
 {

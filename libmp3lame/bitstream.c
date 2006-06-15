@@ -1,8 +1,8 @@
 /*
- *	MP3 bitstream Output interface for LAME
+ *      MP3 bitstream Output interface for LAME
  *
- *	Copyright (c) 1999-2000 Mark Taylor
- *	Copyright (c) 1999-2002 Takehiro Tominaga
+ *      Copyright (c) 1999-2000 Mark Taylor
+ *      Copyright (c) 1999-2002 Takehiro Tominaga
  *
  * This library is free software; you can redistribute it and/or
  * modify it under the terms of the GNU Library General Public
@@ -11,7 +11,7 @@
  *
  * This library is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.	 See the GNU
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
  * Library General Public License for more details.
  *
  * You should have received a copy of the GNU Library General Public
@@ -37,11 +37,9 @@
 #include "encoder.h"
 #include "util.h"
 #include "tables.h"
-#include "l3side.h"
 #include "quantize_pvt.h"
 #include "lame_global_flags.h"
 #include "gain_analysis.h"
-#include "id3tag.h"
 #include "VbrTag.h"
 
 
@@ -66,20 +64,20 @@ static int hoge, hogege;
  **********************************************************************/
 int getframebits(const lame_global_flags * gfp)
 {
-    lame_internal_flags *gfc=gfp->internal_flags;
+    lame_internal_flags const * const gfc=gfp->internal_flags;
     int  bit_rate;
 
     /* get bitrate in kbps [?] */
     if (gfc->bitrate_index) 
-	bit_rate = bitrate_table[gfp->version][gfc->bitrate_index];
+        bit_rate = bitrate_table[gfp->version][gfc->bitrate_index];
     else
-	bit_rate = gfp->brate;
+        bit_rate = gfp->brate;
     assert ( bit_rate <= 550 );
 
     /* main encoding routine toggles padding on and off */
     /* one Layer3 Slot consists of 8 bits */
     return 8 * ((gfp->version+1)*72000*bit_rate / gfp->out_samplerate
-		+ gfc->padding);
+                + gfc->padding);
 }
 
 
@@ -94,7 +92,7 @@ void putheader_bits(lame_internal_flags *gfc)
     hogege += gfc->sideinfo_len * 8;
 #endif
     memcpy(&bs->buf[bs->buf_byte_idx], gfc->header[gfc->w_ptr].buf,
-	   gfc->sideinfo_len);
+           gfc->sideinfo_len);
     bs->buf_byte_idx += gfc->sideinfo_len;
     bs->totbit += gfc->sideinfo_len * 8;
     gfc->w_ptr = (gfc->w_ptr + 1) & (MAX_HEADER_BUF - 1);
@@ -113,28 +111,28 @@ putbits2(lame_internal_flags *gfc, int val, int j)
     assert(j < MAX_LENGTH-2);
 
     while (j > 0) {
-	int k;
-	if (bs->buf_bit_idx == 0) {
-	    bs->buf_bit_idx = 8;
-	    bs->buf_byte_idx++;
-	    assert(bs->buf_byte_idx < BUFFER_SIZE);
-	    assert(gfc->header[gfc->w_ptr].write_timing >= bs->totbit);
-	    if (gfc->header[gfc->w_ptr].write_timing == bs->totbit) {
-	      putheader_bits(gfc);
-	    }
-	    bs->buf[bs->buf_byte_idx] = 0;
-	}
+        int k;
+        if (bs->buf_bit_idx == 0) {
+            bs->buf_bit_idx = 8;
+            bs->buf_byte_idx++;
+            assert(bs->buf_byte_idx < BUFFER_SIZE);
+            assert(gfc->header[gfc->w_ptr].write_timing >= bs->totbit);
+            if (gfc->header[gfc->w_ptr].write_timing == bs->totbit) {
+              putheader_bits(gfc);
+            }
+            bs->buf[bs->buf_byte_idx] = 0;
+        }
 
-	k = Min(j, bs->buf_bit_idx);
-	j -= k;
+        k = Min(j, bs->buf_bit_idx);
+        j -= k;
         
-	bs->buf_bit_idx -= k;
+        bs->buf_bit_idx -= k;
         
-	assert (j < MAX_LENGTH); /* 32 too large on 32 bit machines */
+        assert (j < MAX_LENGTH); /* 32 too large on 32 bit machines */
         assert (bs->buf_bit_idx < MAX_LENGTH); 
-	
+        
         bs->buf[bs->buf_byte_idx] |= ((val >> j) << bs->buf_bit_idx);
-	bs->totbit += k;
+        bs->totbit += k;
     }
 }
 
@@ -148,24 +146,24 @@ putbits_noheaders(lame_internal_flags *gfc, int val, int j)
     assert(j < MAX_LENGTH-2);
 
     while (j > 0) {
-	int k;
-	if (bs->buf_bit_idx == 0) {
-	    bs->buf_bit_idx = 8;
-	    bs->buf_byte_idx++;
-	    assert(bs->buf_byte_idx < BUFFER_SIZE);
-	    bs->buf[bs->buf_byte_idx] = 0;
-	}
+        int k;
+        if (bs->buf_bit_idx == 0) {
+            bs->buf_bit_idx = 8;
+            bs->buf_byte_idx++;
+            assert(bs->buf_byte_idx < BUFFER_SIZE);
+            bs->buf[bs->buf_byte_idx] = 0;
+        }
 
-	k = Min(j, bs->buf_bit_idx);
-	j -= k;
+        k = Min(j, bs->buf_bit_idx);
+        j -= k;
         
-	bs->buf_bit_idx -= k;
+        bs->buf_bit_idx -= k;
         
-	assert (j < MAX_LENGTH); /* 32 too large on 32 bit machines */
+        assert (j < MAX_LENGTH); /* 32 too large on 32 bit machines */
         assert (bs->buf_bit_idx < MAX_LENGTH); 
-	
+        
         bs->buf[bs->buf_byte_idx] |= ((val >> j) << bs->buf_bit_idx);
-	bs->totbit += k;
+        bs->totbit += k;
     }
 }
 
@@ -178,9 +176,9 @@ putbits_noheaders(lame_internal_flags *gfc, int val, int j)
 */
 
 inline static void
-drain_into_ancillary(lame_global_flags *gfp, int remainingBits)
+drain_into_ancillary(lame_global_flags const *gfp, int remainingBits)
 {
-    lame_internal_flags *gfc=gfp->internal_flags;
+    lame_internal_flags * const gfc=gfp->internal_flags;
     int i;
     assert(remainingBits >= 0);
 
@@ -202,17 +200,17 @@ drain_into_ancillary(lame_global_flags *gfp, int remainingBits)
     }
       
     if (remainingBits >= 32) {
-      const char *version = get_lame_short_version ();
+      const char * const version = get_lame_short_version ();
       if (remainingBits >= 32) 
-	for (i=0; i<(int)strlen(version) && remainingBits >=8 ; ++i) {
-	  remainingBits -= 8;
-	  putbits2(gfc,version[i],8);
-	}
+        for (i=0; i<(int)strlen(version) && remainingBits >=8 ; ++i) {
+          remainingBits -= 8;
+          putbits2(gfc,version[i],8);
+        }
     }
 
     for (; remainingBits >= 1; remainingBits -= 1 ) {
         putbits2(gfc, gfc->ancillary_flag, 1 );
-	gfc->ancillary_flag ^= !gfp->disable_reservoir;
+        gfc->ancillary_flag ^= !gfp->disable_reservoir;
     }
 
     assert (remainingBits == 0);
@@ -226,12 +224,12 @@ writeheader(lame_internal_flags *gfc,int val, int j)
     int ptr = gfc->header[gfc->h_ptr].ptr;
 
     while (j > 0) {
-	int k = Min(j, 8 - (ptr & 7));
-	j -= k;
+        int const k = Min(j, 8 - (ptr & 7));
+        j -= k;
         assert (j < MAX_LENGTH); /* >> 32  too large for 32 bit machines */
-	gfc->header[gfc->h_ptr].buf[ptr >> 3]
-	    |= ((val >> j)) << (8 - (ptr & 7) - k);
-	ptr += k;
+        gfc->header[gfc->h_ptr].buf[ptr >> 3]
+            |= ((val >> j)) << (8 - (ptr & 7) - k);
+        ptr += k;
     }
     gfc->header[gfc->h_ptr].ptr = ptr;
 }
@@ -243,18 +241,18 @@ CRC_update(int value, int crc)
     int i;
     value <<= 8;
     for (i = 0; i < 8; i++) {
-	value <<= 1;
-	crc <<= 1;
+        value <<= 1;
+        crc <<= 1;
 
-	if (((crc ^ value) & 0x10000))
-	    crc ^= CRC16_POLYNOMIAL;
+        if (((crc ^ value) & 0x10000))
+            crc ^= CRC16_POLYNOMIAL;
     }
     return crc;
 }
 
 
 void
-CRC_writeheader(lame_internal_flags *gfc, char *header)
+CRC_writeheader(lame_internal_flags const *gfc, char *header)
 {
     int crc = 0xffff; /* (jo) init crc16 for error_protection */
     int i;
@@ -262,7 +260,7 @@ CRC_writeheader(lame_internal_flags *gfc, char *header)
     crc = CRC_update(((unsigned char*)header)[2], crc);
     crc = CRC_update(((unsigned char*)header)[3], crc);
     for (i = 6; i < gfc->sideinfo_len; i++) {
-	crc = CRC_update(((unsigned char*)header)[i], crc);
+        crc = CRC_update(((unsigned char*)header)[i], crc);
     }
 
     header[4] = crc >> 8;
@@ -270,9 +268,9 @@ CRC_writeheader(lame_internal_flags *gfc, char *header)
 }
 
 inline static void
-encodeSideInfo2(lame_global_flags *gfp,int bitsPerFrame)
+encodeSideInfo2(lame_global_flags const *gfp,int bitsPerFrame)
 {
-    lame_internal_flags *gfc=gfp->internal_flags;
+    lame_internal_flags * const gfc=gfp->internal_flags;
     III_side_info_t *l3_side;
     int gr, ch;
     
@@ -296,206 +294,206 @@ encodeSideInfo2(lame_global_flags *gfp,int bitsPerFrame)
     writeheader(gfc,(gfp->original),           1);
     writeheader(gfc,(gfp->emphasis),           2);
     if (gfp->error_protection) {
-	writeheader(gfc,0, 16); /* dummy */
+        writeheader(gfc,0, 16); /* dummy */
     }
 
     if (gfp->version == 1) {
-	/* MPEG1 */
-	assert(l3_side->main_data_begin >= 0);
-	writeheader(gfc,(l3_side->main_data_begin), 9);
+        /* MPEG1 */
+        assert(l3_side->main_data_begin >= 0);
+        writeheader(gfc,(l3_side->main_data_begin), 9);
 
-	if (gfc->channels_out == 2)
-	    writeheader(gfc,l3_side->private_bits, 3);
-	else
-	    writeheader(gfc,l3_side->private_bits, 5);
+        if (gfc->channels_out == 2)
+            writeheader(gfc,l3_side->private_bits, 3);
+        else
+            writeheader(gfc,l3_side->private_bits, 5);
 
-	for (ch = 0; ch < gfc->channels_out; ch++) {
-	    int band;
-	    for (band = 0; band < 4; band++) {
-		writeheader(gfc,l3_side->scfsi[ch][band], 1);
-	    }
-	}
+        for (ch = 0; ch < gfc->channels_out; ch++) {
+            int band;
+            for (band = 0; band < 4; band++) {
+                writeheader(gfc,l3_side->scfsi[ch][band], 1);
+            }
+        }
 
-	for (gr = 0; gr < 2; gr++) {
-	    for (ch = 0; ch < gfc->channels_out; ch++) {
-		gr_info *gi = &l3_side->tt[gr][ch];
-		writeheader(gfc,gi->part2_3_length+gi->part2_length, 12);
-		writeheader(gfc,gi->big_values / 2,        9);
-		writeheader(gfc,gi->global_gain,           8);
-		writeheader(gfc,gi->scalefac_compress,     4);
+        for (gr = 0; gr < 2; gr++) {
+            for (ch = 0; ch < gfc->channels_out; ch++) {
+                gr_info * const gi = &l3_side->tt[gr][ch];
+                writeheader(gfc,gi->part2_3_length+gi->part2_length, 12);
+                writeheader(gfc,gi->big_values / 2,        9);
+                writeheader(gfc,gi->global_gain,           8);
+                writeheader(gfc,gi->scalefac_compress,     4);
 
-		if (gi->block_type != NORM_TYPE) {
-		    writeheader(gfc, 1, 1); /* window_switching_flag */
-		    writeheader(gfc,gi->block_type,       2);
-		    writeheader(gfc,gi->mixed_block_flag, 1);
+                if (gi->block_type != NORM_TYPE) {
+                    writeheader(gfc, 1, 1); /* window_switching_flag */
+                    writeheader(gfc,gi->block_type,       2);
+                    writeheader(gfc,gi->mixed_block_flag, 1);
 
-		    if (gi->table_select[0] == 14)
-			gi->table_select[0] = 16;
-		    writeheader(gfc,gi->table_select[0],  5);
-		    if (gi->table_select[1] == 14)
-			gi->table_select[1] = 16;
-		    writeheader(gfc,gi->table_select[1],  5);
+                    if (gi->table_select[0] == 14)
+                        gi->table_select[0] = 16;
+                    writeheader(gfc,gi->table_select[0],  5);
+                    if (gi->table_select[1] == 14)
+                        gi->table_select[1] = 16;
+                    writeheader(gfc,gi->table_select[1],  5);
 
-		    writeheader(gfc,gi->subblock_gain[0], 3);
-		    writeheader(gfc,gi->subblock_gain[1], 3);
-		    writeheader(gfc,gi->subblock_gain[2], 3);
-		} else {
-		    writeheader(gfc, 0, 1); /* window_switching_flag */
-		    if (gi->table_select[0] == 14)
-			gi->table_select[0] = 16;
-		    writeheader(gfc,gi->table_select[0], 5);
-		    if (gi->table_select[1] == 14)
-			gi->table_select[1] = 16;
-		    writeheader(gfc,gi->table_select[1], 5);
-		    if (gi->table_select[2] == 14)
-			gi->table_select[2] = 16;
-		    writeheader(gfc,gi->table_select[2], 5);
+                    writeheader(gfc,gi->subblock_gain[0], 3);
+                    writeheader(gfc,gi->subblock_gain[1], 3);
+                    writeheader(gfc,gi->subblock_gain[2], 3);
+                } else {
+                    writeheader(gfc, 0, 1); /* window_switching_flag */
+                    if (gi->table_select[0] == 14)
+                        gi->table_select[0] = 16;
+                    writeheader(gfc,gi->table_select[0], 5);
+                    if (gi->table_select[1] == 14)
+                        gi->table_select[1] = 16;
+                    writeheader(gfc,gi->table_select[1], 5);
+                    if (gi->table_select[2] == 14)
+                        gi->table_select[2] = 16;
+                    writeheader(gfc,gi->table_select[2], 5);
 
-		    assert(gi->region0_count < 16U);
-		    assert(gi->region1_count < 8U);
-		    writeheader(gfc,gi->region0_count, 4);
-		    writeheader(gfc,gi->region1_count, 3);
-		}
-		writeheader(gfc,gi->preflag,            1);
-		writeheader(gfc,gi->scalefac_scale,     1);
-		writeheader(gfc,gi->count1table_select, 1);
-	    }
-	}
+                    assert(gi->region0_count < 16U);
+                    assert(gi->region1_count < 8U);
+                    writeheader(gfc,gi->region0_count, 4);
+                    writeheader(gfc,gi->region1_count, 3);
+                }
+                writeheader(gfc,gi->preflag,            1);
+                writeheader(gfc,gi->scalefac_scale,     1);
+                writeheader(gfc,gi->count1table_select, 1);
+            }
+        }
     } else {
-	/* MPEG2 */
-	assert(l3_side->main_data_begin >= 0);
-	writeheader(gfc,(l3_side->main_data_begin), 8);
-	writeheader(gfc,l3_side->private_bits, gfc->channels_out);
+        /* MPEG2 */
+        assert(l3_side->main_data_begin >= 0);
+        writeheader(gfc,(l3_side->main_data_begin), 8);
+        writeheader(gfc,l3_side->private_bits, gfc->channels_out);
 
-	gr = 0;
-	for (ch = 0; ch < gfc->channels_out; ch++) {
-	    gr_info *gi = &l3_side->tt[gr][ch];
-	    writeheader(gfc,gi->part2_3_length+gi->part2_length, 12);
-	    writeheader(gfc,gi->big_values / 2,        9);
-	    writeheader(gfc,gi->global_gain,           8);
-	    writeheader(gfc,gi->scalefac_compress,     9);
+        gr = 0;
+        for (ch = 0; ch < gfc->channels_out; ch++) {
+            gr_info * const gi = &l3_side->tt[gr][ch];
+            writeheader(gfc,gi->part2_3_length+gi->part2_length, 12);
+            writeheader(gfc,gi->big_values / 2,        9);
+            writeheader(gfc,gi->global_gain,           8);
+            writeheader(gfc,gi->scalefac_compress,     9);
 
-	    if (gi->block_type != NORM_TYPE) {
-		writeheader(gfc, 1, 1); /* window_switching_flag */
-		writeheader(gfc,gi->block_type,       2);
-		writeheader(gfc,gi->mixed_block_flag, 1);
+            if (gi->block_type != NORM_TYPE) {
+                writeheader(gfc, 1, 1); /* window_switching_flag */
+                writeheader(gfc,gi->block_type,       2);
+                writeheader(gfc,gi->mixed_block_flag, 1);
 
-		if (gi->table_select[0] == 14)
-		    gi->table_select[0] = 16;
-		writeheader(gfc,gi->table_select[0],  5);
-		if (gi->table_select[1] == 14)
-		    gi->table_select[1] = 16;
-		writeheader(gfc,gi->table_select[1],  5);
+                if (gi->table_select[0] == 14)
+                    gi->table_select[0] = 16;
+                writeheader(gfc,gi->table_select[0],  5);
+                if (gi->table_select[1] == 14)
+                    gi->table_select[1] = 16;
+                writeheader(gfc,gi->table_select[1],  5);
 
-		writeheader(gfc,gi->subblock_gain[0], 3);
-		writeheader(gfc,gi->subblock_gain[1], 3);
-		writeheader(gfc,gi->subblock_gain[2], 3);
-	    } else {
-		writeheader(gfc, 0, 1); /* window_switching_flag */
-		if (gi->table_select[0] == 14)
-		    gi->table_select[0] = 16;
-		writeheader(gfc,gi->table_select[0], 5);
-		if (gi->table_select[1] == 14)
-		    gi->table_select[1] = 16;
-		writeheader(gfc,gi->table_select[1], 5);
-		if (gi->table_select[2] == 14)
-		    gi->table_select[2] = 16;
-		writeheader(gfc,gi->table_select[2], 5);
+                writeheader(gfc,gi->subblock_gain[0], 3);
+                writeheader(gfc,gi->subblock_gain[1], 3);
+                writeheader(gfc,gi->subblock_gain[2], 3);
+            } else {
+                writeheader(gfc, 0, 1); /* window_switching_flag */
+                if (gi->table_select[0] == 14)
+                    gi->table_select[0] = 16;
+                writeheader(gfc,gi->table_select[0], 5);
+                if (gi->table_select[1] == 14)
+                    gi->table_select[1] = 16;
+                writeheader(gfc,gi->table_select[1], 5);
+                if (gi->table_select[2] == 14)
+                    gi->table_select[2] = 16;
+                writeheader(gfc,gi->table_select[2], 5);
 
-		assert(gi->region0_count < 16U);
-		assert(gi->region1_count < 8U);
-		writeheader(gfc,gi->region0_count, 4);
-		writeheader(gfc,gi->region1_count, 3);
-	    }
+                assert(gi->region0_count < 16U);
+                assert(gi->region1_count < 8U);
+                writeheader(gfc,gi->region0_count, 4);
+                writeheader(gfc,gi->region1_count, 3);
+            }
 
-	    writeheader(gfc,gi->scalefac_scale,     1);
-	    writeheader(gfc,gi->count1table_select, 1);
-	}
+            writeheader(gfc,gi->scalefac_scale,     1);
+            writeheader(gfc,gi->count1table_select, 1);
+        }
     }
 
     if (gfp->error_protection) {
-	/* (jo) error_protection: add crc16 information to header */
-	CRC_writeheader(gfc, gfc->header[gfc->h_ptr].buf);
+        /* (jo) error_protection: add crc16 information to header */
+        CRC_writeheader(gfc, gfc->header[gfc->h_ptr].buf);
     }
 
     {
-	int old = gfc->h_ptr;
-	assert(gfc->header[old].ptr == gfc->sideinfo_len * 8);
+        int const old = gfc->h_ptr;
+        assert(gfc->header[old].ptr == gfc->sideinfo_len * 8);
 
-	gfc->h_ptr = (old + 1) & (MAX_HEADER_BUF - 1);
-	gfc->header[gfc->h_ptr].write_timing =
-	    gfc->header[old].write_timing + bitsPerFrame;
+        gfc->h_ptr = (old + 1) & (MAX_HEADER_BUF - 1);
+        gfc->header[gfc->h_ptr].write_timing =
+            gfc->header[old].write_timing + bitsPerFrame;
 
-	if (gfc->h_ptr == gfc->w_ptr) {
-	  /* yikes! we are out of header buffer space */
-	  ERRORF(gfc,"Error: MAX_HEADER_BUF too small in bitstream.c \n");
-	}
+        if (gfc->h_ptr == gfc->w_ptr) {
+          /* yikes! we are out of header buffer space */
+          ERRORF(gfc,"Error: MAX_HEADER_BUF too small in bitstream.c \n");
+        }
 
     }
 }
 
 
 inline static int
-huffman_coder_count1(lame_internal_flags *gfc, gr_info *gi)
+huffman_coder_count1(lame_internal_flags *gfc, gr_info const *gi)
 {
     /* Write count1 area */
-    const struct huffcodetab *h = &ht[gi->count1table_select + 32];
+    struct huffcodetab const * const h = &ht[gi->count1table_select + 32];
     int i,bits=0;
 #ifdef DEBUG
     int gegebo = gfc->bs.totbit;
 #endif
 
-    int *ix = &gi->l3_enc[gi->big_values];
-    FLOAT *xr = &gi->xr[gi->big_values];
+    int const *ix = &gi->l3_enc[gi->big_values];
+    FLOAT const *xr = &gi->xr[gi->big_values];
     assert(gi->count1table_select < 2);
 
     for (i = (gi->count1 - gi->big_values) / 4; i > 0; --i) {
-	int huffbits = 0;
-	int p = 0, v;
+        int huffbits = 0;
+        int p = 0, v;
 
-	v = ix[0];
-	if (v) {
-	    p += 8;
-	    if (xr[0] < 0)
-		huffbits++;
-	    assert(v <= 1u);
-	}
+        v = ix[0];
+        if (v) {
+            p += 8;
+            if (xr[0] < 0)
+                huffbits++;
+            assert(v <= 1u);
+        }
 
-	v = ix[1];
-	if (v) {
-	    p += 4;
-	    huffbits *= 2;
-	    if (xr[1] < 0)
-		huffbits++;
-	    assert(v <= 1u);
-	}
+        v = ix[1];
+        if (v) {
+            p += 4;
+            huffbits *= 2;
+            if (xr[1] < 0)
+                huffbits++;
+            assert(v <= 1u);
+        }
 
-	v = ix[2];
-	if (v) {
-	    p += 2;
-	    huffbits *= 2;
-	    if (xr[2] < 0)
-		huffbits++;
-	    assert(v <= 1u);
-	}
+        v = ix[2];
+        if (v) {
+            p += 2;
+            huffbits *= 2;
+            if (xr[2] < 0)
+                huffbits++;
+            assert(v <= 1u);
+        }
 
-	v = ix[3];
-	if (v) {
-	    p++;
-	    huffbits *= 2;
-	    if (xr[3] < 0)
-		huffbits++;
-	    assert(v <= 1u);
-	}
+        v = ix[3];
+        if (v) {
+            p++;
+            huffbits *= 2;
+            if (xr[3] < 0)
+                huffbits++;
+            assert(v <= 1u);
+        }
 
-	ix += 4;
-	xr += 4;
-	putbits2(gfc, huffbits + h->table[p], h->hlen[p]);
-	bits += h->hlen[p];
+        ix += 4;
+        xr += 4;
+        putbits2(gfc, huffbits + h->table[p], h->hlen[p]);
+        bits += h->hlen[p];
     }
 #ifdef DEBUG
     DEBUGF(gfc,"count1: real: %ld counted:%d (bigv %d count1len %d)\n",
-	   gfc->bs.totbit -gegebo, gi->count1bits, gi->big_values, gi->count1);
+           gfc->bs.totbit -gegebo, gi->count1bits, gi->big_values, gi->count1);
 #endif
     return bits;
 }
@@ -506,71 +504,71 @@ huffman_coder_count1(lame_internal_flags *gfc, gr_info *gi)
   Implements the pseudocode of page 98 of the IS
   */
 inline static int
-Huffmancode( lame_internal_flags* const gfc, const int tableindex,
-	     int start, int end, gr_info *gi)
+Huffmancode( lame_internal_flags* const gfc, const unsigned int tableindex,
+             int start, int end, gr_info const *gi)
 {
-    const struct huffcodetab* h = &ht[tableindex];
+    struct huffcodetab const * const h = &ht[tableindex];
     int index, bits = 0;
 
     assert(tableindex < 32u);
     if (!tableindex)
-	return bits;
+        return bits;
 
     for (index = start; index < end; index += 2) {
-	int cbits   = 0;
-	int xbits   = 0;
-	int linbits = h->xlen;
-	int xlen    = h->xlen;
-	int ext = 0;
-	int x1 = gi->l3_enc[index];
-	int x2 = gi->l3_enc[index+1];
+        int cbits   = 0;
+        int xbits   = 0;
+        int const linbits = h->xlen;
+        int xlen    = h->xlen;
+        int ext = 0;
+        int x1 = gi->l3_enc[index];
+        int x2 = gi->l3_enc[index+1];
 
-	if (x1 != 0) {
-	    if (gi->xr[index] < 0)
-		ext++;
-	    cbits--;
-	}
+        if (x1 != 0) {
+            if (gi->xr[index] < 0)
+                ext++;
+            cbits--;
+        }
 
-	if (tableindex > 15) {
-	    /* use ESC-words */
-	    if (x1 > 14) {
-		int linbits_x1 = x1 - 15;
-		assert ( linbits_x1 <= h->linmax );
-		ext   |= linbits_x1 << 1;
-		xbits  = linbits;
-		x1     = 15;
-	    }
+        if (tableindex > 15) {
+            /* use ESC-words */
+            if (x1 > 14) {
+                int const linbits_x1 = x1 - 15;
+                assert ( linbits_x1 <= h->linmax );
+                ext   |= linbits_x1 << 1;
+                xbits  = linbits;
+                x1     = 15;
+            }
 
-	    if (x2 > 14) {
-		int linbits_x2 = x2 - 15;
-		assert ( linbits_x2 <= h->linmax );
-		ext  <<= linbits;
-		ext   |= linbits_x2;
-		xbits += linbits;
-		x2     = 15;
-	    }
-	    xlen = 16;
-	}
+            if (x2 > 14) {
+                int const linbits_x2 = x2 - 15;
+                assert ( linbits_x2 <= h->linmax );
+                ext  <<= linbits;
+                ext   |= linbits_x2;
+                xbits += linbits;
+                x2     = 15;
+            }
+            xlen = 16;
+        }
 
-	if (x2 != 0) {
-	    ext <<= 1;
-	    if (gi->xr[index+1] < 0)
-		ext++;
-	    cbits--;
-	}
+        if (x2 != 0) {
+            ext <<= 1;
+            if (gi->xr[index+1] < 0)
+                ext++;
+            cbits--;
+        }
 
-	assert ( (x1|x2) < 16u );
+        assert ( (x1|x2) < 16u );
 
-	x1 = x1 * xlen + x2;
-	xbits -= cbits;
-	cbits += h->hlen  [x1];
+        x1 = x1 * xlen + x2;
+        xbits -= cbits;
+        cbits += h->hlen  [x1];
 
-	assert ( cbits <= MAX_LENGTH );
-	assert ( xbits <= MAX_LENGTH );
+        assert ( cbits <= MAX_LENGTH );
+        assert ( xbits <= MAX_LENGTH );
 
-	putbits2(gfc, h->table [x1], cbits );
-	putbits2(gfc, ext,  xbits );
-	bits += cbits + xbits;
+        putbits2(gfc, h->table [x1], cbits );
+        putbits2(gfc, ext,  xbits );
+        bits += cbits + xbits;
     }
     return bits;
 }
@@ -581,14 +579,14 @@ Huffmancode( lame_internal_flags* const gfc, const int tableindex,
   information on pages 26 and 27.
   */
 static int
-ShortHuffmancodebits(lame_internal_flags *gfc, gr_info *gi)
+ShortHuffmancodebits(lame_internal_flags *gfc, gr_info const *gi)
 {
     int bits;
     int region1Start;
     
     region1Start = 3*gfc->scalefac_band.s[3];
     if (region1Start > gi->big_values)
-	region1Start = gi->big_values;
+        region1Start = gi->big_values;
 
     /* short blocks do not have a region2 */
     bits  = Huffmancode(gfc, gi->table_select[0], 0, region1Start, gi);
@@ -597,7 +595,7 @@ ShortHuffmancodebits(lame_internal_flags *gfc, gr_info *gi)
 }
 
 static int
-LongHuffmancodebits(lame_internal_flags *gfc, gr_info *gi)
+LongHuffmancodebits(lame_internal_flags *gfc, gr_info const *gi)
 {
     int i, bigvalues, bits;
     int region1Start, region2Start;
@@ -606,17 +604,17 @@ LongHuffmancodebits(lame_internal_flags *gfc, gr_info *gi)
     assert(0 <= bigvalues && bigvalues <= 576);
 
     i = gi->region0_count + 1;
-    assert(i < 23);
+    assert(i < 22);
     region1Start = gfc->scalefac_band.l[i];
     i += gi->region1_count + 1;
-    assert(i < 23);
+    assert(i < 22);
     region2Start = gfc->scalefac_band.l[i];
 
     if (region1Start > bigvalues)
-	region1Start = bigvalues;
+        region1Start = bigvalues;
 
     if (region2Start > bigvalues)
-	region2Start = bigvalues;
+        region2Start = bigvalues;
 
     bits  =Huffmancode(gfc, gi->table_select[0], 0, region1Start, gi);
     bits +=Huffmancode(gfc, gi->table_select[1], region1Start, region2Start, gi);
@@ -625,98 +623,97 @@ LongHuffmancodebits(lame_internal_flags *gfc, gr_info *gi)
 }
 
 inline static int
-writeMainData ( lame_global_flags * const gfp)
+writeMainData ( lame_global_flags const * const gfp)
 {
     int gr, ch, sfb,data_bits,tot_bits=0;
-    lame_internal_flags *gfc=gfp->internal_flags;
-    III_side_info_t *l3_side;
+    lame_internal_flags * const gfc=gfp->internal_flags;
+    III_side_info_t const * const l3_side = &gfc->l3_side;
 
-    l3_side = &gfc->l3_side;
     if (gfp->version == 1) {
-	/* MPEG 1 */
-	for (gr = 0; gr < 2; gr++) {
-	    for (ch = 0; ch < gfc->channels_out; ch++) {
-		gr_info *gi = &l3_side->tt[gr][ch];
-		int slen1 = slen1_tab[gi->scalefac_compress];
-		int slen2 = slen2_tab[gi->scalefac_compress];
-		data_bits=0;
+        /* MPEG 1 */
+        for (gr = 0; gr < 2; gr++) {
+            for (ch = 0; ch < gfc->channels_out; ch++) {
+                gr_info const * const gi = &l3_side->tt[gr][ch];
+                int const slen1 = slen1_tab[gi->scalefac_compress];
+                int const slen2 = slen2_tab[gi->scalefac_compress];
+                data_bits=0;
 #ifdef DEBUG
-		hogege = gfc->bs.totbit;
+                hogege = gfc->bs.totbit;
 #endif
-		for (sfb = 0; sfb < gi->sfbdivide; sfb++) {
-		    if (gi->scalefac[sfb] == -1)
-			continue; /* scfsi is used */
-		    putbits2(gfc, gi->scalefac[sfb], slen1);
-		    data_bits += slen1;
-		}
-		for (; sfb < gi->sfbmax; sfb++) {
-		    if (gi->scalefac[sfb] == -1)
-			continue; /* scfsi is used */
-		    putbits2(gfc, gi->scalefac[sfb], slen2);
-		    data_bits += slen2;
-		}
-		assert(data_bits == gi->part2_length);
+                for (sfb = 0; sfb < gi->sfbdivide; sfb++) {
+                    if (gi->scalefac[sfb] == -1)
+                        continue; /* scfsi is used */
+                    putbits2(gfc, gi->scalefac[sfb], slen1);
+                    data_bits += slen1;
+                }
+                for (; sfb < gi->sfbmax; sfb++) {
+                    if (gi->scalefac[sfb] == -1)
+                        continue; /* scfsi is used */
+                    putbits2(gfc, gi->scalefac[sfb], slen2);
+                    data_bits += slen2;
+                }
+                assert(data_bits == gi->part2_length);
 
-		if (gi->block_type == SHORT_TYPE) {
-		    data_bits += ShortHuffmancodebits(gfc, gi);
-		} else {
-		    data_bits += LongHuffmancodebits(gfc, gi);
-		}
-		data_bits += huffman_coder_count1(gfc, gi);
+                if (gi->block_type == SHORT_TYPE) {
+                    data_bits += ShortHuffmancodebits(gfc, gi);
+                } else {
+                    data_bits += LongHuffmancodebits(gfc, gi);
+                }
+                data_bits += huffman_coder_count1(gfc, gi);
 #ifdef DEBUG
-		DEBUGF(gfc,"<%ld> ", gfc->bs.totbit-hogege);
+                DEBUGF(gfc,"<%ld> ", gfc->bs.totbit-hogege);
 #endif
-		/* does bitcount in quantize.c agree with actual bit count?*/
-		assert(data_bits == gi->part2_3_length + gi->part2_length);
-		tot_bits += data_bits;
-	    } /* for ch */
-	} /* for gr */
+                /* does bitcount in quantize.c agree with actual bit count?*/
+                assert(data_bits == gi->part2_3_length + gi->part2_length);
+                tot_bits += data_bits;
+            } /* for ch */
+        } /* for gr */
     } else {
-	/* MPEG 2 */
-	gr = 0;
-	for (ch = 0; ch < gfc->channels_out; ch++) {
-	    gr_info *gi = &l3_side->tt[gr][ch];
-	    int i, sfb_partition, scale_bits=0;
-	    assert(gi->sfb_partition_table);
-	    data_bits = 0;
+        /* MPEG 2 */
+        gr = 0;
+        for (ch = 0; ch < gfc->channels_out; ch++) {
+            gr_info const * const gi = &l3_side->tt[gr][ch];
+            int i, sfb_partition, scale_bits=0;
+            assert(gi->sfb_partition_table);
+            data_bits = 0;
 #ifdef DEBUG
-	    hogege = gfc->bs.totbit;
+            hogege = gfc->bs.totbit;
 #endif
-	    sfb = 0;
-	    sfb_partition = 0;
+            sfb = 0;
+            sfb_partition = 0;
 
-	    if (gi->block_type == SHORT_TYPE) {
-		for (; sfb_partition < 4; sfb_partition++) {
-		    int sfbs = gi->sfb_partition_table[sfb_partition] / 3;
-		    int slen = gi->slen[sfb_partition];
-		    for (i = 0; i < sfbs; i++, sfb++) {
-			putbits2(gfc, Max(gi->scalefac[sfb*3+0], 0U), slen);
-			putbits2(gfc, Max(gi->scalefac[sfb*3+1], 0U), slen);
-			putbits2(gfc, Max(gi->scalefac[sfb*3+2], 0U), slen);
-			scale_bits += 3*slen;
-		    }
-		}
-		data_bits += ShortHuffmancodebits(gfc, gi);
-	    } else {
-		for (; sfb_partition < 4; sfb_partition++) {
-		    int sfbs = gi->sfb_partition_table[sfb_partition];
-		    int slen = gi->slen[sfb_partition];
-		    for (i = 0; i < sfbs; i++, sfb++) {
-			putbits2(gfc, Max(gi->scalefac[sfb], 0U), slen);
-			scale_bits += slen;
-		    }
-		}
-		data_bits +=LongHuffmancodebits(gfc, gi);
-	    }
-	    data_bits +=huffman_coder_count1(gfc, gi);
+            if (gi->block_type == SHORT_TYPE) {
+                for (; sfb_partition < 4; sfb_partition++) {
+                    int const sfbs = gi->sfb_partition_table[sfb_partition] / 3;
+                    int const slen = gi->slen[sfb_partition];
+                    for (i = 0; i < sfbs; i++, sfb++) {
+                        putbits2(gfc, Max(gi->scalefac[sfb*3+0], 0U), slen);
+                        putbits2(gfc, Max(gi->scalefac[sfb*3+1], 0U), slen);
+                        putbits2(gfc, Max(gi->scalefac[sfb*3+2], 0U), slen);
+                        scale_bits += 3*slen;
+                    }
+                }
+                data_bits += ShortHuffmancodebits(gfc, gi);
+            } else {
+                for (; sfb_partition < 4; sfb_partition++) {
+                    int const sfbs = gi->sfb_partition_table[sfb_partition];
+                    int const slen = gi->slen[sfb_partition];
+                    for (i = 0; i < sfbs; i++, sfb++) {
+                        putbits2(gfc, Max(gi->scalefac[sfb], 0U), slen);
+                        scale_bits += slen;
+                    }
+                }
+                data_bits +=LongHuffmancodebits(gfc, gi);
+            }
+            data_bits +=huffman_coder_count1(gfc, gi);
 #ifdef DEBUG
-	    DEBUGF(gfc,"<%ld> ", gfc->bs.totbit-hogege);
+            DEBUGF(gfc,"<%ld> ", gfc->bs.totbit-hogege);
 #endif
-	    /* does bitcount in quantize.c agree with actual bit count?*/
-	    assert(data_bits==gi->part2_3_length);
-	    assert(scale_bits==gi->part2_length);
-	    tot_bits += scale_bits + data_bits;
-	} /* for ch */
+            /* does bitcount in quantize.c agree with actual bit count?*/
+            assert(data_bits==gi->part2_3_length);
+            assert(scale_bits==gi->part2_length);
+            tot_bits += scale_bits + data_bits;
+        } /* for ch */
     } /* for gf */
     return tot_bits;
 } /* main_data */
@@ -741,7 +738,7 @@ writeMainData ( lame_global_flags * const gfp)
 int
 compute_flushbits( const lame_global_flags * gfp, int *total_bytes_output )
 {
-  lame_internal_flags *gfc=gfp->internal_flags;
+  lame_internal_flags const * const gfc=gfp->internal_flags;
   int flushbits,remaining_headers;
   int bitsPerFrame;
   int last_ptr,first_ptr;
@@ -799,15 +796,14 @@ compute_flushbits( const lame_global_flags * gfp, int *total_bytes_output )
 
 
 void
-flush_bitstream(lame_global_flags *gfp)
+flush_bitstream(lame_global_flags const *gfp)
 {
-  lame_internal_flags *gfc=gfp->internal_flags;
+  lame_internal_flags * const gfc=gfp->internal_flags;
   III_side_info_t *l3_side;
   int nbytes;
   int flushbits;
-  int last_ptr,first_ptr;
-  first_ptr=gfc->w_ptr;           /* first header to add to bitstream */
-  last_ptr = gfc->h_ptr - 1;   /* last header to add to bitstream */
+  //int first_ptr=gfc->w_ptr;           /* first header to add to bitstream */
+  int last_ptr = gfc->h_ptr - 1;   /* last header to add to bitstream */
   if (last_ptr==-1) last_ptr=MAX_HEADER_BUF-1;   
   l3_side = &gfc->l3_side;
 
@@ -817,7 +813,7 @@ flush_bitstream(lame_global_flags *gfp)
 
   /* check that the 100% of the last frame has been written to bitstream */
   assert (gfc->header[last_ptr].write_timing + getframebits(gfp)
-	  == gfc->bs.totbit);
+          == gfc->bs.totbit);
 
   /* we have padded out all frames with ancillary data, which is the
      same as filling the bitreservoir with ancillary data, so : */
@@ -827,7 +823,7 @@ flush_bitstream(lame_global_flags *gfp)
 
   /* save the ReplayGain value */
   if (gfc->findReplayGain) {
-    FLOAT RadioGain = (FLOAT) GetTitleGain(gfc->rgdata);
+    FLOAT const RadioGain = (FLOAT) GetTitleGain(gfc->rgdata);
     assert(RadioGain != GAIN_NOT_ENOUGH_SAMPLES); 
     gfc->RadioGain = (int) floor( RadioGain * 10.0 + 0.5 ); /* round to nearest */
   }
@@ -838,7 +834,7 @@ flush_bitstream(lame_global_flags *gfp)
     
     if (gfc->noclipGainChange > 0) { /* clipping occurs */
       if (gfp->scale == 1.0 || gfp->scale == 0.0) 
-	gfc->noclipScale = floor( (32767.0 / gfc->PeakSample) * 100.0 ) / 100.0;  /* round down */
+        gfc->noclipScale = floor( (32767.0 / gfc->PeakSample) * 100.0 ) / 100.0;  /* round down */
       else
         /* the user specified his own scaling factor. We could suggest 
          * the scaling factor of (32767.0/gfp->PeakSample)*(gfp->scale)
@@ -854,9 +850,9 @@ flush_bitstream(lame_global_flags *gfp)
 
 
 
-void  add_dummy_byte ( lame_global_flags* const gfp, unsigned char val )
+void  add_dummy_byte ( lame_global_flags const * const gfp, unsigned char val )
 {
-  lame_internal_flags *gfc = gfp->internal_flags;
+  lame_internal_flags * const gfc = gfp->internal_flags;
   int i;
 
   putbits_noheaders(gfc, val, 8);   
@@ -877,9 +873,9 @@ void  add_dummy_byte ( lame_global_flags* const gfp, unsigned char val )
   in the IS).
   */
 int
-format_bitstream(lame_global_flags *gfp)
+format_bitstream(lame_global_flags const *gfp)
 {
-    lame_internal_flags *gfc=gfp->internal_flags;
+    lame_internal_flags * const gfc=gfp->internal_flags;
     int bits,nbytes;
     III_side_info_t *l3_side;
     int bitsPerFrame;
@@ -939,7 +935,7 @@ format_bitstream(lame_global_flags *gfp)
       /* to avoid totbit overflow, (at 8h encoding at 128kbs) lets reset bit counter*/
       int i;
       for (i=0 ; i< MAX_HEADER_BUF ; ++i) 
-	gfc->header[i].write_timing -= gfc->bs.totbit;      
+        gfc->header[i].write_timing -= gfc->bs.totbit;      
       gfc->bs.totbit=0;
     }
 
@@ -961,8 +957,8 @@ format_bitstream(lame_global_flags *gfp)
 */
 int copy_buffer(lame_internal_flags *gfc,unsigned char *buffer,int size,int mp3data) 
 {
-    Bit_stream_struc *bs=&gfc->bs;
-    int minimum = bs->buf_byte_idx + 1;
+    Bit_stream_struc * const bs=&gfc->bs;
+    int const minimum = bs->buf_byte_idx + 1;
     if (minimum <= 0) return 0;
     if (size!=0 && minimum>size) return -1; /* buffer is too small */
     memcpy(buffer,bs->buf,minimum);
@@ -975,7 +971,7 @@ int copy_buffer(lame_internal_flags *gfc,unsigned char *buffer,int size,int mp3d
 #ifdef DECODE_ON_THE_FLY 
         if (gfc->decode_on_the_fly) {  /* decode the frame */
           sample_t pcm_buf[2][1152];
-	  int mp3_in = minimum;
+          int mp3_in = minimum;
           int samples_out = -1;
           int i;
 
@@ -986,11 +982,11 @@ int copy_buffer(lame_internal_flags *gfc,unsigned char *buffer,int size,int mp3d
             /* samples_out = 0:  need more data to decode 
              * samples_out = -1:  error.  Lets assume 0 pcm output 
              * samples_out = number of samples output */
-	    
-	    /* set the lenght of the mp3 input buffer to zero, so that in the 
-	     * next iteration of the loop we will be querying mpglib about 
-	     * buffered data */
-	    mp3_in = 0;
+            
+            /* set the lenght of the mp3 input buffer to zero, so that in the 
+             * next iteration of the loop we will be querying mpglib about 
+             * buffered data */
+            mp3_in = 0;
               
             if (samples_out==-1) {
                 /* error decoding. Not fatal, but might screw up 
@@ -1023,7 +1019,7 @@ int copy_buffer(lame_internal_flags *gfc,unsigned char *buffer,int size,int mp3d
               if (gfc->findReplayGain)
                 if (AnalyzeSamples(gfc->rgdata, pcm_buf[0], pcm_buf[1], samples_out, gfc->channels_out) == GAIN_ANALYSIS_ERROR)
                    return -6;
-		   
+                   
             } /* if (samples_out>0) */
           } /* while (samples_out!=0) */
         } /* if (gfc->decode_on_the_fly) */ 

@@ -82,7 +82,7 @@ typedef struct calc_noise_data_t {
 } calc_noise_data;
 
 
-int     on_pe (lame_global_flags *gfp, FLOAT pe[2][2], III_side_info_t * l3_side,
+int     on_pe (lame_global_flags const *gfp, FLOAT const pe[2][2], III_side_info_t const * l3_side,
                int targ_bits[2], int mean_bits, int gr, int cbr);
 
 void    reduce_side (int targ_bits[2], FLOAT ms_ener_ratio, int mean_bits,
@@ -96,29 +96,27 @@ int     bin_search_StepSize (lame_internal_flags * const gfc, gr_info * const co
 void    iteration_init (lame_global_flags *gfp);
 
 
-int     calc_xmin (lame_global_flags *gfp,
-                    const III_psy_ratio * const ratio,
+int     calc_xmin (lame_global_flags const *gfp,
+                    III_psy_ratio const * const ratio,
                     gr_info * const cod_info,
                     FLOAT * l3_xmin);
 
-int     calc_noise (const lame_internal_flags * const gfc,
-                    const gr_info * const cod_info,
+int     calc_noise (const gr_info * const cod_info,
                     const FLOAT * l3_xmin,
                     FLOAT * distort,
 		            calc_noise_result * const res,
                     calc_noise_data * prev_noise);
 
-void    set_frame_pinfo (lame_global_flags *gfp,
-                         III_psy_ratio ratio[2][2]);
+void    set_frame_pinfo (lame_global_flags const *gfp, III_psy_ratio const ratio[2][2]);
 
 
 
 
 /* takehiro.c */
 
-int     count_bits (lame_internal_flags * const gfc, const FLOAT * const xr,
+int     count_bits (lame_internal_flags const * const gfc, const FLOAT * const xr,
 		    gr_info * const cod_info, calc_noise_data* prev_noise);
-int     noquant_count_bits (lame_internal_flags * const gfc,
+int     noquant_count_bits (lame_internal_flags const * const gfc,
 			    gr_info * const cod_info, calc_noise_data* prev_noise);
 
 

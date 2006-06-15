@@ -31,11 +31,28 @@
 #include "lame_global_flags.h"
 
 #define SET_OPTION(opt, val, def) if (enforce) \
-    lame_set_##opt(gfp, val); \
+    (void) lame_set_##opt(gfp, val); \
     else if (lame_get_##opt(gfp) == def) \
-    lame_set_##opt(gfp, val);
+    (void) lame_set_##opt(gfp, val);
 
+#undef Min
+#undef Max
 
+static inline int min_int( int a, int b )
+{
+    if ( a < b ) {
+        return a;
+    }
+    return b;
+}
+
+static inline int max_int( int a, int b )
+{
+    if ( a > b ) {
+        return a;
+    }
+    return b;
+}
 
 int apply_abr_preset(lame_global_flags*  gfp, int preset, int enforce)
 {
@@ -90,11 +107,11 @@ int apply_abr_preset(lame_global_flags*  gfp, int preset, int enforce)
     r= nearestBitrateFullIndex(preset);
 
 
-    lame_set_VBR(gfp, vbr_abr); 
-    lame_set_VBR_mean_bitrate_kbps(gfp, (actual_bitrate));
-    lame_set_VBR_mean_bitrate_kbps(gfp, Min(lame_get_VBR_mean_bitrate_kbps(gfp), 320)); 
-    lame_set_VBR_mean_bitrate_kbps(gfp, Max(lame_get_VBR_mean_bitrate_kbps(gfp), 8)); 
-    lame_set_brate(gfp, lame_get_VBR_mean_bitrate_kbps(gfp));
+    (void) lame_set_VBR(gfp, vbr_abr); 
+    (void) lame_set_VBR_mean_bitrate_kbps(gfp, (actual_bitrate));
+    (void) lame_set_VBR_mean_bitrate_kbps(gfp, min_int(lame_get_VBR_mean_bitrate_kbps(gfp), 320)); 
+    (void) lame_set_VBR_mean_bitrate_kbps(gfp, max_int(lame_get_VBR_mean_bitrate_kbps(gfp), 8)); 
+    (void) lame_set_brate(gfp, lame_get_VBR_mean_bitrate_kbps(gfp));
 
 
     SET_OPTION(psy_model, PSY_NSPSYTUNE, -1);
@@ -102,16 +119,16 @@ int apply_abr_preset(lame_global_flags*  gfp, int preset, int enforce)
 
     /* parameters for which there is no proper set/get interface */
     if (abr_switch_map[r].safejoint > 0)
-        lame_set_exp_nspsytune(gfp, lame_get_exp_nspsytune(gfp) | 2); /* safejoint */
+        (void) lame_set_exp_nspsytune(gfp, lame_get_exp_nspsytune(gfp) | 2); /* safejoint */
 
     if (abr_switch_map[r].sfscale > 0)
-        lame_set_sfscale(gfp, 1);
+        (void) lame_set_sfscale(gfp, 1);
 
     /* ns-bass tweaks */
     if (abr_switch_map[r].nsbass != 0) {
         k = (int)(abr_switch_map[r].nsbass * 4);
         if (k < 0) k += 64;
-        lame_set_exp_nspsytune(gfp, lame_get_exp_nspsytune(gfp) | (k << 2));
+        (void) lame_set_exp_nspsytune(gfp, lame_get_exp_nspsytune(gfp) | (k << 2));
     }
 
 
@@ -156,37 +173,37 @@ int apply_preset(lame_global_flags*  gfp, int preset, int enforce)
     switch (preset) {
     case R3MIX: {
         preset = V3;
-        lame_set_VBR(gfp, vbr_mtrh);
+        (void) lame_set_VBR(gfp, vbr_mtrh);
         break;
     }
     case MEDIUM: {
         preset = V4;
-        lame_set_VBR(gfp, vbr_rh);
+        (void) lame_set_VBR(gfp, vbr_rh);
         break;
     }
     case MEDIUM_FAST: {
         preset = V4;
-        lame_set_VBR(gfp, vbr_mtrh);
+        (void) lame_set_VBR(gfp, vbr_mtrh);
         break;
     }
     case STANDARD: {
         preset = V2;
-        lame_set_VBR(gfp, vbr_rh);
+        (void) lame_set_VBR(gfp, vbr_rh);
         break;
     }
     case STANDARD_FAST: {
         preset = V2;
-        lame_set_VBR(gfp, vbr_mtrh);
+        (void) lame_set_VBR(gfp, vbr_mtrh);
         break;
     }
     case EXTREME: {
         preset = V0;
-        lame_set_VBR(gfp, vbr_rh);
+        (void) lame_set_VBR(gfp, vbr_rh);
         break;
     }
     case EXTREME_FAST: {
         preset = V0;
-        lame_set_VBR(gfp, vbr_mtrh);
+        (void) lame_set_VBR(gfp, vbr_mtrh);
         break;
     }
     case INSANE: {
@@ -200,7 +217,7 @@ int apply_preset(lame_global_flags*  gfp, int preset, int enforce)
 
     switch (preset) {
     case V9: {
-        lame_set_VBR_q(gfp, 9);
+        (void) lame_set_VBR_q(gfp, 9);
         switch (lame_get_VBR(gfp)) {
         case vbr_rh: {
             SET_OPTION(short_threshold_lrm, 6.60f, -1);
@@ -215,7 +232,7 @@ int apply_preset(lame_global_flags*  gfp, int preset, int enforce)
             SET_OPTION(ATHcurve, 11, -1);
             SET_OPTION(athaa_sensitivity, -25, 0);
 
-            lame_set_experimentalY(gfp, 1);
+            (void) lame_set_experimentalY(gfp, 1);
 
             return preset;
         }
@@ -232,14 +249,14 @@ int apply_preset(lame_global_flags*  gfp, int preset, int enforce)
             SET_OPTION(ATHcurve, 11, -1);
             SET_OPTION(athaa_sensitivity, -25, 0);
 
-            lame_set_experimentalY(gfp, 1);
+            (void) lame_set_experimentalY(gfp, 1);
 
             return preset;
         }
         }
     }
     case V8: {
-        lame_set_VBR_q(gfp, 8);
+        (void) lame_set_VBR_q(gfp, 8);
         switch (lame_get_VBR(gfp)) {
         case vbr_rh: {
             SET_OPTION(short_threshold_lrm, 6.60f, -1);
@@ -254,7 +271,7 @@ int apply_preset(lame_global_flags*  gfp, int preset, int enforce)
             SET_OPTION(ATHcurve, 10, -1);
             SET_OPTION(athaa_sensitivity, -23, 0);
 
-            lame_set_experimentalY(gfp, 1);
+            (void) lame_set_experimentalY(gfp, 1);
 
             return preset;
         }
@@ -271,14 +288,14 @@ int apply_preset(lame_global_flags*  gfp, int preset, int enforce)
             SET_OPTION(ATHcurve, 10, -1);
             SET_OPTION(athaa_sensitivity, -23, 0);
 
-            lame_set_experimentalY(gfp, 1);
+            (void) lame_set_experimentalY(gfp, 1);
 
             return preset;
         }
         }
     }
     case V7: {
-        lame_set_VBR_q(gfp, 7);
+        (void) lame_set_VBR_q(gfp, 7);
         switch (lame_get_VBR(gfp)) {
         case vbr_rh: {
             SET_OPTION(short_threshold_lrm, 6.60f, -1);
@@ -294,7 +311,7 @@ int apply_preset(lame_global_flags*  gfp, int preset, int enforce)
             SET_OPTION(ATHcurve, 8, -1);
             SET_OPTION(athaa_sensitivity, -22, 0);
 
-            lame_set_experimentalY(gfp, 1);
+            (void) lame_set_experimentalY(gfp, 1);
 
             return preset;
         }
@@ -312,14 +329,14 @@ int apply_preset(lame_global_flags*  gfp, int preset, int enforce)
             SET_OPTION(ATHcurve, 8, -1);
             SET_OPTION(athaa_sensitivity, -22, 0);
 
-            lame_set_experimentalY(gfp, 1);
+            (void) lame_set_experimentalY(gfp, 1);
 
             return preset;
         }
         }
     }
     case V6: {
-        lame_set_VBR_q(gfp, 6);
+        (void) lame_set_VBR_q(gfp, 6);
         switch (lame_get_VBR(gfp)) {
         case vbr_rh: {
             SET_OPTION(short_threshold_lrm, 6.60f, -1);
@@ -335,7 +352,7 @@ int apply_preset(lame_global_flags*  gfp, int preset, int enforce)
             SET_OPTION(ATHcurve, 6.5, -1);
             SET_OPTION(athaa_sensitivity, -19, 0);
 
-            lame_set_experimentalY(gfp, 1);
+            (void) lame_set_experimentalY(gfp, 1);
 
             return preset;
         }
@@ -353,14 +370,14 @@ int apply_preset(lame_global_flags*  gfp, int preset, int enforce)
             SET_OPTION(ATHcurve, 6.5, -1);
             SET_OPTION(athaa_sensitivity, -19, 0);
 
-            lame_set_experimentalY(gfp, 1);
+            (void) lame_set_experimentalY(gfp, 1);
 
             return preset;
         }
         }
     }
     case V5: {
-        lame_set_VBR_q(gfp, 5);
+        (void) lame_set_VBR_q(gfp, 5);
         switch (lame_get_VBR(gfp)) {
             case vbr_rh: {
             SET_OPTION(short_threshold_lrm, 6.40f, -1);
@@ -376,7 +393,7 @@ int apply_preset(lame_global_flags*  gfp, int preset, int enforce)
             SET_OPTION(ATHcurve, 4, -1);
             SET_OPTION(athaa_sensitivity, -12, 0);
 
-            lame_set_experimentalY(gfp, 1);
+            (void) lame_set_experimentalY(gfp, 1);
 
             return preset;
         }
@@ -394,14 +411,14 @@ int apply_preset(lame_global_flags*  gfp, int preset, int enforce)
             SET_OPTION(ATHcurve, 4, -1);
             SET_OPTION(athaa_sensitivity, -12, 0);
 
-            lame_set_experimentalY(gfp, 1);
+            (void) lame_set_experimentalY(gfp, 1);
 
             return preset;
         }
         }
     }
     case V4: { /*MEDIUM*/
-        lame_set_VBR_q(gfp, 4);
+        (void) lame_set_VBR_q(gfp, 4);
         switch (lame_get_VBR(gfp)) {
         case vbr_rh: {
             SET_OPTION(short_threshold_lrm, 6.00f, -1);
@@ -409,7 +426,7 @@ int apply_preset(lame_global_flags*  gfp, int preset, int enforce)
             SET_OPTION(quant_comp, 9, -1);
             SET_OPTION(quant_comp_short, 9, -1);
             SET_OPTION(psy_model, PSY_NSPSYTUNE, -1);
-            lame_set_exp_nspsytune(gfp, lame_get_exp_nspsytune(gfp) | 2); /* safejoint */
+            (void) lame_set_exp_nspsytune(gfp, lame_get_exp_nspsytune(gfp) | 2); /* safejoint */
             SET_OPTION(msfix, 1.79, -1);
             SET_OPTION(maskingadjust, -.7, 0);
             SET_OPTION(maskingadjust_short, -1.1, 0);
@@ -417,7 +434,7 @@ int apply_preset(lame_global_flags*  gfp, int preset, int enforce)
             SET_OPTION(ATHcurve, 3.5, -1);
             SET_OPTION(athaa_sensitivity, -8, 0);
 
-            lame_set_experimentalY(gfp, 1);
+            (void) lame_set_experimentalY(gfp, 1);
 
             return preset;
         }
@@ -427,7 +444,7 @@ int apply_preset(lame_global_flags*  gfp, int preset, int enforce)
             SET_OPTION(quant_comp, 0, -1);
             SET_OPTION(quant_comp_short, 0, -1);
             SET_OPTION(psy_model, PSY_NSPSYTUNE, -1);
-            lame_set_exp_nspsytune(gfp, lame_get_exp_nspsytune(gfp) | 2); /* safejoint */
+            (void) lame_set_exp_nspsytune(gfp, lame_get_exp_nspsytune(gfp) | 2); /* safejoint */
             SET_OPTION(msfix, 1.79, -1);
             SET_OPTION(maskingadjust, -.7, 0);
             SET_OPTION(maskingadjust_short, -1.1, 0);
@@ -435,14 +452,14 @@ int apply_preset(lame_global_flags*  gfp, int preset, int enforce)
             SET_OPTION(ATHcurve, 3.5, -1);
             SET_OPTION(athaa_sensitivity, -8, 0);
 
-            lame_set_experimentalY(gfp, 1);
+            (void) lame_set_experimentalY(gfp, 1);
 
             return preset;
         }
         }
     }
     case V3: {
-        lame_set_VBR_q(gfp, 3);
+        (void) lame_set_VBR_q(gfp, 3);
         switch (lame_get_VBR(gfp)) {
         case vbr_rh: {
             SET_OPTION(short_threshold_lrm, 5.80f, -1);
@@ -450,7 +467,7 @@ int apply_preset(lame_global_flags*  gfp, int preset, int enforce)
             SET_OPTION(quant_comp, 9, -1);
             SET_OPTION(quant_comp_short, 9, -1);
             SET_OPTION(psy_model, PSY_NSPSYTUNE, -1);
-            lame_set_exp_nspsytune(gfp, lame_get_exp_nspsytune(gfp) | 2); /* safejoint */
+            (void) lame_set_exp_nspsytune(gfp, lame_get_exp_nspsytune(gfp) | 2); /* safejoint */
             SET_OPTION(msfix, 1.64, -1);
             SET_OPTION(maskingadjust, -1.8, 0);
             SET_OPTION(maskingadjust_short, -2.8, 0);
@@ -459,8 +476,8 @@ int apply_preset(lame_global_flags*  gfp, int preset, int enforce)
             SET_OPTION(athaa_sensitivity, -4, 0);
 
             /* modify sfb21 by 5 dB plus ns-treble=0                  */
-            lame_set_exp_nspsytune(gfp, lame_get_exp_nspsytune(gfp) | (20 << 20));
-            lame_set_experimentalY(gfp, 1);
+            (void) lame_set_exp_nspsytune(gfp, lame_get_exp_nspsytune(gfp) | (20 << 20));
+            (void) lame_set_experimentalY(gfp, 1);
 
             return preset;
         }
@@ -470,7 +487,7 @@ int apply_preset(lame_global_flags*  gfp, int preset, int enforce)
             SET_OPTION(quant_comp, 0, -1);
             SET_OPTION(quant_comp_short, 0, -1);
             SET_OPTION(psy_model, PSY_NSPSYTUNE, -1);
-            lame_set_exp_nspsytune(gfp, lame_get_exp_nspsytune(gfp) | 2); /* safejoint */
+            (void) lame_set_exp_nspsytune(gfp, lame_get_exp_nspsytune(gfp) | 2); /* safejoint */
             SET_OPTION(msfix, 1.64, -1);
             SET_OPTION(maskingadjust, -1.45, 0);
             SET_OPTION(maskingadjust_short, -2.45, 0);
@@ -479,15 +496,15 @@ int apply_preset(lame_global_flags*  gfp, int preset, int enforce)
             SET_OPTION(athaa_sensitivity, -4, 0);
 
             /* modify sfb21 by 3.75 dB plus ns-treble=0                  */
-            lame_set_exp_nspsytune(gfp, lame_get_exp_nspsytune(gfp) | (15 << 20));
-            lame_set_experimentalY(gfp, 1);
+            (void) lame_set_exp_nspsytune(gfp, lame_get_exp_nspsytune(gfp) | (15 << 20));
+            (void) lame_set_experimentalY(gfp, 1);
 
             return preset;
         }
         }
     }
     case V2: { /*STANDARD*/
-        lame_set_VBR_q(gfp, 2);
+        (void) lame_set_VBR_q(gfp, 2);
         switch (lame_get_VBR(gfp)) {
         case vbr_rh: {
             SET_OPTION(short_threshold_lrm, 5.6f, -1);
@@ -495,14 +512,14 @@ int apply_preset(lame_global_flags*  gfp, int preset, int enforce)
             SET_OPTION(quant_comp, 9, -1);
             SET_OPTION(quant_comp_short, 9, -1);
             SET_OPTION(psy_model, PSY_NSPSYTUNE, -1);
-            lame_set_exp_nspsytune(gfp, lame_get_exp_nspsytune(gfp) | 2); /* safejoint */
+            (void) lame_set_exp_nspsytune(gfp, lame_get_exp_nspsytune(gfp) | 2); /* safejoint */
             SET_OPTION(msfix, 1.49, -1);
             SET_OPTION(maskingadjust, -2.2, 0);
             SET_OPTION(maskingadjust_short, -3.5, 0);
             SET_OPTION(ATHlower, 2.8, 0);
             SET_OPTION(ATHcurve, 2, -1);
             /* modify sfb21 by 5.25 dB plus ns-treble=0                  */
-            lame_set_exp_nspsytune(gfp, lame_get_exp_nspsytune(gfp) | (21 << 20));
+            (void) lame_set_exp_nspsytune(gfp, lame_get_exp_nspsytune(gfp) | (21 << 20));
  
             return preset;
         }
@@ -512,21 +529,21 @@ int apply_preset(lame_global_flags*  gfp, int preset, int enforce)
             SET_OPTION(quant_comp, 0, -1);
             SET_OPTION(quant_comp_short, 0, -1);
             SET_OPTION(psy_model, PSY_NSPSYTUNE, -1);
-            lame_set_exp_nspsytune(gfp, lame_get_exp_nspsytune(gfp) | 2); /* safejoint */
+            (void) lame_set_exp_nspsytune(gfp, lame_get_exp_nspsytune(gfp) | 2); /* safejoint */
             SET_OPTION(msfix, 1.49, -1);
             SET_OPTION(maskingadjust, -1.7, 0);
             SET_OPTION(maskingadjust_short, -3.2, 0);
             SET_OPTION(ATHlower, 2, 0);
             SET_OPTION(ATHcurve, 2, -1);
             /* modify sfb21 by 4.5 dB plus ns-treble=0                  */
-            lame_set_exp_nspsytune(gfp, lame_get_exp_nspsytune(gfp) | (18 << 20));
+            (void) lame_set_exp_nspsytune(gfp, lame_get_exp_nspsytune(gfp) | (18 << 20));
 
             return preset;
         }
         }
     }
     case V1: {
-        lame_set_VBR_q(gfp, 1);
+        (void) lame_set_VBR_q(gfp, 1);
         switch (lame_get_VBR(gfp)) {
         case vbr_rh: {
             SET_OPTION(short_threshold_lrm, 5.3f, -1);
@@ -534,14 +551,14 @@ int apply_preset(lame_global_flags*  gfp, int preset, int enforce)
             SET_OPTION(quant_comp, 9, -1);
             SET_OPTION(quant_comp_short, 9, -1);
             SET_OPTION(psy_model, PSY_NSPSYTUNE, -1);
-            lame_set_exp_nspsytune(gfp, lame_get_exp_nspsytune(gfp) | 2); /* safejoint */
+            (void) lame_set_exp_nspsytune(gfp, lame_get_exp_nspsytune(gfp) | 2); /* safejoint */
             SET_OPTION(msfix, 1.35, -1);
             SET_OPTION(maskingadjust, -3.6, 0);
             SET_OPTION(maskingadjust_short, -5.6, 0);
             SET_OPTION(ATHlower, 4.5, 0);
             SET_OPTION(ATHcurve, 1.5, -1);
             /* modify sfb21 by 5.25 dB plus ns-treble=0                  */
-            lame_set_exp_nspsytune(gfp, lame_get_exp_nspsytune(gfp) | (21 << 20));
+            (void) lame_set_exp_nspsytune(gfp, lame_get_exp_nspsytune(gfp) | (21 << 20));
 
             return preset;
         }
@@ -551,21 +568,21 @@ int apply_preset(lame_global_flags*  gfp, int preset, int enforce)
             SET_OPTION(quant_comp, 0, -1);
             SET_OPTION(quant_comp_short, 0, -1);
             SET_OPTION(psy_model, PSY_NSPSYTUNE, -1);
-            lame_set_exp_nspsytune(gfp, lame_get_exp_nspsytune(gfp) | 2); /* safejoint */
+            (void) lame_set_exp_nspsytune(gfp, lame_get_exp_nspsytune(gfp) | 2); /* safejoint */
             SET_OPTION(msfix, 1.35, -1);
             SET_OPTION(maskingadjust, -3.4, 0);
             SET_OPTION(maskingadjust_short, -5.4, 0);
             SET_OPTION(ATHlower, 4.5, 0);
             SET_OPTION(ATHcurve, 1.5, -1);
             /* modify sfb21 by 5.25 dB plus ns-treble=0                  */
-            lame_set_exp_nspsytune(gfp, lame_get_exp_nspsytune(gfp) | (21 << 20));
+            (void) lame_set_exp_nspsytune(gfp, lame_get_exp_nspsytune(gfp) | (21 << 20));
 
             return preset;
         }
         }
     }
     case V0: { /*EXTREME*/
-        lame_set_VBR_q(gfp, 0);
+        (void) lame_set_VBR_q(gfp, 0);
         switch (lame_get_VBR(gfp)) {
         case vbr_rh: {
             SET_OPTION(short_threshold_lrm, 5.2f, -1);
@@ -573,14 +590,14 @@ int apply_preset(lame_global_flags*  gfp, int preset, int enforce)
             SET_OPTION(quant_comp, 9, -1);
             SET_OPTION(quant_comp_short, 9, -1);
             SET_OPTION(psy_model, PSY_NSPSYTUNE, -1);
-            lame_set_exp_nspsytune(gfp, lame_get_exp_nspsytune(gfp) | 2); /* safejoint */
+            (void) lame_set_exp_nspsytune(gfp, lame_get_exp_nspsytune(gfp) | 2); /* safejoint */
             SET_OPTION(msfix, .97, -1);
             SET_OPTION(maskingadjust, -4.2, 0);
             SET_OPTION(maskingadjust_short, -6.3, 0);
             SET_OPTION(ATHlower, 4.8, 0);
             SET_OPTION(ATHcurve, 1, -1);
             /* modify sfb21 by 5 dB plus ns-treble=0                  */
-            lame_set_exp_nspsytune(gfp, lame_get_exp_nspsytune(gfp) | (21 << 20));
+            (void) lame_set_exp_nspsytune(gfp, lame_get_exp_nspsytune(gfp) | (21 << 20));
 
             return preset;
         }
@@ -590,14 +607,14 @@ int apply_preset(lame_global_flags*  gfp, int preset, int enforce)
             SET_OPTION(quant_comp, 0, -1);
             SET_OPTION(quant_comp_short, 0, -1);
             SET_OPTION(psy_model, PSY_NSPSYTUNE, -1);
-            lame_set_exp_nspsytune(gfp, lame_get_exp_nspsytune(gfp) | 2); /* safejoint */
+            (void) lame_set_exp_nspsytune(gfp, lame_get_exp_nspsytune(gfp) | 2); /* safejoint */
             SET_OPTION(msfix, .97, -1);
             SET_OPTION(maskingadjust, -3.6, 0);
             SET_OPTION(maskingadjust_short, -5.6, 0);
             SET_OPTION(ATHlower, 7.5, 0);
             SET_OPTION(ATHcurve, 1, -1);
             /* modify sfb21 by 6.5 dB plus ns-treble=0                  */
-            lame_set_exp_nspsytune(gfp, lame_get_exp_nspsytune(gfp) | (26 << 20));
+            (void) lame_set_exp_nspsytune(gfp, lame_get_exp_nspsytune(gfp) | (26 << 20));
 
             return preset;
         }

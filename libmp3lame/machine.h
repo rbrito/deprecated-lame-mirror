@@ -64,10 +64,10 @@ char *strchr (), *strrchr ();
 # include <sys/stat.h>
 #endif
 
-#if HAVE_INTTYPES_H
+#ifdef HAVE_INTTYPES_H
 # include <inttypes.h>
 #else
-# if HAVE_STDINT_H
+# ifdef HAVE_STDINT_H
 #  include <stdint.h>
 # endif
 #endif
@@ -154,10 +154,6 @@ typedef double  FLOAT8;
 typedef FLOAT     sample_t;
 typedef sample_t  stereo_t [2];
 
-#ifndef LAME_LAME_H
-struct lame_global_struct;
-#endif
-typedef struct lame_global_struct lame_global_flags;
 
 #ifndef LAME_UTIL_H
 struct lame_internal_flags;

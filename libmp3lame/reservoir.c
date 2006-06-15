@@ -79,13 +79,13 @@
  */
 
 int
-ResvFrameBegin(lame_global_flags *gfp, int *mean_bits)
+ResvFrameBegin(lame_global_flags const *gfp, int *mean_bits)
 {
-    lame_internal_flags *gfc=gfp->internal_flags;
+    lame_internal_flags * const gfc=gfp->internal_flags;
     int fullFrameBits;
     int resvLimit;
     int maxmp3buf;
-    III_side_info_t     *l3_side = &gfc->l3_side;
+    III_side_info_t     * const l3_side = &gfc->l3_side;
     int frameLength;
 
     frameLength = getframebits(gfp);
@@ -179,9 +179,9 @@ ResvFrameBegin(lame_global_flags *gfp, int *mean_bits)
          extra_bits:  amount extra available from reservoir
   Mark Taylor 4/99
 */
-void ResvMaxBits(lame_global_flags *gfp, int mean_bits, int *targ_bits, int *extra_bits, int cbr)
+void ResvMaxBits(lame_global_flags const *gfp, int mean_bits, int *targ_bits, int *extra_bits, int cbr)
 {
-  lame_internal_flags *gfc=gfp->internal_flags;
+  lame_internal_flags * const gfc=gfp->internal_flags;
   int add_bits;
   int ResvSize = gfc->ResvSize, ResvMax = gfc->ResvMax;
 
@@ -227,7 +227,7 @@ void ResvMaxBits(lame_global_flags *gfp, int mean_bits, int *targ_bits, int *ext
   the reservoir to reflect the granule's usage.
 */
 void
-ResvAdjust(lame_internal_flags *gfc,gr_info *gi)
+ResvAdjust(lame_internal_flags *gfc,gr_info const *gi)
 {
     gfc->ResvSize -= gi->part2_3_length + gi->part2_length;
 }
@@ -244,7 +244,7 @@ ResvFrameEnd(lame_internal_flags *gfc, int mean_bits)
 {
     int stuffingBits;
     int over_bits;
-    III_side_info_t     *l3_side = &gfc->l3_side;
+    III_side_info_t     * const l3_side = &gfc->l3_side;
 
 
     gfc->ResvSize += mean_bits * gfc->mode_gr;

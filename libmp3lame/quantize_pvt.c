@@ -218,21 +218,21 @@ static FLOAT ATHmdct( lame_global_flags *gfp, FLOAT f )
 
 static void compute_ath( lame_global_flags *gfp )
 {
-    FLOAT *ATH_l = gfp->internal_flags->ATH->l;
-    FLOAT *ATH_psfb21 = gfp->internal_flags->ATH->psfb21;
-    FLOAT *ATH_s = gfp->internal_flags->ATH->s;
-    FLOAT *ATH_psfb12 = gfp->internal_flags->ATH->psfb12;
-    lame_internal_flags *gfc = gfp->internal_flags;
+    FLOAT * const ATH_l = gfp->internal_flags->ATH->l;
+    FLOAT * const ATH_psfb21 = gfp->internal_flags->ATH->psfb21;
+    FLOAT * const ATH_s = gfp->internal_flags->ATH->s;
+    FLOAT * const ATH_psfb12 = gfp->internal_flags->ATH->psfb12;
+    lame_internal_flags const * const gfc = gfp->internal_flags;
     int sfb, i, start, end;
     FLOAT ATH_f;
-    FLOAT samp_freq = gfp->out_samplerate;
+    FLOAT const samp_freq = gfp->out_samplerate;
 
     for (sfb = 0; sfb < SBMAX_l; sfb++) {
         start = gfc->scalefac_band.l[ sfb ];
         end   = gfc->scalefac_band.l[ sfb+1 ];
         ATH_l[sfb]=FLOAT_MAX;
         for (i = start ; i < end; i++) {
-            FLOAT freq = i*samp_freq/(2*576);
+            FLOAT const freq = i*samp_freq/(2*576);
             ATH_f = ATHmdct( gfp, freq );  /* freq in kHz */
             ATH_l[sfb] = Min( ATH_l[sfb], ATH_f );
         }
@@ -246,7 +246,7 @@ static void compute_ath( lame_global_flags *gfp )
         end = gfc->scalefac_band.psfb21[ sfb+1 ];
         ATH_psfb21[sfb]=FLOAT_MAX;
         for (i = start ; i < end; i++) {
-            FLOAT freq = i*samp_freq/(2*576);
+            FLOAT const freq = i*samp_freq/(2*576);
             ATH_f = ATHmdct( gfp, freq );  /* freq in kHz */
             ATH_psfb21[sfb] = Min( ATH_psfb21[sfb], ATH_f );
         }
@@ -257,7 +257,7 @@ static void compute_ath( lame_global_flags *gfp )
         end   = gfc->scalefac_band.s[ sfb+1 ];
         ATH_s[sfb] = FLOAT_MAX;
         for (i = start ; i < end; i++) {
-            FLOAT freq = i*samp_freq/(2*192);
+            FLOAT const freq = i*samp_freq/(2*192);
             ATH_f = ATHmdct( gfp, freq );    /* freq in kHz */
             ATH_s[sfb] = Min( ATH_s[sfb], ATH_f );
         }
@@ -270,7 +270,7 @@ static void compute_ath( lame_global_flags *gfp )
         end = gfc->scalefac_band.psfb12[ sfb+1 ];
         ATH_psfb12[sfb]=FLOAT_MAX;
         for (i = start ; i < end; i++) {
-            FLOAT freq = i*samp_freq/(2*192);
+            FLOAT const freq = i*samp_freq/(2*192);
             ATH_f = ATHmdct( gfp, freq );  /* freq in kHz */
             ATH_psfb12[sfb] = Min( ATH_psfb12[sfb], ATH_f );
         }
@@ -322,7 +322,7 @@ static void compute_ath( lame_global_flags *gfp )
 void
 iteration_init( lame_global_flags *gfp)
 {
-  lame_internal_flags *gfc=gfp->internal_flags;
+  lame_internal_flags * const gfc=gfp->internal_flags;
   III_side_info_t * const l3_side = &gfc->l3_side;
   int i;
 
@@ -414,11 +414,11 @@ iteration_init( lame_global_flags *gfp)
  * mt 6/99
  * bugfixes rh 8/01: often allocated more than the allowed 4095 bits
  ************************************************************************/
-int on_pe( lame_global_flags *gfp, FLOAT pe[][2], III_side_info_t *l3_side,
+int on_pe( lame_global_flags const *gfp, FLOAT const pe[][2], III_side_info_t const *l3_side,
            int targ_bits[2], int mean_bits, int gr, int cbr )
 {
-    lame_internal_flags * gfc = gfp->internal_flags;
-    gr_info *   cod_info;
+    lame_internal_flags const * const gfc = gfp->internal_flags;
+    gr_info const *   cod_info;
     int     extra_bits, tbits, bits;
     int     add_bits[2]; 
     int     max_bits;  /* maximum allowed bits for this granule */
@@ -540,7 +540,7 @@ FLOAT athAdjust( FLOAT a, FLOAT x, FLOAT athFloor )
     FLOAT const o = 90.30873362;
     FLOAT const p = 94.82444863;
     FLOAT u = FAST_LOG10_X(x, 10.0); 
-    FLOAT v = a*a;
+    FLOAT const v = a*a;
     FLOAT w = 0.0;   
     u -= athFloor;                                  /* undo scaling */
     if ( v > 1E-20 ) w = 1. + FAST_LOG10_X(v, 10.0 / o);
@@ -565,16 +565,16 @@ FLOAT athAdjust( FLOAT a, FLOAT x, FLOAT athFloor )
   returns number of sfb's with energy > ATH
 */
 int calc_xmin( 
-        lame_global_flags *gfp,
-        const III_psy_ratio * const ratio,
+        lame_global_flags const *gfp,
+        III_psy_ratio const * const ratio,
             gr_info       *  const cod_info, 
             FLOAT * pxmin
     )
 {
-    lame_internal_flags *gfc = gfp->internal_flags;
+    lame_internal_flags const * const gfc = gfp->internal_flags;
     int sfb, gsfb, j=0, ath_over=0, k;
-    ATH_t * ATH = gfc->ATH;
-    const FLOAT *xr = cod_info->xr;
+    ATH_t const * const ATH = gfc->ATH;
+    const FLOAT * const xr = cod_info->xr;
     int max_nonzero;
 
     for (gsfb = 0; gsfb < cod_info->psy_lmax; gsfb++) {
@@ -667,7 +667,7 @@ FLOAT calc_noise_core_c( const gr_info * const cod_info,
 {
     FLOAT noise = 0;
     int j = *startline;
-    const int *ix = cod_info->l3_enc;
+    const int * const ix = cod_info->l3_enc;
 
     if (j> cod_info->count1) {
             while (l--) {
@@ -720,10 +720,9 @@ FLOAT calc_noise_core_c( const gr_info * const cod_info,
 /* +10 dB  =>  +6.45 */
 
 int  calc_noise( 
-        const lame_internal_flags * const gfc,
-        const gr_info             * const cod_info,
-        const FLOAT              * l3_xmin, 
-              FLOAT              * distort,
+              gr_info       const * const cod_info,
+              FLOAT         const * l3_xmin, 
+              FLOAT               * distort,
               calc_noise_result   * const res,
               calc_noise_data * prev_noise)
 {
@@ -732,15 +731,13 @@ int  calc_noise(
     FLOAT tot_noise_db  = 0; /*    0 dB relative to masking */
     FLOAT max_noise = -20.0; /* -200 dB relative to masking */
     int j = 0;
-    const int *ix = cod_info->l3_enc;
     const int *scalefac = cod_info->scalefac;
-    FLOAT sfb_noise[39];
    
     res->over_SSD = 0;
 
 
     for (sfb = 0; sfb < cod_info->psymax; sfb++) {
-            int s =
+            int const s =
                 cod_info->global_gain
                 - (((*scalefac++) + (cod_info->preflag ? pretab[sfb] : 0))
                    << (cod_info->scalefac_scale + 1))
@@ -757,7 +754,7 @@ int  calc_noise(
                 noise = prev_noise->noise_log[sfb];
 
         } else {
-                FLOAT step = POW20(s);
+                FLOAT const step = POW20(s);
             l = cod_info->width[sfb] >> 1;
 
             if ((j+cod_info->width[sfb])>cod_info->max_nonzero_coeff) {
@@ -812,7 +809,6 @@ int  calc_noise(
             }
             max_noise=Max(max_noise,noise);
 
-        sfb_noise[sfb] = noise;
     }
 
     res->over_count = over;
@@ -844,24 +840,24 @@ int  calc_noise(
 
 static
 void set_pinfo (
-        lame_global_flags *gfp,
+        lame_global_flags const *gfp,
               gr_info        * const cod_info,
         const III_psy_ratio  * const ratio, 
         const int                    gr,
         const int                    ch )
 {
-    lame_internal_flags *gfc=gfp->internal_flags;
+    lame_internal_flags const * const gfc=gfp->internal_flags;
     int sfb, sfb2;
     int j,i,l,start,end,bw;
     FLOAT en0,en1;
-    FLOAT ifqstep = ( cod_info->scalefac_scale == 0 ) ? .5 : 1.0;
-    int* scalefac = cod_info->scalefac;
+    FLOAT const ifqstep = ( cod_info->scalefac_scale == 0 ) ? .5 : 1.0;
+    int const * const scalefac = cod_info->scalefac;
 
     FLOAT l3_xmin[SFBMAX], xfsf[SFBMAX];
     calc_noise_result noise;
 
-    calc_xmin (gfp, ratio, cod_info, l3_xmin);
-    calc_noise (gfc, cod_info, l3_xmin, xfsf, &noise, 0);
+    (void) calc_xmin (gfp, ratio, cod_info, l3_xmin);
+    (void) calc_noise (cod_info, l3_xmin, xfsf, &noise, 0);
 
     j = 0;
     sfb2 = cod_info->sfb_lmax;
@@ -959,8 +955,8 @@ void set_pinfo (
  ************************************************************************/
 
 void set_frame_pinfo( 
-        lame_global_flags *gfp,
-        III_psy_ratio ratio[2][2])
+        lame_global_flags const *gfp,
+        III_psy_ratio const ratio[2][2])
 {
     lame_internal_flags * const gfc=gfp->internal_flags;
     int                   ch;
@@ -972,7 +968,7 @@ void set_frame_pinfo(
      */
     for (gr = 0; gr < gfc->mode_gr; gr ++) {
         for (ch = 0; ch < gfc->channels_out; ch ++) {
-            gr_info *cod_info = &gfc->l3_side.tt[gr][ch];
+            gr_info * const cod_info = &gfc->l3_side.tt[gr][ch];
             int scalefac_sav[SFBMAX];
             memcpy(scalefac_sav, cod_info->scalefac, sizeof(scalefac_sav));
 

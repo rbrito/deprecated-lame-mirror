@@ -1,27 +1,27 @@
 # Microsoft Developer Studio Project File - Name="libmp3lame" - Package Owner=<4>
 # Microsoft Developer Studio Generated Build File, Format Version 6.00
-# ** DO NOT EDIT **
+# ** NICHT BEARBEITEN **
 
 # TARGTYPE "Win32 (x86) Static Library" 0x0104
 
 CFG=libmp3lame - Win32 Debug GTK
-!MESSAGE This is not a valid makefile. To build this project using NMAKE,
-!MESSAGE use the Export Makefile command and run
+!MESSAGE Dies ist kein gültiges Makefile. Zum Erstellen dieses Projekts mit NMAKE
+!MESSAGE verwenden Sie den Befehl "Makefile exportieren" und führen Sie den Befehl
 !MESSAGE 
 !MESSAGE NMAKE /f "libmp3lame_vc6.mak".
 !MESSAGE 
-!MESSAGE You can specify a configuration when running NMAKE
-!MESSAGE by defining the macro CFG on the command line. For example:
+!MESSAGE Sie können beim Ausführen von NMAKE eine Konfiguration angeben
+!MESSAGE durch Definieren des Makros CFG in der Befehlszeile. Zum Beispiel:
 !MESSAGE 
 !MESSAGE NMAKE /f "libmp3lame_vc6.mak" CFG="libmp3lame - Win32 Debug GTK"
 !MESSAGE 
-!MESSAGE Possible choices for configuration are:
+!MESSAGE Für die Konfiguration stehen zur Auswahl:
 !MESSAGE 
-!MESSAGE "libmp3lame - Win32 Release" (based on "Win32 (x86) Static Library")
-!MESSAGE "libmp3lame - Win32 Debug" (based on "Win32 (x86) Static Library")
-!MESSAGE "libmp3lame - Win32 Release NASM" (based on "Win32 (x86) Static Library")
-!MESSAGE "libmp3lame - Win32 Debug GTK" (based on "Win32 (x86) Static Library")
-!MESSAGE "libmp3lame - Win32 Release GTK" (based on "Win32 (x86) Static Library")
+!MESSAGE "libmp3lame - Win32 Release" (basierend auf  "Win32 (x86) Static Library")
+!MESSAGE "libmp3lame - Win32 Debug" (basierend auf  "Win32 (x86) Static Library")
+!MESSAGE "libmp3lame - Win32 Release NASM" (basierend auf  "Win32 (x86) Static Library")
+!MESSAGE "libmp3lame - Win32 Debug GTK" (basierend auf  "Win32 (x86) Static Library")
+!MESSAGE "libmp3lame - Win32 Release GTK" (basierend auf  "Win32 (x86) Static Library")
 !MESSAGE 
 
 # Begin Project
@@ -96,7 +96,7 @@ LIB32=link.exe -lib
 LINK32=link.exe
 # ADD BASE CPP /nologo /W3 /GX /O2 /Ob2 /I "../" /I "../mpglib" /I "../include" /I ".." /D "NDEBUG" /D "_WINDOWS" /D "HAVE_MPGLIB" /D "WIN32" /D "HAVE_CONFIG_H" /Gs1024 /FD /GAy /QIfdiv /QI0f /c
 # SUBTRACT BASE CPP /YX
-# ADD CPP /nologo /W3 /O2 /Ob2 /I "../" /I "../mpglib" /I "../include" /I ".." /D "NDEBUG" /D "_WINDOWS" /D "HAVE_MPGLIB" /D "WIN32" /D "HAVE_CONFIG_H" /D "HAVE_NASM" /D "MMX_choose_table" /Gs1024 /FD /GAy /QIfdiv /QI0f /c
+# ADD CPP /nologo /W3 /O2 /Ob2 /I "../" /I "../mpglib" /I "../include" /I ".." /D "NDEBUG" /D "_WINDOWS" /D "HAVE_MPGLIB" /D "WIN32" /D "HAVE_CONFIG_H" /D "HAVE_NASM" /D "MMX_choose_table" /D "_CRT_SECURE_NO_DEPRECATE" /Gs1024 /FD /GAy /QIfdiv /QI0f /c
 # SUBTRACT CPP /YX
 # ADD BASE RSC /l 0x409
 # ADD RSC /l 0x409
