@@ -179,11 +179,11 @@ ms_convert(III_side_info_t * l3_side, int gr)
 /************************************************************************
  *
  *      init_outer_loop()
- *  mt 6/99                                    
+ *  mt 6/99
  *
  *  initializes cod_info, scalefac and xrpow
  *
- *  returns 0 if all energies in xr are zero, else 1                    
+ *  returns 0 if all energies in xr are zero, else 1
  *
  ************************************************************************/
 
@@ -450,7 +450,7 @@ init_outer_loop(lame_internal_flags const *gfc, gr_info * const cod_info)
         cod_info->sfb_lmax = 0;
         if (cod_info->mixed_block_flag) {
             /*
-             *  MPEG-1:      sfbs 0-7 long block, 3-12 short blocks 
+             *  MPEG-1:      sfbs 0-7 long block, 3-12 short blocks
              *  MPEG-2(.5):  sfbs 0-5 long block, 3-12 short blocks
              */
             cod_info->sfb_smin = 3;
@@ -691,12 +691,12 @@ trancate_smallspectrums(lame_internal_flags const *gfc,
 
 /*************************************************************************
  *
- *      loop_break()                                               
+ *      loop_break()
  *
  *  author/date??
  *
  *  Function: Returns zero if there is a scalefac which has not been
- *            amplified. Otherwise it returns one. 
+ *            amplified. Otherwise it returns one.
  *
  *************************************************************************/
 
@@ -720,7 +720,7 @@ loop_break(const gr_info * const cod_info)
 
 /*************************************************************************
  *
- *      quant_compare()                                               
+ *      quant_compare()
  *
  *  author/date??
  *
@@ -755,7 +755,7 @@ quant_compare(const int quant_comp,
 
        over_noise:  ??? (the previous comment is fully wrong)
        tot_noise:   ??? (the previous comment is fully wrong)
-       max_noise:   max quantization noise 
+       max_noise:   max quantization noise
 
      */
     int     better;
@@ -852,18 +852,18 @@ quant_compare(const int quant_comp,
 
 /*************************************************************************
  *
- *          amp_scalefac_bands() 
+ *          amp_scalefac_bands()
  *
  *  author/date??
- *        
+ *
  *  Amplify the scalefactor bands that violate the masking threshold.
  *  See ISO 11172-3 Section C.1.5.4.3.5
- * 
+ *
  *  distort[] = noise/masking
  *  distort[] > 1   ==> noise is not masked
  *  distort[] < 1   ==> noise is masked
  *  max_dist = maximum value of distort[]
- *  
+ *
  *  Three algorithms:
  *  noise_shaping_amp
  *        0             Amplify all bands with distort[]>1.
@@ -872,12 +872,12 @@ quant_compare(const int quant_comp,
  *                     ( 50% in the db scale)
  *
  *        2             Amplify first band with distort[] >= max_dist;
- *                       
  *
- *  For algorithms 0 and 1, if max_dist < 1, then amplify all bands 
+ *
+ *  For algorithms 0 and 1, if max_dist < 1, then amplify all bands
  *  with distort[] >= .95*max_dist.  This is to make sure we always
- *  amplify at least one band.  
- * 
+ *  amplify at least one band.
+ *
  *
  *************************************************************************/
 static void
@@ -1092,7 +1092,7 @@ inc_subblock_gain(const lame_internal_flags * const gfc, gr_info * const cod_inf
  *  Takehiro Tominaga /date??
  *  Robert Hegemann 2000-09-06: made a function of it
  *
- *  amplifies scalefactor bands, 
+ *  amplifies scalefactor bands,
  *   - if all are already amplified returns 0
  *   - if some bands are amplified too much:
  *      * try to increase scalefac_scale
@@ -1109,7 +1109,7 @@ balance_noise(lame_global_flags const *const gfp,
 
     amp_scalefac_bands(gfp, cod_info, distort, xrpow, bRefine);
 
-    /* check to make sure we have not amplified too much 
+    /* check to make sure we have not amplified too much
      * loop_break returns 0 if there is an unamplified scalefac
      * scale_bitcount returns 0 if no scalefactors are too large
      */
@@ -1119,8 +1119,8 @@ balance_noise(lame_global_flags const *const gfp,
     if (status)
         return 0;       /* all bands amplified */
 
-    /* not all scalefactors have been amplified.  so these 
-     * scalefacs are possibly valid.  encode them: 
+    /* not all scalefactors have been amplified.  so these
+     * scalefacs are possibly valid.  encode them:
      */
     if (gfc->mode_gr == 2)
         status = scale_bitcount(cod_info);
@@ -1131,7 +1131,7 @@ balance_noise(lame_global_flags const *const gfp,
         return 1;       /* amplified some bands not exceeding limits */
 
     /*  some scalefactors are too large.
-     *  lets try setting scalefac_scale=1 
+     *  lets try setting scalefac_scale=1
      */
     if (gfc->noise_shaping > 1) {
         memset(&gfc->pseudohalf[0], 0, sizeof(gfc->pseudohalf));
@@ -1160,17 +1160,17 @@ balance_noise(lame_global_flags const *const gfp,
 
 /************************************************************************
  *
- *  outer_loop ()                                                       
+ *  outer_loop ()
  *
- *  Function: The outer iteration loop controls the masking conditions  
- *  of all scalefactorbands. It computes the best scalefac and          
- *  global gain. This module calls the inner iteration loop             
- * 
- *  mt 5/99 completely rewritten to allow for bit reservoir control,   
- *  mid/side channels with L/R or mid/side masking thresholds, 
- *  and chooses best quantization instead of last quantization when 
- *  no distortion free quantization can be found.  
- *  
+ *  Function: The outer iteration loop controls the masking conditions
+ *  of all scalefactorbands. It computes the best scalefac and
+ *  global gain. This module calls the inner iteration loop
+ *
+ *  mt 5/99 completely rewritten to allow for bit reservoir control,
+ *  mid/side channels with L/R or mid/side masking thresholds,
+ *  and chooses best quantization instead of last quantization when
+ *  no distortion free quantization can be found.
+ *
  *  added VBR support mt 5/99
  *
  *  some code shuffle rh 9/00
@@ -1238,7 +1238,7 @@ outer_loop(lame_global_flags const *gfp, gr_info * const cod_info, const FLOAT *
 
             /* Check if the last scalefactor band is distorted.
              * in VBR mode we can't get rid of the distortion, so quit now
-             * and VBR mode will try again with more bits.  
+             * and VBR mode will try again with more bits.
              * (makes a 10% speed increase, the files I tested were
              * binary identical, 2000/05/20 Robert Hegemann)
              * distort[] > 1 means noise > allowed noise
@@ -1375,7 +1375,7 @@ outer_loop(lame_global_flags const *gfp, gr_info * const cod_info, const FLOAT *
  *
  *  Robert Hegemann 2000-09-06
  *
- *  update reservoir status after FINAL quantization/bitrate 
+ *  update reservoir status after FINAL quantization/bitrate
  *
  ************************************************************************/
 
@@ -1494,7 +1494,7 @@ VBR_encode_granule(lame_global_flags const *gfp, gr_info * const cod_info, const
 
 /************************************************************************
  *
- *      get_framebits()   
+ *      get_framebits()
  *
  *  Robert Hegemann 2000-09-05
  *
@@ -1512,14 +1512,14 @@ get_framebits(lame_global_flags const *gfp,
     lame_internal_flags *const gfc = gfp->internal_flags;
     int     bitsPerFrame, i;
 
-    /*  always use at least this many bits per granule per channel 
-     *  unless we detect analog silence, see below 
+    /*  always use at least this many bits per granule per channel
+     *  unless we detect analog silence, see below
      */
     gfc->bitrate_index = gfc->VBR_min_bitrate;
     bitsPerFrame = getframebits(gfp);
     *min_mean_bits = (bitsPerFrame - gfc->sideinfo_len * 8) / (gfc->mode_gr * gfc->channels_out);
 
-    /*  bits for analog silence 
+    /*  bits for analog silence
      */
     gfc->bitrate_index = 1;
     bitsPerFrame = getframebits(gfp);
@@ -1535,7 +1535,7 @@ get_framebits(lame_global_flags const *gfp,
 
 /************************************************************************
  *
- *      calc_min_bits()   
+ *      calc_min_bits()
  *
  *  Robert Hegemann 2000-09-04
  *
@@ -1605,7 +1605,7 @@ calc_min_bits(lame_global_flags const *gfp,
  *
  *  2000-09-04 Robert Hegemann
  *
- *  * converts LR to MS coding when necessary 
+ *  * converts LR to MS coding when necessary
  *  * calculates allowed/adjusted quantization noise amounts
  *  * detects analog silent frames
  *
@@ -1697,7 +1697,7 @@ VBR_old_prepare(lame_global_flags const *gfp,
 
 static void
 bitpressure_strategy(lame_internal_flags const *gfc,
-                     FLOAT l3_xmin[2][2][SFBMAX], int const min_bits[2][2], int max_bits[2][2])
+                     FLOAT l3_xmin[2][2][SFBMAX], int min_bits[2][2], int max_bits[2][2])
 {
     int     gr, ch, sfb;
     for (gr = 0; gr < gfc->mode_gr; gr++) {
@@ -1721,11 +1721,11 @@ bitpressure_strategy(lame_internal_flags const *gfc,
 
 /************************************************************************
  *
- *      VBR_iteration_loop()   
+ *      VBR_iteration_loop()
  *
  *  tries to find out how many bits are needed for each granule and channel
  *  to get an acceptable quantization. An appropriate bitrate will then be
- *  choosed for quantization.  rh 8/99                          
+ *  choosed for quantization.  rh 8/99
  *
  *  Robert Hegemann 2000-09-06 rewrite
  *
@@ -1767,11 +1767,11 @@ VBR_old_iteration_loop(lame_global_flags const *gfp,
                 int     ret;
                 gr_info *const cod_info = &l3_side->tt[gr][ch];
 
-                /*  init_outer_loop sets up cod_info, scalefac and xrpow 
+                /*  init_outer_loop sets up cod_info, scalefac and xrpow
                  */
                 ret = init_xrpow(gfc, cod_info, xrpow);
                 if (ret == 0 || max_bits[gr][ch] == 0) {
-                    /*  xr contains no energy 
+                    /*  xr contains no energy
                      *  l3_enc, our encoding data, will be quantized to zero
                      */
                     continue; /* with next channel */
@@ -1794,7 +1794,7 @@ VBR_old_iteration_loop(lame_global_flags const *gfp,
         /*  find lowest bitrate able to hold used bits
          */
         if (analog_silence && !gfp->VBR_hard_min)
-            /*  we detected analog silence and the user did not specify 
+            /*  we detected analog silence and the user did not specify
              *  any hard framesize limit, so start with smallest possible frame
              */
             gfc->bitrate_index = 1;
@@ -1908,7 +1908,7 @@ VBR_new_iteration_loop(lame_global_flags const *gfp,
         for (ch = 0; ch < gfc->channels_out; ch++) {
             gr_info *const cod_info = &l3_side->tt[gr][ch];
 
-            /*  init_outer_loop sets up cod_info, scalefac and xrpow 
+            /*  init_outer_loop sets up cod_info, scalefac and xrpow
              */
             if (0 == init_xrpow(gfc, cod_info, xrpow[gr][ch])) {
                 max_bits[gr][ch] = 0; /* silent granule needs no bits */
@@ -1924,7 +1924,7 @@ VBR_new_iteration_loop(lame_global_flags const *gfp,
     /*  find lowest bitrate able to hold used bits
      */
     if (analog_silence && !gfp->VBR_hard_min)
-        /*  we detected analog silence and the user did not specify 
+        /*  we detected analog silence and the user did not specify
          *  any hard framesize limit, so start with smallest possible frame
          */
         gfc->bitrate_index = 1;
@@ -1997,7 +1997,7 @@ calc_target_bits(lame_global_flags const *gfp,
     /*
        res_factor is the percentage of the target bitrate that should
        be used on average.  the remaining bits are added to the
-       bitreservoir and used for difficult to encode frames.  
+       bitreservoir and used for difficult to encode frames.
 
        Since we are tracking the average bitrate, we should adjust
        res_factor "on the fly", increasing it if the average bitrate
@@ -2007,7 +2007,7 @@ calc_target_bits(lame_global_flags const *gfp,
        Until we get the above suggestion working, we use the following
        tuning:
        compression ratio    res_factor
-       5.5  (256kbps)         1.0      no need for bitreservoir 
+       5.5  (256kbps)         1.0      no need for bitreservoir
        11   (128kbps)         .93      7% held for reservoir
 
        with linear interpolation for other values.
@@ -2134,9 +2134,9 @@ ABR_iteration_loop(lame_global_flags const *gfp,
              */
             init_outer_loop(gfc, cod_info);
             if (init_xrpow(gfc, cod_info, xrpow)) {
-                /*  xr contains energy we will have to encode 
+                /*  xr contains energy we will have to encode
                  *  calculate the masking abilities
-                 *  find some good quantization in outer_loop 
+                 *  find some good quantization in outer_loop
                  */
                 ath_over = calc_xmin(gfp, &ratio[gr][ch], cod_info, l3_xmin);
                 if (0 == ath_over) /* analog silence */
@@ -2167,7 +2167,7 @@ ABR_iteration_loop(lame_global_flags const *gfp,
 
 /************************************************************************
  *
- *      CBR_iteration_loop()                                                    
+ *      CBR_iteration_loop()
  *
  *  author/date??
  *
@@ -2220,13 +2220,13 @@ CBR_iteration_loop(lame_global_flags const *gfp,
             }
             gfc->masking_lower = pow(10.0, masking_lower_db * 0.1);
 
-            /*  init_outer_loop sets up cod_info, scalefac and xrpow 
+            /*  init_outer_loop sets up cod_info, scalefac and xrpow
              */
             init_outer_loop(gfc, cod_info);
             if (init_xrpow(gfc, cod_info, xrpow)) {
-                /*  xr contains energy we will have to encode 
+                /*  xr contains energy we will have to encode
                  *  calculate the masking abilities
-                 *  find some good quantization in outer_loop 
+                 *  find some good quantization in outer_loop
                  */
                 (void) calc_xmin(gfp, &ratio[gr][ch], cod_info, l3_xmin);
                 (void) outer_loop(gfp, cod_info, l3_xmin, xrpow, ch, targ_bits[ch]);

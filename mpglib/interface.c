@@ -12,6 +12,7 @@
 #include "tabinit.h"
 #include "layer3.h"
 #include "lame.h"
+#include "machine.h"
 #include "VbrTag.h"
 #include "decode_i386.h"
 
