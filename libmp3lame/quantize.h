@@ -22,6 +22,8 @@
 #ifndef LAME_QUANTIZE_H
 #define LAME_QUANTIZE_H
 
+void    trancate_smallspectrums(lame_internal_flags * gfc, gr_info * const gi,
+                                const FLOAT * const l3_xmin, const FLOAT * work);
 
 void    CBR_iteration_loop(lame_global_flags const *gfp,
                            FLOAT const pe[2][2],

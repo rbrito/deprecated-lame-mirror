@@ -603,33 +603,68 @@ calc_xmin(lame_global_flags const *gfp,
 
     for (gsfb = 0; gsfb < cod_info->psy_lmax; gsfb++) {
         FLOAT   en0, xmin;
+#ifdef RH_TEST_ATHAA_FIX
+        FLOAT   rh1, rh2;
+#endif
         int     width, l;
+
         if (gfp->VBR == vbr_rh || gfp->VBR == vbr_mtrh)
             xmin = athAdjust(ATH->adjust, ATH->l[gsfb], ATH->floor);
         else
             xmin = ATH->adjust * ATH->l[gsfb];
 
         width = cod_info->width[gsfb];
+#ifdef RH_TEST_ATHAA_FIX
+        rh1 = xmin/width;
+        rh2 = 0.;
+#endif
         l = width >> 1;
         en0 = 0.0;
         do {
-            en0 += xr[j] * xr[j];
+            FLOAT xa, xb;
+            xa = xr[j] * xr[j];
+            en0 += xa;
+#ifdef RH_TEST_ATHAA_FIX
+            rh2 += ( xa < rh1 ) ? xa : rh1;
+#endif
             j++;
-            en0 += xr[j] * xr[j];
+            xb = xr[j] * xr[j];
+            en0 += xb;
+#ifdef RH_TEST_ATHAA_FIX
+            rh2 += ( xb < rh1 ) ? xb : rh1;
+#endif
             j++;
         } while (--l > 0);
         if (en0 > xmin)
             ath_over++;
 
+#ifdef RH_TEST_ATHAA_FIX
+        if (gsfb == SBPSY_l)
+        {
+            FLOAT x = xmin*gfc->nsPsy.longfact[gsfb];
+            if (rh2 < x) {
+                rh2 = x;
+            }
+        }
+        xmin = rh2;
+#endif
         if (!gfp->ATHonly) {
-            FLOAT   x = ratio->en.l[gsfb];
-            if (x > 0.0) {
-                x = en0 * ratio->thm.l[gsfb] * gfc->masking_lower / x;
+            FLOAT   e = ratio->en.l[gsfb];
+            if (e > 0.0) {
+                FLOAT   x;
+                x = en0 * ratio->thm.l[gsfb] * gfc->masking_lower / e;
+#ifdef RH_TEST_ATHAA_FIX
+                x *= gfc->nsPsy.longfact[gsfb];
+#endif
                 if (xmin < x)
                     xmin = x;
             }
         }
+#ifdef RH_TEST_ATHAA_FIX
+        *pxmin++ = xmin;
+#else
         *pxmin++ = xmin * gfc->nsPsy.longfact[gsfb];
+#endif
     }                   /* end of long block loop */
 
 
@@ -658,25 +693,62 @@ calc_xmin(lame_global_flags const *gfp,
         width = cod_info->width[gsfb];
         for (b = 0; b < 3; b++) {
             FLOAT   en0 = 0.0, xmin;
+#ifdef RH_TEST_ATHAA_FIX
+            FLOAT   rh1, rh2;
+#endif
             int     l = width >> 1;
+
+#ifdef RH_TEST_ATHAA_FIX
+            rh1 = tmpATH/width;
+            rh2 = 0.;
+#endif
             do {
-                en0 += xr[j] * xr[j];
+                FLOAT xa, xb;
+                xa = xr[j] * xr[j];
+                en0 += xa;
+#ifdef RH_TEST_ATHAA_FIX
+                rh2 += ( xa < rh1 ) ? xa : rh1;
+#endif
                 j++;
-                en0 += xr[j] * xr[j];
+                xb = xr[j] * xr[j];
+                en0 += xb;
+#ifdef RH_TEST_ATHAA_FIX
+                rh2 += ( xb < rh1 ) ? xb : rh1;
+#endif
                 j++;
             } while (--l > 0);
             if (en0 > tmpATH)
                 ath_over++;
-
-            xmin = tmpATH;
-            if (!gfp->ATHonly && !gfp->ATHshort) {
-                FLOAT   x = ratio->en.s[sfb][b];
-                if (x > 0.0)
-                    x = en0 * ratio->thm.s[sfb][b] * gfc->masking_lower / x;
-                if (xmin < x)
+#ifdef RH_TEST_ATHAA_FIX
+            xmin = rh2;
+            if (sfb == SBPSY_s)
+            {
+                FLOAT x = tmpATH*gfc->nsPsy.shortfact[sfb];
+                if (xmin < x) {
                     xmin = x;
+                }
             }
+#else
+            xmin = tmpATH;
+#endif
+
+            if (!gfp->ATHonly && !gfp->ATHshort) {
+                FLOAT   e = ratio->en.s[sfb][b];
+                if (e > 0.0) {
+                    FLOAT   x;
+                    x = en0 * ratio->thm.s[sfb][b] * gfc->masking_lower / e;
+#ifdef RH_TEST_ATHAA_FIX
+                    x *= gfc->nsPsy.shortfact[sfb];
+#endif
+                    if (xmin < x)
+                        xmin = x;
+                }
+            }
+#ifdef RH_TEST_ATHAA_FIX
+            *pxmin++ = xmin;
+#else
             *pxmin++ = xmin * gfc->nsPsy.shortfact[sfb];
+#endif
         }               /* b */
         if (gfp->useTemporal) {
             if (pxmin[-3] > pxmin[-3 + 1])

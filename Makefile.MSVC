@@ -430,8 +430,8 @@ CPP_OPTS = $(CPP_OPTS) /DTAKEHIRO_IEEE754_HACK
 
 #__ Robert's alternate code ___________________________________________________
 !	IF "$(CFG)" == "RH"
-CPP_OPTS = $(CPP_OPTS) 
-!MESSAGE there is currently no alternate code by RH
+CPP_OPTS = $(CPP_OPTS) /DRH_TEST_ATHAA_FIX 
+!MESSAGE testing ATHAA fix for low volume files
 !	ENDIF
 #___________________________________________________ Robert's alternate code __
 

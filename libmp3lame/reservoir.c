@@ -145,8 +145,8 @@ ResvFrameBegin(lame_global_flags const *gfp, int *mean_bits)
         /* Bouvigne suggests this more lax interpretation of the ISO doc 
            instead of using 8*960. */
         /* always enabled because of compatibility problems with some FhG decoders */
-        //       if (gfp->strict_ISO)
-        maxmp3buf = 8 * ((int) (320000 / (gfp->out_samplerate / (FLOAT) 1152) / 8 + .5));
+//        if (gfp->strict_ISO)
+            maxmp3buf = 8 * ((int) (320000 / (gfp->out_samplerate / (FLOAT) 1152) / 8 + .5));
     }
 
     gfc->ResvMax = maxmp3buf - frameLength;
