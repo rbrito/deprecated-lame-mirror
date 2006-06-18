@@ -426,7 +426,7 @@ mask_add(FLOAT m1, FLOAT m2, int kk, int b, lame_internal_flags const *gfc, int 
         }
 
         /* 22% of the total */
-        i = FAST_LOG10_X(ratio, 16.0);
+        i = (int)(FAST_LOG10_X(ratio, 16.0));
         return m1 * table2[i];
     }
 
@@ -435,7 +435,7 @@ mask_add(FLOAT m1, FLOAT m2, int kk, int b, lame_internal_flags const *gfc, int 
      * equ (m1+m2)<10^1.5 * gfc->ATH->cb[k]
      */
 
-    i = FAST_LOG10_X(ratio, 16.0);
+    i = (int)FAST_LOG10_X(ratio, 16.0);
     if (shortblock) {
         m2 = gfc->ATH->cb_s[kk] * gfc->ATH->adjust;
     }
@@ -1401,16 +1401,16 @@ L3psycho_anal_ns(lame_global_flags const *gfp,
         static const FLOAT fircoef[] = {
             -8.65163e-18 * 2, -0.00851586 * 2, -6.74764e-18 * 2, 0.0209036 * 2,
             -3.36639e-17 * 2, -0.0438162 * 2, -1.54175e-17 * 2, 0.0931738 * 2,
-            -5.52212e-17 * 2, -0.313819 * 2, 0 /* do we have an out of bounds problem here? */
+            -5.52212e-17 * 2, -0.313819 * 2
         };
-
         /* apply high pass filter of fs/4 */
         const sample_t *const firbuf = &buffer[chn][576 - 350 - NSFIRLEN + 192];
+        assert(sizeof(fircoef)/sizeof(fircoef[0]) == ((NSFIRLEN - 1) / 2));
         for (i = 0; i < 576; i++) {
             FLOAT   sum1, sum2;
             sum1 = firbuf[i + 10];
             sum2 = 0.0;
-            for (j = 0; j < (NSFIRLEN - 1) / 2; j += 2) {
+            for (j = 0; j < ((NSFIRLEN - 1) / 2)-1; j += 2) {
                 sum1 += fircoef[j] * (firbuf[i + j] + firbuf[i + NSFIRLEN - j]);
                 sum2 += fircoef[j + 1] * (firbuf[i + j + 1] + firbuf[i + NSFIRLEN - j - 1]);
             }
@@ -1658,14 +1658,15 @@ L3psycho_anal_ns(lame_global_flags const *gfp,
             FLOAT   m, a;
             a = avg[0] + avg[1];
             if (a != 0.0) {
+                int const last_tab_entry = sizeof(tab) / sizeof(tab[0])-1;
                 m = max[0];
                 if (m < max[1])
                     m = max[1];
                 a = 20.0 * (m * 2.0 - a)
                     / (a * (gfc->numlines_l[0] + gfc->numlines_l[1] - 1));
                 k = (int) a;
-                if (k > sizeof(tab) / sizeof(tab[0]) - 1)
-                    k = sizeof(tab) / sizeof(tab[0]) - 1;
+                if (k > last_tab_entry)
+                    k = last_tab_entry;
                 a = eb[0] * tab[k];
             }
             eb2[0] = a;
@@ -2032,7 +2033,7 @@ psymodel_init(lame_global_flags * gfp)
 
 
 
-    j = gfc->PSY->cwlimit / (sfreq / BLKSIZE);
+    j = (int)(gfc->PSY->cwlimit / (sfreq / BLKSIZE));
     if (j > HBLKSIZE - 4) /* j+3 < HBLKSIZE-1 */
         j = HBLKSIZE - 4;
     if (j < CW_LOWER_INDEX)
@@ -2181,7 +2182,7 @@ psymodel_init(lame_global_flags * gfp)
     if (gfp->ATHtype != -1) {
         /* compute equal loudness weights (eql_w) */
         FLOAT   freq;
-        FLOAT const freq_inc = gfp->out_samplerate / (BLKSIZE);
+        FLOAT const freq_inc = (FLOAT)gfp->out_samplerate / (FLOAT)(BLKSIZE);
         FLOAT   eql_balance = 0.0;
         freq = 0.0;
         for (i = 0; i < BLKSIZE / 2; ++i) {
