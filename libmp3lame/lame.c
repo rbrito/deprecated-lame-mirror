@@ -157,7 +157,7 @@ lame_init_params_ppflt(lame_global_flags const *gfp)
 static void
 optimum_bandwidth(double *const lowerlimit, double *const upperlimit, const unsigned bitrate)
 {
-/* 
+/*
  *  Input:
  *      bitrate     total bitrate in kbps
  *
@@ -222,7 +222,7 @@ optimum_bandwidth(double *const lowerlimit, double *const upperlimit, const unsi
     else
         f_high = 0.;*/
 
-    /*  
+    /*
      *  When we sometimes have a good highpass filter, we can add the highpass
      *  frequency to the lowpass frequency
      */
@@ -444,7 +444,7 @@ lame_init_qval(lame_global_flags * gfp)
  *
  *  OUTLINE:
  *
- * We first have some complex code to determine bitrate, 
+ * We first have some complex code to determine bitrate,
  * output samplerate and mode.  It is complicated by the fact
  * that we allow the user to set some or all of these parameters,
  * and need to determine best possible values for the rest of them:
@@ -453,15 +453,15 @@ lame_init_qval(lame_global_flags * gfp)
  *  2. check if we are mono->mono, stereo->mono or stereo->stereo
  *  3.  compute bitrate and output samplerate:
  *          user may have set compression ratio
- *          user may have set a bitrate  
+ *          user may have set a bitrate
  *          user may have set a output samplerate
  *  4. set some options which depend on output samplerate
  *  5. compute the actual compression ratio
  *  6. set mode based on compression ratio
  *
  *  The remaining code is much simpler - it just sets options
- *  based on the mode & compression ratio: 
- *   
+ *  based on the mode & compression ratio:
+ *
  *   set allow_diff_short based on mode
  *   select lowpass filter based on compression ratio & mode
  *   set the bitrate index, and min/max bitrates for VBR modes
@@ -473,14 +473,14 @@ lame_init_qval(lame_global_flags * gfp)
  *   write VBR tag into the bitstream
  *   set mpeg1/2 flag
  *   estimate the number of frames (based on a lot of data)
- *         
+ *
  *   now we set more flags:
  *   nspsytune:
  *      see code
  *   VBR modes
- *      see code      
+ *      see code
  *   CBR/ABR
- *      see code   
+ *      see code
  *
  *  Finally, we set the algorithm flags based on the gfp->quality value
  *  lame_init_qval(gfp);
@@ -572,7 +572,7 @@ lame_init_params(lame_global_flags * const gfp)
             gfp->out_samplerate = map2MP3Frequency((int) (0.97 * gfp->in_samplerate)); /* round up with a margin of 3% */
 
         /* choose a bitrate for the output samplerate which achieves
-         * specified compression ratio 
+         * specified compression ratio
          */
         gfp->brate = gfp->out_samplerate * 16 * gfc->channels_out / (1.e3 * gfp->compression_ratio);
 
@@ -671,7 +671,7 @@ lame_init_params(lame_global_flags * const gfp)
 
     gfc->resample_ratio = (double) gfp->in_samplerate / gfp->out_samplerate;
 
-    /* 
+    /*
      *  sample freq       bitrate     compression ratio
      *     [kHz]      [kbps/channel]   for 16 bit input
      *     44.1            56               12.6
@@ -684,8 +684,8 @@ lame_init_params(lame_global_flags * const gfp)
      *     16              24               10.667
      *
      */
-    /* 
-     *  For VBR, take a guess at the compression_ratio. 
+    /*
+     *  For VBR, take a guess at the compression_ratio.
      *  For example:
      *
      *    VBR_q    compression     like
@@ -719,8 +719,8 @@ lame_init_params(lame_global_flags * const gfp)
     }
 
 
-    /* mode = -1 (not set by user) or 
-     * mode = MONO (because of only 1 input channel).  
+    /* mode = -1 (not set by user) or
+     * mode = MONO (because of only 1 input channel).
      * If mode has not been set, then select J-STEREO
      */
     if (gfp->mode == NOT_SET) {
@@ -911,7 +911,7 @@ lame_init_params(lame_global_flags * const gfp)
                 gfc->sfb21_extra = (gfp->out_samplerate > 44000);
 
             /*  VBR needs at least the output of GPSYCHO,
-             *  so we have to garantee that by setting a minimum 
+             *  so we have to garantee that by setting a minimum
              *  quality level, actually level 6 does it.
              *  down to level 6
              */
@@ -987,8 +987,10 @@ lame_init_params(lame_global_flags * const gfp)
 
 
     /*  just another daily changing developer switch  */
-    if (gfp->tune)
-        gfc->PSY->mask_adjust = gfp->tune_value_a;
+    if (gfp->tune) {
+        gfc->PSY->mask_adjust += gfp->tune_value_a;
+        gfc->PSY->mask_adjust_short += gfp->tune_value_a;
+    }
 
     /* initialize internal qval settings */
     lame_init_qval(gfp);
@@ -1070,7 +1072,7 @@ lame_init_params(lame_global_flags * const gfp)
 
 
 
-    /* padding method as described in 
+    /* padding method as described in
      * "MPEG-Layer3 / Bitstream Syntax and Decoding"
      * by Martin Sieler, Ralph Sperschneider
      *
@@ -1119,9 +1121,9 @@ lame_init_params(lame_global_flags * const gfp)
 /*
  *  print_config
  *
- *  Prints some selected information about the coding parameters via 
- *  the macro command MSGF(), which is currently mapped to lame_errorf 
- *  (reports via a error function?), which is a printf-like function 
+ *  Prints some selected information about the coding parameters via
+ *  the macro command MSGF(), which is currently mapped to lame_errorf
+ *  (reports via a error function?), which is a printf-like function
  *  for <stderr>.
  */
 
@@ -1237,7 +1239,7 @@ lame_print_internals(const lame_global_flags * gfp)
     MSGF(gfc, "\texperimental Y=%d\n", gfp->experimentalY);
     MSGF(gfc, "\t...\n");
 
-    /*  everything controlling the stream format 
+    /*  everything controlling the stream format
      */
     MSGF(gfc, "\nstream format:\n\n");
     switch (gfp->version) {
@@ -1346,8 +1348,8 @@ lame_print_internals(const lame_global_flags * gfp)
     }
     MSGF(gfc, "\tusing short blocks: %s\n", pc);
     MSGF(gfc, "\tsubblock gain: %d\n", gfc->subblock_gain);
-    MSGF(gfc, "\tadjust masking: %g dB\n", gfp->maskingadjust);
-    MSGF(gfc, "\tadjust masking short: %g dB\n", gfp->maskingadjust_short);
+    MSGF(gfc, "\tadjust masking: %g dB\n", gfc->PSY->mask_adjust);
+    MSGF(gfc, "\tadjust masking short: %g dB\n", gfc->PSY->mask_adjust_short);
     MSGF(gfc, "\tquantization comparison: %d\n", gfp->quant_comp);
     MSGF(gfc, "\t ^ comparison short blocks: %d\n", gfp->quant_comp_short);
     MSGF(gfc, "\tnoise shaping: %d\n", gfc->noise_shaping);
@@ -1389,9 +1391,9 @@ lame_print_internals(const lame_global_flags * gfp)
 
 
 
-/* routine to feed exactly one frame (gfp->framesize) worth of data to the 
+/* routine to feed exactly one frame (gfp->framesize) worth of data to the
 encoding engine.  All buffering, resampling, etc, handled by calling
-program.  
+program.
 */
 int
 lame_encode_frame(lame_global_flags * gfp,
@@ -1448,11 +1450,11 @@ update_inbuffer_size(lame_internal_flags * gfc, const int nsamples)
  * return code = number of bytes output in mp3buffer.  can be 0
  *
  * NOTE: this routine uses LAME's internal PCM data representation,
- * 'sample_t'.  It should not be used by any application.  
- * applications should use lame_encode_buffer(), 
+ * 'sample_t'.  It should not be used by any application.
+ * applications should use lame_encode_buffer(),
  *                         lame_encode_buffer_float()
  *                         lame_encode_buffer_int()
- * etc... depending on what type of data they are working with.  
+ * etc... depending on what type of data they are working with.
 */
 int
 lame_encode_buffer_sample_t(lame_global_flags * gfp,
@@ -1828,12 +1830,12 @@ lame_encode(lame_global_flags * const gfp,
 
 /*****************************************************************
  Flush mp3 buffer, pad with ancillary data so last frame is complete.
- Reset reservoir size to 0                  
- but keep all PCM samples and MDCT data in memory             
- This option is used to break a large file into several mp3 files 
- that when concatenated together will decode with no gaps         
- Because we set the reservoir=0, they will also decode seperately 
- with no errors. 
+ Reset reservoir size to 0
+ but keep all PCM samples and MDCT data in memory
+ This option is used to break a large file into several mp3 files
+ that when concatenated together will decode with no gaps
+ Because we set the reservoir=0, they will also decode seperately
+ with no errors.
 *********************************************************************/
 int
 lame_encode_flush_nogap(lame_global_flags * gfp, unsigned char *mp3buffer, int mp3buffer_size)
@@ -1844,7 +1846,7 @@ lame_encode_flush_nogap(lame_global_flags * gfp, unsigned char *mp3buffer, int m
 }
 
 
-/* called by lame_init_params.  You can also call this after flush_nogap 
+/* called by lame_init_params.  You can also call this after flush_nogap
    if you want to write new id3v2 and Xing VBR tags into the bitstream */
 int
 lame_init_bitstream(lame_global_flags * gfp)
@@ -1899,7 +1901,7 @@ lame_encode_flush(lame_global_flags * gfp, unsigned char *mp3buffer, int mp3buff
             mp3buffer_size_remaining = 0;
 
         /* send in a frame of 0 padding until all internal sample buffers
-         * are flushed 
+         * are flushed
          */
         imp3 = lame_encode_buffer(gfp, buffer[0], buffer[1], gfp->framesize,
                                   mp3buffer, mp3buffer_size_remaining);
@@ -2164,7 +2166,7 @@ lame_init_old(lame_global_flags * gfp)
  *  One has to weight them to calculate the average bitrate in kbps
  *
  *  bitrate indices:
- *  there are 14 possible bitrate indices, 0 has the special meaning 
+ *  there are 14 possible bitrate indices, 0 has the special meaning
  *  "free format" which is not possible to mix with VBR and 15 is forbidden
  *  anyway.
  *
