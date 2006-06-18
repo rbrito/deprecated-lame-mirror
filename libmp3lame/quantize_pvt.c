@@ -36,7 +36,7 @@
 #include "lame_global_flags.h"
 #include "reservoir.h"
 #include "lame-analysis.h"
-
+#include <float.h>
 
 
 #define NSATHSCALE 100  /* Assuming dynamic range=96dB, this value should be 92 */
@@ -209,7 +209,7 @@ ATH = ATH * 2.5e-10      (ener)
 */
 
 static FLOAT
-ATHmdct(lame_global_flags * gfp, FLOAT f)
+ATHmdct(lame_global_flags const* gfp, FLOAT f)
 {
     FLOAT   ath;
 
@@ -616,7 +616,11 @@ calc_xmin(lame_global_flags const *gfp,
         width = cod_info->width[gsfb];
 #ifdef RH_TEST_ATHAA_FIX
         rh1 = xmin/width;
-        rh2 = 0.;
+#ifdef DBL_EPSILON
+        rh2 = DBL_EPSILON;
+#else
+        rh2 = 2.2204460492503131e-016;
+#endif
 #endif
         l = width >> 1;
         en0 = 0.0;
@@ -649,8 +653,8 @@ calc_xmin(lame_global_flags const *gfp,
         xmin = rh2;
 #endif
         if (!gfp->ATHonly) {
-            FLOAT   e = ratio->en.l[gsfb];
-            if (e > 0.0) {
+            FLOAT const e = ratio->en.l[gsfb];
+            if (e > 0.0f) {
                 FLOAT   x;
                 x = en0 * ratio->thm.l[gsfb] * gfc->masking_lower / e;
 #ifdef RH_TEST_ATHAA_FIX
@@ -700,7 +704,11 @@ calc_xmin(lame_global_flags const *gfp,
 
 #ifdef RH_TEST_ATHAA_FIX
             rh1 = tmpATH/width;
-            rh2 = 0.;
+#ifdef DBL_EPSILON
+            rh2 = DBL_EPSILON;
+#else
+            rh2 = 2.2204460492503131e-016;
+#endif
 #endif
             do {
                 FLOAT xa, xb;
@@ -733,8 +741,8 @@ calc_xmin(lame_global_flags const *gfp,
 #endif
 
             if (!gfp->ATHonly && !gfp->ATHshort) {
-                FLOAT   e = ratio->en.s[sfb][b];
-                if (e > 0.0) {
+                FLOAT const e = ratio->en.s[sfb][b];
+                if (e > 0.0f) {
                     FLOAT   x;
                     x = en0 * ratio->thm.s[sfb][b] * gfc->masking_lower / e;
 #ifdef RH_TEST_ATHAA_FIX
