@@ -10,7 +10,7 @@
  *
  * This library is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.	 See the GNU
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
  * Library General Public License for more details.
  *
  * You should have received a copy of the GNU Library General Public
@@ -22,8 +22,8 @@
 #ifndef LAME_QUANTIZE_H
 #define LAME_QUANTIZE_H
 
-void    trancate_smallspectrums(lame_internal_flags * gfc, gr_info * const gi,
-                                const FLOAT * const l3_xmin, const FLOAT * work);
+void    trancate_smallspectrums(lame_internal_flags const * gfc, gr_info * const gi,
+                                const FLOAT * const l3_xmin, FLOAT * const work);
 
 void    CBR_iteration_loop(lame_global_flags const *gfp,
                            FLOAT const pe[2][2],
