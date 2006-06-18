@@ -41,10 +41,7 @@
    should be made accessable by writing a lame_set_variable() function */
 #include "util.h"
 
-#ifdef WITH_DMALLOC
-#include <dmalloc.h>
-#endif
-
+#include "console.h"
 
 
 #ifdef _WIN32
