@@ -605,10 +605,10 @@ LongHuffmancodebits(lame_internal_flags * gfc, gr_info const *gi)
     assert(0 <= bigvalues && bigvalues <= 576);
 
     i = gi->region0_count + 1;
-    assert(i < sizeof(gfc->scalefac_band.l) );
+    assert(i < sizeof(gfc->scalefac_band.l)/sizeof(gfc->scalefac_band.l[0]));
     region1Start = gfc->scalefac_band.l[i];
     i += gi->region1_count + 1;
-    assert(i < sizeof(gfc->scalefac_band.l) );
+    assert(i < sizeof(gfc->scalefac_band.l)/sizeof(gfc->scalefac_band.l[0]) );
     region2Start = gfc->scalefac_band.l[i];
 
     if (region1Start > bigvalues)
