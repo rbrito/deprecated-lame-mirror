@@ -892,6 +892,10 @@ lame_init_params(lame_global_flags * const gfp)
             else
                 gfc->sfb21_extra = (gfp->out_samplerate > 44000);
 
+#ifdef RH_TEST_ATHAA_FIX
+            gfc->PSY->mask_adjust += 2;
+            gfc->PSY->mask_adjust_short += 2;
+#endif
             gfc->iteration_loop = VBR_new_iteration_loop;
             break;
 

@@ -600,6 +600,9 @@ calc_xmin(lame_global_flags const *gfp,
     ATH_t const *const ATH = gfc->ATH;
     const FLOAT *const xr = cod_info->xr;
     int     max_nonzero;
+#ifdef RH_TEST_ATHAA_FIX
+    int const enable_athaa_fix = (gfp->VBR == vbr_mtrh) ? 1 : 0;
+#endif
 
     for (gsfb = 0; gsfb < cod_info->psy_lmax; gsfb++) {
         FLOAT   en0, xmin;
@@ -643,14 +646,16 @@ calc_xmin(lame_global_flags const *gfp,
             ath_over++;
 
 #ifdef RH_TEST_ATHAA_FIX
-        if (gsfb == SBPSY_l)
+        if (0&&gsfb == SBPSY_l)
         {
             FLOAT x = xmin*gfc->nsPsy.longfact[gsfb];
             if (rh2 < x) {
                 rh2 = x;
             }
         }
-        xmin = rh2;
+        if (enable_athaa_fix) {
+            xmin = rh2;
+        }
 #endif
         if (!gfp->ATHonly) {
             FLOAT const e = ratio->en.l[gsfb];
@@ -658,14 +663,18 @@ calc_xmin(lame_global_flags const *gfp,
                 FLOAT   x;
                 x = en0 * ratio->thm.l[gsfb] * gfc->masking_lower / e;
 #ifdef RH_TEST_ATHAA_FIX
-                x *= gfc->nsPsy.longfact[gsfb];
+                if (enable_athaa_fix)
+                    x *= gfc->nsPsy.longfact[gsfb];
 #endif
                 if (xmin < x)
                     xmin = x;
             }
         }
 #ifdef RH_TEST_ATHAA_FIX
-        *pxmin++ = xmin;
+        if (enable_athaa_fix)
+            *pxmin++ = xmin;
+        else 
+            *pxmin++ = xmin * gfc->nsPsy.longfact[gsfb];
 #else
         *pxmin++ = xmin * gfc->nsPsy.longfact[gsfb];
 #endif
@@ -728,14 +737,17 @@ calc_xmin(lame_global_flags const *gfp,
             if (en0 > tmpATH)
                 ath_over++;
 #ifdef RH_TEST_ATHAA_FIX
-            xmin = rh2;
-            if (sfb == SBPSY_s)
+            if (0&&sfb == SBPSY_s)
             {
                 FLOAT x = tmpATH*gfc->nsPsy.shortfact[sfb];
-                if (xmin < x) {
-                    xmin = x;
+                if (rh2 < x) {
+                    rh2 = x;
                 }
             }
+            if (enable_athaa_fix)
+                xmin = rh2;
+            else
+                xmin = tmpATH;
 #else
             xmin = tmpATH;
 #endif
@@ -746,14 +758,18 @@ calc_xmin(lame_global_flags const *gfp,
                     FLOAT   x;
                     x = en0 * ratio->thm.s[sfb][b] * gfc->masking_lower / e;
 #ifdef RH_TEST_ATHAA_FIX
-                    x *= gfc->nsPsy.shortfact[sfb];
+                    if (enable_athaa_fix)
+                        x *= gfc->nsPsy.shortfact[sfb];
 #endif
                     if (xmin < x)
                         xmin = x;
                 }
             }
 #ifdef RH_TEST_ATHAA_FIX
-            *pxmin++ = xmin;
+            if (enable_athaa_fix)
+                *pxmin++ = xmin;
+            else
+                *pxmin++ = xmin * gfc->nsPsy.shortfact[sfb];
 #else
             *pxmin++ = xmin * gfc->nsPsy.shortfact[sfb];
 #endif
