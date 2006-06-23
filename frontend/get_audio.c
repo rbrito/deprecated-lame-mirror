@@ -522,7 +522,7 @@ OpenSndFile(lame_global_flags * gfp, char *inPath, int *enc_delay, int *enc_padd
 {
     char   *lpszFileName = inPath;
     FILE   *musicin;
-    SNDFILE *gs_pSndFileIn;
+    SNDFILE *gs_pSndFileIn = NULL;
     SF_INFO gs_wfInfo;
 
     if (input_format == sf_mp1 || input_format == sf_mp2 || input_format == sf_mp3) {
@@ -570,44 +570,47 @@ OpenSndFile(lame_global_flags * gfp, char *inPath, int *enc_delay, int *enc_padd
         /* set some defaults incase input is raw PCM */
         gs_wfInfo.seekable = (input_format != sf_raw); /* if user specified -r, set to not seekable */
         gs_wfInfo.samplerate = lame_get_in_samplerate(gfp);
-        gs_wfInfo.pcmbitwidth = in_bitwidth;
         gs_wfInfo.channels = lame_get_num_channels(gfp);
 
         if (in_bitwidth == 8) {
             if (in_signed)
-                gs_wfInfo.format = SF_FORMAT_RAW_S8;
+                gs_wfInfo.format = SF_FORMAT_PCM_S8;
             else
-                gs_wfInfo.format = SF_FORMAT_RAW_U8;
+                gs_wfInfo.format = SF_FORMAT_PCM_U8;
 
         }
         else {
-            if (!in_signed) {
-                fputs("Unsigned input only supported with bitwidth 8\n", stderr);
-                exit(1);
-            }
-            if (in_endian != order_unknown) {
-                if (in_endian == order_littleEndian)
-                    gs_wfInfo.format = SF_FORMAT_RAW_LE;
-                else
-                    gs_wfInfo.format = SF_FORMAT_RAW_BE;
-            }
-            else {
+           memset (&gs_wfInfo, 0, sizeof (gs_wfInfo)) ;
+               gs_pSndFileIn = sf_open(lpszFileName, SFM_READ, &gs_wfInfo);
+
+           if (gs_pSndFileIn == NULL) {
+               if (!in_signed) {
+                   fputs("Unsigned input only supported with bitwidth 8\n", stderr);
+                   exit(1);
+               }
+               if (in_endian != order_unknown) {
+                   if (in_endian == order_littleEndian)
+                       gs_wfInfo.format = SF_ENDIAN_LITTLE | SF_FORMAT_RAW;
+                   else
+                       gs_wfInfo.format = SF_ENDIAN_BIG | SF_FORMAT_RAW;
+               } else {
 #ifndef WORDS_BIGENDIAN
-                /* little endian */
-                if (swapbytes)
-                    gs_wfInfo.format = SF_FORMAT_RAW_BE;
-                else
-                    gs_wfInfo.format = SF_FORMAT_RAW_LE;
+                    /* little endian */
+                    if (swapbytes)
+                        gs_wfInfo.format = SF_ENDIAN_BIG | SF_FORMAT_RAW;
+                    else
+                        gs_wfInfo.format = SF_ENDIAN_LITTLE | SF_FORMAT_RAW;
 #else
-                if (swapbytes)
-                    gs_wfInfo.format = SF_FORMAT_RAW_LE;
-                else
-                    gs_wfInfo.format = SF_FORMAT_RAW_BE;
+                    if (swapbytes)
+                        gs_wfInfo.format = SF_ENDIAN_LITTLE | SF_FORMAT_RAW;
+                    else
+                        gs_wfInfo.format = SF_ENDIAN_BIG | SF_FORMAT_RAW;
 #endif
+                   gs_pSndFileIn = sf_open(lpszFileName, SFM_READ, &gs_wfInfo);
+               }
             }
         }
 
-        gs_pSndFileIn = sf_open_read(lpszFileName, &gs_wfInfo);
         musicin = (SNDFILE *) gs_pSndFileIn;
 
         /* Check result */
@@ -619,9 +622,8 @@ OpenSndFile(lame_global_flags * gfp, char *inPath, int *enc_delay, int *enc_padd
             exit(1);
         }
 
-        if ((gs_wfInfo.format == SF_FORMAT_RAW_LE) ||
-            (gs_wfInfo.format == SF_FORMAT_RAW_BE) ||
-            (gs_wfInfo.format == SF_FORMAT_RAW_S8) || (gs_wfInfo.format == SF_FORMAT_RAW_U8))
+        if ((gs_wfInfo.format == (SF_FORMAT_RAW | SF_FORMAT_PCM_S8)) ||
+           (gs_wfInfo.format == (SF_FORMAT_RAW | SF_FORMAT_PCM_U8)))
             input_format = sf_raw;
 
 #ifdef _DEBUG_SND_FILE
@@ -629,7 +631,6 @@ OpenSndFile(lame_global_flags * gfp, char *inPath, int *enc_delay, int *enc_padd
         DEBUGF("samplerate        :%d\n", gs_wfInfo.samplerate);
         DEBUGF("samples           :%d\n", gs_wfInfo.samples);
         DEBUGF("channels          :%d\n", gs_wfInfo.channels);
-        DEBUGF("pcmbitwidth       :%d\n", gs_wfInfo.pcmbitwidth);
         DEBUGF("format            :");
 
         /* new formats from sbellon@sbellon.de  1/2000 */
@@ -707,12 +708,11 @@ OpenSndFile(lame_global_flags * gfp, char *inPath, int *enc_delay, int *enc_padd
         }
 
         DEBUGF("\n");
-        DEBUGF("pcmbitwidth       :%d\n", gs_wfInfo.pcmbitwidth);
         DEBUGF("sections          :%d\n", gs_wfInfo.sections);
         DEBUGF("seekable          :\n", gs_wfInfo.seekable);
 #endif
 
-        (void) lame_set_num_samples(gfp, gs_wfInfo.samples);
+        (void) lame_set_num_samples(gfp, gs_wfInfo.frames);
         if (-1 == lame_set_num_channels(gfp, gs_wfInfo.channels)) {
             if (silent < 10) {
                 error_printf("Unsupported number of channels: %ud\n", gs_wfInfo.channels);
@@ -720,7 +720,7 @@ OpenSndFile(lame_global_flags * gfp, char *inPath, int *enc_delay, int *enc_padd
             exit(1);
         }
         (void) lame_set_in_samplerate(gfp, gs_wfInfo.samplerate);
-        pcmbitwidth = gs_wfInfo.pcmbitwidth;
+        pcmbitwidth = 32;
     }
 
     if (lame_get_num_samples(gfp) == MAX_U_32_NUM) {
@@ -765,11 +765,11 @@ static int
 read_samples_pcm(FILE * const musicin, int sample_buffer[2304],
                  int frame_size /* unused */ , int samples_to_read)
 {
-    int     i;
     int     samples_read;
 
     samples_read = sf_read_int((SNDFILE *) musicin, sample_buffer, samples_to_read);
 
+#if 0
     switch (pcmbitwidth) {
     case 8:
         for (i = 0; i < samples_read; i++)
@@ -791,6 +791,7 @@ read_samples_pcm(FILE * const musicin, int sample_buffer[2304],
         }
         exit(1);
     }
+#endif
 
     return samples_read;
 }
@@ -897,7 +898,7 @@ read_samples_pcm(FILE * musicin, int sample_buffer[2304], int frame_size, int sa
     if ((32 == pcmbitwidth) || (24 == pcmbitwidth) || (16 == pcmbitwidth)) {
         /* assume only recognized wav files are */
         /*  in little endian byte order */
-        hi_lo_order = (!iswav == !pcmswapbytes);
+        hi_lo_order = (!iswav == !swapbytes);
         samples_read = unpack_read_samples(samples_to_read, pcmbitwidth / 8,
                                            hi_lo_order, sample_buffer, musicin);
 
