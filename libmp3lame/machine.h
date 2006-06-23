@@ -22,6 +22,12 @@
 #ifndef LAME_MACHINE_H
 #define LAME_MACHINE_H
 
+#include "version.h"
+
+#if (LAME_ALPHA_VERSION != 0)
+#undef NDEBUG
+#endif
+
 #include <stdio.h>
 #include <assert.h>
 
