@@ -10,12 +10,12 @@
 #	nmake -f Makefile.MSVC
 #		-> build lame and dll, but not mp3x
 #		-> use Robert's code modifications
-#		-> assume INTEL compiler available  
+#		-> assume MSVC 8.0 compiler available  
 #		-> assume NASM available
 #		-> assemble MMX code with NASM
-#		-> optimize for PIII
-#		-> single file optimizations
 #		-> no compiler warnings
+#       -> use single precision float
+#       -> use LibSndfile
 #
 #	passing arguments, one can modify the default behaviour:
 #	COMP=<not INTEL or BCC>    ->  use MS compiler
@@ -27,7 +27,8 @@
 #	CPU=P2                     ->  optimize for Pentium II/III, you need a PII or better
 #	CPU=P3                     ->  optimize for Pentium III, you need a PIII or better
 #	GTK=YES                    ->  have GTK, adds mp3x to default targets
-#	PREC=SLOPPY                ->  use single float instead of double
+#	PREC=<anything but SINGLE> ->  use double instead of single float
+#	SNDFILE=<anything but YES> ->  do not use LibSndfile for reading input files
 #
 #	Example:
 #	nmake -f Makefile.MSVC CPU=P1 GTK=YES
@@ -57,7 +58,7 @@ GTK = NO
 !	ENDIF
 !	ELSE
 !	IF "$(COMP)" == ""
-COMP = INTEL
+COMP = MSVC
 !	ENDIF
 !	ENDIF
 
@@ -69,7 +70,7 @@ ASM = YES
 MMX = YES
 !	ENDIF
 
-!	IF "$(CFG)" == "NO-ALTERNATE-CODE-AVAILABLE"
+!	IF "$(CFG)" == ""
 CFG = RH
 !	ENDIF
 
@@ -82,7 +83,11 @@ WARN = OFF
 !	ENDIF
 
 !	IF "$(PREC)" == ""
-PREC = DOUBLE
+PREC = SINGLE
+!	ENDIF
+
+!	IF "$(SNDFILE)" == ""
+SNDFILE = YES
 !	ENDIF
 
 
@@ -148,6 +153,9 @@ OFF = win32
 !	ENDIF
 !	IF "$(PREC)" == "SINGLE"
 !	 MESSAGE + using Single precision
+!	ENDIF
+!	IF "$(SNDFILE)" == "YES"
+!	 MESSAGE + using LibSndfile reading input files
 !	ENDIF
 !	MESSAGE ----------------------------------------------------------------------
 
@@ -366,10 +374,20 @@ LN = icl
 
 
 
-#-- MISC --
-SNDLIB = /DLAMESNDFILE
-LIBSNDFILE =
+#__ LIBSNDFILE ________________________________________________________________
+#
+#	uncomment the following if you want LibSndfile for input
+#	It's always a good idea to compile it in!
+#
+!	IF "$(SNDFILE)" == "YES"
+SNDFILE_OPTS = /DLIBSNDFILE
+LIBSNDFILE = $(SNDFILE_DIR)libsndfile.lib
+!   ENDIF
+#________________________________________________________________ LIBSNDFILE __
 
+
+
+#-- MISC --
 BRHIST_SWITCH = /DBRHIST
 TIMER_SWITCH =
 
@@ -388,7 +406,7 @@ CPP_OPTS = /DHAVE_CONFIG_H -I.
 #
 !	IF "$(GTK)" == "YES"
 !	IF "$(GTK_DIRS)" == ""
-GTK_DIRS = ../src
+GTK_DIRS = ../3rdparty
 !	ENDIF
 GTK_OPTS = -I$(GTK_DIRS)/glib     \
            -I$(GTK_DIRS)/gtk+     \
@@ -430,14 +448,17 @@ CPP_OPTS = $(CPP_OPTS) /DTAKEHIRO_IEEE754_HACK
 
 #__ Robert's alternate code ___________________________________________________
 !	IF "$(CFG)" == "RH"
-CPP_OPTS = $(CPP_OPTS) /DRH_TEST_ATHAA_FIX 
+CC_OPTS = $(CC_OPTS) /DRH_TEST_ATHAA_FIX 
+!	IF "$(MSVCVER)" == "8.0"
+LN_OPTS = $(LN_OPTS) /LTCG
+!   ENDIF
 !MESSAGE testing ATHAA fix for low volume files
 !	ENDIF
 #___________________________________________________ Robert's alternate code __
 
 
 
-CC_SWITCHES = $(CC_OPTS) $(SNDLIB) $(BRHIST_SWITCH) \
+CC_SWITCHES = $(CC_OPTS) $(SNDFILE_OPTS) $(BRHIST_SWITCH) \
               $(TIMER_SWITCH) $(GTK_OPTS) /DBS_FORMAT=BINARY
 
 LN_SWITCHES = $(LN_OPTS)
@@ -622,7 +643,7 @@ $(T_MP3X) : config.h lib common $(MPX_OBJ)
 	@echo.
 
 $(T_LDLL) : config.h lib $(DLL_OBJ)
-	@$(LN) $(LN_OUT)$@ $(LN_SWITCHES) $(LN_DLL) $(LIBSNDFILE) \
+	@$(LN) $(LN_OUT)$@ $(LN_SWITCHES) $(LN_DLL) \
 	       $(ASM_OBJ) $(LIB_OBJ) $(MPG_OBJ) $(DLL_OBJ) $(ADDL_OBJ)
 	@echo.
 	@echo --=*  $@ ready  *=--
