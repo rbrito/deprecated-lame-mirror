@@ -600,6 +600,7 @@ calc_xmin(lame_global_flags const *gfp,
     ATH_t const *const ATH = gfc->ATH;
     const FLOAT *const xr = cod_info->xr;
     int     max_nonzero;
+#define RH_TEST_ATHAA_FIX
 #ifdef RH_TEST_ATHAA_FIX
     int const enable_athaa_fix = (gfp->VBR == vbr_mtrh) ? 1 : 0;
 #endif

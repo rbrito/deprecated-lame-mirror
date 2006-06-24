@@ -892,6 +892,7 @@ lame_init_params(lame_global_flags * const gfp)
             else
                 gfc->sfb21_extra = (gfp->out_samplerate > 44000);
 
+#define RH_TEST_ATHAA_FIX
 #ifdef RH_TEST_ATHAA_FIX
             switch (gfp->VBR_q) {            
             case 0:
