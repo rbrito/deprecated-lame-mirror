@@ -893,8 +893,24 @@ lame_init_params(lame_global_flags * const gfp)
                 gfc->sfb21_extra = (gfp->out_samplerate > 44000);
 
 #ifdef RH_TEST_ATHAA_FIX
-            gfc->PSY->mask_adjust += 2;
-            gfc->PSY->mask_adjust_short += 2;
+            switch (gfp->VBR_q) {            
+            case 0:
+            case 1:
+            case 2:
+                break;
+            case 3:
+                gfc->PSY->mask_adjust += 0.6;
+                gfc->PSY->mask_adjust_short += 0.6;
+                break;
+            case 4:
+                gfc->PSY->mask_adjust += 1.2;
+                gfc->PSY->mask_adjust_short += 1.2;
+                break;
+            case 5:
+            default:
+                gfc->PSY->mask_adjust += 2;
+                gfc->PSY->mask_adjust_short += 2;
+            }
 #endif
             gfc->iteration_loop = VBR_new_iteration_loop;
             break;
