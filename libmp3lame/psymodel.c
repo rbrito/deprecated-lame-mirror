@@ -1948,7 +1948,7 @@ init_numline(int *numlines, int *bo, int *bm,
 }
 
 static int
-init_s3_values(lame_internal_flags const *gfc,
+init_s3_values(lame_global_flags const *gfp,
                FLOAT ** p,
                int (*s3ind)[2], int npart, FLOAT const *bval, FLOAT const *bval_width,
                FLOAT const *norm)
@@ -1957,6 +1957,7 @@ init_s3_values(lame_internal_flags const *gfc,
     /* The s3 array is not linear in the bark scale.
      * bval[x] should be used to get the bark value.
      */
+    int const flag = (gfp->VBR == vbr_mtrh || gfp->VBR == vbr_mt);
     int     i, j, k;
     int     numberOfNoneZero = 0;
 
@@ -1966,19 +1967,28 @@ init_s3_values(lame_internal_flags const *gfc,
      * i.e.: sum over j to spread into signal barkval=i
      * NOTE: i and j are used opposite as in the ISO docs
      */
-    for (i = 0; i < npart; i++)
-        for (j = 0; j < npart; j++)
-            s3[i][j] = s3_func(bval[i] - bval[j]) * bval_width[j] * norm[i];
-
+    for (i = 0; i < npart; i++) {
+        FLOAT   sum = 0.f;
+        for (j = 0; j < npart; j++) {
+            FLOAT   v = s3_func(bval[i] - bval[j]) * bval_width[j];
+            sum += v;
+            s3[i][j] = v * norm[i];
+        }
+        if (flag && sum > 0.f) {
+            for (j = 0; j < npart; j++) {
+                s3[i][j] /= sum;
+            }
+        }
+    }
     for (i = 0; i < npart; i++) {
         for (j = 0; j < npart; j++) {
-            if (s3[i][j] != 0.0)
+            if (s3[i][j] != 0.0f)
                 break;
         }
         s3ind[i][0] = j;
 
         for (j = npart - 1; j > 0; j--) {
-            if (s3[i][j] != 0.0)
+            if (s3[i][j] != 0.0f)
                 break;
         }
         s3ind[i][1] = j;
@@ -2063,7 +2073,7 @@ psymodel_init(lame_global_flags * gfp)
         norm[i] = 1.0;
         gfc->rnumlines_l[i] = 1.0 / gfc->numlines_l[i];
     }
-    i = init_s3_values(gfc, &gfc->s3_ll, gfc->s3ind, gfc->npart_l, bval, bval_width, norm);
+    i = init_s3_values(gfp, &gfc->s3_ll, gfc->s3ind, gfc->npart_l, bval, bval_width, norm);
     if (i)
         return i;
 
@@ -2138,7 +2148,7 @@ psymodel_init(lame_global_flags * gfp)
         gfc->minval_s[i] = pow(10.0, x / 10);
     }
 
-    i = init_s3_values(gfc, &gfc->s3_ss, gfc->s3ind_s, gfc->npart_s, bval, bval_width, norm);
+    i = init_s3_values(gfp, &gfc->s3_ss, gfc->s3ind_s, gfc->npart_s, bval, bval_width, norm);
     if (i)
         return i;
 
