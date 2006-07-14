@@ -1537,7 +1537,7 @@ L3psycho_anal_ns(lame_global_flags const *gfp,
                 ratio = en_short[i - 1] / en_short[i];
             else
                 ratio = en_short[i] / en_short[i - 1];
-            if (ratio < 2) {
+            if (ratio < 1.7) {
                 ns_attacks[i] = 0;
                 if (i == 1)
                     ns_attacks[0] = 0;
