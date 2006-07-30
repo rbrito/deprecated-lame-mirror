@@ -708,7 +708,11 @@ has_SSE(void)
     extern int has_SSE_nasm(void);
     return has_SSE_nasm();
 #else
-    return 0;           /* don't know, assume not */
+#ifdef _M_X64
+	return 1;
+#else
+	return 0;           /* don't know, assume not */
+#endif
 #endif
 }
 
@@ -719,7 +723,11 @@ has_SSE2(void)
     extern int has_SSE2_nasm(void);
     return has_SSE2_nasm();
 #else
-    return 0;           /* don't know, assume not */
+#ifdef _M_X64
+	return 1;
+#else
+	return 0;           /* don't know, assume not */
+#endif
 #endif
 }
 
