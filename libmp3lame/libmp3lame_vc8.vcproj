@@ -11,6 +11,9 @@
 		<Platform
 			Name="Win32"
 		/>
+		<Platform
+			Name="x64"
+		/>
 	</Platforms>
 	<ToolFiles>
 	</ToolFiles>
@@ -200,6 +203,194 @@
 				Name="VCPostBuildEventTool"
 			/>
 		</Configuration>
+		<Configuration
+			Name="Debug|x64"
+			OutputDirectory="$(SolutionDir)$(PlatformName)\$(ConfigurationName)"
+			IntermediateDirectory="$(PlatformName)\$(ConfigurationName)"
+			ConfigurationType="4"
+			CharacterSet="1"
+			>
+			<Tool
+				Name="VCPreBuildEventTool"
+			/>
+			<Tool
+				Name="VCCustomBuildTool"
+			/>
+			<Tool
+				Name="VCXMLDataGeneratorTool"
+			/>
+			<Tool
+				Name="VCWebServiceProxyGeneratorTool"
+			/>
+			<Tool
+				Name="VCMIDLTool"
+				TargetEnvironment="3"
+			/>
+			<Tool
+				Name="VCCLCompilerTool"
+				Optimization="0"
+				AdditionalIncludeDirectories="../include;../;E:\Prog\lame\lame\mpglib"
+				PreprocessorDefinitions="_DEBUG,_WINDOWS,HAVE_MPGLIB,WIN32,HAVE_CONFIG_H,_CRT_SECURE_NO_DEPRECATE"
+				MinimalRebuild="true"
+				BasicRuntimeChecks="3"
+				RuntimeLibrary="0"
+				UsePrecompiledHeader="0"
+				WarningLevel="3"
+				Detect64BitPortabilityProblems="true"
+				DebugInformationFormat="3"
+			/>
+			<Tool
+				Name="VCManagedResourceCompilerTool"
+			/>
+			<Tool
+				Name="VCResourceCompilerTool"
+			/>
+			<Tool
+				Name="VCPreLinkEventTool"
+			/>
+			<Tool
+				Name="VCLibrarianTool"
+			/>
+			<Tool
+				Name="VCALinkTool"
+			/>
+			<Tool
+				Name="VCXDCMakeTool"
+			/>
+			<Tool
+				Name="VCBscMakeTool"
+			/>
+			<Tool
+				Name="VCFxCopTool"
+			/>
+			<Tool
+				Name="VCPostBuildEventTool"
+			/>
+		</Configuration>
+		<Configuration
+			Name="Release|x64"
+			OutputDirectory="$(SolutionDir)$(PlatformName)\$(ConfigurationName)"
+			IntermediateDirectory="$(PlatformName)\$(ConfigurationName)"
+			ConfigurationType="4"
+			CharacterSet="1"
+			WholeProgramOptimization="1"
+			>
+			<Tool
+				Name="VCPreBuildEventTool"
+			/>
+			<Tool
+				Name="VCCustomBuildTool"
+			/>
+			<Tool
+				Name="VCXMLDataGeneratorTool"
+			/>
+			<Tool
+				Name="VCWebServiceProxyGeneratorTool"
+			/>
+			<Tool
+				Name="VCMIDLTool"
+				TargetEnvironment="3"
+			/>
+			<Tool
+				Name="VCCLCompilerTool"
+				AdditionalIncludeDirectories="../include;../;E:\Prog\lame\lame\mpglib"
+				PreprocessorDefinitions="NDEBUG,_WINDOWS,HAVE_MPGLIB,WIN32,HAVE_CONFIG_H,_CRT_SECURE_NO_DEPRECATE"
+				RuntimeLibrary="0"
+				UsePrecompiledHeader="0"
+				WarningLevel="3"
+				Detect64BitPortabilityProblems="true"
+				DebugInformationFormat="3"
+			/>
+			<Tool
+				Name="VCManagedResourceCompilerTool"
+			/>
+			<Tool
+				Name="VCResourceCompilerTool"
+			/>
+			<Tool
+				Name="VCPreLinkEventTool"
+			/>
+			<Tool
+				Name="VCLibrarianTool"
+			/>
+			<Tool
+				Name="VCALinkTool"
+			/>
+			<Tool
+				Name="VCXDCMakeTool"
+			/>
+			<Tool
+				Name="VCBscMakeTool"
+			/>
+			<Tool
+				Name="VCFxCopTool"
+			/>
+			<Tool
+				Name="VCPostBuildEventTool"
+			/>
+		</Configuration>
+		<Configuration
+			Name="Release NASM|x64"
+			OutputDirectory="$(SolutionDir)$(PlatformName)\$(ConfigurationName)"
+			IntermediateDirectory="$(PlatformName)\$(ConfigurationName)"
+			ConfigurationType="4"
+			CharacterSet="1"
+			WholeProgramOptimization="1"
+			>
+			<Tool
+				Name="VCPreBuildEventTool"
+			/>
+			<Tool
+				Name="VCCustomBuildTool"
+			/>
+			<Tool
+				Name="VCXMLDataGeneratorTool"
+			/>
+			<Tool
+				Name="VCWebServiceProxyGeneratorTool"
+			/>
+			<Tool
+				Name="VCMIDLTool"
+				TargetEnvironment="3"
+			/>
+			<Tool
+				Name="VCCLCompilerTool"
+				AdditionalIncludeDirectories="../include;../;E:\Prog\lame\lame\mpglib"
+				PreprocessorDefinitions="NDEBUG,_WINDOWS,HAVE_MPGLIB,WIN32,HAVE_CONFIG_H,_CRT_SECURE_NO_DEPRECATE,HAVE_NASM,MMX_choose_table"
+				RuntimeLibrary="0"
+				UsePrecompiledHeader="0"
+				WarningLevel="3"
+				Detect64BitPortabilityProblems="true"
+				DebugInformationFormat="3"
+			/>
+			<Tool
+				Name="VCManagedResourceCompilerTool"
+			/>
+			<Tool
+				Name="VCResourceCompilerTool"
+			/>
+			<Tool
+				Name="VCPreLinkEventTool"
+			/>
+			<Tool
+				Name="VCLibrarianTool"
+			/>
+			<Tool
+				Name="VCALinkTool"
+			/>
+			<Tool
+				Name="VCXDCMakeTool"
+			/>
+			<Tool
+				Name="VCBscMakeTool"
+			/>
+			<Tool
+				Name="VCFxCopTool"
+			/>
+			<Tool
+				Name="VCPostBuildEventTool"
+			/>
+		</Configuration>
 	</Configurations>
 	<References>
 	</References>
@@ -332,6 +523,36 @@
 						Outputs="..\config.h"
 					/>
 				</FileConfiguration>
+				<FileConfiguration
+					Name="Debug|x64"
+					>
+					<Tool
+						Name="VCCustomBuildTool"
+						Description="copy configMS.h -&gt; config.h"
+						CommandLine="copy ..\configMS.h ..\config.h&#x0D;&#x0A;"
+						Outputs="..\config.h"
+					/>
+				</FileConfiguration>
+				<FileConfiguration
+					Name="Release|x64"
+					>
+					<Tool
+						Name="VCCustomBuildTool"
+						Description="copy configMS.h -&gt; config.h"
+						CommandLine="copy ..\configMS.h ..\config.h&#x0D;&#x0A;"
+						Outputs="..\config.h"
+					/>
+				</FileConfiguration>
+				<FileConfiguration
+					Name="Release NASM|x64"
+					>
+					<Tool
+						Name="VCCustomBuildTool"
+						Description="copy configMS.h -&gt; config.h"
+						CommandLine="copy ..\configMS.h ..\config.h&#x0D;&#x0A;"
+						Outputs="..\config.h"
+					/>
+				</FileConfiguration>
 			</File>
 			<File
 				RelativePath=".\encoder.h"
@@ -434,7 +655,17 @@
 					<Tool
 						Name="VCCustomBuildTool"
 						Description="Assembling $(InputName)..."
-						CommandLine="nasmw  -f win32 -i  $(InputDir) -DWIN32  $(InputDir)$(InputName).nas&#x0D;&#x0A;move $(InputDir)$(InputName).obj  &quot;$(OutDir)&quot;"
+						CommandLine="nasmw  -f win32 -i  $(InputDir) -DWIN32  $(InputDir)$(InputName).nas&#x0D;&#x0A;move $(InputDir)$(InputName).obj  &quot;$(OutDir)&quot;&#x0D;&#x0A;"
+						Outputs="$(OutDir)/$(InputName).obj"
+					/>
+				</FileConfiguration>
+				<FileConfiguration
+					Name="Release NASM|x64"
+					>
+					<Tool
+						Name="VCCustomBuildTool"
+						Description="Assembling $(InputName)..."
+						CommandLine="nasmw  -f win32 -i  $(InputDir) -DWIN32  $(InputDir)$(InputName).nas&#x0D;&#x0A;move $(InputDir)$(InputName).obj  &quot;$(OutDir)&quot;&#x0D;&#x0A;"
 						Outputs="$(OutDir)/$(InputName).obj"
 					/>
 				</FileConfiguration>
@@ -448,7 +679,17 @@
 					<Tool
 						Name="VCCustomBuildTool"
 						Description="Assembling $(InputName)..."
-						CommandLine="nasmw  -f win32 -i  $(InputDir) -DWIN32  $(InputDir)$(InputName).nas&#x0D;&#x0A;move $(InputDir)$(InputName).obj  &quot;$(OutDir)&quot;"
+						CommandLine="nasmw  -f win32 -i  $(InputDir) -DWIN32  $(InputDir)$(InputName).nas&#x0D;&#x0A;move $(InputDir)$(InputName).obj  &quot;$(OutDir)&quot;&#x0D;&#x0A;"
+						Outputs="$(OutDir)/$(InputName).obj"
+					/>
+				</FileConfiguration>
+				<FileConfiguration
+					Name="Release NASM|x64"
+					>
+					<Tool
+						Name="VCCustomBuildTool"
+						Description="Assembling $(InputName)..."
+						CommandLine="nasmw  -f win32 -i  $(InputDir) -DWIN32  $(InputDir)$(InputName).nas&#x0D;&#x0A;move $(InputDir)$(InputName).obj  &quot;$(OutDir)&quot;&#x0D;&#x0A;"
 						Outputs="$(OutDir)/$(InputName).obj"
 					/>
 				</FileConfiguration>
@@ -462,7 +703,17 @@
 					<Tool
 						Name="VCCustomBuildTool"
 						Description="Assembling $(InputName)..."
-						CommandLine="nasmw  -f win32 -i  $(InputDir) -DWIN32  $(InputDir)$(InputName).nas&#x0D;&#x0A;move $(InputDir)$(InputName).obj  &quot;$(OutDir)&quot;"
+						CommandLine="nasmw  -f win32 -i  $(InputDir) -DWIN32  $(InputDir)$(InputName).nas&#x0D;&#x0A;move $(InputDir)$(InputName).obj  &quot;$(OutDir)&quot;&#x0D;&#x0A;"
+						Outputs="$(OutDir)/$(InputName).obj"
+					/>
+				</FileConfiguration>
+				<FileConfiguration
+					Name="Release NASM|x64"
+					>
+					<Tool
+						Name="VCCustomBuildTool"
+						Description="Assembling $(InputName)..."
+						CommandLine="nasmw  -f win32 -i  $(InputDir) -DWIN32  $(InputDir)$(InputName).nas&#x0D;&#x0A;move $(InputDir)$(InputName).obj  &quot;$(OutDir)&quot;&#x0D;&#x0A;"
 						Outputs="$(OutDir)/$(InputName).obj"
 					/>
 				</FileConfiguration>
