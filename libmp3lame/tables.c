@@ -745,6 +745,7 @@ init_numline(int *numlines, int *bo, int *bm, FLOAT *bval, FLOAT *mld,
 	if (j2 > blksize/2+1 || i == CBANDS-1)
 	    j2 = blksize/2+1;
 	bval[i] = freq2bark(sfreq*(j+j2)*0.5);
+//	printf("freq %f, bark %f\n", sfreq*(j+j2)*0.5, bval[i]);
 	numlines[i] = j2 - j;
 	while (j<j2)
 	    partition[j++]=i;
@@ -919,11 +920,16 @@ psymodel_init(lame_t gfc)
 	if (i != gfc->npart_l-1)
 	    l += gfc->numlines_l[i+1];
 	norm[i] = 0.5/5.;
-//#define lowfreq 15
-#define lowfreq 0
-	if (i < lowfreq)
-	    norm[i] /= 30*(lowfreq+1-i);
-
+#define lowfreq0 (FLOAT)10
+#define lowfreq1 (FLOAT)10
+//#define lowfreq 0
+	if (bval[i] < lowfreq1) {
+	    FLOAT adj = bval[i];
+//	    printf("%d %f\n", i, bval[i]);
+	    if (adj < (FLOAT)lowfreq0)
+		adj = (FLOAT)lowfreq0;
+	    norm[i] /= (FLOAT)20*(lowfreq1+1-adj);
+	}
 	gfc->rnumlines_ls[i] = 20.0/(l-1);
 	gfc->rnumlines_l[i] = 1.0 / (gfc->numlines_l[i] * 3);
 	if (gfc->ATHonly)
@@ -948,8 +954,8 @@ psymodel_init(lame_t gfc)
 	gfc->ATH.eql_w[i]
 	    = ATHformula(gfc, 3300, 1) / (x * FFT2MDCT * gfc->numlines_l[i]);
     }
-    for (i = 0; i < 8; i++)
-	gfc->ATH.eql_w[i] = gfc->ATH.eql_w[0];
+    for (i = 1; i < 8; i++)
+	gfc->ATH.eql_w[i] = gfc->ATH.eql_w[8];
     for (i = 0; i < SBMAX_l; i++)
 	gfc->ATH.l_avg[i] = gfc->ATH.cb[bm[i]];
 

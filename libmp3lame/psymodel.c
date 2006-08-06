@@ -1156,15 +1156,15 @@ psycho_anal_ns(lame_t gfc, int gr, int numchn)
 	    FLOAT m,a;
 	    a = avg[0] + avg[1];
 	    if (a != (FLOAT)0.0) {
-		int im;
+		int im, mmax;
 		m = max[0]; if (m < max[1]) m = max[1];
 		a *= (FLOAT)(3.0/2.0);
 		m = (m-a) / a * gfc->rnumlines_ls[0];
 		a = eb[0];
 		im = mytruncate(&eb2[0], m);
-		if (im < 10) {
-		    a *= POW20(210 + 10 - im);
-		}
+		mmax = 10;
+		if (im < mmax)
+		    a *= POW20(210 + mmax - im);
 	    }
 	    eb2[0] = a;
 
@@ -1210,19 +1210,20 @@ psycho_anal_ns(lame_t gfc, int gr, int numchn)
 	if (ch != 3) {
 	    FLOAT loudness;
 	    if (ch < 2) {
-		loudness = (FLOAT)0.0;
-		for (b = 0; b < gfc->npart_l; b++) {
-		    FLOAT x = eb2[b] * gfc->ATH.eql_w[b];
-		    loudness = Max(loudness, x);
-		}
-		if (loudness > (FLOAT)1.0)
-		    loudness = (FLOAT)1.0;
-		else {
-		    FLOAT old = gfc->ATH.adjust[ch] * gfc->ATH.aa_decay;
-		    if (loudness < old)
-			loudness = old;
-		    if (loudness < ATHAdjustLimit)
-			loudness = ATHAdjustLimit;
+		loudness = gfc->ATH.adjust[ch] * gfc->ATH.aa_decay;
+		if (loudness < ATHAdjustLimit)
+		    loudness = ATHAdjustLimit;
+		// if there're any short blocks, use previous factor.
+		if ((signbits(mr->en.s[0][0])
+		     & signbits(mr->en.s[0][1])
+		     & signbits(mr->en.s[0][2]))) {
+		    for (b = 0; b < gfc->npart_l; b++) {
+			FLOAT x = eb2[b] * gfc->ATH.eql_w[b];
+			loudness = Max(loudness, x);
+		    }
+		    if (loudness > (FLOAT)1.0) {
+			loudness = (FLOAT)1.0;
+		    }
 		}
 		gfc->ATH.adjust[ch] = loudness;
 	    } else {
