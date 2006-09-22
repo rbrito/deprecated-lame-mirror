@@ -58,7 +58,7 @@
 #define HAVE_STRCHR
 #define HAVE_MEMCPY
 
-#if defined(_MSC_VER)
+#if defined(_MSC_VER) || defined(__BORLANDC__)
 #pragma warning( disable : 4305 )
 	typedef __int8  int8_t;
 	typedef __int16 int16_t;
