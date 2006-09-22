@@ -11,6 +11,271 @@
 
 -- 
 
+2006-09-22 18:51  aleidinger
+
+	* configMS.h:
+
+	Borland C seems to follow the lead of MSC.
+
+	Bug ID:	1563522
+
+2006-09-10 14:25  bouvigne
+
+	* frontend/parse.c, libmp3lame/lame.c, libmp3lame/tables.c,
+	  libmp3lame/util.c:
+
+	restrict mpeg 2.5 to 64kbps
+
+2006-09-03 15:07  bouvigne
+
+	* lame_vc7.sln, Dll/LameDll_vc7.vcproj, frontend/lame_vc7.vcproj,
+	  frontend/mp3x_vc7.vcproj, libmp3lame/libmp3lame_vc7.vcproj,
+	  mpglib/mpglib_vc7.vcproj:
+
+	removed unmaintained VC7 project files
+
+2006-08-18 18:22  bouvigne
+
+	* doc/html/history.html, libmp3lame/psymodel.c,
+	  libmp3lame/version.h (lame3_97):
+
+	backported the workaround against short block detection issue
+
+2006-08-06 16:44  takehiro
+
+	* libmp3lame/: psymodel.c, tables.c
+	  (takehiro-2002_05_07-experimental):
+
+	update ATH adjustment algorithm.
+	- if the block type is short, do not use ATH adjustment with equal pressure
+	  curve, because the curve is not exact for impulse-like signal.
+
+2006-07-30 13:53  bouvigne
+
+	* configMS.h, libmp3lame/util.c:
+
+	enable SSE code when using x64
+
+2006-07-30 09:51  bouvigne
+
+	* lame_vc8.sln, Dll/LameDll_vc8.vcproj, frontend/lame_vc8.vcproj,
+	  libmp3lame/libmp3lame_vc8.vcproj, mpglib/mpglib_vc8.vcproj:
+
+	x64 builds
+
+2006-07-30 09:32  bouvigne
+
+	* Dll/LameDll_vc8.vcproj:
+
+	updated project
+
+2006-07-30 09:11  bouvigne
+
+	* lame_vc8.sln, Dll/LameDll_vc8.vcproj:
+
+	added lame DLL VC8 project
+
+2006-07-14 16:06  bouvigne
+
+	* lame_vc8.sln, frontend/lame_vc8.vcproj,
+	  libmp3lame/libmp3lame_vc8.vcproj, mpglib/mpglib_vc8.vcproj:
+
+	VC8 projects
+
+2006-07-14 15:58  bouvigne
+
+	* libmp3lame/psymodel.c:
+
+	slight change in the short block detection safety threshold
+
+2006-06-28 23:05  robert
+
+	* libmp3lame/lame.c:
+
+	full outer loop search disabled because of audible distortions it may generate
+
+2006-06-28 21:05  robert
+
+	* libmp3lame/psymodel.c:
+
+	normalizing the spreading function (vbr-new)
+
+2006-06-24 15:19  robert
+
+	* libmp3lame/: lame.c, quantize_pvt.c, version.h:
+
+	enabling the conditional RH_ATHAA_FIX code for vbr-new
+	we are now at patch level 6
+
+2006-06-24 01:57  robert
+
+	* libmp3lame/: lame.c, quantize_pvt.c:
+
+	tuning ATHAA_FIX for high quality VBR new presets
+
+2006-06-23 23:40  robert
+
+	* libmp3lame/: lame.c, quantize.c, quantize_pvt.c, vbrquantize.c:
+
+	tuning ATHAA_FIX for midrange VBR new presets
+
+2006-06-23 23:09  robert
+
+	* libmp3lame/machine.h:
+
+	always compile in assertions for alpha builds
+
+2006-06-23 23:06  robert
+
+	* Makefile.MSVC:
+
+	updating LibSndFile support, it's used by default now
+
+2006-06-23 20:52  aleidinger
+
+	* libmp3lame/version.h:
+
+	bump the patchlevel for the updated sndfile support
+
+2006-06-23 20:49  aleidinger
+
+	* doc/html/history.html:
+
+	document the updated libsndfile support
+
+2006-06-23 20:46  aleidinger
+
+	* Makefile.in, aclocal.m4, configure, ACM/Makefile.in,
+	  ACM/ADbg/Makefile.in, ACM/ddk/Makefile.in,
+	  ACM/tinyxml/Makefile.in, Dll/Makefile.in, debian/Makefile.in,
+	  doc/Makefile.in, doc/html/Makefile.in, doc/man/Makefile.in,
+	  dshow/Makefile.in, frontend/Makefile.in, include/Makefile.in,
+	  libmp3lame/Makefile.in, libmp3lame/i386/Makefile.in,
+	  mac/Makefile.in, misc/Makefile.in, mpglib/Makefile.in:
+
+	regen
+
+2006-06-23 20:40  aleidinger
+
+	* frontend/get_audio.c, configure.in, frontend/Makefile.am:
+
+	Add support for a recent sndfile library.
+
+	Submitted by:	Erik de Castro Lopo <erikd@mega-nerd.com> (sndfile author)
+
+2006-06-18 23:02  robert
+
+	* libmp3lame/lame.c:
+
+	developer only switch "--tune x" mow modifies current mask_adjust settings
+	instead of assigning x to it
+
+2006-06-18 21:32  robert
+
+	* Makefile.unix, libmp3lame/quantize.h:
+
+	adding RH_TEST_ATHAA_FIX to the Makefile config RH
+	matching declaration and implementation of trancate_smallsspectrums
+
+2006-06-18 20:49  robert
+
+	* libmp3lame/bitstream.c:
+
+	fixing asserts
+
+2006-06-18 20:48  robert
+
+	* libmp3lame/psymodel.c:
+
+	bugfix: in NSPSY highpass filter, out of bounds access in fircoef
+	bugfix: loss of fraction in equal loudness weighting
+
+2006-06-18 19:20  robert
+
+	* libmp3lame/quantize_pvt.c:
+
+	small update to the ATHAA problem fix
+
+2006-06-18 18:16  robert
+
+	* Makefile.MSVC, libmp3lame/machine.h, libmp3lame/quantize.h,
+	  libmp3lame/quantize_pvt.c, libmp3lame/reservoir.c:
+
+	trying to fix ATHAA problem for low volume files
+	to enable the code, one has to define RH_TEST_ATHAA_FIX at compile time
+
+2006-06-18 16:45  robert
+
+	* frontend/gtkanal.c:
+
+	needs console.h
+
+2006-06-18 16:44  robert
+
+	* libmp3lame/bitstream.c:
+
+	fixed assertion
+
+2006-06-16 00:16  robert
+
+	* libmp3lame/quantize.c, libmp3lame/util.h, mpglib/interface.c:
+
+	few more include dependencies sorted
+
+2006-06-15 23:51  robert
+
+	* frontend/gtkanal.c, frontend/mp3x.c, libmp3lame/VbrTag.c,
+	  libmp3lame/VbrTag.h, libmp3lame/bitstream.c,
+	  libmp3lame/bitstream.h, libmp3lame/encoder.c,
+	  libmp3lame/encoder.h, libmp3lame/fft.c, libmp3lame/fft.h,
+	  libmp3lame/gain_analysis.c, libmp3lame/gain_analysis.h,
+	  libmp3lame/id3tag.c, libmp3lame/id3tag.h, libmp3lame/l3side.h,
+	  libmp3lame/lame-analysis.h, libmp3lame/lame.c,
+	  libmp3lame/lame_global_flags.h, libmp3lame/lameerror.h,
+	  libmp3lame/machine.h, libmp3lame/mpglib_interface.c,
+	  libmp3lame/newmdct.c, libmp3lame/newmdct.h, libmp3lame/presets.c,
+	  libmp3lame/psymodel.c, libmp3lame/psymodel.h,
+	  libmp3lame/quantize.c, libmp3lame/quantize.h,
+	  libmp3lame/quantize_pvt.c, libmp3lame/quantize_pvt.h,
+	  libmp3lame/reservoir.c, libmp3lame/reservoir.h,
+	  libmp3lame/set_get.c, libmp3lame/set_get.h, libmp3lame/tables.c,
+	  libmp3lame/tables.h, libmp3lame/takehiro.c, libmp3lame/util.c,
+	  libmp3lame/util.h, libmp3lame/vbrquantize.c,
+	  libmp3lame/version.c, libmp3lame/version.h, mpglib/interface.c,
+	  mpglib/layer3.c, mpglib/mpglib.h:
+
+	some more header dependencies, indentation
+
+2006-06-15 23:07  robert
+
+	* libmp3lame/: VbrTag.h, bitstream.c, bitstream.h, encoder.c,
+	  encoder.h, fft.c, fft.h, gain_analysis.c, gain_analysis.h,
+	  lame.c, libmp3lame_vc6.dsp, machine.h, mpglib_interface.c,
+	  newmdct.c, presets.c, psymodel.c, psymodel.h, quantize.c,
+	  quantize.h, quantize_pvt.c, quantize_pvt.h, reservoir.c,
+	  reservoir.h, tables.c, takehiro.c, util.c, util.h, vbrquantize.c,
+	  vbrquantize.h, version.c, version.h:
+
+	making arguments and variables const where possible
+
+2006-06-15 16:03  robert
+
+	* libmp3lame/: VbrTag.c, VbrTag.h, bitstream.c, bitstream.h,
+	  encoder.c, encoder.h, fft.c, fft.h, gain_analysis.h, id3tag.c,
+	  id3tag.h, l3side.h, lame-analysis.h, lame.c, lame_global_flags.h,
+	  machine.h, mpglib_interface.c, newmdct.c, presets.c, psymodel.c,
+	  psymodel.h, quantize.c, quantize.h, quantize_pvt.c,
+	  quantize_pvt.h, reservoir.c, set_get.c, set_get.h, tables.c,
+	  tables.h, takehiro.c, util.c, util.h, vbrquantize.c, version.c:
+
+	tried to avoid includes within include headers to make dependencies more obvious
+
+2006-06-03 13:34  aleidinger
+
+	* ChangeLog:
+
+	Add nearly a year of history.
+
 2006-06-03 13:14  aleidinger
 
 	* doc/html/history.html:
