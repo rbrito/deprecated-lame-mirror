@@ -448,7 +448,7 @@ __declspec(dllexport) BE_ERR	beInitStream(PBE_CONFIG pbeConfig, PDWORD dwSamples
 
 
 	// Use strict ISO encoding?
-	lame_set_strict_ISO( gfp, ( lameConfig.format.LHV1.bStrictIso == TRUE ) ? 1 : 0 );
+	lame_set_strict_ISO( gfp, ( lameConfig.format.LHV1.bStrictIso ) ? 1 : 0 );
 	
 	// Set copyright flag?
 	if ( lameConfig.format.LHV1.bCopyright )
@@ -506,7 +506,7 @@ __declspec(dllexport) BE_ERR	beInitStream(PBE_CONFIG pbeConfig, PDWORD dwSamples
 	}
 
 	// check if the VBR tag is required
-	if ( TRUE == lameConfig.format.LHV1.bWriteVBRHeader) 
+	if ( lameConfig.format.LHV1.bWriteVBRHeader) 
 	{
 		lame_set_bWriteVbrTag( gfp, 1 );
 	}
