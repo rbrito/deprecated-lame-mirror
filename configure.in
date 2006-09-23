@@ -85,6 +85,7 @@ AC_CHECK_HEADERS( \
 		 sys/soundcard.h \
 		 sys/time.h \
 		 unistd.h \
+		 xmmintrin.h \
 		 linux/soundcard.h)
 
 dnl Checks for typedefs, structures, and compiler characteristics.
