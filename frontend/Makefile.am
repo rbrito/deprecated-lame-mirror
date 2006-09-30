@@ -10,9 +10,8 @@ brhist_sources = brhist.c brhist.h
 EXTRA_DIST = \
 	$(brhist_sources) \
 	lame_vc6.dsp \
-	lame_vc7.vcproj \
+	lame_vc8.vcproj \
 	mp3x_vc6.dsp \
-	mp3x_vc7.vcproj \
 	amiga_mpega.c
 
 DEFS = @DEFS@ @CONFIG_DEFS@

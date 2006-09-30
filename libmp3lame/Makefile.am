@@ -28,7 +28,7 @@ DEFS = @DEFS@ @CONFIG_DEFS@
 
 EXTRA_DIST = \
 	libmp3lame_vc6.dsp \
-	libmp3lame_vc7.vcproj \
+	libmp3lame_vc8.vcproj \
 	vbrquantize.h
 
 libmp3lame_la_SOURCES = \

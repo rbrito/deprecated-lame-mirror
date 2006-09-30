@@ -6,7 +6,7 @@ INCLUDES = @INCLUDES@ -I$(top_srcdir)/libmp3lame -I$(top_builddir)
 
 EXTRA_DIST = \
 	mpglib_vc6.dsp \
-	mpglib_vc7.vcproj
+	mpglib_vc8.vcproj
 
 DEFS = @DEFS@ @CONFIG_DEFS@
 
