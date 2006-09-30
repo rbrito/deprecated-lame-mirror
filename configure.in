@@ -354,10 +354,6 @@ dnl Compaq fast math library.
 AC_CHECK_LIB(cpml, cos, USE_LIBM="-lcpml")
 CONFIG_MATH_LIB="${USE_LIBM}"
 
-PKG_CHECK_MODULES(SNDFILE, sndfile >= 1.0.2, HAVE_SNDFILE="yes", HAVE_SNDFILE="no")
-AC_DEFINE_UNQUOTED([LIBSNDFILE],${ac_cv_sndfile}, [Set to 1 if you have libsndfile.])
-
-
 dnl configure use of features
 
 AM_PATH_GTK(1.2.0, HAVE_GTK="yes", HAVE_GTK="no")
@@ -393,32 +389,25 @@ esac
 
 
 dnl libsndfile
-AC_MSG_CHECKING(use of file io)
 WARNING=
 AC_ARG_WITH(fileio, 
   [  --with-fileio=lame         Use lame's internal file io routines [default]]
   [             =sndfile      Use Erik de Castro Lopo's libsndfile]
   [                           (no stdin possible currently)],
   CONFIG_FILEIO="${withval}", CONFIG_FILEIO="lame")
-AC_ARG_WITH(sndfile-prefix,
-  [  --with-sndfile-prefix=DIR  Alternate location for libsndfile],
-  CONFIG_SNDFILE_PREFIX="${withval}", CONFIG_SNDFILE_PREFIX="")
+
 if test "${CONFIG_FILEIO}" = "sndfile" ; then
-  if test "x${CONFIG_SNDFILE_PREFIX}" != "x" ; then 
-    # look for sndfile lib. This overrides any standard location
-    LA_SEARCH_LIB(SNDFILE_LIB_LOC, SNDFILE_INC_LOC, \
-      libsndfile.a, sndfile.h, $CONFIG_SNDFILE_PREFIX) 
-    if test "x${SNDFILE_LIB_LOC}" != "x" ; then
-      HAVE_SNDFILE="yes"
-      FRONTEND_LDFLAGS="-L${SNDFILE_LIB_LOC} ${FRONTEND_LDFLAGS}"
-      INCLUDES="-I${SNDFILE_INC_LOC} ${INCLUDES}"
-    else
-      WARNING="sndfile lib not found in specified prefix."
-    fi
-  fi
+  PKG_CHECK_MODULES(SNDFILE, sndfile >= 1.0.2, HAVE_SNDFILE="yes", HAVE_SNDFILE="no")
+fi
+
+AC_MSG_CHECKING(use of file io)
+
+if test "${CONFIG_FILEIO}" = "sndfile" ; then
   if test "${HAVE_SNDFILE}" = "yes" ; then
+    FRONTEND_LDFLAGS="-L${SNDFILE_LIBS} ${FRONTEND_LDFLAGS}"
     FRONTEND_LDADD="-lsndfile ${FRONTEND_LDADD}"
-    AC_DEFINE(LIBSNDFILE, 1, build with libsndfile support)
+    INCLUDES="-I${SNDFILE_CFLAGS} ${INCLUDES}"
+    AC_DEFINE(LIBSNDFILE, 1, set to 1 if you have libsndfile)
   else
     # default
     CONFIG_FILEIO="lame"
