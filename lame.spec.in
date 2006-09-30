@@ -14,7 +14,7 @@ Vendor: The LAME Project
 Packager: Yosi Markovich <yosim@bigfoot.com>
 URL: http://www.mp3dev.org/mp3
 Group: Applications/Multimedia
-Source: ftp://lame.sourceforge.net/pub/lame/src/%{name}-%{version}.tar.bz2
+Source: %{name}-%{version}.tar.gz
 BuildRoot: %{_tmppath}/%{name}-root
 Requires: ncurses >= 5.0
 BuildRequires: gcc => 3.0.1, /usr/bin/find, ncurses-devel
