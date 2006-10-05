@@ -589,10 +589,10 @@ lame_init_params(lame_global_flags * const gfp)
         gfp->VBR = vbr_off; /* at 160 kbps (MPEG-2/2.5)/ 320 kbps (MPEG-1) only Free format or CBR are possible, no VBR */
 
     if (gfp->out_samplerate) {
-        if (gfp->out_samplerate < 32000)
-            gfp->VBR_mean_bitrate_kbps = Max(gfp->VBR_mean_bitrate_kbps, 160);
-        else if (gfp->out_samplerate < 16000)
+        if (gfp->out_samplerate < 16000)
             gfp->VBR_mean_bitrate_kbps = Max(gfp->VBR_mean_bitrate_kbps, 64);
+        else if (gfp->out_samplerate < 32000)
+            gfp->VBR_mean_bitrate_kbps = Max(gfp->VBR_mean_bitrate_kbps, 160);
     }
 
   /****************************************************************/
