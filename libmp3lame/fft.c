@@ -317,5 +317,7 @@ init_fft(lame_internal_flags * const gfc)
     }
     else
 #endif
+    {
         gfc->fft_fht = fht;
+    }
 }

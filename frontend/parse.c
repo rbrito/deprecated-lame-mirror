@@ -519,11 +519,12 @@ long_help(const lame_global_flags * gfp, FILE * const fp, const char *ProgramNam
             "    --abr <bitrate> specify average bitrate desired (instead of quality)\n" "\n");
     fprintf(fp,
             "  VBR options:\n"
-            "    -v              use variable bitrate (VBR) (--vbr-old)\n"
-            "    --vbr-old       use old variable bitrate (VBR) routine\n"
-            "    --vbr-new       use new variable bitrate (VBR) routine\n"
             "    -V n            quality setting for VBR.  default n=%i\n"
-            "                    0=high quality,bigger files. 9=smaller files\n",
+            "                    0=high quality,bigger files. 9=smaller files\n"
+            "    -v              the same as -V 4\n"
+            "    --vbr-old       use old variable bitrate (VBR) routine\n"
+            "    --vbr-new       use new variable bitrate (VBR) routine (default)\n"
+            ,
             lame_get_VBR_q(gfp));
     fprintf(fp,
             "    -b <bitrate>    specify minimum allowed bitrate, default  32 kbps\n"
@@ -548,11 +549,12 @@ long_help(const lame_global_flags * gfp, FILE * const fp, const char *ProgramNam
         )
         fprintf(fp,
                 "  PSY related:\n"
+                DEV_HELP(
                 "    --short         use short blocks when appropriate\n"
                 "    --noshort       do not use short blocks\n"
                 "    --allshort      use only short blocks\n"
-                DEV_HELP
-                ("    --cwlimit <freq>  compute tonality up to freq (in kHz) default 8.8717\n")
+                "    --cwlimit <freq>  compute tonality up to freq (in kHz) default 8.8717\n"
+                )
         );
     fprintf(fp,
             "    --notemp        disable temporal masking effect\n"
@@ -574,10 +576,15 @@ long_help(const lame_global_flags * gfp, FILE * const fp, const char *ProgramNam
 
     fprintf(fp,
             "  experimental switches:\n"
+            DEV_HELP(
             "    -X n[,m]        selects between different noise measurements\n"
             "                    n for long block, m for short. if m is omitted, m = n\n"
+            )
             "    -Y              lets LAME ignore noise in sfb21, like in CBR\n"
-            "    -Z [n]          currently no effects\n");
+            DEV_HELP(
+            "    -Z [n]          currently no effects\n"
+            )
+            );
 
     wait_for(fp, lessmode);
 
@@ -592,8 +599,6 @@ long_help(const lame_global_flags * gfp, FILE * const fp, const char *ProgramNam
             "    --strictly-enforce-ISO   comply as much as possible to ISO MPEG spec\n" "\n");
     fprintf(fp,
             "  Filter options:\n"
-            "    -k              keep ALL frequencies (disables all filters),\n"
-            "                    Can cause ringing and twinkling\n"
             "  --lowpass <freq>        frequency(kHz), lowpass filter cutoff above freq\n"
             "  --lowpass-width <freq>  frequency(kHz) - default 15%% of lowpass freq\n"
             "  --highpass <freq>       frequency(kHz), highpass filter cutoff below freq\n"
@@ -669,7 +674,7 @@ display_bitrate(FILE * const fp, const char *const version, const int d, const i
     fprintf(fp,
             "\nMPEG-%-3s layer III sample frequencies (kHz):  %2d  %2d  %g\n"
             "bitrates (kbps):", version, 32 / d, 48 / d, 44.1 / d);
-    for (i = 1; i <= nBitrates; i++) 
+    for (i = 1; i <= nBitrates; i++)
         fprintf(fp, " %2i", bitrate_table[indx][i]);
     fprintf(fp, "\n");
 }
@@ -1192,13 +1197,13 @@ parse_args(lame_global_flags * gfp, int argc, char **argv,
                     return -1;
                 error_printf("Warning: --studio is deprecated, use --preset studio instead!");
 
-                T_ELIF("noshort")
+                T_ELIF_INTERNAL("noshort")
                     (void) lame_set_no_short_blocks(gfp, 1);
 
-                T_ELIF("short")
+                T_ELIF_INTERNAL("short")
                     (void) lame_set_no_short_blocks(gfp, 0);
 
-                T_ELIF("allshort")
+                T_ELIF_INTERNAL("allshort")
                     (void) lame_set_force_short_blocks(gfp, 1);
 
 
@@ -1810,18 +1815,20 @@ parse_args(lame_global_flags * gfp, int argc, char **argv,
                         autoconvert = 1;
                         (void) lame_set_mode(gfp, MONO);
                         break;
-                    case 'k':
-                        lame_set_lowpassfreq(gfp, -1);
-                        lame_set_highpassfreq(gfp, -1);
-                        break;
-                    case 'd':
-                        error_printf("WARNING: -d is obsolete.\n");
-                        /*(void) lame_set_allow_diff_short( gfp, 1 ); */
+                    case 'd':   /*(void) lame_set_allow_diff_short( gfp, 1 ); */
+                    case 'k':   /*lame_set_lowpassfreq(gfp, -1);
+                                  lame_set_highpassfreq(gfp, -1); */
+                        error_printf("WARNING: -%c is obsolete.\n", c);
                         break;
                     case 'S':
                         silent = 10;
                         break;
                     case 'X':
+                        /*  experimental switch -X:
+                            the differnt types of quant compare are tough
+                            to communicate to endusers, so they shouldn't
+                            bother to toy around with them
+                         */
                         {
                             int     x, y;
                             int     n = sscanf(arg, "%d,%d", &x, &y);
@@ -1829,20 +1836,27 @@ parse_args(lame_global_flags * gfp, int argc, char **argv,
                                 y = x;
                             }
                             argUsed = 1;
-                            lame_set_quant_comp(gfp, x);
-                            lame_set_quant_comp_short(gfp, y);
+                            if (INTERNAL_OPTS) {
+                                lame_set_quant_comp(gfp, x);
+                                lame_set_quant_comp_short(gfp, y);
+                            }
                         }
                         break;
                     case 'Y':
                         lame_set_experimentalY(gfp, 1);
                         break;
                     case 'Z':
+                        /*  experimental switch -Z:
+                            this switch is obsolete
+                         */
                         {
                             int     n = 1;
                             argUsed = sscanf(arg, "%d", &n);
-                            lame_set_experimentalZ(gfp, n);
-                            break;
+                            if (INTERNAL_OPTS) {
+                                lame_set_experimentalZ(gfp, n);
+                            }
                         }
+                        break;
                     case 'e':
                         argUsed = 1;
 

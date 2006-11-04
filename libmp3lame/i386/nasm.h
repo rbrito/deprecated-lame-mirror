@@ -18,8 +18,11 @@
 
 BITS 32
 
-%ifdef WIN32
-	%define _NAMING
+%ifdef YASM
+	%define segment_code segment .text align=16 use32
+	%define segment_data segment .data align=16 use32
+	%define segment_bss  segment .bss align=16 use32
+%elifdef WIN32
 	%define segment_code segment .text align=16 class=CODE use32
 	%define segment_data segment .data align=16 class=DATA use32
 %ifdef __BORLANDC__
@@ -33,9 +36,16 @@ BITS 32
 	%define segment_data segment .data
 	%define segment_bss  segment .bss
 %else
+%ifdef LINUX
+	section .note.GNU-stack progbits noalloc noexec nowrite align=1
+%endif
 	%define segment_code segment .text align=16 class=CODE use32
 	%define segment_data segment .data align=16 class=DATA use32
 	%define segment_bss  segment .bss align=16 class=DATA use32
+%endif
+
+%ifdef WIN32
+	%define _NAMING
 %endif
 
 %ifdef __tos__
@@ -176,3 +186,58 @@ _%1:
 ; bug of NASM-0.98
 %define pushf db 0x66, 0x9C
 %define popf  db 0x66, 0x9D
+
+%define	ge16(n)		((((n) / 16)*0xFFFFFFFF) & 0xFFFFFFFF)
+%define	ge15(n)		((((n) / 15)*0xFFFFFFFF) & 0xFFFFFFFF)
+%define	ge14(n)		((((n) / 14)*0xFFFFFFFF) & 0xFFFFFFFF)
+%define	ge13(n)		((((n) / 13)*0xFFFFFFFF) & 0xFFFFFFFF)
+%define	ge12(n)		((((n) / 12)*0xFFFFFFFF) & 0xFFFFFFFF)
+%define	ge11(n)		((((n) / 11)*0xFFFFFFFF) & 0xFFFFFFFF)
+%define	ge10(n)		((((n) / 10)*0xFFFFFFFF) & 0xFFFFFFFF)
+%define	ge9(n)		((((n) /  9)*0xFFFFFFFF) & 0xFFFFFFFF)
+%define	ge8(n)		(ge9(n) | ((((n) /  8)*0xFFFFFFFF) & 0xFFFFFFFF))
+%define	ge7(n)		(ge9(n) | ((((n) /  7)*0xFFFFFFFF) & 0xFFFFFFFF))
+%define	ge6(n)		(ge9(n) | ((((n) /  6)*0xFFFFFFFF) & 0xFFFFFFFF))
+%define	ge5(n)		(ge9(n) | ((((n) /  5)*0xFFFFFFFF) & 0xFFFFFFFF))
+%define	ge4(n)		(ge5(n) | ((((n) /  4)*0xFFFFFFFF) & 0xFFFFFFFF))
+%define	ge3(n)		(ge5(n) | ((((n) /  3)*0xFFFFFFFF) & 0xFFFFFFFF))
+%define	ge2(n)		(ge3(n) | ((((n) /  2)*0xFFFFFFFF) & 0xFFFFFFFF))
+%define	ge1(n)		(ge2(n) | ((((n) /  1)*0xFFFFFFFF) & 0xFFFFFFFF))
+
+; macro to align for begining of loop
+; %1   does not align if it LE bytes to next alignment 
+;      4..16 
+;      default is 12
+
+%imacro	loopalignK6	0-1 12 
+%%here:
+	times (($$-%%here) & 15 & ge1(($$-%%here) & 15) & ~ge4(($$-%%here) & 15)) nop
+	times (1                & ge4(($$-%%here) & 15) & ~ge%1(($$-%%here) & 15)) jmp short %%skip
+	times (((($$-%%here) & 15)-2) & ge4(($$-%%here) & 15) & ~ge%1(($$-%%here) & 15)) nop
+%%skip:
+%endmacro
+
+%imacro	loopalignK7	0-1 12 
+%%here:
+	times (1 & ge1(($$-%%here) & 15)  & ~ge2(($$-%%here) & 15)  & ~ge%1(($$-%%here) & 15)) nop
+	times (1 & ge2(($$-%%here) & 15)  & ~ge3(($$-%%here) & 15)  & ~ge%1(($$-%%here) & 15)) DB 08Bh,0C0h
+	times (1 & ge3(($$-%%here) & 15)  & ~ge4(($$-%%here) & 15)  & ~ge%1(($$-%%here) & 15)) DB 08Dh,004h,020h
+	times (1 & ge4(($$-%%here) & 15)  & ~ge5(($$-%%here) & 15)  & ~ge%1(($$-%%here) & 15)) DB 08Dh,044h,020h,000h
+	times (1 & ge5(($$-%%here) & 15)  & ~ge6(($$-%%here) & 15)  & ~ge%1(($$-%%here) & 15)) DB 08Dh,044h,020h,000h,090h
+	times (1 & ge6(($$-%%here) & 15)  & ~ge7(($$-%%here) & 15)  & ~ge%1(($$-%%here) & 15)) DB 08Dh,080h,0,0,0,0
+	times (1 & ge7(($$-%%here) & 15)  & ~ge8(($$-%%here) & 15)  & ~ge%1(($$-%%here) & 15)) DB 08Dh,004h,005h,0,0,0,0
+	times (1 & ge8(($$-%%here) & 15)  & ~ge9(($$-%%here) & 15)  & ~ge%1(($$-%%here) & 15)) DB 08Dh,004h,005h,0,0,0,0,90h
+	times (1 & ge9(($$-%%here) & 15)  & ~ge10(($$-%%here) & 15) & ~ge%1(($$-%%here) & 15)) DB 0EBh,007h,90h,90h,90h,90h,90h,90h,90h
+	times (1 & ge10(($$-%%here) & 15) & ~ge11(($$-%%here) & 15) & ~ge%1(($$-%%here) & 15)) DB 0EBh,008h,90h,90h,90h,90h,90h,90h,90h,90h
+	times (1 & ge11(($$-%%here) & 15) & ~ge12(($$-%%here) & 15) & ~ge%1(($$-%%here) & 15)) DB 0EBh,009h,90h,90h,90h,90h,90h,90h,90h,90h,90h
+	times (1 & ge12(($$-%%here) & 15) & ~ge13(($$-%%here) & 15) & ~ge%1(($$-%%here) & 15)) DB 0EBh,00Ah,90h,90h,90h,90h,90h,90h,90h,90h,90h,90h
+	times (1 & ge13(($$-%%here) & 15) & ~ge14(($$-%%here) & 15) & ~ge%1(($$-%%here) & 15)) DB 0EBh,00Bh,90h,90h,90h,90h,90h,90h,90h,90h,90h,90h,90h
+	times (1 & ge14(($$-%%here) & 15) & ~ge15(($$-%%here) & 15) & ~ge%1(($$-%%here) & 15)) DB 0EBh,00Ch,90h,90h,90h,90h,90h,90h,90h,90h,90h,90h,90h,90h
+	times (1 & ge15(($$-%%here) & 15) & ~ge16(($$-%%here) & 15) & ~ge%1(($$-%%here) & 15)) DB 0EBh,00Dh,90h,90h,90h,90h,90h,90h,90h,90h,90h,90h,90h,90h,90h
+%%skip:
+%endmacro
+
+%imacro	loopalign	0-1 12 
+	loopalignK7 %1
+%endmacro
+%define PACK(x,y,z,w)	(x*64+y*16+z*4+w)

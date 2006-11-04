@@ -1,4 +1,4 @@
-#	Makefile.MSVC: MSVC Makefile for LAME 
+#	Makefile.MSVC: MSVC Makefile for LAME
 #
 #	2000-11-21 Robert Hegemann
 #	dedicated to the LAME project http://www.mp3dev.org
@@ -10,7 +10,7 @@
 #	nmake -f Makefile.MSVC
 #		-> build lame and dll, but not mp3x
 #		-> use Robert's code modifications
-#		-> assume MSVC 8.0 compiler available  
+#		-> assume MSVC 8.0 compiler available
 #		-> assume NASM available
 #		-> assemble MMX code with NASM
 #		-> no compiler warnings
@@ -103,11 +103,11 @@ OFF = win32
 !	 MESSAGE + ASM
 !	 IF "$(MMX)" == "YES"
 !	  MESSAGE + MMX
-!	 ENDIF 
-!	ENDIF 
+!	 ENDIF
+!	ENDIF
 !	IF "$(GTK)" == "YES"
 !	 MESSAGE + GTK
-!	ENDIF 
+!	ENDIF
 !	IF "$(COMP)" == "INTEL"
 !	 MESSAGE using INTEL COMPILER
 !	 IF "$(CPU)" == "P1"
@@ -180,7 +180,7 @@ OFF = win32
 #	/QIfdiv generate code for Pentium FDIV fix
 #	/QI0f   generate code for Pentium 0x0f erratum fix
 #
-#	remarks: 
+#	remarks:
 #	 - aliasing options seem to break code
 #	 - try to get the Intel compiler demonstration code!
 #	   ICL produces faster code.
@@ -190,7 +190,7 @@ OFF = win32
 # LN_OPTS = /nologo /debug:full /debugtype:cv /fixed:no
 
 # profiling options
-# CC_OPTS = /nologo /Zi /O2b2gity /G6As /DNDEBUG 
+# CC_OPTS = /nologo /Zi /O2b2gity /G6As /DNDEBUG
 # LN_OPTS = /nologo /debug:full /debugtype:cv /fixed:no /profile
 
 # release options
@@ -232,17 +232,17 @@ LN_OPTS = /nologo /map:lame.map
 LN_DLL = /DLL
 LN_OUT = /OUT:
 !	ELSE
-LN_OPTS = /nologo /DEBUG /pdb:lame.pdb /map:lame.map 
+LN_OPTS = /nologo /DEBUG /pdb:lame.pdb /map:lame.map
 LN_DLL = /DLL /DEBUG
 LN_OUT = /OUT:
 !	ENDIF
 !	ELSEIF "$(MSVCVER)" == "8.0"
 !	IF "$(NODEBUG)" == "1"
-LN_OPTS = /nologo /map:lame.map 
+LN_OPTS = /nologo /map:lame.map
 LN_DLL = /DLL
 LN_OUT = /OUT:
 !	ELSE
-LN_OPTS = /nologo /DEBUG /pdb:lame.pdb /map:lame.map 
+LN_OPTS = /nologo /DEBUG /pdb:lame.pdb /map:lame.map
 LN_DLL = /DLL /DEBUG
 LN_OUT = /OUT:
 !	ENDIF
@@ -253,7 +253,7 @@ LN_DLL = /DLL
 LN_OUT = /OUT:
 !	ELSE
 LN_OPTS = /nologo
-LN_DLL = /DLL /DEBUG /pdb:lame.pdb /map:lame.map 
+LN_DLL = /DLL /DEBUG /pdb:lame.pdb /map:lame.map
 LN_OUT = /OUT:
 !	ENDIF
 !	ENDIF
@@ -288,10 +288,10 @@ CC_OPTS = $(CC_OPTS) -6
 !	IF "$(WARN)" == "OFF"
 CC_OPTS = $(CC_OPTS) -w-
 !	ELSE
-CC_OPTS = $(CC_OPTS) 
+CC_OPTS = $(CC_OPTS)
 !	ENDIF
 
-LN_DLL = 
+LN_DLL =
 #$(CCINST)/lib/cw32R.lib
 LN_OUT = -e
 CC_OUT = -o
@@ -319,7 +319,7 @@ PGM = $(T_LAME)
 #	/GA         assume single threaded
 #	/Gs[n]      disable stack checks for functions with <n bytes of locals
 #	/GF         read-only string pooling optimization
-#	/Gy         separate functions for the linker 
+#	/Gy         separate functions for the linker
 #	/Qunroll    unroll loops with default heuristic
 #	/QIfist     enable fast float to int conversion
 #	/QIfdiv     enable patch for Pentium with FDIV erratum
@@ -329,7 +329,7 @@ PGM = $(T_LAME)
 #	/Qipo_wp 4) enable entire program multi-file IP optimizations
 #	/QaxiMK     automatic use of specialized code for PII/III, MMX, SIMD
 #
-#	remarks: 
+#	remarks:
 #	1) slows speed down, not using
 #	2) faster compared to 3) or 4) on Pentium MMX at 200 MHz
 
@@ -448,7 +448,7 @@ CPP_OPTS = $(CPP_OPTS) /DTAKEHIRO_IEEE754_HACK
 
 #__ Robert's alternate code ___________________________________________________
 !	IF "$(CFG)" == "RH"
-CC_OPTS = $(CC_OPTS) /DRH_TEST_ATHAA_FIX 
+CC_OPTS = $(CC_OPTS) /DRH_TEST_ATHAA_FIX
 !	IF "$(MSVCVER)" == "8.0"
 LN_OPTS = $(LN_OPTS) /LTCG
 !   ENDIF
@@ -528,7 +528,7 @@ MPX_OBJ = $(mpx_sources:.c=.obj)
 DLL_OBJ = $(dll_sources:.c=.obj)
 
 
-.c.obj: 
+.c.obj:
 	@$(CC) $(CPP_OPTS) $(CC_SWITCHES) -Iinclude -Ilibmp3lame -Impglib \
 	       $(CC_OUT)$@  -c $<
 
@@ -541,18 +541,18 @@ DLL_OBJ = $(dll_sources:.c=.obj)
 #
 .SUFFIXES : .nas
 .nas.obj:
-	@echo $< 
+	@echo $<
 	@ml64 -Ilibmp3lame\i386 -Sf -DWIN32 -DWIN64 $< -Fo$@
-                                
+
 CC_SWITCHES = $(CC_SWITCHES) -DHAVE_NASM
 ASM_OBJ = $(ASM_OBJ) libmp3lame\i386\cpu_feat.obj
 
 ASM_OBJ = $(ASM_OBJ) libmp3lame\i386\fft3dn.obj
 
-#	not yet coded
-#CC_SWITCHES = $(CC_SWITCHES) -DUSE_FFTSSE
-#ASM_OBJ = $(ASM_OBJ) libmp3lame\i386\fftsse.obj
+CC_SWITCHES = $(CC_SWITCHES) -DUSE_FFTSSE
+ASM_OBJ = $(ASM_OBJ) libmp3lame\i386\fftsse.obj
 
+#	not yet coded
 #CC_SWITCHES = $(CC_SWITCHES) -DUSE_FFTFPU
 #ASM_OBJ = $(ASM_OBJ) libmp3lame\i386\fftfpu.obj
 #______________________________________________________________________ MASM __
@@ -566,19 +566,19 @@ ASM_OBJ = $(ASM_OBJ) libmp3lame\i386\fft3dn.obj
 #
 .SUFFIXES : .nas
 .nas.obj:
-	@echo $< 
+	@echo $<
 	@nasmw -f $(OFF) -i libmp3lame/i386/ -DWIN32 $< -o $@
-                                
+
 CC_SWITCHES = $(CC_SWITCHES) /DHAVE_NASM
 ASM_OBJ = $(ASM_OBJ) libmp3lame/i386/cpu_feat.obj
 
 
 ASM_OBJ = $(ASM_OBJ) libmp3lame/i386/fft3dn.obj
 
-#	not yet coded
-#CC_SWITCHES = $(CC_SWITCHES) /DUSE_FFTSSE
-#ASM_OBJ = $(ASM_OBJ) libmp3lame/i386/fftsse.obj
+CC_SWITCHES = $(CC_SWITCHES) /DUSE_FFTSSE
+ASM_OBJ = $(ASM_OBJ) libmp3lame/i386/fftsse.obj
 
+#	not yet coded
 #CC_SWITCHES = $(CC_SWITCHES) /DUSE_FFTFPU
 #ASM_OBJ = $(ASM_OBJ) libmp3lame/i386/fftfpu.obj
 #______________________________________________________________________ NASM __

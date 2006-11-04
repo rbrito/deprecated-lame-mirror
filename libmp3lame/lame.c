@@ -875,13 +875,19 @@ lame_init_params(lame_global_flags * const gfp)
     case vbr_mtrh:{
 
             (void) apply_preset(gfp, 500 - (gfp->VBR_q * 10), 0);
-
+            /*  The newer VBR code supports only a limited
+                subset of quality levels:
+                9-6=6 are the same, uses ISO quantization
+                  5=5               uses x^3/4 quantization
+                4-0=0 are the same  5 plus best huffman divide code
+             */
             if (gfp->quality < 0)
                 gfp->quality = LAME_DEFAULT_QUALITY;
-            if (gfp->quality > 7) {
-                gfp->quality = 7; /* needs psymodel */
-                ERRORF(gfc, "VBR needs a psymodel, switching to quality level 7\n");
-            }
+            if (gfp->quality < 5)
+                gfp->quality = 0;
+            if (gfp->quality > 6)
+                gfp->quality = 6;
+
 
             /*  tonality
              */
@@ -900,7 +906,7 @@ lame_init_params(lame_global_flags * const gfp)
 
 #define RH_TEST_ATHAA_FIX
 #ifdef RH_TEST_ATHAA_FIX
-            switch (gfp->VBR_q) {            
+            switch (gfp->VBR_q) {
             case 0:
             case 1:
             case 2:
@@ -1170,28 +1176,54 @@ lame_print_config(const lame_global_flags * gfp)
 
     if (gfc->CPU_features.MMX
         || gfc->CPU_features.AMD_3DNow || gfc->CPU_features.SSE || gfc->CPU_features.SSE2) {
+        int fft_asm_used = 0;
+#ifdef HAVE_NASM
+        if (gfc->CPU_features.AMD_3DNow) {
+            fft_asm_used = 1;
+        }
+        else
+#endif
+#ifdef USE_FFTSSE
+        if (gfc->CPU_features.SSE) {
+            fft_asm_used = 2;
+        }
+        else
+#endif
+        {
+            fft_asm_used = 0;
+        }
         MSGF(gfc, "CPU features: ");
 
-        if (gfc->CPU_features.MMX)
+        if (gfc->CPU_features.MMX) {
 #ifdef MMX_choose_table
             MSGF(gfc, "MMX (ASM used)");
 #else
             MSGF(gfc, "MMX");
 #endif
-        if (gfc->CPU_features.AMD_3DNow)
-#ifdef HAVE_NASM
-            MSGF(gfc, ", 3DNow! (ASM used)");
-#else
-            MSGF(gfc, ", 3DNow!");
-#endif
-        if (gfc->CPU_features.SSE)
+        }
+        if (gfc->CPU_features.AMD_3DNow) {
+            if (fft_asm_used == 1) {
+                MSGF(gfc, ", 3DNow! (ASM used)");
+            }
+            else {
+                MSGF(gfc, ", 3DNow!");
+            }
+        }
+        if (gfc->CPU_features.SSE) {
 #ifdef HAVE_XMMINTRIN_H
             MSGF(gfc, ", SSE (ASM used)");
 #else
-            MSGF(gfc, ", SSE");
+            if (fft_asm_used == 2) {
+                MSGF(gfc, ", SSE (ASM used)");
+            }
+            else {
+                MSGF(gfc, ", SSE");
+            }
 #endif
-        if (gfc->CPU_features.SSE2)
+        }
+        if (gfc->CPU_features.SSE2) {
             MSGF(gfc, ", SSE2");
+        }
         MSGF(gfc, "\n");
     }
 

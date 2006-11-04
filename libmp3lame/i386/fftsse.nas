@@ -7,19 +7,22 @@
 %include "nasm.h"
 
 	globaldef fht_SSE
-	globaldef fft_side_SSE
-	externdef costab_fft
-	externdef sintab_fft
 
 	segment_data
 	align 16
 Q_MMPP	dd	0x0,0x0,0x80000000,0x80000000
 Q_MPMP	dd	0x0,0x80000000,0x0,0x80000000
-Q_002	dd	0.02236068, 0.02236068, 0.02236068, 0.02236068
-D_SQRT2	dd	1.414213562,1.414213562
-S_025	dd	0.25
-S_05	DD	0.5
-S_00005	DD	0.0005
+D_1100	dd 0.0, 0.0, 1.0, 1.0
+costab_fft:
+	dd 9.238795325112867e-01
+	dd 3.826834323650898e-01
+	dd 9.951847266721969e-01
+	dd 9.801714032956060e-02
+	dd 9.996988186962042e-01
+	dd 2.454122852291229e-02
+	dd 9.999811752836011e-01
+	dd 6.135884649154475e-03
+S_SQRT2	dd	1.414213562
 
 	segment_code
 ;------------------------------------------------------------------------
@@ -42,32 +45,19 @@ fht_SSE:
 	;2つ目のループ
 	mov	eax,[esp+_P+4]	;eax=fz
 	mov	ebp,[esp+_P+8]	;=n
-	shl	ebp,2
+	shl	ebp,3
 	add	ebp,eax		; fn  = fz + n, この関数終了まで不変
 
-	xor	ecx,ecx		; ecx=k=0
+	lea	ecx,[costab_fft]
 	xor	eax,eax
-	mov	al,4		; =k1=1*(sizeof float)	// 4, 16, 64, 256,...
-	xor	edx,edx
-	mov	dl,12		; =k3=3*k1
-	jmp	short .lp2
-
-	align	16
+	mov	al,8		; =k1=1*(sizeof float)	// 4, 16, 64, 256,...
 .lp2:				; do{
-	add	cl,2		; k  += 2;
-	shl	eax,2
-	shl	edx,2
-
-	mov	esi,[esp+_P+4]	;esi=fi=fz
-	mov	edi,eax
-	shr	edi,1
-	add	edi,esi		; edi=gi=fi+ki/2
+	mov	esi,[esp+_P+4]	; esi=fi=fz
+	lea	edx,[eax+eax*2]
+	mov	ebx, esi
 
 ; たかだか2並列しか期待できない部分はFPUのほうが速い。
-	movss	xmm7,[D_SQRT2]
-	jmp	short .lp20
-
-	align	16
+	loopalign	16
 .lp20:				; do{
 ;                       f0     = fi[0 ] + fi[k1];
 ;                       f2     = fi[k2] + fi[k3];
@@ -77,31 +67,30 @@ fht_SSE:
 ;                       fi[k1] = f1     + f3;
 ;                       fi[k2] = f0     - f2;
 ;                       fi[k3] = f1     - f3;
-	fld	dword [esi]
-	fadd	dword [esi+eax]
-	fld	dword [esi+eax*2]
-	fadd	dword [esi+edx]
+	lea	edi,[ebx+eax]	; edi=gi=fi+ki/2
+	fld	dword [ebx]
+	fadd	dword [ebx+eax*2]
+	fld	dword [ebx+eax*4]
+	fadd	dword [ebx+edx*2]
 
-	fld	dword [esi]
-	fsub	dword [esi+eax]
-	fld	dword [esi+eax*2]
-	fsub	dword [esi+edx]
-
-	fld	st1
-	fadd	st0,st1
-	fstp	dword [esi+eax]
-	fsubp	st1,st0
-	fstp	dword [esi+edx]
+	fld	dword [ebx]
+	fsub	dword [ebx+eax*2]
+	fld	dword [ebx+eax*4]
+	fsub	dword [ebx+edx*2]
 
 	fld	st1
 	fadd	st0,st1
-	fstp	dword [esi]
+	fstp	dword [ebx+eax*2]
 	fsubp	st1,st0
-	fstp	dword [esi+eax*2]
+	fstp	dword [ebx+edx*2]
 
-	lea	esi,[esi + eax*4]	; = fi += (k1 * 4);
-;	add	esi,eax
-;	add	esi,edx
+	fld	st1
+	fadd	st0,st1
+	fstp	dword [ebx]
+	fsubp	st1,st0
+	fstp	dword [ebx+eax*4]
+
+	lea	ebx,[ebx + eax*8]	; = fi += (k1 * 4);
 ;                       g0     = gi[0 ] + gi[k1];
 ;                       g2     = SQRT2  * gi[k2];
 ;                       g1     = gi[0 ] - gi[k1];
@@ -111,59 +100,56 @@ fht_SSE:
 ;                       gi[k1] = g1     + g3;
 ;                       gi[k3] = g1     - g3;
 	fld	dword [edi]
-	fadd	dword [edi+eax]
-	fld	dword [D_SQRT2]
-	fmul	dword [edi+eax*2]
+	fadd	dword [edi+eax*2]
+	fld	dword [S_SQRT2]
+	fmul	dword [edi+eax*4]
 
 	fld	dword [edi]
-	fsub	dword [edi+eax]
-	fld	dword [D_SQRT2]
-	fmul	dword [edi+edx]
+	fsub	dword [edi+eax*2]
+	fld	dword [S_SQRT2]
+	fmul	dword [edi+edx*2]
 
 	fld	st1
 	fadd	st0,st1
-	fstp	dword [edi+eax]
+	fstp	dword [edi+eax*2]
 	fsubp	st1,st0
-	fstp	dword [edi+edx]
+	fstp	dword [edi+edx*2]
 
 	fld	st1
 	fadd	st0,st1
 	fstp	dword [edi]
 	fsubp	st1,st0
-	fstp	dword [edi+eax*2]
+	fstp	dword [edi+eax*4]
 
-	lea	edi,[edi + eax*4]	; = gi += (k1 * 4);
-	cmp	esi,ebp
+	cmp	ebx,ebp
 	jl	near .lp20		; while (fi<fn);
+
 
 ;               i = 1; //for (i=1;i<kx;i++){
 ;                       c1 = 1.0*t_c - 0.0*t_s;
 ;                       s1 = 0.0*t_c + 1.0*t_s;
-	movss	xmm6,[costab_fft + ecx*4]
-	movss	xmm1,[sintab_fft + ecx*4]
-	shufps	xmm6,xmm1,0x00	; = {s1, s1, c1, c1}
-	shufps	xmm6,xmm6,0x28	; = {+c1, +s1, +s1, +c1}
-;                       c2 = c1*c1 - s1*s1;
-;                       s2 = c1*s1 + s1*c1;
-	movaps	xmm4,xmm6
+	movlps	xmm6,[ecx] ; = { --,  --,  s1, c1}
 	movaps	xmm7,xmm6
-	unpcklps	xmm4,xmm4	; = {s1, s1, c1, c1}
-	shufps	xmm7,xmm7,0x41
-	mulps	xmm4,xmm6	; = {s1*c1, s1*s1, c1*s1, c1*c1}
-	xorps	xmm7,[Q_MMPP]	; = {-s1, -c1, +c1, +s1}
-	movhlps	xmm3,xmm4
-	xorps	xmm3,[Q_MPMP]
-	subps	xmm4,xmm3	; = {--, --, s2, c2}
-	movlhps	xmm4,xmm4	; = {+s2, +c2, +s2, +c2}
-	movaps	xmm5,xmm4
-	shufps	xmm5,xmm5,0x11
-	xorps	xmm5,[Q_MPMP]	; = {-c2, +s2, -c2, +s2}
-	mov	esi,[esp+_P+4]	; = fz
-	lea	edi,[esi + eax - 4]	; edi = gi = fz +k1-i
-	add	esi,4		; esi = fi = fz + i
-	jmp	short .lp21
 
-	align	16
+	shufps	xmm6,xmm6,R4(0,1,1,0)	; = {+c1, +s1, +s1, +c1} -> 必要
+;                       c2 = c1*c1 - s1*s1 = 1 - (2*s1)*s1;
+;                       s2 = c1*s1 + s1*c1 = 2*s1*c1;
+	shufps	xmm7,xmm7,R4(1,0,0,1)
+	movss	xmm5,xmm7		; = { --,  --,  --, s1}
+	xorps	xmm7,[Q_MMPP]	; = {-s1, -c1, +c1, +s1} -> 必要
+
+	addss	xmm5,xmm5		; = (--, --,  --, 2*s1)
+	add	esi,4		; esi = fi = fz + i
+	shufps	xmm5,xmm5,R4(0,0,0,0)	; = (2*s1, 2*s1, 2*s1, 2*s1)
+	mulps	xmm5,xmm6		; = (2*s1*c1, 2*s1*s1, 2*s1*s1, 2*s1*c1)
+	subps	xmm5,[D_1100]		; = (--, 2*s1*s1-1, --, 2*s1*c1) = {-- -c2 -- s2}
+	movaps	xmm4,xmm5
+	shufps	xmm5,xmm5,R4(2,0,2,0)	; = {-c2, s2, -c2, s2} -> 必要
+
+	xorps	xmm4,[Q_MMPP]		; = {--, c2, --, s2}
+	shufps	xmm4,xmm4,R4(0,2,0,2)	; = {s2, c2, s2, c2} -> 必要
+
+	loopalign	16
 .lp21:				; do{
 ;                               a       = c2*fi[k1] + s2*gi[k1];
 ;                               b       = s2*fi[k1] - c2*gi[k1];
@@ -177,19 +163,20 @@ fht_SSE:
 ;                               g1      = gi[0 ]        - b;
 ;                               f3      = fi[k1 * 2]    - c;
 ;                               g3      = gi[k1 * 2]    - d;
+	lea	edi,[esi + eax*2 - 8]	; edi = gi = fz +k1-i
 
-	movss	xmm0,[esi + eax]	; = fi[k1]
-	movss	xmm2,[esi + edx]	; = fi[k3]
+	movss	xmm0,[esi + eax*2]	; = fi[k1]
+	movss	xmm2,[esi + edx*2]	; = fi[k3]
 	shufps	xmm0,xmm2,0x00	; = {fi[k3], fi[k3], fi[k1], fi[k1]}
-	movss	xmm1,[edi + eax]	; = fi[k1]
-	movss	xmm3,[edi + edx]	; = fi[k3]
+	movss	xmm1,[edi + eax*2]	; = fi[k1]
+	movss	xmm3,[edi + edx*2]	; = fi[k3]
 	shufps	xmm1,xmm3,0x00	; = {gi[k3], gi[k3], gi[k1], gi[k1]}
 	movss	xmm2,[esi]		; = fi[0]
 	mulps	xmm0,xmm4		; *= {+s2, +c2, +s2, +c2}
-	movss	xmm3,[esi + eax*2]	; = fi[k2]
+	movss	xmm3,[esi + eax*4]	; = fi[k2]
 	unpcklps	xmm2,xmm3	; = {--, --, fi[k2], fi[0]}
 	mulps	xmm1,xmm5		; *= {-c2, +s2, -c2, +s2}
-	movss	xmm3,[edi + eax*2]	; = gi[k2]
+	movss	xmm3,[edi + eax*4]	; = gi[k2]
 	addps	xmm0,xmm1		; = {d, c, b, a}
 	movss	xmm1,[edi]		; = gi[0]
 	unpcklps	xmm1,xmm3	; = {--,  --, gi[k2], gi[0]}
@@ -223,88 +210,69 @@ fht_SSE:
 	movhlps	xmm0,xmm3
 	movss	[esi],xmm3
 	shufps	xmm3,xmm3,0x55
-	movss	[edi+eax],xmm0
+	movss	[edi+eax*2],xmm0
 	shufps	xmm0,xmm0,0x55
 	movss	[edi],xmm3
-	movss	[esi+eax],xmm0
+	movss	[esi+eax*2],xmm0
 	movhlps	xmm0,xmm2
-	movss	[esi+eax*2],xmm2
+	movss	[esi+eax*4],xmm2
 	shufps	xmm2,xmm2,0x55
-	movss	[edi+edx],xmm0
+	movss	[edi+edx*2],xmm0
 	shufps	xmm0,xmm0,0x55
-	movss	[edi+eax*2],xmm2
-	lea	edi,[edi + eax*4] ; gi += (k1 * 4);
-	movss	[esi+edx],xmm0
-	lea	esi,[esi + eax*4] ; fi += (k1 * 4);
+	movss	[edi+eax*4],xmm2
+	movss	[esi+edx*2],xmm0
+	lea	esi,[esi + eax*8] ; fi += (k1 * 4);
 	cmp	esi,ebp
 	jl	near .lp21		; while (fi<fn);
+
+
 ; unroll前のdo loopは43+4命令
 
-; 最内周ではないforループをunrollingした
+; 最内周ではないforループのi=2から先をunrollingした
 ; kx=   2,   8,  32,  128
 ; k4=  16,  64, 256, 1024
 ;       0, 6/2,30/2,126/2
-; at here
-;	xmm6 = {--, --, s1, c1}
-;               c3 = c1; s3 = s1;
+
 	xor	ebx,ebx
-	mov	bl,4*4		; = i = 4
+	mov	bl, 4*2		; = i = 4
 	cmp	ebx,eax		; i < k1
 	jnl	near .F22
-
-	shufps	xmm6,xmm6,0x14	; = {c1, s1, s1, c1}
-	jmp	short .F220
-
-	align	16
-;               for (i=4;i<k1;i+=4){ // for (i=2;i<k1/2;i+=2){
+;               for (i=2;i<kx;i+=2){
+	loopalign	16
 .lp22:
-	shufps	xmm6,xmm6,0x69	; xmm6 = {c3, s3, s3, c3}
-.F220:
 ; at here, xmm6 is {c3, s3, s3, c3}
 ;                       c1 = c3*t_c - s3*t_s;
 ;                       s1 = c3*t_s + s3*t_c;
-	movss	xmm0,[costab_fft + ecx*4]
-	movss	xmm1,[sintab_fft + ecx*4]
-	shufps	xmm0,xmm1,0x00	; = {t_s, t_s, t_c, t_c}
-	mulps	xmm6,xmm0
-	movhlps	xmm4,xmm6
-	xorps	xmm4,[Q_MPMP]
-	subps	xmm6,xmm4	; = {--, --, s1, c1}
+	movlps	xmm0,[ecx]
+	shufps	xmm0,xmm0,R4(1,1,0,0)	; = {t_s, t_s, t_c, t_c}
+	mulps	xmm6,xmm0	; = {c3*ts, s3*ts, s3*tc, c3*tc}
+	movhlps	xmm4,xmm6	; = {--,    --,    c3*ts, s3*ts}
+	xorps	xmm4,[Q_MPMP]	; = {--,    --,   -c3*ts, s3*ts}
+	subps	xmm6,xmm4	; = {-,-, c3*ts+s3*tc, c3*tc-s3*ts}={-,-,s1,c1}
 
 ;                       c3 = c1*t_c - s1*t_s;
 ;                       s3 = s1*t_c + c1*t_s;
 	shufps	xmm6,xmm6,0x14	; = {c1, s1, s1, c1}
-	mulps	xmm0,xmm6
+	mulps	xmm0,xmm6	; = {ts*c1 ts*s1 tc*s1 tc*c1}
 	movhlps	xmm3,xmm0
 	xorps	xmm3,[Q_MPMP]
 	subps	xmm0,xmm3	; = {--, --, s3, c3}
 
+; {s2 s4 c4 c2} = {2*s1*c1 2*s3*c3 1-2*s3*s3 1-2*s1*s1}
 	unpcklps	xmm6,xmm0	; xmm6 = {s3, s1, c3, c1}
-	shufps	xmm6,xmm6,0xB4	; xmm6 = {s1, s3, c3, c1}
-
-;                       c2 = c1*c1 - s1*s1;
-;                       c4 = c3*c3 - s3*s3;
-;                       s4 = s3*c3 + s3*c3;
-;                       s2 = s1*c1 + s1*c1;
-	movaps	xmm7,xmm6
-	movaps	xmm4,xmm6
-	shufps	xmm7,xmm7,0x14
-	shufps	xmm4,xmm4,0xEB
-	xorps	xmm4,[Q_MMPP]	; = {-c3,-c1, s3, s1}
-	mulps	xmm7,xmm6
-	mulps	xmm4,xmm6
-	shufps	xmm4,xmm4,0x1B
-	addps	xmm7,xmm4	; xmm7 = {s2, s4, c4, c2}
+	movaps	xmm7, xmm6
+	shufps	xmm6,xmm6,R4(2,3,1,0)	; xmm6 = {s1, s3, c3, c1}
+	addps	xmm7, xmm7		; {s3*2, s1*2,   --,   --}
+	mov	edi,[esp+_P+4]		; = fz
+	shufps	xmm7, xmm7, R4(2,3,3,2)	; {s1*2, s3*2, s3*2, s1*2}
+	sub	edi,ebx			; edi = fz - i/2
+	mulps	xmm7, xmm6		; {s1*s1*2, s3*s3*2, s3*c3*2, s1*c1*2}
+	lea	esi,[edi + ebx*2]	; esi = fi = fz +i/2
+	subps	xmm7, [D_1100]		; {-c2, -c4, s4, s2}
+	lea	edi,[edi + eax*2-4]	; edi = gi = fz +k1-i/2
 
 ;                       fi = fz +i;
 ;                       gi = fz +k1-i;
-	mov	edi,[esp+_P+4]	; = fz
-	mov	esi,ebx
-	shr	esi,1
-	sub	edi,esi		; edi = fz - i/2
-	lea	esi,[edi + ebx]	; esi = fi = fz +i/2
-	add	edi,eax		; edi = gi = fz +k1-i/2
-	sub	edi,4
 ;                       do{
 .lp220:
 ; unroll後のdo loopは51+4命令
@@ -317,21 +285,21 @@ fht_SSE:
 ;                               h       = s4*fi[k3+1] - c4*gi[k3-1];
 ;                               d       = s2*fi[k3  ] - c2*gi[k3  ];
 
-	movaps	xmm4,xmm7	; xmm7 = {s2, s4, c4, c2}
-	shufps	xmm4,xmm4,0x1B
-	xorps	xmm4,[Q_MMPP]
-	movlps	xmm0,[esi+eax]
-	movlps	xmm1,[edi+eax]
-	movlps	xmm2,[esi+edx]
-	movlps	xmm3,[edi+edx]
+	movaps	xmm4,xmm7	; = {-c2 -c4  s4  s2}
+	xorps	xmm4,[Q_MMPP]	; = { c2  c4  s4  s2}
+	shufps	xmm4,xmm4,0x1B	; = { s2  s4  c4  c2}
+	movlps	xmm0,[esi+eax*2]
+	movlps	xmm1,[edi+eax*2]
+	movlps	xmm2,[esi+edx*2]
+	movlps	xmm3,[edi+edx*2]
 	shufps	xmm0,xmm0,0x14
 	shufps	xmm1,xmm1,0x41
 	shufps	xmm2,xmm2,0x14
 	shufps	xmm3,xmm3,0x41
-	mulps	xmm0,xmm7
-	mulps	xmm1,xmm4
-	mulps	xmm2,xmm7
-	mulps	xmm3,xmm4
+	mulps	xmm0,xmm4
+	mulps	xmm1,xmm7
+	mulps	xmm2,xmm4
+	mulps	xmm3,xmm7
 	addps	xmm0,xmm1	; xmm0 = {b, f, e, a}
 	addps	xmm2,xmm3	; xmm2 = {d, h, g, c}
 ;17
@@ -352,13 +320,13 @@ fht_SSE:
 ;                               f7      = fi[k2+1]    - g;
 ;                               g7      = gi[k2-1]    - h;
 ;                               g3      = gi[k2  ]    - d;
-	movlps	xmm4,[esi      ]
-	movhps	xmm4,[edi      ]
-	movaps	xmm1,xmm4
+	movlps	xmm1,[esi      ]
+	movhps	xmm1,[edi      ]
+	movaps	xmm4,xmm1
 	subps	xmm1,xmm0	; xmm1 = {g1, g5, f5, f1}
-	movlps	xmm5,[esi+eax*2]
-	movhps	xmm5,[edi+eax*2]
-	movaps	xmm3,xmm5
+	movlps	xmm3,[esi+eax*4]
+	movhps	xmm3,[edi+eax*4]
+	movaps	xmm5,xmm3
 	subps	xmm3,xmm2	; xmm3 = {g3, g7, f7, f3}
 	addps	xmm0,xmm4	; xmm0 = {g0, g4, f4, f0}
 	addps	xmm2,xmm5	; xmm2 = {g2, g6, f6, f2}
@@ -404,135 +372,42 @@ fht_SSE:
 ;                               gi[k3  ]  = g1        - b;
 	movaps	xmm3,xmm0
 	subps	xmm0,xmm4
-	movlps	[esi+eax*2],xmm0
-	movhps	[edi+eax*2],xmm0
+	movlps	[esi+eax*4],xmm0
+	movhps	[edi+eax*4],xmm0
 	addps	xmm4,xmm3
 	movlps	[esi      ],xmm4
 	movhps	[edi      ],xmm4
 
 	movaps	xmm5,xmm1
 	subps	xmm1,xmm2
-	movlps	[esi+edx  ],xmm1
-	movhps	[edi+edx  ],xmm1
+	movlps	[esi+edx*2],xmm1
+	movhps	[edi+edx*2],xmm1
 	addps	xmm2,xmm5
-	movlps	[esi+eax  ],xmm2
-	movhps	[edi+eax  ],xmm2
+	movlps	[esi+eax*2],xmm2
+	movhps	[edi+eax*2],xmm2
 ; 14
 ;                               gi     += k4;
 ;                               fi     += k4;
-	lea	edi,[edi + eax*4] ; gi += (k1 * 4);
-	lea	esi,[esi + eax*4] ; fi += (k1 * 4);
+	lea	edi,[edi + eax*8] ; gi += (k1 * 4);
+	lea	esi,[esi + eax*8] ; fi += (k1 * 4);
 	cmp	esi,ebp
 	jl	near .lp220		; while (fi<fn);
 ;                       } while (fi<fn);
 
-	add	ebx,4*4		; i+= 4
+	add	ebx,byte 2*4	; i+= 4
 	cmp	ebx,eax		; i < k1
+	shufps	xmm6,xmm6,R4(1,2,2,1)	; (--,s3,c3,--) => {c3, s3, s3, c3}
 	jl	near .lp22
 ;               }
 .F22:
-
+	shl	eax,2
+	add	ecx, byte 8
 	cmp	eax,[esp+_P+8]	; while ((k1 * 4)<n);
-	jl	near .lp2
-
+	jle	near .lp2
 	pop	ebp
 	pop	edi
 	pop	esi
 	pop	ebx
 	ret
-
-;------------------------------------------------------------------------
-;	99/11/12	Initial version for SSE by K. SAKAI, 4300clk@P3
-; This routine is very slow when wsamp_r_int is not aligned to 16byte boundary.
-;
-;void fft_side_SSE( float in[2][1024], int s, float *ret)
-;        energy = (in[0][512] - in[1][512])^2;
-;        energy = (in[0][1024-s] - in[1][1024-s])^2;
-;        for (i=s,j=1024-s;i<512;i++,j--){
-;                a = in[0][i] - in[1][i];
-;                energy += a*a;
-;                b = in[0][j-1] - in[1][j-1];
-;                energy += b*b;
-;        }
-;        *ret = energy * 0.25;
-
-	align	16
-fft_side_SSE:
-	mov	ecx,[esp+8]	; = i = s
-	mov	edx,1024
-	sub	edx,ecx		; = j
-	mov	eax,[esp+4]	; = in
-	movss	xmm7,[eax+1024*0*4+512*4]
-	movss	xmm1,[eax+1024*1*4+512*4]
-	subss	xmm7,xmm1
-	mulss	xmm7,xmm7
-	movss	xmm2,[eax+1024*0*4+edx*4]
-	movss	xmm3,[eax+1024*1*4+edx*4]
-	subss	xmm2,xmm3
-	mulss	xmm2,xmm2
-	addss	xmm7,xmm2
-
-	test	cl,1
-	jz	.even
-
-.odd:	dec	edx
-	movss	xmm0,[eax+1024*0*4+ecx*4]
-	movss	xmm1,[eax+1024*1*4+ecx*4]
-	inc	ecx
-	movss	xmm2,[eax+1024*0*4+edx*4]
-	movss	xmm3,[eax+1024*1*4+edx*4]
-	cmp	ecx,edx
-	subss	xmm0,xmm1
-	subss	xmm2,xmm3
-	mulss	xmm0,xmm0
-	mulss	xmm2,xmm2
-	addss	xmm7,xmm0
-	addss	xmm7,xmm2
-	je	near .exit1
-
-.even:	test	cl,2
-	jz	.f0
-	sub	edx,2
-	movlps	xmm0,[eax+1024*0*4+ecx*4]
-	movlps	xmm1,[eax+1024*1*4+ecx*4]
-	add	ecx,2
-	movhps	xmm0,[eax+1024*0*4+edx*4]
-	movhps	xmm1,[eax+1024*1*4+edx*4]
-	cmp	ecx,edx
-	subps	xmm0,xmm1
-	mulps	xmm0,xmm0
-	addps	xmm7,xmm0
-	je	.exit4
-	jmp	short .f0
-
-	align	16
-.f0:
-.lp0:
-	sub	edx,4
-	movaps	xmm0,[eax+1024*0*4+ecx*4]
-	movaps	xmm1,[eax+1024*1*4+ecx*4]
-	add	ecx,4
-	subps	xmm0,xmm1
-	mulps	xmm0,xmm0
-	addps	xmm7,xmm0
-	movaps	xmm2,[eax+1024*0*4+edx*4]
-	movaps	xmm3,[eax+1024*1*4+edx*4]
-	cmp	ecx,edx
-	subps	xmm2,xmm3
-	mulps	xmm2,xmm2
-	addps	xmm7,xmm2
-	jne	.lp0
-
-.exit4:	movhlps	xmm6,xmm7
-	addps	xmm7,xmm6
-	movaps	xmm6,xmm7
-	shufps	xmm6,xmm6,01010101B
-	addss	xmm7,xmm6
-
-.exit1:	mulss	xmm7,[S_025]
-	mov	eax,[esp+12]
-	movss	[eax],xmm7
-	ret
-
 
 	end

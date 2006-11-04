@@ -23,7 +23,7 @@
 #define LAME_VERSION_H
 
 
-/* 
+/*
  * To make a string from a token, use the # operator:
  *
  * #define __STR(x)  #x
@@ -36,7 +36,7 @@
 # define LAME_MAJOR_VERSION      3 /* Major version number */
 # define LAME_MINOR_VERSION     98 /* Minor version number */
 # define LAME_TYPE_VERSION       0 /* 0:alpha 1:beta 2:release */
-# define LAME_PATCH_VERSION      6 /* Patch level */
+# define LAME_PATCH_VERSION      7 /* Patch level */
 # define LAME_ALPHA_VERSION     (LAME_TYPE_VERSION==0)
 # define LAME_BETA_VERSION      (LAME_TYPE_VERSION==1)
 # define LAME_RELEASE_VERSION   (LAME_TYPE_VERSION==2)
