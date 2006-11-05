@@ -1,7 +1,7 @@
 /*
- *	time status related function source file
+ *      time status related function source file
  *
- *	Copyright (c) 1999 Mark Taylor
+ *      Copyright (c) 1999 Mark Taylor
  *
  * This library is free software; you can redistribute it and/or
  * modify it under the terms of the GNU Library General Public
@@ -10,7 +10,7 @@
  *
  * This library is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.	 See the GNU
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
  * Library General Public License for more details.
  *
  * You should have received a copy of the GNU Library General Public
@@ -31,15 +31,16 @@
 
 
 #if 1
-# define SPEED_CHAR	"x" /* character x */
-# define SPEED_MULT	1.
+# define SPEED_CHAR     "x" /* character x */
+# define SPEED_MULT     1.
 #else
-# define SPEED_CHAR	"%%"
-# define SPEED_MULT	100.
+# define SPEED_CHAR     "%%"
+# define SPEED_MULT     100.
 #endif
 
 #include <assert.h>
 #include <time.h>
+#include <string.h>
 
 #include "lame.h"
 #include "main.h"
@@ -280,7 +281,6 @@ void
 encoder_progress_end( lame_global_flags const* gf )
 {
     if (silent <= 0) {
-        int const frames = lame_get_frameNum(gf);
 #ifdef BRHIST
         if (brhist) {
             brhist_jump_back();
