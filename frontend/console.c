@@ -80,44 +80,39 @@ my_report_printing(FILE * fp, const char *format, va_list ap)
  * But one day, for one kind of terminal, that was not enough.)
  */
 
-static int
-init_console(Console_IO_t * const mfp)
-{
 #ifdef HAVE_TERMCAP
+static void
+apply_termcap_settings(Console_IO_t * const mfp)
+{
     const char *term_name;
     char    term_buff[2048];
     char   *tp;
     char    tc[10];
     int     val;
-#endif
 
-    /* setup basics of brhist I/O channels */
-    mfp->disp_width = 80;
-    mfp->disp_height = 25;
-    mfp->Console_fp = stderr;
-    mfp->Error_fp = stderr;
-    mfp->Report_fp = NULL;
-
-    /*mfp -> Console_buff = calloc ( 1, REPORT_BUFF_SIZE ); */
-    setvbuf(mfp->Console_fp, mfp->Console_buff, _IOFBF, sizeof(mfp->Console_buff));
-/*  setvbuf ( mfp -> Error_fp  , NULL                   , _IONBF, 0                                ); */
-
-#if defined(_WIN32)  &&  !defined(__CYGWIN__)
-    mfp->Console_Handle = GetStdHandle(STD_ERROR_HANDLE);
-#endif
-
-    strcpy(mfp->str_up, "\033[A");
-
-#ifdef HAVE_TERMCAP
     /* try to catch additional information about special console sequences */
 
     if ((term_name = getenv("TERM")) == NULL) {
+        /*  rh 061105:
+            silently ignore it and fallback to the behaviour as if
+            TERMCAP wasn't defined at all
+         */
+        return;
+        /*
         fprintf(mfp->Error_fp, "LAME: Can't get \"TERM\" environment string.\n");
         return -1;
+        */
     }
     if (tgetent(term_buff, term_name) != 1) {
+        /*  rh 061105:
+            silently ignore it and fallback to the behaviour as if
+            TERMCAP wasn't defined at all
+         */
+        return;
+        /*
         fprintf(mfp->Error_fp, "LAME: Can't find termcap entry for terminal \"%s\"\n", term_name);
         return -1;
+        */
     }
 
     val = tgetnum("co");
@@ -146,7 +141,31 @@ init_console(Console_IO_t * const mfp)
     tp = tgetstr("me", &tp);
     if (tp != NULL)
         strcpy(mfp->str_norm, tp);
+}
+#endif /* TERMCAP_AVAILABLE */
 
+static int
+init_console(Console_IO_t * const mfp)
+{
+    /* setup basics of brhist I/O channels */
+    mfp->disp_width = 80;
+    mfp->disp_height = 25;
+    mfp->Console_fp = stderr;
+    mfp->Error_fp = stderr;
+    mfp->Report_fp = NULL;
+
+    /*mfp -> Console_buff = calloc ( 1, REPORT_BUFF_SIZE ); */
+    setvbuf(mfp->Console_fp, mfp->Console_buff, _IOFBF, sizeof(mfp->Console_buff));
+/*  setvbuf ( mfp -> Error_fp  , NULL                   , _IONBF, 0                                ); */
+
+#if defined(_WIN32)  &&  !defined(__CYGWIN__)
+    mfp->Console_Handle = GetStdHandle(STD_ERROR_HANDLE);
+#endif
+
+    strcpy(mfp->str_up, "\033[A");
+
+#ifdef HAVE_TERMCAP
+    apply_termcap_settings(mfp);
 #endif /* TERMCAP_AVAILABLE */
 
     mfp->ClassID = CLASS_ID;
