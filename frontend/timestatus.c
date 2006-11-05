@@ -106,14 +106,19 @@ ts_time_decompose(const unsigned long time_in_sec, const char padded_char)
         console_printf("%6lu h%c", hour, padded_char);
 }
 
-void
-timestatus(int samp_rate, int frameNum, int totalframes, int framesize)
+static void
+timestatus(const lame_global_flags * const gfp)
 {
     static timestatus_t real_time;
     static timestatus_t proc_time;
     int     percent;
     static int init = 0;     /* What happens here? A work around instead of a bug fix ??? */
     double  tmx, delta;
+    int samp_rate     = lame_get_out_samplerate(gfp)
+      , frameNum      = lame_get_frameNum(gfp)
+      , totalframes   = lame_get_totalframes(gfp)
+      , framesize     = lame_get_framesize(gfp)
+      ;
 
     if (totalframes < frameNum) {
         totalframes = frameNum;
@@ -176,34 +181,122 @@ timestatus(int samp_rate, int frameNum, int totalframes, int framesize)
     ts_time_decompose((unsigned long) (real_time.estimated_time - real_time.elapsed_time), ' ');
 }
 
-void
+static void
 timestatus_finish(void)
 {
     console_printf("\n");
 }
 
-void
-timestatus_klemm(const lame_global_flags * const gfp)
-{
-    static double last_time = 0.;
 
-    if (silent <= 0)
-        if (lame_get_frameNum(gfp) == 0 ||
-            lame_get_frameNum(gfp) == 9 ||
-            GetRealTime() - last_time >= update_interval || GetRealTime() - last_time < 0) {
-#ifdef BRHIST
-            brhist_jump_back();
-#endif
-            timestatus(lame_get_out_samplerate(gfp),
-                       lame_get_frameNum(gfp), lame_get_totalframes(gfp), lame_get_framesize(gfp));
-#ifdef BRHIST
-            if (brhist) {
-                brhist_disp(gfp);
+void
+encoder_progress_begin( lame_global_flags const* gf
+                      , char              const* inPath
+                      , char              const* outPath
+                      )
+{
+    if (silent < 10) {
+        lame_print_config(gf); /* print useful information about options being used */
+
+        console_printf("Encoding %s%s to %s\n",
+                       strcmp(inPath, "-") ? inPath : "<stdin>",
+                       strlen(inPath) + strlen(outPath) < 66 ? "" : "\n     ",
+                       strcmp(outPath, "-") ? outPath : "<stdout>");
+
+        console_printf("Encoding as %g kHz ", 1.e-3 * lame_get_out_samplerate(gf));
+
+        {
+            static const char *mode_names[2][4] = {
+                {"stereo", "j-stereo", "dual-ch", "single-ch"},
+                {"stereo", "force-ms", "dual-ch", "single-ch"}
+            };
+            const char *appendix = "";
+
+            switch (lame_get_VBR(gf)) {
+            case vbr_mt:
+            case vbr_rh:
+            case vbr_mtrh:
+                appendix = "ca. ";
+                console_printf("VBR(q=%i)", lame_get_VBR_q(gf));
+                break;
+            case vbr_abr:
+                console_printf("average %d kbps", lame_get_VBR_mean_bitrate_kbps(gf));
+                break;
+            default:
+                console_printf("%3d kbps", lame_get_brate(gf));
+                break;
             }
-#endif
+            console_printf(" %s MPEG-%u%s Layer III (%s%gx) qval=%i\n",
+                           mode_names[lame_get_force_ms(gf)][lame_get_mode(gf)],
+                           2 - lame_get_version(gf),
+                           lame_get_out_samplerate(gf) < 16000 ? ".5" : "",
+                           appendix,
+                           0.1 * (int) (10. * lame_get_compression_ratio(gf) + 0.5),
+                           lame_get_quality(gf));
+        }
+
+        if (silent <= -10) {
+            lame_print_internals(gf);
+        }
+    }
+}
+
+void
+encoder_progress( lame_global_flags const* gf )
+{
+    if (silent <= 0) {
+        int const frames = lame_get_frameNum(gf);
+        if (update_interval <= 0) {     /*  most likely --disptime x not used */
+            if ((frames % 100) != 0) {  /*  true, most of the time */
+                return;
+            }
+        }
+        else {
+            static double last_time = 0.0;
+            if (frames != 0 && frames != 9) {
+                double const act = GetRealTime();
+                double const dif = act - last_time;
+                if (dif >= 0 && dif < update_interval) {
+                    return;
+                }
+            }
             last_time = GetRealTime(); /* from now! disp_time seconds */
         }
+#ifdef BRHIST
+        if (brhist) {
+            brhist_jump_back();
+        }
+#endif
+        timestatus(gf);
+#ifdef BRHIST
+        if (brhist) {
+            brhist_disp(gf);
+        }
+#endif
+        console_flush();
+    }
 }
+
+void
+encoder_progress_end( lame_global_flags const* gf )
+{
+    if (silent <= 0) {
+        int const frames = lame_get_frameNum(gf);
+#ifdef BRHIST
+        if (brhist) {
+            brhist_jump_back();
+        }
+#endif
+        timestatus(gf);
+#ifdef BRHIST
+        if (brhist) {
+            brhist_disp(gf);
+        }
+        brhist_disp_total(gf);
+#endif
+        timestatus_finish();
+    }
+}
+
 
 /* these functions are used in get_audio.c */
 

@@ -348,93 +348,21 @@ lame_decoder(lame_global_flags * gfp, FILE * outf, int skip_start, char *inPath,
 
 
 
-
-
-
-
 static int
 lame_encoder(lame_global_flags * gf, FILE * outf, int nogap, char *inPath, char *outPath)
 {
     unsigned char mp3buffer[LAME_MAXMP3BUFFER];
     int     Buffer[2][1152];
-    int     iread, imp3;
-    static const char *mode_names[2][4] = {
-        {"stereo", "j-stereo", "dual-ch", "single-ch"},
-        {"stereo", "force-ms", "dual-ch", "single-ch"}
-    };
-    int     frames;
+    int     iread, imp3, owrite;
 
-    if (silent < 10) {
-        lame_print_config(gf); /* print useful information about options being used */
-
-        console_printf("Encoding %s%s to %s\n",
-                       strcmp(inPath, "-") ? inPath : "<stdin>",
-                       strlen(inPath) + strlen(outPath) < 66 ? "" : "\n     ",
-                       strcmp(outPath, "-") ? outPath : "<stdout>");
-
-        console_printf("Encoding as %g kHz ", 1.e-3 * lame_get_out_samplerate(gf));
-
-        {
-            const char *appendix = "";
-
-            switch (lame_get_VBR(gf)) {
-            case vbr_mt:
-            case vbr_rh:
-            case vbr_mtrh:
-                appendix = "ca. ";
-                console_printf("VBR(q=%i)", lame_get_VBR_q(gf));
-                break;
-            case vbr_abr:
-                console_printf("average %d kbps", lame_get_VBR_mean_bitrate_kbps(gf));
-                break;
-            default:
-                console_printf("%3d kbps", lame_get_brate(gf));
-                break;
-            }
-            console_printf(" %s MPEG-%u%s Layer III (%s%gx) qval=%i\n",
-                           mode_names[lame_get_force_ms(gf)][lame_get_mode(gf)],
-                           2 - lame_get_version(gf),
-                           lame_get_out_samplerate(gf) < 16000 ? ".5" : "",
-                           appendix,
-                           0.1 * (int) (10. * lame_get_compression_ratio(gf) + 0.5),
-                           lame_get_quality(gf));
-        }
-
-        if (silent <= -10)
-            lame_print_internals(gf);
-
-    }
-
+    encoder_progress_begin(gf, inPath, outPath);
 
     /* encode until we hit eof */
     do {
         /* read in 'iread' samples */
         iread = get_audio(gf, Buffer);
-        frames = lame_get_frameNum(gf);
 
-
- /********************** status display  *****************************/
-        if (silent <= 0) {
-            if (update_interval > 0) {
-                timestatus_klemm(gf);
-                console_flush();
-            }
-            else {
-                if (0 == frames % 50) {
-#ifdef BRHIST
-                    if (brhist)
-                        brhist_jump_back();
-#endif
-                    timestatus(lame_get_out_samplerate(gf),
-                               frames, lame_get_totalframes(gf), lame_get_framesize(gf));
-#ifdef BRHIST
-                    if (brhist)
-                        brhist_disp(gf);
-#endif
-                    console_flush();
-                }
-            }
-        }
+        encoder_progress(gf);
 
         /* encode */
         imp3 = lame_encode_buffer_int(gf, Buffer[0], Buffer[1], iread,
@@ -448,8 +376,8 @@ lame_encoder(lame_global_flags * gf, FILE * outf, int nogap, char *inPath, char 
                 error_printf("mp3 internal error:  error code=%i\n", imp3);
             return 1;
         }
-
-        if (fwrite(mp3buffer, 1, imp3, outf) != (size_t) imp3) {
+        owrite = (int) fwrite(mp3buffer, 1, imp3, outf);
+        if (owrite != imp3) {
             error_printf("Error writing mp3 output \n");
             return 1;
         }
@@ -470,24 +398,13 @@ lame_encoder(lame_global_flags * gf, FILE * outf, int nogap, char *inPath, char 
 
     }
 
-    if (silent <= 0) {
-#ifdef BRHIST
-        if (brhist)
-            brhist_jump_back();
-#endif
-        frames = lame_get_frameNum(gf);
-        timestatus(lame_get_out_samplerate(gf),
-                   frames, lame_get_totalframes(gf), lame_get_framesize(gf));
-#ifdef BRHIST
-        if (brhist) {
-            brhist_disp(gf);
-        }
-        brhist_disp_total(gf);
-#endif
-        timestatus_finish();
+    encoder_progress_end(gf);
+    
+    owrite = (int) fwrite(mp3buffer, 1, imp3, outf);
+    if (owrite != imp3) {
+        error_printf("Error writing mp3 output \n");
+        return 1;
     }
-
-    fwrite(mp3buffer, 1, imp3, outf);
 
     return 0;
 }
@@ -521,7 +438,7 @@ parse_nogap_filenames(int nogapout, char *inPath, char *outPath, char *outdir)
 {
 
     char   *slasher;
-    int     n;
+    size_t  n;
 
     strcpy(outPath, outdir);
     if (!nogapout) {
@@ -616,7 +533,7 @@ print_trailing_info(lame_global_flags * gf)
     /* if (the user requested printing info about clipping) and (decoding
        on the fly has actually been performed) */
     if (print_clipping_info && lame_get_decode_on_the_fly(gf)) {
-        float   noclipGainChange = (float) lame_get_noclipGainChange(gf) / 10.0;
+        float   noclipGainChange = (float) lame_get_noclipGainChange(gf) / 10.0f;
         float   noclipScale = lame_get_noclipScale(gf);
 
         if (noclipGainChange > 0.0) { /* clipping occurs */
@@ -690,11 +607,11 @@ main(int argc, char **argv)
 #if defined(_WIN32)
     /* set affinity back to all CPUs.  Fix for EAC/lame on SMP systems from
        "Todd Richmond" <todd.richmond@openwave.com> */
-    typedef BOOL(WINAPI * SPAMFunc) (HANDLE, DWORD);
+    typedef BOOL(WINAPI * SPAMFunc) (HANDLE, DWORD_PTR);
     SPAMFunc func;
     SYSTEM_INFO si;
 
-    if ((func = (SPAMFunc) GetProcAddress(GetModuleHandle("KERNEL32.DLL"),
+    if ((func = (SPAMFunc) GetProcAddress(GetModuleHandleW(L"KERNEL32.DLL"),
                                           "SetProcessAffinityMask")) != NULL) {
         GetSystemInfo(&si);
         func(GetCurrentProcess(), si.dwActiveProcessorMask);
