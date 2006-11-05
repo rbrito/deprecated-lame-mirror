@@ -76,6 +76,9 @@ CFG = RH
 
 !	IF "$(CPU)" == ""
 CPU = P2auto
+!if "$(PROCESSOR_LEVEL)"=="6"
+CPU = P6
+!endif
 !	ENDIF
 
 !	IF "$(WARN)" == ""
@@ -198,9 +201,12 @@ OFF = win32
 CC_OPTS = /nologo /DWin64 /O2b2ity /GAy /Gs1024 /Zp8 /GL /GS- /Zi
 !	ELSEIF "$(MSVCVER)" == "8.0"
 CC_OPTS = /nologo /DNDEBUG /O2 /Ob2 /GAy /Gs1024 /Zp8 /GL /Zi
-!	ELSE
+!	ELSEif "$(CPU)"=="P6"
+CC_OPTS = /nologo /DNDEBUG /O2 /Wp64 /Oi /arch:SSE /fp:precise
+!else
 CC_OPTS = /nologo /DNDEBUG /O2 /Ob2 /GAy /Gs1024 /QIfdiv /QI0f /YX
 !	ENDIF
+
 
 !	IF "$(NODEBUG)" == "1"
 CC_OPTS = $(CC_OPTS) /DNDEBUG
@@ -670,4 +676,3 @@ rebuild: clean all
 lame	:	$(T_LAME)
 dll 	:	$(T_LDLL)
 mp3x	:	$(T_MP3X)
-
