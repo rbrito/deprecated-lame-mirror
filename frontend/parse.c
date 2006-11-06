@@ -253,11 +253,11 @@ lame_version_print(FILE * const fp)
     const char *b = get_lame_os_bitness();
     const char *v = get_lame_version();
     const char *u = get_lame_url();
-    const int lenb = strlen(b);
-    const int lenv = strlen(v);
-    const int lenu = strlen(u);
-    const int lw = 80;       /* line width of terminal in characters */
-    const int sw = 16;       /* static width of text */
+    const size_t lenb = strlen(b);
+    const size_t lenv = strlen(v);
+    const size_t lenu = strlen(u);
+    const size_t lw = 80;       /* line width of terminal in characters */
+    const size_t sw = 16;       /* static width of text */
 
     if (lw >= lenb + lenv + lenu + sw || lw < lenu + 2)
         /* text fits in 80 chars per line, or line even too small for url */
@@ -993,7 +993,7 @@ local_strcasecmp(const char *s1, const char *s2)
 static int
 filename_to_type(const char *FileName)
 {
-    int     len = strlen(FileName);
+    size_t  len = strlen(FileName);
 
     if (len < 4)
         return sf_unknown;
@@ -1223,15 +1223,15 @@ parse_args(lame_global_flags * gfp, int argc, char **argv,
 
                 T_ELIF("scale")
                     argUsed = 1;
-                (void) lame_set_scale(gfp, atof(nextArg));
+                (void) lame_set_scale(gfp, (float) atof(nextArg));
 
                 T_ELIF("scale-l")
                     argUsed = 1;
-                (void) lame_set_scale_left(gfp, atof(nextArg));
+                (void) lame_set_scale_left(gfp, (float) atof(nextArg));
 
                 T_ELIF("scale-r")
                     argUsed = 1;
-                (void) lame_set_scale_right(gfp, atof(nextArg));
+                (void) lame_set_scale_right(gfp, (float) atof(nextArg));
 
                 T_ELIF("noasm")
                     argUsed = 1;
@@ -1401,14 +1401,14 @@ parse_args(lame_global_flags * gfp, int argc, char **argv,
                     error_printf("Must specify compression ratio >= 1.0\n");
                     return -1;
                 }
-                lame_set_compression_ratio(gfp, val);
+                lame_set_compression_ratio(gfp, (float) val);
 
                 T_ELIF("notemp")
                     (void) lame_set_useTemporal(gfp, 0);
 
                 T_ELIF("interch")
                     argUsed = 1;
-                (void) lame_set_interChRatio(gfp, atof(nextArg));
+                (void) lame_set_interChRatio(gfp, (float) atof(nextArg));
 
                 T_ELIF("temporal-masking")
                     argUsed = 1;
@@ -1566,7 +1566,7 @@ parse_args(lame_global_flags * gfp, int argc, char **argv,
 
                 T_ELIF("disptime")
                     argUsed = 1;
-                update_interval = atof(nextArg);
+                update_interval = (float) atof(nextArg);
 
                 T_ELIF("nogaptags")
                     nogap_tags = 1;
@@ -1583,7 +1583,7 @@ parse_args(lame_global_flags * gfp, int argc, char **argv,
                     argUsed = 1;
                 {
                     extern void lame_set_tune(lame_t, float);
-                    lame_set_tune(gfp, atof(nextArg));
+                    lame_set_tune(gfp, (float) atof(nextArg));
                 }
 
                 T_ELIF_INTERNAL("psymodel")
@@ -1598,11 +1598,11 @@ parse_args(lame_global_flags * gfp, int argc, char **argv,
 
                 T_ELIF_INTERNAL("ms-sparse-low") /*without helptext */
                     argUsed = 1;
-                lame_set_ms_sparse_low(gfp, atof(nextArg));
+                lame_set_ms_sparse_low(gfp, (float) atof(nextArg));
 
                 T_ELIF_INTERNAL("ms-sparse-high") /*without helptext */
                     argUsed = 1;
-                lame_set_ms_sparse_high(gfp, atof(nextArg));
+                lame_set_ms_sparse_high(gfp, (float) atof(nextArg));
 
                 T_ELIF_INTERNAL("shortthreshold") {
                     float   x, y;
@@ -1616,15 +1616,15 @@ parse_args(lame_global_flags * gfp, int argc, char **argv,
 
                 T_ELIF_INTERNAL("maskingadjust") /*without helptext */
                     argUsed = 1;
-                (void) lame_set_maskingadjust(gfp, atof(nextArg));
+                (void) lame_set_maskingadjust(gfp, (float) atof(nextArg));
 
                 T_ELIF_INTERNAL("maskingadjustshort") /*without helptext */
                     argUsed = 1;
-                (void) lame_set_maskingadjust_short(gfp, atof(nextArg));
+                (void) lame_set_maskingadjust_short(gfp, (float) atof(nextArg));
 
                 T_ELIF_INTERNAL("athcurve") /*without helptext */
                     argUsed = 1;
-                (void) lame_set_ATHcurve(gfp, atof(nextArg));
+                (void) lame_set_ATHcurve(gfp, (float) atof(nextArg));
 
                 T_ELIF_INTERNAL("no-preset-tune") /*without helptext */
                     (void) lame_set_preset_notune(gfp, 0);
@@ -1651,7 +1651,7 @@ parse_args(lame_global_flags * gfp, int argc, char **argv,
 
                 T_ELIF_INTERNAL("athlower")
                     argUsed = 1;
-                (void) lame_set_ATHlower(gfp, atof(nextArg));
+                (void) lame_set_ATHlower(gfp, (float) atof(nextArg));
 
                 T_ELIF_INTERNAL("athtype")
                     argUsed = 1;
@@ -1663,7 +1663,7 @@ parse_args(lame_global_flags * gfp, int argc, char **argv,
 
                 T_ELIF ("athaa-sensitivity")
                     argUsed=1;
-                lame_set_athaa_sensitivity(gfp, atof(nextArg));
+                lame_set_athaa_sensitivity(gfp, (float) atof(nextArg));
 
                 T_ELIF_INTERNAL("cwlimit")
                     val = atof(nextArg);

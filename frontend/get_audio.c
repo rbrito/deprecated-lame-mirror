@@ -127,7 +127,7 @@ fskip(FILE * fp, long offset, int whence)
 
     while (offset > 0) {
         read = offset > sizeof(buffer) ? sizeof(buffer) : offset;
-        if ((read = fread(buffer, 1, read, fp)) <= 0)
+        if ((read = (int)fread(buffer, 1, read, fp)) <= 0)
             return -1;
         offset -= read;
     }
@@ -218,7 +218,7 @@ SwapBytesInWords(short *ptr, int short_words)
     ptr = (short *) p;
     for (; short_words >= 1; short_words -= 1, ptr++) {
         val = *ptr;
-        *ptr = ((val << 8) & 0xFF00) | ((val >> 8) & 0x00FF);
+        *ptr = (short)(((val << 8) & 0xFF00) | ((val >> 8) & 0x00FF));
     }
 #elif defined(SIZEOF_UNSIGNED_LONG) && SIZEOF_UNSIGNED_LONG == 8
     for (; short_words >= 4; short_words -= 4, p++) {
@@ -316,7 +316,7 @@ get_audio_common(lame_global_flags * const gfp, int buffer[2][1152], short buffe
      */
     if (count_samples_carefully) {
         remaining = tmp_num_samples - Min(tmp_num_samples, num_samples_read);
-        if (remaining < framesize && 0 != tmp_num_samples)
+        if (remaining < (unsigned int)framesize && 0 != tmp_num_samples)
             /* in case the input is a FIFO (at least it's reproducible with
                a FIFO) tmp_num_samples may be 0 and therefore remaining
                would be 0, but we need to read some samples, so don't
@@ -845,7 +845,7 @@ unpack_read_samples(const int samples_to_read, const int bytes_per_sample,
 	for( i = samples_read * bytes_per_sample; (i -= bytes_per_sample) >=0;)
 
 
-    samples_read = fread(sample_buffer, bytes_per_sample, samples_to_read, pcm_in);
+    samples_read = (int)fread(sample_buffer, bytes_per_sample, samples_to_read, pcm_in);
     op = sample_buffer + samples_read;
 
     GA_URS_IFLOOP(1)
@@ -1499,7 +1499,7 @@ lame_decode_initfile(FILE * fd, mp3data_struct * mp3data, int *enc_delay, int *e
 
     /* repeat until we decode a valid mp3 header.  */
     while (!mp3data->header_parsed) {
-        len = fread(buf, 1, sizeof(buf), fd);
+        len = (int)fread(buf, 1, sizeof(buf), fd);
         if (len != sizeof(buf))
             return -1;
         ret = lame_decode1_headersB(buf, len, pcm_l, pcm_r, mp3data, enc_delay, enc_padding);
@@ -1563,7 +1563,7 @@ lame_decode_fromfile(FILE * fd, short pcm_l[], short pcm_r[], mp3data_struct * m
 
     /* read until we get a valid output frame */
     while (1) {
-        len = fread(buf, 1, 1024, fd);
+        len = (int)fread(buf, 1, 1024, fd);
         if (len == 0) {
             /* we are done reading the file, but check for buffered data */
             ret = lame_decode1_headers(buf, len, pcm_l, pcm_r, mp3data);
