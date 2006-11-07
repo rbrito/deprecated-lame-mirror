@@ -329,7 +329,7 @@ AnalyzeSamples(replaygain_t * rgData, const Float_t * left_samples, const Float_
         return GAIN_ANALYSIS_OK;
 
     cursamplepos = 0;
-    batchsamples = num_samples;
+    batchsamples = (long)num_samples;
 
     switch (num_channels) {
     case 1:

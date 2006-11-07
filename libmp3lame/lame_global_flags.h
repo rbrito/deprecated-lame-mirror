@@ -47,7 +47,6 @@ struct lame_global_struct {
     int     quality;         /* quality setting 0=best,  9=worst  default=5 */
     MPEG_mode mode;          /* see enum in lame.h
                                 default = LAME picks best value             */
-    int     mode_fixed;      /* ignored                                     */
     int     force_ms;        /* force M/S mode.  requires mode=1            */
     int     free_format;     /* use free format? default=0                  */
     int     findReplayGain;  /* find the RG value? default=0       */
@@ -65,10 +64,17 @@ struct lame_global_struct {
     /* frame params */
     int     copyright;       /* mark as copyright. default=0           */
     int     original;        /* mark as original. default=1            */
-    int     error_protection; /* use 2 bytes per frame for a CRC
-                                 checksum. default=0                    */
     int     extension;       /* the MP3 'private extension' bit.
                                 Meaningless                            */
+    int     emphasis;        /* Input PCM is emphased PCM (for
+                                instance from one of the rarely
+                                emphased CDs), it is STRONGLY not
+                                recommended to use this, because
+                                psycho does not take it into account,
+                                and last but not least many decoders
+                                don't care about these bits          */
+    int     error_protection; /* use 2 bytes per frame for a CRC
+                                 checksum. default=0                    */
     int     strict_ISO;      /* enforce ISO spec as much as possible   */
 
     int     disable_reservoir; /* use bit reservoir?                     */
@@ -79,7 +85,6 @@ struct lame_global_struct {
     int     experimentalY;
     int     exp_nspsytune;
 
-    double  newmsfix;
     int     preset;
 
     /* VBR control */
@@ -125,13 +130,6 @@ struct lame_global_struct {
     short_block_t short_blocks;
     int     useTemporal;     /* use temporal masking effect          */
     float   interChRatio;
-    int     emphasis;        /* Input PCM is emphased PCM (for
-                                instance from one of the rarely
-                                emphased CDs), it is STRONGLY not
-                                recommended to use this, because
-                                psycho does not take it into account,
-                                and last but not least many decoders
-                                don't care about these bits          */
     float   msfix;           /* Naoki's adjustment of Mid/Side maskings */
 
     int     tune;            /* 0 off, 1 on */
@@ -169,8 +167,6 @@ struct lame_global_struct {
     /* VBR tag data */
     int     TotalFrameSize;
     int     nVbrNumFrames;
-    /*int nVbrFrameBufferSize; */
-    /*int* pVbrFrames; */
 
     struct {
         int     integer[16];

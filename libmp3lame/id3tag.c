@@ -357,13 +357,14 @@ static unsigned char *
 set_frame(unsigned char *frame, unsigned long id, const char *text, size_t length)
 {
     if (length) {
+        unsigned long frame_size = (unsigned long)length;
+        frame_size += ((id == COMMENT_FRAME_ID) ? 5 : 1);
         frame = set_4_byte_value(frame, id);
         /* Set frame size = total size - header size.  Frame header and field
          * bytes include 2-byte header flags, 1 encoding descriptor byte, and
          * for comment frames: 3-byte language descriptor and 1 content
          * descriptor byte */
-        frame = set_4_byte_value(frame, ((id == COMMENT_FRAME_ID) ? 5 : 1)
-                                 + length);
+        frame = set_4_byte_value(frame, frame_size);
         /* clear 2-byte header flags */
         *frame++ = 0;
         *frame++ = 0;
@@ -513,10 +514,10 @@ id3tag_write_v2(lame_global_flags * gfp)
             adjusted_tag_size = tag_size - 10;
             /* encode adjusted size into four bytes where most significant 
              * bit is clear in each byte, for 28-bit total */
-            *p++ = (adjusted_tag_size >> 21) & 0x7fu;
-            *p++ = (adjusted_tag_size >> 14) & 0x7fu;
-            *p++ = (adjusted_tag_size >> 7) & 0x7fu;
-            *p++ = adjusted_tag_size & 0x7fu;
+            *p++ = (unsigned char)((adjusted_tag_size >> 21) & 0x7fu);
+            *p++ = (unsigned char)((adjusted_tag_size >> 14) & 0x7fu);
+            *p++ = (unsigned char)((adjusted_tag_size >> 7) & 0x7fu);
+            *p++ = (unsigned char)(adjusted_tag_size & 0x7fu);
 
             /*
              * NOTE: The remainder of the tag (frames and padding, if any)
@@ -545,7 +546,7 @@ id3tag_write_v2(lame_global_flags * gfp)
                 add_dummy_byte(gfp, tag[index]);
             }
             free(tag);
-            return tag_size;
+            return (int)tag_size;
         }
     }
     return 0;

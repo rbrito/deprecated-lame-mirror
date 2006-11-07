@@ -109,7 +109,7 @@ malloc_aligned(aligned_pointer_t * ptr, unsigned int size, unsigned int bytes)
         if (!ptr->pointer) {
             ptr->pointer = malloc(size + bytes);
             if (bytes > 0) {
-                ptr->aligned = (void *) ((((int) ptr->pointer + bytes - 1) / bytes) * bytes);
+                ptr->aligned = (void *) ((( (size_t)ptr->pointer + bytes - 1) / bytes) * bytes);
             }
             else {
                 ptr->aligned = ptr->pointer;
