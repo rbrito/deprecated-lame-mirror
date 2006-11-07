@@ -1592,18 +1592,6 @@ parse_args(lame_global_flags * gfp, int argc, char **argv,
                     argUsed = 1;
                 lame_set_psy_model(gfp, atoi(nextArg));
 
-                T_ELIF_INTERNAL("ms-sparsing") /*without helptext */
-                    argUsed = 1;
-                lame_set_ms_sparsing(gfp, atoi(nextArg));
-
-                T_ELIF_INTERNAL("ms-sparse-low") /*without helptext */
-                    argUsed = 1;
-                lame_set_ms_sparse_low(gfp, (float) atof(nextArg));
-
-                T_ELIF_INTERNAL("ms-sparse-high") /*without helptext */
-                    argUsed = 1;
-                lame_set_ms_sparse_high(gfp, (float) atof(nextArg));
-
                 T_ELIF_INTERNAL("shortthreshold") {
                     float   x, y;
                     int     n = sscanf(nextArg, "%f,%f", &x, &y);

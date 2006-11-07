@@ -328,10 +328,6 @@ extern  "C" {
 
         int     sfb21_extra; /* will be set in lame_init_params */
 
-        int     sparsing;
-        FLOAT   sparseA;
-        FLOAT   sparseB;
-
         /* variables used by util.c */
         /* BPC = maximum number of filter convolution windows to precompute */
 #define BPC 320

@@ -853,7 +853,7 @@ PutVbrTag(lame_global_flags * gfp, FILE * fpStream, int nVbrScale)
     }
 
     /* Seek to first real frame */
-    fseek(fpStream, id3v2TagSize + gfp->TotalFrameSize, SEEK_SET);
+    fseek(fpStream, (long)(id3v2TagSize + gfp->TotalFrameSize), SEEK_SET);
 
     /* Read the header (first valid frame) */
     fread(pbtStreamBuffer, 4, 1, fpStream);
@@ -967,7 +967,7 @@ PutVbrTag(lame_global_flags * gfp, FILE * fpStream, int nVbrScale)
         crc = CRC_update_lookup(pbtStreamBuffer[i], crc);
 
     /*Put LAME VBR info */
-    nStreamIndex += PutLameVBR(gfp, fpStream, pbtStreamBuffer + nStreamIndex, id3v2TagSize, crc);
+    nStreamIndex += PutLameVBR(gfp, fpStream, pbtStreamBuffer + nStreamIndex, (uint32_t)id3v2TagSize, crc);
 
 #ifdef DEBUG_VBRTAG
     {
@@ -977,7 +977,7 @@ PutVbrTag(lame_global_flags * gfp, FILE * fpStream, int nVbrScale)
 #endif
 
     /*Seek to the beginning of the stream */
-    fseek(fpStream, id3v2TagSize, SEEK_SET);
+    fseek(fpStream, (long)id3v2TagSize, SEEK_SET);
 
     /* Put it all to disk again */
     if (fwrite(pbtStreamBuffer, (unsigned int) gfp->TotalFrameSize, 1, fpStream) != 1) {

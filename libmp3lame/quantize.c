@@ -41,125 +41,6 @@
 
 
 
-/* Robert Hegemann - 2002-10-24
- * sparsing of mid side channels
- * 2DO: replace mld by something with finer resolution
- */
-static void
-ms_sparsing(lame_internal_flags * gfc, int gr)
-{
-    int     sfb, m, k, i, j = 0;
-    int     width;
-    FLOAT   treshold = 0;
-
-    if (gfc->sparsing == 0)
-        return;
-    m = gfc->l3_side.tt[gr][0].sfb_lmax;
-    for (sfb = 0; sfb < m; ++sfb) {
-        width = gfc->scalefac_band.l[sfb + 1] - gfc->scalefac_band.l[sfb];
-        treshold = pow(10, -(gfc->sparseA - gfc->mld_l[sfb] * gfc->sparseB) / 10.);
-        for (i = 0; i < width; i += 2, j += 2) {
-            FLOAT  *const m0 = gfc->l3_side.tt[gr][0].xr + j;
-            FLOAT  *const m1 = gfc->l3_side.tt[gr][0].xr + j + 1;
-            FLOAT  *const s0 = gfc->l3_side.tt[gr][1].xr + j;
-            FLOAT  *const s1 = gfc->l3_side.tt[gr][1].xr + j + 1;
-            FLOAT const m02 = *m0 * *m0;
-            FLOAT const m12 = *m1 * *m1;
-            FLOAT const s02 = *s0 * *s0;
-            FLOAT const s12 = *s1 * *s1;
-            FLOAT const u0 = m02 * treshold;
-            FLOAT const u1 = m12 * treshold;
-            FLOAT const v0 = s02 * treshold;
-            FLOAT const v1 = s12 * treshold;
-            if (s02 < u0 && s12 < u1) {
-                *m0 += *s0;
-                *s0 = 0;
-                *m1 += *s1;
-                *s1 = 0;
-            }
-            if (m02 < v0 && m12 < v1) {
-                *s0 += *m0;
-                *m0 = 0;
-                *s1 += *m1;
-                *m1 = 0;
-            }
-        }
-    }
-    for (sfb = gfc->l3_side.tt[gr][0].sfb_smin; sfb < SBPSY_s; ++sfb) {
-        width = gfc->scalefac_band.s[sfb + 1] - gfc->scalefac_band.s[sfb];
-        treshold = pow(10, -(gfc->sparseA - gfc->mld_s[sfb] * gfc->sparseB) / 10.);
-        for (i = 0; i < width; i += 2, j += 6)
-            for (k = 0; k < 3; ++k) {
-                FLOAT  *const m0 = gfc->l3_side.tt[gr][0].xr + j + k;
-                FLOAT  *const m1 = gfc->l3_side.tt[gr][0].xr + j + k + 3;
-                FLOAT  *const s0 = gfc->l3_side.tt[gr][1].xr + j + k;
-                FLOAT  *const s1 = gfc->l3_side.tt[gr][1].xr + j + k + 3;
-                FLOAT const m02 = *m0 * *m0;
-                FLOAT const m12 = *m1 * *m1;
-                FLOAT const s02 = *s0 * *s0;
-                FLOAT const s12 = *s1 * *s1;
-                FLOAT const u0 = m02 * treshold;
-                FLOAT const u1 = m12 * treshold;
-                FLOAT const v0 = s02 * treshold;
-                FLOAT const v1 = s12 * treshold;
-                if (s02 < u0 && s12 < u1) {
-                    *m0 += *s0;
-                    *s0 = 0;
-                    *m1 += *s1;
-                    *s1 = 0;
-                }
-                if (m02 < v0 && m12 < v1) {
-                    *s0 += *m0;
-                    *m0 = 0;
-                    *s1 += *m1;
-                    *m1 = 0;
-                }
-            }
-    }
-    m = (sfb == SBPSY_s) ? 3 : 1;
-    if (gfc->sparsing == 2) {
-        for (; j < 575; j += 2 * m)
-            for (i = 0; i < m; ++i) {
-                FLOAT  *const m0 = gfc->l3_side.tt[gr][0].xr + j + i;
-                FLOAT  *const m1 = gfc->l3_side.tt[gr][0].xr + j + i + m;
-                FLOAT  *const s0 = gfc->l3_side.tt[gr][1].xr + j + i;
-                FLOAT  *const s1 = gfc->l3_side.tt[gr][1].xr + j + i + m;
-                *m0 += *s0;
-                *s0 = 0;
-                *m1 += *s1;
-                *s1 = 0;
-            }
-    }
-    else {
-        for (; j < 575; j += 2 * m)
-            for (i = 0; i < m; ++i) {
-                FLOAT  *const m0 = gfc->l3_side.tt[gr][0].xr + j + i;
-                FLOAT  *const m1 = gfc->l3_side.tt[gr][0].xr + j + i + m;
-                FLOAT  *const s0 = gfc->l3_side.tt[gr][1].xr + j + i;
-                FLOAT  *const s1 = gfc->l3_side.tt[gr][1].xr + j + i + m;
-                FLOAT const m02 = *m0 * *m0;
-                FLOAT const m12 = *m1 * *m1;
-                FLOAT const s02 = *s0 * *s0;
-                FLOAT const s12 = *s1 * *s1;
-                FLOAT const u0 = m02 * treshold;
-                FLOAT const u1 = m12 * treshold;
-                FLOAT const v0 = s02 * treshold;
-                FLOAT const v1 = s12 * treshold;
-                if (s02 < u0 && s12 < u1) {
-                    *m0 += *s0;
-                    *s0 = 0;
-                    *m1 += *s1;
-                    *s1 = 0;
-                }
-                if (m02 < v0 && m12 < v1) {
-                    *s0 += *m0;
-                    *m0 = 0;
-                    *s1 += *m1;
-                    *m1 = 0;
-                }
-            }
-    }
-}
 
 
 /* convert from L/R <-> Mid/Side */
@@ -1650,7 +1531,6 @@ VBR_old_prepare(lame_global_flags const *gfp,
         mxb = on_pe(gfp, pe, &gfc->l3_side, max_bits[gr], avg, gr, 0);
         if (gfc->mode_ext == MPG_MD_MS_LR) {
             ms_convert(&gfc->l3_side, gr);
-            ms_sparsing(gfc, gr);
             reduce_side(max_bits[gr], ms_ener_ratio[gr], avg, mxb);
         }
         for (ch = 0; ch < gfc->channels_out; ++ch) {
@@ -1851,7 +1731,6 @@ VBR_new_prepare(lame_global_flags const *gfp,
         mxb = on_pe(gfp, pe, &gfc->l3_side, max_bits[gr], avg, gr, 0);
         if (gfc->mode_ext == MPG_MD_MS_LR) {
             ms_convert(&gfc->l3_side, gr);
-            ms_sparsing(gfc, gr);
             reduce_side(max_bits[gr], ms_ener_ratio[gr], avg, mxb);
         }
         for (ch = 0; ch < gfc->channels_out; ++ch) {
@@ -2112,7 +1991,6 @@ ABR_iteration_loop(lame_global_flags const *gfp,
 
         if (gfc->mode_ext == MPG_MD_MS_LR) {
             ms_convert(&gfc->l3_side, gr);
-            ms_sparsing(gfc, gr);
         }
         for (ch = 0; ch < gfc->channels_out; ch++) {
             FLOAT   adjust, masking_lower_db;
@@ -2201,7 +2079,6 @@ CBR_iteration_loop(lame_global_flags const *gfp,
 
         if (gfc->mode_ext == MPG_MD_MS_LR) {
             ms_convert(&gfc->l3_side, gr);
-            ms_sparsing(gfc, gr);
             reduce_side(targ_bits, ms_ener_ratio[gr], mean_bits, max_bits);
         }
 

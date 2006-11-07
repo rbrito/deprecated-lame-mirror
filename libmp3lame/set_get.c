@@ -1784,44 +1784,6 @@ lame_set_tune(lame_global_flags * gfp, float val)
     gfp->tune = 1;
 }
 
-void
-lame_set_ms_sparsing(lame_global_flags * gfp, int val)
-{
-    gfp->sparsing = val;
-}
-
-int
-lame_get_ms_sparsing(lame_global_flags * gfp)
-{
-    return gfp->sparsing;
-}
-
-void
-lame_set_ms_sparse_low(lame_global_flags * gfp, float val)
-{
-    gfp->sparse_low = val;
-}
-
-float
-lame_get_ms_sparse_low(lame_global_flags * gfp)
-{
-    return gfp->sparse_low;
-}
-
-void
-lame_set_ms_sparse_high(lame_global_flags * gfp, float val)
-{
-    gfp->sparse_high = val;
-}
-
-float
-lame_get_ms_sparse_high(lame_global_flags * gfp)
-{
-    return gfp->sparse_high;
-}
-
-
-
 /* Custom msfix hack */
 void
 lame_set_msfix(lame_global_flags * gfp, double msfix)

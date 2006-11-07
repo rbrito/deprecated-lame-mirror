@@ -1120,17 +1120,6 @@ lame_init_params(lame_global_flags * const gfp)
         gfc->slot_lag = gfc->frac_SpF
             = ((gfp->version + 1) * 72000L * gfp->brate) % gfp->out_samplerate;
 
-    /* mid side sparsing */
-    gfc->sparsing = gfp->sparsing;
-    gfc->sparseA = gfp->sparse_low;
-    gfc->sparseB = gfp->sparse_low - gfp->sparse_high;
-    if (gfc->sparseA < 0)
-        gfc->sparseA = 0;
-    if (gfc->sparseB < 0)
-        gfc->sparseB = 0;
-    if (gfc->sparseB > gfc->sparseA)
-        gfc->sparseB = gfc->sparseA;
-
     switch (gfp->quantization_type) {
     default:
     case 0:
@@ -2207,10 +2196,6 @@ lame_init_old(lame_global_flags * gfp)
     gfp->preset = 0;
 
     gfp->psymodel = -1;
-
-    gfp->sparsing = 0;
-    gfp->sparse_low = 9.0;
-    gfp->sparse_high = 3.0;
 
     return 0;
 }
