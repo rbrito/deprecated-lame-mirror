@@ -52,6 +52,7 @@ extern int in_unsigned;
 #define order_unknown 2
 extern int in_endian;
 extern int in_bitwidth;
+extern int flush_write;
 
 #define         Min(A, B)       ((A) < (B) ? (A) : (B))
 #define         Max(A, B)       ((A) > (B) ? (A) : (B))

@@ -307,6 +307,10 @@ lame_decoder(lame_global_flags * gfp, FILE * outf, int skip_start, char *inPath,
                     Write16BitsLowHigh(outf, Buffer[1][i]);
             }
         }
+        if (flush_write == 1) {
+            fflush(outf);
+        }
+        
     } while (iread);
 
     i = (16 / 8) * tmp_num_channels;
@@ -381,6 +385,9 @@ lame_encoder(lame_global_flags * gf, FILE * outf, int nogap, char *inPath, char 
             error_printf("Error writing mp3 output \n");
             return 1;
         }
+        if (flush_write == 1) {
+            fflush(outf);
+        }
 
     } while (iread);
 
@@ -404,6 +411,9 @@ lame_encoder(lame_global_flags * gf, FILE * outf, int nogap, char *inPath, char 
     if (owrite != imp3) {
         error_printf("Error writing mp3 output \n");
         return 1;
+    }
+    if (flush_write == 1) {
+        fflush(outf);
     }
 
     return 0;

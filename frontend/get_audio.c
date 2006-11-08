@@ -149,7 +149,7 @@ init_outfile(char *outPath, int decode)
         lame_set_stream_binary_mode(outf = stdout);
     }
     else {
-        if ((outf = fopen(outPath, "wb+")) == NULL)
+        if ((outf = fopen(outPath, "w+b")) == NULL)
             return NULL;
 #ifdef __riscos__
         /* Assign correct file type */
