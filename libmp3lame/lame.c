@@ -281,8 +281,37 @@ optimum_samplefreq(int lowpassfreq, int input_samplefreq)
     if (lowpassfreq <= 3970)
         suggested_samplefreq = 8000;
 
-    if (input_samplefreq < suggested_samplefreq)
-        suggested_samplefreq = input_samplefreq;
+    if (input_samplefreq < suggested_samplefreq) {
+        /*  choose a valid MPEG sample frequency above the input sample frequency
+            to avoid SFB21/12 bitrate bloat
+            rh 061115
+         */
+        if (input_samplefreq > 44100) {
+            return 48000;
+        }
+        if (input_samplefreq > 32000) {
+            return 44100;
+        }
+        if (input_samplefreq > 24000) {
+            return 32000;
+        }
+        if (input_samplefreq > 22050) {
+            return 24000;
+        }
+        if (input_samplefreq > 16000) {
+            return 22050;
+        }
+        if (input_samplefreq > 12000) {
+            return 16000;
+        }
+        if (input_samplefreq > 11025) {
+            return 12000;
+        }
+        if (input_samplefreq > 8000) {
+            return 11025;
+        }
+        return 8000;
+    }
     return suggested_samplefreq;
 }
 
@@ -630,9 +659,12 @@ lame_init_params(lame_global_flags * const gfp)
         gfp->lowpassfreq = lowpass;
     }
 
-
-    if (gfp->out_samplerate == 0)
+    if (gfp->out_samplerate == 0) {
+        if (2*gfp->lowpassfreq > gfp->in_samplerate) {
+            gfp->lowpassfreq = gfp->in_samplerate/2;
+        }
         gfp->out_samplerate = optimum_samplefreq((int) gfp->lowpassfreq, gfp->in_samplerate);
+    }
 
     gfp->lowpassfreq = Min(20500, gfp->lowpassfreq);
     gfp->lowpassfreq = Min(gfp->out_samplerate / 2, gfp->lowpassfreq);
@@ -999,7 +1031,6 @@ lame_init_params(lame_global_flags * const gfp)
         gfc->VBR_max_bitrate = 14; /* default: allow 160 kbps (MPEG-2) or 320 kbps (MPEG-1) */
         if (gfp->out_samplerate < 16000)
             gfc->VBR_max_bitrate = 8; /* default: allow 64 kbps (MPEG-2.5) */
-
         if (gfp->VBR_min_bitrate_kbps)
             if ((gfc->VBR_min_bitrate =
                  BitrateIndex(gfp->VBR_min_bitrate_kbps, gfp->version, gfp->out_samplerate)) < 0)
