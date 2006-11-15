@@ -500,6 +500,7 @@ lamelib_sources = \
 	libmp3lame/psymodel.c \
 	libmp3lame/quantize.c \
 	libmp3lame/quantize_pvt.c \
+	libmp3lame/x86_64/quantize_sub.c \
 	libmp3lame/set_get.c \
 	libmp3lame/vbrquantize.c \
 	libmp3lame/reservoir.c \
@@ -668,6 +669,7 @@ clean:
 	@-del mpglib\*.obj
 	@-del libmp3lame\*.obj
 	@-del libmp3lame\i386\*.obj
+	@-del libmp3lame\x86_64\*.obj
 
 
 rebuild: clean all

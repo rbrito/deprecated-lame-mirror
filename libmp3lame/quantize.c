@@ -38,7 +38,7 @@
 #include "bitstream.h"
 #include "vbrquantize.h"
 #include "quantize.h"
-#include "lame_intrin.h"
+#include "x86_64/lame_intrin.h"
 
 
 
