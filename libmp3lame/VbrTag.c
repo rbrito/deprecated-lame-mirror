@@ -1,8 +1,8 @@
 /*
- *	Xing VBR tagging for LAME.
+ *      Xing VBR tagging for LAME.
  *
- *	Copyright (c) 1999 A.L. Faber
- *	Copyright (c) 2001 Jonathan Dee
+ *      Copyright (c) 1999 A.L. Faber
+ *      Copyright (c) 2001 Jonathan Dee
  *
  * This library is free software; you can redistribute it and/or
  * modify it under the terms of the GNU Library General Public
@@ -11,7 +11,7 @@
  *
  * This library is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.	 See the GNU
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
  * Library General Public License for more details.
  *
  * You should have received a copy of the GNU Library General Public
@@ -45,15 +45,15 @@
 #endif
 
 /*
- *    4 bytes for Header Tag 
- *    4 bytes for Header Flags 
- *  100 bytes for entry (NUMTOCENTRIES) 
- *    4 bytes for FRAME SIZE 
- *    4 bytes for STREAM_SIZE 
- *    4 bytes for VBR SCALE. a VBR quality indicator: 0=best 100=worst 
- *   20 bytes for LAME tag.  for example, "LAME3.12 (beta 6)" 
- * ___________ 
- *  140 bytes 
+ *    4 bytes for Header Tag
+ *    4 bytes for Header Flags
+ *  100 bytes for entry (NUMTOCENTRIES)
+ *    4 bytes for FRAME SIZE
+ *    4 bytes for STREAM_SIZE
+ *    4 bytes for VBR SCALE. a VBR quality indicator: 0=best 100=worst
+ *   20 bytes for LAME tag.  for example, "LAME3.12 (beta 6)"
+ * ___________
+ *  140 bytes
 */
 #define VBRHEADERSIZE (NUMTOCENTRIES+4+4+4+4+4)
 
@@ -66,8 +66,8 @@
 
 
 
-const static char VBRTag0[] = { "Xing" };
-const static char VBRTag1[] = { "Info" };
+static const char VBRTag0[] = { "Xing" };
+static const char VBRTag1[] = { "Info" };
 
 
 
@@ -76,7 +76,7 @@ const static char VBRTag1[] = { "Info" };
  * See 'CRC_update_lookup'
  * Uses the polynomial x^16+x^15+x^2+1 */
 
-unsigned int crc16_lookup[256] = {
+static const unsigned int crc16_lookup[256] = {
     0x0000, 0xC0C1, 0xC181, 0x0140, 0xC301, 0x03C0, 0x0280, 0xC241,
     0xC601, 0x06C0, 0x0780, 0xC741, 0x0500, 0xC5C1, 0xC481, 0x0440,
     0xCC01, 0x0CC0, 0x0D80, 0xCD41, 0x0F00, 0xCFC1, 0xCE81, 0x0E40,
@@ -148,7 +148,7 @@ addVbr(VBR_seek_info_t * v, int bitrate)
 static void
 Xing_seek_table(VBR_seek_info_t * v, unsigned char *t)
 {
-    int     i, index;
+    int     i, indx;
     int     seek_point;
 
     if (v->pos <= 0)
@@ -156,10 +156,10 @@ Xing_seek_table(VBR_seek_info_t * v, unsigned char *t)
 
     for (i = 1; i < NUMTOCENTRIES; ++i) {
         float   j = i / (float) NUMTOCENTRIES, act, sum;
-        index = (int) (floor(j * v->pos));
-        if (index > v->pos - 1)
-            index = v->pos - 1;
-        act = v->bag[index];
+        indx = (int) (floor(j * v->pos));
+        if (indx > v->pos - 1)
+            indx = v->pos - 1;
+        act = v->bag[indx];
         sum = v->sum;
         seek_point = (int) (256. * act / sum);
         if (seek_point > 255)
@@ -168,7 +168,8 @@ Xing_seek_table(VBR_seek_info_t * v, unsigned char *t)
     }
 }
 
-void
+#ifdef DEBUG_VBR_SEEKING_TABLE
+static void
 print_seeking(unsigned char *t)
 {
     int     i;
@@ -179,14 +180,14 @@ print_seeking(unsigned char *t)
     }
     printf("\n");
 }
-
+#endif
 
 
 /****************************************************************************
  * AddVbrFrame: Add VBR entry, used to fill the VBR the TOC entries
  * Paramters:
- *	nStreamPos: how many bytes did we write to the bitstream so far
- *				(in Bytes NOT Bits)
+ *      nStreamPos: how many bytes did we write to the bitstream so far
+ *                              (in Bytes NOT Bits)
  ****************************************************************************
 */
 void
@@ -238,7 +239,7 @@ CreateI2(unsigned char *buf, int nValue)
 }
 
 /* check for magic strings*/
-int
+static int
 IsVbrTag(const unsigned char *buf)
 {
     int     isTag0, isTag1;
@@ -406,8 +407,8 @@ GetVbrTag(VBRTAGDATA * pTagData, unsigned char *buf)
 /****************************************************************************
  * InitVbrTag: Initializes the header, and write empty frame to stream
  * Paramters:
- *				fpStream: pointer to output file stream
- *				nMode	: Channel Mode: 0=STEREO 1=JS 2=DS 3=MONO
+ *                              fpStream: pointer to output file stream
+ *                              nMode   : Channel Mode: 0=STEREO 1=JS 2=DS 3=MONO
  ****************************************************************************
 */
 int
@@ -433,18 +434,18 @@ InitVbrTag(lame_global_flags * gfp)
 
 
     /*
-     * Xing VBR pretends to be a 48kbs layer III frame.  (at 44.1kHz). 
-     * (at 48kHz they use 56kbs since 48kbs frame not big enough for 
-     * table of contents) 
-     * let's always embed Xing header inside a 64kbs layer III frame. 
-     * this gives us enough room for a LAME version string too. 
-     * size determined by sampling frequency (MPEG1) 
-     * 32kHz:    216 bytes@48kbs    288bytes@ 64kbs 
-     * 44.1kHz:  156 bytes          208bytes@64kbs     (+1 if padding = 1) 
-     * 48kHz:    144 bytes          192 
-     * 
-     * MPEG 2 values are the same since the framesize and samplerate 
-     * are each reduced by a factor of 2. 
+     * Xing VBR pretends to be a 48kbs layer III frame.  (at 44.1kHz).
+     * (at 48kHz they use 56kbs since 48kbs frame not big enough for
+     * table of contents)
+     * let's always embed Xing header inside a 64kbs layer III frame.
+     * this gives us enough room for a LAME version string too.
+     * size determined by sampling frequency (MPEG1)
+     * 32kHz:    216 bytes@48kbs    288bytes@ 64kbs
+     * 44.1kHz:  156 bytes          208bytes@64kbs     (+1 if padding = 1)
+     * 48kHz:    144 bytes          192
+     *
+     * MPEG 2 values are the same since the framesize and samplerate
+     * are each reduced by a factor of 2.
      */
 
 
@@ -500,7 +501,7 @@ InitVbrTag(lame_global_flags * gfp)
 
 
 /* fast CRC-16 computation - uses table crc16_lookup 8*/
-int
+static int
 CRC_update_lookup(int value, int crc)
 {
     int     tmp;
@@ -526,18 +527,17 @@ UpdateMusicCRC(uint16_t * crc, unsigned char *buffer, int size)
  *
  * PutLameVBR: Write LAME info: mini version + info on various switches used
  * Paramters:
- *				pbtStreamBuffer	: pointer to output buffer  
- *				id3v2size		: size of id3v2 tag in bytes
- *				crc				: computation of crc-16 of Lame Tag so far (starting at frame sync)
- *				
+ *                              pbtStreamBuffer : pointer to output buffer
+ *                              id3v2size               : size of id3v2 tag in bytes
+ *                              crc                             : computation of crc-16 of Lame Tag so far (starting at frame sync)
+ *
  ****************************************************************************
 */
 int
-PutLameVBR(lame_global_flags * gfp, FILE * fpStream, uint8_t * pbtStreamBuffer, uint32_t id3v2size,
+PutLameVBR(lame_global_flags const* gfp, FILE * fpStream, uint8_t * pbtStreamBuffer, uint32_t id3v2size,
            uint16_t crc)
 {
     lame_internal_flags *gfc = gfp->internal_flags;
-/*	FLOAT fVersion = LAME_MAJOR_VERSION + 0.01 * LAME_MINOR_VERSION; */
 
     int     nBytesWritten = 0;
     int     nFilesize = 0;   /*size of fpStream. Will be equal to size after process finishes. */
@@ -609,7 +609,7 @@ PutLameVBR(lame_global_flags * gfp, FILE * fpStream, uint8_t * pbtStreamBuffer, 
 
 
     /*revision and vbr method */
-    if (gfp->VBR >= 0 && gfp->VBR < sizeof(vbr_type_translator))
+    if (gfp->VBR < sizeof(vbr_type_translator))
         nVBR = vbr_type_translator[gfp->VBR];
     else
         nVBR = 0x00;    /*unknown. */
@@ -699,7 +699,8 @@ PutLameVBR(lame_global_flags * gfp, FILE * fpStream, uint8_t * pbtStreamBuffer, 
     /*Check if the user overrided the default LAME behaviour with some nasty options */
 
     if (gfp->short_blocks == short_block_forced || gfp->short_blocks == short_block_dispensed || ((gfp->lowpassfreq == -1) && (gfp->highpassfreq == -1)) || /* "-k" */
-        (gfp->scale_left != gfp->scale_right) ||
+        (gfp->scale_left < gfp->scale_right) ||
+        (gfp->scale_left > gfp->scale_right) ||
         (gfp->disable_reservoir && gfp->brate < 320) ||
         gfp->noATH || gfp->ATHonly || (nAthType == 0) || gfp->in_samplerate <= 32000)
         bNonOptimal = 1;
@@ -725,7 +726,7 @@ PutLameVBR(lame_global_flags * gfp, FILE * fpStream, uint8_t * pbtStreamBuffer, 
     CreateI4(&pbtStreamBuffer[nBytesWritten], nQuality);
     nBytesWritten += 4;
 
-    strncpy(&pbtStreamBuffer[nBytesWritten], szVersion, 9);
+    strncpy((char*)&pbtStreamBuffer[nBytesWritten], szVersion, 9);
     nBytesWritten += 9;
 
     pbtStreamBuffer[nBytesWritten] = nRevMethod;
@@ -786,15 +787,15 @@ PutLameVBR(lame_global_flags * gfp, FILE * fpStream, uint8_t * pbtStreamBuffer, 
 }
 
 /***********************************************************************
- * 
+ *
  * PutVbrTag: Write final VBR tag to the file
  * Paramters:
- *				lpszFileName: filename of MP3 bit stream
- *				nVbrScale	: encoder quality indicator (0..100)
+ *                              lpszFileName: filename of MP3 bit stream
+ *                              nVbrScale       : encoder quality indicator (0..100)
  ****************************************************************************
 */
 int
-PutVbrTag(lame_global_flags * gfp, FILE * fpStream, int nVbrScale)
+PutVbrTag(lame_global_flags const* gfp, FILE * fpStream)
 {
     lame_internal_flags *gfc = gfp->internal_flags;
 
@@ -803,9 +804,6 @@ PutVbrTag(lame_global_flags * gfp, FILE * fpStream, int nVbrScale)
     char    abyte, bbyte;
     uint8_t btToc[NUMTOCENTRIES];
     uint8_t pbtStreamBuffer[MAXFRAMESIZE];
-
-    int     i;
-    uint16_t crc = 0x00;
 
     unsigned char id3v2Header[10];
     size_t  id3v2TagSize;
@@ -911,7 +909,9 @@ PutVbrTag(lame_global_flags * gfp, FILE * fpStream, int nVbrScale)
     else {
         Xing_seek_table(&gfc->VBR_seek_table, btToc);
     }
-    /*print_seeking (btToc); */
+#ifdef DEBUG_VBR_SEEKING_TABLE
+    print_seeking (btToc);
+#endif
 
     /* Start writing the tag after the zero frame */
     nStreamIndex = gfc->sideinfo_len;
@@ -961,13 +961,15 @@ PutVbrTag(lame_global_flags * gfp, FILE * fpStream, int nVbrScale)
     }
 
 
-
-    /*work out CRC so far: initially crc = 0 */
-    for (i = 0; i < nStreamIndex; i++)
-        crc = CRC_update_lookup(pbtStreamBuffer[i], crc);
-
-    /*Put LAME VBR info */
-    nStreamIndex += PutLameVBR(gfp, fpStream, pbtStreamBuffer + nStreamIndex, (uint32_t)id3v2TagSize, crc);
+    {
+        /*work out CRC so far: initially crc = 0 */
+        uint16_t crc = 0x00;
+        int i;
+        for (i = 0; i < nStreamIndex; i++)
+            crc = CRC_update_lookup(pbtStreamBuffer[i], crc);
+        /*Put LAME VBR info */
+        nStreamIndex += PutLameVBR(gfp, fpStream, pbtStreamBuffer + nStreamIndex, (uint32_t)id3v2TagSize, crc);
+    }
 
 #ifdef DEBUG_VBRTAG
     {

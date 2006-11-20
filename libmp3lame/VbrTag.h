@@ -1,7 +1,7 @@
 /*
- *	Xing VBR tagging for LAME.
+ *      Xing VBR tagging for LAME.
  *
- *	Copyright (c) 1999 A.L. Faber
+ *      Copyright (c) 1999 A.L. Faber
  *
  * This library is free software; you can redistribute it and/or
  * modify it under the terms of the GNU Library General Public
@@ -10,7 +10,7 @@
  *
  * This library is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.	 See the GNU
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
  * Library General Public License for more details.
  *
  * You should have received a copy of the GNU Library General Public
@@ -71,8 +71,8 @@ int     GetVbrTag(VBRTAGDATA * pTagData, unsigned char *buf);
 
 int     SeekPoint(unsigned char TOC[NUMTOCENTRIES], int file_bytes, float percent);
 int     InitVbrTag(lame_global_flags * gfp);
-int     PutVbrTag(lame_global_flags * gfp, FILE * fid, int nVbrScale);
-int     PutLameVBR(lame_global_flags * gfp, FILE * fpStream, uint8_t * pbtStreamBuffer,
+int     PutVbrTag(lame_global_flags const* gfp, FILE * fid);
+int     PutLameVBR(lame_global_flags const* gfp, FILE * fpStream, uint8_t * pbtStreamBuffer,
                    uint32_t id3v2size, uint16_t crc);
 void    AddVbrFrame(lame_global_flags * gfp);
 void    UpdateMusicCRC(uint16_t * crc, unsigned char *buffer, int size);
