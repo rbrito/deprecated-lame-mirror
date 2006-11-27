@@ -2091,12 +2091,9 @@ void
 lame_mp3_tags_fid(lame_global_flags * gfp, FILE * fpStream)
 {
     if (gfp->bWriteVbrTag) {
-        /* Map VBR_q to Xing quality value: 0=worst, 100=best */
-        int const nQuality = ((9 - gfp->VBR_q) * 100) / 9;
-
         /* Write Xing header again */
         if (fpStream && !fseek(fpStream, 0, SEEK_SET))
-            (void) PutVbrTag(gfp, fpStream, nQuality);
+            (void) PutVbrTag(gfp, fpStream);
     }
 }
 
