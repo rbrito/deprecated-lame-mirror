@@ -613,7 +613,12 @@ main(int argc, char **argv)
 #if macintosh
     argc = ccommand(&argv);
 #endif
-
+#if 0
+    /* rh 061207
+       the following fix seems to be a workaround for a problem in the
+       parent process calling LAME. It would be better to fix the broken
+       application => code disabled.
+     */
 #if defined(_WIN32)
     /* set affinity back to all CPUs.  Fix for EAC/lame on SMP systems from
        "Todd Richmond" <todd.richmond@openwave.com> */
@@ -627,7 +632,7 @@ main(int argc, char **argv)
         func(GetCurrentProcess(), si.dwActiveProcessorMask);
     }
 #endif
-
+#endif
 
 #ifdef __EMX__
     /* This gives wildcard expansion on Non-POSIX shells with OS/2 */

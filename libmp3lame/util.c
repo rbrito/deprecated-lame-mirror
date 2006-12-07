@@ -779,13 +779,19 @@ disable_FPE(void)
 #if defined(ABORTFP)
 #if defined(_MSC_VER)
     {
+#if 0
+    /* rh 061207
+       the following fix seems to be a workaround for a problem in the
+       parent process calling LAME. It would be better to fix the broken
+       application => code disabled.
+     */
 
         /* set affinity to a single CPU.  Fix for EAC/lame on SMP systems from
            "Todd Richmond" <todd.richmond@openwave.com> */
         SYSTEM_INFO si;
         GetSystemInfo(&si);
         SetProcessAffinityMask(GetCurrentProcess(), si.dwActiveProcessorMask);
-
+#endif
 #include <float.h>
         unsigned int mask;
         mask = _controlfp(0, 0);
