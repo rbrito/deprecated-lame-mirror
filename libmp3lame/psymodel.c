@@ -4,7 +4,7 @@
  *	Copyright (c) 1999-2000 Mark Taylor
  *	Copyright (c) 2001-2002 Naoki Shibata
  *	Copyright (c) 2000-2003 Takehiro Tominaga
- *	Copyright (c) 2000-2005 Robert Hegemann
+ *	Copyright (c) 2000-2006 Robert Hegemann
  *	Copyright (c) 2000-2005 Gabriel Bouvigne
  *	Copyright (c) 2000-2005 Alexander Leidinger
  *
@@ -590,6 +590,51 @@ ns_msfix(lame_internal_flags * gfc, FLOAT msfix, FLOAT athadjust)
     }
 }
 
+/* short block threshold calculation (part 2) */
+static void
+convert_partition2scalefac_s(lame_internal_flags * gfc, FLOAT const *eb, FLOAT const* thr, int chn, int sblock)
+{
+    FLOAT   enn, thmm;
+    int     sb, b;
+    enn = thmm = 0.0;
+    sb = b = 0;
+    for (;; ++b, ++sb) {
+        int const bo_s_sb = gfc->bo_s[sb];
+        int const npart_s = gfc->npart_s;
+        int const b_lim = bo_s_sb < npart_s ? bo_s_sb : npart_s;
+        while (b < b_lim) {
+            assert( b < gfc->npart_s );
+            enn += eb[b];
+            thmm += thr[b];
+            b++;
+        }
+        assert(enn >= 0);
+        assert(thmm >= 0);
+        gfc->en[chn].s[sb][sblock] = enn;
+        gfc->thm[chn].s[sb][sblock] = thmm;
+
+        if (b >= npart_s || sb == SBMAX_s-1) {
+            ++sb;
+            break;
+        }
+        /* at border line we split eb[b] and thr[b] into half
+           and add it to the current and next scalefactor band
+        */
+        enn = 0.5 * eb[b];
+        thmm = 0.5 * thr[b];
+        assert(enn >= 0);
+        assert(thmm >= 0);
+
+        gfc->en[chn].s[sb][sblock] += enn;
+        gfc->thm[chn].s[sb][sblock] += thmm;
+    }
+    /* zero initialize the rest */
+    for (sb; sb < SBMAX_s; ++sb) {
+        gfc->en[chn].s[sb][sblock] = 0;
+        gfc->thm[chn].s[sb][sblock] = 0;
+    }
+}
+
 /* longblock threshold calculation (part 2) */
 static void
 convert_partition2scalefac_l(lame_internal_flags * gfc, FLOAT const *eb, FLOAT const *thr, int chn)
@@ -598,31 +643,41 @@ convert_partition2scalefac_l(lame_internal_flags * gfc, FLOAT const *eb, FLOAT c
     int     sb, b;
     enn = thmm = 0.0;
     sb = b = 0;
-    for (;;) {
-        while (b < gfc->bo_l[sb]) {
+    for (;; ++b, ++sb) {
+        int const bo_l_sb = gfc->bo_l[sb];
+        int const npart_l = gfc->npart_l;
+        int const b_lim = bo_l_sb < npart_l ? bo_l_sb : npart_l;
+        while (b < b_lim) {
+            assert( b < gfc->npart_l );
             enn += eb[b];
             thmm += thr[b];
             b++;
         }
-
-        if (sb == SBMAX_l - 1)
-            break;
-
         assert(enn >= 0);
         assert(thmm >= 0);
-        gfc->en[chn].l[sb] = enn + 0.5 * eb[b];
-        gfc->thm[chn].l[sb] = thmm + 0.5 * thr[b];
+        gfc->en[chn].l[sb] = enn;
+        gfc->thm[chn].l[sb] = thmm;
 
+        if (b >= npart_l || sb == SBMAX_l-1) {
+            ++sb;
+            break;
+        }
+        /* at border line we split eb[b] and thr[b] into half
+           and add it to the current and next scalefactor band
+        */
         enn = 0.5 * eb[b];
         thmm = 0.5 * thr[b];
         assert(enn >= 0);
         assert(thmm >= 0);
-        b++;
-        sb++;
-    }
 
-    gfc->en[chn].l[SBMAX_l - 1] = enn;
-    gfc->thm[chn].l[SBMAX_l - 1] = thmm;
+        gfc->en[chn].l[sb] += enn;
+        gfc->thm[chn].l[sb] += thmm;
+    }
+    /* zero initialize the rest */
+    for (sb; sb < SBMAX_l; ++sb) {
+        gfc->en[chn].l[sb] = 0;
+        gfc->thm[chn].l[sb] = 0;
+    }
 }
 
 static void
@@ -1125,28 +1180,8 @@ L3psycho_anal(lame_global_flags const *gfp,
 
         /* compute masking thresholds for short blocks */
         for (sblock = 0; sblock < 3; sblock++) {
-            FLOAT   enn, thmm;
             compute_masking_s(gfp, fftenergy_s, eb, thr, chn, sblock);
-            b = -1;
-            enn = thmm = 0.0;
-            for (sb = 0; sb < SBMAX_s; sb++) {
-                while (++b < gfc->bo_s[sb]) {
-                    enn += eb[b];
-                    thmm += thr[b];
-                }
-                enn += 0.5 * eb[b]; /* for the last sfb b is larger than npart_s!! */
-                thmm += 0.5 * thr[b]; /* rh 20040301 */
-                assert(enn >= 0);
-                assert(thmm >= 0);
-                gfc->en[chn].s[sb][sblock] = enn;
-                gfc->thm[chn].s[sb][sblock] = thmm;
-                enn = 0.5 * eb[b];
-                thmm = 0.5 * thr[b];
-                assert(enn >= 0);
-                assert(thmm >= 0);
-            }
-            gfc->en[chn].s[sb - 1][sblock] += enn;
-            gfc->thm[chn].s[sb - 1][sblock] += thmm;
+            convert_partition2scalefac_s(gfc, eb, thr, chn, sblock);
         }
     }                   /* end loop over chn */
 
@@ -1584,21 +1619,12 @@ L3psycho_anal_ns(lame_global_flags const *gfp,
         for (sblock = 0; sblock < 3; sblock++) {
             FLOAT   enn, thmm;
             compute_masking_s(gfp, fftenergy_s, eb, thr, chn, sblock);
-            b = -1;
+            convert_partition2scalefac_s(gfc, eb, thr, chn, sblock);
+
+            /****   short block pre-echo control   ****/
             for (sb = 0; sb < SBMAX_s; sb++) {
-                enn = thmm = 0.0;
-                while (++b < gfc->bo_s[sb]) {
-                    enn += eb[b];
-                    thmm += thr[b];
-                }
-                enn += 0.5 * eb[b]; /* for the last sfb b is larger than npart_s!! */
-                thmm += 0.5 * thr[b]; /* rh 20040301 */
-                gfc->en[chn].s[sb][sblock] = enn;
+                thmm = gfc->thm[chn].s[sb][sblock];
 
-                assert(enn >= 0);
-                assert(thmm >= 0);
-
-  /****   short block pre-echo control   ****/
                 thmm *= NS_PREECHO_ATT0;
                 if (ns_attacks[sblock] >= 2 || ns_attacks[sblock + 1] == 1) {
                     int const idx = (sblock != 0) ? sblock - 1 : 2;
