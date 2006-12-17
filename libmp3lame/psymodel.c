@@ -708,6 +708,10 @@ compute_masking_s(lame_global_flags const *gfp,
         eb[b] = ebb;
         max[b] = m;
     }
+    for (; b < gfc->npart_s; ++b) {
+        eb[b] = 0;
+        max[b] = 0;
+    }
     for (j = b = 0; b < gfc->npart_s; b++) {
         int     kk = gfc->s3ind_s[b][0];
         FLOAT   ecb = gfc->s3_ss[j++] * eb[kk++];
@@ -1066,7 +1070,7 @@ L3psycho_anal(lame_global_flags const *gfp,
             b++;
         }
 
-        for (; b < gfc->npart_l; b++) {
+        for (; b < gfc->npart_l && j < 513; b++) {
             FLOAT   m = 0;
             FLOAT   ebb = NON_LINEAR_SCALE_ITEM(fftenergy[j++]);
             assert(gfc->numlines_l[b]);
@@ -1080,6 +1084,11 @@ L3psycho_anal(lame_global_flags const *gfp,
             /* XXX: should the "* .4" be outside of the scaling? */
             cb[b] = NON_LINEAR_SCALE_SUM(ebb * 0.4);
             max[b] = m;
+        }
+        for (; b < gfc->npart_l; ++b) {
+            eb[b] = 0;
+            cb[b] = 0;
+            max[b] = 0;
         }
 
         /**********************************************************************
@@ -1683,7 +1692,11 @@ L3psycho_anal_ns(lame_global_flags const *gfp,
             max[b] = m;
             avg[b] = ebb * gfc->rnumlines_l[b];
         }
-
+        for (; b < gfc->npart_l; ++b) {
+            eb[b] = 0;
+            max[b] = 0;
+            avg[b] = 0;
+        }
         if (gfc->nsPsy.pass1fp)
             nsPsy2dataRead(gfc->nsPsy.pass1fp, eb2, eb, chn, gfc->npart_l);
         else {
