@@ -72,7 +72,8 @@ getframebits(const lame_global_flags * gfp)
         bit_rate = bitrate_table[gfp->version][gfc->bitrate_index];
     else
         bit_rate = gfp->brate;
-    assert(bit_rate <= 550);
+    /*assert(bit_rate <= 550);*/
+    assert(8 <= bit_rate && bit_rate <= 640);
 
     /* main encoding routine toggles padding on and off */
     /* one Layer3 Slot consists of 8 bits */
