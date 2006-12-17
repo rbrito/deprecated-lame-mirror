@@ -590,43 +590,49 @@ ns_msfix(lame_internal_flags * gfc, FLOAT msfix, FLOAT athadjust)
     }
 }
 
-/* short block threshold calculation (part 2) */
+/* short block threshold calculation (part 2)
+
+    partition band bo_s[sfb] is at the transition from scalefactor
+    band sfb to the next one sfb+1; enn and thmm have to be split
+    between them
+*/
 static void
 convert_partition2scalefac_s(lame_internal_flags * gfc, FLOAT const *eb, FLOAT const* thr, int chn, int sblock)
 {
     FLOAT   enn, thmm;
     int     sb, b;
     enn = thmm = 0.0;
-    sb = b = 0;
-    for (;; ++b, ++sb) {
+    for (sb = b = 0; sb < SBMAX_s; ++b, ++sb) {
         int const bo_s_sb = gfc->bo_s[sb];
         int const npart_s = gfc->npart_s;
         int const b_lim = bo_s_sb < npart_s ? bo_s_sb : npart_s;
         while (b < b_lim) {
-            assert( b < gfc->npart_s );
+            assert( eb[b] >= 0 );   /* iff failed, it may indicate some index error elsewhere */
+            assert( thr[b] >= 0 );
             enn += eb[b];
             thmm += thr[b];
             b++;
         }
-        assert(enn >= 0);
-        assert(thmm >= 0);
         gfc->en[chn].s[sb][sblock] = enn;
         gfc->thm[chn].s[sb][sblock] = thmm;
 
-        if (b >= npart_s || sb == SBMAX_s-1) {
+        if (b >= npart_s) {
             ++sb;
             break;
         }
-        /* at border line we split eb[b] and thr[b] into half
-           and add it to the current and next scalefactor band
-        */
-        enn = 0.5 * eb[b];
-        thmm = 0.5 * thr[b];
-        assert(enn >= 0);
-        assert(thmm >= 0);
-
-        gfc->en[chn].s[sb][sblock] += enn;
-        gfc->thm[chn].s[sb][sblock] += thmm;
+        assert( eb[b] >= 0 );   /* iff failed, it may indicate some index error elsewhere */
+        assert( thr[b] >= 0 );
+        {
+            /* at transition sfb -> sfb+1 */
+            FLOAT const w_curr = gfc->PSY->bo_s_weight[sb];
+            FLOAT const w_next = 1.0 - w_curr; 
+            enn = w_curr * eb[b];
+            thmm = w_curr * thr[b];
+            gfc->en[chn].s[sb][sblock] += enn;
+            gfc->thm[chn].s[sb][sblock] += thmm;
+            enn = w_next * eb[b];
+            thmm = w_next * thr[b];
+        }
     }
     /* zero initialize the rest */
     for (sb; sb < SBMAX_s; ++sb) {
@@ -642,36 +648,37 @@ convert_partition2scalefac_l(lame_internal_flags * gfc, FLOAT const *eb, FLOAT c
     FLOAT   enn, thmm;
     int     sb, b;
     enn = thmm = 0.0;
-    sb = b = 0;
-    for (;; ++b, ++sb) {
+    for (sb = b = 0; sb < SBMAX_l; ++b, ++sb) {
         int const bo_l_sb = gfc->bo_l[sb];
         int const npart_l = gfc->npart_l;
         int const b_lim = bo_l_sb < npart_l ? bo_l_sb : npart_l;
         while (b < b_lim) {
-            assert( b < gfc->npart_l );
+            assert( eb[b] >= 0 );   /* iff failed, it may indicate some index error elsewhere */
+            assert( thr[b] >= 0 );
             enn += eb[b];
             thmm += thr[b];
             b++;
         }
-        assert(enn >= 0);
-        assert(thmm >= 0);
         gfc->en[chn].l[sb] = enn;
         gfc->thm[chn].l[sb] = thmm;
 
-        if (b >= npart_l || sb == SBMAX_l-1) {
+        if (b >= npart_l) {
             ++sb;
             break;
         }
-        /* at border line we split eb[b] and thr[b] into half
-           and add it to the current and next scalefactor band
-        */
-        enn = 0.5 * eb[b];
-        thmm = 0.5 * thr[b];
-        assert(enn >= 0);
-        assert(thmm >= 0);
-
-        gfc->en[chn].l[sb] += enn;
-        gfc->thm[chn].l[sb] += thmm;
+        assert( eb[b] >= 0 );
+        assert( thr[b] >= 0 );
+        {
+            /* at transition sfb -> sfb+1 */
+            FLOAT const w_curr = gfc->PSY->bo_l_weight[sb];
+            FLOAT const w_next = 1.0 - w_curr; 
+            enn = w_curr * eb[b];
+            thmm = w_curr * thr[b];
+            gfc->en[chn].l[sb] += enn;
+            gfc->thm[chn].l[sb] += thmm;
+            enn = w_next * eb[b];
+            thmm = w_next * thr[b];
+        }
     }
     /* zero initialize the rest */
     for (sb; sb < SBMAX_l; ++sb) {
@@ -689,7 +696,7 @@ compute_masking_s(lame_global_flags const *gfp,
     FLOAT   max[CBANDS];
     int     i, j, b;
 
-    for (b = j = 0; b < gfc->npart_s; b++) {
+    for (b = j = 0; b < gfc->npart_s && j < 129; b++) {
         FLOAT   ebb, m;
         m = ebb = fftenergy_s[sblock][j++];
         for (i = gfc->numlines_s[b] - 1; i > 0; --i) {
@@ -1040,7 +1047,6 @@ L3psycho_anal(lame_global_flags const *gfp,
         for (j = 0; j < gfc->cw_upper_index && gfc->numlines_l[b] && b < gfc->npart_l;) {
             FLOAT   m = 0;
             FLOAT   ebb, cbb;
-
             ebb = NON_LINEAR_SCALE_ITEM(fftenergy[j]);
             cbb = NON_LINEAR_SCALE_ITEM(fftenergy[j] * gfc->cw[j]);
             j++;
@@ -1664,7 +1670,7 @@ L3psycho_anal_ns(lame_global_flags const *gfp,
  /*********************************************************************
   *    Calculate the energy and the tonality of each partition.
   *********************************************************************/
-        for (b = j = 0; b < gfc->npart_l; b++) {
+        for (b = j = 0; b < gfc->npart_l && j < 513; b++) {
             FLOAT   ebb, m;
             m = ebb = fftenergy[j++];
             for (i = gfc->numlines_l[b] - 1; i > 0; --i) {
@@ -1906,13 +1912,15 @@ s3_func(FLOAT bark)
 
 static int
 init_numline(int *numlines, int *bo, int *bm,
-             FLOAT * bval, FLOAT * bval_width, FLOAT * mld,
+             FLOAT * bval, FLOAT * bval_width, FLOAT * mld, FLOAT * bo_w,
              FLOAT sfreq, int blksize, int const *scalepos, FLOAT deltafreq, int sbmax)
 {
+    FLOAT   b_frq[CBANDS+1];
+    FLOAT   f_tmp;
+    FLOAT   sample_freq_frac = sfreq / ( sbmax > 15 ? 2*576 : 2*192 );
     int     partition[HBLKSIZE] = { 0 };
     int     i, j, k;
     int     sfb;
-
     sfreq /= blksize;
     j = 0;
     /* compute numlines, the number of spectral lines in each partition band */
@@ -1921,14 +1929,22 @@ init_numline(int *numlines, int *bo, int *bm,
         FLOAT   bark1;
         int     j2;
         bark1 = freq2bark(sfreq * j);
+        
+        b_frq[i] = sfreq * j;
+
         for (j2 = j; freq2bark(sfreq * j2) - bark1 < DELBARK && j2 <= blksize / 2; j2++);
 
         numlines[i] = j2 - j;
+
         while (j < j2)
             partition[j++] = i;
-        if (j > blksize / 2)
+        if (j > blksize / 2) {
+            j = blksize / 2;
+            ++i;
             break;
+        }
     }
+    b_frq[i] = sfreq * j;
 
     for (sfb = 0; sfb < sbmax; sfb++) {
         int     i1, i2, start, end;
@@ -1940,12 +1956,24 @@ init_numline(int *numlines, int *bo, int *bm,
         if (i1 < 0)
             i1 = 0;
         i2 = floor(.5 + deltafreq * (end - .5));
+
         if (i2 > blksize / 2)
             i2 = blksize / 2;
 
         bm[sfb] = (partition[i1] + partition[i2]) / 2;
         bo[sfb] = partition[i2];
-
+        
+        f_tmp = sample_freq_frac * end;        
+         /* calculate how much of this band belongs to current scalefactor band */
+        bo_w[sfb] = (f_tmp-b_frq[bo[sfb]])/(b_frq[bo[sfb]+1]-b_frq[bo[sfb]]);
+        if ( bo_w[sfb] < 0 ) {
+            bo_w[sfb] = 0;
+        }
+        else {
+            if ( bo_w[sfb] > 1 ) {
+                bo_w[sfb] = 1;
+            }
+        }
         /* setup stereo demasking thresholds */
         /* formula reverse enginerred from plot in paper */
         arg = freq2bark(sfreq * scalepos[sfb] * deltafreq);
@@ -2091,7 +2119,7 @@ psymodel_init(lame_global_flags * gfp)
     /* compute numlines, bo, bm, bval, bval_width, mld */
     gfc->npart_l
         = init_numline(gfc->numlines_l, gfc->bo_l, gfc->bm_l,
-                       bval, bval_width, gfc->mld_l,
+                       bval, bval_width, gfc->mld_l, gfc->PSY->bo_l_weight,
                        sfreq, BLKSIZE, gfc->scalefac_band.l, BLKSIZE / (2.0 * 576), SBMAX_l);
     assert(gfc->npart_l <= CBANDS);
     /* compute the spreading function */
@@ -2136,7 +2164,7 @@ psymodel_init(lame_global_flags * gfp)
      ************************************************************************/
     gfc->npart_s
         = init_numline(gfc->numlines_s, gfc->bo_s, gfc->bm_s,
-                       bval, bval_width, gfc->mld_s,
+                       bval, bval_width, gfc->mld_s, gfc->PSY->bo_s_weight,
                        sfreq, BLKSIZE_s, gfc->scalefac_band.s, BLKSIZE_s / (2.0 * 192), SBMAX_s);
     assert(gfc->npart_s <= CBANDS);
 

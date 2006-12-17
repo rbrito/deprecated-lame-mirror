@@ -205,6 +205,9 @@ extern  "C" {
         FLOAT   mask_adjust; /* the dbQ stuff */
         FLOAT   mask_adjust_short; /* the dbQ stuff */
         FLOAT   cwlimit;
+        /* at transition from one scalefactor band to next */
+        FLOAT   bo_l_weight[SBMAX_l]; /* band weight long scalefactor bands */
+        FLOAT   bo_s_weight[SBMAX_s]; /* band weight short scalefactor bands */
     } PSY_t;
 
 
