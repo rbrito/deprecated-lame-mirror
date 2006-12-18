@@ -696,11 +696,11 @@ compute_masking_s(lame_global_flags const *gfp,
     FLOAT   max[CBANDS];
     int     i, j, b;
 
-    for (b = j = 0; b < gfc->npart_s && j < 129; b++) {
-        FLOAT   ebb, m;
-        m = ebb = fftenergy_s[sblock][j++];
-        for (i = gfc->numlines_s[b] - 1; i > 0; --i) {
-            FLOAT const el = fftenergy_s[sblock][j++];
+    for (b = j = 0; b < gfc->npart_s; ++b) {
+        FLOAT   ebb = 0, m = 0;
+        int const n = gfc->numlines_s[b];
+        for (i = 0; i < n; ++i, ++j) {
+            FLOAT const el = fftenergy_s[sblock][j];
             ebb += el;
             if (m < el)
                 m = el;
@@ -708,10 +708,8 @@ compute_masking_s(lame_global_flags const *gfp,
         eb[b] = ebb;
         max[b] = m;
     }
-    for (; b < gfc->npart_s; ++b) {
-        eb[b] = 0;
-        max[b] = 0;
-    }
+    assert( b == gfc->npart_s );
+    assert( j == 129 );
     for (j = b = 0; b < gfc->npart_s; b++) {
         int     kk = gfc->s3ind_s[b][0];
         FLOAT   ecb = gfc->s3_ss[j++] * eb[kk++];
@@ -1047,35 +1045,29 @@ L3psycho_anal(lame_global_flags const *gfp,
          *    Calculate the energy and the unpredictability in the threshold
          *    calculation partitions
          *********************************************************************/
-        b = 0;
-        for (j = 0; j < gfc->cw_upper_index && gfc->numlines_l[b] && b < gfc->npart_l;) {
-            FLOAT   m = 0;
-            FLOAT   ebb, cbb;
-            ebb = NON_LINEAR_SCALE_ITEM(fftenergy[j]);
-            cbb = NON_LINEAR_SCALE_ITEM(fftenergy[j] * gfc->cw[j]);
-            j++;
 
-            for (i = gfc->numlines_l[b] - 1; i > 0; i--) {
+        for (b = j = 0; j < gfc->cw_upper_index && gfc->numlines_l[b] && b < gfc->npart_l; ++b) {
+            FLOAT   m = 0;
+            FLOAT   ebb = 0, cbb = 0;
+            int const n = gfc->numlines_l[b];
+            for (i = 0; i < n; ++i, ++j) {
                 FLOAT const el = fftenergy[j];
+                FLOAT const el_cw = el * gfc->cw[j];
                 ebb += NON_LINEAR_SCALE_ITEM(el);
                 /* XXX: should "* gfc->cw[j])" be outside of the scaling? */
-                cbb += NON_LINEAR_SCALE_ITEM(el * gfc->cw[j]);
+                cbb += NON_LINEAR_SCALE_ITEM(el_cw);
                 if (m < el)
                     m = el;
-                j++;
             }
             eb[b] = NON_LINEAR_SCALE_SUM(ebb);
             cb[b] = NON_LINEAR_SCALE_SUM(cbb);
             max[b] = m;
-            b++;
         }
-
-        for (; b < gfc->npart_l && j < 513; b++) {
-            FLOAT   m = 0;
-            FLOAT   ebb = NON_LINEAR_SCALE_ITEM(fftenergy[j++]);
-            assert(gfc->numlines_l[b]);
-            for (i = gfc->numlines_l[b] - 1; i > 0; i--) {
-                FLOAT const el = fftenergy[j++];
+        for (; b < gfc->npart_l; ++b) {
+            FLOAT   m = 0, ebb = 0;
+            int const n = gfc->numlines_l[b];
+            for (i = 0; i < n; ++i, ++j) {
+                FLOAT const el = fftenergy[j];
                 ebb += NON_LINEAR_SCALE_ITEM(el);
                 if (m < el)
                     m = el;
@@ -1085,11 +1077,8 @@ L3psycho_anal(lame_global_flags const *gfp,
             cb[b] = NON_LINEAR_SCALE_SUM(ebb * 0.4);
             max[b] = m;
         }
-        for (; b < gfc->npart_l; ++b) {
-            eb[b] = 0;
-            cb[b] = 0;
-            max[b] = 0;
-        }
+        assert( b == gfc->npart_l );
+        assert( j == 513 );
 
         /**********************************************************************
          *      convolve the partitioned energy and unpredictability
@@ -1679,11 +1668,10 @@ L3psycho_anal_ns(lame_global_flags const *gfp,
  /*********************************************************************
   *    Calculate the energy and the tonality of each partition.
   *********************************************************************/
-        for (b = j = 0; b < gfc->npart_l && j < 513; b++) {
-            FLOAT   ebb, m;
-            m = ebb = fftenergy[j++];
-            for (i = gfc->numlines_l[b] - 1; i > 0; --i) {
-                FLOAT const el = fftenergy[j++];
+        for (b = j = 0; b < gfc->npart_l; ++b) {
+            FLOAT   ebb = 0, m = 0;
+            for (i = 0; i < gfc->numlines_l[b]; ++i, ++j) {
+                FLOAT const el = fftenergy[j];
                 ebb += el;
                 if (m < el)
                     m = el;
@@ -1692,11 +1680,8 @@ L3psycho_anal_ns(lame_global_flags const *gfp,
             max[b] = m;
             avg[b] = ebb * gfc->rnumlines_l[b];
         }
-        for (; b < gfc->npart_l; ++b) {
-            eb[b] = 0;
-            max[b] = 0;
-            avg[b] = 0;
-        }
+        assert( b == gfc->npart_l );
+        assert( j == 513 );
         if (gfc->nsPsy.pass1fp)
             nsPsy2dataRead(gfc->nsPsy.pass1fp, eb2, eb, chn, gfc->npart_l);
         else {
@@ -2274,6 +2259,20 @@ psymodel_init(lame_global_flags * gfp)
             gfc->ATH->eql_w[i] *= eql_balance;
         }
     }
-
+    {
+        int i = 0, j, b;
+        for (b = j = 0; b < gfc->npart_s; ++b) {
+            for (i = 0; i < gfc->numlines_s[b]; ++i) {
+                ++j;
+            }
+        }
+        assert( j == 129 );
+        for (b = j = 0; b < gfc->npart_l; ++b) {
+            for (i = 0; i < gfc->numlines_l[b]; ++i ) {
+                ++j;
+            }
+        }
+        assert( j == 513 );
+    }
     return 0;
 }
