@@ -905,6 +905,9 @@ lame_init_params(lame_global_flags * const gfp)
         gfp->VBR = vbr_mtrh;
         /*lint --fallthrough */
     case vbr_mtrh:{
+            if ( gfp->useTemporal < 0 ) {
+                gfp->useTemporal = 0;   /* off by default for this VBR mode */
+            }
 
             (void) apply_preset(gfp, 500 - (gfp->VBR_q * 10), 0);
             /*  The newer VBR code supports only a limited
