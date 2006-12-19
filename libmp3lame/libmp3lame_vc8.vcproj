@@ -43,7 +43,7 @@
 			<Tool
 				Name="VCCLCompilerTool"
 				Optimization="0"
-				AdditionalIncludeDirectories="../include;../;../mpglib"
+				AdditionalIncludeDirectories="../include;../;../mpglib;./"
 				PreprocessorDefinitions="_DEBUG,_WINDOWS,HAVE_MPGLIB,WIN32,HAVE_CONFIG_H,_CRT_SECURE_NO_DEPRECATE"
 				MinimalRebuild="true"
 				BasicRuntimeChecks="3"
@@ -170,7 +170,7 @@
 			/>
 			<Tool
 				Name="VCCLCompilerTool"
-				AdditionalIncludeDirectories="../include;../;../mpglib"
+				AdditionalIncludeDirectories="../include;../;../mpglib;./"
 				PreprocessorDefinitions="NDEBUG,_WINDOWS,HAVE_MPGLIB,WIN32,HAVE_CONFIG_H,_CRT_SECURE_NO_DEPRECATE"
 				RuntimeLibrary="0"
 				UsePrecompiledHeader="0"
@@ -293,7 +293,7 @@
 			/>
 			<Tool
 				Name="VCCLCompilerTool"
-				AdditionalIncludeDirectories="../include;../;../mpglib;./x86_64;./"
+				AdditionalIncludeDirectories="../include;../;../mpglib;./;./x86_64"
 				PreprocessorDefinitions="NDEBUG,_WINDOWS,HAVE_MPGLIB,WIN32,HAVE_CONFIG_H,_CRT_SECURE_NO_DEPRECATE,HAVE_NASM,MMX_choose_table,USE_FFTSSE"
 				RuntimeLibrary="0"
 				UsePrecompiledHeader="0"
@@ -416,7 +416,7 @@
 			<Tool
 				Name="VCCLCompilerTool"
 				Optimization="0"
-				AdditionalIncludeDirectories="../include;../;../mpglib"
+				AdditionalIncludeDirectories="../include;../;../mpglib;./"
 				PreprocessorDefinitions="_DEBUG,_WINDOWS,HAVE_MPGLIB,WIN32,HAVE_CONFIG_H,_CRT_SECURE_NO_DEPRECATE,HAVE_GTK"
 				MinimalRebuild="true"
 				BasicRuntimeChecks="3"
