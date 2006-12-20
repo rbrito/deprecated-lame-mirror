@@ -420,16 +420,19 @@ read_samples_mp3(lame_global_flags * const gfp,
         return 0;
     }
 
-    if (lame_get_num_channels(gfp) != mp3input_data.stereo)
+    if (lame_get_num_channels(gfp) != mp3input_data.stereo) {
         if (silent < 10) {
             error_printf("Error: number of channels has changed in %s - not supported\n",
                          type_name);
         }
-    if (lame_get_in_samplerate(gfp) != mp3input_data.samplerate)
+        out = -1;
+    }
+    if (lame_get_in_samplerate(gfp) != mp3input_data.samplerate) {
         if (silent < 10) {
             error_printf("Error: sample frequency has changed in %s - not supported\n", type_name);
         }
-
+        out = -1;
+    }
 #else
     out = -1;
 #endif
@@ -1218,7 +1221,10 @@ parse_file_header(lame_global_flags * gfp, FILE * sf)
        "First word of input stream: %08x '%4.4s'\n", type, (char*) &type); 
      */
     count_samples_carefully = 0;
-    input_format = sf_raw;
+    /*input_format = sf_raw; commented out, because it is better to fail
+      here as to encode some hundreds of input files not supported by LAME
+      If you know you have RAW PCM data, use the -r switch
+      */
 
     if (type == WAV_ID_RIFF) {
         /* It's probably a WAV file */
@@ -1230,6 +1236,7 @@ parse_file_header(lame_global_flags * gfp, FILE * sf)
             if (silent < 10) {
                 error_printf("Warning: corrupt or unsupported WAVE format\n");
             }
+            exit(2);
         }
     }
     else if (type == IFF_ID_FORM) {
@@ -1245,7 +1252,7 @@ parse_file_header(lame_global_flags * gfp, FILE * sf)
          ** at byte zero, this will unfortunately require seeking.
          */
         if (fseek(sf, 0L, SEEK_SET) != 0) {
-            /* ignore errors */
+            /* ignore errors */            
         }
         input_format = sf_raw;
     }
@@ -1337,6 +1344,12 @@ OpenSndFile(lame_global_flags * gfp, char *inPath, int *enc_delay, int *enc_padd
             }
             pcmswapbytes = swapbytes;
         }
+    }
+    if (input_format == sf_unknown) {
+        if (silent < 10) {
+            error_printf("Unknown input file format.\n");
+        }
+        exit(1);
     }
 
 

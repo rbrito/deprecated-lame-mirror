@@ -1018,6 +1018,8 @@ filename_to_type(const char *FileName)
         return sf_aiff;
     if (0 == local_strcasecmp(FileName, ".raw"))
         return sf_raw;
+    if (0 == local_strcasecmp(FileName, ".ogg"))
+        return sf_ogg;
     return sf_unknown;
 }
 
@@ -1065,7 +1067,6 @@ int
 parse_args(lame_global_flags * gfp, int argc, char **argv,
            char *const inPath, char *const outPath, char **nogap_inPath, int *num_nogap)
 {
-    int     err;
     int     input_file = 0;  /* set to 1 if we parse an input file name  */
     int     i;
     int     autoconvert = 0;
@@ -1089,7 +1090,7 @@ parse_args(lame_global_flags * gfp, int argc, char **argv,
     id3tag_init(gfp);
 
     /* process args */
-    for (i = 0, err = 0; ++i < argc && !err;) {
+    for (i = 0; ++i < argc;) {
         char    c;
         char   *token;
         char   *arg;
@@ -1688,8 +1689,10 @@ parse_args(lame_global_flags * gfp, int argc, char **argv,
                     set_debug_file(nextArg);
                 }
 
-                T_ELSE  error_printf("%s: unrec option --%s\n", ProgramName, token);
-
+                T_ELSE { 
+                    error_printf("%s: unrecognized option --%s\n", ProgramName, token);
+                    return -1;
+                }
                 T_END   i += argUsed;
 
             }
@@ -1722,8 +1725,7 @@ parse_args(lame_global_flags * gfp, int argc, char **argv,
                         default:
                             error_printf("%s: -m mode must be s/d/j/f/m not %s\n", ProgramName,
                                          arg);
-                            err = 1;
-                            break;
+                            return -1;
                         }
                         break;
 
@@ -1868,8 +1870,7 @@ parse_args(lame_global_flags * gfp, int argc, char **argv,
                             break;
                         default:
                             error_printf("%s: -e emp must be n/5/c not %s\n", ProgramName, arg);
-                            err = 1;
-                            break;
+                            return -1;
                         }
                         break;
                     case 'c':
@@ -1884,9 +1885,8 @@ parse_args(lame_global_flags * gfp, int argc, char **argv,
                         return -1;
 
                     default:
-                        error_printf("%s: unrec option %c\n", ProgramName, c);
-                        err = 1;
-                        break;
+                        error_printf("%s: unrecognized option -%c\n", ProgramName, c);
+                        return -1;
                     }
                     if (argUsed) {
                         if (arg == token)
@@ -1926,14 +1926,14 @@ parse_args(lame_global_flags * gfp, int argc, char **argv,
                         strncpy(outPath, argv[i], PATH_MAX + 1);
                     else {
                         error_printf("%s: excess arg %s\n", ProgramName, argv[i]);
-                        err = 1;
+                        return -1;
                     }
                 }
             }
         }
     }                   /* loop over args */
 
-    if (err || !input_file) {
+    if (!input_file) {
         usage(Console_IO.Console_fp, ProgramName);
         return -1;
     }
