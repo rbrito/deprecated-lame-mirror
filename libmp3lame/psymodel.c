@@ -560,11 +560,11 @@ ns_msfix(lame_internal_flags * gfc, FLOAT msfix, FLOAT athadjust)
         thmLR = Min(Max(gfc->thm[0].l[sb], ath), Max(gfc->thm[1].l[sb], ath));
         thmM = Max(gfc->thm[2].l[sb], ath);
         thmS = Max(gfc->thm[3].l[sb], ath);
-
         if (thmLR * msfix < thmM + thmS) {
             FLOAT const f = thmLR * msfix2 / (thmM + thmS);
             thmM *= f;
             thmS *= f;
+            assert( thmM+thmS > 0 );
         }
         gfc->thm[2].l[sb] = Min(thmM, gfc->thm[2].l[sb]);
         gfc->thm[3].l[sb] = Min(thmS, gfc->thm[3].l[sb]);
@@ -583,6 +583,7 @@ ns_msfix(lame_internal_flags * gfc, FLOAT msfix, FLOAT athadjust)
                 FLOAT const f = thmLR * msfix / (thmM + thmS);
                 thmM *= f;
                 thmS *= f;
+                assert( thmM+thmS > 0 );
             }
             gfc->thm[2].s[sb][sblock] = Min(gfc->thm[2].s[sb][sblock], thmM);
             gfc->thm[3].s[sb][sblock] = Min(gfc->thm[3].s[sb][sblock], thmS);
@@ -982,6 +983,7 @@ L3psycho_anal(lame_global_flags const *gfp,
                 FLOAT const an = gfc->ax_sav[chn][0][j] = wsamp_l[0][j];
                 FLOAT const bn = gfc->bx_sav[chn][0][j] =
                     (j == 0 ? wsamp_l[0][0] : wsamp_l[0][BLKSIZE - j]);
+                assert( den != 0 );
                 den = r1 / den * 2.0;
                 numre = (an + bn) - numre * den;
                 numim = (an - bn) - numim * den;
@@ -1033,6 +1035,7 @@ L3psycho_anal(lame_global_flags const *gfp,
             if (rn != 0) {
                 FLOAT const an = (*wsamp_s)[1][k];
                 FLOAT const bn = (*wsamp_s)[1][BLKSIZE_s - k];
+                assert( den != 0 );
                 den = (2 * r1 - r2) / den * 2.0f;
                 numre = (an + bn) - numre * den;
                 numim = (an - bn) - numim * den;
@@ -1173,8 +1176,10 @@ L3psycho_anal(lame_global_flags const *gfp,
             gfc->nb_1[chn][b] = ecb;
 
             ecb = Max(thr[b], gfc->ATH->cb_l[b] * gfc->ATH->adjust);
-            if (ecb < eb[b])
+            if (ecb < eb[b]) {
+                assert( eb[b] > 0 );
                 gfc->pe[chn] -= gfc->numlines_l[b] * FAST_LOG(ecb / eb[b]);
+            }
         }
 
         determine_block_type(gfp, fftenergy_s, uselongblock, chn, gr_out, &gfc->pe[chn]);
@@ -1206,12 +1211,15 @@ L3psycho_anal(lame_global_flags const *gfp,
             /* thresholds difference in db */
             if (x2 >= 1000 * x1)
                 db = 3;
-            else
+            else {
+                assert( x1 > 0 );
                 db = FAST_LOG10(x2 / x1);
+            }
             /*  DEBUGF(gfc,"db = %f %e %e  \n",db,gfc->thm[0].l[sb],gfc->thm[1].l[sb]); */
             sidetot += db;
             tot++;
         }
+        assert( tot > 0 );
         ms_ratio_l = (sidetot / tot) * 0.7; /* was .35*(sidetot/tot)/5.0*10 */
         ms_ratio_l = Min(ms_ratio_l, 0.5);
 
@@ -1224,11 +1232,14 @@ L3psycho_anal(lame_global_flags const *gfp,
                 /* thresholds difference in db */
                 if (x2 >= 1000 * x1)
                     db = 3;
-                else
+                else {
+                    assert( x1 > 0 );
                     db = FAST_LOG10(x2 / x1);
+                }
                 sidetot += db;
                 tot++;
             }
+            assert( tot > 0 );
         ms_ratio_s = (sidetot / tot) * 0.7; /* was .35*(sidetot/tot)/5.0*10 */
         ms_ratio_s = Min(ms_ratio_s, .5);
     }
@@ -1328,8 +1339,10 @@ pecalc_s(III_psy_ratio const *mr, FLOAT masking_lower)
 
             if (mr->en.s[sb][sblock] > x * 1e10)
                 pe_s += regcoef_s[sb] * (10.0 * LOG10);
-            else
+            else {
+                assert( x > 0 );
                 pe_s += regcoef_s[sb] * FAST_LOG10(mr->en.s[sb][sblock] / x);
+            }
         }
     }
 
@@ -1517,6 +1530,7 @@ L3psycho_anal_ns(lame_global_flags const *gfp,
         /* calculate energies of each sub-shortblocks */
         for (i = 0; i < 3; i++) {
             en_subshort[i] = gfc->nsPsy.last_en_subshort[chn][i + 6];
+            assert(gfc->nsPsy.last_en_subshort[chn][i + 4] > 0);
             attack_intensity[i]
                 = en_subshort[i] / gfc->nsPsy.last_en_subshort[chn][i + 4];
             en_short[0] += en_subshort[i];
@@ -1542,10 +1556,14 @@ L3psycho_anal_ns(lame_global_flags const *gfp,
 
                 gfc->nsPsy.last_en_subshort[chn][i] = en_subshort[i + 3] = p;
                 en_short[1 + i / 3] += p;
-                if (p > en_subshort[i + 3 - 2])
+                if (p > en_subshort[i + 3 - 2]) {
+                    assert(en_subshort[i + 3 - 2] > 0);
                     p = p / en_subshort[i + 3 - 2];
-                else if (en_subshort[i + 3 - 2] > p * 10.0)
+                }
+                else if (en_subshort[i + 3 - 2] > p * 10.0) {
+                    assert( p > 0 );
                     p = en_subshort[i + 3 - 2] / (p * 10.0);
+                }
                 else
                     p = 0.0;
                 attack_intensity[i + 3] = p;
@@ -1572,10 +1590,14 @@ L3psycho_anal_ns(lame_global_flags const *gfp,
            in order to avoid periodic signals */
         for (i = 1; i < 4; i++) {
             float   ratio;
-            if (en_short[i - 1] > en_short[i])
+            if (en_short[i - 1] > en_short[i]) {
+                assert( en_short[i] > 0 );
                 ratio = en_short[i - 1] / en_short[i];
-            else
+            }
+            else {
+                assert( en_short[i-1] > 0 );
                 ratio = en_short[i] / en_short[i - 1];
+            }
             if (ratio < 1.7) {
                 ns_attacks[i] = 0;
                 if (i == 1)
@@ -1672,6 +1694,7 @@ L3psycho_anal_ns(lame_global_flags const *gfp,
             FLOAT   ebb = 0, m = 0;
             for (i = 0; i < gfc->numlines_l[b]; ++i, ++j) {
                 FLOAT const el = fftenergy[j];
+                assert(el >= 0);
                 ebb += el;
                 if (m < el)
                     m = el;
@@ -1679,6 +1702,11 @@ L3psycho_anal_ns(lame_global_flags const *gfp,
             eb[b] = ebb;
             max[b] = m;
             avg[b] = ebb * gfc->rnumlines_l[b];
+            assert( gfc->rnumlines_l[b] >= 0 );
+            assert( ebb >= 0 );
+            assert( eb[b] >= 0 );
+            assert( max[b] >= 0 );
+            assert( avg[b] >= 0 );
         }
         assert( b == gfc->npart_l );
         assert( j == 513 );
@@ -1686,56 +1714,68 @@ L3psycho_anal_ns(lame_global_flags const *gfp,
             nsPsy2dataRead(gfc->nsPsy.pass1fp, eb2, eb, chn, gfc->npart_l);
         else {
             FLOAT   m, a;
-            a = avg[0] + avg[1];
+            int const last_tab_entry = sizeof(tab) / sizeof(tab[0])-1;
+            b = 0;
+            a = avg[b] + avg[b+1];
+            assert(a >= 0);
             if (a != 0.0) {
-                int const last_tab_entry = sizeof(tab) / sizeof(tab[0])-1;
-                m = max[0];
-                if (m < max[1])
-                    m = max[1];
+                m = max[b];
+                if (m < max[b+1])
+                    m = max[b+1];
+                assert( (gfc->numlines_l[b] + gfc->numlines_l[b+1] - 1) > 0 );
                 a = 20.0 * (m * 2.0 - a)
-                    / (a * (gfc->numlines_l[0] + gfc->numlines_l[1] - 1));
+                    / (a * (gfc->numlines_l[b] + gfc->numlines_l[b+1] - 1));
                 k = (int) a;
                 if (k > last_tab_entry)
                     k = last_tab_entry;
-                a = eb[0] * tab[k];
+                a = eb[b] * tab[k];
             }
-            eb2[0] = a;
+            eb2[b] = a;
 
             for (b = 1; b < gfc->npart_l - 1; b++) {
                 a = avg[b - 1] + avg[b] + avg[b + 1];
+                assert( a >= 0 );
                 if (a != 0.0) {
                     m = max[b - 1];
                     if (m < max[b])
                         m = max[b];
                     if (m < max[b + 1])
                         m = max[b + 1];
+                    assert( (gfc->numlines_l[b - 1] + gfc->numlines_l[b] + gfc->numlines_l[b + 1] -
+                            1) > 0 );
                     a = 20.0 * (m * 3.0 - a)
                         / (a *
                            (gfc->numlines_l[b - 1] + gfc->numlines_l[b] + gfc->numlines_l[b + 1] -
                             1));
                     k = (int) a;
-                    if (k > sizeof(tab) / sizeof(tab[0]) - 1)
-                        k = sizeof(tab) / sizeof(tab[0]) - 1;
+                    if (k > last_tab_entry)
+                        k = last_tab_entry;
                     a = eb[b] * tab[k];
                 }
                 eb2[b] = a;
+                assert(eb2[b] >= 0);
             }
+            assert( b > 0 );
+            assert( b == gfc->npart_l-1 );
 
-            a = avg[gfc->npart_l - 2] + avg[gfc->npart_l - 1];
-            if (a != 0.0) {
-                m = max[gfc->npart_l - 2];
-                if (m < max[gfc->npart_l - 1])
-                    m = max[gfc->npart_l - 1];
-
+            a = avg[b-1] + avg[b];
+            assert( a >= 0 );
+            if (a > 0.0) {
+                m = max[b-1];
+                if (m < max[b])
+                    m = max[b];
+                assert( (gfc->numlines_l[b-1] + gfc->numlines_l[b] - 1) > 0 );
                 a = 20.0 * (m * 2.0 - a)
                     / (a *
-                       (gfc->numlines_l[gfc->npart_l - 2] + gfc->numlines_l[gfc->npart_l - 1] - 1));
+                       (gfc->numlines_l[b-1] + gfc->numlines_l[b] - 1));
                 k = (int) a;
-                if (k > sizeof(tab) / sizeof(tab[0]) - 1)
-                    k = sizeof(tab) / sizeof(tab[0]) - 1;
+                if (k > last_tab_entry)
+                    k = last_tab_entry;
                 a = eb[b] * tab[k];
             }
             eb2[b] = a;
+            assert(b == (gfc->npart_l - 1));
+            assert(eb2[b] >= 0);
         }
 
  /*********************************************************************
@@ -2123,7 +2163,12 @@ psymodel_init(lame_global_flags * gfp)
     /* compute the spreading function */
     for (i = 0; i < gfc->npart_l; i++) {
         norm[i] = 1.0;
-        gfc->rnumlines_l[i] = 1.0 / gfc->numlines_l[i];
+        if (gfc->numlines_l[i] > 0) {
+            gfc->rnumlines_l[i] = 1.0 / gfc->numlines_l[i];
+        }
+        else {
+            gfc->rnumlines_l[i] = 0;
+        }
     }
     i = init_s3_values(gfp, &gfc->s3_ll, gfc->s3ind, gfc->npart_l, bval, bval_width, norm);
     if (i)
