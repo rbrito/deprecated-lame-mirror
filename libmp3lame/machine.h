@@ -24,7 +24,7 @@
 
 #include "version.h"
 
-#if (LAME_ALPHA_VERSION != 0)
+#if (LAME_RELEASE_VERSION == 0)
 #undef NDEBUG
 #endif
 
