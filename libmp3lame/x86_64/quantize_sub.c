@@ -94,7 +94,5 @@ init_xrpow_core_sse(gr_info * const cod_info, FLOAT xrpow[576], int upper, FLOAT
     }
 }
 
-#endif
-
-
+#endif	/* HAVE_XMMINTRIN_H */
 
