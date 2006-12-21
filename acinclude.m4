@@ -11,7 +11,7 @@ dnl * contain the full pathname or the empty string
 dnl * PATH is space-separated list of directories.
 dnl * by Florian Bomers
 
-AC_DEFUN(LA_SEARCH_FILE,[
+AC_DEFUN([LA_SEARCH_FILE],[
   $1=
   dnl hack: eliminate line feeds in $2
   for FILE in $2; do
@@ -39,7 +39,7 @@ dnl * TODO: assert function call to verify lib
 dnl *
 dnl * by Florian Bomers
 
-AC_DEFUN(LA_SEARCH_LIB,[
+AC_DEFUN([LA_SEARCH_LIB],[
   dnl look for lib
   LA_SEARCH_FILE($1, $3, $5 $5/lib $5/.. $5/../lib)
   dnl look for header.
@@ -55,7 +55,7 @@ AC_DEFUN(LA_SEARCH_LIB,[
 
 # alex_IEEE854_FLOAT80
 # ------------
-AC_DEFUN(alex_IEEE854_FLOAT80,
+AC_DEFUN([alex_IEEE854_FLOAT80],
 [AC_CACHE_CHECK(for IEEE854 compliant 80 bit floats, alex_cv_ieee854_float80,
 [AC_TRY_RUN([
 int   float2long_IEEE_compliance ( void )
