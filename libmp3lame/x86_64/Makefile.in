@@ -14,6 +14,8 @@
 
 @SET_MAKE@
 
+# global section for every Makefile.am
+
 
 srcdir = @srcdir@
 top_srcdir = @top_srcdir@
@@ -38,9 +40,9 @@ POST_UNINSTALL = :
 build_triplet = @build@
 host_triplet = @host@
 ANSI2KNR = $(top_srcdir)/ansi2knr
-subdir = libmp3lame/i386
 DIST_COMMON = $(noinst_HEADERS) $(srcdir)/Makefile.am \
-	$(srcdir)/Makefile.in
+	$(srcdir)/Makefile.in $(top_srcdir)/Makefile.am.global
+subdir = libmp3lame/x86_64
 ACLOCAL_M4 = $(top_srcdir)/aclocal.m4
 am__aclocal_m4_deps = $(top_srcdir)/acinclude.m4 \
 	$(top_srcdir)/configure.in
@@ -50,17 +52,26 @@ mkinstalldirs = $(install_sh) -d
 CONFIG_HEADER = $(top_builddir)/config.h
 CONFIG_CLEAN_FILES =
 LTLIBRARIES = $(noinst_LTLIBRARIES)
-liblameasmroutines_la_LIBADD =
-am__liblameasmroutines_la_SOURCES_DIST = choose_table.nas cpu_feat.nas \
-	fft3dn.nas
-am__objects_1 = choose_table.lo cpu_feat.lo fft3dn.lo
-liblameasmroutines_la_OBJECTS = $(am_liblameasmroutines_la_OBJECTS)
-@HAVE_NASM_TRUE@am_liblameasmroutines_la_rpath =
+liblamecpuroutines_la_LIBADD =
+am__liblamecpuroutines_la_SOURCES_DIST = quantize_sub.c
+am__objects_1 = quantize_sub$U.lo
+@X86_64_TRUE@am_liblamecpuroutines_la_OBJECTS = $(am__objects_1)
+liblamecpuroutines_la_OBJECTS = $(am_liblamecpuroutines_la_OBJECTS)
 DEFAULT_INCLUDES = -I. -I$(srcdir) -I$(top_builddir)
-SOURCES = $(liblameasmroutines_la_SOURCES) \
-	$(EXTRA_liblameasmroutines_la_SOURCES)
-DIST_SOURCES = $(am__liblameasmroutines_la_SOURCES_DIST) \
-	$(EXTRA_liblameasmroutines_la_SOURCES)
+depcomp = $(SHELL) $(top_srcdir)/depcomp
+am__depfiles_maybe = depfiles
+COMPILE = $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) \
+	$(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS)
+LTCOMPILE = $(LIBTOOL) --tag=CC --mode=compile $(CC) $(DEFS) \
+	$(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) \
+	$(AM_CFLAGS) $(CFLAGS)
+CCLD = $(CC)
+LINK = $(LIBTOOL) --tag=CC --mode=link $(CCLD) $(AM_CFLAGS) $(CFLAGS) \
+	$(AM_LDFLAGS) $(LDFLAGS) -o $@
+SOURCES = $(liblamecpuroutines_la_SOURCES) \
+	$(EXTRA_liblamecpuroutines_la_SOURCES)
+DIST_SOURCES = $(am__liblamecpuroutines_la_SOURCES_DIST) \
+	$(EXTRA_liblamecpuroutines_la_SOURCES)
 HEADERS = $(noinst_HEADERS)
 ETAGS = etags
 CTAGS = ctags
@@ -108,7 +119,7 @@ GTK_CONFIG = @GTK_CONFIG@
 GTK_LIBS = @GTK_LIBS@
 HAVE_NASM_FALSE = @HAVE_NASM_FALSE@
 HAVE_NASM_TRUE = @HAVE_NASM_TRUE@
-INCLUDES = @INCLUDES@ "-I$(top_srcdir)/libmp3lame/@CPUTYPE@"
+INCLUDES = @INCLUDES@ "-I$(top_srcdir)/mpglib" "-I$(top_builddir)"
 INSTALL_DATA = @INSTALL_DATA@
 INSTALL_PROGRAM = @INSTALL_PROGRAM@
 INSTALL_SCRIPT = @INSTALL_SCRIPT@
@@ -201,52 +212,28 @@ sbindir = @sbindir@
 sharedstatedir = @sharedstatedir@
 sysconfdir = @sysconfdir@
 target_alias = @target_alias@
-AUTOMAKE_OPTIONS = foreign $(top_srcdir)/ansi2knr
-nasm_sources = \
-	choose_table.nas \
-	cpu_feat.nas \
-	fft3dn.nas
-
-@HAVE_NASM_TRUE@noinst_LTLIBRARIES = liblameasmroutines.la
-@HAVE_NASM_TRUE@liblameasmroutines_la_SOURCES = $(nasm_sources)
-@HAVE_NASM_TRUE@am_liblameasmroutines_la_OBJECTS = \
-@HAVE_NASM_TRUE@	choose_table$U.lo \
-@HAVE_NASM_TRUE@	cpu_feat$U.lo \
-@HAVE_NASM_TRUE@	fft3dn$U.lo
-
-noinst_HEADERS = nasm.h
-SUFFIXES = .nas .lo
-EXTRA_liblameasmroutines_la_SOURCES = $(nasm_sources)
-CLEANFILES = \
-	choose_table.o.lst \
-	choose_table.lo.lst \
-	cpu_feat.o.lst \
-	cpu_feat.lo.lst \
-	fft3dn.o.lst \
-	fft3dn.lo.lst
-
-EXTRA_DIST = \
-	fft.nas \
-	fftfpu.nas \
-	fftsse.nas \
-	ffttbl.nas
-
-NASMFLAGS = @NASM_FORMAT@ -i "$(top_srcdir)/libmp3lame/@CPUTYPE@/"
-COMPILE = $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) \
-	$(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS)
-
-LTCOMPILE = $(LIBTOOL) --mode=compile $(CC) $(DEFS) $(DEFAULT_INCLUDES) \
-	$(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS)
-
-CCLD = $(CC)
-LINK = $(LIBTOOL) --mode=link $(CCLD) $(AM_CFLAGS) $(CFLAGS) \
-	$(AM_LDFLAGS) $(LDFLAGS) -o $@
+AUTOMAKE_OPTIONS = 1.9 foreign $(top_srcdir)/ansi2knr
+noinst_LTLIBRARIES = liblamecpuroutines.la
+x86_64_sources = quantize_sub.c
+@X86_64_TRUE@liblamecpuroutines_la_SOURCES = $(x86_64_sources)
+noinst_HEADERS = lame_intrin.h
+EXTRA_liblamecpuroutines_la_SOURCES = $(x86_64_sources)
+CLEANFILES = lclint.txt
+LCLINTFLAGS = \
+	+posixlib \
+	+showsummary \
+	+showalluses \
+	+whichlib \
+	+forcehints \
+	-fixedformalarray \
+	+matchanyintegral \
+	-Dlint
 
 all: all-am
 
 .SUFFIXES:
-.SUFFIXES: .nas .lo .o
-$(srcdir)/Makefile.in: @MAINTAINER_MODE_TRUE@ $(srcdir)/Makefile.am  $(am__configure_deps)
+.SUFFIXES: .c .lo .o .obj
+$(srcdir)/Makefile.in: @MAINTAINER_MODE_TRUE@ $(srcdir)/Makefile.am $(top_srcdir)/Makefile.am.global $(am__configure_deps)
 	@for dep in $?; do \
 	  case '$(am__configure_deps)' in \
 	    *$$dep*) \
@@ -255,9 +242,9 @@ $(srcdir)/Makefile.in: @MAINTAINER_MODE_TRUE@ $(srcdir)/Makefile.am  $(am__confi
 	      exit 1;; \
 	  esac; \
 	done; \
-	echo ' cd $(top_srcdir) && $(AUTOMAKE) --foreign  libmp3lame/i386/Makefile'; \
+	echo ' cd $(top_srcdir) && $(AUTOMAKE) --foreign  libmp3lame/x86_64/Makefile'; \
 	cd $(top_srcdir) && \
-	  $(AUTOMAKE) --foreign  libmp3lame/i386/Makefile
+	  $(AUTOMAKE) --foreign  libmp3lame/x86_64/Makefile
 .PRECIOUS: Makefile
 Makefile: $(srcdir)/Makefile.in $(top_builddir)/config.status
 	@case '$?' in \
@@ -284,8 +271,8 @@ clean-noinstLTLIBRARIES:
 	  echo "rm -f \"$${dir}/so_locations\""; \
 	  rm -f "$${dir}/so_locations"; \
 	done
-liblameasmroutines.la: $(liblameasmroutines_la_OBJECTS) $(liblameasmroutines_la_DEPENDENCIES) 
-	$(LINK) $(am_liblameasmroutines_la_rpath) $(liblameasmroutines_la_LDFLAGS) $(liblameasmroutines_la_OBJECTS) $(liblameasmroutines_la_LIBADD) $(LIBS)
+liblamecpuroutines.la: $(liblamecpuroutines_la_OBJECTS) $(liblamecpuroutines_la_DEPENDENCIES) 
+	$(LINK)  $(liblamecpuroutines_la_LDFLAGS) $(liblamecpuroutines_la_OBJECTS) $(liblamecpuroutines_la_LIBADD) $(LIBS)
 
 mostlyclean-compile:
 	-rm -f *.$(OBJEXT)
@@ -297,6 +284,32 @@ $(top_srcdir)/ansi2knr:
 
 mostlyclean-kr:
 	-test "$U" = "" || rm -f *_.c
+
+@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/quantize_sub$U.Plo@am__quote@
+
+.c.o:
+@am__fastdepCC_TRUE@	if $(COMPILE) -MT $@ -MD -MP -MF "$(DEPDIR)/$*.Tpo" -c -o $@ $<; \
+@am__fastdepCC_TRUE@	then mv -f "$(DEPDIR)/$*.Tpo" "$(DEPDIR)/$*.Po"; else rm -f "$(DEPDIR)/$*.Tpo"; exit 1; fi
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	source='$<' object='$@' libtool=no @AMDEPBACKSLASH@
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
+@am__fastdepCC_FALSE@	$(COMPILE) -c $<
+
+.c.obj:
+@am__fastdepCC_TRUE@	if $(COMPILE) -MT $@ -MD -MP -MF "$(DEPDIR)/$*.Tpo" -c -o $@ `$(CYGPATH_W) '$<'`; \
+@am__fastdepCC_TRUE@	then mv -f "$(DEPDIR)/$*.Tpo" "$(DEPDIR)/$*.Po"; else rm -f "$(DEPDIR)/$*.Tpo"; exit 1; fi
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	source='$<' object='$@' libtool=no @AMDEPBACKSLASH@
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
+@am__fastdepCC_FALSE@	$(COMPILE) -c `$(CYGPATH_W) '$<'`
+
+.c.lo:
+@am__fastdepCC_TRUE@	if $(LTCOMPILE) -MT $@ -MD -MP -MF "$(DEPDIR)/$*.Tpo" -c -o $@ $<; \
+@am__fastdepCC_TRUE@	then mv -f "$(DEPDIR)/$*.Tpo" "$(DEPDIR)/$*.Plo"; else rm -f "$(DEPDIR)/$*.Tpo"; exit 1; fi
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	source='$<' object='$@' libtool=yes @AMDEPBACKSLASH@
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
+@am__fastdepCC_FALSE@	$(LTCOMPILE) -c -o $@ $<
+quantize_sub_.c: quantize_sub.c $(ANSI2KNR)
+	$(CPP) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) `if test -f $(srcdir)/quantize_sub.c; then echo $(srcdir)/quantize_sub.c; else echo quantize_sub.c; fi` | sed 's/^# \([0-9]\)/#line \1/' | $(ANSI2KNR) > $@ || rm -f $@
+quantize_sub_.$(OBJEXT) quantize_sub_.lo : $(ANSI2KNR)
 
 mostlyclean-libtool:
 	-rm -f *.lo
@@ -357,6 +370,7 @@ distclean-tags:
 	-rm -f TAGS ID GTAGS GRTAGS GSYMS GPATH tags
 
 distdir: $(DISTFILES)
+	$(mkdir_p) $(distdir)/../..
 	@srcdirstrip=`echo "$(srcdir)" | sed 's|.|.|g'`; \
 	topsrcdirstrip=`echo "$(top_srcdir)" | sed 's|.|.|g'`; \
 	list='$(DISTFILES)'; for file in $$list; do \
@@ -418,6 +432,7 @@ clean-am: clean-generic clean-libtool clean-noinstLTLIBRARIES \
 	mostlyclean-am
 
 distclean: distclean-am
+	-rm -rf ./$(DEPDIR)
 	-rm -f Makefile
 distclean-am: clean-am distclean-compile distclean-generic \
 	distclean-libtool distclean-tags
@@ -443,6 +458,7 @@ install-man:
 installcheck-am:
 
 maintainer-clean: maintainer-clean-am
+	-rm -rf ./$(DEPDIR)
 	-rm -f Makefile
 maintainer-clean-am: distclean-am maintainer-clean-generic
 
@@ -474,15 +490,13 @@ uninstall-am: uninstall-info-am
 	uninstall-am uninstall-info-am
 
 
-.nas.o: $< nasm.h
-	$(NASM) $(NASMFLAGS) $< -o $@ -l $@.lst
+# end global section
 
-.nas.lo: $< nasm.h
-	test -d .libs || mkdir .libs
-	$(ECHO) '# Generated by ltmain.sh - GNU libtool 1.5.22 (1.1220.2.365 2005/12/18 22:14:06)' >$@
-	$(ECHO) "pic_object='.libs/$*.o'" >>$@
-	$(ECHO) "non_pic_object='$*.o'" >>$@
-	$(NASM) $(NASMFLAGS) $< -o .libs/$*.o -l $@.lst
+lclint.txt: ${liblamecpuroutines_la_SOURCES} ${noinst_HEADERS}
+	@lclint ${LCLINTFLAGS} ${INCLUDES} ${DEFS} ${liblamecpuroutines_la_SOURCES} 2>&1 >lclint.txt || true
+
+lclint: lclint.txt
+	more lclint.txt
 
 #$(OBJECTS): libtool
 #libtool: $(LIBTOOL_DEPS)
