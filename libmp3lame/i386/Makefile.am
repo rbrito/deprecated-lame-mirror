@@ -20,7 +20,7 @@ endif
 
 noinst_HEADERS = nasm.h
 
-INCLUDES = @INCLUDES@ -I$(top_srcdir)/libmp3lame/@CPUTYPE@
+INCLUDES = @INCLUDES@ "-I$(top_srcdir)/libmp3lame/@CPUTYPE@"
 
 SUFFIXES = .nas .lo
 
@@ -41,7 +41,7 @@ EXTRA_DIST = \
 	ffttbl.nas
 
 NASM = @NASM@
-NASMFLAGS=@NASM_FORMAT@ -i $(top_srcdir)/libmp3lame/@CPUTYPE@/
+NASMFLAGS=@NASM_FORMAT@ -i "$(top_srcdir)/libmp3lame/@CPUTYPE@/"
 
 .nas.o: $< nasm.h
 	$(NASM) $(NASMFLAGS) $< -o $@ -l $@.lst
