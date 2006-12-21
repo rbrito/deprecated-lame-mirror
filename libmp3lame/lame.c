@@ -1233,7 +1233,7 @@ lame_print_config(const lame_global_flags * gfp)
             }
         }
         if (gfc->CPU_features.SSE) {
-#ifdef HAVE_XMMINTRIN_H
+#if defined(HAVE_XMMINTRIN_H) && defined(CPUCCODE)
             MSGF(gfc, ", SSE (ASM used)");
 #else
             if (fft_asm_used == 2) {

@@ -95,7 +95,7 @@ init_xrpow_core_init(lame_internal_flags * const gfc)
 {
     gfc->init_xrpow_core = init_xrpow_core_c;
 
-#ifdef HAVE_XMMINTRIN_H
+#if defined(HAVE_XMMINTRIN_H) && defined(CPUCCODE)
     if (gfc->CPU_features.SSE)
         gfc->init_xrpow_core = init_xrpow_core_sse;
 #endif
@@ -2053,3 +2053,4 @@ CBR_iteration_loop(lame_global_flags const *gfp,
 
     ResvFrameEnd(gfc, mean_bits);
 }
+
