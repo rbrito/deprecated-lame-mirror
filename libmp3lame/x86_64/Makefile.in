@@ -57,6 +57,7 @@ am__liblamecpuroutines_la_SOURCES_DIST = quantize_sub.c
 am__objects_1 = quantize_sub$U.lo
 @X86_64_TRUE@am_liblamecpuroutines_la_OBJECTS = $(am__objects_1)
 liblamecpuroutines_la_OBJECTS = $(am_liblamecpuroutines_la_OBJECTS)
+@X86_64_TRUE@am_liblamecpuroutines_la_rpath =
 DEFAULT_INCLUDES = -I. -I$(srcdir) -I$(top_builddir)
 depcomp = $(SHELL) $(top_srcdir)/depcomp
 am__depfiles_maybe = depfiles
@@ -213,7 +214,7 @@ sharedstatedir = @sharedstatedir@
 sysconfdir = @sysconfdir@
 target_alias = @target_alias@
 AUTOMAKE_OPTIONS = 1.9 foreign $(top_srcdir)/ansi2knr
-noinst_LTLIBRARIES = liblamecpuroutines.la
+@X86_64_TRUE@noinst_LTLIBRARIES = liblamecpuroutines.la
 x86_64_sources = quantize_sub.c
 @X86_64_TRUE@liblamecpuroutines_la_SOURCES = $(x86_64_sources)
 noinst_HEADERS = lame_intrin.h
@@ -272,7 +273,7 @@ clean-noinstLTLIBRARIES:
 	  rm -f "$${dir}/so_locations"; \
 	done
 liblamecpuroutines.la: $(liblamecpuroutines_la_OBJECTS) $(liblamecpuroutines_la_DEPENDENCIES) 
-	$(LINK)  $(liblamecpuroutines_la_LDFLAGS) $(liblamecpuroutines_la_OBJECTS) $(liblamecpuroutines_la_LIBADD) $(LIBS)
+	$(LINK) $(am_liblamecpuroutines_la_rpath) $(liblamecpuroutines_la_LDFLAGS) $(liblamecpuroutines_la_OBJECTS) $(liblamecpuroutines_la_LIBADD) $(LIBS)
 
 mostlyclean-compile:
 	-rm -f *.$(OBJEXT)
