@@ -2,7 +2,9 @@
 
 include $(top_srcdir)/Makefile.am.global
 
+if X86_64
 noinst_LTLIBRARIES = liblamecpuroutines.la
+endif
 
 ##liblamecpuroutines_la_LIBADD = 
 ##liblamecpuroutines_la_LDFLAGS =
