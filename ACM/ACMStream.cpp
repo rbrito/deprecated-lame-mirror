@@ -36,6 +36,8 @@
 
 #include "ACMStream.h"
 
+#include <lame.h>
+
 // static methods
 
 ACMStream * ACMStream::Create()
@@ -349,12 +351,40 @@ my_debug->OutPut(DEBUG_LEVEL_FUNC_DEBUG, "ACMStream::ConvertBuffer result = %d (
 	return result;
 }
 
+/* map frequency to a valid MP3 sample frequency
+ *
+ * Robert Hegemann 2000-07-01
+ */
+static int
+map2MP3Frequency(int freq)
+{
+    if (freq <= 8000)
+        return 8000;
+    if (freq <= 11025)
+        return 11025;
+    if (freq <= 12000)
+        return 12000;
+    if (freq <= 16000)
+        return 16000;
+    if (freq <= 22050)
+        return 22050;
+    if (freq <= 24000)
+        return 24000;
+    if (freq <= 32000)
+        return 32000;
+    if (freq <= 44100)
+        return 44100;
+
+    return 48000;
+}
+
+
 unsigned int ACMStream::GetOutputSampleRate(int samples_per_sec, int bitrate, int channels)
 {
     if (bitrate==0)
         bitrate = (64000*channels)/8;
-
-	/// \todo pass through the same LAME routine
+  
+        /// \todo pass through the same LAME routine
 	unsigned int OutputFrequency;
 	double compression_ratio = double(samples_per_sec * 16 * channels / (bitrate * 8));
 	if (compression_ratio > 13.)
@@ -363,5 +393,6 @@ unsigned int ACMStream::GetOutputSampleRate(int samples_per_sec, int bitrate, in
 		OutputFrequency = map2MP3Frequency( 0.97 * samples_per_sec );
 
 	return OutputFrequency;
+
 }
 

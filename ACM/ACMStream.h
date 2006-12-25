@@ -38,10 +38,12 @@
 
 #include "ADbg/ADbg.h"
 
-#include <config.h>
-#include "util.h"
-
 #include "AEncodeProperties.h"
+
+
+typedef enum vbr_mode_e vbr_mode;
+typedef struct lame_global_struct lame_global_flags;
+
 
 class ACMStream
 {

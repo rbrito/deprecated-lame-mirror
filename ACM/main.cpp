@@ -74,7 +74,7 @@ extern "C" {
 #include "ACM.h"
 #include "resource.h"
 #include "adebug.h"
-#include <version.h>
+
 
 ADbg * debug = NULL;
 

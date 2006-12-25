@@ -40,11 +40,12 @@
 #include <msacm.h>
 #include <msacmdrv.h>
 
-#include "lame.h"
 
 #include "ADbg/ADbg.h"
 
 class AEncodeProperties;
+
+typedef enum vbr_mode_e vbr_mode;
 
 class bitrate_item {
 	public:
@@ -93,7 +94,7 @@ protected:
 	AEncodeProperties my_EncodingProperties;
 	std::vector<bitrate_item> bitrate_table;
 
-	static char VersionString[20];
+	static char VersionString[120];
 };
 
 #endif // !defined(_ACM_H__INCLUDED_)

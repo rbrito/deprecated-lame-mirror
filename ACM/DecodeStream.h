@@ -38,9 +38,9 @@
 
 #include "ADbg/ADbg.h"
 
-#include <config.h>
-#include "util.h"
-#include "interface.h"
+
+struct lame_global_flags;
+
 
 class DecodeStream
 {

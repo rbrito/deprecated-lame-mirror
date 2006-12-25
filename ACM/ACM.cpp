@@ -41,7 +41,7 @@
 
 #include <assert.h>
 
-#include <version.h>
+#include <lame.h>
 
 #include "adebug.h"
 #include "resource.h"
@@ -57,9 +57,9 @@
 #define IDC_HAND            MAKEINTRESOURCE(32649)
 #endif // IDC_HAND
 
-char ACM::VersionString[20];
+char ACM::VersionString[120];
 
-const char ACM_VERSION[] = "0.9.0";
+const char ACM_VERSION[] = "0.9.2";
 
 #ifdef WIN32
 //
@@ -243,7 +243,7 @@ LPARAM lParam  // second message parameter
 				bool bUrl = false;
 				if (::PtInRect(&rect,pnt))
 				{
-					wsprintf(Url,LAME_URL);
+					wsprintf(Url,get_lame_url());
 					bUrl = true;
 				}
 
@@ -325,15 +325,7 @@ ACM::ACM( HMODULE hModule )
 			}
 		}
 	}
-
-#if   LAME_ALPHA_VERSION > 0
-	wsprintf(VersionString,"%s - %d.%d (alpha %d)", ACM_VERSION, LAME_MAJOR_VERSION, LAME_MINOR_VERSION,LAME_PATCH_VERSION);
-#elif LAME_BETA_VERSION > 0
-	wsprintf(VersionString,"%s - %d.%d (beta %d)", ACM_VERSION, LAME_MAJOR_VERSION, LAME_MINOR_VERSION, LAME_PATCH_VERSION);
-#else
-	wsprintf(VersionString,"%s - %d.%d (stable)", ACM_VERSION, LAME_MAJOR_VERSION, LAME_MINOR_VERSION);
-#endif
-
+        wsprintf(VersionString,"%s - %s", ACM_VERSION, get_lame_version() );
 	BuildBitrateTable();
 	
 	my_debug.OutPut(DEBUG_LEVEL_FUNC_START, "New ACM Creation (0x%08X)",this);

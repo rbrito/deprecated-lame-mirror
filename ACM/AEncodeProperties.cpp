@@ -40,8 +40,7 @@
 #endif
 
 #include "resource.h"
-#include <config.h>
-#include "util.h"
+#include <lame.h>
 #include "adebug.h"
 #include "AEncodeProperties.h"
 #include "ACM.h"
