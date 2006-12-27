@@ -1,7 +1,7 @@
 /*
- *	bit reservoir source file
+ *      bit reservoir source file
  *
- *	Copyright (c) 1999-2000 Mark Taylor
+ *      Copyright (c) 1999-2000 Mark Taylor
  *
  * This library is free software; you can redistribute it and/or
  * modify it under the terms of the GNU Library General Public
@@ -10,7 +10,7 @@
  *
  * This library is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.	 See the GNU
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
  * Library General Public License for more details.
  *
  * You should have received a copy of the GNU Library General Public
@@ -146,16 +146,20 @@ ResvFrameBegin(lame_global_flags const *gfp, int *mean_bits)
            instead of using 8*960. */
 
         /*
-        if (gfp->strict_ISO)
+        if (gfp->strict_ISO == old_FhG_decoder)
          always enabled because of compatibility problems with some old FhG decoders
          which is distributed with almost every Windows Installation
         */
         {
             maxmp3buf = 8 * ((int) (320000 / (gfp->out_samplerate / (FLOAT) 1152) / 8 + .5));
-            /* adding (almost) bits used for sideinfo seems still to work with old FhG decoders
-               so in 320 kbps case the backpointer may point back some bytes too
+            /* adding (almost all) bits used for sideinfo seems still to work with old FhG
+               decoders, so in 320 kbps case the backpointer may point back some bytes too
              */
             maxmp3buf += (gfc->sideinfo_len-8)*8;
+        }
+        if (gfp->strict_ISO)
+        {
+            maxmp3buf = 8 * ((int) (320000 / (gfp->out_samplerate / (FLOAT) 1152) / 8 + .5));
         }
     }
 
