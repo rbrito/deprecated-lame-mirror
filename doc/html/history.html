@@ -64,16 +64,64 @@ enabled for gcc</font></li>
   <li>Robert Hegemann:
     <ul>
 
-      <li>Fixed some console printing problems</li>
+      <li><font color="#3366ff">The newer VBR code is now LAME's default
+       VBR routine</font></li>
 
       <li><font color="#ff0000">Fixed: in case of
 not enough bits the new vbr code incorrectly used old vbr routine</font></li>
 
-      <li><font color="#ff0000">Fix regarding short
-blocks ATH values</font></li>
-
       <li><font color="#ff0000">Improved ATH
 adjustment in low volume cases</font></li>
+
+      <li><font color="#ff0000">Fixed (PSY model): mapping from convolution bands
+      to partition bands was broken since we replaced tables by own calculation
+      several years ago</font></li>
+
+      <li><font color="#ff0000">Fixed (PSY model): loss of fraction in equal loudness weighting</font></li>
+
+      <li><font color="#ff0000">Fixed (PSY model): in NSPSY highpass filter, out of bounds access in fircoef</font></li>
+
+      <li><font color="#ff0000">Known problem samples for the new VBR code:
+      many of them are at an acceptable quality level now;</font>
+      with a big <b>'Thank You'</b> to Francis Niechcial</li>
+
+      <li>Restricted bitreservoir size for 320 kbps frames to
+      the size used for sideinfo, because of decoding problems
+      with FhG decoders installed on almost every Windows system</li>
+
+      <li>LAME aborts on unsupported input files
+      or unrecognized parameter options passed more often now </li>
+
+      <li>Fixed: <i>[ 1596306 ] "fatal error during initialization";</i>
+      an invalid MPEG samplerate was returned by optimum_samplefreq function</li>
+
+      <li>Feature request: <i>[ 1588283 ] Flushing output stream in lame.exe;</i>
+          'flush' option added</li>
+
+      <li>Bug tracker item: <i>[ 1585942 ] lame not --silent when TERM not set;</i>
+      in case LAME was build with TERMCAP defined and no TERM
+      environment is defined, now we do not issue an error message and
+      silently fallback to the default behaviour as if LAME was
+      compiled without TERMCAP defined.</li>
+
+      <li><font color="#3366ff">Added FFTSSE and FFT3DNOW assembler code from
+          Lame4 branch</font></li>
+
+      <li>Changes in lame frontend switches:
+       -k removed, add lowpass and highpass switches if you need to change
+       them; --short/noshort/allshort - degraded into DEVELOPER ONLY switches
+          normal users shouldn't use them; -X -Z degraded to
+          DEVELOPER ONLY switches, -X is too tough to communicate to
+          end users and -Z isn't used actualy</li>
+
+      <li>Fixed some console printing problems</li>
+
+      <li>Windows: ACM code now uses LAME library API only, all
+      references to private include files are removed</li>
+
+      <li>Windows: disabled code that resets processor affinity,
+      because this doesn't belong to LAME, but seems to work around
+      some problems the parent process has (in most cases EAC)</li>
 
     </ul>
 
