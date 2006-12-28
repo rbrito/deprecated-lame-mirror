@@ -24,10 +24,7 @@
 #include "BladeMP3EncDLL.h"
 #include <assert.h>
 
-#include "lame.h"
-#include "config.h"
-// sample_t should not be needed by any libmp3lame wrapper:
-//#include "machine.h" /* for sample_t type */
+#include <lame.h>
 
 
 #define         Min(A, B)       ((A) < (B) ? (A) : (B))
