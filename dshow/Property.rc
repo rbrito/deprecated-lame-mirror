@@ -16,7 +16,7 @@
 #undef APSTUDIO_READONLY_SYMBOLS
 
 /////////////////////////////////////////////////////////////////////////////
-// Russian resources
+// Russisch resources
 
 #if !defined(AFX_RESOURCE_DLL) || defined(AFX_TARG_RUS)
 #ifdef _WIN32
@@ -52,12 +52,12 @@ END
 
 #endif    // APSTUDIO_INVOKED
 
-#endif    // Russian resources
+#endif    // Russisch resources
 /////////////////////////////////////////////////////////////////////////////
 
 
 /////////////////////////////////////////////////////////////////////////////
-// English (U.S.) resources
+// Englisch (USA) resources
 
 #if !defined(AFX_RESOURCE_DLL) || defined(AFX_TARG_ENU)
 #ifdef _WIN32
@@ -129,12 +129,13 @@ BEGIN
     CONTROL         "Voice encoding mode",IDC_CHECK_VOICE,"Button",
                     BS_AUTOCHECKBOX | WS_GROUP | WS_TABSTOP,7,21,85,10
     CONTROL         "Keep all frequencies",IDC_CHECK_KEEP_ALL_FREQ,"Button",
-                    BS_AUTOCHECKBOX | WS_GROUP | WS_TABSTOP,7,34,80,10
+                    BS_AUTOCHECKBOX | WS_DISABLED | WS_GROUP | WS_TABSTOP,7,
+                    34,80,10
     CONTROL         "Strict ISO compliance",IDC_CHECK_STRICT_ISO,"Button",
                     BS_AUTOCHECKBOX | WS_GROUP | WS_TABSTOP,7,47,84,10
     CONTROL         "Disable short blocks",IDC_CHECK_DISABLE_SHORT_BLOCK,
-                    "Button",BS_AUTOCHECKBOX | WS_GROUP | WS_TABSTOP,7,60,79,
-                    10
+                    "Button",BS_AUTOCHECKBOX | WS_DISABLED | WS_GROUP | 
+                    WS_TABSTOP,7,60,79,10
     CONTROL         "Enable Xing VBR tag",IDC_CHECK_XING_TAG,"Button",
                     BS_AUTOCHECKBOX | WS_GROUP | WS_TABSTOP,7,73,83,10
     CONTROL         "Dual channel",IDC_RADIO_DUAL,"Button",
@@ -142,7 +143,8 @@ BEGIN
     CONTROL         "Forced mid / side stereo",IDC_CHECK_FORCE_MS,"Button",
                     BS_AUTOCHECKBOX | WS_TABSTOP,122,65,92,10
     CONTROL         "Mode Fixed",IDC_CHECK_MODE_FIXED,"Button",
-                    BS_AUTOCHECKBOX | WS_GROUP | WS_TABSTOP,7,86,53,10
+                    BS_AUTOCHECKBOX | WS_DISABLED | WS_GROUP | WS_TABSTOP,7,
+                    86,53,10
     CONTROL         "Allow sample overlap",IDC_CHECK_OVERLAP,"Button",
                     BS_AUTOCHECKBOX | WS_GROUP | WS_TABSTOP,7,99,82,10
     CONTROL         "Set sample stop time",IDC_CHECK_STOP,"Button",
@@ -253,7 +255,7 @@ BEGIN
     IDS_ABOUT               "About"
 END
 
-#endif    // English (U.S.) resources
+#endif    // Englisch (USA) resources
 /////////////////////////////////////////////////////////////////////////////
 
 

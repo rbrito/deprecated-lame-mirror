@@ -27,13 +27,8 @@
 #pragma once
 #endif // _MSC_VER >= 1000
 
-#include "..\include\lame.h"
-#include "..\libmp3lame\lame_global_flags.h"
-/*
-#define INPUT_BUFF_SIZE     65536 * 2
-#define OUTPUT_BUFF_SIZE    16384
-#define FRAME_SIZE_LAYER3   1152
-*/
+#include <lame.h>
+
 
 const unsigned int dwBitRateValue[2][14] =
 {

@@ -144,69 +144,69 @@ HRESULT CEncoder::Init()
         // see the file 'API' included with LAME.
         if (pgf = lame_init())
         {
-            pgf->num_channels = m_wfex.nChannels;
-
-            pgf->in_samplerate = m_wfex.nSamplesPerSec;
-            pgf->out_samplerate = m_mabsi.dwSampleRate;
-            if ((pgf->out_samplerate >= 32000) && (m_mabsi.dwBitrate < 32))
-                pgf->brate = 32;
+            lame_set_num_channels(pgf, m_wfex.nChannels);
+            lame_set_in_samplerate(pgf, m_wfex.nSamplesPerSec);
+            lame_set_out_samplerate(pgf, m_mabsi.dwSampleRate);
+            if ((lame_get_out_samplerate(pgf) >= 32000) && (m_mabsi.dwBitrate < 32))
+                lame_set_brate(pgf, 32);
             else
-                pgf->brate = m_mabsi.dwBitrate;
+                lame_set_brate(pgf, m_mabsi.dwBitrate);
+            lame_set_VBR(pgf, m_mabsi.vmVariable);
+            lame_set_VBR_min_bitrate_kbps(pgf, m_mabsi.dwVariableMin);
+            lame_set_VBR_max_bitrate_kbps(pgf, m_mabsi.dwVariableMax);
 
-            pgf->VBR = m_mabsi.vmVariable;
-            pgf->VBR_min_bitrate_kbps = m_mabsi.dwVariableMin;
-            pgf->VBR_max_bitrate_kbps = m_mabsi.dwVariableMax;
+            lame_set_copyright(pgf, m_mabsi.bCopyright);
+            lame_set_original(pgf, m_mabsi.bOriginal);
+            lame_set_error_protection(pgf, m_mabsi.bCRCProtect);
 
-            pgf->copyright = m_mabsi.bCopyright;
-            pgf->original = m_mabsi.bOriginal;
-            pgf->error_protection = m_mabsi.bCRCProtect;
+            lame_set_bWriteVbrTag(pgf, m_mabsi.dwXingTag);
+            lame_set_strict_ISO(pgf, m_mabsi.dwStrictISO);
+            lame_set_VBR_hard_min(pgf, m_mabsi.dwEnforceVBRmin);
 
-            pgf->bWriteVbrTag = m_mabsi.dwXingTag;
-            pgf->strict_ISO = m_mabsi.dwStrictISO;
-            pgf->VBR_hard_min = m_mabsi.dwEnforceVBRmin;
-
-            if (pgf->num_channels == 2 && !m_mabsi.bForceMono)
+            if (lame_get_num_channels(pgf) == 2 && !m_mabsi.bForceMono)
             {
-                int act_br = pgf->VBR ? pgf->VBR_min_bitrate_kbps + pgf->VBR_max_bitrate_kbps / 2 : pgf->brate;
+                //int act_br = pgf->VBR ? pgf->VBR_min_bitrate_kbps + pgf->VBR_max_bitrate_kbps / 2 : pgf->brate;
 
                 // Disabled. It's for user's consideration now
                 //int rel = pgf->out_samplerate / (act_br + 1);
                 //pgf->mode = rel < 200 ? m_mabsi.ChMode : JOINT_STEREO;
 
-                pgf->mode = m_mabsi.ChMode;
+                lame_set_mode(pgf, m_mabsi.ChMode);
             }
             else
-                pgf->mode = MONO;
+                lame_set_mode(pgf, MONO);
 
-            if (pgf->mode == JOINT_STEREO)
-                pgf->force_ms = m_mabsi.dwForceMS;
+            if (lame_get_mode(pgf) == JOINT_STEREO)
+                lame_set_force_ms(pgf, m_mabsi.dwForceMS);
             else
-                pgf->force_ms = 0;
+                lame_set_force_ms(pgf, 0);
 
-            pgf->mode_fixed = m_mabsi.dwModeFixed;
+//            pgf->mode_fixed = m_mabsi.dwModeFixed;
 
             if (m_mabsi.dwVoiceMode != 0)
             {
-                pgf->lowpassfreq = 12000;
-                pgf->VBR_max_bitrate_kbps = 160;
+                lame_set_lowpassfreq(pgf,12000);
+                ///pgf->VBR_max_bitrate_kbps = 160;
             }
 
             if (m_mabsi.dwKeepAllFreq != 0)
             {
-                pgf->lowpassfreq = -1;
-                pgf->highpassfreq = -1;
+                ///pgf->lowpassfreq = -1;
+                ///pgf->highpassfreq = -1;
+                /// not available anymore
             }
 
-            pgf->quality = m_mabsi.dwQuality;
-            pgf->VBR_q = m_mabsi.dwVBRq;
+            lame_set_quality(pgf, m_mabsi.dwQuality);
+            lame_set_VBR_q(pgf, m_mabsi.dwVBRq);
 
             lame_init_params(pgf);
 
             // encoder delay compensation
             {
-                short * start_padd = (short *)calloc(48, pgf->num_channels * sizeof(short));
+                int const nch = lame_get_num_channels(pgf);
+                short * start_padd = (short *)calloc(48, nch * sizeof(short));
 
-                if (pgf->num_channels == 2)
+                if (nch == 2)
                     lame_encode_buffer_interleaved(pgf, start_padd, 48, m_outFrameBuf, OUT_BUFFER_SIZE);
                 else
                     lame_encode_buffer(pgf, start_padd, start_padd, 48, m_outFrameBuf, OUT_BUFFER_SIZE);
@@ -266,10 +266,11 @@ int CEncoder::Encode(const short * pdata, int data_size)
     m_bFinished = FALSE;
 
     int bytes_processed = 0;
+    int const nch = lame_get_num_channels(pgf);
 
     while (1)
     {
-        int nsamples = (data_size - bytes_processed) / (sizeof(short) * pgf->num_channels);
+        int nsamples = (data_size - bytes_processed) / (sizeof(short) * nch);
 
         if (nsamples <= 0)
             break;
@@ -282,7 +283,7 @@ int CEncoder::Encode(const short * pdata, int data_size)
 
         int out_bytes = 0;
 
-        if (pgf->num_channels == 2)
+        if (nch == 2)
             out_bytes = lame_encode_buffer_interleaved(
                                             pgf,
                                             (short *)(pdata + (bytes_processed / sizeof(short))),
@@ -302,7 +303,7 @@ int CEncoder::Encode(const short * pdata, int data_size)
             return -1;
 
         m_outOffset     += out_bytes;
-        bytes_processed += nsamples * pgf->num_channels * sizeof(short);
+        bytes_processed += nsamples * nch * sizeof(short);
     }
 
     return bytes_processed;
