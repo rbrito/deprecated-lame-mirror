@@ -512,8 +512,7 @@ lib_obj += libmp3lame/i386/choose_table.o
 ## use 3DNow! extension. you need nasm and 3DNow! supported CPU.
 lib_obj += libmp3lame/i386/fft3dn.o
 
-## not yet coded
-CC_SWITCHES += -DUSE_FFTSSE
+## use SSE extension. you need nasm and SSE supported CPU.
 lib_obj += libmp3lame/i386/fftsse.o
 
 ## not yet coded

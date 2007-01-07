@@ -308,10 +308,7 @@ init_fft(lame_internal_flags * const gfc)
         extern void fht_3DN(FLOAT * fz, int n);
         gfc->fft_fht = fht_3DN;
     }
-    else
-#endif
-#ifdef USE_FFTSSE
-    if (gfc->CPU_features.SSE) {
+    else if (gfc->CPU_features.SSE) {
         extern void fht_SSE(FLOAT * fz, int n);
         gfc->fft_fht = fht_SSE;
     }

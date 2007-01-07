@@ -1054,6 +1054,11 @@ resample_rate(double freq)
     }
 }
 
+
+extern int lame_set_exp_nspsytune2_int( lame_global_flags*, int, int);
+extern float lame_set_exp_nspsytune2_real( lame_global_flags*, int, float);
+extern void * lame_set_exp_nspsytune2_pointer( lame_global_flags*, int, void *);
+
 /* Ugly, NOT final version */
 
 #define T_IF(str)          if ( 0 == local_strcasecmp (token,str) ) {
@@ -1689,7 +1694,7 @@ parse_args(lame_global_flags * gfp, int argc, char **argv,
                     set_debug_file(nextArg);
                 }
 
-                T_ELSE { 
+                T_ELSE {
                     error_printf("%s: unrecognized option --%s\n", ProgramName, token);
                     return -1;
                 }

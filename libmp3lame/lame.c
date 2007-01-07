@@ -1204,10 +1204,7 @@ lame_print_config(const lame_global_flags * gfp)
         if (gfc->CPU_features.AMD_3DNow) {
             fft_asm_used = 1;
         }
-        else
-#endif
-#ifdef USE_FFTSSE
-        if (gfc->CPU_features.SSE) {
+        else if (gfc->CPU_features.SSE) {
             fft_asm_used = 2;
         }
         else

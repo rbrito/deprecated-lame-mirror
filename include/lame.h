@@ -37,6 +37,7 @@ extern "C" {
 #define CDECL
 #endif
 
+#define DEPRECATED_OR_OBSOLETE_CODE_REMOVED 1
 
 typedef enum vbr_mode_e {
   vbr_off=0,
@@ -56,7 +57,7 @@ typedef enum MPEG_mode_e {
   DUAL_CHANNEL,   /* LAME doesn't supports this! */
   MONO,
   NOT_SET,
-  MAX_INDICATOR   /* Don't use this! It's used for sanity checks. */ 
+  MAX_INDICATOR   /* Don't use this! It's used for sanity checks. */
 } MPEG_mode;
 
 /* Padding types */
@@ -137,7 +138,7 @@ typedef lame_global_flags *lame_t;
  *
  *  The LAME API
  *  These functions should be called, in this order, for each
- *  MP3 file to be encoded.  See the file "API" for more documentation 
+ *  MP3 file to be encoded.  See the file "API" for more documentation
  *
  ***********************************************************************/
 
@@ -150,9 +151,11 @@ typedef lame_global_flags *lame_t;
  * API calls.
  */
 lame_global_flags * CDECL lame_init(void);
+#if DEPRECATED_OR_OBSOLETE_CODE_REMOVED
+#else
 /* obsolete version */
 int CDECL lame_init_old(lame_global_flags *);
-
+#endif
 
 /*
  * OPTIONAL:
@@ -180,7 +183,7 @@ int CDECL lame_get_num_channels(const lame_global_flags *);
 */
 int CDECL lame_set_scale(lame_global_flags *, float);
 float CDECL lame_get_scale(const lame_global_flags *);
-    
+
 /*
   scale the channel 0 (left) input by this amount before encoding.
     default=0 (disabled)
@@ -228,10 +231,13 @@ int CDECL lame_get_bWriteVbrTag(const lame_global_flags *);
 int CDECL lame_set_decode_only(lame_global_flags *, int);
 int CDECL lame_get_decode_only(const lame_global_flags *);
 
+#if DEPRECATED_OR_OBSOLETE_CODE_REMOVED
+#else
 /* 1=encode a Vorbis .ogg file.  default=0 */
 /* DEPRECATED */
 int CDECL lame_set_ogg(lame_global_flags *, int);
 int CDECL lame_get_ogg(const lame_global_flags *);
+#endif
 
 /*
   internal algorithm selection.  True quality is determined by the bitrate
@@ -251,6 +257,8 @@ int CDECL lame_get_quality(const lame_global_flags *);
 int CDECL lame_set_mode(lame_global_flags *, MPEG_mode);
 MPEG_mode CDECL lame_get_mode(const lame_global_flags *);
 
+#if DEPRECATED_OR_OBSOLETE_CODE_REMOVED
+#else
 /*
   mode_automs.  Use a M/S mode with a switching threshold based on
   compression ratio
@@ -258,6 +266,7 @@ MPEG_mode CDECL lame_get_mode(const lame_global_flags *);
 */
 int CDECL lame_set_mode_automs(lame_global_flags *, int);
 int CDECL lame_get_mode_automs(const lame_global_flags *);
+#endif
 
 /*
   force_ms.  Force M/S for all frames.  For testing only.
@@ -276,26 +285,29 @@ int CDECL lame_get_findReplayGain(const lame_global_flags *);
 
 /* decode on the fly. Search for the peak sample. If the ReplayGain
  * analysis is enabled then perform the analysis on the decoded data
- * stream. default = 0 (disabled) 
+ * stream. default = 0 (disabled)
  * NOTE: if this option is set the build-in decoder should not be used */
 int CDECL lame_set_decode_on_the_fly(lame_global_flags *, int);
 int CDECL lame_get_decode_on_the_fly(const lame_global_flags *);
 
-/* DEPRECATED: now does the same as lame_set_findReplayGain() 
+#if DEPRECATED_OR_OBSOLETE_CODE_REMOVED
+#else
+/* DEPRECATED: now does the same as lame_set_findReplayGain()
    default = 0 (disabled) */
 int CDECL lame_set_ReplayGain_input(lame_global_flags *, int);
 int CDECL lame_get_ReplayGain_input(const lame_global_flags *);
 
-/* DEPRECATED: now does the same as 
+/* DEPRECATED: now does the same as
    lame_set_decode_on_the_fly() && lame_set_findReplayGain()
    default = 0 (disabled) */
 int CDECL lame_set_ReplayGain_decode(lame_global_flags *, int);
 int CDECL lame_get_ReplayGain_decode(const lame_global_flags *);
 
-/* DEPRECATED: now does the same as lame_set_decode_on_the_fly() 
+/* DEPRECATED: now does the same as lame_set_decode_on_the_fly()
    default = 0 (disabled) */
 int CDECL lame_set_findPeakSample(lame_global_flags *, int);
 int CDECL lame_get_findPeakSample(const lame_global_flags *);
+#endif
 
 /* counters for gapless encoding */
 int CDECL lame_set_nogap_total(lame_global_flags*, int);
@@ -365,10 +377,10 @@ int CDECL lame_get_extension(const lame_global_flags *);
 /* enforce strict ISO compliance.  default=0 */
 int CDECL lame_set_strict_ISO(lame_global_flags *, int);
 int CDECL lame_get_strict_ISO(const lame_global_flags *);
- 
+
 
 /********************************************************************
- * quantization/noise shaping 
+ * quantization/noise shaping
  ***********************************************************************/
 
 /* disable the bit reservoir. For testing only. default=0 */
@@ -399,9 +411,6 @@ int CDECL lame_get_exp_nspsytune(const lame_global_flags *);
 void CDECL lame_set_msfix(lame_global_flags *, double);
 float CDECL lame_get_msfix(const lame_global_flags *);
 
-int lame_set_exp_nspsytune2_int( lame_global_flags*, int, int);
-float lame_set_exp_nspsytune2_real( lame_global_flags*, int, float);
-void * lame_set_exp_nspsytune2_pointer( lame_global_flags*, int, void *);
 
 /********************************************************************
  * VBR control
@@ -454,7 +463,7 @@ int CDECL lame_get_highpasswidth(const lame_global_flags *);
 
 
 /********************************************************************
- * psycho acoustics and other arguments which you should not change 
+ * psycho acoustics and other arguments which you should not change
  * unless you know what you are doing
  ***********************************************************************/
 
@@ -552,7 +561,7 @@ int CDECL lame_get_mf_samples_to_encode( const lame_global_flags*  gfp );
 
 /*
   size (bytes) of mp3 data buffered, but not yet encoded.
-  this is the number of bytes which would be output by a call to 
+  this is the number of bytes which would be output by a call to
   lame_encode_flush_nogap.  NOTE: lame_encode_flush() will return
   more bytes than this because it will encode the reamining buffered
   PCM samples before flushing the mp3 buffers.
@@ -577,12 +586,12 @@ int CDECL lame_get_AudiophileGain(const lame_global_flags *);
 /* the peak sample */
 float CDECL lame_get_PeakSample(const lame_global_flags *);
 
-/* Gain change required for preventing clipping. The value is correct only if 
-   peak sample searching was enabled. If negative then the waveform 
+/* Gain change required for preventing clipping. The value is correct only if
+   peak sample searching was enabled. If negative then the waveform
    already does not clip. The value is multiplied by 10 and rounded up. */
 int CDECL lame_get_noclipGainChange(const lame_global_flags *);
 
-/* user-specified scale factor required for preventing clipping. Value is 
+/* user-specified scale factor required for preventing clipping. Value is
    correct only if peak sample searching was enabled and no user-specified
    scaling was performed. If negative then either the waveform already does
    not clip or the value cannot be determined */
@@ -604,8 +613,8 @@ int CDECL lame_init_params(lame_global_flags * const );
 
 /*
  * OPTIONAL:
- * get the version number, in a string. of the form:  
- * "3.63 (beta)" or just "3.63". 
+ * get the version number, in a string. of the form:
+ * "3.63 (beta)" or just "3.63".
  */
 const char*  CDECL get_lame_version       ( void );
 const char*  CDECL get_lame_short_version ( void );
@@ -648,14 +657,14 @@ void CDECL lame_print_internals( const lame_global_flags *gfp);
 /*
  * input pcm data, output (maybe) mp3 frames.
  * This routine handles all buffering, resampling and filtering for you.
- * 
- * return code     number of bytes output in mp3buf. Can be 0 
+ *
+ * return code     number of bytes output in mp3buf. Can be 0
  *                 -1:  mp3buf was too small
  *                 -2:  malloc() problem
  *                 -3:  lame_init_params() not called
- *                 -4:  psycho acoustic problems 
+ *                 -4:  psycho acoustic problems
  *
- * The required mp3buf_size can be computed from num_samples, 
+ * The required mp3buf_size can be computed from num_samples,
  * samplerate and encoding rate, but here is a worst case estimate:
  *
  * mp3buf_size in bytes = 1.25*num_samples + 7200
@@ -675,7 +684,7 @@ void CDECL lame_print_internals( const lame_global_flags *gfp);
  * if gfp->num_channels=2, but gfp->mode = 3 (mono), the L & R channels
  * will be averaged into the L channel before encoding only the L channel
  * This will overwrite the data in buffer_l[] and buffer_r[].
- * 
+ *
 */
 int CDECL lame_encode_buffer (
         lame_global_flags*  gfp,           /* global context handle         */
@@ -688,9 +697,9 @@ int CDECL lame_encode_buffer (
 
 /*
  * as above, but input has L & R channel data interleaved.
- * NOTE: 
+ * NOTE:
  * num_samples = number of samples in the L (or R)
- * channel, not the total number of samples in pcm[]  
+ * channel, not the total number of samples in pcm[]
  */
 int CDECL lame_encode_buffer_interleaved(
         lame_global_flags*  gfp,           /* global context handlei        */
@@ -705,8 +714,8 @@ int CDECL lame_encode_buffer_interleaved(
 
 
 /* as lame_encode_buffer, but for 'float's.
- * !! NOTE: !! data must still be scaled to be in the same range as 
- * short int, +/- 32768  
+ * !! NOTE: !! data must still be scaled to be in the same range as
+ * short int, +/- 32768
  */
 int CDECL lame_encode_buffer_float(
         lame_global_flags*  gfp,           /* global context handle         */
@@ -718,9 +727,9 @@ int CDECL lame_encode_buffer_float(
                                               stream                        */
 
 
-/* as lame_encode_buffer, but for long's 
- * !! NOTE: !! data must still be scaled to be in the same range as 
- * short int, +/- 32768  
+/* as lame_encode_buffer, but for long's
+ * !! NOTE: !! data must still be scaled to be in the same range as
+ * short int, +/- 32768
  *
  * This scaling was a mistake (doesn't allow one to exploit full
  * precision of type 'long'.  Use lame_encode_buffer_long2() instead.
@@ -735,8 +744,8 @@ int CDECL lame_encode_buffer_long(
         const int           mp3buf_size ); /* number of valid octets in this
                                               stream                        */
 
-/* Same as lame_encode_buffer_long(), but with correct scaling. 
- * !! NOTE: !! data must still be scaled to be in the same range as  
+/* Same as lame_encode_buffer_long(), but with correct scaling.
+ * !! NOTE: !! data must still be scaled to be in the same range as
  * type 'long'.   Data should be in the range:  +/- 2^(8*size(long)-1)
  *
  */
@@ -749,15 +758,15 @@ int CDECL lame_encode_buffer_long2(
         const int           mp3buf_size ); /* number of valid octets in this
                                               stream                        */
 
-/* as lame_encode_buffer, but for int's 
+/* as lame_encode_buffer, but for int's
  * !! NOTE: !! input should be scaled to the maximum range of 'int'
  * If int is 4 bytes, then the values should range from
- * +/- 2147483648.  
+ * +/- 2147483648.
  *
  * This routine does not (and cannot, without loosing precision) use
  * the same scaling as the rest of the lame_encode_buffer() routines.
- * 
- */   
+ *
+ */
 int CDECL lame_encode_buffer_int(
         lame_global_flags*  gfp,           /* global context handle         */
         const int      buffer_l [],       /* PCM data for left channel     */
@@ -773,13 +782,13 @@ int CDECL lame_encode_buffer_int(
 
 /*
  * REQUIRED:
- * lame_encode_flush will flush the intenal PCM buffers, padding with 
+ * lame_encode_flush will flush the intenal PCM buffers, padding with
  * 0's to make sure the final frame is complete, and then flush
- * the internal MP3 buffers, and thus may return a 
+ * the internal MP3 buffers, and thus may return a
  * final few mp3 frames.  'mp3buf' should be at least 7200 bytes long
  * to hold all possible emitted data.
  *
- * will also write id3v1 tags (if any) into the bitstream       
+ * will also write id3v1 tags (if any) into the bitstream
  *
  * return code = number of bytes output to mp3buf. Can be 0
  */
@@ -792,7 +801,7 @@ int CDECL lame_encode_flush(
  * OPTIONAL:
  * lame_encode_flush_nogap will flush the internal mp3 buffers and pad
  * the last frame with ancillary data so it is a complete mp3 frame.
- * 
+ *
  * 'mp3buf' should be at least 7200 bytes long
  * to hold all possible emitted data.
  *
@@ -814,8 +823,8 @@ int CDECL lame_encode_flush_nogap(
  * OPTIONAL:
  * Normally, this is called by lame_init_params().  It writes id3v2 and
  * Xing headers into the front of the bitstream, and sets frame counters
- * and bitrate histogram data to 0.  You can also call this after 
- * lame_encode_flush_nogap().  
+ * and bitrate histogram data to 0.  You can also call this after
+ * lame_encode_flush_nogap().
  */
 int CDECL lame_init_bitstream(
         lame_global_flags *  gfp);    /* global context handle                 */
@@ -836,26 +845,26 @@ int CDECL lame_init_bitstream(
  * suggested: lame_encode_flush -> lame_*_hist -> lame_close
  */
 
-void CDECL lame_bitrate_hist( 
-        const lame_global_flags *const gfp, 
+void CDECL lame_bitrate_hist(
+        const lame_global_flags *const gfp,
               int                      bitrate_count[14] );
-void CDECL lame_bitrate_kbps( 
-        const lame_global_flags *const gfp, 
+void CDECL lame_bitrate_kbps(
+        const lame_global_flags *const gfp,
               int                      bitrate_kbps [14] );
-void CDECL lame_stereo_mode_hist( 
-        const lame_global_flags *const gfp, 
+void CDECL lame_stereo_mode_hist(
+        const lame_global_flags *const gfp,
               int                      stereo_mode_count[4] );
 
-void CDECL lame_bitrate_stereo_mode_hist ( 
-        const lame_global_flags * const gfp, 
+void CDECL lame_bitrate_stereo_mode_hist (
+        const lame_global_flags * const gfp,
         int  bitrate_stmode_count [14] [4] );
 
 void CDECL lame_block_type_hist (
-        const lame_global_flags * const gfp, 
+        const lame_global_flags * const gfp,
         int btype_count[6] );
 
-void CDECL lame_bitrate_block_type_hist ( 
-        const lame_global_flags * const gfp, 
+void CDECL lame_bitrate_block_type_hist (
+        const lame_global_flags * const gfp,
         int bitrate_btype_count[14][6] );
 
 
@@ -879,18 +888,20 @@ void CDECL lame_mp3_tags_fid(lame_global_flags *,FILE* fid);
  */
 int  CDECL lame_close (lame_global_flags *);
 
+#if DEPRECATED_OR_OBSOLETE_CODE_REMOVED
+#else
 /*
  * OBSOLETE:
  * lame_encode_finish combines lame_encode_flush() and lame_close() in
  * one call.  However, once this call is made, the statistics routines
  * will no longer work because the data will have been cleared, and
- * lame_mp3_tags_fid() cannot be called to add data to the VBR header  
+ * lame_mp3_tags_fid() cannot be called to add data to the VBR header
  */
 int CDECL lame_encode_finish(
         lame_global_flags*  gfp,
         unsigned char*      mp3buf,
         int                 size );
-
+#endif
 
 
 
@@ -899,7 +910,7 @@ int CDECL lame_encode_finish(
 
 /*********************************************************************
  *
- * decoding 
+ * decoding
  *
  * a simple interface to mpglib, part of mpg123, is also included if
  * libmp3lame is compiled with HAVE_MPGLIB
@@ -924,27 +935,27 @@ typedef struct {
 } mp3data_struct;
 
 
-/* required call to initialize decoder 
+/* required call to initialize decoder
  * NOTE: the decoder should not be used when encoding is performed
  * with decoding on the fly */
 int CDECL lame_decode_init(void);
 
 /*********************************************************************
- * input 1 mp3 frame, output (maybe) pcm data.  
+ * input 1 mp3 frame, output (maybe) pcm data.
  *
  *  nout = lame_decode(mp3buf,len,pcm_l,pcm_r);
  *
- * input:  
+ * input:
  *    len          :  number of bytes of mp3 data in mp3buf
  *    mp3buf[len]  :  mp3 data to be decoded
  *
  * output:
  *    nout:  -1    : decoding error
- *            0    : need more data before we can complete the decode 
+ *            0    : need more data before we can complete the decode
  *           >0    : returned 'nout' samples worth of data in pcm_l,pcm_r
  *    pcm_l[nout]  : left channel data
- *    pcm_r[nout]  : right channel data 
- *    
+ *    pcm_r[nout]  : right channel data
+ *
  *********************************************************************/
 int CDECL lame_decode(
         unsigned char *  mp3buf,
@@ -1067,7 +1078,7 @@ extern int id3tag_set_genre(
 /***********************************************************************
 *
 *  list of valid bitrates [kbps] & sample frequencies [Hz].
-*  first index: 0: MPEG-2   values  (sample frequencies 16...24 kHz) 
+*  first index: 0: MPEG-2   values  (sample frequencies 16...24 kHz)
 *               1: MPEG-1   values  (sample frequencies 32...48 kHz)
 *               2: MPEG-2.5 values  (sample frequencies  8...12 kHz)
 ***********************************************************************/
@@ -1077,7 +1088,7 @@ extern const int      samplerate_table [3] [ 4];
 
 
 /* maximum size of mp3buffer needed if you encode at most 1152 samples for
-   each call to lame_encode_buffer.  see lame_encode_buffer() below  
+   each call to lame_encode_buffer.  see lame_encode_buffer() below
    (LAME_MAXMP3BUFFER is now obsolete)  */
 #define LAME_MAXMP3BUFFER   16384
 
@@ -1090,11 +1101,11 @@ typedef enum {
     LAME_BADBITRATE       = -11,
     LAME_BADSAMPFREQ      = -12,
     LAME_INTERNALERROR    = -13,
-    
+
     FRONTEND_READERROR    = -80,
     FRONTEND_WRITEERROR   = -81,
     FRONTEND_FILETOOLARGE = -82
-    
+
 } lame_errorcodes_t;
 
 #if defined(__cplusplus)
