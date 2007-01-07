@@ -49,7 +49,7 @@ TARGET_DIR = .\output\
 
 #	default targets
 
-PGM = $(T_DLL) $(T_LAME) $(T_LEGACY_DLL)
+PGM = $(T_LAME) $(T_DLL)
 
 #	some default settings
 
@@ -98,8 +98,9 @@ PREC = SINGLE
 SNDFILE = YES
 !	ENDIF
 
-
+NODEBUG = 1
 OFF = win32
+MACHINE = /machine:I386
 
 !	MESSAGE ----------------------------------------------------------------------
 !	IF "$(CFG)" == ""
@@ -205,16 +206,11 @@ OFF = win32
 !	IF "$(MSVCVER)" == "Win64"
 CC_OPTS = /nologo /DWin64 /O2b2ity /GAy /Gs1024 /Zp8 /GL /GS- /Zi
 !	ELSEIF "$(MSVCVER)" == "8.0"
-CC_OPTS = /nologo /DNDEBUG /O2 /Ob2 /GAy /Gs1024 /Zp8 /GL /Zi
+CC_OPTS = /nologo /O2 /Wp64 /Oi /GL /arch:SSE /fp:precise
 !	ELSEif "$(CPU)"=="P6"
-CC_OPTS = /nologo /DNDEBUG /O2 /Wp64 /Oi /arch:SSE /fp:precise
+CC_OPTS = /nologo /O2 /Ob2 /GAy /Gs1024 /Zp8 /Zi
 !else
-CC_OPTS = /nologo /DNDEBUG /O2 /Ob2 /GAy /Gs1024 /QIfdiv /QI0f /YX
-!	ENDIF
-
-
-!	IF "$(NODEBUG)" == "1"
-CC_OPTS = $(CC_OPTS) /DNDEBUG
+CC_OPTS = /nologo /O2 /Ob2 /GAy /Gs1024 /QIfdiv /QI0f /YX
 !	ENDIF
 
 !	IF "$(MSVCVER)" == "6.0"
@@ -237,41 +233,21 @@ CC_OPTS = $(CC_OPTS) /DFLOAT8=float /DREAL_IS_FLOAT=1
 
 CC_OUT = /Fo
 
-!	IF "$(MSVCVER)" == "Win64"
+LN_OPTS = /nologo /opt:NOWIN98
+LN_DLL = /nologo /DLL /opt:NOWIN98
+
 !	IF "$(NODEBUG)" == "1"
-LN_OPTS = /nologo /map:lame.map /opt:NOWIN98
-LN_DLL = /DLL
+CC_OPTS = $(CC_OPTS) /DNDEBUG
+LN_OPTS = $(LN_OPTS) /pdb:none
 !	ELSE
-LN_OPTS = /nologo /DEBUG /pdb:lame.pdb /map:lame.map /opt:NOWIN98
-LN_DLL = /DLL /DEBUG
-!	ENDIF
-!	ELSEIF "$(MSVCVER)" == "8.0"
-!	IF "$(NODEBUG)" == "1"
-LN_OPTS = /nologo /map:lame.map /opt:NOWIN98
-LN_DLL = /DLL
-!	ELSE
-LN_OPTS = /nologo /DEBUG /pdb:lame.pdb /map:lame.map /opt:NOWIN98
-LN_DLL = /DLL /DEBUG
-!	ENDIF
-!	ELSE
-!	IF "$(NODEBUG)" == "1"
-LN_OPTS = /nologo /map:lame.map /opt:NOWIN98
-LN_DLL = /DLL
-!	ELSE
-LN_OPTS = /nologo
-LN_DLL = /DLL /DEBUG /pdb:lame.pdb /map:lame.map /opt:NOWIN98
-!	ENDIF
+LN_OPTS = $(LN_OPTS) /DEBUG /pdb:lame.pdb /map:lame.map
+LN_DLL = $(LN_DLL) /DEBUG
 !	ENDIF
 
-LN_OUT = /OUT:$(TARGET_DIR)
+LN_OUT = /force /OUT:
+CC = cl
+LN = link
 
-!	IF "$(MSVCVER)" == "Win64"
-CC = cl
-LN = link
-!	ELSE
-CC = cl
-LN = link
-!	ENDIF
 #_______________________________________________________ Microsoft C options __
 
 
@@ -632,21 +608,21 @@ libB:	$(MPG_OBJ)
 lib: $(ASM_OBJ) libA libB
 
 $(T_LAME) : target_directory config.h $(T_LIB_STATIC) common $(LAME_OBJ)
-	@$(LN) $(LN_OUT)$@ $(LN_SWITCHES) $(LIBSNDFILE) \
+	@$(LN) $(LN_OUT)$(TARGET_DIR)$@ $(LN_SWITCHES) $(LIBSNDFILE) \
 	       $(TARGET_DIR)$(T_LIB_STATIC) $(CMMN_OBJ) $(LAME_OBJ) $(ADDL_OBJ)
 	@echo.
 	@echo --=*  $(TARGET_DIR)$@ ready  *=--
 	@echo.
 
 $(T_MP3X) : target_directory config.h lib common $(MPX_OBJ)
-	@$(LN) $(LN_OUT)$@ $(LN_SWITCHES) $(GTK_LIBS) $(LIBSNDFILE) \
+	@$(LN) $(LN_OUT)$(TARGET_DIR)$@ $(LN_SWITCHES) $(GTK_LIBS) $(LIBSNDFILE) \
 	       $(TARGET_DIR)$(T_LIB_STATIC) $(CMMN_OBJ) $(MPX_OBJ) $(ADDL_OBJ)
 	@echo.
 	@echo --=*  $(TARGET_DIR)$@ ready  *=--
 	@echo.
 
 $(T_LEGACY_DLL) : target_directory config.h $(T_DLL) $(DLL_OBJ)
-	@$(LN) $(LN_OUT)$@ $(LN_SWITCHES) \
+	@$(LN) $(LN_OUT)$(TARGET_DIR)$@ $(LN_SWITCHES) \
 	       $(TARGET_DIR)$(T_LIB_DYNAMIC) $(LN_DLL) \
 	       $(DLL_OBJ) $(ADDL_OBJ)
 	@echo.
@@ -654,30 +630,22 @@ $(T_LEGACY_DLL) : target_directory config.h $(T_DLL) $(DLL_OBJ)
 	@echo.
 
 $(T_DLL) : target_directory config.h $(T_LIB_STATIC) 
-	$(LN) $(LN_OUT)$@ $(LN_SWITCHES) "/def:include\lame.def" $(LN_DLL) \
-	       $(ASM_OBJ) $(LIB_OBJ) $(MPG_OBJ) $(ADDL_OBJ)
+	@$(LN) $(LN_DLL) $(MACHINE) \
+		/def:"include\lame.def" \
+		$(ADDL_OBJ) \
+		$(LN_OUT)"$(TARGET_DIR)$@" \
+		$(TARGET_DIR)$(T_LIB_STATIC) libmp3lame\version.obj 
 	@echo.
 	@echo --=*  $(TARGET_DIR)$@ ready  *=--
 	@echo.
 
-#$(T_LIB_DYNAMIC) : target_directory $(T_DLL)
-#	lib /nologo /machine:i386 \
-#		/def:include\lame.def \
-#		/libpath:$(TARGET_DIR) \
-#		/out:$@
-#	@move $@ $(TARGET_DIR)$@
-#	@echo.
-#	@echo --=*  $(TARGET_DIR)$@ ready  *=--
-#	@echo.
-
 $(T_LIB_STATIC) : target_directory lib
-	@lib /nologo /machine:i386 \
-		/out:$(TARGET_DIR)$@ \
+	@lib /nologo $(MACHINE) \
+		/out:"$(TARGET_DIR)$@" \
 		$(ASM_OBJ) $(LIB_OBJ) $(MPG_OBJ)
 	@echo.
 	@echo --=*  $(TARGET_DIR)$@ ready  *=--
 	@echo.
-#	@move $@ $(TARGET_DIR)$@
 		
 config.h : configMS.h
 	@-copy configMS.h config.h
@@ -704,5 +672,5 @@ rebuild: clean all
 
 
 lame	:	$(T_LAME)
-dll 	:	$(T_DLL) $(T_LEGACY_DLL) 
+dll 	:	$(T_DLL) 
 mp3x	:	$(T_MP3X)
