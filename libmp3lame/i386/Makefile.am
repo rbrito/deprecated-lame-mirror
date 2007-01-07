@@ -7,7 +7,8 @@ DEFS = @DEFS@ @CONFIG_DEFS@
 nasm_sources = \
 	choose_table.nas \
 	cpu_feat.nas \
-	fft3dn.nas
+	fft3dn.nas \
+	fftsse.nas
 
 if HAVE_NASM
 noinst_LTLIBRARIES = liblameasmroutines.la
@@ -15,7 +16,8 @@ liblameasmroutines_la_SOURCES = $(nasm_sources)
 am_liblameasmroutines_la_OBJECTS = \
 	choose_table$U.lo \
 	cpu_feat$U.lo \
-	fft3dn$U.lo
+	fft3dn$U.lo \
+	fftsse$U.lo
 endif
 
 noinst_HEADERS = nasm.h
@@ -32,12 +34,13 @@ CLEANFILES = \
 	cpu_feat.o.lst \
 	cpu_feat.lo.lst \
 	fft3dn.o.lst \
-	fft3dn.lo.lst
+	fft3dn.lo.lst \
+	fftsse.o.lst \
+	fftsse.lo.lst
 
 EXTRA_DIST = \
 	fft.nas \
 	fftfpu.nas \
-	fftsse.nas \
 	ffttbl.nas
 
 NASM = @NASM@
