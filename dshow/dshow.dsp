@@ -40,11 +40,11 @@ RSC=rc.exe
 # PROP Use_Debug_Libraries 0
 # PROP Output_Dir "..\obj\Release\dshow"
 # PROP Intermediate_Dir "..\obj\Release\dshow"
-# PROP Ignore_Export_Lib 0
+# PROP Ignore_Export_Lib 1
 # PROP Target_Dir ""
 # ADD BASE CPP /nologo /MT /W3 /GX /O2 /D "WIN32" /D "NDEBUG" /D "_WINDOWS" /YX /c
-# ADD CPP /nologo /Gz /MD /W3 /GX /O2 /I "../include" /D "NDEBUG" /D "INC_OLE2" /D "STRICT" /D WINVER=0x0400 /D _X86_=1 /D "_WINDOWS" /D "WIN32" /D "STDC_HEADERS" /FR /FD /c
-# SUBTRACT CPP /YX
+# ADD CPP /nologo /Gz /MD /W3 /GX /O2 /I "../include" /D "NDEBUG" /D "INC_OLE2" /D "STRICT" /D WINVER=0x0400 /D _X86_=1 /D "_WINDOWS" /D "WIN32" /D "STDC_HEADERS" /FD /c
+# SUBTRACT CPP /Fr /YX
 # ADD BASE MTL /nologo /D "NDEBUG" /win32
 # ADD MTL /D "NDEBUG" /mktyplib203 /win32
 # SUBTRACT MTL /nologo
@@ -55,8 +55,7 @@ BSC32=bscmake.exe
 # SUBTRACT BSC32 /nologo
 LINK32=link.exe
 # ADD BASE LINK32 kernel32.lib user32.lib gdi32.lib winspool.lib comdlg32.lib advapi32.lib shell32.lib ole32.lib oleaut32.lib uuid.lib odbc32.lib odbccp32.lib /nologo /subsystem:windows /dll /machine:I386
-# ADD LINK32 strmbase.lib msvcrt.lib libcmt.lib vfw32.lib winmm.lib kernel32.lib advapi32.lib version.lib largeint.lib Comdlg32.lib user32.lib gdi32.lib comctl32.lib ole32.lib oleaut32.lib uuid.lib quartz.lib measure.lib ..\output\libmp3lame.lib ..\output\mpglib.lib /base:"0x1c400000" /version:0.3 /entry:"DllEntryPoint@12" /subsystem:windows /dll /pdb:none /machine:I386 /nodefaultlib /out:"..\output\Release\lame.ax"
-# SUBTRACT LINK32 /nologo
+# ADD LINK32 ..\output\libmp3lame-dynamic.lib .\strmbase.lib msvcrt.lib libcmt.lib vfw32.lib winmm.lib kernel32.lib advapi32.lib version.lib largeint.lib Comdlg32.lib user32.lib gdi32.lib comctl32.lib ole32.lib oleaut32.lib uuid.lib quartz.lib measure.lib /nologo /base:"0x1c400000" /version:0.3 /entry:"DllEntryPoint@12" /subsystem:windows /dll /pdb:none /machine:I386 /nodefaultlib /out:"..\output\Release\dshow\lame.ax" /opt:NOWIN98
 
 !ELSEIF  "$(CFG)" == "LAME DShow - Win32 Debug"
 
@@ -69,10 +68,11 @@ LINK32=link.exe
 # PROP Use_Debug_Libraries 1
 # PROP Output_Dir "..\obj\Debug\dshow"
 # PROP Intermediate_Dir "..\obj\Debug\dshow"
-# PROP Ignore_Export_Lib 0
+# PROP Ignore_Export_Lib 1
 # PROP Target_Dir ""
 # ADD BASE CPP /nologo /MTd /W3 /Gm /GX /Zi /Od /D "WIN32" /D "_DEBUG" /D "_WINDOWS" /YX /c
-# ADD CPP /nologo /Gz /MDd /W3 /GX /ZI /Od /I "..\include" /D "DEBUG" /D "INC_OLE2" /D WINVER=0x0400 /D _X86_=1 /D "STRICT" /D "_WINDOWS" /D "WIN32" /D "STDC_HEADERS" /FR /YX /FD /c
+# ADD CPP /nologo /Gz /MDd /W3 /GX /ZI /Od /I "..\include" /D "DEBUG" /D "INC_OLE2" /D WINVER=0x0400 /D _X86_=1 /D "STRICT" /D "_WINDOWS" /D "WIN32" /D "STDC_HEADERS" /YX /FD /c
+# SUBTRACT CPP /Fr
 # ADD BASE MTL /nologo /D "_DEBUG" /win32
 # ADD MTL /nologo /D "_DEBUG" /mktyplib203 /win32
 # ADD BASE RSC /l 0x419 /d "_DEBUG"
@@ -82,8 +82,8 @@ BSC32=bscmake.exe
 # ADD BSC32 /nologo
 LINK32=link.exe
 # ADD BASE LINK32 kernel32.lib user32.lib gdi32.lib winspool.lib comdlg32.lib advapi32.lib shell32.lib ole32.lib oleaut32.lib uuid.lib odbc32.lib odbccp32.lib /nologo /subsystem:windows /dll /debug /machine:I386
-# ADD LINK32 strmbasD.lib msvcrtd.lib libcmt.lib vfw32.lib winmm.lib kernel32.lib advapi32.lib version.lib largeint.lib Comdlg32.lib user32.lib gdi32.lib comctl32.lib ole32.lib oleaut32.lib uuid.lib quartz.lib measure.lib ..\output\libmp3lame.lib ..\output\mpglib.lib /nologo /base:"0x1c400000" /entry:"DllEntryPoint@12" /subsystem:windows /dll /incremental:no /debug /machine:I386 /nodefaultlib /out:"..\output\Debug\lame.ax"
-# SUBTRACT LINK32 /pdb:none
+# ADD LINK32 ..\output\libmp3lame-dynamic.lib .\strmbasD.lib msvcrtd.lib libcmt.lib vfw32.lib winmm.lib kernel32.lib advapi32.lib version.lib largeint.lib Comdlg32.lib user32.lib gdi32.lib comctl32.lib ole32.lib oleaut32.lib uuid.lib quartz.lib measure.lib /nologo /base:"0x1c400000" /entry:"DllEntryPoint@12" /subsystem:windows /dll /debug /machine:I386 /nodefaultlib /out:"..\output\Debug\dshow\lame.ax" /opt:NOWIN98
+# SUBTRACT LINK32 /pdb:none /incremental:no
 
 !ENDIF 
 
@@ -193,15 +193,16 @@ SOURCE=..\include\lame.h
 # Begin Source File
 
 SOURCE=.\README
-# End Source File
-# Begin Source File
-
-SOURCE=..\output\mpglib.lib
 # PROP Exclude_From_Build 1
 # End Source File
 # Begin Source File
 
-SOURCE=..\output\libmp3lame.lib
+SOURCE=.\STRMBASE.lib
+# PROP Exclude_From_Build 1
+# End Source File
+# Begin Source File
+
+SOURCE="..\output\libmp3lame-dynamic.lib"
 # PROP Exclude_From_Build 1
 # End Source File
 # End Target

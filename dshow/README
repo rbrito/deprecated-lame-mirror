@@ -29,3 +29,10 @@ Filter Homepage http://www.elecard.com/products/layer3encoder.shtml
 
 Vitaly Ivanov   vitaly.ivanov@elecard.net.ru
 
+
+
+NOTE:
+1st: build dx9sdk/Samples/DShow/BaseClasses Project
+2nd: copy resulting strmbase.lib into LAME's DShow folder
+3rd: build LAME (if you didn't yet)
+4th: build LAME DShow Filter
