@@ -43,7 +43,8 @@ RSC=rc.exe
 # PROP Ignore_Export_Lib 1
 # PROP Target_Dir ""
 # ADD BASE CPP /nologo /MT /W3 /GX /O2 /D "WIN32" /D "NDEBUG" /D "_WINDOWS" /YX /FD /c
-# ADD CPP /nologo /Zp2 /MT /W3 /GX /Ox /Ot /Og /Ob2 /I "../libmp3lame" /I "../include" /I ".." /I "../.." /I "../mpglib" /I "./" /I "./ddk" /D "NDEBUG" /D "_BLADEDLL" /D "TAKEHIRO_IEEE754_HACK" /D "HAVE_CONFIG_H" /D "HAVE_MPGLIB" /D "_WINDOWS" /D "WIN32" /D "NOANALYSIS" /D "LAME_ACM" /YX /FD /c
+# ADD CPP /nologo /Zp2 /MT /W3 /GX /Ob2 /I "../libmp3lame" /I "../include" /I ".." /I "../.." /I "../mpglib" /I "./" /I "./ddk" /D "NDEBUG" /D "_BLADEDLL" /D "_WINDOWS" /D "WIN32" /D "NOANALYSIS" /D "LAME_ACM" /YX /FD /c
+# SUBTRACT CPP /O<none>
 # ADD BASE MTL /nologo /D "NDEBUG" /mktyplib203 /o /win32 "NUL"
 # ADD MTL /nologo /D "NDEBUG" /mktyplib203 /o /win32 "NUL"
 # ADD BASE RSC /l 0x409 /d "NDEBUG"
@@ -53,10 +54,12 @@ BSC32=bscmake.exe
 # ADD BSC32 /nologo
 LINK32=link.exe
 # ADD BASE LINK32 kernel32.lib user32.lib gdi32.lib winspool.lib comdlg32.lib advapi32.lib shell32.lib ole32.lib oleaut32.lib uuid.lib odbc32.lib odbccp32.lib /nologo /subsystem:windows /dll /machine:I386
-# ADD LINK32 ..\output\libmp3lame-dynamic.lib shell32.lib url.lib gdi32.lib winmm.lib advapi32.lib user32.lib kernel32.lib libc.lib libcp.lib /nologo /subsystem:windows /dll /map /machine:I386 /nodefaultlib /out:"..\output\Release\lameACM\lameACM.acm"
+# ADD LINK32 ..\output\libmp3lame-dynamic.lib shell32.lib url.lib gdi32.lib winmm.lib advapi32.lib user32.lib kernel32.lib libc.lib libcp.lib /nologo /subsystem:windows /dll /pdb:none /machine:I386 /nodefaultlib /def:".\lameACM.def" /out:"..\output\Release\lameACM\lameACM.acm" /opt:NOWIN98
 # Begin Special Build Tool
+TargetDir=\cvs\lame\lame\output\Release\lameACM
 SOURCE="$(InputPath)"
-PostBuild_Cmds=copy lameacm.inf ..\output\*.*	copy lame_acm.xml ..\output\*.*
+PostBuild_Desc=ACM config files
+PostBuild_Cmds=copy lameacm.inf $(TargetDir)\*.*	copy lame_acm.xml $(TargetDir)\*.*
 # End Special Build Tool
 
 !ELSEIF  "$(CFG)" == "lameACM - Win32 Debug"
@@ -73,7 +76,7 @@ PostBuild_Cmds=copy lameacm.inf ..\output\*.*	copy lame_acm.xml ..\output\*.*
 # PROP Ignore_Export_Lib 1
 # PROP Target_Dir ""
 # ADD BASE CPP /nologo /MTd /W3 /Gm /GX /Zi /Od /D "WIN32" /D "_DEBUG" /D "_WINDOWS" /YX /FD /c
-# ADD CPP /nologo /Zp2 /MTd /W3 /GX /ZI /Od /I "../libmp3lame" /I "../include" /I ".." /I "../.." /I "../mpglib" /I "./" /I "./ddk" /D "_DEBUG" /D "_BLADEDLL" /D "TAKEHIRO_IEEE754_HACK" /D "HAVE_CONFIG_H" /D "HAVE_MPGLIB" /D "_WINDOWS" /D "WIN32" /D "NOANALYSIS" /D "LAME_ACM" /YX /FD /c
+# ADD CPP /nologo /Zp2 /MTd /W3 /GX /ZI /Od /I "../libmp3lame" /I "../include" /I ".." /I "../.." /I "../mpglib" /I "./" /I "./ddk" /D "_DEBUG" /D "_BLADEDLL" /D "_WINDOWS" /D "WIN32" /D "NOANALYSIS" /D "LAME_ACM" /YX /FD /c
 # ADD BASE MTL /nologo /D "_DEBUG" /mktyplib203 /o /win32 "NUL"
 # ADD MTL /nologo /D "_DEBUG" /mktyplib203 /o /win32 "NUL"
 # ADD BASE RSC /l 0x409 /d "_DEBUG"
@@ -83,11 +86,13 @@ BSC32=bscmake.exe
 # ADD BSC32 /nologo
 LINK32=link.exe
 # ADD BASE LINK32 kernel32.lib user32.lib gdi32.lib winspool.lib comdlg32.lib advapi32.lib shell32.lib ole32.lib oleaut32.lib uuid.lib odbc32.lib odbccp32.lib /nologo /subsystem:windows /dll /debug /machine:I386 /pdbtype:sept
-# ADD LINK32 ..\output\libmp3lame-dynamic.lib shell32.lib url.lib gdi32.lib winmm.lib advapi32.lib user32.lib kernel32.lib libcd.lib libcpd.lib /nologo /subsystem:windows /dll /debug /machine:I386 /nodefaultlib /out:"..\output\Debug\lameACM\lameACM.acm" /pdbtype:sept
-# SUBTRACT LINK32 /map
+# ADD LINK32 ..\output\libmp3lame-dynamic.lib shell32.lib url.lib gdi32.lib winmm.lib advapi32.lib user32.lib kernel32.lib libcd.lib libcpd.lib /nologo /subsystem:windows /dll /debug /machine:I386 /nodefaultlib /def:".\lameACM.def" /out:"..\output\Debug\lameACM\lameACM.acm" /pdbtype:sept /opt:NOWIN98
+# SUBTRACT LINK32 /pdb:none /incremental:no
 # Begin Special Build Tool
+TargetDir=\cvs\lame\lame\output\Debug\lameACM
 SOURCE="$(InputPath)"
-PostBuild_Cmds=copy lameacm.inf ..\output\*.*	copy lame_acm.xml ..\output\*.*
+PostBuild_Desc=ACM config files
+PostBuild_Cmds=copy lameacm.inf $(TargetDir)\*.*	copy lame_acm.xml $(TargetDir)\*.*
 # End Special Build Tool
 
 !ENDIF 
@@ -118,6 +123,7 @@ SOURCE=.\DecodeStream.cpp
 # Begin Source File
 
 SOURCE=.\lameACM.def
+# PROP Exclude_From_Build 1
 # End Source File
 # Begin Source File
 
