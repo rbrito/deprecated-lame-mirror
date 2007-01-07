@@ -39,12 +39,17 @@
 #	targets <-> DOS filenames
 
 T_LAME = lame.exe
-T_LDLL = lame_enc.dll
 T_MP3X = mp3x.exe
+T_DLL = libmp3lame-dynamic.dll
+T_LIB_DYNAMIC = libmp3lame-dynamic.lib
+T_LIB_STATIC = libmp3lame-static.lib
+T_LEGACY_DLL = lame_enc.dll
+
+TARGET_DIR = .\output\ 
 
 #	default targets
 
-PGM = $(T_LDLL) $(T_LAME)
+PGM = $(T_DLL) $(T_LAME) $(T_LEGACY_DLL)
 
 #	some default settings
 
@@ -234,35 +239,31 @@ CC_OUT = /Fo
 
 !	IF "$(MSVCVER)" == "Win64"
 !	IF "$(NODEBUG)" == "1"
-LN_OPTS = /nologo /map:lame.map
+LN_OPTS = /nologo /map:lame.map /opt:NOWIN98
 LN_DLL = /DLL
-LN_OUT = /OUT:
 !	ELSE
-LN_OPTS = /nologo /DEBUG /pdb:lame.pdb /map:lame.map
+LN_OPTS = /nologo /DEBUG /pdb:lame.pdb /map:lame.map /opt:NOWIN98
 LN_DLL = /DLL /DEBUG
-LN_OUT = /OUT:
 !	ENDIF
 !	ELSEIF "$(MSVCVER)" == "8.0"
 !	IF "$(NODEBUG)" == "1"
-LN_OPTS = /nologo /map:lame.map
+LN_OPTS = /nologo /map:lame.map /opt:NOWIN98
 LN_DLL = /DLL
-LN_OUT = /OUT:
 !	ELSE
-LN_OPTS = /nologo /DEBUG /pdb:lame.pdb /map:lame.map
+LN_OPTS = /nologo /DEBUG /pdb:lame.pdb /map:lame.map /opt:NOWIN98
 LN_DLL = /DLL /DEBUG
-LN_OUT = /OUT:
 !	ENDIF
 !	ELSE
 !	IF "$(NODEBUG)" == "1"
-LN_OPTS = /nologo /map:lame.map
+LN_OPTS = /nologo /map:lame.map /opt:NOWIN98
 LN_DLL = /DLL
-LN_OUT = /OUT:
 !	ELSE
 LN_OPTS = /nologo
-LN_DLL = /DLL /DEBUG /pdb:lame.pdb /map:lame.map
-LN_OUT = /OUT:
+LN_DLL = /DLL /DEBUG /pdb:lame.pdb /map:lame.map /opt:NOWIN98
 !	ENDIF
 !	ENDIF
+
+LN_OUT = /OUT:$(TARGET_DIR)
 
 !	IF "$(MSVCVER)" == "Win64"
 CC = cl
@@ -299,14 +300,13 @@ CC_OPTS = $(CC_OPTS)
 
 LN_DLL =
 #$(CCINST)/lib/cw32R.lib
-LN_OUT = -e
+LN_OUT = -e$(TARGET_DIR)
 CC_OUT = -o
 
 CC = bcc32
 LN = bcc32
 
 OFF = obj
-PGM = $(T_LAME)
 
 !	ENDIF
 #_______________________________________________________ Borland BCC options __
@@ -367,9 +367,9 @@ CC_OPTS = /nologo /DNDEBUG /YX /GA /Ox /Ob2 \
           /Qunroll /Qsox- /Qip $(CC_OPTS)
 
 
-LN_OPTS = $(CC_OPTS)
+LN_OPTS = $(CC_OPTS) /opt:NOWIN98
 LN_DLL = /LD
-LN_OUT = /Fe
+LN_OUT = /Fe$(TARGET_DIR)
 CC_OUT = /Fo
 
 CC = icl
@@ -454,11 +454,9 @@ CPP_OPTS = $(CPP_OPTS) /DTAKEHIRO_IEEE754_HACK
 
 #__ Robert's alternate code ___________________________________________________
 !	IF "$(CFG)" == "RH"
-CC_OPTS = $(CC_OPTS) /DRH_TEST_ATHAA_FIX
 !	IF "$(MSVCVER)" == "8.0"
 LN_OPTS = $(LN_OPTS) /LTCG
 !   ENDIF
-!MESSAGE testing ATHAA fix for low volume files
 !	ENDIF
 #___________________________________________________ Robert's alternate code __
 
@@ -552,12 +550,10 @@ DLL_OBJ = $(dll_sources:.c=.obj)
 	@ml64 -Ilibmp3lame\i386 -Sf -DWIN32 -DWIN64 $< -Fo$@
 
 CC_SWITCHES = $(CC_SWITCHES) -DHAVE_NASM
-ASM_OBJ = $(ASM_OBJ) libmp3lame\i386\cpu_feat.obj
-
-ASM_OBJ = $(ASM_OBJ) libmp3lame\i386\fft3dn.obj
-
-CC_SWITCHES = $(CC_SWITCHES) -DUSE_FFTSSE
-ASM_OBJ = $(ASM_OBJ) libmp3lame\i386\fftsse.obj
+ASM_OBJ = $(ASM_OBJ) \
+	libmp3lame\i386\cpu_feat.obj \
+	libmp3lame\i386\fft3dn.obj \
+	libmp3lame\i386\fftsse.obj
 
 #	not yet coded
 #CC_SWITCHES = $(CC_SWITCHES) -DUSE_FFTFPU
@@ -577,13 +573,10 @@ ASM_OBJ = $(ASM_OBJ) libmp3lame\i386\fftsse.obj
 	@nasmw -f $(OFF) -i libmp3lame/i386/ -DWIN32 $< -o $@
 
 CC_SWITCHES = $(CC_SWITCHES) /DHAVE_NASM
-ASM_OBJ = $(ASM_OBJ) libmp3lame/i386/cpu_feat.obj
-
-
-ASM_OBJ = $(ASM_OBJ) libmp3lame/i386/fft3dn.obj
-
-CC_SWITCHES = $(CC_SWITCHES) /DUSE_FFTSSE
-ASM_OBJ = $(ASM_OBJ) libmp3lame/i386/fftsse.obj
+ASM_OBJ = $(ASM_OBJ) \
+	libmp3lame\i386\cpu_feat.obj \
+	libmp3lame\i386\fft3dn.obj \
+	libmp3lame\i386\fftsse.obj
 
 #	not yet coded
 #CC_SWITCHES = $(CC_SWITCHES) /DUSE_FFTFPU
@@ -618,6 +611,9 @@ all :	$(PGM)
 	@echo --=*  $(PGM) uptodate  *=--
 	@echo.
 
+target_directory :
+	@if not exist $(TARGET_DIR) mkdir $(TARGET_DIR)
+	
 common:	$(CMMN_OBJ)
 	@echo.
 	@echo --- COMMON FRONTEND STUFF UPTODATE ---
@@ -635,35 +631,67 @@ libB:	$(MPG_OBJ)
 
 lib: $(ASM_OBJ) libA libB
 
-$(T_LAME) : config.h lib common $(LAME_OBJ)
+$(T_LAME) : target_directory config.h $(T_LIB_STATIC) common $(LAME_OBJ)
 	@$(LN) $(LN_OUT)$@ $(LN_SWITCHES) $(LIBSNDFILE) \
-	       $(ASM_OBJ) $(LIB_OBJ) $(MPG_OBJ) $(CMMN_OBJ) $(LAME_OBJ) $(ADDL_OBJ)
+	       $(TARGET_DIR)$(T_LIB_STATIC) $(CMMN_OBJ) $(LAME_OBJ) $(ADDL_OBJ)
 	@echo.
-	@echo --=*  $@ ready  *=--
+	@echo --=*  $(TARGET_DIR)$@ ready  *=--
 	@echo.
 
-$(T_MP3X) : config.h lib common $(MPX_OBJ)
+$(T_MP3X) : target_directory config.h lib common $(MPX_OBJ)
 	@$(LN) $(LN_OUT)$@ $(LN_SWITCHES) $(GTK_LIBS) $(LIBSNDFILE) \
-	       $(ASM_OBJ) $(LIB_OBJ) $(MPG_OBJ) $(CMMN_OBJ) $(MPX_OBJ) $(ADDL_OBJ)
+	       $(TARGET_DIR)$(T_LIB_STATIC) $(CMMN_OBJ) $(MPX_OBJ) $(ADDL_OBJ)
 	@echo.
-	@echo --=*  $@ ready  *=--
-	@echo.
-
-$(T_LDLL) : config.h lib $(DLL_OBJ)
-	@$(LN) $(LN_OUT)$@ $(LN_SWITCHES) $(LN_DLL) \
-	       $(ASM_OBJ) $(LIB_OBJ) $(MPG_OBJ) $(DLL_OBJ) $(ADDL_OBJ)
-	@echo.
-	@echo --=*  $@ ready  *=--
+	@echo --=*  $(TARGET_DIR)$@ ready  *=--
 	@echo.
 
+$(T_LEGACY_DLL) : target_directory config.h $(T_DLL) $(DLL_OBJ)
+	@$(LN) $(LN_OUT)$@ $(LN_SWITCHES) \
+	       $(TARGET_DIR)$(T_LIB_DYNAMIC) $(LN_DLL) \
+	       $(DLL_OBJ) $(ADDL_OBJ)
+	@echo.
+	@echo --=*  $(TARGET_DIR)$@ ready  *=--
+	@echo.
+
+$(T_DLL) : target_directory config.h $(T_LIB_STATIC) 
+	$(LN) $(LN_OUT)$@ $(LN_SWITCHES) "/def:include\lame.def" $(LN_DLL) \
+	       $(ASM_OBJ) $(LIB_OBJ) $(MPG_OBJ) $(ADDL_OBJ)
+	@echo.
+	@echo --=*  $(TARGET_DIR)$@ ready  *=--
+	@echo.
+
+#$(T_LIB_DYNAMIC) : target_directory $(T_DLL)
+#	lib /nologo /machine:i386 \
+#		/def:include\lame.def \
+#		/libpath:$(TARGET_DIR) \
+#		/out:$@
+#	@move $@ $(TARGET_DIR)$@
+#	@echo.
+#	@echo --=*  $(TARGET_DIR)$@ ready  *=--
+#	@echo.
+
+$(T_LIB_STATIC) : target_directory lib
+	@lib /nologo /machine:i386 \
+		/out:$(TARGET_DIR)$@ \
+		$(ASM_OBJ) $(LIB_OBJ) $(MPG_OBJ)
+	@echo.
+	@echo --=*  $(TARGET_DIR)$@ ready  *=--
+	@echo.
+#	@move $@ $(TARGET_DIR)$@
+		
 config.h : configMS.h
 	@-copy configMS.h config.h
 
 clean:
-	@-del lame.exe
+	@-del $(TARGET_DIR)$(T_LAME)
+	@-del $(TARGET_DIR)$(T_MP3X)
+	@-del $(TARGET_DIR)$(T_DLL)
+	@-del $(TARGET_DIR)$(T_LIB_STATIC)
+	@-del $(TARGET_DIR)$(T_LIB_DYNAMIC)
+	@-del $(TARGET_DIR)$(T_LEGACY_DLL)
 	@-del lame.pdb
 	@-del icl.pch
-	@-del lame_enc.*
+	@-del $(TARGET_DIR)lame_enc.*
 	@-del frontend\*.obj
 	@-del dll\*.obj
 	@-del mpglib\*.obj
@@ -676,5 +704,5 @@ rebuild: clean all
 
 
 lame	:	$(T_LAME)
-dll 	:	$(T_LDLL)
+dll 	:	$(T_DLL) $(T_LEGACY_DLL) 
 mp3x	:	$(T_MP3X)
