@@ -1,27 +1,25 @@
 # Microsoft Developer Studio Project File - Name="mpglib" - Package Owner=<4>
 # Microsoft Developer Studio Generated Build File, Format Version 6.00
-# ** DO NOT EDIT **
+# ** NICHT BEARBEITEN **
 
 # TARGTYPE "Win32 (x86) Static Library" 0x0104
 
-CFG=mpglib - Win32 Debug GTK
-!MESSAGE This is not a valid makefile. To build this project using NMAKE,
-!MESSAGE use the Export Makefile command and run
+CFG=mpglib - Win32 Release
+!MESSAGE Dies ist kein gültiges Makefile. Zum Erstellen dieses Projekts mit NMAKE
+!MESSAGE verwenden Sie den Befehl "Makefile exportieren" und führen Sie den Befehl
 !MESSAGE 
 !MESSAGE NMAKE /f "mpglib_vc6.mak".
 !MESSAGE 
-!MESSAGE You can specify a configuration when running NMAKE
-!MESSAGE by defining the macro CFG on the command line. For example:
+!MESSAGE Sie können beim Ausführen von NMAKE eine Konfiguration angeben
+!MESSAGE durch Definieren des Makros CFG in der Befehlszeile. Zum Beispiel:
 !MESSAGE 
-!MESSAGE NMAKE /f "mpglib_vc6.mak" CFG="mpglib - Win32 Debug GTK"
+!MESSAGE NMAKE /f "mpglib_vc6.mak" CFG="mpglib - Win32 Release"
 !MESSAGE 
-!MESSAGE Possible choices for configuration are:
+!MESSAGE Für die Konfiguration stehen zur Auswahl:
 !MESSAGE 
-!MESSAGE "mpglib - Win32 Release" (based on "Win32 (x86) Static Library")
-!MESSAGE "mpglib - Win32 Debug" (based on "Win32 (x86) Static Library")
-!MESSAGE "mpglib - Win32 Release NASM" (based on "Win32 (x86) Static Library")
-!MESSAGE "mpglib - Win32 Debug GTK" (based on "Win32 (x86) Static Library")
-!MESSAGE "mpglib - Win32 Release GTK" (based on "Win32 (x86) Static Library")
+!MESSAGE "mpglib - Win32 Release" (basierend auf  "Win32 (x86) Static Library")
+!MESSAGE "mpglib - Win32 Debug" (basierend auf  "Win32 (x86) Static Library")
+!MESSAGE "mpglib - Win32 Release NASM" (basierend auf  "Win32 (x86) Static Library")
 !MESSAGE 
 
 # Begin Project
@@ -35,8 +33,8 @@ RSC=rc.exe
 
 # PROP Use_MFC 0
 # PROP Use_Debug_Libraries 0
-# PROP Output_Dir "Release"
-# PROP Intermediate_Dir "Release"
+# PROP Output_Dir "..\output\Release\mpglib"
+# PROP Intermediate_Dir "..\obj\Release\mpglib"
 # PROP Target_Dir ""
 LINK32=link.exe
 # ADD BASE CPP /nologo /W3 /GX /O2 /D "WIN32" /D "HAVE_CONFIG_H" /D "NDEBUG" /D "_WINDOWS" /YX /FD /c
@@ -49,14 +47,14 @@ BSC32=bscmake.exe
 # ADD BSC32 /nologo
 LIB32=link.exe -lib
 # ADD BASE LIB32 /nologo
-# ADD LIB32 /nologo /out:"Release\mpglib.lib"
+# ADD LIB32 /nologo /out:"..\output\Release\mpglib\mpglib.lib"
 
 !ELSEIF  "$(CFG)" == "mpglib - Win32 Debug"
 
 # PROP Use_MFC 0
 # PROP Use_Debug_Libraries 1
-# PROP Output_Dir "Debug"
-# PROP Intermediate_Dir "Debug"
+# PROP Output_Dir "..\output\Debug\mpglib"
+# PROP Intermediate_Dir "..\obj\Debug\mpglib"
 # PROP Target_Dir ""
 LINK32=link.exe
 # ADD BASE CPP /nologo /W3 /GX /Z7 /Od /D "WIN32" /D "HAVE_CONFIG_H" /D "_DEBUG" /D "_WINDOWS" /YX /FD /c
@@ -68,7 +66,7 @@ BSC32=bscmake.exe
 # ADD BSC32 /nologo
 LIB32=link.exe -lib
 # ADD BASE LIB32 /nologo
-# ADD LIB32 /nologo /out:"Debug\mpglib.lib"
+# ADD LIB32 /nologo /out:"..\output\Debug\mpglib\mpglib.lib"
 
 !ELSEIF  "$(CFG)" == "mpglib - Win32 Release NASM"
 
@@ -79,8 +77,8 @@ LIB32=link.exe -lib
 # PROP BASE Target_Dir ""
 # PROP Use_MFC 0
 # PROP Use_Debug_Libraries 0
-# PROP Output_Dir "mpglib___Win32_Release_NASM"
-# PROP Intermediate_Dir "mpglib___Win32_Release_NASM"
+# PROP Output_Dir "..\output\Release_NASM\mpglib"
+# PROP Intermediate_Dir "..\obj\Release_NASM\mpglib"
 # PROP Target_Dir ""
 LINK32=link.exe
 # ADD BASE CPP /nologo /W3 /O2 /Ob2 /I "../libmp3lame" /I "../include" /I ".." /D "NDEBUG" /D "HAVE_MPGLIB" /D "_WINDOWS" /D "USE_LAYER_2" /D "USE_LAYER_1" /D "WIN32" /D "HAVE_CONFIG_H" /FD /c
@@ -94,57 +92,7 @@ BSC32=bscmake.exe
 # ADD BSC32 /nologo
 LIB32=link.exe -lib
 # ADD BASE LIB32 /nologo /out:"Release\mpglib.lib"
-# ADD LIB32 /nologo /out:"Release\mpglib.lib"
-
-!ELSEIF  "$(CFG)" == "mpglib - Win32 Debug GTK"
-
-# PROP BASE Use_MFC 0
-# PROP BASE Use_Debug_Libraries 1
-# PROP BASE Output_Dir "mpglib___Win32_Debug_GTK"
-# PROP BASE Intermediate_Dir "mpglib___Win32_Debug_GTK"
-# PROP BASE Target_Dir ""
-# PROP Use_MFC 0
-# PROP Use_Debug_Libraries 1
-# PROP Output_Dir "mpglib___Win32_Debug_GTK"
-# PROP Intermediate_Dir "mpglib___Win32_Debug_GTK"
-# PROP Target_Dir ""
-LINK32=link.exe
-# ADD BASE CPP /nologo /W3 /ZI /Od /I "../libmp3lame" /I "../include" /I ".." /D "_DEBUG" /D "_WINDOWS" /D "USE_LAYER_2" /D "HAVE_MPGLIB" /D "WIN32" /D "HAVE_CONFIG_H" /YX /FD /c
-# ADD CPP /nologo /W3 /ZI /Od /I "../libmp3lame" /I "../include" /I ".." /D "_DEBUG" /D "_WINDOWS" /D "USE_LAYER_2" /D "HAVE_MPGLIB" /D "WIN32" /D "HAVE_CONFIG_H" /YX /FD /c
-# ADD BASE RSC /l 0x409
-# ADD RSC /l 0x409
-BSC32=bscmake.exe
-# ADD BASE BSC32 /nologo
-# ADD BSC32 /nologo
-LIB32=link.exe -lib
-# ADD BASE LIB32 /nologo /out:"Debug\mpglib.lib"
-# ADD LIB32 /nologo /out:"Debug\mpglib.lib"
-
-!ELSEIF  "$(CFG)" == "mpglib - Win32 Release GTK"
-
-# PROP BASE Use_MFC 0
-# PROP BASE Use_Debug_Libraries 0
-# PROP BASE Output_Dir "mpglib___Win32_Release_GTK"
-# PROP BASE Intermediate_Dir "mpglib___Win32_Release_GTK"
-# PROP BASE Target_Dir ""
-# PROP Use_MFC 0
-# PROP Use_Debug_Libraries 0
-# PROP Output_Dir "mpglib___Win32_Release_GTK"
-# PROP Intermediate_Dir "mpglib___Win32_Release_GTK"
-# PROP Target_Dir ""
-LINK32=link.exe
-# ADD BASE CPP /nologo /W3 /O2 /Ob2 /I "../libmp3lame" /I "../include" /I ".." /D "NDEBUG" /D "HAVE_MPGLIB" /D "_WINDOWS" /D "USE_LAYER_2" /D "WIN32" /D "HAVE_CONFIG_H" /FD /c
-# SUBTRACT BASE CPP /YX
-# ADD CPP /nologo /W3 /O2 /Ob2 /I "../libmp3lame" /I "../include" /I ".." /D "NDEBUG" /D "HAVE_MPGLIB" /D "_WINDOWS" /D "USE_LAYER_2" /D "WIN32" /D "HAVE_CONFIG_H" /FD /c
-# SUBTRACT CPP /YX
-# ADD BASE RSC /l 0x409
-# ADD RSC /l 0x409
-BSC32=bscmake.exe
-# ADD BASE BSC32 /nologo
-# ADD BSC32 /nologo
-LIB32=link.exe -lib
-# ADD BASE LIB32 /nologo /out:"Release\mpglib.lib"
-# ADD LIB32 /nologo /out:"Release\mpglib.lib"
+# ADD LIB32 /nologo /out:"..\output\Release_NASM\mpglib\mpglib.lib"
 
 !ENDIF 
 
@@ -153,8 +101,6 @@ LIB32=link.exe -lib
 # Name "mpglib - Win32 Release"
 # Name "mpglib - Win32 Debug"
 # Name "mpglib - Win32 Release NASM"
-# Name "mpglib - Win32 Debug GTK"
-# Name "mpglib - Win32 Release GTK"
 # Begin Group "Source"
 
 # PROP Default_Filter "c"
@@ -223,26 +169,6 @@ InputPath=..\configMS.h
 # End Custom Build
 
 !ELSEIF  "$(CFG)" == "mpglib - Win32 Release NASM"
-
-# Begin Custom Build - Performing Custom Build Step on $(InputName)
-InputPath=..\configMS.h
-
-"..\config.h" : $(SOURCE) "$(INTDIR)" "$(OUTDIR)"
-	copy ..\configMS.h ..\config.h
-
-# End Custom Build
-
-!ELSEIF  "$(CFG)" == "mpglib - Win32 Debug GTK"
-
-# Begin Custom Build - Performing Custom Build Step on $(InputName)
-InputPath=..\configMS.h
-
-"..\config.h" : $(SOURCE) "$(INTDIR)" "$(OUTDIR)"
-	copy ..\configMS.h ..\config.h
-
-# End Custom Build
-
-!ELSEIF  "$(CFG)" == "mpglib - Win32 Release GTK"
 
 # Begin Custom Build - Performing Custom Build Step on $(InputName)
 InputPath=..\configMS.h
