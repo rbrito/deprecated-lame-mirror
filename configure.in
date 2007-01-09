@@ -65,6 +65,11 @@ fi
 dnl check programs
 AC_PROG_CC()
 
+if test "${GCC}" = "yes"; then
+	AC_MSG_CHECKING(version of GCC)
+	GCC_version=`${CC} --version | sed -n '1s/^[[^ ]]* (.*) //;s/ .*$//;1p'`
+	AC_MSG_RESULT(${GCC_version})
+fi
 
 dnl more automake stuff
 AM_C_PROTOTYPES
@@ -93,12 +98,6 @@ AC_C_CONST
 AC_C_INLINE
 if test ${cross_compiling} = "no"; then
 	AC_C_BIGENDIAN
-fi
-
-if test "${GCC}" = "yes"; then
-	AC_MSG_CHECKING(version of GCC)
-	GCC_version=`${CC} --version | sed -n '1s/^[[^ ]]* (.*) //;s/ .*$//;1p'`
-	AC_MSG_RESULT(${GCC_version})
 fi
 
 AC_SYS_LARGEFILE
@@ -357,10 +356,6 @@ CONFIG_MATH_LIB="${USE_LIBM}"
 dnl configure use of features
 
 AM_PATH_GTK(1.2.0, HAVE_GTK="yes", HAVE_GTK="no")
-if test "${HAVE_GTK}" = "yes"; then
-	AC_DEFINE(HAVE_GTK, 1, have working GTK)
-fi
-
 
 dnl ElectricFence malloc debugging
 AC_MSG_CHECKING(use of ElectricFence malloc debugging)
@@ -606,17 +601,25 @@ AM_CONDITIONAL(WITH_BRHIST, test "${CONFIG_BRHIST}" != "no")
 
 
 dnl ### processor specific options ###
+WITH_VECTOR=no
 case $host_cpu in
 x86_64|amd64)
-	CPUTYPE="x86_64"
-	AC_DEFINE(CPUCCODE, 1, [we have intrinsicts for this CPU type])
-	HAVE_CPUCCODE=yes
+	CPUTYPE="no"
+	if test $ac_cv_header_xmmintrin_h = yes ; then
+		WITH_XMM=yes
+		WITH_VECTOR=yes
+	fi
+
 	AC_DEFINE(TAKEHIRO_IEEE754_HACK, 1, IEEE754 compatible machine)
 	AC_DEFINE(USE_FAST_LOG, 1, faster log implementation with less but enoug
 h precission)
 	;;
 *86)
 	CPUTYPE="i386"
+	if test $ac_cv_header_xmmintrin_h = yes ; then
+		WITH_XMM=yes
+		WITH_VECTOR=yes
+	fi
 
 	# use internal knowledge of the IEEE 754 layout
 	AC_DEFINE(TAKEHIRO_IEEE754_HACK, 1, IEEE754 compatible machine)
@@ -635,8 +638,14 @@ powerpc)
 	CPUTYPE="no"
 	;;
 esac
-AM_CONDITIONAL(CPUCCODE, test "x${HAVE_CPUCCODE}" = "xyes")
-AM_CONDITIONAL(X86_64, test "${CPUTYPE}" = "x86_64")
+
+# which vector code do we support to build on this machine?
+AM_CONDITIONAL(WITH_XMM, test "x${WITH_XMM}" = "xyes")
+
+# needs to be defined to link in the internal vector lib
+AM_CONDITIONAL(WITH_VECTOR, test "x${WITH_VECTOR}" = "xyes")
+AC_MSG_CHECKING(if I have to build the internal vector lib)
+AC_MSG_RESULT(${WITH_VECTOR})
 
 AC_MSG_CHECKING(for FLOAT8 as float)
 AC_ARG_ENABLE(all-float,
@@ -731,7 +740,7 @@ if test "x$GCC" = "xyes"; then
 		OPTIMIZATION_FULL="-fmove-all-movables -freduce-all-givs \
 			-fbranch-count-reg -fforce-addr -fforce-mem"
 		;;
-	3.2*)
+	3.[234567]*|4.*)
 		# -fomit-frame-pointer seems to be buggy on cygwin
 		case ${host_os} in
 		*cygwin*)
@@ -742,7 +751,7 @@ if test "x$GCC" = "xyes"; then
 			;;
 		esac
 
-		OPTIMIZATION="-O ${OMIT_FRAME_POINTER} -ffast-math"
+		OPTIMIZATION="-O3 ${OMIT_FRAME_POINTER} -ffast-math"
 		OPTIMIZATION_FULL="-fmove-all-movables -freduce-all-givs \
 			-fbranch-count-reg -fforce-addr -fforce-mem"
 		;;
@@ -1082,5 +1091,5 @@ AC_SUBST(CPUCCODE)
 
 AC_SUBST(CONFIG_DEFS)
 
-AC_CONFIG_FILES([Makefile libmp3lame/Makefile libmp3lame/i386/Makefile libmp3lame/x86_64/Makefile frontend/Makefile mpglib/Makefile doc/Makefile doc/html/Makefile doc/man/Makefile include/Makefile Dll/Makefile misc/Makefile debian/Makefile dshow/Makefile ACM/Makefile ACM/ADbg/Makefile ACM/ddk/Makefile ACM/tinyxml/Makefile lame.spec mac/Makefile])
+AC_CONFIG_FILES([Makefile libmp3lame/Makefile libmp3lame/i386/Makefile libmp3lame/vector/Makefile frontend/Makefile mpglib/Makefile doc/Makefile doc/html/Makefile doc/man/Makefile include/Makefile Dll/Makefile misc/Makefile debian/Makefile dshow/Makefile ACM/Makefile ACM/ADbg/Makefile ACM/ddk/Makefile ACM/tinyxml/Makefile lame.spec mac/Makefile])
 AC_OUTPUT
