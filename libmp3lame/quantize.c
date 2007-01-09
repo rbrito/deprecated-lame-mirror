@@ -95,7 +95,7 @@ init_xrpow_core_init(lame_internal_flags * const gfc)
 {
     gfc->init_xrpow_core = init_xrpow_core_c;
 
-#if defined(HAVE_XMMINTRIN_H) && defined(CPUCCODE)
+#if defined(HAVE_XMMINTRIN_H)
     if (gfc->CPU_features.SSE)
         gfc->init_xrpow_core = init_xrpow_core_sse;
 #endif
