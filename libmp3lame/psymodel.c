@@ -636,7 +636,7 @@ convert_partition2scalefac_s(lame_internal_flags * gfc, FLOAT const *eb, FLOAT c
         }
     }
     /* zero initialize the rest */
-    for (sb; sb < SBMAX_s; ++sb) {
+    for (; sb < SBMAX_s; ++sb) {
         gfc->en[chn].s[sb][sblock] = 0;
         gfc->thm[chn].s[sb][sblock] = 0;
     }
@@ -682,7 +682,7 @@ convert_partition2scalefac_l(lame_internal_flags * gfc, FLOAT const *eb, FLOAT c
         }
     }
     /* zero initialize the rest */
-    for (sb; sb < SBMAX_l; ++sb) {
+    for (; sb < SBMAX_l; ++sb) {
         gfc->en[chn].l[sb] = 0;
         gfc->thm[chn].l[sb] = 0;
     }

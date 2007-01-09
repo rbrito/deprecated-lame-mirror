@@ -188,6 +188,7 @@ lame_decode1_headersB_clipchoice(unsigned char *buffer, int len,
         break;
 
     default:
+	processed_samples = -1;
         assert(0);
         break;
     }

@@ -2097,6 +2097,8 @@ lame_mp3_tags_fid(lame_global_flags * gfp, FILE * fpStream)
     }
 }
 
+int lame_init_old(lame_global_flags * gfp);
+
 lame_global_flags *
 lame_init(void)
 {
