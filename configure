@@ -465,7 +465,7 @@ ac_includes_default="\
 # include <unistd.h>
 #endif"
 
-ac_subst_vars='SHELL PATH_SEPARATOR PACKAGE_NAME PACKAGE_TARNAME PACKAGE_VERSION PACKAGE_STRING PACKAGE_BUGREPORT exec_prefix prefix program_transform_name bindir sbindir libexecdir datadir sysconfdir sharedstatedir localstatedir libdir includedir oldincludedir infodir mandir build_alias host_alias target_alias DEFS ECHO_C ECHO_N ECHO_T LIBS build build_cpu build_vendor build_os host host_cpu host_vendor host_os INSTALL_PROGRAM INSTALL_SCRIPT INSTALL_DATA CYGPATH_W PACKAGE VERSION ACLOCAL AUTOCONF AUTOMAKE AUTOHEADER MAKEINFO install_sh STRIP ac_ct_STRIP INSTALL_STRIP_PROGRAM mkdir_p AWK SET_MAKE am__leading_dot AMTAR am__tar am__untar MAINTAINER_MODE_TRUE MAINTAINER_MODE_FALSE MAINT am__include am__quote CC CFLAGS LDFLAGS CPPFLAGS ac_ct_CC EXEEXT OBJEXT DEPDIR AMDEP_TRUE AMDEP_FALSE AMDEPBACKSLASH CCDEPMODE am__fastdepCC_TRUE am__fastdepCC_FALSE CPP EGREP LN_S ECHO AR ac_ct_AR RANLIB ac_ct_RANLIB CXX CXXFLAGS ac_ct_CXX CXXDEPMODE am__fastdepCXX_TRUE am__fastdepCXX_FALSE CXXCPP F77 FFLAGS ac_ct_F77 LIBTOOL LIBTOOL_DEPS U ANSI2KNR ALLOCA GTK_CONFIG GTK_CFLAGS GTK_LIBS PKG_CONFIG ac_pt_PKG_CONFIG SNDFILE_CFLAGS SNDFILE_LIBS LIB_WITH_DECODER_TRUE LIB_WITH_DECODER_FALSE WITH_BRHIST_TRUE WITH_BRHIST_FALSE CPUCCODE_TRUE CPUCCODE_FALSE X86_64_TRUE X86_64_FALSE NASM HAVE_NASM_TRUE HAVE_NASM_FALSE INCLUDES FRONTEND_LDFLAGS FRONTEND_CFLAGS FRONTEND_LDADD LDADD LIB_MAJOR_VERSION LIB_MINOR_VERSION NASM_FORMAT MAKEDEP RM_F WITH_FRONTEND WITH_MP3X WITH_MP3RTP CPUTYPE CPUCCODE CONFIG_DEFS LIBOBJS LTLIBOBJS'
+ac_subst_vars='SHELL PATH_SEPARATOR PACKAGE_NAME PACKAGE_TARNAME PACKAGE_VERSION PACKAGE_STRING PACKAGE_BUGREPORT exec_prefix prefix program_transform_name bindir sbindir libexecdir datadir sysconfdir sharedstatedir localstatedir libdir includedir oldincludedir infodir mandir build_alias host_alias target_alias DEFS ECHO_C ECHO_N ECHO_T LIBS build build_cpu build_vendor build_os host host_cpu host_vendor host_os INSTALL_PROGRAM INSTALL_SCRIPT INSTALL_DATA CYGPATH_W PACKAGE VERSION ACLOCAL AUTOCONF AUTOMAKE AUTOHEADER MAKEINFO install_sh STRIP ac_ct_STRIP INSTALL_STRIP_PROGRAM mkdir_p AWK SET_MAKE am__leading_dot AMTAR am__tar am__untar MAINTAINER_MODE_TRUE MAINTAINER_MODE_FALSE MAINT am__include am__quote CC CFLAGS LDFLAGS CPPFLAGS ac_ct_CC EXEEXT OBJEXT DEPDIR AMDEP_TRUE AMDEP_FALSE AMDEPBACKSLASH CCDEPMODE am__fastdepCC_TRUE am__fastdepCC_FALSE CPP EGREP LN_S ECHO AR ac_ct_AR RANLIB ac_ct_RANLIB CXX CXXFLAGS ac_ct_CXX CXXDEPMODE am__fastdepCXX_TRUE am__fastdepCXX_FALSE CXXCPP F77 FFLAGS ac_ct_F77 LIBTOOL LIBTOOL_DEPS U ANSI2KNR ALLOCA GTK_CONFIG GTK_CFLAGS GTK_LIBS PKG_CONFIG ac_pt_PKG_CONFIG SNDFILE_CFLAGS SNDFILE_LIBS LIB_WITH_DECODER_TRUE LIB_WITH_DECODER_FALSE WITH_BRHIST_TRUE WITH_BRHIST_FALSE WITH_XMM_TRUE WITH_XMM_FALSE WITH_VECTOR_TRUE WITH_VECTOR_FALSE NASM HAVE_NASM_TRUE HAVE_NASM_FALSE INCLUDES FRONTEND_LDFLAGS FRONTEND_CFLAGS FRONTEND_LDADD LDADD LIB_MAJOR_VERSION LIB_MINOR_VERSION NASM_FORMAT MAKEDEP RM_F WITH_FRONTEND WITH_MP3X WITH_MP3RTP CPUTYPE CPUCCODE CONFIG_DEFS LIBOBJS LTLIBOBJS'
 ac_subst_files=''
 
 # Initialize some variables set by options.
@@ -19715,6 +19715,28 @@ fi
 
 
 
+if test "${GCC}" = "yes"; then
+	echo "$as_me:$LINENO: checking version of GCC" >&5
+echo $ECHO_N "checking version of GCC... $ECHO_C" >&6
+	GCC_version=`${CC} --version | sed -n '1s/^[^ ]* (.*) //;s/ .*$//;1p'`
+	echo "$as_me:$LINENO: result: ${GCC_version}" >&5
+echo "${ECHO_T}${GCC_version}" >&6
+
+	case $host_cpu in
+	*86|amd64)
+		case $GCC_version in
+		3.23456*|4*)
+			ac_save_CPPFLAGS="${ac_save_CPPFLAGS} -msse"
+			ac_save_CFLAGS="${ac_save_CFLAGS} -msse"
+			;;
+		*)
+			;;
+		esac
+		;;
+	*)
+		;;
+	esac
+fi
 
 echo "$as_me:$LINENO: checking for function prototypes" >&5
 echo $ECHO_N "checking for function prototypes... $ECHO_C" >&6
@@ -20808,14 +20830,6 @@ presetting ac_cv_c_bigendian=no (or yes) will help" >&2;}
    { (exit 1); exit 1; }; } ;;
 esac
 
-fi
-
-if test "${GCC}" = "yes"; then
-	echo "$as_me:$LINENO: checking version of GCC" >&5
-echo $ECHO_N "checking version of GCC... $ECHO_C" >&6
-	GCC_version=`${CC} --version | sed -n '1s/^[^ ]* (.*) //;s/ .*$//;1p'`
-	echo "$as_me:$LINENO: result: ${GCC_version}" >&5
-echo "${ECHO_T}${GCC_version}" >&6
 fi
 
 # Check whether --enable-largefile or --disable-largefile was given.
@@ -28611,14 +28625,6 @@ rm -f conftest.err conftest.$ac_objext \
 
   rm -f conf.gtktest
 
-if test "${HAVE_GTK}" = "yes"; then
-
-cat >>confdefs.h <<\_ACEOF
-#define HAVE_GTK 1
-_ACEOF
-
-fi
-
 
 echo "$as_me:$LINENO: checking use of ElectricFence malloc debugging" >&5
 echo $ECHO_N "checking use of ElectricFence malloc debugging... $ECHO_C" >&6
@@ -29270,15 +29276,15 @@ fi
 
 
 
+WITH_VECTOR=no
 case $host_cpu in
 x86_64|amd64)
-	CPUTYPE="x86_64"
+	CPUTYPE="no"
+	if test $ac_cv_header_xmmintrin_h = yes ; then
+		WITH_XMM=yes
+		WITH_VECTOR=yes
+	fi
 
-cat >>confdefs.h <<\_ACEOF
-#define CPUCCODE 1
-_ACEOF
-
-	HAVE_CPUCCODE=yes
 
 cat >>confdefs.h <<\_ACEOF
 #define TAKEHIRO_IEEE754_HACK 1
@@ -29292,6 +29298,10 @@ _ACEOF
 	;;
 *86)
 	CPUTYPE="i386"
+	if test $ac_cv_header_xmmintrin_h = yes ; then
+		WITH_XMM=yes
+		WITH_VECTOR=yes
+	fi
 
 	# use internal knowledge of the IEEE 754 layout
 
@@ -29327,25 +29337,33 @@ _ACEOF
 	;;
 esac
 
+# which vector code do we support to build on this machine?
 
-if test "x${HAVE_CPUCCODE}" = "xyes"; then
-  CPUCCODE_TRUE=
-  CPUCCODE_FALSE='#'
+
+if test "x${WITH_XMM}" = "xyes"; then
+  WITH_XMM_TRUE=
+  WITH_XMM_FALSE='#'
 else
-  CPUCCODE_TRUE='#'
-  CPUCCODE_FALSE=
+  WITH_XMM_TRUE='#'
+  WITH_XMM_FALSE=
 fi
 
 
+# needs to be defined to link in the internal vector lib
 
-if test "${CPUTYPE}" = "x86_64"; then
-  X86_64_TRUE=
-  X86_64_FALSE='#'
+
+if test "x${WITH_VECTOR}" = "xyes"; then
+  WITH_VECTOR_TRUE=
+  WITH_VECTOR_FALSE='#'
 else
-  X86_64_TRUE='#'
-  X86_64_FALSE=
+  WITH_VECTOR_TRUE='#'
+  WITH_VECTOR_FALSE=
 fi
 
+echo "$as_me:$LINENO: checking if I have to build the internal vector lib" >&5
+echo $ECHO_N "checking if I have to build the internal vector lib... $ECHO_C" >&6
+echo "$as_me:$LINENO: result: ${WITH_VECTOR}" >&5
+echo "${ECHO_T}${WITH_VECTOR}" >&6
 
 echo "$as_me:$LINENO: checking for FLOAT8 as float" >&5
 echo $ECHO_N "checking for FLOAT8 as float... $ECHO_C" >&6
@@ -29513,7 +29531,7 @@ if test "x$GCC" = "xyes"; then
 		OPTIMIZATION_FULL="-fmove-all-movables -freduce-all-givs \
 			-fbranch-count-reg -fforce-addr -fforce-mem"
 		;;
-	3.2*)
+	3.234567*|4.*)
 		# -fomit-frame-pointer seems to be buggy on cygwin
 		case ${host_os} in
 		*cygwin*)
@@ -29524,7 +29542,7 @@ if test "x$GCC" = "xyes"; then
 			;;
 		esac
 
-		OPTIMIZATION="-O ${OMIT_FRAME_POINTER} -ffast-math"
+		OPTIMIZATION="-O3 ${OMIT_FRAME_POINTER} -ffast-math"
 		OPTIMIZATION_FULL="-fmove-all-movables -freduce-all-givs \
 			-fbranch-count-reg -fforce-addr -fforce-mem"
 		;;
@@ -29905,7 +29923,7 @@ FRONTEND_LDADD="${FRONTEND_LDADD} ${CONFIG_MATH_LIB}"
 
 
 
-                                                                                                                                                                                                        ac_config_files="$ac_config_files Makefile libmp3lame/Makefile libmp3lame/i386/Makefile libmp3lame/x86_64/Makefile frontend/Makefile mpglib/Makefile doc/Makefile doc/html/Makefile doc/man/Makefile include/Makefile Dll/Makefile misc/Makefile debian/Makefile dshow/Makefile ACM/Makefile ACM/ADbg/Makefile ACM/ddk/Makefile ACM/tinyxml/Makefile lame.spec mac/Makefile"
+                                                                                                                                                                                                        ac_config_files="$ac_config_files Makefile libmp3lame/Makefile libmp3lame/i386/Makefile libmp3lame/vector/Makefile frontend/Makefile mpglib/Makefile doc/Makefile doc/html/Makefile doc/man/Makefile include/Makefile Dll/Makefile misc/Makefile debian/Makefile dshow/Makefile ACM/Makefile ACM/ADbg/Makefile ACM/ddk/Makefile ACM/tinyxml/Makefile lame.spec mac/Makefile"
 
 cat >confcache <<\_ACEOF
 # This file is a shell script that caches the results of configure
@@ -30047,17 +30065,17 @@ echo "$as_me: error: conditional \"WITH_BRHIST\" was never defined.
 Usually this means the macro was only invoked conditionally." >&2;}
    { (exit 1); exit 1; }; }
 fi
-if test -z "${CPUCCODE_TRUE}" && test -z "${CPUCCODE_FALSE}"; then
-  { { echo "$as_me:$LINENO: error: conditional \"CPUCCODE\" was never defined.
+if test -z "${WITH_XMM_TRUE}" && test -z "${WITH_XMM_FALSE}"; then
+  { { echo "$as_me:$LINENO: error: conditional \"WITH_XMM\" was never defined.
 Usually this means the macro was only invoked conditionally." >&5
-echo "$as_me: error: conditional \"CPUCCODE\" was never defined.
+echo "$as_me: error: conditional \"WITH_XMM\" was never defined.
 Usually this means the macro was only invoked conditionally." >&2;}
    { (exit 1); exit 1; }; }
 fi
-if test -z "${X86_64_TRUE}" && test -z "${X86_64_FALSE}"; then
-  { { echo "$as_me:$LINENO: error: conditional \"X86_64\" was never defined.
+if test -z "${WITH_VECTOR_TRUE}" && test -z "${WITH_VECTOR_FALSE}"; then
+  { { echo "$as_me:$LINENO: error: conditional \"WITH_VECTOR\" was never defined.
 Usually this means the macro was only invoked conditionally." >&5
-echo "$as_me: error: conditional \"X86_64\" was never defined.
+echo "$as_me: error: conditional \"WITH_VECTOR\" was never defined.
 Usually this means the macro was only invoked conditionally." >&2;}
    { (exit 1); exit 1; }; }
 fi
@@ -30515,7 +30533,7 @@ do
   "Makefile" ) CONFIG_FILES="$CONFIG_FILES Makefile" ;;
   "libmp3lame/Makefile" ) CONFIG_FILES="$CONFIG_FILES libmp3lame/Makefile" ;;
   "libmp3lame/i386/Makefile" ) CONFIG_FILES="$CONFIG_FILES libmp3lame/i386/Makefile" ;;
-  "libmp3lame/x86_64/Makefile" ) CONFIG_FILES="$CONFIG_FILES libmp3lame/x86_64/Makefile" ;;
+  "libmp3lame/vector/Makefile" ) CONFIG_FILES="$CONFIG_FILES libmp3lame/vector/Makefile" ;;
   "frontend/Makefile" ) CONFIG_FILES="$CONFIG_FILES frontend/Makefile" ;;
   "mpglib/Makefile" ) CONFIG_FILES="$CONFIG_FILES mpglib/Makefile" ;;
   "doc/Makefile" ) CONFIG_FILES="$CONFIG_FILES doc/Makefile" ;;
@@ -30702,10 +30720,10 @@ s,@LIB_WITH_DECODER_TRUE@,$LIB_WITH_DECODER_TRUE,;t t
 s,@LIB_WITH_DECODER_FALSE@,$LIB_WITH_DECODER_FALSE,;t t
 s,@WITH_BRHIST_TRUE@,$WITH_BRHIST_TRUE,;t t
 s,@WITH_BRHIST_FALSE@,$WITH_BRHIST_FALSE,;t t
-s,@CPUCCODE_TRUE@,$CPUCCODE_TRUE,;t t
-s,@CPUCCODE_FALSE@,$CPUCCODE_FALSE,;t t
-s,@X86_64_TRUE@,$X86_64_TRUE,;t t
-s,@X86_64_FALSE@,$X86_64_FALSE,;t t
+s,@WITH_XMM_TRUE@,$WITH_XMM_TRUE,;t t
+s,@WITH_XMM_FALSE@,$WITH_XMM_FALSE,;t t
+s,@WITH_VECTOR_TRUE@,$WITH_VECTOR_TRUE,;t t
+s,@WITH_VECTOR_FALSE@,$WITH_VECTOR_FALSE,;t t
 s,@NASM@,$NASM,;t t
 s,@HAVE_NASM_TRUE@,$HAVE_NASM_TRUE,;t t
 s,@HAVE_NASM_FALSE@,$HAVE_NASM_FALSE,;t t

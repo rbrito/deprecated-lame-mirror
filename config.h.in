@@ -6,9 +6,6 @@
 /* enable VBR bitrate histogram */
 #undef BRHIST
 
-/* we have intrinsicts for this CPU type */
-#undef CPUCCODE
-
 /* Define to one of `_getb67', `GETB67', `getb67' for Cray-2 and Cray-YMP
    systems. This function is required for `alloca.c' support on those systems.
    */
@@ -50,9 +47,6 @@
 
 /* Define to 1 if you have the `gettimeofday' function. */
 #undef HAVE_GETTIMEOFDAY
-
-/* have working GTK */
-#undef HAVE_GTK
 
 /* add ieee754_float32_t type */
 #undef HAVE_IEEE754_FLOAT32_T
