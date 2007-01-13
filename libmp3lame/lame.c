@@ -1936,11 +1936,10 @@ lame_init_bitstream(lame_global_flags * gfp)
     gfp->frameNum = 0;
 
     (void) id3tag_write_v2(gfp);
-#ifdef BRHIST
+
     /* initialize histogram data optionally used by frontend */
     memset(gfc->bitrate_stereoMode_Hist, 0, sizeof(gfc->bitrate_stereoMode_Hist));
     memset(gfc->bitrate_blockType_Hist, 0, sizeof(gfc->bitrate_blockType_Hist));
-#endif
 
     gfc->PeakSample = 0.0;
 
@@ -2275,7 +2274,6 @@ lame_bitrate_kbps(const lame_global_flags * const gfp, int bitrate_kbps[14])
 }
 
 
-#ifdef BRHIST
 void
 lame_bitrate_hist(const lame_global_flags * const gfp, int bitrate_count[14])
 {
@@ -2377,6 +2375,5 @@ lame_bitrate_block_type_hist(const lame_global_flags * const gfp, int bitrate_bt
             bitrate_btype_count[j][i] = gfc->bitrate_blockType_Hist[j + 1][i];
 }
 
-#endif
 
 /* end of lame.c */

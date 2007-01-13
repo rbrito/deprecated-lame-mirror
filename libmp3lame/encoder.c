@@ -596,9 +596,7 @@ lame_encode_mp3_frame(       /* Output */
         set_frame_pinfo(gfp, *masking);
     }
 
-#ifdef BRHIST
     updateStats(gfc);
-#endif
 
     return mp3count;
 }

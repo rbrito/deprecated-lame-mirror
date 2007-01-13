@@ -465,11 +465,10 @@ extern  "C" {
         FLOAT   noclipScale; /* user-specified scale factor required for preventing clipping */
 
 
-#ifdef BRHIST
         /* simple statistics */
         int     bitrate_stereoMode_Hist[16][4 + 1];
         int     bitrate_blockType_Hist[16][4 + 1 + 1]; /*norm/start/short/stop/mixed(short)/sum */
-#endif
+
         /* used by the frame analyzer */
         plotting_data *pinfo;
 
