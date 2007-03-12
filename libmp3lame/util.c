@@ -342,6 +342,10 @@ BitrateIndex(int bRate,      /* legal rates from 32 to 448 kbps */
     int     i;
     if (samplerate < 16000)
         version = 2;
+    if (bRate < bitrate_table[version][0])
+        bRate = bitrate_table[version][0];
+    if (bRate > bitrate_table[version][14])
+        bRate = bitrate_table[version][14];
 
     for (i = 0; i <= 14; i++)
         if (bitrate_table[version][i] == bRate)
