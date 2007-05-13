@@ -859,15 +859,17 @@ flush_bitstream(lame_global_flags const *gfp)
 
 
 void
-add_dummy_byte(lame_global_flags const *const gfp, unsigned char val)
+add_dummy_byte(lame_global_flags const *const gfp, unsigned char val, unsigned int n)
 {
     lame_internal_flags *const gfc = gfp->internal_flags;
     int     i;
 
-    putbits_noheaders(gfc, val, 8);
+    while (n-- > 0) {
+        putbits_noheaders(gfc, val, 8);
 
-    for (i = 0; i < MAX_HEADER_BUF; ++i)
-        gfc->header[i].write_timing += 8;
+        for (i = 0; i < MAX_HEADER_BUF; ++i)
+            gfc->header[i].write_timing += 8;
+        }
 }
 
 
@@ -976,6 +978,13 @@ copy_buffer(lame_internal_flags * gfc, unsigned char *buffer, int size, int mp3d
 
     if (mp3data) {
         UpdateMusicCRC(&gfc->nMusicCRC, buffer, minimum);
+        
+        /** sum number of bytes belonging to the mp3 stream
+         *  this info will be written into the Xing/LAME header for seeking
+         */
+        if (minimum > 0) {
+            gfc->VBR_seek_table.nBytesWritten += minimum;
+        }
 
 #ifdef DECODE_ON_THE_FLY
         if (gfc->decode_on_the_fly) { /* decode the frame */

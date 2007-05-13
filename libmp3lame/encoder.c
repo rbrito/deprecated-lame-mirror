@@ -578,8 +578,6 @@ lame_encode_mp3_frame(       /* Output */
     mp3count = copy_buffer(gfc, mp3buf, mp3buf_size, 1);
 
 
-
-
     if (gfp->bWriteVbrTag)
         AddVbrFrame(gfp);
 

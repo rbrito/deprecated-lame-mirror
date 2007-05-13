@@ -173,6 +173,10 @@ extern  "C" {
         int     pos;         /* actual position in our bag */
         int     size;        /* size of our bag */
         int    *bag;         /* pointer to our bag */
+    	unsigned int nVbrNumFrames;
+	unsigned long nBytesWritten;
+        /* VBR tag data */
+        unsigned int TotalFrameSize;
     } VBR_seek_info_t;
 
 

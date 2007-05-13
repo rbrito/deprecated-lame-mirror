@@ -164,10 +164,6 @@ struct lame_global_struct {
     lame_internal_flags *internal_flags;
 
 
-    /* VBR tag data */
-    int     TotalFrameSize;
-    int     nVbrNumFrames;
-
     struct {
         int     integer[16];
         float   real[16];

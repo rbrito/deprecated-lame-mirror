@@ -124,6 +124,7 @@ addVbr(VBR_seek_info_t * v, int bitrate)
 {
     int     i;
 
+    v->nVbrNumFrames++;
     v->sum += bitrate;
     v->seen++;
 
@@ -198,7 +199,6 @@ AddVbrFrame(lame_global_flags * gfp)
     int     kbps = bitrate_table[gfp->version][gfc->bitrate_index];
     assert(gfc->VBR_seek_table.bag);
     addVbr(&gfc->VBR_seek_table, kbps);
-    gfp->nVbrNumFrames++;
 }
 
 
@@ -415,17 +415,13 @@ int
 InitVbrTag(lame_global_flags * gfp)
 {
     int     nMode, SampIndex;
-    int     i, kbps_header, tot;
+    int     i, kbps_header;
     lame_internal_flags *gfc = gfp->internal_flags;
 #define MAXFRAMESIZE 2880 /* or 0xB40, the max freeformat 640 32kHz framesize */
     /* uint8_t pbtStreamBuffer[MAXFRAMESIZE]; */
     nMode = gfp->mode;
     SampIndex = gfc->samplerate_index;
 
-
-
-    gfp->nVbrNumFrames = 0;
-    /*gfp->nVbrFrameBufferSize=0; */
 
 
     /* Clear stream buffer */
@@ -462,21 +458,24 @@ InitVbrTag(lame_global_flags * gfp)
     if (gfp->VBR == vbr_off)
         kbps_header = gfp->brate;
 
-    gfp->TotalFrameSize = ((gfp->version + 1) * 72000 * kbps_header) / gfp->out_samplerate;
-
-    tot = (gfc->sideinfo_len + LAMEHEADERSIZE);
-
-    if (gfp->TotalFrameSize < tot || gfp->TotalFrameSize > MAXFRAMESIZE) {
-        /* disable tag, it wont fit */
-        gfp->bWriteVbrTag = 0;
-        return 0;
+    /** make sure LAME Header fits into Frame
+     */
+    {
+        int total_frame_size = ((gfp->version + 1) * 72000 * kbps_header) / gfp->out_samplerate;
+        int header_size = (gfc->sideinfo_len + LAMEHEADERSIZE);
+        gfc->VBR_seek_table.TotalFrameSize = total_frame_size;
+        if (total_frame_size < header_size || total_frame_size > MAXFRAMESIZE) {
+            /* disable tag, it wont fit */
+            gfp->bWriteVbrTag = 0;
+            return 0;
+        }
     }
 
     /* write dummy VBR tag of all 0's into bitstream */
-    for (i = 0; i < gfp->TotalFrameSize; ++i)
-        add_dummy_byte(gfp, 0);
+    add_dummy_byte(gfp, 0, gfc->VBR_seek_table.TotalFrameSize);
 
-
+    gfc->VBR_seek_table.nVbrNumFrames = 0;
+    gfc->VBR_seek_table.nBytesWritten = 0;
     gfc->VBR_seek_table.sum = 0;
 
     gfc->VBR_seek_table.seen = 0;
@@ -800,6 +799,7 @@ PutVbrTag(lame_global_flags const* gfp, FILE * fpStream)
     lame_internal_flags *gfc = gfp->internal_flags;
 
     long    lFileSize;
+    int     stream_size;
     int     nStreamIndex;
     char    abyte, bbyte;
     uint8_t btToc[NUMTOCENTRIES];
@@ -851,7 +851,7 @@ PutVbrTag(lame_global_flags const* gfp, FILE * fpStream)
     }
 
     /* Seek to first real frame */
-    fseek(fpStream, (long)(id3v2TagSize + gfp->TotalFrameSize), SEEK_SET);
+    fseek(fpStream, (long)(id3v2TagSize + gfc->VBR_seek_table.TotalFrameSize), SEEK_SET);
 
     /* Read the header (first valid frame) */
     fread(pbtStreamBuffer, 4, 1, fpStream);
@@ -943,11 +943,12 @@ PutVbrTag(lame_global_flags const* gfp, FILE * fpStream)
     nStreamIndex += 4;
 
     /* Put Total Number of frames */
-    CreateI4(&pbtStreamBuffer[nStreamIndex], gfp->nVbrNumFrames);
+    CreateI4(&pbtStreamBuffer[nStreamIndex], gfc->VBR_seek_table.nVbrNumFrames);
     nStreamIndex += 4;
 
-    /* Put Total file size */
-    CreateI4(&pbtStreamBuffer[nStreamIndex], (int) lFileSize);
+    /* Put total audio stream size, including Xing/LAME Header */
+    stream_size = gfc->VBR_seek_table.nBytesWritten + gfc->VBR_seek_table.TotalFrameSize;
+    CreateI4(&pbtStreamBuffer[nStreamIndex], stream_size);
     nStreamIndex += 4;
 
     /* Put TOC */
@@ -982,7 +983,7 @@ PutVbrTag(lame_global_flags const* gfp, FILE * fpStream)
     fseek(fpStream, (long)id3v2TagSize, SEEK_SET);
 
     /* Put it all to disk again */
-    if (fwrite(pbtStreamBuffer, (unsigned int) gfp->TotalFrameSize, 1, fpStream) != 1) {
+    if (fwrite(pbtStreamBuffer, gfc->VBR_seek_table.TotalFrameSize, 1, fpStream) != 1) {
         return -1;
     }
 
