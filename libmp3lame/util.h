@@ -160,9 +160,6 @@ extern  "C" {
         /* short block tuning */
         FLOAT   attackthre;
         FLOAT   attackthre_s;
-
-        /* variables for nspsytune2 */
-        FILE   *pass1fp;
     } nsPsy_t;
 
 

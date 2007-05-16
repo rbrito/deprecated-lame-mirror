@@ -489,9 +489,21 @@ on_pe(lame_global_flags const *gfp, FLOAT const pe[][2], III_side_info_t const *
     for (ch = 0; ch < gfc->channels_out; ++ch) {
         targ_bits[ch] += add_bits[ch];
         extra_bits -= add_bits[ch];
-        assert(targ_bits[ch] <= MAX_BITS);
     }
-    assert(max_bits <= MAX_BITS);
+
+    for (bits = 0, ch = 0; ch < gfc->channels_out; ++ch) {
+        bits += targ_bits[ch];
+    }
+    if (bits > MAX_BITS) {
+        int sum = 0;
+        for (ch = 0; ch < gfc->channels_out; ++ch) {
+            targ_bits[ch] *= MAX_BITS;
+            targ_bits[ch] /= bits;
+            sum += targ_bits[ch];
+        }
+        assert( sum <= MAX_BITS );
+    }
+
     return max_bits;
 }
 
@@ -600,16 +612,11 @@ calc_xmin(lame_global_flags const *gfp,
     ATH_t const *const ATH = gfc->ATH;
     const FLOAT *const xr = cod_info->xr;
     int     max_nonzero;
-#define RH_TEST_ATHAA_FIX
-#ifdef RH_TEST_ATHAA_FIX
     int const enable_athaa_fix = (gfp->VBR == vbr_mtrh) ? 1 : 0;
-#endif
 
     for (gsfb = 0; gsfb < cod_info->psy_lmax; gsfb++) {
         FLOAT   en0, xmin;
-#ifdef RH_TEST_ATHAA_FIX
         FLOAT   rh1, rh2;
-#endif
         int     width, l;
 
         if (gfp->VBR == vbr_rh || gfp->VBR == vbr_mtrh)
@@ -618,13 +625,11 @@ calc_xmin(lame_global_flags const *gfp,
             xmin = ATH->adjust * ATH->l[gsfb];
 
         width = cod_info->width[gsfb];
-#ifdef RH_TEST_ATHAA_FIX
         rh1 = xmin/width;
 #ifdef DBL_EPSILON
         rh2 = DBL_EPSILON;
 #else
         rh2 = 2.2204460492503131e-016;
-#endif
 #endif
         l = width >> 1;
         en0 = 0.0;
@@ -632,23 +637,17 @@ calc_xmin(lame_global_flags const *gfp,
             FLOAT xa, xb;
             xa = xr[j] * xr[j];
             en0 += xa;
-#ifdef RH_TEST_ATHAA_FIX
             rh2 += ( xa < rh1 ) ? xa : rh1;
-#endif
             j++;
             xb = xr[j] * xr[j];
             en0 += xb;
-#ifdef RH_TEST_ATHAA_FIX
             rh2 += ( xb < rh1 ) ? xb : rh1;
-#endif
             j++;
         } while (--l > 0);
         if (en0 > xmin)
             ath_over++;
 
-#ifdef RH_TEST_ATHAA_FIX
-        if (1&&gsfb == SBPSY_l)
-        {
+        if (gsfb == SBPSY_l) {
             FLOAT x = xmin*gfc->nsPsy.longfact[gsfb];
             if (rh2 < x) {
                 rh2 = x;
@@ -657,28 +656,21 @@ calc_xmin(lame_global_flags const *gfp,
         if (enable_athaa_fix) {
             xmin = rh2;
         }
-#endif
         if (!gfp->ATHonly) {
             FLOAT const e = ratio->en.l[gsfb];
             if (e > 0.0f) {
                 FLOAT   x;
                 x = en0 * ratio->thm.l[gsfb] * gfc->masking_lower / e;
-#ifdef RH_TEST_ATHAA_FIX
                 if (enable_athaa_fix)
                     x *= gfc->nsPsy.longfact[gsfb];
-#endif
                 if (xmin < x)
                     xmin = x;
             }
         }
-#ifdef RH_TEST_ATHAA_FIX
         if (enable_athaa_fix)
             *pxmin++ = xmin;
         else 
             *pxmin++ = xmin * gfc->nsPsy.longfact[gsfb];
-#else
-        *pxmin++ = xmin * gfc->nsPsy.longfact[gsfb];
-#endif
     }                   /* end of long block loop */
 
 
@@ -707,39 +699,29 @@ calc_xmin(lame_global_flags const *gfp,
         width = cod_info->width[gsfb];
         for (b = 0; b < 3; b++) {
             FLOAT   en0 = 0.0, xmin;
-#ifdef RH_TEST_ATHAA_FIX
             FLOAT   rh1, rh2;
-#endif
             int     l = width >> 1;
 
-#ifdef RH_TEST_ATHAA_FIX
             rh1 = tmpATH/width;
 #ifdef DBL_EPSILON
             rh2 = DBL_EPSILON;
 #else
             rh2 = 2.2204460492503131e-016;
 #endif
-#endif
             do {
                 FLOAT xa, xb;
                 xa = xr[j] * xr[j];
                 en0 += xa;
-#ifdef RH_TEST_ATHAA_FIX
                 rh2 += ( xa < rh1 ) ? xa : rh1;
-#endif
                 j++;
                 xb = xr[j] * xr[j];
                 en0 += xb;
-#ifdef RH_TEST_ATHAA_FIX
                 rh2 += ( xb < rh1 ) ? xb : rh1;
-#endif
                 j++;
             } while (--l > 0);
             if (en0 > tmpATH)
                 ath_over++;
-#ifdef RH_TEST_ATHAA_FIX
-            if (1&&sfb == SBPSY_s)
-            {
+            if (sfb == SBPSY_s) {
                 FLOAT x = tmpATH*gfc->nsPsy.shortfact[sfb];
                 if (rh2 < x) {
                     rh2 = x;
@@ -749,31 +731,22 @@ calc_xmin(lame_global_flags const *gfp,
                 xmin = rh2;
             else
                 xmin = tmpATH;
-#else
-            xmin = tmpATH;
-#endif
 
             if (!gfp->ATHonly && !gfp->ATHshort) {
                 FLOAT const e = ratio->en.s[sfb][b];
                 if (e > 0.0f) {
                     FLOAT   x;
                     x = en0 * ratio->thm.s[sfb][b] * gfc->masking_lower / e;
-#ifdef RH_TEST_ATHAA_FIX
                     if (enable_athaa_fix)
                         x *= gfc->nsPsy.shortfact[sfb];
-#endif
                     if (xmin < x)
                         xmin = x;
                 }
             }
-#ifdef RH_TEST_ATHAA_FIX
             if (enable_athaa_fix)
                 *pxmin++ = xmin;
             else
                 *pxmin++ = xmin * gfc->nsPsy.shortfact[sfb];
-#else
-            *pxmin++ = xmin * gfc->nsPsy.shortfact[sfb];
-#endif
         }               /* b */
         if (gfp->useTemporal) {
             if (pxmin[-3] > pxmin[-3 + 1])

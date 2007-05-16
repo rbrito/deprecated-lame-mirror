@@ -1281,33 +1281,6 @@ NS_INTERP(FLOAT x, FLOAT y, FLOAT r)
 
 
 
-static void
-nsPsy2dataRead(FILE * fp, FLOAT * eb2, FLOAT const *eb, int chn, int npart_l)
-{
-    int     b;
-    for (;;) {
-        static const char chname[] = { 'L', 'R', 'M', 'S' };
-        char    c;
-
-        fscanf(fp, "%c", &c);
-        for (b = 0; b < npart_l; b++) {
-            double  e;
-            fscanf(fp, "%lf", &e);
-            eb2[b] = e;
-        }
-
-        if (feof(fp))
-            abort();
-        if (c == chname[chn])
-            break;
-        abort();
-    }
-
-    eb2[62] = eb2[61];
-    for (b = 0; b < npart_l; b++)
-        eb2[b] = eb2[b] * eb[b];
-}
-
 static  FLOAT
 pecalc_s(III_psy_ratio const *mr, FLOAT masking_lower)
 {
@@ -1710,9 +1683,7 @@ L3psycho_anal_ns(lame_global_flags const *gfp,
         }
         assert( b == gfc->npart_l );
         assert( j == 513 );
-        if (gfc->nsPsy.pass1fp)
-            nsPsy2dataRead(gfc->nsPsy.pass1fp, eb2, eb, chn, gfc->npart_l);
-        else {
+        {
             FLOAT   m, a;
             int const last_tab_entry = sizeof(tab) / sizeof(tab[0])-1;
             b = 0;

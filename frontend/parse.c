@@ -1055,9 +1055,6 @@ resample_rate(double freq)
 }
 
 
-extern int lame_set_exp_nspsytune2_int( lame_global_flags*, int, int);
-extern float lame_set_exp_nspsytune2_real( lame_global_flags*, int, float);
-extern void * lame_set_exp_nspsytune2_pointer( lame_global_flags*, int, void *);
 
 /* Ugly, NOT final version */
 
@@ -1505,18 +1502,7 @@ parse_args(lame_global_flags * gfp, int argc, char **argv,
                 }
 
                 T_ELIF("nspsytune2") {
-                    FILE   *fp = fopen(nextArg, "r");
-                    if (fp == NULL) {
-                        error_printf("nspsytune2 : error opening %s\n", nextArg);
-                        abort();
-                    }
-                    lame_set_exp_nspsytune2_pointer(gfp, 0, fp);
                 }
-                /* nspsytune2 implies nspsytune */
-                argUsed = 1;
-                lame_set_psy_model(gfp, PSY_NSPSYTUNE);
-                lame_set_experimentalZ(gfp, 1);
-                lame_set_experimentalX(gfp, 1);
 
                 /* some more GNU-ish options could be added
                  * brief         => few messages on screen (name, status report)

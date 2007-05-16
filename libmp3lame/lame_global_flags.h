@@ -165,12 +165,6 @@ struct lame_global_struct {
 
 
     struct {
-        int     integer[16];
-        float   real[16];
-        void   *pointer[16];
-    } exp_nspsytune2;
-
-    struct {
         int     mmx;
         int     amd3dnow;
         int     sse;
