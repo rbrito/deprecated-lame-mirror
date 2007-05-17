@@ -1311,15 +1311,13 @@ void ACM::BuildBitrateTable()
 
 				if (!my_EncodingProperties.GetSmartOutputMode() || IsSmartOutput(mpeg1_freq[freq], mpeg1_bitrate[bitrate], channel+1))
 				{
-					bitrate_item * bitrate_table_tmp = new bitrate_item;
-					if (bitrate_table_tmp == NULL)
-						return;
+					bitrate_item bitrate_table_tmp;
 					
-					bitrate_table_tmp->frequency = mpeg1_freq[freq];
-					bitrate_table_tmp->bitrate = mpeg1_bitrate[bitrate];
-					bitrate_table_tmp->channels = channel+1;
-					bitrate_table_tmp->mode = vbr_off;
-					bitrate_table.push_back(*bitrate_table_tmp);
+					bitrate_table_tmp.frequency = mpeg1_freq[freq];
+					bitrate_table_tmp.bitrate = mpeg1_bitrate[bitrate];
+					bitrate_table_tmp.channels = channel+1;
+					bitrate_table_tmp.mode = vbr_off;
+					bitrate_table.push_back(bitrate_table_tmp);
 				}
 			}
 		}
@@ -1330,15 +1328,13 @@ void ACM::BuildBitrateTable()
 			{
 				if (!my_EncodingProperties.GetSmartOutputMode() || IsSmartOutput(mpeg2_freq[freq], mpeg2_bitrate[bitrate], channel+1))
 				{
-					bitrate_item * bitrate_table_tmp = new bitrate_item;
-					if (bitrate_table_tmp == NULL)
-						return;
-					
-					bitrate_table_tmp->frequency = mpeg2_freq[freq];
-					bitrate_table_tmp->bitrate = mpeg2_bitrate[bitrate];
-					bitrate_table_tmp->channels = channel+1;
-					bitrate_table_tmp->mode = vbr_abr;
-					bitrate_table.push_back(*bitrate_table_tmp);
+					bitrate_item bitrate_table_tmp;
+
+                                        bitrate_table_tmp.frequency = mpeg2_freq[freq];
+					bitrate_table_tmp.bitrate = mpeg2_bitrate[bitrate];
+					bitrate_table_tmp.channels = channel+1;
+					bitrate_table_tmp.mode = vbr_abr;
+					bitrate_table.push_back(bitrate_table_tmp);
 				}
 			}
 		}
@@ -1358,15 +1354,13 @@ void ACM::BuildBitrateTable()
 				{
 					if (bitrate >= mpeg1_bitrate[SIZE_BITRATE_MPEG1-1] && (!my_EncodingProperties.GetSmartOutputMode() || IsSmartOutput(mpeg1_freq[freq], bitrate, channel+1)))
 					{
-						bitrate_item * bitrate_table_tmp = new bitrate_item;
-						if (bitrate_table_tmp == NULL)
-							return;
+						bitrate_item bitrate_table_tmp;
 						
-						bitrate_table_tmp->frequency = mpeg1_freq[freq];
-						bitrate_table_tmp->bitrate = bitrate;
-						bitrate_table_tmp->channels = channel+1;
-						bitrate_table_tmp->mode = vbr_abr;
-						bitrate_table.push_back(*bitrate_table_tmp);
+						bitrate_table_tmp.frequency = mpeg1_freq[freq];
+						bitrate_table_tmp.bitrate = bitrate;
+						bitrate_table_tmp.channels = channel+1;
+						bitrate_table_tmp.mode = vbr_abr;
+						bitrate_table.push_back(bitrate_table_tmp);
 					}
 				}
 			}
@@ -1379,15 +1373,13 @@ void ACM::BuildBitrateTable()
 				{
 					if (bitrate >= mpeg2_bitrate[SIZE_BITRATE_MPEG2-1] && (!my_EncodingProperties.GetSmartOutputMode() || IsSmartOutput(mpeg2_freq[freq], bitrate, channel+1)))
 					{
-						bitrate_item * bitrate_table_tmp = new bitrate_item;
-						if (bitrate_table_tmp == NULL)
-							return;
+						bitrate_item bitrate_table_tmp;
 						
-						bitrate_table_tmp->frequency = mpeg2_freq[freq];
-						bitrate_table_tmp->bitrate = bitrate;
-						bitrate_table_tmp->channels = channel+1;
-						bitrate_table_tmp->mode = vbr_abr;
-						bitrate_table.push_back(*bitrate_table_tmp);
+						bitrate_table_tmp.frequency = mpeg2_freq[freq];
+						bitrate_table_tmp.bitrate = bitrate;
+						bitrate_table_tmp.channels = channel+1;
+						bitrate_table_tmp.mode = vbr_abr;
+						bitrate_table.push_back(bitrate_table_tmp);
 					}
 				}
 			}

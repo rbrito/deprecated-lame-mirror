@@ -415,7 +415,7 @@ int
 InitVbrTag(lame_global_flags * gfp)
 {
     int     nMode, SampIndex;
-    int     i, kbps_header;
+    int     kbps_header;
     lame_internal_flags *gfc = gfp->internal_flags;
 #define MAXFRAMESIZE 2880 /* or 0xB40, the max freeformat 640 32kHz framesize */
     /* uint8_t pbtStreamBuffer[MAXFRAMESIZE]; */
