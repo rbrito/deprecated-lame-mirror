@@ -80,7 +80,9 @@ extern  "C" {
 
 #define         HAN_SIZE                512
 #define         CRC16_POLYNOMIAL        0x8005
-#define MAX_BITS 4095
+    
+#define MAX_BITS_PER_CHANNEL 4095
+#define MAX_BITS_PER_GRANULE 7680
 
 /* "bit_stream.h" Definitions */
 #define         BUFFER_SIZE     LAME_MAXMP3BUFFER

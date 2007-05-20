@@ -157,13 +157,13 @@ From top to bottom of sfb, changes to 0
 coeffs which are below ath. It stops on the first
 coeff higher than ath.
 */
-void
+static void
 psfb21_analogsilence(lame_internal_flags const *gfc, gr_info * const cod_info)
 {
     ATH_t const *const ATH = gfc->ATH;
     FLOAT  *const xr = cod_info->xr;
 
-    if (cod_info->block_type == NORM_TYPE) {
+    if (cod_info->block_type != SHORT_TYPE) { /* NORM, START or STOP type, but not SHORT blocks */
         int     gsfb;
         int     stop = 0;
         for (gsfb = PSFB21 - 1; gsfb >= 0 && !stop; gsfb--) {
@@ -186,7 +186,7 @@ psfb21_analogsilence(lame_internal_flags const *gfc, gr_info * const cod_info)
             }
         }
     }
-    else if (cod_info->block_type == SHORT_TYPE) {
+    else {
         /*note: short blocks coeffs are reordered */
         int     block;
         for (block = 0; block < 3; block++) {
@@ -1112,7 +1112,7 @@ outer_loop(lame_global_flags const *gfp, gr_info * const cod_info, const FLOAT *
 
             /* check if this quantization is better
              * than our saved quantization */
-            if (cod_info->block_type == NORM_TYPE)
+            if (cod_info->block_type != SHORT_TYPE) /* NORM, START or STOP type */
                 better = gfp->quant_comp;
             else
                 better = gfp->quant_comp_short;
@@ -1241,7 +1241,7 @@ VBR_encode_granule(lame_global_flags const *gfp, gr_info * const cod_info, const
     int     dbits, over, found = 0;
     int const sfb21_extra = gfc->sfb21_extra;
 
-    assert(Max_bits <= MAX_BITS);
+    assert(Max_bits <= MAX_BITS_PER_CHANNEL);
 
     /*  search within round about 40 bits of optimal
      */
@@ -1472,7 +1472,7 @@ VBR_old_prepare(lame_global_flags const *gfp,
         for (ch = 0; ch < gfc->channels_out; ++ch) {
             gr_info *const cod_info = &gfc->l3_side.tt[gr][ch];
 
-            if (cod_info->block_type == NORM_TYPE) {
+            if (cod_info->block_type != SHORT_TYPE) { /* NORM, START or STOP type */
                 adjust = 1.28 / (1 + exp(3.5 - pe[gr][ch] / 300.)) - 0.05;
                 masking_lower_db = gfc->PSY->mask_adjust - adjust;
             }
@@ -1667,17 +1667,22 @@ VBR_new_prepare(lame_global_flags const *gfp,
         mxb = on_pe(gfp, pe, &gfc->l3_side, max_bits[gr], avg, gr, 0);
         if (gfc->mode_ext == MPG_MD_MS_LR) {
             ms_convert(&gfc->l3_side, gr);
-            reduce_side(max_bits[gr], ms_ener_ratio[gr], avg, mxb);
         }
         for (ch = 0; ch < gfc->channels_out; ++ch) {
             gr_info *const cod_info = &gfc->l3_side.tt[gr][ch];
 
-            if (cod_info->block_type == NORM_TYPE) {
-                adjust = 1.28 / (1 + exp(3.5 - pe[gr][ch] / 300.)) - 0.05;
+            if (cod_info->block_type != SHORT_TYPE) { /* NORM, START or STOP type */
+                /*
+                //adjust = 1.28 / (1 + exp(3.5 - pe[gr][ch] / 300.)) - 0.05;
+                */
+                adjust = 0.4;
                 masking_lower_db = gfc->PSY->mask_adjust - adjust;
             }
             else {
-                adjust = 2.56 / (1 + exp(3.5 - pe[gr][ch] / 300.)) - 0.14;
+                /*
+                //adjust = 2.56 / (1 + exp(3.5 - pe[gr][ch] / 300.)) - 0.14;
+                */
+                adjust = 0.7;
                 masking_lower_db = gfc->PSY->mask_adjust_short - adjust;
             }
             gfc->masking_lower = pow(10.0, masking_lower_db * 0.1);
@@ -1753,8 +1758,9 @@ VBR_new_iteration_loop(lame_global_flags const *gfp,
     }
     if (used_bits <= frameBits[gfc->VBR_max_bitrate]) {
         /* update Reservoire status */
-        int     mean_bits;
-        (void) ResvFrameBegin(gfp, &mean_bits);
+        int     mean_bits, fullframebits;
+        fullframebits = ResvFrameBegin(gfp, &mean_bits);
+        assert( used_bits <= fullframebits );
         for (gr = 0; gr < gfc->mode_gr; gr++) {
             for (ch = 0; ch < gfc->channels_out; ch++) {
                 gr_info const *const cod_info = &l3_side->tt[gr][ch];
@@ -1863,7 +1869,7 @@ calc_target_bits(lame_global_flags const *gfp,
 
     if (gfc->mode_ext == MPG_MD_MS_LR)
         for (gr = 0; gr < gfc->mode_gr; gr++) {
-            reduce_side(targ_bits[gr], ms_ener_ratio[gr], mean_bits * gfc->channels_out, MAX_BITS);
+            reduce_side(targ_bits[gr], ms_ener_ratio[gr], mean_bits * gfc->channels_out, MAX_BITS_PER_GRANULE);
         }
 
     /*  sum target bits
@@ -1871,8 +1877,8 @@ calc_target_bits(lame_global_flags const *gfp,
     totbits = 0;
     for (gr = 0; gr < gfc->mode_gr; gr++) {
         for (ch = 0; ch < gfc->channels_out; ch++) {
-            if (targ_bits[gr][ch] > MAX_BITS)
-                targ_bits[gr][ch] = MAX_BITS;
+            if (targ_bits[gr][ch] > MAX_BITS_PER_CHANNEL)
+                targ_bits[gr][ch] = MAX_BITS_PER_CHANNEL;
             totbits += targ_bits[gr][ch];
         }
     }
@@ -1932,7 +1938,7 @@ ABR_iteration_loop(lame_global_flags const *gfp,
             FLOAT   adjust, masking_lower_db;
             cod_info = &l3_side->tt[gr][ch];
 
-            if (cod_info->block_type == NORM_TYPE) {
+            if (cod_info->block_type != SHORT_TYPE) { /* NORM, START or STOP type */
                 /* adjust = 1.28/(1+exp(3.5-pe[gr][ch]/300.))-0.05; */
                 adjust = 0;
                 masking_lower_db = gfc->PSY->mask_adjust - adjust;
@@ -2022,7 +2028,7 @@ CBR_iteration_loop(lame_global_flags const *gfp,
             FLOAT   adjust, masking_lower_db;
             cod_info = &l3_side->tt[gr][ch];
 
-            if (cod_info->block_type == NORM_TYPE) {
+            if (cod_info->block_type != SHORT_TYPE) { /* NORM, START or STOP type */
                 /* adjust = 1.28/(1+exp(3.5-pe[gr][ch]/300.))-0.05; */
                 adjust = 0;
                 masking_lower_db = gfc->PSY->mask_adjust - adjust;
@@ -2047,7 +2053,7 @@ CBR_iteration_loop(lame_global_flags const *gfp,
             }
 
             iteration_finish_one(gfc, gr, ch);
-            assert(cod_info->part2_3_length <= MAX_BITS);
+            assert(cod_info->part2_3_length <= MAX_BITS_PER_CHANNEL);
             assert(cod_info->part2_3_length <= targ_bits[ch]);
         }               /* for ch */
     }                   /* for gr */

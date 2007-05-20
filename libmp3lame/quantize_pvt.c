@@ -446,8 +446,8 @@ on_pe(lame_global_flags const *gfp, FLOAT const pe[][2], III_side_info_t const *
     /* allocate targ_bits for granule */
     ResvMaxBits(gfp, mean_bits, &tbits, &extra_bits, cbr);
     max_bits = tbits + extra_bits;
-    if (max_bits > MAX_BITS) /* hard limit per granule */
-        max_bits = MAX_BITS;
+    if (max_bits > MAX_BITS_PER_GRANULE) /* hard limit per granule */
+        max_bits = MAX_BITS_PER_GRANULE;
 
     for (bits = 0, ch = 0; ch < gfc->channels_out; ++ch) {
         /******************************************************************
@@ -455,7 +455,7 @@ on_pe(lame_global_flags const *gfp, FLOAT const pe[][2], III_side_info_t const *
          ******************************************************************/
         cod_info = &l3_side->tt[gr][ch];
 
-        targ_bits[ch] = Min(MAX_BITS, tbits / gfc->channels_out);
+        targ_bits[ch] = Min(MAX_BITS_PER_CHANNEL, tbits / gfc->channels_out);
 
         if (gfp->psymodel == PSY_NSPSYTUNE) {
             add_bits[ch] = targ_bits[ch] * pe[gr][ch] / 700.0 - targ_bits[ch];
@@ -475,8 +475,8 @@ on_pe(lame_global_flags const *gfp, FLOAT const pe[][2], III_side_info_t const *
         if (add_bits[ch] < 0)
             add_bits[ch] = 0;
 
-        if (add_bits[ch] + targ_bits[ch] > MAX_BITS)
-            add_bits[ch] = Max(0, MAX_BITS - targ_bits[ch]);
+        if (add_bits[ch] + targ_bits[ch] > MAX_BITS_PER_CHANNEL)
+            add_bits[ch] = Max(0, MAX_BITS_PER_CHANNEL - targ_bits[ch]);
 
         bits += add_bits[ch];
     }
@@ -494,14 +494,14 @@ on_pe(lame_global_flags const *gfp, FLOAT const pe[][2], III_side_info_t const *
     for (bits = 0, ch = 0; ch < gfc->channels_out; ++ch) {
         bits += targ_bits[ch];
     }
-    if (bits > MAX_BITS) {
+    if (bits > MAX_BITS_PER_GRANULE) {
         int sum = 0;
         for (ch = 0; ch < gfc->channels_out; ++ch) {
-            targ_bits[ch] *= MAX_BITS;
+            targ_bits[ch] *= MAX_BITS_PER_GRANULE;
             targ_bits[ch] /= bits;
             sum += targ_bits[ch];
         }
-        assert( sum <= MAX_BITS );
+        assert( sum <= MAX_BITS_PER_GRANULE );
     }
 
     return max_bits;
@@ -531,8 +531,8 @@ reduce_side(int targ_bits[2], FLOAT ms_ener_ratio, int mean_bits, int max_bits)
     /*    move_bits = fac*targ_bits[1];  */
     move_bits = fac * .5 * (targ_bits[0] + targ_bits[1]);
 
-    if (move_bits > MAX_BITS - targ_bits[0]) {
-        move_bits = MAX_BITS - targ_bits[0];
+    if (move_bits > MAX_BITS_PER_CHANNEL - targ_bits[0]) {
+        move_bits = MAX_BITS_PER_CHANNEL - targ_bits[0];
     }
     if (move_bits < 0)
         move_bits = 0;
@@ -558,8 +558,8 @@ reduce_side(int targ_bits[2], FLOAT ms_ener_ratio, int mean_bits, int max_bits)
         targ_bits[0] = (max_bits * targ_bits[0]) / move_bits;
         targ_bits[1] = (max_bits * targ_bits[1]) / move_bits;
     }
-    assert(targ_bits[0] <= MAX_BITS);
-    assert(targ_bits[1] <= MAX_BITS);
+    assert(targ_bits[0] <= MAX_BITS_PER_CHANNEL);
+    assert(targ_bits[1] <= MAX_BITS_PER_CHANNEL);
 }
 
 
@@ -678,7 +678,7 @@ calc_xmin(lame_global_flags const *gfp,
 
     /*use this function to determine the highest non-zero coeff */
     max_nonzero = 575;
-    if (cod_info->block_type == NORM_TYPE) {
+    if (cod_info->block_type != SHORT_TYPE) { /* NORM, START or STOP type, but not SHORT */
         k = 576;
         while (k-- && !xr[k]) {
             max_nonzero = k;
