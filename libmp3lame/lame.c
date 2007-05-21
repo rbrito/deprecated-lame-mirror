@@ -611,7 +611,7 @@ lame_init_params(lame_global_flags * const gfp)
         gfc->samplerate_index = SmpFrqIndex(gfp->out_samplerate, &gfp->version);
 
         if (!gfp->free_format) /* for non Free Format find the nearest allowed bitrate */
-            gfp->brate = FindNearestBitrate(gfp->brate, gfp->version);
+            gfp->brate = FindNearestBitrate(gfp->brate, gfp->version, gfp->out_samplerate);
     }
 
     if (gfp->VBR != vbr_off && gfp->brate >= 320)
@@ -825,8 +825,9 @@ lame_init_params(lame_global_flags * const gfp)
             gfc->bitrate_index = 0;
         }
         else {
+            gfp->brate = FindNearestBitrate(gfp->brate, gfp->version, gfp->out_samplerate);
             gfc->bitrate_index = BitrateIndex(gfp->brate, gfp->version, gfp->out_samplerate);
-            if (gfc->bitrate_index < 0) {
+            if (gfc->bitrate_index <= 0) {
                 freegfc(gfc);
                 gfp->internal_flags = NULL;
                 return -1;
@@ -1026,15 +1027,22 @@ lame_init_params(lame_global_flags * const gfp)
         gfc->VBR_max_bitrate = 14; /* default: allow 160 kbps (MPEG-2) or 320 kbps (MPEG-1) */
         if (gfp->out_samplerate < 16000)
             gfc->VBR_max_bitrate = 8; /* default: allow 64 kbps (MPEG-2.5) */
-        if (gfp->VBR_min_bitrate_kbps)
-            if ((gfc->VBR_min_bitrate =
-                 BitrateIndex(gfp->VBR_min_bitrate_kbps, gfp->version, gfp->out_samplerate)) < 0)
+        if (gfp->VBR_min_bitrate_kbps) {
+            gfp->VBR_min_bitrate_kbps =
+                FindNearestBitrate(gfp->VBR_min_bitrate_kbps, gfp->version, gfp->out_samplerate);
+            gfc->VBR_min_bitrate =
+                BitrateIndex(gfp->VBR_min_bitrate_kbps, gfp->version, gfp->out_samplerate);
+            if (gfc->VBR_min_bitrate < 0)
                 return -1;
-        if (gfp->VBR_max_bitrate_kbps)
-            if ((gfc->VBR_max_bitrate =
-                 BitrateIndex(gfp->VBR_max_bitrate_kbps, gfp->version, gfp->out_samplerate)) < 0)
+        }
+        if (gfp->VBR_max_bitrate_kbps) {
+            gfp->VBR_max_bitrate_kbps =
+                FindNearestBitrate(gfp->VBR_max_bitrate_kbps, gfp->version, gfp->out_samplerate);
+            gfc->VBR_max_bitrate =
+                BitrateIndex(gfp->VBR_max_bitrate_kbps, gfp->version, gfp->out_samplerate);
+            if (gfc->VBR_max_bitrate < 0)
                 return -1;
-
+        }
         gfp->VBR_min_bitrate_kbps = bitrate_table[gfp->version][gfc->VBR_min_bitrate];
         gfp->VBR_max_bitrate_kbps = bitrate_table[gfp->version][gfc->VBR_max_bitrate];
 

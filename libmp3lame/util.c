@@ -226,15 +226,23 @@ freq2cbw(FLOAT freq)
 
 int
 FindNearestBitrate(int bRate, /* legal rates from 8 to 320 */
-                   int version)
+                   int version,
+                   int samplerate)
 {                       /* MPEG-1 or MPEG-2 LSF */
-    int     bitrate = 0;
+    int     bitrate;
     int     i;
 
-    for (i = 1; i <= 14; i++)
-        if (ABS(bitrate_table[version][i] - bRate) < ABS(bitrate - bRate))
-            bitrate = bitrate_table[version][i];
+    if (samplerate < 16000)
+        version = 2;
+    
+    bitrate = bitrate_table[version][1];
 
+    for (i = 2; i <= 14; i++) {
+        if (bitrate_table[version][i] > 0) {
+            if (ABS(bitrate_table[version][i] - bRate) < ABS(bitrate - bRate))
+                bitrate = bitrate_table[version][i];
+        }
+    }
     return bitrate;
 }
 
@@ -342,15 +350,13 @@ BitrateIndex(int bRate,      /* legal rates from 32 to 448 kbps */
     int     i;
     if (samplerate < 16000)
         version = 2;
-    if (bRate < bitrate_table[version][0])
-        bRate = bitrate_table[version][0];
-    if (bRate > bitrate_table[version][14])
-        bRate = bitrate_table[version][14];
-
-    for (i = 0; i <= 14; i++)
-        if (bitrate_table[version][i] == bRate)
-            return i;
-
+    for (i = 0; i <= 14; i++) {
+        if (bitrate_table[version][i] > 0) {
+            if (bitrate_table[version][i] == bRate) {
+                return i;
+            }
+        }
+    }
     return -1;
 }
 

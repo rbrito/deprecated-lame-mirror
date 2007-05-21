@@ -495,7 +495,7 @@ extern  "C" {
 ***********************************************************************/
     void    freegfc(lame_internal_flags * const gfc);
     extern int BitrateIndex(int, int, int);
-    extern int FindNearestBitrate(int, int);
+    extern int FindNearestBitrate(int, int, int);
     extern int map2MP3Frequency(int freq);
     extern int SmpFrqIndex(int, int *const);
     extern int nearestBitrateFullIndex(const int brate);
