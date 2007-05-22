@@ -1869,7 +1869,7 @@ calc_target_bits(lame_global_flags const *gfp,
 
     if (gfc->mode_ext == MPG_MD_MS_LR)
         for (gr = 0; gr < gfc->mode_gr; gr++) {
-            reduce_side(targ_bits[gr], ms_ener_ratio[gr], mean_bits * gfc->channels_out, MAX_BITS_PER_GRANULE);
+            reduce_side(targ_bits[gr], ms_ener_ratio[gr], mean_bits * gfc->channels_out, MAX_BITS_PER_CHANNEL);
         }
 
     /*  sum target bits
