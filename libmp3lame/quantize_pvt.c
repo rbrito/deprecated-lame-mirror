@@ -516,6 +516,8 @@ reduce_side(int targ_bits[2], FLOAT ms_ener_ratio, int mean_bits, int max_bits)
     int     move_bits;
     FLOAT   fac;
 
+    assert(max_bits <= MAX_BITS_PER_GRANULE);
+    assert(targ_bits[0]+targ_bits[1] <= MAX_BITS_PER_GRANULE);
 
     /*  ms_ener_ratio = 0:  allocate 66/33  mid/side  fac=.33  
      *  ms_ener_ratio =.5:  allocate 50/50 mid/side   fac= 0 */
@@ -553,7 +555,6 @@ reduce_side(int targ_bits[2], FLOAT ms_ener_ratio, int mean_bits, int max_bits)
         }
     }
 
-    assert(max_bits <= MAX_BITS_PER_CHANNEL);
     move_bits = targ_bits[0] + targ_bits[1];
     if (move_bits > max_bits) {
         targ_bits[0] = (max_bits * targ_bits[0]) / move_bits;
@@ -561,6 +562,7 @@ reduce_side(int targ_bits[2], FLOAT ms_ener_ratio, int mean_bits, int max_bits)
     }
     assert(targ_bits[0] <= MAX_BITS_PER_CHANNEL);
     assert(targ_bits[1] <= MAX_BITS_PER_CHANNEL);
+    assert(targ_bits[0]+targ_bits[1] <= MAX_BITS_PER_GRANULE);
 }
 
 

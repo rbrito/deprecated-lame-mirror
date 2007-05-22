@@ -1842,6 +1842,7 @@ calc_target_bits(lame_global_flags const *gfp,
         res_factor = 1.00;
 
     for (gr = 0; gr < gfc->mode_gr; gr++) {
+        int sum = 0;
         for (ch = 0; ch < gfc->channels_out; ch++) {
             targ_bits[gr][ch] = res_factor * mean_bits;
 
@@ -1864,12 +1865,22 @@ calc_target_bits(lame_global_flags const *gfp,
 
                 targ_bits[gr][ch] += add_bits;
             }
+            if (targ_bits[gr][ch] > MAX_BITS_PER_CHANNEL) {
+                targ_bits[gr][ch] = MAX_BITS_PER_CHANNEL;
+            }
+            sum += targ_bits[gr][ch];
         }               /* for ch */
+        if (sum > MAX_BITS_PER_GRANULE) {
+            for (ch = 0; ch < gfc->channels_out; ++ch) {
+              targ_bits[gr][ch] *= MAX_BITS_PER_GRANULE;
+              targ_bits[gr][ch] /= sum;
+            } 
+        }
     }                   /* for gr */
 
     if (gfc->mode_ext == MPG_MD_MS_LR)
         for (gr = 0; gr < gfc->mode_gr; gr++) {
-            reduce_side(targ_bits[gr], ms_ener_ratio[gr], mean_bits * gfc->channels_out, MAX_BITS_PER_CHANNEL);
+            reduce_side(targ_bits[gr], ms_ener_ratio[gr], mean_bits * gfc->channels_out, MAX_BITS_PER_GRANULE);
         }
 
     /*  sum target bits
