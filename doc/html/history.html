@@ -30,7 +30,46 @@ affect speed</font> <br>
 
 black = usability, portability, other
 <hr>
-<h3>LAME 3.98 development</h3>
+<h3>LAME 3.98 beta 3&nbsp; &nbsp;May 22 2007</h3>
+
+<ul>
+
+  <li>Robert Hegemann:
+    <ul>
+
+      <li>Fixes regarding max number of bits limitation</li>
+      
+    </ul>
+
+  </li>
+
+</ul>
+
+<br>
+
+<h3>LAME 3.98 beta 2&nbsp; &nbsp;May 20 2007</h3>
+
+<ul>
+
+  <li>Robert Hegemann:
+    <ul>
+
+      <li>Bug tracker item: <i>[ 1693461 ];</i>
+      Fixed memory leaks in ACM codec</li>
+      
+      <li>Fixed encoding of non-standard sampling rates in CBR</li>
+
+      <li><font color="#ff0000">Improved VBR strategy when running out of bits</font></li>
+      
+    </ul>
+
+  </li>
+
+</ul>
+
+<br>
+
+<h3>LAME 3.98 beta 1&nbsp; &nbsp;May 16 2007</h3>
 
 <ul>
 
@@ -85,6 +124,8 @@ adjustment in low volume cases</font></li>
       many of them are at an acceptable quality level now;</font>
       with a big <b>'Thank You'</b> to Francis Niechcial</li>
 
+      <li><font color="#ff0000">Modified VBR strategy to handle out of bits cases</font></li>
+
       <li>Restricted bitreservoir size for 320 kbps frames to
       the size used for sideinfo, because of decoding problems
       with FhG decoders installed on almost every Windows system</li>
@@ -92,17 +133,20 @@ adjustment in low volume cases</font></li>
       <li>LAME aborts on unsupported input files
       or unrecognized parameter options passed more often now </li>
 
-      <li>Fixed: <i>[ 1596306 ] "fatal error during initialization";</i>
+      <li>Bug tracker item: <i>[ 1596306 ] "fatal error during initialization";</i>
       an invalid MPEG samplerate was returned by optimum_samplefreq function</li>
-
-      <li>Feature request: <i>[ 1588283 ] Flushing output stream in lame.exe;</i>
-          'flush' option added</li>
 
       <li>Bug tracker item: <i>[ 1585942 ] lame not --silent when TERM not set;</i>
       in case LAME was build with TERMCAP defined and no TERM
       environment is defined, now we do not issue an error message and
       silently fallback to the default behaviour as if LAME was
       compiled without TERMCAP defined.</li>
+
+      <li>Bug tracker item: <i>[ 1711980 ] LAME writes invalid Xing header when ID3 tags exist;</i>
+      LAME was sometimes writing an invalid Xing/Info header</li>
+
+      <li>Feature request: <i>[ 1588283 ] Flushing output stream in lame.exe;</i>
+          'flush' option added</li>
 
       <li><font color="#3366ff">Added FFTSSE and FFT3DNOW assembler code from
           Lame4 branch</font></li>
