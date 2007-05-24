@@ -327,6 +327,39 @@ id3tag_set_genre(lame_global_flags * gfp, const char *genre)
     return 0;
 }
 
+
+/*
+Some existing options for ID3 tag can be specified by --tv option
+as follows.
+--tt <value>, --tv TIT2=value
+--ta <value>, --tv TPE1=value
+--tl <value>, --tv TALB=value
+--ty <value>, --tv TYER=value
+--tn <value>, --tv TRCK=value
+--tg <value>, --tv TCON=value
+(although some are not exactly same)*/
+
+int
+id3tag_set_fieldvalue(lame_global_flags * gfp, const char *fieldvalue)
+{
+    lame_internal_flags *gfc = gfp->internal_flags;
+    if (fieldvalue && *fieldvalue) {
+        char **p = NULL;
+        if (strlen(fieldvalue) < 5 || fieldvalue[4] != '=') {
+            return -1;
+        }
+        p = (char **)realloc(gfc->tag_spec.values, sizeof(char*) * (gfc->tag_spec.num_values + 1));
+        if (!p) {
+            return -1;
+        }
+        gfc->tag_spec.values = (char const**)p;
+        gfc->tag_spec.values[gfc->tag_spec.num_values++] = fieldvalue;
+        gfc->tag_spec.flags |= CHANGED_FLAG;
+    }
+    id3tag_add_v2(gfp);
+    return 0;
+}
+
 static unsigned char *
 set_4_byte_value(unsigned char *bytes, unsigned long value)
 {
@@ -380,6 +413,29 @@ set_frame(unsigned char *frame, unsigned long id, const char *text, size_t lengt
         }
         while (length--) {
             *frame++ = *text++;
+        }
+    }
+    return frame;
+}
+
+static unsigned char *
+set_frame_custom(unsigned char *frame, const char *fieldvalue)
+{
+    if (fieldvalue && *fieldvalue) {
+        const char *value = fieldvalue + 5;
+        size_t length = strlen(value);
+        *frame++ = *fieldvalue++;
+        *frame++ = *fieldvalue++;
+        *frame++ = *fieldvalue++;
+        *frame++ = *fieldvalue++;
+        frame = set_4_byte_value(frame, strlen(value) + 1);
+        /* clear 2-byte header flags */
+        *frame++ = 0;
+        *frame++ = 0;
+        /* clear 1 encoding descriptor byte to indicate ISO-8859-1 format */
+        *frame++ = 0;
+        while (length--) {
+            *frame++ = *value++;
         }
     }
     return frame;
@@ -492,6 +548,9 @@ id3tag_write_v2(lame_global_flags * gfp)
             else {
                 genre_length = 0;
             }
+            for (index = 0;index < gfc->tag_spec.num_values;++index) {
+                tag_size += 6 + strlen(gfc->tag_spec.values[index]);
+            }
             if (gfc->tag_spec.flags & PAD_V2_FLAG) {
                 /* add 128 bytes of padding */
                 tag_size += 128;
@@ -539,6 +598,9 @@ id3tag_write_v2(lame_global_flags * gfp)
             p = set_frame(p, COMMENT_FRAME_ID, gfc->tag_spec.comment, comment_length);
             p = set_frame(p, TRACK_FRAME_ID, track, track_length);
             p = set_frame(p, GENRE_FRAME_ID, genre, genre_length);
+            for (index = 0;index < gfc->tag_spec.num_values;++index) {
+                p = set_frame_custom(p, gfc->tag_spec.values[index]);
+            }
             /* clear any padding bytes */
             memset(p, 0, tag_size - (p - tag));
             /* write tag directly into bitstream at current position */

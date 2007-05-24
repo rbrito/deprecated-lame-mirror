@@ -21,6 +21,8 @@ struct id3tag_spec {
     int     track;
     int     trackcount;
     int     genre;
+    char const* *values;
+    int     num_values;
 };
 
 

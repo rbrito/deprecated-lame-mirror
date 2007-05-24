@@ -18,7 +18,7 @@
   This allows to have some usefull information about the music track included 
   inside the file. Those data can be read by most MP3 players.<br>
   <br>
-  Lame will smartly choose wich tags to use. It will add ID3 v2 tags only if the 
+  LAME will smartly choose wich tags to use. It will add ID3 v2 tags only if the 
   input comments won't fint in v1 or v1.1 tags, ie if they are more than 30 characters. 
   In this case, both v1 and v2 tags will be added, to ensure reading of tags by 
   MP3 players wich are unable to read ID3 v2 tags.</p>
@@ -56,6 +56,10 @@
   <tr valign="TOP"> 
     <td align="LEFT" nowrap><kbd>--tg "genre"</kbd></td>
     <td align="LEFT" nowrap> genre of song (name or number)</td>
+  </tr>
+  <tr valign="TOP"> 
+    <td align="LEFT" nowrap><kbd>--tv "id=value"</kbd></td>
+    <td align="LEFT" nowrap> user-defined frame specified by id and value (v2.3 tag)</td>
   </tr>
 </table>
 <br>

@@ -1075,6 +1075,11 @@ extern int id3tag_set_genre(
         lame_global_flags*  gfp,
         const char*         genre );
 
+/* return non-zero result if field name is invalid */
+extern int id3tag_set_fieldvalue(
+        lame_global_flags*  gfp,
+        const char*         fieldvalue);
+
 /***********************************************************************
 *
 *  list of valid bitrates [kbps] & sample frequencies [Hz].
