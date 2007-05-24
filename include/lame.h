@@ -1080,6 +1080,12 @@ extern int id3tag_set_fieldvalue(
         lame_global_flags*  gfp,
         const char*         fieldvalue);
 
+/* return non-zero result if image type is invalid */
+extern int id3tag_set_albumart(
+        lame_global_flags*  gfp,
+        const char*         image,
+        unsigned long       size );
+
 /***********************************************************************
 *
 *  list of valid bitrates [kbps] & sample frequencies [Hz].
@@ -1092,10 +1098,14 @@ extern const int      samplerate_table [3] [ 4];
 
 
 
+/* maximum size of albumart image (128KB), which affects LAME_MAXMP3BUFFER
+   as well since lame_encode_buffer() also returns ID3v2 tag data */
+#define LAME_MAXALBUMART    (128 * 1024)
+
 /* maximum size of mp3buffer needed if you encode at most 1152 samples for
-   each call to lame_encode_buffer.  see lame_encode_buffer() below
+   each call to lame_encode_buffer.  see lame_encode_buffer() below  
    (LAME_MAXMP3BUFFER is now obsolete)  */
-#define LAME_MAXMP3BUFFER   16384
+#define LAME_MAXMP3BUFFER   (16384 + LAME_MAXALBUMART)
 
 
 typedef enum {

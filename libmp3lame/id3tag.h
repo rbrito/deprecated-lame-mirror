@@ -10,6 +10,13 @@
 #define SPACE_V1_FLAG   (1U << 4)
 #define PAD_V2_FLAG     (1U << 5)
 
+enum {
+    MIMETYPE_NONE = 0,
+    MIMETYPE_JPEG,
+    MIMETYPE_PNG,
+    MIMETYPE_GIF,
+};
+
 struct id3tag_spec {
     /* private data members */
     int     flags;
@@ -21,6 +28,9 @@ struct id3tag_spec {
     int     track;
     int     trackcount;
     int     genre;
+    const unsigned char *albumart;
+    int     albumart_size;
+    int     albumart_mimetype;
     char const* *values;
     int     num_values;
 };

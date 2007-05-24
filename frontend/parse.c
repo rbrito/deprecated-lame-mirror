@@ -108,6 +108,9 @@ int     in_bitwidth = 16;
 
 int     flush_write = 0;
 
+/* MODULE VARIABLES.  set by parse_args() */
+char*   albumart = NULL;
+
 
 /**
  *  Long Filename support for the WIN32 platform
@@ -620,6 +623,7 @@ long_help(const lame_global_flags * gfp, FILE * const fp, const char *ProgramNam
             "    --tc <comment>  user-defined text (max 30 chars for v1 tag, 28 for v1.1)\n"
             "    --tn <track>    audio/song track number (1 to 255, creates v1.1 tag)\n"
             "    --tg <genre>    audio/song genre (name or number in list)\n"
+            "    --ti <file>     audio/song albumArt (jpeg/png/gif file, 128KB max, v2.3)\n"
             "    --tv <id=value> user-defined frame specified by id and value (v2.3 tag)\n");
     fprintf(fp,
             "    --add-id3v2     force addition of version 2 tag\n"
@@ -1351,6 +1355,36 @@ parse_args(lame_global_flags * gfp, int argc, char **argv,
                     argUsed = 1;
                 id3tag_set_fieldvalue(gfp, nextArg);
 
+                T_ELIF("ti")
+                    argUsed = 1;
+                if (nextArg) {
+                    FILE *fpi = fopen(nextArg, "rb");
+                    size_t size = 0;
+                    if (!fpi) {
+                        error_printf("Could not find: '%s'.\n", nextArg);
+                        return -1;
+                    }
+                    fseek(fpi, 0, SEEK_END);
+                    size = ftell(fpi);
+                    fseek(fpi, 0, SEEK_SET);
+                    free(albumart); /* free albumart in case a user specifies multiple times */
+                    albumart = (char *)malloc(size);
+                    if (!albumart) {
+                        error_printf("Insufficient memory for reading the albumart.\n");
+                        return -1;
+                    }
+                    if (fread(albumart, 1, size, fpi) != size) {
+                        error_printf("Read error: '%s'.\n", nextArg);
+                        return -1;
+                    }
+                    fclose(fpi);
+                    if (id3tag_set_albumart(gfp, albumart, size)) {
+                        error_printf("Unsupported image: '%s'.\nSpecify JPEG/PNG/GIF image (128KB maximum)\n",
+                                     nextArg);
+                        return -1;
+                    }
+                }
+
                 T_ELIF("add-id3v2")
                     id3tag_add_v2(gfp);
 
@@ -2030,6 +2064,12 @@ parse_args(lame_global_flags * gfp, int argc, char **argv,
     if (num_nogap != NULL)
         *num_nogap = count_nogap;
     return 0;
+}
+
+void parse_close()
+{
+    free(albumart);
+    albumart = NULL;
 }
 
 /* end of parse.c */

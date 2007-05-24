@@ -360,6 +360,36 @@ id3tag_set_fieldvalue(lame_global_flags * gfp, const char *fieldvalue)
     return 0;
 }
 
+int
+id3tag_set_albumart(lame_global_flags* gfp, const char* image, unsigned long size)
+{
+    int mimetype = 0;
+    unsigned char *data = (unsigned char *)image;
+    lame_internal_flags *gfc = gfp->internal_flags;
+
+    /* make sure the image size is no larger than the maximum value */
+    if (LAME_MAXALBUMART < size) {
+        return -1;
+    }
+    /* determine MIME type from the actual image data */
+    if (2 < size && data[0] == 0xFF && data[1] == 0xD8) {
+        mimetype = MIMETYPE_JPEG;
+    } else if (4 < size && data[0] == 0x89 && strncmp((const char *)&data[1], "PNG", 3) == 0) {
+        mimetype = MIMETYPE_PNG;
+    } else if (4 < size && strncmp((const char *)data, "GIF8", 4) == 0) { 
+        mimetype = MIMETYPE_GIF;
+    } else {
+        return -1;
+    }
+
+    gfc->tag_spec.albumart = (unsigned char *)image;
+    gfc->tag_spec.albumart_size = size;
+    gfc->tag_spec.albumart_mimetype = mimetype;
+    gfc->tag_spec.flags |= CHANGED_FLAG;
+    id3tag_add_v2(gfp);
+    return 0;
+}
+
 static unsigned char *
 set_4_byte_value(unsigned char *bytes, unsigned long value)
 {
@@ -441,6 +471,42 @@ set_frame_custom(unsigned char *frame, const char *fieldvalue)
     return frame;
 }
 
+static unsigned char *
+set_frame_apic(unsigned char *frame, const char *mimetype, const unsigned char *data, size_t size)
+{
+    /* ID3v2.3 standard APIC frame:
+     *     <Header for 'Attached picture', ID: "APIC">
+     *     Text encoding    $xx
+     *     MIME type        <text string> $00
+     *     Picture type     $xx
+     *     Description      <text string according to encoding> $00 (00)
+     *     Picture data     <binary data>
+     */
+    if (mimetype && data && size) {
+        frame = set_4_byte_value(frame, FRAME_ID('A', 'P', 'I', 'C'));
+        frame = set_4_byte_value(frame, 4 + strlen(mimetype) + size);
+        /* clear 2-byte header flags */
+        *frame++ = 0;
+        *frame++ = 0;
+        /* clear 1 encoding descriptor byte to indicate ISO-8859-1 format */
+        *frame++ = 0;
+        /* copy mime_type */
+        while (*mimetype) {
+            *frame++ = *mimetype++;
+        }
+        *frame++ = 0;
+        /* set picture type to 0 */
+        *frame++ = 0;
+        /* empty description field */
+        *frame++ = 0;
+        /* copy the image data */
+        while (size--) {
+            *frame++ = *data++;
+        }
+    }
+    return frame;
+}
+
 int
 id3tag_write_v2(lame_global_flags * gfp)
 {
@@ -474,6 +540,10 @@ id3tag_write_v2(lame_global_flags * gfp)
             unsigned char *p;
             size_t  adjusted_tag_size;
             unsigned int index;
+            const char *albumart_mime = NULL;
+            static const char *mime_jpeg = "image/jpeg";
+            static const char *mime_png = "image/png";
+            static const char *mime_gif = "image/gif";
             /* calculate playlength in milliseconds */
             playlength_ms = (unsigned long) ((double) gfp->num_samples * 1000.0) /
                 (gfp->num_channels * gfp->in_samplerate);
@@ -551,6 +621,20 @@ id3tag_write_v2(lame_global_flags * gfp)
             for (index = 0;index < gfc->tag_spec.num_values;++index) {
                 tag_size += 6 + strlen(gfc->tag_spec.values[index]);
             }
+            if (gfc->tag_spec.albumart && gfc->tag_spec.albumart_size) {
+                switch (gfc->tag_spec.albumart_mimetype) {
+                case MIMETYPE_JPEG:
+                    albumart_mime = mime_jpeg;
+                    break;
+                case MIMETYPE_PNG:
+                    albumart_mime = mime_png;
+                    break;
+                case MIMETYPE_GIF:
+                    albumart_mime = mime_gif;
+                    break;
+                }
+                tag_size += 10 + 4 + strlen(albumart_mime) + gfc->tag_spec.albumart_size;
+            }
             if (gfc->tag_spec.flags & PAD_V2_FLAG) {
                 /* add 128 bytes of padding */
                 tag_size += 128;
@@ -598,6 +682,7 @@ id3tag_write_v2(lame_global_flags * gfp)
             p = set_frame(p, COMMENT_FRAME_ID, gfc->tag_spec.comment, comment_length);
             p = set_frame(p, TRACK_FRAME_ID, track, track_length);
             p = set_frame(p, GENRE_FRAME_ID, genre, genre_length);
+            p = set_frame_apic(p, albumart_mime, gfc->tag_spec.albumart, gfc->tag_spec.albumart_size);
             for (index = 0;index < gfc->tag_spec.num_values;++index) {
                 p = set_frame_custom(p, gfc->tag_spec.values[index]);
             }
