@@ -621,7 +621,10 @@ long_help(const lame_global_flags * gfp, FILE * const fp, const char *ProgramNam
             "    --tl <album>    audio/song album (max 30 chars for version 1 tag)\n"
             "    --ty <year>     audio/song year of issue (1 to 9999)\n"
             "    --tc <comment>  user-defined text (max 30 chars for v1 tag, 28 for v1.1)\n"
-            "    --tn <track>    audio/song track number (1 to 255, creates v1.1 tag)\n"
+            "    --tn <track[/total]>   audio/song track number and (optionally) the total\n"
+            "                           number of tracks on the original recording. (track\n"
+            "                           and total each 1 to 255. just the track number\n"
+            "                           creates v1.1 tag, providing a total forces v2.0).\n"
             "    --tg <genre>    audio/song genre (name or number in list)\n"
             "    --ti <file>     audio/song albumArt (jpeg/png/gif file, 128KB max, v2.3)\n"
             "    --tv <id=value> user-defined frame specified by id and value (v2.3 tag)\n");
@@ -1323,6 +1326,7 @@ parse_args(lame_global_flags * gfp, int argc, char **argv,
                     argUsed = 1;
                 if (0 == ignore_tag_errors) {
                     if (nextArg && *nextArg) {
+                        char   *tot = strchr(nextArg, '/');
                         int     num = atoi(nextArg);
 
                         if (num < 0 || num > 255) {
@@ -1330,6 +1334,17 @@ parse_args(lame_global_flags * gfp, int argc, char **argv,
                                 error_printf("The track number has to be between 0 and 255.\n");
                             }
                             return -1;
+                        }
+                        if (tot)
+                        {
+                            int tnum = atoi(++tot);
+
+                            if ( tnum < 0 || tnum > 255 ) {
+                                if( silent < 10 ) {
+                                    fprintf(stderr, "The track count has to be between 0 and 255.\n");
+                                }
+                                return -1;
+                            }
                         }
                     }
                 }

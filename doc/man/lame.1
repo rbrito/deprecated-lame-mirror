@@ -973,8 +973,10 @@ audio/song year of issue (1 to 9999)
 .BI \-\-tc " comment"
 user-defined text (max 30 chars for v1 tag, 28 for v1.1)
 .TP
-.BI \-\-tn " track"
-audio/song track number (1 to 255, creates v1.1 tag)
+.BI \-\-tn " track[/total]"
+audio/song track number and (optionally) the total number of tracks on
+the original recording. (track and total each 1 to 255. Providing
+just the track number creates v1.1 tag, providing a total forces v2.0).
 .TP
 .BI \-\-tg " genre"
 audio/song genre (name or number in list)
