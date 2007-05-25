@@ -1309,26 +1309,33 @@ reduce_bit_usage(lame_internal_flags * gfc, int gr, int ch
 }
 
 #if 0
+static int frame_num = -1;
 static void
-debug_bit_usage(algo_t that[2], int maxbits[2], char *s)
+debug_bit_usage(algo_t that[2][2], int maxbits[2][2], char *s)
 {
-    int     nch;
-    int     ch;
-    int     gr_sum = 0, gr_max = 0;
+    lame_internal_flags* gfc = that[0][0].gfc;
+    int     ngr, nch;
+    int     gr, ch;
+    int     fr_sum = 0, fr_max = 0;
 
-    nch = that[0].gfc->channels_out;
-    DEBUGF(that[0].gfc, "%s\t", s);
-    for (ch = 0; ch < nch; ++ch) {
-        int     use = 0;
-        if (maxbits[ch] > 0) {
-            gr_max += maxbits[ch];
-            use += that[ch].cod_info->part2_3_length + that[ch].cod_info->part2_length;
-            gr_sum += use;
+    ngr = gfc->mode_gr;
+    nch = gfc->channels_out;
+    DEBUGF(gfc, "%4d %s\t", frame_num, s);
+    for (gr = 0; gr < ngr; ++gr) {
+        int     gr_sum = 0, gr_max = 0;
+        for (ch = 0; ch < nch; ++ch) {
+            int     use = 0;
+            if (maxbits[gr][ch] > 0) {
+                gr_max += maxbits[gr][ch];
+                use += that[gr][ch].cod_info->part2_3_length + that[gr][ch].cod_info->part2_length;
+                gr_sum += use;
+            }
+            DEBUGF(gfc, "<%d%d> %4d %c%4d\t", gr, ch, maxbits[gr][ch],
+                maxbits[gr][ch] < use ? '<' : ' ', use);
         }
-        DEBUGF(that[0].gfc, "ch=%d max=%4d%cuse=%4d\t", ch, maxbits[ch],
-               maxbits[ch] < use ? '<' : ' ', use);
+        DEBUGF(gfc, "max%4d%csum=%4d\t", gr_max, gr_max < gr_sum ? '<' : ' ', gr_sum);
     }
-    DEBUGF(that[0].gfc, "gr_max=%4d%cgr_sum=%4d\n", gr_max, gr_max < gr_sum ? '<' : ' ', gr_sum);
+    DEBUGF(gfc, "fr_max=%4d%cfr_sum=%4d\n", fr_max, fr_max < fr_sum ? '<' : ' ', fr_sum);
 }
 #endif
 
@@ -1396,7 +1403,6 @@ VBR_encode_frame(lame_internal_flags * gfc, FLOAT const xr34orig[2][2][576],
                  FLOAT const l3_xmin[2][2][SFBMAX], int const max_bits[2][2])
 {
     int     sfwork_[2][2][SFBMAX];
-    int     sfcalc_[2][2][SFBMAX];
     int     vbrsfmin_[2][2][SFBMAX];
     algo_t  that_[2][2];
     int const ngr = gfc->mode_gr;
@@ -1409,7 +1415,7 @@ VBR_encode_frame(lame_internal_flags * gfc, FLOAT const xr34orig[2][2][576],
     int     use_nbits_fr = 0;
     int     gr, ch;
     int     ok, sum_fr;
-
+/*++frame_num;*/
     /* set up some encoding parameters
      */
     for (gr = 0; gr < ngr; ++gr) {
@@ -1446,18 +1452,10 @@ VBR_encode_frame(lame_internal_flags * gfc, FLOAT const xr34orig[2][2][576],
             if (max_bits[gr][ch] > 0) {
                 algo_t *that = &that_[gr][ch];
                 int    *sfwork = sfwork_[gr][ch];
-                int    *sfcalc = sfcalc_[gr][ch];
                 int    *vbrsfmin = vbrsfmin_[gr][ch];
                 int     vbrmax;
-                unsigned int const max_nonzero_coeff =
-                    (unsigned int) that->cod_info->max_nonzero_coeff;
 
-                assert(max_nonzero_coeff < 576);
-                memset(&that->cod_info->l3_enc[max_nonzero_coeff], 0,
-                       (576u - max_nonzero_coeff) * sizeof(that->cod_info->l3_enc[0]));
-
-                vbrmax = block_sf(that, l3_xmin[gr][ch], sfcalc, vbrsfmin);
-                memcpy(sfwork, sfcalc, SFBMAX * sizeof(int));
+                vbrmax = block_sf(that, l3_xmin[gr][ch], sfwork, vbrsfmin);
                 (void) that->alloc(that, sfwork, vbrsfmin, vbrmax);
                 if (0 != bitcount(that)) {
                     /*  this should not happen due to the way the scalefactors are selected
@@ -1483,6 +1481,12 @@ VBR_encode_frame(lame_internal_flags * gfc, FLOAT const xr34orig[2][2][576],
         for (ch = 0; ch < nch; ++ch) {
             if (max_bits[gr][ch] > 0) {
                 algo_t *that = &that_[gr][ch];
+                unsigned int const max_nonzero_coeff =
+                        (unsigned int) that->cod_info->max_nonzero_coeff;
+
+                assert(max_nonzero_coeff < 576);
+                memset(&that->cod_info->l3_enc[max_nonzero_coeff], 0,
+                        (576u - max_nonzero_coeff) * sizeof(that->cod_info->l3_enc[0]));
 
                 (void) quantizeAndCountBits(that);
                 reduce_bit_usage(gfc, gr, ch);
@@ -1525,9 +1529,11 @@ VBR_encode_frame(lame_internal_flags * gfc, FLOAT const xr34orig[2][2][576],
             }
         }
         if (ok) {
+            /*debug_bit_usage(that_,max_nbits_ch,"+");*/
             return use_nbits_fr;
         }
     }
+    /*debug_bit_usage(that_,max_nbits_ch,"?");*/
 
     /* OK, we are in trouble and have to define how many bits are
      * to be used for each granule
@@ -1548,20 +1554,140 @@ VBR_encode_frame(lame_internal_flags * gfc, FLOAT const xr34orig[2][2][576],
                 max_nbits_gr[gr] += max_nbits_ch[gr][ch];
             }
             if (max_nbits_gr[gr] > MAX_BITS_PER_GRANULE) {
+#if 1
+                float f[2], s = 0;
+                for (ch = 0; ch < nch; ++ch) {
+                    if (max_nbits_ch[gr][ch] > 0) {
+                        f[ch] = sqrt(sqrt(max_nbits_ch[gr][ch]));
+                        s += f[ch];
+                    }
+                    else {
+                        f[ch] = 0;
+                    }
+                }
+                for (ch = 0; ch < nch; ++ch) {
+                    if (s > 0) {
+                        max_nbits_ch[gr][ch] = MAX_BITS_PER_GRANULE * f[ch]/s;
+                    }
+                    else {
+                        max_nbits_ch[gr][ch] = 0;
+                    }
+                }
+                if (nch > 1) {
+                    if (max_nbits_ch[gr][0] > use_nbits_ch[gr][0]+32) {
+                        max_nbits_ch[gr][1] += max_nbits_ch[gr][0];
+                        max_nbits_ch[gr][1] -= use_nbits_ch[gr][0]+32;
+                        max_nbits_ch[gr][0] = use_nbits_ch[gr][0]+32;
+                    }
+                    if (max_nbits_ch[gr][1] > use_nbits_ch[gr][1]+32) {
+                        max_nbits_ch[gr][0] += max_nbits_ch[gr][1];
+                        max_nbits_ch[gr][0] -= use_nbits_ch[gr][1]+32;
+                        max_nbits_ch[gr][1] = use_nbits_ch[gr][1]+32;
+                    }
+                    if (max_nbits_ch[gr][0] > MAX_BITS_PER_CHANNEL) {
+                        max_nbits_ch[gr][0] = MAX_BITS_PER_CHANNEL;
+                    }
+                    if (max_nbits_ch[gr][1] > MAX_BITS_PER_CHANNEL) {
+                        max_nbits_ch[gr][1] = MAX_BITS_PER_CHANNEL;
+                    }
+                }
+#else
                 for (ch = 0; ch < nch; ++ch) {
                     max_nbits_ch[gr][ch] *= MAX_BITS_PER_GRANULE;
                     max_nbits_ch[gr][ch] /= max_nbits_gr[gr];
+                }
+#endif
+                max_nbits_gr[gr] = 0;
+                for (ch = 0; ch < nch; ++ch) {
+                    max_nbits_gr[gr] += max_nbits_ch[gr][ch]; 
                 }
             }
             sum_fr += max_nbits_gr[gr];
         }
         if (sum_fr > max_nbits_fr) {
+#if 1
+            {
+                float f[2], s = 0;
+                for (gr = 0; gr < ngr; ++gr) {
+                    if (max_nbits_gr[gr] > 0) {
+                        f[gr] = sqrt(max_nbits_gr[gr]);
+                        s += f[gr];
+                    }
+                    else {
+                        f[gr] = 0;
+                    }
+                }
+                for (gr = 0; gr < ngr; ++gr) {
+                    if (s > 0) {
+                        max_nbits_gr[gr] = max_nbits_fr * f[gr]/s;
+                    }
+                    else {
+                        max_nbits_gr[gr] = 0;
+                    }
+                }
+            }
+            if (ngr > 1) {
+                if (max_nbits_gr[0] > use_nbits_gr[0]+125) {                    
+                    max_nbits_gr[1] += max_nbits_gr[0];
+                    max_nbits_gr[1] -= use_nbits_gr[0]+125;
+                    max_nbits_gr[0] = use_nbits_gr[0]+125;
+                }
+                if (max_nbits_gr[1] > use_nbits_gr[1]+125) {
+                    max_nbits_gr[0] += max_nbits_gr[1];
+                    max_nbits_gr[0] -= use_nbits_gr[1]+125;
+                    max_nbits_gr[1] = use_nbits_gr[1]+125;
+                }
+                for (gr = 0; gr < ngr; ++gr) {
+                    if (max_nbits_gr[gr] > MAX_BITS_PER_GRANULE) {
+                        max_nbits_gr[gr] = MAX_BITS_PER_GRANULE;
+                    }
+                }
+            }
+            for (gr = 0; gr < ngr; ++gr) {
+                float f[2], s = 0;
+                for (ch = 0; ch < nch; ++ch) {
+                    if (max_nbits_ch[gr][ch] > 0) {
+                        f[ch] = sqrt(max_nbits_ch[gr][ch]);
+                        s += f[ch];
+                    }
+                    else {
+                        f[ch] = 0;
+                    }
+                }
+                for (ch = 0; ch < nch; ++ch) {
+                    if (s > 0) {
+                        max_nbits_ch[gr][ch] = max_nbits_gr[gr] * f[ch] / s;
+                    }
+                    else {
+                        max_nbits_ch[gr][ch] = 0;
+                    }
+                }
+                if (nch > 1) {
+                    if (max_nbits_ch[gr][0] > use_nbits_ch[gr][0]+32) {
+                        max_nbits_ch[gr][1] += max_nbits_ch[gr][0];
+                        max_nbits_ch[gr][1] -= use_nbits_ch[gr][0]+32;
+                        max_nbits_ch[gr][0] = use_nbits_ch[gr][0]+32;
+                    }
+                    if (max_nbits_ch[gr][1] > use_nbits_ch[gr][1]+32) {
+                        max_nbits_ch[gr][0] += max_nbits_ch[gr][1];
+                        max_nbits_ch[gr][0] -= use_nbits_ch[gr][1]+32;
+                        max_nbits_ch[gr][1] = use_nbits_ch[gr][1]+32;
+                    }
+                    for (ch = 0; ch < nch; ++ch) {
+                        if (max_nbits_ch[gr][ch] > MAX_BITS_PER_CHANNEL) {
+                            max_nbits_ch[gr][ch] = MAX_BITS_PER_CHANNEL;
+                        }
+                    }
+                }
+            }
+#else
             for (gr = 0; gr < ngr; ++gr) {
                 for (ch = 0; ch < nch; ++ch) {
                     max_nbits_ch[gr][ch] *= max_nbits_fr;
                     max_nbits_ch[gr][ch] /= sum_fr;
                 }
             }
+#endif
         }
         /* sanity check */
         sum_fr = 0;
@@ -1631,6 +1757,7 @@ VBR_encode_frame(lame_internal_flags * gfc, FLOAT const xr34orig[2][2][576],
     /* check bit constrains, but it should always be ok, iff there are no bugs ;-)
      */
     if (use_nbits_fr <= max_nbits_fr) {
+        /*debug_bit_usage(that_,max_nbits_ch,"-");*/
         return use_nbits_fr;
     }
 
