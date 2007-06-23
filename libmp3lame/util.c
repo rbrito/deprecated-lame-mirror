@@ -64,6 +64,14 @@ free_id3tag(lame_internal_flags * const gfc)
         free(gfc->tag_spec.comment);
         gfc->tag_spec.comment = 0;
     }
+    if (gfc->tag_spec.track_id3v2 != 0) {
+        free(gfc->tag_spec.track_id3v2);
+        gfc->tag_spec.track_id3v2 = 0;
+    }
+    if (gfc->tag_spec.genre_id3v2 != 0) {
+        free(gfc->tag_spec.genre_id3v2);
+        gfc->tag_spec.genre_id3v2 = 0;
+    }
 
     if (gfc->tag_spec.albumart != 0) {
         free(gfc->tag_spec.albumart);

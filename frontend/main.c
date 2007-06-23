@@ -660,7 +660,6 @@ main(int argc, char **argv)
     if (argc <= 1) {
         usage(stderr, argv[0]); /* no command-line args, print usage, exit  */
         lame_close(gf);
-        parse_close();
         frontend_close_console();
         return 1;
     }
@@ -675,7 +674,6 @@ main(int argc, char **argv)
     ret = parse_args(gf, argc, argv, inPath, outPath, nogap_inPath, &max_nogap);
     if (ret < 0) {
         lame_close(gf);
-        parse_close();
         frontend_close_console();
         return ret == -2 ? 0 : 1;
     }
@@ -700,7 +698,6 @@ main(int argc, char **argv)
     }
     if (outf == NULL) {
         lame_close(gf);
-        parse_close();
         frontend_close_console();
         return -1;
     }
@@ -715,7 +712,6 @@ main(int argc, char **argv)
         }
         error_printf("fatal error during initialization\n");
         lame_close(gf);
-        parse_close();
         frontend_close_console();
         return i;
     }
@@ -792,7 +788,6 @@ main(int argc, char **argv)
             lame_close(gf);
         }
     }
-    parse_close();
     frontend_close_console();
     return ret;
 }

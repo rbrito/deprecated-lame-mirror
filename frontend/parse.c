@@ -108,8 +108,6 @@ int     in_bitwidth = 16;
 
 int     flush_write = 0;
 
-/* MODULE VARIABLES.  set by parse_args() */
-char*   albumart = NULL;
 
 
 /**
@@ -1324,56 +1322,64 @@ parse_args(lame_global_flags * gfp, int argc, char **argv,
 
                 T_ELIF("tn")
                     argUsed = 1;
-                if (0 == ignore_tag_errors) {
-                    if (nextArg && *nextArg) {
-                        char   *tot = strchr(nextArg, '/');
-                        int     num = atoi(nextArg);
+                    if (0 == ignore_tag_errors) {
+                        if (nextArg && *nextArg) {
+                            char   *tot = strchr(nextArg, '/');
+                            int     num = atoi(nextArg);
 
-                        if (num < 0 || num > 255) {
-                            if (silent < 10) {
-                                error_printf("The track number has to be between 0 and 255.\n");
-                            }
-                            return -1;
-                        }
-                        if (tot)
-                        {
-                            int tnum = atoi(++tot);
-
-                            if ( tnum < 0 || tnum > 255 ) {
-                                if( silent < 10 ) {
-                                    fprintf(stderr, "The track count has to be between 0 and 255.\n");
+                            if (num < 0 || num > 255) {
+                                if (silent < 10) {
+                                    error_printf("The track number has to be between 0 and 255.\n");
                                 }
                                 return -1;
                             }
+                            if (tot)
+                            {
+                                int tnum = atoi(++tot);
+
+                                if ( tnum < 0 || tnum > 255 ) {
+                                    if( silent < 10 ) {
+                                        fprintf(stderr, "The track count has to be between 0 and 255.\n");
+                                    }
+                                    return -1;
+                                }
+                            }
                         }
                     }
-                }
-                id3tag_set_track(gfp, nextArg);
+                    id3tag_set_track(gfp, nextArg);
 
                 T_ELIF("tg")
+                    int ret = 0;
                     argUsed = 1;
-                if (id3tag_set_genre(gfp, nextArg)) {
-                    if (ignore_tag_errors) {
+                    ret = id3tag_set_genre(gfp, nextArg);
+                    if (ret > 0) {
                         if (silent < 10) {
-                            error_printf("Unknown genre: '%s'.  Setting to 'Other'\n", nextArg);
+                            error_printf("Unknown genre: '%s'.  Setting ID3v1 genre to 'Other'\n", nextArg);
                         }
-                        id3tag_set_genre(gfp, "other");
                     }
-                    else {
-                        error_printf("Unknown genre: '%s'.  Specify genre name or number\n",
-                                     nextArg);
-                        return -1;
+                    if (ret < 0) {
+                        if (silent < 10) {
+                            error_printf("Unknown genre: '%s'.\n", nextArg);
+                        }
+                        if (0 == ignore_tag_errors) {
+                            return -1;
+                        }
                     }
-                }
 
                 T_ELIF("tv")
                     argUsed = 1;
-                id3tag_set_fieldvalue(gfp, nextArg);
+                if (id3tag_set_fieldvalue(gfp, nextArg)) {
+                    if (silent < 10) {
+                        error_printf("Invalid field value: '%s'. Ignored\n", nextArg);
+                    }
+                }
 
                 T_ELIF("ti")
                     argUsed = 1;
                 if (nextArg) {
                     FILE *fpi = fopen(nextArg, "rb");
+                    char *albumart = 0;
+                    int ret = 0;
                     size_t size = 0;
                     if (!fpi) {
                         error_printf("Could not find: '%s'.\n", nextArg);
@@ -1382,7 +1388,6 @@ parse_args(lame_global_flags * gfp, int argc, char **argv,
                     fseek(fpi, 0, SEEK_END);
                     size = ftell(fpi);
                     fseek(fpi, 0, SEEK_SET);
-                    free(albumart); /* free albumart in case a user specifies multiple times */
                     albumart = (char *)malloc(size);
                     if (!albumart) {
                         error_printf("Insufficient memory for reading the albumart.\n");
@@ -1393,7 +1398,10 @@ parse_args(lame_global_flags * gfp, int argc, char **argv,
                         return -1;
                     }
                     fclose(fpi);
-                    if (id3tag_set_albumart(gfp, albumart, size)) {
+                    ret = id3tag_set_albumart(gfp, albumart, size);
+                    free(albumart);
+                    albumart = 0;
+                    if (ret) {
                         error_printf("Unsupported image: '%s'.\nSpecify JPEG/PNG/GIF image (128KB maximum)\n",
                                      nextArg);
                         return -1;
@@ -2081,10 +2089,5 @@ parse_args(lame_global_flags * gfp, int argc, char **argv,
     return 0;
 }
 
-void parse_close()
-{
-    free(albumart);
-    albumart = NULL;
-}
 
 /* end of parse.c */

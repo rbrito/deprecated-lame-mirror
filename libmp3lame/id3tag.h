@@ -20,18 +20,19 @@ enum {
 struct id3tag_spec {
     /* private data members */
     int     flags;
-    const char *title;
-    const char *artist;
-    const char *album;
     int     year;
-    const char *comment;
-    int     track;
-    int     trackcount;
-    int     genre;
-    const unsigned char *albumart;
+    char   *title;
+    char   *artist;
+    char   *album;
+    char   *comment;
+    int     track_id3v1;
+    int     genre_id3v1;
+    char   *track_id3v2;
+    char   *genre_id3v2;
+    unsigned char *albumart;
     int     albumart_size;
     int     albumart_mimetype;
-    char const* *values;
+    char  **values;
     int     num_values;
 };
 
