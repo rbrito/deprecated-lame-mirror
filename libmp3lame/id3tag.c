@@ -181,12 +181,29 @@ id3tag_pad_v2(lame_global_flags * gfp)
     gfc->tag_spec.flags |= PAD_V2_FLAG;
 }
 
+
+static void
+local_strdup( char** dst, char const* src )
+{
+    if (dst == 0) {
+        return;
+    }
+    if (src == 0) {
+        return;
+    }
+    if (*dst != 0) {
+        free(*dst);
+    }
+    *dst = strdup(src);
+}
+
+
 void
 id3tag_set_title(lame_global_flags * gfp, const char *title)
 {
     lame_internal_flags *gfc = gfp->internal_flags;
     if (title && *title) {
-        gfc->tag_spec.title = title;
+        local_strdup(&gfc->tag_spec.title, title);
         gfc->tag_spec.flags |= CHANGED_FLAG;
     }
 }
@@ -196,7 +213,7 @@ id3tag_set_artist(lame_global_flags * gfp, const char *artist)
 {
     lame_internal_flags *gfc = gfp->internal_flags;
     if (artist && *artist) {
-        gfc->tag_spec.artist = artist;
+        local_strdup(&gfc->tag_spec.artist, artist);
         gfc->tag_spec.flags |= CHANGED_FLAG;
     }
 }
@@ -206,7 +223,7 @@ id3tag_set_album(lame_global_flags * gfp, const char *album)
 {
     lame_internal_flags *gfc = gfp->internal_flags;
     if (album && *album) {
-        gfc->tag_spec.album = album;
+        local_strdup(&gfc->tag_spec.album, album);
         gfc->tag_spec.flags |= CHANGED_FLAG;
     }
 }
@@ -236,7 +253,7 @@ id3tag_set_comment(lame_global_flags * gfp, const char *comment)
 {
     lame_internal_flags *gfc = gfp->internal_flags;
     if (comment && *comment) {
-        gfc->tag_spec.comment = comment;
+        local_strdup(&gfc->tag_spec.comment, comment);
         gfc->tag_spec.flags |= CHANGED_FLAG;
     }
 }
@@ -353,7 +370,7 @@ id3tag_set_fieldvalue(lame_global_flags * gfp, const char *fieldvalue)
             return -1;
         }
         gfc->tag_spec.values = (char const**)p;
-        gfc->tag_spec.values[gfc->tag_spec.num_values++] = fieldvalue;
+        gfc->tag_spec.values[gfc->tag_spec.num_values++] = strdup(fieldvalue);
         gfc->tag_spec.flags |= CHANGED_FLAG;
     }
     id3tag_add_v2(gfp);
@@ -381,12 +398,23 @@ id3tag_set_albumart(lame_global_flags* gfp, const char* image, unsigned long siz
     } else {
         return -1;
     }
-
-    gfc->tag_spec.albumart = (unsigned char *)image;
-    gfc->tag_spec.albumart_size = size;
-    gfc->tag_spec.albumart_mimetype = mimetype;
-    gfc->tag_spec.flags |= CHANGED_FLAG;
-    id3tag_add_v2(gfp);
+    if (gfc->tag_spec.albumart != 0) {
+        free(gfc->tag_spec.albumart);
+        gfc->tag_spec.albumart = 0;
+        gfc->tag_spec.albumart_size = 0;
+        gfc->tag_spec.albumart_mimetype = MIMETYPE_NONE;
+    }
+    if (size < 1) {
+        return 0;
+    }
+    gfc->tag_spec.albumart = malloc(size);
+    if (gfc->tag_spec.albumart != 0) {
+        memcpy(gfc->tag_spec.albumart, image, size);
+        gfc->tag_spec.albumart_size = size;
+        gfc->tag_spec.albumart_mimetype = mimetype;
+        gfc->tag_spec.flags |= CHANGED_FLAG;
+        id3tag_add_v2(gfp);
+    }
     return 0;
 }
 
