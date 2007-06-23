@@ -45,6 +45,24 @@
 ***********************************************************************/
 /*empty and close mallocs in gfc */
 
+static void
+free_id3tag(lame_internal_flags * const gfc)
+{
+  if (gfc->tag_spec.albumart != 0) {
+    free(gfc->tag_spec.albumart);
+    gfc->tag_spec.albumart = 0;
+  }
+  if (gfc->tag_spec.values != 0) {
+    int i;
+    for (i = 0; i < gfc->tag_spec.num_values; ++i) {
+      free(gfc->tag_spec.values[i]);
+    }
+    free(gfc->tag_spec.values);
+    gfc->tag_spec.values = 0;
+  }
+}
+
+
 void
 freegfc(lame_internal_flags * const gfc)
 {                       /* bit stream structure */
@@ -98,7 +116,7 @@ freegfc(lame_internal_flags * const gfc)
     if (gfc->in_buffer_1) {
         free(gfc->in_buffer_1);
     }
-
+    free_id3tag(gfc);
     free(gfc);
 }
 
