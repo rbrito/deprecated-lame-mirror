@@ -45,7 +45,7 @@
 ***********************************************************************/
 /*empty and close mallocs in gfc */
 
-static void
+void
 free_id3tag(lame_internal_flags * const gfc)
 {
     if (gfc->tag_spec.title != 0) {

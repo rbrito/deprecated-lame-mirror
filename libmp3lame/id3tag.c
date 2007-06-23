@@ -137,6 +137,7 @@ void
 id3tag_init(lame_global_flags * gfp)
 {
     lame_internal_flags *gfc = gfp->internal_flags;
+    free_id3tag(gfc);
     memset(&gfc->tag_spec, 0, sizeof gfc->tag_spec);
     gfc->tag_spec.genre_id3v1 = GENRE_NUM_UNKNOWN;
 }
