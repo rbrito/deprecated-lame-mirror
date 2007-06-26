@@ -2086,8 +2086,27 @@ lame_mp3_tags_fid(lame_global_flags * gfp, FILE * fpStream)
 {
     if (gfp->bWriteVbrTag) {
         /* Write Xing header again */
-        if (fpStream && !fseek(fpStream, 0, SEEK_SET))
-            (void) PutVbrTag(gfp, fpStream);
+        if (fpStream && !fseek(fpStream, 0, SEEK_SET)) {
+            lame_internal_flags *gfc = gfp->internal_flags;
+            int rc = PutVbrTag(gfp, fpStream);
+            switch (rc) {
+            default: 
+                /* OK */
+                break;
+
+            case -1:
+                ERRORF(gfc, "Error: could not update LAME tag.\n");
+                break;
+
+            case -2: 
+                ERRORF(gfc, "Error: could not update LAME tag, file not seekable.\n");
+                break;
+
+            case -3:
+                ERRORF(gfc, "Error: could not update LAME tag, file not readable.\n");
+                break;
+            }
+        }
     }
 }
 

@@ -804,7 +804,7 @@ PutVbrTag(lame_global_flags const* gfp, FILE * fpStream)
     char    abyte, bbyte;
     uint8_t btToc[NUMTOCENTRIES];
     uint8_t pbtStreamBuffer[MAXFRAMESIZE];
-
+    size_t  nbytes;
     unsigned char id3v2Header[10];
     size_t  id3v2TagSize;
 
@@ -832,9 +832,14 @@ PutVbrTag(lame_global_flags const* gfp, FILE * fpStream)
      */
 
     /* seek to the beginning of the stream */
-    fseek(fpStream, 0, SEEK_SET);
+    if (fseek(fpStream, 0, SEEK_SET) != 0) {
+        return -2;  /* not seekable, abort */
+    }
     /* read 10 bytes in case there's an ID3 version 2 header here */
-    fread(id3v2Header, 1, sizeof id3v2Header, fpStream);
+    nbytes = fread(id3v2Header, 1, sizeof(id3v2Header), fpStream);
+    if (nbytes != sizeof(id3v2Header)) {
+        return -3;  /* not readable, maybe opened Write-Only */
+    }
     /* does the stream begin with the ID3 version 2 file identifier? */
     if (!strncmp((char *) id3v2Header, "ID3", 3)) {
         /* the tag size (minus the 10-byte header) is encoded into four
@@ -854,7 +859,10 @@ PutVbrTag(lame_global_flags const* gfp, FILE * fpStream)
     fseek(fpStream, (long)(id3v2TagSize + gfc->VBR_seek_table.TotalFrameSize), SEEK_SET);
 
     /* Read the header (first valid frame) */
-    fread(pbtStreamBuffer, 4, 1, fpStream);
+    nbytes = fread(pbtStreamBuffer, 4, 1, fpStream);
+    if (nbytes != 4) {
+        return -3;  /* Read failed */
+    }
 
     /* the default VBR header. 48 kbps layer III, no padding, no crc */
     /* but sampling freq, mode andy copyright/copy protection taken */

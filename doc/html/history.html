@@ -30,7 +30,28 @@ affect speed</font> <br>
 
 black = usability, portability, other
 <hr>
-<h3>LAME 3.98 beta 4&nbsp; &nbsp;not yet released</h3>
+<h3>LAME 3.98 beta 5&nbsp; &nbsp;not yet released</h3>
+
+<ul>
+
+  <li>Jonathan Stott:
+  
+    <ul>
+
+      <li>Bug tracker items: <i>[ 1590693 ] ID3v2 tag not writing, [ 1636267 ] ID3v2 tags overwritten</i><br>
+      If the output file is opened 'write-only', then LAME can't update the LAME tag.
+      In this case LAME silently overwrote the first bytes of the file and an
+      optional ID3v2 tag disappeared. Now an error message will be printed and
+      no data is written in this case.       
+      </li>
+      
+    </ul>
+
+  </li>
+  
+</ul>
+
+<h3>LAME 3.98 beta 4&nbsp; &nbsp;June 23 2007</h3>
 
 <ul>
 
@@ -54,6 +75,19 @@ black = usability, portability, other
       <li>Bugfix: the "play length in ms", which is stored in the ID3v2 tag TLEN, was not correctly computed.
                 Some hardware and software players were confused by this garbage data.</li>
       
+      <li><font color="#ff0000">Out of bits strategy for the newer VBR code overhauled</font></li> 
+      
+      <li>LAME API: the ID3 tag functions do not store the pointers passed anymore,
+      they do make deep copies of strings passed as parameters.
+      </li>
+      
+      <li>Changes in LAME frontend switches regarding ID3 tags:
+      <br><tt>--tg "MyGenre"</tt> will route unknown ID3v1 genres to "Other" for ID3v1 tags
+      and will be stored as plain text "MyGenre" for ID3v2 tags. Genres given by known
+      ID3v1 numbers will be stored as its corresponding text in ID3v2 tags.
+      <br><tt>--tn "02/02"</tt> will store the track number specified as plain text as-is
+      for ID3v2 tags.
+      </li>
     </ul>
 
   </li>
