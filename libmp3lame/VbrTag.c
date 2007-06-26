@@ -859,7 +859,7 @@ PutVbrTag(lame_global_flags const* gfp, FILE * fpStream)
     fseek(fpStream, (long)(id3v2TagSize + gfc->VBR_seek_table.TotalFrameSize), SEEK_SET);
 
     /* Read the header (first valid frame) */
-    nbytes = fread(pbtStreamBuffer, 4, 1, fpStream);
+    nbytes = fread(pbtStreamBuffer, 1, 4, fpStream);
     if (nbytes != 4) {
         return -3;  /* Read failed */
     }
