@@ -265,3 +265,5 @@ id3tag_set_year		@2010
 id3tag_set_comment	@2011
 id3tag_set_track	@2012
 id3tag_set_genre	@2013
+id3tag_set_fieldvalue	@2014
+id3tag_set_albumart	@2015
