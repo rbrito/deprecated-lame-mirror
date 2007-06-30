@@ -870,7 +870,7 @@ void CDECL lame_bitrate_block_type_hist (
 
 /*
  * OPTIONAL:
- * lame_mp3_tags_fid will append a Xing VBR tag to the mp3 file with file
+ * lame_mp3_tags_fid will rewrite a Xing VBR tag to the mp3 file with file
  * pointer fid.  These calls perform forward and backwards seeks, so make
  * sure fid is a real file.  Make sure lame_encode_flush has been called,
  * and all mp3 data has been written to the file before calling this
@@ -878,6 +878,9 @@ void CDECL lame_bitrate_block_type_hist (
  * NOTE:
  * if VBR  tags are turned off by the user, or turned off by LAME because
  * the output is not a regular file, this call does nothing
+ * NOTE:
+ * LAME wants to read from the file to skip an optional ID3v2 tag, so
+ * make sure you opened the file for writing and reading.
 */
 void CDECL lame_mp3_tags_fid(lame_global_flags *,FILE* fid);
 
@@ -1066,11 +1069,18 @@ extern void id3tag_set_year(
 extern void id3tag_set_comment(
         lame_global_flags*  gfp,
         const char*         comment );
-extern void id3tag_set_track(
+            
+/* return -1 result if track number is out of ID3v1 range
+                    and ignored for ID3v1 */
+extern int id3tag_set_track(
         lame_global_flags*  gfp,
         const char*         track );
 
-/* return non-zero result if genre name or number is invalid */
+/* return non-zero result if genre name or number is invalid
+  result 0: OK
+  result -1: genre number out of range
+  result -2: no valid ID3v1 genre name, mapped to ID3v1 'Other'
+             but taken as-is for ID3v2 genre tag */
 extern int id3tag_set_genre(
         lame_global_flags*  gfp,
         const char*         genre );

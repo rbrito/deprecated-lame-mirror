@@ -1060,7 +1060,11 @@ resample_rate(double freq)
     }
 }
 
-
+enum ID3TAG_MODE 
+{ ID3TAG_MODE_DEFAULT
+, ID3TAG_MODE_V1_ONLY
+, ID3TAG_MODE_V2_ONLY
+};
 
 /* Ugly, NOT final version */
 
@@ -1084,6 +1088,7 @@ parse_args(lame_global_flags * gfp, int argc, char **argv,
     const char *ProgramName = argv[0];
     int     count_nogap = 0;
     int     noreplaygain = 0; /* is RG explicitly disabled by the user */
+    int     id3tag_mode = ID3TAG_MODE_DEFAULT; 
 
     inPath[0] = '\0';
     outPath[0] = '\0';
@@ -1321,48 +1326,52 @@ parse_args(lame_global_flags * gfp, int argc, char **argv,
                 id3tag_set_comment(gfp, nextArg);
 
                 T_ELIF("tn")
+                    int ret = id3tag_set_track(gfp, nextArg);
                     argUsed = 1;
-                    if (0 == ignore_tag_errors) {
-                        if (nextArg && *nextArg) {
-                            char   *tot = strchr(nextArg, '/');
-                            int     num = atoi(nextArg);
-
-                            if (num < 0 || num > 255) {
-                                if (silent < 10) {
-                                    error_printf("The track number has to be between 0 and 255.\n");
-                                }
+                    if (ret != 0) {
+                        if (0 == ignore_tag_errors) {
+                            if (id3tag_mode == ID3TAG_MODE_V1_ONLY) {
+                                error_printf("The track number has to be between 1 and 255 for ID3v1.\n");
                                 return -1;
                             }
-                            if (tot)
-                            {
-                                int tnum = atoi(++tot);
-
-                                if ( tnum < 0 || tnum > 255 ) {
-                                    if( silent < 10 ) {
-                                        fprintf(stderr, "The track count has to be between 0 and 255.\n");
-                                    }
-                                    return -1;
+                            else if (id3tag_mode == ID3TAG_MODE_V2_ONLY) {
+                                /* track will be stored as-is in ID3v2 case, so no problem here */
+                            }
+                            else {
+                                if (silent < 10) {
+                                    error_printf("The track number has to be between 1 and 255 for ID3v1, ignored for ID3v1.\n");
                                 }
                             }
                         }
                     }
-                    id3tag_set_track(gfp, nextArg);
 
                 T_ELIF("tg")
-                    int ret = 0;
+                    int ret = id3tag_set_genre(gfp, nextArg);
                     argUsed = 1;
-                    ret = id3tag_set_genre(gfp, nextArg);
-                    if (ret > 0) {
-                        if (silent < 10) {
-                            error_printf("Unknown genre: '%s'.  Setting ID3v1 genre to 'Other'\n", nextArg);
-                        }
-                    }
-                    if (ret < 0) {
-                        if (silent < 10) {
-                            error_printf("Unknown genre: '%s'.\n", nextArg);
-                        }
+                    if (ret != 0) {
                         if (0 == ignore_tag_errors) {
-                            return -1;
+                            if (ret == -1) {
+                                error_printf("Unknown ID3v1 genre number: '%s'.\n", nextArg);
+                                return -1;
+                            }
+                            else if (ret == -2) {
+                                if (id3tag_mode == ID3TAG_MODE_V1_ONLY) {
+                                    error_printf("Unknown ID3v1 genre: '%s'.\n", nextArg);
+                                    return -1;
+                                }
+                                else if (id3tag_mode == ID3TAG_MODE_V2_ONLY) {
+                                    /* genre will be stored as-is in ID3v2 case, so no problem here */
+                                }
+                                else {
+                                    if (silent < 10) {
+                                        error_printf("Unknown ID3v1 genre: '%s'.  Setting ID3v1 genre to 'Other'\n", nextArg);
+                                    }
+                                }
+                            }
+                            else {
+                                error_printf("Internal error.\n");
+                                return -1;
+                            }
                         }
                     }
 
@@ -1413,9 +1422,11 @@ parse_args(lame_global_flags * gfp, int argc, char **argv,
 
                 T_ELIF("id3v1-only")
                     id3tag_v1_only(gfp);
+                    id3tag_mode = ID3TAG_MODE_V1_ONLY;
 
                 T_ELIF("id3v2-only")
                     id3tag_v2_only(gfp);
+                    id3tag_mode = ID3TAG_MODE_V2_ONLY;
 
                 T_ELIF("space-id3v1")
                     id3tag_space_v1(gfp);

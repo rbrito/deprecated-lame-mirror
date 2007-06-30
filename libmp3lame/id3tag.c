@@ -261,21 +261,20 @@ id3tag_set_comment(lame_global_flags * gfp, const char *comment)
     }
 }
 
-void
+int
 id3tag_set_track(lame_global_flags * gfp, const char *track)
 {
     char   *trackcount;
     lame_internal_flags *gfc = gfp->internal_flags;
+    int     ret = 0;
 
     if (track && *track) {
         int     num = atoi(track);
-        if (num < 0) {
+        /* check for valid ID3v1 track number range */
+        if (num < 1 || num > 255) {
             num = 0;
-        }
-        /* limit a track to 255 so it fits in a version 1 tag even though CD
-         * audio doesn't allow more than 99 tracks */
-        if (num > 255) {
-            num = 255;
+            ret = -1; /* track number out of ID3v1 range, ignored for ID3v1 */
+            gfc->tag_spec.flags |= (CHANGED_FLAG | ADD_V2_FLAG);
         }
         if (num) {
             gfc->tag_spec.track_id3v1 = num;
@@ -289,6 +288,7 @@ id3tag_set_track(lame_global_flags * gfp, const char *track)
             gfc->tag_spec.flags |= (CHANGED_FLAG | ADD_V2_FLAG);
         }
     }
+    return ret;
 }
 
 /* would use real "strcasecmp" but it isn't portable */
@@ -328,7 +328,7 @@ id3tag_set_genre(lame_global_flags * gfp, const char *genre)
             }
             if (i == GENRE_NAME_COUNT) {
                 num = GENRE_INDEX_OTHER;
-                ret = 1;
+                ret = -2;
             }
         }
         else {
