@@ -192,6 +192,10 @@ lame_decoder(lame_global_flags * gfp, FILE * outf, int skip_start, char *inPath,
                        tmp_num_channels, tmp_num_channels != 1 ? "s" : "");
 
     switch (input_format) {
+    case sf_mp123: /* FIXME: !!! */
+      error_printf("Internal error.  Aborting.");
+      exit(-1);
+
     case sf_mp3:
         if (skip_start == 0) {
             if (*enc_delay > -1 || *enc_padding > -1) {
@@ -278,40 +282,41 @@ lame_decoder(lame_global_flags * gfp, FILE * outf, int skip_start, char *inPath,
 
     do {
         iread = get_audio16(gfp, Buffer); /* read in 'iread' samples */
-        mp3input_data.framenum += iread / mp3input_data.framesize;
-        wavsize += iread;
+        if (iread >= 0) {
+            mp3input_data.framenum += iread / mp3input_data.framesize;
+            wavsize += iread;
 
-        if (silent <= 0) {
-            decoder_progress(&mp3input_data);
-            console_flush();
-        }
-
-        skip_start -= (i = skip_start < iread ? skip_start : iread); /* 'i' samples are to skip in this frame */
-
-        if (skip_end > 1152 && mp3input_data.framenum + 2 > mp3input_data.totalframes) {
-            iread -= (skip_end - 1152);
-            skip_end = 1152;
-        }
-        else if (mp3input_data.framenum == mp3input_data.totalframes && iread != 0)
-            iread -= skip_end;
-
-        for (; i < iread; i++) {
-            if (disable_wav_header) {
-                WriteFunction(outf, (char *) &Buffer[0][i], sizeof(short));
-                if (tmp_num_channels == 2)
-                    WriteFunction(outf, (char *) &Buffer[1][i], sizeof(short));
+            if (silent <= 0) {
+                decoder_progress(&mp3input_data);
+                console_flush();
             }
-            else {
-                Write16BitsLowHigh(outf, Buffer[0][i]);
-                if (tmp_num_channels == 2)
-                    Write16BitsLowHigh(outf, Buffer[1][i]);
+
+            skip_start -= (i = skip_start < iread ? skip_start : iread); /* 'i' samples are to skip in this frame */
+
+            if (skip_end > 1152 && mp3input_data.framenum + 2 > mp3input_data.totalframes) {
+                iread -= (skip_end - 1152);
+                skip_end = 1152;
+            }
+            else if (mp3input_data.framenum == mp3input_data.totalframes && iread != 0)
+                iread -= skip_end;
+
+            for (; i < iread; i++) {
+                if (disable_wav_header) {
+                    WriteFunction(outf, (char *) &Buffer[0][i], sizeof(short));
+                    if (tmp_num_channels == 2)
+                        WriteFunction(outf, (char *) &Buffer[1][i], sizeof(short));
+                }
+                else {
+                    Write16BitsLowHigh(outf, Buffer[0][i]);
+                    if (tmp_num_channels == 2)
+                        Write16BitsLowHigh(outf, Buffer[1][i]);
+                }
+            }
+            if (flush_write == 1) {
+                fflush(outf);
             }
         }
-        if (flush_write == 1) {
-            fflush(outf);
-        }
-        
-    } while (iread);
+    } while (iread > 0);
 
     i = (16 / 8) * tmp_num_channels;
     assert(i > 0);
@@ -366,30 +371,31 @@ lame_encoder(lame_global_flags * gf, FILE * outf, int nogap, char *inPath, char 
         /* read in 'iread' samples */
         iread = get_audio(gf, Buffer);
 
-        encoder_progress(gf);
+        if (iread >= 0) {
+            encoder_progress(gf);
 
-        /* encode */
-        imp3 = lame_encode_buffer_int(gf, Buffer[0], Buffer[1], iread,
-                                      mp3buffer, sizeof(mp3buffer));
+            /* encode */
+            imp3 = lame_encode_buffer_int(gf, Buffer[0], Buffer[1], iread,
+                                          mp3buffer, sizeof(mp3buffer));
 
-        /* was our output buffer big enough? */
-        if (imp3 < 0) {
-            if (imp3 == -1)
-                error_printf("mp3 buffer is not big enough... \n");
-            else
-                error_printf("mp3 internal error:  error code=%i\n", imp3);
-            return 1;
-        }
-        owrite = (int) fwrite(mp3buffer, 1, imp3, outf);
-        if (owrite != imp3) {
-            error_printf("Error writing mp3 output \n");
-            return 1;
+            /* was our output buffer big enough? */
+            if (imp3 < 0) {
+                if (imp3 == -1)
+                    error_printf("mp3 buffer is not big enough... \n");
+                else
+                    error_printf("mp3 internal error:  error code=%i\n", imp3);
+                return 1;
+            }
+            owrite = (int) fwrite(mp3buffer, 1, imp3, outf);
+            if (owrite != imp3) {
+                error_printf("Error writing mp3 output \n");
+                return 1;
+            }
         }
         if (flush_write == 1) {
             fflush(outf);
         }
-
-    } while (iread);
+    } while (iread > 0);
 
     if (nogap)
         imp3 = lame_encode_flush_nogap(gf, mp3buffer, sizeof(mp3buffer)); /* may return one more mp3 frame */

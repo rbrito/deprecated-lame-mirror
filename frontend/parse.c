@@ -1011,13 +1011,13 @@ filename_to_type(const char *FileName)
 
     FileName += len - 4;
     if (0 == local_strcasecmp(FileName, ".mpg"))
-        return sf_mp1;
+        return sf_mp123;
     if (0 == local_strcasecmp(FileName, ".mp1"))
-        return sf_mp1;
+        return sf_mp123;
     if (0 == local_strcasecmp(FileName, ".mp2"))
-        return sf_mp2;
+        return sf_mp123;
     if (0 == local_strcasecmp(FileName, ".mp3"))
-        return sf_mp3;
+        return sf_mp123;
     if (0 == local_strcasecmp(FileName, ".wav"))
         return sf_wave;
     if (0 == local_strcasecmp(FileName, ".aif"))
@@ -2045,15 +2045,14 @@ parse_args(lame_global_flags * gfp, int argc, char **argv,
         input_format = filename_to_type(inPath);
 
 #if !(defined HAVE_MPGLIB || defined AMIGA_MPEGA)
-    if (input_format == sf_mp1 || input_format == sf_mp2 || input_format == sf_mp3) {
+    if (is_mpeg_file_format(input_format)) {
         error_printf("Error: libmp3lame not compiled with mpg123 *decoding* support \n");
         return -1;
     }
 #endif
 
 
-    if ((input_format == sf_mp1 ||
-         input_format == sf_mp2 || input_format == sf_mp3) && print_clipping_info) {
+    if (is_mpeg_file_format(input_format) && print_clipping_info) {
 
         error_printf("\nError: input cannot be MPEG when --clipdetect is used\n"
                      "\n--clipdetect requires decoding of MPEG *output* on the fly which\n"
@@ -2064,8 +2063,7 @@ parse_args(lame_global_flags * gfp, int argc, char **argv,
     }
 
 
-    if ((input_format == sf_mp1 ||
-         input_format == sf_mp2 || input_format == sf_mp3) && lame_get_decode_on_the_fly(gfp)) {
+    if (is_mpeg_file_format(input_format) && lame_get_decode_on_the_fly(gfp)) {
 
         error_printf("\nError: input cannot be MPEG when --replaygain-accurate is used\n"
                      "\n--replaygain-accurate requires decoding of MPEG *output* on the fly which\n"

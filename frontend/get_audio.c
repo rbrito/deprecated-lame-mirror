@@ -324,19 +324,22 @@ get_audio_common(lame_global_flags * const gfp, int buffer[2][1152], short buffe
             samples_to_read = remaining;
     }
 
-    switch (input_format) {
-    case sf_mp1:
-    case sf_mp2:
-    case sf_mp3:
+    if (is_mpeg_file_format(input_format)) {
         if (buffer != NULL)
             samples_read = read_samples_mp3(gfp, musicin, buf_tmp16, num_channels);
         else
             samples_read = read_samples_mp3(gfp, musicin, buffer16, num_channels);
-        break;
-    default:
+        if (samples_read < 0) {
+            return samples_read;
+        }
+    }
+    else {
         samples_read =
             read_samples_pcm(musicin, insamp, num_channels * framesize,
                              num_channels * samples_to_read);
+        if (samples_read < 0) {
+            return samples_read;
+        }
         p = insamp + samples_read;
         samples_read /= num_channels;
         if (buffer != NULL) { /* output to int buffer */
@@ -374,7 +377,7 @@ get_audio_common(lame_global_flags * const gfp, int buffer[2][1152], short buffe
     }
 
     /* LAME mp3 output 16bit -  convert to int, if necessary */
-    if (input_format == sf_mp1 || input_format == sf_mp2 || input_format == sf_mp3) {
+    if (is_mpeg_file_format(input_format)) {
         if (buffer != NULL) {
             for (i = samples_read; --i >= 0;)
                 buffer[0][i] = buf_tmp16[0][i] << (8 * sizeof(int) - 16);
@@ -496,7 +499,7 @@ void
 CloseSndFile(sound_file_format input, FILE * musicin)
 {
     SNDFILE *gs_pSndFileIn = (SNDFILE *) musicin;
-    if (input == sf_mp1 || input == sf_mp2 || input == sf_mp3) {
+    if (is_mpeg_file_format(input)) {
 #ifndef AMIGA_MPEGA
         if (fclose(musicin) != 0) {
             if (silent < 10) {
@@ -528,7 +531,7 @@ OpenSndFile(lame_global_flags * gfp, char *inPath, int *enc_delay, int *enc_padd
     SNDFILE *gs_pSndFileIn = NULL;
     SF_INFO gs_wfInfo;
 
-    if (input_format == sf_mp1 || input_format == sf_mp2 || input_format == sf_mp3) {
+    if (is_mpeg_file_format(input_format)) {
 #ifdef AMIGA_MPEGA
         if (-1 == lame_decode_initfile(lpszFileName, &mp3input_data)) {
             if (silent < 10) {
@@ -732,7 +735,7 @@ OpenSndFile(lame_global_flags * gfp, char *inPath, int *enc_delay, int *enc_padd
 
         if (flen >= 0) {
             /* try file size, assume 2 bytes per sample */
-            if (input_format == sf_mp1 || input_format == sf_mp2 || input_format == sf_mp3) {
+            if (is_mpeg_file_format(input_format)) {
                 if (mp3input_data.bitrate > 0) {
                     double  totalseconds = (flen * 8.0 / (1000.0 * mp3input_data.bitrate));
                     unsigned long tmp_num_samples = totalseconds * lame_get_in_samplerate(gfp);
@@ -1296,7 +1299,7 @@ OpenSndFile(lame_global_flags * gfp, char *inPath, int *enc_delay, int *enc_padd
         }
     }
 
-    if (input_format == sf_mp1 || input_format == sf_mp2 || input_format == sf_mp3) {
+    if (is_mpeg_file_format(input_format)) {
 #ifdef AMIGA_MPEGA
         if (-1 == lame_decode_initfile(inPath, &mp3input_data)) {
             if (silent < 10) {
@@ -1358,8 +1361,7 @@ OpenSndFile(lame_global_flags * gfp, char *inPath, int *enc_delay, int *enc_padd
         double  flen = lame_get_file_size(inPath); /* try to figure out num_samples */
         if (flen >= 0) {
             /* try file size, assume 2 bytes per sample */
-            if (input_format == sf_mp1 || input_format == sf_mp2 || input_format == sf_mp3) {
-
+            if (is_mpeg_file_format(input_format)) {
                 if (mp3input_data.bitrate > 0) {
                     double  totalseconds = (flen * 8.0 / (1000.0 * mp3input_data.bitrate));
                     unsigned long tmp_num_samples =
@@ -1409,20 +1411,34 @@ is_syncword_mp123(const void *const headerptr)
         return 0;       /* next 3 bits are also */
     if ((p[1] & 0x18) == 0x08)
         return 0;       /* no MPEG-1, -2 or -2.5 */
+    switch (p[1] & 0x06) {
+    default:
+    case 0x00: /* illegal Layer */
+      return 0;
+
+    case 0x02: /* Layer3 */
+      if (input_format != sf_mp3 && input_format != sf_mp123) {
+        return 0;
+      }
+      input_format = sf_mp3;
+      break;
+
+    case 0x04: /* Layer2 */
+      if (input_format != sf_mp2 && input_format != sf_mp123) {
+        return 0;
+      }
+      input_format = sf_mp2;
+      break;
+
+    case 0x06: /* Layer1 */
+      if (input_format != sf_mp1 && input_format != sf_mp123) {
+        return 0;
+      }
+      input_format = sf_mp1;
+      break;
+    }
     if ((p[1] & 0x06) == 0x00)
         return 0;       /* no Layer I, II and III */
-#ifndef USE_LAYER_1
-    if ((p[1] & 0x06) == 0x03 * 2)
-        return 0;       /* layer1 is not supported */
-#endif
-#ifndef USE_LAYER_2
-    if ((p[1] & 0x06) == 0x02 * 2)
-        return 0;       /* layer1 is not supported */
-#endif
-    if (!(((p[1] & 0x06) == 0x03 * 2 && input_format == sf_mp1)
-          || ((p[1] & 0x06) == 0x02 * 2 && input_format == sf_mp2)
-          || ((p[1] & 0x06) == 0x01 * 2 && input_format == sf_mp3)))
-        return 0;       /* imcompatible layer with input file format */
     if ((p[2] & 0xF0) == 0xF0)
         return 0;       /* bad bitrate */
     if ((p[2] & 0x0C) == 0x0C)

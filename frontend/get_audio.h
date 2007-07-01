@@ -33,9 +33,21 @@ typedef enum sound_file_format_e {
     sf_mp1,                  /* MPEG Layer 1, aka mpg */
     sf_mp2,                  /* MPEG Layer 2 */
     sf_mp3,                  /* MPEG Layer 3 */
+    sf_mp123,                /* MPEG Layer 1,2 or 3; whatever .mp3, .mp2, .mp1 or .mpg contains */
     sf_ogg
 } sound_file_format;
 
+static int is_mpeg_file_format( int input_format )
+{
+  switch ( input_format ) {
+  case sf_mp1: return 1;
+  case sf_mp2: return 2;
+  case sf_mp3: return 3;
+  case sf_mp123: return -1;
+  default: break;
+  }
+  return 0;
+}
 
 
 
