@@ -14,8 +14,6 @@
 # include <config.h>
 #endif
 
-#ifdef USE_LAYER_1
-
 #include <assert.h>
 #include "common.h"
 #include "decode_i386.h"
@@ -169,5 +167,4 @@ int do_layer1(PMPSTR mp, unsigned char *pcm_sample,int *pcm_point)
   return clip;
 }
 
-#endif
 

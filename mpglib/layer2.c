@@ -11,9 +11,6 @@
 # include <config.h>
 #endif
 
-#ifdef USE_LAYER_2
-
-
 #include "common.h"
 #include "layer2.h"
 #include "l2tables.h"
@@ -308,5 +305,4 @@ int do_layer2( PMPSTR mp,unsigned char *pcm_sample,int *pcm_point)
 }
 
 
-#endif
 

@@ -26,10 +26,8 @@
 extern const int  tabsel_123[2][3][16];
 extern const long freqs[9];
 
+extern real muls[27][64];
 
-#if defined( USE_LAYER_1 ) || defined ( USE_LAYER_2 )
-  extern real muls[27][64];
-#endif
 
 int  head_check(unsigned long head,int check_layer);
 int  decode_header(struct frame *fr,unsigned long newhead);

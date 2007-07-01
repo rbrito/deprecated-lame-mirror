@@ -16,13 +16,8 @@
 #include "VbrTag.h"
 #include "decode_i386.h"
 
-#ifdef USE_LAYER_1
-        #include "layer1.h"
-#endif
-
-#ifdef USE_LAYER_2
-        #include "layer2.h"
-#endif
+#include "layer1.h"
+#include "layer2.h"
 
 #ifdef WITH_DMALLOC
 #include <dmalloc.h>
@@ -59,9 +54,7 @@ BOOL InitMP3( PMPSTR mp)
 
         init_layer3(SBLIMIT);
 
-#ifdef USE_LAYER_2
         init_layer2();
-#endif
 
         return !0;
 }
@@ -504,22 +497,20 @@ decodeMP3_clipchoice( PMPSTR mp,unsigned char *in,int isize,char *out,int *done,
                 /*do_layer3(&mp->fr,(unsigned char *) out,done); */
                 switch (mp->fr.lay)
                 {
-#ifdef USE_LAYER_1
                         case 1:
                                 if(mp->fr.error_protection)
                                         getbits(mp,16);
 
                                 do_layer1(mp,(unsigned char *) out,done);
                         break;
-#endif
-#ifdef USE_LAYER_2
+
                         case 2:
                                 if(mp->fr.error_protection)
                                         getbits(mp,16);
 
                                 do_layer2(mp,(unsigned char *) out,done);
                         break;
-#endif
+
                         case 3:
                                 do_layer3(mp,(unsigned char *) out,done, synth_1to1_mono_ptr, synth_1to1_ptr);
                         break;

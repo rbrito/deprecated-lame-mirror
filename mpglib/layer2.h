@@ -16,7 +16,6 @@
 ** Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
 */
 
-#ifdef USE_LAYER_2
 
 #ifndef LAYER2_H_INCLUDED
 #define LAYER2_H_INCLUDED
@@ -33,7 +32,6 @@ struct al_table2
 void init_layer2(void);
 int  do_layer2( PMPSTR mp,unsigned char *pcm_sample,int *pcm_point);
 
-#endif
 
 #endif
 
