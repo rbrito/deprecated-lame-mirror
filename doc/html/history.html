@@ -49,6 +49,23 @@ black = usability, portability, other
 
   </li>
   
+  <li>Robert Hegemann:
+    <ul>
+    
+        <li>Fix for Bugtracker item <i>[ 1719593 ] Track numbers > 255 not allowed even with --id3v2-only</i>
+        
+        <li>Fix for Bugtracker item <i>[ 1742623 ] fail(lame --mp3input -m m -b 128 --resample 8 *.mp3 **.mp3)</i>
+        The problem here was, the input files are MPEG-1 Layer2 files named as MP3s. Even if you leave out
+        the --mp3input switch LAME tried to decode the input files as Layer3 files because of the file name
+        extension and because it found some valid looking Layer3 synchronization header.
+        The fixed LAME version does not assume the file name extension is always correct and treats the files
+        depending on the first found MPEG sync word. The files in question are now correctly detected as
+        Layer2 files and transcoding does succeed.
+        </li>
+        
+    </ul>
+  </li>
+  
 </ul>
 
 <h3>LAME 3.98 beta 4&nbsp; &nbsp;June 23 2007</h3>
