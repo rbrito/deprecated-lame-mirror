@@ -54,7 +54,7 @@ black = usability, portability, other
     
         <li>Fix for Bugtracker item <i>[ 1719593 ] Track numbers > 255 not allowed even with --id3v2-only</i>
         
-        <li>Fix for Bugtracker item <i>[ 1742623 ] fail(lame --mp3input -m m -b 128 --resample 8 *.mp3 **.mp3)</i>
+        <li>Fix for Bugtracker item <i>[ 1742623 ] fail(lame --mp3input -m m -b 128 --resample 8 *.mp3 **.mp3)</i><br>
         The problem here was, the input files are MPEG-1 Layer2 files named as MP3s. Even if you leave out
         the --mp3input switch LAME tried to decode the input files as Layer3 files because of the file name
         extension and because it found some valid looking Layer3 synchronization header.
