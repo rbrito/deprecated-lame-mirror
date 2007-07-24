@@ -87,7 +87,7 @@ char   *strchr(), *strrchr();
 /* GLOBAL VARIABLES.  set by parse_args() */
 /* we need to clean this up */
 sound_file_format input_format;
-int     swapbytes;           /* force byte swapping   default=0 */
+int     swapbytes = 0;       /* force byte swapping   default=0 */
 int     silent;              /* Verbosity */
 int     ignore_tag_errors;   /* Ignore errors in values passed for tags */
 int     brhist;
@@ -101,8 +101,10 @@ int     disable_wav_header;
 mp3data_struct mp3input_data; /* used by MP3 */
 int     print_clipping_info; /* print info whether waveform clips */
 
+#ifdef LIBSNDFILE
 int     in_signed = 1;
 int     in_unsigned = 0;
+#endif
 int     in_endian = order_littleEndian;
 int     in_bitwidth = 16;
 
@@ -439,21 +441,9 @@ long_help(const lame_global_flags * gfp, FILE * const fp, const char *ProgramNam
     fprintf(fp,
             "OPTIONS:\n"
             "  Input options:\n"
-            "    -r              input is raw pcm\n"
-            "    -x              force byte-swapping of input\n"
-            "    -s sfreq        sampling frequency of input file (kHz) - default 44.1 kHz\n"
-            "    --bitwidth w    input bit width is w (default 16)\n"
             "    --scale <arg>   scale input (multiply PCM data) by <arg>\n"
             "    --scale-l <arg> scale channel 0 (left) input (multiply PCM data) by <arg>\n"
             "    --scale-r <arg> scale channel 1 (right) input (multiply PCM data) by <arg>\n"
-#ifdef LIBSNDFILE
-            "    --signed        input is signed (default)\n"
-            "    --unsigned      input is unsigned\n"
-            "    --little-endian input is little-endian (default from host)\n"
-            "    --big-endian    input is big-endian (default from host)\n"
-#endif
-        );
-    fprintf(fp,
 #if (defined HAVE_MPGLIB || defined AMIGA_MPEGA)
             "    --mp1input      input file is a MPEG Layer I   file\n"
             "    --mp2input      input file is a MPEG Layer II  file\n"
@@ -463,7 +453,22 @@ long_help(const lame_global_flags * gfp, FILE * const fp, const char *ProgramNam
             "                    gapless encoding for a set of contiguous files\n"
             "    --nogapout <dir>\n"
             "                    output dir for gapless encoding (must precede --nogap)\n"
-            "    --nogaptags     allow the use of VBR tags in gapless encoding");
+            "    --nogaptags     allow the use of VBR tags in gapless encoding\n"
+           );
+    fprintf(fp,
+            "\n"
+            "  Input options for RAW PCM:\n"
+            "    -r              input is raw pcm\n"
+            "    -x              force byte-swapping of input\n"
+            "    -s sfreq        sampling frequency of input file (kHz) - default 44.1 kHz\n"
+            "    --bitwidth w    input bit width is w (default 16)\n"
+#ifdef LIBSNDFILE
+            "    --signed        input is signed (default)\n"
+            "    --unsigned      input is unsigned\n"
+#endif
+            "    --little-endian input is little-endian (default)\n"
+            "    --big-endian    input is big-endian\n"
+           );
 
     wait_for(fp, lessmode);
     fprintf(fp,
@@ -1160,13 +1165,13 @@ parse_args(lame_global_flags * gfp, int argc, char **argv,
                 T_ELIF("bitwidth")
                     argUsed = 1;
                 in_bitwidth = atoi(nextArg);
-
+#ifdef LIBSNDFILE
                 T_ELIF("signed")
                     in_signed = 1;
 
                 T_ELIF("unsigned")
                     in_signed = 0;
-
+#endif
                 T_ELIF("little-endian")
                     in_endian = order_littleEndian;
 

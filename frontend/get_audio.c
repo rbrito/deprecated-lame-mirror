@@ -571,50 +571,51 @@ OpenSndFile(lame_global_flags * gfp, char *inPath, int *enc_delay, int *enc_padd
         exit(1);
     }
     else {
-
         /* Try to open the sound file */
-        /* set some defaults incase input is raw PCM */
-        gs_wfInfo.seekable = (input_format != sf_raw); /* if user specified -r, set to not seekable */
-        gs_wfInfo.samplerate = lame_get_in_samplerate(gfp);
-        gs_wfInfo.channels = lame_get_num_channels(gfp);
+        memset (&gs_wfInfo, 0, sizeof (gs_wfInfo)) ;
+        gs_pSndFileIn = sf_open(lpszFileName, SFM_READ, &gs_wfInfo);
 
-        if (in_bitwidth == 8) {
-            if (in_signed)
-                gs_wfInfo.format = SF_FORMAT_PCM_S8;
-            else
-                gs_wfInfo.format = SF_FORMAT_PCM_U8;
-
-        }
-        else {
-           memset (&gs_wfInfo, 0, sizeof (gs_wfInfo)) ;
-               gs_pSndFileIn = sf_open(lpszFileName, SFM_READ, &gs_wfInfo);
-
-           if (gs_pSndFileIn == NULL) {
-               if (!in_signed) {
-                   fputs("Unsigned input only supported with bitwidth 8\n", stderr);
-                   exit(1);
-               }
-               if (in_endian != order_unknown) {
-                   if (in_endian == order_littleEndian)
-                       gs_wfInfo.format = SF_ENDIAN_LITTLE | SF_FORMAT_RAW;
-                   else
-                       gs_wfInfo.format = SF_ENDIAN_BIG | SF_FORMAT_RAW;
-               } else {
-#ifndef WORDS_BIGENDIAN
-                    /* little endian */
-                    if (swapbytes)
-                        gs_wfInfo.format = SF_ENDIAN_BIG | SF_FORMAT_RAW;
-                    else
-                        gs_wfInfo.format = SF_ENDIAN_LITTLE | SF_FORMAT_RAW;
-#else
-                    if (swapbytes)
-                        gs_wfInfo.format = SF_ENDIAN_LITTLE | SF_FORMAT_RAW;
-                    else
-                        gs_wfInfo.format = SF_ENDIAN_BIG | SF_FORMAT_RAW;
-#endif
-                   gs_pSndFileIn = sf_open(lpszFileName, SFM_READ, &gs_wfInfo);
-               }
+        if (gs_pSndFileIn == NULL) {
+            if (!in_signed && in_bitwidth != 8) {
+                fputs("Unsigned input only supported with bitwidth 8\n", stderr);
+                exit(1);
             }
+            /* set some defaults incase input is raw PCM */
+            gs_wfInfo.seekable = (input_format != sf_raw); /* if user specified -r, set to not seekable */
+            gs_wfInfo.samplerate = lame_get_in_samplerate(gfp);
+            gs_wfInfo.channels = lame_get_num_channels(gfp);
+            gs_wfInfo.format = SF_FORMAT_RAW;
+            if (in_endian != order_unknown) {
+                if (in_endian == order_littleEndian) {
+                    gs_wfInfo.format |= SF_ENDIAN_LITTLE;
+                }
+                else {
+                    gs_wfInfo.format |= SF_ENDIAN_BIG;
+                }
+            }
+            else {
+                /* we will never get here. it seems in_endian is always either little or big endian */
+#ifndef WORDS_BIGENDIAN
+                /* little endian */
+                if (swapbytes)
+                    gs_wfInfo.format |= SF_ENDIAN_BIG;
+                else
+                    gs_wfInfo.format |= SF_ENDIAN_LITTLE;
+#else
+                if (swapbytes)
+                    gs_wfInfo.format |= SF_ENDIAN_LITTLE;
+                else
+                    gs_wfInfo.format |= SF_ENDIAN_BIG;
+#endif
+            }
+            switch (in_bitwidth) {
+            case  8: gs_wfInfo.format |= in_signed ? SF_FORMAT_PCM_S8 : SF_FORMAT_PCM_U8; break;
+            case 16: gs_wfInfo.format |= SF_FORMAT_PCM_16; break;
+            case 24: gs_wfInfo.format |= SF_FORMAT_PCM_24; break;
+            case 32: gs_wfInfo.format |= SF_FORMAT_PCM_32; break;
+            default: break;
+            }
+            gs_pSndFileIn = sf_open(lpszFileName, SFM_READ, &gs_wfInfo);
         }
 
         musicin = (SNDFILE *) gs_pSndFileIn;
@@ -628,14 +629,14 @@ OpenSndFile(lame_global_flags * gfp, char *inPath, int *enc_delay, int *enc_padd
             exit(1);
         }
 
-        if ((gs_wfInfo.format == (SF_FORMAT_RAW | SF_FORMAT_PCM_S8)) ||
-           (gs_wfInfo.format == (SF_FORMAT_RAW | SF_FORMAT_PCM_U8)))
+        if ((gs_wfInfo.format & SF_FORMAT_RAW ) == SF_FORMAT_RAW) {
             input_format = sf_raw;
+        }
 
 #ifdef _DEBUG_SND_FILE
         DEBUGF("\n\nSF_INFO structure\n");
         DEBUGF("samplerate        :%d\n", gs_wfInfo.samplerate);
-        DEBUGF("samples           :%d\n", gs_wfInfo.samples);
+        DEBUGF("samples           :%d\n", gs_wfInfo.frames);
         DEBUGF("channels          :%d\n", gs_wfInfo.channels);
         DEBUGF("format            :");
 
@@ -651,9 +652,11 @@ OpenSndFile(lame_global_flags * gfp, char *inPath, int *enc_delay, int *enc_padd
         case SF_FORMAT_AU:
             DEBUGF("Sun/NeXT AU format (big endian). ");
             break;
+            /*
         case SF_FORMAT_AULE:
             DEBUGF("DEC AU format (little endian). ");
             break;
+            */
         case SF_FORMAT_RAW:
             DEBUGF("RAW PCM data. ");
             break;
@@ -672,9 +675,11 @@ OpenSndFile(lame_global_flags * gfp, char *inPath, int *enc_delay, int *enc_padd
         }
 
         switch (gs_wfInfo.format & SF_FORMAT_SUBMASK) {
+            /*
         case SF_FORMAT_PCM:
             DEBUGF("PCM data in 8, 16, 24 or 32 bits.");
             break;
+            */
         case SF_FORMAT_FLOAT:
             DEBUGF("32 bit Intel x86 floats.");
             break;
@@ -690,24 +695,37 @@ OpenSndFile(lame_global_flags * gfp, char *inPath, int *enc_delay, int *enc_padd
         case SF_FORMAT_MS_ADPCM:
             DEBUGF("Microsoft ADPCM.");
             break;
+            /*
         case SF_FORMAT_PCM_BE:
             DEBUGF("Big endian PCM data.");
             break;
         case SF_FORMAT_PCM_LE:
             DEBUGF("Little endian PCM data.");
             break;
+            */
         case SF_FORMAT_PCM_S8:
             DEBUGF("Signed 8 bit PCM.");
             break;
         case SF_FORMAT_PCM_U8:
             DEBUGF("Unsigned 8 bit PCM.");
             break;
+        case SF_FORMAT_PCM_16:
+            DEBUGF("Signed 16 bit PCM.");
+            break;
+        case SF_FORMAT_PCM_24:
+            DEBUGF("Signed 24 bit PCM.");
+            break;
+        case SF_FORMAT_PCM_32:
+            DEBUGF("Signed 32 bit PCM.");
+            break;
+            /*
         case SF_FORMAT_SVX_FIB:
             DEBUGF("SVX Fibonacci Delta encoding.");
             break;
         case SF_FORMAT_SVX_EXP:
             DEBUGF("SVX Exponential Delta encoding.");
             break;
+            */
         default:
             assert(0);
             break;
@@ -717,6 +735,15 @@ OpenSndFile(lame_global_flags * gfp, char *inPath, int *enc_delay, int *enc_padd
         DEBUGF("sections          :%d\n", gs_wfInfo.sections);
         DEBUGF("seekable          :\n", gs_wfInfo.seekable);
 #endif
+        /* Check result */
+        if (gs_pSndFileIn == NULL) {
+            sf_perror(gs_pSndFileIn);
+            if (silent < 10) {
+                error_printf("Could not open sound file \"%s\".\n", lpszFileName);
+            }
+            exit(1);
+        }
+
 
         (void) lame_set_num_samples(gfp, gs_wfInfo.frames);
         if (-1 == lame_set_num_channels(gfp, gs_wfInfo.channels)) {
@@ -902,9 +929,22 @@ read_samples_pcm(FILE * musicin, int sample_buffer[2304], int frame_size, int sa
     int     hi_lo_order;     /* byte order of input stream */
 
     if ((32 == pcmbitwidth) || (24 == pcmbitwidth) || (16 == pcmbitwidth)) {
-        /* assume only recognized wav files are */
-        /*  in little endian byte order */
-        hi_lo_order = (!iswav == !swapbytes);
+#ifndef WORDS_BIGENDIAN
+        int const machine_byte_order = order_littleEndian;
+#else
+        int const machine_byte_order = order_bigEndian;
+#endif
+        if (in_endian != order_unknown) {
+            hi_lo_order = in_endian != machine_byte_order;
+        }
+        else {
+            /* assume only recognized wav files are */
+            /*  in little endian byte order */
+            hi_lo_order = !iswav;
+        }
+        if (pcmswapbytes) {
+            hi_lo_order = !hi_lo_order;
+        }
         samples_read = unpack_read_samples(samples_to_read, pcmbitwidth / 8,
                                            hi_lo_order, sample_buffer, musicin);
 
