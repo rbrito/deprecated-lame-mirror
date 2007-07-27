@@ -27,14 +27,14 @@ see the file "HACKING" if you are interested in working on LAME
 see the file "API" for details of the LAME encoding library API
 
 There is HTML documentation and a man page in the doc directory.
-The HTML docs were contributed by Gabriel Bouvigne (www.mp3-tech.org).
-See www.mp3-tech.org for more audio compression information and links.
 
 ============================================================================
 
 LAME uses the MPGLIB decoding engine, from the MPG123 package, written
 by: Michael Hipp (www.mpg123.de) MPGLIB is released under the GPL.
 
+Copyrights (c) 1999-1007 by The LAME Project
+Copyrights (c) 1999,2000,2001 by Mark Taylor
 Copyrights (c) 1999,2000,2001 by Mark Taylor
 Copyrights (c) 1998 by Michael Cheng
 Copyrights (c) 1995,1996,1997 by Michael Hipp: mpglib
