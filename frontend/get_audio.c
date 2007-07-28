@@ -114,8 +114,46 @@ fskip(FILE * fp, long offset, int whence)
 #endif
     int     read;
 
-    if (0 == fseek(fp, offset, whence))
+/* S_ISFIFO macro is defined on newer Linuxes */
+#ifndef S_ISFIFO
+# ifdef _S_IFIFO
+                /* _S_IFIFO is defined on Win32 and Cygwin */
+#  define	S_ISFIFO(m)	(((m)&_S_IFIFO) == _S_IFIFO)
+# endif
+#endif
+
+#ifdef S_ISFIFO
+    /* fseek is known to fail on pipes with several C-Library implementations
+       workaround: 1) test for pipe
+                   2) for pipes, only relatvie seeking is possible
+                   3)            and only in forward direction!
+                   else fallback to old code
+    */
+    {
+        int const fd = fileno(fp);
+        struct stat    file_stat;
+
+        if (fstat(fd, &file_stat) == 0) {
+            if (S_ISFIFO(file_stat.st_mode)) {
+                if (whence != SEEK_CUR || offset < 0) {
+                    return -1;
+                }
+                while (offset > 0) {
+                    size_t const bytes_to_skip = Min(sizeof(buffer), offset);
+                    size_t const read = fread(buffer, 1, bytes_to_skip, fp);
+                    if (read < 1) {
+                        return -1;
+                    }
+                    offset -= read;
+                }
+                return 0;
+            }
+        }
+    }
+#endif
+    if (0 == fseek(fp, offset, whence)){
         return 0;
+    }
 
     if (whence != SEEK_CUR || offset < 0) {
         if (silent < 10) {
@@ -1016,7 +1054,6 @@ parse_wave_header(lame_global_flags * gfp, FILE * sf)
     int     loop_sanity = 0;
 
     file_length = Read32BitsHighLow(sf);
-
     if (Read32BitsHighLow(sf) != WAV_ID_WAVE)
         return 0;
 
