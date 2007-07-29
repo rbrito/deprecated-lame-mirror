@@ -63,6 +63,24 @@ black = usability, portability, other
         Layer2 files and transcoding does succeed.
         </li>
         
+        <li>Fix for Bugtracker item <i>[ 1445175 ] Input being stdin fails in Windows on WAV files</i><br>
+        The problem here was, seeking on pipes shows some different behaviour depending on C-Library
+        implementations. The workaround tries to detect it's working on a pipe and doing some
+        reading instead of seeking in that case.
+        </li>
+        
+        <li>Fixing some memory leak in the 'lame_enc.dll'.
+        </li>
+        
+        <li>Fix for Bugtracker items <i>[ 1160757, 1160741 ] --little-endian / --big-endian not working</i><br>
+        These switches where originally intended to be used together with Libsndfile only.
+        </li>
+        
+        <li>Fix for Bugtracker item <i>[ 1746336 ] Incorrect Bitrate with ABR und --resample, LAME 3.98b4</i><br>
+        Some earlier bug-fix had some typo. As a result, when adding a '--resample 123' switch, 
+        the average bitrate rised upto maximum bitrate.
+        </li>
+        
     </ul>
   </li>
   
