@@ -503,7 +503,7 @@ __declspec(dllexport) BE_ERR	beInitStream(PBE_CONFIG pbeConfig, PDWORD dwSamples
 	}
 
 	// check if the VBR tag is required
-	if ( lameConfig.format.LHV1.bWriteVBRHeader) 
+	if ( lameConfig.format.LHV1.bWriteVBRHeader ) 
 	{
 		lame_set_bWriteVbrTag( gfp, 1 );
 	}
@@ -752,13 +752,11 @@ __declspec(dllexport) BE_ERR beWriteInfoTag( HBE_STREAM hbeStream,
 	BE_ERR beResult	= BE_ERR_SUCCESSFUL;
 
 	lame_global_flags*	gfp = (lame_global_flags*)hbeStream;
-
 	if ( NULL != gfp )
 	{
 		// Do we have to write the VBR tag?
 		if ( lame_get_bWriteVbrTag( gfp ) )
 		{
-
 			// Try to open the file
 			fpStream=fopen( lpszFileName, "rb+" );
 
@@ -775,10 +773,10 @@ __declspec(dllexport) BE_ERR beWriteInfoTag( HBE_STREAM hbeStream,
 				// Close the file stream
 				fclose( fpStream );
 			}
-
-			// clean up of allocated memory
-			lame_close( gfp );
 		}
+
+		// clean up of allocated memory
+		lame_close( gfp );
 	}
 	else
 	{

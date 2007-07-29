@@ -269,12 +269,12 @@ __declspec(dllexport) BE_ERR	beWriteInfoTag( HBE_STREAM hbeStream, LPCSTR lpszFi
 
 #endif
 
-#ifndef __GNUC__
-#pragma pack(pop)
-#endif
-
 #ifdef	__cplusplus
 }
+#endif
+
+#ifndef __GNUC__
+#pragma pack(pop)
 #endif
 
 #endif
