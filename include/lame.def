@@ -1,4 +1,4 @@
-LIBRARY  libmp3lame-dynamic.DLL
+LIBRARY  libmp3lame.DLL
 EXPORTS
 
 lame_init		@1

@@ -38,13 +38,12 @@ RSC=rc.exe
 # PROP BASE Target_Dir ""
 # PROP Use_MFC 0
 # PROP Use_Debug_Libraries 0
-# PROP Output_Dir "..\output\Release\lameACM"
+# PROP Output_Dir "..\output\Release"
 # PROP Intermediate_Dir "..\obj\Release\lameACM"
 # PROP Ignore_Export_Lib 1
 # PROP Target_Dir ""
 # ADD BASE CPP /nologo /MT /W3 /GX /O2 /D "WIN32" /D "NDEBUG" /D "_WINDOWS" /YX /FD /c
 # ADD CPP /nologo /Zp2 /MT /W3 /GX /Ob2 /I "../libmp3lame" /I "../include" /I ".." /I "../.." /I "../mpglib" /I "./" /I "./ddk" /D "NDEBUG" /D "_BLADEDLL" /D "_WINDOWS" /D "WIN32" /D "NOANALYSIS" /D "LAME_ACM" /YX /FD /c
-# SUBTRACT CPP /O<none>
 # ADD BASE MTL /nologo /D "NDEBUG" /mktyplib203 /o /win32 "NUL"
 # ADD MTL /nologo /D "NDEBUG" /mktyplib203 /o /win32 "NUL"
 # ADD BASE RSC /l 0x409 /d "NDEBUG"
@@ -54,9 +53,9 @@ BSC32=bscmake.exe
 # ADD BSC32 /nologo
 LINK32=link.exe
 # ADD BASE LINK32 kernel32.lib user32.lib gdi32.lib winspool.lib comdlg32.lib advapi32.lib shell32.lib ole32.lib oleaut32.lib uuid.lib odbc32.lib odbccp32.lib /nologo /subsystem:windows /dll /machine:I386
-# ADD LINK32 ..\output\libmp3lame-dynamic.lib shell32.lib url.lib gdi32.lib winmm.lib advapi32.lib user32.lib kernel32.lib libc.lib libcp.lib /nologo /subsystem:windows /dll /pdb:none /machine:I386 /nodefaultlib /def:".\lameACM.def" /out:"..\output\Release\lameACM\lameACM.acm" /opt:NOWIN98
+# ADD LINK32 libmp3lame.lib shell32.lib url.lib gdi32.lib winmm.lib advapi32.lib user32.lib kernel32.lib libc.lib libcp.lib /nologo /subsystem:windows /dll /pdb:none /machine:I386 /nodefaultlib /def:".\lameACM.def" /out:"..\output\Release\lameACM.acm" /libpath:"..\output\Release" /opt:NOWIN98
 # Begin Special Build Tool
-TargetDir=\cvs\lame\lame\output\Release\lameACM
+TargetDir=\cvs\lame-398b4\lame\output\Release
 SOURCE="$(InputPath)"
 PostBuild_Desc=ACM config files
 PostBuild_Cmds=copy lameacm.inf $(TargetDir)\*.*	copy lame_acm.xml $(TargetDir)\*.*
@@ -71,7 +70,7 @@ PostBuild_Cmds=copy lameacm.inf $(TargetDir)\*.*	copy lame_acm.xml $(TargetDir)\
 # PROP BASE Target_Dir ""
 # PROP Use_MFC 0
 # PROP Use_Debug_Libraries 1
-# PROP Output_Dir "..\output\Debug\lameACM"
+# PROP Output_Dir "..\output\Debug"
 # PROP Intermediate_Dir "..\obj\Debug\lameACM"
 # PROP Ignore_Export_Lib 1
 # PROP Target_Dir ""
@@ -86,10 +85,10 @@ BSC32=bscmake.exe
 # ADD BSC32 /nologo
 LINK32=link.exe
 # ADD BASE LINK32 kernel32.lib user32.lib gdi32.lib winspool.lib comdlg32.lib advapi32.lib shell32.lib ole32.lib oleaut32.lib uuid.lib odbc32.lib odbccp32.lib /nologo /subsystem:windows /dll /debug /machine:I386 /pdbtype:sept
-# ADD LINK32 ..\output\libmp3lame-dynamic.lib shell32.lib url.lib gdi32.lib winmm.lib advapi32.lib user32.lib kernel32.lib libcd.lib libcpd.lib /nologo /subsystem:windows /dll /debug /machine:I386 /nodefaultlib /def:".\lameACM.def" /out:"..\output\Debug\lameACM\lameACM.acm" /pdbtype:sept /opt:NOWIN98
+# ADD LINK32 libmp3lame.lib shell32.lib url.lib gdi32.lib winmm.lib advapi32.lib user32.lib kernel32.lib libcd.lib libcpd.lib /nologo /subsystem:windows /dll /debug /machine:I386 /nodefaultlib /def:".\lameACM.def" /out:"..\output\Debug\lameACM.acm" /pdbtype:sept /libpath:"..\output\Debug" /opt:NOWIN98
 # SUBTRACT LINK32 /pdb:none /incremental:no
 # Begin Special Build Tool
-TargetDir=\cvs\lame\lame\output\Debug\lameACM
+TargetDir=\cvs\lame-398b4\lame\output\Debug
 SOURCE="$(InputPath)"
 PostBuild_Desc=ACM config files
 PostBuild_Cmds=copy lameacm.inf $(TargetDir)\*.*	copy lame_acm.xml $(TargetDir)\*.*

@@ -37,7 +37,7 @@ RSC=rc.exe
 # PROP BASE Target_Dir ""
 # PROP Use_MFC 0
 # PROP Use_Debug_Libraries 0
-# PROP Output_Dir "..\..\obj\Release\tinyXML"
+# PROP Output_Dir "..\..\obj\Release"
 # PROP Intermediate_Dir "..\..\obj\Release\tinyXML"
 # PROP Target_Dir ""
 LINK32=link.exe
@@ -62,7 +62,7 @@ LIB32=link.exe -lib
 # PROP BASE Target_Dir ""
 # PROP Use_MFC 0
 # PROP Use_Debug_Libraries 1
-# PROP Output_Dir "..\..\obj\Debug\tinyXML"
+# PROP Output_Dir "..\..\obj\Debug"
 # PROP Intermediate_Dir "..\..\obj\Debug\tinyXML"
 # PROP Ignore_Export_Lib 0
 # PROP Target_Dir ""
@@ -102,13 +102,6 @@ SOURCE=.\tinyxml.cpp
 # Begin Source File
 
 SOURCE=.\tinyxml.h
-
-!IF  "$(CFG)" == "tinyxml - Win32 Release"
-
-!ELSEIF  "$(CFG)" == "tinyxml - Win32 Debug"
-
-!ENDIF 
-
 # End Source File
 # Begin Source File
 

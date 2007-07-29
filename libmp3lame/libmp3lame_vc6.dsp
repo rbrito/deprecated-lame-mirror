@@ -38,7 +38,7 @@ RSC=rc.exe
 # PROP BASE Target_Dir ""
 # PROP Use_MFC 0
 # PROP Use_Debug_Libraries 0
-# PROP Output_Dir "..\output\Release\libmp3lame"
+# PROP Output_Dir "..\output\Release"
 # PROP Intermediate_Dir "..\obj\Release\libmp3lame"
 # PROP Target_Dir ""
 LINK32=link.exe
@@ -52,7 +52,7 @@ BSC32=bscmake.exe
 # ADD BSC32 /nologo
 LIB32=link.exe -lib
 # ADD BASE LIB32 /nologo
-# ADD LIB32 /nologo /out:"..\output\Release\libmp3lame\libmp3lame-static.lib"
+# ADD LIB32 /nologo /out:"..\output\Release\libmp3lame-static.lib"
 
 !ELSEIF  "$(CFG)" == "libmp3lame - Win32 Debug"
 
@@ -63,7 +63,7 @@ LIB32=link.exe -lib
 # PROP BASE Target_Dir ""
 # PROP Use_MFC 0
 # PROP Use_Debug_Libraries 1
-# PROP Output_Dir "..\output\Debug\libmp3lame"
+# PROP Output_Dir "..\output\Debug"
 # PROP Intermediate_Dir "..\obj\Debug\libmp3lame"
 # PROP Target_Dir ""
 LINK32=link.exe
@@ -77,7 +77,7 @@ BSC32=bscmake.exe
 # ADD BSC32 /nologo
 LIB32=link.exe -lib
 # ADD BASE LIB32 /nologo
-# ADD LIB32 /nologo /out:"..\output\Debug\libmp3lame\libmp3lame-static.lib"
+# ADD LIB32 /nologo /out:"..\output\Debug\libmp3lame-static.lib"
 
 !ELSEIF  "$(CFG)" == "libmp3lame - Win32 Release NASM"
 
@@ -88,7 +88,7 @@ LIB32=link.exe -lib
 # PROP BASE Target_Dir ""
 # PROP Use_MFC 0
 # PROP Use_Debug_Libraries 0
-# PROP Output_Dir "..\output\Release_NASM\libmp3lame"
+# PROP Output_Dir "..\output\Release_NASM"
 # PROP Intermediate_Dir "..\obj\Release_NASM\libmp3lame"
 # PROP Target_Dir ""
 LINK32=link.exe
@@ -103,7 +103,7 @@ BSC32=bscmake.exe
 # ADD BSC32 /nologo
 LIB32=link.exe -lib
 # ADD BASE LIB32 /nologo
-# ADD LIB32 /nologo /out:"..\output\Release_NASM\libmp3lame\libmp3lame-static.lib"
+# ADD LIB32 /nologo /out:"..\output\Release_NASM\libmp3lame-static.lib"
 
 !ENDIF 
 

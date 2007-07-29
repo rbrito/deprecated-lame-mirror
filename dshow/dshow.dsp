@@ -38,7 +38,7 @@ RSC=rc.exe
 # PROP BASE Target_Dir ""
 # PROP Use_MFC 0
 # PROP Use_Debug_Libraries 0
-# PROP Output_Dir "..\obj\Release\dshow"
+# PROP Output_Dir "..\obj\Release"
 # PROP Intermediate_Dir "..\obj\Release\dshow"
 # PROP Ignore_Export_Lib 1
 # PROP Target_Dir ""
@@ -55,7 +55,7 @@ BSC32=bscmake.exe
 # SUBTRACT BSC32 /nologo
 LINK32=link.exe
 # ADD BASE LINK32 kernel32.lib user32.lib gdi32.lib winspool.lib comdlg32.lib advapi32.lib shell32.lib ole32.lib oleaut32.lib uuid.lib odbc32.lib odbccp32.lib /nologo /subsystem:windows /dll /machine:I386
-# ADD LINK32 ..\output\libmp3lame-dynamic.lib .\strmbase.lib msvcrt.lib libcmt.lib vfw32.lib winmm.lib kernel32.lib advapi32.lib version.lib largeint.lib Comdlg32.lib user32.lib gdi32.lib comctl32.lib ole32.lib oleaut32.lib uuid.lib quartz.lib measure.lib /nologo /base:"0x1c400000" /version:0.3 /entry:"DllEntryPoint@12" /subsystem:windows /dll /pdb:none /machine:I386 /nodefaultlib /out:"..\output\Release\dshow\lame.ax" /opt:NOWIN98
+# ADD LINK32 libmp3lame.lib .\strmbase.lib msvcrt.lib libcmt.lib vfw32.lib winmm.lib kernel32.lib advapi32.lib version.lib largeint.lib Comdlg32.lib user32.lib gdi32.lib comctl32.lib ole32.lib oleaut32.lib uuid.lib quartz.lib measure.lib /nologo /base:"0x1c400000" /version:0.3 /entry:"DllEntryPoint@12" /subsystem:windows /dll /pdb:none /machine:I386 /nodefaultlib /out:"..\output\Release\lame.ax" /libpath:"..\output\Release" /opt:NOWIN98
 
 !ELSEIF  "$(CFG)" == "LAME DShow - Win32 Debug"
 
@@ -66,7 +66,7 @@ LINK32=link.exe
 # PROP BASE Target_Dir ""
 # PROP Use_MFC 0
 # PROP Use_Debug_Libraries 1
-# PROP Output_Dir "..\obj\Debug\dshow"
+# PROP Output_Dir "..\obj\Debug"
 # PROP Intermediate_Dir "..\obj\Debug\dshow"
 # PROP Ignore_Export_Lib 1
 # PROP Target_Dir ""
@@ -82,7 +82,7 @@ BSC32=bscmake.exe
 # ADD BSC32 /nologo
 LINK32=link.exe
 # ADD BASE LINK32 kernel32.lib user32.lib gdi32.lib winspool.lib comdlg32.lib advapi32.lib shell32.lib ole32.lib oleaut32.lib uuid.lib odbc32.lib odbccp32.lib /nologo /subsystem:windows /dll /debug /machine:I386
-# ADD LINK32 ..\output\libmp3lame-dynamic.lib .\strmbasD.lib msvcrtd.lib libcmt.lib vfw32.lib winmm.lib kernel32.lib advapi32.lib version.lib largeint.lib Comdlg32.lib user32.lib gdi32.lib comctl32.lib ole32.lib oleaut32.lib uuid.lib quartz.lib measure.lib /nologo /base:"0x1c400000" /entry:"DllEntryPoint@12" /subsystem:windows /dll /debug /machine:I386 /nodefaultlib /out:"..\output\Debug\dshow\lame.ax" /opt:NOWIN98
+# ADD LINK32 libmp3lame.lib .\strmbasD.lib msvcrtd.lib libcmt.lib vfw32.lib winmm.lib kernel32.lib advapi32.lib version.lib largeint.lib Comdlg32.lib user32.lib gdi32.lib comctl32.lib ole32.lib oleaut32.lib uuid.lib quartz.lib measure.lib /nologo /base:"0x1c400000" /entry:"DllEntryPoint@12" /subsystem:windows /dll /debug /machine:I386 /nodefaultlib /out:"..\output\Debug\lame.ax" /libpath:"..\output\Debug" /opt:NOWIN98
 # SUBTRACT LINK32 /pdb:none /incremental:no
 
 !ENDIF 

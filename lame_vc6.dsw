@@ -3,28 +3,7 @@ Microsoft Developer Studio Workspace File, Format Version 6.00
 
 ###############################################################################
 
-Project: "lame"=.\frontend\lame_vc6.dsp - Package Owner=<4>
-
-Package=<5>
-{{{
-}}}
-
-Package=<4>
-{{{
-    Begin Project Dependency
-    Project_Dep_Name libmp3lame
-    End Project Dependency
-    Begin Project Dependency
-    Project_Dep_Name mpglib
-    End Project Dependency
-    Begin Project Dependency
-    Project_Dep_Name libmp3lame DLL
-    End Project Dependency
-}}}
-
-###############################################################################
-
-Project: "MP3x"=.\frontend\mp3x_vc6.dsp - Package Owner=<4>
+Project: "MP3x"=".\frontend\mp3x_vc6.dsp" - Package Owner=<4>
 
 Package=<5>
 {{{
@@ -48,7 +27,28 @@ Package=<4>
 
 ###############################################################################
 
-Project: "lame_projects"=.\lame_projects_vc6.dsp - Package Owner=<4>
+Project: "lame"=".\frontend\lame_vc6.dsp" - Package Owner=<4>
+
+Package=<5>
+{{{
+}}}
+
+Package=<4>
+{{{
+    Begin Project Dependency
+    Project_Dep_Name libmp3lame
+    End Project Dependency
+    Begin Project Dependency
+    Project_Dep_Name mpglib
+    End Project Dependency
+    Begin Project Dependency
+    Project_Dep_Name libmp3lame DLL
+    End Project Dependency
+}}}
+
+###############################################################################
+
+Project: "lame_projects"=".\lame_projects_vc6.dsp" - Package Owner=<4>
 
 Package=<5>
 {{{
@@ -75,7 +75,7 @@ Package=<4>
 
 ###############################################################################
 
-Project: "libmp3lame"=.\libmp3lame\libmp3lame_vc6.dsp - Package Owner=<4>
+Project: "libmp3lame"=".\libmp3lame\libmp3lame_vc6.dsp" - Package Owner=<4>
 
 Package=<5>
 {{{
@@ -90,7 +90,7 @@ Package=<4>
 
 ###############################################################################
 
-Project: "libmp3lame DLL"=.\libmp3lame\libmp3lame_dll_vc6.dsp - Package Owner=<4>
+Project: "libmp3lame DLL"=".\libmp3lame\libmp3lame_dll_vc6.dsp" - Package Owner=<4>
 
 Package=<5>
 {{{
@@ -98,17 +98,11 @@ Package=<5>
 
 Package=<4>
 {{{
-    Begin Project Dependency
-    Project_Dep_Name mpglib
-    End Project Dependency
-    Begin Project Dependency
-    Project_Dep_Name libmp3lame
-    End Project Dependency
 }}}
 
 ###############################################################################
 
-Project: "mpglib"=.\mpglib\mpglib_vc6.dsp - Package Owner=<4>
+Project: "mpglib"=".\mpglib\mpglib_vc6.dsp" - Package Owner=<4>
 
 Package=<5>
 {{{
