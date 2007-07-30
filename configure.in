@@ -740,7 +740,7 @@ if test "x$GCC" = "xyes"; then
 		OPTIMIZATION_FULL="-fmove-all-movables -freduce-all-givs \
 			-fbranch-count-reg -fforce-addr -fforce-mem"
 		;;
-	3.(1|2|3|4|5|6|7|8|9)*|4.(0|1).*)
+	3.*|4.0.*|4.1.*)
 		# -fomit-frame-pointer seems to be buggy on cygwin
 		case ${host_os} in
 		*cygwin*)
@@ -755,7 +755,7 @@ if test "x$GCC" = "xyes"; then
 		OPTIMIZATION_FULL="-fmove-all-movables -freduce-all-givs \
 			-fbranch-count-reg -fforce-addr -fforce-mem"
 		;;
-	4.(2|3|4|5|6|7|8|9).*)
+	4.*)
 		OPTIMIZATION="-O3 -fomit-frame-pointer -ffast-math"
 		OPTIMIZATION_FULL="-fbranch-count-reg -fforce-addr"
 		;;
@@ -778,7 +778,7 @@ if test "x$GCC" = "xyes"; then
 		case "${GCC_version}" in
 		3.0*)
 			;;
-		3.(1|2|3|4|5|6|7|8|9)*|4.*)
+		3.*|4.*)
 			# doesn't work on 3.0.x, but on 3.[12] and
 			# hopefully on every other release after that too
 			if test -x /usr/bin/isalist; then
@@ -818,7 +818,7 @@ if test "x$GCC" = "xyes"; then
 
 		# some hardware dependend options
 		case "${GCC_version}" in
-		2.9*|3.*|4.(0|1).*)
+		2.9*|3.*|4.0.*|4.1.*)
 			# "new" GCC, use some "new" CPU specific optimizations
 			case ${host_cpu} in
 			*486)
@@ -848,7 +848,7 @@ if test "x$GCC" = "xyes"; then
 				;;
 			esac
 			;;
-		4.(2|3|4|5|6|7|8|9).*)
+		4.*)
 			case ${host_cpu} in
 			*486)
 				OPTIMIZATION="${OPTIMIZATION} -march=486"
