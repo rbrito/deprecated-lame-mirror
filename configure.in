@@ -740,7 +740,7 @@ if test "x$GCC" = "xyes"; then
 		OPTIMIZATION_FULL="-fmove-all-movables -freduce-all-givs \
 			-fbranch-count-reg -fforce-addr -fforce-mem"
 		;;
-	3.[234567]*|4.*)
+	3.(1|2|3|4|5|6|7|8|9)*|4.(0|1).*)
 		# -fomit-frame-pointer seems to be buggy on cygwin
 		case ${host_os} in
 		*cygwin*)
@@ -755,11 +755,15 @@ if test "x$GCC" = "xyes"; then
 		OPTIMIZATION_FULL="-fmove-all-movables -freduce-all-givs \
 			-fbranch-count-reg -fforce-addr -fforce-mem"
 		;;
+	4.(2|3|4|5|6|7|8|9).*)
+		OPTIMIZATION="-O3 -fomit-frame-pointer -ffast-math"
+		OPTIMIZATION_FULL="-fbranch-count-reg -fforce-addr"
+		;;
 	*)
 		# default
 		OPTIMIZATION="-O3 ${OMIT_FRAME_POINTER} -ffast-math \
 			-funroll-loops"
-		OPTIMIZATION_FULL="-fbranch-count-reg -fforce-addr -fforce-mem"
+		OPTIMIZATION_FULL="-fbranch-count-reg -fforce-addr"
 		;;
 	esac
 
@@ -774,7 +778,7 @@ if test "x$GCC" = "xyes"; then
 		case "${GCC_version}" in
 		3.0*)
 			;;
-		3.*)
+		3.(1|2|3|4|5|6|7|8|9)*|4.*)
 			# doesn't work on 3.0.x, but on 3.[12] and
 			# hopefully on every other release after that too
 			if test -x /usr/bin/isalist; then
@@ -789,7 +793,7 @@ if test "x$GCC" = "xyes"; then
 		;;
 	*86)
 		case "${GCC_version}" in
-		3.*)
+		3.*|4.*)
 			OPTIMIZATION="${OPTIMIZATION} \
 				-maccumulate-outgoing-args"
 			;;
@@ -797,7 +801,7 @@ if test "x$GCC" = "xyes"; then
 		;;
 	esac
 
-
+	expopt_msg_result_printed=no
 	case "${CONFIG_EXPOPT}" in
 	no)
 		# if someone supplies own CFLAGS, we don't add our own
@@ -814,7 +818,7 @@ if test "x$GCC" = "xyes"; then
 
 		# some hardware dependend options
 		case "${GCC_version}" in
-		2.9*|3.*)
+		2.9*|3.*|4.(0|1).*)
 			# "new" GCC, use some "new" CPU specific optimizations
 			case ${host_cpu} in
 			*486)
@@ -844,9 +848,30 @@ if test "x$GCC" = "xyes"; then
 				;;
 			esac
 			;;
+		4.(2|3|4|5|6|7|8|9).*)
+			case ${host_cpu} in
+			*486)
+				OPTIMIZATION="${OPTIMIZATION} -march=486"
+				;;
+			*586)
+				OPTIMIZATION="${OPTIMIZATION} -march=586 \
+					-mtune=native"
+				;;
+			*686)
+				OPTIMIZATION="${OPTIMIZATION} -march=686 \
+					-mtune=native"
+				;;
+			*86)
+				OPTIMIZATION="${OPTIMIZATION} -march=generic \
+					-mtune=native"
+				;;
+			esac
+			;;
 		*)
 			# no special optimization for other versions
-			AC_MSG_WARN(LAME doesn't know about your version of gcc, please report it to lame-dev@lists.sourceforge.net. Please make sure you try the latest LAME version first!)
+			AC_MSG_RESULT(no)
+			expopt_msg_result_printed=yes
+			AC_MSG_WARN(LAME doesn't know about your version (${GCC_version}) of gcc, please report it to lame-dev@lists.sourceforge.net. Please make sure you try the latest LAME version first!)
 			;;
 		esac
 		;;
@@ -855,7 +880,9 @@ if test "x$GCC" = "xyes"; then
 		;;
 	esac
 
-	AC_MSG_RESULT(${CONFIG_EXPOPT})
+	if test "${expopt_msg_result_printed}" = "no" ; then
+		AC_MSG_RESULT(${CONFIG_EXPOPT})
+	fi
 else
 	AC_MSG_RESULT(no)
 fi
