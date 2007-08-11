@@ -723,7 +723,9 @@ compute_masking_s(lame_global_flags const *gfp,
 #endif
             ++j, ++kk;
         }
-        ecb *= 0.158489319246111; /* pow(10,-0.8) */
+        if (gfp->VBR == vbr_mtrh || gfp->VBR == vbr_mt) {
+            ecb *= 0.158489319246111; /* pow(10,-0.8) */
+        }
 
         {               /* limit calculated threshold by previous granule */
             FLOAT const x = rpelev_s * gfc->nb_s1[chn][b];
