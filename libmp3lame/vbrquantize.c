@@ -382,6 +382,85 @@ calc_sfb_noise_ISO(const FLOAT * xr, const FLOAT * xr34, unsigned int bw, uint8_
 
 
 
+struct calc_noise_cache {
+    int     valid;
+    FLOAT   value;
+};
+
+typedef struct calc_noise_cache calc_noise_cache_t;
+
+
+static  uint8_t
+tri_calc_sfb_noise_x34(const FLOAT * xr, const FLOAT * xr34, FLOAT l3_xmin, unsigned int bw,
+                       uint8_t sf, calc_noise_cache_t * did_it)
+{
+    if (did_it[sf].valid == 0) {
+        did_it[sf].valid = 1;
+        did_it[sf].value = calc_sfb_noise_x34(xr, xr34, bw, sf);
+    }
+    if (l3_xmin < did_it[sf].value) {
+        return 1;
+    }
+    if (sf < 255) {
+        uint8_t const sf_x = sf + 1;
+        if (did_it[sf_x].valid == 0) {
+            did_it[sf_x].valid = 1;
+            did_it[sf_x].value = calc_sfb_noise_x34(xr, xr34, bw, sf_x);
+        }
+        if (l3_xmin < did_it[sf_x].value) {
+            return 1;
+        }
+    }
+    if (sf > 0) {
+        uint8_t const sf_x = sf - 1;
+        if (did_it[sf_x].valid == 0) {
+            did_it[sf_x].valid = 1;
+            did_it[sf_x].value = calc_sfb_noise_x34(xr, xr34, bw, sf_x);
+        }
+        if (l3_xmin < did_it[sf_x].value) {
+            return 1;
+        }
+    }
+    return 0;
+}
+
+
+static  uint8_t
+tri_calc_sfb_noise_ISO(const FLOAT * xr, const FLOAT * xr34, FLOAT l3_xmin, unsigned int bw,
+                       uint8_t sf, calc_noise_cache_t * did_it)
+{
+    if (did_it[sf].valid == 0) {
+        did_it[sf].valid = 1;
+        did_it[sf].value = calc_sfb_noise_ISO(xr, xr34, bw, sf);
+    }
+    if (l3_xmin < did_it[sf].value) {
+        return 1;
+    }
+    if (sf < 255) {
+        uint8_t const sf_x = sf + 1;
+        if (did_it[sf_x].valid == 0) {
+            did_it[sf_x].valid = 1;
+            did_it[sf_x].value = calc_sfb_noise_ISO(xr, xr34, bw, sf_x);
+        }
+        if (l3_xmin < did_it[sf_x].value) {
+            return 1;
+        }
+    }
+    if (sf > 0) {
+        uint8_t const sf_x = sf - 1;
+        if (did_it[sf_x].valid == 0) {
+            did_it[sf_x].valid = 1;
+            did_it[sf_x].value = calc_sfb_noise_ISO(xr, xr34, bw, sf_x);
+        }
+        if (l3_xmin < did_it[sf_x].value) {
+            return 1;
+        }
+    }
+    return 0;
+}
+
+
+
 /* the find_scalefac* routines calculate
  * a quantization step size which would
  * introduce as much noise as is allowed.
@@ -397,16 +476,16 @@ static  uint8_t
 find_scalefac_x34(const FLOAT * xr, const FLOAT * xr34, FLOAT l3_xmin, unsigned int bw,
                   uint8_t sf_min)
 {
+    calc_noise_cache_t did_it[256];
     uint8_t sf = 128, sf_ok = 255, delsf = 128, i;
+    memset(did_it, 0, sizeof(did_it));
     for (i = 0; i < 8; ++i) {
         delsf >>= 1;
         if (sf <= sf_min) {
             sf += delsf;
         }
         else {
-            uint8_t const bad = (l3_xmin < calc_sfb_noise_x34(xr, xr34, bw, sf))
-                || (sf < 255 && l3_xmin < calc_sfb_noise_x34(xr, xr34, bw, sf + 1))
-                || (sf > 0 && l3_xmin < calc_sfb_noise_x34(xr, xr34, bw, sf - 1));
+            uint8_t const bad = tri_calc_sfb_noise_x34(xr, xr34, l3_xmin, bw, sf, did_it);
             if (bad) {  /* distortion.  try a smaller scalefactor */
                 sf -= delsf;
             }
@@ -427,16 +506,16 @@ static  uint8_t
 find_scalefac_ISO(const FLOAT * xr, const FLOAT * xr34, FLOAT l3_xmin, unsigned int bw,
                   uint8_t sf_min)
 {
+    calc_noise_cache_t did_it[256];
     uint8_t sf = 128, sf_ok = 255, delsf = 128, i;
+    memset(did_it, 0, sizeof(did_it));
     for (i = 0; i < 8; ++i) {
         delsf >>= 1;
         if (sf <= sf_min) {
             sf += delsf;
         }
         else {
-            uint8_t const bad = (l3_xmin < calc_sfb_noise_ISO(xr, xr34, bw, sf))
-                || (sf < 255 && l3_xmin < calc_sfb_noise_ISO(xr, xr34, bw, sf + 1))
-                || (sf > 0 && l3_xmin < calc_sfb_noise_ISO(xr, xr34, bw, sf - 1));
+            uint8_t const bad = tri_calc_sfb_noise_ISO(xr, xr34, l3_xmin, bw, sf, did_it);
             if (bad) {  /* distortion.  try a smaller scalefactor */
                 sf -= delsf;
             }
