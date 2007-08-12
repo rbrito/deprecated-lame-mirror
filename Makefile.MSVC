@@ -40,8 +40,8 @@
 
 T_LAME = lame.exe
 T_MP3X = mp3x.exe
-T_DLL = libmp3lame-dynamic.dll
-T_LIB_DYNAMIC = libmp3lame-dynamic.lib
+T_DLL = libmp3lame.dll
+T_LIB_DYNAMIC = libmp3lame.lib
 T_LIB_STATIC = libmp3lame-static.lib
 T_LEGACY_DLL = lame_enc.dll
 
@@ -49,7 +49,7 @@ TARGET_DIR = .\output\
 
 #	default targets
 
-PGM = $(T_LAME) $(T_DLL)
+PGM = $(T_LAME)
 
 #	some default settings
 
@@ -95,12 +95,12 @@ PREC = SINGLE
 !	ENDIF
 
 !	IF "$(SNDFILE)" == ""
-SNDFILE = YES
+SNDFILE = NO
 !	ENDIF
 
-NODEBUG = 1
 OFF = win32
 MACHINE = /machine:I386
+LIB_OPTS = /nologo $(MACHINE) 
 
 !	MESSAGE ----------------------------------------------------------------------
 !	IF "$(CFG)" == ""
@@ -231,20 +231,14 @@ CC_OPTS = $(CC_OPTS) /W$(WARN)
 CC_OPTS = $(CC_OPTS) /DFLOAT8=float /DREAL_IS_FLOAT=1
 !	ENDIF
 
-CC_OUT = /Fo
+CC_OPTS = $(CC_OPTS) /DNDEBUG /MT
 
-LN_OPTS = /nologo /opt:NOWIN98
+LN_OPTS = /nologo /opt:NOWIN98 /pdb:none
 LN_DLL = /nologo /DLL /opt:NOWIN98
 
-!	IF "$(NODEBUG)" == "1"
-CC_OPTS = $(CC_OPTS) /DNDEBUG
-LN_OPTS = $(LN_OPTS) /pdb:none
-!	ELSE
-LN_OPTS = $(LN_OPTS) /DEBUG /pdb:lame.pdb /map:lame.map
-LN_DLL = $(LN_DLL) /DEBUG
-!	ENDIF
-
+CC_OUT = /Fo
 LN_OUT = /force /OUT:
+
 CC = cl
 LN = link
 
@@ -431,6 +425,7 @@ CPP_OPTS = $(CPP_OPTS) /DTAKEHIRO_IEEE754_HACK
 #__ Robert's alternate code ___________________________________________________
 !	IF "$(CFG)" == "RH"
 !	IF "$(MSVCVER)" == "8.0"
+LIB_OPTS = $(LIB_OPTS) /LTCG
 LN_OPTS = $(LN_OPTS) /LTCG
 !   ENDIF
 !	ENDIF
@@ -580,9 +575,7 @@ ASM_OBJ = $(ASM_OBJ) libmp3lame/i386/choose_table.obj
 
 !	MESSAGE
 
-
-
-all :	$(PGM)
+no_target_specified :	$(PGM)
 	@echo.
 	@echo --=*  $(PGM) uptodate  *=--
 	@echo.
@@ -621,9 +614,9 @@ $(T_MP3X) : target_directory config.h lib common $(MPX_OBJ)
 	@echo --=*  $(TARGET_DIR)$@ ready  *=--
 	@echo.
 
-$(T_LEGACY_DLL) : target_directory config.h $(T_DLL) $(DLL_OBJ)
+$(T_LEGACY_DLL) : target_directory config.h $(DLL_OBJ)
 	@$(LN) $(LN_OUT)$(TARGET_DIR)$@ $(LN_SWITCHES) \
-	       $(TARGET_DIR)$(T_LIB_DYNAMIC) $(LN_DLL) \
+	       $(TARGET_DIR)$(T_LIB_STATIC) $(LN_DLL) \
 	       $(DLL_OBJ) $(ADDL_OBJ)
 	@echo.
 	@echo --=*  $(TARGET_DIR)$@ ready  *=--
@@ -640,7 +633,7 @@ $(T_DLL) : target_directory config.h $(T_LIB_STATIC)
 	@echo.
 
 $(T_LIB_STATIC) : target_directory lib
-	@lib /nologo $(MACHINE) \
+	@lib $(LIB_OPTS) \
 		/out:"$(TARGET_DIR)$@" \
 		$(ASM_OBJ) $(LIB_OBJ) $(MPG_OBJ)
 	@echo.
@@ -672,5 +665,12 @@ rebuild: clean all
 
 
 lame	:	$(T_LAME)
-dll 	:	$(T_DLL) 
+lame_enc:	$(T_LEGACY_DLL)
+dll 	:	$(T_DLL) $(T_LEGACY_DLL) 
 mp3x	:	$(T_MP3X)
+
+
+all :	$(PGM) dll lame_enc 
+	@echo.
+	@echo --=*  all uptodate  *=--
+	@echo.
