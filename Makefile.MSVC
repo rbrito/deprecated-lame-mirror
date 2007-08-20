@@ -1,6 +1,6 @@
 #	Makefile.MSVC: MSVC Makefile for LAME
 #
-#	2000-11-21 Robert Hegemann
+#	2000-2007 Robert Hegemann
 #	dedicated to the LAME project http://www.mp3dev.org
 ###############################################################################
 
@@ -8,14 +8,13 @@
 
 #__ readme ____________________________________________________________________
 #	nmake -f Makefile.MSVC
-#		-> build lame and dll, but not mp3x
+#		-> build lame, but not mp3x
 #		-> use Robert's code modifications
-#		-> assume MSVC 8.0 compiler available
+#		-> assume MSVC 6.0 compiler available
 #		-> assume NASM available
 #		-> assemble MMX code with NASM
 #		-> no compiler warnings
 #       -> use single precision float
-#       -> use LibSndfile
 #
 #	passing arguments, one can modify the default behaviour:
 #	COMP=<not INTEL or BCC>    ->  use MS compiler
@@ -270,7 +269,7 @@ CC_OPTS = $(CC_OPTS)
 
 LN_DLL =
 #$(CCINST)/lib/cw32R.lib
-LN_OUT = -e$(TARGET_DIR)
+LN_OUT = -e
 CC_OUT = -o
 
 CC = bcc32
@@ -337,9 +336,9 @@ CC_OPTS = /nologo /DNDEBUG /YX /GA /Ox /Ob2 \
           /Qunroll /Qsox- /Qip $(CC_OPTS)
 
 
-LN_OPTS = $(CC_OPTS) /opt:NOWIN98
+LN_OPTS = $(CC_OPTS)
 LN_DLL = /LD
-LN_OUT = /Fe$(TARGET_DIR)
+LN_OUT = /Fe
 CC_OUT = /Fo
 
 CC = icl
@@ -365,7 +364,6 @@ LIBSNDFILE = $(SNDFILE_DIR)libsndfile.lib
 
 #-- MISC --
 BRHIST_SWITCH = /DBRHIST
-TIMER_SWITCH =
 
 CPP_OPTS = /DHAVE_CONFIG_H -I.
 
@@ -434,7 +432,7 @@ LN_OPTS = $(LN_OPTS) /LTCG
 
 
 CC_SWITCHES = $(CC_OPTS) $(SNDFILE_OPTS) $(BRHIST_SWITCH) \
-              $(TIMER_SWITCH) $(GTK_OPTS) /DBS_FORMAT=BINARY
+              $(GTK_OPTS) /DBS_FORMAT=BINARY
 
 LN_SWITCHES = $(LN_OPTS)
 
@@ -624,7 +622,7 @@ $(T_LEGACY_DLL) : target_directory config.h $(DLL_OBJ)
 
 $(T_DLL) : target_directory config.h $(T_LIB_STATIC) 
 	@$(LN) $(LN_DLL) $(MACHINE) \
-		/def:"include\lame.def" \
+		/DEF:"include\lame.def" \
 		$(ADDL_OBJ) \
 		$(LN_OUT)"$(TARGET_DIR)$@" \
 		$(TARGET_DIR)$(T_LIB_STATIC) libmp3lame\version.obj 
@@ -634,7 +632,7 @@ $(T_DLL) : target_directory config.h $(T_LIB_STATIC)
 
 $(T_LIB_STATIC) : target_directory lib
 	@lib $(LIB_OPTS) \
-		/out:"$(TARGET_DIR)$@" \
+		/OUT:"$(TARGET_DIR)$@" \
 		$(ASM_OBJ) $(LIB_OBJ) $(MPG_OBJ)
 	@echo.
 	@echo --=*  $(TARGET_DIR)$@ ready  *=--
