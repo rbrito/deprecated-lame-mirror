@@ -29383,9 +29383,13 @@ echo $ECHO_N "checking use of file io... $ECHO_C" >&6; }
 
 if test "${CONFIG_FILEIO}" = "sndfile" ; then
   if test "${HAVE_SNDFILE}" = "yes" ; then
-    FRONTEND_LDFLAGS="-L${SNDFILE_LIBS} ${FRONTEND_LDFLAGS}"
+    if test -n "${SNDFILE_LIBS}" ; then
+      FRONTEND_LDFLAGS="-L${SNDFILE_LIBS} ${FRONTEND_LDFLAGS}"
+    fi
     FRONTEND_LDADD="-lsndfile ${FRONTEND_LDADD}"
-    INCLUDES="-I${SNDFILE_CFLAGS} ${INCLUDES}"
+    if test -n "${SNDFILE_CFLAGS}" ; then
+      INCLUDES="-I${SNDFILE_CFLAGS} ${INCLUDES}"
+    fi
 
 cat >>confdefs.h <<\_ACEOF
 #define LIBSNDFILE 1
