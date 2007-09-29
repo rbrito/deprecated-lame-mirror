@@ -168,6 +168,18 @@ find_lowest_scalefac(const FLOAT xr34)
 }
 
 
+static int
+below_noise_floor(const FLOAT* xr, FLOAT l3xmin, unsigned int bw)
+{
+    FLOAT sum = 1e-12;
+    unsigned int i;
+    for (i = 0; i < bw; ++i ) {
+        FLOAT const x = xr[i];
+        sum += x*x;
+    }
+    return (l3xmin > sum) ? 1 : 0;
+}
+
 
 static void
 k_34_4(DOUBLEX x[4], int l3[4])
@@ -459,7 +471,16 @@ tri_calc_sfb_noise_ISO(const FLOAT * xr, const FLOAT * xr34, FLOAT l3_xmin, unsi
     return 0;
 }
 
-
+/**
+ *  Robert Hegemann 2001-05-01
+ *  calculates quantization step size determined by allowed masking
+ */
+static int
+calc_scalefac(FLOAT8 l3_xmin, int bw)
+{
+    FLOAT8 const c = 5.799142446; /* 10 * 10^(2/3) * log10(4/3) */
+    return 210 + (int) (c * log10(l3_xmin / bw) - .5);
+}
 
 /* the find_scalefac* routines calculate
  * a quantization step size which would
@@ -584,9 +605,25 @@ block_sf(algo_t * that, const FLOAT l3_xmin[SFBMAX], int vbrsf[SFBMAX], int vbrs
             i = 0;
         }
         if (sfb < psymax) {
-            m2 = that->find(&xr[j], &xr34_orig[j], l3_xmin[sfb], l, m1);
-            if (maxsf < m2) {
-                maxsf = m2;
+            if (below_noise_floor(&xr[j], l3_xmin[sfb], l) == 0) {
+                m2 = that->find(&xr[j], &xr34_orig[j], l3_xmin[sfb], l, m1);
+                if (0) {
+                    /** Robert Hegemann 2007-09-29:
+                     *  It seems here is some more potential for speed improvements.
+                     *  Current find method does 11-18 quantization calculations.
+                     *  Using a "good guess" may help to reduce this amount.
+                     */
+                    int guess = calc_scalefac(l3_xmin[sfb], l);
+                    DEBUGF(that->gfc, "sfb=%3d guess=%3d found=%3d diff=%3d\n"
+                                    , sfb, guess, m2, m2-guess);
+                }
+                if (maxsf < m2) {
+                    maxsf = m2;
+                }
+            }
+            else {
+                m2 = 255;
+                maxsf = 255;
             }
         }
         else {
@@ -1162,136 +1199,6 @@ quantizeAndCountBits(const algo_t * that)
 }
 
 
-#if 0
-static int
-tryScalefacColor(const algo_t * that, int vbrsf[SFBMAX],
-                 const int vbrsf2[SFBMAX], const int vbrsfmin[SFBMAX], int I, int M, int target)
-{
-    FLOAT const xrpow_max = that->cod_info->xrpow_max;
-    int     i, nbits;
-    int     gain, vbrmax = 0;
-
-    for (i = 0; i < SFBMAX; ++i) {
-        gain = target + (vbrsf2[i] - target) * I / M;
-        if (gain < vbrsfmin[i]) {
-            gain = vbrsfmin[i];
-        }
-        if (gain > 255) {
-            gain = 255;
-        }
-        if (vbrmax < gain) {
-            vbrmax = gain;
-        }
-        vbrsf[i] = gain;
-    }
-    if (!that->alloc(that, vbrsf, vbrsfmin, vbrmax)) {
-        return LARGE_BITS;
-    }
-    (void) bitcount(that);
-    nbits = quantizeAndCountBits(that);
-    that->cod_info->xrpow_max = xrpow_max;
-    return nbits;
-}
-
-
-
-static void
-searchScalefacColorMax(const algo_t that_[2], int sfwork[2][SFBMAX],
-                       const int sfcalc[2][SFBMAX], const int vbrsfmin[2][SFBMAX], int maxbits[2])
-{
-    int     M[2], vbrmin[2], vbrmax[2];
-    int     ch;
-    int     max_bits = 0;
-    int const nch = that_[0].gfc->channels_out;
-    int     last[2], i[2], ok[2], l[2], r[2], looping = 0;
-
-    for (ch = 0; ch < nch; ch++) {
-        algo_t const *that = &that_[ch];
-
-        if (maxbits[ch] != 0) {
-            int const psymax = that->cod_info->psymax;
-            int     j;
-            vbrmin[ch] = 255;
-            vbrmax[ch] = 0;
-            for (j = 0; j < psymax; ++j) {
-                if (vbrmin[ch] > sfcalc[ch][j]) {
-                    vbrmin[ch] = sfcalc[ch][j];
-                }
-                if (vbrmax[ch] < sfcalc[ch][j]) {
-                    vbrmax[ch] = sfcalc[ch][j];
-                }
-            }
-            M[ch] = vbrmax[ch] - vbrmin[ch];
-            max_bits += maxbits[ch];
-        }
-    }
-
-    for (ch = 0; ch < nch; ch++) {
-        if (maxbits[ch] != 0) {
-            ok[ch] = -1;
-            l[ch] = 0;
-            r[ch] = M[ch];
-            last[ch] = i[ch] = M[ch] / 2;
-            if (l[ch] <= r[ch]) {
-                looping += 1 + ch;
-            }
-        }
-    }
-    while (looping > 0) {
-        int     nbits = 0;
-        looping = 0;
-        for (ch = 0; ch < nch; ch++) {
-            if (maxbits[ch] != 0) {
-                if (M[ch] == 0) {
-                    continue;
-                }
-                nbits +=
-                    tryScalefacColor(&that_[ch], sfwork[ch], sfcalc[ch], vbrsfmin[ch], i[ch], M[ch],
-                                     vbrmax[ch]);
-            }
-        }
-        for (ch = 0; ch < nch; ch++) {
-            if (maxbits[ch] != 0) {
-                if (nbits < max_bits) {
-                    ok[ch] = i[ch];
-                    l[ch] = i[ch] + 1;
-                    if (l[ch] <= r[ch]) {
-                        looping += 1 + ch;
-                    }
-                    else {
-                        l[ch] = r[ch];
-                    }
-                }
-                else {
-                    r[ch] = i[ch] - 1;
-                    if (l[ch] <= r[ch]) {
-                        looping += 1 + ch;
-                    }
-                    else {
-                        r[ch] = l[ch];
-                    }
-                }
-                last[ch] = i[ch];
-                i[ch] = (l[ch] + r[ch]) / 2;
-            }
-        }
-    }
-    for (ch = 0; ch < nch; ch++) {
-        if (maxbits[ch] != 0) {
-            if (M[ch] == 0) {
-                continue;
-            }
-            if (last[ch] != ok[ch]) {
-                if (ok[ch] == -1) {
-                    ok[ch] = 0;
-                }
-                tryScalefacColor(&that_[ch], sfwork[ch], sfcalc[ch], vbrsfmin[ch], ok[ch], M[ch],
-                                 vbrmax[ch]);
-            }
-        }
-    }
-}
-#endif
 
 
 
@@ -1387,94 +1294,7 @@ reduce_bit_usage(lame_internal_flags * gfc, int gr, int ch
 #endif
 }
 
-#if 0
-static int frame_num = -1;
-static void
-debug_bit_usage(algo_t that[2][2], int maxbits[2][2], char *s)
-{
-    lame_internal_flags* gfc = that[0][0].gfc;
-    int     ngr, nch;
-    int     gr, ch;
-    int     fr_sum = 0, fr_max = 0;
 
-    ngr = gfc->mode_gr;
-    nch = gfc->channels_out;
-    DEBUGF(gfc, "%4d %s\t", frame_num, s);
-    for (gr = 0; gr < ngr; ++gr) {
-        int     gr_sum = 0, gr_max = 0;
-        for (ch = 0; ch < nch; ++ch) {
-            int     use = 0;
-            if (maxbits[gr][ch] > 0) {
-                gr_max += maxbits[gr][ch];
-                use += that[gr][ch].cod_info->part2_3_length + that[gr][ch].cod_info->part2_length;
-                gr_sum += use;
-            }
-            DEBUGF(gfc, "<%d%d> %4d %c%4d\t", gr, ch, maxbits[gr][ch],
-                maxbits[gr][ch] < use ? '<' : ' ', use);
-        }
-        DEBUGF(gfc, "max%4d%csum=%4d\t", gr_max, gr_max < gr_sum ? '<' : ' ', gr_sum);
-    }
-    DEBUGF(gfc, "fr_max=%4d%cfr_sum=%4d\n", fr_max, fr_max < fr_sum ? '<' : ' ', fr_sum);
-}
-#endif
-
-/************************************************************************
- *
- *  VBR_noise_shaping()
- *
- *  may result in a need of too many bits, then do it CBR like
- *
- *  Robert Hegemann 2000-10-25
- *
- ***********************************************************************/
-#if 0
-static int
-VBR_noise_shaping(lame_internal_flags * gfc, const FLOAT xr34orig[2][576],
-                  const FLOAT l3_xmin[2][SFBMAX], int const maxbits[2], int gr)
-{
-    int     sfwork_[2][SFBMAX];
-    int     sfcalc_[2][SFBMAX];
-    int     vbrsfmin_[2][SFBMAX];
-    algo_t  that_[2];
-    int     ch;
-    int     nbits, max_bits = 0;
-
-
-#if 0
-    searchScalefacColorMax(that_, sfwork_, sfcalc_, vbrsfmin_, maxbits);
-    nbits = 0;
-    for (ch = 0; ch < gfc->channels_out; ch++) {
-        if (maxbits[ch] != 0) {
-            reduce_bit_usage(gfc, gr, ch /*, xr34orig, l3_xmin, maxbits */ );
-            algo_t *that = &that_[ch];
-            nbits += that->cod_info->part2_3_length + that->cod_info->part2_length;
-        }
-    }
-    debug_bit_usage(that_, maxbits, "B");
-    if (nbits <= max_bits) {
-        return nbits;
-    }
-#endif
-    nbits = 0;
-    for (ch = 0; ch < gfc->channels_out; ch++) {
-        int    *sfwork = sfwork_[ch];
-        int    *vbrsfmin = vbrsfmin_[ch];
-        algo_t *that = &that_[ch];
-        if (maxbits[ch] > 0) {
-            searchGlobalStepsizeMax(that, sfwork, vbrsfmin, maxbits[ch]);
-            reduce_bit_usage(gfc, gr, ch /*, xr34orig, l3_xmin, maxbits */ );
-            nbits += that->cod_info->part2_3_length + that->cod_info->part2_length;
-        }
-    }                   /* for ch */
-    /*debug_bit_usage(that_,maxbits,"C"); */
-    if (nbits <= max_bits /* && that->cod_info->global_gain < 256 */ ) {
-        return nbits;
-    }
-    ERRORF(gfc, "INTERNAL ERROR IN VBR NEW CODE (1313), please send bug report\n"
-           "maxbits=%d usedbits=%d\n", maxbits[ch], nbits);
-    exit(-1);
-}
-#endif
 
 
 int
@@ -1494,7 +1314,7 @@ VBR_encode_frame(lame_internal_flags * gfc, FLOAT const xr34orig[2][2][576],
     int     use_nbits_fr = 0;
     int     gr, ch;
     int     ok, sum_fr;
-/*++frame_num;*/
+
     /* set up some encoding parameters
      */
     for (gr = 0; gr < ngr; ++gr) {
@@ -1608,11 +1428,9 @@ VBR_encode_frame(lame_internal_flags * gfc, FLOAT const xr34orig[2][2][576],
             }
         }
         if (ok) {
-            /*debug_bit_usage(that_,max_nbits_ch,"+");*/
             return use_nbits_fr;
         }
     }
-    /*debug_bit_usage(that_,max_nbits_ch,"?");*/
 
     /* OK, we are in trouble and have to define how many bits are
      * to be used for each granule
@@ -1633,7 +1451,6 @@ VBR_encode_frame(lame_internal_flags * gfc, FLOAT const xr34orig[2][2][576],
                 max_nbits_gr[gr] += max_nbits_ch[gr][ch];
             }
             if (max_nbits_gr[gr] > MAX_BITS_PER_GRANULE) {
-#if 1
                 float f[2], s = 0;
                 for (ch = 0; ch < nch; ++ch) {
                     if (max_nbits_ch[gr][ch] > 0) {
@@ -1670,12 +1487,6 @@ VBR_encode_frame(lame_internal_flags * gfc, FLOAT const xr34orig[2][2][576],
                         max_nbits_ch[gr][1] = MAX_BITS_PER_CHANNEL;
                     }
                 }
-#else
-                for (ch = 0; ch < nch; ++ch) {
-                    max_nbits_ch[gr][ch] *= MAX_BITS_PER_GRANULE;
-                    max_nbits_ch[gr][ch] /= max_nbits_gr[gr];
-                }
-#endif
                 max_nbits_gr[gr] = 0;
                 for (ch = 0; ch < nch; ++ch) {
                     max_nbits_gr[gr] += max_nbits_ch[gr][ch]; 
@@ -1684,7 +1495,6 @@ VBR_encode_frame(lame_internal_flags * gfc, FLOAT const xr34orig[2][2][576],
             sum_fr += max_nbits_gr[gr];
         }
         if (sum_fr > max_nbits_fr) {
-#if 1
             {
                 float f[2], s = 0;
                 for (gr = 0; gr < ngr; ++gr) {
@@ -1759,14 +1569,6 @@ VBR_encode_frame(lame_internal_flags * gfc, FLOAT const xr34orig[2][2][576],
                     }
                 }
             }
-#else
-            for (gr = 0; gr < ngr; ++gr) {
-                for (ch = 0; ch < nch; ++ch) {
-                    max_nbits_ch[gr][ch] *= max_nbits_fr;
-                    max_nbits_ch[gr][ch] /= sum_fr;
-                }
-            }
-#endif
         }
         /* sanity check */
         sum_fr = 0;
@@ -1836,7 +1638,6 @@ VBR_encode_frame(lame_internal_flags * gfc, FLOAT const xr34orig[2][2][576],
     /* check bit constrains, but it should always be ok, iff there are no bugs ;-)
      */
     if (use_nbits_fr <= max_nbits_fr) {
-        /*debug_bit_usage(that_,max_nbits_ch,"-");*/
         return use_nbits_fr;
     }
 
