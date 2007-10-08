@@ -321,7 +321,7 @@ stats_line(double *stat)
 void
 brhist_disp(const lame_global_flags * gf)
 {
-    int     i, lines = 0;
+    int     i, lines_used = 0;
     int     br_hist[BRHIST_WIDTH]; /* how often a frame size was used */
     int     br_sm_hist[BRHIST_WIDTH][4]; /* how often a special frame size/stereo mode commbination was used */
     int     st_mode[4];
@@ -348,13 +348,13 @@ brhist_disp(const lame_global_flags * gf)
         if (most_often < br_hist[i])
             most_often = br_hist[i];
         if (br_hist[i])
-            ++lines;
+            ++lines_used;
     }
 
     for (i = 0; i < BRHIST_WIDTH; i++) {
         int     show = br_hist[i];
 #ifdef RH_HIST
-        show = show && (lines > 1);
+        show = show && (lines_used > 1);
 #endif
         if (show || (i >= brhist.vbr_bitrate_min_index && i <= brhist.vbr_bitrate_max_index))
             brhist_disp_line(i, br_hist[i], br_sm_hist[i][LR], most_often, frames);
