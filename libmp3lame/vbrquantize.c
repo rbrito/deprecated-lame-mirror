@@ -498,7 +498,7 @@ find_scalefac_x34(const FLOAT * xr, const FLOAT * xr34, FLOAT l3_xmin, unsigned 
                   uint8_t sf_min)
 {
     calc_noise_cache_t did_it[256];
-    uint8_t sf = 128, sf_ok = 255, delsf = 128, i;
+    uint8_t sf = 128, sf_ok = 255, delsf = 128, seen_good_one = 0, i;
     memset(did_it, 0, sizeof(did_it));
     for (i = 0; i < 8; ++i) {
         delsf >>= 1;
@@ -513,12 +513,19 @@ find_scalefac_x34(const FLOAT * xr, const FLOAT * xr34, FLOAT l3_xmin, unsigned 
             else {
                 sf_ok = sf;
                 sf += delsf;
+                seen_good_one = 1;
             }
         }
     }
     /*  returning a scalefac without distortion, if possible
      */
-    return sf_ok;
+    if (seen_good_one > 0) {
+        return sf_ok;
+    }
+    if (sf <= sf_min) {
+        return sf_min;
+    }
+    return sf;
 }
 
 
@@ -528,7 +535,7 @@ find_scalefac_ISO(const FLOAT * xr, const FLOAT * xr34, FLOAT l3_xmin, unsigned 
                   uint8_t sf_min)
 {
     calc_noise_cache_t did_it[256];
-    uint8_t sf = 128, sf_ok = 255, delsf = 128, i;
+    uint8_t sf = 128, sf_ok = 255, delsf = 128, seen_good_one = 0, i;
     memset(did_it, 0, sizeof(did_it));
     for (i = 0; i < 8; ++i) {
         delsf >>= 1;
@@ -543,12 +550,19 @@ find_scalefac_ISO(const FLOAT * xr, const FLOAT * xr34, FLOAT l3_xmin, unsigned 
             else {
                 sf_ok = sf;
                 sf += delsf;
+                seen_good_one = 1;
             }
         }
     }
     /*  returning a scalefac without distortion, if possible
      */
-    return sf_ok;
+    if (seen_good_one > 0) {
+        return sf_ok;
+    }
+    if (sf <= sf_min) {
+        return sf_min;
+    }
+    return sf;
 }
 
 
