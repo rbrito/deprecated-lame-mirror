@@ -83,7 +83,7 @@ getframebits(const lame_global_flags * gfp)
 
 
 
-void
+static void
 putheader_bits(lame_internal_flags * gfc)
 {
     Bit_stream_struc *bs;
@@ -510,23 +510,23 @@ Huffmancode(lame_internal_flags * const gfc, const unsigned int tableindex,
             int start, int end, gr_info const *gi)
 {
     struct huffcodetab const *const h = &ht[tableindex];
-    int     index, bits = 0;
+    int     i, bits = 0;
 
     assert(tableindex < 32u);
     if (!tableindex)
         return bits;
 
-    for (index = start; index < end; index += 2) {
+    for (i = start; i < end; i += 2) {
         int     cbits = 0;
         int     xbits = 0;
         int const linbits = h->xlen;
         int     xlen = h->xlen;
         int     ext = 0;
-        int     x1 = gi->l3_enc[index];
-        int     x2 = gi->l3_enc[index + 1];
+        int     x1 = gi->l3_enc[i];
+        int     x2 = gi->l3_enc[i + 1];
 
         if (x1 != 0) {
-            if (gi->xr[index] < 0)
+            if (gi->xr[i] < 0)
                 ext++;
             cbits--;
         }
@@ -554,7 +554,7 @@ Huffmancode(lame_internal_flags * const gfc, const unsigned int tableindex,
 
         if (x2 != 0) {
             ext <<= 1;
-            if (gi->xr[index + 1] < 0)
+            if (gi->xr[i + 1] < 0)
                 ext++;
             cbits--;
         }

@@ -763,7 +763,7 @@ calc_xmin(lame_global_flags const *gfp,
 }
 
 
-FLOAT
+static FLOAT
 calc_noise_core_c(const gr_info * const cod_info, int *startline, int l, FLOAT step)
 {
     FLOAT   noise = 0;

@@ -384,7 +384,7 @@ int
 id3tag_set_albumart(lame_global_flags* gfp, const char* image, unsigned long size)
 {
     int mimetype = 0;
-    unsigned char *data = (unsigned char *)image;
+    unsigned char const *data = (unsigned char const*)image;
     lame_internal_flags *gfc = gfp->internal_flags;
 
     /* make sure the image size is no larger than the maximum value */
@@ -424,9 +424,9 @@ id3tag_set_albumart(lame_global_flags* gfp, const char* image, unsigned long siz
 static unsigned char *
 set_4_byte_value(unsigned char *bytes, unsigned long value)
 {
-    int     index;
-    for (index = 3; index >= 0; --index) {
-        bytes[index] = value & 0xfful;
+    int     i;
+    for (i = 3; i >= 0; --i) {
+        bytes[i] = value & 0xfful;
         value >>= 8;
     }
     return bytes + 4;
@@ -568,7 +568,7 @@ id3tag_write_v2(lame_global_flags * gfp)
             unsigned char *tag;
             unsigned char *p;
             size_t  adjusted_tag_size;
-            unsigned int index;
+            unsigned int i;
             const char *albumart_mime = NULL;
             static const char *mime_jpeg = "image/jpeg";
             static const char *mime_png = "image/png";
@@ -650,8 +650,8 @@ id3tag_write_v2(lame_global_flags * gfp)
             else {
                 genre_length = 0;
             }
-            for (index = 0;index < gfc->tag_spec.num_values;++index) {
-                tag_size += 6 + strlen(gfc->tag_spec.values[index]);
+            for (i = 0; i < gfc->tag_spec.num_values; ++i) {
+                tag_size += 6 + strlen(gfc->tag_spec.values[i]);
             }
             if (gfc->tag_spec.albumart && gfc->tag_spec.albumart_size) {
                 switch (gfc->tag_spec.albumart_mimetype) {
@@ -715,14 +715,14 @@ id3tag_write_v2(lame_global_flags * gfp)
             p = set_frame(p, TRACK_FRAME_ID, gfc->tag_spec.track_id3v2, track_length);
             p = set_frame(p, GENRE_FRAME_ID, gfc->tag_spec.genre_id3v2, genre_length);
             p = set_frame_apic(p, albumart_mime, gfc->tag_spec.albumart, gfc->tag_spec.albumart_size);
-            for (index = 0;index < gfc->tag_spec.num_values;++index) {
-                p = set_frame_custom(p, gfc->tag_spec.values[index]);
+            for (i = 0; i < gfc->tag_spec.num_values; ++i) {
+                p = set_frame_custom(p, gfc->tag_spec.values[i]);
             }
             /* clear any padding bytes */
             memset(p, 0, tag_size - (p - tag));
             /* write tag directly into bitstream at current position */
-            for (index = 0; index < tag_size; ++index) {
-                add_dummy_byte(gfp, tag[index], 1);
+            for (i = 0; i < tag_size; ++i) {
+                add_dummy_byte(gfp, tag[i], 1);
             }
             free(tag);
             return (int)tag_size;
@@ -756,7 +756,7 @@ id3tag_write_v1(lame_global_flags * gfp)
         int     pad = (gfc->tag_spec.flags & SPACE_V1_FLAG) ? ' ' : 0;
         char    year[5];
         int     year_length;
-        unsigned int index;
+        unsigned int i;
         /* set tag identifier */
         *p++ = 'T';
         *p++ = 'A';
@@ -778,8 +778,8 @@ id3tag_write_v1(lame_global_flags * gfp)
         }
         *p++ = gfc->tag_spec.genre_id3v1;
         /* write tag directly into bitstream at current position */
-        for (index = 0; index < 128; ++index) {
-            add_dummy_byte(gfp, tag[index], 1);
+        for (i = 0; i < 128; ++i) {
+            add_dummy_byte(gfp, tag[i], 1);
         }
         return 128;
     }

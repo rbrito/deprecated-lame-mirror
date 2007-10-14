@@ -427,7 +427,7 @@ WriteBytesSwapped(FILE * fp, char *p, int n)
  * Extended precision IEEE floating-point conversion routines
  ****************************************************************/
 
-double
+static double
 ConvertFromIeeeExtended(char *bytes)
 {
     double  f;

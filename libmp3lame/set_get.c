@@ -260,17 +260,28 @@ lame_get_decode_only(const lame_global_flags * gfp)
 }
 
 
+#if DEPRECATED_OR_OBSOLETE_CODE_REMOVED
+/* 1=encode a Vorbis .ogg file.  default=0 */
+/* DEPRECATED */
+int CDECL lame_set_ogg(lame_global_flags *, int);
+int CDECL lame_get_ogg(const lame_global_flags *);
+#else
+#endif
+ 
 /* encode a Vorbis .ogg file */
 /* DEPRECATED */
 int
 lame_set_ogg(lame_global_flags * gfp, int ogg)
 {
+    (void) gfp;
+    (void) ogg;
     return -1;
 }
 
 int
 lame_get_ogg(const lame_global_flags * gfp)
 {
+    (void) gfp;
     return 0;
 }
 
@@ -303,9 +314,11 @@ lame_get_quality(const lame_global_flags * gfp)
 int
 lame_set_mode(lame_global_flags * gfp, MPEG_mode mode)
 {
+    int mpg_mode = mode;
+    
     /* default: lame chooses based on compression ratio and input channels */
 
-    if (0 > mode || MAX_INDICATOR <= mode)
+    if (mpg_mode < 0 || MAX_INDICATOR <= mpg_mode)
         return -1;      /* Unknown MPEG mode! */
 
     gfp->mode = mode;
@@ -316,11 +329,24 @@ lame_set_mode(lame_global_flags * gfp, MPEG_mode mode)
 MPEG_mode
 lame_get_mode(const lame_global_flags * gfp)
 {
-    assert(0 <= gfp->mode && MAX_INDICATOR > gfp->mode);
+    int mpg_mode = gfp->mode;
+    
+    assert(0 <= mpg_mode && mpg_mode < MAX_INDICATOR);
 
     return gfp->mode;
 }
 
+
+#if DEPRECATED_OR_OBSOLETE_CODE_REMOVED
+/*
+  mode_automs.  Use a M/S mode with a switching threshold based on
+  compression ratio
+  DEPRECATED
+*/
+int CDECL lame_set_mode_automs(lame_global_flags *, int);
+int CDECL lame_get_mode_automs(const lame_global_flags *);
+#else
+#endif
 
 /* Us a M/S mode with a switching threshold based on compression ratio */
 /* DEPRECATED */
@@ -343,6 +369,7 @@ lame_set_mode_automs(lame_global_flags * gfp, int mode_automs)
 int
 lame_get_mode_automs(const lame_global_flags * gfp)
 {
+    (void) gfp;
     return 1;
 }
 
@@ -458,6 +485,25 @@ lame_get_decode_on_the_fly(const lame_global_flags * gfp)
 
     return gfp->decode_on_the_fly;
 }
+
+#if DEPRECATED_OR_OBSOLETE_CODE_REMOVED
+/* DEPRECATED: now does the same as lame_set_findReplayGain()
+   default = 0 (disabled) */
+int CDECL lame_set_ReplayGain_input(lame_global_flags *, int);
+int CDECL lame_get_ReplayGain_input(const lame_global_flags *);
+
+/* DEPRECATED: now does the same as
+   lame_set_decode_on_the_fly() && lame_set_findReplayGain()
+   default = 0 (disabled) */
+int CDECL lame_set_ReplayGain_decode(lame_global_flags *, int);
+int CDECL lame_get_ReplayGain_decode(const lame_global_flags *);
+
+/* DEPRECATED: now does the same as lame_set_decode_on_the_fly()
+   default = 0 (disabled) */
+int CDECL lame_set_findPeakSample(lame_global_flags *, int);
+int CDECL lame_get_findPeakSample(const lame_global_flags *);
+#else
+#endif
 
 /* DEPRECATED. same as lame_set_decode_on_the_fly() */
 int
@@ -690,6 +736,13 @@ lame_get_error_protection(const lame_global_flags * gfp)
 }
 
 
+#if DEPRECATED_OR_OBSOLETE_CODE_REMOVED
+/* padding_type. 0=pad no frames  1=pad all frames 2=adjust padding(default) */
+int CDECL lame_set_padding_type(lame_global_flags *, Padding_type);
+Padding_type CDECL lame_get_padding_type(const lame_global_flags *);
+#else
+#endif
+
 /*
  * padding_type.
  *  PAD_NO     = pad no frames
@@ -699,12 +752,15 @@ lame_get_error_protection(const lame_global_flags * gfp)
 int
 lame_set_padding_type(lame_global_flags * gfp, Padding_type padding_type)
 {
+    (void) gfp;
+    (void) padding_type;
     return 0;
 }
 
 Padding_type
 lame_get_padding_type(const lame_global_flags * gfp)
 {
+    (void) gfp;
     return PAD_ADJUST;
 }
 
@@ -862,12 +918,15 @@ lame_get_experimentalY(const lame_global_flags * gfp)
 int
 lame_set_experimentalZ(lame_global_flags * gfp, int experimentalZ)
 {
+    (void) gfp;
+    (void) experimentalZ;
     return 0;
 }
 
 int
 lame_get_experimentalZ(const lame_global_flags * gfp)
 {
+    (void) gfp;
     return 0;
 }
 
@@ -900,7 +959,9 @@ lame_get_exp_nspsytune(const lame_global_flags * gfp)
 int
 lame_set_VBR(lame_global_flags * gfp, vbr_mode VBR)
 {
-    if (0 > VBR || vbr_max_indicator <= VBR)
+    int vbr_q = VBR;
+    
+    if (0 > vbr_q || vbr_max_indicator <= vbr_q)
         return -1;      /* Unknown VBR mode! */
 
     gfp->VBR = VBR;
@@ -911,7 +972,9 @@ lame_set_VBR(lame_global_flags * gfp, vbr_mode VBR)
 vbr_mode
 lame_get_VBR(const lame_global_flags * gfp)
 {
-    assert(0 <= gfp->VBR && vbr_max_indicator > gfp->VBR);
+    int vbr_q = gfp->VBR;
+    
+    assert(0 <= vbr_q && vbr_max_indicator > vbr_q);
 
     return gfp->VBR;
 }
@@ -1271,6 +1334,7 @@ lame_get_athaa_type(const lame_global_flags * gfp)
 int
 lame_set_athaa_loudapprox(lame_global_flags * gfp, int athaa_loudapprox)
 {
+    (void) athaa_loudapprox;
     ERRORF(gfp->internal_flags, "--athaa-loudapprox is obsolete\n");
     return 0;
 }
@@ -1278,6 +1342,7 @@ lame_set_athaa_loudapprox(lame_global_flags * gfp, int athaa_loudapprox)
 int
 lame_get_athaa_loudapprox(const lame_global_flags * gfp)
 {
+    (void) gfp;
     /* obsolete, the type known under number 2 is the only survival */
     return 2;
 }
@@ -1746,6 +1811,8 @@ change.
 /*
  *  just another daily changing developer switch  
  */
+void CDECL lame_set_tune(lame_global_flags *, float);
+
 void
 lame_set_tune(lame_global_flags * gfp, float val)
 {
@@ -1767,19 +1834,32 @@ lame_get_msfix(const lame_global_flags * gfp)
     return gfp->msfix;
 }
 
+#if DEPRECATED_OR_OBSOLETE_CODE_REMOVED
+int CDECL lame_set_preset_expopts(lame_global_flags *, int);
+#else
+#endif
+
 int
 lame_set_preset_expopts(lame_global_flags * gfp, int preset_expopts)
 {
-
+    (void) gfp;
+    (void) preset_expopts;
     return 0;
 }
 
+/*
 int
 lame_set_preset_notune(lame_global_flags * gfp, int preset_notune)
 {
+    (void) gfp;
+    (void) preset_notune;
     return 0;
 }
+*/
 
+/* DEVELOPER ONLY */
+void CDECL lame_set_quantization_type(lame_global_flags *, int);
+int CDECL lame_get_quantization_type(lame_global_flags *);
 
 void
 lame_set_quantization_type(lame_global_flags * gfp, int type)

@@ -165,7 +165,7 @@ optimum_bandwidth(double *const lowerlimit, double *const upperlimit, const unsi
  *      lowerlimit: best lowpass frequency limit for input filter in Hz
  *      upperlimit: best highpass frequency limit for input filter in Hz
  */
-    int     index;
+    int     table_index;
 
     typedef struct {
         int     bitrate;     /* only indicative value */
@@ -193,9 +193,9 @@ optimum_bandwidth(double *const lowerlimit, double *const upperlimit, const unsi
     };
 
 
-    index = nearestBitrateFullIndex(bitrate);
+    table_index = nearestBitrateFullIndex(bitrate);
 
-    *lowerlimit = freq_map[index].lowpass;
+    *lowerlimit = freq_map[table_index].lowpass;
 
 
 /*
@@ -229,6 +229,7 @@ optimum_bandwidth(double *const lowerlimit, double *const upperlimit, const unsi
 
     /*if (upperlimit != NULL)
      *upperlimit = f_high;*/
+    (void) upperlimit;
 }
 
 
@@ -321,7 +322,7 @@ optimum_samplefreq(int lowpassfreq, int input_samplefreq)
 
 /* set internal feature flags.  USER should not access these since
  * some combinations will produce strange results */
-void
+static void
 lame_init_qval(lame_global_flags * gfp)
 {
     lame_internal_flags *const gfc = gfp->internal_flags;
@@ -1479,7 +1480,7 @@ lame_print_internals(const lame_global_flags * gfp)
 encoding engine.  All buffering, resampling, etc, handled by calling
 program.
 */
-int
+static int
 lame_encode_frame(lame_global_flags * gfp,
                   sample_t inbuf_l[], sample_t inbuf_r[], unsigned char *mp3buf, int mp3buf_size)
 {
@@ -1540,7 +1541,7 @@ update_inbuffer_size(lame_internal_flags * gfc, const int nsamples)
  *                         lame_encode_buffer_int()
  * etc... depending on what type of data they are working with.
 */
-int
+static int
 lame_encode_buffer_sample_t(lame_global_flags * gfp,
                             sample_t buffer_l[],
                             sample_t buffer_r[],
@@ -1622,12 +1623,15 @@ lame_encode_buffer_sample_t(lame_global_flags * gfp,
     mfbuf[1] = gfc->mfbuf[1];
 
     while (nsamples > 0) {
+        sample_t const* in_buffer_ptr[2];
         int     n_in = 0;    /* number of input samples processed with fill_buffer */
         int     n_out = 0;   /* number of samples output with fill_buffer */
         /* n_in <> n_out if we are resampling */
 
+        in_buffer_ptr[0] = in_buffer[0];
+        in_buffer_ptr[1] = in_buffer[1];
         /* copy in new samples into mfbuf, with resampling */
-        fill_buffer(gfp, mfbuf, in_buffer, nsamples, &n_in, &n_out);
+        fill_buffer(gfp, mfbuf, &in_buffer_ptr[0], nsamples, &n_in, &n_out);
 
         /* compute ReplayGain of resampled input if requested */
         if (gfc->findReplayGain && !gfc->decode_on_the_fly)
@@ -1899,8 +1903,8 @@ lame_encode_buffer_interleaved(lame_global_flags * gfp,
                                        mp3buf_size);
 }
 
-
-int
+#if 0
+static int
 lame_encode(lame_global_flags * const gfp,
             const short int in_buffer[2][1152], unsigned char *const mp3buf, const int size)
 {
@@ -1911,6 +1915,7 @@ lame_encode(lame_global_flags * const gfp,
 
     return lame_encode_buffer(gfp, in_buffer[0], in_buffer[1], gfp->framesize, mp3buf, size);
 }
+#endif
 
 /*****************************************************************
  Flush mp3 buffer, pad with ancillary data so last frame is complete.
@@ -2070,7 +2075,8 @@ lame_close(lame_global_flags * gfp)
 /*****************************************************************/
 /* flush internal mp3 buffers, and free internal buffers         */
 /*****************************************************************/
-
+#if DEPRECATED_OR_OBSOLETE_CODE_REMOVED
+#else
 int
 lame_encode_finish(lame_global_flags * gfp, unsigned char *mp3buffer, int mp3buffer_size)
 {
@@ -2080,6 +2086,7 @@ lame_encode_finish(lame_global_flags * gfp, unsigned char *mp3buffer, int mp3buf
 
     return ret;
 }
+#endif
 
 /*****************************************************************/
 /* write VBR Xing header, and ID3 version 1 tag, if asked for    */
@@ -2113,31 +2120,13 @@ lame_mp3_tags_fid(lame_global_flags * gfp, FILE * fpStream)
     }
 }
 
-int lame_init_old(lame_global_flags * gfp);
 
-lame_global_flags *
-lame_init(void)
-{
-    lame_global_flags *gfp;
-    int     ret;
-
-    init_log_table();
-
-    gfp = calloc(1, sizeof(lame_global_flags));
-    if (gfp == NULL)
-        return NULL;
-
-    ret = lame_init_old(gfp);
-    if (ret != 0) {
-        free(gfp);
-        return NULL;
-    }
-
-    gfp->lame_allocated_gfp = 1;
-    return gfp;
-}
 
 /* initialize mp3 encoder */
+#if DEPRECATED_OR_OBSOLETE_CODE_REMOVED
+static
+#else
+#endif
 int
 lame_init_old(lame_global_flags * gfp)
 {
@@ -2245,6 +2234,30 @@ lame_init_old(lame_global_flags * gfp)
 
     return 0;
 }
+
+
+lame_global_flags *
+lame_init(void)
+{
+    lame_global_flags *gfp;
+    int     ret;
+
+    init_log_table();
+
+    gfp = calloc(1, sizeof(lame_global_flags));
+    if (gfp == NULL)
+        return NULL;
+
+    ret = lame_init_old(gfp);
+    if (ret != 0) {
+        free(gfp);
+        return NULL;
+    }
+
+    gfp->lame_allocated_gfp = 1;
+    return gfp;
+}
+
 
 /***********************************************************************
  *

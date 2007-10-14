@@ -110,7 +110,7 @@ static const struct {
 
 
 
-void
+static void
 quantize_lines_xrpow_01(int l, FLOAT istep, const FLOAT * xr, int *ix)
 {
     const FLOAT compareval0 = (1.0 - 0.4054) / istep;
@@ -136,7 +136,7 @@ typedef union {
 #define MAGIC_INT 0x4b000000
 
 
-void
+static void
 quantize_lines_xrpow(int l, FLOAT istep, const FLOAT * xp, int *pi)
 {
     fi_union *fi;
@@ -196,7 +196,7 @@ quantize_lines_xrpow(int l, FLOAT istep, const FLOAT * xp, int *pi)
 
 
 #  define ROUNDFAC -0.0946
-void
+static void
 quantize_lines_xrpow_ISO(int l, FLOAT istep, const FLOAT * xp, int *pi)
 {
     fi_union *fi;
@@ -256,7 +256,7 @@ quantize_lines_xrpow_ISO(int l, FLOAT istep, const FLOAT * xp, int *pi)
 #define ROUNDFAC 0.4054
 
 
-void
+static void
 quantize_lines_xrpow(int l, FLOAT istep, const FLOAT * xr, int *ix)
 {
     int     remaining;
@@ -305,7 +305,7 @@ quantize_lines_xrpow(int l, FLOAT istep, const FLOAT * xr, int *ix)
 
 
 
-void
+static void
 quantize_lines_xrpow_ISO(int l, FLOAT istep, const FLOAT * xr, int *ix)
 {
 
@@ -515,7 +515,7 @@ quantize_init(lame_internal_flags * const gfc)
 /*	      ix_max							 */
 /*************************************************************************/
 
-int
+static int
 ix_max(const int *ix, const int *end)
 {
     int     max1 = 0, max2 = 0;
@@ -541,7 +541,7 @@ ix_max(const int *ix, const int *end)
 
 
 
-int
+static int
 count_bit_ESC(const int *ix, const int *const end, int t1, const int t2, int *const s)
 {
     /* ESC-table is used */
@@ -1051,7 +1051,8 @@ const int slen2_tab[16] = { 0, 1, 2, 3, 0, 1, 2, 3, 1, 2, 3, 1, 2, 3, 2, 3 };
 static void
 scfsi_calc(int ch, III_side_info_t * l3_side)
 {
-    int     i, s1, s2, c1, c2;
+    unsigned int i;
+    int     s1, s2, c1, c2;
     int     sfb;
     gr_info *const gi = &l3_side->tt[1][ch];
     gr_info const *const g0 = &l3_side->tt[0][ch];
@@ -1421,31 +1422,31 @@ huffman_init(lame_internal_flags * const gfc)
 #endif
 
     for (i = 2; i <= 576; i += 2) {
-        int     scfb_anz = 0, index;
+        int     scfb_anz = 0, bv_index;
         while (gfc->scalefac_band.l[++scfb_anz] < i);
 
-        index = subdv_table[scfb_anz].region0_count;
-        while (gfc->scalefac_band.l[index + 1] > i)
-            index--;
+        bv_index = subdv_table[scfb_anz].region0_count;
+        while (gfc->scalefac_band.l[bv_index + 1] > i)
+            bv_index--;
 
-        if (index < 0) {
+        if (bv_index < 0) {
             /* this is an indication that everything is going to
                be encoded as region0:  bigvalues < region0 < region1
                so lets set region0, region1 to some value larger
                than bigvalues */
-            index = subdv_table[scfb_anz].region0_count;
+            bv_index = subdv_table[scfb_anz].region0_count;
         }
 
-        gfc->bv_scf[i - 2] = index;
+        gfc->bv_scf[i - 2] = bv_index;
 
-        index = subdv_table[scfb_anz].region1_count;
-        while (gfc->scalefac_band.l[index + gfc->bv_scf[i - 2] + 2] > i)
-            index--;
+        bv_index = subdv_table[scfb_anz].region1_count;
+        while (gfc->scalefac_band.l[bv_index + gfc->bv_scf[i - 2] + 2] > i)
+            bv_index--;
 
-        if (index < 0) {
-            index = subdv_table[scfb_anz].region1_count;
+        if (bv_index < 0) {
+            bv_index = subdv_table[scfb_anz].region1_count;
         }
 
-        gfc->bv_scf[i - 1] = index;
+        gfc->bv_scf[i - 1] = bv_index;
     }
 }

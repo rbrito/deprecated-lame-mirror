@@ -52,7 +52,7 @@ init_xrpow_core_sse(gr_info * const cod_info, FLOAT xrpow[576], int upper, FLOAT
 
 
     const int fabs_mask[4] = { 0x7FFFFFFF, 0x7FFFFFFF, 0x7FFFFFFF, 0x7FFFFFFF };
-    const __m128 vec_fabs_mask = _mm_loadu_ps((float *) fabs_mask);
+    const __m128 vec_fabs_mask = _mm_loadu_ps((float const*) &fabs_mask[0]);
     vecfloat_union vec_xrpow_max;
     vecfloat_union vec_sum;
 

@@ -1740,4 +1740,17 @@ lame_decode_fromfile(FILE * fd, short pcm_l[], short pcm_r[], mp3data_struct * m
 }
 #endif /* defined(HAVE_MPGLIB) */
 
+
+int is_mpeg_file_format( int input_file_format )
+{
+    switch ( input_file_format ) {
+        case sf_mp1: return 1;
+        case sf_mp2: return 2;
+        case sf_mp3: return 3;
+        case sf_mp123: return -1;
+        default: break;
+    }
+    return 0;
+}
+
 /* end of get_audio.c */

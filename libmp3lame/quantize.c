@@ -1679,11 +1679,19 @@ VBR_new_prepare(lame_global_flags const *gfp,
                 masking_lower_db = gfc->PSY->mask_adjust - adjust;
             }
             else {
+#if 0
+                /* TODO: extreme low allowed noise may lead to bitrate canibalism!
+                 *       Setting mask adjust as in long block case should do,
+                 *       but we'll have to do some tests.
+                 */
+                masking_lower_db = gfc->PSY->mask_adjust - 0.4;
+#else
                 /*
                 //adjust = 2.56 / (1 + exp(3.5 - pe[gr][ch] / 300.)) - 0.14;
                 */
                 adjust = 0.7;
                 masking_lower_db = gfc->PSY->mask_adjust_short - adjust;
+#endif
             }
             gfc->masking_lower = pow(10.0, masking_lower_db * 0.1);
 

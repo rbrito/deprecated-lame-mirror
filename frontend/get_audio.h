@@ -37,19 +37,8 @@ typedef enum sound_file_format_e {
     sf_ogg
 } sound_file_format;
 
-static int is_mpeg_file_format( int input_format )
-{
-  switch ( input_format ) {
-  case sf_mp1: return 1;
-  case sf_mp2: return 2;
-  case sf_mp3: return 3;
-  case sf_mp123: return -1;
-  default: break;
-  }
-  return 0;
-}
 
-
+int     is_mpeg_file_format( int input_format );
 
 FILE   *init_outfile(char *outPath, int decode);
 void    init_infile(lame_global_flags *, char *inPath, int *enc_delay, int *enc_padding);

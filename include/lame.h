@@ -367,9 +367,12 @@ int CDECL lame_get_original(const lame_global_flags *);
 int CDECL lame_set_error_protection(lame_global_flags *, int);
 int CDECL lame_get_error_protection(const lame_global_flags *);
 
+#if DEPRECATED_OR_OBSOLETE_CODE_REMOVED
+#else
 /* padding_type. 0=pad no frames  1=pad all frames 2=adjust padding(default) */
 int CDECL lame_set_padding_type(lame_global_flags *, Padding_type);
 Padding_type CDECL lame_get_padding_type(const lame_global_flags *);
+#endif
 
 /* MP3 'private extension' bit  Meaningless.  default=0 */
 int CDECL lame_set_extension(lame_global_flags *, int);
@@ -442,8 +445,10 @@ int CDECL lame_set_VBR_hard_min(lame_global_flags *, int);
 int CDECL lame_get_VBR_hard_min(const lame_global_flags *);
 
 /* for preset */
+#if DEPRECATED_OR_OBSOLETE_CODE_REMOVED
+#else
 int CDECL lame_set_preset_expopts(lame_global_flags *, int);
-
+#endif
 
 /********************************************************************
  * Filtering control
