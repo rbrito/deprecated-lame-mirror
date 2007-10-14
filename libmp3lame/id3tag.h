@@ -33,7 +33,7 @@ struct id3tag_spec {
     int     albumart_size;
     int     albumart_mimetype;
     char  **values;
-    int     num_values;
+    unsigned int num_values;
 };
 
 

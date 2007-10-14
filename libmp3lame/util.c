@@ -80,7 +80,7 @@ free_id3tag(lame_internal_flags * const gfc)
         gfc->tag_spec.albumart_mimetype = MIMETYPE_NONE;
     }
     if (gfc->tag_spec.values != 0) {
-        int i;
+        unsigned int i;
         for (i = 0; i < gfc->tag_spec.num_values; ++i) {
             free(gfc->tag_spec.values[i]);
         }
