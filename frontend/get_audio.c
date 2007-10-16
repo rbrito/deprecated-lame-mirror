@@ -79,11 +79,12 @@ typedef struct get_audio_global_data {
     int     count_samples_carefully;
     int     pcmbitwidth;
     int     pcmswapbytes;
+    int     pcm_is_unsigned_8bit;
     unsigned int num_samples_read;
     FILE   *musicin;
 } get_audio_global_data;
 
-static get_audio_global_data global = { 0, 0, 0, 0, 0 };
+static get_audio_global_data global = { 0, 0, 0, 0, 0, 0 };
 
 
 
@@ -105,7 +106,7 @@ void    CloseSndFile(sound_file_format input, FILE * musicin);
 FILE   *OpenSndFile(lame_global_flags * gfp, char *, int *enc_delay, int *enc_padding);
 
 
-static size_t
+static  size_t
 min_size_t(size_t a, size_t b)
 {
     if (a < b) {
@@ -237,6 +238,7 @@ init_infile(lame_global_flags * gfp, char *inPath, int *enc_delay, int *enc_padd
     global. num_samples_read = 0;
     global. pcmbitwidth = in_bitwidth;
     global. pcmswapbytes = swapbytes;
+    global. pcm_is_unsigned_8bit = 0;
     global. musicin = OpenSndFile(gfp, inPath, enc_delay, enc_padding);
 }
 
@@ -302,8 +304,8 @@ SwapBytesInWords(short *ptr, int short_words)
 
 
 static int
-get_audio_common(lame_global_flags * const gfp,
-                 int buffer[2][1152], short buffer16[2][1152]);
+        get_audio_common(lame_global_flags * const gfp,
+                         int buffer[2][1152], short buffer16[2][1152]);
 
 /************************************************************************
 *
@@ -938,13 +940,12 @@ unpack_read_samples(const int samples_to_read, const int bytes_per_sample,
     if( bytes_per_sample == ga_urs_bps ) \
 	for( i = samples_read * bytes_per_sample; (i -= bytes_per_sample) >=0;)
 
-
     samples_read = fread(sample_buffer, bytes_per_sample, samples_to_read, pcm_in);
     op = sample_buffer + samples_read;
 
-    GA_URS_IFLOOP(1)
-        * --op = (ip[i] ^ 0x80) << (b - 8) | 0x7f << (b - 16); /* convert from unsigned */
     if (swap_order == 0) {
+        GA_URS_IFLOOP(1)
+            * --op = (ip[i] ^ 0x80) << (b - 8) | 0x7f << (b - 16); /* convert from unsigned */
         GA_URS_IFLOOP(2)
             * --op = ip[i] << (b - 16) | ip[i + 1] << (b - 8);
         GA_URS_IFLOOP(3)
@@ -955,6 +956,8 @@ unpack_read_samples(const int samples_to_read, const int bytes_per_sample,
                                                                                               8);
     }
     else {
+        GA_URS_IFLOOP(1)
+            * --op = ip[i] << (b - 8);
         GA_URS_IFLOOP(2)
             * --op = ip[i] << (b - 8) | ip[i + 1] << (b - 16);
         GA_URS_IFLOOP(3)
@@ -1018,7 +1021,8 @@ read_samples_pcm(FILE * musicin, int sample_buffer[2304], int samples_to_read)
 
     case 8:
         {
-            samples_read = unpack_read_samples(samples_to_read, 1, 0, sample_buffer, musicin);
+            samples_read = unpack_read_samples(samples_to_read, 1, global.pcm_is_unsigned_8bit,
+                                               sample_buffer, musicin);
         }
         break;
 
@@ -1052,13 +1056,13 @@ static int const IFF_ID_COMM = 0x434f4d4d; /* "COMM" */
 static int const IFF_ID_SSND = 0x53534e44; /* "SSND" */
 static int const IFF_ID_MPEG = 0x4d504547; /* "MPEG" */
 
-static int const IFF_ID_NONE = 0x4e4f4e45; /* "NONE" */ /* AIFF-C data format */
-static int const IFF_ID_2CBE = 0x74776f73; /* "twos" */ /* AIFF-C data format */
-static int const IFF_ID_2CLE = 0x736f7774; /* "sowt" */ /* AIFF-C data format */
+static int const IFF_ID_NONE = 0x4e4f4e45; /* "NONE" *//* AIFF-C data format */
+static int const IFF_ID_2CBE = 0x74776f73; /* "twos" *//* AIFF-C data format */
+static int const IFF_ID_2CLE = 0x736f7774; /* "sowt" *//* AIFF-C data format */
 
 static int const WAV_ID_RIFF = 0x52494646; /* "RIFF" */
 static int const WAV_ID_WAVE = 0x57415645; /* "WAVE" */
-static int const WAV_ID_FMT  = 0x666d7420; /* "fmt " */
+static int const WAV_ID_FMT = 0x666d7420; /* "fmt " */
 static int const WAV_ID_DATA = 0x64617461; /* "data" */
 
 #ifndef WAVE_FORMAT_PCM
@@ -1169,6 +1173,7 @@ parse_wave_header(lame_global_flags * gfp, FILE * sf)
         }
         (void) lame_set_in_samplerate(gfp, samples_per_sec);
         global. pcmbitwidth = bits_per_sample;
+        global. pcm_is_unsigned_8bit = 0;
         (void) lame_set_num_samples(gfp, data_length / (channels * ((bits_per_sample + 7) / 8)));
     }
     return is_wav;
@@ -1186,15 +1191,21 @@ parse_wave_header(lame_global_flags * gfp, FILE * sf)
 static int
 aiff_check2(IFF_AIFF * const pcm_aiff_data)
 {
-    if (pcm_aiff_data->sampleType != (unsigned long)IFF_ID_SSND) {
+    if (pcm_aiff_data->sampleType != (unsigned long) IFF_ID_SSND) {
         if (silent < 10) {
             error_printf("ERROR: input sound data is not PCM\n");
         }
         return 1;
     }
-    if (pcm_aiff_data->sampleSize != sizeof(short) * CHAR_BIT) {
+    switch (pcm_aiff_data->sampleSize) {
+    case 32:
+    case 24:
+    case 16:
+    case 8:
+        break;
+    default:
         if (silent < 10) {
-            error_printf("ERROR: input ound data is not %i bits\n", sizeof(short) * CHAR_BIT);
+            error_printf("ERROR: input sound data is not 8, 16, 24 or 32 bits\n");
         }
         return 1;
     }
@@ -1219,6 +1230,17 @@ aiff_check2(IFF_AIFF * const pcm_aiff_data)
     return 0;
 }
 
+
+static long
+make_even_number_of_bytes_in_length(long x)
+{
+    if ((x & 0x01) != 0) {
+        return x + 1;
+    }
+    return x;
+}
+
+
 /*****************************************************************************
  *
  *	Read Audio Interchange File Format (AIFF) headers.
@@ -1231,9 +1253,10 @@ aiff_check2(IFF_AIFF * const pcm_aiff_data)
 static int
 parse_aiff_header(lame_global_flags * gfp, FILE * sf)
 {
-    int     is_aiff = 0;
-    long    chunkSize = 0, subSize = 0, typeID = 0, dataType = 0;
+    long    chunkSize = 0, subSize = 0, typeID = 0, dataType = IFF_ID_NONE;;
     IFF_AIFF aiff_info;
+    int     seen_comm_chunk = 0, seen_ssnd_chunk = 0;
+    long    pcm_data_pos = -1;
 
     memset(&aiff_info, 0, sizeof(aiff_info));
     chunkSize = Read32BitsHighLow(sf);
@@ -1243,6 +1266,7 @@ parse_aiff_header(lame_global_flags * gfp, FILE * sf)
         return 0;
 
     while (chunkSize > 0) {
+        long    ckSize;
         int     type = Read32BitsHighLow(sf);
         chunkSize -= 4;
 
@@ -1251,66 +1275,88 @@ parse_aiff_header(lame_global_flags * gfp, FILE * sf)
 
         /* don't use a switch here to make it easier to use 'break' for SSND */
         if (type == IFF_ID_COMM) {
+            seen_comm_chunk = seen_ssnd_chunk + 1;
             subSize = Read32BitsHighLow(sf);
-            chunkSize -= subSize;
+            ckSize = make_even_number_of_bytes_in_length(subSize);
+            chunkSize -= ckSize;
 
             aiff_info.numChannels = Read16BitsHighLow(sf);
-            subSize -= 2;
+            ckSize -= 2;
             aiff_info.numSampleFrames = Read32BitsHighLow(sf);
-            subSize -= 4;
+            ckSize -= 4;
             aiff_info.sampleSize = Read16BitsHighLow(sf);
-            subSize -= 2;
+            ckSize -= 2;
             aiff_info.sampleRate = ReadIeeeExtendedHighLow(sf);
-            subSize -= 10;
-
+            ckSize -= 10;
             if (typeID == IFF_ID_AIFC) {
                 dataType = Read32BitsHighLow(sf);
-                subSize -= 4;
-
-                if ((dataType != IFF_ID_2CLE) &&
-                    (dataType != IFF_ID_2CBE) && (dataType != IFF_ID_NONE))
-                    return 0;
-
-                if (aiff_info.sampleSize == 16)
-                    global. pcmswapbytes = (!swapbytes == (dataType == IFF_ID_2CLE));
+                ckSize -= 4;
             }
-
-            if (fskip(sf, (long) subSize, SEEK_CUR) != 0)
-                return 0;
+            if (fskip(sf, ckSize, SEEK_CUR) != 0)
+                return -1;
         }
         else if (type == IFF_ID_SSND) {
+            seen_ssnd_chunk = 1;
             subSize = Read32BitsHighLow(sf);
-            chunkSize -= subSize;
+            ckSize = make_even_number_of_bytes_in_length(subSize);
+            chunkSize -= ckSize;
 
             aiff_info.blkAlgn.offset = Read32BitsHighLow(sf);
-            subSize -= 4;
+            ckSize -= 4;
             aiff_info.blkAlgn.blockSize = Read32BitsHighLow(sf);
-            subSize -= 4;
-
-            if (fskip(sf, (long) aiff_info.blkAlgn.offset, SEEK_CUR) != 0)
-                return 0;
+            ckSize -= 4;
 
             aiff_info.sampleType = IFF_ID_SSND;
-            is_aiff = 1;
 
-            /* We've found the audio data. Read no further! */
-            break;
-
+            if (seen_comm_chunk > 0) {
+                if (fskip(sf, (long) aiff_info.blkAlgn.offset, SEEK_CUR) != 0)
+                    return -1;
+                /* We've found the audio data. Read no further! */
+                break;
+            }
+            pcm_data_pos = ftell(sf);
+            if (pcm_data_pos >= 0) {
+                pcm_data_pos += aiff_info.blkAlgn.offset;
+            }
+            if (fskip(sf, ckSize, SEEK_CUR) != 0)
+                return -1;
         }
         else {
             subSize = Read32BitsHighLow(sf);
-            chunkSize -= subSize;
+            ckSize = make_even_number_of_bytes_in_length(subSize);
+            chunkSize -= ckSize;
 
-            if (fskip(sf, (long) subSize, SEEK_CUR) != 0)
-                return 0;
+            if (fskip(sf, ckSize, SEEK_CUR) != 0)
+                return -1;
+        }
+    }
+    if (dataType == IFF_ID_2CLE) {
+        global. pcmswapbytes = swapbytes;
+    }
+    else if (dataType == IFF_ID_2CBE) {
+        global. pcmswapbytes = !swapbytes;
+    }
+    else if (dataType == IFF_ID_NONE) {
+        global. pcmswapbytes = !swapbytes;
+    }
+    else {
+        return -1;
+    }
+
+    if (pcm_data_pos >= 0) {
+        if (fseek(sf, pcm_data_pos, SEEK_SET) != 0) {
+            if (silent < 10) {
+                error_printf("Can't rewind stream to audio data position\n");
+            }
+            return -1;
         }
     }
 
     /* DEBUGF("Parsed AIFF %d\n", is_aiff); */
-    if (is_aiff) {
+    if (seen_comm_chunk && (seen_ssnd_chunk > 0 || aiff_info.numSampleFrames == 0)) {
         /* make sure the header is sane */
         if (0 != aiff_check2(&aiff_info))
-            return 0;
+            exit(1);
         if (-1 == lame_set_num_channels(gfp, aiff_info.numChannels)) {
             if (silent < 10) {
                 error_printf("Unsupported number of channels: %ud\n", aiff_info.numChannels);
@@ -1318,10 +1364,12 @@ parse_aiff_header(lame_global_flags * gfp, FILE * sf)
             exit(1);
         }
         (void) lame_set_in_samplerate(gfp, (int) aiff_info.sampleRate);
-        global. pcmbitwidth = aiff_info.sampleSize;
         (void) lame_set_num_samples(gfp, aiff_info.numSampleFrames);
+        global. pcmbitwidth = aiff_info.sampleSize;
+        global. pcm_is_unsigned_8bit = 1;
+        return 1;
     }
-    return is_aiff;
+    return -1;
 }
 
 
@@ -1350,6 +1398,7 @@ parse_file_header(lame_global_flags * gfp, FILE * sf)
        "First word of input stream: %08x '%4.4s'\n", type, (char*) &type); 
      */
     global. count_samples_carefully = 0;
+    global. pcm_is_unsigned_8bit = 0;
     /*input_format = sf_raw; commented out, because it is better to fail
        here as to encode some hundreds of input files not supported by LAME
        If you know you have RAW PCM data, use the -r switch
@@ -1370,9 +1419,24 @@ parse_file_header(lame_global_flags * gfp, FILE * sf)
     }
     else if (type == IFF_ID_FORM) {
         /* It's probably an AIFF file */
-        if (parse_aiff_header(gfp, sf)) {
+        int     ret;
+        ret = parse_aiff_header(gfp, sf);
+        switch (ret) {
+        case -1:
+            if (silent < 10) {
+                error_printf("Warning: corrupt or unsupported AIFF format\n");
+            }
+            exit(2);
+            break;
+
+        case 1:
             input_format = sf_aiff;
             global. count_samples_carefully = 1;
+            break;
+
+        default:
+            /* or maybe not an AIFF file!? */
+            break;
         }
     }
     if (input_format == sf_raw) {
@@ -1745,14 +1809,20 @@ lame_decode_fromfile(FILE * fd, short pcm_l[], short pcm_r[], mp3data_struct * m
 #endif /* defined(HAVE_MPGLIB) */
 
 
-int is_mpeg_file_format( int input_file_format )
+int
+is_mpeg_file_format(int input_file_format)
 {
-    switch ( input_file_format ) {
-        case sf_mp1: return 1;
-        case sf_mp2: return 2;
-        case sf_mp3: return 3;
-        case sf_mp123: return -1;
-        default: break;
+    switch (input_file_format) {
+    case sf_mp1:
+        return 1;
+    case sf_mp2:
+        return 2;
+    case sf_mp3:
+        return 3;
+    case sf_mp123:
+        return -1;
+    default:
+        break;
     }
     return 0;
 }
