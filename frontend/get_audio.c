@@ -1253,7 +1253,7 @@ make_even_number_of_bytes_in_length(long x)
 static int
 parse_aiff_header(lame_global_flags * gfp, FILE * sf)
 {
-    long    chunkSize = 0, subSize = 0, typeID = 0, dataType = IFF_ID_NONE;;
+    long    chunkSize = 0, subSize = 0, typeID = 0, dataType = IFF_ID_NONE;
     IFF_AIFF aiff_info;
     int     seen_comm_chunk = 0, seen_ssnd_chunk = 0;
     long    pcm_data_pos = -1;
