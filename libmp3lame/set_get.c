@@ -1847,7 +1847,7 @@ lame_set_preset_expopts(lame_global_flags * gfp, int preset_expopts)
     return 0;
 }
 
-/*
+
 int
 lame_set_preset_notune(lame_global_flags * gfp, int preset_notune)
 {
@@ -1855,7 +1855,7 @@ lame_set_preset_notune(lame_global_flags * gfp, int preset_notune)
     (void) preset_notune;
     return 0;
 }
-*/
+
 
 /* DEVELOPER ONLY */
 void CDECL lame_set_quantization_type(lame_global_flags *, int);

@@ -141,7 +141,7 @@ typedef float FLOAT;
 # endif
 #endif
 
-#ifndef FLOAT8          /* NOTE: RH: 7/00:  if FLOAT8=float, it breaks resampling and VBR code */
+#ifndef FLOAT8 
 typedef double FLOAT8;
 # ifdef DBL_MAX
 #  define FLOAT8_MAX DBL_MAX
@@ -160,6 +160,8 @@ typedef double FLOAT8;
 typedef FLOAT sample_t;
 typedef sample_t stereo_t[2];
 
+#define dimension_of(array) (sizeof(array)/sizeof(array[0]))
+#define beyond(array) (array+dimension_of(array))
 
 
 #endif

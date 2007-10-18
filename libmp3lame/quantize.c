@@ -70,8 +70,7 @@ ms_convert(III_side_info_t * l3_side, int gr)
  *
  ************************************************************************/
 
-static
-    void
+static void
 init_xrpow_core_c(gr_info * const cod_info, FLOAT xrpow[576], int upper, FLOAT * sum)
 {
     int     i;
@@ -1679,7 +1678,7 @@ VBR_new_prepare(lame_global_flags const *gfp,
                 masking_lower_db = gfc->PSY->mask_adjust - adjust;
             }
             else {
-#if 0
+#if 1
                 /* TODO: extreme low allowed noise may lead to bitrate canibalism!
                  *       Setting mask adjust as in long block case should do,
                  *       but we'll have to do some tests.
