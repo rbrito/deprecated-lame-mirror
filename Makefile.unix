@@ -425,7 +425,7 @@ else
 CC_SWITCHES = -D__NO_MATH_INLINES  # only needed by some older glibc
 endif
 
-CC_SWITCHES += -DNDEBUG $(CC_OPTS) $(SNDLIB) $(GTK) $(BRHIST_SWITCH)
+CC_SWITCHES += -DNDEBUG $(CC_OPTS) $(SNDLIB) $(BRHIST_SWITCH)
 frontend_sources = \
 	frontend/amiga_mpega.c \
         frontend/brhist.c \
@@ -548,7 +548,7 @@ frontend/$(PGM):	frontend/main.o $(frontend_obj)  $(MP3LIB)
         $(MP3LIB) $(LIBS) $(LIBSNDFILE) $(LIBTERMCAP)
 
 mp3x:   frontend/mp3x.o $(frontend_obj) $(gtk_obj) $(MP3LIB)
-	$(CC) $(CC_OPTS) -o frontend/mp3x frontend/mp3x.o $(frontend_obj) $(gtk_obj) $(MP3LIB) \
+	$(CC) $(CC_OPTS) $(GTK) -o frontend/mp3x frontend/mp3x.o $(frontend_obj) $(gtk_obj) $(MP3LIB) \
         $(LIBS) $(LIBSNDFILE) $(GTKLIBS) $(LIBTERMCAP)
 
 mp3rtp:	frontend/rtp.o frontend/mp3rtp.o  $(frontend_obj) $(MP3LIB)
