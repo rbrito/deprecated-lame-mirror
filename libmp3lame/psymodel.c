@@ -749,8 +749,8 @@ compute_masking_s(lame_global_flags const *gfp,
     assert(b == gfc->npart_s);
     assert(j == 129);
     for (j = b = 0; b < gfc->npart_s; b++) {
-        static FLOAT const mask_floor_a = 0.251188643; /* 6dB */
-        static FLOAT const mask_floor_m = 0.39810717; /* 4dB */
+        static FLOAT const mask_floor_a = 0.251188643; /* pow(10,-0.60) */
+        static FLOAT const mask_floor_m = 0.117489755; /* pow(10,-0.93) */
         int     kk = gfc->s3ind_s[b][0];
         FLOAT   ecb = gfc->s3_ss[j++] * eb[kk] * tab[mask_idx_s[kk]];
         ++kk;
@@ -1813,6 +1813,8 @@ L3psycho_anal_ns(lame_global_flags const *gfp,
 #endif
             k = 0;
             for (b = 0; b < gfc->npart_l; b++) {
+                static FLOAT const mask_floor_a = 0.251188643; /* pow(10,-0.60) */
+                static FLOAT const mask_floor_m = 0.117489755; /* pow(10,-0.93) */
                 FLOAT   eb2;
                 FLOAT   ecb;
                 /* convolve the partitioned energy with the spreading function */
@@ -1823,7 +1825,7 @@ L3psycho_anal_ns(lame_global_flags const *gfp,
                     eb2 = eb_l[kk] * tab[mask_idx_l[kk]];
                     ecb = mask_add(ecb, gfc->s3_ll[k++] * eb2, kk, kk - b, gfc, 0);
                 }
-                ecb *= 0.158489319246111; /* pow(10,-0.8) */
+                ecb *= mask_floor_a;
 
      /****   long block pre-echo control   ****/
                 /* dont use long block pre-echo control if previous granule was 
@@ -1852,7 +1854,7 @@ L3psycho_anal_ns(lame_global_flags const *gfp,
                     FLOAT   x = max[b];
                     x *= gfc->numlines_l[b];
                     x *= gfc->minval_l[b];
-                    x *= 0.158489319246111; /* pow(10,-0.8) */
+                    x *= mask_floor_m;
                     x *= tab[mask_idx_l[b]];
                     if (thr[b] > x) {
                         thr[b] = x;

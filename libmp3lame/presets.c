@@ -32,7 +32,7 @@
 
 #define SET_OPTION(opt, val, def) if (enforce) \
     (void) lame_set_##opt(gfp, val); \
-    else if (lame_get_##opt(gfp) == def) \
+    else if (!(fabs(lame_get_##opt(gfp) - def) > 0)) \
     (void) lame_set_##opt(gfp, val);
 
 #undef Min
@@ -56,7 +56,92 @@ max_int(int a, int b)
     return b;
 }
 
-int
+
+
+typedef struct {
+    int     vbr_q;
+    int     quant_comp;
+    int     quant_comp_s;
+    int     expY;
+    FLOAT   st_lrm;          /*short threshold */
+    FLOAT   st_s;
+    FLOAT   masking_adj;
+    FLOAT   masking_adj_short;
+    FLOAT   ath_lower;
+    FLOAT   ath_curve;
+    FLOAT   ath_sensitivity;
+    FLOAT   interch;
+    int     safejoint;
+    int     sfb21mod;
+    FLOAT   msfix;
+} vbr_presets_t;
+
+    /* *INDENT-OFF* */
+    
+    /* Switch mappings for VBR mode VBR_RH */
+    static const vbr_presets_t vbr_old_switch_map[] = {
+    /*vbr_q  qcomp_l  qcomp_s  expY  st_lrm   st_s  mask adj_l  adj_s  ath_lower  ath_curve  ath_sens  interChR  safejoint sfb21mod  msfix */
+        {0,       9,       9,    0,   5.20, 125.0,      -4.2,   -6.3,       4.8,       1,          0,   0,              2,      21,  0.97},
+        {1,       9,       9,    0,   5.30, 125.0,      -3.6,   -5.6,       4.5,       1.5,        0,   0,              2,      21,  1.35},
+        {2,       9,       9,    0,   5.60, 125.0,      -2.2,   -3.5,       2.8,       2,          0,   0,              2,      21,  1.49},
+        {3,       9,       9,    1,   5.80, 130.0,      -1.8,   -2.8,       2.6,       3,         -4,   0,              2,      20,  1.64},
+        {4,       9,       9,    1,   6.00, 135.0,      -0.7,   -1.1,       1.1,       3.5,       -8,   0,              2,       0,  1.79},
+        {5,       9,       9,    1,   6.40, 140.0,       0.5,    0.4,      -7.5,       4,        -12,   0.0002,         0,       0,  1.95},
+        {6,       9,       9,    1,   6.60, 145.0,       0.67,   0.65,    -14.7,       6.5,      -19,   0.0004,         0,       0,  2.30},
+        {7,       9,       9,    1,   6.60, 145.0,       0.8,    0.75,    -19.7,       8,        -22,   0.0006,         0,       0,  2.70},
+        {8,       9,       9,    1,   6.60, 145.0,       1.2,    1.15,    -27.5,      10,        -23,   0.0007,         0,       0,  0   },
+        {9,       9,       9,    1,   6.60, 145.0,       1.6,    1.6,     -36,        11,        -25,   0.0008,         0,       0,  0   }
+    };
+    
+    /* Switch mappings for VBR mode VBR_MTRH */
+    static const vbr_presets_t vbr_new_switch_map[] = {
+    /*vbr_q  qcomp_l  qcomp_s  expY  st_lrm   st_s  mask adj_l  adj_s  ath_lower  ath_curve  ath_sens  interChR  safejoint sfb21mod  msfix */
+        {0,       9,       9,    0,   5.20, 125.0,      -4.0,   -4.0,       7.5,       1,          0,   0,              2,      21,  0.97},
+        {1,       9,       9,    0,   5.30, 125.0,      -3.6,   -3.6,       4.5,       1.5,        0,   0,              2,      21,  1.35},
+        {2,       9,       9,    0,   5.60, 125.0,      -1.8,   -1.8,       2,         2,          0,   0,              2,      18,  1.49},
+        {3,       9,       9,    1,   5.80, 130.0,      -1.25,  -1.25,      1.1,       3,         -4,   0,              2,      15,  1.64},
+        {4,       9,       9,    1,   6.00, 135.0,       0.1,    0.1,       0,         3.5,       -8,   0,              2,       0,  1.79},
+        {5,       9,       9,    1,   6.40, 140.0,       1.65,   1.65,     -7.7,       4,        -12,   0.0002,         0,       0,  1.95},
+        {6,       9,       9,    1,   6.60, 145.0,       2.47,   2.47,    -14.5,       6.5,      -19,   0.0004,         0,       0,  2.30},
+        {7,       9,       9,    1,   6.60, 145.0,       2.0,    2.0,     -22.0,       8,        -22,   0.0006,         0,       0,  2.70},
+        {8,       9,       9,    1,   6.60, 145.0,       2.4,    2.4,     -30.0,      10,        -23,   0.0007,         0,       0,  0   },
+        {9,       9,       9,    1,   6.60, 145.0,       2.95,   2.95,    -39.5,      11,        -25,   0.0008,         0,       0,  0   }
+    };
+    
+    /* *INDENT-ON* */
+
+static void
+apply_vbr_preset(lame_global_flags * gfp, vbr_presets_t const *set, int enforce)
+{
+    SET_OPTION(psy_model, PSY_NSPSYTUNE, -1);
+    (void) lame_set_VBR_q(gfp, set->vbr_q);
+    SET_OPTION(quant_comp, set->quant_comp, -1);
+    SET_OPTION(quant_comp_short, set->quant_comp_s, -1);
+    if (set->expY) {
+        (void) lame_set_experimentalY(gfp, set->expY);
+    }
+    SET_OPTION(short_threshold_lrm, set->st_lrm, -1);
+    SET_OPTION(short_threshold_s, set->st_s, -1);
+    SET_OPTION(maskingadjust, set->masking_adj, 0);
+    SET_OPTION(maskingadjust_short, set->masking_adj_short, 0);
+    SET_OPTION(ATHlower, set->ath_lower, 0);
+    SET_OPTION(ATHcurve, set->ath_curve, -1);
+    SET_OPTION(athaa_sensitivity, set->ath_sensitivity, 0);
+    if (set->interch > 0) {
+        SET_OPTION(interChRatio, set->interch, -1);
+    }
+
+    /* parameters for which there is no proper set/get interface */
+    if (set->safejoint > 0) {
+        (void) lame_set_exp_nspsytune(gfp, lame_get_exp_nspsytune(gfp) | set->safejoint);
+    }
+    if (set->sfb21mod > 0) {
+        (void) lame_set_exp_nspsytune(gfp, lame_get_exp_nspsytune(gfp) | (set->sfb21mod << 20));
+    }
+    SET_OPTION(msfix, set->msfix, -1);
+}
+
+static int
 apply_abr_preset(lame_global_flags * gfp, int preset, int enforce)
 {
     int     k;
@@ -79,29 +164,33 @@ apply_abr_preset(lame_global_flags * gfp, int preset, int enforce)
     } abr_presets_t;
 
 
+    /* *INDENT-OFF* */
 
-    /* Switch mappings for ABR mode */
-    const abr_presets_t abr_switch_map[] = {
-        /* kbps  quant q_s safejoint nsmsfix st_lrm  st_s  ns-bass scale   msk ath_lwr ath_curve  interch , sfscale */
-        {8, 9, 9, 0, 0, 6.60, 145, 0, 0.95, 0, -30.0, 11, 0.0012, 1}, /*   8, impossible to use in stereo */
-        {16, 9, 9, 0, 0, 6.60, 145, 0, 0.95, 0, -25.0, 11, 0.0010, 1}, /*  16 */
-        {24, 9, 9, 0, 0, 6.60, 145, 0, 0.95, 0, -20.0, 11, 0.0010, 1}, /*  24 */
-        {32, 9, 9, 0, 0, 6.60, 145, 0, 0.95, 0, -15.0, 11, 0.0010, 1}, /*  32 */
-        {40, 9, 9, 0, 0, 6.60, 145, 0, 0.95, 0, -10.0, 11, 0.0009, 1}, /*  40 */
-        {48, 9, 9, 0, 0, 6.60, 145, 0, 0.95, 0, -10.0, 11, 0.0009, 1}, /*  48 */
-        {56, 9, 9, 0, 0, 6.60, 145, 0, 0.95, 0, -6.0, 11, 0.0008, 1}, /*  56 */
-        {64, 9, 9, 0, 0, 6.60, 145, 0, 0.95, 0, -2.0, 11, 0.0008, 1}, /*  64 */
-        {80, 9, 9, 0, 0, 6.60, 145, 0, 0.95, 0, .0, 8, 0.0007, 1}, /*  80 */
-        {96, 9, 9, 0, 2.50, 6.60, 145, 0, 0.95, 0, 1.0, 5.5, 0.0006, 1}, /*  96 */
-        {112, 9, 9, 0, 2.25, 6.60, 145, 0, 0.95, 0, 2.0, 4.5, 0.0005, 1}, /* 112 */
-        {128, 9, 9, 0, 1.95, 6.40, 140, 0, 0.95, 0, 3.0, 4, 0.0002, 1}, /* 128 */
-        {160, 9, 9, 1, 1.79, 6.00, 135, 0, 0.95, -2, 5.0, 3.5, 0, 1}, /* 160 */
-        {192, 9, 9, 1, 1.49, 5.60, 125, 0, 0.97, -4, 7.0, 3, 0, 0}, /* 192 */
-        {224, 9, 9, 1, 1.25, 5.20, 125, 0, 0.98, -6, 9.0, 2, 0, 0}, /* 224 */
-        {256, 9, 9, 1, 0.97, 5.20, 125, 0, 1.00, -8, 10.0, 1, 0, 0}, /* 256 */
-        {320, 9, 9, 1, 0.90, 5.20, 125, 0, 1.00, -10, 12.0, 0, 0, 0} /* 320 */
+    /* 
+     *  Switch mappings for ABR mode
+     */
+    const abr_presets_t abr_switch_map[] = {        
+    /* kbps  quant q_s safejoint nsmsfix st_lrm  st_s  ns-bass scale   msk ath_lwr ath_curve  interch , sfscale */
+      {  8,     9,  9,        0,      0,  6.60,  145,       0, 0.95,    0,  -30.0,     11,    0.0012,        1}, /*   8, impossible to use in stereo */
+      { 16,     9,  9,        0,      0,  6.60,  145,       0, 0.95,    0,  -25.0,     11,    0.0010,        1}, /*  16 */
+      { 24,     9,  9,        0,      0,  6.60,  145,       0, 0.95,    0,  -20.0,     11,    0.0010,        1}, /*  24 */
+      { 32,     9,  9,        0,      0,  6.60,  145,       0, 0.95,    0,  -15.0,     11,    0.0010,        1}, /*  32 */
+      { 40,     9,  9,        0,      0,  6.60,  145,       0, 0.95,    0,  -10.0,     11,    0.0009,        1}, /*  40 */
+      { 48,     9,  9,        0,      0,  6.60,  145,       0, 0.95,    0,  -10.0,     11,    0.0009,        1}, /*  48 */
+      { 56,     9,  9,        0,      0,  6.60,  145,       0, 0.95,    0,   -6.0,     11,    0.0008,        1}, /*  56 */
+      { 64,     9,  9,        0,      0,  6.60,  145,       0, 0.95,    0,   -2.0,     11,    0.0008,        1}, /*  64 */
+      { 80,     9,  9,        0,      0,  6.60,  145,       0, 0.95,    0,     .0,      8,    0.0007,        1}, /*  80 */
+      { 96,     9,  9,        0,   2.50,  6.60,  145,       0, 0.95,    0,    1.0,      5.5,  0.0006,        1}, /*  96 */
+      {112,     9,  9,        0,   2.25,  6.60,  145,       0, 0.95,    0,    2.0,      4.5,  0.0005,        1}, /* 112 */
+      {128,     9,  9,        0,   1.95,  6.40,  140,       0, 0.95,    0,    3.0,      4,    0.0002,        1}, /* 128 */
+      {160,     9,  9,        1,   1.79,  6.00,  135,       0, 0.95,   -2,    5.0,      3.5,  0,             1}, /* 160 */
+      {192,     9,  9,        1,   1.49,  5.60,  125,       0, 0.97,   -4,    7.0,      3,    0,             0}, /* 192 */
+      {224,     9,  9,        1,   1.25,  5.20,  125,       0, 0.98,   -6,    9.0,      2,    0,             0}, /* 224 */
+      {256,     9,  9,        1,   0.97,  5.20,  125,       0, 1.00,   -8,   10.0,      1,    0,             0}, /* 256 */
+      {320,     9,  9,        1,   0.90,  5.20,  125,       0, 1.00,  -10,   12.0,      0,    0,             0}  /* 320 */
     };
 
+    /* *INDENT-ON* */
 
     /* Variables for the ABR stuff */
     int     r;
@@ -128,7 +217,7 @@ apply_abr_preset(lame_global_flags * gfp, int preset, int enforce)
         (void) lame_set_sfscale(gfp, 1);
 
     /* ns-bass tweaks */
-    if (abr_switch_map[r].nsbass != 0) {
+    if (fabs(abr_switch_map[r].nsbass) > 0) {
         k = (int) (abr_switch_map[r].nsbass * 4);
         if (k < 0)
             k += 64;
@@ -177,462 +266,104 @@ apply_preset(lame_global_flags * gfp, int preset, int enforce)
 {
     /*translate legacy presets */
     switch (preset) {
-    case R3MIX:{
+    case R3MIX:
+        {
             preset = V3;
             (void) lame_set_VBR(gfp, vbr_mtrh);
             break;
         }
-    case MEDIUM:{
+    case MEDIUM:
+        {
             preset = V4;
             (void) lame_set_VBR(gfp, vbr_rh);
             break;
         }
-    case MEDIUM_FAST:{
+    case MEDIUM_FAST:
+        {
             preset = V4;
             (void) lame_set_VBR(gfp, vbr_mtrh);
             break;
         }
-    case STANDARD:{
+    case STANDARD:
+        {
             preset = V2;
             (void) lame_set_VBR(gfp, vbr_rh);
             break;
         }
-    case STANDARD_FAST:{
+    case STANDARD_FAST:
+        {
             preset = V2;
             (void) lame_set_VBR(gfp, vbr_mtrh);
             break;
         }
-    case EXTREME:{
+    case EXTREME:
+        {
             preset = V0;
             (void) lame_set_VBR(gfp, vbr_rh);
             break;
         }
-    case EXTREME_FAST:{
+    case EXTREME_FAST:
+        {
             preset = V0;
             (void) lame_set_VBR(gfp, vbr_mtrh);
             break;
         }
-    case INSANE:{
+    case INSANE:
+        {
             preset = 320;
             break;
         }
     }
 
-
     gfp->preset = preset;
-
-    switch (preset) {
-    case V9:{
-            (void) lame_set_VBR_q(gfp, 9);
-            switch (lame_get_VBR(gfp)) {
-            case vbr_rh:{
-                    SET_OPTION(short_threshold_lrm, 6.60f, -1);
-                    SET_OPTION(short_threshold_s, 145.0f, -1);
-                    SET_OPTION(quant_comp, 9, -1);
-                    SET_OPTION(quant_comp_short, 9, -1);
-                    SET_OPTION(psy_model, PSY_NSPSYTUNE, -1);
-                    SET_OPTION(maskingadjust, 1.6, 0);
-                    SET_OPTION(maskingadjust_short, 1.6, 0);
-                    SET_OPTION(interChRatio, 0.0008, -1);
-                    SET_OPTION(ATHlower, -36, 0);
-                    SET_OPTION(ATHcurve, 11, -1);
-                    SET_OPTION(athaa_sensitivity, -25, 0);
-
-                    (void) lame_set_experimentalY(gfp, 1);
-
-                    return preset;
-                }
-            default:{
-                    SET_OPTION(short_threshold_lrm, 6.60f, -1);
-                    SET_OPTION(short_threshold_s, 145.0f, -1);
-                    SET_OPTION(quant_comp, 0, -1);
-                    SET_OPTION(quant_comp_short, 0, -1);
-                    SET_OPTION(psy_model, PSY_NSPSYTUNE, -1);
-                    SET_OPTION(maskingadjust, 1.75, 0);
-                    SET_OPTION(maskingadjust_short, 1.75, 0);
-                    SET_OPTION(interChRatio, 0.0008, -1);
-                    SET_OPTION(ATHlower, -39.5, 0);
-                    SET_OPTION(ATHcurve, 11, -1);
-                    SET_OPTION(athaa_sensitivity, -25, 0);
-
-                    (void) lame_set_experimentalY(gfp, 1);
-
-                    return preset;
-                }
-            }
+    {
+        vbr_presets_t const *vbr_preset;
+        switch (lame_get_VBR(gfp)) {
+        case vbr_rh:
+            vbr_preset = &vbr_old_switch_map[0];
+            break;
+        default:
+            vbr_preset = &vbr_new_switch_map[0];
+            break;
         }
-    case V8:{
-            (void) lame_set_VBR_q(gfp, 8);
-            switch (lame_get_VBR(gfp)) {
-            case vbr_rh:{
-                    SET_OPTION(short_threshold_lrm, 6.60f, -1);
-                    SET_OPTION(short_threshold_s, 145.0f, -1);
-                    SET_OPTION(quant_comp, 9, -1);
-                    SET_OPTION(quant_comp_short, 9, -1);
-                    SET_OPTION(psy_model, PSY_NSPSYTUNE, -1);
-                    SET_OPTION(maskingadjust, 1.2, 0);
-                    SET_OPTION(maskingadjust_short, 1.15, 0);
-                    SET_OPTION(interChRatio, 0.0007, -1);
-                    SET_OPTION(ATHlower, -27.5, 0);
-                    SET_OPTION(ATHcurve, 10, -1);
-                    SET_OPTION(athaa_sensitivity, -23, 0);
-
-                    (void) lame_set_experimentalY(gfp, 1);
-
-                    return preset;
-                }
-            default:{
-                    SET_OPTION(short_threshold_lrm, 6.60f, -1);
-                    SET_OPTION(short_threshold_s, 145.0f, -1);
-                    SET_OPTION(quant_comp, 0, -1);
-                    SET_OPTION(quant_comp_short, 0, -1);
-                    SET_OPTION(psy_model, PSY_NSPSYTUNE, -1);
-                    SET_OPTION(maskingadjust, 1.2, 0);
-                    SET_OPTION(maskingadjust_short, 1.15, 0);
-                    SET_OPTION(interChRatio, 0.0007, -1);
-                    SET_OPTION(ATHlower, -30, 0);
-                    SET_OPTION(ATHcurve, 10, -1);
-                    SET_OPTION(athaa_sensitivity, -23, 0);
-
-                    (void) lame_set_experimentalY(gfp, 1);
-
-                    return preset;
-                }
-            }
+        switch (preset) {
+        case V9:
+            apply_vbr_preset(gfp, &vbr_preset[9], enforce);
+            return preset;
+        case V8:
+            apply_vbr_preset(gfp, &vbr_preset[8], enforce);
+            return preset;
+        case V7:
+            apply_vbr_preset(gfp, &vbr_preset[7], enforce);
+            return preset;
+        case V6:
+            apply_vbr_preset(gfp, &vbr_preset[6], enforce);
+            return preset;
+        case V5:
+            apply_vbr_preset(gfp, &vbr_preset[5], enforce);
+            return preset;
+        case V4:
+            apply_vbr_preset(gfp, &vbr_preset[4], enforce);
+            return preset;
+        case V3:
+            apply_vbr_preset(gfp, &vbr_preset[3], enforce);
+            return preset;
+        case V2:
+            apply_vbr_preset(gfp, &vbr_preset[2], enforce);
+            return preset;
+        case V1:
+            apply_vbr_preset(gfp, &vbr_preset[1], enforce);
+            return preset;
+        case V0:
+            apply_vbr_preset(gfp, &vbr_preset[0], enforce);
+            return preset;
+        default:
+            break;
         }
-    case V7:{
-            (void) lame_set_VBR_q(gfp, 7);
-            switch (lame_get_VBR(gfp)) {
-            case vbr_rh:{
-                    SET_OPTION(short_threshold_lrm, 6.60f, -1);
-                    SET_OPTION(short_threshold_s, 145.0f, -1);
-                    SET_OPTION(quant_comp, 9, -1);
-                    SET_OPTION(quant_comp_short, 9, -1);
-                    SET_OPTION(psy_model, PSY_NSPSYTUNE, -1);
-                    SET_OPTION(msfix, 2.70, -1);
-                    SET_OPTION(maskingadjust, .8, 0);
-                    SET_OPTION(maskingadjust_short, .75, 0);
-                    SET_OPTION(interChRatio, 0.0006, -1);
-                    SET_OPTION(ATHlower, -19.7, 0);
-                    SET_OPTION(ATHcurve, 8, -1);
-                    SET_OPTION(athaa_sensitivity, -22, 0);
-
-                    (void) lame_set_experimentalY(gfp, 1);
-
-                    return preset;
-                }
-            default:{
-                    SET_OPTION(short_threshold_lrm, 6.60f, -1);
-                    SET_OPTION(short_threshold_s, 145.0f, -1);
-                    SET_OPTION(quant_comp, 0, -1);
-                    SET_OPTION(quant_comp_short, 0, -1);
-                    SET_OPTION(psy_model, PSY_NSPSYTUNE, -1);
-                    SET_OPTION(msfix, 2.70, -1);
-                    SET_OPTION(maskingadjust, 0.8, 0);
-                    SET_OPTION(maskingadjust_short, 0.78, 0);
-                    SET_OPTION(interChRatio, 0.0006, -1);
-                    SET_OPTION(ATHlower, -22, 0);
-                    SET_OPTION(ATHcurve, 8, -1);
-                    SET_OPTION(athaa_sensitivity, -22, 0);
-
-                    (void) lame_set_experimentalY(gfp, 1);
-
-                    return preset;
-                }
-            }
-        }
-    case V6:{
-            (void) lame_set_VBR_q(gfp, 6);
-            switch (lame_get_VBR(gfp)) {
-            case vbr_rh:{
-                    SET_OPTION(short_threshold_lrm, 6.60f, -1);
-                    SET_OPTION(short_threshold_s, 145.0f, -1);
-                    SET_OPTION(quant_comp, 9, -1);
-                    SET_OPTION(quant_comp_short, 9, -1);
-                    SET_OPTION(psy_model, PSY_NSPSYTUNE, -1);
-                    SET_OPTION(msfix, 2.30, -1);
-                    SET_OPTION(maskingadjust, .67, 0);
-                    SET_OPTION(maskingadjust_short, .65, 0);
-                    SET_OPTION(interChRatio, 0.0004, -1);
-                    SET_OPTION(ATHlower, -14.7, 0);
-                    SET_OPTION(ATHcurve, 6.5, -1);
-                    SET_OPTION(athaa_sensitivity, -19, 0);
-
-                    (void) lame_set_experimentalY(gfp, 1);
-
-                    return preset;
-                }
-            default:{
-                    SET_OPTION(short_threshold_lrm, 6.60f, -1);
-                    SET_OPTION(short_threshold_s, 145.0f, -1);
-                    SET_OPTION(quant_comp, 0, -1);
-                    SET_OPTION(quant_comp_short, 0, -1);
-                    SET_OPTION(psy_model, PSY_NSPSYTUNE, -1);
-                    SET_OPTION(msfix, 2.30, -1);
-                    SET_OPTION(maskingadjust, 0.67, 0);
-                    SET_OPTION(maskingadjust_short, 0.65, 0);
-                    SET_OPTION(interChRatio, 0.0004, -1);
-                    SET_OPTION(ATHlower, -14.5, 0);
-                    SET_OPTION(ATHcurve, 6.5, -1);
-                    SET_OPTION(athaa_sensitivity, -19, 0);
-
-                    (void) lame_set_experimentalY(gfp, 1);
-
-                    return preset;
-                }
-            }
-        }
-    case V5:{
-            (void) lame_set_VBR_q(gfp, 5);
-            switch (lame_get_VBR(gfp)) {
-            case vbr_rh:{
-                    SET_OPTION(short_threshold_lrm, 6.40f, -1);
-                    SET_OPTION(short_threshold_s, 140.0f, -1);
-                    SET_OPTION(quant_comp, 9, -1);
-                    SET_OPTION(quant_comp_short, 9, -1);
-                    SET_OPTION(psy_model, PSY_NSPSYTUNE, -1);
-                    SET_OPTION(msfix, 1.95, -1);
-                    SET_OPTION(maskingadjust, .5, 0);
-                    SET_OPTION(maskingadjust_short, .4, 0);
-                    SET_OPTION(interChRatio, 0.0002, -1);
-                    SET_OPTION(ATHlower, -7.5, 0);
-                    SET_OPTION(ATHcurve, 4, -1);
-                    SET_OPTION(athaa_sensitivity, -12, 0);
-
-                    (void) lame_set_experimentalY(gfp, 1);
-
-                    return preset;
-                }
-            default:{
-                    SET_OPTION(short_threshold_lrm, 6.40f, -1);
-                    SET_OPTION(short_threshold_s, 140.0f, -1);
-                    SET_OPTION(quant_comp, 0, -1);
-                    SET_OPTION(quant_comp_short, 0, -1);
-                    SET_OPTION(psy_model, PSY_NSPSYTUNE, -1);
-                    SET_OPTION(msfix, 1.95, -1);
-                    SET_OPTION(maskingadjust, 0.45, 0);
-                    SET_OPTION(maskingadjust_short, 0.35, 0);
-                    SET_OPTION(interChRatio, 0.0002, -1);
-                    SET_OPTION(ATHlower, -7.7, 0);
-                    SET_OPTION(ATHcurve, 4, -1);
-                    SET_OPTION(athaa_sensitivity, -12, 0);
-
-                    (void) lame_set_experimentalY(gfp, 1);
-
-                    return preset;
-                }
-            }
-        }
-    case V4:{
-            /*MEDIUM*/(void) lame_set_VBR_q(gfp, 4);
-            switch (lame_get_VBR(gfp)) {
-            case vbr_rh:{
-                    SET_OPTION(short_threshold_lrm, 6.00f, -1);
-                    SET_OPTION(short_threshold_s, 135.0f, -1);
-                    SET_OPTION(quant_comp, 9, -1);
-                    SET_OPTION(quant_comp_short, 9, -1);
-                    SET_OPTION(psy_model, PSY_NSPSYTUNE, -1);
-                    (void) lame_set_exp_nspsytune(gfp, lame_get_exp_nspsytune(gfp) | 2); /* safejoint */
-                    SET_OPTION(msfix, 1.79, -1);
-                    SET_OPTION(maskingadjust, -.7, 0);
-                    SET_OPTION(maskingadjust_short, -1.1, 0);
-                    SET_OPTION(ATHlower, 1.1, 0);
-                    SET_OPTION(ATHcurve, 3.5, -1);
-                    SET_OPTION(athaa_sensitivity, -8, 0);
-
-                    (void) lame_set_experimentalY(gfp, 1);
-
-                    return preset;
-                }
-            default:{
-                    SET_OPTION(short_threshold_lrm, 6.00f, -1);
-                    SET_OPTION(short_threshold_s, 135.0f, -1);
-                    SET_OPTION(quant_comp, 0, -1);
-                    SET_OPTION(quant_comp_short, 0, -1);
-                    SET_OPTION(psy_model, PSY_NSPSYTUNE, -1);
-                    (void) lame_set_exp_nspsytune(gfp, lame_get_exp_nspsytune(gfp) | 2); /* safejoint */
-                    SET_OPTION(msfix, 1.79, -1);
-                    SET_OPTION(maskingadjust, -.7, 0);
-                    SET_OPTION(maskingadjust_short, -1.1, 0);
-                    SET_OPTION(ATHlower, 0, 0);
-                    SET_OPTION(ATHcurve, 3.5, -1);
-                    SET_OPTION(athaa_sensitivity, -8, 0);
-
-                    (void) lame_set_experimentalY(gfp, 1);
-
-                    return preset;
-                }
-            }
-        }
-    case V3:{
-            (void) lame_set_VBR_q(gfp, 3);
-            switch (lame_get_VBR(gfp)) {
-            case vbr_rh:{
-                    SET_OPTION(short_threshold_lrm, 5.80f, -1);
-                    SET_OPTION(short_threshold_s, 130.0f, -1);
-                    SET_OPTION(quant_comp, 9, -1);
-                    SET_OPTION(quant_comp_short, 9, -1);
-                    SET_OPTION(psy_model, PSY_NSPSYTUNE, -1);
-                    (void) lame_set_exp_nspsytune(gfp, lame_get_exp_nspsytune(gfp) | 2); /* safejoint */
-                    SET_OPTION(msfix, 1.64, -1);
-                    SET_OPTION(maskingadjust, -1.8, 0);
-                    SET_OPTION(maskingadjust_short, -2.8, 0);
-                    SET_OPTION(ATHlower, 2.6, 0);
-                    SET_OPTION(ATHcurve, 3, -1);
-                    SET_OPTION(athaa_sensitivity, -4, 0);
-
-                    /* modify sfb21 by 5 dB plus ns-treble=0                  */
-                    (void) lame_set_exp_nspsytune(gfp, lame_get_exp_nspsytune(gfp) | (20 << 20));
-                    (void) lame_set_experimentalY(gfp, 1);
-
-                    return preset;
-                }
-            default:{
-                    SET_OPTION(short_threshold_lrm, 5.80f, -1);
-                    SET_OPTION(short_threshold_s, 130.0f, -1);
-                    SET_OPTION(quant_comp, 0, -1);
-                    SET_OPTION(quant_comp_short, 0, -1);
-                    SET_OPTION(psy_model, PSY_NSPSYTUNE, -1);
-                    (void) lame_set_exp_nspsytune(gfp, lame_get_exp_nspsytune(gfp) | 2); /* safejoint */
-                    SET_OPTION(msfix, 1.64, -1);
-                    SET_OPTION(maskingadjust, -1.45, 0);
-                    SET_OPTION(maskingadjust_short, -2.45, 0);
-                    SET_OPTION(ATHlower, 1.1, 0);
-                    SET_OPTION(ATHcurve, 3, -1);
-                    SET_OPTION(athaa_sensitivity, -4, 0);
-
-                    /* modify sfb21 by 3.75 dB plus ns-treble=0                  */
-                    (void) lame_set_exp_nspsytune(gfp, lame_get_exp_nspsytune(gfp) | (15 << 20));
-                    (void) lame_set_experimentalY(gfp, 1);
-
-                    return preset;
-                }
-            }
-        }
-    case V2:{
-            /*STANDARD*/(void) lame_set_VBR_q(gfp, 2);
-            switch (lame_get_VBR(gfp)) {
-            case vbr_rh:{
-                    SET_OPTION(short_threshold_lrm, 5.6f, -1);
-                    SET_OPTION(short_threshold_s, 125.0f, -1);
-                    SET_OPTION(quant_comp, 9, -1);
-                    SET_OPTION(quant_comp_short, 9, -1);
-                    SET_OPTION(psy_model, PSY_NSPSYTUNE, -1);
-                    (void) lame_set_exp_nspsytune(gfp, lame_get_exp_nspsytune(gfp) | 2); /* safejoint */
-                    SET_OPTION(msfix, 1.49, -1);
-                    SET_OPTION(maskingadjust, -2.2, 0);
-                    SET_OPTION(maskingadjust_short, -3.5, 0);
-                    SET_OPTION(ATHlower, 2.8, 0);
-                    SET_OPTION(ATHcurve, 2, -1);
-                    /* modify sfb21 by 5.25 dB plus ns-treble=0                  */
-                    (void) lame_set_exp_nspsytune(gfp, lame_get_exp_nspsytune(gfp) | (21 << 20));
-
-                    return preset;
-                }
-            default:{
-                    SET_OPTION(short_threshold_lrm, 5.6f, -1);
-                    SET_OPTION(short_threshold_s, 125.0f, -1);
-                    SET_OPTION(quant_comp, 0, -1);
-                    SET_OPTION(quant_comp_short, 0, -1);
-                    SET_OPTION(psy_model, PSY_NSPSYTUNE, -1);
-                    (void) lame_set_exp_nspsytune(gfp, lame_get_exp_nspsytune(gfp) | 2); /* safejoint */
-                    SET_OPTION(msfix, 1.49, -1);
-                    SET_OPTION(maskingadjust, -1.7, 0);
-                    SET_OPTION(maskingadjust_short, -3.2, 0);
-                    SET_OPTION(ATHlower, 2, 0);
-                    SET_OPTION(ATHcurve, 2, -1);
-                    /* modify sfb21 by 4.5 dB plus ns-treble=0                  */
-                    (void) lame_set_exp_nspsytune(gfp, lame_get_exp_nspsytune(gfp) | (18 << 20));
-
-                    return preset;
-                }
-            }
-        }
-    case V1:{
-            (void) lame_set_VBR_q(gfp, 1);
-            switch (lame_get_VBR(gfp)) {
-            case vbr_rh:{
-                    SET_OPTION(short_threshold_lrm, 5.3f, -1);
-                    SET_OPTION(short_threshold_s, 125.0f, -1);
-                    SET_OPTION(quant_comp, 9, -1);
-                    SET_OPTION(quant_comp_short, 9, -1);
-                    SET_OPTION(psy_model, PSY_NSPSYTUNE, -1);
-                    (void) lame_set_exp_nspsytune(gfp, lame_get_exp_nspsytune(gfp) | 2); /* safejoint */
-                    SET_OPTION(msfix, 1.35, -1);
-                    SET_OPTION(maskingadjust, -3.6, 0);
-                    SET_OPTION(maskingadjust_short, -5.6, 0);
-                    SET_OPTION(ATHlower, 4.5, 0);
-                    SET_OPTION(ATHcurve, 1.5, -1);
-                    /* modify sfb21 by 5.25 dB plus ns-treble=0                  */
-                    (void) lame_set_exp_nspsytune(gfp, lame_get_exp_nspsytune(gfp) | (21 << 20));
-
-                    return preset;
-                }
-            default:{
-                    SET_OPTION(short_threshold_lrm, 5.3f, -1);
-                    SET_OPTION(short_threshold_s, 125.0f, -1);
-                    SET_OPTION(quant_comp, 0, -1);
-                    SET_OPTION(quant_comp_short, 0, -1);
-                    SET_OPTION(psy_model, PSY_NSPSYTUNE, -1);
-                    (void) lame_set_exp_nspsytune(gfp, lame_get_exp_nspsytune(gfp) | 2); /* safejoint */
-                    SET_OPTION(msfix, 1.35, -1);
-                    SET_OPTION(maskingadjust, -3.4, 0);
-                    SET_OPTION(maskingadjust_short, -5.4, 0);
-                    SET_OPTION(ATHlower, 4.5, 0);
-                    SET_OPTION(ATHcurve, 1.5, -1);
-                    /* modify sfb21 by 5.25 dB plus ns-treble=0                  */
-                    (void) lame_set_exp_nspsytune(gfp, lame_get_exp_nspsytune(gfp) | (21 << 20));
-
-                    return preset;
-                }
-            }
-        }
-    case V0:{
-            /*EXTREME*/(void) lame_set_VBR_q(gfp, 0);
-            switch (lame_get_VBR(gfp)) {
-            case vbr_rh:{
-                    SET_OPTION(short_threshold_lrm, 5.2f, -1);
-                    SET_OPTION(short_threshold_s, 125.0f, -1);
-                    SET_OPTION(quant_comp, 9, -1);
-                    SET_OPTION(quant_comp_short, 9, -1);
-                    SET_OPTION(psy_model, PSY_NSPSYTUNE, -1);
-                    (void) lame_set_exp_nspsytune(gfp, lame_get_exp_nspsytune(gfp) | 2); /* safejoint */
-                    SET_OPTION(msfix, .97, -1);
-                    SET_OPTION(maskingadjust, -4.2, 0);
-                    SET_OPTION(maskingadjust_short, -6.3, 0);
-                    SET_OPTION(ATHlower, 4.8, 0);
-                    SET_OPTION(ATHcurve, 1, -1);
-                    /* modify sfb21 by 5 dB plus ns-treble=0                  */
-                    (void) lame_set_exp_nspsytune(gfp, lame_get_exp_nspsytune(gfp) | (21 << 20));
-
-                    return preset;
-                }
-            default:{
-                    SET_OPTION(short_threshold_lrm, 5.2f, -1);
-                    SET_OPTION(short_threshold_s, 125.0f, -1);
-                    SET_OPTION(quant_comp, 0, -1);
-                    SET_OPTION(quant_comp_short, 0, -1);
-                    SET_OPTION(psy_model, PSY_NSPSYTUNE, -1);
-                    (void) lame_set_exp_nspsytune(gfp, lame_get_exp_nspsytune(gfp) | 2); /* safejoint */
-                    SET_OPTION(msfix, .97, -1);
-                    SET_OPTION(maskingadjust, -3.6, 0);
-                    SET_OPTION(maskingadjust_short, -5.6, 0);
-                    SET_OPTION(ATHlower, 7.5, 0);
-                    SET_OPTION(ATHcurve, 1, -1);
-                    /* modify sfb21 by 6.5 dB plus ns-treble=0                  */
-                    (void) lame_set_exp_nspsytune(gfp, lame_get_exp_nspsytune(gfp) | (26 << 20));
-
-                    return preset;
-                }
-            }
-        }
-    default:
-        break;
     }
-
-    if ((preset >= 8) && (preset <= 320))
+    if (8 <= preset && preset <= 320) {
         return apply_abr_preset(gfp, preset, enforce);
-
+    }
 
     gfp->preset = 0;    /*no corresponding preset found */
     return preset;

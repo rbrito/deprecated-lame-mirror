@@ -1644,14 +1644,11 @@ VBR_old_iteration_loop(lame_global_flags const *gfp,
 static int
 VBR_new_prepare(lame_global_flags const *gfp,
                 FLOAT const pe[2][2],
-                FLOAT const ms_ener_ratio[2],
                 III_psy_ratio const ratio[2][2],
                 FLOAT l3_xmin[2][2][SFBMAX], int frameBits[16], int max_bits[2][2])
 {
     lame_internal_flags *const gfc = gfp->internal_flags;
 
-
-    FLOAT   masking_lower_db, adjust = 0.0;
     int     gr, ch;
     int     analog_silence = 1;
     int     avg, mxb, bits = 0;
@@ -1670,29 +1667,7 @@ VBR_new_prepare(lame_global_flags const *gfp,
         for (ch = 0; ch < gfc->channels_out; ++ch) {
             gr_info *const cod_info = &gfc->l3_side.tt[gr][ch];
 
-            if (cod_info->block_type != SHORT_TYPE) { /* NORM, START or STOP type */
-                /*
-                //adjust = 1.28 / (1 + exp(3.5 - pe[gr][ch] / 300.)) - 0.05;
-                */
-                adjust = 0.4;
-                masking_lower_db = gfc->PSY->mask_adjust - adjust;
-            }
-            else {
-#if 1
-                /* TODO: extreme low allowed noise may lead to bitrate canibalism!
-                 *       Setting mask adjust as in long block case should do,
-                 *       but we'll have to do some tests.
-                 */
-                masking_lower_db = gfc->PSY->mask_adjust - 0.4;
-#else
-                /*
-                //adjust = 2.56 / (1 + exp(3.5 - pe[gr][ch] / 300.)) - 0.14;
-                */
-                adjust = 0.7;
-                masking_lower_db = gfc->PSY->mask_adjust_short - adjust;
-#endif
-            }
-            gfc->masking_lower = pow(10.0, masking_lower_db * 0.1);
+            gfc->masking_lower = pow(10.0, gfc->PSY->mask_adjust * 0.1);
 
             init_outer_loop(gfc, cod_info);
             if (0 != calc_xmin(gfp, &ratio[gr][ch], cod_info, l3_xmin[gr][ch]))
@@ -1730,7 +1705,9 @@ VBR_new_iteration_loop(lame_global_flags const *gfp,
     int     ch, gr, analog_silence;
     III_side_info_t *const l3_side = &gfc->l3_side;
 
-    analog_silence = VBR_new_prepare(gfp, pe, ms_ener_ratio, ratio, l3_xmin, frameBits, max_bits);
+    (void) ms_ener_ratio; /* not used */
+    
+    analog_silence = VBR_new_prepare(gfp, pe, ratio, l3_xmin, frameBits, max_bits);
 
     for (gr = 0; gr < gfc->mode_gr; gr++) {
         for (ch = 0; ch < gfc->channels_out; ch++) {
