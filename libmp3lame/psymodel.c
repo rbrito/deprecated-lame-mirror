@@ -749,13 +749,26 @@ compute_masking_s(lame_global_flags const *gfp,
     assert(b == gfc->npart_s);
     assert(j == 129);
     for (j = b = 0; b < gfc->npart_s; b++) {
+#if 0
         static FLOAT const mask_floor_a = 0.251188643; /* pow(10,-0.60) */
         static FLOAT const mask_floor_m = 0.117489755; /* pow(10,-0.93) */
+#else
+        static FLOAT const mask_floor_a = 0.158489319246111; /* pow(10,-0.8) */
+        static FLOAT const mask_floor_m = 0.158489319246111; /* pow(10,-0.8) */
+#endif
         int     kk = gfc->s3ind_s[b][0];
+#if 0
         FLOAT   ecb = gfc->s3_ss[j++] * eb[kk] * tab[mask_idx_s[kk]];
+#else
+        FLOAT   ecb = gfc->s3_ss[j++] * eb[kk];
+#endif
         ++kk;
         while (kk <= gfc->s3ind_s[b][1]) {
+#if 0
             FLOAT const x = gfc->s3_ss[j] * eb[kk] * tab[mask_idx_s[kk]];
+#else
+            FLOAT const x = gfc->s3_ss[j] * eb[kk];
+#endif
 #ifdef SHORT_BLOCK_MASK_ADD
             ecb = mask_add(ecb, x, kk, kk - b, gfc, 1);
 #else
@@ -787,7 +800,9 @@ compute_masking_s(lame_global_flags const *gfp,
             x *= gfc->numlines_s[b];
             x *= gfc->minval_s[b];
             x *= mask_floor_m;
+#if 0
             x *= tab[mask_idx_s[b]];
+#endif
             if (thr[b] > x) {
                 thr[b] = x;
             }
@@ -1813,8 +1828,13 @@ L3psycho_anal_ns(lame_global_flags const *gfp,
 #endif
             k = 0;
             for (b = 0; b < gfc->npart_l; b++) {
+#if 0
                 static FLOAT const mask_floor_a = 0.251188643; /* pow(10,-0.60) */
                 static FLOAT const mask_floor_m = 0.117489755; /* pow(10,-0.93) */
+#else
+                static FLOAT const mask_floor_a = 0.158489319246111; /* pow(10,-0.8) */
+                static FLOAT const mask_floor_m = 0.158489319246111; /* pow(10,-0.8) */
+#endif
                 FLOAT   eb2;
                 FLOAT   ecb;
                 /* convolve the partitioned energy with the spreading function */
