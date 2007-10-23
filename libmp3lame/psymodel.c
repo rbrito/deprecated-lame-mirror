@@ -777,15 +777,16 @@ compute_masking_s(lame_global_flags const *gfp,
              *  from other bands. in case of strong tonal samples (tonaltest.wav)
              *  this leads to heavy distortions. that's why we limit THR here.
              */
-            FLOAT   x = max[b];
-            x *= gfc->numlines_s[b];
-            x *= gfc->minval_s[b];
-            x *= mask_floor_m;
-            x *= tab[mask_idx_s[b]];
-            if (thr[b] > x) {
-                thr[b] = x;
+            {
+                FLOAT   x = max[b];
+                x *= gfc->numlines_s[b];
+                x *= gfc->minval_s[b];
+                x *= mask_floor_m;
+                x *= tab[mask_idx_s[b]];
+                if (thr[b] > x) {
+                    thr[b] = x;
+                }
             }
-
             gfc->nb_s2[chn][b] = gfc->nb_s1[chn][b];
             gfc->nb_s1[chn][b] = ecb;
             assert(thr[b] >= 0);
