@@ -169,13 +169,13 @@ find_lowest_scalefac(const FLOAT xr34)
 
 
 static int
-below_noise_floor(const FLOAT* xr, FLOAT l3xmin, unsigned int bw)
+below_noise_floor(const FLOAT * xr, FLOAT l3xmin, unsigned int bw)
 {
-    FLOAT sum = 1e-12;
+    FLOAT   sum = 1e-12;
     unsigned int i;
-    for (i = 0; i < bw; ++i ) {
+    for (i = 0; i < bw; ++i) {
         FLOAT const x = xr[i];
-        sum += x*x;
+        sum += x * x;
     }
     return (l3xmin > sum) ? 1 : 0;
 }
@@ -627,9 +627,9 @@ block_sf(algo_t * that, const FLOAT l3_xmin[SFBMAX], int vbrsf[SFBMAX], int vbrs
                      *  Current find method does 11-18 quantization calculations.
                      *  Using a "good guess" may help to reduce this amount.
                      */
-                    int guess = calc_scalefac(l3_xmin[sfb], l);
-                    DEBUGF(that->gfc, "sfb=%3d guess=%3d found=%3d diff=%3d\n"
-                                    , sfb, guess, m2, m2-guess);
+                    int     guess = calc_scalefac(l3_xmin[sfb], l);
+                    DEBUGF(that->gfc, "sfb=%3d guess=%3d found=%3d diff=%3d\n", sfb, guess, m2,
+                           m2 - guess);
                 }
                 if (maxsf < m2) {
                     maxsf = m2;
@@ -1010,7 +1010,7 @@ short_block_constrain(const algo_t * that, int vbrsf[SFBMAX],
             maxover1 = v1;
         }
     }
-    if (gfc->noise_shaping == 2) {
+    if (gfc->noise_shaping == 2 || 1) {
         /* allow scalefac_scale=1 */
         mover = Min(maxover0, maxover1);
     }
@@ -1133,7 +1133,7 @@ long_block_constrain(const algo_t * that, int vbrsf[SFBMAX], const int vbrsfmin[
     if (vm1p == 0) {
         maxover1p = maxover1;
     }
-    if (gfc->noise_shaping != 2) {
+    if (gfc->noise_shaping != 2 && 0) {
         maxover1 = maxover0;
         maxover1p = maxover0p;
     }
@@ -1395,11 +1395,11 @@ VBR_encode_frame(lame_internal_flags * gfc, FLOAT const xr34orig[2][2][576],
             if (max_bits[gr][ch] > 0) {
                 algo_t *that = &that_[gr][ch];
                 unsigned int const max_nonzero_coeff =
-                        (unsigned int) that->cod_info->max_nonzero_coeff;
+                    (unsigned int) that->cod_info->max_nonzero_coeff;
 
                 assert(max_nonzero_coeff < 576);
                 memset(&that->cod_info->l3_enc[max_nonzero_coeff], 0,
-                        (576u - max_nonzero_coeff) * sizeof(that->cod_info->l3_enc[0]));
+                       (576u - max_nonzero_coeff) * sizeof(that->cod_info->l3_enc[0]));
 
                 (void) quantizeAndCountBits(that);
                 reduce_bit_usage(gfc, gr, ch);
@@ -1465,7 +1465,7 @@ VBR_encode_frame(lame_internal_flags * gfc, FLOAT const xr34orig[2][2][576],
                 max_nbits_gr[gr] += max_nbits_ch[gr][ch];
             }
             if (max_nbits_gr[gr] > MAX_BITS_PER_GRANULE) {
-                float f[2], s = 0;
+                float   f[2], s = 0;
                 for (ch = 0; ch < nch; ++ch) {
                     if (max_nbits_ch[gr][ch] > 0) {
                         f[ch] = sqrt(sqrt(max_nbits_ch[gr][ch]));
@@ -1477,22 +1477,22 @@ VBR_encode_frame(lame_internal_flags * gfc, FLOAT const xr34orig[2][2][576],
                 }
                 for (ch = 0; ch < nch; ++ch) {
                     if (s > 0) {
-                        max_nbits_ch[gr][ch] = MAX_BITS_PER_GRANULE * f[ch]/s;
+                        max_nbits_ch[gr][ch] = MAX_BITS_PER_GRANULE * f[ch] / s;
                     }
                     else {
                         max_nbits_ch[gr][ch] = 0;
                     }
                 }
                 if (nch > 1) {
-                    if (max_nbits_ch[gr][0] > use_nbits_ch[gr][0]+32) {
+                    if (max_nbits_ch[gr][0] > use_nbits_ch[gr][0] + 32) {
                         max_nbits_ch[gr][1] += max_nbits_ch[gr][0];
-                        max_nbits_ch[gr][1] -= use_nbits_ch[gr][0]+32;
-                        max_nbits_ch[gr][0] = use_nbits_ch[gr][0]+32;
+                        max_nbits_ch[gr][1] -= use_nbits_ch[gr][0] + 32;
+                        max_nbits_ch[gr][0] = use_nbits_ch[gr][0] + 32;
                     }
-                    if (max_nbits_ch[gr][1] > use_nbits_ch[gr][1]+32) {
+                    if (max_nbits_ch[gr][1] > use_nbits_ch[gr][1] + 32) {
                         max_nbits_ch[gr][0] += max_nbits_ch[gr][1];
-                        max_nbits_ch[gr][0] -= use_nbits_ch[gr][1]+32;
-                        max_nbits_ch[gr][1] = use_nbits_ch[gr][1]+32;
+                        max_nbits_ch[gr][0] -= use_nbits_ch[gr][1] + 32;
+                        max_nbits_ch[gr][1] = use_nbits_ch[gr][1] + 32;
                     }
                     if (max_nbits_ch[gr][0] > MAX_BITS_PER_CHANNEL) {
                         max_nbits_ch[gr][0] = MAX_BITS_PER_CHANNEL;
@@ -1503,14 +1503,14 @@ VBR_encode_frame(lame_internal_flags * gfc, FLOAT const xr34orig[2][2][576],
                 }
                 max_nbits_gr[gr] = 0;
                 for (ch = 0; ch < nch; ++ch) {
-                    max_nbits_gr[gr] += max_nbits_ch[gr][ch]; 
+                    max_nbits_gr[gr] += max_nbits_ch[gr][ch];
                 }
             }
             sum_fr += max_nbits_gr[gr];
         }
         if (sum_fr > max_nbits_fr) {
             {
-                float f[2], s = 0;
+                float   f[2], s = 0;
                 for (gr = 0; gr < ngr; ++gr) {
                     if (max_nbits_gr[gr] > 0) {
                         f[gr] = sqrt(max_nbits_gr[gr]);
@@ -1522,7 +1522,7 @@ VBR_encode_frame(lame_internal_flags * gfc, FLOAT const xr34orig[2][2][576],
                 }
                 for (gr = 0; gr < ngr; ++gr) {
                     if (s > 0) {
-                        max_nbits_gr[gr] = max_nbits_fr * f[gr]/s;
+                        max_nbits_gr[gr] = max_nbits_fr * f[gr] / s;
                     }
                     else {
                         max_nbits_gr[gr] = 0;
@@ -1530,15 +1530,15 @@ VBR_encode_frame(lame_internal_flags * gfc, FLOAT const xr34orig[2][2][576],
                 }
             }
             if (ngr > 1) {
-                if (max_nbits_gr[0] > use_nbits_gr[0]+125) {                    
+                if (max_nbits_gr[0] > use_nbits_gr[0] + 125) {
                     max_nbits_gr[1] += max_nbits_gr[0];
-                    max_nbits_gr[1] -= use_nbits_gr[0]+125;
-                    max_nbits_gr[0] = use_nbits_gr[0]+125;
+                    max_nbits_gr[1] -= use_nbits_gr[0] + 125;
+                    max_nbits_gr[0] = use_nbits_gr[0] + 125;
                 }
-                if (max_nbits_gr[1] > use_nbits_gr[1]+125) {
+                if (max_nbits_gr[1] > use_nbits_gr[1] + 125) {
                     max_nbits_gr[0] += max_nbits_gr[1];
-                    max_nbits_gr[0] -= use_nbits_gr[1]+125;
-                    max_nbits_gr[1] = use_nbits_gr[1]+125;
+                    max_nbits_gr[0] -= use_nbits_gr[1] + 125;
+                    max_nbits_gr[1] = use_nbits_gr[1] + 125;
                 }
                 for (gr = 0; gr < ngr; ++gr) {
                     if (max_nbits_gr[gr] > MAX_BITS_PER_GRANULE) {
@@ -1547,7 +1547,7 @@ VBR_encode_frame(lame_internal_flags * gfc, FLOAT const xr34orig[2][2][576],
                 }
             }
             for (gr = 0; gr < ngr; ++gr) {
-                float f[2], s = 0;
+                float   f[2], s = 0;
                 for (ch = 0; ch < nch; ++ch) {
                     if (max_nbits_ch[gr][ch] > 0) {
                         f[ch] = sqrt(max_nbits_ch[gr][ch]);
@@ -1566,15 +1566,15 @@ VBR_encode_frame(lame_internal_flags * gfc, FLOAT const xr34orig[2][2][576],
                     }
                 }
                 if (nch > 1) {
-                    if (max_nbits_ch[gr][0] > use_nbits_ch[gr][0]+32) {
+                    if (max_nbits_ch[gr][0] > use_nbits_ch[gr][0] + 32) {
                         max_nbits_ch[gr][1] += max_nbits_ch[gr][0];
-                        max_nbits_ch[gr][1] -= use_nbits_ch[gr][0]+32;
-                        max_nbits_ch[gr][0] = use_nbits_ch[gr][0]+32;
+                        max_nbits_ch[gr][1] -= use_nbits_ch[gr][0] + 32;
+                        max_nbits_ch[gr][0] = use_nbits_ch[gr][0] + 32;
                     }
-                    if (max_nbits_ch[gr][1] > use_nbits_ch[gr][1]+32) {
+                    if (max_nbits_ch[gr][1] > use_nbits_ch[gr][1] + 32) {
                         max_nbits_ch[gr][0] += max_nbits_ch[gr][1];
-                        max_nbits_ch[gr][0] -= use_nbits_ch[gr][1]+32;
-                        max_nbits_ch[gr][1] = use_nbits_ch[gr][1]+32;
+                        max_nbits_ch[gr][0] -= use_nbits_ch[gr][1] + 32;
+                        max_nbits_ch[gr][1] = use_nbits_ch[gr][1] + 32;
                     }
                     for (ch = 0; ch < nch; ++ch) {
                         if (max_nbits_ch[gr][ch] > MAX_BITS_PER_CHANNEL) {
