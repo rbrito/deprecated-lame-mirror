@@ -750,45 +750,47 @@ compute_masking_s(lame_global_flags const *gfp,
     assert(j == 129);
     if (gfp->VBR == vbr_mtrh || gfp->VBR == vbr_mt) {
         for (j = b = 0; b < gfc->npart_s; b++) {
-            static FLOAT const mask_floor_a = 0.251188643; /* pow(10,-0.60) */
-            static FLOAT const mask_floor_m = 0.117489755; /* pow(10,-0.93) */
             int     kk = gfc->s3ind_s[b][0];
-            FLOAT   ecb = gfc->s3_ss[j++] * eb[kk] * tab[mask_idx_s[kk]];
-            ++kk;
-            while (kk <= gfc->s3ind_s[b][1]) {
-                FLOAT const x = gfc->s3_ss[j] * eb[kk] * tab[mask_idx_s[kk]];
+            int const last = gfc->s3ind_s[b][1];
+            FLOAT   x, ecb;
+            ecb = gfc->s3_ss[j] * eb[kk] * tab[mask_idx_s[kk]];
+            ++j, ++kk;
+            while (kk <= last) {
+                x = gfc->s3_ss[j] * eb[kk] * tab[mask_idx_s[kk]];
                 ecb += x;
                 ++j, ++kk;
             }
-            ecb *= mask_floor_a;
+            ecb *= 0.158489319246111; /* pow(10,-0.8) */
 
-            {           /* limit calculated threshold by previous granule */
-                FLOAT const x = rpelev_s * gfc->nb_s1[chn][b];
-                thr[b] = Min(ecb, x);
-            }
             if (gfc->blocktype_old[chn & 1] == SHORT_TYPE) {
                 /* limit calculated threshold by even older granule */
-                FLOAT const x = rpelev2_s * gfc->nb_s2[chn][b];
-                FLOAT const y = thr[b];
-                thr[b] = Min(x, y);
+                FLOAT const t1 = rpelev_s * gfc->nb_s1[chn][b];
+                FLOAT const t2 = rpelev2_s * gfc->nb_s2[chn][b];
+                FLOAT const tm = Min(t1, t2);
+                thr[b] = Min(ecb, tm);
+            }
+            else {
+                /* limit calculated threshold by older granule */
+                FLOAT const t1 = rpelev_s * gfc->nb_s1[chn][b];
+                thr[b] = Min(ecb, t1);
             }
 
-            /*  if THR exceeds EB, the quantization routines will take the difference
-             *  from other bands. in case of strong tonal samples (tonaltest.wav)
-             *  this leads to heavy distortions. that's why we limit THR here.
-             */
-            {
-                FLOAT   x = max[b];
-                x *= gfc->numlines_s[b];
-                x *= gfc->minval_s[b];
-                x *= mask_floor_m;
-                x *= tab[mask_idx_s[b]];
-                if (thr[b] > x) {
-                    thr[b] = x;
-                }
-            }
             gfc->nb_s2[chn][b] = gfc->nb_s1[chn][b];
             gfc->nb_s1[chn][b] = ecb;
+            
+            /*  if THR exceeds EB, the quantization routines will take the difference
+            *  from other bands. in case of strong tonal samples (tonaltest.wav)
+            *  this leads to heavy distortions. that's why we limit THR here.
+            */
+            x = max[b];
+            x *= gfc->numlines_s[b];
+            x *= gfc->minval_s[b];
+            x *= 0.158489319246111; /* pow(10,-0.8) */
+            x *= tab[mask_idx_s[b]];
+            if (thr[b] > x) {
+                thr[b] = x;
+            }
+            
             assert(thr[b] >= 0);
         }
     }
@@ -1835,20 +1837,18 @@ L3psycho_anal_ns(lame_global_flags const *gfp,
         k = 0;
         if (gfp->VBR == vbr_mtrh || gfp->VBR == vbr_mt) {
             for (b = 0; b < gfc->npart_l; b++) {
-                static FLOAT const mask_floor_a = 0.251188643; /* pow(10,-0.60) */
-                static FLOAT const mask_floor_m = 0.117489755; /* pow(10,-0.93) */
-                FLOAT   eb2, eb3;
-                FLOAT   ecb;
+                FLOAT   x, ecb;
                 /* convolve the partitioned energy with the spreading function */
                 int     kk = gfc->s3ind[b][0];
-                eb2 = eb_l[kk] * tab[mask_idx_l[kk]];
-                ecb = gfc->s3_ll[k++] * eb2;
-                while (++kk <= gfc->s3ind[b][1]) {
-                    eb2 = eb_l[kk] * tab[mask_idx_l[kk]];
-                    eb3 = gfc->s3_ll[k++] * eb2;
-                    ecb += eb3;
+                int const last = gfc->s3ind[b][1];
+                ecb = gfc->s3_ll[k] * eb_l[kk] * tab[mask_idx_l[kk]];
+                ++k, ++kk;
+                while (kk <= last) {
+                    x = gfc->s3_ll[k] * eb_l[kk] * tab[mask_idx_l[kk]]; 
+                    ecb = mask_add(ecb, x, kk, kk - b, gfc, 0);
+                    ++k, ++kk;
                 }
-                ecb *= mask_floor_a;
+                ecb *= 0.158489319246111; /* pow(10,-0.8) */
 
                 /****   long block pre-echo control   ****/
                 /* dont use long block pre-echo control if previous granule was 
@@ -1861,30 +1861,31 @@ L3psycho_anal_ns(lame_global_flags const *gfp,
                 /* chn=0,1   L and R channels
                    chn=2,3   S and M channels.
                  */
-
-                if (gfc->blocktype_old[chn & 1] == SHORT_TYPE)
-                    thr[b] = ecb; /* Min(ecb, rpelev*gfc->nb_1[chn][b]); */
-                else
+                if (gfc->blocktype_old[chn & 1] == SHORT_TYPE) {
+                    thr[b] = NS_INTERP(Min(ecb, rpelev*gfc->nb_1[chn][b]), ecb, pcfact);
+                }
+                else {
                     thr[b] = NS_INTERP(Min(ecb,
-                                           Min(rpelev * gfc->nb_1[chn][b],
-                                               rpelev2 * gfc->nb_2[chn][b])), ecb, pcfact);
-
-                /*  if THR exceeds EB, the quantization routines will take the difference
-                 *  from other bands. in case of strong tonal samples (tonaltest.wav)
-                 *  this leads to heavy distortions. that's why we limit THR here.
-                 */
-                {
-                    FLOAT   x = max[b];
-                    x *= gfc->numlines_l[b];
-                    x *= gfc->minval_l[b];
-                    x *= mask_floor_m;
-                    x *= tab[mask_idx_l[b]];
-                    if (thr[b] > x) {
-                        thr[b] = x;
-                    }
+                                    Min(rpelev * gfc->nb_1[chn][b],
+                                        rpelev2 * gfc->nb_2[chn][b])), ecb, pcfact);
                 }
                 gfc->nb_2[chn][b] = gfc->nb_1[chn][b];
                 gfc->nb_1[chn][b] = ecb;
+
+                /*  if THR exceeds EB, the quantization routines will take the difference
+                *  from other bands. in case of strong tonal samples (tonaltest.wav)
+                *  this leads to heavy distortions. that's why we limit THR here.
+                */
+                x = max[b];
+                x *= gfc->numlines_l[b];
+                x *= gfc->minval_l[b];
+                x *= 0.158489319246111; /* pow(10,-0.8) */
+                x *= tab[mask_idx_l[b]];
+                if (thr[b] > x) {
+                    thr[b] = x;
+                }
+                
+                assert(thr[b] >= 0);
             }
         }
         else {
