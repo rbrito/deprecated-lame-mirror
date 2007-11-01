@@ -841,6 +841,9 @@ lame_init_params(lame_global_flags * const gfp)
             }
         }
     }
+    else {
+        gfc->bitrate_index = 1;
+    }
 
     /* for CBR, we will write an "info" tag. */
     /*    if ((gfp->VBR == vbr_off))  */
