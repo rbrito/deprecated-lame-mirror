@@ -17,6 +17,9 @@ Input options:
 .B \-r
 Assume the input file is raw pcm.
 Sampling rate and mono/stereo/jstereo must be specified on the command line.
+For each stereo sample, LAME expects the input data to be ordered left channel
+first, then right channel. By default, LAME expects them to be signed integers
+with a bitwidth of 16.
 Without
 .B \-r,
 LAME will perform several
@@ -57,28 +60,27 @@ Required only for raw PCM input files.
 Otherwise it will be determined from the header of the input file.
 .TP
 .BI \-\-signed
-Instructs LAME that the samples from the input are signed (the default).
+Instructs LAME that the samples from the input are signed (the default
+for 16, 24 and 32 bits raw pcm data).
 
-Required only for raw PCM input files
-and only available if LAME was compiled with libsndfile.
+Required only for raw PCM input files.
 .TP
 .BI \-\-unsigned
-Instructs LAME that the samples from the input are unsigned.
+Instructs LAME that the samples from the input are unsigned (the default
+for 8 bits raw pcm data, where 0x80 is zero).
 
 Required only for raw PCM input files
-and only available if LAME was compiled with libsndfile.
+and only available at bitwidth 8.
 .TP
 .BI \-\-little-endian
 Instructs LAME that the samples from the input are in little-endian form.
 
-Required only for raw PCM input files
-and only available if LAME was compiled with libsndfile.
+Required only for raw PCM input files.
 .TP
 .BI \-\-big-endian
 Instructs LAME that the samples from the input are in big-endian form.
 
-Required only for raw PCM input files
-and only available if LAME was compiled with libsndfile.
+Required only for raw PCM input files.
 .TP
 .B \-\-mp2input
 Assume the input file is a MPEG Layer II (ie MP2) file.

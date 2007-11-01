@@ -238,7 +238,7 @@ init_infile(lame_global_flags * gfp, char *inPath, int *enc_delay, int *enc_padd
     global. num_samples_read = 0;
     global. pcmbitwidth = in_bitwidth;
     global. pcmswapbytes = swapbytes;
-    global. pcm_is_unsigned_8bit = 0;
+    global. pcm_is_unsigned_8bit = in_signed == 1 ? 0 : 1;
     global. musicin = OpenSndFile(gfp, inPath, enc_delay, enc_padding);
 }
 
@@ -631,7 +631,7 @@ OpenSndFile(lame_global_flags * gfp, char *inPath, int *enc_delay, int *enc_padd
         gs_pSndFileIn = sf_open(lpszFileName, SFM_READ, &gs_wfInfo);
 
         if (gs_pSndFileIn == NULL) {
-            if (!in_signed && in_bitwidth != 8) {
+            if (in_signed == 0 && in_bitwidth != 8) {
                 fputs("Unsigned input only supported with bitwidth 8\n", stderr);
                 exit(1);
             }
@@ -665,7 +665,7 @@ OpenSndFile(lame_global_flags * gfp, char *inPath, int *enc_delay, int *enc_padd
             }
             switch (in_bitwidth) {
             case 8:
-                gs_wfInfo.format |= in_signed ? SF_FORMAT_PCM_S8 : SF_FORMAT_PCM_U8;
+                gs_wfInfo.format |= in_signed == 0 ? SF_FORMAT_PCM_U8 : SF_FORMAT_PCM_S8;
                 break;
             case 16:
                 gs_wfInfo.format |= SF_FORMAT_PCM_16;
@@ -945,7 +945,7 @@ unpack_read_samples(const int samples_to_read, const int bytes_per_sample,
 
     if (swap_order == 0) {
         GA_URS_IFLOOP(1)
-            * --op = (ip[i] ^ 0x80) << (b - 8) | 0x7f << (b - 16); /* convert from unsigned */
+            * --op = ip[i] << (b - 8);
         GA_URS_IFLOOP(2)
             * --op = ip[i] << (b - 16) | ip[i + 1] << (b - 8);
         GA_URS_IFLOOP(3)
@@ -957,7 +957,7 @@ unpack_read_samples(const int samples_to_read, const int bytes_per_sample,
     }
     else {
         GA_URS_IFLOOP(1)
-            * --op = ip[i] << (b - 8);
+            * --op = (ip[i] ^ 0x80) << (b - 8) | 0x7f << (b - 16); /* convert from unsigned */
         GA_URS_IFLOOP(2)
             * --op = ip[i] << (b - 8) | ip[i + 1] << (b - 16);
         GA_URS_IFLOOP(3)
@@ -996,6 +996,10 @@ read_samples_pcm(FILE * musicin, int sample_buffer[2304], int samples_to_read)
     case 32:
     case 24:
     case 16:
+        if (in_signed == 0) {
+            error_printf("Unsigned input only supported with bitwidth 8\n");
+            exit(1);
+        }
         {
 #ifndef WORDS_BIGENDIAN
             int const machine_byte_order = order_littleEndian;
@@ -1173,7 +1177,7 @@ parse_wave_header(lame_global_flags * gfp, FILE * sf)
         }
         (void) lame_set_in_samplerate(gfp, samples_per_sec);
         global. pcmbitwidth = bits_per_sample;
-        global. pcm_is_unsigned_8bit = 0;
+        global. pcm_is_unsigned_8bit = 1;
         (void) lame_set_num_samples(gfp, data_length / (channels * ((bits_per_sample + 7) / 8)));
     }
     return is_wav;
@@ -1366,7 +1370,7 @@ parse_aiff_header(lame_global_flags * gfp, FILE * sf)
         (void) lame_set_in_samplerate(gfp, (int) aiff_info.sampleRate);
         (void) lame_set_num_samples(gfp, aiff_info.numSampleFrames);
         global. pcmbitwidth = aiff_info.sampleSize;
-        global. pcm_is_unsigned_8bit = 1;
+        global. pcm_is_unsigned_8bit = 0;
         return 1;
     }
     return -1;
@@ -1388,7 +1392,7 @@ parse_aiff_header(lame_global_flags * gfp, FILE * sf)
 *
 ************************************************************************/
 
-static void
+static int
 parse_file_header(lame_global_flags * gfp, FILE * sf)
 {
 
@@ -1398,7 +1402,7 @@ parse_file_header(lame_global_flags * gfp, FILE * sf)
        "First word of input stream: %08x '%4.4s'\n", type, (char*) &type); 
      */
     global. count_samples_carefully = 0;
-    global. pcm_is_unsigned_8bit = 0;
+    global. pcm_is_unsigned_8bit = in_signed == 1 ? 0 : 1;
     /*input_format = sf_raw; commented out, because it is better to fail
        here as to encode some hundreds of input files not supported by LAME
        If you know you have RAW PCM data, use the -r switch
@@ -1407,48 +1411,26 @@ parse_file_header(lame_global_flags * gfp, FILE * sf)
     if (type == WAV_ID_RIFF) {
         /* It's probably a WAV file */
         if (parse_wave_header(gfp, sf)) {
-            input_format = sf_wave;
             global. count_samples_carefully = 1;
+            return sf_wave;
         }
-        else {
-            if (silent < 10) {
-                error_printf("Warning: corrupt or unsupported WAVE format\n");
-            }
-            exit(2);
+        if (silent < 10) {
+            error_printf("Warning: corrupt or unsupported WAVE format\n");
         }
     }
     else if (type == IFF_ID_FORM) {
         /* It's probably an AIFF file */
         int     ret;
         ret = parse_aiff_header(gfp, sf);
-        switch (ret) {
-        case -1:
-            if (silent < 10) {
-                error_printf("Warning: corrupt or unsupported AIFF format\n");
-            }
-            exit(2);
-            break;
-
-        case 1:
-            input_format = sf_aiff;
+        if (ret > 0) {
             global. count_samples_carefully = 1;
-            break;
-
-        default:
-            /* or maybe not an AIFF file!? */
-            break;
+            return sf_aiff;
+        }
+        if (silent < 10) {
+            error_printf("Warning: corrupt or unsupported AIFF format\n");
         }
     }
-    if (input_format == sf_raw) {
-        /*
-         ** Assume it's raw PCM.  Since the audio data is assumed to begin
-         ** at byte zero, this will unfortunately require seeking.
-         */
-        if (fseek(sf, 0L, SEEK_SET) != 0) {
-            /* ignore errors */
-        }
-        input_format = sf_raw;
-    }
+    return sf_unknown;
 }
 
 
@@ -1522,22 +1504,19 @@ OpenSndFile(lame_global_flags * gfp, char *inPath, int *enc_delay, int *enc_padd
         }
         exit(1);
     }
+    else if (input_format == sf_raw) {
+        /* assume raw PCM */
+        if (silent < 10) {
+            console_printf("Assuming raw pcm input file");
+            if (swapbytes)
+                console_printf(" : Forcing byte-swapping\n");
+            else
+                console_printf("\n");
+        }
+        global. pcmswapbytes = swapbytes;
+    }
     else {
-        if (input_format != sf_raw) {
-            parse_file_header(gfp, musicin);
-        }
-
-        if (input_format == sf_raw) {
-            /* assume raw PCM */
-            if (silent < 10) {
-                console_printf("Assuming raw pcm input file");
-                if (swapbytes)
-                    console_printf(" : Forcing byte-swapping\n");
-                else
-                    console_printf("\n");
-            }
-            global. pcmswapbytes = swapbytes;
-        }
+        input_format = parse_file_header(gfp, musicin);
     }
     if (input_format == sf_unknown) {
         if (silent < 10) {

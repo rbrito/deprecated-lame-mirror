@@ -101,10 +101,9 @@ int     disable_wav_header;
 mp3data_struct mp3input_data; /* used by MP3 */
 int     print_clipping_info; /* print info whether waveform clips */
 
-#ifdef LIBSNDFILE
-int     in_signed = 1;
-int     in_unsigned = 0;
-#endif
+
+int     in_signed = -1;
+
 int     in_endian = order_littleEndian;
 int     in_bitwidth = 16;
 
@@ -462,10 +461,8 @@ long_help(const lame_global_flags * gfp, FILE * const fp, const char *ProgramNam
             "    -x              force byte-swapping of input\n"
             "    -s sfreq        sampling frequency of input file (kHz) - default 44.1 kHz\n"
             "    --bitwidth w    input bit width is w (default 16)\n"
-#ifdef LIBSNDFILE
             "    --signed        input is signed (default)\n"
             "    --unsigned      input is unsigned\n"
-#endif
             "    --little-endian input is little-endian (default)\n"
             "    --big-endian    input is big-endian\n"
            );
@@ -1166,13 +1163,13 @@ parse_args(lame_global_flags * gfp, int argc, char **argv,
                 T_ELIF("bitwidth")
                     argUsed = 1;
                 in_bitwidth = atoi(nextArg);
-#ifdef LIBSNDFILE
+                
                 T_ELIF("signed")
                     in_signed = 1;
 
                 T_ELIF("unsigned")
                     in_signed = 0;
-#endif
+
                 T_ELIF("little-endian")
                     in_endian = order_littleEndian;
 
