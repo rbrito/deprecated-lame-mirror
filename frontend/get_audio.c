@@ -1103,7 +1103,7 @@ parse_wave_header(lame_global_flags * gfp, FILE * sf)
 
     file_length = Read32BitsHighLow(sf);
     if (Read32BitsHighLow(sf) != WAV_ID_WAVE)
-        return 0;
+        return -1;
 
     for (loop_sanity = 0; loop_sanity < 20; ++loop_sanity) {
         int     type = Read32BitsHighLow(sf);
@@ -1113,7 +1113,7 @@ parse_wave_header(lame_global_flags * gfp, FILE * sf)
             if (subSize < 16) {
                 /*DEBUGF(
                    "'fmt' chunk too short (only %ld bytes)!", subSize);  */
-                return 0;
+                return -1;
             }
 
             format_tag = Read16BitsLowHigh(sf);
@@ -1143,7 +1143,7 @@ parse_wave_header(lame_global_flags * gfp, FILE * sf)
 
             if (subSize > 0) {
                 if (fskip(sf, (long) subSize, SEEK_CUR) != 0)
-                    return 0;
+                    return -1;
             };
 
         }
@@ -1157,30 +1157,35 @@ parse_wave_header(lame_global_flags * gfp, FILE * sf)
         }
         else {
             subSize = Read32BitsLowHigh(sf);
-            if (fskip(sf, (long) subSize, SEEK_CUR) != 0)
-                return 0;
+            if (fskip(sf, (long) subSize, SEEK_CUR) != 0) {
+                return -1;
+            }
         }
     }
 
-    if (format_tag != WAVE_FORMAT_PCM) {
-        return 0;       /* oh no! non-supported format  */
-    }
-
-
     if (is_wav) {
+        if (format_tag != WAVE_FORMAT_PCM) {
+            if (silent < 10) {
+                error_printf("Unsupported data format: 0x%04X\n", format_tag);
+            }
+            return 0;       /* oh no! non-supported format  */
+        }
+
+
         /* make sure the header is sane */
         if (-1 == lame_set_num_channels(gfp, channels)) {
             if (silent < 10) {
-                error_printf("Unsupported number of channels: %ud\n", channels);
+                error_printf("Unsupported number of channels: %u\n", channels);
             }
-            exit(1);
+            return 0;
         }
         (void) lame_set_in_samplerate(gfp, samples_per_sec);
         global. pcmbitwidth = bits_per_sample;
         global. pcm_is_unsigned_8bit = 1;
         (void) lame_set_num_samples(gfp, data_length / (channels * ((bits_per_sample + 7) / 8)));
+        return 1;
     }
-    return is_wav;
+    return -1;
 }
 
 
@@ -1267,7 +1272,7 @@ parse_aiff_header(lame_global_flags * gfp, FILE * sf)
 
     typeID = Read32BitsHighLow(sf);
     if ((typeID != IFF_ID_AIFF) && (typeID != IFF_ID_AIFC))
-        return 0;
+        return -1;
 
     while (chunkSize > 0) {
         long    ckSize;
@@ -1347,30 +1352,31 @@ parse_aiff_header(lame_global_flags * gfp, FILE * sf)
         return -1;
     }
 
-    if (pcm_data_pos >= 0) {
-        if (fseek(sf, pcm_data_pos, SEEK_SET) != 0) {
-            if (silent < 10) {
-                error_printf("Can't rewind stream to audio data position\n");
-            }
-            return -1;
-        }
-    }
-
     /* DEBUGF("Parsed AIFF %d\n", is_aiff); */
     if (seen_comm_chunk && (seen_ssnd_chunk > 0 || aiff_info.numSampleFrames == 0)) {
         /* make sure the header is sane */
         if (0 != aiff_check2(&aiff_info))
-            exit(1);
+            return 0;
         if (-1 == lame_set_num_channels(gfp, aiff_info.numChannels)) {
             if (silent < 10) {
-                error_printf("Unsupported number of channels: %ud\n", aiff_info.numChannels);
+                error_printf("Unsupported number of channels: %u\n", aiff_info.numChannels);
             }
-            exit(1);
+            return 0;
         }
         (void) lame_set_in_samplerate(gfp, (int) aiff_info.sampleRate);
         (void) lame_set_num_samples(gfp, aiff_info.numSampleFrames);
         global. pcmbitwidth = aiff_info.sampleSize;
         global. pcm_is_unsigned_8bit = 0;
+        
+        if (pcm_data_pos >= 0) {
+            if (fseek(sf, pcm_data_pos, SEEK_SET) != 0) {
+                if (silent < 10) {
+                    error_printf("Can't rewind stream to audio data position\n");
+                }
+                return 0;
+            }
+        }
+
         return 1;
     }
     return -1;
@@ -1410,24 +1416,33 @@ parse_file_header(lame_global_flags * gfp, FILE * sf)
 
     if (type == WAV_ID_RIFF) {
         /* It's probably a WAV file */
-        if (parse_wave_header(gfp, sf)) {
+        int const ret = parse_wave_header(gfp, sf); 
+        if (ret > 0) {
             global. count_samples_carefully = 1;
             return sf_wave;
         }
-        if (silent < 10) {
-            error_printf("Warning: corrupt or unsupported WAVE format\n");
+        if (ret < 0) {
+            if (silent < 10) {
+                error_printf("Warning: corrupt or unsupported WAVE format\n");
+            }
         }
     }
     else if (type == IFF_ID_FORM) {
         /* It's probably an AIFF file */
-        int     ret;
-        ret = parse_aiff_header(gfp, sf);
+        int const ret = parse_aiff_header(gfp, sf);
         if (ret > 0) {
             global. count_samples_carefully = 1;
             return sf_aiff;
         }
+        if (ret < 0) {
+            if (silent < 10) {
+                error_printf("Warning: corrupt or unsupported AIFF format\n");
+            }
+        }
+    }
+    else {
         if (silent < 10) {
-            error_printf("Warning: corrupt or unsupported AIFF format\n");
+            error_printf("Warning: unsupported audio format\n");
         }
     }
     return sf_unknown;
@@ -1519,9 +1534,6 @@ OpenSndFile(lame_global_flags * gfp, char *inPath, int *enc_delay, int *enc_padd
         input_format = parse_file_header(gfp, musicin);
     }
     if (input_format == sf_unknown) {
-        if (silent < 10) {
-            error_printf("Unknown input file format.\n");
-        }
         exit(1);
     }
 

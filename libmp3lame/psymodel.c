@@ -778,17 +778,22 @@ compute_masking_s(lame_global_flags const *gfp,
             gfc->nb_s2[chn][b] = gfc->nb_s1[chn][b];
             gfc->nb_s1[chn][b] = ecb;
             
-            /*  if THR exceeds EB, the quantization routines will take the difference
-            *  from other bands. in case of strong tonal samples (tonaltest.wav)
-            *  this leads to heavy distortions. that's why we limit THR here.
-            */
-            x = max[b];
-            x *= gfc->numlines_s[b];
-            x *= gfc->minval_s[b];
-            x *= 0.158489319246111; /* pow(10,-0.8) */
-            x *= tab[mask_idx_s[b]];
-            if (thr[b] > x) {
-                thr[b] = x;
+            if (gfc->minval_s[b] < 0.9995) {
+                /*  if THR exceeds EB, the quantization routines will take the difference
+                 *  from other bands. in case of strong tonal samples (tonaltest.wav)
+                 *  this leads to heavy distortions. that's why we limit THR here.
+                 */
+                x = max[b];
+                x *= gfc->numlines_s[b];
+                x *= gfc->minval_s[b];
+                x *= 0.158489319246111; /* pow(10,-0.8) */
+                x *= tab[mask_idx_s[b]];
+                if (thr[b] > x) {
+                    thr[b] = x;
+                }
+            }
+            if (thr[b] > eb[b]) {
+                thr[b] = eb[b];
             }
             
             assert(thr[b] >= 0);
@@ -1871,20 +1876,23 @@ L3psycho_anal_ns(lame_global_flags const *gfp,
                 }
                 gfc->nb_2[chn][b] = gfc->nb_1[chn][b];
                 gfc->nb_1[chn][b] = ecb;
-
-                /*  if THR exceeds EB, the quantization routines will take the difference
-                *  from other bands. in case of strong tonal samples (tonaltest.wav)
-                *  this leads to heavy distortions. that's why we limit THR here.
-                */
-                x = max[b];
-                x *= gfc->numlines_l[b];
-                x *= gfc->minval_l[b];
-                x *= 0.158489319246111; /* pow(10,-0.8) */
-                x *= tab[mask_idx_l[b]];
-                if (thr[b] > x) {
-                    thr[b] = x;
+                if (gfc->minval_l[b] < .9995) {
+                    /*  if THR exceeds EB, the quantization routines will take the difference
+                     *  from other bands. in case of strong tonal samples (tonaltest.wav)
+                     *  this leads to heavy distortions. that's why we limit THR here.
+                     */
+                    x = max[b];
+                    x *= gfc->numlines_l[b];
+                    x *= gfc->minval_l[b];
+                    x *= 0.158489319246111; /* pow(10,-0.8) */
+                    x *= tab[mask_idx_l[b]];
+                    if (thr[b] > x) {
+                        thr[b] = x;
+                    }
+                }        
+                if (thr[b] > eb_l[b]) {
+                    thr[b] = eb_l[b];
                 }
-                
                 assert(thr[b] >= 0);
             }
         }
