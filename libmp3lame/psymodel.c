@@ -757,7 +757,11 @@ compute_masking_s(lame_global_flags const *gfp,
             ++j, ++kk;
             while (kk <= last) {
                 x = gfc->s3_ss[j] * eb[kk] * tab[mask_idx_s[kk]];
+#if 1
                 ecb += x;
+#else
+                ecb = mask_add(ecb, x, kk, kk - b, gfc, 1);
+#endif
                 ++j, ++kk;
             }
             ecb *= 0.158489319246111; /* pow(10,-0.8) */
@@ -792,6 +796,7 @@ compute_masking_s(lame_global_flags const *gfp,
                     thr[b] = x;
                 }
             }
+            thr[b] *= gfc->masking_lower;
             if (thr[b] > eb[b]) {
                 thr[b] = eb[b];
             }
@@ -1890,6 +1895,7 @@ L3psycho_anal_ns(lame_global_flags const *gfp,
                         thr[b] = x;
                     }
                 }        
+                thr[b] *= gfc->masking_lower;
                 if (thr[b] > eb_l[b]) {
                     thr[b] = eb_l[b];
                 }

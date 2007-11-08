@@ -615,7 +615,8 @@ calc_xmin(lame_global_flags const *gfp,
     ATH_t const *const ATH = gfc->ATH;
     const FLOAT *const xr = cod_info->xr;
     int     max_nonzero;
-    int const enable_athaa_fix = (gfp->VBR == vbr_mtrh) ? 1 : 0;
+    int const enable_athaa_fix = (gfp->VBR == vbr_mtrh || gfp->VBR == vbr_mt) ? 1 : 0;
+    FLOAT const masking_lower = (gfp->VBR == vbr_mtrh || gfp->VBR == vbr_mt) ? 1 : gfc->masking_lower;
 
     for (gsfb = 0; gsfb < cod_info->psy_lmax; gsfb++) {
         FLOAT   en0, xmin;
@@ -663,7 +664,7 @@ calc_xmin(lame_global_flags const *gfp,
             FLOAT const e = ratio->en.l[gsfb];
             if (e > 0.0f) {
                 FLOAT   x;
-                x = en0 * ratio->thm.l[gsfb] * gfc->masking_lower / e;
+                x = en0 * ratio->thm.l[gsfb] * masking_lower / e;
                 if (enable_athaa_fix)
                     x *= gfc->nsPsy.longfact[gsfb];
                 if (xmin < x)
@@ -739,7 +740,7 @@ calc_xmin(lame_global_flags const *gfp,
                 FLOAT const e = ratio->en.s[sfb][b];
                 if (e > 0.0f) {
                     FLOAT   x;
-                    x = en0 * ratio->thm.s[sfb][b] * gfc->masking_lower / e;
+                    x = en0 * ratio->thm.s[sfb][b] * masking_lower / e;
                     if (enable_athaa_fix)
                         x *= gfc->nsPsy.shortfact[sfb];
                     if (xmin < x)

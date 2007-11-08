@@ -70,7 +70,7 @@ char   *strchr(), *strrchr();
 #endif
 
 
-#if defined DEBUG || _DEBUG
+#if defined DEBUG || _DEBUG || _ALLOW_INTERNAL_OPTIONS
 #define INTERNAL_OPTS 1
 #else
 #define INTERNAL_OPTS LAME_ALPHA_VERSION
