@@ -417,7 +417,6 @@ extern  "C" {
         int     numlines_s[CBANDS];
         int     numlines_l[CBANDS];
         FLOAT   rnumlines_l[CBANDS];
-        FLOAT   mld_cb_l[CBANDS], mld_cb_s[CBANDS];
 
         /* ratios  */
         FLOAT   pe[4];

@@ -88,9 +88,6 @@ int     on_pe(lame_global_flags const *gfp, FLOAT const pe[2][2], III_side_info_
 void    reduce_side(int targ_bits[2], FLOAT ms_ener_ratio, int mean_bits, int max_bits);
 
 
-int     bin_search_StepSize(lame_internal_flags * const gfc, gr_info * const cod_info,
-                            int desired_rate, const int ch, const FLOAT xrpow[576]);
-
 void    iteration_init(lame_global_flags * gfp);
 
 

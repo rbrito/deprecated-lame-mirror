@@ -171,13 +171,13 @@ find_lowest_scalefac(const FLOAT xr34)
 static int
 below_noise_floor(const FLOAT * xr, FLOAT l3xmin, unsigned int bw)
 {
-    FLOAT   sum = 1e-12;
-    unsigned int i;
-    for (i = 0; i < bw; ++i) {
+    FLOAT   sum = 0.0;
+    unsigned int i, j;
+    for (i = 0, j = bw; j > 0; ++i, --j) {
         FLOAT const x = xr[i];
         sum += x * x;
     }
-    return (l3xmin - sum) >= -1e-12 ? 1 : 0;
+    return (l3xmin - sum) >= -1E-20 ? 1 : 0;
 }
 
 
@@ -528,54 +528,7 @@ find_scalefac_x34(const FLOAT * xr, const FLOAT * xr34, FLOAT l3_xmin, unsigned 
     return sf;
 }
 
-#if 0
-enum { dir_x = 0, dir_l = 1, dir_r = 2 };
-static  uint8_t
-find_scalefac_x34_(const FLOAT * xr, const FLOAT * xr34, FLOAT l3_xmin, unsigned int bw,
-                          uint8_t sf_min, uint8_t guess)
-{
-    calc_noise_cache_t did_it[256];
-    int sf = guess & 0xf8, dir = dir_x;
-    uint8_t sf_ok = 255, w = 4, seen_good_one = 0, i;
-    memset(did_it, 0, sizeof(did_it));
-    for(; w > 0;) {
-        if (sf <= sf_min) {
-            sf += w;
-            if (dir == dir_l) w = w/2;
-            dir = dir_r;
-        }
-        else if (sf > 255) {
-            sf -= w;
-            if (dir == dir_r) w = w/2;
-            dir = dir_l;
-        }
-        else {
-            uint8_t const bad = tri_calc_sfb_noise_x34(xr, xr34, l3_xmin, bw, sf, did_it);
-            if (bad) {  /* distortion.  try a smaller scalefactor */
-                sf -= w;
-                if (dir == dir_r) w = w/2;
-                dir = dir_l;
-            }
-            else {
-                sf_ok = sf;
-                sf += w;
-                seen_good_one = 1;
-                if (dir == dir_l) w = w/2;
-                dir = dir_r;
-            }
-        }
-    }
-    /*  returning a scalefac without distortion, if possible
-    */
-    if (seen_good_one > 0) {
-        return sf_ok;
-    }
-    if (sf <= sf_min) {
-        return sf_min;
-    }
-    return sf;
-}
-#endif
+
 
 static  uint8_t
 find_scalefac_ISO(const FLOAT * xr, const FLOAT * xr34, FLOAT l3_xmin, unsigned int bw,
@@ -675,9 +628,8 @@ block_sf(algo_t * that, const FLOAT l3_xmin[SFBMAX], int vbrsf[SFBMAX], int vbrs
                      *  Using a "good guess" may help to reduce this amount.
                      */
                     int     guess = calc_scalefac(l3_xmin[sfb], l);
-                    int     m3 = find_scalefac_x34_(&xr[j], &xr34_orig[j], l3_xmin[sfb], l, m1, guess);
-                    DEBUGF(that->gfc, "sfb=%3d guess=%3d x=%3d dx=%3d y=%3d dy=%3d x-y=%3d\n", sfb, guess, m2, m2 - guess, m3, m3-guess,m2-m3);
-                    //m2 = guess;
+                    DEBUGF(that->gfc, "sfb=%3d guess=%3d found=%3d diff=%3d\n", sfb, guess, m2,
+                           m2 - guess);
                 }
                 if (maxsf < m2) {
                     maxsf = m2;
@@ -876,7 +828,7 @@ set_subblock_gain(gr_info * cod_info, const int mingain_s[3], int sf[])
     unsigned int const psymax = (unsigned int) cod_info->psymax;
     unsigned int psydiv = 18;
     int     sbg0, sbg1, sbg2;
-    unsigned int sfb, i;
+    unsigned int sfb, i, min_sbg = 7;;
 
     if (psydiv > psymax) {
         psydiv = psymax;
@@ -930,6 +882,9 @@ set_subblock_gain(gr_info * cod_info, const int mingain_s[3], int sf[])
         if (sbg[i] > 7) {
             sbg[i] = 7;
         }
+        if (min_sbg > sbg[i]) {
+            min_sbg = sbg[i];
+        }
     }
     sbg0 = sbg[0] * 8;
     sbg1 = sbg[1] * 8;
@@ -938,6 +893,12 @@ set_subblock_gain(gr_info * cod_info, const int mingain_s[3], int sf[])
         sf[sfb + 0] += sbg0;
         sf[sfb + 1] += sbg1;
         sf[sfb + 2] += sbg2;
+    }
+    if (min_sbg > 0) {
+        for (i = 0; i < 3; ++i) {
+            sbg[i] -= min_sbg;
+        }
+        cod_info->global_gain -= min_sbg * 8;
     }
 }
 
@@ -1024,7 +985,6 @@ checkScalefactor(const gr_info * cod_info, const int vbrsfmin[SFBMAX])
 }
 
 
-
 /******************************************************************
  *
  *  short block scalefacs
@@ -1042,7 +1002,7 @@ short_block_constrain(const algo_t * that, int vbrsf[SFBMAX],
     int     v, v0, v1;
     int     sfb;
     int const psymax = cod_info->psymax;
-
+    
     for (sfb = 0; sfb < psymax; ++sfb) {
         assert(vbrsf[sfb] >= vbrsfmin[sfb]);
         v = vbrmax - vbrsf[sfb];
