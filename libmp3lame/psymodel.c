@@ -1023,7 +1023,7 @@ L3psycho_anal(lame_global_flags const *gfp,
             r1 = gfc->rx_sav[chn][1][j] = gfc->rx_sav[chn][0][j];
 
             /* square (x1,y1) */
-            if (r1 != 0.0) {
+            if (r1 > 0.0) {
                 FLOAT const a1 = gfc->ax_sav[chn][1][j] = gfc->ax_sav[chn][0][j];
                 FLOAT const b1 = gfc->bx_sav[chn][1][j] = gfc->bx_sav[chn][0][j];
                 den = r1 * r1;
@@ -1038,7 +1038,7 @@ L3psycho_anal(lame_global_flags const *gfp,
             }
 
             /* multiply by (x2,-y2) */
-            if (r2 != 0.0) {
+            if (r2 > 0.0) {
                 FLOAT const tmp2 = (numim + numre) * (a2 + b2) * 0.5f;
                 FLOAT const tmp1 = -a2 * numre + tmp2;
                 numre = -b2 * numim + tmp2;
@@ -1049,11 +1049,11 @@ L3psycho_anal(lame_global_flags const *gfp,
             r1 = 2.0f * r1 - r2;
             r2 = gfc->rx_sav[chn][0][j] = sqrt(fftenergy[j]);
             r2 = r2 + fabs(r1);
-            if (r2 != 0) {
+            if (r2 > 0) {
                 FLOAT const an = gfc->ax_sav[chn][0][j] = wsamp_l[0][j];
                 FLOAT const bn = gfc->bx_sav[chn][0][j] =
                     (j == 0 ? wsamp_l[0][0] : wsamp_l[0][BLKSIZE - j]);
-                assert(den != 0);
+                assert(den > 0);
                 den = r1 / den * 2.0;
                 numre = (an + bn) - numre * den;
                 numim = (an - bn) - numim * den;
@@ -1072,7 +1072,7 @@ L3psycho_anal(lame_global_flags const *gfp,
             k = (j + 2) / 4;
             /* square (x1,y1) */
             r1 = fftenergy_s[0][k];
-            if (r1 != 0.0) {
+            if (r1 > 0.0) {
                 FLOAT const a1 = (*wsamp_s)[0][k];
                 FLOAT const b1 = (*wsamp_s)[0][BLKSIZE_s - k]; /* k is never 0 */
                 numre = a1 * b1;
@@ -1087,7 +1087,7 @@ L3psycho_anal(lame_global_flags const *gfp,
 
             /* multiply by (x2,-y2) */
             r2 = fftenergy_s[2][k];
-            if (r2 != 0.0) {
+            if (r2 > 0.0) {
                 FLOAT const a2 = (*wsamp_s)[2][k];
                 FLOAT const b2 = (*wsamp_s)[2][BLKSIZE_s - k];
 
@@ -1102,10 +1102,10 @@ L3psycho_anal(lame_global_flags const *gfp,
 
             /* r-prime factor */
             rn = sqrt(fftenergy_s[1][k]) + fabs(2 * r1 - r2);
-            if (rn != 0) {
+            if (rn > 0) {
                 FLOAT const an = (*wsamp_s)[1][k];
                 FLOAT const bn = (*wsamp_s)[1][BLKSIZE_s - k];
-                assert(den != 0);
+                assert(den > 0);
                 den = (2 * r1 - r2) / den * 2.0f;
                 numre = (an + bn) - numre * den;
                 numim = (an - bn) - numim * den;
@@ -1178,7 +1178,7 @@ L3psycho_anal(lame_global_flags const *gfp,
  * tonality = 1:           use TMN   (little masking)
  */
             tbb = ecb;
-            if (tbb != 0.0) {
+            if (tbb > 0.0) {
                 tbb = ctb / tbb;
                 /* convert to tonality index */
                 /* tonality small:   tbb=1 */
@@ -1264,13 +1264,13 @@ L3psycho_anal(lame_global_flags const *gfp,
         }
     }                   /* end loop over chn */
 
-    if (gfp->interChRatio != 0.0)
+    if (gfp->interChRatio > 0.0)
         calc_interchannel_masking(gfp, gfp->interChRatio);
 
     if (gfp->mode == JOINT_STEREO) {
         FLOAT   db, x1, x2, sidetot = 0, tot = 0;
         msfix1(gfc);
-        if (gfp->msfix != 0.0)
+        if (gfp->msfix > 0.0)
             ns_msfix(gfc, gfp->msfix, gfp->ATHlower * gfc->ATH->adjust);
 
         /* determin ms_ratio from masking thresholds */
@@ -1340,9 +1340,9 @@ static inline FLOAT
 NS_INTERP(FLOAT x, FLOAT y, FLOAT r)
 {
     /* was pow((x),(r))*pow((y),1-(r)) */
-    if (r == 1.0)
+    if (r >= 1.0)
         return x;       /* 99.7% of the time */
-    if (r == 0.0)
+    if (r <= 0.0)
         return y;
     if (y > 0.0)
         return pow(x / y, r) * y; /* rest of the time */
@@ -2049,10 +2049,11 @@ init_numline(int *numlines, int *bo, int *bm,
     FLOAT   f_tmp;
     FLOAT   sample_freq_frac = sfreq / (sbmax > 15 ? 2 * 576 : 2 * 192);
     int     partition[HBLKSIZE] = { 0 };
-    int     i, j, k;
+    int     i, j, k, ni;
     int     sfb;
     sfreq /= blksize;
     j = 0;
+    ni = 0;
     /* compute numlines, the number of spectral lines in each partition band */
     /* each partition band should be about DELBARK wide. */
     for (i = 0; i < CBANDS; i++) {
@@ -2065,15 +2066,19 @@ init_numline(int *numlines, int *bo, int *bm,
         for (j2 = j; freq2bark(sfreq * j2) - bark1 < DELBARK && j2 <= blksize / 2; j2++);
 
         numlines[i] = j2 - j;
+        ni = i+1;
 
-        while (j < j2)
+        while (j < j2) {
+            assert(j < HBLKSIZE);
             partition[j++] = i;
+        }
         if (j > blksize / 2) {
             j = blksize / 2;
             ++i;
             break;
         }
     }
+    assert(i < CBANDS);
     b_frq[i] = sfreq * j;
 
     for (sfb = 0; sfb < sbmax; sfb++) {
@@ -2114,7 +2119,7 @@ init_numline(int *numlines, int *bo, int *bm,
 
     /* compute bark values of each critical band */
     j = 0;
-    for (k = 0; k < i + 1; k++) {
+    for (k = 0; k < ni; k++) {
         int const w = numlines[k];
         FLOAT   bark1, bark2;
 
@@ -2128,7 +2133,7 @@ init_numline(int *numlines, int *bo, int *bm,
         j += w;
     }
 
-    return i + 1;
+    return ni;
 }
 
 static int

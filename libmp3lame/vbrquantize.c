@@ -171,13 +171,13 @@ find_lowest_scalefac(const FLOAT xr34)
 static int
 below_noise_floor(const FLOAT * xr, FLOAT l3xmin, unsigned int bw)
 {
-    FLOAT   sum = 1e-12;
-    unsigned int i;
-    for (i = 0; i < bw; ++i) {
+    FLOAT   sum = 0.0;
+    unsigned int i, j;
+    for (i = 0, j = bw; j > 0; ++i, --j) {
         FLOAT const x = xr[i];
         sum += x * x;
     }
-    return (l3xmin > sum) ? 1 : 0;
+    return (l3xmin - sum) >= -1E-20 ? 1 : 0;
 }
 
 
@@ -828,7 +828,7 @@ set_subblock_gain(gr_info * cod_info, const int mingain_s[3], int sf[])
     unsigned int const psymax = (unsigned int) cod_info->psymax;
     unsigned int psydiv = 18;
     int     sbg0, sbg1, sbg2;
-    unsigned int sfb, i;
+    unsigned int sfb, i, min_sbg = 7;;
 
     if (psydiv > psymax) {
         psydiv = psymax;
@@ -882,6 +882,9 @@ set_subblock_gain(gr_info * cod_info, const int mingain_s[3], int sf[])
         if (sbg[i] > 7) {
             sbg[i] = 7;
         }
+        if (min_sbg > sbg[i]) {
+            min_sbg = sbg[i];
+        }
     }
     sbg0 = sbg[0] * 8;
     sbg1 = sbg[1] * 8;
@@ -890,6 +893,12 @@ set_subblock_gain(gr_info * cod_info, const int mingain_s[3], int sf[])
         sf[sfb + 0] += sbg0;
         sf[sfb + 1] += sbg1;
         sf[sfb + 2] += sbg2;
+    }
+    if (min_sbg > 0) {
+        for (i = 0; i < 3; ++i) {
+            sbg[i] -= min_sbg;
+        }
+        cod_info->global_gain -= min_sbg * 8;
     }
 }
 
@@ -976,7 +985,6 @@ checkScalefactor(const gr_info * cod_info, const int vbrsfmin[SFBMAX])
 }
 
 
-
 /******************************************************************
  *
  *  short block scalefacs
@@ -994,7 +1002,7 @@ short_block_constrain(const algo_t * that, int vbrsf[SFBMAX],
     int     v, v0, v1;
     int     sfb;
     int const psymax = cod_info->psymax;
-
+    
     for (sfb = 0; sfb < psymax; ++sfb) {
         assert(vbrsf[sfb] >= vbrsfmin[sfb]);
         v = vbrmax - vbrsf[sfb];

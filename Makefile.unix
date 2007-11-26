@@ -140,7 +140,9 @@ ifeq ($(UNAME),Linux)
 
 
 ifeq ($(CFG),RH)
-  CPP_OPTS += -DFLOAT8=float -DREAL_IS_FLOAT=1 -DRH_TEST_ATHAA_FIX -DHAVE_XMMINTRIN_H
+   GTK = -DHAVE_GTK `gtk-config --cflags`
+   GTKLIBS = `gtk-config --libs`
+  CPP_OPTS += -DFLOAT8=float -DREAL_IS_FLOAT=1 -DRH_TEST_ATHAA_FIX -DHAVE_XMMINTRIN_H -D_ALLOW_INTERNAL_OPTIONS
 # these options for gcc-3.2 & AthlonXP
    CC_OPTS = \
 	-pipe -O3 \
@@ -478,8 +480,8 @@ lib_obj = $(lib_sources:.c=.o)
 
 DEP = $(frontend_sources:.c=.d) $(lib_sources:.c=.d )
 
-gtk_sources = frontend/gtkanal.c frontend/gpkplotting.c
-gtk_obj = $(gtk_sources:.c=.o)
+gtk_sources = frontend/gtkanal.c frontend/gpkplotting.c frontend/mp3x.c
+gtk_obj = $(gtk_sources:.c=.gtk.o)
 gtk_dep = $(gtk_sources:.c=.d)
 
 
@@ -521,7 +523,6 @@ lib_obj += libmp3lame/i386/fftsse.o
 #lib_obj += libmp3lame/i386/fftfpu.o
 endif
 
-
 %.o: %.c
 	$(CC) $(CPP_OPTS) $(CC_SWITCHES) -c $< -o $@
 
@@ -532,7 +533,11 @@ endif
 	$(SHELL) -ec '$(CC) $(MAKEDEP)  $(CPP_OPTS) $(CC_SWITCHES)  $< | sed '\''s;$*.o;& $@;g'\'' > $@'
   endif
 
+%.gtk.o: %.c
+	$(CC) $(CPP_OPTS) $(CC_SWITCHES) $(GTK) -c $< -o $@
+
 all: frontend/$(PGM)
+
 
 $(lib_sources) $(frontend_sources) $(gtk_sources) : config.h
 
@@ -547,15 +552,16 @@ frontend/$(PGM):	frontend/main.o $(frontend_obj)  $(MP3LIB)
 	$(CC) $(CC_OPTS) -o frontend/$(PGM)  frontend/main.o $(frontend_obj) \
         $(MP3LIB) $(LIBS) $(LIBSNDFILE) $(LIBTERMCAP)
 
-mp3x:   frontend/mp3x.o $(frontend_obj) $(gtk_obj) $(MP3LIB)
-	$(CC) $(CC_OPTS) $(GTK) -o frontend/mp3x frontend/mp3x.o $(frontend_obj) $(gtk_obj) $(MP3LIB) \
-        $(LIBS) $(LIBSNDFILE) $(GTKLIBS) $(LIBTERMCAP)
+mp3x:   $(frontend_obj) $(gtk_obj) $(MP3LIB)
+	$(CC) $(CC_OPTS) -o frontend/mp3x $(frontend_obj) $(gtk_obj) \
+        $(MP3LIB) $(LIBS) $(LIBSNDFILE) $(LIBTERMCAP) $(GTKLIBS) 
 
 mp3rtp:	frontend/rtp.o frontend/mp3rtp.o  $(frontend_obj) $(MP3LIB)
 	$(CC) $(CC_OPTS) -o frontend/mp3rtp frontend/mp3rtp.o frontend/rtp.o $(frontend_obj) $(MP3LIB) \
         $(LIBS) $(LIBSNDFILE) $(LIBTERMCAP)
 
 libmp3lame/libmp3lame.a:  $(lib_obj)
+	echo $(lib_obj)
 	$(AR) cr libmp3lame/libmp3lame.a  $(lib_obj)
 	$(RANLIB) libmp3lame/libmp3lame.a
 
@@ -567,8 +573,6 @@ install:  frontend/$(PGM) #libmp3lame.a
 	cp frontend/$(PGM) /usr/bin
 	#cp libmp3lame.a /usr/lib
 	#cp lame.h /usr/lib
-
-
 
 clean:
   ifeq ($(UNAME),MSDOS)

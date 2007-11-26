@@ -70,7 +70,7 @@ char   *strchr(), *strrchr();
 #endif
 
 
-#if defined DEBUG || _DEBUG
+#if defined DEBUG || _DEBUG || _ALLOW_INTERNAL_OPTIONS
 #define INTERNAL_OPTS 1
 #else
 #define INTERNAL_OPTS LAME_ALPHA_VERSION
@@ -461,10 +461,8 @@ long_help(const lame_global_flags * gfp, FILE * const fp, const char *ProgramNam
             "    -x              force byte-swapping of input\n"
             "    -s sfreq        sampling frequency of input file (kHz) - default 44.1 kHz\n"
             "    --bitwidth w    input bit width is w (default 16)\n"
-#ifdef LIBSNDFILE
             "    --signed        input is signed (default)\n"
             "    --unsigned      input is unsigned\n"
-#endif
             "    --little-endian input is little-endian (default)\n"
             "    --big-endian    input is big-endian\n"
            );
