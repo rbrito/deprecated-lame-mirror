@@ -911,6 +911,11 @@ lame_init_params(lame_global_flags * const gfp)
         gfp->VBR = vbr_mtrh;
         /*lint --fallthrough */
     case vbr_mtrh:{
+        if ((gfp->VBR == vbr_mt || gfp->VBR == vbr_mtrh) && lame_get_psy_model(gfp) <= 0) 
+        {
+            lame_set_psy_model(gfp, 3);
+        }
+        //(void) lame_set_psy_model(gfp, PSY_NSPSYTUNE);
             if ( gfp->useTemporal < 0 ) {
                 gfp->useTemporal = 0;   /* off by default for this VBR mode */
             }
@@ -1097,6 +1102,9 @@ lame_init_params(lame_global_flags * const gfp)
     /* select psychoacoustic model */
     if ((lame_get_psy_model(gfp) < 0) || (lame_get_psy_model(gfp) == PSY_NSPSYTUNE)) {
         (void) lame_set_psy_model(gfp, PSY_NSPSYTUNE);
+        (void) lame_set_exp_nspsytune(gfp, lame_get_exp_nspsytune(gfp) | 1);
+    }
+    else if (lame_get_psy_model(gfp) > PSY_NSPSYTUNE) {
         (void) lame_set_exp_nspsytune(gfp, lame_get_exp_nspsytune(gfp) | 1);
     }
     else {

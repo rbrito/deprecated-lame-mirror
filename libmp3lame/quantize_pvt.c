@@ -215,7 +215,7 @@ ATHmdct(lame_global_flags const* gfp, FLOAT f)
 
     ath = ATHformula(f, gfp);
 
-    if (gfp->psymodel == PSY_NSPSYTUNE) {
+    if (gfp->psymodel >= PSY_NSPSYTUNE) {
         ath -= NSATHSCALE;
     }
     else {
@@ -363,7 +363,7 @@ iteration_init(lame_global_flags * gfp)
         quantize_init(gfc);
         init_xrpow_core_init(gfc);
 
-        if (gfp->psymodel == PSY_NSPSYTUNE) {
+        if (gfp->psymodel >= PSY_NSPSYTUNE) {
             FLOAT   bass, alto, treble, sfb21;
 
             i = (gfp->exp_nspsytune >> 2) & 63;
@@ -457,7 +457,7 @@ on_pe(lame_global_flags const *gfp, FLOAT const pe[][2], III_side_info_t const *
 
         targ_bits[ch] = Min(MAX_BITS_PER_CHANNEL, tbits / gfc->channels_out);
 
-        if (gfp->psymodel == PSY_NSPSYTUNE) {
+        if (gfp->psymodel >= PSY_NSPSYTUNE) {
             add_bits[ch] = targ_bits[ch] * pe[gr][ch] / 700.0 - targ_bits[ch];
         }
         else {
