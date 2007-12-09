@@ -2093,8 +2093,8 @@ L3psycho_anal_ns(lame_global_flags const *gfp,
 
 
 static void
-compute_vbr_fft_l(lame_global_flags const *gfp, const sample_t * buffer[2], int chn, int gr_out,
-                  FLOAT fftenergy[HBLKSIZE], FLOAT(*wsamp_l)[BLKSIZE])
+vbrpsy_compute_fft_l(lame_global_flags const *gfp, const sample_t * buffer[2], int chn, int gr_out,
+                     FLOAT fftenergy[HBLKSIZE], FLOAT(*wsamp_l)[BLKSIZE])
 {
     lame_internal_flags *const gfc = gfp->internal_flags;
     int     j;
@@ -2143,8 +2143,8 @@ compute_vbr_fft_l(lame_global_flags const *gfp, const sample_t * buffer[2], int 
 
 
 static void
-compute_vbr_fft_s(lame_global_flags const *gfp, const sample_t * buffer[2], int chn, int sblock,
-                  FLOAT(*fftenergy_s)[HBLKSIZE_s], FLOAT(*wsamp_s)[3][BLKSIZE_s])
+vbrpsy_compute_fft_s(lame_global_flags const *gfp, const sample_t * buffer[2], int chn, int sblock,
+                     FLOAT(*fftenergy_s)[HBLKSIZE_s], FLOAT(*wsamp_s)[3][BLKSIZE_s])
 {
     lame_internal_flags *const gfc = gfp->internal_flags;
     int     j;
@@ -2180,8 +2180,8 @@ compute_vbr_fft_s(lame_global_flags const *gfp, const sample_t * buffer[2], int 
     * compute loudness approximation (used for ATH auto-level adjustment) 
     *********************************************************************/
 static void
-compute_vbr_loudness_approximation_l(lame_global_flags const *gfp, int gr_out, int chn,
-                                     FLOAT fftenergy[HBLKSIZE])
+vbrpsy_compute_loudness_approximation_l(lame_global_flags const *gfp, int gr_out, int chn,
+                                        FLOAT fftenergy[HBLKSIZE])
 {
     lame_internal_flags *const gfc = gfp->internal_flags;
     if (gfp->athaa_loudapprox == 2 && chn < 2) { /*no loudness for mid/side ch */
@@ -2196,12 +2196,10 @@ compute_vbr_loudness_approximation_l(lame_global_flags const *gfp, int gr_out, i
     *  This is used for attack detection / handling.
     **********************************************************************/
 static void
-attack_detection(lame_global_flags const *gfp, const sample_t * buffer[2],
-                 int gr_out,
-                 III_psy_ratio masking_ratio[2][2],
-                 III_psy_ratio masking_MS_ratio[2][2],
-                 FLOAT energy[4],
-                 FLOAT sub_short_factor[4][3], int ns_attacks[4][4], int uselongblock[2])
+vbrpsy_attack_detection(lame_global_flags const *gfp, const sample_t * buffer[2], int gr_out,
+                        III_psy_ratio masking_ratio[2][2], III_psy_ratio masking_MS_ratio[2][2],
+                        FLOAT energy[4], FLOAT sub_short_factor[4][3], int ns_attacks[4][4],
+                        int uselongblock[2])
 {
     FLOAT   ns_hpfsmpl[2][576];
     lame_internal_flags *const gfc = gfp->internal_flags;
@@ -2322,13 +2320,19 @@ attack_detection(lame_global_flags const *gfp, const sample_t * buffer[2],
         }
 
         /* should have energy change between short blocks, in order to avoid periodic signals */
+        /* Good samples to show the effect are Trumpet test songs */
+        /* GB: tuned (1) to avoid too many short blocks for test sample TRUMPET */
+        /* RH: tuned (2) to let enough short blocks through for test sample FSOL */
         for (i = 1; i < 4; i++) {
             FLOAT const u = en_short[i - 1];
             FLOAT const v = en_short[i];
-            if (u < 1.5 * v && v < 1.5 * u) {
-                ns_attacks[chn][i] = 0;
-                if (i == 1) {
-                    ns_attacks[chn][0] = 0;
+            if (u < 1.7 * v && v < 1.7 * u) { /* (1) */
+                FLOAT const m = Max(u, v);
+                if (m < 40000) { /* (2) */
+                    ns_attacks[chn][i] = 0;
+                    if (i == 1) {
+                        ns_attacks[chn][0] = 0;
+                    }
                 }
             }
         }
@@ -2370,7 +2374,7 @@ attack_detection(lame_global_flags const *gfp, const sample_t * buffer[2],
 
 
 static void
-skip_vbr_masking_s(lame_internal_flags * gfc, int chn, int sblock)
+vbrpsy_skip_masking_s(lame_internal_flags * gfc, int chn, int sblock)
 {
     if (sblock == 0) {
         int     b;
@@ -2383,7 +2387,7 @@ skip_vbr_masking_s(lame_internal_flags * gfc, int chn, int sblock)
 
 
 static void
-skip_vbr_masking_l(lame_internal_flags * gfc, int chn)
+vbrpsy_skip_masking_l(lame_internal_flags * gfc, int chn)
 {
     int     b;
     for (b = 0; b < gfc->npart_l; b++) {
@@ -2394,13 +2398,12 @@ skip_vbr_masking_l(lame_internal_flags * gfc, int chn)
 
 
 static void
-compute_vbr_masking_s(lame_global_flags const *gfp,
-                      FLOAT(*fftenergy_s)[HBLKSIZE_s], FLOAT * eb, FLOAT * thr, int chn, int sblock)
+vbrpsy_compute_masking_s(lame_global_flags const *gfp, FLOAT(*fftenergy_s)[HBLKSIZE_s], FLOAT * eb,
+                         FLOAT * thr, int chn, int sblock)
 {
     lame_internal_flags *const gfc = gfp->internal_flags;
     FLOAT   max[CBANDS], avg[CBANDS];
     int     i, j, b;
-    int const ch01 = chn & 0x01;
     unsigned char mask_idx_s[CBANDS];
 
     for (b = j = 0; b < gfc->npart_s; ++b) {
@@ -2439,31 +2442,28 @@ compute_vbr_masking_s(lame_global_flags const *gfp,
             dd += mask_idx_s[kk];
             dd_n += 1;
             x = gfc->s3_ss[j] * eb[kk] * tab[mask_idx_s[kk]];
-#if 0
-            ecb += x;
-#else
             ecb = mask_add(ecb, x, kk, kk - b, gfc, 1);
-#endif
             ++j, ++kk;
         }
         dd = (1 + 2 * dd) / (2 * dd_n);
         avg_mask = tab[dd] * 0.5;
         ecb *= avg_mask;
-        //ecb *= 0.158489319246111; /* pow(10,-0.8) */
-
-        if (gfc->blocktype_old[ch01] == SHORT_TYPE) {
+#if 0   /* we can do PRE ECHO control now here, or do it later */
+        if (gfc->blocktype_old[chn & 0x01] == SHORT_TYPE) {
             /* limit calculated threshold by even older granule */
             FLOAT const t1 = rpelev_s * gfc->nb_s1[chn][b];
             FLOAT const t2 = rpelev2_s * gfc->nb_s2[chn][b];
             FLOAT const tm = (t2 > 0) ? Min(ecb, t2) : ecb;
-            thr[b] = (t1 > 0) ? Min(tm, t1) : ecb;
+            thr[b] = (t1 > 0) ? NS_INTERP(Min(tm, t1),ecb,0.6) : ecb;
         }
         else {
             /* limit calculated threshold by older granule */
             FLOAT const t1 = rpelev_s * gfc->nb_s1[chn][b];
-            thr[b] = (t1 > 0) ? Min(ecb, t1) : ecb;
+            thr[b] = (t1 > 0) ? NS_INTERP(Min(ecb, t1),ecb,0.6) : ecb;
         }
-
+#else   /* we do it later */
+        thr[b] = ecb;
+#endif
         gfc->nb_s2[chn][b] = gfc->nb_s1[chn][b];
         gfc->nb_s1[chn][b] = ecb;
 
@@ -2476,9 +2476,6 @@ compute_vbr_masking_s(lame_global_flags const *gfp,
             x *= gfc->numlines_s[b];
             x *= gfc->minval_s[b];
             x *= 0.158489319246111; /* pow(10,-0.8) */
-            ///x *= 0.39;
-            //x *= tab[mask_idx_s[b]];
-            ///x *= tab[dd];
             x *= avg_mask;
             if (thr[b] > x) {
                 thr[b] = x;
@@ -2504,12 +2501,12 @@ compute_vbr_masking_s(lame_global_flags const *gfp,
 
 
 static void
-compute_vbr_masking_l(lame_internal_flags * gfc, FLOAT fftenergy[HBLKSIZE], FLOAT eb_l[CBANDS],
-                      FLOAT thr[CBANDS], int chn)
+vbrpsy_compute_masking_l(lame_internal_flags * gfc, FLOAT fftenergy[HBLKSIZE], FLOAT eb_l[CBANDS],
+                         FLOAT thr[CBANDS], int chn)
 {
-    FLOAT   max[CBANDS], avg[CBANDS], pcfact = 1.0f;
+    FLOAT   max[CBANDS], avg[CBANDS];
     unsigned char mask_idx_l[CBANDS + 2];
-    int     k, b, ch01 = chn & 0x01;
+    int     k, b;
 
  /*********************************************************************
     *    Calculate the energy and the tonality of each partition.
@@ -2541,7 +2538,6 @@ compute_vbr_masking_l(lame_internal_flags * gfc, FLOAT fftenergy[HBLKSIZE], FLOA
         }
         dd = (1 + 2 * dd) / (2 * dd_n);
         avg_mask = tab[dd] * 0.5;
-        //ecb *= 0.158489319246111; /* pow(10,-0.8) */
         ecb *= avg_mask;
 
         /****   long block pre-echo control   ****/
@@ -2555,10 +2551,10 @@ compute_vbr_masking_l(lame_internal_flags * gfc, FLOAT fftenergy[HBLKSIZE], FLOA
         /* chn=0,1   L and R channels
            chn=2,3   S and M channels.
          */
-        if (gfc->blocktype_old[ch01] == SHORT_TYPE) {
+        if (gfc->blocktype_old[chn & 0x01] == SHORT_TYPE) {
             FLOAT const ecb_limit = rpelev * gfc->nb_1[chn][b];
             if (ecb_limit > 0) {
-                thr[b] = NS_INTERP(Min(ecb, ecb_limit), ecb, pcfact);
+                thr[b] = Min(ecb, ecb_limit);
             }
             else {
                 thr[b] = ecb;
@@ -2575,7 +2571,7 @@ compute_vbr_masking_l(lame_internal_flags * gfc, FLOAT fftenergy[HBLKSIZE], FLOA
                 ecb_limit_1 = ecb;
             }
             ecb_limit = Min(ecb_limit_1, ecb_limit_2);
-            thr[b] = NS_INTERP(Min(ecb, ecb_limit), ecb, pcfact);
+            thr[b] = Min(ecb, ecb_limit);
         }
         gfc->nb_2[chn][b] = gfc->nb_1[chn][b];
         gfc->nb_1[chn][b] = ecb;
@@ -2588,7 +2584,6 @@ compute_vbr_masking_l(lame_internal_flags * gfc, FLOAT fftenergy[HBLKSIZE], FLOA
             x *= gfc->numlines_l[b];
             x *= gfc->minval_l[b];
             x *= 0.158489319246111; /* pow(10,-0.8) */
-            //x *= tab[mask_idx_l[b]];
             x *= avg_mask;
             if (thr[b] > x) {
                 thr[b] = x;
@@ -2609,12 +2604,11 @@ compute_vbr_masking_l(lame_internal_flags * gfc, FLOAT fftenergy[HBLKSIZE], FLOA
         eb_l[b] = 0;
         thr[b] = 0;
     }
-    /* compute masking thresholds for long blocks */
 }
 
 
 static void
-compute_vbr_block_type(lame_global_flags const *gfp, int *uselongblock)
+vbrpsy_compute_block_type(lame_global_flags const *gfp, int *uselongblock)
 {
     lame_internal_flags *const gfc = gfp->internal_flags;
     int     chn;
@@ -2639,7 +2633,7 @@ compute_vbr_block_type(lame_global_flags const *gfp, int *uselongblock)
 
 
 static void
-apply_vbr_block_type(lame_global_flags const *gfp, int const *uselongblock, int *blocktype_d)
+vbrpsy_apply_block_type(lame_global_flags const *gfp, int const *uselongblock, int *blocktype_d)
 {
     lame_internal_flags *const gfc = gfp->internal_flags;
     int     chn;
@@ -2675,20 +2669,23 @@ apply_vbr_block_type(lame_global_flags const *gfp, int const *uselongblock, int 
  * compute interchannel masking effects
  ***************************************************************/
 static void
-compute_vbr_interchannel_masking_effects(FLOAT eb[2][CBANDS], FLOAT thr[2][CBANDS], FLOAT ratio, int n)
+vbrpsy_compute_interchannel_masking_effects(FLOAT eb[4][CBANDS], FLOAT thr[4][CBANDS], FLOAT ratio,
+                                            int n)
 {
-    FLOAT   l, r;
-    int     b;
-    for (b = 0; b < n; ++b) {
-        l = thr[0][b];
-        r = thr[1][b];
-        thr[0][b] += r * ratio;
-        thr[1][b] += l * ratio;
-        if (thr[0][b] > eb[0][b]) {
-            thr[0][b] = eb[0][b];
-        }
-        if (thr[1][b] > eb[1][b]) {
-            thr[1][b] = eb[1][b];
+    if (ratio > 0) {
+        FLOAT   l, r;
+        int     b;
+        for (b = 0; b < n; ++b) {
+            l = thr[0][b];
+            r = thr[1][b];
+            thr[0][b] += r * ratio;
+            thr[1][b] += l * ratio;
+            if (thr[0][b] > eb[0][b]) {
+                thr[0][b] = eb[0][b];
+            }
+            if (thr[1][b] > eb[1][b]) {
+                thr[1][b] = eb[1][b];
+            }
         }
     }
 }
@@ -2697,57 +2694,13 @@ compute_vbr_interchannel_masking_effects(FLOAT eb[2][CBANDS], FLOAT thr[2][CBAND
 /*************************************************************** 
  * compute M/S thresholds from Johnston & Ferreira 1992 ICASSP paper
  ***************************************************************/
-#if 0
-static void
-compute_vbr_MS_thresholds_s(lame_internal_flags * gfc, int sblock)
-{
-    FLOAT   rside, rmid, mld;
-    int     sb;
-    for (sb = 0; sb < SBMAX_s; sb++) {
-        if (gfc->thm[0].s[sb][sblock] > 1.58 * gfc->thm[1].s[sb][sblock]
-            || gfc->thm[1].s[sb][sblock] > 1.58 * gfc->thm[0].s[sb][sblock])
-            continue;
-
-        mld = gfc->mld_s[sb] * gfc->en[3].s[sb][sblock];
-        rmid = Max(gfc->thm[2].s[sb][sblock], Min(gfc->thm[3].s[sb][sblock], mld));
-
-        mld = gfc->mld_s[sb] * gfc->en[2].s[sb][sblock];
-        rside = Max(gfc->thm[3].s[sb][sblock], Min(gfc->thm[2].s[sb][sblock], mld));
-
-        gfc->thm[2].s[sb][sblock] = rmid;
-        gfc->thm[3].s[sb][sblock] = rside;
-    }
-}
 
 static void
-compute_vbr_MS_thresholds_l(lame_internal_flags * gfc)
+vbrpsy_compute_MS_thresholds(FLOAT eb[4][CBANDS], FLOAT thr[4][CBANDS], FLOAT cb_mld[CBANDS],
+                             FLOAT ath_cb[CBANDS], FLOAT athadjust, FLOAT msfix, int n)
 {
-    FLOAT   rside, rmid, mld;
-    int     sb;
-    for (sb = 0; sb < SBMAX_l; sb++) {
-        /* use this fix if L & R masking differs by 2db or less */
-        /* if db = 10*log10(x2/x1) < 2 */
-        /* if (x2 < 1.58*x1) { */
-        if (gfc->thm[0].l[sb] > 1.58 * gfc->thm[1].l[sb]
-            || gfc->thm[1].l[sb] > 1.58 * gfc->thm[0].l[sb])
-            continue;
-
-        mld = gfc->mld_l[sb] * gfc->en[3].l[sb];
-        rmid = Max(gfc->thm[2].l[sb], Min(gfc->thm[3].l[sb], mld));
-
-        mld = gfc->mld_l[sb] * gfc->en[2].l[sb];
-        rside = Max(gfc->thm[3].l[sb], Min(gfc->thm[2].l[sb], mld));
-        gfc->thm[2].l[sb] = rmid;
-        gfc->thm[3].l[sb] = rside;
-    }
-}
-#endif
-
-static void
-compute_vbr_MS_thresholds(FLOAT eb[2][CBANDS], FLOAT thr[4][CBANDS], FLOAT cb_mld[CBANDS], FLOAT ath_cb[CBANDS], FLOAT msfix, FLOAT athadjust, int n)
-{
-    FLOAT const  msfix2 = msfix * 2;
-    FLOAT const  athlower = msfix > 0 ? pow(10, athadjust) : 1;
+    FLOAT const msfix2 = msfix * 2;
+    FLOAT const athlower = msfix > 0 ? pow(10, athadjust) : 1;
     FLOAT   rside, rmid, mld;
     int     b;
     for (b = 0; b < n; ++b) {
@@ -2757,9 +2710,9 @@ compute_vbr_MS_thresholds(FLOAT eb[2][CBANDS], FLOAT thr[4][CBANDS], FLOAT cb_ml
         /* if db = 10*log10(x2/x1) < 2 */
         /* if (x2 < 1.58*x1) { */
         if (!(thr[0][b] > 1.58 * thr[1][b] || thr[1][b] > 1.58 * thr[0][b])) {
-            mld = cb_mld[b] * eb[1][b];
+            mld = cb_mld[b] * eb[3][b];
             rmid = Max(rmid, Min(rside, mld));
-            mld = cb_mld[b] * eb[0][b];
+            mld = cb_mld[b] * eb[2][b];
             rside = Max(rside, Min(rmid, mld));
         }
         if (msfix > 0) {
@@ -2773,7 +2726,7 @@ compute_vbr_MS_thresholds(FLOAT eb[2][CBANDS], FLOAT thr[4][CBANDS], FLOAT cb_ml
             thmLR = Min(Max(thr[0][b], ath), Max(thr[1][b], ath));
             thmM = Max(rmid, ath);
             thmS = Max(rside, ath);
-            thmMS = thmM+thmS;
+            thmMS = thmM + thmS;
             if (thmMS > 0 && (thmLR * msfix2) < thmMS) {
                 FLOAT const f = thmLR * msfix2 / thmMS;
                 thmM *= f;
@@ -2783,71 +2736,17 @@ compute_vbr_MS_thresholds(FLOAT eb[2][CBANDS], FLOAT thr[4][CBANDS], FLOAT cb_ml
             rmid = Min(thmM, rmid);
             rside = Min(thmS, rside);
         }
-        if (rmid > eb[0][b]) {
-            rmid = eb[0][b];
+        if (rmid > eb[2][b]) {
+            rmid = eb[2][b];
         }
-        if (rside > eb[1][b]) {
-            rside = eb[1][b];
+        if (rside > eb[3][b]) {
+            rside = eb[3][b];
         }
         thr[2][b] = rmid;
         thr[3][b] = rside;
     }
 }
 
-#if 0
-/*************************************************************** 
- * Adjust M/S maskings if user set "msfix"
- ***************************************************************/
-/* Naoki Shibata 2000 */
-static void
-compute_vbr_ns_msfix_s(lame_internal_flags * gfc, FLOAT msfix, FLOAT athadjust, int sblock)
-{
-    FLOAT const  msfix2 = msfix * 2;
-    FLOAT const  athlower = pow(10, athadjust) * ((FLOAT) BLKSIZE_s / BLKSIZE);
-    int     sb;
-
-    for (sb = 0; sb < SBMAX_s; sb++) {
-        FLOAT   thmLR, thmM, thmS, ath;
-        ath = (gfc->ATH->cb_s[gfc->bm_s[sb]]) * athlower;
-        thmLR = Min(Max(gfc->thm[0].s[sb][sblock], ath), Max(gfc->thm[1].s[sb][sblock], ath));
-        thmM = Max(gfc->thm[2].s[sb][sblock], ath);
-        thmS = Max(gfc->thm[3].s[sb][sblock], ath);
-
-        if (thmLR * msfix2 < thmM + thmS) {
-            FLOAT const f = thmLR * msfix2 / (thmM + thmS);
-            thmM *= f;
-            thmS *= f;
-            assert(thmM + thmS > 0);
-        }
-        gfc->thm[2].s[sb][sblock] = Min(gfc->thm[2].s[sb][sblock], thmM);
-        gfc->thm[3].s[sb][sblock] = Min(gfc->thm[3].s[sb][sblock], thmS);
-    }
-}
-
-static void
-compute_vbr_ns_msfix_l(lame_internal_flags * gfc, FLOAT msfix, FLOAT athadjust)
-{
-    FLOAT const msfix2 = msfix * 2;
-    FLOAT const athlower = pow(10, athadjust);
-    int     sb;
-
-    for (sb = 0; sb < SBMAX_l; sb++) {
-        FLOAT   thmLR, thmM, thmS, ath;
-        ath = (gfc->ATH->cb_l[gfc->bm_l[sb]]) * athlower;
-        thmLR = Min(Max(gfc->thm[0].l[sb], ath), Max(gfc->thm[1].l[sb], ath));
-        thmM = Max(gfc->thm[2].l[sb], ath);
-        thmS = Max(gfc->thm[3].l[sb], ath);
-        if (thmLR * msfix2 < thmM + thmS) {
-            FLOAT const f = thmLR * msfix2 / (thmM + thmS);
-            thmM *= f;
-            thmS *= f;
-            assert(thmM + thmS > 0);
-        }
-        gfc->thm[2].l[sb] = Min(thmM, gfc->thm[2].l[sb]);
-        gfc->thm[3].l[sb] = Min(thmS, gfc->thm[3].l[sb]);
-    }
-}
-#endif
 
 
 int
@@ -2867,100 +2766,113 @@ L3psycho_anal_vbr(lame_global_flags const *gfp,
     FLOAT   fftenergy_s[3][HBLKSIZE_s];
     FLOAT   wsamp_L[2][BLKSIZE];
     FLOAT   wsamp_S[2][3][BLKSIZE_s];
-    FLOAT   eb[2][CBANDS], thr[4][CBANDS];
+    FLOAT   eb[4][CBANDS], thr[4][CBANDS];
 
     FLOAT   sub_short_factor[4][3];
     FLOAT   thmm;
-    FLOAT   pcfact = 1.0f;
+    FLOAT   pcfact = 0.6f;
 
     /* block type  */
     int     ns_attacks[4][4] = { {0, 0, 0, 0}, {0, 0, 0, 0}, {0, 0, 0, 0}, {0, 0, 0, 0} };
     int     uselongblock[2];
 
     /* usual variables like loop indices, etc..    */
-    int     chn, chn_sum;
-    int     sb, sblock;
+    int     chn, sb, sblock;
 
     /* chn=2 and 3 = Mid and Side channels */
     int const n_chn_psy = (gfp->mode == JOINT_STEREO) ? 4 : gfc->channels_out;
 
-    attack_detection(gfp, buffer, gr_out, masking_ratio, masking_MS_ratio,
-                     energy, sub_short_factor, ns_attacks, uselongblock);
+    vbrpsy_attack_detection(gfp, buffer, gr_out, masking_ratio, masking_MS_ratio, energy,
+                            sub_short_factor, ns_attacks, uselongblock);
 
-    compute_vbr_block_type(gfp, uselongblock);
+    vbrpsy_compute_block_type(gfp, uselongblock);
+
+    /* LONG BLOCK CASE */
+    {
+        for (chn = 0; chn < n_chn_psy; chn++) {
+            int const ch01 = chn & 0x01;
+
+            wsamp_l = wsamp_L + ch01;
+            vbrpsy_compute_fft_l(gfp, buffer, chn, gr_out, fftenergy, wsamp_l);
+            vbrpsy_compute_loudness_approximation_l(gfp, gr_out, chn, fftenergy);
+
+            if (uselongblock[ch01]) {
+                vbrpsy_compute_masking_l(gfc, fftenergy, eb[chn], thr[chn], chn);
+            }
+            else {
+                vbrpsy_skip_masking_l(gfc, chn);
+            }
+        }
+        if ((uselongblock[0] + uselongblock[1]) == 2) {
+            /* M/S channel */
+            if (gfp->mode == JOINT_STEREO) {
+                vbrpsy_compute_MS_thresholds(eb, thr, gfc->mld_cb_l, gfc->ATH->cb_l,
+                                             gfp->ATHlower * gfc->ATH->adjust, gfp->msfix,
+                                             gfc->npart_l);
+            }
+            /* L/R channel */
+            if (gfp->mode == STEREO || gfp->mode == JOINT_STEREO) {
+                vbrpsy_compute_interchannel_masking_effects(eb, thr, gfp->interChRatio,
+                                                            gfc->npart_l);
+            }
+        }
+        /* TODO: apply adaptive ATH masking here ?? */
+        for (chn = 0; chn < n_chn_psy; chn++) {
+            int const ch01 = chn & 0x01;
+            if (uselongblock[ch01]) {
+                convert_partition2scalefac_l(gfc, eb[chn], thr[chn], chn);
+            }
+        }
+    }
 
     /* SHORT BLOCKS CASE */
     {
         for (sblock = 0; sblock < 3; sblock++) {
-            /* L/R channel */
-            chn_sum = 0;
-            for (chn = 0; chn < 2 && chn < n_chn_psy; ++chn) {
+            for (chn = 0; chn < n_chn_psy; ++chn) {
                 int const ch01 = chn & 0x01;
 
                 if (uselongblock[ch01]) {
-                    skip_vbr_masking_s(gfc, chn, sblock);
+                    vbrpsy_skip_masking_s(gfc, chn, sblock);
                 }
                 else {
                     /* compute masking thresholds for short blocks */
                     wsamp_s = wsamp_S + ch01;
-                    compute_vbr_fft_s(gfp, buffer, chn, sblock, fftenergy_s, wsamp_s);
-                    compute_vbr_masking_s(gfp, fftenergy_s, eb[ch01], thr[chn], chn, sblock);
-                    chn_sum += 1;
+                    vbrpsy_compute_fft_s(gfp, buffer, chn, sblock, fftenergy_s, wsamp_s);
+                    vbrpsy_compute_masking_s(gfp, fftenergy_s, eb[chn], thr[chn], chn, sblock);
                 }
             }
-            /* test chn_sum==2 excludes MONO case, mode<=JOINT_STEREO excludes DUAL_CHANNEL case */
-            if (chn_sum == 2 && gfp->mode <= JOINT_STEREO && fabs(gfp->interChRatio) > 0.0) {
-                compute_vbr_interchannel_masking_effects(eb, thr, gfp->interChRatio, gfc->npart_s);
+            if ((uselongblock[0] + uselongblock[1]) == 0) {
+                /* M/S channel */
+                if (gfp->mode == JOINT_STEREO) {
+                    vbrpsy_compute_MS_thresholds(eb, thr, gfc->mld_cb_s, gfc->ATH->cb_s,
+                                                 gfp->ATHlower * gfc->ATH->adjust, gfp->msfix,
+                                                 gfc->npart_s);
+                }
+                /* L/R channel */
+                if (gfp->mode == STEREO || gfp->mode == JOINT_STEREO) {
+                    vbrpsy_compute_interchannel_masking_effects(eb, thr, gfp->interChRatio,
+                                                                gfc->npart_s);
+                }
             }
-            for (chn = 0; chn < 2 && chn < n_chn_psy; ++chn) {
+            /* TODO: apply adaptive ATH masking here ?? */
+            for (chn = 0; chn < n_chn_psy; ++chn) {
                 int const ch01 = chn & 0x01;
                 if (!uselongblock[ch01]) {
-                    convert_partition2scalefac_s(gfc, eb[ch01], thr[chn], chn, sblock);
+                    convert_partition2scalefac_s(gfc, eb[chn], thr[chn], chn, sblock);
                 }
             }
+        }
 
-            /* M/S channel */
-            chn_sum = 0;
-            for (; chn < 4 && chn < n_chn_psy; ++chn) {
-                int const ch01 = chn & 0x01;
+        /****   short block pre-echo control   ****/
+        for (chn = 0; chn < n_chn_psy; chn++) {
+            int const ch01 = chn & 0x01;
 
-                if (uselongblock[ch01]) {
-                    skip_vbr_masking_s(gfc, chn, sblock);
-                }
-                else {
-                    /* compute masking thresholds for short blocks */
-                    wsamp_s = wsamp_S + ch01;
-                    compute_vbr_fft_s(gfp, buffer, chn, sblock, fftenergy_s, wsamp_s);
-                    compute_vbr_masking_s(gfp, fftenergy_s, eb[ch01], thr[chn], chn, sblock);
-                    chn_sum += 1;
-                }
+            if (uselongblock[ch01]) {
+                continue;
             }
-            if (chn_sum == 2 && gfp->mode == JOINT_STEREO) {
-                compute_vbr_MS_thresholds(eb, thr, gfc->mld_cb_s,
-                                          gfc->ATH->cb_s, gfp->msfix, gfp->ATHlower * gfc->ATH->adjust,
-                                          gfc->npart_s);
-            }
-            for (chn = 2; chn < 4 && chn < n_chn_psy; ++chn) {
-                int const ch01 = chn & 0x01;
-                if (!uselongblock[ch01]) {
-                    convert_partition2scalefac_s(gfc, eb[ch01], thr[chn], chn, sblock);
-                }
-            }
-            /*
-            if (chn_sum == 2 && gfp->mode == JOINT_STEREO) {
-                if (gfp->msfix > 0.0) {
-                    compute_vbr_ns_msfix_s(gfc, gfp->msfix, gfp->ATHlower * gfc->ATH->adjust, sblock);
-                }
-            }
-              */          
-            /****   short block pre-echo control   ****/
-            for (chn = 0; chn < n_chn_psy; chn++) {
-                int const ch01 = chn & 0x01;
-
-                if (uselongblock[ch01]) {
-                    continue;
-                }
-                for (sb = 0; sb < SBMAX_s; sb++) {
+            for (sb = 0; sb < SBMAX_s; sb++) {
+                FLOAT   new_thmm[3];
+                for (sblock = 0; sblock < 3; sblock++) {
                     thmm = gfc->thm[chn].s[sb][sblock];
                     thmm *= NS_PREECHO_ATT0;
 
@@ -2984,10 +2896,15 @@ L3psycho_anal_vbr(lame_global_flags const *gfp,
                         thmm = Min(thmm, p);
                     }
 
+#if 1 /* seems to work without too ?? */
                     /* pulse like signal detection for fatboy.wav and so on */
                     thmm *= sub_short_factor[chn][sblock];
+#endif
 
-                    gfc->thm[chn].s[sb][sblock] = thmm;
+                    new_thmm[sblock] = thmm;
+                }
+                for (sblock = 0; sblock < 3; sblock++) {
+                    gfc->thm[chn].s[sb][sblock] = new_thmm[sblock];
                 }
             }
         }
@@ -2996,77 +2913,11 @@ L3psycho_anal_vbr(lame_global_flags const *gfp,
         gfc->nsPsy.last_attacks[chn] = ns_attacks[chn][2];
     }
 
-    /* LONG BLOCK CASE */
-    {
-        chn_sum = 0;
-        for (chn = 0; chn < 2 && chn < n_chn_psy; chn++) {
-            int const ch01 = chn & 0x01;
-
-            wsamp_l = wsamp_L + ch01;
-            compute_vbr_fft_l(gfp, buffer, chn, gr_out, fftenergy, wsamp_l);
-            compute_vbr_loudness_approximation_l(gfp, gr_out, chn, fftenergy);
-
-            if (uselongblock[ch01]) {
-                compute_vbr_masking_l(gfc, fftenergy, eb[ch01], thr[chn], chn);
-                chn_sum += 1;
-            }
-            else {
-                skip_vbr_masking_l(gfc, chn);
-            }
-        }
-        /* test chn_sum==2 excludes MONO case, mode<=JOINT_STEREO excludes DUAL_CHANNEL case */
-        if (chn_sum == 2 && gfp->mode <= JOINT_STEREO && fabs(gfp->interChRatio) > 0.0) {
-            compute_vbr_interchannel_masking_effects(eb, thr, gfp->interChRatio, gfc->npart_l);
-        }
-        for (chn = 0; chn < 2 && chn < n_chn_psy; chn++) {
-            int const ch01 = chn & 0x01;
-            if (uselongblock[ch01]) {
-                convert_partition2scalefac_l(gfc, eb[ch01], thr[chn], chn);
-            }
-        }
-
-        /* M/S channel */
-        chn_sum = 0;
-        for (chn = 2; chn < 4 && chn < n_chn_psy; chn++) {
-            int const ch01 = chn & 0x01;
-
-            wsamp_l = wsamp_L + ch01;
-            compute_vbr_fft_l(gfp, buffer, chn, gr_out, fftenergy, wsamp_l);
-            compute_vbr_loudness_approximation_l(gfp, gr_out, chn, fftenergy);
-
-            if (uselongblock[ch01]) {
-                compute_vbr_masking_l(gfc, fftenergy, eb[ch01], thr[chn], chn);
-                chn_sum += 1;
-            }
-            else {
-                skip_vbr_masking_l(gfc, chn);
-            }
-        }
-        if (chn_sum == 2 && gfp->mode == JOINT_STEREO) {
-            compute_vbr_MS_thresholds(eb, thr, gfc->mld_cb_l,
-                                      gfc->ATH->cb_s, gfp->msfix, gfp->ATHlower * gfc->ATH->adjust,
-                                      gfc->npart_l);
-        }
-        for (chn = 2; chn < 4 && chn < n_chn_psy; ++chn) {
-            int const ch01 = chn & 0x01;
-            if (uselongblock[ch01]) {
-                convert_partition2scalefac_l(gfc, eb[ch01], thr[chn], chn);
-            }
-        }
-        /*
-        if (chn_sum == 2 && gfp->mode == JOINT_STEREO) {
-            if (gfp->msfix > 0.0) {
-                compute_vbr_ns_msfix_l(gfc, gfp->msfix, gfp->ATHlower * gfc->ATH->adjust);
-            }
-        }
-        */
-    }
-
 
     /*************************************************************** 
     * determine final block type
     ***************************************************************/
-    apply_vbr_block_type(gfp, uselongblock, blocktype_d);
+    vbrpsy_apply_block_type(gfp, uselongblock, blocktype_d);
 
     /*********************************************************************
     * compute the value of PE to return ... no delay and advance
@@ -3299,12 +3150,12 @@ init_s3_values(lame_global_flags const *gfp,
     return 0;
 }
 
-static FLOAT
-        stereo_demask(double f)
+static  FLOAT
+stereo_demask(double f)
 {
     /* setup stereo demasking thresholds */
     /* formula reverse enginerred from plot in paper */
-    double arg = freq2bark(f);
+    double  arg = freq2bark(f);
     arg = (Min(arg, 15.5) / 15.5);
 
     return pow(10.0, 1.25 * (1 - cos(PI * arg)) - 2.5);
@@ -3531,8 +3382,8 @@ psymodel_init(lame_global_flags * gfp)
     }
     j = 0;
     for (i = 0; i < gfc->npart_l; i++) {
-        FLOAT const freq = sfreq * (j+gfc->numlines_l[i]/2) / (1.0 * BLKSIZE);
-        gfc->mld_cb_l[i] = stereo_demask( freq );
+        FLOAT const freq = sfreq * (j + gfc->numlines_l[i] / 2) / (1.0 * BLKSIZE);
+        gfc->mld_cb_l[i] = stereo_demask(freq);
         j += gfc->numlines_l[i];
     }
     for (; i < CBANDS; ++i) {
@@ -3540,10 +3391,10 @@ psymodel_init(lame_global_flags * gfp)
     }
     j = 0;
     for (i = 0; i < gfc->npart_s; i++) {
-        FLOAT const freq = sfreq * (j+gfc->numlines_s[i]/2) / (1.0 * BLKSIZE_s);
-        gfc->mld_cb_s[i] = stereo_demask( freq );
+        FLOAT const freq = sfreq * (j + gfc->numlines_s[i] / 2) / (1.0 * BLKSIZE_s);
+        gfc->mld_cb_s[i] = stereo_demask(freq);
         j += gfc->numlines_s[i];
-    }    
+    }
     for (; i < CBANDS; ++i) {
         gfc->mld_cb_s[i] = 1;
     }
