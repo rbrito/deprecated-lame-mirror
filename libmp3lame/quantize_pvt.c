@@ -215,7 +215,7 @@ ATHmdct(lame_global_flags const* gfp, FLOAT f)
 
     ath = ATHformula(f, gfp);
 
-    if (gfp->psymodel == PSY_NSPSYTUNE) {
+    if (gfp->psymodel >= PSY_NSPSYTUNE) {
         ath -= NSATHSCALE;
     }
     else {
@@ -363,7 +363,7 @@ iteration_init(lame_global_flags * gfp)
         quantize_init(gfc);
         init_xrpow_core_init(gfc);
 
-        if (gfp->psymodel == PSY_NSPSYTUNE) {
+        if (gfp->psymodel >= PSY_NSPSYTUNE) {
             FLOAT   bass, alto, treble, sfb21;
 
             i = (gfp->exp_nspsytune >> 2) & 63;
@@ -457,7 +457,7 @@ on_pe(lame_global_flags const *gfp, FLOAT const pe[][2], III_side_info_t const *
 
         targ_bits[ch] = Min(MAX_BITS_PER_CHANNEL, tbits / gfc->channels_out);
 
-        if (gfp->psymodel == PSY_NSPSYTUNE) {
+        if (gfp->psymodel >= PSY_NSPSYTUNE) {
             add_bits[ch] = targ_bits[ch] * pe[gr][ch] / 700.0 - targ_bits[ch];
         }
         else {
@@ -616,6 +616,11 @@ calc_xmin(lame_global_flags const *gfp,
     const FLOAT *const xr = cod_info->xr;
     int     max_nonzero;
     int const enable_athaa_fix = (gfp->VBR == vbr_mtrh) ? 1 : 0;
+    FLOAT   masking_lower = gfc->masking_lower;
+    
+    if (gfp->psymodel == PSY_NSPSYTUNE+1) {
+        masking_lower = 1.0f; /* was already done in PSY-Model */
+    }
 
     for (gsfb = 0; gsfb < cod_info->psy_lmax; gsfb++) {
         FLOAT   en0, xmin;
@@ -663,7 +668,7 @@ calc_xmin(lame_global_flags const *gfp,
             FLOAT const e = ratio->en.l[gsfb];
             if (e > 0.0f) {
                 FLOAT   x;
-                x = en0 * ratio->thm.l[gsfb] * gfc->masking_lower / e;
+                x = en0 * ratio->thm.l[gsfb] * masking_lower / e;
                 if (enable_athaa_fix)
                     x *= gfc->nsPsy.longfact[gsfb];
                 if (xmin < x)
@@ -739,7 +744,7 @@ calc_xmin(lame_global_flags const *gfp,
                 FLOAT const e = ratio->en.s[sfb][b];
                 if (e > 0.0f) {
                     FLOAT   x;
-                    x = en0 * ratio->thm.s[sfb][b] * gfc->masking_lower / e;
+                    x = en0 * ratio->thm.s[sfb][b] * masking_lower / e;
                     if (enable_athaa_fix)
                         x *= gfc->nsPsy.shortfact[sfb];
                     if (xmin < x)

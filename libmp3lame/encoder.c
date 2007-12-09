@@ -374,6 +374,11 @@ lame_encode_mp3_frame(       /* Output */
                                        masking_LR, masking_MS,
                                        pe[gr], pe_MS[gr], tot_ener[gr], blocktype);
             }
+            else if (gfp->psymodel == PSY_NSPSYTUNE+1) {
+                ret = L3psycho_anal_vbr(gfp, bufp, gr,
+                                       masking_LR, masking_MS,
+                                       pe[gr], pe_MS[gr], tot_ener[gr], blocktype);
+            }
             else {
                 ret = L3psycho_anal(gfp, bufp, gr,
                                     &gfc->ms_ratio[gr], &ms_ratio_next,
@@ -481,7 +486,7 @@ lame_encode_mp3_frame(       /* Output */
 
             /* based on PE: M/S coding would not use much more bits than L/R */
             if (((gfp->psymodel == PSY_GPSYCHO) && sum_pe_MS <= 1.07 * sum_pe_LR) ||
-                ((gfp->psymodel == PSY_NSPSYTUNE) && sum_pe_MS <= 1.00 * sum_pe_LR)) {
+                ((gfp->psymodel >= PSY_NSPSYTUNE) && sum_pe_MS <= 1.00 * sum_pe_LR)) {
 
                 gr_info const *const gi0 = &gfc->l3_side.tt[0][0];
                 gr_info const *const gi1 = &gfc->l3_side.tt[gfc->mode_gr - 1][0];
@@ -531,7 +536,7 @@ lame_encode_mp3_frame(       /* Output */
     *   Stage 4: quantization loop          *
     ****************************************/
 
-    if (gfp->psymodel == PSY_NSPSYTUNE) {
+    if (gfp->psymodel >= PSY_NSPSYTUNE) {
         if (gfp->VBR == vbr_off || gfp->VBR == vbr_abr) {
             static FLOAT const fircoef[9] = {
                 -0.0207887 * 5, -0.0378413 * 5, -0.0432472 * 5, -0.031183 * 5,

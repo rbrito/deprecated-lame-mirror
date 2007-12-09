@@ -911,6 +911,10 @@ lame_init_params(lame_global_flags * const gfp)
         gfp->VBR = vbr_mtrh;
         /*lint --fallthrough */
     case vbr_mtrh:{
+        if ((gfp->VBR == vbr_mt || gfp->VBR == vbr_mtrh) && lame_get_psy_model(gfp) <= PSY_GPSYCHO) 
+        {            
+            (void) lame_set_psy_model(gfp, PSY_NSPSYTUNE+1);
+        }
             if ( gfp->useTemporal < 0 ) {
                 gfp->useTemporal = 0;   /* off by default for this VBR mode */
             }
@@ -1097,6 +1101,9 @@ lame_init_params(lame_global_flags * const gfp)
     /* select psychoacoustic model */
     if ((lame_get_psy_model(gfp) < 0) || (lame_get_psy_model(gfp) == PSY_NSPSYTUNE)) {
         (void) lame_set_psy_model(gfp, PSY_NSPSYTUNE);
+        (void) lame_set_exp_nspsytune(gfp, lame_get_exp_nspsytune(gfp) | 1);
+    }
+    else if (lame_get_psy_model(gfp) == PSY_NSPSYTUNE+1) {
         (void) lame_set_exp_nspsytune(gfp, lame_get_exp_nspsytune(gfp) | 1);
     }
     else {
@@ -1395,9 +1402,9 @@ lame_print_internals(const lame_global_flags * gfp)
 
     MSGF(gfc, "\tusing psychoacoustic model: %d\n", gfc->psymodel);
     MSGF(gfc, "\tpsychoacoustic model: %s\n",
-         (gfp->psymodel == PSY_NSPSYTUNE) ? "NSPsytune" : "GPsycho");
+         (gfp->psymodel >= PSY_NSPSYTUNE) ? "NSPsytune" : "GPsycho");
     MSGF(gfc, "\ttonality estimation limit: %f Hz %s\n", gfc->PSY->cwlimit,
-         (gfp->psymodel == PSY_NSPSYTUNE) ? "(not relevant)" : "");
+         (gfp->psymodel >= PSY_NSPSYTUNE) ? "(not relevant)" : "");
     switch (gfp->short_blocks) {
     default:
     case short_block_not_set:
@@ -1441,7 +1448,7 @@ lame_print_internals(const lame_global_flags * gfp)
     MSGF(gfc, "\t ^ adjust sensitivity power: %f\n", gfc->ATH->aa_sensitivity_p);
     MSGF(gfc, "\t ^ adapt threshold type: %d\n", gfp->athaa_loudapprox);
 
-    if (gfp->psymodel == PSY_NSPSYTUNE) {
+    if (gfp->psymodel >= PSY_NSPSYTUNE) {
         MSGF(gfc, "\texperimental psy tunings by Naoki Shibata\n");
         MSGF(gfc, "\t   adjust masking bass=%g dB, alto=%g dB, treble=%g dB, sfb21=%g dB\n",
              10 * log10(gfc->nsPsy.longfact[0]),

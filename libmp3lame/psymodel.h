@@ -37,6 +37,12 @@ int     L3psycho_anal_ns(lame_global_flags const *gfc,
                          III_psy_ratio MS_ratio[2][2],
                          FLOAT pe[2], FLOAT pe_MS[2], FLOAT ener[2], int blocktype_d[2]);
 
+int     L3psycho_anal_vbr(lame_global_flags const *gfc,
+                          const sample_t * buffer[2], int gr,
+                          III_psy_ratio ratio[2][2],
+                          III_psy_ratio MS_ratio[2][2],
+                          FLOAT pe[2], FLOAT pe_MS[2], FLOAT ener[2], int blocktype_d[2]);
+
 
 int     psymodel_init(lame_global_flags * gfp);
 
