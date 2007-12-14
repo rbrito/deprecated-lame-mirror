@@ -2232,22 +2232,22 @@ vbrpsy_attack_detection(lame_global_flags const *gfp, const sample_t * buffer[2]
         /* should have energy change between short blocks, in order to avoid periodic signals */
         /* Good samples to show the effect are Trumpet test songs */
         /* GB: tuned (1) to avoid too many short blocks for test sample TRUMPET */
-        /* RH: tuned (2) to let enough short blocks through for test sample FSOL */
+        /* RH: tuned (2) to let enough short blocks through for test sample FSOL and SNAPS */
         for (i = 1; i < 4; i++) {
             FLOAT const u = en_short[i - 1];
             FLOAT const v = en_short[i];
-            if (u < 1.7 * v && v < 1.7 * u) { /* (1) */
-                FLOAT const m = Max(u, v);
-                if (m < 40000) { /* (2) */
-                    ns_attacks[chn][i] = 0;
-                    if (i == 1) {
+            FLOAT const m = Max(u, v);
+            if (m < 40000) { /* (2) */
+                if (u < 1.7 * v && v < 1.7 * u) { /* (1) */
+                    if (i == 1 && ns_attacks[chn][0] <= ns_attacks[chn][i]) {
                         ns_attacks[chn][0] = 0;
                     }
+                    ns_attacks[chn][i] = 0;
                 }
             }
         }
 
-        if (ns_attacks[chn][0] && gfc->nsPsy.last_attacks[chn]) {
+        if (ns_attacks[chn][0] <= gfc->nsPsy.last_attacks[chn]) {
             ns_attacks[chn][0] = 0;
         }
 
@@ -2502,7 +2502,7 @@ vbrpsy_compute_masking_l(lame_internal_flags * gfc, FLOAT fftenergy[HBLKSIZE], F
  ********************************************************************/
     k = 0;
     for (b = 0; b < gfc->npart_l; b++) {
-        FLOAT   x, ecb, avg_mask;
+        FLOAT   x, ecb, avg_mask, t;
         /* convolve the partitioned energy with the spreading function */
         int     kk = gfc->s3ind[b][0];
         int const last = gfc->s3ind[b][1];
@@ -2515,7 +2515,15 @@ vbrpsy_compute_masking_l(lame_internal_flags * gfc, FLOAT fftenergy[HBLKSIZE], F
             dd += mask_idx_l[kk];
             dd_n += 1;
             x = gfc->s3_ll[k] * eb_l[kk] * tab[mask_idx_l[kk]];
-            ecb = mask_add(ecb, x, kk, kk - b, gfc, 0);
+            t = mask_add(ecb, x, kk, kk - b, gfc, 0);
+#if 0
+            ecb += eb_l[kk];
+            if (ecb > t) {
+                ecb = t;
+            }
+#else
+            ecb = t;
+#endif
             ++k, ++kk;
         }
         dd = (1 + 2 * dd) / (2 * dd_n);
