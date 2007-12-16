@@ -44,7 +44,7 @@ typedef void (*quantize_f) (const algo_t *);
 
 typedef uint8_t(*find_f) (const FLOAT *, const FLOAT *, FLOAT, unsigned int, uint8_t);
 
-typedef int (*alloc_sf_f) (const algo_t *, int *, const int *, int);
+typedef int (*alloc_sf_f) (const algo_t *, const int *, const int *, int);
 
 struct algo_s {
     find_f  find;
@@ -992,7 +992,7 @@ checkScalefactor(const gr_info * cod_info, const int vbrsfmin[SFBMAX])
  ******************************************************************/
 
 static int
-short_block_constrain(const algo_t * that, int vbrsf[SFBMAX],
+short_block_constrain(const algo_t * that, const int vbrsf[SFBMAX],
                       const int vbrsfmin[SFBMAX], int vbrmax)
 {
     gr_info *const cod_info = that->cod_info;
@@ -1002,7 +1002,7 @@ short_block_constrain(const algo_t * that, int vbrsf[SFBMAX],
     int     v, v0, v1;
     int     sfb;
     int const psymax = cod_info->psymax;
-    
+
     for (sfb = 0; sfb < psymax; ++sfb) {
         assert(vbrsf[sfb] >= vbrsfmin[sfb]);
         v = vbrmax - vbrsf[sfb];
@@ -1049,11 +1049,14 @@ short_block_constrain(const algo_t * that, int vbrsf[SFBMAX],
     else if (cod_info->global_gain > 255) {
         cod_info->global_gain = 255;
     }
-    for (sfb = 0; sfb < SFBMAX; ++sfb) {
-        vbrsf[sfb] -= vbrmax;
+    {
+        int     sf_temp[SFBMAX];
+        for (sfb = 0; sfb < SFBMAX; ++sfb) {
+            sf_temp[sfb] = vbrsf[sfb] - vbrmax;
+        }
+        set_subblock_gain(cod_info, &that->mingain_s[0], sf_temp);
+        set_scalefacs(cod_info, vbrsfmin, sf_temp, max_range_short);
     }
-    set_subblock_gain(cod_info, &that->mingain_s[0], vbrsf);
-    set_scalefacs(cod_info, vbrsfmin, vbrsf, max_range_short);
     assert(checkScalefactor(cod_info, vbrsfmin));
     return checkScalefactor(cod_info, vbrsfmin);
 }
@@ -1067,7 +1070,8 @@ short_block_constrain(const algo_t * that, int vbrsf[SFBMAX],
  ******************************************************************/
 
 static int
-long_block_constrain(const algo_t * that, int vbrsf[SFBMAX], const int vbrsfmin[SFBMAX], int vbrmax)
+long_block_constrain(const algo_t * that, const int vbrsf[SFBMAX], const int vbrsfmin[SFBMAX],
+                     int vbrmax)
 {
     gr_info *const cod_info = that->cod_info;
     lame_internal_flags const *const gfc = that->gfc;
@@ -1189,10 +1193,13 @@ long_block_constrain(const algo_t * that, int vbrsf[SFBMAX], const int vbrsfmin[
     else if (cod_info->global_gain > 255) {
         cod_info->global_gain = 255;
     }
-    for (sfb = 0; sfb < SFBMAX; ++sfb) {
-        vbrsf[sfb] -= vbrmax;
+    {
+        int     sf_temp[SFBMAX];
+        for (sfb = 0; sfb < SFBMAX; ++sfb) {
+            sf_temp[sfb] = vbrsf[sfb] - vbrmax;
+        }
+        set_scalefacs(cod_info, vbrsfmin, sf_temp, max_rangep);
     }
-    set_scalefacs(cod_info, vbrsfmin, vbrsf, max_rangep);
     assert(checkScalefactor(cod_info, vbrsfmin));
     return checkScalefactor(cod_info, vbrsfmin);
 }
@@ -1287,6 +1294,164 @@ searchGlobalStepsizeMax(const algo_t * that, const int sfwork[SFBMAX],
     }
 }
 
+
+
+static int
+sfDepth(const int sfwork[SFBMAX])
+{
+    int     m = 0;
+    unsigned int i, j;
+    for (j = SFBMAX, i = 0; j > 0; --j, ++i) {
+        int const di = 255 - sfwork[i];
+        if (m < di) {
+            m = di;
+        }
+        assert(sfwork[i] >= 0);
+        assert(sfwork[i] <= 255);
+    }
+    assert(m >= 0);
+    assert(m <= 255);
+    return m;
+}
+
+
+static void
+cutDistribution(const int sfwork[SFBMAX], int sf_out[SFBMAX], int cut)
+{
+    unsigned int i, j;
+    for (j = SFBMAX, i = 0; j > 0; --j, ++i) {
+        int const x = sfwork[SFBMAX];
+        sf_out[SFBMAX] = x < cut ? x : cut;
+    }
+}
+
+
+static int
+flattenDistribution(const int sfwork[SFBMAX], int sf_out[SFBMAX], int dm, int k, int p)
+{
+    unsigned int i, j;
+    int     x, sfmax = 0;
+    if (dm > 0) {
+        for (j = SFBMAX, i = 0; j > 0; --j, ++i) {
+            int const di = p - sfwork[i];        
+            x = sfwork[i] + (k * di) / dm;
+            if (x < 0) {
+                x = 0;
+            }
+            else {
+                if (x > 255) {
+                    x = 255;
+                }
+            }
+            sf_out[i] = x;
+            if (sfmax < x) {
+                sfmax = x;
+            }
+        }
+    }
+    else {
+        for (j = SFBMAX, i = 0; j > 0; --j, ++i) {
+            x = sfwork[i];
+            sf_out[i] = x;
+            if (sfmax < x) {
+                sfmax = x;
+            }
+        }
+    }
+    return sfmax;
+}
+
+
+static int
+tryThatOne(algo_t * that, int sftemp[SFBMAX], const int vbrsfmin[SFBMAX], int vbrmax)
+{
+    FLOAT const xrpow_max = that->cod_info->xrpow_max;
+    int     nbits = LARGE_BITS;
+    if (that->alloc(that, sftemp, vbrsfmin, vbrmax)) {
+        (void) bitcount(that);
+        nbits = quantizeAndCountBits(that);
+        nbits += that->cod_info->part2_length;
+        that->cod_info->xrpow_max = xrpow_max;
+    }
+    return nbits;
+}
+
+
+static void
+outOfBitsStrategy(algo_t * that, const int sfwork[SFBMAX], const int vbrsfmin[SFBMAX], int target)
+{
+    int     wrk[SFBMAX];
+    int const dm = sfDepth(sfwork);
+    int const p = that->cod_info->global_gain;
+    int     nbits;
+
+    /* PART 1 */
+    {
+        int     bi = dm / 2;
+        int     bi_ok = -1;
+        int     bu = 0;
+        int     bo = dm;
+        for (;;) {
+            int const sfmax = flattenDistribution(sfwork, wrk, dm, bi, p);
+            nbits = tryThatOne(that, wrk, vbrsfmin, sfmax);
+            if (nbits <= target) {
+                bi_ok = bi;
+                bo = bi - 1;
+            }
+            else {
+                bu = bi + 1;
+            }
+            if (bu <= bo) {
+                bi = (bu + bo) / 2;
+            }
+            else {
+                break;
+            }
+        }
+        if (bi_ok >= 0) {
+            if (bi != bi_ok) {
+                int const sfmax = flattenDistribution(sfwork, wrk, dm, bi_ok, p);
+                nbits = tryThatOne(that, wrk, vbrsfmin, sfmax);
+            }
+            return;
+        }
+    }
+
+    /* PART 2: */
+    {
+        int     bi = (255 + p) / 2;
+        int     bi_ok = -1;
+        int     bu = p;
+        int     bo = 255;
+        for (;;) {
+            int const sfmax = flattenDistribution(sfwork, wrk, dm, dm, bi);
+            nbits = tryThatOne(that, wrk, vbrsfmin, sfmax);
+            if (nbits <= target) {
+                bi_ok = bi;
+                bo = bi - 1;
+            }
+            else {
+                bu = bi + 1;
+            }
+            if (bu <= bo) {
+                bi = (bu + bo) / 2;
+            }
+            else {
+                break;
+            }
+        }
+        if (bi_ok >= 0) {
+            if (bi != bi_ok) {
+                int const sfmax = flattenDistribution(sfwork, wrk, dm, dm, bi_ok);
+                nbits = tryThatOne(that, wrk, vbrsfmin, sfmax);
+            }
+            return;
+        }
+    }
+
+    /* fall back to old code, likely to be never called */
+    searchGlobalStepsizeMax(that, wrk, vbrsfmin, target);
+}
 
 
 static void
@@ -1646,7 +1811,8 @@ VBR_encode_frame(lame_internal_flags * gfc, FLOAT const xr34orig[2][2][576],
             if (max_bits[gr][ch] > 0) {
                 int    *sfwork = sfwork_[gr][ch];
                 int    *vbrsfmin = vbrsfmin_[gr][ch];
-                searchGlobalStepsizeMax(that, sfwork, vbrsfmin, max_nbits_ch[gr][ch]);
+                cutDistribution(sfwork, sfwork, that->cod_info->global_gain);
+                outOfBitsStrategy(that, sfwork, vbrsfmin, max_nbits_ch[gr][ch]);
                 reduce_bit_usage(gfc, gr, ch);
                 use_nbits_ch[gr][ch] =
                     that->cod_info->part2_3_length + that->cod_info->part2_length;

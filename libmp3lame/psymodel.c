@@ -2666,6 +2666,11 @@ vbrpsy_apply_block_type(lame_global_flags const *gfp, int const *uselongblock, i
 /*************************************************************** 
  * compute interchannel masking effects
  ***************************************************************/
+#if 0
+/*
+ * NOTE: the bitrate reduction is low compared to the chance of getting annyoing artefacts
+ * so I think it is best to not use this feature. (Robert 071216)
+ */
 static void
 vbrpsy_compute_interchannel_masking_effects(FLOAT eb[4][CBANDS], FLOAT thr[4][CBANDS], FLOAT ratio,
                                             int n)
@@ -2687,6 +2692,7 @@ vbrpsy_compute_interchannel_masking_effects(FLOAT eb[4][CBANDS], FLOAT thr[4][CB
         }
     }
 }
+#endif
 
 
 /*************************************************************** 
@@ -2699,29 +2705,37 @@ vbrpsy_compute_MS_thresholds(FLOAT eb[4][CBANDS], FLOAT thr[4][CBANDS], FLOAT cb
 {
     FLOAT const msfix2 = msfix * 2;
     FLOAT const athlower = msfix > 0 ? pow(10, athadjust) : 1;
-    FLOAT   rside, rmid, mld;
+    FLOAT   rside, rmid;
     int     b;
     for (b = 0; b < n; ++b) {
-        rmid = thr[2][b];
-        rside = thr[3][b];
+        FLOAT const ebM = eb[2][b];
+        FLOAT const ebS = eb[3][b];
+        FLOAT const thmL = thr[0][b];
+        FLOAT const thmR = thr[1][b];
+        FLOAT thmM = thr[2][b];
+        FLOAT thmS = thr[3][b];
+        
         /* use this fix if L & R masking differs by 2db or less */
         /* if db = 10*log10(x2/x1) < 2 */
         /* if (x2 < 1.58*x1) { */
-        if (!(thr[0][b] > 1.58 * thr[1][b] || thr[1][b] > 1.58 * thr[0][b])) {
-            mld = cb_mld[b] * eb[3][b];
-            rmid = Max(rmid, Min(rside, mld));
-            mld = cb_mld[b] * eb[2][b];
-            rside = Max(rside, Min(rmid, mld));
+        if (thmL <= 1.58 * thmR && thmR <= 1.58 * thmL) {
+            FLOAT const mld_m = cb_mld[b] * ebS;
+            FLOAT const mld_s = cb_mld[b] * ebM;
+            rmid = Max(thmM, Min(thmS, mld_m));
+            rside = Max(thmS, Min(thmM, mld_s));
+        }
+        else {
+            rmid = thmM;
+            rside = thmS;
         }
         if (msfix > 0) {
             /***************************************************************/
             /* Adjust M/S maskings if user set "msfix"                     */
             /***************************************************************/
             /* Naoki Shibata 2000 */
-            FLOAT   thmLR, thmM, thmS, ath, thmMS;
-            ath = ath_cb[b] * athlower;
-            assert(ath >= 0);
-            thmLR = Min(Max(thr[0][b], ath), Max(thr[1][b], ath));
+            FLOAT   thmLR, thmMS;
+            FLOAT const ath = ath_cb[b] * athlower;
+            thmLR = Min(Max(thmL, ath), Max(thmR, ath));
             thmM = Max(rmid, ath);
             thmS = Max(rside, ath);
             thmMS = thmM + thmS;
@@ -2734,11 +2748,11 @@ vbrpsy_compute_MS_thresholds(FLOAT eb[4][CBANDS], FLOAT thr[4][CBANDS], FLOAT cb
             rmid = Min(thmM, rmid);
             rside = Min(thmS, rside);
         }
-        if (rmid > eb[2][b]) {
-            rmid = eb[2][b];
+        if (rmid > ebM) {
+            rmid = ebM;
         }
-        if (rside > eb[3][b]) {
-            rside = eb[3][b];
+        if (rside > ebS) {
+            rside = ebS;
         }
         thr[2][b] = rmid;
         thr[3][b] = rside;
@@ -2809,10 +2823,16 @@ L3psycho_anal_vbr(lame_global_flags const *gfp,
                                              gfc->npart_l);
             }
             /* L/R channel */
+#if 0 
             if (gfp->mode == STEREO || gfp->mode == JOINT_STEREO) {
+                /*
+                 * NOTE: the bitrate reduction is low compared to the chance of getting annyoing artefacts
+                 * so I think it is best to not use this feature. (Robert 071216)
+                 */
                 vbrpsy_compute_interchannel_masking_effects(eb, thr, gfp->interChRatio,
                                                             gfc->npart_l);
             }
+#endif
         }
         /* TODO: apply adaptive ATH masking here ?? */
         for (chn = 0; chn < n_chn_psy; chn++) {
@@ -2847,11 +2867,17 @@ L3psycho_anal_vbr(lame_global_flags const *gfp,
                                                  gfc->npart_s);
                 }
                 /* L/R channel */
+#if 0 
                 if (gfp->mode == STEREO || gfp->mode == JOINT_STEREO) {
+                /*
+                    * NOTE: the bitrate reduction is low compared to the chance of getting annyoing artefacts
+                    * so I think it is best to not use this feature. (Robert 071216)
+                */
                     vbrpsy_compute_interchannel_masking_effects(eb, thr, gfp->interChRatio,
                                                                 gfc->npart_s);
                 }
-            }
+#endif
+                }
             /* TODO: apply adaptive ATH masking here ?? */
             for (chn = 0; chn < n_chn_psy; ++chn) {
                 int const ch01 = chn & 0x01;
