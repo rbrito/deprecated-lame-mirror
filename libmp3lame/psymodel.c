@@ -1264,8 +1264,11 @@ L3psycho_anal(lame_global_flags const *gfp,
         }
     }                   /* end loop over chn */
 
-    if (gfp->interChRatio > 0.0)
-        calc_interchannel_masking(gfp, gfp->interChRatio);
+    if (gfp->mode == STEREO || gfp->mode == JOINT_STEREO) {
+        if (gfp->interChRatio > 0.0) {
+            calc_interchannel_masking(gfp, gfp->interChRatio);
+        }
+    }
 
     if (gfp->mode == JOINT_STEREO) {
         FLOAT   db, x1, x2, sidetot = 0, tot = 0;
@@ -1948,8 +1951,11 @@ L3psycho_anal_ns(lame_global_flags const *gfp,
 
     }                   /* end loop over chn */
 
-    if (fabs(gfp->interChRatio) > 0.0)
-        calc_interchannel_masking(gfp, gfp->interChRatio);
+    if (gfp->mode == STEREO || gfp->mode == JOINT_STEREO) {
+        if (gfp->interChRatio > 0.0) {
+            calc_interchannel_masking(gfp, gfp->interChRatio);
+        }
+    }
 
     if (gfp->mode == JOINT_STEREO) {
         FLOAT   msfix;

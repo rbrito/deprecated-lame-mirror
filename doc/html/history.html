@@ -32,6 +32,9 @@ black = usability, portability, other
 <hr>
 <h3>LAME 3.98 stable&nbsp; &nbsp;not yet released</h3>
 
+
+<h3>LAME 3.98 beta 6&nbsp; &nbsp;December 16 2007</h3>
+
 <ul>
   <li>Robert Hegemann:
     <ul>
@@ -43,6 +46,26 @@ black = usability, portability, other
       </font></li>
       
       <li>Fix for Bugtracker item<i>[ 1813496 ] AIFF parsing bug</i>
+      </li>
+      
+      <li>Latest changes to the new VBR code:
+      <ul>
+      
+      <li><font color="#3366ff">it now has its own psy model, a derivation from NSPSY.</font>
+      </li>
+      
+      <li><font color="#ff0000">some more tuning has been done for this new psy model.</font>
+        Many thanks to Horst Albrecht and Myles Thiass.
+      </li>
+      
+      <li><font color="#ff0000">the "out-of-bits" strategy is reworked</font>
+      </li>
+      
+      </ul>
+      
+      <li><font color="#ff0000">It was possible, that the "interchannel masking effects feature"
+        was used by the dual-channel-mode for bi-lingual encodings too. It was meant to work
+        on stereo L/R channels only.</font>
       </li>
       
     </ul>
