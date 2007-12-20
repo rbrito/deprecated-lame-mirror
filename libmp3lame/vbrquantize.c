@@ -1252,6 +1252,7 @@ tryGlobalStepsize(const algo_t * that, const int sfwork[SFBMAX],
         sftemp[i] = gain;
     }
     if (!that->alloc(that, sftemp, vbrsfmin, vbrmax)) {
+        that->cod_info->xrpow_max = xrpow_max;
         return LARGE_BITS;
     }
     (void) bitcount(that);
@@ -1371,8 +1372,8 @@ tryThatOne(algo_t * that, int sftemp[SFBMAX], const int vbrsfmin[SFBMAX], int vb
         (void) bitcount(that);
         nbits = quantizeAndCountBits(that);
         nbits += that->cod_info->part2_length;
-        that->cod_info->xrpow_max = xrpow_max;
     }
+    that->cod_info->xrpow_max = xrpow_max;
     return nbits;
 }
 
@@ -1565,8 +1566,8 @@ VBR_encode_frame(lame_internal_flags * gfc, FLOAT const xr34orig[2][2][576],
     for (gr = 0; gr < ngr; ++gr) {
         use_nbits_gr[gr] = 0;
         for (ch = 0; ch < nch; ++ch) {
+            algo_t *that = &that_[gr][ch];
             if (max_bits[gr][ch] > 0) {
-                algo_t *that = &that_[gr][ch];
                 unsigned int const max_nonzero_coeff =
                     (unsigned int) that->cod_info->max_nonzero_coeff;
 
@@ -1575,10 +1576,6 @@ VBR_encode_frame(lame_internal_flags * gfc, FLOAT const xr34orig[2][2][576],
                        (576u - max_nonzero_coeff) * sizeof(that->cod_info->l3_enc[0]));
 
                 (void) quantizeAndCountBits(that);
-                reduce_bit_usage(gfc, gr, ch);
-                use_nbits_ch[gr][ch] =
-                    that->cod_info->part2_3_length + that->cod_info->part2_length;
-                use_nbits_gr[gr] += use_nbits_ch[gr][ch];
             }
             else {
                 /*  xr contains no energy 
@@ -1586,6 +1583,10 @@ VBR_encode_frame(lame_internal_flags * gfc, FLOAT const xr34orig[2][2][576],
                  *  continue with next channel
                  */
             }
+            reduce_bit_usage(gfc, gr, ch);
+            use_nbits_ch[gr][ch] =
+                    that->cod_info->part2_3_length + that->cod_info->part2_length;
+            use_nbits_gr[gr] += use_nbits_ch[gr][ch];
         }               /* for ch */
         use_nbits_fr += use_nbits_gr[gr];
     }
@@ -1813,12 +1814,12 @@ VBR_encode_frame(lame_internal_flags * gfc, FLOAT const xr34orig[2][2][576],
                 int    *vbrsfmin = vbrsfmin_[gr][ch];
                 cutDistribution(sfwork, sfwork, that->cod_info->global_gain);
                 outOfBitsStrategy(that, sfwork, vbrsfmin, max_nbits_ch[gr][ch]);
-                reduce_bit_usage(gfc, gr, ch);
-                use_nbits_ch[gr][ch] =
-                    that->cod_info->part2_3_length + that->cod_info->part2_length;
-                assert(use_nbits_ch[gr][ch] <= max_nbits_ch[gr][ch]);
-                use_nbits_gr[gr] += use_nbits_ch[gr][ch];
             }
+            reduce_bit_usage(gfc, gr, ch);
+            use_nbits_ch[gr][ch] =
+                    that->cod_info->part2_3_length + that->cod_info->part2_length;
+            assert(use_nbits_ch[gr][ch] <= max_nbits_ch[gr][ch]);
+            use_nbits_gr[gr] += use_nbits_ch[gr][ch];
         }               /* for ch */
         use_nbits_fr += use_nbits_gr[gr];
     }
