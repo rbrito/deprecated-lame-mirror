@@ -276,7 +276,6 @@ extern  "C" {
         FLOAT   highpass1, highpass2; /* normalized frequency bounds of passband */
 
         int     filter_type; /* 0=polyphase filter, 1= FIR filter 2=MDCT filter(bad) */
-        int     quantization; /* 0 = ISO formual,  1=best amplitude */
         int     noise_shaping; /* 0 = none
                                   1 = ISO AAC model
                                   2 = allow scalefac_select=1
@@ -439,7 +438,6 @@ extern  "C" {
         /* functions to replace with CPU feature optimized versions in takehiro.c */
         int     (*choose_table) (const int *ix, const int *const end, int *const s);
         void    (*fft_fht) (FLOAT *, int);
-        void    (*quantize_lines_xrpow) (int l, FLOAT istep, const FLOAT * xp, int *pi);
         void    (*init_xrpow_core) (gr_info * const cod_info, FLOAT xrpow[576], int upper,
                                     FLOAT * sum);
 

@@ -332,7 +332,6 @@ lame_init_qval(lame_global_flags * gfp)
     case 9:            /* no psymodel, no noise shaping */
         gfc->filter_type = 0;
         gfc->psymodel = 0;
-        gfc->quantization = 0;
         gfc->noise_shaping = 0;
         gfc->noise_shaping_amp = 0;
         gfc->noise_shaping_stop = 0;
@@ -346,7 +345,6 @@ lame_init_qval(lame_global_flags * gfp)
     case 7:            /* use psymodel (for short block and m/s switching), but no noise shapping */
         gfc->filter_type = 0;
         gfc->psymodel = 1;
-        gfc->quantization = 0;
         gfc->noise_shaping = 0;
         gfc->noise_shaping_amp = 0;
         gfc->noise_shaping_stop = 0;
@@ -357,7 +355,6 @@ lame_init_qval(lame_global_flags * gfp)
     case 6:
         gfc->filter_type = 0;
         gfc->psymodel = 1;
-        gfc->quantization = 0;
         if (gfc->noise_shaping == 0)
             gfc->noise_shaping = 1;
         gfc->noise_shaping_amp = 0;
@@ -371,7 +368,6 @@ lame_init_qval(lame_global_flags * gfp)
     case 5:
         gfc->filter_type = 0;
         gfc->psymodel = 1;
-        gfc->quantization = 1;
         if (gfc->noise_shaping == 0)
             gfc->noise_shaping = 1;
         gfc->noise_shaping_amp = 0;
@@ -385,7 +381,6 @@ lame_init_qval(lame_global_flags * gfp)
     case 4:
         gfc->filter_type = 0;
         gfc->psymodel = 1;
-        gfc->quantization = 1;
         if (gfc->noise_shaping == 0)
             gfc->noise_shaping = 1;
         gfc->noise_shaping_amp = 0;
@@ -399,7 +394,6 @@ lame_init_qval(lame_global_flags * gfp)
     case 3:
         gfc->filter_type = 0;
         gfc->psymodel = 1;
-        gfc->quantization = 1;
         if (gfc->noise_shaping == 0)
             gfc->noise_shaping = 1;
         gfc->noise_shaping_amp = 1;
@@ -413,7 +407,6 @@ lame_init_qval(lame_global_flags * gfp)
     case 2:
         gfc->filter_type = 0;
         gfc->psymodel = 1;
-        gfc->quantization = 1;
         if (gfc->noise_shaping == 0)
             gfc->noise_shaping = 1;
         if (gfc->substep_shaping == 0)
@@ -429,7 +422,6 @@ lame_init_qval(lame_global_flags * gfp)
     case 1:
         gfc->filter_type = 0; /* 1 not yet coded */
         gfc->psymodel = 1;
-        gfc->quantization = 1;
         if (gfc->noise_shaping == 0)
             gfc->noise_shaping = 1;
         if (gfc->substep_shaping == 0)
@@ -445,7 +437,6 @@ lame_init_qval(lame_global_flags * gfp)
     case 0:
         gfc->filter_type = 0; /* 1 not yet coded */
         gfc->psymodel = 1;
-        gfc->quantization = 1;
         if (gfc->noise_shaping == 0)
             gfc->noise_shaping = 1;
         if (gfc->substep_shaping == 0)
@@ -911,10 +902,8 @@ lame_init_params(lame_global_flags * const gfp)
         gfp->VBR = vbr_mtrh;
         /*lint --fallthrough */
     case vbr_mtrh:{
-        if ((gfp->VBR == vbr_mt || gfp->VBR == vbr_mtrh) && lame_get_psy_model(gfp) <= PSY_GPSYCHO) 
-        {            
             (void) lame_set_psy_model(gfp, PSY_NSPSYTUNE+1);
-        }
+            
             if ( gfp->useTemporal < 0 ) {
                 gfp->useTemporal = 0;   /* off by default for this VBR mode */
             }
@@ -922,22 +911,15 @@ lame_init_params(lame_global_flags * const gfp)
             (void) apply_preset(gfp, 500 - (gfp->VBR_q * 10), 0);
             /*  The newer VBR code supports only a limited
                 subset of quality levels:
-                9-6=6 are the same, uses ISO quantization
-                  5=5               uses x^3/4 quantization
+                9-5=5 are the same, uses x^3/4 quantization
                 4-0=0 are the same  5 plus best huffman divide code
              */
             if (gfp->quality < 0)
                 gfp->quality = LAME_DEFAULT_QUALITY;
             if (gfp->quality < 5)
                 gfp->quality = 0;
-            if (gfp->quality > 6)
-                gfp->quality = 6;
-
-
-            /*  tonality
-             */
-            if (gfp->cwlimit <= 0)
-                gfp->cwlimit = 0.42 * gfp->out_samplerate;
+            if (gfp->quality > 5)
+                gfp->quality = 5;
 
             gfc->PSY->mask_adjust = gfp->maskingadjust;
             gfc->PSY->mask_adjust_short = gfp->maskingadjust_short;
@@ -1150,22 +1132,6 @@ lame_init_params(lame_global_flags * const gfp)
         gfc->slot_lag = gfc->frac_SpF
             = ((gfp->version + 1) * 72000L * gfp->brate) % gfp->out_samplerate;
 
-    switch (gfp->quantization_type) {
-    default:
-    case 0:
-        /* nothing to change */
-        break;
-    case 1:
-        gfc->quantization = 0;
-        gfc->PSY->mask_adjust += 0.68125;
-        gfc->PSY->mask_adjust_short += 0.68125;
-        break;
-    case 2:
-        gfc->quantization = 1;
-        break;
-    }
-
-
     iteration_init(gfp);
     (void) psymodel_init(gfp);
 
@@ -1299,8 +1265,6 @@ lame_print_internals(const lame_global_flags * gfp)
     MSGF(gfc, "\tch0 (left) scaling: %g\n", gfp->scale_left);
     MSGF(gfc, "\tch1 (right) scaling: %g\n", gfp->scale_right);
     MSGF(gfc, "\tfilter type: %d\n", gfc->filter_type);
-    pc = gfc->quantization ? "xr^3/4" : "ISO";
-    MSGF(gfc, "\tquantization: %s\n", pc);
     switch (gfc->use_best_huffman) {
     default:
         pc = "normal";

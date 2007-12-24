@@ -195,48 +195,6 @@ quantize_lines_xrpow(int l, FLOAT istep, const FLOAT * xp, int *pi)
 }
 
 
-#  define ROUNDFAC -0.0946
-static void
-quantize_lines_xrpow_ISO(int l, FLOAT istep, const FLOAT * xp, int *pi)
-{
-    fi_union *fi;
-    int     remaining;
-
-    assert(l > 0);
-
-    fi = (fi_union *) pi;
-
-    l = l >> 1;
-    remaining = l % 2;
-    l = l >> 1;
-    while (l--) {
-        fi[0].f = istep * xp[0] + (ROUNDFAC + MAGIC_FLOAT);
-        fi[1].f = istep * xp[1] + (ROUNDFAC + MAGIC_FLOAT);
-        fi[2].f = istep * xp[2] + (ROUNDFAC + MAGIC_FLOAT);
-        fi[3].f = istep * xp[3] + (ROUNDFAC + MAGIC_FLOAT);
-
-        fi[0].i -= MAGIC_INT;
-        fi[1].i -= MAGIC_INT;
-        fi[2].i -= MAGIC_INT;
-        fi[3].i -= MAGIC_INT;
-        fi += 4;
-        xp += 4;
-    };
-    if (remaining) {
-        fi[0].f = istep * xp[0] + (ROUNDFAC + MAGIC_FLOAT);
-        fi[1].f = istep * xp[1] + (ROUNDFAC + MAGIC_FLOAT);
-
-        fi[0].i -= MAGIC_INT;
-        fi[1].i -= MAGIC_INT;
-    }
-
-}
-
-
-
-
-
-
 #else
 
 /*********************************************************************
@@ -305,51 +263,6 @@ quantize_lines_xrpow(int l, FLOAT istep, const FLOAT * xr, int *ix)
 
 
 
-static void
-quantize_lines_xrpow_ISO(int l, FLOAT istep, const FLOAT * xr, int *ix)
-{
-
-    const FLOAT compareval0 = (1.0 - 0.4054) / istep;
-    const FLOAT compareval1 = (2.0 - 0.4054) / istep;
-
-    assert(l > 0);
-
-    /* depending on architecture, it may be worth calculating a few more
-       compareval's.
-
-       eg.  compareval1 = (2.0 - 0.4054)/istep;
-       .. and then after the first compare do this ...
-       if compareval1>*xr then ix = 1;
-
-       On a pentium166, it's only worth doing the one compare (as done here),
-       as the second compare becomes more expensive than just calculating
-       the value. Architectures with slow FP operations may want to add some
-       more comparevals. try it and send your diffs statistically speaking
-
-       73% of all xr*istep values give ix=0
-       16% will give 1
-       4%  will give 2
-     */
-    while (l--) {
-        if (compareval0 > *xr) {
-            *(ix++) = 0;
-            xr++;
-        }
-        else if (compareval1 > *xr) {
-            *(ix++) = 1;
-            xr++;
-        }
-        else {
-            /*    *(ix++) = (int)( istep*(*(xr++))  + 0.4054); */
-            XRPOW_FTOI(istep * (*(xr++)) + ROUNDFAC, *(ix++));
-        }
-    }
-
-}
-
-
-
-
 #endif
 
 
@@ -362,7 +275,7 @@ quantize_lines_xrpow_ISO(int l, FLOAT istep, const FLOAT * xr, int *ix)
 
 static void
 quantize_xrpow(const FLOAT * xp, int *pi, FLOAT istep, gr_info const *const cod_info,
-               calc_noise_data const *prev_noise, lame_internal_flags const *const gfc)
+               calc_noise_data const *prev_noise)
 {
     /* quantize on xr^(3/4) instead of xr */
     int     sfb;
@@ -406,7 +319,7 @@ quantize_xrpow(const FLOAT * xp, int *pi, FLOAT istep, gr_info const *const cod_
             /* do not recompute this part,
                but compute accumulated lines */
             if (accumulate) {
-                gfc->quantize_lines_xrpow(accumulate, istep, acc_xp, acc_iData);
+                quantize_lines_xrpow(accumulate, istep, acc_xp, acc_iData);
                 accumulate = 0;
             }
             if (accumulate01) {
@@ -445,7 +358,7 @@ quantize_xrpow(const FLOAT * xp, int *pi, FLOAT istep, gr_info const *const cod_
                 prev_noise->step[sfb] > 0 && step >= prev_noise->step[sfb]) {
 
                 if (accumulate) {
-                    gfc->quantize_lines_xrpow(accumulate, istep, acc_xp, acc_iData);
+                    quantize_lines_xrpow(accumulate, istep, acc_xp, acc_iData);
                     accumulate = 0;
                     acc_iData = iData;
                     acc_xp = xp;
@@ -471,7 +384,7 @@ quantize_xrpow(const FLOAT * xp, int *pi, FLOAT istep, gr_info const *const cod_
                     accumulate01 = 0;
                 }
                 if (accumulate) {
-                    gfc->quantize_lines_xrpow(accumulate, istep, acc_xp, acc_iData);
+                    quantize_lines_xrpow(accumulate, istep, acc_xp, acc_iData);
                     accumulate = 0;
                 }
 
@@ -485,7 +398,7 @@ quantize_xrpow(const FLOAT * xp, int *pi, FLOAT istep, gr_info const *const cod_
         }
     }
     if (accumulate) {   /*last data part */
-        gfc->quantize_lines_xrpow(accumulate, istep, acc_xp, acc_iData);
+        quantize_lines_xrpow(accumulate, istep, acc_xp, acc_iData);
         accumulate = 0;
     }
     if (accumulate01) { /*last data part */
@@ -494,19 +407,6 @@ quantize_xrpow(const FLOAT * xp, int *pi, FLOAT istep, gr_info const *const cod_
     }
 
 }
-
-
-
-
-void
-quantize_init(lame_internal_flags * const gfc)
-{
-    if (gfc->quantization)
-        gfc->quantize_lines_xrpow = quantize_lines_xrpow;
-    else
-        gfc->quantize_lines_xrpow = quantize_lines_xrpow_ISO;
-}
-
 
 
 
@@ -866,7 +766,7 @@ count_bits(lame_internal_flags const *const gfc,
     if (gi->xrpow_max > w)
         return LARGE_BITS;
 
-    quantize_xrpow(xr, ix, IPOW20(gi->global_gain), gi, prev_noise, gfc);
+    quantize_xrpow(xr, ix, IPOW20(gi->global_gain), gi, prev_noise);
 
     if (gfc->substep_shaping & 2) {
         int     sfb, j = 0;

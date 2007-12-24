@@ -2669,37 +2669,6 @@ vbrpsy_apply_block_type(lame_global_flags const *gfp, int const *uselongblock, i
     }
 }
 
-/*************************************************************** 
- * compute interchannel masking effects
- ***************************************************************/
-#if 0
-/*
- * NOTE: the bitrate reduction is low compared to the chance of getting annyoing artefacts
- * so I think it is best to not use this feature. (Robert 071216)
- */
-static void
-vbrpsy_compute_interchannel_masking_effects(FLOAT eb[4][CBANDS], FLOAT thr[4][CBANDS], FLOAT ratio,
-                                            int n)
-{
-    if (ratio > 0) {
-        FLOAT   l, r;
-        int     b;
-        for (b = 0; b < n; ++b) {
-            l = thr[0][b];
-            r = thr[1][b];
-            thr[0][b] += r * ratio;
-            thr[1][b] += l * ratio;
-            if (thr[0][b] > eb[0][b]) {
-                thr[0][b] = eb[0][b];
-            }
-            if (thr[1][b] > eb[1][b]) {
-                thr[1][b] = eb[1][b];
-            }
-        }
-    }
-}
-#endif
-
 
 /*************************************************************** 
  * compute M/S thresholds from Johnston & Ferreira 1992 ICASSP paper
@@ -2767,6 +2736,12 @@ vbrpsy_compute_MS_thresholds(FLOAT eb[4][CBANDS], FLOAT thr[4][CBANDS], FLOAT cb
 
 
 
+/*
+ * NOTE: the bitrate reduction from the inter-channel masking effect is low
+ * compared to the chance of getting annyoing artefacts. L3psycho_anal_vbr does
+ * not use this feature. (Robert 071216)
+*/
+
 int
 L3psycho_anal_vbr(lame_global_flags const *gfp,
                   const sample_t * buffer[2], int gr_out,
@@ -2831,12 +2806,6 @@ L3psycho_anal_vbr(lame_global_flags const *gfp,
             /* L/R channel */
 #if 0 
             if (gfp->mode == STEREO || gfp->mode == JOINT_STEREO) {
-                /*
-                 * NOTE: the bitrate reduction is low compared to the chance of getting annyoing artefacts
-                 * so I think it is best to not use this feature. (Robert 071216)
-                 */
-                vbrpsy_compute_interchannel_masking_effects(eb, thr, gfp->interChRatio,
-                                                            gfc->npart_l);
             }
 #endif
         }
@@ -2875,12 +2844,6 @@ L3psycho_anal_vbr(lame_global_flags const *gfp,
                 /* L/R channel */
 #if 0 
                 if (gfp->mode == STEREO || gfp->mode == JOINT_STEREO) {
-                /*
-                    * NOTE: the bitrate reduction is low compared to the chance of getting annyoing artefacts
-                    * so I think it is best to not use this feature. (Robert 071216)
-                */
-                    vbrpsy_compute_interchannel_masking_effects(eb, thr, gfp->interChRatio,
-                                                                gfc->npart_s);
                 }
 #endif
                 }
@@ -2926,11 +2889,9 @@ L3psycho_anal_vbr(lame_global_flags const *gfp,
                         thmm = Min(thmm, p);
                     }
 
-#if 1                   /* seems to work without too ?? */
                     /* pulse like signal detection for fatboy.wav and so on */
                     thmm *= sub_short_factor[chn][sblock];
-#endif
-
+                                        
                     new_thmm[sblock] = thmm;
                 }
                 for (sblock = 0; sblock < 3; sblock++) {

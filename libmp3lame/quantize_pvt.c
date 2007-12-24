@@ -360,7 +360,6 @@ iteration_init(lame_global_flags * gfp)
             pow20[i] = pow(2.0, (double) (i - 210 - Q_MAX2) * 0.25);
 
         huffman_init(gfc);
-        quantize_init(gfc);
         init_xrpow_core_init(gfc);
 
         if (gfp->psymodel >= PSY_NSPSYTUNE) {

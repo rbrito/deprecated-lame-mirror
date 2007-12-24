@@ -251,56 +251,6 @@ k_34_2(DOUBLEX x[2], int l3[2])
 
 
 
-static void
-k_iso_4(DOUBLEX x[4], int l3[4])
-{
-#ifdef TAKEHIRO_IEEE754_HACK
-    fi_union fi[4];
-
-    assert(x[0] <= IXMAX_VAL && x[1] <= IXMAX_VAL && x[2] <= IXMAX_VAL && x[3] <= IXMAX_VAL);
-    x[0] += ROUNDFAC_plus_MAGIC_FLOAT;
-    fi[0].f = x[0];
-    x[1] += ROUNDFAC_plus_MAGIC_FLOAT;
-    fi[1].f = x[1];
-    x[2] += ROUNDFAC_plus_MAGIC_FLOAT;
-    fi[2].f = x[2];
-    x[3] += ROUNDFAC_plus_MAGIC_FLOAT;
-    fi[3].f = x[3];
-    l3[0] = fi[0].i - MAGIC_INT;
-    l3[1] = fi[1].i - MAGIC_INT;
-    l3[2] = fi[2].i - MAGIC_INT;
-    l3[3] = fi[3].i - MAGIC_INT;
-#else
-    l3[0] = x[0] + ROUNDFAC;
-    l3[1] = x[1] + ROUNDFAC;
-    l3[2] = x[2] + ROUNDFAC;
-    l3[3] = x[3] + ROUNDFAC;
-#endif
-}
-
-
-
-static void
-k_iso_2(DOUBLEX x[2], int l3[2])
-{
-#ifdef TAKEHIRO_IEEE754_HACK
-    fi_union fi[2];
-
-    assert(x[0] <= IXMAX_VAL && x[1] <= IXMAX_VAL);
-    x[0] += ROUNDFAC_plus_MAGIC_FLOAT;
-    fi[0].f = x[0];
-    x[1] += ROUNDFAC_plus_MAGIC_FLOAT;
-    fi[1].f = x[1];
-    l3[0] = fi[0].i - MAGIC_INT;
-    l3[1] = fi[1].i - MAGIC_INT;
-#else
-    l3[0] = x[0] + ROUNDFAC;
-    l3[1] = x[1] + ROUNDFAC;
-#endif
-}
-
-
-
 /*  do call the calc_sfb_noise_* functions only with sf values
  *  for which holds: sfpow34*xr34 <= IXMAX_VAL
  */
@@ -339,51 +289,6 @@ calc_sfb_noise_x34(const FLOAT * xr, const FLOAT * xr34, unsigned int bw, uint8_
         x[1] = sfpow34 * xr34[1];
 
         k_34_2(x, l3);
-
-        x[0] = fabs(xr[0]) - sfpow * pow43[l3[0]];
-        x[1] = fabs(xr[1]) - sfpow * pow43[l3[1]];
-        xfsf += x[0] * x[0] + x[1] * x[1];
-    }
-    return xfsf;
-}
-
-
-
-static  FLOAT
-calc_sfb_noise_ISO(const FLOAT * xr, const FLOAT * xr34, unsigned int bw, uint8_t sf)
-{
-    DOUBLEX x[4];
-    int     l3[4];
-    const FLOAT sfpow = pow20[sf + Q_MAX2]; /*pow(2.0,sf/4.0); */
-    const FLOAT sfpow34 = ipow20[sf]; /*pow(sfpow,-3.0/4.0); */
-
-    FLOAT   xfsf = 0;
-    unsigned int j = bw >> 1;
-    unsigned int const remaining = (j & 0x01u);
-
-    for (j >>= 1; j > 0; --j) {
-        x[0] = sfpow34 * xr34[0];
-        x[1] = sfpow34 * xr34[1];
-        x[2] = sfpow34 * xr34[2];
-        x[3] = sfpow34 * xr34[3];
-
-        k_iso_4(x, l3);
-
-        x[0] = fabs(xr[0]) - sfpow * pow43[l3[0]];
-        x[1] = fabs(xr[1]) - sfpow * pow43[l3[1]];
-        x[2] = fabs(xr[2]) - sfpow * pow43[l3[2]];
-        x[3] = fabs(xr[3]) - sfpow * pow43[l3[3]];
-
-        xfsf += (x[0] * x[0] + x[1] * x[1]) + (x[2] * x[2] + x[3] * x[3]);
-
-        xr += 4;
-        xr34 += 4;
-    }
-    if (remaining) {
-        x[0] = sfpow34 * xr34[0];
-        x[1] = sfpow34 * xr34[1];
-
-        k_iso_2(x, l3);
 
         x[0] = fabs(xr[0]) - sfpow * pow43[l3[0]];
         x[1] = fabs(xr[1]) - sfpow * pow43[l3[1]];
@@ -437,40 +342,6 @@ tri_calc_sfb_noise_x34(const FLOAT * xr, const FLOAT * xr34, FLOAT l3_xmin, unsi
 }
 
 
-static  uint8_t
-tri_calc_sfb_noise_ISO(const FLOAT * xr, const FLOAT * xr34, FLOAT l3_xmin, unsigned int bw,
-                       uint8_t sf, calc_noise_cache_t * did_it)
-{
-    if (did_it[sf].valid == 0) {
-        did_it[sf].valid = 1;
-        did_it[sf].value = calc_sfb_noise_ISO(xr, xr34, bw, sf);
-    }
-    if (l3_xmin < did_it[sf].value) {
-        return 1;
-    }
-    if (sf < 255) {
-        uint8_t const sf_x = sf + 1;
-        if (did_it[sf_x].valid == 0) {
-            did_it[sf_x].valid = 1;
-            did_it[sf_x].value = calc_sfb_noise_ISO(xr, xr34, bw, sf_x);
-        }
-        if (l3_xmin < did_it[sf_x].value) {
-            return 1;
-        }
-    }
-    if (sf > 0) {
-        uint8_t const sf_x = sf - 1;
-        if (did_it[sf_x].valid == 0) {
-            did_it[sf_x].valid = 1;
-            did_it[sf_x].value = calc_sfb_noise_ISO(xr, xr34, bw, sf_x);
-        }
-        if (l3_xmin < did_it[sf_x].value) {
-            return 1;
-        }
-    }
-    return 0;
-}
-
 /**
  *  Robert Hegemann 2001-05-01
  *  calculates quantization step size determined by allowed masking
@@ -507,43 +378,6 @@ find_scalefac_x34(const FLOAT * xr, const FLOAT * xr34, FLOAT l3_xmin, unsigned 
         }
         else {
             uint8_t const bad = tri_calc_sfb_noise_x34(xr, xr34, l3_xmin, bw, sf, did_it);
-            if (bad) {  /* distortion.  try a smaller scalefactor */
-                sf -= delsf;
-            }
-            else {
-                sf_ok = sf;
-                sf += delsf;
-                seen_good_one = 1;
-            }
-        }
-    }
-    /*  returning a scalefac without distortion, if possible
-     */
-    if (seen_good_one > 0) {
-        return sf_ok;
-    }
-    if (sf <= sf_min) {
-        return sf_min;
-    }
-    return sf;
-}
-
-
-
-static  uint8_t
-find_scalefac_ISO(const FLOAT * xr, const FLOAT * xr34, FLOAT l3_xmin, unsigned int bw,
-                  uint8_t sf_min)
-{
-    calc_noise_cache_t did_it[256];
-    uint8_t sf = 128, sf_ok = 255, delsf = 128, seen_good_one = 0, i;
-    memset(did_it, 0, sizeof(did_it));
-    for (i = 0; i < 8; ++i) {
-        delsf >>= 1;
-        if (sf <= sf_min) {
-            sf += delsf;
-        }
-        else {
-            uint8_t const bad = tri_calc_sfb_noise_ISO(xr, xr34, l3_xmin, bw, sf, did_it);
             if (bad) {  /* distortion.  try a smaller scalefactor */
                 sf -= delsf;
             }
@@ -728,68 +562,6 @@ quantize_x34(const algo_t * that)
         }
     }
 }
-
-
-
-static void
-quantize_ISO(const algo_t * that)
-{
-    DOUBLEX x[4];
-    const FLOAT *xr34_orig = that->xr34orig;
-    gr_info *const cod_info = that->cod_info;
-    int const ifqstep = (cod_info->scalefac_scale == 0) ? 2 : 4;
-    int    *l3 = cod_info->l3_enc;
-    unsigned int j = 0, sfb = 0;
-    unsigned int const max_nonzero_coeff = (unsigned int) cod_info->max_nonzero_coeff;
-
-    assert(cod_info->max_nonzero_coeff >= 0);
-    assert(cod_info->max_nonzero_coeff < 576);
-
-    while (j <= max_nonzero_coeff) {
-        int const s =
-            (cod_info->scalefac[sfb] + (cod_info->preflag ? pretab[sfb] : 0)) * ifqstep
-            + cod_info->subblock_gain[cod_info->window[sfb]] * 8;
-        uint8_t const sfac = (uint8_t) (cod_info->global_gain - s);
-        FLOAT const sfpow34 = ipow20[sfac];
-        unsigned int const w = (unsigned int) cod_info->width[sfb];
-        unsigned int const m = (unsigned int) (max_nonzero_coeff - j + 1);
-        unsigned int l = w;
-        unsigned int remaining;
-
-        assert((cod_info->global_gain - s) >= 0);
-        assert(cod_info->width[sfb] >= 0);
-
-        if (l > m) {
-            l = m;
-        }
-        j += w;
-        ++sfb;
-        l >>= 1;
-        remaining = (l & 1);
-
-        for (l >>= 1; l > 0; --l) {
-            x[0] = sfpow34 * xr34_orig[0];
-            x[1] = sfpow34 * xr34_orig[1];
-            x[2] = sfpow34 * xr34_orig[2];
-            x[3] = sfpow34 * xr34_orig[3];
-
-            k_iso_4(x, l3);
-
-            l3 += 4;
-            xr34_orig += 4;
-        }
-        if (remaining) {
-            x[0] = sfpow34 * xr34_orig[0];
-            x[1] = sfpow34 * xr34_orig[1];
-
-            k_iso_2(x, l3);
-
-            l3 += 2;
-            xr34_orig += 2;
-        }
-    }
-}
-
 
 
 
@@ -1515,14 +1287,8 @@ VBR_encode_frame(lame_internal_flags * gfc, FLOAT const xr34orig[2][2][576],
             that_[gr][ch].gfc = gfc;
             that_[gr][ch].cod_info = &gfc->l3_side.tt[gr][ch];
             that_[gr][ch].xr34orig = xr34orig[gr][ch];
-            if (gfc->quantization) {
-                that_[gr][ch].find = find_scalefac_x34;
-                that_[gr][ch].quantize = quantize_x34;
-            }
-            else {
-                that_[gr][ch].find = find_scalefac_ISO;
-                that_[gr][ch].quantize = quantize_ISO;
-            }
+            that_[gr][ch].find = find_scalefac_x34;
+            that_[gr][ch].quantize = quantize_x34;
             if (that_[gr][ch].cod_info->block_type == SHORT_TYPE) {
                 that_[gr][ch].alloc = short_block_constrain;
             }

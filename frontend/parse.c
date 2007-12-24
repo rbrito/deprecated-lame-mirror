@@ -1743,13 +1743,6 @@ parse_args(lame_global_flags * gfp, int argc, char **argv,
                     }
                 }
 
-                T_ELIF_INTERNAL("quantization-type") /*  switch for developing, no DOCU */
-                    argUsed = 1; /* 0:depending on quality, 1:ISO, 2:x^3/4 */
-                {
-                    extern void lame_set_quantization_type(lame_t, int);
-                    lame_set_quantization_type(gfp, atoi(nextArg)); /* now: 0:off else:Jon */
-                }
-
                 T_ELIF_INTERNAL("debug-file") /* switch for developing, no DOCU */
                     argUsed = 1; /* file name to print debug info into */
                 {

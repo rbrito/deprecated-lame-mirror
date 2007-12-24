@@ -121,8 +121,6 @@ int     scale_bitcount_lsf(const lame_internal_flags * gfp, gr_info * const cod_
 
 void    huffman_init(lame_internal_flags * const gfc);
 
-void    quantize_init(lame_internal_flags * const gfc);
-
 void    init_xrpow_core_init(lame_internal_flags * const gfc);
 
 FLOAT   athAdjust(FLOAT a, FLOAT x, FLOAT athFloor);
