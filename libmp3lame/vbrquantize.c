@@ -40,15 +40,9 @@
 struct algo_s;
 typedef struct algo_s algo_t;
 
-typedef void (*quantize_f) (const algo_t *);
-
-typedef uint8_t(*find_f) (const FLOAT *, const FLOAT *, FLOAT, unsigned int, uint8_t);
-
-typedef int (*alloc_sf_f) (const algo_t *, const int *, const int *, int);
+typedef void (*alloc_sf_f) (const algo_t *, const int *, const int *, int);
 
 struct algo_s {
-    find_f  find;
-    quantize_f quantize;
     alloc_sf_f alloc;
     const FLOAT *xr34orig;
     lame_internal_flags *gfc;
@@ -454,7 +448,7 @@ block_sf(algo_t * that, const FLOAT l3_xmin[SFBMAX], int vbrsf[SFBMAX], int vbrs
         }
         if (sfb < psymax) {
             if (below_noise_floor(&xr[j], l3_xmin[sfb], l) == 0) {
-                m2 = that->find(&xr[j], &xr34_orig[j], l3_xmin[sfb], l, m1);
+                m2 = find_scalefac_x34(&xr[j], &xr34_orig[j], l3_xmin[sfb], l, m1);
                 if (0) {
                     /** Robert Hegemann 2007-09-29:
                      *  It seems here is some more potential for speed improvements.
@@ -763,7 +757,7 @@ checkScalefactor(const gr_info * cod_info, const int vbrsfmin[SFBMAX])
  *
  ******************************************************************/
 
-static int
+static void
 short_block_constrain(const algo_t * that, const int vbrsf[SFBMAX],
                       const int vbrsfmin[SFBMAX], int vbrmax)
 {
@@ -830,7 +824,6 @@ short_block_constrain(const algo_t * that, const int vbrsf[SFBMAX],
         set_scalefacs(cod_info, vbrsfmin, sf_temp, max_range_short);
     }
     assert(checkScalefactor(cod_info, vbrsfmin));
-    return checkScalefactor(cod_info, vbrsfmin);
 }
 
 
@@ -841,7 +834,7 @@ short_block_constrain(const algo_t * that, const int vbrsf[SFBMAX],
  *
  ******************************************************************/
 
-static int
+static void
 long_block_constrain(const algo_t * that, const int vbrsf[SFBMAX], const int vbrsfmin[SFBMAX],
                      int vbrmax)
 {
@@ -973,20 +966,27 @@ long_block_constrain(const algo_t * that, const int vbrsf[SFBMAX], const int vbr
         set_scalefacs(cod_info, vbrsfmin, sf_temp, max_rangep);
     }
     assert(checkScalefactor(cod_info, vbrsfmin));
-    return checkScalefactor(cod_info, vbrsfmin);
 }
 
 
 
-static int
+static void
 bitcount(const algo_t * that)
 {
+    int rc;
+    
     if (that->gfc->mode_gr == 2) {
-        return scale_bitcount(that->cod_info);
+        rc = scale_bitcount(that->cod_info);
     }
     else {
-        return scale_bitcount_lsf(that->gfc, that->cod_info);
+        rc = scale_bitcount_lsf(that->gfc, that->cod_info);
     }
+    if (rc == 0) {
+        return;
+    }
+    /*  this should not happen due to the way the scalefactors are selected  */
+    ERRORF(that->gfc, "INTERNAL ERROR IN VBR NEW CODE (986), please send bug report\n");
+    exit(-1);
 }
 
 
@@ -994,7 +994,7 @@ bitcount(const algo_t * that)
 static int
 quantizeAndCountBits(const algo_t * that)
 {
-    that->quantize(that);
+    quantize_x34(that);
     that->cod_info->part2_3_length = noquant_count_bits(that->gfc, that->cod_info, 0);
     return that->cod_info->part2_3_length;
 }
@@ -1023,11 +1023,8 @@ tryGlobalStepsize(const algo_t * that, const int sfwork[SFBMAX],
         }
         sftemp[i] = gain;
     }
-    if (!that->alloc(that, sftemp, vbrsfmin, vbrmax)) {
-        that->cod_info->xrpow_max = xrpow_max;
-        return LARGE_BITS;
-    }
-    (void) bitcount(that);
+    that->alloc(that, sftemp, vbrsfmin, vbrmax);
+    bitcount(that);
     nbits = quantizeAndCountBits(that);
     that->cod_info->xrpow_max = xrpow_max;
     return nbits;
@@ -1140,11 +1137,10 @@ tryThatOne(algo_t * that, int sftemp[SFBMAX], const int vbrsfmin[SFBMAX], int vb
 {
     FLOAT const xrpow_max = that->cod_info->xrpow_max;
     int     nbits = LARGE_BITS;
-    if (that->alloc(that, sftemp, vbrsfmin, vbrmax)) {
-        (void) bitcount(that);
-        nbits = quantizeAndCountBits(that);
-        nbits += that->cod_info->part2_length;
-    }
+    that->alloc(that, sftemp, vbrsfmin, vbrmax);
+    bitcount(that);
+    nbits = quantizeAndCountBits(that);
+    nbits += that->cod_info->part2_length;
     that->cod_info->xrpow_max = xrpow_max;
     return nbits;
 }
@@ -1227,7 +1223,7 @@ outOfBitsStrategy(algo_t * that, const int sfwork[SFBMAX], const int vbrsfmin[SF
 }
 
 
-static void
+static int
 reduce_bit_usage(lame_internal_flags * gfc, int gr, int ch
 #if 0
                  , const FLOAT xr34orig[576], const FLOAT l3_xmin[SFBMAX], int maxbits
@@ -1252,6 +1248,7 @@ reduce_bit_usage(lame_internal_flags * gfc, int gr, int ch
         trancate_smallspectrums(gfc, cod_info, l3_xmin, xr34orig);
     }
 #endif
+    return cod_info->part2_3_length + cod_info->part2_length;
 }
 
 
@@ -1287,8 +1284,6 @@ VBR_encode_frame(lame_internal_flags * gfc, FLOAT const xr34orig[2][2][576],
             that_[gr][ch].gfc = gfc;
             that_[gr][ch].cod_info = &gfc->l3_side.tt[gr][ch];
             that_[gr][ch].xr34orig = xr34orig[gr][ch];
-            that_[gr][ch].find = find_scalefac_x34;
-            that_[gr][ch].quantize = quantize_x34;
             if (that_[gr][ch].cod_info->block_type == SHORT_TYPE) {
                 that_[gr][ch].alloc = short_block_constrain;
             }
@@ -1309,13 +1304,8 @@ VBR_encode_frame(lame_internal_flags * gfc, FLOAT const xr34orig[2][2][576],
                 int     vbrmax;
 
                 vbrmax = block_sf(that, l3_xmin[gr][ch], sfwork, vbrsfmin);
-                (void) that->alloc(that, sfwork, vbrsfmin, vbrmax);
-                if (0 != bitcount(that)) {
-                    /*  this should not happen due to the way the scalefactors are selected
-                     */
-                    ERRORF(gfc, "INTERNAL ERROR IN VBR NEW CODE (1319), please send bug report\n");
-                    exit(-1);
-                }
+                that->alloc(that, sfwork, vbrsfmin, vbrmax);
+                bitcount(that);
             }
             else {
                 /*  xr contains no energy 
@@ -1349,9 +1339,7 @@ VBR_encode_frame(lame_internal_flags * gfc, FLOAT const xr34orig[2][2][576],
                  *  continue with next channel
                  */
             }
-            reduce_bit_usage(gfc, gr, ch);
-            use_nbits_ch[gr][ch] =
-                    that->cod_info->part2_3_length + that->cod_info->part2_length;
+            use_nbits_ch[gr][ch] = reduce_bit_usage(gfc, gr, ch);
             use_nbits_gr[gr] += use_nbits_ch[gr][ch];
         }               /* for ch */
         use_nbits_fr += use_nbits_gr[gr];
@@ -1581,9 +1569,7 @@ VBR_encode_frame(lame_internal_flags * gfc, FLOAT const xr34orig[2][2][576],
                 cutDistribution(sfwork, sfwork, that->cod_info->global_gain);
                 outOfBitsStrategy(that, sfwork, vbrsfmin, max_nbits_ch[gr][ch]);
             }
-            reduce_bit_usage(gfc, gr, ch);
-            use_nbits_ch[gr][ch] =
-                    that->cod_info->part2_3_length + that->cod_info->part2_length;
+            use_nbits_ch[gr][ch] = reduce_bit_usage(gfc, gr, ch);
             assert(use_nbits_ch[gr][ch] <= max_nbits_ch[gr][ch]);
             use_nbits_gr[gr] += use_nbits_ch[gr][ch];
         }               /* for ch */
