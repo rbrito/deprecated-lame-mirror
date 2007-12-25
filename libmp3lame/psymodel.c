@@ -710,25 +710,8 @@ convert_partition2scalefac_l(lame_internal_flags * gfc, FLOAT const *eb, FLOAT c
 
 
 static void
-calc_mask_index_s(lame_internal_flags const *gfc, unsigned char const *mask_idx_l,
-                  unsigned char *mask_idx_s)
-{
-    int     i, j;
-    mask_idx_s[0] = 0;
-    for (i = 0; i < gfc->npart_l; ++i) {
-        j = (i * gfc->npart_s) / gfc->npart_l;
-        if (mask_idx_s[j] < mask_idx_l[i]) {
-            mask_idx_s[j] = mask_idx_l[i];
-        }
-        mask_idx_s[j + 1] = 0;
-    }
-}
-
-
-static void
 compute_masking_s(lame_global_flags const *gfp,
-                  FLOAT(*fftenergy_s)[HBLKSIZE_s],
-                  FLOAT * eb, FLOAT * thr, int chn, int sblock, unsigned char const *mask_idx_s)
+                  FLOAT(*fftenergy_s)[HBLKSIZE_s], FLOAT * eb, FLOAT * thr, int chn, int sblock)
 {
     lame_internal_flags *const gfc = gfp->internal_flags;
     FLOAT   max[CBANDS];
@@ -748,82 +731,34 @@ compute_masking_s(lame_global_flags const *gfp,
     }
     assert(b == gfc->npart_s);
     assert(j == 129);
-    if (gfp->VBR == vbr_mtrh || gfp->VBR == vbr_mt) {
-        for (j = b = 0; b < gfc->npart_s; b++) {
-            int     kk = gfc->s3ind_s[b][0];
-            int const last = gfc->s3ind_s[b][1];
-            FLOAT   x, ecb;
-            ecb = gfc->s3_ss[j] * eb[kk] * tab[mask_idx_s[kk]];
-            ++j, ++kk;
-            while (kk <= last) {
-                x = gfc->s3_ss[j] * eb[kk] * tab[mask_idx_s[kk]];
-                ecb += x;
-                ++j, ++kk;
-            }
-            ecb *= 0.158489319246111; /* pow(10,-0.8) */
-
-            if (gfc->blocktype_old[chn & 1] == SHORT_TYPE) {
-                /* limit calculated threshold by even older granule */
-                FLOAT const t1 = rpelev_s * gfc->nb_s1[chn][b];
-                FLOAT const t2 = rpelev2_s * gfc->nb_s2[chn][b];
-                FLOAT const tm = Min(t1, t2);
-                thr[b] = Min(ecb, tm);
-            }
-            else {
-                /* limit calculated threshold by older granule */
-                FLOAT const t1 = rpelev_s * gfc->nb_s1[chn][b];
-                thr[b] = Min(ecb, t1);
-            }
-
-            gfc->nb_s2[chn][b] = gfc->nb_s1[chn][b];
-            gfc->nb_s1[chn][b] = ecb;
-
-            /*  if THR exceeds EB, the quantization routines will take the difference
-             *  from other bands. in case of strong tonal samples (tonaltest.wav)
-             *  this leads to heavy distortions. that's why we limit THR here.
-             */
-            x = max[b];
-            x *= gfc->numlines_s[b];
-            x *= gfc->minval_s[b];
-            x *= 0.158489319246111; /* pow(10,-0.8) */
-            x *= tab[mask_idx_s[b]];
-            if (thr[b] > x) {
-                thr[b] = x;
-            }
-
-            assert(thr[b] >= 0);
-        }
-    }
-    else {
-        for (j = b = 0; b < gfc->npart_s; b++) {
-            int     kk = gfc->s3ind_s[b][0];
-            FLOAT   ecb = gfc->s3_ss[j++] * eb[kk];
-            ++kk;
-            while (kk <= gfc->s3ind_s[b][1]) {
-                FLOAT const x = gfc->s3_ss[j] * eb[kk];
+    for (j = b = 0; b < gfc->npart_s; b++) {
+        int     kk = gfc->s3ind_s[b][0];
+        FLOAT   ecb = gfc->s3_ss[j++] * eb[kk];
+        ++kk;
+        while (kk <= gfc->s3ind_s[b][1]) {
+            FLOAT const x = gfc->s3_ss[j] * eb[kk];
 #ifdef SHORT_BLOCK_MASK_ADD
-                ecb = mask_add(ecb, x, kk, kk - b, gfc, 1);
+            ecb = mask_add(ecb, x, kk, kk - b, gfc, 1);
 #else
-                ecb += x;
+            ecb += x;
 #endif
-                ++j, ++kk;
-            }
-
-            {           /* limit calculated threshold by previous granule */
-                FLOAT const x = rpelev_s * gfc->nb_s1[chn][b];
-                thr[b] = Min(ecb, x);
-            }
-            if (gfc->blocktype_old[chn & 1] == SHORT_TYPE) {
-                /* limit calculated threshold by even older granule */
-                FLOAT const x = rpelev2_s * gfc->nb_s2[chn][b];
-                FLOAT const y = thr[b];
-                thr[b] = Min(x, y);
-            }
-
-            gfc->nb_s2[chn][b] = gfc->nb_s1[chn][b];
-            gfc->nb_s1[chn][b] = ecb;
-            assert(thr[b] >= 0);
+            ++j, ++kk;
         }
+
+        {               /* limit calculated threshold by previous granule */
+            FLOAT const x = rpelev_s * gfc->nb_s1[chn][b];
+            thr[b] = Min(ecb, x);
+        }
+        if (gfc->blocktype_old[chn & 1] == SHORT_TYPE) {
+            /* limit calculated threshold by even older granule */
+            FLOAT const x = rpelev2_s * gfc->nb_s2[chn][b];
+            FLOAT const y = thr[b];
+            thr[b] = Min(x, y);
+        }
+
+        gfc->nb_s2[chn][b] = gfc->nb_s1[chn][b];
+        gfc->nb_s1[chn][b] = ecb;
+        assert(thr[b] >= 0);
     }
     for (; b <= CBANDS; ++b) {
         eb[b] = 0;
@@ -1223,21 +1158,6 @@ L3psycho_anal(lame_global_flags const *gfp,
             if (gfc->blocktype_old[chn & 1] != SHORT_TYPE && thr[b] > rpelev2 * gfc->nb_2[chn][b])
                 thr[b] = rpelev2 * gfc->nb_2[chn][b];
 
-            if (gfp->VBR == vbr_mtrh || gfp->VBR == vbr_mt) {
-                /*  if THR exceeds EB, the quantization routines will take the difference
-                 *  from other bands. in case of strong tonal samples (tonaltest.wav, Wind Saxophon)
-                 *  this leads to heavy distortions. that's why we limit THR here.
-                 */
-                FLOAT   x = max[b];
-                x *= gfc->numlines_l[b];
-                x *= gfc->minval_l[b];
-                x *= 0.158489319246111; /* pow(10,-0.8) */
-                x *= reduction;
-                if (thr[b] > x) {
-                    thr[b] = x;
-                }
-            }
-
             gfc->nb_2[chn][b] = gfc->nb_1[chn][b];
             gfc->nb_1[chn][b] = ecb;
 
@@ -1259,7 +1179,7 @@ L3psycho_anal(lame_global_flags const *gfp,
 
         /* compute masking thresholds for short blocks */
         for (sblock = 0; sblock < 3; sblock++) {
-            compute_masking_s(gfp, fftenergy_s, eb, thr, chn, sblock, mask_idx_s);
+            compute_masking_s(gfp, fftenergy_s, eb, thr, chn, sblock);
             convert_partition2scalefac_s(gfc, eb, thr, chn, sblock);
         }
     }                   /* end loop over chn */
@@ -1783,14 +1703,11 @@ L3psycho_anal_ns(lame_global_flags const *gfp,
  *********************************************************************/
         calc_energy(gfc, fftenergy, eb_l, max, avg);
         calc_mask_index_l(gfc, max, avg, mask_idx_l);
-        if (gfp->VBR == vbr_mtrh || gfp->VBR == vbr_mt) {
-            calc_mask_index_s(gfc, mask_idx_l, mask_idx_s);
-        }
 
         /* compute masking thresholds for short blocks */
         for (sblock = 0; sblock < 3; sblock++) {
             FLOAT   enn, thmm;
-            compute_masking_s(gfp, fftenergy_s, eb_s, thr, chn, sblock, mask_idx_s);
+            compute_masking_s(gfp, fftenergy_s, eb_s, thr, chn, sblock);
             convert_partition2scalefac_s(gfc, eb_s, thr, chn, sblock);
 
             /****   short block pre-echo control   ****/
@@ -1838,60 +1755,7 @@ L3psycho_anal_ns(lame_global_flags const *gfp,
   *      with the spreading function, s3_l[b][k]
   ********************************************************************/
         k = 0;
-        if (gfp->VBR == vbr_mtrh || gfp->VBR == vbr_mt) {
-            for (b = 0; b < gfc->npart_l; b++) {
-                FLOAT   x, ecb;
-                /* convolve the partitioned energy with the spreading function */
-                int     kk = gfc->s3ind[b][0];
-                int const last = gfc->s3ind[b][1];
-                ecb = gfc->s3_ll[k] * eb_l[kk] * tab[mask_idx_l[kk]];
-                ++k, ++kk;
-                while (kk <= last) {
-                    x = gfc->s3_ll[k] * eb_l[kk] * tab[mask_idx_l[kk]];
-                    ecb = mask_add(ecb, x, kk, kk - b, gfc, 0);
-                    ++k, ++kk;
-                }
-                ecb *= 0.158489319246111; /* pow(10,-0.8) */
-
-                /****   long block pre-echo control   ****/
-                /* dont use long block pre-echo control if previous granule was 
-                 * a short block.  This is to avoid the situation:   
-                 * frame0:  quiet (very low masking)  
-                 * frame1:  surge  (triggers short blocks)
-                 * frame2:  regular frame.  looks like pre-echo when compared to 
-                 *          frame0, but all pre-echo was in frame1.
-                 */
-                /* chn=0,1   L and R channels
-                   chn=2,3   S and M channels.
-                 */
-                if (gfc->blocktype_old[chn & 1] == SHORT_TYPE) {
-                    thr[b] = NS_INTERP(Min(ecb, rpelev * gfc->nb_1[chn][b]), ecb, pcfact);
-                }
-                else {
-                    thr[b] = NS_INTERP(Min(ecb,
-                                           Min(rpelev * gfc->nb_1[chn][b],
-                                               rpelev2 * gfc->nb_2[chn][b])), ecb, pcfact);
-                }
-                gfc->nb_2[chn][b] = gfc->nb_1[chn][b];
-                gfc->nb_1[chn][b] = ecb;
-
-                /*  if THR exceeds EB, the quantization routines will take the difference
-                 *  from other bands. in case of strong tonal samples (tonaltest.wav)
-                 *  this leads to heavy distortions. that's why we limit THR here.
-                 */
-                x = max[b];
-                x *= gfc->numlines_l[b];
-                x *= gfc->minval_l[b];
-                x *= 0.158489319246111; /* pow(10,-0.8) */
-                x *= tab[mask_idx_l[b]];
-                if (thr[b] > x) {
-                    thr[b] = x;
-                }
-
-                assert(thr[b] >= 0);
-            }
-        }
-        else {
+        {
 #undef GPSYCHO_BLOCK_TYPE_DECISION
 #ifdef GPSYCHO_BLOCK_TYPE_DECISION
             FLOAT   pe = 0;
@@ -2560,8 +2424,8 @@ vbrpsy_compute_masking_l(lame_internal_flags * gfc, FLOAT fftenergy[HBLKSIZE], F
                    a little bit for this END_TYPE block.
                    Most of the time we get away with this sloppyness. (fingers crossed :)
                    The speed increase is worth it.
-                */
-                thr[b] = Min(ecb, eb_l[b]*NS_PREECHO_ATT2);
+                 */
+                thr[b] = Min(ecb, eb_l[b] * NS_PREECHO_ATT2);
             }
         }
         else {
@@ -2687,9 +2551,9 @@ vbrpsy_compute_MS_thresholds(FLOAT eb[4][CBANDS], FLOAT thr[4][CBANDS], FLOAT cb
         FLOAT const ebS = eb[3][b];
         FLOAT const thmL = thr[0][b];
         FLOAT const thmR = thr[1][b];
-        FLOAT thmM = thr[2][b];
-        FLOAT thmS = thr[3][b];
-        
+        FLOAT   thmM = thr[2][b];
+        FLOAT   thmS = thr[3][b];
+
         /* use this fix if L & R masking differs by 2db or less */
         /* if db = 10*log10(x2/x1) < 2 */
         /* if (x2 < 1.58*x1) { */
@@ -2804,7 +2668,7 @@ L3psycho_anal_vbr(lame_global_flags const *gfp,
                                              gfc->npart_l);
             }
             /* L/R channel */
-#if 0 
+#if 0
             if (gfp->mode == STEREO || gfp->mode == JOINT_STEREO) {
             }
 #endif
@@ -2842,11 +2706,11 @@ L3psycho_anal_vbr(lame_global_flags const *gfp,
                                                  gfc->npart_s);
                 }
                 /* L/R channel */
-#if 0 
+#if 0
                 if (gfp->mode == STEREO || gfp->mode == JOINT_STEREO) {
                 }
 #endif
-                }
+            }
             /* TODO: apply adaptive ATH masking here ?? */
             for (chn = 0; chn < n_chn_psy; ++chn) {
                 int const ch01 = chn & 0x01;
@@ -2891,7 +2755,7 @@ L3psycho_anal_vbr(lame_global_flags const *gfp,
 
                     /* pulse like signal detection for fatboy.wav and so on */
                     thmm *= sub_short_factor[chn][sblock];
-                                        
+
                     new_thmm[sblock] = thmm;
                 }
                 for (sblock = 0; sblock < 3; sblock++) {

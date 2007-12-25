@@ -93,20 +93,6 @@ typedef struct {
         {9,       9,       9,    1,   6.60, 145.0,       1.6,    1.6,     -36,        11,        -25,   0.0008,         0,       0,  0   }
     };
     
-    static const vbr_presets_t vbr_new_switch_map[] = {
-    /*vbr_q  qcomp_l  qcomp_s  expY  st_lrm   st_s  mask adj_l  adj_s  ath_lower  ath_curve  ath_sens  interChR  safejoint sfb21mod  msfix */
-        {0,       9,       9,    0,   5.20, 125.0,      -4.0,   -4.0,       7.5,       1,          0,   0,              2,      26,  0.97},
-        {1,       9,       9,    0,   5.30, 125.0,      -3.8,   -3.6,       4.5,       1.5,        0,   0,              2,      21,  1.35},
-        {2,       9,       9,    0,   5.60, 125.0,      -2.1,   -1.8,       2,         2,          0,   0,              2,      18,  1.49},
-        {3,       9,       9,    1,   5.80, 130.0,      -1.25,  -1.25,      1.1,       3,         -4,   0,              2,      15,  1.64},
-        {4,       9,       9,    1,   6.00, 135.0,       0.1,    0.1,       0,         3.5,       -8,   0,              2,       0,  1.79},
-        {5,       9,       9,    1,   6.40, 140.0,       2.05,   1.65,     -7.7,       4,        -12,   0.0002,         0,       0,  1.95},
-        {6,       9,       9,    1,   6.60, 145.0,       2.27,   2.47,    -14.5,       6.5,      -19,   0.0004,         0,       0,  2.30},
-        {7,       9,       9,    1,   6.60, 145.0,       2.4,    2.0,     -22.0,       8,        -22,   0.0006,         0,       0,  2.70},
-        {8,       9,       9,    1,   6.60, 145.0,       2.8,    2.4,     -30.0,      10,        -23,   0.0007,         0,       0,  0   },
-        {9,       9,       9,    1,   6.60, 145.0,       3.35,   2.95,    -39.5,      11,        -25,   0.0008,         0,       0,  0   }
-    };
-    
     static const vbr_presets_t vbr_psy_switch_map[] = {
     /*vbr_q  qcomp_l  qcomp_s  expY  st_lrm   st_s  mask adj_l  adj_s  ath_lower  ath_curve  ath_sens  interChR  safejoint sfb21mod  msfix */
         {0,       9,       9,    0,   4.20,  25.0,      -7.0,   -4.0,       7.5,       1,          0,   0,              2,      26,  0.97},
@@ -332,16 +318,13 @@ apply_preset(lame_global_flags * gfp, int preset, int enforce)
     {
         vbr_presets_t const *vbr_preset;
         switch (lame_get_VBR(gfp)) {
+        default:
         case vbr_rh:
             vbr_preset = &vbr_old_switch_map[0];
             break;
-        default:
-            if (gfp->psymodel == PSY_NSPSYTUNE+1) {
-                vbr_preset = &vbr_psy_switch_map[0];
-            }
-            else {
-                vbr_preset = &vbr_new_switch_map[0];
-            }
+        case vbr_mt:
+        case vbr_mtrh:
+            vbr_preset = &vbr_psy_switch_map[0];
             break;
         }
         switch (preset) {
