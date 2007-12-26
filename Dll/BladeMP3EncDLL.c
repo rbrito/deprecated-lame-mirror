@@ -499,7 +499,6 @@ __declspec(dllexport) BE_ERR	beInitStream(PBE_CONFIG pbeConfig, PDWORD dwSamples
 	if ( lameConfig.format.LHV1.bNoRes )
 	{
 		lame_set_disable_reservoir( gfp,1 );
-		lame_set_padding_type( gfp, PAD_NO );
 	}
 
 	// check if the VBR tag is required
@@ -858,7 +857,6 @@ static void dump_config( 	lame_global_flags*	gfp )
 	DebugPrintf("CRC                    =%s\n", lame_get_error_protection( gfp ) ? "on" : "off" );
 	DebugPrintf("Fast mode              =%s\n", ( lame_get_quality( gfp ) )? "enabled" : "disabled" );
 	DebugPrintf("Force mid/side stereo  =%s\n", ( lame_get_force_ms( gfp ) )?"enabled":"disabled" );
-	DebugPrintf("Padding Type           =%d\n", lame_get_padding_type( gfp ) );
 	DebugPrintf("Disable Reservoir      =%d\n", lame_get_disable_reservoir( gfp ) );
 	DebugPrintf("Allow diff-short       =%d\n", lame_get_allow_diff_short( gfp ) );
 	DebugPrintf("Interchannel masking   =%f\n", lame_get_interChRatio( gfp ) );
