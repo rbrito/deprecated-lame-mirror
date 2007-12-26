@@ -1352,72 +1352,6 @@ get_framebits(lame_global_flags const *gfp,
 
 
 
-/************************************************************************
- *
- *      calc_min_bits()
- *
- *  Robert Hegemann 2000-09-04
- *
- *  determine minimal bit skeleton
- *
- ************************************************************************/
-inline static int
-calc_min_bits(lame_global_flags const *gfp,
-              const gr_info * const cod_info,
-              const int pe,
-              const FLOAT ms_ener_ratio,
-              const int bands,
-              const int mch_bits,
-              const int analog_mean_bits,
-              const int min_mean_bits, const int analog_silence, const int ch)
-{
-    lame_internal_flags const *const gfc = gfp->internal_flags;
-    int     min_bits, min_pe_bits;
-
-    if (gfp->psymodel == PSY_NSPSYTUNE)
-        return 126;
-    /*  changed minimum from 1 to 126 bits
-     *  the iteration loops require a minimum of bits
-     *  for each granule to start with; robert 2001-07-02 */
-
-    /*  base amount of minimum bits
-     */
-    min_bits = Max(126, min_mean_bits);
-
-    if (gfc->mode_ext == MPG_MD_MS_LR && ch == 1)
-        min_bits = Max(min_bits, mch_bits / 5);
-
-    /*  bit skeleton based on PE
-     */
-    if (cod_info->block_type == SHORT_TYPE)
-        /*  if LAME switches to short blocks then pe is
-         *  >= 1000 on medium surge
-         *  >= 3000 on big surge
-         */
-        min_pe_bits = (pe - 350) * bands / (cod_info->sfbmax + 3);
-    else
-        min_pe_bits = (pe - 350) * bands / (cod_info->sfbmax + 1);
-
-    if (gfc->mode_ext == MPG_MD_MS_LR && ch == 1) {
-        /*  side channel will use a lower bit skeleton based on PE
-         */
-        FLOAT const fac = .33 * (.5 - ms_ener_ratio) / .5;
-        min_pe_bits = (int) (min_pe_bits * ((1 - fac) / (1 + fac)));
-    }
-    min_pe_bits = Min(min_pe_bits, (1820 * gfp->out_samplerate / 44100));
-
-    /*  determine final minimum bits
-     */
-    if (analog_silence && !gfp->VBR_hard_min)
-        min_bits = analog_mean_bits;
-    else
-        min_bits = Max(min_bits, min_pe_bits);
-
-    return min_bits;
-}
-
-
-
 /*********************************************************************
  *
  *      VBR_prepare()
@@ -1488,10 +1422,7 @@ VBR_old_prepare(lame_global_flags const *gfp,
             if (bands[gr][ch])
                 analog_silence = 0;
 
-            min_bits[gr][ch] = calc_min_bits(gfp, cod_info, (int) pe[gr][ch],
-                                             ms_ener_ratio[gr], bands[gr][ch],
-                                             0, *analog_mean_bits,
-                                             *min_mean_bits, analog_silence, ch);
+            min_bits[gr][ch] = 126;
 
             bits += max_bits[gr][ch];
         }

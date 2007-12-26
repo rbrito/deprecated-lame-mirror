@@ -230,7 +230,7 @@ CC_OPTS = $(CC_OPTS) /W$(WARN)
 CC_OPTS = $(CC_OPTS) /DFLOAT8=float /DREAL_IS_FLOAT=1
 !	ENDIF
 
-CC_OPTS = $(CC_OPTS) /DNDEBUG /MT
+CC_OPTS = $(CC_OPTS) /DNDEBUG /MD
 
 LN_OPTS = /nologo /opt:NOWIN98 /pdb:none
 LN_DLL = /nologo /DLL /opt:NOWIN98

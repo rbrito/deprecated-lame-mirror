@@ -114,7 +114,6 @@ struct lame_global_struct {
      * psycho acoustics and other arguments which you should not change
      * unless you know what you are doing
      */
-    int     psymodel;        /* select psychoacoustic model          */
     float   maskingadjust;
     float   maskingadjust_short;
     int     ATHonly;         /* only use ATH                         */
@@ -126,7 +125,6 @@ struct lame_global_struct {
     int     athaa_type;      /* select ATH auto-adjust scheme        */
     int     athaa_loudapprox; /* select ATH auto-adjust loudness calc */
     float   athaa_sensitivity; /* dB, tune active region of auto-level */
-    int     cwlimit;         /* predictability limit                 */
     short_block_t short_blocks;
     int     useTemporal;     /* use temporal masking effect          */
     float   interChRatio;
@@ -134,8 +132,6 @@ struct lame_global_struct {
 
     int     tune;            /* 0 off, 1 on */
     float   tune_value_a;    /* used to pass values for debugging and stuff */
-
-    int     quantization_type; /* 0 depending on quality, 1 ISO, 2 nonlinear */
 
     struct {
         void    (*msgf) (const char *format, va_list ap);

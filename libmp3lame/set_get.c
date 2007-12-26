@@ -1179,19 +1179,6 @@ lame_get_highpasswidth(const lame_global_flags * gfp)
  */
 
 
-int
-lame_set_psy_model(lame_global_flags * gfp, int psy)
-{
-    gfp->psymodel = psy;
-    return 0;
-}
-
-int
-lame_get_psy_model(const lame_global_flags * gfp)
-{
-    return gfp->psymodel;
-}
-
 /* Adjust masking values. */
 int
 lame_set_maskingadjust(lame_global_flags * gfp, float adjust)
@@ -1368,15 +1355,16 @@ lame_get_athaa_sensitivity(const lame_global_flags * gfp)
 int
 lame_set_cwlimit(lame_global_flags * gfp, int cwlimit)
 {
-    gfp->cwlimit = cwlimit;
-
+    (void) gfp;
+    (void) cwlimit;
     return 0;
 }
 
 int
 lame_get_cwlimit(const lame_global_flags * gfp)
 {
-    return gfp->cwlimit;
+    (void) gfp;
+    return 0;
 }
 
 

@@ -112,7 +112,6 @@ typedef struct {
 static void
 apply_vbr_preset(lame_global_flags * gfp, vbr_presets_t const *set, int enforce)
 {
-    SET_OPTION(psy_model, PSY_NSPSYTUNE, -1);
     (void) lame_set_VBR_q(gfp, set->vbr_q);
     SET_OPTION(quant_comp, set->quant_comp, -1);
     SET_OPTION(quant_comp_short, set->quant_comp_s, -1);
@@ -203,9 +202,6 @@ apply_abr_preset(lame_global_flags * gfp, int preset, int enforce)
     (void) lame_set_VBR_mean_bitrate_kbps(gfp, min_int(lame_get_VBR_mean_bitrate_kbps(gfp), 320));
     (void) lame_set_VBR_mean_bitrate_kbps(gfp, max_int(lame_get_VBR_mean_bitrate_kbps(gfp), 8));
     (void) lame_set_brate(gfp, lame_get_VBR_mean_bitrate_kbps(gfp));
-
-
-    SET_OPTION(psy_model, PSY_NSPSYTUNE, -1);
 
 
     /* parameters for which there is no proper set/get interface */

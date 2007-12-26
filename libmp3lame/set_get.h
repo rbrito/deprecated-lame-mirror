@@ -35,14 +35,6 @@ extern  "C" {
 
 
 /* select psychoacoustic model */
-    int CDECL lame_set_psy_model(lame_global_flags *, int);
-    int CDECL lame_get_psy_model(const lame_global_flags *);
-
-
-    void CDECL lame_set_ms_sparsing(lame_global_flags *, int);
-    void CDECL lame_set_ms_sparse_low(lame_t, float);
-    void CDECL lame_set_ms_sparse_high(lame_t, float);
-
 
 /* manage short blocks */
     int CDECL lame_set_short_threshold(lame_global_flags *, float, float);
@@ -51,9 +43,6 @@ extern  "C" {
     int CDECL lame_set_short_threshold_s(lame_global_flags *, float);
     float CDECL lame_get_short_threshold_s(const lame_global_flags *);
 
-
-    int CDECL lame_set_vbr_smooth(lame_global_flags *, int);
-    int CDECL lame_get_vbr_smooth(const lame_global_flags *);
 
     int CDECL lame_set_maskingadjust(lame_global_flags *, float);
     float CDECL lame_get_maskingadjust(const lame_global_flags *);

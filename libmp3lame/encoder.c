@@ -319,7 +319,6 @@ lame_encode_mp3_frame(       /* Output */
 
     int     ch, gr;
 
-    FLOAT   ms_ratio_next = 0.;
     FLOAT   ms_ratio_prev = 0.;
 
 
@@ -366,24 +365,18 @@ lame_encode_mp3_frame(       /* Output */
         ms_ratio_prev = gfc->ms_ratio[gfc->mode_gr - 1];
         for (gr = 0; gr < gfc->mode_gr; gr++) {
 
-            for (ch = 0; ch < gfc->channels_out; ch++)
+            for (ch = 0; ch < gfc->channels_out; ch++) {
                 bufp[ch] = &inbuf[ch][576 + gr * 576 - FFTOFFSET];
-
-            if (gfp->psymodel == PSY_NSPSYTUNE) {
-                ret = L3psycho_anal_ns(gfp, bufp, gr,
-                                       masking_LR, masking_MS,
-                                       pe[gr], pe_MS[gr], tot_ener[gr], blocktype);
             }
-            else if (gfp->psymodel == PSY_NSPSYTUNE+1) {
+            if (gfp->VBR == vbr_mtrh || gfp->VBR == vbr_mt) {
                 ret = L3psycho_anal_vbr(gfp, bufp, gr,
                                        masking_LR, masking_MS,
                                        pe[gr], pe_MS[gr], tot_ener[gr], blocktype);
             }
             else {
-                ret = L3psycho_anal(gfp, bufp, gr,
-                                    &gfc->ms_ratio[gr], &ms_ratio_next,
-                                    masking_LR, masking_MS,
-                                    pe[gr], pe_MS[gr], tot_ener[gr], blocktype);
+                ret = L3psycho_anal_ns(gfp, bufp, gr,
+                                       masking_LR, masking_MS,
+                                       pe[gr], pe_MS[gr], tot_ener[gr], blocktype);
             }
             if (ret != 0)
                 return -4;
@@ -439,7 +432,6 @@ lame_encode_mp3_frame(       /* Output */
         gfc->mode_ext = MPG_MD_MS_LR;
     }
     else if (gfp->mode == JOINT_STEREO) {
-        int     check_ms_stereo = 1;
         /* ms_ratio = is scaled, for historical reasons, to look like
            a ratio of side_channel / total.
            0 = signal is 100% mono
@@ -451,51 +443,26 @@ lame_encode_mp3_frame(       /* Output */
          * _prev is the value of the last granule of the previous frame
          * _next is the value of the first granule of the next frame
          */
-        if (gfp->psymodel == PSY_GPSYCHO) {
-            FLOAT   ms_ratio_ave1;
-            FLOAT   ms_ratio_ave2;
-            FLOAT const threshold1 = 0.35;
-            FLOAT const threshold2 = 0.45;
 
-            /* take an average */
-            if (gfc->mode_gr == 1) {
-                /* MPEG2 - no second granule */
-                ms_ratio_ave1 = 0.33 * (gfc->ms_ratio[0] + ms_ratio_prev + ms_ratio_next);
-                ms_ratio_ave2 = gfc->ms_ratio[0];
+        FLOAT   sum_pe_MS = 0;
+        FLOAT   sum_pe_LR = 0;
+        for (gr = 0; gr < gfc->mode_gr; gr++) {
+            for (ch = 0; ch < gfc->channels_out; ch++) {
+                sum_pe_MS += pe_MS[gr][ch];
+                sum_pe_LR += pe[gr][ch];
             }
-            else {
-                ms_ratio_ave1 =
-                    0.25 * (gfc->ms_ratio[0] + gfc->ms_ratio[1] + ms_ratio_prev + ms_ratio_next);
-                ms_ratio_ave2 = 0.50 * (gfc->ms_ratio[0] + gfc->ms_ratio[1]);
-            }
-
-
-            if (ms_ratio_ave1 >= threshold1 || ms_ratio_ave2 >= threshold2)
-                check_ms_stereo = 0;
         }
 
-        if (check_ms_stereo) {
-            FLOAT   sum_pe_MS = 0;
-            FLOAT   sum_pe_LR = 0;
-            for (gr = 0; gr < gfc->mode_gr; gr++) {
-                for (ch = 0; ch < gfc->channels_out; ch++) {
-                    sum_pe_MS += pe_MS[gr][ch];
-                    sum_pe_LR += pe[gr][ch];
-                }
-            }
+        /* based on PE: M/S coding would not use much more bits than L/R */
+        if (sum_pe_MS <= 1.00 * sum_pe_LR) {
 
-            /* based on PE: M/S coding would not use much more bits than L/R */
-            if (((gfp->psymodel == PSY_GPSYCHO) && sum_pe_MS <= 1.07 * sum_pe_LR) ||
-                ((gfp->psymodel >= PSY_NSPSYTUNE) && sum_pe_MS <= 1.00 * sum_pe_LR)) {
+            gr_info const *const gi0 = &gfc->l3_side.tt[0][0];
+            gr_info const *const gi1 = &gfc->l3_side.tt[gfc->mode_gr - 1][0];
 
-                gr_info const *const gi0 = &gfc->l3_side.tt[0][0];
-                gr_info const *const gi1 = &gfc->l3_side.tt[gfc->mode_gr - 1][0];
+            if (gi0[0].block_type == gi0[1].block_type &&
+                gi1[0].block_type == gi1[1].block_type) {
 
-                if (gi0[0].block_type == gi0[1].block_type &&
-                    gi1[0].block_type == gi1[1].block_type) {
-
-                    gfc->mode_ext = MPG_MD_MS_LR;
-                }
+                gfc->mode_ext = MPG_MD_MS_LR;
             }
         }
     }
@@ -536,35 +503,33 @@ lame_encode_mp3_frame(       /* Output */
     *   Stage 4: quantization loop          *
     ****************************************/
 
-    if (gfp->psymodel >= PSY_NSPSYTUNE) {
-        if (gfp->VBR == vbr_off || gfp->VBR == vbr_abr) {
-            static FLOAT const fircoef[9] = {
-                -0.0207887 * 5, -0.0378413 * 5, -0.0432472 * 5, -0.031183 * 5,
-                7.79609e-18 * 5, 0.0467745 * 5, 0.10091 * 5, 0.151365 * 5,
-                0.187098 * 5
-            };
+    if (gfp->VBR == vbr_off || gfp->VBR == vbr_abr) {
+        static FLOAT const fircoef[9] = {
+            -0.0207887 * 5, -0.0378413 * 5, -0.0432472 * 5, -0.031183 * 5,
+            7.79609e-18 * 5, 0.0467745 * 5, 0.10091 * 5, 0.151365 * 5,
+            0.187098 * 5
+        };
 
-            int     i;
-            FLOAT   f;
+        int     i;
+        FLOAT   f;
 
-            for (i = 0; i < 18; i++)
-                gfc->nsPsy.pefirbuf[i] = gfc->nsPsy.pefirbuf[i + 1];
+        for (i = 0; i < 18; i++)
+            gfc->nsPsy.pefirbuf[i] = gfc->nsPsy.pefirbuf[i + 1];
 
-            f = 0.0;
-            for (gr = 0; gr < gfc->mode_gr; gr++)
-                for (ch = 0; ch < gfc->channels_out; ch++)
-                    f += (*pe_use)[gr][ch];
-            gfc->nsPsy.pefirbuf[18] = f;
+        f = 0.0;
+        for (gr = 0; gr < gfc->mode_gr; gr++)
+            for (ch = 0; ch < gfc->channels_out; ch++)
+                f += (*pe_use)[gr][ch];
+        gfc->nsPsy.pefirbuf[18] = f;
 
-            f = gfc->nsPsy.pefirbuf[9];
-            for (i = 0; i < 9; i++)
-                f += (gfc->nsPsy.pefirbuf[i] + gfc->nsPsy.pefirbuf[18 - i]) * fircoef[i];
+        f = gfc->nsPsy.pefirbuf[9];
+        for (i = 0; i < 9; i++)
+            f += (gfc->nsPsy.pefirbuf[i] + gfc->nsPsy.pefirbuf[18 - i]) * fircoef[i];
 
-            f = (670 * 5 * gfc->mode_gr * gfc->channels_out) / f;
-            for (gr = 0; gr < gfc->mode_gr; gr++) {
-                for (ch = 0; ch < gfc->channels_out; ch++) {
-                    (*pe_use)[gr][ch] *= f;
-                }
+        f = (670 * 5 * gfc->mode_gr * gfc->channels_out) / f;
+        for (gr = 0; gr < gfc->mode_gr; gr++) {
+            for (ch = 0; ch < gfc->channels_out; ch++) {
+                (*pe_use)[gr][ch] *= f;
             }
         }
     }

@@ -560,7 +560,6 @@ long_help(const lame_global_flags * gfp, FILE * const fp, const char *ProgramNam
                 "    --short         use short blocks when appropriate\n"
                 "    --noshort       do not use short blocks\n"
                 "    --allshort      use only short blocks\n"
-                "    --cwlimit <freq>  compute tonality up to freq (in kHz) default 8.8717\n"
                 )
         );
     fprintf(fp,
@@ -1502,7 +1501,7 @@ parse_args(lame_global_flags * gfp, int argc, char **argv,
                 (void) lame_set_useTemporal(gfp, atoi(nextArg) ? 1 : 0);
 
                 T_ELIF("nspsytune")
-                    lame_set_psy_model(gfp, PSY_NSPSYTUNE);
+                    ;
 
                 T_ELIF("nssafejoint")
                     lame_set_exp_nspsytune(gfp, lame_get_exp_nspsytune(gfp) | 2);
@@ -1662,12 +1661,6 @@ parse_args(lame_global_flags * gfp, int argc, char **argv,
                     lame_set_tune(gfp, (float) atof(nextArg));
                 }
 
-                T_ELIF_INTERNAL("psymodel")
-                    /*without helptext */
-                    /* 1 gpsycho, 2 nspsytune */
-                    argUsed = 1;
-                lame_set_psy_model(gfp, atoi(nextArg));
-
                 T_ELIF_INTERNAL("shortthreshold") {
                     float   x, y;
                     int     n = sscanf(nextArg, "%f,%f", &x, &y);
@@ -1728,20 +1721,6 @@ parse_args(lame_global_flags * gfp, int argc, char **argv,
                 T_ELIF ("athaa-sensitivity")
                     argUsed=1;
                 lame_set_athaa_sensitivity(gfp, (float) atof(nextArg));
-
-                T_ELIF_INTERNAL("cwlimit")
-                    val = atof(nextArg);
-                argUsed = 1;
-                /* useful are 0.001 kHz...50 kHz, 50 Hz...50000 Hz */
-                {
-                    int     my_cwlimit = (int) (val * (val <= 50. ? 1.e3 : 1.e0));
-                    lame_set_cwlimit(gfp, my_cwlimit);
-                    if (my_cwlimit <= 0) {
-                        error_printf
-                            ("Must specify cwlimit with --cwlimit freq, freq >= 0.001 kHz\n");
-                        return -1;
-                    }
-                }
 
                 T_ELIF_INTERNAL("debug-file") /* switch for developing, no DOCU */
                     argUsed = 1; /* file name to print debug info into */

@@ -206,8 +206,7 @@ extern  "C" {
      */
     typedef struct {
         FLOAT   mask_adjust; /* the dbQ stuff */
-        FLOAT   mask_adjust_short; /* the dbQ stuff */
-        FLOAT   cwlimit;
+        FLOAT   mask_adjust_short; /* the dbQ stuff */        
         /* at transition from one scalefactor band to next */
         FLOAT   bo_l_weight[SBMAX_l]; /* band weight long scalefactor bands */
         FLOAT   bo_s_weight[SBMAX_s]; /* band weight short scalefactor bands */
@@ -275,7 +274,6 @@ extern  "C" {
         FLOAT   lowpass1, lowpass2; /* normalized frequency bounds of passband */
         FLOAT   highpass1, highpass2; /* normalized frequency bounds of passband */
 
-        int     filter_type; /* 0=polyphase filter, 1= FIR filter 2=MDCT filter(bad) */
         int     noise_shaping; /* 0 = none
                                   1 = ISO AAC model
                                   2 = allow scalefac_select=1
@@ -386,15 +384,6 @@ extern  "C" {
 
         III_psy_xmin thm[4];
         III_psy_xmin en[4];
-
-        /* unpredictability calculation
-         */
-        int     cw_upper_index;
-        FLOAT   ax_sav[4][2][HBLKSIZE];
-        FLOAT   bx_sav[4][2][HBLKSIZE];
-        FLOAT   rx_sav[4][2][HBLKSIZE];
-        FLOAT   cw[HBLKSIZE];
-
 
         /* fft and energy calculation    */
         FLOAT   tot_ener[4];

@@ -505,9 +505,12 @@ int CDECL lame_get_athaa_loudapprox( const lame_global_flags *);
 int CDECL lame_set_athaa_sensitivity( lame_global_flags *, float);
 float CDECL lame_get_athaa_sensitivity( const lame_global_flags* );
 
-/* predictability limit (ISO tonality formula) */
+#if DEPRECATED_OR_OBSOLETE_CODE_REMOVED
+#else
+/* OBSOLETE: predictability limit (ISO tonality formula) */
 int CDECL lame_set_cwlimit(lame_global_flags *, int);
 int CDECL lame_get_cwlimit(const lame_global_flags *);
+#endif
 
 /*
   allow blocktypes to differ between channels?

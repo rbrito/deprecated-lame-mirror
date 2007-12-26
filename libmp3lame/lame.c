@@ -330,7 +330,6 @@ lame_init_qval(lame_global_flags * gfp)
     switch (gfp->quality) {
     default:
     case 9:            /* no psymodel, no noise shaping */
-        gfc->filter_type = 0;
         gfc->psymodel = 0;
         gfc->noise_shaping = 0;
         gfc->noise_shaping_amp = 0;
@@ -343,7 +342,6 @@ lame_init_qval(lame_global_flags * gfp)
         gfp->quality = 7;
         /*lint --fallthrough */
     case 7:            /* use psymodel (for short block and m/s switching), but no noise shapping */
-        gfc->filter_type = 0;
         gfc->psymodel = 1;
         gfc->noise_shaping = 0;
         gfc->noise_shaping_amp = 0;
@@ -353,7 +351,6 @@ lame_init_qval(lame_global_flags * gfp)
         break;
 
     case 6:
-        gfc->filter_type = 0;
         gfc->psymodel = 1;
         if (gfc->noise_shaping == 0)
             gfc->noise_shaping = 1;
@@ -366,7 +363,6 @@ lame_init_qval(lame_global_flags * gfp)
         break;
 
     case 5:
-        gfc->filter_type = 0;
         gfc->psymodel = 1;
         if (gfc->noise_shaping == 0)
             gfc->noise_shaping = 1;
@@ -379,7 +375,6 @@ lame_init_qval(lame_global_flags * gfp)
         break;
 
     case 4:
-        gfc->filter_type = 0;
         gfc->psymodel = 1;
         if (gfc->noise_shaping == 0)
             gfc->noise_shaping = 1;
@@ -392,7 +387,6 @@ lame_init_qval(lame_global_flags * gfp)
         break;
 
     case 3:
-        gfc->filter_type = 0;
         gfc->psymodel = 1;
         if (gfc->noise_shaping == 0)
             gfc->noise_shaping = 1;
@@ -405,7 +399,6 @@ lame_init_qval(lame_global_flags * gfp)
         break;
 
     case 2:
-        gfc->filter_type = 0;
         gfc->psymodel = 1;
         if (gfc->noise_shaping == 0)
             gfc->noise_shaping = 1;
@@ -420,7 +413,6 @@ lame_init_qval(lame_global_flags * gfp)
         break;
 
     case 1:
-        gfc->filter_type = 0; /* 1 not yet coded */
         gfc->psymodel = 1;
         if (gfc->noise_shaping == 0)
             gfc->noise_shaping = 1;
@@ -435,7 +427,6 @@ lame_init_qval(lame_global_flags * gfp)
         break;
 
     case 0:
-        gfc->filter_type = 0; /* 1 not yet coded */
         gfc->psymodel = 1;
         if (gfc->noise_shaping == 0)
             gfc->noise_shaping = 1;
@@ -801,13 +792,6 @@ lame_init_params(lame_global_flags * const gfp)
     lame_init_params_ppflt(gfp);
 
 
-  /*******************************************************/
-    /* compute info needed for FIR filter (filter_type==1) */
-  /*******************************************************/
-    /* not yet coded */
-
-
-
   /*******************************************************
    * samplerate and bitrate index
    *******************************************************/
@@ -902,8 +886,6 @@ lame_init_params(lame_global_flags * const gfp)
         gfp->VBR = vbr_mtrh;
         /*lint --fallthrough */
     case vbr_mtrh:{
-            (void) lame_set_psy_model(gfp, PSY_NSPSYTUNE+1);
-            
             if ( gfp->useTemporal < 0 ) {
                 gfp->useTemporal = 0;   /* off by default for this VBR mode */
             }
@@ -1052,8 +1034,6 @@ lame_init_params(lame_global_flags * const gfp)
     gfc->ATH->aa_sensitivity_p = pow(10.0, gfp->athaa_sensitivity / -10.0);
 
 
-    gfc->PSY->cwlimit = gfp->cwlimit <= 0 ? 8871.7f : gfp->cwlimit;
-
     if (gfp->short_blocks == short_block_not_set) {
         gfp->short_blocks = short_block_allowed;
     }
@@ -1081,18 +1061,7 @@ lame_init_params(lame_global_flags * const gfp)
         lame_set_msfix(gfp, 0);
 
     /* select psychoacoustic model */
-    if ((lame_get_psy_model(gfp) < 0) || (lame_get_psy_model(gfp) == PSY_NSPSYTUNE)) {
-        (void) lame_set_psy_model(gfp, PSY_NSPSYTUNE);
-        (void) lame_set_exp_nspsytune(gfp, lame_get_exp_nspsytune(gfp) | 1);
-    }
-    else if (lame_get_psy_model(gfp) == PSY_NSPSYTUNE+1) {
-        (void) lame_set_exp_nspsytune(gfp, lame_get_exp_nspsytune(gfp) | 1);
-    }
-    else {
-        (void) lame_set_psy_model(gfp, PSY_GPSYCHO);
-        (void) lame_set_exp_nspsytune(gfp, (lame_get_exp_nspsytune(gfp) >> 1) << 1);
-    }
-
+    (void) lame_set_exp_nspsytune(gfp, lame_get_exp_nspsytune(gfp) | 1);
 
     if (lame_get_short_threshold_lrm(gfp) < 0)
         (void) lame_set_short_threshold_lrm(gfp, NSATTACKTHRE);
@@ -1218,22 +1187,17 @@ lame_print_config(const lame_global_flags * gfp)
              1.e-3 * in_samplerate, 1.e-3 * out_samplerate);
     }
 
-    if (gfc->filter_type == 0) {
-        if (gfc->highpass2 > 0.)
-            MSGF(gfc,
-                 "Using polyphase highpass filter, transition band: %5.0f Hz - %5.0f Hz\n",
-                 0.5 * gfc->highpass1 * out_samplerate, 0.5 * gfc->highpass2 * out_samplerate);
-        if (0. < gfc->lowpass1 && gfc->lowpass1 < 1.) {
-            MSGF(gfc,
-                 "Using polyphase lowpass filter, transition band: %5.0f Hz - %5.0f Hz\n",
-                 0.5 * gfc->lowpass1 * out_samplerate, 0.5 * gfc->lowpass2 * out_samplerate);
-        }
-        else {
-            MSGF(gfc, "polyphase lowpass filter disabled\n");
-        }
+    if (gfc->highpass2 > 0.)
+        MSGF(gfc,
+                "Using polyphase highpass filter, transition band: %5.0f Hz - %5.0f Hz\n",
+                0.5 * gfc->highpass1 * out_samplerate, 0.5 * gfc->highpass2 * out_samplerate);
+    if (0. < gfc->lowpass1 && gfc->lowpass1 < 1.) {
+        MSGF(gfc,
+                "Using polyphase lowpass filter, transition band: %5.0f Hz - %5.0f Hz\n",
+                0.5 * gfc->lowpass1 * out_samplerate, 0.5 * gfc->lowpass2 * out_samplerate);
     }
     else {
-        MSGF(gfc, "polyphase filters disabled\n");
+        MSGF(gfc, "polyphase lowpass filter disabled\n");
     }
 
     if (gfp->free_format) {
@@ -1264,7 +1228,6 @@ lame_print_internals(const lame_global_flags * gfp)
     MSGF(gfc, "\tscaling: %g\n", gfp->scale);
     MSGF(gfc, "\tch0 (left) scaling: %g\n", gfp->scale_left);
     MSGF(gfc, "\tch1 (right) scaling: %g\n", gfp->scale_right);
-    MSGF(gfc, "\tfilter type: %d\n", gfc->filter_type);
     switch (gfc->use_best_huffman) {
     default:
         pc = "normal";
@@ -1364,11 +1327,6 @@ lame_print_internals(const lame_global_flags * gfp)
      */
     MSGF(gfc, "\npsychoacoustic:\n\n");
 
-    MSGF(gfc, "\tusing psychoacoustic model: %d\n", gfc->psymodel);
-    MSGF(gfc, "\tpsychoacoustic model: %s\n",
-         (gfp->psymodel >= PSY_NSPSYTUNE) ? "NSPsytune" : "GPsycho");
-    MSGF(gfc, "\ttonality estimation limit: %f Hz %s\n", gfc->PSY->cwlimit,
-         (gfp->psymodel >= PSY_NSPSYTUNE) ? "(not relevant)" : "");
     switch (gfp->short_blocks) {
     default:
     case short_block_not_set:
@@ -1412,13 +1370,12 @@ lame_print_internals(const lame_global_flags * gfp)
     MSGF(gfc, "\t ^ adjust sensitivity power: %f\n", gfc->ATH->aa_sensitivity_p);
     MSGF(gfc, "\t ^ adapt threshold type: %d\n", gfp->athaa_loudapprox);
 
-    if (gfp->psymodel >= PSY_NSPSYTUNE) {
-        MSGF(gfc, "\texperimental psy tunings by Naoki Shibata\n");
-        MSGF(gfc, "\t   adjust masking bass=%g dB, alto=%g dB, treble=%g dB, sfb21=%g dB\n",
-             10 * log10(gfc->nsPsy.longfact[0]),
-             10 * log10(gfc->nsPsy.longfact[7]),
-             10 * log10(gfc->nsPsy.longfact[14]), 10 * log10(gfc->nsPsy.longfact[21]));
-    }
+    MSGF(gfc, "\texperimental psy tunings by Naoki Shibata\n");
+    MSGF(gfc, "\t   adjust masking bass=%g dB, alto=%g dB, treble=%g dB, sfb21=%g dB\n",
+            10 * log10(gfc->nsPsy.longfact[0]),
+            10 * log10(gfc->nsPsy.longfact[7]),
+            10 * log10(gfc->nsPsy.longfact[14]), 10 * log10(gfc->nsPsy.longfact[21]));
+    
     pc = gfp->useTemporal ? "yes" : "no";
     MSGF(gfc, "\tusing temporal masking effect: %s\n", pc);
     MSGF(gfc, "\tinterchannel masking ratio: %g\n", gfp->interChRatio);
@@ -2185,8 +2142,6 @@ lame_init_old(lame_global_flags * gfp)
     gfp->asm_optimizations.sse = 1;
 
     gfp->preset = 0;
-
-    gfp->psymodel = -1;
 
     return 0;
 }

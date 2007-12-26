@@ -215,12 +215,7 @@ ATHmdct(lame_global_flags const* gfp, FLOAT f)
 
     ath = ATHformula(f, gfp);
 
-    if (gfp->psymodel >= PSY_NSPSYTUNE) {
-        ath -= NSATHSCALE;
-    }
-    else {
-        ath -= 114;
-    }
+    ath -= NSATHSCALE;
 
     /* modify the MDCT scaling for the ATH and convert to energy */
     ath = pow(10.0, ath / 10.0 + gfp->ATHlower);
@@ -248,8 +243,6 @@ compute_ath(lame_global_flags * gfp)
             ATH_f = ATHmdct(gfp, freq); /* freq in kHz */
             ATH_l[sfb] = Min(ATH_l[sfb], ATH_f);
         }
-        if (gfp->psymodel == PSY_GPSYCHO)
-            ATH_l[sfb] *= (gfc->scalefac_band.l[sfb + 1] - gfc->scalefac_band.l[sfb]);
     }
 
     for (sfb = 0; sfb < PSFB21; sfb++) {
@@ -362,7 +355,7 @@ iteration_init(lame_global_flags * gfp)
         huffman_init(gfc);
         init_xrpow_core_init(gfc);
 
-        if (gfp->psymodel >= PSY_NSPSYTUNE) {
+        {
             FLOAT   bass, alto, treble, sfb21;
 
             i = (gfp->exp_nspsytune >> 2) & 63;
@@ -413,12 +406,6 @@ iteration_init(lame_global_flags * gfp)
                 gfc->nsPsy.shortfact[i] = f;
             }
         }
-        else {
-            for (i = 0; i < SBMAX_l; i++)
-                gfc->nsPsy.longfact[i] = 1.0;
-            for (i = 0; i < SBMAX_s; i++)
-                gfc->nsPsy.shortfact[i] = 1.0;
-        }
     }
 }
 
@@ -456,17 +443,7 @@ on_pe(lame_global_flags const *gfp, FLOAT const pe[][2], III_side_info_t const *
 
         targ_bits[ch] = Min(MAX_BITS_PER_CHANNEL, tbits / gfc->channels_out);
 
-        if (gfp->psymodel >= PSY_NSPSYTUNE) {
-            add_bits[ch] = targ_bits[ch] * pe[gr][ch] / 700.0 - targ_bits[ch];
-        }
-        else {
-            add_bits[ch] = (pe[gr][ch] - 750) / 1.4;
-            /* short blocks us a little extra, no matter what the pe */
-            if (cod_info->block_type == SHORT_TYPE) {
-                if (add_bits[ch] < mean_bits / 4)
-                    add_bits[ch] = mean_bits / 4;
-            }
-        }
+        add_bits[ch] = targ_bits[ch] * pe[gr][ch] / 700.0 - targ_bits[ch];
 
         /* at most increase bits by 1.5*average */
         if (add_bits[ch] > mean_bits * 3 / 4)
@@ -617,7 +594,7 @@ calc_xmin(lame_global_flags const *gfp,
     int const enable_athaa_fix = (gfp->VBR == vbr_mtrh) ? 1 : 0;
     FLOAT   masking_lower = gfc->masking_lower;
     
-    if (gfp->psymodel == PSY_NSPSYTUNE+1) {
+    if (gfp->VBR == vbr_mtrh || gfp->VBR == vbr_mt) {
         masking_lower = 1.0f; /* was already done in PSY-Model */
     }
 
