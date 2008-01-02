@@ -398,14 +398,20 @@ fi
 AC_MSG_CHECKING(use of file io)
 
 if test "${CONFIG_FILEIO}" = "sndfile" ; then
-  if test "${HAVE_SNDFILE}" = "yes" ; then
+  if test "${HAVE_SNDFILE}" = "yes" -o "x${SNDFILE_LIBS}" != "x" \
+    -o "x${SNDFILE_CFLAGS}" != "x"; then
+    SNDFILE_LIBS=`echo ${SNDFILE_LIBS}`
+    SNDFILE_CFLAGS=`echo ${SNDFILE_CFLAGS}`
+
     if test -n "${SNDFILE_LIBS}" ; then
       FRONTEND_LDFLAGS="-L${SNDFILE_LIBS} ${FRONTEND_LDFLAGS}"
     fi
     FRONTEND_LDADD="-lsndfile ${FRONTEND_LDADD}"
+
     if test -n "${SNDFILE_CFLAGS}" ; then
       INCLUDES="-I${SNDFILE_CFLAGS} ${INCLUDES}"
     fi
+
     AC_DEFINE(LIBSNDFILE, 1, set to 1 if you have libsndfile)
   else
     # default
