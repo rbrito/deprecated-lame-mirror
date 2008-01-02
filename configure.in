@@ -113,6 +113,23 @@ AC_CHECK_SIZEOF(unsigned long long)
 AC_CHECK_SIZEOF(float)
 AC_CHECK_SIZEOF(double)
 
+if test $ac_cv_sizeof_short -eq 0 \
+    -o $ac_cv_sizeof_unsigned_short -eq 0 \
+    -o $ac_cv_sizeof_int -eq 0 \
+    -o $ac_cv_sizeof_unsigned_int -eq 0 \
+    -o $ac_cv_sizeof_long -eq 0 \
+    -o $ac_cv_sizeof_unsigned_long -eq 0 \
+    -o $ac_cv_sizeof_long_long -eq 0 \
+    -o $ac_cv_sizeof_unsigned_long_long -eq 0 \
+    -o $ac_cv_sizeof_float -eq 0 \
+    -o $ac_cv_sizeof_double -eq 0; then
+	echo '*** I have a problem determining the size of some variable types. Either'
+	echo '*** you compiler is broken, or your system+compiler combination is not'
+	echo '*** supportet by the "autoconf" framework we use to generate this'
+	echo '*** configure script.'
+	exit 1
+fi
+
 AC_C_LONG_DOUBLE
 if test "${ac_cv_c_have_long_double}" = "yes" ; then
 	AC_CHECK_SIZEOF(long double)
@@ -148,16 +165,20 @@ AH_VERBATIM([HAVE_INT16_T],
 	typedef short int16_t;
 #endif])
 
-if test "${ac_cv_sizeof_unsigned_short}" = "4"; then
-	AC_DEFINE(A_UINT32_T,unsigned short)
+if test "${HAVE_INT32_T}" = yes; then
+	AC_DEFINE(A_UINT32_T,unsigned int32_t)
 else
-	if test "${ac_cv_sizeof_unsigned_int}" = "4"; then
-		AC_DEFINE(A_UINT32_T,unsigned int)
+	if test "${ac_cv_sizeof_unsigned_short}" = "4"; then
+		AC_DEFINE(A_UINT32_T,unsigned short)
 	else
-		if test "${ac_cv_sizeof_unsigned_long}" = "4"; then
-			AC_DEFINE(A_UINT32_T,unsigned long)
+		if test "${ac_cv_sizeof_unsigned_int}" = "4"; then
+			AC_DEFINE(A_UINT32_T,unsigned int)
 		else
-			AC_MSG_ERROR([CHECK_TYPE_uint32_t - please report to lame-dev@lists.sourceforge.net])
+			if test "${ac_cv_sizeof_unsigned_long}" = "4"; then
+				AC_DEFINE(A_UINT32_T,unsigned long)
+			else
+				AC_MSG_ERROR([CHECK_TYPE_uint32_t - please report to lame-dev@lists.sourceforge.net])
+			fi
 		fi
 	fi
 fi
@@ -192,16 +213,20 @@ AH_VERBATIM([HAVE_INT32_T],
 	typedef A_INT32_T int32_t;
 #endif])
 
-if test "${ac_cv_sizeof_unsigned_int}" = "8"; then
-	AC_DEFINE(A_UINT64_T,unsigned int)
+if test "${HAVE_INT64_T}" = yes; then
+        AC_DEFINE(A_UINT64_T,unsigned int64_t)
 else
-	if test "${ac_cv_sizeof_unsigned_long}" = "8"; then
-		AC_DEFINE(A_UINT64_T,unsigned long)
+	if test "${ac_cv_sizeof_unsigned_int}" = "8"; then
+		AC_DEFINE(A_UINT64_T,unsigned int)
 	else
-		if test "${ac_cv_sizeof_unsigned_long_long}" = "8"; then
-			AC_DEFINE(A_UINT64_T,unsigned long long)
+		if test "${ac_cv_sizeof_unsigned_long}" = "8"; then
+			AC_DEFINE(A_UINT64_T,unsigned long)
 		else
-			AC_MSG_ERROR([CHECK_TYPE_uint64_t - please report to lame-dev@lists.sourceforge.net])
+			if test "${ac_cv_sizeof_unsigned_long_long}" = "8"; then
+				AC_DEFINE(A_UINT64_T,unsigned long long)
+			else
+				AC_MSG_ERROR([CHECK_TYPE_uint64_t - please report to lame-dev@lists.sourceforge.net])
+			fi
 		fi
 	fi
 fi
@@ -404,12 +429,12 @@ if test "${CONFIG_FILEIO}" = "sndfile" ; then
     SNDFILE_CFLAGS=`echo ${SNDFILE_CFLAGS}`
 
     if test -n "${SNDFILE_LIBS}" ; then
-      FRONTEND_LDFLAGS="-L${SNDFILE_LIBS} ${FRONTEND_LDFLAGS}"
+      FRONTEND_LDFLAGS="${SNDFILE_LIBS} ${FRONTEND_LDFLAGS}"
     fi
     FRONTEND_LDADD="-lsndfile ${FRONTEND_LDADD}"
 
     if test -n "${SNDFILE_CFLAGS}" ; then
-      INCLUDES="-I${SNDFILE_CFLAGS} ${INCLUDES}"
+      INCLUDES="${SNDFILE_CFLAGS} ${INCLUDES}"
     fi
 
     AC_DEFINE(LIBSNDFILE, 1, set to 1 if you have libsndfile)
@@ -687,6 +712,14 @@ no)
 		if test "${CPUTYPE}" = "${recurse_over}"; then
 			include_asm_routines="yes"
 		fi
+
+		case $host_os in
+		*darwin*)
+			# currently we have problems because of a wrong
+			# libtool hack in the darwin case (for nasm code)
+			include_asm_routines="no"
+			;;
+		esac
 	done
 	if test "x${include_asm_routines}" = "xyes"; then
 		AC_DEFINE(HAVE_NASM, 1, have nasm)
@@ -704,6 +737,9 @@ case $host_os in
 	*cygwin*|*mingw32*)
 		CYGWIN=yes
 		NASM_FORMAT="-f win32 -DWIN32"
+		;;
+	*darwin*)
+		NASM_FORMAT="-f macho"
 		;;
 	*)
 		CYGWIN=no
