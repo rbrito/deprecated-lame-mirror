@@ -568,9 +568,16 @@ lame_init_params(lame_global_flags * const gfp)
     if (gfp->VBR == vbr_off && gfp->VBR_mean_bitrate_kbps != 128 && gfp->brate == 0)
         gfp->brate = gfp->VBR_mean_bitrate_kbps;
 
-
-    if (gfp->VBR != vbr_off)
-        gfp->free_format = 0; /* VBR can't be mixed with free format */
+    switch (gfp->VBR) {        
+    case vbr_off:
+    case vbr_mtrh:
+    case vbr_mt:
+        /* these modes can handle free format condition */
+        break;
+    default:
+        gfp->free_format = 0; /* mode can't be mixed with free format */
+        break;
+    }
 
     if (gfp->VBR == vbr_off && gfp->brate == 0) {
         /* no bitrate or compression ratio specified, use 11.025 */
@@ -595,9 +602,6 @@ lame_init_params(lame_global_flags * const gfp)
         if (!gfp->free_format) /* for non Free Format find the nearest allowed bitrate */
             gfp->brate = FindNearestBitrate(gfp->brate, gfp->version, gfp->out_samplerate);
     }
-
-    if (gfp->VBR != vbr_off && gfp->brate >= 320)
-        gfp->VBR = vbr_off; /* at 160 kbps (MPEG-2/2.5)/ 320 kbps (MPEG-1) only Free format or CBR are possible, no VBR */
     if (gfp->out_samplerate) {
         if (gfp->out_samplerate < 16000) {
             gfp->VBR_mean_bitrate_kbps = Max(gfp->VBR_mean_bitrate_kbps, 8);
@@ -2210,8 +2214,15 @@ lame_bitrate_kbps(const lame_global_flags * const gfp, int bitrate_kbps[14])
     if (NULL == gfc)
         return;
 
-    for (i = 0; i < 14; i++)
-        bitrate_kbps[i] = bitrate_table[gfp->version][i + 1];
+    if (gfp->free_format) {
+        for (i = 0; i < 14; i++)
+            bitrate_kbps[i] = -1;
+        bitrate_kbps[0] = gfp->brate;
+    }
+    else {
+        for (i = 0; i < 14; i++)
+            bitrate_kbps[i] = bitrate_table[gfp->version][i + 1];
+    }
 }
 
 
@@ -2229,8 +2240,15 @@ lame_bitrate_hist(const lame_global_flags * const gfp, int bitrate_count[14])
     if (NULL == gfc)
         return;
 
-    for (i = 0; i < 14; i++)
-        bitrate_count[i] = gfc->bitrate_stereoMode_Hist[i + 1][4];
+    if (gfp->free_format) {
+        for (i = 0; i < 14; i++)
+            bitrate_count[i] = 0;
+        bitrate_count[0] = gfc->bitrate_stereoMode_Hist[0][4];
+    }
+    else {
+        for (i = 0; i < 14; i++)
+            bitrate_count[i] = gfc->bitrate_stereoMode_Hist[i + 1][4];
+    }
 }
 
 
@@ -2270,9 +2288,18 @@ lame_bitrate_stereo_mode_hist(const lame_global_flags * const gfp, int bitrate_s
     if (NULL == gfc)
         return;
 
-    for (j = 0; j < 14; j++)
+    if (gfp->free_format) {
+        for (j = 0; j < 14; j++)
+            for (i = 0; i < 4; i++)
+                bitrate_stmode_count[j][i] = 0;
         for (i = 0; i < 4; i++)
-            bitrate_stmode_count[j][i] = gfc->bitrate_stereoMode_Hist[j + 1][i];
+            bitrate_stmode_count[0][i] = gfc->bitrate_stereoMode_Hist[0][i];
+    }
+    else {
+        for (j = 0; j < 14; j++)
+            for (i = 0; i < 4; i++)
+                bitrate_stmode_count[j][i] = gfc->bitrate_stereoMode_Hist[j + 1][i];
+    }
 }
 
 
@@ -2311,9 +2338,18 @@ lame_bitrate_block_type_hist(const lame_global_flags * const gfp, int bitrate_bt
     if (NULL == gfc)
         return;
 
-    for (j = 0; j < 14; ++j)
+    if (gfp->free_format) {
+        for (j = 0; j < 14; ++j)
+            for (i = 0; i < 6; ++i)
+                bitrate_btype_count[j][i] = 0;
         for (i = 0; i < 6; ++i)
-            bitrate_btype_count[j][i] = gfc->bitrate_blockType_Hist[j + 1][i];
+            bitrate_btype_count[0][i] = gfc->bitrate_blockType_Hist[0][i];
+    }
+    else {
+        for (j = 0; j < 14; ++j)
+            for (i = 0; i < 6; ++i)
+                bitrate_btype_count[j][i] = gfc->bitrate_blockType_Hist[j + 1][i];
+    }
 }
 
 

@@ -1325,8 +1325,7 @@ VBR_encode_granule(lame_global_flags const *gfp, gr_info * const cod_info, const
  ************************************************************************/
 
 static void
-get_framebits(lame_global_flags const *gfp,
-              int *const analog_mean_bits, int *const min_mean_bits, int frameBits[15])
+get_framebits(lame_global_flags const *gfp, int frameBits[15])
 {
     lame_internal_flags *const gfc = gfp->internal_flags;
     int     bitsPerFrame, i;
@@ -1336,13 +1335,11 @@ get_framebits(lame_global_flags const *gfp,
      */
     gfc->bitrate_index = gfc->VBR_min_bitrate;
     bitsPerFrame = getframebits(gfp);
-    *min_mean_bits = (bitsPerFrame - gfc->sideinfo_len * 8) / (gfc->mode_gr * gfc->channels_out);
 
     /*  bits for analog silence
      */
     gfc->bitrate_index = 1;
     bitsPerFrame = getframebits(gfp);
-    *analog_mean_bits = (bitsPerFrame - gfc->sideinfo_len * 8) / (gfc->mode_gr * gfc->channels_out);
 
     for (i = 1; i <= gfc->VBR_max_bitrate; i++) {
         gfc->bitrate_index = i;
@@ -1382,8 +1379,7 @@ VBR_old_prepare(lame_global_flags const *gfp,
                 III_psy_ratio const ratio[2][2],
                 FLOAT l3_xmin[2][2][SFBMAX],
                 int frameBits[16],
-                int *analog_mean_bits,
-                int *min_mean_bits, int min_bits[2][2], int max_bits[2][2], int bands[2][2])
+                int min_bits[2][2], int max_bits[2][2], int bands[2][2])
 {
     lame_internal_flags *const gfc = gfp->internal_flags;
 
@@ -1396,7 +1392,7 @@ VBR_old_prepare(lame_global_flags const *gfp,
     gfc->bitrate_index = gfc->VBR_max_bitrate;
     avg = ResvFrameBegin(gfp, &avg) / gfc->mode_gr;
 
-    get_framebits(gfp, analog_mean_bits, min_mean_bits, frameBits);
+    get_framebits(gfp, frameBits);
 
     for (gr = 0; gr < gfc->mode_gr; gr++) {
         mxb = on_pe(gfp, pe, &gfc->l3_side, max_bits[gr], avg, gr, 0);
@@ -1438,8 +1434,6 @@ VBR_old_prepare(lame_global_flags const *gfp,
 
         }               /* for ch */
     }                   /* for gr */
-
-    *min_mean_bits = Max(*min_mean_bits, 126);
 
     return analog_silence;
 }
@@ -1494,14 +1488,13 @@ VBR_old_iteration_loop(lame_global_flags const *gfp,
     int     used_bits;
     int     bits;
     int     min_bits[2][2], max_bits[2][2];
-    int     analog_mean_bits, min_mean_bits;
     int     mean_bits;
     int     ch, gr, analog_silence;
     III_side_info_t *const l3_side = &gfc->l3_side;
 
     analog_silence = VBR_old_prepare(gfp, pe, ms_ener_ratio, ratio,
-                                     l3_xmin, frameBits, &analog_mean_bits,
-                                     &min_mean_bits, min_bits, max_bits, bands);
+                                     l3_xmin, frameBits,
+                                     min_bits, max_bits, bands);
 
     /*---------------------------------*/
     for (;;) {
@@ -1585,12 +1578,20 @@ VBR_new_prepare(lame_global_flags const *gfp,
     int     gr, ch;
     int     analog_silence = 1;
     int     avg, mxb, bits = 0;
-    int     dummy_not_used_anymore;
+    int     maximum_framebits;
+    
+    if (!gfp->free_format) {
+        gfc->bitrate_index = gfc->VBR_max_bitrate;
+        (void) ResvFrameBegin(gfp, &avg);
 
-    gfc->bitrate_index = gfc->VBR_max_bitrate;
-    (void) ResvFrameBegin(gfp, &avg);
-
-    get_framebits(gfp, &dummy_not_used_anymore, &dummy_not_used_anymore, frameBits);
+        get_framebits(gfp, frameBits);
+        maximum_framebits = frameBits[gfc->VBR_max_bitrate];
+    }
+    else {
+        gfc->bitrate_index = 0;
+        maximum_framebits = ResvFrameBegin(gfp, &avg);
+        frameBits[0] = maximum_framebits;
+    }
 
     for (gr = 0; gr < gfc->mode_gr; gr++) {
         mxb = on_pe(gfp, pe, &gfc->l3_side, max_bits[gr], avg, gr, 0);
@@ -1611,8 +1612,8 @@ VBR_new_prepare(lame_global_flags const *gfp,
     }
     for (gr = 0; gr < gfc->mode_gr; gr++) {
         for (ch = 0; ch < gfc->channels_out; ch++) {
-            if (bits > frameBits[gfc->VBR_max_bitrate]) {
-                max_bits[gr][ch] *= frameBits[gfc->VBR_max_bitrate];
+            if (bits > maximum_framebits) {
+                max_bits[gr][ch] *= maximum_framebits;
                 max_bits[gr][ch] /= bits;
             }
 
@@ -1621,6 +1622,27 @@ VBR_new_prepare(lame_global_flags const *gfp,
 
     return analog_silence;
 }
+
+
+#if 0
+static int
+getFramesizeInBytesPerSecond(lame_global_flags const* gfp, int bits_used )
+{
+    lame_internal_flags const * gfc = gfp->internal_flags;
+    int const tmp = (gfp->version == 0) ? 72 : 144;
+    int const bytes_used = (bits_used+7)/8;
+    int const bytes_per_second = (gfp->out_samplerate * ( bytes_used + gfc->sideinfo_len) + (tmp-1)) / tmp;
+    return bytes_per_second;
+}
+
+static int
+getFramesize_kbps(lame_global_flags const* gfp, int bits_used )
+{
+    int const bytes_per_second = getFramesizeInBytesPerSecond(gfp, bits_used);
+    int const kbps = (bytes_per_second + 999)/1000;
+    return kbps;
+}
+#endif
 
 
 void
@@ -1658,22 +1680,39 @@ VBR_new_iteration_loop(lame_global_flags const *gfp,
      */
 
     used_bits = VBR_encode_frame(gfc, xrpow, l3_xmin, max_bits);
-
-    /*  find lowest bitrate able to hold used bits
-     */
-    if (analog_silence && !gfp->VBR_hard_min)
-        /*  we detected analog silence and the user did not specify
-         *  any hard framesize limit, so start with smallest possible frame
-         */
-        gfc->bitrate_index = 1;
-    else
-        gfc->bitrate_index = gfc->VBR_min_bitrate;
-
-    for (; gfc->bitrate_index < gfc->VBR_max_bitrate; gfc->bitrate_index++) {
-        if (used_bits <= frameBits[gfc->bitrate_index])
-            break;
+    
+    if (!gfp->free_format) {
+        /*  find lowest bitrate able to hold used bits
+        */
+        if (analog_silence && !gfp->VBR_hard_min) {
+            /*  we detected analog silence and the user did not specify
+            *  any hard framesize limit, so start with smallest possible frame
+            */
+            gfc->bitrate_index = 1;
+        }
+        else {
+            gfc->bitrate_index = gfc->VBR_min_bitrate;
+        }
+    
+        for (; gfc->bitrate_index < gfc->VBR_max_bitrate; gfc->bitrate_index++) {
+            if (used_bits <= frameBits[gfc->bitrate_index])
+                break;
+        }
+        if (gfc->bitrate_index > gfc->VBR_max_bitrate) {
+            gfc->bitrate_index = gfc->VBR_max_bitrate;
+        }
     }
-    if (used_bits <= frameBits[gfc->VBR_max_bitrate]) {
+    else {
+#if 0
+        static int mmm = 0;
+        int fff = getFramesize_kbps(gfp, used_bits);
+        int hhh = getFramesize_kbps(gfp, MAX_BITS_PER_GRANULE * gfc->mode_gr);
+        if (mmm < fff) mmm = fff;
+        printf("demand=%3d kbps  max=%3d kbps   limit=%3d kbps\n",fff,mmm,hhh);
+#endif
+        gfc->bitrate_index = 0;
+    }
+    if (used_bits <= frameBits[gfc->bitrate_index]) {
         /* update Reservoire status */
         int     mean_bits, fullframebits;
         fullframebits = ResvFrameBegin(gfp, &mean_bits);
