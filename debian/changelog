@@ -1,5 +1,16 @@
 lame (3.98-1) unstable; urgency=low
 
+  * New upstream release with various improvements;
+  * Use libsndfile for input files;
+  * Remove the parts that depend on gtk-1.2;
+  * debian/rules: remove the DH_COMPAT variable;
+  * debian/control: use ${binary:Version} to be up-to-date;
+  * debian/control: use debhelper version >= 5;
+	
+ -- Rogério Brito <rbrito@users.sf.net>  Wed, 09 Jan 2008 17:12:19 -0200
+
+lame (3.98-0.1) unstable; urgency=low
+
   * debian/copyright: updated FSF real address;
   * debian/rules: small fixes;
   * doc/man/lame.1: used accented characters in troff format.

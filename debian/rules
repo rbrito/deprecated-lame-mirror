@@ -5,8 +5,6 @@
 # Uncomment this to turn on verbose mode.
 #export DHVERBOSE=1
 
-export DH_COMPAT=4
-
 configure: configure-stamp
 configure-stamp:
 	dh_testdir
@@ -14,11 +12,8 @@ configure-stamp:
 	CFLAGS="$(CFLAGS)" ./configure \
 		--prefix=/usr \
 		--mandir=/usr/share/man \
-		--with-fileio=lame \
+		--with-fileio=sndfile \
 		--without-vorbis \
-		--enable-decode-layer1 \
-		--enable-mp3x \
-		--enable-mp3rtp \
 		--enable-nasm \
 		--with-pic \
 		--enable-expopt=full
