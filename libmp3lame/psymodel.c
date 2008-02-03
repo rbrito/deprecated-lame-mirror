@@ -1,12 +1,12 @@
 /*
- *	psymodel.c
+ *      psymodel.c
  *
- *	Copyright (c) 1999-2000 Mark Taylor
- *	Copyright (c) 2001-2002 Naoki Shibata
- *	Copyright (c) 2000-2003 Takehiro Tominaga
- *	Copyright (c) 2000-2007 Robert Hegemann
- *	Copyright (c) 2000-2005 Gabriel Bouvigne
- *	Copyright (c) 2000-2005 Alexander Leidinger
+ *      Copyright (c) 1999-2000 Mark Taylor
+ *      Copyright (c) 2001-2002 Naoki Shibata
+ *      Copyright (c) 2000-2003 Takehiro Tominaga
+ *      Copyright (c) 2000-2008 Robert Hegemann
+ *      Copyright (c) 2000-2005 Gabriel Bouvigne
+ *      Copyright (c) 2000-2005 Alexander Leidinger
  *
  * This library is free software; you can redistribute it and/or
  * modify it under the terms of the GNU Lesser General Public
@@ -15,7 +15,7 @@
  *
  * This library is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.	 See the GNU
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
  * Library General Public License for more details.
  *
  * You should have received a copy of the GNU Lesser General Public
@@ -157,9 +157,9 @@ blocktype_d[2]        block type to use for previous granule
 #define NSFIRLEN 21
 
 #ifdef M_LN10
-#define		LN_TO_LOG10		(M_LN10/10)
+#define  LN_TO_LOG10  (M_LN10/10)
 #else
-#define         LN_TO_LOG10             0.2302585093
+#define  LN_TO_LOG10  0.2302585093
 #endif
 
 #ifdef NON_LINEAR_PSY
@@ -483,6 +483,80 @@ mask_add(FLOAT m1, FLOAT m2, int kk, int b, lame_internal_flags const *gfc, int 
     }
 
 
+    /* 10% of total */
+    return m1 * table1[i];
+}
+
+
+/* addition of simultaneous masking   Naoki Shibata 2000/7 */
+inline static FLOAT
+vbrpsy_mask_add(FLOAT m1, FLOAT m2, int kk, int b)
+{
+    static const FLOAT table1[] = {
+        3.3246 * 3.3246, 3.23837 * 3.23837, 3.15437 * 3.15437, 3.00412 * 3.00412, 2.86103 * 2.86103,
+        2.65407 * 2.65407, 2.46209 * 2.46209, 2.284 * 2.284,
+        2.11879 * 2.11879, 1.96552 * 1.96552, 1.82335 * 1.82335, 1.69146 * 1.69146,
+        1.56911 * 1.56911, 1.46658 * 1.46658, 1.37074 * 1.37074, 1.31036 * 1.31036,
+        1.25264 * 1.25264, 1.20648 * 1.20648, 1.16203 * 1.16203, 1.12765 * 1.12765,
+        1.09428 * 1.09428, 1.0659 * 1.0659, 1.03826 * 1.03826, 1.01895 * 1.01895,
+        1
+    };
+
+    static const FLOAT table2[] = {
+        1.33352 * 1.33352, 1.35879 * 1.35879, 1.38454 * 1.38454, 1.39497 * 1.39497,
+        1.40548 * 1.40548, 1.3537 * 1.3537, 1.30382 * 1.30382, 1.22321 * 1.22321,
+        1.14758 * 1.14758,
+        1
+    };
+
+    static const FLOAT table3[] = {
+        2.35364 * 2.35364, 2.29259 * 2.29259, 2.23313 * 2.23313, 2.12675 * 2.12675,
+        2.02545 * 2.02545, 1.87894 * 1.87894, 1.74303 * 1.74303, 1.61695 * 1.61695,
+        1.49999 * 1.49999, 1.39148 * 1.39148, 1.29083 * 1.29083, 1.19746 * 1.19746,
+        1.11084 * 1.11084, 1.03826 * 1.03826
+    };
+
+
+    int     i;
+    FLOAT   ratio;
+
+    if (m1 < 0) m1 = 0;
+    if (m2 < 0) m2 = 0;
+    if (m1 <= 0 && m2 <= 0) return 0;
+    
+    if (m2 > m1) {
+        if (m2 < (m1 * ma_max_i2)) {
+            ratio = m2 / m1;
+        }
+        else
+            return (m1 + m2);
+    }
+    else {
+        if (m1 >= (m2 * ma_max_i2))
+            return (m1 + m2);
+        ratio = m1 / m2;
+    }
+
+    m1 += m2;
+
+    if ((unsigned int) (b + 3) <= 3 + 3) { /* approximately, 1 bark = 3 partitions */
+        /* 65% of the cases */
+        /* originally 'if(i > 8)' */
+        if (ratio >= ma_max_i1) {
+            /* 43% of the total */
+            return m1;
+        }
+
+        /* 22% of the total */
+        i = (int) (FAST_LOG10_X(ratio, 16.0));
+        return m1 * table2[i];
+    }
+
+    i = (int) FAST_LOG10_X(ratio, 16.0);
+    
+    assert( i >= 0 );
+    assert( i < dimension_of(table1) );
+    
     /* 10% of total */
     return m1 * table1[i];
 }
@@ -838,7 +912,7 @@ pecalc_s(III_psy_ratio const *mr, FLOAT masking_lower)
         84.6,
         97.6,
         130,
-/*	255.8 */
+/*      255.8 */
     };
     unsigned int sb, sblock;
 
@@ -892,7 +966,7 @@ pecalc_l(III_psy_ratio const *mr, FLOAT masking_lower)
         85.7,
         93.4,
         126.1,
-/*	241.3 */
+/*      241.3 */
     };
     unsigned int sb;
 
@@ -1827,7 +1901,7 @@ vbrpsy_compute_masking_s(lame_global_flags const *gfp, FLOAT(*fftenergy_s)[HBLKS
             dd += mask_idx_s[kk];
             dd_n += 1;
             x = gfc->s3_ss[j] * eb[kk] * tab[mask_idx_s[kk]];
-            ecb = mask_add(ecb, x, kk, kk - b, gfc, 1);
+            ecb = vbrpsy_mask_add(ecb, x, kk, kk - b);
             ++j, ++kk;
         }
         dd = (1 + 2 * dd) / (2 * dd_n);
@@ -1918,7 +1992,7 @@ vbrpsy_compute_masking_l(lame_internal_flags * gfc, FLOAT fftenergy[HBLKSIZE], F
             dd += mask_idx_l[kk];
             dd_n += 1;
             x = gfc->s3_ll[k] * eb_l[kk] * tab[mask_idx_l[kk]];
-            t = mask_add(ecb, x, kk, kk - b, gfc, 0);
+            t = vbrpsy_mask_add(ecb, x, kk, kk - b);
 #if 0
             ecb += eb_l[kk];
             if (ecb > t) {
@@ -2483,8 +2557,7 @@ init_numline(int *numlines, int *bo, int *bm,
 }
 
 static int
-init_s3_values(lame_global_flags const *gfp,
-               FLOAT ** p,
+init_s3_values(FLOAT ** p,
                int (*s3ind)[2], int npart, FLOAT const *bval, FLOAT const *bval_width,
                FLOAT const *norm)
 {
@@ -2492,7 +2565,6 @@ init_s3_values(lame_global_flags const *gfp,
     /* The s3 array is not linear in the bark scale.
      * bval[x] should be used to get the bark value.
      */
-    int const flag = (gfp->VBR == vbr_mtrh || gfp->VBR == vbr_mt);
     int     i, j, k;
     int     numberOfNoneZero = 0;
 
@@ -2508,11 +2580,6 @@ init_s3_values(lame_global_flags const *gfp,
             FLOAT   v = s3_func(bval[i] - bval[j]) * bval_width[j];
             sum += v;
             s3[i][j] = v * norm[i];
-        }
-        if (flag && sum > 0.f) {
-            for (j = 0; j < npart; j++) {
-                s3[i][j] /= sum;
-            }
         }
     }
     for (i = 0; i < npart; i++) {
@@ -2612,7 +2679,7 @@ psymodel_init(lame_global_flags * gfp)
             gfc->rnumlines_l[i] = 0;
         }
     }
-    i = init_s3_values(gfp, &gfc->s3_ll, gfc->s3ind, gfc->npart_l, bval, bval_width, norm);
+    i = init_s3_values(&gfc->s3_ll, gfc->s3ind, gfc->npart_l, bval, bval_width, norm);
     if (i)
         return i;
 
@@ -2687,7 +2754,7 @@ psymodel_init(lame_global_flags * gfp)
         gfc->minval_s[i] = pow(10.0, x / 10);
     }
 
-    i = init_s3_values(gfp, &gfc->s3_ss, gfc->s3ind_s, gfc->npart_s, bval, bval_width, norm);
+    i = init_s3_values(&gfc->s3_ss, gfc->s3ind_s, gfc->npart_s, bval, bval_width, norm);
     if (i)
         return i;
 
