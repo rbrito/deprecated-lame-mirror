@@ -238,6 +238,7 @@ lame_block_type_hist	@161
 lame_bitrate_block_type_hist	@162
 lame_mp3_tags_fid	@163
 lame_close		@164
+lame_get_lametag_frame	@165
 
 bitrate_table		@500
 samplerate_table	@501
@@ -267,3 +268,7 @@ id3tag_set_track	@2012
 id3tag_set_genre	@2013
 id3tag_set_fieldvalue	@2014
 id3tag_set_albumart	@2015
+lame_get_id3v1_tag	@2016
+lame_get_id3v2_tag	@2017
+lame_set_write_id3tag_automatic	@2018
+lame_get_write_id3tag_automatic	@2019

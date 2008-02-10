@@ -1784,7 +1784,23 @@ lame_set_asm_optimizations(lame_global_flags * gfp, int optim, int mode)
 }
 
 
+void
+lame_set_write_id3tag_automatic(lame_global_flags * gfp, int v)
+{
+    if (gfp) {
+        gfp->write_id3tag_automatic = v;
+    }
+}
 
+
+int
+lame_get_write_id3tag_automatic(lame_global_flags const* gfp)
+{
+    if (gfp) {
+        return gfp->write_id3tag_automatic;
+    }
+    return 1;
+}
 
 
 /*

@@ -51,6 +51,7 @@ struct lame_global_struct {
     int     free_format;     /* use free format? default=0                  */
     int     findReplayGain;  /* find the RG value? default=0       */
     int     decode_on_the_fly; /* decode on the fly? default=0                */
+    int     write_id3tag_automatic; /* 1 (default) writes ID3 tags, 0 not */
 
     /*
      * set either brate>0  or compression_ratio>0, LAME will compute

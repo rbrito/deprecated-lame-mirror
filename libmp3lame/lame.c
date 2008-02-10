@@ -1860,8 +1860,9 @@ lame_init_bitstream(lame_global_flags * gfp)
     lame_internal_flags *const gfc = gfp->internal_flags;
     gfp->frameNum = 0;
 
-    (void) id3tag_write_v2(gfp);
-
+    if (gfp->write_id3tag_automatic) {
+        (void) id3tag_write_v2(gfp);
+    }
     /* initialize histogram data optionally used by frontend */
     memset(gfc->bitrate_stereoMode_Hist, 0, sizeof(gfc->bitrate_stereoMode_Hist));
     memset(gfc->bitrate_blockType_Hist, 0, sizeof(gfc->bitrate_blockType_Hist));
@@ -1946,14 +1947,17 @@ lame_encode_flush(lame_global_flags * gfp, unsigned char *mp3buffer, int mp3buff
     if (mp3buffer_size == 0)
         mp3buffer_size_remaining = 0;
 
-    /* write a id3 tag to the bitstream */
-    (void) id3tag_write_v1(gfp);
-    imp3 = copy_buffer(gfc, mp3buffer, mp3buffer_size_remaining, 0);
-
-    if (imp3 < 0) {
-        return imp3;
+    if (gfp->write_id3tag_automatic) {
+        /* write a id3 tag to the bitstream */
+        (void) id3tag_write_v1(gfp);
+    
+        imp3 = copy_buffer(gfc, mp3buffer, mp3buffer_size_remaining, 0);
+        
+        if (imp3 < 0) {
+            return imp3;
+        }
+        mp3count += imp3;
     }
-    mp3count += imp3;
     gfp->encoder_padding = end_padding;
     return mp3count;
 }
@@ -2147,6 +2151,7 @@ lame_init_old(lame_global_flags * gfp)
 
     gfp->preset = 0;
 
+    gfp->write_id3tag_automatic = 1;
     return 0;
 }
 

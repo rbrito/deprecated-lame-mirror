@@ -617,7 +617,7 @@ float CDECL lame_get_noclipScale(const lame_global_flags *);
  * sets more internal configuration based on data provided above.
  * returns -1 if something failed.
  */
-int CDECL lame_init_params(lame_global_flags * const );
+int CDECL lame_init_params(lame_global_flags *);
 
 
 /*
@@ -651,7 +651,7 @@ typedef struct {
     /* compile time features */
     const char *features;    /* Don't make assumptions about the contents! */
 } lame_version_t;
-void CDECL get_lame_version_numerical ( lame_version_t *const );
+void CDECL get_lame_version_numerical(lame_version_t *);
 
 
 /*
@@ -855,25 +855,25 @@ int CDECL lame_init_bitstream(
  */
 
 void CDECL lame_bitrate_hist(
-        const lame_global_flags *const gfp,
-              int                      bitrate_count[14] );
+        const lame_global_flags * gfp,
+        int bitrate_count[14] );
 void CDECL lame_bitrate_kbps(
-        const lame_global_flags *const gfp,
-              int                      bitrate_kbps [14] );
+        const lame_global_flags * gfp,
+        int bitrate_kbps [14] );
 void CDECL lame_stereo_mode_hist(
-        const lame_global_flags *const gfp,
-              int                      stereo_mode_count[4] );
+        const lame_global_flags * gfp,
+        int stereo_mode_count[4] );
 
 void CDECL lame_bitrate_stereo_mode_hist (
-        const lame_global_flags * const gfp,
-        int  bitrate_stmode_count [14] [4] );
+        const lame_global_flags * gfp,
+        int bitrate_stmode_count[14][4] );
 
 void CDECL lame_block_type_hist (
-        const lame_global_flags * const gfp,
+        const lame_global_flags * gfp,
         int btype_count[6] );
 
 void CDECL lame_bitrate_block_type_hist (
-        const lame_global_flags * const gfp,
+        const lame_global_flags * gfp,
         int bitrate_btype_count[14][6] );
 
 
@@ -890,9 +890,31 @@ void CDECL lame_bitrate_block_type_hist (
  * NOTE:
  * LAME wants to read from the file to skip an optional ID3v2 tag, so
  * make sure you opened the file for writing and reading.
+ * NOTE:
+ * You can call lame_get_lametag_frame instead, if you want to insert
+ * the lametag yourself.
 */
 void CDECL lame_mp3_tags_fid(lame_global_flags *,FILE* fid);
 
+/*
+ * OPTIONAL:
+ * lame_get_lametag_frame copies the final LAME-tag into 'buffer'.
+ * The function returns the number of bytes copied into buffer, or
+ * the required buffer size, if the provided buffer is too small.
+ * Function failed, if the return value is larger than 'size'!
+ * Make sure lame_encode flush has been called before calling this function.
+ * NOTE:
+ * if VBR  tags are turned off by the user, or turned off by LAME,
+ * this call does nothing and returns 0.
+ * NOTE:
+ * LAME inserted an empty frame in the beginning of mp3 audio data,
+ * which you have to replace by the final LAME-tag frame after encoding.
+ * In case there is no ID3v2 tag, usually this frame will be the very first
+ * data in your mp3 file. If you put some other leading data into your
+ * file, you'll have to do some bookkeeping about where to write this buffer.
+ */
+size_t CDECL lame_get_lametag_frame(
+        const lame_global_flags *, unsigned char* buffer, size_t size);
 
 /*
  * REQUIRED:
@@ -1042,46 +1064,46 @@ int CDECL lame_decode_exit(void);
  */
 
 /* utility to obtain alphabetically sorted list of genre names with numbers */
-extern void id3tag_genre_list(
+void CDECL id3tag_genre_list(
         void (*handler)(int, const char *, void *),
         void*  cookie);
 
-extern void id3tag_init   (lame_global_flags *gfp);
+void CDECL id3tag_init   (lame_global_flags *gfp);
 
 /* force addition of version 2 tag */
-extern void id3tag_add_v2   (lame_global_flags *gfp);
+void CDECL id3tag_add_v2   (lame_global_flags *gfp);
 
 /* add only a version 1 tag */
-extern void id3tag_v1_only  (lame_global_flags *gfp);
+void CDECL id3tag_v1_only  (lame_global_flags *gfp);
 
 /* add only a version 2 tag */
-extern void id3tag_v2_only  (lame_global_flags *gfp);
+void CDECL id3tag_v2_only  (lame_global_flags *gfp);
 
 /* pad version 1 tag with spaces instead of nulls */
-extern void id3tag_space_v1 (lame_global_flags *gfp);
+void CDECL id3tag_space_v1 (lame_global_flags *gfp);
 
 /* pad version 2 tag with extra 128 bytes */
-extern void id3tag_pad_v2   (lame_global_flags *gfp);
+void CDECL id3tag_pad_v2   (lame_global_flags *gfp);
 
-extern void id3tag_set_title(
+void CDECL id3tag_set_title(
         lame_global_flags*  gfp,
         const char*         title );
-extern void id3tag_set_artist(
+void CDECL id3tag_set_artist(
         lame_global_flags*  gfp,
         const char*         artist );
-extern void id3tag_set_album(
+void CDECL id3tag_set_album(
         lame_global_flags*  gfp,
         const char*         album );
-extern void id3tag_set_year(
+void CDECL id3tag_set_year(
         lame_global_flags*  gfp,
         const char*         year );
-extern void id3tag_set_comment(
+void CDECL id3tag_set_comment(
         lame_global_flags*  gfp,
         const char*         comment );
             
 /* return -1 result if track number is out of ID3v1 range
                     and ignored for ID3v1 */
-extern int id3tag_set_track(
+int CDECL id3tag_set_track(
         lame_global_flags*  gfp,
         const char*         track );
 
@@ -1090,20 +1112,48 @@ extern int id3tag_set_track(
   result -1: genre number out of range
   result -2: no valid ID3v1 genre name, mapped to ID3v1 'Other'
              but taken as-is for ID3v2 genre tag */
-extern int id3tag_set_genre(
+int CDECL id3tag_set_genre(
         lame_global_flags*  gfp,
         const char*         genre );
 
 /* return non-zero result if field name is invalid */
-extern int id3tag_set_fieldvalue(
+int CDECL id3tag_set_fieldvalue(
         lame_global_flags*  gfp,
         const char*         fieldvalue);
 
 /* return non-zero result if image type is invalid */
-extern int id3tag_set_albumart(
+int CDECL id3tag_set_albumart(
         lame_global_flags*  gfp,
         const char*         image,
         unsigned long       size );
+
+/* lame_get_id3v1_tag copies ID3v1 tag into buffer.
+ * Function returns number of bytes copied into buffer, or number
+ * of bytes rquired if buffer 'size' is too small.
+ * Function fails, if returned value is larger than 'size'.
+ * NOTE:
+ * This functions does nothing, if user/LAME disabled ID3v1 tag.
+ */
+size_t CDECL lame_get_id3v1_tag(
+        lame_global_flags * gfp, unsigned char* buffer, size_t size);
+
+/* lame_get_id3v2_tag copies ID3v2 tag into buffer.
+ * Function returns number of bytes copied into buffer, or number
+ * of bytes rquired if buffer 'size' is too small.
+ * Function fails, if returned value is larger than 'size'.
+ * NOTE:
+ * This functions does nothing, if user/LAME disabled ID3v2 tag.
+ */
+size_t CDECL lame_get_id3v2_tag(
+        lame_global_flags * gfp, unsigned char* buffer, size_t size);
+
+/* normaly lame_init_param writes ID3v2 tags into the audio stream
+ * Call lame_set_write_id3tag_automatic(gfp, 0) before lame_init_param
+ * to turn off this behaviour and get ID3v2 tag with above function
+ * write it yourself into your file.
+ */
+void CDECL lame_set_write_id3tag_automatic(lame_global_flags * gfp, int);
+int CDECL lame_get_write_id3tag_automatic(lame_global_flags const* gfp);
 
 /***********************************************************************
 *

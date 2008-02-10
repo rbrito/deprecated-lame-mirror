@@ -348,12 +348,99 @@ lame_decoder(lame_global_flags * gfp, FILE * outf, int skip_start, char *inPath,
 
 
 
+static void
+        print_lame_tag_leading_info(lame_global_flags * gf)
+{
+    if (lame_get_bWriteVbrTag(gf))
+        console_printf("Writing LAME Tag...");
+}
+
+static void
+        print_trailing_info(lame_global_flags * gf)
+{
+    if (lame_get_bWriteVbrTag(gf))
+        console_printf("done\n");
+
+    if (lame_get_findReplayGain(gf)) {
+        int     RadioGain = lame_get_RadioGain(gf);
+        console_printf("ReplayGain: %s%.1fdB\n", RadioGain > 0 ? "+" : "",
+                       ((float) RadioGain) / 10.0);
+        if (RadioGain > 0x1FE || RadioGain < -0x1FE)
+            error_printf
+                    ("WARNING: ReplayGain exceeds the -51dB to +51dB range. Such a result is too\n"
+                    "         high to be stored in the header.\n");
+    }
+
+    /* if (the user requested printing info about clipping) and (decoding
+    on the fly has actually been performed) */
+    if (print_clipping_info && lame_get_decode_on_the_fly(gf)) {
+        float   noclipGainChange = (float) lame_get_noclipGainChange(gf) / 10.0f;
+        float   noclipScale = lame_get_noclipScale(gf);
+
+        if (noclipGainChange > 0.0) { /* clipping occurs */
+            console_printf
+                    ("WARNING: clipping occurs at the current gain. Set your decoder to decrease\n"
+                    "         the  gain  by  at least %.1fdB or encode again ", noclipGainChange);
+
+            /* advice the user on the scale factor */
+            if (noclipScale > 0) {
+                console_printf("using  --scale %.2f\n", noclipScale);
+                console_printf("         or less (the value under --scale is approximate).\n");
+            }
+            else {
+                /* the user specified his own scale factor. We could suggest
+                * the scale factor of (32767.0/gfp->PeakSample)*(gfp->scale)
+                * but it's usually very inaccurate. So we'd rather advice him to
+                * disable scaling first and see our suggestion on the scale factor then. */
+                console_printf("using --scale <arg>\n"
+                        "         (For   a   suggestion  on  the  optimal  value  of  <arg>  encode\n"
+                        "         with  --scale 1  first)\n");
+            }
+
+        }
+        else {          /* no clipping */
+            if (noclipGainChange > -0.1)
+                console_printf
+                        ("\nThe waveform does not clip and is less than 0.1dB away from full scale.\n");
+            else
+                console_printf
+                        ("\nThe waveform does not clip and is at least %.1fdB away from full scale.\n",
+                         -noclipGainChange);
+        }
+    }
+
+}
 
 
 
 
-
-
+static int
+write_xing_frame(lame_global_flags * gf, FILE * outf)
+{
+    unsigned char mp3buffer[LAME_MAXMP3BUFFER];
+    size_t  imp3, owrite;
+    
+    imp3 = lame_get_lametag_frame(gf, mp3buffer, sizeof(mp3buffer));
+    if (imp3 > sizeof(mp3buffer)) {
+        error_printf("Error writing LAME-tag frame: buffer too small: buffer size=%d  frame size=%d\n"
+                    , sizeof(mp3buffer)
+                    , imp3
+                    );
+        return -1;
+    }
+    if (imp3 <= 0) {
+        return 0;
+    }
+    owrite = (int) fwrite(mp3buffer, 1, imp3, outf);
+    if (owrite != imp3) {
+        error_printf("Error writing LAME-tag \n");
+        return -1;
+    }
+    if (flush_write == 1) {
+        fflush(outf);
+    }
+    return imp3;
+}
 
 
 
@@ -362,10 +449,30 @@ lame_encoder(lame_global_flags * gf, FILE * outf, int nogap, char *inPath, char 
 {
     unsigned char mp3buffer[LAME_MAXMP3BUFFER];
     int     Buffer[2][1152];
-    int     iread, imp3, owrite;
+    int     iread, imp3, owrite, id3v2_size;
 
     encoder_progress_begin(gf, inPath, outPath);
 
+    imp3 = lame_get_id3v2_tag(gf, mp3buffer, sizeof(mp3buffer));
+    if ((size_t)imp3 > sizeof(mp3buffer)) {
+        encoder_progress_end(gf);
+        error_printf("Error writing ID3v2 tag: buffer too small: buffer size=%d  ID3v2 size=%d\n"
+                , sizeof(mp3buffer)
+                , imp3
+                    );
+        return 1;
+    }
+    owrite = (int) fwrite(mp3buffer, 1, imp3, outf);
+    if (owrite != imp3) {
+        encoder_progress_end(gf);
+        error_printf("Error writing ID3v2 tag \n");
+        return 1;
+    }
+    if (flush_write == 1) {
+        fflush(outf);
+    }    
+    id3v2_size = imp3;
+    
     /* encode until we hit eof */
     do {
         /* read in 'iread' samples */
@@ -422,6 +529,40 @@ lame_encoder(lame_global_flags * gf, FILE * outf, int nogap, char *inPath, char 
         fflush(outf);
     }
 
+    
+    imp3 = lame_get_id3v1_tag(gf, mp3buffer, sizeof(mp3buffer));
+    if ((size_t)imp3 > sizeof(mp3buffer)) {
+        error_printf("Error writing ID3v1 tag: buffer too small: buffer size=%d  ID3v1 size=%d\n"
+                , sizeof(mp3buffer)
+                , imp3
+                    );
+    }
+    else {
+        if (imp3 > 0) {
+            owrite = (int) fwrite(mp3buffer, 1, imp3, outf);
+            if (owrite != imp3) {
+                error_printf("Error writing ID3v1 tag \n");
+                return 1;
+            }
+            if (flush_write == 1) {
+                fflush(outf);
+            }
+        }
+    }
+    
+    if (silent <= 0) {
+        print_lame_tag_leading_info(gf);
+    }
+    if (fseek(outf, id3v2_size, SEEK_SET) != 0) {
+        error_printf("fatal error: can't update LAME-tag frame!\n");                    
+    }
+    else {
+        write_xing_frame(gf, outf);
+    }
+
+    if (silent <= 0) {
+        print_trailing_info(gf);
+    }    
     return 0;
 }
 
@@ -521,70 +662,6 @@ parse_nogap_filenames(int nogapout, char *inPath, char *outPath, char *outdir)
 }
 
 
-
-
-static void
-print_lame_tag_leading_info(lame_global_flags * gf)
-{
-    if (lame_get_bWriteVbrTag(gf))
-        console_printf("Writing LAME Tag...");
-}
-
-static void
-print_trailing_info(lame_global_flags * gf)
-{
-    if (lame_get_bWriteVbrTag(gf))
-        console_printf("done\n");
-
-    if (lame_get_findReplayGain(gf)) {
-        int     RadioGain = lame_get_RadioGain(gf);
-        console_printf("ReplayGain: %s%.1fdB\n", RadioGain > 0 ? "+" : "",
-                       ((float) RadioGain) / 10.0);
-        if (RadioGain > 0x1FE || RadioGain < -0x1FE)
-            error_printf
-                ("WARNING: ReplayGain exceeds the -51dB to +51dB range. Such a result is too\n"
-                 "         high to be stored in the header.\n");
-    }
-
-    /* if (the user requested printing info about clipping) and (decoding
-       on the fly has actually been performed) */
-    if (print_clipping_info && lame_get_decode_on_the_fly(gf)) {
-        float   noclipGainChange = (float) lame_get_noclipGainChange(gf) / 10.0f;
-        float   noclipScale = lame_get_noclipScale(gf);
-
-        if (noclipGainChange > 0.0) { /* clipping occurs */
-            console_printf
-                ("WARNING: clipping occurs at the current gain. Set your decoder to decrease\n"
-                 "         the  gain  by  at least %.1fdB or encode again ", noclipGainChange);
-
-            /* advice the user on the scale factor */
-            if (noclipScale > 0) {
-                console_printf("using  --scale %.2f\n", noclipScale);
-                console_printf("         or less (the value under --scale is approximate).\n");
-            }
-            else {
-                /* the user specified his own scale factor. We could suggest
-                 * the scale factor of (32767.0/gfp->PeakSample)*(gfp->scale)
-                 * but it's usually very inaccurate. So we'd rather advice him to
-                 * disable scaling first and see our suggestion on the scale factor then. */
-                console_printf("using --scale <arg>\n"
-                               "         (For   a   suggestion  on  the  optimal  value  of  <arg>  encode\n"
-                               "         with  --scale 1  first)\n");
-            }
-
-        }
-        else {          /* no clipping */
-            if (noclipGainChange > -0.1)
-                console_printf
-                    ("\nThe waveform does not clip and is less than 0.1dB away from full scale.\n");
-            else
-                console_printf
-                    ("\nThe waveform does not clip and is at least %.1fdB away from full scale.\n",
-                     -noclipGainChange);
-        }
-    }
-
-}
 
 
 /***********************************************************************
@@ -707,6 +784,11 @@ main(int argc, char **argv)
         frontend_close_console();
         return -1;
     }
+    /* turn off automatic writing of ID3 tag data into mp3 stream 
+     * we have to call it before 'lame_init_params', because that
+     * function would spit out ID3v2 tag data.
+     */
+    lame_set_write_id3tag_automatic(gf, 0);
 
     /* Now that all the options are set, lame needs to analyze them and
      * set some more internal options and check for problems
@@ -751,26 +833,19 @@ main(int argc, char **argv)
                     /* note: if init_files changes anything, like
                        samplerate, num_channels, etc, we are screwed */
                     outf = init_files(gf, nogap_inPath[i], outPath, &enc_delay, &enc_padding);
+                    /* reinitialize bitstream for next encoding.  this is normally done
+                     * by lame_init_params(), but we cannot call that routine twice */
+                    lame_init_bitstream(gf);
                 }
                 brhist_init_package(gf);
                 lame_set_nogap_total(gf, max_nogap);
                 lame_set_nogap_currentindex(gf, i);
+                
                 ret = lame_encoder(gf, outf, use_flush_nogap, nogap_inPath[i], outPath);
-
-                if (silent <= 0)
-                    print_lame_tag_leading_info(gf);
-                lame_mp3_tags_fid(gf, outf); /* add VBR tags to mp3 file */
-
-                if (silent <= 0)
-                    print_trailing_info(gf);
 
                 fclose(outf); /* close the output file */
                 close_infile(); /* close the input file */
 
-                /* reinitialize bitstream for next encoding.  this is normally done
-                 * by lame_init_params(), but we cannot call that routine twice */
-                if (use_flush_nogap)
-                    lame_init_bitstream(gf);
             }
             lame_close(gf);
 
@@ -780,14 +855,8 @@ main(int argc, char **argv)
              * encode a single input file
              */
             brhist_init_package(gf);
+            
             ret = lame_encoder(gf, outf, 0, inPath, outPath);
-
-            if (silent <= 0)
-                print_lame_tag_leading_info(gf);
-            lame_mp3_tags_fid(gf, outf); /* add VBR tags to mp3 file */
-
-            if (silent <= 0)
-                print_trailing_info(gf);
 
             fclose(outf); /* close the output file */
             close_infile(); /* close the input file */

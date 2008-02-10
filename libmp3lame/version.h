@@ -46,14 +46,6 @@
 # define PSY_ALPHA_VERSION       0 /* Set number if this is an alpha version, otherwise zero */
 # define PSY_BETA_VERSION        0 /* Set number if this is a beta version, otherwise zero */
 
-
-const char *get_lame_version(void);
-const char *get_lame_short_version(void);
-const char *get_psy_version(void);
-const char *get_lame_url(void);
-void    get_lame_version_numerical(lame_version_t * const lvp);
-const char *get_lame_os_bitness(void);
-
 #endif /* LAME_VERSION_H */
 
 /* End of version.h */
