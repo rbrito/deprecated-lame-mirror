@@ -239,6 +239,7 @@ lame_bitrate_block_type_hist	@162
 lame_mp3_tags_fid	@163
 lame_close		@164
 lame_get_lametag_frame	@165
+get_lame_os_bitness	@166
 
 bitrate_table		@500
 samplerate_table	@501

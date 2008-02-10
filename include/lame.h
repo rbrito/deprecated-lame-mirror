@@ -630,6 +630,7 @@ const char*  CDECL get_lame_short_version ( void );
 const char*  CDECL get_lame_very_short_version ( void );
 const char*  CDECL get_psy_version        ( void );
 const char*  CDECL get_lame_url           ( void );
+const char*  CDECL get_lame_os_bitness    ( void );
 
 /*
  * OPTIONAL:
