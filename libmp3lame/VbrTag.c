@@ -252,6 +252,75 @@ IsVbrTag(const unsigned char *buf)
     return (isTag0 || isTag1);
 }
 
+#define SHIFT_IN_BITS_VALUE(x,n,v) ( x = (x << (n)) | ( (v) & ~(-1 << (n)) ) )
+
+static void
+setLameTagFrameHeader(lame_global_flags const* gfp, unsigned char* buffer)
+{
+    lame_internal_flags * gfc = gfp->internal_flags;
+    char    abyte, bbyte;
+
+    SHIFT_IN_BITS_VALUE(buffer[0], 8u, 0xffu);
+    
+    SHIFT_IN_BITS_VALUE(buffer[1], 3u, 7);
+    SHIFT_IN_BITS_VALUE(buffer[1], 1u, (gfp->out_samplerate < 16000) ? 0 : 1);
+    SHIFT_IN_BITS_VALUE(buffer[1], 1u, gfp->version);
+    SHIFT_IN_BITS_VALUE(buffer[1], 2u, 4-3);
+    SHIFT_IN_BITS_VALUE(buffer[1], 1u, (!gfp->error_protection) ? 1 : 0);
+    
+    SHIFT_IN_BITS_VALUE(buffer[2], 4u, gfc->bitrate_index);
+    SHIFT_IN_BITS_VALUE(buffer[2], 2u, gfc->samplerate_index);
+    SHIFT_IN_BITS_VALUE(buffer[2], 1u, 0);
+    SHIFT_IN_BITS_VALUE(buffer[2], 1u, gfp->extension);
+    
+    SHIFT_IN_BITS_VALUE(buffer[3], 2u, gfp->mode);
+    SHIFT_IN_BITS_VALUE(buffer[3], 2u, gfc->mode_ext);
+    SHIFT_IN_BITS_VALUE(buffer[3], 1u, gfp->copyright);
+    SHIFT_IN_BITS_VALUE(buffer[3], 1u, gfp->original);
+    SHIFT_IN_BITS_VALUE(buffer[3], 2u, gfp->emphasis);
+    
+    /* the default VBR header. 48 kbps layer III, no padding, no crc */
+    /* but sampling freq, mode andy copyright/copy protection taken */
+    /* from first valid frame */
+    buffer[0] = (uint8_t) 0xff;
+    abyte = (buffer[1] & (char) 0xf1);
+    {
+        int     bitrate;
+        if (1 == gfp->version) {
+            bitrate = XING_BITRATE1;
+        }
+        else {
+            if (gfp->out_samplerate < 16000)
+                bitrate = XING_BITRATE25;
+            else
+                bitrate = XING_BITRATE2;
+        }
+
+        if (gfp->VBR == vbr_off)
+            bitrate = gfp->brate;
+
+        if (gfp->free_format)
+            bbyte = 0x00;
+        else
+            bbyte = 16 * BitrateIndex(bitrate, gfp->version, gfp->out_samplerate);
+    }
+
+    /* Use as much of the info from the real frames in the
+    * Xing header:  samplerate, channels, crc, etc...
+    */
+    if (gfp->version == 1) {
+        /* MPEG1 */
+        buffer[1] = abyte | (char) 0x0a; /* was 0x0b; */
+        abyte = buffer[2] & (char) 0x0d; /* AF keep also private bit */
+        buffer[2] = (char) bbyte | abyte; /* 64kbs MPEG1 frame */
+    }
+    else {
+        /* MPEG2 */
+        buffer[1] = abyte | (char) 0x02; /* was 0x03; */
+        abyte = buffer[2] & (char) 0x0d; /* AF keep also private bit */
+        buffer[2] = (char) bbyte | abyte; /* 64kbs MPEG2 frame */
+    }
+}
 
 /*-------------------------------------------------------------*/
 /* Same as GetVbrTag below, but only checks for the Xing tag.
@@ -418,16 +487,8 @@ InitVbrTag(lame_global_flags * gfp)
     int     kbps_header;
     lame_internal_flags *gfc = gfp->internal_flags;
 #define MAXFRAMESIZE 2880 /* or 0xB40, the max freeformat 640 32kHz framesize */
-    /* uint8_t pbtStreamBuffer[MAXFRAMESIZE]; */
     nMode = gfp->mode;
     SampIndex = gfc->samplerate_index;
-
-
-
-    /* Clear stream buffer */
-    /* memset(pbtStreamBuffer,0x00,sizeof(pbtStreamBuffer)); */
-
-
 
     /*
      * Xing VBR pretends to be a 48kbs layer III frame.  (at 44.1kHz).
@@ -471,9 +532,6 @@ InitVbrTag(lame_global_flags * gfp)
         }
     }
 
-    /* write dummy VBR tag of all 0's into bitstream */
-    add_dummy_byte(gfp, 0, gfc->VBR_seek_table.TotalFrameSize);
-
     gfc->VBR_seek_table.nVbrNumFrames = 0;
     gfc->VBR_seek_table.nBytesWritten = 0;
     gfc->VBR_seek_table.sum = 0;
@@ -490,7 +548,21 @@ InitVbrTag(lame_global_flags * gfp)
         else {
             gfc->VBR_seek_table.size = 0;
             ERRORF(gfc, "Error: can't allocate VbrFrames buffer\n");
+            gfp->bWriteVbrTag = 0;
             return -1;
+        }
+    }
+
+    /* write dummy VBR tag of all 0's into bitstream */
+    {
+        uint8_t buffer[MAXFRAMESIZE];
+        size_t i, n;
+
+        memset(buffer, 0, sizeof(buffer));
+        setLameTagFrameHeader(gfp, buffer);
+        n = gfc->VBR_seek_table.TotalFrameSize;
+        for (i = 0; i < n; ++i) {
+            add_dummy_byte(gfp, buffer[i], 1);
         }
     }
     /* Success */
@@ -813,7 +885,6 @@ skipId3v2(FILE * fpStream)
 }
 
                                                
-#define SHIFT_IN_BITS_VALUE(x,n,v) ( x = (x << (n)) | ( (v) & ~(-1 << (n)) ) )
 
 size_t
 lame_get_lametag_frame(lame_global_flags const* gfp, unsigned char* buffer, size_t size)
@@ -821,7 +892,6 @@ lame_get_lametag_frame(lame_global_flags const* gfp, unsigned char* buffer, size
     lame_internal_flags * gfc;
     int     stream_size;
     int     nStreamIndex;
-    char    abyte, bbyte;
     uint8_t btToc[NUMTOCENTRIES];
     
     if (gfp == 0) {
@@ -840,77 +910,18 @@ lame_get_lametag_frame(lame_global_flags const* gfp, unsigned char* buffer, size
     if (gfc->VBR_seek_table.pos <= 0) {
         return 0;
     }
-    if (buffer == 0) {
-        return 0;
-    }
     if (size < gfc->VBR_seek_table.TotalFrameSize) {
         return gfc->VBR_seek_table.TotalFrameSize;
+    }
+    if (buffer == 0) {
+        return 0;
     }
     
     memset(buffer, 0, gfc->VBR_seek_table.TotalFrameSize);
     
     /* 4 bytes frame header */
     
-    SHIFT_IN_BITS_VALUE(buffer[0], 8u, 0xffu);
-    
-    SHIFT_IN_BITS_VALUE(buffer[1], 3u, 7);
-    SHIFT_IN_BITS_VALUE(buffer[1], 1u, (gfp->out_samplerate < 16000) ? 0 : 1);
-    SHIFT_IN_BITS_VALUE(buffer[1], 1u, gfp->version);
-    SHIFT_IN_BITS_VALUE(buffer[1], 2u, 4-3);
-    SHIFT_IN_BITS_VALUE(buffer[1], 1u, (!gfp->error_protection) ? 1 : 0);
-    
-    SHIFT_IN_BITS_VALUE(buffer[2], 4u, gfc->bitrate_index);
-    SHIFT_IN_BITS_VALUE(buffer[2], 2u, gfc->samplerate_index);
-    SHIFT_IN_BITS_VALUE(buffer[2], 1u, 0);
-    SHIFT_IN_BITS_VALUE(buffer[2], 1u, gfp->extension);
-    
-    SHIFT_IN_BITS_VALUE(buffer[3], 2u, gfp->mode);
-    SHIFT_IN_BITS_VALUE(buffer[3], 2u, gfc->mode_ext);
-    SHIFT_IN_BITS_VALUE(buffer[3], 1u, gfp->copyright);
-    SHIFT_IN_BITS_VALUE(buffer[3], 1u, gfp->original);
-    SHIFT_IN_BITS_VALUE(buffer[3], 2u, gfp->emphasis);
-    
-    /* the default VBR header. 48 kbps layer III, no padding, no crc */
-    /* but sampling freq, mode andy copyright/copy protection taken */
-    /* from first valid frame */
-    buffer[0] = (uint8_t) 0xff;
-    abyte = (buffer[1] & (char) 0xf1);
-    {
-        int     bitrate;
-        if (1 == gfp->version) {
-            bitrate = XING_BITRATE1;
-        }
-        else {
-            if (gfp->out_samplerate < 16000)
-                bitrate = XING_BITRATE25;
-            else
-                bitrate = XING_BITRATE2;
-        }
-
-        if (gfp->VBR == vbr_off)
-            bitrate = gfp->brate;
-
-        if (gfp->free_format)
-            bbyte = 0x00;
-        else
-            bbyte = 16 * BitrateIndex(bitrate, gfp->version, gfp->out_samplerate);
-    }
-
-    /* Use as much of the info from the real frames in the
-    * Xing header:  samplerate, channels, crc, etc...
-    */
-    if (gfp->version == 1) {
-        /* MPEG1 */
-        buffer[1] = abyte | (char) 0x0a; /* was 0x0b; */
-        abyte = buffer[2] & (char) 0x0d; /* AF keep also private bit */
-        buffer[2] = (char) bbyte | abyte; /* 64kbs MPEG1 frame */
-    }
-    else {
-        /* MPEG2 */
-        buffer[1] = abyte | (char) 0x02; /* was 0x03; */
-        abyte = buffer[2] & (char) 0x0d; /* AF keep also private bit */
-        buffer[2] = (char) bbyte | abyte; /* 64kbs MPEG2 frame */
-    }
+    setLameTagFrameHeader(gfp, buffer);
 
     /* Clear all TOC entries */
     memset(btToc, 0, sizeof(btToc));
