@@ -17,7 +17,7 @@
 		<Configuration
 			Name="Release|Win32"
 			OutputDirectory="..\output\Release"
-			IntermediateDirectory="..\obj\Release"
+			IntermediateDirectory="..\obj\Release\LameMp3EncDll"
 			ConfigurationType="1"
 			InheritedPropertySheets="$(VCInstallDir)VCProjectDefaults\UpgradeFromVC60.vsprops"
 			UseOfMFC="0"
@@ -38,7 +38,7 @@
 			/>
 			<Tool
 				Name="VCMIDLTool"
-				TypeLibraryName="..\obj\Release/Example.tlb"
+				TypeLibraryName="..\obj\Release\LameMp3EncDll/Example.tlb"
 				HeaderFileName=""
 			/>
 			<Tool
@@ -49,10 +49,10 @@
 				StringPooling="true"
 				RuntimeLibrary="0"
 				EnableFunctionLevelLinking="true"
-				PrecompiledHeaderFile="..\obj\Release/Example.pch"
-				AssemblerListingLocation="..\obj\Release/"
-				ObjectFile="..\obj\Release/"
-				ProgramDataBaseFileName="..\obj\Release/"
+				PrecompiledHeaderFile="..\obj\Release\LameMp3EncDll/Example.pch"
+				AssemblerListingLocation="..\obj\Release\LameMp3EncDll/"
+				ObjectFile="..\obj\Release\LameMp3EncDll/"
+				ProgramDataBaseFileName="..\obj\Release\LameMp3EncDll/"
 				WarningLevel="3"
 				SuppressStartupBanner="true"
 				DisableSpecificWarnings="4996"
@@ -73,7 +73,7 @@
 				OutputFile="..\output\Release/lame_enc_example.exe"
 				LinkIncremental="1"
 				SuppressStartupBanner="true"
-				ProgramDatabaseFile="..\obj\Release/lame_enc_example.pdb"
+				ProgramDatabaseFile="..\obj\Release\LameMp3EncDll/lame_enc_example.pdb"
 				SubSystem="1"
 				RandomizedBaseAddress="1"
 				DataExecutionPrevention="0"
@@ -91,7 +91,7 @@
 			<Tool
 				Name="VCBscMakeTool"
 				SuppressStartupBanner="true"
-				OutputFile="..\obj\Release/Example.bsc"
+				OutputFile="..\obj\Release\LameMp3EncDll/Example.bsc"
 			/>
 			<Tool
 				Name="VCFxCopTool"
@@ -106,7 +106,7 @@
 		<Configuration
 			Name="Debug|Win32"
 			OutputDirectory="..\output\Debug"
-			IntermediateDirectory="..\obj\Debug"
+			IntermediateDirectory="..\obj\Debug\LameMp3EncDll"
 			ConfigurationType="1"
 			InheritedPropertySheets="$(VCInstallDir)VCProjectDefaults\UpgradeFromVC60.vsprops"
 			UseOfMFC="0"
@@ -127,7 +127,7 @@
 			/>
 			<Tool
 				Name="VCMIDLTool"
-				TypeLibraryName="..\obj\Debug/Example.tlb"
+				TypeLibraryName="..\obj\Debug\LameMp3EncDll/Example.tlb"
 				HeaderFileName=""
 			/>
 			<Tool
@@ -136,10 +136,10 @@
 				PreprocessorDefinitions="WIN32;_DEBUG;_CONSOLE"
 				MinimalRebuild="true"
 				RuntimeLibrary="1"
-				PrecompiledHeaderFile="..\obj\Debug/Example.pch"
-				AssemblerListingLocation="..\obj\Debug/"
-				ObjectFile="..\obj\Debug/"
-				ProgramDataBaseFileName="..\obj\Debug/"
+				PrecompiledHeaderFile="..\obj\Debug\LameMp3EncDll/Example.pch"
+				AssemblerListingLocation="..\obj\Debug\LameMp3EncDll/"
+				ObjectFile="..\obj\Debug\LameMp3EncDll/"
+				ProgramDataBaseFileName="..\obj\Debug\LameMp3EncDll/"
 				WarningLevel="3"
 				SuppressStartupBanner="true"
 				DebugInformationFormat="4"
@@ -162,7 +162,7 @@
 				LinkIncremental="2"
 				SuppressStartupBanner="true"
 				GenerateDebugInformation="true"
-				ProgramDatabaseFile="..\obj\Debug/Example.pdb"
+				ProgramDatabaseFile="..\obj\Debug\LameMp3EncDll/Example.pdb"
 				SubSystem="1"
 				RandomizedBaseAddress="1"
 				DataExecutionPrevention="0"
@@ -180,7 +180,7 @@
 			<Tool
 				Name="VCBscMakeTool"
 				SuppressStartupBanner="true"
-				OutputFile="..\obj\Debug/Example.bsc"
+				OutputFile="..\obj\Debug\LameMp3EncDll/Example.bsc"
 			/>
 			<Tool
 				Name="VCFxCopTool"
