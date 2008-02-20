@@ -51,12 +51,14 @@
 				PreprocessorDefinitions="NDEBUG;_BLADEDLL;_WINDOWS;WIN32;LAME_ACM"
 				RuntimeLibrary="0"
 				StructMemberAlignment="2"
+				TreatWChar_tAsBuiltInType="false"
 				PrecompiledHeaderFile="..\obj\Release\lameACM\lameACM.pch"
 				AssemblerListingLocation="..\obj\Release\lameACM\"
 				ObjectFile="..\obj\Release\lameACM\"
 				ProgramDataBaseFileName="..\obj\Release\lameACM\"
 				WarningLevel="3"
 				SuppressStartupBanner="true"
+				DisableSpecificWarnings="4996"
 			/>
 			<Tool
 				Name="VCManagedResourceCompilerTool"
@@ -72,7 +74,7 @@
 			<Tool
 				Name="VCLinkerTool"
 				IgnoreImportLibrary="true"
-				AdditionalDependencies="libmp3lame.lib url.lib winmm.lib libc.lib libcp.lib"
+				AdditionalDependencies="libmp3lame.lib url.lib winmm.lib libcmt.lib libcpmt.lib"
 				OutputFile="..\output\Release\lameACM.acm"
 				LinkIncremental="1"
 				SuppressStartupBanner="true"
@@ -80,7 +82,7 @@
 				IgnoreAllDefaultLibraries="true"
 				ModuleDefinitionFile="..\ACM\lameACM.def"
 				SubSystem="2"
-				OptimizeForWindows98="1"
+				OptimizeForWindows98="0"
 				RandomizedBaseAddress="1"
 				DataExecutionPrevention="0"
 				ImportLibrary="..\output\Release\lameACM.lib"
@@ -109,7 +111,7 @@
 			<Tool
 				Name="VCPostBuildEventTool"
 				Description="ACM config files"
-				CommandLine="copy lameacm.inf $(TargetDir)*.*&#x0D;&#x0A;copy lame_acm.xml $(TargetDir)*.*&#x0D;&#x0A;"
+				CommandLine="copy ..\ACM\lameacm.inf $(TargetDir)*.*&#x0D;&#x0A;copy ..\ACM\lame_acm.xml $(TargetDir)*.*&#x0D;&#x0A;"
 			/>
 		</Configuration>
 		<Configuration
@@ -149,6 +151,7 @@
 				PreprocessorDefinitions="_DEBUG;_BLADEDLL;_WINDOWS;WIN32;LAME_ACM"
 				RuntimeLibrary="1"
 				StructMemberAlignment="2"
+				TreatWChar_tAsBuiltInType="false"
 				PrecompiledHeaderFile="..\obj\Debug\lameACM\lameACM.pch"
 				AssemblerListingLocation="..\obj\Debug\lameACM\"
 				ObjectFile="..\obj\Debug\lameACM\"
@@ -156,6 +159,7 @@
 				WarningLevel="3"
 				SuppressStartupBanner="true"
 				DebugInformationFormat="4"
+				DisableSpecificWarnings="4996"
 			/>
 			<Tool
 				Name="VCManagedResourceCompilerTool"
@@ -171,7 +175,7 @@
 			<Tool
 				Name="VCLinkerTool"
 				IgnoreImportLibrary="true"
-				AdditionalDependencies="libmp3lame.lib url.lib winmm.lib libcd.lib libcpd.lib"
+				AdditionalDependencies="libmp3lame.lib url.lib winmm.lib libcmtd.lib libcpmtd.lib"
 				OutputFile="..\output\Debug\lameACM.acm"
 				LinkIncremental="2"
 				SuppressStartupBanner="true"
@@ -181,7 +185,7 @@
 				GenerateDebugInformation="true"
 				ProgramDatabaseFile="..\output\Debug\lameACM.pdb"
 				SubSystem="2"
-				OptimizeForWindows98="1"
+				OptimizeForWindows98="0"
 				RandomizedBaseAddress="1"
 				DataExecutionPrevention="0"
 				ImportLibrary="..\output\Debug\lameACM.lib"
@@ -210,7 +214,7 @@
 			<Tool
 				Name="VCPostBuildEventTool"
 				Description="ACM config files"
-				CommandLine="copy lameacm.inf $(TargetDir)*.*&#x0D;&#x0A;copy lame_acm.xml $(TargetDir)*.*&#x0D;&#x0A;"
+				CommandLine="copy ..\ACM\lameacm.inf $(TargetDir)*.*&#x0D;&#x0A;copy ..\ACM\lame_acm.xml $(TargetDir)*.*&#x0D;&#x0A;"
 			/>
 		</Configuration>
 	</Configurations>
