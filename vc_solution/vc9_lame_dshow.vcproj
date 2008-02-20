@@ -49,7 +49,7 @@
 				Optimization="0"
 				AdditionalIncludeDirectories="..\include,..\DShow"
 				PreprocessorDefinitions="DEBUG;INC_OLE2;WINVER=0x0400;_X86_=1;STRICT;_WINDOWS;WIN32;STDC_HEADERS"
-				RuntimeLibrary="3"
+				RuntimeLibrary="1"
 				PrecompiledHeaderFile="..\obj\Debug\dshow/dshow.pch"
 				AssemblerListingLocation="..\obj\Debug\dshow/"
 				ObjectFile="..\obj\Debug\dshow/"
@@ -58,6 +58,7 @@
 				SuppressStartupBanner="true"
 				DebugInformationFormat="4"
 				CallingConvention="2"
+				DisableSpecificWarnings="4996"
 			/>
 			<Tool
 				Name="VCManagedResourceCompilerTool"
@@ -73,7 +74,7 @@
 			<Tool
 				Name="VCLinkerTool"
 				IgnoreImportLibrary="true"
-				AdditionalDependencies="libmp3lame.lib ..\DShow\strmbasD.lib msvcrtd.lib libcmt.lib vfw32.lib winmm.lib version.lib largeint.lib Comdlg32.lib comctl32.lib quartz.lib measure.lib"
+				AdditionalDependencies="libmp3lame.lib ..\DShow\strmbasD.lib vfw32.lib winmm.lib version.lib Comdlg32.lib comctl32.lib quartz.lib msvcrtd.lib"
 				OutputFile="..\output\Debug\lame.ax"
 				LinkIncremental="2"
 				SuppressStartupBanner="true"
@@ -83,7 +84,7 @@
 				GenerateDebugInformation="true"
 				ProgramDatabaseFile="..\obj\Debug/lame.pdb"
 				SubSystem="2"
-				OptimizeForWindows98="1"
+				OptimizeForWindows98="0"
 				EntryPointSymbol="DllEntryPoint@12"
 				BaseAddress="0x1c400000"
 				RandomizedBaseAddress="1"
@@ -160,6 +161,7 @@
 				WarningLevel="3"
 				SuppressStartupBanner="true"
 				CallingConvention="2"
+				DisableSpecificWarnings="4996"
 			/>
 			<Tool
 				Name="VCManagedResourceCompilerTool"
@@ -175,7 +177,7 @@
 			<Tool
 				Name="VCLinkerTool"
 				IgnoreImportLibrary="true"
-				AdditionalDependencies="libmp3lame.lib ..\DShow\strmbase.lib msvcrt.lib libcmt.lib vfw32.lib winmm.lib version.lib largeint.lib Comdlg32.lib comctl32.lib quartz.lib measure.lib"
+				AdditionalDependencies="libmp3lame.lib ..\DShow\strmbase.lib vfw32.lib winmm.lib version.lib Comdlg32.lib comctl32.lib quartz.lib msvcrt.lib"
 				OutputFile="..\output\Release\lame.ax"
 				Version="0.3"
 				LinkIncremental="1"
@@ -184,7 +186,7 @@
 				IgnoreAllDefaultLibraries="true"
 				ModuleDefinitionFile="..\DShow\Mpegac.def"
 				SubSystem="2"
-				OptimizeForWindows98="1"
+				OptimizeForWindows98="0"
 				EntryPointSymbol="DllEntryPoint@12"
 				BaseAddress="0x1c400000"
 				RandomizedBaseAddress="1"
