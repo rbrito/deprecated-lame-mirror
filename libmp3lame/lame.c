@@ -501,7 +501,7 @@ lame_init_qval(lame_global_flags * gfp)
  *
  ********************************************************************/
 int
-lame_init_params(lame_global_flags * const gfp)
+lame_init_params(lame_global_flags * gfp)
 {
 
     int     i;
@@ -2206,7 +2206,7 @@ lame_init(void)
  */
 
 void
-lame_bitrate_kbps(const lame_global_flags * const gfp, int bitrate_kbps[14])
+lame_bitrate_kbps(const lame_global_flags * gfp, int bitrate_kbps[14])
 {
     const lame_internal_flags *gfc;
     int     i;
@@ -2232,7 +2232,7 @@ lame_bitrate_kbps(const lame_global_flags * const gfp, int bitrate_kbps[14])
 
 
 void
-lame_bitrate_hist(const lame_global_flags * const gfp, int bitrate_count[14])
+lame_bitrate_hist(const lame_global_flags * gfp, int bitrate_count[14])
 {
     const lame_internal_flags *gfc;
     int     i;
@@ -2258,7 +2258,7 @@ lame_bitrate_hist(const lame_global_flags * const gfp, int bitrate_count[14])
 
 
 void
-lame_stereo_mode_hist(const lame_global_flags * const gfp, int stmode_count[4])
+lame_stereo_mode_hist(const lame_global_flags * gfp, int stmode_count[4])
 {
     const lame_internal_flags *gfc;
     int     i;
@@ -2279,7 +2279,7 @@ lame_stereo_mode_hist(const lame_global_flags * const gfp, int stmode_count[4])
 
 
 void
-lame_bitrate_stereo_mode_hist(const lame_global_flags * const gfp, int bitrate_stmode_count[14][4])
+lame_bitrate_stereo_mode_hist(const lame_global_flags * gfp, int bitrate_stmode_count[14][4])
 {
     const lame_internal_flags *gfc;
     int     i;
@@ -2309,7 +2309,7 @@ lame_bitrate_stereo_mode_hist(const lame_global_flags * const gfp, int bitrate_s
 
 
 void
-lame_block_type_hist(const lame_global_flags * const gfp, int btype_count[6])
+lame_block_type_hist(const lame_global_flags * gfp, int btype_count[6])
 {
     const lame_internal_flags *gfc;
     int     i;
@@ -2330,7 +2330,7 @@ lame_block_type_hist(const lame_global_flags * const gfp, int btype_count[6])
 
 
 void
-lame_bitrate_block_type_hist(const lame_global_flags * const gfp, int bitrate_btype_count[14][6])
+lame_bitrate_block_type_hist(const lame_global_flags * gfp, int bitrate_btype_count[14][6])
 {
     const lame_internal_flags *gfc;
     int     i, j;

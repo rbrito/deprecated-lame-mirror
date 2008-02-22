@@ -186,7 +186,7 @@ get_lame_url(void)
   \param lvp    
 */
 void
-get_lame_version_numerical(lame_version_t * const lvp)
+get_lame_version_numerical(lame_version_t * lvp)
 {
     static /*@observer@ */ const char *const features = ""; /* obsolete */
 

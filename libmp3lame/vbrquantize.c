@@ -594,7 +594,7 @@ set_subblock_gain(gr_info * cod_info, const int mingain_s[3], int sf[])
     unsigned int const psymax = (unsigned int) cod_info->psymax;
     unsigned int psydiv = 18;
     int     sbg0, sbg1, sbg2;
-    unsigned int sfb, i, min_sbg = 7;;
+    unsigned int sfb, i, min_sbg = 7;
 
     if (psydiv > psymax) {
         psydiv = psymax;
