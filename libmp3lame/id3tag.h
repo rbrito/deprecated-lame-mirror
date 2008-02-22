@@ -17,7 +17,29 @@ enum {
     MIMETYPE_GIF,
 };
 
-struct id3tag_spec {
+typedef struct ID3v2FrameNode
+{   
+    int     id;
+    int     tenc; /* text encoding: 0x00 ISO Latin-1, 0x01 UCS-2 */
+    union {
+        char* l;
+        unsigned short* u;
+    }       text; /* pointer to text in Latin-1/UCS-2 encoding */
+    struct ID3v2FrameNode* next;
+} ID3v2FrameNode;
+
+typedef struct ID3v2CommentNode
+{
+    char    tenc;
+    char    lang[3];
+    union {
+        char* l;
+        unsigned short* u;
+    }       desc, text;
+    struct ID3v2CommentNode* next;
+} ID3v2CommentNode;
+
+typedef struct id3tag_spec {
     /* private data members */
     int     flags;
     int     year;
@@ -27,14 +49,16 @@ struct id3tag_spec {
     char   *comment;
     int     track_id3v1;
     int     genre_id3v1;
-    char   *track_id3v2;
-    char   *genre_id3v2;
     unsigned char *albumart;
     int     albumart_size;
     int     albumart_mimetype;
     char  **values;
     unsigned int num_values;
-};
+    ID3v2FrameNode* id3v2_head;
+    ID3v2FrameNode* id3v2_tail;
+    ID3v2CommentNode* id3v2_comm_head;
+    ID3v2CommentNode* id3v2_comm_tail;
+} id3tag_spec;
 
 
 /* write tag into stream at current position */
@@ -45,5 +69,30 @@ extern int id3tag_write_v1(lame_global_flags * gfp);
  * fit in a version 1 tag (e.g. the title string is longer than 30 characters),
  * or the "id3tag_add_v2" or "id3tag_v2_only" functions are used.
  */
+/* experimental */
+int CDECL id3tag_set_textinfo_latin1(
+        lame_global_flags* gfp,
+        char const*        id,
+        char const*        text );
+
+/* experimental */
+int CDECL id3tag_set_textinfo_ucs2(
+        lame_global_flags*    gfp, 
+        char const*           id,
+        unsigned short const* text );
+
+/* experimental */
+int CDECL id3tag_set_comment_latin1(
+        lame_global_flags* gfp,
+        char const*        lang,
+        char const*        desc,
+        char const*        text );
+
+/* experimental */
+int CDECL id3tag_set_comment_ucs2(
+        lame_global_flags*    gfp, 
+        char const*           lang,
+        unsigned short const* desc,
+        unsigned short const* text );
 
 #endif

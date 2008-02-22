@@ -64,14 +64,6 @@ free_id3tag(lame_internal_flags * const gfc)
         free(gfc->tag_spec.comment);
         gfc->tag_spec.comment = 0;
     }
-    if (gfc->tag_spec.track_id3v2 != 0) {
-        free(gfc->tag_spec.track_id3v2);
-        gfc->tag_spec.track_id3v2 = 0;
-    }
-    if (gfc->tag_spec.genre_id3v2 != 0) {
-        free(gfc->tag_spec.genre_id3v2);
-        gfc->tag_spec.genre_id3v2 = 0;
-    }
 
     if (gfc->tag_spec.albumart != 0) {
         free(gfc->tag_spec.albumart);
@@ -87,6 +79,32 @@ free_id3tag(lame_internal_flags * const gfc)
         free(gfc->tag_spec.values);
         gfc->tag_spec.values = 0;
         gfc->tag_spec.num_values = 0;
+    }
+    if (gfc->tag_spec.id3v2_head != 0) {
+        ID3v2FrameNode* node = gfc->tag_spec.id3v2_head;
+        do {
+            void* p = node;
+            void* q = node->text.l;
+            node = node->next;
+            free(p);
+            free(q);
+        } while (node != 0);
+        gfc->tag_spec.id3v2_head = 0;
+        gfc->tag_spec.id3v2_tail = 0;
+    }
+    if (gfc->tag_spec.id3v2_comm_head != 0) {
+        ID3v2CommentNode* node = gfc->tag_spec.id3v2_comm_head;
+        do {
+            void* p = node;
+            void* q = node->text.l;
+            void* r = node->desc.l;
+            node = node->next;
+            free(p);
+            free(q);
+            free(r);
+        } while (node != 0);
+        gfc->tag_spec.id3v2_comm_head = 0;
+        gfc->tag_spec.id3v2_comm_tail = 0;
     }
 }
 
