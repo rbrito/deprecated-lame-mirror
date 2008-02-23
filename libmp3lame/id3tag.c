@@ -192,10 +192,6 @@ id3v2AddLameVersion(lame_global_flags* gfp)
     const char *v = get_lame_version();
     const char *u = get_lame_url();
     const size_t lenb = strlen(b);
-    const size_t lenv = strlen(v);
-    const size_t lenu = strlen(u);
-    const size_t lw = 80;       /* line width of terminal in characters */
-    const size_t sw = 16;       /* static width of text */
 
     if (lenb > 0) {
         sprintf(buffer, "LAME %s version %s (%s)", b, v, u);
@@ -204,7 +200,7 @@ id3v2AddLameVersion(lame_global_flags* gfp)
         sprintf(buffer, "LAME version %s (%s)", v, u);
     }
     copyV1ToV2(gfp, ID_ENCODER, buffer);
-#if 1
+#if 0
     testID3v2(gfp);
 #endif
 }
@@ -316,7 +312,7 @@ local_strdup( char** dst, const char* src )
         if (n > 0) { /* string length without zero termination */
             assert(sizeof(*src) == sizeof(**dst));
             *dst = malloc((n+1)*sizeof(**dst));
-            if (*dst > 0) {
+            if (*dst != 0) {
                 memcpy(*dst, src, n*sizeof(**dst));
                 (*dst)[n] = 0;
                 return n;
@@ -342,7 +338,7 @@ local_ucs2_strdup( unsigned short** dst, unsigned short const* src )
             assert(sizeof(*src) >= 2);
             assert(sizeof(*src) == sizeof(**dst));
             *dst = malloc((n+1)*sizeof(**dst));
-            if (*dst > 0) {
+            if (*dst != 0) {
                 memcpy(*dst, src, n*sizeof(**dst));
                 (*dst)[n] = 0;
                 return n;
@@ -536,13 +532,15 @@ setLang(char* dst, char const* src)
     if (src == 0 || src[0] == 0) {
         dst[0] = 'X';
         dst[1] = 'X';
-        dst[2] = 'X';
+        dst[2] = 'X';        
     }
-    for (i = 0; i < 3 && src && *src; ++i) {
-        dst[i] = src[i];
-    }
-    for (; i < 3; ++i) {
-        dst[i] = ' ';
+    else {
+        for (i = 0; i < 3 && src && *src; ++i) {
+            dst[i] = src[i];
+        }
+        for (; i < 3; ++i) {
+            dst[i] = ' ';
+        }
     }
 }
 
@@ -672,7 +670,7 @@ id3v2_add_latin1(lame_global_flags* gfp, int frame_id
 
 
 int
-id3tag_set_texinfo_ucs2(lame_global_flags* gfp, char const* id, unsigned short const* text)
+id3tag_set_textinfo_ucs2(lame_global_flags* gfp, char const* id, unsigned short const* text)
 {
     int const t_mask = FRAME_ID('T',0,0,0);
     int const frame_id = toID3v2TagId(id);
@@ -913,38 +911,6 @@ id3tag_set_genre(lame_global_flags * gfp, const char *genre)
     return ret;
 }
 
-
-static unsigned char *
-set_frame(unsigned char *frame, unsigned long id, const char *text, size_t length)
-{
-    if (length) {
-        unsigned long frame_size = (unsigned long)length;
-        frame_size += ((id == ID_COMMENT) ? 5 : 1);
-        frame = set_4_byte_value(frame, id);
-        /* Set frame size = total size - header size.  Frame header and field
-         * bytes include 2-byte header flags, 1 encoding descriptor byte, and
-         * for comment frames: 3-byte language descriptor and 1 content
-         * descriptor byte */
-        frame = set_4_byte_value(frame, frame_size);
-        /* clear 2-byte header flags */
-        *frame++ = 0;
-        *frame++ = 0;
-        /* clear 1 encoding descriptor byte to indicate ISO-8859-1 format */
-        *frame++ = 0;
-        if (id == ID_COMMENT) {
-            /* use id3lib-compatible bogus language descriptor */
-            *frame++ = 'X';
-            *frame++ = 'X';
-            *frame++ = 'X';
-            /* clear 1 byte to make content descriptor empty string */
-            *frame++ = 0;
-        }
-        while (length--) {
-            *frame++ = *text++;
-        }
-    }
-    return frame;
-}
 
 static unsigned char *
 set_frame_custom(unsigned char *frame, const char *fieldvalue)

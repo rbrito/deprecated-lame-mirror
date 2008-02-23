@@ -69,6 +69,14 @@ char   *strchr(), *strrchr();
 #include <dmalloc.h>
 #endif
 
+#ifndef WIN32
+#  define HAVE_ICONV
+#endif
+                 
+#ifdef HAVE_ICONV
+#include <iconv.h>
+#include <errno.h>
+#endif
 
 #if defined DEBUG || _DEBUG || _ALLOW_INTERNAL_OPTIONS
 #define INTERNAL_OPTS 1
@@ -240,6 +248,242 @@ setOS2Priority(lame_global_flags * gfp, int Priority)
     return 0;
 }
 #endif
+
+
+extern int
+id3tag_set_textinfo_ucs2(lame_global_flags* gfp, char const* id, unsigned short const* text);
+
+extern int
+id3tag_set_comment_ucs2(lame_global_flags* gfp, char const* lng, unsigned short const* desc, unsigned short const* text);
+
+/* possible text encodings */
+typedef enum TextEncoding
+{ TENC_RAW     /* bytes will be stored as-is into ID3 tags, which are Latin1/UCS2 per definition */
+, TENC_LATIN1  /* text will be converted from local encoding to Latin1, as ID3 needs it */
+, TENC_UCS2    /* text will be converted from local encoding to UCS-2, as ID3v2 wants it */
+} TextEncoding;
+
+#ifdef HAVE_ICONV
+
+/* search for Zero termination in multi-byte strings */
+static size_t
+strlenMultiByte(char const* str, size_t w)
+{    
+    size_t n = 0;
+    if (str != 0) {
+        size_t i, x = 0;
+        for (n = 0; ; ++n) {
+            x = 0;
+            for (i = 0; i < w; ++i) {
+                x += *str++ == 0 ? 1 : 0;
+            }
+            if (x == w) {
+                break;
+            }
+        }
+    }
+    return n;
+}
+
+
+static size_t
+currCharCodeSize(void)
+{
+    size_t n = 1;
+    char dst[32];
+    char* src = "A";
+    char* env_lang = getenv("LANG");
+    char* xxx_code = env_lang == NULL ? NULL : strrchr(env_lang, '.');
+    char* cur_code = xxx_code == NULL ? "" : xxx_code+1;
+    iconv_t xiconv = iconv_open(cur_code, "ISO_8859-1");
+    if (xiconv != (iconv_t)-1) {
+        for (n = 0; n < 32; ++n) {
+            char* i_ptr = src;
+            char* o_ptr = dst;
+            size_t srcln = 1;
+            size_t avail = n;
+            size_t rc = iconv(xiconv, &i_ptr, &srcln, &o_ptr, &avail);
+            if (rc != (size_t)-1) {
+                break;
+            }
+        }
+        iconv_close(xiconv);
+    }
+    return n;
+}
+
+static
+char* fromLatin1( char* src )
+{
+    char* dst = 0;
+    if (src != 0) {
+        size_t const l = strlen(src);
+        size_t const n = l*4;
+        dst = calloc(n+4, 4);
+        if (dst != 0) {
+            char* env_lang = getenv("LANG");
+            char* xxx_code = env_lang == NULL ? NULL : strrchr(env_lang, '.');
+            char* cur_code = xxx_code == NULL ? "" : xxx_code+1;
+            iconv_t xiconv = iconv_open(cur_code, "ISO_8859-1");
+            if (xiconv != (iconv_t)-1) {
+                char* i_ptr = src;
+                char* o_ptr = dst;
+                size_t srcln = l;
+                size_t avail = n;                
+                iconv(xiconv, &i_ptr, &srcln, &o_ptr, &avail);
+                iconv_close(xiconv);
+            }
+        }
+    }
+    return dst;
+}
+
+static
+char* fromUcs2( char* src )
+{
+    char* dst = 0;
+    if (src != 0) {
+        size_t const l = strlenMultiByte(src, 2);
+        size_t const n = l*4;
+        dst = calloc(n+4, 4);
+        if (dst != 0) {
+            char* env_lang = getenv("LANG");
+            char* xxx_code = env_lang == NULL ? NULL : strrchr(env_lang, '.');
+            char* cur_code = xxx_code == NULL ? "" : xxx_code+1;
+            iconv_t xiconv = iconv_open(cur_code, "UCS-2LE");
+            if (xiconv != (iconv_t)-1) {
+                char* i_ptr = (char*)src;
+                char* o_ptr = dst;
+                size_t srcln = l*2;
+                size_t avail = n;                
+                iconv(xiconv, &i_ptr, &srcln, &o_ptr, &avail);
+                iconv_close(xiconv);
+            }
+        }
+    }
+    return dst;
+}
+
+
+static
+char* toLatin1( char* src )
+{
+    size_t w = currCharCodeSize();
+    char* dst = 0;
+    if (src != 0) {
+        size_t const l = strlenMultiByte(src, w);
+        size_t const n = l*4;
+        dst = calloc(n+4, 4);
+        if (dst != 0) {
+            char* env_lang = getenv("LANG");
+            char* xxx_code = env_lang == NULL ? NULL : strrchr(env_lang, '.');
+            char* cur_code = xxx_code == NULL ? "" : xxx_code+1;
+            iconv_t xiconv = iconv_open("ISO_8859-1", cur_code);
+            if (xiconv != (iconv_t)-1) {
+                char* i_ptr = (char*)src;
+                char* o_ptr = dst;
+                size_t srcln = l*w;
+                size_t avail = n;                
+                iconv(xiconv, &i_ptr, &srcln, &o_ptr, &avail);
+                iconv_close(xiconv);
+            }
+        }
+    }
+    return dst;
+}
+
+
+static
+char* toUcs2( char* src )
+{
+    size_t w = currCharCodeSize();
+    char* dst = 0;
+    if (src != 0) {
+        size_t const l = strlenMultiByte(src, w);
+        size_t const n = (l+1)*4;
+        dst = calloc(n+4, 4);
+        if (dst != 0) {
+            char* env_lang = getenv("LANG");
+            char* xxx_code = env_lang == NULL ? NULL : strrchr(env_lang, '.');
+            char* cur_code = xxx_code == NULL ? "" : xxx_code+1;
+            iconv_t xiconv = iconv_open("UCS-2LE", cur_code);
+            dst[0] = 0xff;
+            dst[1] = 0xfe;
+            if (xiconv != (iconv_t)-1) {
+                char* i_ptr = (char*)src;
+                char* o_ptr = &dst[2];
+                size_t srcln = l*w;
+                size_t avail = n;                
+                iconv(xiconv, &i_ptr, &srcln, &o_ptr, &avail);
+                iconv_close(xiconv);
+            }
+        }
+    }
+    return dst;
+}
+
+
+static int
+set_id3v2tag(lame_global_flags* gfp, int type, unsigned short const* str)
+{
+    switch (type)
+    {
+        case 'a': return id3tag_set_textinfo_ucs2(gfp, "TPE1", str);
+        case 't': return id3tag_set_textinfo_ucs2(gfp, "TIT2", str);
+        case 'l': return id3tag_set_textinfo_ucs2(gfp, "TALB", str);
+        case 'g': return id3tag_set_textinfo_ucs2(gfp, "TCON", str);
+        case 'c': return id3tag_set_comment_ucs2(gfp, 0, 0, str);
+        case 'n': return id3tag_set_textinfo_ucs2(gfp, "TRCK", str);
+    }
+    return 0;
+}
+#endif
+
+static int
+set_id3tag(lame_global_flags* gfp, int type, char const* str)
+{
+    switch (type)
+    {
+        case 'a': return id3tag_set_artist(gfp, str), 0;
+        case 't': return id3tag_set_title(gfp, str), 0;
+        case 'l': return id3tag_set_album(gfp, str), 0;
+        case 'g': return id3tag_set_genre(gfp, str);
+        case 'c': return id3tag_set_comment(gfp, str), 0;
+        case 'n': return id3tag_set_track(gfp, str);
+        case 'y': return id3tag_set_year(gfp, str), 0;
+        case 'v': return id3tag_set_fieldvalue(gfp, str);
+    }
+    return 0;
+}
+
+static int
+id3_tag(lame_global_flags* gfp, int type, TextEncoding enc, char* str)
+{
+    void* x = 0;
+    int result;
+    switch (enc) 
+    {
+        default:
+        case TENC_RAW:    x = strdup(str);   break;
+#ifdef HAVE_ICONV
+        case TENC_LATIN1: x = toLatin1(str); break;
+        case TENC_UCS2:   x = toUcs2(str);   break;
+#endif
+    }
+    switch (enc)
+    {
+        default:
+        case TENC_RAW:
+        case TENC_LATIN1: result = set_id3tag(gfp, type, x);   break;
+#ifdef HAVE_ICONV
+        case TENC_UCS2:   result = set_id3v2tag(gfp, type, x); break;
+#endif
+    }
+    free(x);
+    return result;
+}
+
+
 
 
 /************************************************************************
@@ -1309,26 +1553,26 @@ parse_args(lame_global_flags * gfp, int argc, char **argv,
                 /* options for ID3 tag */
                 T_ELIF("tt")
                     argUsed = 1;
-                id3tag_set_title(gfp, nextArg);
+                    id3_tag(gfp, 't', TENC_LATIN1, nextArg);
 
                 T_ELIF("ta")
                     argUsed = 1;
-                id3tag_set_artist(gfp, nextArg);
+                    id3_tag(gfp, 'a', TENC_LATIN1, nextArg);
 
                 T_ELIF("tl")
                     argUsed = 1;
-                id3tag_set_album(gfp, nextArg);
+                    id3_tag(gfp, 'l', TENC_LATIN1, nextArg);
 
                 T_ELIF("ty")
                     argUsed = 1;
-                id3tag_set_year(gfp, nextArg);
+                    id3_tag(gfp, 'y', TENC_LATIN1, nextArg);
 
                 T_ELIF("tc")
                     argUsed = 1;
-                id3tag_set_comment(gfp, nextArg);
+                    id3_tag(gfp, 'c', TENC_LATIN1, nextArg);
 
                 T_ELIF("tn")
-                    int ret = id3tag_set_track(gfp, nextArg);
+                    int ret = id3_tag(gfp, 'n', TENC_LATIN1, nextArg);
                     argUsed = 1;
                     if (ret != 0) {
                         if (0 == ignore_tag_errors) {
@@ -1348,7 +1592,7 @@ parse_args(lame_global_flags * gfp, int argc, char **argv,
                     }
 
                 T_ELIF("tg")
-                    int ret = id3tag_set_genre(gfp, nextArg);
+                    int ret = id3_tag(gfp, 'g', TENC_LATIN1, nextArg);
                     argUsed = 1;
                     if (ret != 0) {
                         if (0 == ignore_tag_errors) {
@@ -1379,11 +1623,11 @@ parse_args(lame_global_flags * gfp, int argc, char **argv,
 
                 T_ELIF("tv")
                     argUsed = 1;
-                if (id3tag_set_fieldvalue(gfp, nextArg)) {
-                    if (silent < 10) {
-                        error_printf("Invalid field value: '%s'. Ignored\n", nextArg);
+                    if (id3_tag(gfp, 'v', TENC_LATIN1, nextArg)) {
+                        if (silent < 10) {
+                            error_printf("Invalid field value: '%s'. Ignored\n", nextArg);
+                        }
                     }
-                }
 
                 T_ELIF("ti")
                     argUsed = 1;
@@ -1438,8 +1682,29 @@ parse_args(lame_global_flags * gfp, int argc, char **argv,
 
                 T_ELIF("genre-list")
                     id3tag_genre_list(genre_list_handler, NULL);
-                return -2;
-
+                    return -2;
+#ifdef HAVE_ICONV                
+                T_ELIF("uTitle")
+                    argUsed = 1;
+                    id3_tag(gfp, 't', TENC_UCS2, nextArg);
+                    
+                T_ELIF("uArtist")
+                    argUsed = 1;
+                    id3_tag(gfp, 'a', TENC_UCS2, nextArg);
+                    
+                T_ELIF("uAlbum")
+                    argUsed = 1;
+                    id3_tag(gfp, 'l', TENC_UCS2, nextArg);
+                    
+                T_ELIF("uGenre")
+                    argUsed = 1;
+                    id3_tag(gfp, 'g', TENC_UCS2, nextArg);
+                    
+                T_ELIF("uComment")
+                    argUsed = 1;
+                    id3_tag(gfp, 'c', TENC_UCS2, nextArg);
+                    
+#endif
                 T_ELIF("lowpass")
                     val = atof(nextArg);
                 argUsed = 1;
