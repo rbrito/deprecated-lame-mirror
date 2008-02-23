@@ -17,27 +17,22 @@ enum {
     MIMETYPE_GIF,
 };
 
-typedef struct ID3v2FrameNode
-{   
-    int     id;
-    int     tenc; /* text encoding: 0x00 ISO Latin-1, 0x01 UCS-2 */
-    union {
-        char* l;
-        unsigned short* u;
-    }       text; /* pointer to text in Latin-1/UCS-2 encoding */
-    struct ID3v2FrameNode* next;
-} ID3v2FrameNode;
-
-typedef struct ID3v2CommentNode
+typedef struct FrameDataNode
 {
-    char    tenc;
-    char    lang[3];
-    union {
-        char* l;
-        unsigned short* u;
-    }       desc, text;
-    struct ID3v2CommentNode* next;
-} ID3v2CommentNode;
+    struct FrameDataNode* nxt;
+    int     fid;                /* Frame Identifier                 */
+    char    lng[4];             /* 3-character language descriptor  */
+    struct {
+        union {
+            char*           l;  /* ptr to Latin-1 chars             */
+            unsigned short* u;  /* ptr to UCS-2 text                */
+            unsigned char*  b;  /* ptr to raw bytes                 */
+        }       ptr;
+        size_t  dim;
+        int     enc;            /* 0:Latin-1, 1:UCS-2, 2:RAW        */
+    } dsc, txt;
+} FrameDataNode;
+
 
 typedef struct id3tag_spec {
     /* private data members */
@@ -54,10 +49,7 @@ typedef struct id3tag_spec {
     int     albumart_mimetype;
     char  **values;
     unsigned int num_values;
-    ID3v2FrameNode* id3v2_head;
-    ID3v2FrameNode* id3v2_tail;
-    ID3v2CommentNode* id3v2_comm_head;
-    ID3v2CommentNode* id3v2_comm_tail;
+    FrameDataNode* v2_head, *v2_tail;
 } id3tag_spec;
 
 
