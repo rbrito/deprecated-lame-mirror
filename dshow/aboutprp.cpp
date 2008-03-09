@@ -29,7 +29,7 @@
 #include "mpegac.h"
 #include "resource.h"
 #include "Reg.h"
-
+#include <stdio.h>
 
 // -------------------------------------------------------------------------
 // CMAEAbout

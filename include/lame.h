@@ -24,9 +24,6 @@
 #ifndef LAME_LAME_H
 #define LAME_LAME_H
 
-#include <stdio.h>
-#include <stdarg.h>
-
 #if defined(__cplusplus)
 extern "C" {
 #endif
@@ -877,7 +874,8 @@ void CDECL lame_bitrate_block_type_hist (
         const lame_global_flags * gfp,
         int bitrate_btype_count[14][6] );
 
-
+#if DEPRECATED_OR_OBSOLETE_CODE_REMOVED
+#else
 /*
  * OPTIONAL:
  * lame_mp3_tags_fid will rewrite a Xing VBR tag to the mp3 file with file
@@ -895,7 +893,11 @@ void CDECL lame_bitrate_block_type_hist (
  * You can call lame_get_lametag_frame instead, if you want to insert
  * the lametag yourself.
 */
-void CDECL lame_mp3_tags_fid(lame_global_flags *,FILE* fid);
+
+struct _iobuf;
+typedef struct _iobuf FILE;
+void CDECL lame_mp3_tags_fid(lame_global_flags *, FILE* fid);
+#endif
 
 /*
  * OPTIONAL:

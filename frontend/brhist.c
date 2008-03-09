@@ -40,6 +40,7 @@
 /* #includes */
 
 #ifdef STDC_HEADERS
+# include <stdio.h>
 # include <stdlib.h>
 # include <string.h>
 #endif

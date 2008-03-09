@@ -23,6 +23,7 @@
 #include <Windef.h>
 #include "BladeMP3EncDLL.h"
 #include <assert.h>
+#include <stdio.h>
 
 #include <lame.h>
 
