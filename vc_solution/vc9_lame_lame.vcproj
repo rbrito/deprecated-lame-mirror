@@ -4,6 +4,7 @@
 	Version="9,00"
 	Name="lame"
 	ProjectGUID="{EEF5B49E-DBD1-4E1B-8B86-C5D64FCBAD38}"
+	RootNamespace="lame"
 	TargetFrameworkVersion="0"
 	>
 	<Platforms>

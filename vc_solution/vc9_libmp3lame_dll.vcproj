@@ -4,6 +4,7 @@
 	Version="9,00"
 	Name="libmp3lame DLL"
 	ProjectGUID="{92BD50AA-04D6-4FBF-ACE1-468FAF6778F2}"
+	RootNamespace="libmp3lame DLL"
 	TargetFrameworkVersion="0"
 	>
 	<Platforms>
@@ -12,6 +13,9 @@
 		/>
 	</Platforms>
 	<ToolFiles>
+		<ToolFile
+			RelativePath=".\vc9_nasm.rules"
+		/>
 	</ToolFiles>
 	<Configurations>
 		<Configuration
@@ -28,6 +32,9 @@
 			/>
 			<Tool
 				Name="VCCustomBuildTool"
+			/>
+			<Tool
+				Name="NASM"
 			/>
 			<Tool
 				Name="VCXMLDataGeneratorTool"
@@ -119,6 +126,9 @@
 				Name="VCCustomBuildTool"
 			/>
 			<Tool
+				Name="NASM"
+			/>
+			<Tool
 				Name="VCXMLDataGeneratorTool"
 			/>
 			<Tool
@@ -207,6 +217,9 @@
 			/>
 			<Tool
 				Name="VCCustomBuildTool"
+			/>
+			<Tool
+				Name="NASM"
 			/>
 			<Tool
 				Name="VCXMLDataGeneratorTool"
@@ -1254,52 +1267,38 @@
 			<File
 				RelativePath="..\libmp3lame\i386\choose_table.nas"
 				>
-				<FileConfiguration
-					Name="Release NASM|Win32"
-					>
-					<Tool
-						Name="VCCustomBuildTool"
-						Description="Assembling $(InputName)..."
-						CommandLine="nasmw -f win32 -i $(InputDir) -DWIN32 $(InputPath) -o   $(IntDir)/$(InputName).obj&#x0D;&#x0A;"
-						Outputs="$(IntDir)/$(InputName).obj"
-					/>
-				</FileConfiguration>
 			</File>
 			<File
 				RelativePath="..\libmp3lame\i386\cpu_feat.nas"
 				>
-				<FileConfiguration
-					Name="Release NASM|Win32"
-					>
-					<Tool
-						Name="VCCustomBuildTool"
-						Description="Assembling $(InputName)..."
-						CommandLine="nasmw -f win32 -i $(InputDir) -DWIN32 $(InputPath) -o   $(IntDir)/$(InputName).obj&#x0D;&#x0A;"
-						Outputs="$(IntDir)/$(InputName).obj"
-					/>
-				</FileConfiguration>
 			</File>
 			<File
 				RelativePath="..\libmp3lame\i386\fft.nas"
 				>
-			</File>
-			<File
-				RelativePath="..\libmp3lame\i386\fft3dn.nas"
-				>
 				<FileConfiguration
 					Name="Release NASM|Win32"
+					ExcludedFromBuild="true"
 					>
 					<Tool
-						Name="VCCustomBuildTool"
-						Description="Assembling $(InputName)..."
-						CommandLine="nasmw -f win32 -i $(InputDir) -DWIN32 $(InputPath) -o   $(IntDir)/$(InputName).obj&#x0D;&#x0A;"
-						Outputs="$(IntDir)/$(InputName).obj"
+						Name="NASM"
 					/>
 				</FileConfiguration>
 			</File>
 			<File
+				RelativePath="..\libmp3lame\i386\fft3dn.nas"
+				>
+			</File>
+			<File
 				RelativePath="..\libmp3lame\i386\fftfpu.nas"
 				>
+				<FileConfiguration
+					Name="Release NASM|Win32"
+					ExcludedFromBuild="true"
+					>
+					<Tool
+						Name="NASM"
+					/>
+				</FileConfiguration>
 			</File>
 			<File
 				RelativePath="..\libmp3lame\i386\fftsse.nas"
@@ -1308,20 +1307,33 @@
 					Name="Release NASM|Win32"
 					>
 					<Tool
-						Name="VCCustomBuildTool"
-						Description="Assembling $(InputName)..."
-						CommandLine="nasmw -f win32 -i $(InputDir) -DWIN32 $(InputPath) -o   $(IntDir)/$(InputName).obj&#x0D;&#x0A;"
-						Outputs="$(IntDir)/$(InputName).obj"
+						Name="NASM"
 					/>
 				</FileConfiguration>
 			</File>
 			<File
 				RelativePath="..\libmp3lame\i386\ffttbl.nas"
 				>
+				<FileConfiguration
+					Name="Release NASM|Win32"
+					ExcludedFromBuild="true"
+					>
+					<Tool
+						Name="NASM"
+					/>
+				</FileConfiguration>
 			</File>
 			<File
 				RelativePath="..\libmp3lame\i386\scalar.nas"
 				>
+				<FileConfiguration
+					Name="Release NASM|Win32"
+					ExcludedFromBuild="true"
+					>
+					<Tool
+						Name="NASM"
+					/>
+				</FileConfiguration>
 			</File>
 		</Filter>
 		<Filter

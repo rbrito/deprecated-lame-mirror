@@ -4,6 +4,7 @@
 	Version="9,00"
 	Name="libmp3lame"
 	ProjectGUID="{20536101-3B0E-43EF-94F9-080D595DAC57}"
+	RootNamespace="libmp3lame"
 	TargetFrameworkVersion="0"
 	>
 	<Platforms>
@@ -12,6 +13,9 @@
 		/>
 	</Platforms>
 	<ToolFiles>
+		<ToolFile
+			RelativePath=".\vc9_nasm.rules"
+		/>
 	</ToolFiles>
 	<Configurations>
 		<Configuration
@@ -28,6 +32,9 @@
 			/>
 			<Tool
 				Name="VCCustomBuildTool"
+			/>
+			<Tool
+				Name="NASM"
 			/>
 			<Tool
 				Name="VCXMLDataGeneratorTool"
@@ -104,6 +111,9 @@
 				Name="VCCustomBuildTool"
 			/>
 			<Tool
+				Name="NASM"
+			/>
+			<Tool
 				Name="VCXMLDataGeneratorTool"
 			/>
 			<Tool
@@ -176,6 +186,9 @@
 			/>
 			<Tool
 				Name="VCCustomBuildTool"
+			/>
+			<Tool
+				Name="NASM"
 			/>
 			<Tool
 				Name="VCXMLDataGeneratorTool"
@@ -1032,10 +1045,7 @@
 					Name="Release NASM|Win32"
 					>
 					<Tool
-						Name="VCCustomBuildTool"
-						Description="Assembling $(InputName)..."
-						CommandLine="nasmw -f win32 -i $(InputDir) -DWIN32 $(InputPath) -o   $(IntDir)/$(InputName).obj&#x0D;&#x0A;"
-						Outputs="$(IntDir)/$(InputName).obj"
+						Name="NASM"
 					/>
 				</FileConfiguration>
 			</File>
@@ -1046,10 +1056,7 @@
 					Name="Release NASM|Win32"
 					>
 					<Tool
-						Name="VCCustomBuildTool"
-						Description="Assembling $(InputName)..."
-						CommandLine="nasmw -f win32 -i $(InputDir) -DWIN32 $(InputPath) -o   $(IntDir)/$(InputName).obj&#x0D;&#x0A;"
-						Outputs="$(IntDir)/$(InputName).obj"
+						Name="NASM"
 					/>
 				</FileConfiguration>
 			</File>
@@ -1061,7 +1068,7 @@
 					ExcludedFromBuild="true"
 					>
 					<Tool
-						Name="VCCustomBuildTool"
+						Name="NASM"
 					/>
 				</FileConfiguration>
 			</File>
@@ -1072,10 +1079,7 @@
 					Name="Release NASM|Win32"
 					>
 					<Tool
-						Name="VCCustomBuildTool"
-						Description="Assembling $(InputName)..."
-						CommandLine="nasmw -f win32 -i $(InputDir) -DWIN32 $(InputPath) -o   $(IntDir)/$(InputName).obj&#x0D;&#x0A;"
-						Outputs="$(IntDir)/$(InputName).obj"
+						Name="NASM"
 					/>
 				</FileConfiguration>
 			</File>
@@ -1087,7 +1091,7 @@
 					ExcludedFromBuild="true"
 					>
 					<Tool
-						Name="VCCustomBuildTool"
+						Name="NASM"
 					/>
 				</FileConfiguration>
 			</File>
@@ -1098,10 +1102,7 @@
 					Name="Release NASM|Win32"
 					>
 					<Tool
-						Name="VCCustomBuildTool"
-						Description="Assembling $(InputName)..."
-						CommandLine="nasmw -f win32 -i $(InputDir) -DWIN32 $(InputPath) -o   $(IntDir)/$(InputName).obj&#x0D;&#x0A;"
-						Outputs="$(IntDir)/$(InputName).obj"
+						Name="NASM"
 					/>
 				</FileConfiguration>
 			</File>
@@ -1113,7 +1114,7 @@
 					ExcludedFromBuild="true"
 					>
 					<Tool
-						Name="VCCustomBuildTool"
+						Name="NASM"
 					/>
 				</FileConfiguration>
 			</File>
@@ -1125,7 +1126,7 @@
 					ExcludedFromBuild="true"
 					>
 					<Tool
-						Name="VCCustomBuildTool"
+						Name="NASM"
 					/>
 				</FileConfiguration>
 			</File>
