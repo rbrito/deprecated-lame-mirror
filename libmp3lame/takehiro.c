@@ -164,10 +164,10 @@ quantize_lines_xrpow(int l, FLOAT istep, const FLOAT * xp, int *pi)
         x3 += MAGIC_FLOAT;
         fi[3].f = x3;
 
-        fi[0].f = x0 + (adj43asm - MAGIC_INT)[fi[0].i];
-        fi[1].f = x1 + (adj43asm - MAGIC_INT)[fi[1].i];
-        fi[2].f = x2 + (adj43asm - MAGIC_INT)[fi[2].i];
-        fi[3].f = x3 + (adj43asm - MAGIC_INT)[fi[3].i];
+        fi[0].f = x0 + adj43asm[fi[0].i - MAGIC_INT];
+        fi[1].f = x1 + adj43asm[fi[1].i - MAGIC_INT];
+        fi[2].f = x2 + adj43asm[fi[2].i - MAGIC_INT];
+        fi[3].f = x3 + adj43asm[fi[3].i - MAGIC_INT];
 
         fi[0].i -= MAGIC_INT;
         fi[1].i -= MAGIC_INT;
@@ -185,8 +185,8 @@ quantize_lines_xrpow(int l, FLOAT istep, const FLOAT * xp, int *pi)
         x1 += MAGIC_FLOAT;
         fi[1].f = x1;
 
-        fi[0].f = x0 + (adj43asm - MAGIC_INT)[fi[0].i];
-        fi[1].f = x1 + (adj43asm - MAGIC_INT)[fi[1].i];
+        fi[0].f = x0 + adj43asm[fi[0].i - MAGIC_INT];
+        fi[1].f = x1 + adj43asm[fi[1].i - MAGIC_INT];
 
         fi[0].i -= MAGIC_INT;
         fi[1].i -= MAGIC_INT;
