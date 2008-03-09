@@ -24,6 +24,11 @@
 #ifndef LAME_LAME_H
 #define LAME_LAME_H
 
+/* for size_t typedef */
+#include <stddef.h>
+/* for va_list typedef */
+#include <stdarg.h>
+
 #if defined(__cplusplus)
 extern "C" {
 #endif
