@@ -313,6 +313,7 @@ currCharCodeSize(void)
     return n;
 }
 
+#if 0
 static
 char* fromLatin1( char* src )
 {
@@ -364,7 +365,7 @@ char* fromUcs2( char* src )
     }
     return dst;
 }
-
+#endif
 
 static
 char* toLatin1( char* src )
@@ -1554,26 +1555,26 @@ parse_args(lame_global_flags * gfp, int argc, char **argv,
                 /* options for ID3 tag */
                 T_ELIF("tt")
                     argUsed = 1;
-                    id3_tag(gfp, 't', TENC_LATIN1, nextArg);
+                    id3_tag(gfp, 't', TENC_RAW, nextArg);
 
                 T_ELIF("ta")
                     argUsed = 1;
-                    id3_tag(gfp, 'a', TENC_LATIN1, nextArg);
+                id3_tag(gfp, 'a', TENC_RAW, nextArg);
 
                 T_ELIF("tl")
                     argUsed = 1;
-                    id3_tag(gfp, 'l', TENC_LATIN1, nextArg);
+                id3_tag(gfp, 'l', TENC_RAW, nextArg);
 
                 T_ELIF("ty")
                     argUsed = 1;
-                    id3_tag(gfp, 'y', TENC_LATIN1, nextArg);
+                id3_tag(gfp, 'y', TENC_RAW, nextArg);
 
                 T_ELIF("tc")
                     argUsed = 1;
-                    id3_tag(gfp, 'c', TENC_LATIN1, nextArg);
+                id3_tag(gfp, 'c', TENC_RAW, nextArg);
 
                 T_ELIF("tn")
-                    int ret = id3_tag(gfp, 'n', TENC_LATIN1, nextArg);
+                    int ret = id3_tag(gfp, 'n', TENC_RAW, nextArg);
                     argUsed = 1;
                     if (ret != 0) {
                         if (0 == ignore_tag_errors) {
@@ -1593,7 +1594,7 @@ parse_args(lame_global_flags * gfp, int argc, char **argv,
                     }
 
                 T_ELIF("tg")
-                    int ret = id3_tag(gfp, 'g', TENC_LATIN1, nextArg);
+                    int ret = id3_tag(gfp, 'g', TENC_RAW, nextArg);
                     argUsed = 1;
                     if (ret != 0) {
                         if (0 == ignore_tag_errors) {
@@ -1624,7 +1625,7 @@ parse_args(lame_global_flags * gfp, int argc, char **argv,
 
                 T_ELIF("tv")
                     argUsed = 1;
-                    if (id3_tag(gfp, 'v', TENC_LATIN1, nextArg)) {
+                    if (id3_tag(gfp, 'v', TENC_RAW, nextArg)) {
                         if (silent < 10) {
                             error_printf("Invalid field value: '%s'. Ignored\n", nextArg);
                         }
@@ -1684,28 +1685,40 @@ parse_args(lame_global_flags * gfp, int argc, char **argv,
                 T_ELIF("genre-list")
                     id3tag_genre_list(genre_list_handler, NULL);
                     return -2;
-#ifdef HAVE_ICONV                
-                T_ELIF("uTitle")
+
+#ifdef HAVE_ICONV
+                    /* some experimental switches for setting ID3 tags
+                     * with proper character encodings
+                    */
+                T_ELIF("lTitle")  argUsed = 1; id3_tag(gfp, 't', TENC_LATIN1, nextArg);
+                T_ELIF("lArtist") argUsed = 1; id3_tag(gfp, 'a', TENC_LATIN1, nextArg);
+                T_ELIF("lAlbum")  argUsed = 1; id3_tag(gfp, 'l', TENC_LATIN1, nextArg);
+                T_ELIF("lGenre")  argUsed = 1; id3_tag(gfp, 'g', TENC_LATIN1, nextArg);
+                T_ELIF("lComment")argUsed = 1; id3_tag(gfp, 'c', TENC_LATIN1, nextArg);
+                T_ELIF("lFieldvalue")
                     argUsed = 1;
-                    id3_tag(gfp, 't', TENC_UCS2, nextArg);
-                    
-                T_ELIF("uArtist")
+                    if (id3_tag(gfp, 'v', TENC_LATIN1, nextArg)) {
+                        if (silent < 10) {
+                            error_printf("Invalid field value: '%s'. Ignored\n", nextArg);
+                        }
+                    }
+
+                T_ELIF("uTitle")  argUsed = 1; id3_tag(gfp, 't', TENC_UCS2, nextArg);
+                T_ELIF("uArtist") argUsed = 1; id3_tag(gfp, 'a', TENC_UCS2, nextArg);
+                T_ELIF("uAlbum")  argUsed = 1; id3_tag(gfp, 'l', TENC_UCS2, nextArg);
+                T_ELIF("uGenre")  argUsed = 1; id3_tag(gfp, 'g', TENC_UCS2, nextArg);
+                T_ELIF("uComment")argUsed = 1; id3_tag(gfp, 'c', TENC_UCS2, nextArg);
+                /*
+                T_ELIF("uFieldvalue")
                     argUsed = 1;
-                    id3_tag(gfp, 'a', TENC_UCS2, nextArg);
-                    
-                T_ELIF("uAlbum")
-                    argUsed = 1;
-                    id3_tag(gfp, 'l', TENC_UCS2, nextArg);
-                    
-                T_ELIF("uGenre")
-                    argUsed = 1;
-                    id3_tag(gfp, 'g', TENC_UCS2, nextArg);
-                    
-                T_ELIF("uComment")
-                    argUsed = 1;
-                    id3_tag(gfp, 'c', TENC_UCS2, nextArg);
-                    
+                    if (id3_tag(gfp, 'v', TENC_UCS2, nextArg)) {
+                        if (silent < 10) {
+                            error_printf("Invalid field value: '%s'. Ignored\n", nextArg);
+                        }
+                    }
+                */
 #endif
+
                 T_ELIF("lowpass")
                     val = atof(nextArg);
                 argUsed = 1;
