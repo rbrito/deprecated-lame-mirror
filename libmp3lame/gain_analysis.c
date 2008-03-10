@@ -410,9 +410,7 @@ AnalyzeSamples(replaygain_t * rgData, const Float_t * left_samples, const Float_
             double const val =
                 STEPS_per_dB * 10. * log10((rgData->lsum + rgData->rsum) / rgData->totsamp * 0.5 +
                                            1.e-37);
-            int     ival = (int) val;
-            if (ival < 0)
-                ival = 0;
+            size_t  ival = (val <= 0) ? 0 : (size_t)val;
             if (ival >= sizeof(rgData->A) / sizeof(*(rgData->A)))
                 ival = sizeof(rgData->A) / sizeof(*(rgData->A)) - 1;
             rgData->A[ival]++;

@@ -162,7 +162,6 @@ typedef enum MiscIDs
 
 
 
-static void testID3v2(lame_global_flags*);
 static int
 id3v2_add_ucs2(lame_global_flags* gfp, int frame_id
                                      , char const*           lang
@@ -200,9 +199,6 @@ id3v2AddLameVersion(lame_global_flags* gfp)
         sprintf(buffer, "LAME version %s (%s)", v, u);
     }
     copyV1ToV2(gfp, ID_ENCODER, buffer);
-#if 0
-    testID3v2(gfp);
-#endif
 }
 
 static void
@@ -348,6 +344,7 @@ local_ucs2_strdup( unsigned short** dst, unsigned short const* src )
     return 0;
 }
 
+#if 0
 static size_t
 local_ucs2_strlen(unsigned short const* s)
 {
@@ -359,6 +356,7 @@ local_ucs2_strlen(unsigned short const* s)
     }
     return n;
 }
+#endif
 
 /*
 Some existing options for ID3 tag can be specified by --tv option
@@ -479,6 +477,7 @@ isMultiFrame(int frame_id)
     return 0;
 }
 
+#if 0
 static int
 isFullTextString(int frame_id)
 {
@@ -489,6 +488,7 @@ isFullTextString(int frame_id)
     }
     return 0;
 }
+#endif
 
 static int
 hasUcs2ByteOrderMarker(unsigned short bom)
@@ -737,24 +737,6 @@ id3tag_set_comment_ucs2(lame_global_flags* gfp, char const*           lang
     return -255;
 }
 
-static void
-testID3v2(lame_global_flags* gfp)
-{
-    union{char t[16];unsigned short s[8];}x;
-    char* p = x.t;
-    
-    *p++ = 0xff;
-    *p++ = 0xfe;
-    *p++ = 'H'; *p++ = 0;
-    *p++ = 'E'; *p++ = 0;
-    *p++ = 'L'; *p++ = 0;
-    *p++ = 'L'; *p++ = 0;
-    *p++ = 'O'; *p++ = 0;
-    *p++ = 0x05; *p++ = 0x21;
-    *p++ = 0; *p++ = 0;
-    assert(0==id3tag_set_comment_ucs2(gfp,"eng",0,x.s));
-    id3tag_set_comment_latin1(gfp,"ger","Test","Das ist ein Test");
-}
 
 void
 id3tag_set_title(lame_global_flags * gfp, const char *title)

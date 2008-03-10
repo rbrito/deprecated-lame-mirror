@@ -1256,8 +1256,8 @@ reduce_bit_usage(lame_internal_flags * gfc, int gr, int ch
 
 
 int
-VBR_encode_frame(lame_internal_flags * gfc, FLOAT const xr34orig[2][2][576],
-                 FLOAT const l3_xmin[2][2][SFBMAX], int const max_bits[2][2])
+VBR_encode_frame(lame_internal_flags * gfc, FLOAT xr34orig[2][2][576],
+                 FLOAT l3_xmin[2][2][SFBMAX], int max_bits[2][2])
 {
     int     sfwork_[2][2][SFBMAX];
     int     vbrsfmin_[2][2][SFBMAX];

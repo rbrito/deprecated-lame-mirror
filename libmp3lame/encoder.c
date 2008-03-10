@@ -154,8 +154,8 @@ static void
 updateStats(lame_internal_flags * const gfc)
 {
     int     gr, ch;
-    assert(gfc->bitrate_index < 16u);
-    assert(gfc->mode_ext < 4u);
+    assert(0 <= gfc->bitrate_index && gfc->bitrate_index < 16);
+    assert(0 <= gfc->mode_ext && gfc->mode_ext < 4);
 
     /* count bitrate indices */
     gfc->bitrate_stereoMode_Hist[gfc->bitrate_index][4]++;

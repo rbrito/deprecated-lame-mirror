@@ -350,8 +350,8 @@ encodeSideInfo2(lame_global_flags const *gfp, int bitsPerFrame)
                         gi->table_select[2] = 16;
                     writeheader(gfc, gi->table_select[2], 5);
 
-                    assert(gi->region0_count < 16U);
-                    assert(gi->region1_count < 8U);
+                    assert(0 <= gi->region0_count && gi->region0_count < 16);
+                    assert(0 <= gi->region1_count && gi->region1_count < 8);
                     writeheader(gfc, gi->region0_count, 4);
                     writeheader(gfc, gi->region1_count, 3);
                 }
@@ -403,8 +403,8 @@ encodeSideInfo2(lame_global_flags const *gfp, int bitsPerFrame)
                     gi->table_select[2] = 16;
                 writeheader(gfc, gi->table_select[2], 5);
 
-                assert(gi->region0_count < 16U);
-                assert(gi->region1_count < 8U);
+                assert(0 <= gi->region0_count && gi->region0_count < 16);
+                assert(0 <= gi->region1_count && gi->region1_count < 8);
                 writeheader(gfc, gi->region0_count, 4);
                 writeheader(gfc, gi->region1_count, 3);
             }
@@ -458,7 +458,7 @@ huffman_coder_count1(lame_internal_flags * gfc, gr_info const *gi)
             p += 8;
             if (xr[0] < 0)
                 huffbits++;
-            assert(v <= 1u);
+            assert(v <= 1);
         }
 
         v = ix[1];
@@ -467,7 +467,7 @@ huffman_coder_count1(lame_internal_flags * gfc, gr_info const *gi)
             huffbits *= 2;
             if (xr[1] < 0)
                 huffbits++;
-            assert(v <= 1u);
+            assert(v <= 1);
         }
 
         v = ix[2];
@@ -476,7 +476,7 @@ huffman_coder_count1(lame_internal_flags * gfc, gr_info const *gi)
             huffbits *= 2;
             if (xr[2] < 0)
                 huffbits++;
-            assert(v <= 1u);
+            assert(v <= 1);
         }
 
         v = ix[3];
@@ -485,7 +485,7 @@ huffman_coder_count1(lame_internal_flags * gfc, gr_info const *gi)
             huffbits *= 2;
             if (xr[3] < 0)
                 huffbits++;
-            assert(v <= 1u);
+            assert(v <= 1);
         }
 
         ix += 4;
@@ -559,7 +559,7 @@ Huffmancode(lame_internal_flags * const gfc, const unsigned int tableindex,
             cbits--;
         }
 
-        assert((x1 | x2) < 16u);
+        assert((x1 | x2) < 16);
 
         x1 = x1 * xlen + x2;
         xbits -= cbits;
@@ -606,10 +606,12 @@ LongHuffmancodebits(lame_internal_flags * gfc, gr_info const *gi)
     assert(0 <= bigvalues && bigvalues <= 576);
 
     i = gi->region0_count + 1;
-    assert(i < sizeof(gfc->scalefac_band.l)/sizeof(gfc->scalefac_band.l[0]));
+    assert(0 <= i);
+    assert((size_t)i < dimension_of(gfc->scalefac_band.l));
     region1Start = gfc->scalefac_band.l[i];
     i += gi->region1_count + 1;
-    assert(i < sizeof(gfc->scalefac_band.l)/sizeof(gfc->scalefac_band.l[0]) );
+    assert(0 <= i);
+    assert((size_t)i < dimension_of(gfc->scalefac_band.l));
     region2Start = gfc->scalefac_band.l[i];
 
     if (region1Start > bigvalues)
@@ -691,9 +693,9 @@ writeMainData(lame_global_flags const *const gfp)
                     int const sfbs = gi->sfb_partition_table[sfb_partition] / 3;
                     int const slen = gi->slen[sfb_partition];
                     for (i = 0; i < sfbs; i++, sfb++) {
-                        putbits2(gfc, Max(gi->scalefac[sfb * 3 + 0], 0U), slen);
-                        putbits2(gfc, Max(gi->scalefac[sfb * 3 + 1], 0U), slen);
-                        putbits2(gfc, Max(gi->scalefac[sfb * 3 + 2], 0U), slen);
+                        putbits2(gfc, Max(gi->scalefac[sfb * 3 + 0], 0), slen);
+                        putbits2(gfc, Max(gi->scalefac[sfb * 3 + 1], 0), slen);
+                        putbits2(gfc, Max(gi->scalefac[sfb * 3 + 2], 0), slen);
                         scale_bits += 3 * slen;
                     }
                 }
@@ -704,7 +706,7 @@ writeMainData(lame_global_flags const *const gfp)
                     int const sfbs = gi->sfb_partition_table[sfb_partition];
                     int const slen = gi->slen[sfb_partition];
                     for (i = 0; i < sfbs; i++, sfb++) {
-                        putbits2(gfc, Max(gi->scalefac[sfb], 0U), slen);
+                        putbits2(gfc, Max(gi->scalefac[sfb], 0), slen);
                         scale_bits += slen;
                     }
                 }
@@ -832,7 +834,7 @@ flush_bitstream(lame_global_flags const *gfp)
     /* save the ReplayGain value */
     if (gfc->findReplayGain) {
         FLOAT const RadioGain = (FLOAT) GetTitleGain(gfc->rgdata);
-        assert(RadioGain != GAIN_NOT_ENOUGH_SAMPLES);
+        assert(NEQ(RadioGain, GAIN_NOT_ENOUGH_SAMPLES));
         gfc->RadioGain = (int) floor(RadioGain * 10.0 + 0.5); /* round to nearest */
     }
 
@@ -841,7 +843,7 @@ flush_bitstream(lame_global_flags const *gfp)
         gfc->noclipGainChange = (int) ceil(log10(gfc->PeakSample / 32767.0) * 20.0 * 10.0); /* round up */
 
         if (gfc->noclipGainChange > 0) { /* clipping occurs */
-            if (gfp->scale == 1.0 || gfp->scale == 0.0)
+            if (EQ(gfp->scale, 1.0) || EQ(gfp->scale, 0.0))
                 gfc->noclipScale = floor((32767.0 / gfc->PeakSample) * 100.0) / 100.0; /* round down */
             else
                 /* the user specified his own scaling factor. We could suggest

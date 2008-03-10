@@ -34,6 +34,7 @@
 #include "encoder.h"
 #include "interface.h"
 
+#include "util.h"
 
 
 MPSTR   mp;
@@ -82,7 +83,7 @@ lame_decode_init(void)
  *  n     number of samples output.  either 576 or 1152 depending on MP3 file.
  */
 
-int
+static int
 lame_decode1_headersB_clipchoice(unsigned char *buffer, int len,
                                  char pcm_l_raw[], char pcm_r_raw[], mp3data_struct * mp3data,
                                  int *enc_delay, int *enc_padding,

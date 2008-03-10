@@ -163,6 +163,11 @@ typedef sample_t stereo_t[2];
 #define dimension_of(array) (sizeof(array)/sizeof(array[0]))
 #define beyond(array) (array+dimension_of(array))
 
+#define EQ(a,b) (fabs((a)-(b))<1E-37)
+#define EQ_F(a,b) (fabsf((a)-(b))<1E-37)
+
+#define NEQ(a,b) (fabs((a)-(b))>=1E-37)
+#define NEQ_F(a,b) (fabsf((a)-(b))>=1E-37)
 
 #endif
 

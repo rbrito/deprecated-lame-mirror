@@ -581,7 +581,7 @@ lame_init_params(lame_global_flags * gfp)
 
     if (gfp->VBR == vbr_off && gfp->brate == 0) {
         /* no bitrate or compression ratio specified, use 11.025 */
-        if (gfp->compression_ratio == 0)
+        if (EQ(gfp->compression_ratio, 0))
             gfp->compression_ratio = 11.025; /* rate to compress a CD down to exactly 128000 bps */
     }
 
@@ -1186,7 +1186,7 @@ lame_print_config(const lame_global_flags * gfp)
         MSGF(gfc, "Autoconverting from stereo to mono. Setting encoding to mono mode.\n");
     }
 
-    if (gfc->resample_ratio != 1.) {
+    if (NEQ(gfc->resample_ratio, 1.)) {
         MSGF(gfc, "Resampling:  input %g kHz  output %g kHz\n",
              1.e-3 * in_samplerate, 1.e-3 * out_samplerate);
     }
@@ -1491,7 +1491,7 @@ lame_encode_buffer_sample_t(lame_global_flags * gfp,
     /* Apply user defined re-scaling */
 
     /* user selected scaling of the samples */
-    if (gfp->scale != 0 && gfp->scale != 1.0) {
+    if (NEQ(gfp->scale, 0) && NEQ(gfp->scale, 1.0)) {
         for (i = 0; i < nsamples; ++i) {
             in_buffer[0][i] *= gfp->scale;
             if (gfc->channels_out == 2)
@@ -1500,14 +1500,14 @@ lame_encode_buffer_sample_t(lame_global_flags * gfp,
     }
 
     /* user selected scaling of the channel 0 (left) samples */
-    if (gfp->scale_left != 0 && gfp->scale_left != 1.0) {
+    if (NEQ(gfp->scale_left, 0) && NEQ(gfp->scale_left, 1.0)) {
         for (i = 0; i < nsamples; ++i) {
             in_buffer[0][i] *= gfp->scale_left;
         }
     }
 
     /* user selected scaling of the channel 1 (right) samples */
-    if (gfp->scale_right != 0 && gfp->scale_right != 1.0) {
+    if (NEQ(gfp->scale_right, 0) && NEQ(gfp->scale_right, 1.0)) {
         for (i = 0; i < nsamples; ++i) {
             in_buffer[1][i] *= gfp->scale_right;
         }
@@ -2012,6 +2012,8 @@ lame_encode_finish(lame_global_flags * gfp, unsigned char *mp3buffer, int mp3buf
 /*****************************************************************/
 /* write VBR Xing header, and ID3 version 1 tag, if asked for    */
 /*****************************************************************/
+void lame_mp3_tags_fid(lame_global_flags * gfp, FILE * fpStream);
+
 void
 lame_mp3_tags_fid(lame_global_flags * gfp, FILE * fpStream)
 {

@@ -419,7 +419,7 @@ iteration_init(lame_global_flags * gfp)
  * bugfixes rh 8/01: often allocated more than the allowed 4095 bits
  ************************************************************************/
 int
-on_pe(lame_global_flags const *gfp, FLOAT const pe[][2], III_side_info_t const *l3_side,
+on_pe(lame_global_flags const *gfp, FLOAT pe[][2], III_side_info_t const *l3_side,
       int targ_bits[2], int mean_bits, int gr, int cbr)
 {
     lame_internal_flags const *const gfc = gfp->internal_flags;
@@ -664,7 +664,7 @@ calc_xmin(lame_global_flags const *gfp,
     max_nonzero = 575;
     if (cod_info->block_type != SHORT_TYPE) { /* NORM, START or STOP type, but not SHORT */
         k = 576;
-        while (k-- && !xr[k]) {
+        while (k-- && NEQ(xr[k],0)) {
             max_nonzero = k;
         }
     }
@@ -1038,7 +1038,7 @@ set_pinfo(lame_global_flags const *gfp,
  ************************************************************************/
 
 void
-set_frame_pinfo(lame_global_flags const *gfp, III_psy_ratio const ratio[2][2])
+set_frame_pinfo(lame_global_flags const *gfp, III_psy_ratio ratio[2][2])
 {
     lame_internal_flags *const gfc = gfp->internal_flags;
     int     ch;

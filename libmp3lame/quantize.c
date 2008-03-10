@@ -172,7 +172,7 @@ psfb21_analogsilence(lame_internal_flags const *gfc, gr_info * const cod_info)
             FLOAT   ath21;
             ath21 = athAdjust(ATH->adjust, ATH->psfb21[gsfb], ATH->floor);
 
-            if (gfc->nsPsy.longfact[21] != 0)
+            if (NEQ(gfc->nsPsy.longfact[21], 0))
                 ath21 *= gfc->nsPsy.longfact[21];
 
             for (j = end - 1; j >= start; j--) {
@@ -202,7 +202,7 @@ psfb21_analogsilence(lame_internal_flags const *gfc, gr_info * const cod_info)
                 FLOAT   ath12;
                 ath12 = athAdjust(ATH->adjust, ATH->psfb12[gsfb], ATH->floor);
 
-                if (gfc->nsPsy.shortfact[12] != 0)
+                if (NEQ(gfc->nsPsy.shortfact[12], 0))
                     ath12 *= gfc->nsPsy.shortfact[12];
 
                 for (j = end - 1; j >= start; j--) {
@@ -428,9 +428,9 @@ floatcompare(const void *v1, const void *v2)
     const FLOAT *const a = v1, *const b = v2;
     if (*a > *b)
         return 1;
-    if (*a == *b)
-        return 0;
-    return -1;
+    if (*a < *b)
+        return -1;
+    return 0;
 }
 
 void
@@ -466,7 +466,7 @@ trancate_smallspectrums(lame_internal_flags const *gfc,
             continue;
 
         qsort(&work[j - width], width, sizeof(FLOAT), floatcompare);
-        if (work[j - 1] == 0.0)
+        if (EQ(work[j - 1], 0.0))
             continue;   /* all zero sfb */
 
         allowedNoise = (1.0 - distort[sfb]) * l3_xmin[sfb];
@@ -475,7 +475,7 @@ trancate_smallspectrums(lame_internal_flags const *gfc,
         do {
             FLOAT   noise;
             for (nsame = 1; start + nsame < width; nsame++)
-                if (work[start + j - width] != work[start + j + nsame - width])
+                if (NEQ(work[start + j - width], work[start + j + nsame - width]))
                     break;
 
             noise = work[start + j - width] * work[start + j - width] * nsame;
@@ -487,7 +487,7 @@ trancate_smallspectrums(lame_internal_flags const *gfc,
             allowedNoise -= noise;
             start += nsame;
         } while (start < width);
-        if (trancateThreshold == 0.0)
+        if (EQ(trancateThreshold, 0.0))
             continue;
 
 /*      printf("%e %e %e\n", */
@@ -601,7 +601,7 @@ quant_compare(const int quant_comp,
         better = calc->over_count < best->over_count
             || (calc->over_count == best->over_count && calc->over_noise < best->over_noise)
             || (calc->over_count == best->over_count &&
-                calc->over_noise == best->over_noise && calc->tot_noise < best->tot_noise);
+                EQ(calc->over_noise, best->over_noise) && calc->tot_noise < best->tot_noise);
         break;
 
     case 8:
@@ -638,13 +638,13 @@ quant_compare(const int quant_comp,
         break;
     case 5:
         better = calc->over_noise < best->over_noise
-            || (calc->over_noise == best->over_noise && calc->tot_noise < best->tot_noise);
+            || (EQ(calc->over_noise, best->over_noise) && calc->tot_noise < best->tot_noise);
         break;
     case 6:
         better = calc->over_noise < best->over_noise
-            || (calc->over_noise == best->over_noise &&
+            || (EQ(calc->over_noise, best->over_noise) &&
                 (calc->max_noise < best->max_noise
-                 || (calc->max_noise == best->max_noise && calc->tot_noise <= best->tot_noise)
+                 || (EQ(calc->max_noise, best->max_noise) && calc->tot_noise <= best->tot_noise)
                 ));
         break;
     case 7:
@@ -1374,9 +1374,8 @@ get_framebits(lame_global_flags const *gfp, int frameBits[15])
 
 static int
 VBR_old_prepare(lame_global_flags const *gfp,
-                FLOAT const pe[2][2],
-                FLOAT const ms_ener_ratio[2],
-                III_psy_ratio const ratio[2][2],
+                FLOAT pe[2][2], FLOAT const ms_ener_ratio[2],
+                III_psy_ratio ratio[2][2],
                 FLOAT l3_xmin[2][2][SFBMAX],
                 int frameBits[16],
                 int min_bits[2][2], int max_bits[2][2], int bands[2][2])
@@ -1475,9 +1474,8 @@ bitpressure_strategy(lame_internal_flags const *gfc,
  ************************************************************************/
 
 void
-VBR_old_iteration_loop(lame_global_flags const *gfp,
-                       FLOAT const pe[2][2],
-                       FLOAT const ms_ener_ratio[2], III_psy_ratio const ratio[2][2])
+VBR_old_iteration_loop(lame_global_flags const *gfp, FLOAT pe[2][2],
+                       FLOAT ms_ener_ratio[2], III_psy_ratio ratio[2][2])
 {
     lame_internal_flags *const gfc = gfp->internal_flags;
     FLOAT   l3_xmin[2][2][SFBMAX];
@@ -1569,8 +1567,7 @@ VBR_old_iteration_loop(lame_global_flags const *gfp,
 
 static int
 VBR_new_prepare(lame_global_flags const *gfp,
-                FLOAT const pe[2][2],
-                III_psy_ratio const ratio[2][2],
+                FLOAT pe[2][2], III_psy_ratio ratio[2][2],
                 FLOAT l3_xmin[2][2][SFBMAX], int frameBits[16], int max_bits[2][2])
 {
     lame_internal_flags *const gfc = gfp->internal_flags;
@@ -1646,9 +1643,8 @@ getFramesize_kbps(lame_global_flags const* gfp, int bits_used )
 
 
 void
-VBR_new_iteration_loop(lame_global_flags const *gfp,
-                       FLOAT const pe[2][2],
-                       FLOAT const ms_ener_ratio[2], III_psy_ratio const ratio[2][2])
+VBR_new_iteration_loop(lame_global_flags const *gfp, FLOAT pe[2][2],
+                       FLOAT ms_ener_ratio[2], III_psy_ratio ratio[2][2])
 {
     lame_internal_flags *const gfc = gfp->internal_flags;
     FLOAT   l3_xmin[2][2][SFBMAX];
@@ -1749,7 +1745,7 @@ VBR_new_iteration_loop(lame_global_flags const *gfp,
 
 static void
 calc_target_bits(lame_global_flags const *gfp,
-                 FLOAT const pe[2][2],
+                 FLOAT pe[2][2],
                  FLOAT const ms_ener_ratio[2],
                  int targ_bits[2][2], int *analog_silence_bits, int *max_frame_bits)
 {
@@ -1878,9 +1874,8 @@ calc_target_bits(lame_global_flags const *gfp,
  ********************************************************************/
 
 void
-ABR_iteration_loop(lame_global_flags const *gfp,
-                   FLOAT const pe[2][2],
-                   FLOAT const ms_ener_ratio[2], III_psy_ratio const ratio[2][2])
+ABR_iteration_loop(lame_global_flags const *gfp, FLOAT pe[2][2],
+                   FLOAT ms_ener_ratio[2], III_psy_ratio ratio[2][2])
 {
     lame_internal_flags *const gfc = gfp->internal_flags;
     FLOAT   l3_xmin[SFBMAX];
@@ -1964,9 +1959,8 @@ ABR_iteration_loop(lame_global_flags const *gfp,
  ************************************************************************/
 
 void
-CBR_iteration_loop(lame_global_flags const *gfp,
-                   FLOAT const pe[2][2],
-                   FLOAT const ms_ener_ratio[2], III_psy_ratio const ratio[2][2])
+CBR_iteration_loop(lame_global_flags const *gfp, FLOAT pe[2][2],
+                   FLOAT ms_ener_ratio[2], III_psy_ratio ratio[2][2])
 {
     lame_internal_flags *const gfc = gfp->internal_flags;
     FLOAT   l3_xmin[SFBMAX];

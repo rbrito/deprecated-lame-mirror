@@ -490,7 +490,7 @@ mask_add(FLOAT m1, FLOAT m2, int kk, int b, lame_internal_flags const *gfc, int 
 
 /* addition of simultaneous masking   Naoki Shibata 2000/7 */
 inline static FLOAT
-vbrpsy_mask_add(FLOAT m1, FLOAT m2, int kk, int b)
+vbrpsy_mask_add(FLOAT m1, FLOAT m2, int b)
 {
     static const FLOAT table1[] = {
         3.3246 * 3.3246, 3.23837 * 3.23837, 3.15437 * 3.15437, 3.00412 * 3.00412, 2.86103 * 2.86103,
@@ -508,14 +508,6 @@ vbrpsy_mask_add(FLOAT m1, FLOAT m2, int kk, int b)
         1.14758 * 1.14758,
         1
     };
-
-    static const FLOAT table3[] = {
-        2.35364 * 2.35364, 2.29259 * 2.29259, 2.23313 * 2.23313, 2.12675 * 2.12675,
-        2.02545 * 2.02545, 1.87894 * 1.87894, 1.74303 * 1.74303, 1.61695 * 1.61695,
-        1.49999 * 1.49999, 1.39148 * 1.39148, 1.29083 * 1.29083, 1.19746 * 1.19746,
-        1.11084 * 1.11084, 1.03826 * 1.03826
-    };
-
 
     int     i;
     FLOAT   ratio;
@@ -555,7 +547,7 @@ vbrpsy_mask_add(FLOAT m1, FLOAT m2, int kk, int b)
     i = (int) FAST_LOG10_X(ratio, 16.0);
     
     assert( i >= 0 );
-    assert( i < dimension_of(table1) );
+    assert( (size_t)i < dimension_of(table1) );
     
     /* 10% of total */
     return m1 * table1[i];
@@ -1901,7 +1893,7 @@ vbrpsy_compute_masking_s(lame_global_flags const *gfp, FLOAT(*fftenergy_s)[HBLKS
             dd += mask_idx_s[kk];
             dd_n += 1;
             x = gfc->s3_ss[j] * eb[kk] * tab[mask_idx_s[kk]];
-            ecb = vbrpsy_mask_add(ecb, x, kk, kk - b);
+            ecb = vbrpsy_mask_add(ecb, x, kk - b);
             ++j, ++kk;
         }
         dd = (1 + 2 * dd) / (2 * dd_n);
@@ -1992,7 +1984,7 @@ vbrpsy_compute_masking_l(lame_internal_flags * gfc, FLOAT fftenergy[HBLKSIZE], F
             dd += mask_idx_l[kk];
             dd_n += 1;
             x = gfc->s3_ll[k] * eb_l[kk] * tab[mask_idx_l[kk]];
-            t = vbrpsy_mask_add(ecb, x, kk, kk - b);
+            t = vbrpsy_mask_add(ecb, x, kk - b);
 #if 0
             ecb += eb_l[kk];
             if (ecb > t) {
