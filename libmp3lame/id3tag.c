@@ -411,7 +411,7 @@ id3tag_set_albumart(lame_global_flags* gfp, const char* image, unsigned long siz
 }
 
 static unsigned char *
-set_4_byte_value(unsigned char *bytes, unsigned long value)
+set_4_byte_value(unsigned char *bytes, uint32_t value)
 {
     int     i;
     for (i = 3; i >= 0; --i) {
@@ -983,7 +983,7 @@ set_frame_comment(unsigned char* frame, FrameDataNode const* node)
     size_t const n = sizeOfCommentNode(node);
     if (n > 10) {
         frame = set_4_byte_value(frame, ID_COMMENT);
-        frame = set_4_byte_value(frame, n-10);
+        frame = set_4_byte_value(frame, (uint32_t)(n-10));
         /* clear 2-byte header flags */
         *frame++ = 0;
         *frame++ = 0;
@@ -1266,7 +1266,7 @@ id3tag_write_v2(lame_global_flags * gfp)
             }
         }
         free(tag);
-        return tag_size;
+        return (int)tag_size; /* ok, tag should not exceed 2GB */
     }
     return 0;
 }
@@ -1348,5 +1348,5 @@ id3tag_write_v1(lame_global_flags * gfp)
     for (i = 0; i < n; ++i) {
         add_dummy_byte(gfp, tag[i], 1);
     }
-    return n;
+    return (int)n; /* ok, tag has fixed size of 128 bytes, well below 2GB */
 }

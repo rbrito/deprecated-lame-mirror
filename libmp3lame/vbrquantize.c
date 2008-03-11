@@ -449,6 +449,7 @@ block_sf(algo_t * that, const FLOAT l3_xmin[SFBMAX], int vbrsf[SFBMAX], int vbrs
         if (sfb < psymax) {
             if (below_noise_floor(&xr[j], l3_xmin[sfb], l) == 0) {
                 m2 = find_scalefac_x34(&xr[j], &xr34_orig[j], l3_xmin[sfb], l, m1);
+#if 0
                 if (0) {
                     /** Robert Hegemann 2007-09-29:
                      *  It seems here is some more potential for speed improvements.
@@ -459,6 +460,7 @@ block_sf(algo_t * that, const FLOAT l3_xmin[SFBMAX], int vbrsf[SFBMAX], int vbrs
                     DEBUGF(that->gfc, "sfb=%3d guess=%3d found=%3d diff=%3d\n", sfb, guess, m2,
                            m2 - guess);
                 }
+#endif
                 if (maxsf < m2) {
                     maxsf = m2;
                 }
@@ -1586,6 +1588,4 @@ VBR_encode_frame(lame_internal_flags * gfc, FLOAT xr34orig[2][2][576],
     ERRORF(gfc, "INTERNAL ERROR IN VBR NEW CODE (1313), please send bug report\n"
            "maxbits=%d usedbits=%d\n", max_nbits_fr, use_nbits_fr);
     exit(-1);
-
-    return use_nbits_fr;
 }

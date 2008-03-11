@@ -1243,6 +1243,7 @@ VBR_encode_granule(lame_global_flags const *gfp, gr_info * const cod_info, const
     int const sfb21_extra = gfc->sfb21_extra;
 
     assert(Max_bits <= MAX_BITS_PER_CHANNEL);
+    memset(bst_cod_info.l3_enc,0,sizeof(bst_cod_info.l3_enc));
 
     /*  search within round about 40 bits of optimal
      */
@@ -1886,6 +1887,8 @@ ABR_iteration_loop(lame_global_flags const *gfp, FLOAT pe[2][2],
     int     analog_silence_bits;
     gr_info *cod_info;
     III_side_info_t *const l3_side = &gfc->l3_side;
+
+    mean_bits = 0;
 
     calc_target_bits(gfp, pe, ms_ener_ratio, targ_bits, &analog_silence_bits, &max_frame_bits);
 

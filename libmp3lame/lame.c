@@ -1129,9 +1129,9 @@ lame_print_config(const lame_global_flags * gfp)
 
     MSGF(gfc, "LAME %s %s (%s)\n", get_lame_version(), get_lame_os_bitness(), get_lame_url());
 
-    if (LAME_ALPHA_VERSION)
-        MSGF(gfc, "warning: alpha versions should be used for testing only\n");
-
+#if (LAME_ALPHA_VERSION)
+    MSGF(gfc, "warning: alpha versions should be used for testing only\n");
+#endif
     if (gfc->CPU_features.MMX
         || gfc->CPU_features.AMD_3DNow || gfc->CPU_features.SSE || gfc->CPU_features.SSE2) {
         int fft_asm_used = 0;

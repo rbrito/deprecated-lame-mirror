@@ -283,7 +283,7 @@ setLameTagFrameHeader(lame_global_flags const* gfp, unsigned char* buffer)
     /* but sampling freq, mode andy copyright/copy protection taken */
     /* from first valid frame */
     buffer[0] = (uint8_t) 0xff;
-    abyte = (buffer[1] & (char) 0xf1);
+    abyte = (buffer[1] & (unsigned char) 0xf1);
     {
         int     bitrate;
         if (1 == gfp->version) {
@@ -605,7 +605,7 @@ UpdateMusicCRC(uint16_t * crc, unsigned char *buffer, int size)
  ****************************************************************************
 */
 static int
-PutLameVBR(lame_global_flags const* gfp, size_t nFilesize, uint8_t * pbtStreamBuffer, uint32_t id3v2size,
+PutLameVBR(lame_global_flags const* gfp, size_t nFilesize, uint8_t * pbtStreamBuffer, size_t id3v2size,
            uint16_t crc)
 {
     lame_internal_flags *gfc = gfp->internal_flags;
@@ -641,7 +641,7 @@ PutLameVBR(lame_global_flags const* gfp, size_t nFilesize, uint8_t * pbtStreamBu
     int     bNonOptimal = 0;
     uint8_t nSourceFreq = 0;
     uint8_t nMisc = 0;
-    uint32_t nMusicLength = 0;
+    size_t  nMusicLength = 0;
     int     bId3v1Present = ((gfp->internal_flags->tag_spec.flags & CHANGED_FLAG)
                              && !(gfp->internal_flags->tag_spec.flags & V2_ONLY_FLAG));
     uint16_t nMusicCRC = 0;
@@ -833,7 +833,7 @@ PutLameVBR(lame_global_flags const* gfp, size_t nFilesize, uint8_t * pbtStreamBu
     CreateI2(&pbtStreamBuffer[nBytesWritten], gfp->preset);
     nBytesWritten += 2;
 
-    CreateI4(&pbtStreamBuffer[nBytesWritten], nMusicLength);
+    CreateI4(&pbtStreamBuffer[nBytesWritten], (int)nMusicLength);
     nBytesWritten += 4;
 
     CreateI2(&pbtStreamBuffer[nBytesWritten], nMusicCRC);
@@ -855,7 +855,7 @@ static long
 skipId3v2(FILE * fpStream)
 {
     size_t  nbytes;
-    size_t  id3v2TagSize;
+    long    id3v2TagSize;
     unsigned char id3v2Header[10];
     
     /* seek to the beginning of the stream */

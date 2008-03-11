@@ -104,7 +104,7 @@ lame_decode1_headersB_clipchoice(unsigned char *buffer, int len,
 
     mp3data->header_parsed = 0;
 
-    ret = (*decodeMP3_ptr) (&mp, buffer, len, p, psize, &processed_bytes);
+    ret = (*decodeMP3_ptr) (&mp, buffer, len, p, (int)psize, &processed_bytes);
     /* three cases:  
      * 1. headers parsed, but data not complete
      *       mp.header_parsed==1 
@@ -273,7 +273,7 @@ lame_decode_headers(unsigned char *buffer,
     int     ret;
     int     totsize = 0;     /* number of decoded samples per channel */
 
-    while (1) {
+    for (;;) {
         switch (ret = lame_decode1_headers(buffer, len, pcm_l + totsize, pcm_r + totsize, mp3data)) {
         case -1:
             return ret;

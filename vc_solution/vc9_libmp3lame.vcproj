@@ -58,7 +58,7 @@
 				AssemblerListingLocation="..\obj\Release_NASM\libmp3lame/"
 				ObjectFile="..\obj\Release_NASM\libmp3lame/"
 				ProgramDataBaseFileName="..\obj\Release_NASM\libmp3lame/"
-				WarningLevel="3"
+				WarningLevel="4"
 				SuppressStartupBanner="true"
 				DisableSpecificWarnings="4996"
 			/>
@@ -135,7 +135,7 @@
 				AssemblerListingLocation="..\obj\Release\libmp3lame/"
 				ObjectFile="..\obj\Release\libmp3lame/"
 				ProgramDataBaseFileName="..\obj\Release\libmp3lame/"
-				WarningLevel="3"
+				WarningLevel="4"
 				SuppressStartupBanner="true"
 				DisableSpecificWarnings="4996"
 			/>
@@ -209,7 +209,7 @@
 				AssemblerListingLocation="..\obj\Debug\libmp3lame/"
 				ObjectFile="..\obj\Debug\libmp3lame/"
 				ProgramDataBaseFileName="..\obj\Debug\libmp3lame/"
-				WarningLevel="3"
+				WarningLevel="4"
 				SuppressStartupBanner="true"
 				DebugInformationFormat="4"
 				DisableSpecificWarnings="4996"
@@ -1041,10 +1041,42 @@
 			<File
 				RelativePath="..\libmp3lame\i386\choose_table.nas"
 				>
+				<FileConfiguration
+					Name="Release|Win32"
+					ExcludedFromBuild="true"
+					>
+					<Tool
+						Name="NASM"
+					/>
+				</FileConfiguration>
+				<FileConfiguration
+					Name="Debug|Win32"
+					ExcludedFromBuild="true"
+					>
+					<Tool
+						Name="NASM"
+					/>
+				</FileConfiguration>
 			</File>
 			<File
 				RelativePath="..\libmp3lame\i386\cpu_feat.nas"
 				>
+				<FileConfiguration
+					Name="Release|Win32"
+					ExcludedFromBuild="true"
+					>
+					<Tool
+						Name="NASM"
+					/>
+				</FileConfiguration>
+				<FileConfiguration
+					Name="Debug|Win32"
+					ExcludedFromBuild="true"
+					>
+					<Tool
+						Name="NASM"
+					/>
+				</FileConfiguration>
 			</File>
 			<File
 				RelativePath="..\libmp3lame\i386\fft.nas"
@@ -1057,10 +1089,42 @@
 						Name="NASM"
 					/>
 				</FileConfiguration>
+				<FileConfiguration
+					Name="Release|Win32"
+					ExcludedFromBuild="true"
+					>
+					<Tool
+						Name="NASM"
+					/>
+				</FileConfiguration>
+				<FileConfiguration
+					Name="Debug|Win32"
+					ExcludedFromBuild="true"
+					>
+					<Tool
+						Name="NASM"
+					/>
+				</FileConfiguration>
 			</File>
 			<File
 				RelativePath="..\libmp3lame\i386\fft3dn.nas"
 				>
+				<FileConfiguration
+					Name="Release|Win32"
+					ExcludedFromBuild="true"
+					>
+					<Tool
+						Name="NASM"
+					/>
+				</FileConfiguration>
+				<FileConfiguration
+					Name="Debug|Win32"
+					ExcludedFromBuild="true"
+					>
+					<Tool
+						Name="NASM"
+					/>
+				</FileConfiguration>
 			</File>
 			<File
 				RelativePath="..\libmp3lame\i386\fftfpu.nas"
@@ -1073,10 +1137,42 @@
 						Name="NASM"
 					/>
 				</FileConfiguration>
+				<FileConfiguration
+					Name="Release|Win32"
+					ExcludedFromBuild="true"
+					>
+					<Tool
+						Name="NASM"
+					/>
+				</FileConfiguration>
+				<FileConfiguration
+					Name="Debug|Win32"
+					ExcludedFromBuild="true"
+					>
+					<Tool
+						Name="NASM"
+					/>
+				</FileConfiguration>
 			</File>
 			<File
 				RelativePath="..\libmp3lame\i386\fftsse.nas"
 				>
+				<FileConfiguration
+					Name="Release|Win32"
+					ExcludedFromBuild="true"
+					>
+					<Tool
+						Name="NASM"
+					/>
+				</FileConfiguration>
+				<FileConfiguration
+					Name="Debug|Win32"
+					ExcludedFromBuild="true"
+					>
+					<Tool
+						Name="NASM"
+					/>
+				</FileConfiguration>
 			</File>
 			<File
 				RelativePath="..\libmp3lame\i386\ffttbl.nas"
@@ -1089,12 +1185,44 @@
 						Name="NASM"
 					/>
 				</FileConfiguration>
+				<FileConfiguration
+					Name="Release|Win32"
+					ExcludedFromBuild="true"
+					>
+					<Tool
+						Name="NASM"
+					/>
+				</FileConfiguration>
+				<FileConfiguration
+					Name="Debug|Win32"
+					ExcludedFromBuild="true"
+					>
+					<Tool
+						Name="NASM"
+					/>
+				</FileConfiguration>
 			</File>
 			<File
 				RelativePath="..\libmp3lame\i386\scalar.nas"
 				>
 				<FileConfiguration
 					Name="Release NASM|Win32"
+					ExcludedFromBuild="true"
+					>
+					<Tool
+						Name="NASM"
+					/>
+				</FileConfiguration>
+				<FileConfiguration
+					Name="Release|Win32"
+					ExcludedFromBuild="true"
+					>
+					<Tool
+						Name="NASM"
+					/>
+				</FileConfiguration>
+				<FileConfiguration
+					Name="Debug|Win32"
 					ExcludedFromBuild="true"
 					>
 					<Tool
