@@ -1041,24 +1041,10 @@
 			<File
 				RelativePath="..\libmp3lame\i386\choose_table.nas"
 				>
-				<FileConfiguration
-					Name="Release NASM|Win32"
-					>
-					<Tool
-						Name="NASM"
-					/>
-				</FileConfiguration>
 			</File>
 			<File
 				RelativePath="..\libmp3lame\i386\cpu_feat.nas"
 				>
-				<FileConfiguration
-					Name="Release NASM|Win32"
-					>
-					<Tool
-						Name="NASM"
-					/>
-				</FileConfiguration>
 			</File>
 			<File
 				RelativePath="..\libmp3lame\i386\fft.nas"
@@ -1075,13 +1061,6 @@
 			<File
 				RelativePath="..\libmp3lame\i386\fft3dn.nas"
 				>
-				<FileConfiguration
-					Name="Release NASM|Win32"
-					>
-					<Tool
-						Name="NASM"
-					/>
-				</FileConfiguration>
 			</File>
 			<File
 				RelativePath="..\libmp3lame\i386\fftfpu.nas"
@@ -1098,13 +1077,6 @@
 			<File
 				RelativePath="..\libmp3lame\i386\fftsse.nas"
 				>
-				<FileConfiguration
-					Name="Release NASM|Win32"
-					>
-					<Tool
-						Name="NASM"
-					/>
-				</FileConfiguration>
 			</File>
 			<File
 				RelativePath="..\libmp3lame\i386\ffttbl.nas"
