@@ -335,7 +335,7 @@ tri_calc_sfb_noise_x34(const FLOAT * xr, const FLOAT * xr34, FLOAT l3_xmin, unsi
     return 0;
 }
 
-
+#if 0
 /**
  *  Robert Hegemann 2001-05-01
  *  calculates quantization step size determined by allowed masking
@@ -346,6 +346,7 @@ calc_scalefac(FLOAT8 l3_xmin, int bw)
     FLOAT8 const c = 5.799142446; /* 10 * 10^(2/3) * log10(4/3) */
     return 210 + (int) (c * log10(l3_xmin / bw) - .5);
 }
+#endif
 
 /* the find_scalefac* routines calculate
  * a quantization step size which would
@@ -723,7 +724,7 @@ set_scalefacs(gr_info * cod_info, const int *vbrsfmin, int sf[], const uint8_t *
 }
 
 
-
+#ifndef NDEBUG
 static int
 checkScalefactor(const gr_info * cod_info, const int vbrsfmin[SFBMAX])
 {
@@ -752,6 +753,7 @@ checkScalefactor(const gr_info * cod_info, const int vbrsfmin[SFBMAX])
     }
     return 1;
 }
+#endif
 
 
 /******************************************************************

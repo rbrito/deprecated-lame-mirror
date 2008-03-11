@@ -329,7 +329,7 @@ lame_set_mode(lame_global_flags * gfp, MPEG_mode mode)
 MPEG_mode
 lame_get_mode(const lame_global_flags * gfp)
 {
-    assert(0 <= gfp->mode && gfp->mode < MAX_INDICATOR);
+    assert(gfp->mode < MAX_INDICATOR);
 
     return gfp->mode;
 }
@@ -970,7 +970,7 @@ lame_set_VBR(lame_global_flags * gfp, vbr_mode VBR)
 vbr_mode
 lame_get_VBR(const lame_global_flags * gfp)
 {
-    assert(0 <= gfp->VBR && vbr_max_indicator > gfp->VBR);
+    assert(gfp->VBR < vbr_max_indicator);
 
     return gfp->VBR;
 }
