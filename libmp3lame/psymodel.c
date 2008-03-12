@@ -1944,7 +1944,7 @@ vbrpsy_compute_masking_s(lame_global_flags const *gfp, FLOAT(*fftenergy_s)[HBLKS
 
         assert(thr[b] >= 0);
     }
-    for (; b <= CBANDS; ++b) {
+    for (; b < CBANDS; ++b) {
         eb[b] = 0;
         thr[b] = 0;
     }

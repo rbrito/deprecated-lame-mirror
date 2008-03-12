@@ -190,6 +190,7 @@
 				Optimization="0"
 				AdditionalIncludeDirectories="../libmp3lame,../include,.."
 				PreprocessorDefinitions="_DEBUG;_WINDOWS;USE_LAYER_2;HAVE_MPGLIB;WIN32;HAVE_CONFIG_H"
+				BasicRuntimeChecks="3"
 				RuntimeLibrary="3"
 				PrecompiledHeaderFile="..\obj\Debug\mpglib/mpglib.pch"
 				AssemblerListingLocation="..\obj\Debug\mpglib/"
