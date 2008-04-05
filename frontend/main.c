@@ -804,11 +804,7 @@ main(int argc, char **argv)
         return i;
     }
 
-    if (silent > 0
-#ifndef RH_HIST
-        || lame_get_VBR(gf) == vbr_off
-#endif
-        ) {
+    if (silent > 0) {
         brhist = 0;     /* turn off VBR histogram */
     }
 

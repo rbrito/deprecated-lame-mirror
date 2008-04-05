@@ -70,9 +70,6 @@ char   *strchr(), *strrchr();
 #include <dmalloc.h>
 #endif
 
-#ifndef WIN32
-#  define HAVE_ICONV
-#endif
                  
 #ifdef HAVE_ICONV
 #include <iconv.h>

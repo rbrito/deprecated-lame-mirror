@@ -291,7 +291,6 @@ encoder_progress_end( lame_global_flags const* gf )
         if (brhist) {
             brhist_disp(gf);
         }
-        brhist_disp_total(gf);
 #endif
         timestatus_finish();
     }

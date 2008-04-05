@@ -88,20 +88,6 @@ brhist_init(const lame_global_flags * gf, const int bitrate_kbps_min, const int 
 {
     brhist.hist_printed_lines = 0;
 
-#ifndef RH_HIST
-    /* some internal checks */
-    if (bitrate_kbps_min > bitrate_kbps_max) {
-        error_printf("lame internal error: VBR min %d kbps > VBR max %d kbps.\n",
-                     bitrate_kbps_min, bitrate_kbps_max);
-        return -1;
-    }
-    if (bitrate_kbps_min < 8 || bitrate_kbps_max > 320) {
-        error_printf("lame internal error: VBR min %d kbps or VBR max %d kbps out of range.\n",
-                     bitrate_kbps_min, bitrate_kbps_max);
-        return -1;
-    }
-#endif
-
     /* initialize histogramming data structure */
     lame_bitrate_kbps(gf, brhist.kbps);
     brhist.vbr_bitrate_min_index = calculate_index(brhist.kbps, BRHIST_WIDTH, bitrate_kbps_min);
@@ -186,7 +172,7 @@ brhist_disp_line(int i, int br_hist_TOT, int br_hist_LR, int full, int frames)
 }
 
 
-#ifdef RH_HIST
+
 static void
 progress_line(const lame_global_flags * gf, int full, int frames)
 {
@@ -313,7 +299,7 @@ stats_line(double *stat)
     }
     brhist.hist_printed_lines++;
 }
-#endif
+
 
 /* Yes, not very good */
 #define LR  0
@@ -330,10 +316,10 @@ brhist_disp(const lame_global_flags * gf)
     int     frames;          /* total number of encoded frames */
     int     most_often;      /* usage count of the most often used frame size, but not smaller than Console_IO.disp_width-BRHIST_RES (makes this sense?) and 1 */
     double  sum = 0.;
-#ifdef RH_HIST
+
     double  stat[9] = { 0 };
     int     st_frames = 0;
-#endif
+
 
     brhist.hist_printed_lines = 0; /* printed number of lines for the brhist functionality, used to skip back the right number of lines */
 
@@ -354,13 +340,10 @@ brhist_disp(const lame_global_flags * gf)
 
     for (i = 0; i < BRHIST_WIDTH; i++) {
         int     show = br_hist[i];
-#ifdef RH_HIST
         show = show && (lines_used > 1);
-#endif
         if (show || (i >= brhist.vbr_bitrate_min_index && i <= brhist.vbr_bitrate_max_index))
             brhist_disp_line(i, br_hist[i], br_sm_hist[i][LR], most_often, frames);
     }
-#ifdef RH_HIST
     for (i = 0; i < 4; i++) {
         st_frames += st_mode[i];
     }
@@ -381,7 +364,6 @@ brhist_disp(const lame_global_flags * gf)
     }
     progress_line(gf, lame_get_totalframes(gf), frames);
     stats_line(stat);
-#endif
 }
 
 void
@@ -389,80 +371,6 @@ brhist_jump_back(void)
 {
     console_up(brhist.hist_printed_lines);
     brhist.hist_printed_lines = 0;
-}
-
-
-void
-brhist_disp_total(const lame_global_flags * gf)
-{
-#ifndef RH_HIST
-
-    int     i;
-    int     br_hist[BRHIST_WIDTH];
-    int     st_mode[4];
-    int     bl_type[6];
-    int     st_frames = 0;
-    int     br_frames = 0;
-    double  sum = 0.;
-
-    lame_stereo_mode_hist(gf, st_mode);
-    lame_bitrate_hist(gf, br_hist);
-    lame_block_type_hist(gf, bl_type);
-
-    for (i = 0; i < BRHIST_WIDTH; i++) {
-        br_frames += br_hist[i];
-        sum += br_hist[i] * brhist.kbps[i];
-    }
-
-    for (i = 0; i < 4; i++) {
-        st_frames += st_mode[i];
-    }
-
-    if (0 == br_frames)
-        return;
-
-    console_printf("\naverage: %5.1f kbps", sum / br_frames);
-
-    /* I'm very unhappy because this is only printed out in VBR modes */
-
-    if (st_frames > 0) {
-        if (st_mode[LR] > 0)
-            console_printf("   LR: %d (%#5.4g%%)", st_mode[LR], 100. * st_mode[LR] / st_frames);
-        else
-            console_printf("                 ");
-        if (st_mode[MS] > 0)
-            console_printf("   MS: %d (%#5.4g%%)", st_mode[MS], 100. * st_mode[MS] / st_frames);
-    }
-    console_printf("\n");
-
-    if (bl_type[5] > 0) {
-        extern int silent;
-        if (silent <= -5 && silent > -10) {
-            console_printf("block type");
-            console_printf(" long: %#4.3f", 100. * bl_type[0] / bl_type[5]);
-            console_printf(" start: %#4.3f", 100. * bl_type[1] / bl_type[5]);
-            console_printf(" short: %#4.3f", 100. * bl_type[2] / bl_type[5]);
-            console_printf(" stop: %#4.3f", 100. * bl_type[3] / bl_type[5]);
-            console_printf(" mixed: %#4.3f", 100. * bl_type[4] / bl_type[5]);
-            console_printf(" (%%)\n");
-        }
-        else if (silent <= -10) {
-            console_printf("block types   granules   percent\n");
-            console_printf("      long: % 10d  % 8.3f%%\n",
-                           bl_type[0], 100. * bl_type[0] / bl_type[5]);
-            console_printf("     start: % 10d  % 8.3f%%\n",
-                           bl_type[1], 100. * bl_type[1] / bl_type[5]);
-            console_printf("     short: % 10d  % 8.3f%%\n",
-                           bl_type[2], 100. * bl_type[2] / bl_type[5]);
-            console_printf("      stop: % 10d  % 8.3f%%\n",
-                           bl_type[3], 100. * bl_type[3] / bl_type[5]);
-            console_printf("     mixed: % 10d  % 8.3f%%\n",
-                           bl_type[4], 100. * bl_type[4] / bl_type[5]);
-        }
-    }
-#else
-    (void) gf;
-#endif
 }
 
 /*

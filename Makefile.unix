@@ -142,7 +142,7 @@ ifeq ($(UNAME),Linux)
 ifeq ($(CFG),RH)
    GTK = -DHAVE_GTK `gtk-config --cflags`
    GTKLIBS = `gtk-config --libs`
-  CPP_OPTS += -DFLOAT8=float -DREAL_IS_FLOAT=1 -DRH_TEST_ATHAA_FIX -DHAVE_XMMINTRIN_H -D_ALLOW_INTERNAL_OPTIONS
+  CPP_OPTS += -DFLOAT8=float -DREAL_IS_FLOAT=1 -DHAVE_ICONV -DHAVE_XMMINTRIN_H -D_ALLOW_INTERNAL_OPTIONS
 # these options for gcc-3.2 & AthlonXP
    CC_OPTS = \
 	-pipe -O3 \
