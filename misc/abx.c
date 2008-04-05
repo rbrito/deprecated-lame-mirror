@@ -31,7 +31,7 @@
  *      level/delay ajustment should be switchable
  *      pause key missing
  *      problems with digital silence files (division by 0)
- *      Größe cross corr fenster 2^16...18
+ *      Grï¿½ï¿½e cross corr fenster 2^16...18
  *      Stellensuche, ab 0*len oder 0.1*len oder 0.25*len, nach Effektiv oder Spitzenwert
  *      Absturz bei LPAC feeding, warum?
  *      Als 'B' beim Ratespiel sollte auch '0'...'9' verwendbar sein 
@@ -567,12 +567,12 @@ void testing ( const stereo_t* A, const stereo_t* B, size_t len, long freq )
     int     c;
     int     fd    = open ( "/dev/dsp", O_WRONLY );
     int     rnd   = random_number ();   /* Auswahl von X */
-    int     state = 0;                  /* derzeitiger Füttungsmodus */
+    int     state = 0;                  /* derzeitiger Fï¿½ttungsmodus */
     float   fac1  = 0.5;
     float   fac2  = 0.5;
     size_t  start = 0;
     size_t  stop  = len;
-    size_t  index = start;                  /* derzeitiger Offset auf den Audioströmen */
+    size_t  index = start;                  /* derzeitiger Offset auf den Audiostrï¿½men */
     char    message [80] = "A  ";
 
     setup ( fd, len, freq );
@@ -889,9 +889,9 @@ typedef struct {
 const decoder_t  decoder [] = {
     { ".mp1"    , PATH"mpg123 -w - %s"                         REDIR },  // MPEG Layer I         : www.iis.fhg.de, www.mpeg.org
     { ".mp2"    , PATH"mpg123 -w - %s"                         REDIR },  // MPEG Layer II        : www.iis.fhg.de, www.uq.net.au/~zzmcheng, www.mpeg.org
-    { ".mp3"    , PATH"mpg123 -w - %s"                         REDIR },  // MPEG Layer III       : www.iis.fhg.de, www.mp3dev.org/mp3, www.mpeg.org
-    { ".mp3pro" , PATH"mpg123 -w - %s"                         REDIR },  // MPEG Layer III       : www.iis.fhg.de, www.mp3dev.org/mp3, www.mpeg.org
-    { ".mpt"    , PATH"mpg123 -w - %s"                         REDIR },  // MPEG Layer III       : www.iis.fhg.de, www.mp3dev.org/mp3, www.mpeg.org
+    { ".mp3"    , PATH"mpg123 -w - %s"                         REDIR },  // MPEG Layer III       : www.iis.fhg.de, www.mp3dev.org, www.mpeg.org
+    { ".mp3pro" , PATH"mpg123 -w - %s"                         REDIR },  // MPEG Layer III       : www.iis.fhg.de, www.mp3dev.org, www.mpeg.org
+    { ".mpt"    , PATH"mpg123 -w - %s"                         REDIR },  // MPEG Layer III       : www.iis.fhg.de, www.mp3dev.org, www.mpeg.org
     { ".mpp"    , PATH"mppdec %s -"                            REDIR },  // MPEGplus             : www.stud.uni-hannover.de/user/73884
     { ".mpc"    , PATH"mppdec %s -"                            REDIR },  // MPEGplus             : www.stud.uni-hannover.de/user/73884
     { ".mp+"    , PATH"mppdec %s -"                            REDIR },  // MPEGplus             : www.stud.uni-hannover.de/user/73884

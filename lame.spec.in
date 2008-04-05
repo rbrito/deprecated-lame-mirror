@@ -12,7 +12,7 @@ Release: %{rel}
 License: LGPL
 Vendor: The LAME Project
 Packager: Yosi Markovich <yosim@bigfoot.com>
-URL: http://www.mp3dev.org/mp3
+URL: http://www.mp3dev.org
 Group: Applications/Multimedia
 Source: %{name}-%{version}.tar.gz
 BuildRoot: %{_tmppath}/%{name}-root
@@ -30,8 +30,8 @@ psycho acoustics, noise shaping and speed of MP3.
 
 %description -l fr
 LAME est un outil d'enseignement pour l'apprentissage de l'encodage MP3.
-Le but du projet LAME est d'utiliser un modèle "open source" afin
-d'améliorer la qualité et la vitesse du MP3. 
+Le but du projet LAME est d'utiliser un modï¿½le "open source" afin
+d'amï¿½liorer la qualitï¿½ et la vitesse du MP3. 
 
 
 
@@ -167,22 +167,22 @@ find doc/html -name "Makefile*" | xargs rm -f
 - Updated and corrected RPM to 3.89beta.
 - Added french translations
 
-* Sat Aug 04 2000 Markus Linnala «maage@cs.tut.fi»
+* Sat Aug 04 2000 Markus Linnala ï¿½maage@cs.tut.fiï¿½
 - Build and include docs and libs correctly
 - Build extra programs
 
-* Tue Aug 01 2000 Stuart Young «cefiar1@optushome.com.au»
+* Tue Aug 01 2000 Stuart Young ï¿½cefiar1@optushome.com.auï¿½
 - Updated RPM to 3.85beta.
 - Modified spec file (merged George and Keitaro's specs)
 - Added reasonable info to the specs to reflect the maintainer
 - Renamed lame.spec (plain spec is bad, mmkay?).
 
-* Fri Jun 30 2000 Keitaro Yosimura «ramsy@linux.or.jp»
+* Fri Jun 30 2000 Keitaro Yosimura ï¿½ramsy@linux.or.jpï¿½
 - Updated RPM to 3.84alpha.
 - Better attempt at an RPM, independant of 3.83 release.
 - (This is all surmise as there was no changelog).
 
-* Thu May 30 2000 Georges Seguin «crow@planete.net» 
+* Thu May 30 2000 Georges Seguin ï¿½crow@planete.netï¿½ 
 - First RPM build around 3.83beta
 
 

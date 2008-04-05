@@ -19,7 +19,7 @@
  */
 
 /*
- * HISTORY: This source file is part of LAME (see http://www.mp3dev.org/mp3/)
+ * HISTORY: This source file is part of LAME (see http://www.mp3dev.org)
  * and was originally adapted by Conrad Sanderson <c.sanderson@me.gu.edu.au>
  * from mp3info by Ricardo Cerqueira <rmc@rccn.net> to write only ID3 version 1
  * tags.  Don Melton <don@blivet.com> COMPLETELY rewrote it to support version
