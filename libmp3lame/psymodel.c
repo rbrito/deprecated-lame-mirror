@@ -2412,6 +2412,78 @@ L3psycho_anal_vbr(lame_global_flags const *gfp,
 
 
 
+static FLOAT
+s3_func_x(FLOAT bark, FLOAT hf_slope)
+{
+    FLOAT   tempx = bark, tempy;
+
+    if (tempx >= 0) {
+        tempy = -tempx * 27;
+    }
+    else {
+        tempy = tempx * hf_slope;
+    }
+    if (tempy <= -72.0) {
+        return 0;
+    }
+    return exp(tempy * LN_TO_LOG10);
+}
+
+static FLOAT
+norm_s3_func_x(FLOAT hf_slope)
+{
+    double lim_a=0, lim_b=0;
+    {
+        double x = 0, l, h;
+        for ( x = 0; s3_func_x(x, hf_slope) > 1e-37; x -= 1 );
+        l = x;
+        h = 0;
+        while ( fabs(h - l) > 1e-12 ) 
+        {
+            x = (h+l)/2;
+            if ( s3_func_x(x, hf_slope) > 0 ) {
+                h = x;
+            }
+            else {
+                l = x;
+            }
+        }
+        lim_a = l;
+    }
+    {
+        double x = 0, l, h;
+        for ( x = 0; s3_func_x(x, hf_slope) > 1e-37; x += 1 );
+        l = 0;
+        h = x;
+        while ( fabs(h - l) > 1e-12 ) 
+        {
+            x = (h+l)/2;
+            if ( s3_func_x(x, hf_slope) > 0 ) {
+                l = x;
+            }
+            else {
+                h = x;
+            }
+        }
+        lim_b = h;
+    }
+    { 
+        double sum = 0;
+        int const m = 1000;
+        int i;
+        for ( i = 0; i <= m; ++i ) {
+            double x = lim_a + i*(lim_b-lim_a)/m;
+            double y = s3_func_x(x, hf_slope);
+            sum += y;
+        }
+        {
+            double norm = (m+1)/(sum * (lim_b-lim_a));
+            /*printf( "norm = %lf\n",norm);*/
+            return norm;
+        }
+    }
+}
+
 
 
 /* 
@@ -2451,6 +2523,58 @@ s3_func(FLOAT bark)
     tempx /= .6609193;
     return tempx;
 }
+
+#if 0
+static FLOAT
+norm_s3_func(void)
+{
+    double lim_a=0, lim_b=0;
+    double x = 0, l, h;
+    for ( x = 0; s3_func(x) > 1e-37; x -= 1 );
+    l = x;
+    h = 0;
+    while ( fabs(h - l) > 1e-12 ) 
+    {
+        x = (h+l)/2;
+        if ( s3_func(x) > 0 ) {
+            h = x;
+        }
+        else {
+            l = x;
+        }
+    }
+    lim_a = l;
+    for ( x = 0; s3_func(x) > 1e-37; x += 1 );
+    l = 0;
+    h = x;
+    while ( fabs(h - l) > 1e-12 ) 
+    {
+        x = (h+l)/2;
+        if ( s3_func(x) > 0 ) {
+            l = x;
+        }
+        else {
+            h = x;
+        }
+    }
+    lim_b = h;
+    { 
+        double sum = 0;
+        int const m = 1000;
+        int i;
+        for ( i = 0; i <= m; ++i ) {
+            double x = lim_a + i*(lim_b-lim_a)/m;
+            double y = s3_func( x );
+            sum += y;
+        }
+        {
+            double norm = (m+1)/(sum * (lim_b-lim_a));
+            /*printf( "norm = %lf\n",norm);*/
+            return norm;
+        }
+    }
+}
+#endif
 
 static int
 init_numline(int *numlines, int *bo, int *bm,
@@ -2551,7 +2675,7 @@ init_numline(int *numlines, int *bo, int *bm,
 static int
 init_s3_values(FLOAT ** p,
                int (*s3ind)[2], int npart, FLOAT const *bval, FLOAT const *bval_width,
-               FLOAT const *norm)
+               FLOAT const *norm, int use_old_s3)
 {
     FLOAT   s3[CBANDS][CBANDS];
     /* The s3 array is not linear in the bark scale.
@@ -2566,12 +2690,22 @@ init_s3_values(FLOAT ** p,
      * i.e.: sum over j to spread into signal barkval=i
      * NOTE: i and j are used opposite as in the ISO docs
      */
-    for (i = 0; i < npart; i++) {
-        FLOAT   sum = 0.f;
+    if (use_old_s3) {
+        for (i = 0; i < npart; i++) {
+            for (j = 0; j < npart; j++) {
+                FLOAT   v = s3_func(bval[i] - bval[j]) * bval_width[j];
+                s3[i][j] = v * norm[i];
+            }
+        }
+    }
+    else {
         for (j = 0; j < npart; j++) {
-            FLOAT   v = s3_func(bval[i] - bval[j]) * bval_width[j];
-            sum += v;
-            s3[i][j] = v * norm[i];
+            FLOAT hf_slope = 15 + Min(21/bval[j],12);
+            FLOAT s3_x_norm = norm_s3_func_x(hf_slope);
+            for (i = 0; i < npart; i++) {
+                FLOAT v = s3_x_norm * s3_func_x(bval[i]-bval[j], hf_slope) * bval_width[j];
+                s3[i][j] = v * norm[i];
+            }
         }
     }
     for (i = 0; i < npart; i++) {
@@ -2616,12 +2750,25 @@ psymodel_init(lame_global_flags * gfp)
 {
     lame_internal_flags *const gfc = gfp->internal_flags;
     int     i, j, b, sb, k;
+    int     use_old_s3 = 1;
 
     FLOAT   bval[CBANDS];
     FLOAT   bval_width[CBANDS];
     FLOAT   norm[CBANDS];
     FLOAT const sfreq = gfp->out_samplerate;
 
+    switch (gfp->experimentalZ) {
+        default:
+        case 0:
+            use_old_s3 = (gfp->VBR == vbr_mtrh || gfp->VBR == vbr_mt) ? 0 : 1;
+            break;
+        case 1:
+            use_old_s3 = 0;
+            break;
+        case 2:
+            use_old_s3 = 1;
+            break;
+    }
     gfc->ms_ener_ratio_old = .25;
     gfc->blocktype_old[0] = gfc->blocktype_old[1] = NORM_TYPE; /* the vbr header is long blocks */
 
@@ -2671,7 +2818,7 @@ psymodel_init(lame_global_flags * gfp)
             gfc->rnumlines_l[i] = 0;
         }
     }
-    i = init_s3_values(&gfc->s3_ll, gfc->s3ind, gfc->npart_l, bval, bval_width, norm);
+    i = init_s3_values(&gfc->s3_ll, gfc->s3ind, gfc->npart_l, bval, bval_width, norm, use_old_s3);
     if (i)
         return i;
 
@@ -2746,7 +2893,7 @@ psymodel_init(lame_global_flags * gfp)
         gfc->minval_s[i] = pow(10.0, x / 10);
     }
 
-    i = init_s3_values(&gfc->s3_ss, gfc->s3ind_s, gfc->npart_s, bval, bval_width, norm);
+    i = init_s3_values(&gfc->s3_ss, gfc->s3ind_s, gfc->npart_s, bval, bval_width, norm, use_old_s3);
     if (i)
         return i;
 

@@ -19,6 +19,7 @@
 #include "encoder.h"
 #include "lame-analysis.h"
 #include "decode_i386.h"
+#include "layer3.h"
 
 #ifdef WITH_DMALLOC
 #include <dmalloc.h>

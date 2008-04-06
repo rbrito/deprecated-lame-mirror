@@ -916,16 +916,14 @@ lame_get_experimentalY(const lame_global_flags * gfp)
 int
 lame_set_experimentalZ(lame_global_flags * gfp, int experimentalZ)
 {
-    (void) gfp;
-    (void) experimentalZ;
+    gfp->experimentalZ = experimentalZ;
     return 0;
 }
 
 int
 lame_get_experimentalZ(const lame_global_flags * gfp)
 {
-    (void) gfp;
-    return 0;
+    return gfp->experimentalZ;
 }
 
 
