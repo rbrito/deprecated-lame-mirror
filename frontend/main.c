@@ -349,14 +349,14 @@ lame_decoder(lame_global_flags * gfp, FILE * outf, int skip_start, char *inPath,
 
 
 static void
-        print_lame_tag_leading_info(lame_global_flags * gf)
+print_lame_tag_leading_info(lame_global_flags * gf)
 {
     if (lame_get_bWriteVbrTag(gf))
         console_printf("Writing LAME Tag...");
 }
 
 static void
-        print_trailing_info(lame_global_flags * gf)
+print_trailing_info(lame_global_flags * gf)
 {
     if (lame_get_bWriteVbrTag(gf))
         console_printf("done\n");

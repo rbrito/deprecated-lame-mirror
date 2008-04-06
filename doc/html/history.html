@@ -32,6 +32,31 @@ black = usability, portability, other
 <hr>
 <h3>LAME 3.98 stable&nbsp; &nbsp;not yet released</h3>
 
+<h3>LAME 3.98 beta 7&nbsp; &nbsp;April 6 2008</h3>
+
+<ul>
+  <li>Robert Hegemann:
+    <ul>
+      <li>libmp3lame API: allow frontends to separately retrieve LAME/Xing and ID3 data, because the old library automatism 
+          makes it impossible to make fully buffered encodes.
+      </li>
+      <li>libmp3lame API: added some experimental unicode ID3 tagging code.
+      </li>
+      <li>frontends: write itself final ID3 tags and LAME/Xing header frame
+      </li>
+      <li>lame_enc.dll: writes itself final LAME/Xing header frame
+      </li>
+      <li>Latest changes to the new VBR psymodel:
+        <ul>
+          <li>uses a different spreading function
+          </li>
+          <li><font color="#ff0000">bug-fix for out-of-bounds array access (program stack corruption possible)</font>
+          </li>
+        </ul>
+      </li>
+    </ul>
+  </li>
+</ul>
 
 <h3>LAME 3.98 beta 6&nbsp; &nbsp;December 16 2007</h3>
 
