@@ -147,9 +147,9 @@ lame_init_params_ppflt(lame_global_flags const *gfp)
         freq = band / 31.0;
         gfc->amp_filter[band]
             = filter_coef((gfc->highpass2 - freq)
-                          / (gfc->highpass2 - gfc->highpass1 + 1e-37))
+                          / (gfc->highpass2 - gfc->highpass1 + 1e-20))
             * filter_coef((freq - gfc->lowpass1)
-                          / (gfc->lowpass2 - gfc->lowpass1 - 1e-37));
+                          / (gfc->lowpass2 - gfc->lowpass1 + 1e-20));
     }
 }
 
@@ -283,9 +283,9 @@ optimum_samplefreq(int lowpassfreq, int input_samplefreq)
         suggested_samplefreq = 8000;
 
     if (input_samplefreq < suggested_samplefreq) {
-        /*  choose a valid MPEG sample frequency above the input sample frequency
-            to avoid SFB21/12 bitrate bloat
-            rh 061115
+        /* choose a valid MPEG sample frequency above the input sample frequency
+           to avoid SFB21/12 bitrate bloat
+           rh 061115
          */
         if (input_samplefreq > 44100) {
             return 48000;
@@ -448,7 +448,11 @@ lame_init_qval(lame_global_flags * gfp)
 
 
 
-
+static double
+linear_int(double a, double b, double m)
+{
+    return a + m * (b - a);
+}
 
 
 
@@ -568,7 +572,7 @@ lame_init_params(lame_global_flags * gfp)
     if (gfp->VBR == vbr_off && gfp->VBR_mean_bitrate_kbps != 128 && gfp->brate == 0)
         gfp->brate = gfp->VBR_mean_bitrate_kbps;
 
-    switch (gfp->VBR) {        
+    switch (gfp->VBR) {
     case vbr_off:
     case vbr_mtrh:
     case vbr_mt:
@@ -633,12 +637,26 @@ lame_init_params(lame_global_flags * gfp)
                 optimum_bandwidth(&lowpass, &highpass, gfp->VBR_mean_bitrate_kbps);
                 break;
             }
-        default:{
-                unsigned int const x[10] = {
-                    19500, 19000, 18600, 18000, 17500, 16000, 15600, 14900, 12500, 10000
+        case vbr_rh:{
+                int const x[11] = {
+                    19500, 19000, 18600, 18000, 17500, 16000, 15600, 14900, 12500, 10000, 3950
                 };
                 if (0 <= gfp->VBR_q && gfp->VBR_q <= 9) {
-                    lowpass = x[gfp->VBR_q];
+                    double  a = x[gfp->VBR_q], b = x[gfp->VBR_q + 1], m = gfp->VBR_q_frac;
+                    lowpass = linear_int(a, b, m);
+                }
+                else {
+                    lowpass = 19500;
+                }
+                break;
+            }
+        default:{
+                int const x[11] = {
+                    19500, 19000, 18500, 18000, 17500, 16500, 15500, 14500, 12500, 9500, 3950
+                };
+                if (0 <= gfp->VBR_q && gfp->VBR_q <= 9) {
+                    double  a = x[gfp->VBR_q], b = x[gfp->VBR_q + 1], m = gfp->VBR_q_frac;
+                    lowpass = linear_int(a, b, m);
                 }
                 else {
                     lowpass = 19500;
@@ -653,8 +671,8 @@ lame_init_params(lame_global_flags * gfp)
     }
 
     if (gfp->out_samplerate == 0) {
-        if (2*gfp->lowpassfreq > gfp->in_samplerate) {
-            gfp->lowpassfreq = gfp->in_samplerate/2;
+        if (2 * gfp->lowpassfreq > gfp->in_samplerate) {
+            gfp->lowpassfreq = gfp->in_samplerate / 2;
         }
         gfp->out_samplerate = optimum_samplefreq((int) gfp->lowpassfreq, gfp->in_samplerate);
     }
@@ -771,7 +789,6 @@ lame_init_params(lame_global_flags * gfp)
         gfc->highpass1 /= gfp->out_samplerate;
         gfc->highpass2 /= gfp->out_samplerate;
     }
-
     /* apply user driven low pass filter */
     if (gfp->lowpassfreq > 0) {
         gfc->lowpass2 = 2. * gfp->lowpassfreq;
@@ -890,15 +907,15 @@ lame_init_params(lame_global_flags * gfp)
         gfp->VBR = vbr_mtrh;
         /*lint --fallthrough */
     case vbr_mtrh:{
-            if ( gfp->useTemporal < 0 ) {
-                gfp->useTemporal = 0;   /* off by default for this VBR mode */
+            if (gfp->useTemporal < 0) {
+                gfp->useTemporal = 0; /* off by default for this VBR mode */
             }
 
             (void) apply_preset(gfp, 500 - (gfp->VBR_q * 10), 0);
             /*  The newer VBR code supports only a limited
-                subset of quality levels:
-                9-5=5 are the same, uses x^3/4 quantization
-                4-0=0 are the same  5 plus best huffman divide code
+               subset of quality levels:
+               9-5=5 are the same, uses x^3/4 quantization
+               4-0=0 are the same  5 plus best huffman divide code
              */
             if (gfp->quality < 0)
                 gfp->quality = LAME_DEFAULT_QUALITY;
@@ -1134,7 +1151,7 @@ lame_print_config(const lame_global_flags * gfp)
 #endif
     if (gfc->CPU_features.MMX
         || gfc->CPU_features.AMD_3DNow || gfc->CPU_features.SSE || gfc->CPU_features.SSE2) {
-        int fft_asm_used = 0;
+        int     fft_asm_used = 0;
 #ifdef HAVE_NASM
         if (gfc->CPU_features.AMD_3DNow) {
             fft_asm_used = 1;
@@ -1193,12 +1210,12 @@ lame_print_config(const lame_global_flags * gfp)
 
     if (gfc->highpass2 > 0.)
         MSGF(gfc,
-                "Using polyphase highpass filter, transition band: %5.0f Hz - %5.0f Hz\n",
-                0.5 * gfc->highpass1 * out_samplerate, 0.5 * gfc->highpass2 * out_samplerate);
-    if (0. < gfc->lowpass1 && gfc->lowpass1 < 1.) {
+             "Using polyphase highpass filter, transition band: %5.0f Hz - %5.0f Hz\n",
+             0.5 * gfc->highpass1 * out_samplerate, 0.5 * gfc->highpass2 * out_samplerate);
+    if (0. < gfc->lowpass1 || 0. < gfc->lowpass2) {
         MSGF(gfc,
-                "Using polyphase lowpass filter, transition band: %5.0f Hz - %5.0f Hz\n",
-                0.5 * gfc->lowpass1 * out_samplerate, 0.5 * gfc->lowpass2 * out_samplerate);
+             "Using polyphase lowpass filter, transition band: %5.0f Hz - %5.0f Hz\n",
+             0.5 * gfc->lowpass1 * out_samplerate, 0.5 * gfc->lowpass2 * out_samplerate);
     }
     else {
         MSGF(gfc, "polyphase lowpass filter disabled\n");
@@ -1376,10 +1393,10 @@ lame_print_internals(const lame_global_flags * gfp)
 
     MSGF(gfc, "\texperimental psy tunings by Naoki Shibata\n");
     MSGF(gfc, "\t   adjust masking bass=%g dB, alto=%g dB, treble=%g dB, sfb21=%g dB\n",
-            10 * log10(gfc->nsPsy.longfact[0]),
-            10 * log10(gfc->nsPsy.longfact[7]),
-            10 * log10(gfc->nsPsy.longfact[14]), 10 * log10(gfc->nsPsy.longfact[21]));
-    
+         10 * log10(gfc->nsPsy.longfact[0]),
+         10 * log10(gfc->nsPsy.longfact[7]),
+         10 * log10(gfc->nsPsy.longfact[14]), 10 * log10(gfc->nsPsy.longfact[21]));
+
     pc = gfp->useTemporal ? "yes" : "no";
     MSGF(gfc, "\tusing temporal masking effect: %s\n", pc);
     MSGF(gfc, "\tinterchannel masking ratio: %g\n", gfp->interChRatio);
@@ -1540,7 +1557,7 @@ lame_encode_buffer_sample_t(lame_global_flags * gfp,
     mfbuf[1] = gfc->mfbuf[1];
 
     while (nsamples > 0) {
-        sample_t const* in_buffer_ptr[2];
+        sample_t const *in_buffer_ptr[2];
         int     n_in = 0;    /* number of input samples processed with fill_buffer */
         int     n_out = 0;   /* number of samples output with fill_buffer */
         /* n_in <> n_out if we are resampling */
@@ -1950,9 +1967,9 @@ lame_encode_flush(lame_global_flags * gfp, unsigned char *mp3buffer, int mp3buff
     if (gfp->write_id3tag_automatic) {
         /* write a id3 tag to the bitstream */
         (void) id3tag_write_v1(gfp);
-    
+
         imp3 = copy_buffer(gfc, mp3buffer, mp3buffer_size_remaining, 0);
-        
+
         if (imp3 < 0) {
             return imp3;
         }
@@ -2012,7 +2029,7 @@ lame_encode_finish(lame_global_flags * gfp, unsigned char *mp3buffer, int mp3buf
 /*****************************************************************/
 /* write VBR Xing header, and ID3 version 1 tag, if asked for    */
 /*****************************************************************/
-void lame_mp3_tags_fid(lame_global_flags * gfp, FILE * fpStream);
+void    lame_mp3_tags_fid(lame_global_flags * gfp, FILE * fpStream);
 
 void
 lame_mp3_tags_fid(lame_global_flags * gfp, FILE * fpStream)
@@ -2021,9 +2038,9 @@ lame_mp3_tags_fid(lame_global_flags * gfp, FILE * fpStream)
         /* Write Xing header again */
         if (fpStream && !fseek(fpStream, 0, SEEK_SET)) {
             lame_internal_flags *gfc = gfp->internal_flags;
-            int rc = PutVbrTag(gfp, fpStream);
+            int     rc = PutVbrTag(gfp, fpStream);
             switch (rc) {
-            default: 
+            default:
                 /* OK */
                 break;
 
@@ -2031,7 +2048,7 @@ lame_mp3_tags_fid(lame_global_flags * gfp, FILE * fpStream)
                 ERRORF(gfc, "Error: could not update LAME tag.\n");
                 break;
 
-            case -2: 
+            case -2:
                 ERRORF(gfc, "Error: could not update LAME tag, file not seekable.\n");
                 break;
 

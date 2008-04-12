@@ -288,8 +288,8 @@ fft_long(lame_internal_flags const *const gfc,
 }
 
 #ifdef HAVE_NASM
-    extern void fht_3DN(FLOAT * fz, int n);
-    extern void fht_SSE(FLOAT * fz, int n);
+extern void fht_3DN(FLOAT * fz, int n);
+extern void fht_SSE(FLOAT * fz, int n);
 #endif
 
 void

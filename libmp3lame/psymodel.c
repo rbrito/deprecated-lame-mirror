@@ -512,10 +512,13 @@ vbrpsy_mask_add(FLOAT m1, FLOAT m2, int b)
     int     i;
     FLOAT   ratio;
 
-    if (m1 < 0) m1 = 0;
-    if (m2 < 0) m2 = 0;
-    if (m1 <= 0 && m2 <= 0) return 0;
-    
+    if (m1 < 0)
+        m1 = 0;
+    if (m2 < 0)
+        m2 = 0;
+    if (m1 <= 0 && m2 <= 0)
+        return 0;
+
     if (m2 > m1) {
         if (m2 < (m1 * ma_max_i2)) {
             ratio = m2 / m1;
@@ -545,10 +548,10 @@ vbrpsy_mask_add(FLOAT m1, FLOAT m2, int b)
     }
 
     i = (int) FAST_LOG10_X(ratio, 16.0);
-    
-    assert( i >= 0 );
-    assert( (size_t)i < dimension_of(table1) );
-    
+
+    assert(i >= 0);
+    assert((size_t) i < dimension_of(table1));
+
     /* 10% of total */
     return m1 * table1[i];
 }
@@ -2037,7 +2040,12 @@ vbrpsy_compute_masking_l(lame_internal_flags * gfc, FLOAT fftenergy[HBLKSIZE], F
             if (ecb_limit_1 <= 0) {
                 ecb_limit_1 = ecb;
             }
-            ecb_limit = Min(ecb_limit_1, ecb_limit_2);
+            if (gfc->blocktype_old[chn & 0x01] == NORM_TYPE) {
+                ecb_limit = Min(ecb_limit_1, ecb_limit_2);
+            }
+            else {
+                ecb_limit = ecb_limit_1;
+            }
             thr[b] = Min(ecb, ecb_limit);
         }
         gfc->nb_2[chn][b] = gfc->nb_1[chn][b];
@@ -2412,7 +2420,7 @@ L3psycho_anal_vbr(lame_global_flags const *gfp,
 
 
 
-static FLOAT
+static  FLOAT
 s3_func_x(FLOAT bark, FLOAT hf_slope)
 {
     FLOAT   tempx = bark, tempy;
@@ -2429,19 +2437,18 @@ s3_func_x(FLOAT bark, FLOAT hf_slope)
     return exp(tempy * LN_TO_LOG10);
 }
 
-static FLOAT
+static  FLOAT
 norm_s3_func_x(FLOAT hf_slope)
 {
-    double lim_a=0, lim_b=0;
+    double  lim_a = 0, lim_b = 0;
     {
-        double x = 0, l, h;
-        for ( x = 0; s3_func_x(x, hf_slope) > 1e-37; x -= 1 );
+        double  x = 0, l, h;
+        for (x = 0; s3_func_x(x, hf_slope) > 1e-20; x -= 1);
         l = x;
         h = 0;
-        while ( fabs(h - l) > 1e-12 ) 
-        {
-            x = (h+l)/2;
-            if ( s3_func_x(x, hf_slope) > 0 ) {
+        while (fabs(h - l) > 1e-12) {
+            x = (h + l) / 2;
+            if (s3_func_x(x, hf_slope) > 0) {
                 h = x;
             }
             else {
@@ -2451,14 +2458,13 @@ norm_s3_func_x(FLOAT hf_slope)
         lim_a = l;
     }
     {
-        double x = 0, l, h;
-        for ( x = 0; s3_func_x(x, hf_slope) > 1e-37; x += 1 );
+        double  x = 0, l, h;
+        for (x = 0; s3_func_x(x, hf_slope) > 1e-20; x += 1);
         l = 0;
         h = x;
-        while ( fabs(h - l) > 1e-12 ) 
-        {
-            x = (h+l)/2;
-            if ( s3_func_x(x, hf_slope) > 0 ) {
+        while (fabs(h - l) > 1e-12) {
+            x = (h + l) / 2;
+            if (s3_func_x(x, hf_slope) > 0) {
                 l = x;
             }
             else {
@@ -2467,18 +2473,18 @@ norm_s3_func_x(FLOAT hf_slope)
         }
         lim_b = h;
     }
-    { 
-        double sum = 0;
+    {
+        double  sum = 0;
         int const m = 1000;
-        int i;
-        for ( i = 0; i <= m; ++i ) {
-            double x = lim_a + i*(lim_b-lim_a)/m;
-            double y = s3_func_x(x, hf_slope);
+        int     i;
+        for (i = 0; i <= m; ++i) {
+            double  x = lim_a + i * (lim_b - lim_a) / m;
+            double  y = s3_func_x(x, hf_slope);
             sum += y;
         }
         {
-            double norm = (m+1)/(sum * (lim_b-lim_a));
-            /*printf( "norm = %lf\n",norm);*/
+            double  norm = (m + 1) / (sum * (lim_b - lim_a));
+            /*printf( "norm = %lf\n",norm); */
             return norm;
         }
     }
@@ -2525,18 +2531,17 @@ s3_func(FLOAT bark)
 }
 
 #if 0
-static FLOAT
+static  FLOAT
 norm_s3_func(void)
 {
-    double lim_a=0, lim_b=0;
-    double x = 0, l, h;
-    for ( x = 0; s3_func(x) > 1e-37; x -= 1 );
+    double  lim_a = 0, lim_b = 0;
+    double  x = 0, l, h;
+    for (x = 0; s3_func(x) > 1e-20; x -= 1);
     l = x;
     h = 0;
-    while ( fabs(h - l) > 1e-12 ) 
-    {
-        x = (h+l)/2;
-        if ( s3_func(x) > 0 ) {
+    while (fabs(h - l) > 1e-12) {
+        x = (h + l) / 2;
+        if (s3_func(x) > 0) {
             h = x;
         }
         else {
@@ -2544,13 +2549,12 @@ norm_s3_func(void)
         }
     }
     lim_a = l;
-    for ( x = 0; s3_func(x) > 1e-37; x += 1 );
+    for (x = 0; s3_func(x) > 1e-20; x += 1);
     l = 0;
     h = x;
-    while ( fabs(h - l) > 1e-12 ) 
-    {
-        x = (h+l)/2;
-        if ( s3_func(x) > 0 ) {
+    while (fabs(h - l) > 1e-12) {
+        x = (h + l) / 2;
+        if (s3_func(x) > 0) {
             l = x;
         }
         else {
@@ -2558,18 +2562,18 @@ norm_s3_func(void)
         }
     }
     lim_b = h;
-    { 
-        double sum = 0;
+    {
+        double  sum = 0;
         int const m = 1000;
-        int i;
-        for ( i = 0; i <= m; ++i ) {
-            double x = lim_a + i*(lim_b-lim_a)/m;
-            double y = s3_func( x );
+        int     i;
+        for (i = 0; i <= m; ++i) {
+            double  x = lim_a + i * (lim_b - lim_a) / m;
+            double  y = s3_func(x);
             sum += y;
         }
         {
-            double norm = (m+1)/(sum * (lim_b-lim_a));
-            /*printf( "norm = %lf\n",norm);*/
+            double  norm = (m + 1) / (sum * (lim_b - lim_a));
+            /*printf( "norm = %lf\n",norm); */
             return norm;
         }
     }
@@ -2700,10 +2704,10 @@ init_s3_values(FLOAT ** p,
     }
     else {
         for (j = 0; j < npart; j++) {
-            FLOAT hf_slope = 15 + Min(21/bval[j],12);
-            FLOAT s3_x_norm = norm_s3_func_x(hf_slope);
+            FLOAT   hf_slope = 15 + Min(21 / bval[j], 12);
+            FLOAT   s3_x_norm = norm_s3_func_x(hf_slope);
             for (i = 0; i < npart; i++) {
-                FLOAT v = s3_x_norm * s3_func_x(bval[i]-bval[j], hf_slope) * bval_width[j];
+                FLOAT   v = s3_x_norm * s3_func_x(bval[i] - bval[j], hf_slope) * bval_width[j];
                 s3[i][j] = v * norm[i];
             }
         }
@@ -2758,16 +2762,16 @@ psymodel_init(lame_global_flags * gfp)
     FLOAT const sfreq = gfp->out_samplerate;
 
     switch (gfp->experimentalZ) {
-        default:
-        case 0:
-            use_old_s3 = (gfp->VBR == vbr_mtrh || gfp->VBR == vbr_mt) ? 0 : 1;
-            break;
-        case 1:
-            use_old_s3 = 0;
-            break;
-        case 2:
-            use_old_s3 = 1;
-            break;
+    default:
+    case 0:
+        use_old_s3 = 1;
+        break;
+    case 1:
+        use_old_s3 = (gfp->VBR == vbr_mtrh || gfp->VBR == vbr_mt) ? 0 : 1;
+        break;
+    case 2:
+        use_old_s3 = 0;
+        break;
     }
     gfc->ms_ener_ratio_old = .25;
     gfc->blocktype_old[0] = gfc->blocktype_old[1] = NORM_TYPE; /* the vbr header is long blocks */

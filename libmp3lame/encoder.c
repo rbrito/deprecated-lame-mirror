@@ -370,8 +370,8 @@ lame_encode_mp3_frame(       /* Output */
             }
             if (gfp->VBR == vbr_mtrh || gfp->VBR == vbr_mt) {
                 ret = L3psycho_anal_vbr(gfp, bufp, gr,
-                                       masking_LR, masking_MS,
-                                       pe[gr], pe_MS[gr], tot_ener[gr], blocktype);
+                                        masking_LR, masking_MS,
+                                        pe[gr], pe_MS[gr], tot_ener[gr], blocktype);
             }
             else {
                 ret = L3psycho_anal_ns(gfp, bufp, gr,
@@ -459,8 +459,7 @@ lame_encode_mp3_frame(       /* Output */
             gr_info const *const gi0 = &gfc->l3_side.tt[0][0];
             gr_info const *const gi1 = &gfc->l3_side.tt[gfc->mode_gr - 1][0];
 
-            if (gi0[0].block_type == gi0[1].block_type &&
-                gi1[0].block_type == gi1[1].block_type) {
+            if (gi0[0].block_type == gi0[1].block_type && gi1[0].block_type == gi1[1].block_type) {
 
                 gfc->mode_ext = MPG_MD_MS_LR;
             }

@@ -978,8 +978,8 @@ long_block_constrain(const algo_t * that, const int vbrsf[SFBMAX], const int vbr
 static void
 bitcount(const algo_t * that)
 {
-    int rc;
-    
+    int     rc;
+
     if (that->gfc->mode_gr == 2) {
         rc = scale_bitcount(that->cod_info);
     }
@@ -1108,7 +1108,7 @@ flattenDistribution(const int sfwork[SFBMAX], int sf_out[SFBMAX], int dm, int k,
     int     x, sfmax = 0;
     if (dm > 0) {
         for (j = SFBMAX, i = 0; j > 0; --j, ++i) {
-            int const di = p - sfwork[i];        
+            int const di = p - sfwork[i];
             x = sfwork[i] + (k * di) / dm;
             if (x < 0) {
                 x = 0;

@@ -1307,7 +1307,7 @@ scale_bitcount_lsf(const lame_internal_flags * gfc, gr_info * const cod_info)
 
 
 #ifdef MMX_choose_table
-    extern int choose_table_MMX(const int *ix, const int *const end, int *const s);
+extern int choose_table_MMX(const int *ix, const int *const end, int *const s);
 #endif
 
 void

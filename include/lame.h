@@ -431,6 +431,10 @@ vbr_mode CDECL lame_get_VBR(const lame_global_flags *);
 int CDECL lame_set_VBR_q(lame_global_flags *, int);
 int CDECL lame_get_VBR_q(const lame_global_flags *);
 
+/* VBR quality level.  0=highest  9=lowest, Range [0,...,10[  */
+int CDECL lame_set_VBR_quality(lame_global_flags *, float);
+float CDECL lame_get_VBR_quality(const lame_global_flags *);
+
 /* Ignored except for VBR=vbr_abr (ABR mode) */
 int CDECL lame_set_VBR_mean_bitrate_kbps(lame_global_flags *, int);
 int CDECL lame_get_VBR_mean_bitrate_kbps(const lame_global_flags *);

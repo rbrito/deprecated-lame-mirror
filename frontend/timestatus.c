@@ -210,29 +210,42 @@ encoder_progress_begin( lame_global_flags const* gf
                 {"stereo", "j-stereo", "dual-ch", "single-ch"},
                 {"stereo", "force-ms", "dual-ch", "single-ch"}
             };
-            const char *appendix = "";
-
             switch (lame_get_VBR(gf)) {
-            case vbr_mt:
             case vbr_rh:
+                console_printf("%s MPEG-%u%s Layer III VBR(q=%g) qval=%i\n",
+                               mode_names[lame_get_force_ms(gf)][lame_get_mode(gf)],
+                               2 - lame_get_version(gf),
+                               lame_get_out_samplerate(gf) < 16000 ? ".5" : "",
+                               lame_get_VBR_quality(gf),
+                               lame_get_quality(gf));
+                break;
+            case vbr_mt:
             case vbr_mtrh:
-                appendix = "ca. ";
-                console_printf("VBR(q=%i)", lame_get_VBR_q(gf));
+                console_printf("%s MPEG-%u%s Layer III VBR(q=%g)\n",
+                               mode_names[lame_get_force_ms(gf)][lame_get_mode(gf)],
+                               2 - lame_get_version(gf),
+                               lame_get_out_samplerate(gf) < 16000 ? ".5" : "",
+                               lame_get_VBR_quality(gf));
                 break;
             case vbr_abr:
-                console_printf("average %d kbps", lame_get_VBR_mean_bitrate_kbps(gf));
+                console_printf("%s MPEG-%u%s Layer III (%gx) average %d kbps qval=%i\n",
+                               mode_names[lame_get_force_ms(gf)][lame_get_mode(gf)],
+                               2 - lame_get_version(gf),
+                               lame_get_out_samplerate(gf) < 16000 ? ".5" : "",
+                               0.1 * (int) (10. * lame_get_compression_ratio(gf) + 0.5),
+                               lame_get_VBR_mean_bitrate_kbps(gf),
+                               lame_get_quality(gf));
                 break;
             default:
-                console_printf("%3d kbps", lame_get_brate(gf));
+                console_printf("%s MPEG-%u%s Layer III (%gx) %3d kbps qval=%i\n",
+                               mode_names[lame_get_force_ms(gf)][lame_get_mode(gf)],
+                               2 - lame_get_version(gf),
+                               lame_get_out_samplerate(gf) < 16000 ? ".5" : "",
+                               0.1 * (int) (10. * lame_get_compression_ratio(gf) + 0.5),
+                               lame_get_brate(gf),
+                               lame_get_quality(gf));
                 break;
             }
-            console_printf(" %s MPEG-%u%s Layer III (%s%gx) qval=%i\n",
-                           mode_names[lame_get_force_ms(gf)][lame_get_mode(gf)],
-                           2 - lame_get_version(gf),
-                           lame_get_out_samplerate(gf) < 16000 ? ".5" : "",
-                           appendix,
-                           0.1 * (int) (10. * lame_get_compression_ratio(gf) + 0.5),
-                           lame_get_quality(gf));
         }
 
         if (silent <= -10) {

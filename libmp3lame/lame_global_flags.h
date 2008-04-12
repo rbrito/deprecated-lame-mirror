@@ -91,7 +91,8 @@ struct lame_global_struct {
 
     /* VBR control */
     vbr_mode VBR;
-    int     VBR_q;
+    float   VBR_q_frac;      /* Range [0,...,1[ */
+    int     VBR_q;           /* Range [0,...,9] */
     int     VBR_mean_bitrate_kbps;
     int     VBR_min_bitrate_kbps;
     int     VBR_max_bitrate_kbps;

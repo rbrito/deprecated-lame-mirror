@@ -81,11 +81,11 @@ free_id3tag(lame_internal_flags * const gfc)
         gfc->tag_spec.num_values = 0;
     }
     if (gfc->tag_spec.v2_head != 0) {
-        FrameDataNode* node = gfc->tag_spec.v2_head;
+        FrameDataNode *node = gfc->tag_spec.v2_head;
         do {
-            void* p = node->dsc.ptr.b;
-            void* q = node->txt.ptr.b;
-            void* r = node;
+            void   *p = node->dsc.ptr.b;
+            void   *q = node->txt.ptr.b;
+            void   *r = node;
             node = node->nxt;
             free(p);
             free(q);
@@ -161,7 +161,7 @@ malloc_aligned(aligned_pointer_t * ptr, unsigned int size, unsigned int bytes)
         if (!ptr->pointer) {
             ptr->pointer = malloc(size + bytes);
             if (bytes > 0) {
-                ptr->aligned = (void *) ((( (size_t)ptr->pointer + bytes - 1) / bytes) * bytes);
+                ptr->aligned = (void *) ((((size_t) ptr->pointer + bytes - 1) / bytes) * bytes);
             }
             else {
                 ptr->aligned = ptr->pointer;
@@ -185,7 +185,7 @@ free_aligned(aligned_pointer_t * ptr)
 /*those ATH formulas are returning
 their minimum value for input = -1*/
 
-static FLOAT
+static  FLOAT
 ATHformula_GB(FLOAT f, FLOAT value)
 {
     /* from Painter & Spanias
@@ -212,11 +212,12 @@ bitrate is more balanced according to the -V value.*/
 
     FLOAT   ath;
 
+    /* the following Hack allows to ask for the lowest value */
     if (f < -.3)
         f = 3410;
 
     f /= 1000;          /* convert to khz */
-    f = Max(0.01, f);
+    f = Max(0.1, f);
 /*  f  = Min(21.0, f);
 */
     ath = 3.640 * pow(f, -0.8)
@@ -231,22 +232,28 @@ bitrate is more balanced according to the -V value.*/
 FLOAT
 ATHformula(FLOAT f, lame_global_flags const *gfp)
 {
+    FLOAT   ath;
     switch (gfp->ATHtype) {
     case 0:
-        return ATHformula_GB(f, 9);
+        ath = ATHformula_GB(f, 9);
+        break;
     case 1:
-        return ATHformula_GB(f, -1); /*over sensitive, should probably be removed */
+        ath = ATHformula_GB(f, -1); /*over sensitive, should probably be removed */
+        break;
     case 2:
-        return ATHformula_GB(f, 0);
+        ath = ATHformula_GB(f, 0);
+        break;
     case 3:
-        return ATHformula_GB(f, 1) + 6; /*modification of GB formula by Roel */
+        ath = ATHformula_GB(f, 1) + 6; /*modification of GB formula by Roel */
+        break;
     case 4:
-        return ATHformula_GB(f, gfp->ATHcurve);
+        ath = ATHformula_GB(f, gfp->ATHcurve);
+        break;
     default:
+        ath = ATHformula_GB(f, 0);
         break;
     }
-
-    return ATHformula_GB(f, 0);
+    return ath;
 }
 
 /* see for example "Zwicker: Psychoakustik, 1982; ISBN 3-540-11401-7 */
@@ -278,15 +285,14 @@ freq2cbw(FLOAT freq)
 
 int
 FindNearestBitrate(int bRate, /* legal rates from 8 to 320 */
-                   int version,
-                   int samplerate)
+                   int version, int samplerate)
 {                       /* MPEG-1 or MPEG-2 LSF */
     int     bitrate;
     int     i;
 
     if (samplerate < 16000)
         version = 2;
-    
+
     bitrate = bitrate_table[version][1];
 
     for (i = 2; i <= 14; i++) {
@@ -355,7 +361,7 @@ nearestBitrateFullIndex(const int bitrate)
     /* Determine which range the value specified is closer to */
     if ((upper_range_kbps - bitrate) > (bitrate - lower_range_kbps)) {
         return lower_range;
-    } 
+    }
     return upper_range;
 }
 
@@ -739,10 +745,10 @@ lame_errorf(const lame_internal_flags * gfc, const char *format, ...)
  ***********************************************************************/
 
 #ifdef HAVE_NASM
-    extern int has_MMX_nasm(void);
-    extern int has_3DNow_nasm(void);
-    extern int has_SSE_nasm(void);
-    extern int has_SSE2_nasm(void);
+extern int has_MMX_nasm(void);
+extern int has_3DNow_nasm(void);
+extern int has_SSE_nasm(void);
+extern int has_SSE2_nasm(void);
 #endif
 
 int
@@ -772,9 +778,9 @@ has_SSE(void)
     return has_SSE_nasm();
 #else
 #ifdef _M_X64
-	return 1;
+    return 1;
 #else
-	return 0;           /* don't know, assume not */
+    return 0;           /* don't know, assume not */
 #endif
 #endif
 }
@@ -786,9 +792,9 @@ has_SSE2(void)
     return has_SSE2_nasm();
 #else
 #ifdef _M_X64
-	return 1;
+    return 1;
 #else
-	return 0;           /* don't know, assume not */
+    return 0;           /* don't know, assume not */
 #endif
 #endif
 }
@@ -840,11 +846,11 @@ disable_FPE(void)
 #if defined(_MSC_VER)
     {
 #if 0
-    /* rh 061207
-       the following fix seems to be a workaround for a problem in the
-       parent process calling LAME. It would be better to fix the broken
-       application => code disabled.
-     */
+        /* rh 061207
+           the following fix seems to be a workaround for a problem in the
+           parent process calling LAME. It would be better to fix the broken
+           application => code disabled.
+         */
 
         /* set affinity to a single CPU.  Fix for EAC/lame on SMP systems from
            "Todd Richmond" <todd.richmond@openwave.com> */

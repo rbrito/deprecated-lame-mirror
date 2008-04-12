@@ -1,7 +1,8 @@
 /*
  * presets.c -- Apply presets
  *
- *	Copyright (c) 2002-2005 Gabriel Bouvigne
+ *	Copyright (c) 2002-2008 Gabriel Bouvigne
+ *	Copyright (c) 2007-2008 Robert Hegemann
  *
  * This library is free software; you can redistribute it and/or
  * modify it under the terms of the GNU Lesser General Public
@@ -90,7 +91,8 @@ typedef struct {
         {6,       9,       9,    1,   6.60, 145.0,       0.67,   0.65,    -14.7,       6.5,      -19,   0.0004,         0,       0,  2.30},
         {7,       9,       9,    1,   6.60, 145.0,       0.8,    0.75,    -19.7,       8,        -22,   0.0006,         0,       0,  2.70},
         {8,       9,       9,    1,   6.60, 145.0,       1.2,    1.15,    -27.5,      10,        -23,   0.0007,         0,       0,  0   },
-        {9,       9,       9,    1,   6.60, 145.0,       1.6,    1.6,     -36,        11,        -25,   0.0008,         0,       0,  0   }
+        {9,       9,       9,    1,   6.60, 145.0,       1.6,    1.6,     -36,        11,        -25,   0.0008,         0,       0,  0   },
+        {10,      9,       9,    1,   6.60, 145.0,       2.0,    2.0,     -36,        12,        -25,   0.0008,         0,       0,  0   }
     };
     
     static const vbr_presets_t vbr_psy_switch_map[] = {
@@ -101,17 +103,43 @@ typedef struct {
         {3,       9,       9,    1,   4.20,  25.0,      -3.4,   -1.25,      1.1,       3,         -4,   0,              2,      15,  1.64},
         {4,       9,       9,    1,   4.20,  25.0,      -2.2,    0.1,       0,         3.5,       -8,   0,              2,       0,  1.79},
         {5,       9,       9,    1,   4.20,  25.0,      -1.0,    1.65,     -7.7,       4,        -12,   0.0002,         0,       0,  1.95},
-        {6,       9,       9,    1,   4.20,  25.0,      -0.2,    2.47,     -7.7,       6.7,      -19,   0.0004,         0,       0,  2   },
-        {7,       9,       9,    1,   4.20,  25.0,       0.4,    2.0,     -14.5,       8,        -22,   0.0006,         0,       0,  2   },
-        {8,       9,       9,    1,   4.20,  25.0,       1.9,    2.4,     -22.0,      10,        -23,   0.0007,         0,       0,  2   },
-        {9,       9,       9,    1,   4.20,  25.0,       2.5,    2.95,    -30.0,      11,        -25,   0.0008,         0,       0,  2   }
+        {6,       9,       9,    1,   4.20,  25.0,      -0.0,    2.47,     -7.7,       6.5,      -19,   0.0004,         0,       0,  2   },
+        {7,       9,       9,    1,   4.20,  25.0,       0.5,    2.0,     -14.5,       8,        -22,   0.0006,         0,       0,  2   },
+        {8,       9,       9,    1,   4.20,  25.0,       1.0,    2.4,     -22.0,      10,        -23,   0.0007,         0,       0,  2   },
+        {9,       9,       9,    1,   4.20,  25.0,       1.5,    2.95,    -30.0,      11,        -25,   0.0008,         0,       0,  2   },
+        {10,      9,       9,    1,   4.20,  25.0,       2.0,    2.95,    -36.0,      12,        -30,   0.0008,         0,       0,  2   }
     };
     
     /* *INDENT-ON* */
 
+#define KEEP(m) do { (void) p.m; } while(0)
+#define FRAC(m) do { p.m = p.m + x * (q.m - p.m); } while(0)
 static void
-apply_vbr_preset(lame_global_flags * gfp, vbr_presets_t const *set, int enforce)
+apply_vbr_preset(lame_global_flags * gfp, int a, int enforce)
 {
+    vbr_presets_t const *vbr_preset = lame_get_VBR(gfp) == vbr_rh ? &vbr_old_switch_map[0]
+        : &vbr_psy_switch_map[0];
+    float   x = gfp->VBR_q_frac;
+    vbr_presets_t p = vbr_preset[a];
+    vbr_presets_t q = vbr_preset[a + 1];
+    vbr_presets_t const *set = &p;
+
+    KEEP(vbr_q);
+    KEEP(quant_comp);
+    KEEP(quant_comp_s);
+    KEEP(expY);
+    FRAC(st_lrm);
+    FRAC(st_s);
+    FRAC(masking_adj);
+    FRAC(masking_adj_short);
+    FRAC(ath_lower);
+    FRAC(ath_curve);
+    FRAC(ath_sensitivity);
+    FRAC(interch);
+    KEEP(safejoint);
+    KEEP(sfb21mod);
+    FRAC(msfix);
+
     (void) lame_set_VBR_q(gfp, set->vbr_q);
     SET_OPTION(quant_comp, set->quant_comp, -1);
     SET_OPTION(quant_comp_short, set->quant_comp_s, -1);
@@ -137,6 +165,11 @@ apply_vbr_preset(lame_global_flags * gfp, vbr_presets_t const *set, int enforce)
         (void) lame_set_exp_nspsytune(gfp, lame_get_exp_nspsytune(gfp) | (set->sfb21mod << 20));
     }
     SET_OPTION(msfix, set->msfix, -1);
+
+    if (enforce == 0) {
+        gfp->VBR_q = a;
+        gfp->VBR_q_frac = x;
+    }
 }
 
 static int
@@ -254,8 +287,6 @@ apply_abr_preset(lame_global_flags * gfp, int preset, int enforce)
 
 
 
-
-
 int
 apply_preset(lame_global_flags * gfp, int preset, int enforce)
 {
@@ -312,47 +343,36 @@ apply_preset(lame_global_flags * gfp, int preset, int enforce)
 
     gfp->preset = preset;
     {
-        vbr_presets_t const *vbr_preset;
-        switch (lame_get_VBR(gfp)) {
-        default:
-        case vbr_rh:
-            vbr_preset = &vbr_old_switch_map[0];
-            break;
-        case vbr_mt:
-        case vbr_mtrh:
-            vbr_preset = &vbr_psy_switch_map[0];
-            break;
-        }
         switch (preset) {
         case V9:
-            apply_vbr_preset(gfp, &vbr_preset[9], enforce);
+            apply_vbr_preset(gfp, 9, enforce);
             return preset;
         case V8:
-            apply_vbr_preset(gfp, &vbr_preset[8], enforce);
+            apply_vbr_preset(gfp, 8, enforce);
             return preset;
         case V7:
-            apply_vbr_preset(gfp, &vbr_preset[7], enforce);
+            apply_vbr_preset(gfp, 7, enforce);
             return preset;
         case V6:
-            apply_vbr_preset(gfp, &vbr_preset[6], enforce);
+            apply_vbr_preset(gfp, 6, enforce);
             return preset;
         case V5:
-            apply_vbr_preset(gfp, &vbr_preset[5], enforce);
+            apply_vbr_preset(gfp, 5, enforce);
             return preset;
         case V4:
-            apply_vbr_preset(gfp, &vbr_preset[4], enforce);
+            apply_vbr_preset(gfp, 4, enforce);
             return preset;
         case V3:
-            apply_vbr_preset(gfp, &vbr_preset[3], enforce);
+            apply_vbr_preset(gfp, 3, enforce);
             return preset;
         case V2:
-            apply_vbr_preset(gfp, &vbr_preset[2], enforce);
+            apply_vbr_preset(gfp, 2, enforce);
             return preset;
         case V1:
-            apply_vbr_preset(gfp, &vbr_preset[1], enforce);
+            apply_vbr_preset(gfp, 1, enforce);
             return preset;
         case V0:
-            apply_vbr_preset(gfp, &vbr_preset[0], enforce);
+            apply_vbr_preset(gfp, 0, enforce);
             return preset;
         default:
             break;

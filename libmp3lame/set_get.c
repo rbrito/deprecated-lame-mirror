@@ -267,7 +267,7 @@ int CDECL lame_set_ogg(lame_global_flags *, int);
 int CDECL lame_get_ogg(const lame_global_flags *);
 #else
 #endif
- 
+
 /* encode a Vorbis .ogg file */
 /* DEPRECATED */
 int
@@ -314,8 +314,8 @@ lame_get_quality(const lame_global_flags * gfp)
 int
 lame_set_mode(lame_global_flags * gfp, MPEG_mode mode)
 {
-    int mpg_mode = mode;
-    
+    int     mpg_mode = mode;
+
     /* default: lame chooses based on compression ratio and input channels */
 
     if (mpg_mode < 0 || MAX_INDICATOR <= mpg_mode)
@@ -955,8 +955,8 @@ lame_get_exp_nspsytune(const lame_global_flags * gfp)
 int
 lame_set_VBR(lame_global_flags * gfp, vbr_mode VBR)
 {
-    int vbr_q = VBR;
-    
+    int     vbr_q = VBR;
+
     if (0 > vbr_q || vbr_max_indicator <= vbr_q)
         return -1;      /* Unknown VBR mode! */
 
@@ -982,23 +982,22 @@ lame_get_VBR(const lame_global_flags * gfp)
 int
 lame_set_VBR_q(lame_global_flags * gfp, int VBR_q)
 {
-    /* XXX: This should be an enum */
-    /*  to whoever added this note: why should it be an enum?
-       do you want to call a specific setting by name? 
-       say VBR quality level red? */
-    /* No, but VBR_Q_HIGHEST, VBR_Q_HIGH, ..., VBR_Q_MID, ...
-       VBR_Q_LOW, VBR_Q_LOWEST (or something like that )and a
-       VBR_Q_DEFAULT, which aliases the default setting of
-       e.g. VBR_Q_MID. */
+    int     ret = 0;
 
-
-    if (0 > VBR_q || 10 <= VBR_q)
-        return -1;      /* Unknown VBR quality level! */
+    if (0 > VBR_q) {
+        ret = -1;       /* Unknown VBR quality level! */
+        VBR_q = 0;
+    }
+    if (9 < VBR_q) {
+        ret = -1;
+        VBR_q = 9;
+    }
 
     gfp->VBR_q = VBR_q;
+    gfp->VBR_q_frac = 0;
 /*    lame_set_ATHcurve(gfp, VBR_q);
 */
-    return 0;
+    return ret;
 }
 
 int
@@ -1007,6 +1006,32 @@ lame_get_VBR_q(const lame_global_flags * gfp)
     assert(0 <= gfp->VBR_q && 10 > gfp->VBR_q);
 
     return gfp->VBR_q;
+}
+
+int
+lame_set_VBR_quality(lame_global_flags * gfp, float VBR_q)
+{
+    int     ret = 0;
+
+    if (0 > VBR_q) {
+        ret = -1;       /* Unknown VBR quality level! */
+        VBR_q = 0;
+    }
+    if (9.999 < VBR_q) {
+        ret = -1;
+        VBR_q = 9.999;
+    }
+
+    gfp->VBR_q = (int) VBR_q;
+    gfp->VBR_q_frac = VBR_q - gfp->VBR_q;
+
+    return ret;
+}
+
+float
+lame_get_VBR_quality(const lame_global_flags * gfp)
+{
+    return gfp->VBR_q + gfp->VBR_q_frac;
 }
 
 
@@ -1346,9 +1371,9 @@ lame_get_athaa_sensitivity(const lame_global_flags * gfp)
 
 
 /* Predictability limit (ISO tonality formula) */
-int lame_set_cwlimit(lame_global_flags * gfp, int cwlimit);
-int lame_get_cwlimit(const lame_global_flags * gfp);
-        
+int     lame_set_cwlimit(lame_global_flags * gfp, int cwlimit);
+int     lame_get_cwlimit(const lame_global_flags * gfp);
+
 int
 lame_set_cwlimit(lame_global_flags * gfp, int cwlimit)
 {
@@ -1432,7 +1457,7 @@ lame_set_interChRatio(lame_global_flags * gfp, float ratio)
 float
 lame_get_interChRatio(const lame_global_flags * gfp)
 {
-    assert((0 <= gfp->interChRatio && gfp->interChRatio <= 1.0) || EQ(gfp->interChRatio,-1));
+    assert((0 <= gfp->interChRatio && gfp->interChRatio <= 1.0) || EQ(gfp->interChRatio, -1));
 
     return gfp->interChRatio;
 }
@@ -1681,7 +1706,7 @@ lame_get_mf_samples_to_encode(const lame_global_flags * gfp)
     return gfc->mf_samples_to_encode;
 }
 
-int CDECL
+int     CDECL
 lame_get_size_mp3buffer(const lame_global_flags * gfp)
 {
     int     size;
@@ -1791,7 +1816,7 @@ lame_set_write_id3tag_automatic(lame_global_flags * gfp, int v)
 
 
 int
-lame_get_write_id3tag_automatic(lame_global_flags const* gfp)
+lame_get_write_id3tag_automatic(lame_global_flags const *gfp)
 {
     if (gfp) {
         return gfp->write_id3tag_automatic;
@@ -1856,5 +1881,3 @@ lame_set_preset_notune(lame_global_flags * gfp, int preset_notune)
     (void) preset_notune;
     return 0;
 }
-
-

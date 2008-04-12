@@ -116,7 +116,7 @@ init_xrpow(lame_internal_flags * gfc, gr_info * const cod_info, FLOAT xrpow[576]
     /*  check if there is some energy we have to quantize
      *  and calculate xrpow matching our fresh scalefactors
      */
-    assert( 0 <= upper && upper <= 575 );
+    assert(0 <= upper && upper <= 575);
     memset(&(xrpow[upper]), 0, (576 - upper) * sizeof(xrpow[0]));
 
 
@@ -359,7 +359,7 @@ bin_search_StepSize(lame_internal_flags * const gfc, gr_info * const cod_info,
     desired_rate -= cod_info->part2_length;
 
     assert(CurrentStep);
-    for(;;) {
+    for (;;) {
         int     step;
         nBits = count_bits(gfc, xrpow, cod_info, 0);
 
@@ -399,7 +399,7 @@ bin_search_StepSize(lame_internal_flags * const gfc, gr_info * const cod_info,
 
     assert(cod_info->global_gain >= 0);
     assert(cod_info->global_gain < 256);
-    
+
     while (nBits > desired_rate && cod_info->global_gain < 255) {
         cod_info->global_gain++;
         nBits = count_bits(gfc, xrpow, cod_info, 0);
@@ -1243,7 +1243,7 @@ VBR_encode_granule(lame_global_flags const *gfp, gr_info * const cod_info, const
     int const sfb21_extra = gfc->sfb21_extra;
 
     assert(Max_bits <= MAX_BITS_PER_CHANNEL);
-    memset(bst_cod_info.l3_enc,0,sizeof(bst_cod_info.l3_enc));
+    memset(bst_cod_info.l3_enc, 0, sizeof(bst_cod_info.l3_enc));
 
     /*  search within round about 40 bits of optimal
      */
@@ -1378,8 +1378,7 @@ VBR_old_prepare(lame_global_flags const *gfp,
                 FLOAT pe[2][2], FLOAT const ms_ener_ratio[2],
                 III_psy_ratio ratio[2][2],
                 FLOAT l3_xmin[2][2][SFBMAX],
-                int frameBits[16],
-                int min_bits[2][2], int max_bits[2][2], int bands[2][2])
+                int frameBits[16], int min_bits[2][2], int max_bits[2][2], int bands[2][2])
 {
     lame_internal_flags *const gfc = gfp->internal_flags;
 
@@ -1492,8 +1491,7 @@ VBR_old_iteration_loop(lame_global_flags const *gfp, FLOAT pe[2][2],
     III_side_info_t *const l3_side = &gfc->l3_side;
 
     analog_silence = VBR_old_prepare(gfp, pe, ms_ener_ratio, ratio,
-                                     l3_xmin, frameBits,
-                                     min_bits, max_bits, bands);
+                                     l3_xmin, frameBits, min_bits, max_bits, bands);
 
     /*---------------------------------*/
     for (;;) {
@@ -1577,7 +1575,7 @@ VBR_new_prepare(lame_global_flags const *gfp,
     int     analog_silence = 1;
     int     avg, mxb, bits = 0;
     int     maximum_framebits;
-    
+
     if (!gfp->free_format) {
         gfc->bitrate_index = gfc->VBR_max_bitrate;
         (void) ResvFrameBegin(gfp, &avg);
@@ -1624,20 +1622,21 @@ VBR_new_prepare(lame_global_flags const *gfp,
 
 #if 0
 static int
-getFramesizeInBytesPerSecond(lame_global_flags const* gfp, int bits_used )
+getFramesizeInBytesPerSecond(lame_global_flags const *gfp, int bits_used)
 {
-    lame_internal_flags const * gfc = gfp->internal_flags;
+    lame_internal_flags const *gfc = gfp->internal_flags;
     int const tmp = (gfp->version == 0) ? 72 : 144;
-    int const bytes_used = (bits_used+7)/8;
-    int const bytes_per_second = (gfp->out_samplerate * ( bytes_used + gfc->sideinfo_len) + (tmp-1)) / tmp;
+    int const bytes_used = (bits_used + 7) / 8;
+    int const bytes_per_second =
+        (gfp->out_samplerate * (bytes_used + gfc->sideinfo_len) + (tmp - 1)) / tmp;
     return bytes_per_second;
 }
 
 static int
-getFramesize_kbps(lame_global_flags const* gfp, int bits_used )
+getFramesize_kbps(lame_global_flags const *gfp, int bits_used)
 {
     int const bytes_per_second = getFramesizeInBytesPerSecond(gfp, bits_used);
-    int const kbps = (bytes_per_second + 999)/1000;
+    int const kbps = (bytes_per_second + 999) / 1000;
     return kbps;
 }
 #endif
@@ -1658,7 +1657,7 @@ VBR_new_iteration_loop(lame_global_flags const *gfp, FLOAT pe[2][2],
     III_side_info_t *const l3_side = &gfc->l3_side;
 
     (void) ms_ener_ratio; /* not used */
-    
+
     analog_silence = VBR_new_prepare(gfp, pe, ratio, l3_xmin, frameBits, max_bits);
 
     for (gr = 0; gr < gfc->mode_gr; gr++) {
@@ -1677,20 +1676,20 @@ VBR_new_iteration_loop(lame_global_flags const *gfp, FLOAT pe[2][2],
      */
 
     used_bits = VBR_encode_frame(gfc, xrpow, l3_xmin, max_bits);
-    
+
     if (!gfp->free_format) {
         /*  find lowest bitrate able to hold used bits
-        */
+         */
         if (analog_silence && !gfp->VBR_hard_min) {
             /*  we detected analog silence and the user did not specify
-            *  any hard framesize limit, so start with smallest possible frame
-            */
+             *  any hard framesize limit, so start with smallest possible frame
+             */
             gfc->bitrate_index = 1;
         }
         else {
             gfc->bitrate_index = gfc->VBR_min_bitrate;
         }
-    
+
         for (; gfc->bitrate_index < gfc->VBR_max_bitrate; gfc->bitrate_index++) {
             if (used_bits <= frameBits[gfc->bitrate_index])
                 break;
@@ -1702,10 +1701,11 @@ VBR_new_iteration_loop(lame_global_flags const *gfp, FLOAT pe[2][2],
     else {
 #if 0
         static int mmm = 0;
-        int fff = getFramesize_kbps(gfp, used_bits);
-        int hhh = getFramesize_kbps(gfp, MAX_BITS_PER_GRANULE * gfc->mode_gr);
-        if (mmm < fff) mmm = fff;
-        printf("demand=%3d kbps  max=%3d kbps   limit=%3d kbps\n",fff,mmm,hhh);
+        int     fff = getFramesize_kbps(gfp, used_bits);
+        int     hhh = getFramesize_kbps(gfp, MAX_BITS_PER_GRANULE * gfc->mode_gr);
+        if (mmm < fff)
+            mmm = fff;
+        printf("demand=%3d kbps  max=%3d kbps   limit=%3d kbps\n", fff, mmm, hhh);
 #endif
         gfc->bitrate_index = 0;
     }
@@ -1713,7 +1713,7 @@ VBR_new_iteration_loop(lame_global_flags const *gfp, FLOAT pe[2][2],
         /* update Reservoire status */
         int     mean_bits, fullframebits;
         fullframebits = ResvFrameBegin(gfp, &mean_bits);
-        assert( used_bits <= fullframebits );
+        assert(used_bits <= fullframebits);
         for (gr = 0; gr < gfc->mode_gr; gr++) {
             for (ch = 0; ch < gfc->channels_out; ch++) {
                 gr_info const *const cod_info = &l3_side->tt[gr][ch];
@@ -1795,7 +1795,7 @@ calc_target_bits(lame_global_flags const *gfp,
         res_factor = 1.00;
 
     for (gr = 0; gr < gfc->mode_gr; gr++) {
-        int sum = 0;
+        int     sum = 0;
         for (ch = 0; ch < gfc->channels_out; ch++) {
             targ_bits[gr][ch] = res_factor * mean_bits;
 
@@ -1825,15 +1825,16 @@ calc_target_bits(lame_global_flags const *gfp,
         }               /* for ch */
         if (sum > MAX_BITS_PER_GRANULE) {
             for (ch = 0; ch < gfc->channels_out; ++ch) {
-              targ_bits[gr][ch] *= MAX_BITS_PER_GRANULE;
-              targ_bits[gr][ch] /= sum;
-            } 
+                targ_bits[gr][ch] *= MAX_BITS_PER_GRANULE;
+                targ_bits[gr][ch] /= sum;
+            }
         }
     }                   /* for gr */
 
     if (gfc->mode_ext == MPG_MD_MS_LR)
         for (gr = 0; gr < gfc->mode_gr; gr++) {
-            reduce_side(targ_bits[gr], ms_ener_ratio[gr], mean_bits * gfc->channels_out, MAX_BITS_PER_GRANULE);
+            reduce_side(targ_bits[gr], ms_ener_ratio[gr], mean_bits * gfc->channels_out,
+                        MAX_BITS_PER_GRANULE);
         }
 
     /*  sum target bits
@@ -2024,4 +2025,3 @@ CBR_iteration_loop(lame_global_flags const *gfp, FLOAT pe[2][2],
 
     ResvFrameEnd(gfc, mean_bits);
 }
-

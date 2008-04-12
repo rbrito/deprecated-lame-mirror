@@ -146,19 +146,18 @@ ResvFrameBegin(lame_global_flags const *gfp, int *mean_bits)
            instead of using 8*960. */
 
         /*
-        if (gfp->strict_ISO == old_FhG_decoder)
-         always enabled because of compatibility problems with some old FhG decoders
-         which is distributed with almost every Windows Installation
-        */
+           if (gfp->strict_ISO == old_FhG_decoder)
+           always enabled because of compatibility problems with some old FhG decoders
+           which is distributed with almost every Windows Installation
+         */
         {
             maxmp3buf = 8 * ((int) (320000 / (gfp->out_samplerate / (FLOAT) 1152) / 8 + .5));
             /* adding (almost all) bits used for sideinfo seems still to work with old FhG
                decoders, so in 320 kbps case the backpointer may point back some bytes too
              */
-            maxmp3buf += (gfc->sideinfo_len-8)*8;
+            maxmp3buf += (gfc->sideinfo_len - 8) * 8;
         }
-        if (gfp->strict_ISO)
-        {
+        if (gfp->strict_ISO) {
             maxmp3buf = 8 * ((int) (320000 / (gfp->out_samplerate / (FLOAT) 1152) / 8 + .5));
         }
     }

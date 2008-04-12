@@ -208,8 +208,8 @@ ATH = ATH * 2.5e-10      (ener)
 
 */
 
-static FLOAT
-ATHmdct(lame_global_flags const* gfp, FLOAT f)
+static  FLOAT
+ATHmdct(lame_global_flags const *gfp, FLOAT f)
 {
     FLOAT   ath;
 
@@ -288,16 +288,16 @@ compute_ath(lame_global_flags * gfp)
 
     if (gfp->noATH) {
         for (sfb = 0; sfb < SBMAX_l; sfb++) {
-            ATH_l[sfb] = 1E-37;
+            ATH_l[sfb] = 1E-20;
         }
         for (sfb = 0; sfb < PSFB21; sfb++) {
-            ATH_psfb21[sfb] = 1E-37;
+            ATH_psfb21[sfb] = 1E-20;
         }
         for (sfb = 0; sfb < SBMAX_s; sfb++) {
-            ATH_s[sfb] = 1E-37;
+            ATH_s[sfb] = 1E-20;
         }
         for (sfb = 0; sfb < PSFB12; sfb++) {
-            ATH_psfb12[sfb] = 1E-37;
+            ATH_psfb12[sfb] = 1E-20;
         }
     }
 
@@ -471,13 +471,13 @@ on_pe(lame_global_flags const *gfp, FLOAT pe[][2], III_side_info_t const *l3_sid
         bits += targ_bits[ch];
     }
     if (bits > MAX_BITS_PER_GRANULE) {
-        int sum = 0;
+        int     sum = 0;
         for (ch = 0; ch < gfc->channels_out; ++ch) {
             targ_bits[ch] *= MAX_BITS_PER_GRANULE;
             targ_bits[ch] /= bits;
             sum += targ_bits[ch];
         }
-        assert( sum <= MAX_BITS_PER_GRANULE );
+        assert(sum <= MAX_BITS_PER_GRANULE);
     }
 
     return max_bits;
@@ -493,7 +493,7 @@ reduce_side(int targ_bits[2], FLOAT ms_ener_ratio, int mean_bits, int max_bits)
     FLOAT   fac;
 
     assert(max_bits <= MAX_BITS_PER_GRANULE);
-    assert(targ_bits[0]+targ_bits[1] <= MAX_BITS_PER_GRANULE);
+    assert(targ_bits[0] + targ_bits[1] <= MAX_BITS_PER_GRANULE);
 
     /*  ms_ener_ratio = 0:  allocate 66/33  mid/side  fac=.33  
      *  ms_ener_ratio =.5:  allocate 50/50 mid/side   fac= 0 */
@@ -538,7 +538,7 @@ reduce_side(int targ_bits[2], FLOAT ms_ener_ratio, int mean_bits, int max_bits)
     }
     assert(targ_bits[0] <= MAX_BITS_PER_CHANNEL);
     assert(targ_bits[1] <= MAX_BITS_PER_CHANNEL);
-    assert(targ_bits[0]+targ_bits[1] <= MAX_BITS_PER_GRANULE);
+    assert(targ_bits[0] + targ_bits[1] <= MAX_BITS_PER_GRANULE);
 }
 
 
@@ -593,7 +593,7 @@ calc_xmin(lame_global_flags const *gfp,
     int     max_nonzero;
     int const enable_athaa_fix = (gfp->VBR == vbr_mtrh) ? 1 : 0;
     FLOAT   masking_lower = gfc->masking_lower;
-    
+
     if (gfp->VBR == vbr_mtrh || gfp->VBR == vbr_mt) {
         masking_lower = 1.0f; /* was already done in PSY-Model */
     }
@@ -609,7 +609,7 @@ calc_xmin(lame_global_flags const *gfp,
             xmin = ATH->adjust * ATH->l[gsfb];
 
         width = cod_info->width[gsfb];
-        rh1 = xmin/width;
+        rh1 = xmin / width;
 #ifdef DBL_EPSILON
         rh2 = DBL_EPSILON;
 #else
@@ -618,21 +618,21 @@ calc_xmin(lame_global_flags const *gfp,
         l = width >> 1;
         en0 = 0.0;
         do {
-            FLOAT xa, xb;
+            FLOAT   xa, xb;
             xa = xr[j] * xr[j];
             en0 += xa;
-            rh2 += ( xa < rh1 ) ? xa : rh1;
+            rh2 += (xa < rh1) ? xa : rh1;
             j++;
             xb = xr[j] * xr[j];
             en0 += xb;
-            rh2 += ( xb < rh1 ) ? xb : rh1;
+            rh2 += (xb < rh1) ? xb : rh1;
             j++;
         } while (--l > 0);
         if (en0 > xmin)
             ath_over++;
 
         if (gsfb == SBPSY_l) {
-            FLOAT x = xmin*gfc->nsPsy.longfact[gsfb];
+            FLOAT   x = xmin * gfc->nsPsy.longfact[gsfb];
             if (rh2 < x) {
                 rh2 = x;
             }
@@ -653,7 +653,7 @@ calc_xmin(lame_global_flags const *gfp,
         }
         if (enable_athaa_fix)
             *pxmin++ = xmin;
-        else 
+        else
             *pxmin++ = xmin * gfc->nsPsy.longfact[gsfb];
     }                   /* end of long block loop */
 
@@ -664,7 +664,7 @@ calc_xmin(lame_global_flags const *gfp,
     max_nonzero = 575;
     if (cod_info->block_type != SHORT_TYPE) { /* NORM, START or STOP type, but not SHORT */
         k = 576;
-        while (k-- && NEQ(xr[k],0)) {
+        while (k-- && NEQ(xr[k], 0)) {
             max_nonzero = k;
         }
     }
@@ -686,27 +686,27 @@ calc_xmin(lame_global_flags const *gfp,
             FLOAT   rh1, rh2;
             int     l = width >> 1;
 
-            rh1 = tmpATH/width;
+            rh1 = tmpATH / width;
 #ifdef DBL_EPSILON
             rh2 = DBL_EPSILON;
 #else
             rh2 = 2.2204460492503131e-016;
 #endif
             do {
-                FLOAT xa, xb;
+                FLOAT   xa, xb;
                 xa = xr[j] * xr[j];
                 en0 += xa;
-                rh2 += ( xa < rh1 ) ? xa : rh1;
+                rh2 += (xa < rh1) ? xa : rh1;
                 j++;
                 xb = xr[j] * xr[j];
                 en0 += xb;
-                rh2 += ( xb < rh1 ) ? xb : rh1;
+                rh2 += (xb < rh1) ? xb : rh1;
                 j++;
             } while (--l > 0);
             if (en0 > tmpATH)
                 ath_over++;
             if (sfb == SBPSY_s) {
-                FLOAT x = tmpATH*gfc->nsPsy.shortfact[sfb];
+                FLOAT   x = tmpATH * gfc->nsPsy.shortfact[sfb];
                 if (rh2 < x) {
                     rh2 = x;
                 }
@@ -744,7 +744,7 @@ calc_xmin(lame_global_flags const *gfp,
 }
 
 
-static FLOAT
+static  FLOAT
 calc_noise_core_c(const gr_info * const cod_info, int *startline, int l, FLOAT step)
 {
     FLOAT   noise = 0;
@@ -926,8 +926,7 @@ calc_noise(gr_info const *const cod_info,
  *
  ************************************************************************/
 
-static
-    void
+static void
 set_pinfo(lame_global_flags const *gfp,
           gr_info * const cod_info, const III_psy_ratio * const ratio, const int gr, const int ch)
 {

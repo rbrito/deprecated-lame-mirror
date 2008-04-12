@@ -72,7 +72,7 @@ getframebits(const lame_global_flags * gfp)
         bit_rate = bitrate_table[gfp->version][gfc->bitrate_index];
     else
         bit_rate = gfp->brate;
-    /*assert(bit_rate <= 550);*/
+    /*assert(bit_rate <= 550); */
     assert(8 <= bit_rate && bit_rate <= 640);
 
     /* main encoding routine toggles padding on and off */
@@ -607,11 +607,11 @@ LongHuffmancodebits(lame_internal_flags * gfc, gr_info const *gi)
 
     i = gi->region0_count + 1;
     assert(0 <= i);
-    assert((size_t)i < dimension_of(gfc->scalefac_band.l));
+    assert((size_t) i < dimension_of(gfc->scalefac_band.l));
     region1Start = gfc->scalefac_band.l[i];
     i += gi->region1_count + 1;
     assert(0 <= i);
-    assert((size_t)i < dimension_of(gfc->scalefac_band.l));
+    assert((size_t) i < dimension_of(gfc->scalefac_band.l));
     region2Start = gfc->scalefac_band.l[i];
 
     if (region1Start > bigvalues)
@@ -871,7 +871,7 @@ add_dummy_byte(lame_global_flags const *const gfp, unsigned char val, unsigned i
 
         for (i = 0; i < MAX_HEADER_BUF; ++i)
             gfc->header[i].write_timing += 8;
-        }
+    }
 }
 
 
@@ -980,7 +980,7 @@ copy_buffer(lame_internal_flags * gfc, unsigned char *buffer, int size, int mp3d
 
     if (mp3data) {
         UpdateMusicCRC(&gfc->nMusicCRC, buffer, minimum);
-        
+
         /** sum number of bytes belonging to the mp3 stream
          *  this info will be written into the Xing/LAME header for seeking
          */
