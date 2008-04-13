@@ -492,16 +492,6 @@ mask_add(FLOAT m1, FLOAT m2, int kk, int b, lame_internal_flags const *gfc, int 
 inline static FLOAT
 vbrpsy_mask_add(FLOAT m1, FLOAT m2, int b)
 {
-    static const FLOAT table1[] = {
-        3.3246 * 3.3246, 3.23837 * 3.23837, 3.15437 * 3.15437, 3.00412 * 3.00412, 2.86103 * 2.86103,
-        2.65407 * 2.65407, 2.46209 * 2.46209, 2.284 * 2.284,
-        2.11879 * 2.11879, 1.96552 * 1.96552, 1.82335 * 1.82335, 1.69146 * 1.69146,
-        1.56911 * 1.56911, 1.46658 * 1.46658, 1.37074 * 1.37074, 1.31036 * 1.31036,
-        1.25264 * 1.25264, 1.20648 * 1.20648, 1.16203 * 1.16203, 1.12765 * 1.12765,
-        1.09428 * 1.09428, 1.0659 * 1.0659, 1.03826 * 1.03826, 1.01895 * 1.01895,
-        1
-    };
-
     static const FLOAT table2[] = {
         1.33352 * 1.33352, 1.35879 * 1.35879, 1.38454 * 1.38454, 1.39497 * 1.39497,
         1.40548 * 1.40548, 1.3537 * 1.3537, 1.30382 * 1.30382, 1.22321 * 1.22321,
@@ -509,51 +499,40 @@ vbrpsy_mask_add(FLOAT m1, FLOAT m2, int b)
         1
     };
 
-    int     i;
     FLOAT   ratio;
 
-    if (m1 < 0)
+    if (m1 < 0) {
         m1 = 0;
-    if (m2 < 0)
+    }
+    if (m2 < 0) {
         m2 = 0;
-    if (m1 <= 0 && m2 <= 0)
+    }
+    if (m1 <= 0 && m2 <= 0) {
         return 0;
-
+    }
     if (m2 > m1) {
-        if (m2 < (m1 * ma_max_i2)) {
-            ratio = m2 / m1;
-        }
-        else
-            return (m1 + m2);
+        ratio = m2 / m1;
     }
     else {
-        if (m1 >= (m2 * ma_max_i2))
-            return (m1 + m2);
         ratio = m1 / m2;
-    }
-
-    m1 += m2;
-
-    if ((unsigned int) (b + 3) <= 3 + 3) { /* approximately, 1 bark = 3 partitions */
-        /* 65% of the cases */
+    }    
+    if (-2 <= b && b <= 2) { /* approximately, 1 bark = 3 partitions */
         /* originally 'if(i > 8)' */
         if (ratio >= ma_max_i1) {
-            /* 43% of the total */
-            return m1;
+            return m1 + m2;
         }
-
-        /* 22% of the total */
-        i = (int) (FAST_LOG10_X(ratio, 16.0));
-        return m1 * table2[i];
+        else {
+            int     i = (int) (FAST_LOG10_X(ratio, 16.0));
+        return (m1 + m2) * table2[i];
+        }
     }
-
-    i = (int) FAST_LOG10_X(ratio, 16.0);
-
-    assert(i >= 0);
-    assert((size_t) i < dimension_of(table1));
-
-    /* 10% of total */
-    return m1 * table1[i];
+    if (ratio < ma_max_i2) {
+        return m1 + m2;
+    }
+    if (m1 < m2) {
+        m1 = m2;
+    }
+    return m1;
 }
 
 
@@ -2859,15 +2838,19 @@ psymodel_init(lame_global_flags * gfp)
         /* MINVAL.
            For low freq, the strength of the masking is limited by minval
            this is an ISO MPEG1 thing, dont know if it is really needed */
-        x = (-5.7 + bval[i] * 5.7 / 11.0);
-        if (bval[i] > 11) {
-            x *= 1+log(1+x)*3.1;
+        /* FIXME: it does work to reduce low-freq problems in S53-Wind-Sax
+           and lead-voice samples, but introduces some 3 kbps bit bloat too.
+           TODO: Further refinement of the shape of this hack.
+        */
+        x = -20 + bval[i] * 20 / 10;
+        if (x > 6) {
+            x = 100;
         }
-        if (bval[i] < 11) {
-            x *= 1+log(1-x)*.67;
+        if (x < -15) {
+            x = -15;
         }
-        x -= 8;
-        gfc->minval_l[i] = pow(10.0, x / 10) * gfc->numlines_l[i];
+        x -= 8.;
+        gfc->minval_l[i] = pow(10.0, x / 10.) * gfc->numlines_l[i];
     }
 
     /************************************************************************
@@ -2909,10 +2892,13 @@ psymodel_init(lame_global_flags * gfp)
            this is an ISO MPEG1 thing, dont know if it is really needed */
         x = (-7.0 + bval[i] * 7.0 / 12.0);
         if (bval[i] > 12) {
-            x *= 1+log(1+x)*3.0;
+            x *= 1+log(1+x)*3.1;
         }
         if (bval[i] < 12) {
-            x *= 1+log(1-x)*0.75;
+            x *= 1+log(1-x)*2.3;
+        }
+        if (x < -15) {
+            x = -15;
         }
         x -= 8;
         gfc->minval_s[i] = pow(10.0, x / 10) * gfc->numlines_s[i];

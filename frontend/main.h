@@ -47,12 +47,12 @@ extern mp3data_struct mp3input_data; /* used by MP3 */
 extern int print_clipping_info; /* print info whether waveform clips */
 extern int in_signed;
 extern int in_unsigned;
-#define order_littleEndian 0
-#define order_bigEndian 1
-#define order_unknown 2
-extern int in_endian;
 extern int in_bitwidth;
 extern int flush_write;
 
 #define         Min(A, B)       ((A) < (B) ? (A) : (B))
 #define         Max(A, B)       ((A) > (B) ? (A) : (B))
+
+
+enum ByteOrder { ByteOrderLittleEndian, ByteOrderBigEndian };
+extern enum ByteOrder in_endian;

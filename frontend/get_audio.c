@@ -115,11 +115,13 @@ min_size_t(size_t a, size_t b)
     return b;
 }
 
-static int
+enum ByteOrder machine_byte_order(void);
+
+enum ByteOrder
 machine_byte_order(void)
 {
     long one= 1;
-    return !(*((char *)(&one))) ? order_bigEndian : order_littleEndian;
+    return !(*((char *)(&one))) ? ByteOrderBigEndian : ByteOrderLittleEndian;
 }
 
 
@@ -996,8 +998,7 @@ static int
 read_samples_pcm(FILE * musicin, int sample_buffer[2304], int samples_to_read)
 {
     int     samples_read;
-    int     iswav = (input_format == sf_wave);
-    int     hi_lo_order;     /* byte order of input stream */
+    int     swap_byte_order;     /* byte order of input stream */
 
     switch (global.pcmbitwidth) {
     case 32:
@@ -1008,19 +1009,12 @@ read_samples_pcm(FILE * musicin, int sample_buffer[2304], int samples_to_read)
             exit(1);
         }
         {
-            if (in_endian != order_unknown) {
-                hi_lo_order = in_endian != machine_byte_order();
-            }
-            else {
-                /* assume only recognized wav files are */
-                /*  in little endian byte order */
-                hi_lo_order = !iswav;
-            }
+            swap_byte_order = (in_endian != ByteOrderLittleEndian) ? 1 : 0;
             if (global.pcmswapbytes) {
-                hi_lo_order = !hi_lo_order;
+                swap_byte_order = !swap_byte_order;
             }
             samples_read = unpack_read_samples(samples_to_read, global.pcmbitwidth / 8,
-                                               hi_lo_order, sample_buffer, musicin);
+                                               swap_byte_order, sample_buffer, musicin);
 
         }
         break;
