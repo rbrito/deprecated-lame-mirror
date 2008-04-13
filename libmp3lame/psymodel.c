@@ -1921,15 +1921,13 @@ vbrpsy_compute_masking_s(lame_global_flags const *gfp, FLOAT(*fftenergy_s)[HBLKS
         gfc->nb_s2[chn][b] = gfc->nb_s1[chn][b];
         gfc->nb_s1[chn][b] = ecb;
 
-        if (gfc->minval_s[b] < 0.9995) {
+        {
             /*  if THR exceeds EB, the quantization routines will take the difference
              *  from other bands. in case of strong tonal samples (tonaltest.wav)
              *  this leads to heavy distortions. that's why we limit THR here.
              */
             x = max[b];
-            x *= gfc->numlines_s[b];
             x *= gfc->minval_s[b];
-            x *= 0.158489319246111; /* pow(10,-0.8) */
             x *= avg_mask;
             if (thr[b] > x) {
                 thr[b] = x;
@@ -2050,15 +2048,13 @@ vbrpsy_compute_masking_l(lame_internal_flags * gfc, FLOAT fftenergy[HBLKSIZE], F
         }
         gfc->nb_2[chn][b] = gfc->nb_1[chn][b];
         gfc->nb_1[chn][b] = ecb;
-        if (gfc->minval_l[b] < .9995) {
+        {
             /*  if THR exceeds EB, the quantization routines will take the difference
              *  from other bands. in case of strong tonal samples (tonaltest.wav)
              *  this leads to heavy distortions. that's why we limit THR here.
              */
             x = max[b];
-            x *= gfc->numlines_l[b];
             x *= gfc->minval_l[b];
-            x *= 0.158489319246111; /* pow(10,-0.8) */
             x *= avg_mask;
             if (thr[b] > x) {
                 thr[b] = x;
@@ -2755,6 +2751,9 @@ psymodel_init(lame_global_flags * gfp)
     lame_internal_flags *const gfc = gfp->internal_flags;
     int     i, j, b, sb, k;
     int     use_old_s3 = 1;
+    FLOAT   bvl_a = 13, bvl_b = 24;
+    FLOAT   snr_l_a = 0, snr_l_b = 0;
+    FLOAT   snr_s_a = -8.25, snr_s_b = -4.5;
 
     FLOAT   bval[CBANDS];
     FLOAT   bval_width[CBANDS];
@@ -2771,6 +2770,13 @@ psymodel_init(lame_global_flags * gfp)
         break;
     case 2:
         use_old_s3 = 0;
+        break;
+    case 3:
+        bvl_a = 8;
+        snr_l_a = -1.75;
+        snr_l_b = -0.0125;
+        snr_s_a = -8.25;
+        snr_s_b = -2.25;
         break;
     }
     gfc->ms_ener_ratio_old = .25;
@@ -2814,7 +2820,12 @@ psymodel_init(lame_global_flags * gfp)
     assert(gfc->npart_l < CBANDS);
     /* compute the spreading function */
     for (i = 0; i < gfc->npart_l; i++) {
-        norm[i] = 1.0;
+        double  snr = snr_l_a;
+        if (bval[i] >= bvl_a) {
+            snr = snr_l_b * (bval[i] - bvl_a) / (bvl_b - bvl_a)
+                + snr_l_a * (bvl_b - bval[i]) / (bvl_b - bvl_a);
+        }
+        norm[i] = pow(10.0, snr / 10.0);
         if (gfc->numlines_l[i] > 0) {
             gfc->rnumlines_l[i] = 1.0 / gfc->numlines_l[i];
         }
@@ -2848,10 +2859,15 @@ psymodel_init(lame_global_flags * gfp)
         /* MINVAL.
            For low freq, the strength of the masking is limited by minval
            this is an ISO MPEG1 thing, dont know if it is really needed */
-        x = (-20 + bval[i] * 20.0 / 10.0);
-        if (bval[i] > 10)
-            x = 0;
-        gfc->minval_l[i] = pow(10.0, x / 10);
+        x = (-5.7 + bval[i] * 5.7 / 11.0);
+        if (bval[i] > 11) {
+            x *= 1+log(1+x)*3.1;
+        }
+        if (bval[i] < 11) {
+            x *= 1+log(1-x)*.67;
+        }
+        x -= 8;
+        gfc->minval_l[i] = pow(10.0, x / 10) * gfc->numlines_l[i];
     }
 
     /************************************************************************
@@ -2867,11 +2883,11 @@ psymodel_init(lame_global_flags * gfp)
     j = 0;
     for (i = 0; i < gfc->npart_s; i++) {
         double  x;
-        double  snr = -8.25;
-        if (bval[i] >= 13)
-            snr = -4.5 * (bval[i] - 13) / (24.0 - 13.0)
-                - 8.25 * (bval[i] - 24) / (13.0 - 24.0);
-
+        double  snr = snr_s_a;
+        if (bval[i] >= bvl_a) {
+            snr = snr_s_b * (bval[i] - bvl_a) / (bvl_b - bvl_a)
+                + snr_s_a * (bvl_b - bval[i]) / (bvl_b - bvl_a);
+        }
         norm[i] = pow(10.0, snr / 10.0);
 
         /* ATH */
@@ -2891,10 +2907,15 @@ psymodel_init(lame_global_flags * gfp)
         /* MINVAL.
            For low freq, the strength of the masking is limited by minval
            this is an ISO MPEG1 thing, dont know if it is really needed */
-        x = (-20 + bval[i] * 20.0 / 10.0);
-        if (bval[i] > 10)
-            x = 0;
-        gfc->minval_s[i] = pow(10.0, x / 10);
+        x = (-7.0 + bval[i] * 7.0 / 12.0);
+        if (bval[i] > 12) {
+            x *= 1+log(1+x)*3.0;
+        }
+        if (bval[i] < 12) {
+            x *= 1+log(1-x)*0.75;
+        }
+        x -= 8;
+        gfc->minval_s[i] = pow(10.0, x / 10) * gfc->numlines_s[i];
     }
 
     i = init_s3_values(&gfc->s3_ss, gfc->s3ind_s, gfc->npart_s, bval, bval_width, norm, use_old_s3);
