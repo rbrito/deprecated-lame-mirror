@@ -172,7 +172,7 @@ psfb21_analogsilence(lame_internal_flags const *gfc, gr_info * const cod_info)
             FLOAT   ath21;
             ath21 = athAdjust(ATH->adjust, ATH->psfb21[gsfb], ATH->floor);
 
-            if (NEQ(gfc->nsPsy.longfact[21], 0))
+            if (gfc->nsPsy.longfact[21] > 1e-12f)
                 ath21 *= gfc->nsPsy.longfact[21];
 
             for (j = end - 1; j >= start; j--) {
@@ -202,7 +202,7 @@ psfb21_analogsilence(lame_internal_flags const *gfc, gr_info * const cod_info)
                 FLOAT   ath12;
                 ath12 = athAdjust(ATH->adjust, ATH->psfb12[gsfb], ATH->floor);
 
-                if (NEQ(gfc->nsPsy.shortfact[12], 0))
+                if (gfc->nsPsy.shortfact[12] > 1e-12f)
                     ath12 *= gfc->nsPsy.shortfact[12];
 
                 for (j = end - 1; j >= start; j--) {

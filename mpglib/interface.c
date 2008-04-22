@@ -590,7 +590,7 @@ int decodeMP3_unclipped( PMPSTR mp,unsigned char *in,int isize,char *out,
                           int osize,int *done)
 {
         /* we forbid input with more than 1152 samples per channel for output in unclipped mode */
-        if(osize < 1152 * 2 * sizeof(real) ) {
+        if(osize < (int)(1152 * 2 * sizeof(real)) ) {
                 fprintf(stderr,"To less out space\n");
                 return MP3_ERR;
         }

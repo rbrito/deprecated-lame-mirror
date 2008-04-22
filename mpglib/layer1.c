@@ -22,6 +22,8 @@
 #include <dmalloc.h>
 #endif
 
+#include "layer1.h"
+
 static void 
 I_step_one(PMPSTR mp, unsigned int balloc[], unsigned int scale_index[2][SBLIMIT],struct frame *fr)
 {

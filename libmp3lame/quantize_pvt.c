@@ -664,7 +664,7 @@ calc_xmin(lame_global_flags const *gfp,
     max_nonzero = 575;
     if (cod_info->block_type != SHORT_TYPE) { /* NORM, START or STOP type, but not SHORT */
         k = 576;
-        while (k-- && NEQ(xr[k], 0)) {
+        while (k-- && EQ(xr[k], 0)) {
             max_nonzero = k;
         }
     }
