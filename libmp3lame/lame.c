@@ -1990,24 +1990,25 @@ lame_encode_flush(lame_global_flags * gfp, unsigned char *mp3buffer, int mp3buff
 int
 lame_close(lame_global_flags * gfp)
 {
-    lame_internal_flags *const gfc = gfp->internal_flags;
-
-    if (NULL == gfc || gfc->Class_ID != LAME_ID)
-        return -3;
-
-    gfc->Class_ID = 0;
-
-    /* this routien will free all malloc'd data in gfc, and then free gfc: */
-    freegfc(gfc);
-
-    gfp->internal_flags = NULL;
-
-    if (gfp->lame_allocated_gfp) {
-        gfp->lame_allocated_gfp = 0;
-        free(gfp);
+    int ret = 0;
+    if (gfp && gfp->class_id == LAME_ID) {
+        lame_internal_flags *const gfc = gfp->internal_flags;
+        gfp->class_id = 0;
+        if (NULL == gfc || gfc->Class_ID != LAME_ID) {
+            ret = -3;
+        }
+        if (NULL != gfc) {
+            gfc->Class_ID = 0;
+            /* this routine will free all malloc'd data in gfc, and then free gfc: */
+            freegfc(gfc);
+            gfp->internal_flags = NULL;
+        }
+        if (gfp->lame_allocated_gfp) {
+            gfp->lame_allocated_gfp = 0;
+            free(gfp);
+        }
     }
-
-    return 0;
+    return ret;
 }
 
 /*****************************************************************/
@@ -2071,10 +2072,12 @@ int
 lame_init_old(lame_global_flags * gfp)
 {
     lame_internal_flags *gfc;
-
+    
     disable_FPE();      /* disable floating point exceptions */
 
     memset(gfp, 0, sizeof(lame_global_flags));
+
+    gfp->class_id = LAME_ID;
 
     if (NULL == (gfc = gfp->internal_flags = calloc(1, sizeof(lame_internal_flags))))
         return -1;

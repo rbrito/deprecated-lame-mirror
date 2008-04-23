@@ -1899,7 +1899,6 @@ vbrpsy_compute_masking_s(lame_global_flags const *gfp, FLOAT(*fftenergy_s)[HBLKS
 #endif
         gfc->nb_s2[chn][b] = gfc->nb_s1[chn][b];
         gfc->nb_s1[chn][b] = ecb;
-
         {
             /*  if THR exceeds EB, the quantization routines will take the difference
              *  from other bands. in case of strong tonal samples (tonaltest.wav)

@@ -688,7 +688,8 @@ main(int argc, char **argv)
 #define MAX_NOGAP 200
     int     nogapout = 0;
     int     max_nogap = MAX_NOGAP;
-    char   *nogap_inPath[MAX_NOGAP];
+    char    nogap_inPath_[MAX_NOGAP][PATH_MAX+1];
+    char*   nogap_inPath[MAX_NOGAP];
 
     int     i;
     FILE   *outf;
@@ -722,8 +723,9 @@ main(int argc, char **argv)
     _wildcard(&argc, &argv);
 #endif
 
-    for (i = 0; i < max_nogap; ++i) {
-        nogap_inPath[i] = malloc(PATH_MAX + 1);
+    memset(nogap_inPath_, 0, sizeof(nogap_inPath_));
+    for (i = 0; i < MAX_NOGAP; ++i) {
+        nogap_inPath[i] = &nogap_inPath_[i][0];
     }
 
     memset(inPath, 0, sizeof(inPath));
@@ -843,8 +845,6 @@ main(int argc, char **argv)
                 close_infile(); /* close the input file */
 
             }
-            lame_close(gf);
-
         }
         else {
             /*
@@ -856,9 +856,9 @@ main(int argc, char **argv)
 
             fclose(outf); /* close the output file */
             close_infile(); /* close the input file */
-            lame_close(gf);
         }
     }
+    lame_close(gf);
     frontend_close_console();
     return ret;
 }
