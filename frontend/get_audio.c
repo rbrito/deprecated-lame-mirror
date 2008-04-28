@@ -611,7 +611,7 @@ OpenSndFile(lame_global_flags * gfp, char *inPath, int *enc_delay, int *enc_padd
             }
             exit(1);
         }
-        if (-1 == lame_decode_initfile(musicin, &mp3input_data, &enc_delay, &enc_padding)) {
+        if (-1 == lame_decode_initfile(musicin, &mp3input_data, enc_delay, enc_padding)) {
             if (silent < 10) {
                 error_printf("Error reading headers in mp3 input file %s.\n", lpszFileName);
             }
@@ -649,28 +649,11 @@ OpenSndFile(lame_global_flags * gfp, char *inPath, int *enc_delay, int *enc_padd
             gs_wfInfo.samplerate = lame_get_in_samplerate(gfp);
             gs_wfInfo.channels = lame_get_num_channels(gfp);
             gs_wfInfo.format = SF_FORMAT_RAW;
-            if (in_endian != order_unknown) {
-                if (in_endian == order_littleEndian) {
-                    gs_wfInfo.format |= SF_ENDIAN_LITTLE;
-                }
-                else {
-                    gs_wfInfo.format |= SF_ENDIAN_BIG;
-                }
+            if ((in_endian == ByteOrderLittleEndian) ^ (swapbytes != 0)) {
+                gs_wfInfo.format |= SF_ENDIAN_LITTLE;
             }
             else {
-                /* we will never get here. it seems in_endian is always either little or big endian */
-                if (machine_byte_order() == order_littleEndian) {
-                    if (swapbytes)
-                        gs_wfInfo.format |= SF_ENDIAN_BIG;
-                    else
-                        gs_wfInfo.format |= SF_ENDIAN_LITTLE;
-                }
-                else {
-                    if (swapbytes)
-                        gs_wfInfo.format |= SF_ENDIAN_LITTLE;
-                    else
-                        gs_wfInfo.format |= SF_ENDIAN_BIG;
-                }
+                gs_wfInfo.format |= SF_ENDIAN_BIG;
             }
             switch (in_bitwidth) {
             case 8:
@@ -691,7 +674,7 @@ OpenSndFile(lame_global_flags * gfp, char *inPath, int *enc_delay, int *enc_padd
             gs_pSndFileIn = sf_open(lpszFileName, SFM_READ, &gs_wfInfo);
         }
 
-        musicin = (SNDFILE *) gs_pSndFileIn;
+        musicin = (FILE *) gs_pSndFileIn;
 
         /* Check result */
         if (gs_pSndFileIn == NULL) {
