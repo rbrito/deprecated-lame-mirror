@@ -1,4 +1,19 @@
-lame (3.98-1) unstable; urgency=low
+lame (3.98~beta8+cvs20080514) unstable; urgency=low
+
+  * Fixing debian packaging details.
+  * debian/rules: put detection of architectures for cross-compilation.
+  * debian/rules: included support for noopt option.
+  * debian/rules: take more care of building everything under debian/tmp.
+  * debian/control: updated to Standards-Version 3.7.3 (no changes).
+  * debian/control: put correctly Conflicts: and Replaces in libmp3lame0{,-dev}.
+  * debian/lame.docs: remove TODO and sort by name.
+  * debian/libmp3lame0-dev.docs: include TODO.
+  * debian/libmp3lame0-dev: include liblame0.so in the package.
+  * debian/watch: include watchfile.
+
+ -- Rogério Brito <rbrito@users.sf.net>  Wed, 14 May 2008 01:44:46 -0300
+
+lame (3.98~alpha1) unstable; urgency=low
 
   * New upstream release with various improvements;
   * Use libsndfile for input files;
@@ -9,7 +24,7 @@ lame (3.98-1) unstable; urgency=low
 	
  -- Rogério Brito <rbrito@users.sf.net>  Wed, 09 Jan 2008 17:12:19 -0200
 
-lame (3.98-0.1) unstable; urgency=low
+lame (3.98~alpha0) unstable; urgency=low
 
   * debian/copyright: updated FSF real address;
   * debian/rules: small fixes;

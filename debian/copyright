@@ -1,12 +1,14 @@
 This package was originally debianized by Stefan Karrmann <S.Karrmann@gmx.net>
 on Thu, 31 Aug 2000 22:15:07 +0200.
 
-It was downloaded from <http://www.mp3dev.org>.
+The current maintainer is Rogério Brito <rbrito@users.sf.net>.
+
+It was downloaded from the CVS repository at <http://sf.net/projects/lame>.
 
 Upstream Authors: please, see the file html/contributors.html for a
 list of contributors to the lame project.
 
-Copyright:
+Copyright: 1999-2008 see html/contributors.html
 
     LAME is free software; you can redistribute it and/or
     modify it under the terms of the GNU Lesser General Public
@@ -49,3 +51,6 @@ GPL unless you obtain such permission from the MPG123 project (www.mpg123.de).
 
 On Debian systems, the complete text of the GNU Library
 General Public License can be found in `/usr/share/common-licenses/LGPL'.
+
+The Debian packaging is (C) 2005-2008, Rogério Brito <rbrito@users.sf.net>
+and is licensed under the GPL, see above.
