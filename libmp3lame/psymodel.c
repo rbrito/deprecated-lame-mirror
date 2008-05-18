@@ -974,20 +974,28 @@ calc_energy(lame_internal_flags const *gfc, FLOAT const *fftenergy,
     int     b, j;
 
     for (b = j = 0; b < gfc->npart_l; ++b) {
-        FLOAT   ebb = 0, m = 0;
-        int     i;
-        for (i = 0; i < gfc->numlines_l[b]; ++i, ++j) {
+        if (gfc->numlines_l[b] == 1) {
             FLOAT const el = fftenergy[j];
             assert(el >= 0);
-            ebb += el;
-            if (m < el)
-                m = el;
+            eb[b] = el;
+            max[b] = el;
+            avg[b] = el;
+        } else {
+            FLOAT   ebb = 0, m = 0;
+            int     i;
+            for (i = 0; i < gfc->numlines_l[b]; ++i, ++j) {
+                FLOAT const el = fftenergy[j];
+                assert(el >= 0);
+                ebb += el;
+                if (m < el)
+                    m = el;
+            }
+            eb[b] = ebb;
+            max[b] = m;
+            avg[b] = ebb * gfc->rnumlines_l[b];
+            assert(ebb >= 0);
         }
-        eb[b] = ebb;
-        max[b] = m;
-        avg[b] = ebb * gfc->rnumlines_l[b];
         assert(gfc->rnumlines_l[b] >= 0);
-        assert(ebb >= 0);
         assert(eb[b] >= 0);
         assert(max[b] >= 0);
         assert(avg[b] >= 0);
