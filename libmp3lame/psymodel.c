@@ -973,28 +973,29 @@ calc_energy(lame_internal_flags const *gfc, FLOAT const *fftenergy,
 {
     int     b, j;
 
-    for (b = j = 0; b < gfc->npart_l; ++b) {
-        if (gfc->numlines_l[b] == 1) {
+    for (b = j = 0; b < gfc->numlines_l_num1 ; ++b, ++j) {
+        eb[b] = fftenergy[j];
+        max[b] = fftenergy[j];
+        avg[b] = fftenergy[j];
+
+        assert(fftenergy[j] >= 0);
+        assert(gfc->rnumlines_l[b] >= 0);
+    }
+
+    for (b ; b < gfc->npart_l; ++b) {
+        FLOAT   ebb = 0, m = 0;
+        int     i;
+        for (i = 0; i < gfc->numlines_l[b]; ++i, ++j) {
             FLOAT const el = fftenergy[j];
+            ebb += el;
+            if (m < el)
+                m = el;
             assert(el >= 0);
-            eb[b] = el;
-            max[b] = el;
-            avg[b] = el;
-        } else {
-            FLOAT   ebb = 0, m = 0;
-            int     i;
-            for (i = 0; i < gfc->numlines_l[b]; ++i, ++j) {
-                FLOAT const el = fftenergy[j];
-                assert(el >= 0);
-                ebb += el;
-                if (m < el)
-                    m = el;
-            }
-            eb[b] = ebb;
-            max[b] = m;
-            avg[b] = ebb * gfc->rnumlines_l[b];
-            assert(ebb >= 0);
         }
+        eb[b] = ebb;
+        max[b] = m;
+        avg[b] = ebb * gfc->rnumlines_l[b];
+        assert(ebb >= 0);
         assert(gfc->rnumlines_l[b] >= 0);
         assert(eb[b] >= 0);
         assert(max[b] >= 0);
@@ -2563,7 +2564,7 @@ norm_s3_func(void)
 #endif
 
 static int
-init_numline(int *numlines, int *bo, int *bm,
+init_numline(int *numlines, int *numlines_num1, int *bo, int *bm,
              FLOAT * bval, FLOAT * bval_width, FLOAT * mld, FLOAT * bo_w,
              FLOAT sfreq, int blksize, int const *scalepos, FLOAT deltafreq, int sbmax)
 {
@@ -2573,9 +2574,11 @@ init_numline(int *numlines, int *bo, int *bm,
     int     partition[HBLKSIZE] = { 0 };
     int     i, j, k, ni;
     int     sfb;
+    int     b_num1 = 1;
     sfreq /= blksize;
     j = 0;
     ni = 0;
+    *numlines_num1 = 0;
     /* compute numlines, the number of spectral lines in each partition band */
     /* each partition band should be about DELBARK wide. */
     for (i = 0; i < CBANDS; i++) {
@@ -2589,6 +2592,11 @@ init_numline(int *numlines, int *bo, int *bm,
 
         numlines[i] = j2 - j;
         ni = i + 1;
+
+        if ((numlines[i] == 1) && b_num1)
+            (*numlines_num1)++;
+        else
+            b_num1 = 0;
 
         while (j < j2) {
             assert(j < HBLKSIZE);
@@ -2800,7 +2808,7 @@ psymodel_init(lame_global_flags * gfp)
      ************************************************************************/
     /* compute numlines, bo, bm, bval, bval_width, mld */
     gfc->npart_l
-        = init_numline(gfc->numlines_l, gfc->bo_l, gfc->bm_l,
+        = init_numline(gfc->numlines_l, &gfc->numlines_l_num1, gfc->bo_l, gfc->bm_l,
                        bval, bval_width, gfc->mld_l, gfc->PSY->bo_l_weight,
                        sfreq, BLKSIZE, gfc->scalefac_band.l, BLKSIZE / (2.0 * 576), SBMAX_l);
     assert(gfc->npart_l < CBANDS);
@@ -2864,7 +2872,7 @@ psymodel_init(lame_global_flags * gfp)
      * do the same things for short blocks
      ************************************************************************/
     gfc->npart_s
-        = init_numline(gfc->numlines_s, gfc->bo_s, gfc->bm_s,
+        = init_numline(gfc->numlines_s, &gfc->numlines_s_num1, gfc->bo_s, gfc->bm_s,
                        bval, bval_width, gfc->mld_s, gfc->PSY->bo_s_weight,
                        sfreq, BLKSIZE_s, gfc->scalefac_band.s, BLKSIZE_s / (2.0 * 192), SBMAX_s);
     assert(gfc->npart_s < CBANDS);
