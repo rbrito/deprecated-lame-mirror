@@ -4,7 +4,8 @@ include $(top_srcdir)/Makefile.am.global
 
 .PHONY: test
 
-SUBDIRS = mpglib libmp3lame frontend Dll debian doc include misc dshow ACM mac
+SUBDIRS = mpglib libmp3lame frontend Dll debian doc include misc dshow ACM \
+	mac macosx
 
 CLEANFILES = testcase.new.mp3
 
