@@ -30615,7 +30615,8 @@ FRONTEND_LDADD="${FRONTEND_LDADD} ${CONFIG_MATH_LIB}"
 
 
 
-ac_config_files="$ac_config_files Makefile libmp3lame/Makefile libmp3lame/i386/Makefile libmp3lame/vector/Makefile frontend/Makefile mpglib/Makefile doc/Makefile doc/html/Makefile doc/man/Makefile include/Makefile Dll/Makefile misc/Makefile debian/Makefile dshow/Makefile ACM/Makefile ACM/ADbg/Makefile ACM/ddk/Makefile ACM/tinyxml/Makefile lame.spec mac/Makefile"
+ac_config_files="$ac_config_files Makefile libmp3lame/Makefile libmp3lame/i386/Makefile libmp3lame/vector/Makefile frontend/Makefile mpglib/Makefile doc/Makefile doc/html/Makefile doc/man/Makefile include/Makefile Dll/Makefile misc/Makefile debian/Makefile dshow/Makefile ACM/Makefile ACM/ADbg/Makefile ACM/ddk/Makefile ACM/tinyxml/Makefile lame.spec mac/Makefile macosx/Makefile macosx/English.lproj/Makefile macosx/LAME.xcodeproj/Makefile"
+
 
 cat >confcache <<\_ACEOF
 # This file is a shell script that caches the results of configure
@@ -31272,6 +31273,9 @@ do
     "ACM/tinyxml/Makefile") CONFIG_FILES="$CONFIG_FILES ACM/tinyxml/Makefile" ;;
     "lame.spec") CONFIG_FILES="$CONFIG_FILES lame.spec" ;;
     "mac/Makefile") CONFIG_FILES="$CONFIG_FILES mac/Makefile" ;;
+    "macosx/Makefile") CONFIG_FILES="$CONFIG_FILES macosx/Makefile" ;;
+    "macosx/English.lproj/Makefile") CONFIG_FILES="$CONFIG_FILES macosx/English.lproj/Makefile" ;;
+    "macosx/LAME.xcodeproj/Makefile") CONFIG_FILES="$CONFIG_FILES macosx/LAME.xcodeproj/Makefile" ;;
 
   *) { { echo "$as_me:$LINENO: error: invalid argument: $ac_config_target" >&5
 echo "$as_me: error: invalid argument: $ac_config_target" >&2;}
