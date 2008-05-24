@@ -11,6 +11,840 @@
 
 -- 
 
+2008-05-24 08:37  aleidinger
+
+	* Makefile.in, configure:
+
+	regen
+
+2008-05-24 08:31  aleidinger
+
+	* macosx/: Makefile.in, English.lproj/Makefile.in,
+	  LAME.xcodeproj/Makefile.in:
+
+	regen
+
+2008-05-24 08:28  aleidinger
+
+	* configure.in, macosx/Makefile.am,
+	  macosx/English.lproj/Makefile.am,
+	  macosx/LAME.xcodeproj/Makefile.am:
+
+	Add some more macosx stuff
+
+2008-05-22 17:32  audiofileeng
+
+	* macosx/: English.lproj/InfoPlist.strings,
+	  LAME.xcodeproj/project.pbxproj:
+
+	adding files in subdirectories in macosx
+
+2008-05-22 06:26  aleidinger
+
+	* Makefile.am, configure.in, macosx/Makefile.am:
+
+	add the new macosx directory
+
+2008-05-21 03:05  audiofileeng
+
+	* macosx/: Info.plist, LAME_Prefix.pch:
+
+	added XCode framework project for Mac OS X
+
+2008-05-19 07:41  bouvigne
+
+	* libmp3lame/: psymodel.c, util.h:
+
+	faster calc_energy: don't loop if there is a single line within the band
+
+2008-05-18 17:49  bouvigne
+
+	* libmp3lame/psymodel.c:
+
+	faster calc_energy: dont' loop if there is a single line within the band
+
+2008-05-14 07:43  rbrito
+
+	* debian/watch:
+
+	New file for detecting new versions of the package.
+
+2008-05-14 07:42  rbrito
+
+	* debian/: changelog, control, copyright, lame.docs,
+	  libmp3lame0-dev.docs, libmp3lame0-dev.files, rules:
+
+	Updates to the Debian packaging.
+
+2008-04-28 20:32  robert
+
+	* frontend/get_audio.c:
+
+	fixing LIBSNDFILE compile problem found by Rogério Brito
+
+2008-04-23 01:50  robert
+
+	* frontend/main.c, frontend/parse.h, libmp3lame/lame.c,
+	  libmp3lame/lame_global_flags.h, libmp3lame/machine.h,
+	  libmp3lame/psymodel.c:
+
+	fix for bug-tracker item:[ 1948101 ] Memory not freed (lame-3.97, lame-3.98b8)
+	plus, we didn't call lame_close in decode-only case
+
+2008-04-22 23:01  robert
+
+	* libmp3lame/machine.h, libmp3lame/newmdct.c,
+	  libmp3lame/quantize.c, libmp3lame/quantize_pvt.c,
+	  mpglib/interface.c, mpglib/layer1.c:
+
+	fixing a problem if you are using --fast-math compiler switch
+
+2008-04-13 22:03  robert
+
+	* doc/html/history.html, libmp3lame/version.h:
+
+	updating history, we are now at 3.98 beta 8
+
+2008-04-13 21:27  robert
+
+	* frontend/get_audio.c, frontend/main.h, frontend/parse.c,
+	  libmp3lame/psymodel.c:
+
+	found some problem in Naoki's additive masking code and fixed it for VBR_NEW
+
+2008-04-13 13:45  robert
+
+	* testcase.mp3, frontend/get_audio.c:
+
+	changed compile-time test for machine byte order into run-time test,
+	this should solve issues PPC users seem to have
+
+2008-04-13 02:52  robert
+
+	* libmp3lame/psymodel.c:
+
+	some SNR testcode to try with -Z3
+
+2008-04-12 18:18  robert
+
+	* frontend/parse.c, frontend/timestatus.c, include/lame.def,
+	  include/lame.h, libmp3lame/VbrTag.c, libmp3lame/bitstream.c,
+	  libmp3lame/encoder.c, libmp3lame/fft.c,
+	  libmp3lame/gain_analysis.c, libmp3lame/id3tag.c,
+	  libmp3lame/lame.c, libmp3lame/lame_global_flags.h,
+	  libmp3lame/mpglib_interface.c, libmp3lame/newmdct.c,
+	  libmp3lame/presets.c, libmp3lame/psymodel.c,
+	  libmp3lame/quantize.c, libmp3lame/quantize_pvt.c,
+	  libmp3lame/reservoir.c, libmp3lame/set_get.c,
+	  libmp3lame/tables.c, libmp3lame/takehiro.c, libmp3lame/util.c,
+	  libmp3lame/vbrquantize.c:
+
+	extended VBR quality scale: 0, ..., 9.999 as floating point value
+
+2008-04-06 15:07  robert
+
+	* doc/html/history.html, frontend/main.c:
+
+	updating history.html
+
+2008-04-06 02:38  robert
+
+	* libmp3lame/lame_global_flags.h, libmp3lame/presets.c,
+	  libmp3lame/psymodel.c, libmp3lame/set_get.c,
+	  libmp3lame/version.h, mpglib/layer3.c:
+
+	some simpler spreading function for VBR NEW
+
+2008-04-05 17:38  robert
+
+	* Makefile.unix, frontend/brhist.c, frontend/brhist.h,
+	  frontend/main.c, frontend/parse.c, frontend/timestatus.c:
+
+	removing "#ifdef/#endif" from code bocks, which were always compiled in
+
+2008-04-05 17:13  robert
+
+	* lame.spec.in, debian/copyright, libmp3lame/id3tag.c, misc/abx.c,
+	  misc/lameGUI.html:
+
+	changing some links from "www.mp3dev.org/mp3" to "www.mp3dev.org"
+	and from "www.sulaco.org/mp3" to "www.mp3dev.org"
+
+2008-03-20 22:28  robert
+
+	* include/lame.h:
+
+	keep 'lame_mp3_tags_fid' alive at least for next stable release
+
+2008-03-12 11:23  robert
+
+	* libmp3lame/psymodel.c, vc_solution/vc9_libmp3lame.vcproj,
+	  vc_solution/vc9_libmp3lame_dll.vcproj,
+	  vc_solution/vc9_mpglib.vcproj:
+
+	bug fix: stack corruption in vbrpsy_compute_masking_s
+
+2008-03-11 21:57  robert
+
+	* libmp3lame/: set_get.c, vbrquantize.c:
+
+	fixing some more compiler warnings
+
+2008-03-11 21:17  robert
+
+	* libmp3lame/VbrTag.c, libmp3lame/fft.c, libmp3lame/id3tag.c,
+	  libmp3lame/lame.c, libmp3lame/mpglib_interface.c,
+	  libmp3lame/quantize.c, libmp3lame/takehiro.c, libmp3lame/util.c,
+	  libmp3lame/vbrquantize.c, vc_solution/vc9_libmp3lame.vcproj,
+	  vc_solution/vc9_libmp3lame_dll.vcproj:
+
+	fixing some more compiler warnings
+
+2008-03-11 00:56  robert
+
+	* libmp3lame/set_get.c:
+
+	fixing some more compiler warnings
+
+2008-03-11 00:21  robert
+
+	* vc_solution/vc9_libmp3lame.vcproj:
+
+	update for nasm file config
+
+2008-03-10 23:47  robert
+
+	* libmp3lame/: bitstream.c, encoder.c, gain_analysis.c, id3tag.c,
+	  lame.c, machine.h, mpglib_interface.c, newmdct.c, psymodel.c,
+	  quantize.c, quantize.h, quantize_pvt.c, quantize_pvt.h,
+	  set_get.c, util.h, vbrquantize.c, vbrquantize.h:
+
+	fixing some compiler warnings
+
+2008-03-09 22:37  robert
+
+	* frontend/parse.c:
+
+	for now, keep old ID3 tag switches passing raw character encoded strings
+	some experimental switches for Linux systems:
+
+	(ID3v1/ID3v2)
+	--lTtitle <some song title to be stored as Latin-1 string>
+	--lArtist <some artist to be stored as Latin-1 string>
+	--lAlbum <some album title to be stored as Latin-1 string>
+	--lGenre <some genre to be stored as Latin-1 string>
+	--lComment <some comment to be stored as Latin-1 string>
+	--lFieldvalue <some fieldvalue to be stored as Latin-1 string>
+
+	(ID3v2)
+	--uTitle <some song title to be store as UCS-2 string>
+	--uArtist <some artist to be stored as UCS-2 string>
+	--uAlbum <some album title to be stored as UCS-2 string>
+	--uGenre <some genre to be stored as UCS-2 string>
+	--uComment <some comment to be stored as UCS-2 string>
+
+2008-03-09 22:29  robert
+
+	* include/lame.h:
+
+	under Linux we need some C-library includes here (why not on Win32?)
+
+2008-03-09 19:31  robert
+
+	* libmp3lame/: takehiro.c, vbrquantize.c:
+
+	fixing some compiler warnings about:
+	- integer constant overflow
+	- signed/unsigned mismatch
+
+2008-03-09 17:13  robert
+
+	* Dll/BladeMP3EncDLL.c, dshow/aboutprp.cpp, frontend/brhist.c,
+	  frontend/mp3x.c, frontend/parse.c, include/lame.h:
+
+	removing unneccessary stdlib includes from lame.h
+
+2008-03-09 16:33  robert
+
+	* vc_solution/: vc9_lame_lame.vcproj, vc9_libmp3lame.vcproj,
+	  vc9_libmp3lame_dll.vcproj, vc9_nasm.rules:
+
+	adding NASM build rule
+
+2008-02-23 20:58  robert
+
+	* frontend/parse.c, libmp3lame/id3tag.c:
+
+	adding ICONV character conversion (NOT for WIN32), because ID3 tags have to
+	be in ISO Latin-1 or UCS-2 text encoding. Previously we wrote bytes into ID3
+	tags, as we got them from the commandline, in locale text encoding.
+
+	There are some experimental switches to store UCS-2 encoded ID3 tags:
+	--uArtist, --uAlbum, --uTitle, --uGenre and --uComment
+
+2008-02-23 12:58  robert
+
+	* libmp3lame/: id3tag.c, id3tag.h, util.c:
+
+	locate and replace {TXXX,COMM} field if LANGUAGE and DESCRIPTION match new one
+
+2008-02-22 02:48  robert
+
+	* libmp3lame/: id3tag.c, id3tag.h, util.c:
+
+	preparing unicode id3v2 tags
+
+2008-02-22 02:38  robert
+
+	* libmp3lame/: lame.c, vbrquantize.c, version.c:
+
+	fixing some compiler warnings
+
+2008-02-20 03:04  robert
+
+	* vc_solution/vc9_lame_dll_example.vcproj:
+
+	VC9 Solution files
+
+2008-02-20 02:40  robert
+
+	* vc_solution/vc9_lame_dshow.vcproj:
+
+	VC9 Solution files
+
+2008-02-20 01:53  robert
+
+	* vc_solution/vc9_lame_acm.vcproj:
+
+	VC9 Solution files
+
+2008-02-20 00:38  robert
+
+	* vc_solution/: .cvsignore, vc9_lame.sln, vc9_lame_acm.vcproj,
+	  vc9_lame_acm_adbg.vcproj, vc9_lame_acm_tinyxml.vcproj,
+	  vc9_lame_clients.sln, vc9_lame_dll.vcproj,
+	  vc9_lame_dll_example.vcproj, vc9_lame_dshow.vcproj,
+	  vc9_lame_lame.vcproj, vc9_lame_mp3x.vcproj,
+	  vc9_libmp3lame.vcproj, vc9_libmp3lame_dll.vcproj,
+	  vc9_mpglib.vcproj:
+
+	VC9 Solution files
+
+2008-02-15 01:27  robert
+
+	* Dll/BladeMP3EncDLL.c:
+
+	use new API function for LAME-tag frame update
+
+2008-02-15 00:23  robert
+
+	* libmp3lame/VbrTag.c:
+
+	let the dummy Xing frame have a valid mp3 sync word
+
+2008-02-10 18:38  robert
+
+	* libmp3lame/id3tag.c, include/lame.def, include/lame.h:
+
+	fixes:
+	id3tag.c - some block scope missing
+	lame.h, lame.def: - some exported function was missing
+
+2008-02-10 17:35  robert
+
+	* frontend/main.c, include/lame.def, include/lame.h,
+	  libmp3lame/VbrTag.c, libmp3lame/VbrTag.h, libmp3lame/id3tag.c,
+	  libmp3lame/lame.c, libmp3lame/lame_global_flags.h,
+	  libmp3lame/set_get.c, libmp3lame/version.h:
+
+	Adding some new API functions
+	- to en-/dis- able automatic ID3 tag writing into audio stream (default on):
+
+	  void CDECL lame_set_write_id3tag_automatic(lame_global_flags * gfp, int);
+	  int CDECL lame_get_write_id3tag_automatic(lame_global_flags const* gfp);
+
+	- to query ID3 tags into a buffer:
+
+	  size_t CDECL lame_get_id3v1_tag(
+	        lame_global_flags * gfp, unsigned char* buffer, size_t size);
+	  size_t CDECL lame_get_id3v2_tag(
+	        lame_global_flags * gfp, unsigned char* buffer, size_t size);
+
+	- to query the final Xing/LAME tag frame into a buffer:
+	  size_t CDECL lame_get_lametag_frame(
+	        const lame_global_flags *, unsigned char* buffer, size_t size);
+
+	Those new functions allow to encode a complete input file into RAM first,
+	before writing it into a file/socket/whatever...
+
+2008-02-03 14:28  robert
+
+	* libmp3lame/psymodel.c:
+
+	VBRPSY: don't use ATH in 'additive masking' function
+
+2008-01-09 20:46  rbrito
+
+	* debian/: changelog, compat, control, rules:
+
+	Updated the Debian packaging.
+
+2008-01-06 16:46  robert
+
+	* libmp3lame/: lame.c, quantize.c:
+
+	VBR-NEW can be mixed with free format now. The result will be a free format
+	stream using VBR-NEW quantization routine.
+
+	note: following free format bitrates are maximum bitrates which make sense:
+	samplerate:   8  11  12  16  22  24  32  44  48
+	kbps        109 151 164 218 301 327 435 600 640(652)
+
+	Using the maximum bitrate one may look and see how the VBR code behaves
+	when the bitrate pressure is lowered to the theoretical minimum, like:
+	  lame -V0 -b600 --freeformat x.wav x.mp3
+
+2008-01-03 00:03  aleidinger
+
+	* configure:
+
+	regenerate with autoconf 2.61
+
+2008-01-03 00:02  aleidinger
+
+	* Makefile.in, ACM/Makefile.in, ACM/ADbg/Makefile.in,
+	  ACM/ddk/Makefile.in, ACM/tinyxml/Makefile.in, Dll/Makefile.in,
+	  debian/Makefile.in, doc/Makefile.in, doc/html/Makefile.in,
+	  doc/man/Makefile.in, dshow/Makefile.in, frontend/Makefile.in,
+	  include/Makefile.in, libmp3lame/Makefile.in,
+	  libmp3lame/i386/Makefile.in, libmp3lame/vector/Makefile.in,
+	  mac/Makefile.in, misc/Makefile.in, mpglib/Makefile.in:
+
+	regenerate with automake 1.10
+
+2008-01-03 00:01  aleidinger
+
+	* aclocal.m4:
+
+	update with stuff from more recent autotools
+
+2008-01-03 00:00  aleidinger
+
+	* ltmain.sh:
+
+	update to a libtool 1.5.24 version
+
+2008-01-02 23:58  aleidinger
+
+	* configure.in:
+
+	After installing sndfile:
+	 - fix SNDFILE_xxx
+
+	Give a better failure description for some errors (sizeof check).
+
+	If there are intXX_t but no uintXX_t, use the intXX_t with "unsigned" instead
+	of trying to find the right K&R-C integral type.
+
+	Use macho as the format type for NASM on OSX, but disable the nasm use by
+	default there, as there seems to be a problem with the nasm code on OSX.
+
+2008-01-02 22:00  aleidinger
+
+	* configure.in:
+
+	- If SNDFILE_xxx are defined and the fileio is sndfile, then assume the
+	  user is knowing what he does (some systems don't have pkg-config but
+	  have sndfile).
+	- Fix the problem case where SNDFILE_CFLAGS has spaces at the beginning.
+
+2008-01-02 20:30  robert
+
+	* libmp3lame/id3tag.c:
+
+	fix for tracker item: [ 1861450 ] TLEN tag fixed on encode from stdin with ID3v2 tags
+
+2007-12-26 22:04  robert
+
+	* ACM/ACMStream.cpp, Dll/BladeMP3EncDLL.c:
+
+	removing obsolete function calls
+
+2007-12-26 13:12  robert
+
+	* Makefile.MSVC, frontend/parse.c, include/lame.h,
+	  libmp3lame/encoder.c, libmp3lame/lame.c,
+	  libmp3lame/lame_global_flags.h, libmp3lame/presets.c,
+	  libmp3lame/psymodel.c, libmp3lame/psymodel.h,
+	  libmp3lame/quantize.c, libmp3lame/quantize_pvt.c,
+	  libmp3lame/set_get.c, libmp3lame/set_get.h, libmp3lame/util.h:
+
+	removing dead code
+
+2007-12-25 16:15  robert
+
+	* libmp3lame/vbrquantize.c:
+
+	some small code simplification
+
+2007-12-25 00:16  robert
+
+	* libmp3lame/: presets.c, psymodel.c:
+
+	clean code from obsolete branches
+
+2007-12-24 16:00  robert
+
+	* frontend/parse.c, libmp3lame/lame.c, libmp3lame/psymodel.c,
+	  libmp3lame/quantize_pvt.c, libmp3lame/quantize_pvt.h,
+	  libmp3lame/set_get.c, libmp3lame/takehiro.c, libmp3lame/util.h,
+	  libmp3lame/vbrquantize.c:
+
+	- removing legacy ISO quantization code
+	- vbr-new now has only two -qx settings left: q0 and q5
+	- vbr-new can't use legacy GPSYCHO anymore
+
+	TODO:
+	+ remove legacy GPSYCHO code, as we don't use it anymore
+	+ remove superflouos psy-model selection switches
+	+ remove superflouos psy-model configuration switches like --cwlimit
+
+2007-12-20 14:44  robert
+
+	* libmp3lame/vbrquantize.c:
+
+	in rare cases, where one channel is completely zero, some illegal "scalefactor
+	selection info" might be used in VBR-NEW. fixed
+
+2007-12-17 20:54  robert
+
+	* doc/html/history.html:
+
+	fixing typo
+
+2007-12-17 00:08  robert
+
+	* libmp3lame/vbrquantize.c:
+
+	fixing typo
+
+2007-12-16 17:56  robert
+
+	* doc/html/history.html, libmp3lame/psymodel.c:
+
+	disabling the use of the "interchannel masking feature" in dual-channel case
+
+2007-12-16 17:18  robert
+
+	* libmp3lame/: psymodel.c, vbrquantize.c:
+
+	VBR-NEW:
+	-quantization: another "out of bits" strategy
+	-psymodel: dropped "inter channel effect", because the effect doesn't save
+	 many bits, but raises the chance of annoying artefacts a lot.
+
+2007-12-14 02:52  robert
+
+	* libmp3lame/psymodel.c:
+
+	found new test sample SNAPS which needs some more short blocks
+
+2007-12-09 22:47  robert
+
+	* libmp3lame/: encoder.c, lame.c, presets.c, psymodel.c,
+	  psymodel.h, quantize_pvt.c, util.h:
+
+	merger from test branch:
+	- features a new psy model, a modification from NSPSY
+
+	VBR NEW uses the new psy model, unless you call lame with --nspsytune, or
+	the developer only switch --psymodel x, with x in {1,2}
+
+	features of the new psy model:
+	- speed: it does determine the resulting block type before doing the fft
+	  and other psy stuff and will calc long/short blocks only as necessary
+	- interchannel masking effect: it will be calculated after the mid-side fix
+	  and it's working on convolution bands, instead of scalefactor bands
+	- mid-side fix: calculated on convolution bands, instead of sf bands
+	- mask_adjust feature: it's now used earlier in the convolution calculation
+
+2007-12-09 17:06  robert
+
+	* libmp3lame/psymodel.c (rh0710_test):
+
+	some fixes, ie. the short block pre-echo control was applied twice
+
+2007-12-08 23:27  robert
+
+	* libmp3lame/: encoder.c, lame.c, presets.c, psymodel.c,
+	  psymodel.h, quantize_pvt.c, util.h (rh0710_test):
+
+	modified psy model for vbr-new
+
+2007-11-26 00:14  robert
+
+	* Makefile.unix, frontend/get_audio.c, frontend/parse.c,
+	  libmp3lame/psymodel.c, libmp3lame/vbrquantize.c:
+
+	psymodel.c:
+	- bug fix in init_numlines: it returned sometimes a too large npart_[sl]
+	- fixing some more compiler warnings
+	get_audio.c:
+	- some fix in error-report in case of unsupported input format
+
+2007-11-25 23:38  robert
+
+	* Makefile.unix, libmp3lame/presets.c, libmp3lame/psymodel.c,
+	  libmp3lame/quantize.c, libmp3lame/quantize_pvt.h,
+	  libmp3lame/util.h, libmp3lame/vbrquantize.c (rh0710_test):
+
+	re-tuning
+
+2007-11-21 21:30  robert
+
+	* libmp3lame/: quantize.c, quantize_pvt.h:
+
+	bug fix for bin_search_StepSize. It returned illegal values, leading to
+	assertion failures in fast encoding mode, which only adjusts global step size.
+
+2007-11-12 10:46  robert
+
+	* libmp3lame/: psymodel.c, util.h, vbrquantize.c (rh0710_test):
+
+	- inter channel masking now on convolution bands
+	- mid/side fix now on convolution bands
+
+2007-11-08 01:13  robert
+
+	* Makefile.unix, frontend/parse.c, libmp3lame/psymodel.c,
+	  libmp3lame/quantize_pvt.c (rh0710_test):
+
+	moving masking_lower adjustment into psymodel.c (for vbr-new)
+
+2007-11-03 14:04  robert
+
+	* frontend/get_audio.c, libmp3lame/presets.c, libmp3lame/psymodel.c
+	  (rh0710_test):
+
+	limiting the sandpaper-noise hack to the minval range (ca. 1.2 kHz)
+
+2007-11-01 20:28  robert
+
+	* doc/man/lame.1, frontend/get_audio.c, frontend/parse.c
+	  (rh0710_test):
+
+	adding main branch fixes
+
+2007-11-01 19:52  robert
+
+	* frontend/get_audio.c:
+
+	enabling --signed / --unsigned switches for 8 bit raw pcm input data
+
+2007-11-01 19:25  robert
+
+	* frontend/: get_audio.c, parse.c:
+
+	[ 1823881 ] lame 3.97 produces complete garbage
+	now invalid WAV/AIFF files are rejected, instead of trying to encode them as
+	raw pcm files.
+
+2007-11-01 19:23  robert
+
+	* doc/man/lame.1:
+
+	[ 1158193 ] Man page doesn't tell about stereo format in raw
+	[ 1158253 ] Data format is not described in the manpage
+	added some info to manpage
+
+2007-11-01 19:16  robert
+
+	* libmp3lame/lame.c:
+
+	bitrate_index may have been uninitialized under some rare circumstances
+
+2007-10-25 01:59  robert
+
+	* libmp3lame/lame.c (rh0710_test):
+
+	fixing some bad initialed value gfc->bitrate_index
+
+2007-10-24 02:04  robert
+
+	* libmp3lame/psymodel.c:
+
+	back to the roots. Maybe I'll branch from here
+
+2007-10-23 23:23  robert
+
+	* libmp3lame/vbrquantize.c:
+
+	turn of scalefac scale feature
+
+2007-10-23 02:46  robert
+
+	* libmp3lame/psymodel.c:
+
+	yeah, ok it's C and not C++
+	open block scope for local variable
+
+2007-10-23 02:31  robert
+
+	* libmp3lame/: psymodel.c, vbrquantize.c:
+
+	dropping Naoki's idea of "simultaneous masking addition" for the newer VBR code
+	for now
+
+2007-10-22 12:00  robert
+
+	* libmp3lame/: presets.c, psymodel.c:
+
+	re-establishing previous mask adjustments
+
+2007-10-21 00:45  robert
+
+	* libmp3lame/: lame.c, presets.c, psymodel.c, quantize.c,
+	  version.h:
+
+	recalibration of VBR new's compression level settings, because of recent bug fixes
+
+2007-10-19 00:10  robert
+
+	* Makefile.unix:
+
+	moving GTK config script to MP3x target compilation, it's not needed outside MP3x
+
+2007-10-18 02:54  robert
+
+	* frontend/get_audio.c:
+
+	seems, VC compiler doesn't like redundant semicolon, fixed
+
+2007-10-18 02:09  robert
+
+	* libmp3lame/: machine.h, psymodel.c, quantize.c, set_get.c:
+
+	PSY: the newer vbr code uses tonalality estimation from long blocks for short blocks
+
+2007-10-16 01:07  robert
+
+	* doc/html/history.html, frontend/get_audio.c:
+
+	Fix for bugtracker item: [ 1813496 ] AIFF parsing bug
+
+2007-10-14 20:18  robert
+
+	* frontend/get_audio.c, libmp3lame/id3tag.h, libmp3lame/util.c:
+
+	some more compiler and compiler-warning fixes
+
+2007-10-14 19:54  robert
+
+	* frontend/get_audio.c, frontend/get_audio.h, frontend/mp3x.c,
+	  frontend/parse.c, frontend/portableio.c, include/lame.h,
+	  libmp3lame/bitstream.c, libmp3lame/id3tag.c, libmp3lame/lame.c,
+	  libmp3lame/quantize.c, libmp3lame/quantize_pvt.c,
+	  libmp3lame/set_get.c, libmp3lame/takehiro.c, libmp3lame/util.c,
+	  libmp3lame/vector/xmm_quantize_sub.c:
+
+	eliminating some of the several hundred compiler warnings
+
+2007-10-14 14:16  robert
+
+	* doc/html/history.html:
+
+	updating history to latest changes:
+	- bug fix scalefactor selection in vbr new code
+	- feature added: WAVE_FORMAT_EXTENSIBLE
+
+2007-10-14 13:33  robert
+
+	* frontend/get_audio.c:
+
+	feature request [ 1811483 ] WAVE_FORMAT_EXTENSIBLE support
+
+	We still support PCM wave files only with our little wave reader,
+	it is just that we now accept them when written in wave format extensible.
+
+2007-10-13 20:34  robert
+
+	* libmp3lame/vbrquantize.c:
+
+	Bug-fix: the quantization-find-routine could under some circumstances return
+	some way too large quantization step size. For example, the song Piku from
+	The Chemical Brothers had almost 550 scalefactors wrong. For most songs this
+	fix makes no difference.
+
+2007-10-08 20:59  robert
+
+	* frontend/brhist.c:
+
+	replaced variable 'lines' by 'lines_used', because term.h has some macro
+	definition for 'lines'.
+
+2007-09-29 19:17  robert
+
+	* libmp3lame/vbrquantize.c:
+
+	- Removing dead code.
+	- Avoiding unnecessary search for quantization step sizes. This speeds-up lower quality encodings.
+	  If energy is below masking threshold, the resulting step size will be at 255. So no need to search what we already know.
+
+2007-08-29 13:44  aleidinger
+
+	* configure:
+
+	regen
+
+2007-08-29 13:43  aleidinger
+
+	* configure.in:
+
+	Don't change the include/library path, if there's no corresponding soundfile
+	path set.
+
+	This is supposed to fix the compile problem with soundfile Rogério sees on
+	Debian.
+
+2007-08-20 21:54  robert
+
+	* Makefile.MSVC:
+
+	removing duplicate target_dir references
+
+2007-08-12 18:30  robert
+
+	* Makefile.MSVC:
+
+	let targets link against multi threaded C-library
+
+2007-08-12 00:07  robert
+
+	* doc/html/history.html, libmp3lame/vbrquantize.c,
+	  libmp3lame/version.h:
+
+	small speedup in VBR NEW
+
+	we are now at 3.98 beta 5, a release candidate for 3.98 stable?
+
+2007-08-11 23:06  robert
+
+	* testcase.mp3:
+
+	updating "testcase.mp3" for LAME 3.98 beta 5
+
+2007-08-11 21:44  robert
+
+	* libmp3lame/psymodel.c:
+
+	Short block masking: the CBR/ABR code seems to rely on the old masking definition. The VBR NEW code on the other hand needs the lowered masking.
+
+2007-07-30 06:51  aleidinger
+
+	* ChangeLog:
+
+	Add the changelog for the last ~10 months.
+
 2007-07-30 06:39  aleidinger
 
 	* configure:
@@ -268,15 +1102,6 @@
 
 	bug fix: [ 1730875 ] TLEN calculation wrong
 	fixing the calculation of "playlength in ms" written into the ID3v2 tag TLEN
-
-2007-05-30 23:17  rjamorim
-
-	* logo/: logoERGB.ai, logoEncodedRGB.ai, logoPDF.pdf, logoRGB.ai,
-	  logoRGB.eps, logoRGB.svg, logoe.ai, logoe.eps, logoe.svg,
-	  logofull.ai, logofull.eps, logofull.svg, logomini.ai,
-	  logomini.eps, logomini.svg:
-
-	Initial import of the Lame logo in several vectorial formats
 
 2007-05-25 03:38  robert
 
