@@ -9,7 +9,7 @@
  *
  *  Note: several 'decoding' utilites must be on the 'right' place
  *
- *  Bugs: 
+ *  Bugs:
  *      fix path of decoding utilities
  *      only 16 bit support
  *      only support of the same sample frequency
@@ -34,7 +34,7 @@
  *      Gr��e cross corr fenster 2^16...18
  *      Stellensuche, ab 0*len oder 0.1*len oder 0.25*len, nach Effektiv oder Spitzenwert
  *      Absturz bei LPAC feeding, warum?
- *      Als 'B' beim Ratespiel sollte auch '0'...'9' verwendbar sein 
+ *      Als 'B' beim Ratespiel sollte auch '0'...'9' verwendbar sein
  *      Oder mit einem Filter 300 Hz...3 kHz vorher filtern?
  *      Multiple encoded differenziertes Signal
  *      Amplitudenanpassung schaltbar machen?
@@ -42,7 +42,7 @@
  *      abx "test.wav" "!lame -b128 test.wav -"
  */
 
-// If the program should increase it priority while playing define USE_NICE. 
+// If the program should increase it priority while playing define USE_NICE.
 // Program must be installed SUID root. Decompressing phase is using NORMAL priority
 #define USE_NICE
 
@@ -132,16 +132,16 @@ void reset ( void )
 void set ( void )
 {
     struct termios new_settings;
-    
+
     tcgetattr ( 0, &stored_settings );
     new_settings = stored_settings;
-    
+
     new_settings.c_lflag    &= ~ECHO;
     /* Disable canonical mode, and set buffer size to 1 byte */
     new_settings.c_lflag    &= ~ICANON;
     new_settings.c_cc[VTIME] = 0;
     new_settings.c_cc[VMIN]  = 1;
-    
+
     tcsetattr(0,TCSANOW,&new_settings);
     return;
 }
@@ -154,19 +154,19 @@ int sel ( void )
     int             ret;
     unsigned char   c;
 
-    FD_SET (0, fd);    
+    FD_SET (0, fd);
     t.tv_sec  = 0;
     t.tv_usec = 0;
 
     ret = select ( 1, fd, NULL, NULL, &t );
-    
+
     switch ( ret ) {
-    case  0: 
+    case  0:
         return -1;
-    case  1: 
+    case  1:
         ret = read (0, &c, 1);
         return ret == 1  ?  c  :  -1;
-    default: 
+    default:
         return -2;
     }
 }
@@ -278,7 +278,7 @@ int  fft ( compl* fn, const size_t newlen )
 void  printnumber ( long double x )
 {
     unsigned  exp = 0;
-    
+
     if      ( x < 9.999995  ) fprintf ( stderr, "%7.5f",  (double)x );
     else if ( x < 99.99995  ) fprintf ( stderr, "%7.4f",  (double)x );
     else if ( x < 999.9995  ) fprintf ( stderr, "%7.3f",  (double)x );
@@ -307,7 +307,7 @@ void  printnumber ( long double x )
 double logdual ( long double x )
 {
     unsigned exp = 0;
-    
+
     while ( x >= 18446744073709551616. )
         x /= 18446744073709551616., exp += 64;
     while ( x >= 256. )
@@ -340,12 +340,12 @@ long double  prob ( int last, int total )
     long double  tmp = 1.;
     int          i;
     int          j   = total;
-    
+
     if ( 2*last == total )
         return 1.;
     if ( 2*last > total )
         last = total - last;
-        
+
     for ( i = 0; i <= last; i++ ) {
         sum += tmp;
         tmp  = tmp * (total-i) / (1+i);
@@ -364,12 +364,12 @@ void  eval ( int right )
     static int   count = 0;
     static int   okay  = 0;
     long double  val;
-    
+
     count ++;
     okay  += right;
-    
+
     val    = 1.L / prob ( okay, count );
-    
+
     fprintf (stderr, "   %s %5u/%-5u ", right ? "OK" : "- " , okay, count );
     printnumber (val);
     if ( count > 1 )
@@ -396,9 +396,9 @@ void  analyze_stereo ( const stereo_t* p1, const stereo_t* p2, size_t len, korr_
     long double  _x = 0, _x2 = 0, _y = 0, _y2 = 0, _xy = 0;
     double       t1;
     double       t2;
-    
+
     k -> n  += 2*len;
-    
+
     for ( ; len--; p1++, p2++ ) {
         _x  += (t1 = (*p1)[0]); _x2 += t1 * t1;
         _y  += (t2 = (*p2)[0]); _y2 += t2 * t2;
@@ -407,7 +407,7 @@ void  analyze_stereo ( const stereo_t* p1, const stereo_t* p2, size_t len, korr_
         _y  += (t2 = (*p2)[1]); _y2 += t2 * t2;
                                 _xy += t1 * t2;
     }
-    
+
     k -> x  += _x ;
     k -> x2 += _x2;
     k -> y  += _y ;
@@ -420,7 +420,7 @@ int  sgn ( double x )
     if ( x == 0 ) return 0;
     if ( x <  0 ) return -1;
     return +1;
-}    
+}
 
 long double  report ( const korr_t* const k )
 {
@@ -430,14 +430,14 @@ long double  report ( const korr_t* const k )
     long double  x;
     long double  y;
     long double  b;
-    
+
     r  = (k->x2*k->n - k->x*k->x) * (k->y2*k->n - k->y*k->y);
     r  = r  > 0.l  ?  (k->xy*k->n - k->x*k->y) / sqrt (r)  :  1.l;
     sx = k->n > 1  ?  sqrt ( (k->x2 - k->x*k->x/k->n) / (k->n - 1) )  :  0.l;
     sy = k->n > 1  ?  sqrt ( (k->y2 - k->y*k->y/k->n) / (k->n - 1) )  :  0.l;
     x  = k->n > 0  ?  k->x/k->n  :  0.l;
     y  = k->n > 0  ?  k->y/k->n  :  0.l;
-    
+
     b  = sx != 0   ?  sy/sx * sgn(r)  :  0.l;
     if (verbose)
         fprintf ( stderr, "r=%Lf  sx=%Lf  sy=%Lf  x=%Lf  y=%Lf  b=%Lf\n", r, sx, sy, x, y, b );
@@ -463,7 +463,7 @@ int  feed2 ( int fd, const stereo_t* p1, const stereo_t* p2, int len )
 {
     stereo_t  tmp [30000];   /* An arbitrary size, hope that no overruns occure */
     int       i;
-    
+
     if (len > sizeof(tmp)/sizeof(*tmp))
         len = sizeof(tmp)/sizeof(*tmp);
     for ( i = 0; i < len; i++ ) {
@@ -482,7 +482,7 @@ int feedfac ( int fd, const stereo_t* p1, const stereo_t* p2, int len, double fa
 {
     stereo_t  tmp [30000];   /* An arbitrary size, hope that no overruns occure */
     int       i;
-    
+
     if (len > sizeof(tmp)/sizeof(*tmp))
         len = sizeof(tmp)/sizeof(*tmp);
     for ( i = 0; i < len; i++ ) {
@@ -613,7 +613,7 @@ void testing ( const stereo_t* A, const stereo_t* B, size_t len, long freq )
         case 'M' :
             state = (state & 1) + 4;
             break;
-            
+
         case 'x'&0x1F:
             state = (state & 1) + 6;
             break;
@@ -791,7 +791,7 @@ void testing ( const stereo_t* A, const stereo_t* B, size_t len, long freq )
                 index += feed2 (fd, A+index, B+index, BF );
             state = 1;
             break;
-            
+
         case 4: /* A */
             strcpy ( message, "A  " );
             if ( index + BF >= stop )
@@ -855,7 +855,7 @@ void testing ( const stereo_t* A, const stereo_t* B, size_t len, long freq )
             else
                 index += feedfac (fd, A+index, B+index, BF        , fac1, fac2 );
             break;
-            
+
         default:
             assert (0);
         }
@@ -915,8 +915,8 @@ const decoder_t  decoder [] = {
     { ".flac"   , PATH"flac -c -d %s"                          REDIR },  // Free Lossless Audio Coder: flac.sourceforge.net/
     { ".fla"    , PATH"flac -c -d %s"                          REDIR },  // Free Lossless Audio Coder: flac.sourceforge.net/
     { ".ape"    , "( "PATH"MAC %s _._.wav -d > /dev/null; cat _._.wav; rm _._.wav )"  REDIR },  // Monkey's Audio Codec : www.monkeysaudio.com (email@monkeysaudio.com)
-    { ".rka"    , "( "PATH"rkau %s _._.wav   > /dev/null; cat _._.wav; rm _._.wav )"  REDIR },  // RK Audio:              
-    { ".rkau"   , "( "PATH"rkau %s _._.wav   > /dev/null; cat _._.wav; rm _._.wav )"  REDIR },  // RK Audio:              
+    { ".rka"    , "( "PATH"rkau %s _._.wav   > /dev/null; cat _._.wav; rm _._.wav )"  REDIR },  // RK Audio:
+    { ".rkau"   , "( "PATH"rkau %s _._.wav   > /dev/null; cat _._.wav; rm _._.wav )"  REDIR },  // RK Audio:
     { ".mod"    , "xmp -b16 -c -f44100 --stereo -o- %s | sox -r44100 -sw -c2 -traw - -twav -sw -"
                                                                REDIR },  // Amiga's Music on Disk:
     { ""        , "sox %s -twav -sw -"                         REDIR },  // Rest, may be sox can handle it
@@ -941,7 +941,7 @@ int  readwave ( stereo_t* buff, size_t maxlen, const char* name, size_t* len )
     if ( name[i] == '-' )
         name_q[j++] = '.',
         name_q[j++] = '/';
-        
+
     while (name[i]) {
         if ( !isalnum (name[i]) && name[i]!='-' && name[i]!='_' && name[i]!='.' )
             name_q[j++] = '\\';
@@ -962,7 +962,7 @@ int  readwave ( stereo_t* buff, size_t maxlen, const char* name, size_t* len )
         exit (1);
     }
     free (command);
-    
+
     fprintf (stderr, " ..." );
     fread ( header, sizeof(*header), sizeof(header)/sizeof(*header), fp );
     switch ( header[11] ) {
@@ -985,7 +985,7 @@ int  readwave ( stereo_t* buff, size_t maxlen, const char* name, size_t* len )
             pclose (fp);
             return -1;
     }
-    pclose ( fp ); 
+    pclose ( fp );
     fprintf (stderr, "\n" );
     return header[12] ? header[12] : 65534;
 }
@@ -1107,19 +1107,19 @@ void  DC_cancel ( stereo_t* p, size_t len )
     size_t  i;
     int     diff1;
     int     diff2;
-    
+
     for (i = 0; i < len; i++ ) {
         sum1 += p[i][0];
         sum2 += p[i][1];
     }
     if ( fabs(sum1) < len  &&  fabs(sum2) < len )
         return;
-        
+
     diff1 = round ( sum1 / len );
     diff2 = round ( sum2 / len );
     if (verbose)
         fprintf (stderr, "Removing DC (left=%d, right=%d)\n", diff1, diff2 );
-    
+
     for (i = 0; i < len; i++ ) {
         p[i][0] = to_short ( p[i][0] - diff1);
         p[i][1] = to_short ( p[i][1] - diff2);
@@ -1129,12 +1129,12 @@ void  DC_cancel ( stereo_t* p, size_t len )
 void  multiply ( char c, stereo_t* p, size_t len, double fact )
 {
     size_t  i;
-    
+
     if ( fact == 1. )
         return;
     if (verbose)
         fprintf (stderr, "Multiplying %c by %7.5f\n", c, fact );
-    
+
     for (i = 0; i < len; i++ ) {
         p[i][0] = to_short ( p[i][0] * fact );
         p[i][1] = to_short ( p[i][1] * fact );
@@ -1146,7 +1146,7 @@ int  maximum ( stereo_t* p, size_t len )
 {
     int     max = 0;
     size_t  i;
-    
+
     for (i = 0; i < len; i++ ) {
         if (abs(p[i][0]) > max) max = abs(p[i][0]);
         if (abs(p[i][1]) > max) max = abs(p[i][1]);
@@ -1157,7 +1157,7 @@ int  maximum ( stereo_t* p, size_t len )
 
 void  usage ( void )
 {
-    fprintf ( stderr, 
+    fprintf ( stderr,
         "usage:  abx [-v] File_A File_B\n"
         "\n"
         "File_A and File_B loaded and played. File_A should be the better/reference\n"
@@ -1201,7 +1201,7 @@ int  main ( int argc, char** argv )
     double     ampl;
     int        ampl_X;
     korr_t     k;
-    
+
     if (argc > 1  &&  0 == strcmp (argv[1], "-v") ) {
         verbose = 1;
         argc--;
@@ -1224,7 +1224,7 @@ int  main ( int argc, char** argv )
     DC_cancel ( A, len_A );
     freq2 = readwave ( B, MAX_LEN, argv[2], &len_B );
     DC_cancel ( B, len_B );
-    
+
     if      ( freq1 == 65534  &&  freq2 != 65534 )
         freq1 = freq2;
     else if ( freq2 == 65534  &&  freq1 != 65534 )
@@ -1244,12 +1244,12 @@ int  main ( int argc, char** argv )
 
     if ( verbose ) {
         fprintf ( stderr, "Delay Ch1 is %.4f samples\n", fshift );
-	fprintf ( stderr, "Delay Ch2 is %.4f samples\n", 
+	fprintf ( stderr, "Delay Ch2 is %.4f samples\n",
 	          cross_analyze ( (stereo_t*)(((sample_t*)A)+1), (stereo_t*)(((sample_t*)B)+1), len ) );
     }
 
     if (shift > 0) {
-        if (verbose) 
+        if (verbose)
             fprintf ( stderr, "Delaying A by %d samples\n", +shift);
         B     += shift;
         len_B -= shift;
@@ -1262,12 +1262,12 @@ int  main ( int argc, char** argv )
     }
 
     len    = len_A < len_B  ?  len_A  :  len_B;
-    memset ( &k, 0, sizeof(k) );    
+    memset ( &k, 0, sizeof(k) );
     analyze_stereo ( A, B, len, &k );
     ampl  = report (&k);
-    max_A = maximum ( A, len ); 
-    max_B = maximum ( B, len ); 
-    
+    max_A = maximum ( A, len );
+    max_B = maximum ( B, len );
+
     if ( ampl <= 0.98855 ) { /* < -0.05 dB */
         max    = max_A*ampl < max_B  ?  max_B  :  max_A*ampl;
         ampl_X = (int)(29203 / max);
@@ -1299,4 +1299,3 @@ int  main ( int argc, char** argv )
 }
 
 /* end of abx.c */
-
