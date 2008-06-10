@@ -510,12 +510,12 @@ void setup ( int fdd, int samples, long freq )
         perror ("unable to set number of channels");
     fprintf (stderr, "%1u*", arg);
 
-    org = arg = 16;
-    if ( -1 == (status = ioctl (fdd, SOUND_PCM_WRITE_BITS, &arg)) )
-        perror ("SOUND_PCM_WRITE_BITS ioctl failed");
-    if (arg != org)
-        perror ("unable to set sample size");
-    fprintf (stderr, "%2u bit ", arg);
+/*     org = arg = 16; */
+/*     if ( -1 == (status = ioctl (fdd, SOUND_PCM_WRITE_BITS, &arg)) ) */
+/*         perror ("SOUND_PCM_WRITE_BITS ioctl failed"); */
+/*     if (arg != org) */
+/*         perror ("unable to set sample size"); */
+/*     fprintf (stderr, "%2u bit ", arg); */
 
     org = arg = AFMT_S16_LE;
     if ( -1 == ioctl (fdd, SNDCTL_DSP_SETFMT, &arg) )
@@ -524,13 +524,13 @@ void setup ( int fdd, int samples, long freq )
         perror ("unable to set data format");
 
     org = arg = freq;
-    if ( -1 == (status = ioctl (fdd, SOUND_PCM_WRITE_RATE, &arg)) )
+    if ( -1 == (status = ioctl (fdd, /* SOUND */ SNDCTL_DSP_SPEED /* DPCM_WRITE_RATE */, &arg)) )
         perror ("SOUND_PCM_WRITE_WRITE ioctl failed");
     fprintf (stderr, "%5u Hz*%.3f sec\n", arg, (double)samples/arg );
 
-    org = arg = DMA_SAMPLES;
-    if ( -1 == (status = ioctl (fdd, SNDCTL_DSP_SETFRAGMENT, &arg)) )
-        perror ("SNDCTL_DSP_SETFRAGMENT ioctl failed");
+/*     org = arg = DMA_SAMPLES; */
+/*     if ( -1 == (status = ioctl (fdd, SNDCTL_DSP_SETFRAGMENT, &arg)) ) */
+/*         perror ("SNDCTL_DSP_SETFRAGMENT ioctl failed"); */
 }
 
 
