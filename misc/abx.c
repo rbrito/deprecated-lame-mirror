@@ -902,11 +902,11 @@ const decoder_t  decoder [] = {
     { ".ogg"    , PATH"ogg123 -d wav -o file:"STDOUT" %s"      REDIR },  // Ogg Vorbis           : www.xiph.org/ogg/vorbis/index.html
     { ".pac"    , PATH"lpac -x %s "STDOUT                      REDIR },  // Lossless predictive Audio Compression: www-ft.ee.tu-berlin.de/~liebchen/lpac.html (liebchen@ft.ee.tu-berlin.de)
     { ".shn"    , PATH"shorten -x < %s"                        REDIR },  // Shorten              : shnutils.freeshell.org, www.softsound.com/Shorten.html (shnutils@freeshell.org, shorten@softsound.com)
-    { ".wav.gz" , "gzip  -d < %s | sox -twav - -twav -sw -"    REDIR },  // gziped WAV
+    { ".wav.gz" , PATH"gzip  -d < %s | sox -twav - -twav -sw -"REDIR },  // gziped WAV
     { ".wav.sz" , PATH"szip  -d < %s | sox -twav - -twav -sw -"REDIR },  // sziped WAV
     { ".wav.sz2", PATH"szip2 -d < %s | sox -twav - -twav -sw -"REDIR },  // sziped WAV
-    { ".raw"    , "sox -r44100 -sw -c2 -traw %s -twav -sw -"   REDIR },  // raw files are treated as CD like audio
-    { ".cdr"    , "sox -r44100 -sw -c2 -traw %s -twav -sw -"   REDIR },  // CD-DA files are treated as CD like audio, no preemphasis info available
+    { ".raw"    , PATH"sox -r44100 -sw -c2 -traw %s -twav -sw -"REDIR },  // raw files are treated as CD like audio
+    { ".cdr"    , PATH"sox -r44100 -sw -c2 -traw %s -twav -sw -"REDIR },  // CD-DA files are treated as CD like audio, no preemphasis info available
     { ".rm"     , "echo %s '???'"                              REDIR },  // Real Audio           : www.real.com
     { ".epc"    , "echo %s '???'"                              REDIR },  // ePAC                 : www.audioveda.com, www.lucent.com/ldr
     { ".mov"    , "echo %s '???'"                              REDIR },  // QDesign Music 2      : www.qdesign.com
@@ -917,9 +917,9 @@ const decoder_t  decoder [] = {
     { ".ape"    , "( "PATH"MAC %s _._.wav -d > /dev/null; cat _._.wav; rm _._.wav )"  REDIR },  // Monkey's Audio Codec : www.monkeysaudio.com (email@monkeysaudio.com)
     { ".rka"    , "( "PATH"rkau %s _._.wav   > /dev/null; cat _._.wav; rm _._.wav )"  REDIR },  // RK Audio:
     { ".rkau"   , "( "PATH"rkau %s _._.wav   > /dev/null; cat _._.wav; rm _._.wav )"  REDIR },  // RK Audio:
-    { ".mod"    , "xmp -b16 -c -f44100 --stereo -o- %s | sox -r44100 -sw -c2 -traw - -twav -sw -"
+    { ".mod"    , PATH"xmp -b16 -c -f44100 --stereo -o- %s | sox -r44100 -sw -c2 -traw - -twav -sw -"
                                                                REDIR },  // Amiga's Music on Disk:
-    { ""        , "sox %s -twav -sw -"                         REDIR },  // Rest, may be sox can handle it
+    { ""        , PATH"sox %s -twav -sw -"                     REDIR },  // Rest, may be sox can handle it
 };
 
 #undef REDIR
