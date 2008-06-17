@@ -112,8 +112,9 @@ typedef struct {
     
     /* *INDENT-ON* */
 
-#define KEEP(m) do { (void) p.m; } while(0)
-#define FRAC(m) do { p.m = p.m + x * (q.m - p.m); } while(0)
+#define NOOP(m) (void)p.m
+#define LERP(m) p.m = p.m + x * (q.m - p.m)
+
 static void
 apply_vbr_preset(lame_global_flags * gfp, int a, int enforce)
 {
@@ -124,21 +125,21 @@ apply_vbr_preset(lame_global_flags * gfp, int a, int enforce)
     vbr_presets_t q = vbr_preset[a + 1];
     vbr_presets_t const *set = &p;
 
-    KEEP(vbr_q);
-    KEEP(quant_comp);
-    KEEP(quant_comp_s);
-    KEEP(expY);
-    FRAC(st_lrm);
-    FRAC(st_s);
-    FRAC(masking_adj);
-    FRAC(masking_adj_short);
-    FRAC(ath_lower);
-    FRAC(ath_curve);
-    FRAC(ath_sensitivity);
-    FRAC(interch);
-    KEEP(safejoint);
-    KEEP(sfb21mod);
-    FRAC(msfix);
+    NOOP(vbr_q);
+    NOOP(quant_comp);
+    NOOP(quant_comp_s);
+    NOOP(expY);
+    LERP(st_lrm);
+    LERP(st_s);
+    LERP(masking_adj);
+    LERP(masking_adj_short);
+    LERP(ath_lower);
+    LERP(ath_curve);
+    LERP(ath_sensitivity);
+    LERP(interch);
+    NOOP(safejoint);
+    NOOP(sfb21mod);
+    LERP(msfix);
 
     (void) lame_set_VBR_q(gfp, set->vbr_q);
     SET_OPTION(quant_comp, set->quant_comp, -1);
@@ -337,7 +338,10 @@ apply_preset(lame_global_flags * gfp, int preset, int enforce)
     case INSANE:
         {
             preset = 320;
-            break;
+            gfp->preset = preset;
+            (void) apply_abr_preset(gfp, preset, enforce);
+            lame_set_VBR(gfp, vbr_off);
+            return preset;
         }
     }
 

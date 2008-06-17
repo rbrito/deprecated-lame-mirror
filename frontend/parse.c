@@ -1030,8 +1030,7 @@ presets_longinfo_dm(FILE * msgfp)
     fprintf(msgfp,
             "   \"fast\" - Enables the new fast VBR for a particular profile. The\n"
             "            disadvantage to the speed switch is that often times the\n"
-            "            bitrate will be slightly higher than with the normal mode\n"
-            "            and quality may be slightly lower also.\n" "\n");
+            "            bitrate will be slightly higher than with the normal mode.\n" "\n");
     fprintf(msgfp,
             "   \"cbr\"  - If you use the ABR mode (read above) with a significant\n"
             "            bitrate such as 80, 96, 112, 128, 160, 192, 224, 256, 320,\n"
@@ -1142,8 +1141,7 @@ presets_set(lame_t gfp, int fast, int cbr, const char *preset_name, const char *
         return 0;
     }
 
-    else if (((strcmp(preset_name, "insane") == 0) ||
-              (strcmp(preset_name, "320") == 0)) && (fast < 1)) {
+    else if ((strcmp(preset_name, "insane") == 0) && (fast < 1)) {
 
         lame_set_preset(gfp, INSANE);
 
