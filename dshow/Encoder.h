@@ -44,6 +44,7 @@ const unsigned int dwBitRateValue[2][14] =
 
 #define OUT_BUFFER_SIZE             16384
 #define OUT_BUFFER_GUARD            8192
+
 #define OUT_BUFFER_MAX              (OUT_BUFFER_SIZE - OUT_BUFFER_GUARD)
 
 typedef struct {
@@ -128,16 +129,21 @@ public:
     // Initialize encoder SDK
     HRESULT Init();
     // Close encoder SDK
-    HRESULT Close();
+    HRESULT Close(IStream* pStream);
 
     // Encode media sample data
     int Encode(const short * pdata, int data_size);
     int GetFrame(const unsigned char ** pframe);
+	
+	// Returns block of a mp3 file, witch size integer multiples of cbAlign
+	int GetBlockAligned(const unsigned char ** pblock, int* piBufferSize, const long& cbAlign);
 
     HRESULT Finish();
 
-
 protected:
+	HRESULT updateLameTagFrame(IStream* pStream);
+	HRESULT skipId3v2(IStream *pStream, size_t lametag_frame_size);
+	HRESULT maybeSyncWord(IStream *pStream);
     HRESULT SetDefaultOutputType(LPWAVEFORMATEX lpwfex);
 
     // Input media type

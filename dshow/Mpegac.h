@@ -215,7 +215,10 @@ private:
     DWORD                       m_setDuration;
     DWORD                       m_allowOverlap;
 
+	REFERENCE_TIME m_rtBytePos;
 
+	BOOL						m_bStreamOutput;	// Binary stream output
+	long						m_cbStramAlignment;	// Stream block size
 protected:
     friend class CMpegAudEncPropertyPage;
 };

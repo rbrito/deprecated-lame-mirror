@@ -41,7 +41,7 @@ CEncoder::CEncoder() :
 
 CEncoder::~CEncoder()
 {
-    Close();
+    Close(NULL);
 
     if (m_outFrameBuf)
         delete [] m_outFrameBuf;
@@ -206,10 +206,15 @@ HRESULT CEncoder::Init()
                 int const nch = lame_get_num_channels(pgf);
                 short * start_padd = (short *)calloc(48, nch * sizeof(short));
 
+				int out_bytes = 0;
+
                 if (nch == 2)
-                    lame_encode_buffer_interleaved(pgf, start_padd, 48, m_outFrameBuf, OUT_BUFFER_SIZE);
+                    out_bytes = lame_encode_buffer_interleaved(pgf, start_padd, 48, m_outFrameBuf, OUT_BUFFER_SIZE);
                 else
-                    lame_encode_buffer(pgf, start_padd, start_padd, 48, m_outFrameBuf, OUT_BUFFER_SIZE);
+                    out_bytes = lame_encode_buffer(pgf, start_padd, start_padd, 48, m_outFrameBuf, OUT_BUFFER_SIZE);
+
+				if (out_bytes > 0)
+					m_outOffset += out_bytes;
 
                 free(start_padd);
             }
@@ -226,12 +231,16 @@ HRESULT CEncoder::Init()
 //////////////////////////////////////////////////////////////////////
 // Close - closes encoder
 //////////////////////////////////////////////////////////////////////
-HRESULT CEncoder::Close()
+HRESULT CEncoder::Close(IStream* pStream)
 {
-    CAutoLock l(&m_lock);
-
+	CAutoLock l(&m_lock);
     if (pgf)
     {
+		if(lame_get_bWriteVbrTag(pgf) && pStream)
+		{
+			updateLameTagFrame(pStream);
+		}
+
         lame_close(pgf);
         pgf = NULL;
     }
@@ -382,7 +391,7 @@ int CEncoder::GetFrame(const unsigned char ** pframe)
     if (!pgf || !m_outFrameBuf || !pframe)
         return -1;
 
-    while ((m_outOffset - m_outReadOffset) > 4)
+	while ((m_outOffset - m_outReadOffset) > 4)
     {
         int frame_length = getFrameLength(m_outFrameBuf + m_outReadOffset);
 
@@ -408,23 +417,161 @@ int CEncoder::GetFrame(const unsigned char ** pframe)
     return 0;
 }
 
+////////////////////////////////////////////////////////////////////////////////
+// Returns block of a mp3 file, witch size integer multiples of cbAlign
+// or not aligned if finished
+////////////////////////////////////////////////////////////////////////////////
+int CEncoder::GetBlockAligned(const unsigned char ** pblock, int* piBufferSize, const long& cbAlign)
+{
+	ASSERT(piBufferSize);
+    if (!pgf || !m_outFrameBuf || !pblock)
+        return -1;
 
+	int iBlockLen = m_outOffset - m_outReadOffset;
+	ASSERT(iBlockLen >= 0);
+	
+	if(!m_bFinished)
+	{
+		if(cbAlign > 0)
+			iBlockLen-=iBlockLen%cbAlign;
+		*piBufferSize = iBlockLen;
+	}
+	else
+	{
+		if(cbAlign && iBlockLen%cbAlign)
+		{
+			*piBufferSize = iBlockLen + cbAlign - iBlockLen%cbAlign;
+		}
+		else
+		{
+			*piBufferSize = iBlockLen;
+		}
+	}
 
+	if(iBlockLen) {
+		*pblock = m_outFrameBuf + m_outReadOffset;
+		m_outReadOffset+=iBlockLen;
+	}
 
+	return iBlockLen;
+}
 
+HRESULT CEncoder::maybeSyncWord(IStream *pStream)
+{
+	HRESULT hr = S_OK;
+    unsigned char mp3_frame_header[4];
+	ULONG nbytes;
+	if(FAILED(hr = pStream->Read(mp3_frame_header, sizeof(mp3_frame_header), &nbytes)))
+		return hr;
+	
+    if ( nbytes != sizeof(mp3_frame_header) ) {
+        return E_FAIL;
+    }
+    if ( mp3_frame_header[0] != 0xffu ) {
+        return S_FALSE; /* doesn't look like a sync word */
+    }
+    if ( (mp3_frame_header[1] & 0xE0u) != 0xE0u ) {
+		return S_FALSE; /* doesn't look like a sync word */
+    }
+    return S_OK;
+}
 
+HRESULT CEncoder::skipId3v2(IStream *pStream, size_t lametag_frame_size)
+{
+	HRESULT hr = S_OK;
+    ULONG  nbytes;
+    size_t  id3v2TagSize = 0;
+    unsigned char id3v2Header[10];
+	LARGE_INTEGER seekTo;
 
+    /* seek to the beginning of the stream */
+	seekTo.QuadPart = 0;
+	if (FAILED(hr = pStream->Seek(seekTo,  STREAM_SEEK_SET, NULL))) {
+        return hr;  /* not seekable, abort */
+    }
+    /* read 10 bytes in case there's an ID3 version 2 header here */
+	hr = pStream->Read(id3v2Header, sizeof(id3v2Header), &nbytes);
+    if (FAILED(hr))
+		return hr;
+	if(nbytes != sizeof(id3v2Header)) {
+        return E_FAIL;  /* not readable, maybe opened Write-Only */
+    }
+    /* does the stream begin with the ID3 version 2 file identifier? */
+    if (!strncmp((char *) id3v2Header, "ID3", 3)) {
+        /* the tag size (minus the 10-byte header) is encoded into four
+        * bytes where the most significant bit is clear in each byte
+        */
+        id3v2TagSize = (((id3v2Header[6] & 0x7f) << 21)
+            | ((id3v2Header[7] & 0x7f) << 14)
+            | ((id3v2Header[8] & 0x7f) << 7)
+            | (id3v2Header[9] & 0x7f))
+            + sizeof id3v2Header;
+    }
+    /* Seek to the beginning of the audio stream */
+	seekTo.QuadPart = id3v2TagSize;
+	if (FAILED(hr = pStream->Seek(seekTo, STREAM_SEEK_SET, NULL))) {
+        return hr;
+    }
+    if (S_OK != (hr = maybeSyncWord(pStream))) {
+		return SUCCEEDED(hr)?E_FAIL:hr;
+    }
+	seekTo.QuadPart = id3v2TagSize+lametag_frame_size;
+	if (FAILED(hr = pStream->Seek(seekTo, STREAM_SEEK_SET, NULL))) {
+        return hr;
+    }
+    if (S_OK != (hr = maybeSyncWord(pStream))) {
+        return SUCCEEDED(hr)?E_FAIL:hr;
+    }
+    /* OK, it seems we found our LAME-Tag/Xing frame again */
+    /* Seek to the beginning of the audio stream */
+	seekTo.QuadPart = id3v2TagSize;
+	if (FAILED(hr = pStream->Seek(seekTo, STREAM_SEEK_SET, NULL))) {
+        return hr;
+    }
+    return S_OK;
+}
 
+// Updates VBR tag
+HRESULT CEncoder::updateLameTagFrame(IStream* pStream)
+{
+	HRESULT hr = S_OK;
+	size_t n = lame_get_lametag_frame( pgf, 0, 0 ); /* ask for bufer size */
 
+    if ( n > 0 )
+    {
+        unsigned char* buffer = 0;
+        ULONG m = n;
 
+        if ( FAILED(hr = skipId3v2(pStream, n) )) 
+        {
+            /*DispErr( "Error updating LAME-tag frame:\n\n"
+                     "can't locate old frame\n" );*/
+            return hr;
+        }
 
+        buffer = (unsigned char*)malloc( n );
 
+        if ( buffer == 0 ) 
+        {
+            /*DispErr( "Error updating LAME-tag frame:\n\n"
+                     "can't allocate frame buffer\n" );*/
+            return E_OUTOFMEMORY;
+        }
 
+        /* Put it all to disk again */
+        n = lame_get_lametag_frame( pgf, buffer, n );
+        if ( n > 0 ) 
+        {
+			hr = pStream->Write(buffer, n, &m);        
+        }
+        free( buffer );
 
-
-
-
-
-
-
-
+        if ( m != n ) 
+        {
+            /*DispErr( "Error updating LAME-tag frame:\n\n"
+                     "couldn't write frame into file\n" );*/
+			return E_FAIL;
+        }
+    }
+    return hr;
+}
