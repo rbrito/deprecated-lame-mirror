@@ -1,3 +1,12 @@
+lame (3.98~beta8+cvs20080624) unstable; urgency=low
+
+  * Preparation for the new upstream release (lame 3.98 final).
+  * debian/control: eliminate build dependency on gtk1.2-dev.
+  * debian/rules: include -Wextra in the CFLAGS variable.
+  * debian/rules: explicitly disable some features from the build.
+
+ -- Rogério Brito <rbrito@users.sf.net>  Tue, 24 Jun 2008 15:16:22 -0300
+
 lame (3.98~beta8+cvs20080514) unstable; urgency=low
 
   * Fixing debian packaging details.
