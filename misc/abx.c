@@ -1213,7 +1213,8 @@ int  main ( int argc, char** argv )
     case 1:
     case 2:
     default:
-        usage ();
+        usage();
+	free(_A); free(_B);
         return 1;
     case 3:
         usage();
