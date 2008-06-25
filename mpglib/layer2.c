@@ -74,7 +74,7 @@ II_step_one(PMPSTR mp, unsigned int *bit_alloc,int *scale,struct frame *fr)
     int sblimit = fr->II_sblimit;
     int jsbound = fr->jsbound;
     int sblimit2 = fr->II_sblimit<<stereo;
-    struct al_table2 *alloc1 = fr->alloc;
+    struct al_table2 const *alloc1 = fr->alloc;
     int i;
     static unsigned int scfsi_buf[64];
     unsigned int *scfsi,*bita;
@@ -148,7 +148,7 @@ II_step_two(PMPSTR mp, unsigned int *bit_alloc,real fraction[2][4][SBLIMIT],int 
     int stereo = fr->stereo;
     int sblimit = fr->II_sblimit;
     int jsbound = fr->jsbound;
-    struct al_table2 *alloc2,*alloc1 = fr->alloc;
+    struct al_table2 const *alloc2, *alloc1 = fr->alloc;
     unsigned int *bita=bit_alloc;
     int d1,step;
 
@@ -260,7 +260,7 @@ static void II_select_table(struct frame *fr)
     table = translate[fr->sampling_frequency][2-fr->stereo][fr->bitrate_index];
   sblim = sblims[table];
 
-  fr->alloc      = (struct al_table2*)tables[table];
+  fr->alloc      = (struct al_table2 const*)tables[table];
   fr->II_sblimit = sblim;
 }
 

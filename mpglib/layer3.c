@@ -210,10 +210,10 @@ void init_layer3(int down_sample_sblimit)
 
   for(j=0;j<9;j++)
   {
-   struct bandInfoStruct *bi = (struct bandInfoStruct *)&bandInfo[j];
+   struct bandInfoStruct const *bi = (struct bandInfoStruct const *)&bandInfo[j];
    int *mp;
    int cb,lwin;
-   short *bdf;
+   short const *bdf;
 
    mp = map[j][0] = mapbuf0[j];
    bdf = bi->longDiff;
@@ -607,7 +607,7 @@ III_get_scale_factors_1(PMPSTR mp, int *scf,struct gr_info_s *gr_infos)
 static int
 III_get_scale_factors_2(PMPSTR mp, int *scf,struct gr_info_s *gr_infos,int i_stereo)
 {
-  unsigned char *pnt;
+  unsigned char const *pnt;
   int i,j;
   unsigned int slen;
   int n = 0;
@@ -635,7 +635,7 @@ III_get_scale_factors_2(PMPSTR mp, int *scf,struct gr_info_s *gr_infos,int i_ste
       n++;
   }
 
-  pnt = (unsigned char *)stab[n][(slen>>12)&0x7];
+  pnt = (unsigned char const *)stab[n][(slen>>12)&0x7];
 
   for(i=0;i<4;i++) {
     int num = slen & 0x7;
@@ -744,7 +744,7 @@ static int III_dequantize_sample(PMPSTR mp, real xr[SBLIMIT][SSLIMIT],int *scf,
     mc = 0;
     for(i=0;i<2;i++) {
       int lp = l[i];
-      struct newhuff *h = (struct newhuff *)(ht+gr_infos->table_select[i]);
+      struct newhuff const *h = (struct newhuff const *)(ht+gr_infos->table_select[i]);
       for(;lp;lp--,mc--) {
         int x,y;
         if( (!mc) ) {
@@ -762,7 +762,7 @@ static int III_dequantize_sample(PMPSTR mp, real xr[SBLIMIT][SSLIMIT],int *scf,
           }
         }
         {
-          short *val = (short *)h->table;
+          short const *val = (short const *)h->table;
           while((y=*val++)<0) {
             if (get1bit(mp))
               val -= y;
@@ -814,8 +814,9 @@ static int III_dequantize_sample(PMPSTR mp, real xr[SBLIMIT][SSLIMIT],int *scf,
       }
     }
     for(;l3 && (part2remain > 0);l3--) {
-      struct newhuff *h = (struct newhuff *)(htc+gr_infos->count1table_select);
-      short *val = (short *)h->table,a;
+      struct newhuff const *h = (struct newhuff const *)(htc+gr_infos->count1table_select);
+      short const *val = (short const *)h->table;
+      short a;
 
       while((a=*val++)<0) {
         part2remain--;
@@ -901,7 +902,7 @@ static int III_dequantize_sample(PMPSTR mp, real xr[SBLIMIT][SSLIMIT],int *scf,
         /*
      * decoding with 'long' BandIndex table (block_type != 2)
      */
-    int *pretab = (int *)(gr_infos->preflag ? pretab1 : pretab2);
+    int const *pretab = (int const *)(gr_infos->preflag ? pretab1 : pretab2);
     int i,max = -1;
     int cb = 0;
     int *m = map[sfreq][2];
@@ -913,7 +914,7 @@ static int III_dequantize_sample(PMPSTR mp, real xr[SBLIMIT][SSLIMIT],int *scf,
      */
     for(i=0;i<3;i++) {
       int lp = l[i];
-      struct newhuff *h = (struct newhuff *)(ht+gr_infos->table_select[i]);
+      struct newhuff const *h = (struct newhuff const *)(ht+gr_infos->table_select[i]);
 
       for(;lp;lp--,mc--) {
         int x,y;
@@ -924,7 +925,7 @@ static int III_dequantize_sample(PMPSTR mp, real xr[SBLIMIT][SSLIMIT],int *scf,
           cb = *m++;
         }
         {
-          short *val = (short *)h->table;
+          short const *val = (short const *)h->table;
           while((y=*val++)<0) {
             if (get1bit(mp))
               val -= y;
@@ -979,8 +980,9 @@ static int III_dequantize_sample(PMPSTR mp, real xr[SBLIMIT][SSLIMIT],int *scf,
      * short (count1table) values
      */
     for(;l3 && (part2remain > 0);l3--) {
-      struct newhuff *h = (struct newhuff *)(htc+gr_infos->count1table_select);
-      short *val = (short *)h->table,a;
+      struct newhuff const *h = (struct newhuff const *)(htc+gr_infos->count1table_select);
+      short const *val = (short const *)h->table;
+      short a;
 
       while((a=*val++)<0) {
         part2remain--;
@@ -1051,7 +1053,7 @@ static void III_i_stereo(real xr_buf[2][SBLIMIT][SSLIMIT],int *scalefac,
    struct gr_info_s *gr_infos,int sfreq,int ms_stereo,int lsf)
 {
       real (*xr)[SBLIMIT*SSLIMIT] = (real (*)[SBLIMIT*SSLIMIT] ) xr_buf;
-      struct bandInfoStruct *bi = (struct bandInfoStruct *)&bandInfo[sfreq];
+      struct bandInfoStruct const *bi = (struct bandInfoStruct const *)&bandInfo[sfreq];
       real *tabl1,*tabl2;
 
       if(lsf) {

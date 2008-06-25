@@ -93,7 +93,7 @@ struct frame {
 
 	/* AF: ADDED FOR LAYER1/LAYER2 */
     int II_sblimit;
-    struct al_table2 *alloc;
+    struct al_table2 const *alloc;
 	int down_sample_sblimit;
 	int	down_sample;
 
