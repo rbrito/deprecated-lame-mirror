@@ -57,8 +57,9 @@ am__installdirs = "$(DESTDIR)$(libdir)"
 libLTLIBRARIES_INSTALL = $(INSTALL)
 LTLIBRARIES = $(lib_LTLIBRARIES)
 @LIB_WITH_DECODER_TRUE@am__DEPENDENCIES_1 = $(top_builddir)/mpglib/libmpgdecoder.la
+am__DEPENDENCIES_2 =
 libmp3lame_la_DEPENDENCIES = $(cpu_ldadd) $(vector_ldadd) \
-	$(am__DEPENDENCIES_1)
+	$(am__DEPENDENCIES_1) $(am__DEPENDENCIES_2)
 am_libmp3lame_la_OBJECTS = VbrTag$U.lo bitstream$U.lo encoder$U.lo \
 	fft$U.lo gain_analysis$U.lo id3tag$U.lo lame$U.lo newmdct$U.lo \
 	presets$U.lo psymodel$U.lo quantize$U.lo quantize_pvt$U.lo \
@@ -108,6 +109,7 @@ CC = @CC@
 CCDEPMODE = @CCDEPMODE@
 CFLAGS = @CFLAGS@
 CONFIG_DEFS = @CONFIG_DEFS@
+CONFIG_MATH_LIB = @CONFIG_MATH_LIB@
 CPP = @CPP@
 CPPFLAGS = @CPPFLAGS@
 CPUCCODE = @CPUCCODE@
@@ -236,7 +238,9 @@ lib_LTLIBRARIES = libmp3lame.la
 @WITH_VECTOR_TRUE@vector_ldadd = $(top_builddir)/libmp3lame/vector/liblamevectorroutines.la
 @LIB_WITH_DECODER_FALSE@decoder_ldadd = 
 @LIB_WITH_DECODER_TRUE@decoder_ldadd = $(top_builddir)/mpglib/libmpgdecoder.la
-libmp3lame_la_LIBADD = $(cpu_ldadd) $(vector_ldadd) $(decoder_ldadd)
+libmp3lame_la_LIBADD = $(cpu_ldadd) $(vector_ldadd) $(decoder_ldadd) \
+			$(CONFIG_MATH_LIB)
+
 libmp3lame_la_LDFLAGS = -version-info @LIB_MAJOR_VERSION@:@LIB_MINOR_VERSION@ \
 			-no-undefined
 
