@@ -48,13 +48,13 @@ char *strchr (), *strrchr ();
 
 
  /* old WRITE_SAMPLE_CLIPPED */
-#define WRITE_SAMPLE_CLIPPED(samples,sum,clip) \
+#define WRITE_SAMPLE_CLIPPED(TYPE,samples,sum,clip) \
   if( (sum) > 32767.0) { *(samples) = 0x7fff; (clip)++; } \
   else if( (sum) < -32768.0) { *(samples) = -0x8000; (clip)++; } \
-  else { *(samples) = ((sum)>0 ? (sum)+0.5 : (sum)-0.5) ; }
+  else { *(samples) = (TYPE)((sum)>0 ? (sum)+0.5 : (sum)-0.5) ; }
 
-#define WRITE_SAMPLE_UNCLIPPED(samples,sum,clip) \
-  *samples = sum;
+#define WRITE_SAMPLE_UNCLIPPED(TYPE,samples,sum,clip) \
+  *samples = (TYPE)sum;
 
 
  /* versions: clipped (when TYPE == short) and unclipped (when TYPE == real) of synth_1to1_mono* functions */
@@ -146,7 +146,7 @@ int synth_1to1_mono_unclipped(PMPSTR mp, real *bandPtr, unsigned char *out,int *
       sum += window[0xE] * b0[0xE];                      \
       sum -= window[0xF] * b0[0xF];                      \
                                                          \
-      WRITE_SAMPLE (samples,sum,clip);                   \
+      WRITE_SAMPLE (TYPE,samples,sum,clip);              \
     }                                                    \
                                                          \
     {                                                    \
@@ -159,7 +159,7 @@ int synth_1to1_mono_unclipped(PMPSTR mp, real *bandPtr, unsigned char *out,int *
       sum += window[0xA] * b0[0xA];                      \
       sum += window[0xC] * b0[0xC];                      \
       sum += window[0xE] * b0[0xE];                      \
-      WRITE_SAMPLE (samples,sum,clip);                   \
+      WRITE_SAMPLE (TYPE,samples,sum,clip);              \
       b0-=0x10,window-=0x20,samples+=step;               \
     }                                                    \
     window += bo1<<1;                                    \
@@ -184,7 +184,7 @@ int synth_1to1_mono_unclipped(PMPSTR mp, real *bandPtr, unsigned char *out,int *
       sum -= window[-0xF] * b0[0xE];                     \
       sum -= window[-0x0] * b0[0xF];                     \
                                                          \
-      WRITE_SAMPLE (samples,sum,clip);                   \
+      WRITE_SAMPLE (TYPE,samples,sum,clip);              \
     }                                                    \
   }                                                      \
   *pnt += 64*sizeof(TYPE);                               \

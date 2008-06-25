@@ -2050,7 +2050,7 @@ parse_args(lame_global_flags * gfp, int argc, char **argv,
                         /* to change VBR default look in lame.h */
                         if (lame_get_VBR(gfp) == vbr_off)
                             lame_set_VBR(gfp, vbr_default);
-                        lame_set_VBR_quality(gfp, atof(arg));
+                        lame_set_VBR_quality(gfp, (float)atof(arg));
                         break;
                     case 'v':
                         /* to change VBR default look in lame.h */

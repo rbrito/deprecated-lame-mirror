@@ -25,8 +25,8 @@ extern "C" {
 
 #include "common.h"
 
-BOOL InitMP3(PMPSTR mp);
-int	 decodeMP3(PMPSTR mp,unsigned char *inmemory,int inmemsize,char *outmemory,int outmemsize,int *done);
+int InitMP3(PMPSTR mp);
+int decodeMP3(PMPSTR mp,unsigned char *inmemory,int inmemsize,char *outmemory,int outmemsize,int *done);
 void ExitMP3(PMPSTR mp);
 
 /* added decodeMP3_unclipped to support returning raw floating-point values of samples. The representation
