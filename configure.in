@@ -375,7 +375,12 @@ AC_CHECK_LIB(m, cos, USE_LIBM="-lm")
 dnl free fast math library
 AC_CHECK_LIB(ffm, cos, USE_LIBM="-lffm -lm")
 dnl Compaq fast math library.
-AC_CHECK_LIB(cpml, cos, USE_LIBM="-lcpml")
+dnl XXX: test this!
+AC_ARG_DISABLE(cpml,
+  [  --disable-cpml              Do not use Compaq's fast Math Library],
+  [if test "$enableval" = yes; then
+      AC_CHECK_LIB(cpml, cos, USE_LIBM="-lcpml")
+   fi])
 CONFIG_MATH_LIB="${USE_LIBM}"
 
 dnl configure use of features
@@ -1142,6 +1147,7 @@ AC_SUBST(INCLUDES)
 AC_SUBST(FRONTEND_LDFLAGS)
 AC_SUBST(FRONTEND_CFLAGS)
 AC_SUBST(FRONTEND_LDADD)
+AC_SUBST(CONFIG_MATH_LIB)
 AC_SUBST(LDADD)
 
 AC_SUBST(LIB_MAJOR_VERSION)
