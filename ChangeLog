@@ -11,6 +11,132 @@
 
 -- 
 
+2008-06-25 12:43  aleidinger
+
+	* doc/html/history.html:
+
+	a little bit of history
+
+2008-06-25 12:40  aleidinger
+
+	* configure:
+
+	regen
+
+2008-06-25 12:37  aleidinger
+
+	* configure.in:
+
+	fix --diable-cpml switch
+
+2008-06-25 12:17  aleidinger
+
+	* mpglib/Makefile.in, Makefile.in, ACM/Makefile.in,
+	  ACM/ADbg/Makefile.in, ACM/ddk/Makefile.in,
+	  ACM/tinyxml/Makefile.in, Dll/Makefile.in, debian/Makefile.in,
+	  doc/Makefile.in, doc/html/Makefile.in, doc/man/Makefile.in,
+	  dshow/Makefile.in, frontend/Makefile.in, include/Makefile.in,
+	  libmp3lame/Makefile.in, libmp3lame/i386/Makefile.in,
+	  libmp3lame/vector/Makefile.in, mac/Makefile.in,
+	  macosx/Makefile.in, macosx/English.lproj/Makefile.in,
+	  macosx/LAME.xcodeproj/Makefile.in, misc/Makefile.in:
+
+	regen (math lib change)
+
+2008-06-25 12:13  aleidinger
+
+	* configure.in:
+
+	export the math lib, allow to disable the use of the alpha optimized math lib
+
+2008-06-25 12:12  aleidinger
+
+	* libmp3lame/Makefile.am:
+
+	add the math lib explicitely to the build of the lib
+
+2008-06-25 08:20  robert
+
+	* frontend/parse.c, mpglib/decode_i386.c, mpglib/interface.c,
+	  mpglib/interface.h, mpglib/layer1.c, mpglib/layer2.c,
+	  mpglib/mpglib.h:
+
+	Some cosmetic changes, now the vc9 compiles the workspace vc9_lame without any warning
+
+2008-06-24 19:07  rbrito
+
+	* doc/html/history.html:
+
+	Add some modifications of mine to the history
+
+2008-06-24 18:39  rbrito
+
+	* debian/: changelog, control, rules:
+
+	Updates to the Debian packaging.
+
+2008-06-24 17:06  rbrito
+
+	* misc/abx.c:
+
+	Quick and dirty fix for some memory leak (detected via Valgrind).
+
+2008-06-22 18:39  robert
+
+	* doc/html/: history.html, contributors.html:
+
+	tracker item [ lame-Patches-1990643 ] DShow direct file writer output
+	patch by Anton Sergunov (setosha)
+
+2008-06-22 18:31  robert
+
+	* dshow/: Encoder.cpp, Encoder.h, Mpegac.cpp, Mpegac.h:
+
+	tracker item [ lame-Patches-1990643 ] DShow direct file writer output
+	patch by Anton Sergunov (setosha)
+
+2008-06-22 18:29  robert
+
+	* vc_solution/: vc9_lame_acm.vcproj, vc9_lame_acm_adbg.vcproj,
+	  vc9_lame_acm_tinyxml.vcproj, vc9_lame_dll_example.vcproj,
+	  vc9_lame_dshow.vcproj:
+
+	linking against multithreaded (debug) DLL
+
+2008-06-17 20:57  robert
+
+	* frontend/parse.c, libmp3lame/presets.c:
+
+	bug fix: preset INSANE wasn't a CBR preset anymore, but preset help said it should be
+
+2008-06-10 19:24  rbrito
+
+	* misc/abx.c:
+
+	Fixes for consistency (lack of PATH on some commands)
+
+2008-06-10 19:14  rbrito
+
+	* misc/abx.c:
+
+	Removing spurious whitespaces at the end of lines.
+
+2008-06-10 16:10  rbrito
+
+	* misc/abx.c:
+
+	Corrected the abx.c file to work on Linux x86-64 (it should work on ia32 too).
+
+	I think that I can remove latter the commented lines. They were prejudicial
+	to playing the file on Linux (i.e., a 1min file was played in less than 5s,
+	which is not exactly something that useful for doing an abx test).
+
+2008-05-24 08:40  aleidinger
+
+	* ChangeLog:
+
+	Add nearly a year of history.
+
 2008-05-24 08:37  aleidinger
 
 	* Makefile.in, configure:
