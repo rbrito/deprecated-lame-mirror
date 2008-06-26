@@ -976,14 +976,8 @@ presets_longinfo_dm(FILE * msgfp)
 {
     fprintf(msgfp,
             "\n"
-            "The --preset switches are designed to provide the highest possible quality.\n"
-            "\n"
-            "They have for the most part been subject to and tuned via rigorous double blind\n"
-            "listening tests to verify and achieve this objective.\n" "\n");
-    fprintf(msgfp,
-            "These are continually updated to coincide with the latest developments that\n"
-            "occur and as a result should provide you with nearly the best quality\n"
-            "currently possible from LAME.\n" "\n");
+            "The --preset switches are aliases over LAME settings.\n"
+            "\n" "\n");
     fprintf(msgfp,
             "To activate these presets:\n"
             "\n" "   For VBR modes (generally highest quality):\n" "\n");
@@ -1028,9 +1022,7 @@ presets_longinfo_dm(FILE * msgfp)
             "                      \"--preset 185\" activates this\n"
             "                      preset and uses 185 as an average kbps.\n" "\n");
     fprintf(msgfp,
-            "   \"fast\" - Enables the new fast VBR for a particular profile. The\n"
-            "            disadvantage to the speed switch is that often times the\n"
-            "            bitrate will be slightly higher than with the normal mode.\n" "\n");
+            "   \"fast\" - Enables the fast VBR mode for a particular profile.\n" "\n");
     fprintf(msgfp,
             "   \"cbr\"  - If you use the ABR mode (read above) with a significant\n"
             "            bitrate such as 80, 96, 112, 128, 160, 192, 224, 256, 320,\n"
@@ -1046,7 +1038,7 @@ presets_longinfo_dm(FILE * msgfp)
             " or \"--preset 172 <input file> <output file>\"\n"
             " or \"--preset extreme <input file> <output file>\"\n" "\n" "\n");
     fprintf(msgfp,
-            "A few aliases are available for ABR mode:\n"
+            "A few aliases are also available for ABR mode:\n"
             "phone => 16kbps/mono        phon+/lw/mw-eu/sw => 24kbps/mono\n"
             "mw-us => 40kbps/mono        voice => 56kbps/mono\n"
             "fm/radio/tape => 112kbps    hifi => 160kbps\n"

@@ -417,10 +417,6 @@ Use one of the built-in presets.
 
 Have a look at the PRESETS section below.
 
-.B Warning:
-with the current version fast presets might result in too high bitrate
-compared to regular presets.
-
 .B \-\-preset help
 gives more infos about the the used options in these presets.
 .TP
@@ -1069,14 +1065,7 @@ but the inconvenient is that the final file size is totally unpredictable.
 .SH PRESETS
 The
 .B \-\-preset
-switches are designed to provide the highest possible quality.
-
-They have for the most part been subject to and tuned via rigorous double blind
-listening tests to verify and achieve this objective.
-
-These are continually updated to coincide with the latest developments that
-occur and as a result should provide you with nearly the best quality
-currently possible from LAME.
+switches are aliases over LAME settings.
 
 To activate these presets:
 .PP
@@ -1123,8 +1112,6 @@ The following options are also available for the corresponding profiles:
 .TP
 .B fast
 Enables the new fast VBR for a particular profile.
-The disadvantage to the speed switch is that often times the bitrate will be
-slightly higher than with the normal mode and quality may be slightly lower also.
 .TP
 .B cbr
 If you use the ABR mode (read above) with a significant bitrate such as 80,
