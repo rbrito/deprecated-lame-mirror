@@ -2,9 +2,9 @@
 <VisualStudioProject
 	ProjectType="Visual C++"
 	Version="9,00"
-	Name="libmp3lame DLL"
+	Name="libmp3lameDLL"
 	ProjectGUID="{92BD50AA-04D6-4FBF-ACE1-468FAF6778F2}"
-	RootNamespace="libmp3lame DLL"
+	RootNamespace="libmp3lameDLL"
 	TargetFrameworkVersion="0"
 	>
 	<Platforms>
@@ -20,8 +20,8 @@
 	<Configurations>
 		<Configuration
 			Name="Release|Win32"
-			OutputDirectory="..\output\Release"
-			IntermediateDirectory="..\obj\Release\libmp3lameDLL"
+			OutputDirectory="$(SolutionDir)..\output\$(ConfigurationName)"
+			IntermediateDirectory="$(SolutionDir)..\obj\$(ConfigurationName)\$(ProjectName)"
 			ConfigurationType="2"
 			InheritedPropertySheets="$(VCInstallDir)VCProjectDefaults\UpgradeFromVC60.vsprops"
 			UseOfMFC="0"
@@ -111,9 +111,9 @@
 			/>
 		</Configuration>
 		<Configuration
-			Name="Release NASM|Win32"
-			OutputDirectory="..\output\Release_NASM"
-			IntermediateDirectory="..\obj\Release_NASM\libmp3lameDLL"
+			Name="ReleaseNASM|Win32"
+			OutputDirectory="$(SolutionDir)..\output\$(ConfigurationName)"
+			IntermediateDirectory="$(SolutionDir)..\obj\$(ConfigurationName)\$(ProjectName)"
 			ConfigurationType="2"
 			InheritedPropertySheets="$(VCInstallDir)VCProjectDefaults\UpgradeFromVC60.vsprops"
 			UseOfMFC="0"
@@ -136,7 +136,7 @@
 			/>
 			<Tool
 				Name="VCMIDLTool"
-				TypeLibraryName="..\output\Release_NASM/libmp3lame_dll.tlb"
+				TypeLibraryName="..\output\ReleaseNASM/libmp3lame_dll.tlb"
 				HeaderFileName=""
 			/>
 			<Tool
@@ -149,10 +149,10 @@
 				StringPooling="true"
 				RuntimeLibrary="2"
 				EnableFunctionLevelLinking="true"
-				PrecompiledHeaderFile="..\obj\Release_NASM\libmp3lameDLL/libmp3lame_dll.pch"
-				AssemblerListingLocation="..\obj\Release_NASM\libmp3lameDLL/"
-				ObjectFile="..\obj\Release_NASM\libmp3lameDLL/"
-				ProgramDataBaseFileName="..\obj\Release_NASM\libmp3lameDLL/"
+				PrecompiledHeaderFile="..\obj\ReleaseNASM\libmp3lameDLL/libmp3lame_dll.pch"
+				AssemblerListingLocation="..\obj\ReleaseNASM\libmp3lameDLL/"
+				ObjectFile="..\obj\ReleaseNASM\libmp3lameDLL/"
+				ProgramDataBaseFileName="..\obj\ReleaseNASM\libmp3lameDLL/"
 				WarningLevel="4"
 				SuppressStartupBanner="true"
 				DisableSpecificWarnings="4996"
@@ -169,14 +169,14 @@
 			/>
 			<Tool
 				Name="VCLinkerTool"
-				OutputFile="..\output\Release_NASM\libmp3lame.dll"
+				OutputFile="..\output\ReleaseNASM\libmp3lame.dll"
 				LinkIncremental="1"
 				SuppressStartupBanner="true"
 				ModuleDefinitionFile="..\include\lame.def"
 				OptimizeForWindows98="0"
 				RandomizedBaseAddress="1"
 				DataExecutionPrevention="0"
-				ImportLibrary="..\output\Release_NASM/libmp3lame.lib"
+				ImportLibrary="..\output\ReleaseNASM/libmp3lame.lib"
 				TargetMachine="1"
 			/>
 			<Tool
@@ -191,7 +191,7 @@
 			<Tool
 				Name="VCBscMakeTool"
 				SuppressStartupBanner="true"
-				OutputFile="..\obj\Release_NASM/libmp3lame_dll.bsc"
+				OutputFile="..\obj\ReleaseNASM/libmp3lame_dll.bsc"
 			/>
 			<Tool
 				Name="VCFxCopTool"
@@ -205,8 +205,8 @@
 		</Configuration>
 		<Configuration
 			Name="Debug|Win32"
-			OutputDirectory="..\output\Debug"
-			IntermediateDirectory="..\obj\Debug\libmp3lameDLL"
+			OutputDirectory="$(SolutionDir)..\output\$(ConfigurationName)"
+			IntermediateDirectory="$(SolutionDir)..\obj\$(ConfigurationName)\$(ProjectName)"
 			ConfigurationType="2"
 			InheritedPropertySheets="$(VCInstallDir)VCProjectDefaults\UpgradeFromVC60.vsprops"
 			UseOfMFC="0"
@@ -317,14 +317,14 @@
 					/>
 				</FileConfiguration>
 				<FileConfiguration
-					Name="Release NASM|Win32"
+					Name="ReleaseNASM|Win32"
 					>
 					<Tool
 						Name="VCCLCompilerTool"
 						AdditionalIncludeDirectories=""
 						PreprocessorDefinitions=""
-						ObjectFile="..\obj\Release_NASM\libmp3lameDLL/"
-						ProgramDataBaseFileName="..\obj\Release_NASM\libmp3lameDLL/"
+						ObjectFile="..\obj\ReleaseNASM\libmp3lameDLL/"
+						ProgramDataBaseFileName="..\obj\ReleaseNASM\libmp3lameDLL/"
 					/>
 				</FileConfiguration>
 				<FileConfiguration
@@ -350,14 +350,14 @@
 					/>
 				</FileConfiguration>
 				<FileConfiguration
-					Name="Release NASM|Win32"
+					Name="ReleaseNASM|Win32"
 					>
 					<Tool
 						Name="VCCLCompilerTool"
 						AdditionalIncludeDirectories=""
 						PreprocessorDefinitions=""
-						ObjectFile="..\obj\Release_NASM\libmp3lameDLL/"
-						ProgramDataBaseFileName="..\obj\Release_NASM\libmp3lameDLL/"
+						ObjectFile="..\obj\ReleaseNASM\libmp3lameDLL/"
+						ProgramDataBaseFileName="..\obj\ReleaseNASM\libmp3lameDLL/"
 					/>
 				</FileConfiguration>
 				<FileConfiguration
@@ -383,14 +383,14 @@
 					/>
 				</FileConfiguration>
 				<FileConfiguration
-					Name="Release NASM|Win32"
+					Name="ReleaseNASM|Win32"
 					>
 					<Tool
 						Name="VCCLCompilerTool"
 						AdditionalIncludeDirectories=""
 						PreprocessorDefinitions=""
-						ObjectFile="..\obj\Release_NASM\libmp3lameDLL/"
-						ProgramDataBaseFileName="..\obj\Release_NASM\libmp3lameDLL/"
+						ObjectFile="..\obj\ReleaseNASM\libmp3lameDLL/"
+						ProgramDataBaseFileName="..\obj\ReleaseNASM\libmp3lameDLL/"
 					/>
 				</FileConfiguration>
 				<FileConfiguration
@@ -416,14 +416,14 @@
 					/>
 				</FileConfiguration>
 				<FileConfiguration
-					Name="Release NASM|Win32"
+					Name="ReleaseNASM|Win32"
 					>
 					<Tool
 						Name="VCCLCompilerTool"
 						AdditionalIncludeDirectories=""
 						PreprocessorDefinitions=""
-						ObjectFile="..\obj\Release_NASM\libmp3lameDLL/"
-						ProgramDataBaseFileName="..\obj\Release_NASM\libmp3lameDLL/"
+						ObjectFile="..\obj\ReleaseNASM\libmp3lameDLL/"
+						ProgramDataBaseFileName="..\obj\ReleaseNASM\libmp3lameDLL/"
 					/>
 				</FileConfiguration>
 				<FileConfiguration
@@ -449,14 +449,14 @@
 					/>
 				</FileConfiguration>
 				<FileConfiguration
-					Name="Release NASM|Win32"
+					Name="ReleaseNASM|Win32"
 					>
 					<Tool
 						Name="VCCLCompilerTool"
 						AdditionalIncludeDirectories=""
 						PreprocessorDefinitions=""
-						ObjectFile="..\obj\Release_NASM\libmp3lameDLL/"
-						ProgramDataBaseFileName="..\obj\Release_NASM\libmp3lameDLL/"
+						ObjectFile="..\obj\ReleaseNASM\libmp3lameDLL/"
+						ProgramDataBaseFileName="..\obj\ReleaseNASM\libmp3lameDLL/"
 					/>
 				</FileConfiguration>
 				<FileConfiguration
@@ -482,14 +482,14 @@
 					/>
 				</FileConfiguration>
 				<FileConfiguration
-					Name="Release NASM|Win32"
+					Name="ReleaseNASM|Win32"
 					>
 					<Tool
 						Name="VCCLCompilerTool"
 						AdditionalIncludeDirectories=""
 						PreprocessorDefinitions=""
-						ObjectFile="..\obj\Release_NASM\libmp3lameDLL/"
-						ProgramDataBaseFileName="..\obj\Release_NASM\libmp3lameDLL/"
+						ObjectFile="..\obj\ReleaseNASM\libmp3lameDLL/"
+						ProgramDataBaseFileName="..\obj\ReleaseNASM\libmp3lameDLL/"
 					/>
 				</FileConfiguration>
 				<FileConfiguration
@@ -515,14 +515,14 @@
 					/>
 				</FileConfiguration>
 				<FileConfiguration
-					Name="Release NASM|Win32"
+					Name="ReleaseNASM|Win32"
 					>
 					<Tool
 						Name="VCCLCompilerTool"
 						AdditionalIncludeDirectories=""
 						PreprocessorDefinitions=""
-						ObjectFile="..\obj\Release_NASM\libmp3lameDLL/"
-						ProgramDataBaseFileName="..\obj\Release_NASM\libmp3lameDLL/"
+						ObjectFile="..\obj\ReleaseNASM\libmp3lameDLL/"
+						ProgramDataBaseFileName="..\obj\ReleaseNASM\libmp3lameDLL/"
 					/>
 				</FileConfiguration>
 				<FileConfiguration
@@ -548,14 +548,14 @@
 					/>
 				</FileConfiguration>
 				<FileConfiguration
-					Name="Release NASM|Win32"
+					Name="ReleaseNASM|Win32"
 					>
 					<Tool
 						Name="VCCLCompilerTool"
 						AdditionalIncludeDirectories=""
 						PreprocessorDefinitions=""
-						ObjectFile="..\obj\Release_NASM\libmp3lameDLL/"
-						ProgramDataBaseFileName="..\obj\Release_NASM\libmp3lameDLL/"
+						ObjectFile="..\obj\ReleaseNASM\libmp3lameDLL/"
+						ProgramDataBaseFileName="..\obj\ReleaseNASM\libmp3lameDLL/"
 					/>
 				</FileConfiguration>
 				<FileConfiguration
@@ -581,14 +581,14 @@
 					/>
 				</FileConfiguration>
 				<FileConfiguration
-					Name="Release NASM|Win32"
+					Name="ReleaseNASM|Win32"
 					>
 					<Tool
 						Name="VCCLCompilerTool"
 						AdditionalIncludeDirectories=""
 						PreprocessorDefinitions=""
-						ObjectFile="..\obj\Release_NASM\libmp3lameDLL/"
-						ProgramDataBaseFileName="..\obj\Release_NASM\libmp3lameDLL/"
+						ObjectFile="..\obj\ReleaseNASM\libmp3lameDLL/"
+						ProgramDataBaseFileName="..\obj\ReleaseNASM\libmp3lameDLL/"
 					/>
 				</FileConfiguration>
 				<FileConfiguration
@@ -614,14 +614,14 @@
 					/>
 				</FileConfiguration>
 				<FileConfiguration
-					Name="Release NASM|Win32"
+					Name="ReleaseNASM|Win32"
 					>
 					<Tool
 						Name="VCCLCompilerTool"
 						AdditionalIncludeDirectories=""
 						PreprocessorDefinitions=""
-						ObjectFile="..\obj\Release_NASM\libmp3lameDLL/"
-						ProgramDataBaseFileName="..\obj\Release_NASM\libmp3lameDLL/"
+						ObjectFile="..\obj\ReleaseNASM\libmp3lameDLL/"
+						ProgramDataBaseFileName="..\obj\ReleaseNASM\libmp3lameDLL/"
 					/>
 				</FileConfiguration>
 				<FileConfiguration
@@ -647,14 +647,14 @@
 					/>
 				</FileConfiguration>
 				<FileConfiguration
-					Name="Release NASM|Win32"
+					Name="ReleaseNASM|Win32"
 					>
 					<Tool
 						Name="VCCLCompilerTool"
 						AdditionalIncludeDirectories=""
 						PreprocessorDefinitions=""
-						ObjectFile="..\obj\Release_NASM\libmp3lameDLL/"
-						ProgramDataBaseFileName="..\obj\Release_NASM\libmp3lameDLL/"
+						ObjectFile="..\obj\ReleaseNASM\libmp3lameDLL/"
+						ProgramDataBaseFileName="..\obj\ReleaseNASM\libmp3lameDLL/"
 					/>
 				</FileConfiguration>
 				<FileConfiguration
@@ -680,14 +680,14 @@
 					/>
 				</FileConfiguration>
 				<FileConfiguration
-					Name="Release NASM|Win32"
+					Name="ReleaseNASM|Win32"
 					>
 					<Tool
 						Name="VCCLCompilerTool"
 						AdditionalIncludeDirectories=""
 						PreprocessorDefinitions=""
-						ObjectFile="..\obj\Release_NASM\libmp3lameDLL/"
-						ProgramDataBaseFileName="..\obj\Release_NASM\libmp3lameDLL/"
+						ObjectFile="..\obj\ReleaseNASM\libmp3lameDLL/"
+						ProgramDataBaseFileName="..\obj\ReleaseNASM\libmp3lameDLL/"
 					/>
 				</FileConfiguration>
 				<FileConfiguration
@@ -713,14 +713,14 @@
 					/>
 				</FileConfiguration>
 				<FileConfiguration
-					Name="Release NASM|Win32"
+					Name="ReleaseNASM|Win32"
 					>
 					<Tool
 						Name="VCCLCompilerTool"
 						AdditionalIncludeDirectories=""
 						PreprocessorDefinitions=""
-						ObjectFile="..\obj\Release_NASM\libmp3lameDLL/"
-						ProgramDataBaseFileName="..\obj\Release_NASM\libmp3lameDLL/"
+						ObjectFile="..\obj\ReleaseNASM\libmp3lameDLL/"
+						ProgramDataBaseFileName="..\obj\ReleaseNASM\libmp3lameDLL/"
 					/>
 				</FileConfiguration>
 				<FileConfiguration
@@ -746,14 +746,14 @@
 					/>
 				</FileConfiguration>
 				<FileConfiguration
-					Name="Release NASM|Win32"
+					Name="ReleaseNASM|Win32"
 					>
 					<Tool
 						Name="VCCLCompilerTool"
 						AdditionalIncludeDirectories=""
 						PreprocessorDefinitions=""
-						ObjectFile="..\obj\Release_NASM\libmp3lameDLL/"
-						ProgramDataBaseFileName="..\obj\Release_NASM\libmp3lameDLL/"
+						ObjectFile="..\obj\ReleaseNASM\libmp3lameDLL/"
+						ProgramDataBaseFileName="..\obj\ReleaseNASM\libmp3lameDLL/"
 					/>
 				</FileConfiguration>
 				<FileConfiguration
@@ -779,14 +779,14 @@
 					/>
 				</FileConfiguration>
 				<FileConfiguration
-					Name="Release NASM|Win32"
+					Name="ReleaseNASM|Win32"
 					>
 					<Tool
 						Name="VCCLCompilerTool"
 						AdditionalIncludeDirectories=""
 						PreprocessorDefinitions=""
-						ObjectFile="..\obj\Release_NASM\libmp3lameDLL/"
-						ProgramDataBaseFileName="..\obj\Release_NASM\libmp3lameDLL/"
+						ObjectFile="..\obj\ReleaseNASM\libmp3lameDLL/"
+						ProgramDataBaseFileName="..\obj\ReleaseNASM\libmp3lameDLL/"
 					/>
 				</FileConfiguration>
 				<FileConfiguration
@@ -812,14 +812,14 @@
 					/>
 				</FileConfiguration>
 				<FileConfiguration
-					Name="Release NASM|Win32"
+					Name="ReleaseNASM|Win32"
 					>
 					<Tool
 						Name="VCCLCompilerTool"
 						AdditionalIncludeDirectories=""
 						PreprocessorDefinitions=""
-						ObjectFile="..\obj\Release_NASM\libmp3lameDLL/"
-						ProgramDataBaseFileName="..\obj\Release_NASM\libmp3lameDLL/"
+						ObjectFile="..\obj\ReleaseNASM\libmp3lameDLL/"
+						ProgramDataBaseFileName="..\obj\ReleaseNASM\libmp3lameDLL/"
 					/>
 				</FileConfiguration>
 				<FileConfiguration
@@ -845,14 +845,14 @@
 					/>
 				</FileConfiguration>
 				<FileConfiguration
-					Name="Release NASM|Win32"
+					Name="ReleaseNASM|Win32"
 					>
 					<Tool
 						Name="VCCLCompilerTool"
 						AdditionalIncludeDirectories=""
 						PreprocessorDefinitions=""
-						ObjectFile="..\obj\Release_NASM\libmp3lameDLL/"
-						ProgramDataBaseFileName="..\obj\Release_NASM\libmp3lameDLL/"
+						ObjectFile="..\obj\ReleaseNASM\libmp3lameDLL/"
+						ProgramDataBaseFileName="..\obj\ReleaseNASM\libmp3lameDLL/"
 					/>
 				</FileConfiguration>
 				<FileConfiguration
@@ -878,14 +878,14 @@
 					/>
 				</FileConfiguration>
 				<FileConfiguration
-					Name="Release NASM|Win32"
+					Name="ReleaseNASM|Win32"
 					>
 					<Tool
 						Name="VCCLCompilerTool"
 						AdditionalIncludeDirectories=""
 						PreprocessorDefinitions=""
-						ObjectFile="..\obj\Release_NASM\libmp3lameDLL/"
-						ProgramDataBaseFileName="..\obj\Release_NASM\libmp3lameDLL/"
+						ObjectFile="..\obj\ReleaseNASM\libmp3lameDLL/"
+						ProgramDataBaseFileName="..\obj\ReleaseNASM\libmp3lameDLL/"
 					/>
 				</FileConfiguration>
 				<FileConfiguration
@@ -911,14 +911,14 @@
 					/>
 				</FileConfiguration>
 				<FileConfiguration
-					Name="Release NASM|Win32"
+					Name="ReleaseNASM|Win32"
 					>
 					<Tool
 						Name="VCCLCompilerTool"
 						AdditionalIncludeDirectories=""
 						PreprocessorDefinitions=""
-						ObjectFile="..\obj\Release_NASM\libmp3lameDLL/"
-						ProgramDataBaseFileName="..\obj\Release_NASM\libmp3lameDLL/"
+						ObjectFile="..\obj\ReleaseNASM\libmp3lameDLL/"
+						ProgramDataBaseFileName="..\obj\ReleaseNASM\libmp3lameDLL/"
 					/>
 				</FileConfiguration>
 				<FileConfiguration
@@ -944,14 +944,14 @@
 					/>
 				</FileConfiguration>
 				<FileConfiguration
-					Name="Release NASM|Win32"
+					Name="ReleaseNASM|Win32"
 					>
 					<Tool
 						Name="VCCLCompilerTool"
 						AdditionalIncludeDirectories=""
 						PreprocessorDefinitions=""
-						ObjectFile="..\obj\Release_NASM\libmp3lameDLL/"
-						ProgramDataBaseFileName="..\obj\Release_NASM\libmp3lameDLL/"
+						ObjectFile="..\obj\ReleaseNASM\libmp3lameDLL/"
+						ProgramDataBaseFileName="..\obj\ReleaseNASM\libmp3lameDLL/"
 					/>
 				</FileConfiguration>
 				<FileConfiguration
@@ -976,7 +976,7 @@
 					/>
 				</FileConfiguration>
 				<FileConfiguration
-					Name="Release NASM|Win32"
+					Name="ReleaseNASM|Win32"
 					>
 					<Tool
 						Name="VCCLCompilerTool"
@@ -1001,7 +1001,7 @@
 				RelativePath="..\libmp3lame\bitstream.h"
 				>
 				<FileConfiguration
-					Name="Release NASM|Win32"
+					Name="ReleaseNASM|Win32"
 					ExcludedFromBuild="true"
 					>
 					<Tool
@@ -1013,7 +1013,7 @@
 				RelativePath="..\libmp3lame\encoder.h"
 				>
 				<FileConfiguration
-					Name="Release NASM|Win32"
+					Name="ReleaseNASM|Win32"
 					ExcludedFromBuild="true"
 					>
 					<Tool
@@ -1025,7 +1025,7 @@
 				RelativePath="..\libmp3lame\fft.h"
 				>
 				<FileConfiguration
-					Name="Release NASM|Win32"
+					Name="ReleaseNASM|Win32"
 					ExcludedFromBuild="true"
 					>
 					<Tool
@@ -1037,7 +1037,7 @@
 				RelativePath="..\libmp3lame\gain_analysis.h"
 				>
 				<FileConfiguration
-					Name="Release NASM|Win32"
+					Name="ReleaseNASM|Win32"
 					ExcludedFromBuild="true"
 					>
 					<Tool
@@ -1049,7 +1049,7 @@
 				RelativePath="..\libmp3lame\id3tag.h"
 				>
 				<FileConfiguration
-					Name="Release NASM|Win32"
+					Name="ReleaseNASM|Win32"
 					ExcludedFromBuild="true"
 					>
 					<Tool
@@ -1061,7 +1061,7 @@
 				RelativePath="..\libmp3lame\l3side.h"
 				>
 				<FileConfiguration
-					Name="Release NASM|Win32"
+					Name="ReleaseNASM|Win32"
 					ExcludedFromBuild="true"
 					>
 					<Tool
@@ -1073,7 +1073,7 @@
 				RelativePath="..\libmp3lame\lame-analysis.h"
 				>
 				<FileConfiguration
-					Name="Release NASM|Win32"
+					Name="ReleaseNASM|Win32"
 					ExcludedFromBuild="true"
 					>
 					<Tool
@@ -1085,7 +1085,7 @@
 				RelativePath="..\libmp3lame\lame_global_flags.h"
 				>
 				<FileConfiguration
-					Name="Release NASM|Win32"
+					Name="ReleaseNASM|Win32"
 					ExcludedFromBuild="true"
 					>
 					<Tool
@@ -1097,7 +1097,7 @@
 				RelativePath="..\libmp3lame\.\vector\lame_intrin.h"
 				>
 				<FileConfiguration
-					Name="Release NASM|Win32"
+					Name="ReleaseNASM|Win32"
 					ExcludedFromBuild="true"
 					>
 					<Tool
@@ -1109,7 +1109,7 @@
 				RelativePath="..\libmp3lame\lameerror.h"
 				>
 				<FileConfiguration
-					Name="Release NASM|Win32"
+					Name="ReleaseNASM|Win32"
 					ExcludedFromBuild="true"
 					>
 					<Tool
@@ -1121,7 +1121,7 @@
 				RelativePath="..\libmp3lame\machine.h"
 				>
 				<FileConfiguration
-					Name="Release NASM|Win32"
+					Name="ReleaseNASM|Win32"
 					ExcludedFromBuild="true"
 					>
 					<Tool
@@ -1133,7 +1133,7 @@
 				RelativePath="..\libmp3lame\newmdct.h"
 				>
 				<FileConfiguration
-					Name="Release NASM|Win32"
+					Name="ReleaseNASM|Win32"
 					ExcludedFromBuild="true"
 					>
 					<Tool
@@ -1145,7 +1145,7 @@
 				RelativePath="..\libmp3lame\psymodel.h"
 				>
 				<FileConfiguration
-					Name="Release NASM|Win32"
+					Name="ReleaseNASM|Win32"
 					ExcludedFromBuild="true"
 					>
 					<Tool
@@ -1157,7 +1157,7 @@
 				RelativePath="..\libmp3lame\quantize.h"
 				>
 				<FileConfiguration
-					Name="Release NASM|Win32"
+					Name="ReleaseNASM|Win32"
 					ExcludedFromBuild="true"
 					>
 					<Tool
@@ -1169,7 +1169,7 @@
 				RelativePath="..\libmp3lame\quantize_pvt.h"
 				>
 				<FileConfiguration
-					Name="Release NASM|Win32"
+					Name="ReleaseNASM|Win32"
 					ExcludedFromBuild="true"
 					>
 					<Tool
@@ -1181,7 +1181,7 @@
 				RelativePath="..\libmp3lame\reservoir.h"
 				>
 				<FileConfiguration
-					Name="Release NASM|Win32"
+					Name="ReleaseNASM|Win32"
 					ExcludedFromBuild="true"
 					>
 					<Tool
@@ -1193,7 +1193,7 @@
 				RelativePath="..\libmp3lame\set_get.h"
 				>
 				<FileConfiguration
-					Name="Release NASM|Win32"
+					Name="ReleaseNASM|Win32"
 					ExcludedFromBuild="true"
 					>
 					<Tool
@@ -1205,7 +1205,7 @@
 				RelativePath="..\libmp3lame\tables.h"
 				>
 				<FileConfiguration
-					Name="Release NASM|Win32"
+					Name="ReleaseNASM|Win32"
 					ExcludedFromBuild="true"
 					>
 					<Tool
@@ -1217,7 +1217,7 @@
 				RelativePath="..\libmp3lame\util.h"
 				>
 				<FileConfiguration
-					Name="Release NASM|Win32"
+					Name="ReleaseNASM|Win32"
 					ExcludedFromBuild="true"
 					>
 					<Tool
@@ -1229,7 +1229,7 @@
 				RelativePath="..\libmp3lame\vbrquantize.h"
 				>
 				<FileConfiguration
-					Name="Release NASM|Win32"
+					Name="ReleaseNASM|Win32"
 					ExcludedFromBuild="true"
 					>
 					<Tool
@@ -1241,7 +1241,7 @@
 				RelativePath="..\libmp3lame\VbrTag.h"
 				>
 				<FileConfiguration
-					Name="Release NASM|Win32"
+					Name="ReleaseNASM|Win32"
 					ExcludedFromBuild="true"
 					>
 					<Tool
@@ -1253,7 +1253,7 @@
 				RelativePath="..\libmp3lame\version.h"
 				>
 				<FileConfiguration
-					Name="Release NASM|Win32"
+					Name="ReleaseNASM|Win32"
 					ExcludedFromBuild="true"
 					>
 					<Tool
@@ -1317,7 +1317,7 @@
 					/>
 				</FileConfiguration>
 				<FileConfiguration
-					Name="Release NASM|Win32"
+					Name="ReleaseNASM|Win32"
 					ExcludedFromBuild="true"
 					>
 					<Tool
@@ -1365,7 +1365,7 @@
 					/>
 				</FileConfiguration>
 				<FileConfiguration
-					Name="Release NASM|Win32"
+					Name="ReleaseNASM|Win32"
 					ExcludedFromBuild="true"
 					>
 					<Tool
@@ -1413,7 +1413,7 @@
 					/>
 				</FileConfiguration>
 				<FileConfiguration
-					Name="Release NASM|Win32"
+					Name="ReleaseNASM|Win32"
 					ExcludedFromBuild="true"
 					>
 					<Tool
@@ -1441,7 +1441,7 @@
 					/>
 				</FileConfiguration>
 				<FileConfiguration
-					Name="Release NASM|Win32"
+					Name="ReleaseNASM|Win32"
 					ExcludedFromBuild="true"
 					>
 					<Tool
@@ -1475,14 +1475,14 @@
 					/>
 				</FileConfiguration>
 				<FileConfiguration
-					Name="Release NASM|Win32"
+					Name="ReleaseNASM|Win32"
 					>
 					<Tool
 						Name="VCCLCompilerTool"
 						AdditionalIncludeDirectories=""
 						PreprocessorDefinitions=""
-						ObjectFile="..\obj\Release_NASM\libmp3lameDLL/"
-						ProgramDataBaseFileName="..\obj\Release_NASM\libmp3lameDLL/"
+						ObjectFile="..\obj\ReleaseNASM\libmp3lameDLL/"
+						ProgramDataBaseFileName="..\obj\ReleaseNASM\libmp3lameDLL/"
 					/>
 				</FileConfiguration>
 				<FileConfiguration
@@ -1508,14 +1508,14 @@
 					/>
 				</FileConfiguration>
 				<FileConfiguration
-					Name="Release NASM|Win32"
+					Name="ReleaseNASM|Win32"
 					>
 					<Tool
 						Name="VCCLCompilerTool"
 						AdditionalIncludeDirectories=""
 						PreprocessorDefinitions=""
-						ObjectFile="..\obj\Release_NASM\libmp3lameDLL/"
-						ProgramDataBaseFileName="..\obj\Release_NASM\libmp3lameDLL/"
+						ObjectFile="..\obj\ReleaseNASM\libmp3lameDLL/"
+						ProgramDataBaseFileName="..\obj\ReleaseNASM\libmp3lameDLL/"
 					/>
 				</FileConfiguration>
 				<FileConfiguration
@@ -1541,14 +1541,14 @@
 					/>
 				</FileConfiguration>
 				<FileConfiguration
-					Name="Release NASM|Win32"
+					Name="ReleaseNASM|Win32"
 					>
 					<Tool
 						Name="VCCLCompilerTool"
 						AdditionalIncludeDirectories=""
 						PreprocessorDefinitions=""
-						ObjectFile="..\obj\Release_NASM\libmp3lameDLL/"
-						ProgramDataBaseFileName="..\obj\Release_NASM\libmp3lameDLL/"
+						ObjectFile="..\obj\ReleaseNASM\libmp3lameDLL/"
+						ProgramDataBaseFileName="..\obj\ReleaseNASM\libmp3lameDLL/"
 					/>
 				</FileConfiguration>
 				<FileConfiguration
@@ -1574,14 +1574,14 @@
 					/>
 				</FileConfiguration>
 				<FileConfiguration
-					Name="Release NASM|Win32"
+					Name="ReleaseNASM|Win32"
 					>
 					<Tool
 						Name="VCCLCompilerTool"
 						AdditionalIncludeDirectories=""
 						PreprocessorDefinitions=""
-						ObjectFile="..\obj\Release_NASM\libmp3lameDLL/"
-						ProgramDataBaseFileName="..\obj\Release_NASM\libmp3lameDLL/"
+						ObjectFile="..\obj\ReleaseNASM\libmp3lameDLL/"
+						ProgramDataBaseFileName="..\obj\ReleaseNASM\libmp3lameDLL/"
 					/>
 				</FileConfiguration>
 				<FileConfiguration
@@ -1607,14 +1607,14 @@
 					/>
 				</FileConfiguration>
 				<FileConfiguration
-					Name="Release NASM|Win32"
+					Name="ReleaseNASM|Win32"
 					>
 					<Tool
 						Name="VCCLCompilerTool"
 						AdditionalIncludeDirectories=""
 						PreprocessorDefinitions=""
-						ObjectFile="..\obj\Release_NASM\libmp3lameDLL/"
-						ProgramDataBaseFileName="..\obj\Release_NASM\libmp3lameDLL/"
+						ObjectFile="..\obj\ReleaseNASM\libmp3lameDLL/"
+						ProgramDataBaseFileName="..\obj\ReleaseNASM\libmp3lameDLL/"
 					/>
 				</FileConfiguration>
 				<FileConfiguration
@@ -1640,14 +1640,14 @@
 					/>
 				</FileConfiguration>
 				<FileConfiguration
-					Name="Release NASM|Win32"
+					Name="ReleaseNASM|Win32"
 					>
 					<Tool
 						Name="VCCLCompilerTool"
 						AdditionalIncludeDirectories=""
 						PreprocessorDefinitions=""
-						ObjectFile="..\obj\Release_NASM\libmp3lameDLL/"
-						ProgramDataBaseFileName="..\obj\Release_NASM\libmp3lameDLL/"
+						ObjectFile="..\obj\ReleaseNASM\libmp3lameDLL/"
+						ProgramDataBaseFileName="..\obj\ReleaseNASM\libmp3lameDLL/"
 					/>
 				</FileConfiguration>
 				<FileConfiguration
@@ -1673,14 +1673,14 @@
 					/>
 				</FileConfiguration>
 				<FileConfiguration
-					Name="Release NASM|Win32"
+					Name="ReleaseNASM|Win32"
 					>
 					<Tool
 						Name="VCCLCompilerTool"
 						AdditionalIncludeDirectories=""
 						PreprocessorDefinitions=""
-						ObjectFile="..\obj\Release_NASM\libmp3lameDLL/"
-						ProgramDataBaseFileName="..\obj\Release_NASM\libmp3lameDLL/"
+						ObjectFile="..\obj\ReleaseNASM\libmp3lameDLL/"
+						ProgramDataBaseFileName="..\obj\ReleaseNASM\libmp3lameDLL/"
 					/>
 				</FileConfiguration>
 				<FileConfiguration
@@ -1706,14 +1706,14 @@
 					/>
 				</FileConfiguration>
 				<FileConfiguration
-					Name="Release NASM|Win32"
+					Name="ReleaseNASM|Win32"
 					>
 					<Tool
 						Name="VCCLCompilerTool"
 						AdditionalIncludeDirectories=""
 						PreprocessorDefinitions=""
-						ObjectFile="..\obj\Release_NASM\libmp3lameDLL/"
-						ProgramDataBaseFileName="..\obj\Release_NASM\libmp3lameDLL/"
+						ObjectFile="..\obj\ReleaseNASM\libmp3lameDLL/"
+						ProgramDataBaseFileName="..\obj\ReleaseNASM\libmp3lameDLL/"
 					/>
 				</FileConfiguration>
 				<FileConfiguration
@@ -1735,7 +1735,7 @@
 				RelativePath="..\libmp3lame\..\mpglib\common.h"
 				>
 				<FileConfiguration
-					Name="Release NASM|Win32"
+					Name="ReleaseNASM|Win32"
 					ExcludedFromBuild="true"
 					>
 					<Tool
@@ -1747,7 +1747,7 @@
 				RelativePath="..\libmp3lame\..\mpglib\dct64_i386.h"
 				>
 				<FileConfiguration
-					Name="Release NASM|Win32"
+					Name="ReleaseNASM|Win32"
 					ExcludedFromBuild="true"
 					>
 					<Tool
@@ -1759,7 +1759,7 @@
 				RelativePath="..\libmp3lame\..\mpglib\decode_i386.h"
 				>
 				<FileConfiguration
-					Name="Release NASM|Win32"
+					Name="ReleaseNASM|Win32"
 					ExcludedFromBuild="true"
 					>
 					<Tool
@@ -1771,7 +1771,7 @@
 				RelativePath="..\libmp3lame\..\mpglib\huffman.h"
 				>
 				<FileConfiguration
-					Name="Release NASM|Win32"
+					Name="ReleaseNASM|Win32"
 					ExcludedFromBuild="true"
 					>
 					<Tool
@@ -1783,7 +1783,7 @@
 				RelativePath="..\libmp3lame\..\mpglib\interface.h"
 				>
 				<FileConfiguration
-					Name="Release NASM|Win32"
+					Name="ReleaseNASM|Win32"
 					ExcludedFromBuild="true"
 					>
 					<Tool
@@ -1795,7 +1795,7 @@
 				RelativePath="..\libmp3lame\..\mpglib\layer1.h"
 				>
 				<FileConfiguration
-					Name="Release NASM|Win32"
+					Name="ReleaseNASM|Win32"
 					ExcludedFromBuild="true"
 					>
 					<Tool
@@ -1807,7 +1807,7 @@
 				RelativePath="..\libmp3lame\..\mpglib\layer2.h"
 				>
 				<FileConfiguration
-					Name="Release NASM|Win32"
+					Name="ReleaseNASM|Win32"
 					ExcludedFromBuild="true"
 					>
 					<Tool
@@ -1819,7 +1819,7 @@
 				RelativePath="..\libmp3lame\..\mpglib\layer3.h"
 				>
 				<FileConfiguration
-					Name="Release NASM|Win32"
+					Name="ReleaseNASM|Win32"
 					ExcludedFromBuild="true"
 					>
 					<Tool
@@ -1831,7 +1831,7 @@
 				RelativePath="..\libmp3lame\..\mpglib\mpg123.h"
 				>
 				<FileConfiguration
-					Name="Release NASM|Win32"
+					Name="ReleaseNASM|Win32"
 					ExcludedFromBuild="true"
 					>
 					<Tool
@@ -1843,7 +1843,7 @@
 				RelativePath="..\libmp3lame\..\mpglib\mpglib.h"
 				>
 				<FileConfiguration
-					Name="Release NASM|Win32"
+					Name="ReleaseNASM|Win32"
 					ExcludedFromBuild="true"
 					>
 					<Tool
@@ -1855,7 +1855,7 @@
 				RelativePath="..\libmp3lame\..\mpglib\tabinit.h"
 				>
 				<FileConfiguration
-					Name="Release NASM|Win32"
+					Name="ReleaseNASM|Win32"
 					ExcludedFromBuild="true"
 					>
 					<Tool
@@ -1878,7 +1878,7 @@
 				/>
 			</FileConfiguration>
 			<FileConfiguration
-				Name="Release NASM|Win32"
+				Name="ReleaseNASM|Win32"
 				ExcludedFromBuild="true"
 				>
 				<Tool
@@ -1908,7 +1908,7 @@
 				/>
 			</FileConfiguration>
 			<FileConfiguration
-				Name="Release NASM|Win32"
+				Name="ReleaseNASM|Win32"
 				ExcludedFromBuild="true"
 				>
 				<Tool

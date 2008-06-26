@@ -15,9 +15,9 @@
 	</ToolFiles>
 	<Configurations>
 		<Configuration
-			Name="Release NASM|Win32"
-			OutputDirectory="..\output\Release_NASM"
-			IntermediateDirectory="..\obj\Release_NASM\mpglib"
+			Name="ReleaseNASM|Win32"
+			OutputDirectory="..\output\ReleaseNASM"
+			IntermediateDirectory="..\obj\ReleaseNASM\mpglib"
 			ConfigurationType="4"
 			InheritedPropertySheets="$(VCInstallDir)VCProjectDefaults\UpgradeFromVC60.vsprops"
 			UseOfMFC="0"
@@ -47,10 +47,10 @@
 				StringPooling="true"
 				RuntimeLibrary="2"
 				EnableFunctionLevelLinking="true"
-				PrecompiledHeaderFile="..\obj\Release_NASM\mpglib/mpglib.pch"
-				AssemblerListingLocation="..\obj\Release_NASM\mpglib/"
-				ObjectFile="..\obj\Release_NASM\mpglib/"
-				ProgramDataBaseFileName="..\obj\Release_NASM\mpglib/"
+				PrecompiledHeaderFile="..\obj\ReleaseNASM\mpglib/mpglib.pch"
+				AssemblerListingLocation="..\obj\ReleaseNASM\mpglib/"
+				ObjectFile="..\obj\ReleaseNASM\mpglib/"
+				ProgramDataBaseFileName="..\obj\ReleaseNASM\mpglib/"
 				WarningLevel="3"
 				SuppressStartupBanner="true"
 			/>
@@ -66,7 +66,7 @@
 			/>
 			<Tool
 				Name="VCLibrarianTool"
-				OutputFile="..\output\Release_NASM\mpglib-static.lib"
+				OutputFile="..\output\ReleaseNASM\mpglib-static.lib"
 				SuppressStartupBanner="true"
 			/>
 			<Tool
@@ -78,7 +78,7 @@
 			<Tool
 				Name="VCBscMakeTool"
 				SuppressStartupBanner="true"
-				OutputFile="..\obj\Release_NASM/mpglib.bsc"
+				OutputFile="..\obj\ReleaseNASM/mpglib.bsc"
 			/>
 			<Tool
 				Name="VCFxCopTool"
@@ -89,8 +89,8 @@
 		</Configuration>
 		<Configuration
 			Name="Release|Win32"
-			OutputDirectory="..\output\Release"
-			IntermediateDirectory="..\obj\Release\mpglib"
+			OutputDirectory="$(SolutionDir)..\output\$(ConfigurationName)"
+			IntermediateDirectory="$(SolutionDir)..\obj\$(ConfigurationName)\$(ProjectName)"
 			ConfigurationType="4"
 			InheritedPropertySheets="$(VCInstallDir)VCProjectDefaults\UpgradeFromVC60.vsprops"
 			UseOfMFC="0"
@@ -163,8 +163,8 @@
 		</Configuration>
 		<Configuration
 			Name="Debug|Win32"
-			OutputDirectory="..\output\Debug"
-			IntermediateDirectory="..\obj\Debug\mpglib"
+			OutputDirectory="$(SolutionDir)..\output\$(ConfigurationName)"
+			IntermediateDirectory="$(SolutionDir)..\obj\$(ConfigurationName)\$(ProjectName)"
 			ConfigurationType="4"
 			InheritedPropertySheets="$(VCInstallDir)VCProjectDefaults\UpgradeFromVC60.vsprops"
 			UseOfMFC="0"
@@ -246,7 +246,7 @@
 				RelativePath="..\mpglib\common.c"
 				>
 				<FileConfiguration
-					Name="Release NASM|Win32"
+					Name="ReleaseNASM|Win32"
 					>
 					<Tool
 						Name="VCCLCompilerTool"
@@ -277,7 +277,7 @@
 				RelativePath="..\mpglib\dct64_i386.c"
 				>
 				<FileConfiguration
-					Name="Release NASM|Win32"
+					Name="ReleaseNASM|Win32"
 					>
 					<Tool
 						Name="VCCLCompilerTool"
@@ -308,7 +308,7 @@
 				RelativePath="..\mpglib\decode_i386.c"
 				>
 				<FileConfiguration
-					Name="Release NASM|Win32"
+					Name="ReleaseNASM|Win32"
 					>
 					<Tool
 						Name="VCCLCompilerTool"
@@ -339,7 +339,7 @@
 				RelativePath="..\mpglib\interface.c"
 				>
 				<FileConfiguration
-					Name="Release NASM|Win32"
+					Name="ReleaseNASM|Win32"
 					>
 					<Tool
 						Name="VCCLCompilerTool"
@@ -370,7 +370,7 @@
 				RelativePath="..\mpglib\layer1.c"
 				>
 				<FileConfiguration
-					Name="Release NASM|Win32"
+					Name="ReleaseNASM|Win32"
 					>
 					<Tool
 						Name="VCCLCompilerTool"
@@ -401,7 +401,7 @@
 				RelativePath="..\mpglib\layer2.c"
 				>
 				<FileConfiguration
-					Name="Release NASM|Win32"
+					Name="ReleaseNASM|Win32"
 					>
 					<Tool
 						Name="VCCLCompilerTool"
@@ -432,7 +432,7 @@
 				RelativePath="..\mpglib\layer3.c"
 				>
 				<FileConfiguration
-					Name="Release NASM|Win32"
+					Name="ReleaseNASM|Win32"
 					>
 					<Tool
 						Name="VCCLCompilerTool"
@@ -463,7 +463,7 @@
 				RelativePath="..\mpglib\tabinit.c"
 				>
 				<FileConfiguration
-					Name="Release NASM|Win32"
+					Name="ReleaseNASM|Win32"
 					>
 					<Tool
 						Name="VCCLCompilerTool"
@@ -503,7 +503,7 @@
 				RelativePath="..\mpglib\..\configMS.h"
 				>
 				<FileConfiguration
-					Name="Release NASM|Win32"
+					Name="ReleaseNASM|Win32"
 					>
 					<Tool
 						Name="VCCustomBuildTool"
