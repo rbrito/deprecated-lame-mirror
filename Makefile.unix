@@ -610,10 +610,7 @@ endif
 #  should be at most 30.
 #
 test: frontend/$(PGM)
-	frontend/$(PGM)  --nores -h testcase.wav testcase.new.mp3
+	frontend/$(PGM)  --nores testcase.wav testcase.new.mp3
 	cmp -l testcase.new.mp3 testcase.mp3 | wc -l
-
-testg: frontend/$(PGM)
-	frontend/$(PGM) -g -h ../test/castanets.wav
 
 
