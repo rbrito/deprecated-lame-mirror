@@ -1,3 +1,9 @@
+lame (3.98) unstable; urgency=low
+
+  * Preparation for the final release.
+
+ -- Rogério Brito <rbrito@users.sf.net>  Sun, 29 Jun 2008 18:29:09 -0300
+
 lame (3.98~beta8+cvs20080624) unstable; urgency=low
 
   * Preparation for the new upstream release (lame 3.98 final).

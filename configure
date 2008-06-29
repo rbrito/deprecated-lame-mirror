@@ -30288,7 +30288,7 @@ if test "x$GCC" = "xyes"; then
 			# "new" GCC, use some "new" CPU specific optimizations
 			case ${host_cpu} in
 			*486)
-				OPTIMIZATION="${OPTIMIZATION} -m486 \
+				OPTIMIZATION="${OPTIMIZATION} -mcpu=i486 \
 					-mfancy-math-387"
 				;;
 			*586)
@@ -30321,14 +30321,14 @@ _ACEOF
 		4.*)
 			case ${host_cpu} in
 			*486)
-				OPTIMIZATION="${OPTIMIZATION} -march=486"
+				OPTIMIZATION="${OPTIMIZATION} -march=i486"
 				;;
 			*586)
-				OPTIMIZATION="${OPTIMIZATION} -march=586 \
+				OPTIMIZATION="${OPTIMIZATION} -march=i586 \
 					-mtune=native"
 				;;
 			*686)
-				OPTIMIZATION="${OPTIMIZATION} -march=686 \
+				OPTIMIZATION="${OPTIMIZATION} -march=i686 \
 					-mtune=native"
 				;;
 			*86)

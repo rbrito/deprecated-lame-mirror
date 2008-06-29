@@ -871,9 +871,11 @@ if test "x$GCC" = "xyes"; then
 		case "${GCC_version}" in
 		2.9*|3.*|4.0.*|4.1.*)
 			# "new" GCC, use some "new" CPU specific optimizations
+			# use -mtune instead of -m486 or -mcpu= etc, since they are
+			# deprecated by GCC <rbrito>
 			case ${host_cpu} in
 			*486)
-				OPTIMIZATION="${OPTIMIZATION} -m486 \
+				OPTIMIZATION="${OPTIMIZATION} -mcpu=i486 \
 					-mfancy-math-387"
 				;;
 			*586)
@@ -902,14 +904,14 @@ if test "x$GCC" = "xyes"; then
 		4.*)
 			case ${host_cpu} in
 			*486)
-				OPTIMIZATION="${OPTIMIZATION} -march=486"
+				OPTIMIZATION="${OPTIMIZATION} -march=i486"
 				;;
 			*586)
-				OPTIMIZATION="${OPTIMIZATION} -march=586 \
+				OPTIMIZATION="${OPTIMIZATION} -march=i586 \
 					-mtune=native"
 				;;
 			*686)
-				OPTIMIZATION="${OPTIMIZATION} -march=686 \
+				OPTIMIZATION="${OPTIMIZATION} -march=i686 \
 					-mtune=native"
 				;;
 			*86)
