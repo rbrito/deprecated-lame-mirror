@@ -155,7 +155,7 @@ IDD_ABOUT DIALOG DISCARDABLE  0, 0, 228, 121
 STYLE WS_CHILD
 FONT 8, "MS Sans Serif"
 BEGIN
-    LTEXT           "LAME Ain't MP3 Encoder (3.98 engine)",IDC_LAME_VER,7,8,
+    LTEXT           "LAME Ain't MP3 Encoder (X.XX engine)",IDC_LAME_VER,7,8,
                     208,8
     LTEXT           "LAME Project Homepage: http://www.mp3dev.org",
                     IDC_LAME_URL,7,19,192,8
