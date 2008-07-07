@@ -445,10 +445,37 @@ long double  report ( const korr_t* const k )
 }
 
 
-int  feed ( int fd, const stereo_t* p, int len )
+/* Input: an unsigned short n.
+ * Output: the swapped bytes of n if the arch is big-endian or n itself
+ *         if the arch is little-endian.
+ * Comment: should be replaced latter with a better solution than this
+ *          home-brewed hack (rbrito). The name should be better also.
+ */
+inline unsigned short be16_le(unsigned short n)
 {
-    write ( fd, p, sizeof(stereo_t) * len );
-    return len;
+#ifdef _WORDS_BIGENDIAN
+     return (n << 8) | (n >> 8);
+#else
+     return n;
+#endif
+}
+
+
+int feed ( int fd, const stereo_t* p, int len )
+{
+     int i;
+     stereo_t tmp[30000];	/* An arbitrary size--to be changed latter */
+
+     if (len > sizeof(tmp)/sizeof(*tmp))
+	  len = sizeof(tmp)/sizeof(*tmp);
+
+     for (i = 0; i < len; i++) {
+	  tmp[i][0] = be16_le(p[i][0]);
+	  tmp[i][1] = be16_le(p[i][1]);
+     }
+
+     write ( fd, tmp, sizeof(stereo_t) * len );
+     return len;
 }
 
 
@@ -461,33 +488,33 @@ short  round ( double f )
 
 int  feed2 ( int fd, const stereo_t* p1, const stereo_t* p2, int len )
 {
-    stereo_t  tmp [30000];   /* An arbitrary size, hope that no overruns occure */
-    int       i;
+     stereo_t  tmp [30000];   /* An arbitrary size, hope that no overruns occure */
+     int       i;
 
-    if (len > sizeof(tmp)/sizeof(*tmp))
-        len = sizeof(tmp)/sizeof(*tmp);
-    for ( i = 0; i < len; i++ ) {
-        double f = cos ( M_PI/2*i/len );
-        f *= f;
-        tmp [i] [0] = round ( p1 [i] [0] * f + p2 [i] [0] * (1. - f) );
-        tmp [i] [1] = round ( p1 [i] [1] * f + p2 [i] [1] * (1. - f) );
-    }
+     if (len > sizeof(tmp)/sizeof(*tmp))
+	  len = sizeof(tmp)/sizeof(*tmp);
+     for ( i = 0; i < len; i++ ) {
+	  double f = cos ( M_PI/2*i/len );
+	  f *= f;
+	  tmp [i] [0] = be16_le(round ( p1 [i] [0] * f + p2 [i] [0] * (1. - f) ));
+	  tmp [i] [1] = be16_le(round ( p1 [i] [1] * f + p2 [i] [1] * (1. - f) ));
+     }
 
-    write ( fd, tmp, sizeof(stereo_t) * len );
-    return len;
+     write ( fd, tmp, sizeof(stereo_t) * len );
+     return len;
 }
 
 
 int feedfac ( int fd, const stereo_t* p1, const stereo_t* p2, int len, double fac1, double fac2 )
 {
-    stereo_t  tmp [30000];   /* An arbitrary size, hope that no overruns occure */
-    int       i;
+     stereo_t  tmp [30000];   /* An arbitrary size, hope that no overruns occure */
+     int       i;
 
-    if (len > sizeof(tmp)/sizeof(*tmp))
-        len = sizeof(tmp)/sizeof(*tmp);
-    for ( i = 0; i < len; i++ ) {
-        tmp [i] [0] = round ( p1 [i] [0] * fac1 + p2 [i] [0] * fac2 );
-        tmp [i] [1] = round ( p1 [i] [1] * fac1 + p2 [i] [1] * fac2 );
+     if (len > sizeof(tmp)/sizeof(*tmp))
+	  len = sizeof(tmp)/sizeof(*tmp);
+     for ( i = 0; i < len; i++ ) {
+	  tmp [i] [0] = be16_le(round ( p1 [i] [0] * fac1 + p2 [i] [0] * fac2 ));
+	  tmp [i] [1] = be16_le(round ( p1 [i] [1] * fac1 + p2 [i] [1] * fac2 ));
     }
 
     write ( fd, tmp, sizeof(stereo_t) * len );
@@ -955,9 +982,14 @@ int  readwave ( stereo_t* buff, size_t maxlen, const char* name, size_t* len )
 
     fprintf (stderr, " ..." );
     fread ( header, sizeof(*header), sizeof(header)/sizeof(*header), fp );
-    switch ( header[11] ) {
+
+    switch (be16_le(header[11])) {
         case 2:
             *len = fread ( buff, sizeof(stereo_t), maxlen, fp );
+	    for (i = 0; i < *len; i ++) {
+		 buff[i][0] = be16_le(buff[i][0]);
+		 buff[i][1] = be16_le(buff[i][1]);
+	    }
             break;
         case 1:
             *len = fread ( buff, sizeof(sample_t), maxlen, fp );
@@ -977,7 +1009,7 @@ int  readwave ( stereo_t* buff, size_t maxlen, const char* name, size_t* len )
     }
     pclose ( fp );
     fprintf (stderr, "\n" );
-    return header[12] ? header[12] : 65534;
+    return be16_le(header[12]) ? be16_le(header[12]) : 65534;
 }
 
 
