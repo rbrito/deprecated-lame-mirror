@@ -140,7 +140,7 @@ ifeq ($(UNAME),Linux)
 #	-Wmissing-declarations -Wfloat-equal -Wshadow \
 #	-Wcast-qual -Wcast-align -Wdisabled-optimization \
 #	-ffast-math -ftree-vectorize -ftree-vect-loop-version \
-#	-mtune=nocona -march=nocona -mfp-math=sse -msse -msse2 -msse3 \
+#	-mtune=nocona -march=nocona -mfpmath=sse -msse -msse2 -msse3 \
 #	-malign-double -maccumulate-outgoing-args
 
 #  for debugging:
