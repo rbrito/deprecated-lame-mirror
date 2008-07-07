@@ -118,9 +118,9 @@ endif
 # LINUX
 ##########################################################################
 ifeq ($(UNAME),Linux)
-#  remove these lines if you dont have GTK, or dont want the GTK frame analyzer
-   GTK = -DHAVE_GTK `gtk-config --cflags`
-   GTKLIBS = `gtk-config --libs`
+#  The frame analyzer depends on gtk1.2. Uncomment the next 2 lines to get it
+#   GTK = -DHAVE_GTK `gtk-config --cflags`
+#   GTKLIBS = `gtk-config --libs`
 # Comment out next 2 lines if you want to remove VBR histogram capability
    BRHIST_SWITCH = -DBRHIST -DHAVE_TERMCAP -DHAVE_TERMCAP_H
    LIBTERMCAP = -lncurses
@@ -129,8 +129,19 @@ ifeq ($(UNAME),Linux)
 #   LIBSNDFILE=-lsndfile
 
 # suggested for gcc-2.7.x
-#   CC_OPTS =  -O3 -fomit-frame-pointer -funroll-loops -ffast-math  -finline-functions -Wall -pedantic
+#  CC_OPTS =  -O3 -fomit-frame-pointer -funroll-loops -ffast-math  -finline-functions -Wall -pedantic
 #  CC_OPTS =  -O9 -fomit-frame-pointer -fno-strength-reduce -mpentiumpro -ffast-math -finline-functions -funroll-loops -Wall -malign-double -g -march=pentiumpro -mfancy-math-387 -pipe -pedantic
+
+# Suggested for GCC 4.* & machines with sse+sse2+sse3: -Os might reduce
+# the use of the instruction cache and, thus, get better performance,
+# but this should be experimented by the user.
+#CC_OPTS = -pipe -O3 \
+#	-Wall -Wextra -pedantic \
+#	-Wmissing-declarations -Wfloat-equal -Wshadow \
+#	-Wcast-qual -Wcast-align -Wdisabled-optimization \
+#	-ffast-math -ftree-vectorize -ftree-vect-loop-version \
+#	-mtune=nocona -march=nocona -mfp-math=sse -msse -msse2 -msse3 \
+#	-malign-double -maccumulate-outgoing-args
 
 #  for debugging:
   CC_OPTS =  -UNDEBUG -O -Wall -pedantic -ggdb -DABORTFP
@@ -404,20 +415,6 @@ ifeq ($(UNAME),AmigaOS)
 endif
 
 
-
-
-
-
-
-
-
-
-
-
-
-
-
-
 # 10/99 added -D__NO_MATH_INLINES to fix a bug in *all* versions of
 # gcc 2.8+ as of 10/99.
 
@@ -605,12 +602,10 @@ endif
 #  wc is the number of bytes which differ between new output
 #  and 'official' results.
 #
-#  Because of compilier options and effects of roundoff, the
+#  Because of compiler options and effects of roundoff, the
 #  number of bytes which are different may not be zero, but
 #  should be at most 30.
 #
 test: frontend/$(PGM)
 	frontend/$(PGM)  --nores testcase.wav testcase.new.mp3
 	cmp -l testcase.new.mp3 testcase.mp3 | wc -l
-
-
