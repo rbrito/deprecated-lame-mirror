@@ -1,4 +1,4 @@
-# Makefile for LAME 3.xx
+# Makefile for LAME 3.xx -*- makefile -*-
 #
 # LAME is reported to work under:
 # Linux (i86), NetBSD 1.3.2 (StrongARM), FreeBSD (i86)
