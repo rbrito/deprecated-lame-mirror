@@ -134,7 +134,9 @@ ifeq ($(UNAME),Linux)
 
 # Suggested for GCC 4.* & machines with sse+sse2+sse3: -Os might reduce
 # the use of the instruction cache and, thus, get better performance,
-# but this should be experimented by the user.
+# but this should be experimented by the user. Customize at your own
+# convenience.
+#
 #CC_OPTS = -pipe -O3 \
 #	-Wall -Wextra -pedantic \
 #	-Wmissing-declarations -Wfloat-equal -Wshadow \
@@ -256,6 +258,7 @@ ifeq ($(UNAME),FreeBSD)
 endif
 
 
+
 ##########################################################################
 # OpenBSD
 ##########################################################################
@@ -283,6 +286,7 @@ ifeq ($(UNAME),SunOS)
 #   CC_OPTS = -O
 #   MAKEDEP = -M
 endif
+
 
 
 ##########################################################################
@@ -372,6 +376,8 @@ ifeq ($(UNAME),OS/2)
 #   GTKLIBS = -LC:/XFree86/lib -Zmtd -Zsysv-signals -Zbin-files -lgtk12 -lgdk12 -lgmodule -lglib12 -lXext -lX11 -lshm -lbsd -lsocket -lm
 endif
 
+
+
 ###########################################################################
 # MSDOS/Windows
 ###########################################################################
@@ -384,6 +390,8 @@ ifeq ($(UNAME),MSDOS)
   CC_OPTS += -D_cdecl=__cdecl
   PGM = lame.exe
 endif
+
+
 
 ###########################################################################
 # AmigaOS
@@ -520,6 +528,11 @@ lib_obj += libmp3lame/i386/fftsse.o
 #lib_obj += libmp3lame/i386/fftfpu.o
 endif
 
+
+
+#
+# Makefile rules---you probably won't have to modify below this line
+#
 %.o: %.c
 	$(CC) $(CPP_OPTS) $(CC_SWITCHES) -c $< -o $@
 
