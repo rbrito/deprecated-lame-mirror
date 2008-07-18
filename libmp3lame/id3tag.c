@@ -411,7 +411,7 @@ set_4_byte_value(unsigned char *bytes, uint32_t value)
 {
     int     i;
     for (i = 3; i >= 0; --i) {
-        bytes[i] = value & 0xfful;
+        bytes[i] = value & 0xffUL;
         value >>= 8;
     }
     return bytes + 4;
@@ -802,7 +802,7 @@ id3tag_set_comment(lame_global_flags * gfp, const char *comment)
 int
 id3tag_set_track(lame_global_flags * gfp, const char *track)
 {
-    char   *trackcount;
+    char const *trackcount;
     lame_internal_flags *gfc = gfp->internal_flags;
     int     ret = 0;
 
@@ -1151,7 +1151,9 @@ lame_get_id3v2_tag(lame_global_flags * gfp, unsigned char *buffer, size_t size)
                     albumart_mime = mime_gif;
                     break;
                 }
-                tag_size += 10 + 4 + strlen(albumart_mime) + gfc->tag_spec.albumart_size;
+                if (albumart_mime) {
+                    tag_size += 10 + 4 + strlen(albumart_mime) + gfc->tag_spec.albumart_size;
+                }
             }
             {
                 id3tag_spec *tag = &gfc->tag_spec;
@@ -1230,8 +1232,10 @@ lame_get_id3v2_tag(lame_global_flags * gfp, unsigned char *buffer, size_t size)
             for (i = 0; i < gfc->tag_spec.num_values; ++i) {
                 p = set_frame_custom(p, gfc->tag_spec.values[i]);
             }
-            p = set_frame_apic(p, albumart_mime, gfc->tag_spec.albumart,
-                               gfc->tag_spec.albumart_size);
+            if (albumart_mime) {
+                p = set_frame_apic(p, albumart_mime, gfc->tag_spec.albumart,
+                                   gfc->tag_spec.albumart_size);
+            }
             /* clear any padding bytes */
             memset(p, 0, tag_size - (p - buffer));
             return tag_size;

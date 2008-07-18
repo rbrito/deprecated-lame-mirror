@@ -334,6 +334,7 @@ AnalyzeSamples(replaygain_t * rgData, const Float_t * left_samples, const Float_
     switch (num_channels) {
     case 1:
         right_samples = left_samples;
+        break;
     case 2:
         break;
     default:

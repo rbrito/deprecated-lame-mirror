@@ -1394,7 +1394,7 @@ VBR_old_prepare(lame_global_flags const *gfp,
     get_framebits(gfp, frameBits);
 
     for (gr = 0; gr < gfc->mode_gr; gr++) {
-        mxb = on_pe(gfp, pe, &gfc->l3_side, max_bits[gr], avg, gr, 0);
+        mxb = on_pe(gfp, pe, max_bits[gr], avg, gr, 0);
         if (gfc->mode_ext == MPG_MD_MS_LR) {
             ms_convert(&gfc->l3_side, gr);
             reduce_side(max_bits[gr], ms_ener_ratio[gr], avg, mxb);
@@ -1573,7 +1573,7 @@ VBR_new_prepare(lame_global_flags const *gfp,
 
     int     gr, ch;
     int     analog_silence = 1;
-    int     avg, mxb, bits = 0;
+    int     avg, bits = 0;
     int     maximum_framebits;
 
     if (!gfp->free_format) {
@@ -1590,7 +1590,7 @@ VBR_new_prepare(lame_global_flags const *gfp,
     }
 
     for (gr = 0; gr < gfc->mode_gr; gr++) {
-        mxb = on_pe(gfp, pe, &gfc->l3_side, max_bits[gr], avg, gr, 0);
+        (void) on_pe(gfp, pe, max_bits[gr], avg, gr, 0);
         if (gfc->mode_ext == MPG_MD_MS_LR) {
             ms_convert(&gfc->l3_side, gr);
         }
@@ -1982,7 +1982,7 @@ CBR_iteration_loop(lame_global_flags const *gfp, FLOAT pe[2][2],
 
         /*  calculate needed bits
          */
-        max_bits = on_pe(gfp, pe, l3_side, targ_bits, mean_bits, gr, gr);
+        max_bits = on_pe(gfp, pe, targ_bits, mean_bits, gr, gr);
 
         if (gfc->mode_ext == MPG_MD_MS_LR) {
             ms_convert(&gfc->l3_side, gr);

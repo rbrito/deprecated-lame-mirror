@@ -51,7 +51,7 @@
 
 
 #ifdef DEBUG
-static int hoge, hogege;
+static int hogege;
 #endif
 
 
@@ -89,7 +89,6 @@ putheader_bits(lame_internal_flags * gfc)
     Bit_stream_struc *bs;
     bs = &gfc->bs;
 #ifdef DEBUG
-    hoge += gfc->sideinfo_len * 8;
     hogege += gfc->sideinfo_len * 8;
 #endif
     memcpy(&bs->buf[bs->buf_byte_idx], gfc->header[gfc->w_ptr].buf, gfc->sideinfo_len);

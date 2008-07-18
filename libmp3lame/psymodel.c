@@ -507,8 +507,11 @@ vbrpsy_mask_add(FLOAT m1, FLOAT m2, int b)
     if (m2 < 0) {
         m2 = 0;
     }
-    if (m1 <= 0 && m2 <= 0) {
-        return 0;
+    if (m1 <= 0) {
+        return m2;
+    }
+    if (m2 <= 0) {
+        return m1;
     }
     if (m2 > m1) {
         ratio = m2 / m1;
@@ -762,7 +765,6 @@ compute_masking_s(lame_global_flags const *gfp,
                   FLOAT(*fftenergy_s)[HBLKSIZE_s], FLOAT * eb, FLOAT * thr, int chn, int sblock)
 {
     lame_internal_flags *const gfc = gfp->internal_flags;
-    FLOAT   max[CBANDS];
     int     i, j, b;
 
     for (b = j = 0; b < gfc->npart_s; ++b) {
@@ -775,7 +777,6 @@ compute_masking_s(lame_global_flags const *gfp,
                 m = el;
         }
         eb[b] = ebb;
-        max[b] = m;
     }
     assert(b == gfc->npart_s);
     assert(j == 129);
