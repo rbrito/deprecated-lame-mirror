@@ -46,7 +46,7 @@ ADDING NEW OPTIONS
 control variable goes in lame_global_flags sturct.
 Assume the variable is called 'new_variable'.
 
-You also need to write (in get_set.c):
+You also need to write (in set_get.c):
 
 lame_set_new_variable()
 lame_get_new_variable()
@@ -59,7 +59,7 @@ in parse.m
 
 Note: for experimental features that you need to call from the frontend
 but that should not be part of the official API, see the section at
-the end of get_set.c.  These functions should *NOT* be prototyped in
+the end of set_get.c.  These functions should *NOT* be prototyped in
 lame.h (since that would indicate to the world that they are part
 of the API). 
 
@@ -121,28 +121,4 @@ flags all the way back up the call stack.
    }
 
 3. The data should be free'd in the routine freegfc().
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
- 
-
 
