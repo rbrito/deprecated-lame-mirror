@@ -12,8 +12,10 @@
 
 #ifdef HAVE_CONFIG_H
 # include <config.h>
-/* std int types already defined in config.h */
-#define _STDINT_H
+#endif
+
+#ifdef HAVE_STDINT_H
+# include <stdint.h>
 #endif
 
 #ifdef STDC_HEADERS
