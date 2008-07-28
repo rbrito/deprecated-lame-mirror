@@ -82,23 +82,23 @@ typedef struct calc_noise_data_t {
 } calc_noise_data;
 
 
-int     on_pe(lame_global_flags const *gfp, FLOAT pe[2][2],
+int     on_pe(lame_internal_flags * gfc, FLOAT pe[2][2],
               int targ_bits[2], int mean_bits, int gr, int cbr);
 
 void    reduce_side(int targ_bits[2], FLOAT ms_ener_ratio, int mean_bits, int max_bits);
 
 
-void    iteration_init(lame_global_flags * gfp);
+void    iteration_init(lame_internal_flags * gfc);
 
 
-int     calc_xmin(lame_global_flags const *gfp,
+int     calc_xmin(lame_internal_flags const *gfc,
                   III_psy_ratio const *const ratio, gr_info * const cod_info, FLOAT * l3_xmin);
 
 int     calc_noise(const gr_info * const cod_info,
                    const FLOAT * l3_xmin,
                    FLOAT * distort, calc_noise_result * const res, calc_noise_data * prev_noise);
 
-void    set_frame_pinfo(lame_global_flags const *gfp, III_psy_ratio ratio[2][2]);
+void    set_frame_pinfo(lame_internal_flags * gfc, III_psy_ratio ratio[2][2]);
 
 
 

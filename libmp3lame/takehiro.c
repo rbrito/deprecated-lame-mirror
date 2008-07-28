@@ -650,6 +650,7 @@ int
 noquant_count_bits(lame_internal_flags const *const gfc,
                    gr_info * const gi, calc_noise_data * prev_noise)
 {
+    SessionConfig_t const *const cfg = &gfc->cfg;
     int     bits = 0;
     int     i, a1, a2;
     int const *const ix = gi->l3_enc;
@@ -699,8 +700,8 @@ noquant_count_bits(lame_internal_flags const *const gfc,
     }
     else if (gi->block_type == NORM_TYPE) {
         assert(i <= 576); /* bv_scf has 576 entries (0..575) */
-        a1 = gi->region0_count = gfc->bv_scf[i - 2];
-        a2 = gi->region1_count = gfc->bv_scf[i - 1];
+        a1 = gi->region0_count = gfc->sv_qnt.bv_scf[i - 2];
+        a2 = gi->region1_count = gfc->sv_qnt.bv_scf[i - 1];
 
         assert(a1 + a2 + 2 < SBPSY_l);
         a2 = gfc->scalefac_band.l[a1 + a2 + 2];
@@ -734,7 +735,7 @@ noquant_count_bits(lame_internal_flags const *const gfc,
         gi->table_select[0] = gfc->choose_table(ix, ix + a1, &bits);
     if (a1 < a2)
         gi->table_select[1] = gfc->choose_table(ix + a1, ix + a2, &bits);
-    if (gfc->use_best_huffman == 2) {
+    if (cfg->use_best_huffman == 2) {
         gi->part2_3_length = bits;
         best_huffman_divide(gfc, gi);
         bits = gi->part2_3_length;
@@ -768,7 +769,7 @@ count_bits(lame_internal_flags const *const gfc,
 
     quantize_xrpow(xr, ix, IPOW20(gi->global_gain), gi, prev_noise);
 
-    if (gfc->substep_shaping & 2) {
+    if (gfc->sv_qnt.substep_shaping & 2) {
         int     sfb, j = 0;
         /* 0.634521682242439 = 0.5946*2**(.5*0.1875) */
         int const gain = gi->global_gain + gi->scalefac_scale;
@@ -778,7 +779,7 @@ count_bits(lame_internal_flags const *const gfc,
             int     l;
             assert(width >= 0);
             j += width;
-            if (!gfc->pseudohalf[sfb])
+            if (!gfc->sv_qnt.pseudohalf[sfb])
                 continue;
             for (l = -width; l < 0; l++)
                 if (xr[j + l] < roundfac)
@@ -872,6 +873,7 @@ recalc_divide_sub(const lame_internal_flags * const gfc,
 void
 best_huffman_divide(const lame_internal_flags * const gfc, gr_info * const gi)
 {
+    SessionConfig_t const *const cfg = &gfc->cfg;
     int     i, a1, a2;
     gr_info cod_info2;
     int const *const ix = gi->l3_enc;
@@ -883,7 +885,7 @@ best_huffman_divide(const lame_internal_flags * const gfc, gr_info * const gi)
 
 
     /* SHORT BLOCK stuff fails for MPEG2 */
-    if (gi->block_type == SHORT_TYPE && gfc->mode_gr == 1)
+    if (gi->block_type == SHORT_TYPE && cfg->mode_gr == 1)
         return;
 
 
@@ -1009,6 +1011,7 @@ void
 best_scalefac_store(const lame_internal_flags * gfc,
                     const int gr, const int ch, III_side_info_t * const l3_side)
 {
+    SessionConfig_t const *const cfg = &gfc->cfg;
     /* use scalefac_scale if we can */
     gr_info *const gi = &l3_side->tt[gr][ch];
     int     sfb, i, j, l;
@@ -1048,7 +1051,7 @@ best_scalefac_store(const lame_internal_flags * gfc,
         }
     }
 
-    if (!gi->preflag && gi->block_type != SHORT_TYPE && gfc->mode_gr == 2) {
+    if (!gi->preflag && gi->block_type != SHORT_TYPE && cfg->mode_gr == 2) {
         for (sfb = 11; sfb < SBPSY_l; sfb++)
             if (gi->scalefac[sfb] < pretab[sfb] && gi->scalefac[sfb] != -2)
                 break;
@@ -1064,7 +1067,7 @@ best_scalefac_store(const lame_internal_flags * gfc,
     for (i = 0; i < 4; i++)
         l3_side->scfsi[ch][i] = 0;
 
-    if (gfc->mode_gr == 2 && gr == 1
+    if (cfg->mode_gr == 2 && gr == 1
         && l3_side->tt[0][ch].block_type != SHORT_TYPE
         && l3_side->tt[1][ch].block_type != SHORT_TYPE) {
         scfsi_calc(ch, l3_side);
@@ -1076,7 +1079,7 @@ best_scalefac_store(const lame_internal_flags * gfc,
         }
     }
     if (recalc) {
-        if (gfc->mode_gr == 2) {
+        if (cfg->mode_gr == 2) {
             (void) scale_bitcount(gi);
         }
         else {
@@ -1339,16 +1342,16 @@ huffman_init(lame_internal_flags * const gfc)
             bv_index = subdv_table[scfb_anz].region0_count;
         }
 
-        gfc->bv_scf[i - 2] = bv_index;
+        gfc->sv_qnt.bv_scf[i - 2] = bv_index;
 
         bv_index = subdv_table[scfb_anz].region1_count;
-        while (gfc->scalefac_band.l[bv_index + gfc->bv_scf[i - 2] + 2] > i)
+        while (gfc->scalefac_band.l[bv_index + gfc->sv_qnt.bv_scf[i - 2] + 2] > i)
             bv_index--;
 
         if (bv_index < 0) {
             bv_index = subdv_table[scfb_anz].region1_count;
         }
 
-        gfc->bv_scf[i - 1] = bv_index;
+        gfc->sv_qnt.bv_scf[i - 1] = bv_index;
     }
 }

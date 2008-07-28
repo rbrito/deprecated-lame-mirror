@@ -767,6 +767,7 @@ short_block_constrain(const algo_t * that, const int vbrsf[SFBMAX],
 {
     gr_info *const cod_info = that->cod_info;
     lame_internal_flags const *const gfc = that->gfc;
+    SessionConfig_t const *const cfg = &gfc->cfg;
     int const maxminsfb = that->mingain_l;
     int     mover, maxover0 = 0, maxover1 = 0, delta = 0;
     int     v, v0, v1;
@@ -788,7 +789,7 @@ short_block_constrain(const algo_t * that, const int vbrsf[SFBMAX],
             maxover1 = v1;
         }
     }
-    if (gfc->noise_shaping == 2) {
+    if (cfg->noise_shaping == 2) {
         /* allow scalefac_scale=1 */
         mover = Min(maxover0, maxover1);
     }
@@ -844,6 +845,7 @@ long_block_constrain(const algo_t * that, const int vbrsf[SFBMAX], const int vbr
 {
     gr_info *const cod_info = that->cod_info;
     lame_internal_flags const *const gfc = that->gfc;
+    SessionConfig_t const *const cfg = &gfc->cfg;
     uint8_t const *max_rangep;
     int const maxminsfb = that->mingain_l;
     int     sfb;
@@ -851,7 +853,7 @@ long_block_constrain(const algo_t * that, const int vbrsf[SFBMAX], const int vbr
     int     v, v0, v1, v0p, v1p, vm0p = 1, vm1p = 1;
     int const psymax = cod_info->psymax;
 
-    max_rangep = gfc->mode_gr == 2 ? max_range_long : max_range_long_lsf_pretab;
+    max_rangep = cfg->mode_gr == 2 ? max_range_long : max_range_long_lsf_pretab;
 
     maxover0 = 0;
     maxover1 = 0;
@@ -914,7 +916,7 @@ long_block_constrain(const algo_t * that, const int vbrsf[SFBMAX], const int vbr
     if (vm1p == 0) {
         maxover1p = maxover1;
     }
-    if (gfc->noise_shaping != 2) {
+    if (cfg->noise_shaping != 2) {
         maxover1 = maxover0;
         maxover1p = maxover0p;
     }
@@ -977,9 +979,10 @@ long_block_constrain(const algo_t * that, const int vbrsf[SFBMAX], const int vbr
 static void
 bitcount(const algo_t * that)
 {
+    SessionConfig_t const *const cfg = &that->gfc->cfg;
     int     rc;
 
-    if (that->gfc->mode_gr == 2) {
+    if (cfg->mode_gr == 2) {
         rc = scale_bitcount(that->cod_info);
     }
     else {
@@ -1234,6 +1237,7 @@ reduce_bit_usage(lame_internal_flags * gfc, int gr, int ch
 #endif
     )
 {
+    SessionConfig_t const *const cfg = &gfc->cfg;
     gr_info *const cod_info = &gfc->l3_side.tt[gr][ch];
     /*  try some better scalefac storage
      */
@@ -1241,7 +1245,7 @@ reduce_bit_usage(lame_internal_flags * gfc, int gr, int ch
 
     /*  best huffman_divide may save some bits too
      */
-    if (gfc->use_best_huffman == 1)
+    if (cfg->use_best_huffman == 1)
         best_huffman_divide(gfc, cod_info);
 #if 0
     /* truncate small spectrum seems to introduce pops, disabled(RH 050918) */
@@ -1262,11 +1266,12 @@ int
 VBR_encode_frame(lame_internal_flags * gfc, FLOAT xr34orig[2][2][576],
                  FLOAT l3_xmin[2][2][SFBMAX], int max_bits[2][2])
 {
+    SessionConfig_t const *const cfg = &gfc->cfg;
     int     sfwork_[2][2][SFBMAX];
     int     vbrsfmin_[2][2][SFBMAX];
     algo_t  that_[2][2];
-    int const ngr = gfc->mode_gr;
-    int const nch = gfc->channels_out;
+    int const ngr = cfg->mode_gr;
+    int const nch = cfg->channels_out;
     int     max_nbits_ch[2][2];
     int     max_nbits_gr[2];
     int     max_nbits_fr = 0;

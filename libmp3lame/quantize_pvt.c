@@ -209,30 +209,30 @@ ATH = ATH * 2.5e-10      (ener)
 */
 
 static  FLOAT
-ATHmdct(lame_global_flags const *gfp, FLOAT f)
+ATHmdct(SessionConfig_t const *cfg, FLOAT f)
 {
     FLOAT   ath;
 
-    ath = ATHformula(f, gfp);
+    ath = ATHformula(cfg, f);
 
     ath -= NSATHSCALE;
 
     /* modify the MDCT scaling for the ATH and convert to energy */
-    ath = pow(10.0, ath / 10.0 + gfp->ATHlower);
+    ath = pow(10.0, ath / 10.0 + cfg->ATHlower);
     return ath;
 }
 
 static void
-compute_ath(lame_global_flags * gfp)
+compute_ath(lame_internal_flags * gfc)
 {
-    FLOAT  *const ATH_l = gfp->internal_flags->ATH->l;
-    FLOAT  *const ATH_psfb21 = gfp->internal_flags->ATH->psfb21;
-    FLOAT  *const ATH_s = gfp->internal_flags->ATH->s;
-    FLOAT  *const ATH_psfb12 = gfp->internal_flags->ATH->psfb12;
-    lame_internal_flags const *const gfc = gfp->internal_flags;
+    SessionConfig_t const *const cfg = &gfc->cfg;
+    FLOAT  *const ATH_l = gfc->ATH->l;
+    FLOAT  *const ATH_psfb21 = gfc->ATH->psfb21;
+    FLOAT  *const ATH_s = gfc->ATH->s;
+    FLOAT  *const ATH_psfb12 = gfc->ATH->psfb12;
     int     sfb, i, start, end;
     FLOAT   ATH_f;
-    FLOAT const samp_freq = gfp->out_samplerate;
+    FLOAT const samp_freq = cfg->samplerate_out;
 
     for (sfb = 0; sfb < SBMAX_l; sfb++) {
         start = gfc->scalefac_band.l[sfb];
@@ -240,7 +240,7 @@ compute_ath(lame_global_flags * gfp)
         ATH_l[sfb] = FLOAT_MAX;
         for (i = start; i < end; i++) {
             FLOAT const freq = i * samp_freq / (2 * 576);
-            ATH_f = ATHmdct(gfp, freq); /* freq in kHz */
+            ATH_f = ATHmdct(cfg, freq); /* freq in kHz */
             ATH_l[sfb] = Min(ATH_l[sfb], ATH_f);
         }
     }
@@ -251,7 +251,7 @@ compute_ath(lame_global_flags * gfp)
         ATH_psfb21[sfb] = FLOAT_MAX;
         for (i = start; i < end; i++) {
             FLOAT const freq = i * samp_freq / (2 * 576);
-            ATH_f = ATHmdct(gfp, freq); /* freq in kHz */
+            ATH_f = ATHmdct(cfg, freq); /* freq in kHz */
             ATH_psfb21[sfb] = Min(ATH_psfb21[sfb], ATH_f);
         }
     }
@@ -262,7 +262,7 @@ compute_ath(lame_global_flags * gfp)
         ATH_s[sfb] = FLOAT_MAX;
         for (i = start; i < end; i++) {
             FLOAT const freq = i * samp_freq / (2 * 192);
-            ATH_f = ATHmdct(gfp, freq); /* freq in kHz */
+            ATH_f = ATHmdct(cfg, freq); /* freq in kHz */
             ATH_s[sfb] = Min(ATH_s[sfb], ATH_f);
         }
         ATH_s[sfb] *= (gfc->scalefac_band.s[sfb + 1] - gfc->scalefac_band.s[sfb]);
@@ -274,7 +274,7 @@ compute_ath(lame_global_flags * gfp)
         ATH_psfb12[sfb] = FLOAT_MAX;
         for (i = start; i < end; i++) {
             FLOAT const freq = i * samp_freq / (2 * 192);
-            ATH_f = ATHmdct(gfp, freq); /* freq in kHz */
+            ATH_f = ATHmdct(cfg, freq); /* freq in kHz */
             ATH_psfb12[sfb] = Min(ATH_psfb12[sfb], ATH_f);
         }
         /*not sure about the following */
@@ -286,7 +286,7 @@ compute_ath(lame_global_flags * gfp)
      *  reduce ATH to -200 dB
      */
 
-    if (gfp->noATH) {
+    if (cfg->noATH) {
         for (sfb = 0; sfb < SBMAX_l; sfb++) {
             ATH_l[sfb] = 1E-20;
         }
@@ -303,12 +303,12 @@ compute_ath(lame_global_flags * gfp)
 
     /*  work in progress, don't rely on it too much
      */
-    gfc->ATH->floor = 10. * log10(ATHmdct(gfp, -1.));
+    gfc->ATH->floor = 10. * log10(ATHmdct(cfg, -1.));
 
     /*
        {   FLOAT g=10000, t=1e30, x;
        for ( f = 100; f < 10000; f++ ) {
-       x = ATHmdct( gfp, f );
+       x = ATHmdct( cfg, f );
        if ( t > x ) t = x, g = f;
        }
        printf("min=%g\n", g);
@@ -322,9 +322,9 @@ compute_ath(lame_global_flags * gfp)
 /*  initialization for iteration_loop */
 /************************************************************************/
 void
-iteration_init(lame_global_flags * gfp)
+iteration_init(lame_internal_flags * gfc)
 {
-    lame_internal_flags *const gfc = gfp->internal_flags;
+    SessionConfig_t const *const cfg = &gfc->cfg;
     III_side_info_t *const l3_side = &gfc->l3_side;
     int     i;
 
@@ -332,7 +332,7 @@ iteration_init(lame_global_flags * gfp)
         gfc->iteration_init_init = 1;
 
         l3_side->main_data_begin = 0;
-        compute_ath(gfp);
+        compute_ath(gfc);
 
         pow43[0] = 0.0;
         for (i = 1; i < PRECALC_SIZE; i++)
@@ -355,56 +355,31 @@ iteration_init(lame_global_flags * gfp)
         huffman_init(gfc);
         init_xrpow_core_init(gfc);
 
-        {
-            FLOAT   bass, alto, treble, sfb21;
+        for (i = 0; i < SBMAX_l; i++) {
+            FLOAT   f;
+            if (i <= 6)
+                f = cfg->adjust_bass;
+            else if (i <= 13)
+                f = cfg->adjust_alto;
+            else if (i <= 20)
+                f = cfg->adjust_treble;
+            else
+                f = cfg->adjust_sfb21;
 
-            i = (gfp->exp_nspsytune >> 2) & 63;
-            if (i >= 32)
-                i -= 64;
-            bass = pow(10, i / 4.0 / 10.0);
+            gfc->sv_qnt.longfact[i] = f;
+        }
+        for (i = 0; i < SBMAX_s; i++) {
+            FLOAT   f;
+            if (i <= 5)
+                f = cfg->adjust_bass;
+            else if (i <= 10)
+                f = cfg->adjust_alto;
+            else if (i <= 11)
+                f = cfg->adjust_treble;
+            else
+                f = cfg->adjust_sfb21;
 
-            i = (gfp->exp_nspsytune >> 8) & 63;
-            if (i >= 32)
-                i -= 64;
-            alto = pow(10, i / 4.0 / 10.0);
-
-            i = (gfp->exp_nspsytune >> 14) & 63;
-            if (i >= 32)
-                i -= 64;
-            treble = pow(10, i / 4.0 / 10.0);
-
-            /*  to be compatible with Naoki's original code, the next 6 bits
-             *  define only the amount of changing treble for sfb21 */
-            i = (gfp->exp_nspsytune >> 20) & 63;
-            if (i >= 32)
-                i -= 64;
-            sfb21 = treble * pow(10, i / 4.0 / 10.0);
-            for (i = 0; i < SBMAX_l; i++) {
-                FLOAT   f;
-                if (i <= 6)
-                    f = bass;
-                else if (i <= 13)
-                    f = alto;
-                else if (i <= 20)
-                    f = treble;
-                else
-                    f = sfb21;
-
-                gfc->nsPsy.longfact[i] = f;
-            }
-            for (i = 0; i < SBMAX_s; i++) {
-                FLOAT   f;
-                if (i <= 5)
-                    f = bass;
-                else if (i <= 10)
-                    f = alto;
-                else if (i <= 11)
-                    f = treble;
-                else
-                    f = sfb21;
-
-                gfc->nsPsy.shortfact[i] = f;
-            }
+            gfc->sv_qnt.shortfact[i] = f;
         }
     }
 }
@@ -419,26 +394,25 @@ iteration_init(lame_global_flags * gfp)
  * bugfixes rh 8/01: often allocated more than the allowed 4095 bits
  ************************************************************************/
 int
-on_pe(lame_global_flags const *gfp, FLOAT pe[][2],
-      int targ_bits[2], int mean_bits, int gr, int cbr)
+on_pe(lame_internal_flags * gfc, FLOAT pe[][2], int targ_bits[2], int mean_bits, int gr, int cbr)
 {
-    lame_internal_flags const *const gfc = gfp->internal_flags;
+    SessionConfig_t const *const cfg = &gfc->cfg;
     int     extra_bits, tbits, bits;
     int     add_bits[2];
     int     max_bits;        /* maximum allowed bits for this granule */
     int     ch;
 
     /* allocate targ_bits for granule */
-    ResvMaxBits(gfp, mean_bits, &tbits, &extra_bits, cbr);
+    ResvMaxBits(gfc, mean_bits, &tbits, &extra_bits, cbr);
     max_bits = tbits + extra_bits;
     if (max_bits > MAX_BITS_PER_GRANULE) /* hard limit per granule */
         max_bits = MAX_BITS_PER_GRANULE;
 
-    for (bits = 0, ch = 0; ch < gfc->channels_out; ++ch) {
+    for (bits = 0, ch = 0; ch < cfg->channels_out; ++ch) {
         /******************************************************************
          * allocate bits for each channel 
          ******************************************************************/
-        targ_bits[ch] = Min(MAX_BITS_PER_CHANNEL, tbits / gfc->channels_out);
+        targ_bits[ch] = Min(MAX_BITS_PER_CHANNEL, tbits / cfg->channels_out);
 
         add_bits[ch] = targ_bits[ch] * pe[gr][ch] / 700.0 - targ_bits[ch];
 
@@ -454,22 +428,22 @@ on_pe(lame_global_flags const *gfp, FLOAT pe[][2],
         bits += add_bits[ch];
     }
     if (bits > extra_bits) {
-        for (ch = 0; ch < gfc->channels_out; ++ch) {
+        for (ch = 0; ch < cfg->channels_out; ++ch) {
             add_bits[ch] = extra_bits * add_bits[ch] / bits;
         }
     }
 
-    for (ch = 0; ch < gfc->channels_out; ++ch) {
+    for (ch = 0; ch < cfg->channels_out; ++ch) {
         targ_bits[ch] += add_bits[ch];
         extra_bits -= add_bits[ch];
     }
 
-    for (bits = 0, ch = 0; ch < gfc->channels_out; ++ch) {
+    for (bits = 0, ch = 0; ch < cfg->channels_out; ++ch) {
         bits += targ_bits[ch];
     }
     if (bits > MAX_BITS_PER_GRANULE) {
         int     sum = 0;
-        for (ch = 0; ch < gfc->channels_out; ++ch) {
+        for (ch = 0; ch < cfg->channels_out; ++ch) {
             targ_bits[ch] *= MAX_BITS_PER_GRANULE;
             targ_bits[ch] /= bits;
             sum += targ_bits[ch];
@@ -580,18 +554,18 @@ athAdjust(FLOAT a, FLOAT x, FLOAT athFloor)
   returns number of sfb's with energy > ATH
 */
 int
-calc_xmin(lame_global_flags const *gfp,
+calc_xmin(lame_internal_flags const *gfc,
           III_psy_ratio const *const ratio, gr_info * const cod_info, FLOAT * pxmin)
 {
-    lame_internal_flags const *const gfc = gfp->internal_flags;
+    SessionConfig_t const *const cfg = &gfc->cfg;
     int     sfb, gsfb, j = 0, ath_over = 0, k;
     ATH_t const *const ATH = gfc->ATH;
     const FLOAT *const xr = cod_info->xr;
     int     max_nonzero;
-    int const enable_athaa_fix = (gfp->VBR == vbr_mtrh) ? 1 : 0;
-    FLOAT   masking_lower = gfc->masking_lower;
+    int const enable_athaa_fix = (cfg->vbr == vbr_mtrh) ? 1 : 0;
+    FLOAT   masking_lower = gfc->sv_qnt.masking_lower;
 
-    if (gfp->VBR == vbr_mtrh || gfp->VBR == vbr_mt) {
+    if (cfg->vbr == vbr_mtrh || cfg->vbr == vbr_mt) {
         masking_lower = 1.0f; /* was already done in PSY-Model */
     }
 
@@ -600,7 +574,7 @@ calc_xmin(lame_global_flags const *gfp,
         FLOAT   rh1, rh2;
         int     width, l;
 
-        if (gfp->VBR == vbr_rh || gfp->VBR == vbr_mtrh)
+        if (cfg->vbr == vbr_rh || cfg->vbr == vbr_mtrh)
             xmin = athAdjust(ATH->adjust, ATH->l[gsfb], ATH->floor);
         else
             xmin = ATH->adjust * ATH->l[gsfb];
@@ -629,7 +603,7 @@ calc_xmin(lame_global_flags const *gfp,
             ath_over++;
 
         if (gsfb == SBPSY_l) {
-            FLOAT   x = xmin * gfc->nsPsy.longfact[gsfb];
+            FLOAT   x = xmin * gfc->sv_qnt.longfact[gsfb];
             if (rh2 < x) {
                 rh2 = x;
             }
@@ -637,13 +611,13 @@ calc_xmin(lame_global_flags const *gfp,
         if (enable_athaa_fix) {
             xmin = rh2;
         }
-        if (!gfp->ATHonly) {
+        if (!cfg->ATHonly) {
             FLOAT const e = ratio->en.l[gsfb];
             if (e > 0.0f) {
                 FLOAT   x;
                 x = en0 * ratio->thm.l[gsfb] * masking_lower / e;
                 if (enable_athaa_fix)
-                    x *= gfc->nsPsy.longfact[gsfb];
+                    x *= gfc->sv_qnt.longfact[gsfb];
                 if (xmin < x)
                     xmin = x;
             }
@@ -651,7 +625,7 @@ calc_xmin(lame_global_flags const *gfp,
         if (enable_athaa_fix)
             *pxmin++ = xmin;
         else
-            *pxmin++ = xmin * gfc->nsPsy.longfact[gsfb];
+            *pxmin++ = xmin * gfc->sv_qnt.longfact[gsfb];
     }                   /* end of long block loop */
 
 
@@ -672,7 +646,7 @@ calc_xmin(lame_global_flags const *gfp,
     for (sfb = cod_info->sfb_smin; gsfb < cod_info->psymax; sfb++, gsfb += 3) {
         int     width, b;
         FLOAT   tmpATH;
-        if (gfp->VBR == vbr_rh || gfp->VBR == vbr_mtrh)
+        if (cfg->vbr == vbr_rh || cfg->vbr == vbr_mtrh)
             tmpATH = athAdjust(ATH->adjust, ATH->s[sfb], ATH->floor);
         else
             tmpATH = ATH->adjust * ATH->s[sfb];
@@ -703,7 +677,7 @@ calc_xmin(lame_global_flags const *gfp,
             if (en0 > tmpATH)
                 ath_over++;
             if (sfb == SBPSY_s) {
-                FLOAT   x = tmpATH * gfc->nsPsy.shortfact[sfb];
+                FLOAT   x = tmpATH * gfc->sv_qnt.shortfact[sfb];
                 if (rh2 < x) {
                     rh2 = x;
                 }
@@ -713,13 +687,13 @@ calc_xmin(lame_global_flags const *gfp,
             else
                 xmin = tmpATH;
 
-            if (!gfp->ATHonly && !gfp->ATHshort) {
+            if (!cfg->ATHonly && !cfg->ATHshort) {
                 FLOAT const e = ratio->en.s[sfb][b];
                 if (e > 0.0f) {
                     FLOAT   x;
                     x = en0 * ratio->thm.s[sfb][b] * masking_lower / e;
                     if (enable_athaa_fix)
-                        x *= gfc->nsPsy.shortfact[sfb];
+                        x *= gfc->sv_qnt.shortfact[sfb];
                     if (xmin < x)
                         xmin = x;
                 }
@@ -727,13 +701,13 @@ calc_xmin(lame_global_flags const *gfp,
             if (enable_athaa_fix)
                 *pxmin++ = xmin;
             else
-                *pxmin++ = xmin * gfc->nsPsy.shortfact[sfb];
+                *pxmin++ = xmin * gfc->sv_qnt.shortfact[sfb];
         }               /* b */
-        if (gfp->useTemporal) {
+        if (cfg->use_temporal_masking_effect) {
             if (pxmin[-3] > pxmin[-3 + 1])
-                pxmin[-3 + 1] += (pxmin[-3] - pxmin[-3 + 1]) * gfc->decay;
+                pxmin[-3 + 1] += (pxmin[-3] - pxmin[-3 + 1]) * gfc->cd_psy->decay;
             if (pxmin[-3 + 1] > pxmin[-3 + 2])
-                pxmin[-3 + 2] += (pxmin[-3 + 1] - pxmin[-3 + 2]) * gfc->decay;
+                pxmin[-3 + 2] += (pxmin[-3 + 1] - pxmin[-3 + 2]) * gfc->cd_psy->decay;
         }
     }                   /* end of short block sfb loop */
 
@@ -924,10 +898,10 @@ calc_noise(gr_info const *const cod_info,
  ************************************************************************/
 
 static void
-set_pinfo(lame_global_flags const *gfp,
+set_pinfo(lame_internal_flags const *gfc,
           gr_info * const cod_info, const III_psy_ratio * const ratio, const int gr, const int ch)
 {
-    lame_internal_flags const *const gfc = gfp->internal_flags;
+    SessionConfig_t const *const cfg = &gfc->cfg;
     int     sfb, sfb2;
     int     j, i, l, start, end, bw;
     FLOAT   en0, en1;
@@ -937,7 +911,7 @@ set_pinfo(lame_global_flags const *gfp,
     FLOAT   l3_xmin[SFBMAX], xfsf[SFBMAX];
     calc_noise_result noise;
 
-    (void) calc_xmin(gfp, ratio, cod_info, l3_xmin);
+    (void) calc_xmin(gfc, ratio, cod_info, l3_xmin);
     (void) calc_noise(cod_info, l3_xmin, xfsf, &noise, 0);
 
     j = 0;
@@ -956,7 +930,7 @@ set_pinfo(lame_global_flags const *gfp,
         gfc->pinfo->en[gr][ch][sfb] = en1 * en0;
         gfc->pinfo->xfsf[gr][ch][sfb] = en1 * l3_xmin[sfb] * xfsf[sfb] / bw;
 
-        if (ratio->en.l[sfb] > 0 && !gfp->ATHonly)
+        if (ratio->en.l[sfb] > 0 && !cfg->ATHonly)
             en0 = en0 / ratio->en.l[sfb];
         else
             en0 = 0.0;
@@ -995,7 +969,7 @@ set_pinfo(lame_global_flags const *gfp,
                     en0 = en0 / ratio->en.s[sfb][i];
                 else
                     en0 = 0.0;
-                if (gfp->ATHonly || gfp->ATHshort)
+                if (cfg->ATHonly || cfg->ATHshort)
                     en0 = 0;
 
                 gfc->pinfo->thr_s[gr][ch][3 * sfb + i] =
@@ -1034,18 +1008,16 @@ set_pinfo(lame_global_flags const *gfp,
  ************************************************************************/
 
 void
-set_frame_pinfo(lame_global_flags const *gfp, III_psy_ratio ratio[2][2])
+set_frame_pinfo(lame_internal_flags * gfc, III_psy_ratio ratio[2][2])
 {
-    lame_internal_flags *const gfc = gfp->internal_flags;
+    SessionConfig_t const *const cfg = &gfc->cfg;
     int     ch;
     int     gr;
 
-    gfc->masking_lower = 1.0;
-
     /* for every granule and channel patch l3_enc and set info
      */
-    for (gr = 0; gr < gfc->mode_gr; gr++) {
-        for (ch = 0; ch < gfc->channels_out; ch++) {
+    for (gr = 0; gr < cfg->mode_gr; gr++) {
+        for (ch = 0; ch < cfg->channels_out; ch++) {
             gr_info *const cod_info = &gfc->l3_side.tt[gr][ch];
             int     scalefac_sav[SFBMAX];
             memcpy(scalefac_sav, cod_info->scalefac, sizeof(scalefac_sav));
@@ -1060,7 +1032,7 @@ set_frame_pinfo(lame_global_flags const *gfp, III_psy_ratio ratio[2][2])
                 }
             }
 
-            set_pinfo(gfp, cod_info, &ratio[gr][ch], gr, ch);
+            set_pinfo(gfc, cod_info, &ratio[gr][ch], gr, ch);
             memcpy(cod_info->scalefac, scalefac_sav, sizeof(scalefac_sav));
         }               /* for ch */
     }                   /* for gr */

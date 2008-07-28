@@ -505,9 +505,12 @@ float CDECL lame_get_ATHlower(const lame_global_flags *);
 int CDECL lame_set_athaa_type( lame_global_flags *, int);
 int CDECL lame_get_athaa_type( const lame_global_flags *);
 
+#if DEPRECATED_OR_OBSOLETE_CODE_REMOVED
+#else
 /* select the loudness approximation used by the ATH adaptive auto-leveling  */
 int CDECL lame_set_athaa_loudapprox( lame_global_flags *, int);
 int CDECL lame_get_athaa_loudapprox( const lame_global_flags *);
+#endif
 
 /* adjust (in dB) the point below which adaptive ATH level adjustment occurs */
 int CDECL lame_set_athaa_sensitivity( lame_global_flags *, float);

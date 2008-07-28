@@ -17,20 +17,19 @@ enum {
     MIMETYPE_GIF,
 };
 
-typedef struct FrameDataNode
-{
-    struct FrameDataNode* nxt;
-    int     fid;                /* Frame Identifier                 */
-    char    lng[4];             /* 3-character language descriptor  */
+typedef struct FrameDataNode {
+    struct FrameDataNode *nxt;
+    int     fid;             /* Frame Identifier                 */
+    char    lng[4];          /* 3-character language descriptor  */
     struct {
         union {
-            char*           l;  /* ptr to Latin-1 chars             */
-            unsigned short* u;  /* ptr to UCS-2 text                */
-            unsigned char*  b;  /* ptr to raw bytes                 */
-        }       ptr;
+            char   *l;       /* ptr to Latin-1 chars             */
+            unsigned short *u; /* ptr to UCS-2 text                */
+            unsigned char *b; /* ptr to raw bytes                 */
+        } ptr;
         size_t  dim;
-        int     enc;            /* 0:Latin-1, 1:UCS-2, 2:RAW        */
-    } dsc, txt;
+        int     enc;         /* 0:Latin-1, 1:UCS-2, 2:RAW        */
+    } dsc  , txt;
 } FrameDataNode;
 
 
@@ -49,7 +48,7 @@ typedef struct id3tag_spec {
     int     albumart_mimetype;
     char  **values;
     unsigned int num_values;
-    FrameDataNode* v2_head, *v2_tail;
+    FrameDataNode *v2_head, *v2_tail;
 } id3tag_spec;
 
 
@@ -62,29 +61,19 @@ extern int id3tag_write_v1(lame_global_flags * gfp);
  * or the "id3tag_add_v2" or "id3tag_v2_only" functions are used.
  */
 /* experimental */
-int CDECL id3tag_set_textinfo_latin1(
-        lame_global_flags* gfp,
-        char const*        id,
-        char const*        text );
+int CDECL id3tag_set_textinfo_latin1(lame_global_flags * gfp, char const *id, char const *text);
 
 /* experimental */
-int CDECL id3tag_set_textinfo_ucs2(
-        lame_global_flags*    gfp, 
-        char const*           id,
-        unsigned short const* text );
+int CDECL id3tag_set_textinfo_ucs2(lame_global_flags * gfp,
+                                   char const *id, unsigned short const *text);
 
 /* experimental */
-int CDECL id3tag_set_comment_latin1(
-        lame_global_flags* gfp,
-        char const*        lang,
-        char const*        desc,
-        char const*        text );
+int CDECL id3tag_set_comment_latin1(lame_global_flags * gfp,
+                                    char const *lang, char const *desc, char const *text);
 
 /* experimental */
-int CDECL id3tag_set_comment_ucs2(
-        lame_global_flags*    gfp, 
-        char const*           lang,
-        unsigned short const* desc,
-        unsigned short const* text );
+int CDECL id3tag_set_comment_ucs2(lame_global_flags * gfp,
+                                  char const *lang,
+                                  unsigned short const *desc, unsigned short const *text);
 
 #endif

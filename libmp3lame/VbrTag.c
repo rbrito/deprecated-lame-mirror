@@ -192,11 +192,9 @@ print_seeking(unsigned char *t)
  ****************************************************************************
 */
 void
-AddVbrFrame(lame_global_flags * gfp)
+AddVbrFrame(lame_internal_flags * gfc)
 {
-    lame_internal_flags *gfc = gfp->internal_flags;
-
-    int     kbps = bitrate_table[gfp->version][gfc->bitrate_index];
+    int     kbps = bitrate_table[gfc->cfg.version][gfc->ov_enc.bitrate_index];
     assert(gfc->VBR_seek_table.bag);
     addVbr(&gfc->VBR_seek_table, kbps);
 }
@@ -255,29 +253,30 @@ IsVbrTag(const unsigned char *buf)
 #define SHIFT_IN_BITS_VALUE(x,n,v) ( x = (x << (n)) | ( (v) & ~(-1 << (n)) ) )
 
 static void
-setLameTagFrameHeader(lame_global_flags const *gfp, unsigned char *buffer)
+setLameTagFrameHeader(lame_internal_flags const *gfc, unsigned char *buffer)
 {
-    lame_internal_flags *gfc = gfp->internal_flags;
+    SessionConfig_t const *const cfg = &gfc->cfg;
+    EncResult_t const *const eov = &gfc->ov_enc;
     char    abyte, bbyte;
 
     SHIFT_IN_BITS_VALUE(buffer[0], 8u, 0xffu);
 
     SHIFT_IN_BITS_VALUE(buffer[1], 3u, 7);
-    SHIFT_IN_BITS_VALUE(buffer[1], 1u, (gfp->out_samplerate < 16000) ? 0 : 1);
-    SHIFT_IN_BITS_VALUE(buffer[1], 1u, gfp->version);
+    SHIFT_IN_BITS_VALUE(buffer[1], 1u, (cfg->samplerate_out < 16000) ? 0 : 1);
+    SHIFT_IN_BITS_VALUE(buffer[1], 1u, cfg->version);
     SHIFT_IN_BITS_VALUE(buffer[1], 2u, 4 - 3);
-    SHIFT_IN_BITS_VALUE(buffer[1], 1u, (!gfp->error_protection) ? 1 : 0);
+    SHIFT_IN_BITS_VALUE(buffer[1], 1u, (!cfg->error_protection) ? 1 : 0);
 
-    SHIFT_IN_BITS_VALUE(buffer[2], 4u, gfc->bitrate_index);
-    SHIFT_IN_BITS_VALUE(buffer[2], 2u, gfc->samplerate_index);
+    SHIFT_IN_BITS_VALUE(buffer[2], 4u, eov->bitrate_index);
+    SHIFT_IN_BITS_VALUE(buffer[2], 2u, cfg->samplerate_index);
     SHIFT_IN_BITS_VALUE(buffer[2], 1u, 0);
-    SHIFT_IN_BITS_VALUE(buffer[2], 1u, gfp->extension);
+    SHIFT_IN_BITS_VALUE(buffer[2], 1u, cfg->extension);
 
-    SHIFT_IN_BITS_VALUE(buffer[3], 2u, gfp->mode);
-    SHIFT_IN_BITS_VALUE(buffer[3], 2u, gfc->mode_ext);
-    SHIFT_IN_BITS_VALUE(buffer[3], 1u, gfp->copyright);
-    SHIFT_IN_BITS_VALUE(buffer[3], 1u, gfp->original);
-    SHIFT_IN_BITS_VALUE(buffer[3], 2u, gfp->emphasis);
+    SHIFT_IN_BITS_VALUE(buffer[3], 2u, cfg->mode);
+    SHIFT_IN_BITS_VALUE(buffer[3], 2u, eov->mode_ext);
+    SHIFT_IN_BITS_VALUE(buffer[3], 1u, cfg->copyright);
+    SHIFT_IN_BITS_VALUE(buffer[3], 1u, cfg->original);
+    SHIFT_IN_BITS_VALUE(buffer[3], 2u, cfg->emphasis);
 
     /* the default VBR header. 48 kbps layer III, no padding, no crc */
     /* but sampling freq, mode andy copyright/copy protection taken */
@@ -286,29 +285,29 @@ setLameTagFrameHeader(lame_global_flags const *gfp, unsigned char *buffer)
     abyte = (buffer[1] & (unsigned char) 0xf1);
     {
         int     bitrate;
-        if (1 == gfp->version) {
+        if (1 == cfg->version) {
             bitrate = XING_BITRATE1;
         }
         else {
-            if (gfp->out_samplerate < 16000)
+            if (cfg->samplerate_out < 16000)
                 bitrate = XING_BITRATE25;
             else
                 bitrate = XING_BITRATE2;
         }
 
-        if (gfp->VBR == vbr_off)
-            bitrate = gfp->brate;
+        if (cfg->vbr == vbr_off)
+            bitrate = cfg->avg_bitrate;
 
-        if (gfp->free_format)
+        if (cfg->free_format)
             bbyte = 0x00;
         else
-            bbyte = 16 * BitrateIndex(bitrate, gfp->version, gfp->out_samplerate);
+            bbyte = 16 * BitrateIndex(bitrate, cfg->version, cfg->samplerate_out);
     }
 
     /* Use as much of the info from the real frames in the
      * Xing header:  samplerate, channels, crc, etc...
      */
-    if (gfp->version == 1) {
+    if (cfg->version == 1) {
         /* MPEG1 */
         buffer[1] = abyte | (char) 0x0a; /* was 0x0b; */
         abyte = buffer[2] & (char) 0x0d; /* AF keep also private bit */
@@ -482,8 +481,10 @@ GetVbrTag(VBRTAGDATA * pTagData, unsigned char *buf)
 int
 InitVbrTag(lame_global_flags * gfp)
 {
-    int     kbps_header;
     lame_internal_flags *gfc = gfp->internal_flags;
+    SessionConfig_t const *const cfg = &gfc->cfg;
+    int     kbps_header;
+
 #define MAXFRAMESIZE 2880 /* or 0xB40, the max freeformat 640 32kHz framesize */
 
     /*
@@ -502,28 +503,28 @@ InitVbrTag(lame_global_flags * gfp)
      */
 
 
-    if (1 == gfp->version) {
+    if (1 == cfg->version) {
         kbps_header = XING_BITRATE1;
     }
     else {
-        if (gfp->out_samplerate < 16000)
+        if (cfg->samplerate_out < 16000)
             kbps_header = XING_BITRATE25;
         else
             kbps_header = XING_BITRATE2;
     }
 
-    if (gfp->VBR == vbr_off)
-        kbps_header = gfp->brate;
+    if (cfg->vbr == vbr_off)
+        kbps_header = cfg->avg_bitrate;
 
     /** make sure LAME Header fits into Frame
      */
     {
-        int     total_frame_size = ((gfp->version + 1) * 72000 * kbps_header) / gfp->out_samplerate;
-        int     header_size = (gfc->sideinfo_len + LAMEHEADERSIZE);
+        int     total_frame_size = ((cfg->version + 1) * 72000 * kbps_header) / cfg->samplerate_out;
+        int     header_size = (cfg->sideinfo_len + LAMEHEADERSIZE);
         gfc->VBR_seek_table.TotalFrameSize = total_frame_size;
         if (total_frame_size < header_size || total_frame_size > MAXFRAMESIZE) {
             /* disable tag, it wont fit */
-            gfp->bWriteVbrTag = 0;
+            gfp->write_lame_tag = 0;
             return 0;
         }
     }
@@ -544,7 +545,7 @@ InitVbrTag(lame_global_flags * gfp)
         else {
             gfc->VBR_seek_table.size = 0;
             ERRORF(gfc, "Error: can't allocate VbrFrames buffer\n");
-            gfp->bWriteVbrTag = 0;
+            gfp->write_lame_tag = 0;
             return -1;
         }
     }
@@ -555,10 +556,10 @@ InitVbrTag(lame_global_flags * gfp)
         size_t  i, n;
 
         memset(buffer, 0, sizeof(buffer));
-        setLameTagFrameHeader(gfp, buffer);
+        setLameTagFrameHeader(gfc, buffer);
         n = gfc->VBR_seek_table.TotalFrameSize;
         for (i = 0; i < n; ++i) {
-            add_dummy_byte(gfp, buffer[i], 1);
+            add_dummy_byte(gfc, buffer[i], 1);
         }
     }
     /* Success */
@@ -604,15 +605,16 @@ static int
 PutLameVBR(lame_global_flags const *gfp, size_t nFilesize, uint8_t * pbtStreamBuffer,
            size_t id3v2size, uint16_t crc)
 {
-    lame_internal_flags *gfc = gfp->internal_flags;
+    lame_internal_flags const *gfc = gfp->internal_flags;
+    SessionConfig_t const *const cfg = &gfc->cfg;
 
     int     nBytesWritten = 0;
     int     i;
 
-    int     enc_delay = lame_get_encoder_delay(gfp); /* encoder delay */
-    int     enc_padding = lame_get_encoder_padding(gfp); /* encoder padding  */
+    int     enc_delay = gfc->ov_enc.encoder_delay; /* encoder delay */
+    int     enc_padding = gfc->ov_enc.encoder_padding; /* encoder padding  */
 
-    /*recall: gfp->VBR_q is for example set by the switch -V  */
+    /*recall: cfg->vbr_q is for example set by the switch -V  */
     /*   gfp->quality by -q, -h, -f, etc */
 
     int     nQuality = (100 - 10 * gfp->VBR_q - gfp->quality);
@@ -625,58 +627,58 @@ PutLameVBR(lame_global_flags const *gfp, size_t nFilesize, uint8_t * pbtStreamBu
     uint8_t vbr_type_translator[] = { 1, 5, 3, 2, 4, 0, 3 }; /*numbering different in vbr_mode vs. Lame tag */
 
     uint8_t nLowpass =
-        (((gfp->lowpassfreq / 100.0) + .5) > 255 ? 255 : (gfp->lowpassfreq / 100.0) + .5);
+        (((cfg->lowpassfreq / 100.0) + .5) > 255 ? 255 : (cfg->lowpassfreq / 100.0) + .5);
 
     uint32_t nPeakSignalAmplitude = 0;
 
     uint16_t nRadioReplayGain = 0;
     uint16_t nAudiophileReplayGain = 0;
 
-    uint8_t nNoiseShaping = gfp->internal_flags->noise_shaping;
+    uint8_t nNoiseShaping = cfg->noise_shaping;
     uint8_t nStereoMode = 0;
     int     bNonOptimal = 0;
     uint8_t nSourceFreq = 0;
     uint8_t nMisc = 0;
     size_t  nMusicLength = 0;
-    int     bId3v1Present = ((gfp->internal_flags->tag_spec.flags & CHANGED_FLAG)
-                             && !(gfp->internal_flags->tag_spec.flags & V2_ONLY_FLAG));
+    int     bId3v1Present = ((gfc->tag_spec.flags & CHANGED_FLAG)
+                             && !(gfc->tag_spec.flags & V2_ONLY_FLAG));
     uint16_t nMusicCRC = 0;
 
     /*psy model type: Gpsycho or NsPsytune */
-    unsigned char bExpNPsyTune = gfp->exp_nspsytune & 1;
-    unsigned char bSafeJoint = (gfp->exp_nspsytune & 2) != 0;
+    unsigned char bExpNPsyTune = 1; /* only NsPsytune */
+    unsigned char bSafeJoint = (cfg->use_safe_joint_stereo) != 0;
 
     unsigned char bNoGapMore = 0;
     unsigned char bNoGapPrevious = 0;
 
-    int     nNoGapCount = gfp->internal_flags->nogap_total;
-    int     nNoGapCurr = gfp->internal_flags->nogap_current;
+    int     nNoGapCount = gfp->nogap_total;
+    int     nNoGapCurr = gfp->nogap_current;
 
 
-    uint8_t nAthType = gfp->ATHtype; /*4 bits. */
+    uint8_t nAthType = cfg->ATHtype; /*4 bits. */
 
     uint8_t nFlags = 0;
 
     /* if ABR, {store bitrate <=255} else { store "-b"} */
     int     nABRBitrate;
-    switch (gfp->VBR) {
+    switch (cfg->vbr) {
     case vbr_abr:{
-            nABRBitrate = gfp->VBR_mean_bitrate_kbps;
+            nABRBitrate = cfg->vbr_avg_bitrate_kbps;
             break;
         }
     case vbr_off:{
-            nABRBitrate = gfp->brate;
+            nABRBitrate = cfg->avg_bitrate;
             break;
         }
     default:{          /*vbr modes */
-            nABRBitrate = gfp->VBR_min_bitrate_kbps;
+            nABRBitrate = bitrate_table[cfg->version][cfg->vbr_min_bitrate_index];;
         }
     }
 
 
     /*revision and vbr method */
-    if (gfp->VBR < sizeof(vbr_type_translator))
-        nVBR = vbr_type_translator[gfp->VBR];
+    if (cfg->vbr < sizeof(vbr_type_translator))
+        nVBR = vbr_type_translator[cfg->vbr];
     else
         nVBR = 0x00;    /*unknown. */
 
@@ -684,26 +686,28 @@ PutLameVBR(lame_global_flags const *gfp, size_t nFilesize, uint8_t * pbtStreamBu
 
 
     /* ReplayGain */
-    if (gfc->findReplayGain) {
-        if (gfc->RadioGain > 0x1FE)
-            gfc->RadioGain = 0x1FE;
-        if (gfc->RadioGain < -0x1FE)
-            gfc->RadioGain = -0x1FE;
+    if (cfg->findReplayGain) {
+        int     RadioGain = gfc->ov_rpg.RadioGain;
+        if (RadioGain > 0x1FE)
+            RadioGain = 0x1FE;
+        if (RadioGain < -0x1FE)
+            RadioGain = -0x1FE;
 
         nRadioReplayGain = 0x2000; /* set name code */
         nRadioReplayGain |= 0xC00; /* set originator code to `determined automatically' */
 
-        if (gfc->RadioGain >= 0)
-            nRadioReplayGain |= gfc->RadioGain; /* set gain adjustment */
+        if (RadioGain >= 0)
+            nRadioReplayGain |= RadioGain; /* set gain adjustment */
         else {
             nRadioReplayGain |= 0x200; /* set the sign bit */
-            nRadioReplayGain |= -gfc->RadioGain; /* set gain adjustment */
+            nRadioReplayGain |= -RadioGain; /* set gain adjustment */
         }
     }
 
     /* peak sample */
-    if (gfc->findPeakSample)
-        nPeakSignalAmplitude = abs((int) ((((FLOAT) gfc->PeakSample) / 32767.0) * pow(2, 23) + .5));
+    if (cfg->findPeakSample)
+        nPeakSignalAmplitude =
+            abs((int) ((((FLOAT) gfc->ov_rpg.PeakSample) / 32767.0) * pow(2, 23) + .5));
 
     /*nogap */
     if (nNoGapCount != -1) {
@@ -727,7 +731,7 @@ PutLameVBR(lame_global_flags const *gfp, size_t nFilesize, uint8_t * pbtStreamBu
 
     /*stereo mode field... a bit ugly. */
 
-    switch (gfp->mode) {
+    switch (cfg->mode) {
     case MONO:
         nStereoMode = 0;
         break;
@@ -738,7 +742,7 @@ PutLameVBR(lame_global_flags const *gfp, size_t nFilesize, uint8_t * pbtStreamBu
         nStereoMode = 2;
         break;
     case JOINT_STEREO:
-        if (gfp->force_ms)
+        if (cfg->force_ms)
             nStereoMode = 4;
         else
             nStereoMode = 3;
@@ -752,11 +756,11 @@ PutLameVBR(lame_global_flags const *gfp, size_t nFilesize, uint8_t * pbtStreamBu
 
     /*Intensity stereo : nStereoMode = 6. IS is not implemented */
 
-    if (gfp->in_samplerate <= 32000)
+    if (cfg->samplerate_in <= 32000)
         nSourceFreq = 0x00;
-    else if (gfp->in_samplerate == 48000)
+    else if (cfg->samplerate_in == 48000)
         nSourceFreq = 0x02;
-    else if (gfp->in_samplerate > 48000)
+    else if (cfg->samplerate_in > 48000)
         nSourceFreq = 0x03;
     else
         nSourceFreq = 0x01; /*default is 44100Hz. */
@@ -764,11 +768,11 @@ PutLameVBR(lame_global_flags const *gfp, size_t nFilesize, uint8_t * pbtStreamBu
 
     /*Check if the user overrided the default LAME behaviour with some nasty options */
 
-    if (gfp->short_blocks == short_block_forced || gfp->short_blocks == short_block_dispensed || ((gfp->lowpassfreq == -1) && (gfp->highpassfreq == -1)) || /* "-k" */
-        (gfp->scale_left < gfp->scale_right) ||
-        (gfp->scale_left > gfp->scale_right) ||
-        (gfp->disable_reservoir && gfp->brate < 320) ||
-        gfp->noATH || gfp->ATHonly || (nAthType == 0) || gfp->in_samplerate <= 32000)
+    if (cfg->short_blocks == short_block_forced || cfg->short_blocks == short_block_dispensed || ((cfg->lowpassfreq == -1) && (cfg->highpassfreq == -1)) || /* "-k" */
+        (cfg->scale_left < cfg->scale_right) ||
+        (cfg->scale_left > cfg->scale_right) ||
+        (cfg->disable_reservoir && cfg->avg_bitrate < 320) ||
+        cfg->noATH || cfg->ATHonly || (nAthType == 0) || cfg->samplerate_in <= 32000)
         bNonOptimal = 1;
 
     nMisc = nNoiseShaping + (nStereoMode << 2)
@@ -826,7 +830,7 @@ PutLameVBR(lame_global_flags const *gfp, size_t nFilesize, uint8_t * pbtStreamBu
 
     pbtStreamBuffer[nBytesWritten++] = 0; /*unused in rev0 */
 
-    CreateI2(&pbtStreamBuffer[nBytesWritten], gfp->preset);
+    CreateI2(&pbtStreamBuffer[nBytesWritten], cfg->preset);
     nBytesWritten += 2;
 
     CreateI4(&pbtStreamBuffer[nBytesWritten], (int) nMusicLength);
@@ -886,6 +890,7 @@ size_t
 lame_get_lametag_frame(lame_global_flags const *gfp, unsigned char *buffer, size_t size)
 {
     lame_internal_flags *gfc;
+    SessionConfig_t const *cfg;
     int     stream_size;
     int     nStreamIndex;
     uint8_t btToc[NUMTOCENTRIES];
@@ -893,14 +898,15 @@ lame_get_lametag_frame(lame_global_flags const *gfp, unsigned char *buffer, size
     if (gfp == 0) {
         return 0;
     }
-    if (gfp->bWriteVbrTag == 0) {
-        return 0;
-    }
     gfc = gfp->internal_flags;
     if (gfc == 0) {
         return 0;
     }
-    if (gfc->Class_ID != LAME_ID) {
+    if (gfc->class_id != LAME_ID) {
+        return 0;
+    }
+    cfg = &gfc->cfg;
+    if (cfg->write_lame_tag == 0) {
         return 0;
     }
     if (gfc->VBR_seek_table.pos <= 0) {
@@ -917,12 +923,12 @@ lame_get_lametag_frame(lame_global_flags const *gfp, unsigned char *buffer, size
 
     /* 4 bytes frame header */
 
-    setLameTagFrameHeader(gfp, buffer);
+    setLameTagFrameHeader(gfc, buffer);
 
     /* Clear all TOC entries */
     memset(btToc, 0, sizeof(btToc));
 
-    if (gfp->free_format) {
+    if (cfg->free_format) {
         int     i;
         for (i = 1; i < NUMTOCENTRIES; ++i)
             btToc[i] = 255 * i / 100;
@@ -935,17 +941,17 @@ lame_get_lametag_frame(lame_global_flags const *gfp, unsigned char *buffer, size
 #endif
 
     /* Start writing the tag after the zero frame */
-    nStreamIndex = gfc->sideinfo_len;
+    nStreamIndex = cfg->sideinfo_len;
     /* note! Xing header specifies that Xing data goes in the
      * ancillary data with NO ERROR PROTECTION.  If error protecton
      * in enabled, the Xing data still starts at the same offset,
      * and now it is in sideinfo data block, and thus will not
      * decode correctly by non-Xing tag aware players */
-    if (gfp->error_protection)
+    if (cfg->error_protection)
         nStreamIndex -= 2;
 
     /* Put Vbr tag */
-    if (gfp->VBR == vbr_off) {
+    if (cfg->vbr == vbr_off) {
         buffer[nStreamIndex++] = VBRTag1[0];
         buffer[nStreamIndex++] = VBRTag1[1];
         buffer[nStreamIndex++] = VBRTag1[2];
@@ -977,7 +983,7 @@ lame_get_lametag_frame(lame_global_flags const *gfp, unsigned char *buffer, size
     nStreamIndex += sizeof(btToc);
 
 
-    if (gfp->error_protection) {
+    if (cfg->error_protection) {
         /* (jo) error_protection: add crc16 information to header */
         CRC_writeheader(gfc, (char *) buffer);
     }
