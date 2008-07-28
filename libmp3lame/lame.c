@@ -1489,8 +1489,8 @@ update_inbuffer_size(lame_internal_flags * gfc, const int nsamples)
         if (esv->in_buffer_1) {
             free(esv->in_buffer_1);
         }
-        esv->in_buffer_0 = calloc(sizeof(sample_t), nsamples);
-        esv->in_buffer_1 = calloc(sizeof(sample_t), nsamples);
+        esv->in_buffer_0 = calloc(nsamples, sizeof(sample_t));
+        esv->in_buffer_1 = calloc(nsamples, sizeof(sample_t));
         esv->in_buffer_nsamples = nsamples;
     }
     if (esv->in_buffer_0 == NULL || esv->in_buffer_1 == NULL) {

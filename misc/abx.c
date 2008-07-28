@@ -1206,8 +1206,8 @@ void  usage ( void )
 
 int  main ( int argc, char** argv )
 {
-    stereo_t*  _A = calloc ( sizeof(stereo_t), MAX_LEN );
-    stereo_t*  _B = calloc ( sizeof(stereo_t), MAX_LEN );
+    stereo_t*  _A = calloc ( MAX_LEN, sizeof(stereo_t) );
+    stereo_t*  _B = calloc ( MAX_LEN, sizeof(stereo_t) );
     stereo_t*  A  = _A;
     stereo_t*  B  = _B;
     size_t     len_A;
