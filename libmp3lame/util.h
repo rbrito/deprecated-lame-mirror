@@ -80,7 +80,6 @@ extern  "C" {
 #endif
 
 
-#define         HAN_SIZE                512
 #define         CRC16_POLYNOMIAL        0x8005
 
 #define MAX_BITS_PER_CHANNEL 4095
@@ -223,7 +222,6 @@ extern  "C" {
     } PsyConst_s_t;
 
 
-#define MAX_CHANNELS  2
 
     /**
      *  global data constants
@@ -578,10 +576,9 @@ extern  "C" {
     extern int FindNearestBitrate(int, int, int);
     extern int map2MP3Frequency(int freq);
     extern int SmpFrqIndex(int, int *const);
-    extern int nearestBitrateFullIndex(const int brate);
+    extern int nearestBitrateFullIndex(uint16_t brate);
     extern FLOAT ATHformula(SessionConfig_t const *cfg, FLOAT freq);
     extern FLOAT freq2bark(FLOAT freq);
-    extern FLOAT freq2cbw(FLOAT freq);
     void    disable_FPE(void);
 
 /* log/log10 approximations */
@@ -590,8 +587,8 @@ extern  "C" {
 
 
     void    fill_buffer(lame_internal_flags * gfc,
-                        sample_t * mfbuf[2],
-                        sample_t const *in_buffer[2], int nsamples, int *n_in, int *n_out);
+                        sample_t *const mfbuf[2],
+                        sample_t const *const in_buffer[2], int nsamples, int *n_in, int *n_out);
 
 /* same as lame_decode1 (look in lame.h), but returns
    unclipped raw floating-point samples. It is declared

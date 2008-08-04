@@ -158,7 +158,6 @@ typedef double FLOAT8;
 
 /* sample_t must be floating point, at least 32 bits */
 typedef FLOAT sample_t;
-typedef sample_t stereo_t[2];
 
 #define dimension_of(array) (sizeof(array)/sizeof(array[0]))
 #define beyond(array) (array+dimension_of(array))

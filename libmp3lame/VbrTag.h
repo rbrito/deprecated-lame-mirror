@@ -47,8 +47,6 @@
 
 #define NUMTOCENTRIES 100
 
-#define FRAMES_AND_BYTES (FRAMES_FLAG | BYTES_FLAG)
-
 #ifndef lame_internal_flags_defined
 #define lame_internal_flags_defined
 struct lame_internal_flags;
@@ -71,13 +69,11 @@ typedef struct {
     int     enc_padding;     /* encoder paddign added at end of stream */
 } VBRTAGDATA;
 
-int     CheckVbrTag(unsigned char *buf);
-int     GetVbrTag(VBRTAGDATA * pTagData, unsigned char *buf);
+int     GetVbrTag(VBRTAGDATA * pTagData, const unsigned char *buf);
 
-int     SeekPoint(unsigned char TOC[NUMTOCENTRIES], int file_bytes, float percent);
 int     InitVbrTag(lame_global_flags * gfp);
 int     PutVbrTag(lame_global_flags const *gfp, FILE * fid);
 void    AddVbrFrame(lame_internal_flags * gfc);
-void    UpdateMusicCRC(uint16_t * crc, unsigned char *buffer, int size);
+void    UpdateMusicCRC(uint16_t * crc, const unsigned char *buffer, int size);
 
 #endif

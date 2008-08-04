@@ -37,7 +37,7 @@
 #include "util.h"
 
 
-MPSTR   mp;
+static MPSTR   mp;
 plotting_data *mpg123_pinfo = NULL;
 
 int

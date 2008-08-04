@@ -33,7 +33,6 @@
 #include "encoder.h"
 #include "util.h"
 #include "quantize_pvt.h"
-#include "lame_global_flags.h"
 #include "reservoir.h"
 #include "lame-analysis.h"
 #include <float.h>
@@ -223,7 +222,7 @@ ATHmdct(SessionConfig_t const *cfg, FLOAT f)
 }
 
 static void
-compute_ath(lame_internal_flags * gfc)
+compute_ath(lame_internal_flags const* gfc)
 {
     SessionConfig_t const *const cfg = &gfc->cfg;
     FLOAT  *const ATH_l = gfc->ATH->l;
@@ -394,11 +393,11 @@ iteration_init(lame_internal_flags * gfc)
  * bugfixes rh 8/01: often allocated more than the allowed 4095 bits
  ************************************************************************/
 int
-on_pe(lame_internal_flags * gfc, FLOAT pe[][2], int targ_bits[2], int mean_bits, int gr, int cbr)
+on_pe(lame_internal_flags * gfc, const FLOAT pe[][2], int targ_bits[2], int mean_bits, int gr, int cbr)
 {
     SessionConfig_t const *const cfg = &gfc->cfg;
-    int     extra_bits, tbits, bits;
-    int     add_bits[2];
+    int     extra_bits = 0, tbits, bits;
+    int     add_bits[2] = {0, 0};
     int     max_bits;        /* maximum allowed bits for this granule */
     int     ch;
 
@@ -427,7 +426,7 @@ on_pe(lame_internal_flags * gfc, FLOAT pe[][2], int targ_bits[2], int mean_bits,
 
         bits += add_bits[ch];
     }
-    if (bits > extra_bits) {
+    if (bits > extra_bits && bits > 0) {
         for (ch = 0; ch < cfg->channels_out; ++ch) {
             add_bits[ch] = extra_bits * add_bits[ch] / bits;
         }
@@ -1008,7 +1007,7 @@ set_pinfo(lame_internal_flags const *gfc,
  ************************************************************************/
 
 void
-set_frame_pinfo(lame_internal_flags * gfc, III_psy_ratio ratio[2][2])
+set_frame_pinfo(lame_internal_flags * gfc, const III_psy_ratio ratio[2][2])
 {
     SessionConfig_t const *const cfg = &gfc->cfg;
     int     ch;

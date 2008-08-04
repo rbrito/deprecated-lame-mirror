@@ -147,7 +147,7 @@ addVbr(VBR_seek_info_t * v, int bitrate)
 }
 
 static void
-Xing_seek_table(VBR_seek_info_t * v, unsigned char *t)
+Xing_seek_table(VBR_seek_info_t const* v, unsigned char *t)
 {
     int     i, indx;
     int     seek_point;
@@ -202,7 +202,7 @@ AddVbrFrame(lame_internal_flags * gfc)
 
 /*-------------------------------------------------------------*/
 static int
-ExtractI4(unsigned char *buf)
+ExtractI4(const unsigned char *buf)
 {
     int     x;
     /* big endian extract */
@@ -217,7 +217,7 @@ ExtractI4(unsigned char *buf)
 }
 
 static void
-CreateI4(unsigned char *buf, int nValue)
+CreateI4(unsigned char *buf, uint32_t nValue)
 {
     /* big endian create */
     buf[0] = (nValue >> 24) & 0xff;
@@ -321,6 +321,9 @@ setLameTagFrameHeader(lame_internal_flags const *gfc, unsigned char *buffer)
     }
 }
 
+#if 0
+static int CheckVbrTag(unsigned char *buf);
+
 /*-------------------------------------------------------------*/
 /* Same as GetVbrTag below, but only checks for the Xing tag.
    requires buf to contain only 40 bytes */
@@ -352,9 +355,10 @@ CheckVbrTag(unsigned char *buf)
 
     return IsVbrTag(buf);
 }
+#endif
 
 int
-GetVbrTag(VBRTAGDATA * pTagData, unsigned char *buf)
+GetVbrTag(VBRTAGDATA * pTagData, const unsigned char *buf)
 {
     int     i, head_flags;
     int     h_bitrate, h_id, h_mode, h_sr_index;
@@ -569,17 +573,17 @@ InitVbrTag(lame_global_flags * gfp)
 
 
 /* fast CRC-16 computation - uses table crc16_lookup 8*/
-static int
-CRC_update_lookup(int value, int crc)
+static uint16_t
+CRC_update_lookup(uint16_t value, uint16_t crc)
 {
-    int     tmp;
+    uint16_t tmp;
     tmp = crc ^ value;
     crc = (crc >> 8) ^ crc16_lookup[tmp & 0xff];
     return crc;
 }
 
 void
-UpdateMusicCRC(uint16_t * crc, unsigned char *buffer, int size)
+UpdateMusicCRC(uint16_t * crc, unsigned char const *buffer, int size)
 {
     int     i;
     for (i = 0; i < size; ++i)
@@ -891,8 +895,8 @@ lame_get_lametag_frame(lame_global_flags const *gfp, unsigned char *buffer, size
 {
     lame_internal_flags *gfc;
     SessionConfig_t const *cfg;
-    int     stream_size;
-    int     nStreamIndex;
+    unsigned long stream_size;
+    unsigned int  nStreamIndex;
     uint8_t btToc[NUMTOCENTRIES];
 
     if (gfp == 0) {
@@ -990,7 +994,7 @@ lame_get_lametag_frame(lame_global_flags const *gfp, unsigned char *buffer, size
     {
         /*work out CRC so far: initially crc = 0 */
         uint16_t crc = 0x00;
-        int     i;
+        unsigned int i;
         for (i = 0; i < nStreamIndex; i++)
             crc = CRC_update_lookup(buffer[i], crc);
         /*Put LAME VBR info */

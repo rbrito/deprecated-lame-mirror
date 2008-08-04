@@ -161,16 +161,16 @@ typedef enum MiscIDs { ID_TXXX = FRAME_ID('T', 'X', 'X', 'X')
 
 
 static int
-        id3v2_add_ucs2(lame_internal_flags * gfc, int frame_id, char const *lang,
-                       unsigned short const *desc, unsigned short const *text);
+id3v2_add_ucs2(lame_internal_flags * gfc, uint32_t frame_id, char const *lang,
+               unsigned short const *desc, unsigned short const *text);
 static int
-        id3v2_add_latin1(lame_internal_flags * gfc, int frame_id, char const *lang, char const *desc,
-                         char const *text);
+id3v2_add_latin1(lame_internal_flags * gfc, uint32_t frame_id, char const *lang, char const *desc,
+                 char const *text);
 
 static void
 copyV1ToV2(lame_internal_flags * gfc, int frame_id, char const *s)
 {
-    int     flags = gfc->tag_spec.flags;
+    unsigned int flags = gfc->tag_spec.flags;
     id3v2_add_latin1(gfc, frame_id, 0, 0, s);
     gfc->tag_spec.flags = flags;
 }
@@ -417,10 +417,10 @@ set_4_byte_value(unsigned char *bytes, uint32_t value)
     return bytes + 4;
 }
 
-static int
+static uint32_t
 toID3v2TagId(char const *s)
 {
-    int     i, x = 0;
+    unsigned int i, x = 0;
     if (s == 0) {
         return 0;
     }
@@ -439,7 +439,7 @@ toID3v2TagId(char const *s)
 }
 
 static int
-isNumericString(int frame_id)
+isNumericString(uint32_t frame_id)
 {
     switch (frame_id) {
     case ID_DATE:
@@ -453,7 +453,7 @@ isNumericString(int frame_id)
 }
 
 static int
-isMultiFrame(int frame_id)
+isMultiFrame(uint32_t frame_id)
 {
     switch (frame_id) {
     case ID_TXXX:
@@ -496,7 +496,7 @@ hasUcs2ByteOrderMarker(unsigned short bom)
 }
 
 static FrameDataNode *
-findNode(id3tag_spec const *tag, int frame_id, FrameDataNode * last)
+findNode(id3tag_spec const *tag, uint32_t frame_id, FrameDataNode const *last)
 {
     FrameDataNode *node = last ? last->nxt : tag->v2_head;
     while (node != 0) {
@@ -561,7 +561,7 @@ isSameLang(char const *l1, char const *l2)
 }
 
 static int
-isSameDescriptor(FrameDataNode * node, char const *dsc)
+isSameDescriptor(FrameDataNode const *node, char const *dsc)
 {
     size_t  i;
     if (node->dsc.enc == 1 && node->dsc.dim > 0) {
@@ -591,7 +591,7 @@ isSameDescriptorUcs2(FrameDataNode const *node, unsigned short const *dsc)
 }
 
 static int
-id3v2_add_ucs2(lame_internal_flags * gfc, int frame_id, char const *lang,
+id3v2_add_ucs2(lame_internal_flags * gfc, uint32_t frame_id, char const *lang,
                unsigned short const *desc, unsigned short const *text)
 {
     if (gfc != 0) {
@@ -626,7 +626,7 @@ id3v2_add_ucs2(lame_internal_flags * gfc, int frame_id, char const *lang,
 }
 
 static int
-id3v2_add_latin1(lame_internal_flags * gfc, int frame_id, char const *lang, char const *desc,
+id3v2_add_latin1(lame_internal_flags * gfc, uint32_t frame_id, char const *lang, char const *desc,
                  char const *text)
 {
     if (gfc != 0) {
@@ -664,8 +664,8 @@ id3v2_add_latin1(lame_internal_flags * gfc, int frame_id, char const *lang, char
 int
 id3tag_set_textinfo_ucs2(lame_global_flags * gfp, char const *id, unsigned short const *text)
 {
-    int const t_mask = FRAME_ID('T', 0, 0, 0);
-    int const frame_id = toID3v2TagId(id);
+    uint32_t const t_mask = FRAME_ID('T', 0, 0, 0);
+    uint32_t const frame_id = toID3v2TagId(id);
     if (frame_id == 0) {
         return -1;
     }
@@ -689,8 +689,8 @@ id3tag_set_textinfo_ucs2(lame_global_flags * gfp, char const *id, unsigned short
 int
 id3tag_set_textinfo_latin1(lame_global_flags * gfp, char const *id, char const *text)
 {
-    int const t_mask = FRAME_ID('T', 0, 0, 0);
-    int const frame_id = toID3v2TagId(id);
+    uint32_t const t_mask = FRAME_ID('T', 0, 0, 0);
+    uint32_t const frame_id = toID3v2TagId(id);
     if (frame_id == 0) {
         return -1;
     }
@@ -790,7 +790,7 @@ id3tag_set_comment(lame_global_flags * gfp, const char *comment)
         local_strdup(&gfc->tag_spec.comment, comment);
         gfc->tag_spec.flags |= CHANGED_FLAG;
         {
-            int const flags = gfc->tag_spec.flags;
+            uint32_t const flags = gfc->tag_spec.flags;
             id3v2_add_latin1(gfc, ID_COMMENT, "XXX", "", comment);
             gfc->tag_spec.flags = flags;
         }
@@ -967,7 +967,7 @@ writeChars(unsigned char *frame, char const *str, size_t n)
 }
 
 static unsigned char *
-writeUcs2s(unsigned char *frame, unsigned short *str, size_t n)
+writeUcs2s(unsigned char *frame, unsigned short const *str, size_t n)
 {
     while (n--) {
         *frame++ = 0xff & (*str >> 8);
@@ -1076,7 +1076,7 @@ id3tag_set_fieldvalue(lame_global_flags * gfp, const char *fieldvalue)
 {
     lame_internal_flags *gfc = gfp->internal_flags;
     if (fieldvalue && *fieldvalue) {
-        int const frame_id = toID3v2TagId(fieldvalue);
+        uint32_t const frame_id = toID3v2TagId(fieldvalue);
         char  **p = NULL;
         if (strlen(fieldvalue) < 5 || fieldvalue[4] != '=') {
             return -1;

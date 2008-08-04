@@ -57,7 +57,6 @@ extern FLOAT adj43[PRECALC_SIZE];
 
 extern FLOAT pow20[Q_MAX + Q_MAX2 + 1];
 extern FLOAT ipow20[Q_MAX];
-extern FLOAT iipow20[Q_MAX2 + 1];
 
 typedef struct calc_noise_result_t {
     FLOAT   over_noise;      /* sum of quantization noise > masking */
@@ -82,7 +81,7 @@ typedef struct calc_noise_data_t {
 } calc_noise_data;
 
 
-int     on_pe(lame_internal_flags * gfc, FLOAT pe[2][2],
+int     on_pe(lame_internal_flags * gfc, const FLOAT pe[2][2],
               int targ_bits[2], int mean_bits, int gr, int cbr);
 
 void    reduce_side(int targ_bits[2], FLOAT ms_ener_ratio, int mean_bits, int max_bits);
@@ -98,7 +97,7 @@ int     calc_noise(const gr_info * const cod_info,
                    const FLOAT * l3_xmin,
                    FLOAT * distort, calc_noise_result * const res, calc_noise_data * prev_noise);
 
-void    set_frame_pinfo(lame_internal_flags * gfc, III_psy_ratio ratio[2][2]);
+void    set_frame_pinfo(lame_internal_flags * gfc, const III_psy_ratio ratio[2][2]);
 
 
 
@@ -116,8 +115,7 @@ void    best_huffman_divide(const lame_internal_flags * const gfc, gr_info * con
 void    best_scalefac_store(const lame_internal_flags * gfc, const int gr, const int ch,
                             III_side_info_t * const l3_side);
 
-int     scale_bitcount(gr_info * const cod_info);
-int     scale_bitcount_lsf(const lame_internal_flags * gfp, gr_info * const cod_info);
+int     scale_bitcount(const lame_internal_flags * gfc, gr_info * cod_info);
 
 void    huffman_init(lame_internal_flags * const gfc);
 

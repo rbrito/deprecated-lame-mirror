@@ -517,6 +517,7 @@ Huffmancode(lame_internal_flags * const gfc, const unsigned int tableindex,
             int start, int end, gr_info const *gi)
 {
     struct huffcodetab const *const h = &ht[tableindex];
+    unsigned int const linbits = h->xlen;
     int     i, bits = 0;
 
     assert(tableindex < 32u);
@@ -524,13 +525,15 @@ Huffmancode(lame_internal_flags * const gfc, const unsigned int tableindex,
         return bits;
 
     for (i = start; i < end; i += 2) {
-        int     cbits = 0;
-        int     xbits = 0;
-        int const linbits = h->xlen;
-        int     xlen = h->xlen;
-        int     ext = 0;
-        int     x1 = gi->l3_enc[i];
-        int     x2 = gi->l3_enc[i + 1];
+        int16_t  cbits = 0;
+        uint16_t xbits = 0;
+        unsigned int xlen = h->xlen;
+        unsigned int ext = 0;
+        unsigned int x1 = gi->l3_enc[i];
+        unsigned int x2 = gi->l3_enc[i + 1];
+
+        assert(gi->l3_enc[i] >= 0);
+        assert(gi->l3_enc[i+1] >= 0);
 
         if (x1 != 0) {
             if (gi->xr[i] < 0)
@@ -538,23 +541,23 @@ Huffmancode(lame_internal_flags * const gfc, const unsigned int tableindex,
             cbits--;
         }
 
-        if (tableindex > 15) {
+        if (tableindex > 15u) {
             /* use ESC-words */
-            if (x1 > 14) {
-                int const linbits_x1 = x1 - 15;
+            if (x1 >= 15u) {
+                uint16_t const linbits_x1 = x1 - 15u;
                 assert(linbits_x1 <= h->linmax);
                 ext |= linbits_x1 << 1;
                 xbits = linbits;
-                x1 = 15;
+                x1 = 15u;
             }
 
-            if (x2 > 14) {
-                int const linbits_x2 = x2 - 15;
+            if (x2 >= 15u) {
+                uint16_t const linbits_x2 = x2 - 15u;
                 assert(linbits_x2 <= h->linmax);
                 ext <<= linbits;
                 ext |= linbits_x2;
                 xbits += linbits;
-                x2 = 15;
+                x2 = 15u;
             }
             xlen = 16;
         }
@@ -566,7 +569,7 @@ Huffmancode(lame_internal_flags * const gfc, const unsigned int tableindex,
             cbits--;
         }
 
-        assert((x1 | x2) < 16);
+        assert((x1 | x2) < 16u);
 
         x1 = x1 * xlen + x2;
         xbits -= cbits;
@@ -576,7 +579,7 @@ Huffmancode(lame_internal_flags * const gfc, const unsigned int tableindex,
         assert(xbits <= MAX_LENGTH);
 
         putbits2(gfc, h->table[x1], cbits);
-        putbits2(gfc, ext, xbits);
+        putbits2(gfc, (int)ext, xbits);
         bits += cbits + xbits;
     }
     return bits;
@@ -606,18 +609,19 @@ ShortHuffmancodebits(lame_internal_flags * gfc, gr_info const *gi)
 static int
 LongHuffmancodebits(lame_internal_flags * gfc, gr_info const *gi)
 {
-    int     i, bigvalues, bits;
+    unsigned int i;
+    int     bigvalues, bits;
     int     region1Start, region2Start;
 
     bigvalues = gi->big_values;
     assert(0 <= bigvalues && bigvalues <= 576);
 
+    assert(gi->region0_count >= -1);
+    assert(gi->region1_count >= -1);
     i = gi->region0_count + 1;
-    assert(0 <= i);
     assert((size_t) i < dimension_of(gfc->scalefac_band.l));
     region1Start = gfc->scalefac_band.l[i];
     i += gi->region1_count + 1;
-    assert(0 <= i);
     assert((size_t) i < dimension_of(gfc->scalefac_band.l));
     region2Start = gfc->scalefac_band.l[i];
 

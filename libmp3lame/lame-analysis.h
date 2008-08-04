@@ -90,7 +90,7 @@ struct plotting_data {
 #define plotting_data_defined
 typedef struct plotting_data plotting_data;
 #endif
-
+#if 0
 extern plotting_data *pinfo;
-
+#endif
 #endif

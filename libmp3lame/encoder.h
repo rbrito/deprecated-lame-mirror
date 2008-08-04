@@ -130,11 +130,18 @@
  *  -mf: MPG_MD_MS_LR
  *  -mi: all
  */
-
+#if 0
 #define MPG_MD_LR_LR  0
 #define MPG_MD_LR_I   1
 #define MPG_MD_MS_LR  2
 #define MPG_MD_MS_I   3
+#endif
+enum MPEGChannelMode
+{   MPG_MD_LR_LR = 0
+,   MPG_MD_LR_I  = 1
+,   MPG_MD_MS_LR = 2
+,   MPG_MD_MS_I  = 3
+};
 
 #ifndef lame_internal_flags_defined
 #define lame_internal_flags_defined

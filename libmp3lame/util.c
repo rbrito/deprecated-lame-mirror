@@ -30,7 +30,6 @@
 #include "machine.h"
 #include "encoder.h"
 #include "util.h"
-#include "lame_global_flags.h"
 
 #define PRECOMPUTE
 #if defined(__FreeBSD__) && !defined(__alpha__)
@@ -277,6 +276,9 @@ freq2bark(FLOAT freq)
     return 13.0 * atan(.76 * freq) + 3.5 * atan(freq * freq / (7.5 * 7.5));
 }
 
+#if 0
+extern FLOAT freq2cbw(FLOAT freq);
+
 /* see for example "Zwicker: Psychoakustik, 1982; ISBN 3-540-11401-7 */
 FLOAT
 freq2cbw(FLOAT freq)
@@ -286,7 +288,7 @@ freq2cbw(FLOAT freq)
     return 25 + 75 * pow(1 + 1.4 * (freq * freq), 0.69);
 }
 
-
+#endif
 
 
 
@@ -335,7 +337,7 @@ FindNearestBitrate(int bRate, /* legal rates from 8 to 320 */
  * Gabriel Bouvigne 2002-11-03
  */
 int
-nearestBitrateFullIndex(const int bitrate)
+nearestBitrateFullIndex(uint16_t bitrate)
 {
     /* borrowed from DM abr presets */
 
@@ -543,9 +545,7 @@ fill_buffer_resample(lame_internal_flags * gfc,
     fcn = 1.00 / cfg->resample_ratio;
     if (fcn > 1.00)
         fcn = 1.00;
-    filter_l = 31;
-    if (0 == filter_l % 2)
-        --filter_l;     /* must be odd */
+    filter_l = 31;     /* must be odd */
     filter_l += intratio; /* unless resample_ratio=int, it must be even */
 
 
@@ -654,7 +654,7 @@ fill_buffer_resample(lame_internal_flags * gfc,
 
 void
 fill_buffer(lame_internal_flags * gfc,
-            sample_t * mfbuf[2], sample_t const *in_buffer[2], int nsamples, int *n_in, int *n_out)
+            sample_t * const mfbuf[2], sample_t const * const in_buffer[2], int nsamples, int *n_in, int *n_out)
 {
     SessionConfig_t const *const cfg = &gfc->cfg;
     int     mf_size = gfc->sv_enc.mf_size;

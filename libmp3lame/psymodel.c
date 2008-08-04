@@ -176,9 +176,10 @@ static const float non_linear_psy_constant = .3;
 #endif
 
 #else
-
+/*
 #define NON_LINEAR_SCALE_ITEM(x)   (x)
 #define NON_LINEAR_SCALE_SUM(x)    (x)
+*/
 #define NON_LINEAR_SCALE_ENERGY(x) (x)
 
 #endif
@@ -251,7 +252,7 @@ compute_ffts(lame_internal_flags * gfc,
              FLOAT fftenergy[HBLKSIZE],
              FLOAT(*fftenergy_s)[HBLKSIZE_s],
              FLOAT(*wsamp_l)[BLKSIZE],
-             FLOAT(*wsamp_s)[3][BLKSIZE_s], int gr_out, int chn, const sample_t * buffer[2]
+             FLOAT(*wsamp_s)[3][BLKSIZE_s], int gr_out, int chn, const sample_t *const buffer[2]
     )
 {
     SessionConfig_t const *const cfg = &gfc->cfg;
@@ -769,7 +770,7 @@ convert_partition2scalefac_l(lame_internal_flags * gfc, FLOAT const *eb, FLOAT c
 
 static void
 compute_masking_s(lame_internal_flags * gfc,
-                  FLOAT(*fftenergy_s)[HBLKSIZE_s], FLOAT * eb, FLOAT * thr, int chn, int sblock)
+                  const FLOAT(*fftenergy_s)[HBLKSIZE_s], FLOAT * eb, FLOAT * thr, int chn, int sblock)
 {
     PsyStateVar_t *const psv = &gfc->sv_psy;
     PsyConst_s_t const *const gds = &gfc->cd_psy->s;
@@ -1078,7 +1079,7 @@ calc_mask_index_l(lame_internal_flags const *gfc, FLOAT const *max,
 
 int
 L3psycho_anal_ns(lame_internal_flags * gfc,
-                 const sample_t * buffer[2], int gr_out,
+                 const sample_t *const buffer[2], int gr_out,
                  III_psy_ratio masking_ratio[2][2],
                  III_psy_ratio masking_MS_ratio[2][2],
                  FLOAT percep_entropy[2], FLOAT percep_MS_entropy[2],
@@ -1113,6 +1114,7 @@ L3psycho_anal_ns(lame_internal_flags * gfc,
     unsigned char mask_idx_l[CBANDS + 2], mask_idx_s[CBANDS + 2];
 
     memset(mask_idx_s, 0, sizeof(mask_idx_s));
+    memset(&ns_hpfsmpl[0][0], 0, sizeof(ns_hpfsmpl));
 
     numchn = cfg->channels_out;
     /* chn=2 and 3 = Mid and Side channels */
@@ -1472,7 +1474,7 @@ L3psycho_anal_ns(lame_internal_flags * gfc,
 
 
 static void
-vbrpsy_compute_fft_l(lame_internal_flags * gfc, const sample_t * buffer[2], int chn, int gr_out,
+vbrpsy_compute_fft_l(lame_internal_flags * gfc, const sample_t *const buffer[2], int chn, int gr_out,
                      FLOAT fftenergy[HBLKSIZE], FLOAT(*wsamp_l)[BLKSIZE])
 {
     SessionConfig_t const *const cfg = &gfc->cfg;
@@ -1523,7 +1525,7 @@ vbrpsy_compute_fft_l(lame_internal_flags * gfc, const sample_t * buffer[2], int 
 
 
 static void
-vbrpsy_compute_fft_s(lame_internal_flags * gfc, const sample_t * buffer[2], int chn, int sblock,
+vbrpsy_compute_fft_s(lame_internal_flags const* gfc, const sample_t *const buffer[2], int chn, int sblock,
                      FLOAT(*fftenergy_s)[HBLKSIZE_s], FLOAT(*wsamp_s)[3][BLKSIZE_s])
 {
     int     j;
@@ -1560,7 +1562,7 @@ vbrpsy_compute_fft_s(lame_internal_flags * gfc, const sample_t * buffer[2], int 
     *********************************************************************/
 static void
 vbrpsy_compute_loudness_approximation_l(lame_internal_flags * gfc, int gr_out, int chn,
-                                        FLOAT fftenergy[HBLKSIZE])
+                                        const FLOAT fftenergy[HBLKSIZE])
 {
     PsyStateVar_t *psv = &gfc->sv_psy;
     if (chn < 2) {      /*no loudness for mid/side ch */
@@ -1575,7 +1577,7 @@ vbrpsy_compute_loudness_approximation_l(lame_internal_flags * gfc, int gr_out, i
     *  This is used for attack detection / handling.
     **********************************************************************/
 static void
-vbrpsy_attack_detection(lame_internal_flags * gfc, const sample_t * buffer[2], int gr_out,
+vbrpsy_attack_detection(lame_internal_flags * gfc, const sample_t *const buffer[2], int gr_out,
                         III_psy_ratio masking_ratio[2][2], III_psy_ratio masking_MS_ratio[2][2],
                         FLOAT energy[4], FLOAT sub_short_factor[4][3], int ns_attacks[4][4],
                         int uselongblock[2])
@@ -1588,6 +1590,8 @@ vbrpsy_attack_detection(lame_internal_flags * gfc, const sample_t * buffer[2], i
     /* chn=2 and 3 = Mid and Side channels */
     int const n_chn_psy = (cfg->mode == JOINT_STEREO) ? 4 : n_chn_out;
     int     chn, i, j;
+
+    memset(&ns_hpfsmpl[0][0], 0, sizeof(ns_hpfsmpl));
     /* Don't copy the input buffer into a temporary buffer */
     /* unroll the loop 2 times */
     for (chn = 0; chn < n_chn_out; chn++) {
@@ -1861,7 +1865,7 @@ psyvbr_calc_mask_index_s(lame_internal_flags const *gfc, FLOAT const *max,
 
 
 static void
-vbrpsy_compute_masking_s(lame_internal_flags * gfc, FLOAT(*fftenergy_s)[HBLKSIZE_s], FLOAT * eb,
+vbrpsy_compute_masking_s(lame_internal_flags * gfc, const FLOAT(*fftenergy_s)[HBLKSIZE_s], FLOAT * eb,
                          FLOAT * thr, int chn, int sblock)
 {
     PsyStateVar_t *const psv = &gfc->sv_psy;
@@ -1869,6 +1873,9 @@ vbrpsy_compute_masking_s(lame_internal_flags * gfc, FLOAT(*fftenergy_s)[HBLKSIZE
     FLOAT   max[CBANDS], avg[CBANDS];
     int     i, j, b;
     unsigned char mask_idx_s[CBANDS];
+
+    memset(max, 0, sizeof(max));
+    memset(avg, 0, sizeof(avg));
 
     for (b = j = 0; b < gds->npart; ++b) {
         FLOAT   ebb = 0, m = 0;
@@ -1888,10 +1895,6 @@ vbrpsy_compute_masking_s(lame_internal_flags * gfc, FLOAT(*fftenergy_s)[HBLKSIZE
     }
     assert(b == gds->npart);
     assert(j == 129);
-    for (; b < CBANDS; ++b) {
-        max[b] = 0;
-        avg[b] = 0;
-    }
     psyvbr_calc_mask_index_s(gfc, max, avg, mask_idx_s);
     for (j = b = 0; b < gds->npart; b++) {
         int     kk = gds->s3ind[b][0];
@@ -1962,7 +1965,7 @@ vbrpsy_compute_masking_s(lame_internal_flags * gfc, FLOAT(*fftenergy_s)[HBLKSIZE
 
 
 static void
-vbrpsy_compute_masking_l(lame_internal_flags * gfc, FLOAT fftenergy[HBLKSIZE], FLOAT eb_l[CBANDS],
+vbrpsy_compute_masking_l(lame_internal_flags * gfc, const FLOAT fftenergy[HBLKSIZE], FLOAT eb_l[CBANDS],
                          FLOAT thr[CBANDS], int chn)
 {
     PsyStateVar_t *const psv = &gfc->sv_psy;
@@ -2090,9 +2093,8 @@ vbrpsy_compute_masking_l(lame_internal_flags * gfc, FLOAT fftenergy[HBLKSIZE], F
 
 
 static void
-vbrpsy_compute_block_type(lame_internal_flags * gfc, int *uselongblock)
+vbrpsy_compute_block_type(SessionConfig_t const * cfg, int *uselongblock)
 {
-    SessionConfig_t const *const cfg = &gfc->cfg;
     int     chn;
 
     if (cfg->short_blocks == short_block_coupled
@@ -2152,8 +2154,8 @@ vbrpsy_apply_block_type(PsyStateVar_t * psv, int nch, int const *uselongblock, i
  ***************************************************************/
 
 static void
-vbrpsy_compute_MS_thresholds(FLOAT eb[4][CBANDS], FLOAT thr[4][CBANDS], FLOAT const *cb_mld,
-                             FLOAT ath_cb[CBANDS], FLOAT athadjust, FLOAT msfix, int n)
+vbrpsy_compute_MS_thresholds(const FLOAT eb[4][CBANDS], FLOAT thr[4][CBANDS], const FLOAT cb_mld[CBANDS],
+                             const FLOAT ath_cb[CBANDS], FLOAT athadjust, FLOAT msfix, int n)
 {
     FLOAT const msfix2 = msfix * 2;
     FLOAT const athlower = msfix > 0 ? pow(10, athadjust) : 1;
@@ -2221,7 +2223,7 @@ vbrpsy_compute_MS_thresholds(FLOAT eb[4][CBANDS], FLOAT thr[4][CBANDS], FLOAT co
 
 int
 L3psycho_anal_vbr(lame_internal_flags * gfc,
-                  const sample_t * buffer[2], int gr_out,
+                  const sample_t *const buffer[2], int gr_out,
                   III_psy_ratio masking_ratio[2][2],
                   III_psy_ratio masking_MS_ratio[2][2],
                   FLOAT percep_entropy[2], FLOAT percep_MS_entropy[2],
@@ -2259,7 +2261,7 @@ L3psycho_anal_vbr(lame_internal_flags * gfc,
     vbrpsy_attack_detection(gfc, buffer, gr_out, masking_ratio, masking_MS_ratio, energy,
                             sub_short_factor, ns_attacks, uselongblock);
 
-    vbrpsy_compute_block_type(gfc, uselongblock);
+    vbrpsy_compute_block_type(cfg, uselongblock);
 
     /* LONG BLOCK CASE */
     {
@@ -2697,6 +2699,8 @@ init_s3_values(FLOAT ** p,
     int     i, j, k;
     int     numberOfNoneZero = 0;
 
+    memset(&s3[0][0], 0, sizeof(s3));
+
     /* s[i][j], the value of the spreading function,
      * centered at band j (masker), for band i (maskee)
      *
@@ -2759,7 +2763,7 @@ stereo_demask(double f)
 }
 
 int
-psymodel_init(lame_global_flags * gfp)
+psymodel_init(lame_global_flags const* gfp)
 {
     lame_internal_flags *const gfc = gfp->internal_flags;
     SessionConfig_t *const cfg = &gfc->cfg;
@@ -2779,6 +2783,8 @@ psymodel_init(lame_global_flags * gfp)
     if (gfc->cd_psy != 0) {
         return 0;
     }
+    memset(norm, 0, sizeof(norm));
+
     gd = calloc(1, sizeof(PsyConst_t));
     gfc->cd_psy = gd;
 

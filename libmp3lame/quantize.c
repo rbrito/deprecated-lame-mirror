@@ -33,7 +33,6 @@
 #include "encoder.h"
 #include "util.h"
 #include "quantize_pvt.h"
-#include "lame_global_flags.h"
 #include "reservoir.h"
 #include "bitstream.h"
 #include "vbrquantize.h"
@@ -434,7 +433,7 @@ floatcompare(const void *v1, const void *v2)
     return 0;
 }
 
-void
+static void
 trancate_smallspectrums(lame_internal_flags const *gfc,
                         gr_info * const gi, const FLOAT * const l3_xmin, FLOAT * const work)
 {
@@ -942,10 +941,7 @@ balance_noise(lame_internal_flags * gfc,
     /* not all scalefactors have been amplified.  so these
      * scalefacs are possibly valid.  encode them:
      */
-    if (cfg->mode_gr == 2)
-        status = scale_bitcount(cod_info);
-    else
-        status = scale_bitcount_lsf(gfc, cod_info);
+    status = scale_bitcount(gfc, cod_info);
 
     if (!status)
         return 1;       /* amplified some bands not exceeding limits */
@@ -968,10 +964,7 @@ balance_noise(lame_internal_flags * gfc,
     }
 
     if (!status) {
-        if (cfg->mode_gr == 2)
-            status = scale_bitcount(cod_info);
-        else
-            status = scale_bitcount_lsf(gfc, cod_info);
+        status = scale_bitcount(gfc, cod_info);
     }
     return !status;
 }
@@ -1377,8 +1370,8 @@ get_framebits(lame_internal_flags * gfc, int frameBits[15])
 
 static int
 VBR_old_prepare(lame_internal_flags * gfc,
-                FLOAT pe[2][2], FLOAT const ms_ener_ratio[2],
-                III_psy_ratio ratio[2][2],
+                const FLOAT pe[2][2], FLOAT const ms_ener_ratio[2],
+                const III_psy_ratio ratio[2][2],
                 FLOAT l3_xmin[2][2][SFBMAX],
                 int frameBits[16], int min_bits[2][2], int max_bits[2][2], int bands[2][2])
 {
@@ -1426,7 +1419,7 @@ VBR_old_prepare(lame_internal_flags * gfc,
     }
     for (gr = 0; gr < cfg->mode_gr; gr++) {
         for (ch = 0; ch < cfg->channels_out; ch++) {
-            if (bits > frameBits[cfg->vbr_max_bitrate_index]) {
+            if (bits > frameBits[cfg->vbr_max_bitrate_index] && bits > 0) {
                 max_bits[gr][ch] *= frameBits[cfg->vbr_max_bitrate_index];
                 max_bits[gr][ch] /= bits;
             }
@@ -1441,7 +1434,7 @@ VBR_old_prepare(lame_internal_flags * gfc,
 
 static void
 bitpressure_strategy(lame_internal_flags const *gfc,
-                     FLOAT l3_xmin[2][2][SFBMAX], int min_bits[2][2], int max_bits[2][2])
+                     FLOAT l3_xmin[2][2][SFBMAX], const int min_bits[2][2], int max_bits[2][2])
 {
     SessionConfig_t const *const cfg = &gfc->cfg;
     int     gr, ch, sfb;
@@ -1477,8 +1470,8 @@ bitpressure_strategy(lame_internal_flags const *gfc,
  ************************************************************************/
 
 void
-VBR_old_iteration_loop(lame_internal_flags * gfc, FLOAT pe[2][2],
-                       FLOAT ms_ener_ratio[2], III_psy_ratio ratio[2][2])
+VBR_old_iteration_loop(lame_internal_flags * gfc, const FLOAT pe[2][2],
+                       const FLOAT ms_ener_ratio[2], const III_psy_ratio ratio[2][2])
 {
     SessionConfig_t const *const cfg = &gfc->cfg;
     EncResult_t *const eov = &gfc->ov_enc;
@@ -1570,7 +1563,7 @@ VBR_old_iteration_loop(lame_internal_flags * gfc, FLOAT pe[2][2],
 
 static int
 VBR_new_prepare(lame_internal_flags * gfc,
-                FLOAT pe[2][2], III_psy_ratio ratio[2][2],
+                const FLOAT pe[2][2], const III_psy_ratio ratio[2][2],
                 FLOAT l3_xmin[2][2][SFBMAX], int frameBits[16], int max_bits[2][2])
 {
     SessionConfig_t const *const cfg = &gfc->cfg;
@@ -1613,7 +1606,7 @@ VBR_new_prepare(lame_internal_flags * gfc,
     }
     for (gr = 0; gr < cfg->mode_gr; gr++) {
         for (ch = 0; ch < cfg->channels_out; ch++) {
-            if (bits > maximum_framebits) {
+            if (bits > maximum_framebits && bits > 0) {
                 max_bits[gr][ch] *= maximum_framebits;
                 max_bits[gr][ch] /= bits;
             }
@@ -1627,8 +1620,8 @@ VBR_new_prepare(lame_internal_flags * gfc,
 
 
 void
-VBR_new_iteration_loop(lame_internal_flags * gfc, FLOAT pe[2][2],
-                       FLOAT ms_ener_ratio[2], III_psy_ratio ratio[2][2])
+VBR_new_iteration_loop(lame_internal_flags * gfc, const FLOAT pe[2][2],
+                       const FLOAT ms_ener_ratio[2], const III_psy_ratio ratio[2][2])
 {
     SessionConfig_t const *const cfg = &gfc->cfg;
     EncResult_t *const eov = &gfc->ov_enc;
@@ -1642,6 +1635,8 @@ VBR_new_iteration_loop(lame_internal_flags * gfc, FLOAT pe[2][2],
     III_side_info_t *const l3_side = &gfc->l3_side;
 
     (void) ms_ener_ratio; /* not used */
+
+    memset(xrpow, 0, sizeof(xrpow));
 
     analog_silence = VBR_new_prepare(gfc, pe, ratio, l3_xmin, frameBits, max_bits);
 
@@ -1731,7 +1726,7 @@ VBR_new_iteration_loop(lame_internal_flags * gfc, FLOAT pe[2][2],
 
 static void
 calc_target_bits(lame_internal_flags * gfc,
-                 FLOAT pe[2][2],
+                 const FLOAT pe[2][2],
                  FLOAT const ms_ener_ratio[2],
                  int targ_bits[2][2], int *analog_silence_bits, int *max_frame_bits)
 {
@@ -1837,7 +1832,7 @@ calc_target_bits(lame_internal_flags * gfc,
 
     /*  repartion target bits if needed
      */
-    if (totbits > *max_frame_bits) {
+    if (totbits > *max_frame_bits && totbits > 0) {
         for (gr = 0; gr < cfg->mode_gr; gr++) {
             for (ch = 0; ch < cfg->channels_out; ch++) {
                 targ_bits[gr][ch] *= *max_frame_bits;
@@ -1863,8 +1858,8 @@ calc_target_bits(lame_internal_flags * gfc,
  ********************************************************************/
 
 void
-ABR_iteration_loop(lame_internal_flags * gfc, FLOAT pe[2][2],
-                   FLOAT ms_ener_ratio[2], III_psy_ratio ratio[2][2])
+ABR_iteration_loop(lame_internal_flags * gfc, const FLOAT pe[2][2],
+                   const FLOAT ms_ener_ratio[2], const III_psy_ratio ratio[2][2])
 {
     SessionConfig_t const *const cfg = &gfc->cfg;
     EncResult_t *const eov = &gfc->ov_enc;
@@ -1951,8 +1946,8 @@ ABR_iteration_loop(lame_internal_flags * gfc, FLOAT pe[2][2],
  ************************************************************************/
 
 void
-CBR_iteration_loop(lame_internal_flags * gfc, FLOAT pe[2][2],
-                   FLOAT ms_ener_ratio[2], III_psy_ratio ratio[2][2])
+CBR_iteration_loop(lame_internal_flags * gfc, const FLOAT pe[2][2],
+                   const FLOAT ms_ener_ratio[2], const III_psy_ratio ratio[2][2])
 {
     SessionConfig_t const *const cfg = &gfc->cfg;
     FLOAT   l3_xmin[SFBMAX];

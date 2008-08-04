@@ -221,6 +221,7 @@ optimum_bandwidth(double *const lowerlimit, double *const upperlimit, const unsi
 
     table_index = nearestBitrateFullIndex(bitrate);
 
+    (void) freq_map[table_index].bitrate;
     *lowerlimit = freq_map[table_index].lowpass;
 
 

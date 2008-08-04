@@ -100,9 +100,7 @@ extern  "C" {
     int     InitGainAnalysis(replaygain_t * rgData, long samplefreq);
     int     AnalyzeSamples(replaygain_t * rgData, const Float_t * left_samples,
                            const Float_t * right_samples, size_t num_samples, int num_channels);
-    int     ResetSampleFrequency(replaygain_t * rgData, long samplefreq);
     Float_t GetTitleGain(replaygain_t * rgData);
-    Float_t GetAlbumGain(replaygain_t * rgData);
 
 
 #ifdef __cplusplus

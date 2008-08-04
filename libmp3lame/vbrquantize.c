@@ -81,7 +81,6 @@ typedef VOLATILE union {
 #define MAGIC_INT_def    0x4b000000
 
 #ifdef TAKEHIRO_IEEE754_HACK
-#  define ROUNDFAC_def -0.0946f
 #else
 /*********************************************************************
  * XRPOW_FTOI is a macro to convert floats to ints.
@@ -340,9 +339,9 @@ tri_calc_sfb_noise_x34(const FLOAT * xr, const FLOAT * xr34, FLOAT l3_xmin, unsi
  *  calculates quantization step size determined by allowed masking
  */
 static int
-calc_scalefac(FLOAT8 l3_xmin, int bw)
+calc_scalefac(FLOAT l3_xmin, int bw)
 {
-    FLOAT8 const c = 5.799142446; /* 10 * 10^(2/3) * log10(4/3) */
+    FLOAT const c = 5.799142446; /* 10 * 10^(2/3) * log10(4/3) */
     return 210 + (int) (c * log10(l3_xmin / bw) - .5);
 }
 #endif
@@ -979,15 +978,8 @@ long_block_constrain(const algo_t * that, const int vbrsf[SFBMAX], const int vbr
 static void
 bitcount(const algo_t * that)
 {
-    SessionConfig_t const *const cfg = &that->gfc->cfg;
-    int     rc;
+    int     rc = scale_bitcount(that->gfc, that->cod_info);
 
-    if (cfg->mode_gr == 2) {
-        rc = scale_bitcount(that->cod_info);
-    }
-    else {
-        rc = scale_bitcount_lsf(that->gfc, that->cod_info);
-    }
     if (rc == 0) {
         return;
     }
@@ -1140,7 +1132,7 @@ flattenDistribution(const int sfwork[SFBMAX], int sf_out[SFBMAX], int dm, int k,
 
 
 static int
-tryThatOne(algo_t * that, int sftemp[SFBMAX], const int vbrsfmin[SFBMAX], int vbrmax)
+tryThatOne(algo_t const* that, const int sftemp[SFBMAX], const int vbrsfmin[SFBMAX], int vbrmax)
 {
     FLOAT const xrpow_max = that->cod_info->xrpow_max;
     int     nbits = LARGE_BITS;
@@ -1154,7 +1146,7 @@ tryThatOne(algo_t * that, int sftemp[SFBMAX], const int vbrsfmin[SFBMAX], int vb
 
 
 static void
-outOfBitsStrategy(algo_t * that, const int sfwork[SFBMAX], const int vbrsfmin[SFBMAX], int target)
+outOfBitsStrategy(algo_t const* that, const int sfwork[SFBMAX], const int vbrsfmin[SFBMAX], int target)
 {
     int     wrk[SFBMAX];
     int const dm = sfDepth(sfwork);
@@ -1247,15 +1239,6 @@ reduce_bit_usage(lame_internal_flags * gfc, int gr, int ch
      */
     if (cfg->use_best_huffman == 1)
         best_huffman_divide(gfc, cod_info);
-#if 0
-    /* truncate small spectrum seems to introduce pops, disabled(RH 050918) */
-    if (gfc->substep_shaping & 1) {
-        trancate_smallspectrums(gfc, cod_info, l3_xmin, xr34orig);
-    }
-    else if (cod_info->part2_3_length > maxbits - cod_info->part2_length) {
-        trancate_smallspectrums(gfc, cod_info, l3_xmin, xr34orig);
-    }
-#endif
     return cod_info->part2_3_length + cod_info->part2_length;
 }
 
@@ -1263,8 +1246,8 @@ reduce_bit_usage(lame_internal_flags * gfc, int gr, int ch
 
 
 int
-VBR_encode_frame(lame_internal_flags * gfc, FLOAT xr34orig[2][2][576],
-                 FLOAT l3_xmin[2][2][SFBMAX], int max_bits[2][2])
+VBR_encode_frame(lame_internal_flags * gfc, const FLOAT xr34orig[2][2][576],
+                 const FLOAT l3_xmin[2][2][SFBMAX], const int max_bits[2][2])
 {
     SessionConfig_t const *const cfg = &gfc->cfg;
     int     sfwork_[2][2][SFBMAX];
@@ -1272,12 +1255,13 @@ VBR_encode_frame(lame_internal_flags * gfc, FLOAT xr34orig[2][2][576],
     algo_t  that_[2][2];
     int const ngr = cfg->mode_gr;
     int const nch = cfg->channels_out;
-    int     max_nbits_ch[2][2];
-    int     max_nbits_gr[2];
+    int     max_nbits_ch[2][2] = {{0, 0}, {0 ,0}};
+    int     max_nbits_gr[2] = {0, 0};
     int     max_nbits_fr = 0;
-    int     use_nbits_ch[2][2];
-    int     use_nbits_gr[2];
-    int     use_nbits_fr = 0;
+    int     use_nbits_ch[2][2] = {{MAX_BITS_PER_CHANNEL+1, MAX_BITS_PER_CHANNEL+1}
+                                 ,{MAX_BITS_PER_CHANNEL+1, MAX_BITS_PER_CHANNEL+1}};
+    int     use_nbits_gr[2] = { MAX_BITS_PER_GRANULE+1, MAX_BITS_PER_GRANULE+1 };
+    int     use_nbits_fr = MAX_BITS_PER_GRANULE+MAX_BITS_PER_GRANULE;
     int     gr, ch;
     int     ok, sum_fr;
 
@@ -1337,9 +1321,12 @@ VBR_encode_frame(lame_internal_flags * gfc, FLOAT xr34orig[2][2][576],
                     (unsigned int) that->cod_info->max_nonzero_coeff;
 
                 assert(max_nonzero_coeff < 576);
+#if 0
                 memset(&that->cod_info->l3_enc[max_nonzero_coeff], 0,
                        (576u - max_nonzero_coeff) * sizeof(that->cod_info->l3_enc[0]));
-
+#else
+                memset(&that->cod_info->l3_enc[0], 0, sizeof(that->cod_info->l3_enc));
+#endif
                 (void) quantizeAndCountBits(that);
             }
             else {
@@ -1402,7 +1389,7 @@ VBR_encode_frame(lame_internal_flags * gfc, FLOAT xr34orig[2][2][576],
                 max_nbits_gr[gr] += max_nbits_ch[gr][ch];
             }
             if (max_nbits_gr[gr] > MAX_BITS_PER_GRANULE) {
-                float   f[2], s = 0;
+                float   f[2] = {0.0f, 0.0f}, s = 0.0f;
                 for (ch = 0; ch < nch; ++ch) {
                     if (max_nbits_ch[gr][ch] > 0) {
                         f[ch] = sqrt(sqrt(max_nbits_ch[gr][ch]));
@@ -1447,7 +1434,7 @@ VBR_encode_frame(lame_internal_flags * gfc, FLOAT xr34orig[2][2][576],
         }
         if (sum_fr > max_nbits_fr) {
             {
-                float   f[2], s = 0;
+                float   f[2] = {0.0f, 0.0f}, s = 0.0f;
                 for (gr = 0; gr < ngr; ++gr) {
                     if (max_nbits_gr[gr] > 0) {
                         f[gr] = sqrt(max_nbits_gr[gr]);
@@ -1484,7 +1471,7 @@ VBR_encode_frame(lame_internal_flags * gfc, FLOAT xr34orig[2][2][576],
                 }
             }
             for (gr = 0; gr < ngr; ++gr) {
-                float   f[2], s = 0;
+                float   f[2] = {0.0f, 0.0f}, s = 0.0f;
                 for (ch = 0; ch < nch; ++ch) {
                     if (max_nbits_ch[gr][ch] > 0) {
                         f[ch] = sqrt(max_nbits_ch[gr][ch]);
