@@ -101,7 +101,6 @@ static int const MAGIC_INT = MAGIC_INT_def;
 static DOUBLEX const ROUNDFAC = ROUNDFAC_def;
 #endif
 static DOUBLEX const MAGIC_FLOAT = MAGIC_FLOAT_def;
-static DOUBLEX const ROUNDFAC_plus_MAGIC_FLOAT = ROUNDFAC_def + MAGIC_FLOAT_def;
 
 
 

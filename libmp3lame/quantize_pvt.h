@@ -82,7 +82,7 @@ typedef struct calc_noise_data_t {
 } calc_noise_data;
 
 
-int     on_pe(lame_global_flags const *gfp, FLOAT pe[2][2], III_side_info_t const *l3_side,
+int     on_pe(lame_global_flags const *gfp, FLOAT pe[2][2],
               int targ_bits[2], int mean_bits, int gr, int cbr);
 
 void    reduce_side(int targ_bits[2], FLOAT ms_ener_ratio, int mean_bits, int max_bits);

@@ -419,11 +419,10 @@ iteration_init(lame_global_flags * gfp)
  * bugfixes rh 8/01: often allocated more than the allowed 4095 bits
  ************************************************************************/
 int
-on_pe(lame_global_flags const *gfp, FLOAT pe[][2], III_side_info_t const *l3_side,
+on_pe(lame_global_flags const *gfp, FLOAT pe[][2],
       int targ_bits[2], int mean_bits, int gr, int cbr)
 {
     lame_internal_flags const *const gfc = gfp->internal_flags;
-    gr_info const *cod_info;
     int     extra_bits, tbits, bits;
     int     add_bits[2];
     int     max_bits;        /* maximum allowed bits for this granule */
@@ -439,8 +438,6 @@ on_pe(lame_global_flags const *gfp, FLOAT pe[][2], III_side_info_t const *l3_sid
         /******************************************************************
          * allocate bits for each channel 
          ******************************************************************/
-        cod_info = &l3_side->tt[gr][ch];
-
         targ_bits[ch] = Min(MAX_BITS_PER_CHANNEL, tbits / gfc->channels_out);
 
         add_bits[ch] = targ_bits[ch] * pe[gr][ch] / 700.0 - targ_bits[ch];

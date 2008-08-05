@@ -18,7 +18,7 @@ dnl FRONTEND_CFLAGS
 dnl FRONTEND_LDADD
 
 AC_PREREQ(2.59)
-AC_INIT([lame],[3.98],[lame-dev@lists.sf.net])
+AC_INIT([lame],[3.98.1],[lame-dev@lists.sf.net])
 AC_CONFIG_SRCDIR([libmp3lame/lame.c])
 
 dnl check system
@@ -408,7 +408,7 @@ no)
 	AC_MSG_RESULT(${CONFIG_EFENCE})
 	;;
 *)
-	AC_MSG_ERROR(bad value »${CONFIG_EFENCE}« for efence option)
+	AC_MSG_ERROR(bad value ï¿½${CONFIG_EFENCE}ï¿½ for efence option)
 	;;
 esac
 
@@ -471,7 +471,7 @@ no)
 	AC_DEFINE(NOANALYSIS, 1, build without hooks for analyzer)
 	;;
 *)
-	AC_MSG_ERROR(bad value »${CONFIG_ANALYZER}« for analyzer-hooks option)
+	AC_MSG_ERROR(bad value ï¿½${CONFIG_ANALYZER}ï¿½ for analyzer-hooks option)
 	;;
 esac
 AC_MSG_RESULT($CONFIG_ANALYZER)
@@ -699,7 +699,7 @@ yes)
 	AC_DEFINE(FLOAT8, float, float instead of double)
 	;;
 *)
-	AC_MSG_ERROR(bad value »${CONFIG_ALLFLOAT}« for all-float option)
+	AC_MSG_ERROR(bad value ï¿½${CONFIG_ALLFLOAT}ï¿½ for all-float option)
 	;;
 esac
 AC_MSG_RESULT(${CONFIG_ALLFLOAT})
@@ -929,7 +929,7 @@ if test "x$GCC" = "xyes"; then
 		esac
 		;;
 	*)
-		AC_MSG_ERROR(bad value »${CONFIG_EXPOPT}« for expopt option)
+		AC_MSG_ERROR(bad value ï¿½${CONFIG_EXPOPT}ï¿½ for expopt option)
 		;;
 	esac
 
@@ -978,7 +978,7 @@ if test "x$GCC" = "xyes"; then
 		OPTIMIZATION="${DEBUG_NORM_OPT}"
 		;;
 	*)
-		AC_MSG_ERROR(bad value »${CONFIG_DEBUG}« for debug option)
+		AC_MSG_ERROR(bad value ï¿½${CONFIG_DEBUG}ï¿½ for debug option)
 	esac
 
 	AC_MSG_RESULT(${CONFIG_DEBUG})

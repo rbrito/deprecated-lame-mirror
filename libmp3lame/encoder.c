@@ -319,9 +319,6 @@ lame_encode_mp3_frame(       /* Output */
 
     int     ch, gr;
 
-    FLOAT   ms_ratio_prev = 0.;
-
-
     inbuf[0] = inbuf_l;
     inbuf[1] = inbuf_r;
 
@@ -362,7 +359,6 @@ lame_encode_mp3_frame(       /* Output */
         const sample_t *bufp[2]; /* address of beginning of left & right granule */
         int     blocktype[2];
 
-        ms_ratio_prev = gfc->ms_ratio[gfc->mode_gr - 1];
         for (gr = 0; gr < gfc->mode_gr; gr++) {
 
             for (ch = 0; ch < gfc->channels_out; ch++) {
@@ -485,7 +481,7 @@ lame_encode_mp3_frame(       /* Output */
                 gfc->pinfo->ms_ener_ratio[gr] = ms_ener_ratio[gr];
                 gfc->pinfo->blocktype[gr][ch] = gfc->l3_side.tt[gr][ch].block_type;
                 gfc->pinfo->pe[gr][ch] = (*pe_use)[gr][ch];
-                memcpy(gfc->pinfo->xr[gr][ch], &gfc->l3_side.tt[gr][ch].xr, sizeof(FLOAT) * 576);
+                memcpy(gfc->pinfo->xr[gr][ch], &gfc->l3_side.tt[gr][ch].xr[0], sizeof(FLOAT) * 576);
                 /* in psymodel, LR and MS data was stored in pinfo.  
                    switch to MS data: */
                 if (gfc->mode_ext == MPG_MD_MS_LR) {

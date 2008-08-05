@@ -1,4 +1,4 @@
-# Makefile for LAME 3.xx
+# Makefile for LAME 3.xx -*- makefile -*-
 #
 # LAME is reported to work under:
 # Linux (i86), NetBSD 1.3.2 (StrongARM), FreeBSD (i86)
@@ -118,9 +118,9 @@ endif
 # LINUX
 ##########################################################################
 ifeq ($(UNAME),Linux)
-#  remove these lines if you dont have GTK, or dont want the GTK frame analyzer
-   GTK = -DHAVE_GTK `gtk-config --cflags`
-   GTKLIBS = `gtk-config --libs`
+#  The frame analyzer depends on gtk1.2. Uncomment the next 2 lines to get it
+#   GTK = -DHAVE_GTK `gtk-config --cflags`
+#   GTKLIBS = `gtk-config --libs`
 # Comment out next 2 lines if you want to remove VBR histogram capability
    BRHIST_SWITCH = -DBRHIST -DHAVE_TERMCAP -DHAVE_TERMCAP_H
    LIBTERMCAP = -lncurses
@@ -129,8 +129,21 @@ ifeq ($(UNAME),Linux)
 #   LIBSNDFILE=-lsndfile
 
 # suggested for gcc-2.7.x
-#   CC_OPTS =  -O3 -fomit-frame-pointer -funroll-loops -ffast-math  -finline-functions -Wall -pedantic
+#  CC_OPTS =  -O3 -fomit-frame-pointer -funroll-loops -ffast-math  -finline-functions -Wall -pedantic
 #  CC_OPTS =  -O9 -fomit-frame-pointer -fno-strength-reduce -mpentiumpro -ffast-math -finline-functions -funroll-loops -Wall -malign-double -g -march=pentiumpro -mfancy-math-387 -pipe -pedantic
+
+# Suggested for GCC 4.* & machines with sse+sse2+sse3: -Os might reduce
+# the use of the instruction cache and, thus, get better performance,
+# but this should be experimented by the user. Customize at your own
+# convenience.
+#
+#CC_OPTS = -pipe -O3 \
+#	-Wall -Wextra -pedantic \
+#	-Wmissing-declarations -Wfloat-equal -Wshadow \
+#	-Wcast-qual -Wcast-align -Wdisabled-optimization \
+#	-ffast-math -ftree-vectorize -ftree-vect-loop-version \
+#	-mtune=nocona -march=nocona -mfpmath=sse -msse -msse2 -msse3 \
+#	-malign-double -maccumulate-outgoing-args
 
 #  for debugging:
   CC_OPTS =  -UNDEBUG -O -Wall -pedantic -ggdb -DABORTFP
@@ -245,6 +258,7 @@ ifeq ($(UNAME),FreeBSD)
 endif
 
 
+
 ##########################################################################
 # OpenBSD
 ##########################################################################
@@ -272,6 +286,7 @@ ifeq ($(UNAME),SunOS)
 #   CC_OPTS = -O
 #   MAKEDEP = -M
 endif
+
 
 
 ##########################################################################
@@ -361,6 +376,8 @@ ifeq ($(UNAME),OS/2)
 #   GTKLIBS = -LC:/XFree86/lib -Zmtd -Zsysv-signals -Zbin-files -lgtk12 -lgdk12 -lgmodule -lglib12 -lXext -lX11 -lshm -lbsd -lsocket -lm
 endif
 
+
+
 ###########################################################################
 # MSDOS/Windows
 ###########################################################################
@@ -373,6 +390,8 @@ ifeq ($(UNAME),MSDOS)
   CC_OPTS += -D_cdecl=__cdecl
   PGM = lame.exe
 endif
+
+
 
 ###########################################################################
 # AmigaOS
@@ -402,20 +421,6 @@ ifeq ($(UNAME),AmigaOS)
 		LIBS =
 	endif
 endif
-
-
-
-
-
-
-
-
-
-
-
-
-
-
 
 
 # 10/99 added -D__NO_MATH_INLINES to fix a bug in *all* versions of
@@ -523,6 +528,11 @@ lib_obj += libmp3lame/i386/fftsse.o
 #lib_obj += libmp3lame/i386/fftfpu.o
 endif
 
+
+
+#
+# Makefile rules---you probably won't have to modify below this line
+#
 %.o: %.c
 	$(CC) $(CPP_OPTS) $(CC_SWITCHES) -c $< -o $@
 
@@ -605,12 +615,10 @@ endif
 #  wc is the number of bytes which differ between new output
 #  and 'official' results.
 #
-#  Because of compilier options and effects of roundoff, the
+#  Because of compiler options and effects of roundoff, the
 #  number of bytes which are different may not be zero, but
 #  should be at most 30.
 #
 test: frontend/$(PGM)
 	frontend/$(PGM)  --nores testcase.wav testcase.new.mp3
 	cmp -l testcase.new.mp3 testcase.mp3 | wc -l
-
-

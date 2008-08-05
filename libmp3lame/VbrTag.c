@@ -329,11 +329,10 @@ setLameTagFrameHeader(lame_global_flags const *gfp, unsigned char *buffer)
 int
 CheckVbrTag(unsigned char *buf)
 {
-    int     h_id, h_mode, h_sr_index;
+    int     h_id, h_mode;
 
     /* get selected MPEG header data */
     h_id = (buf[1] >> 3) & 1;
-    h_sr_index = (buf[2] >> 2) & 3;
     h_mode = (buf[3] >> 6) & 3;
 
     /*  determine offset of header */
@@ -483,12 +482,9 @@ GetVbrTag(VBRTAGDATA * pTagData, unsigned char *buf)
 int
 InitVbrTag(lame_global_flags * gfp)
 {
-    int     nMode, SampIndex;
     int     kbps_header;
     lame_internal_flags *gfc = gfp->internal_flags;
 #define MAXFRAMESIZE 2880 /* or 0xB40, the max freeformat 640 32kHz framesize */
-    nMode = gfp->mode;
-    SampIndex = gfc->samplerate_index;
 
     /*
      * Xing VBR pretends to be a 48kbs layer III frame.  (at 44.1kHz).

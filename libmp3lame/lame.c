@@ -1910,12 +1910,23 @@ lame_encode_flush(lame_global_flags * gfp, unsigned char *mp3buffer, int mp3buff
     /* we always add POSTDELAY=288 padding to make sure granule with real
      * data can be complety decoded (because of 50% overlap with next granule */
     int     end_padding = POSTDELAY;
+    int     pad_out_samples;
+    int     frames_left;
+    int     samples_to_encode = gfc->mf_samples_to_encode;
 
     memset(buffer, 0, sizeof(buffer));
     mp3count = 0;
+    
+    if (gfp->in_samplerate != gfp->out_samplerate) {
+        /* delay due to resampling; needs to be fixed, if resampling code gets changed */
+        samples_to_encode += 16.*gfp->out_samplerate/gfp->in_samplerate;
+    }
+    pad_out_samples = gfp->framesize - (samples_to_encode % gfp->framesize);
+    end_padding += pad_out_samples;
 
-
-    while (gfc->mf_samples_to_encode > 0) {
+    frames_left = (samples_to_encode + pad_out_samples) / gfp->framesize;
+    while (frames_left > 0) {
+        int frame_num = gfp->frameNum;
 
         mp3buffer_size_remaining = mp3buffer_size - mp3count;
 
@@ -1926,17 +1937,12 @@ lame_encode_flush(lame_global_flags * gfp, unsigned char *mp3buffer, int mp3buff
         /* send in a frame of 0 padding until all internal sample buffers
          * are flushed
          */
-        imp3 = lame_encode_buffer(gfp, buffer[0], buffer[1], gfp->framesize,
+        imp3 = lame_encode_buffer(gfp, buffer[0], buffer[1], 32,
                                   mp3buffer, mp3buffer_size_remaining);
-
-        /* don't count the above padding: */
-        gfc->mf_samples_to_encode -= gfp->framesize;
-        if (gfc->mf_samples_to_encode < 0) {
-            /* we added extra padding to the end */
-            end_padding += -gfc->mf_samples_to_encode;
+        
+        if (frame_num != gfp->frameNum) {
+            --frames_left;
         }
-
-
         if (imp3 < 0) {
             /* some type of fatal error */
             return imp3;
@@ -1944,7 +1950,6 @@ lame_encode_flush(lame_global_flags * gfp, unsigned char *mp3buffer, int mp3buff
         mp3buffer += imp3;
         mp3count += imp3;
     }
-
     mp3buffer_size_remaining = mp3buffer_size - mp3count;
     /* if user specifed buffer size = 0, dont check size */
     if (mp3buffer_size == 0)
@@ -1976,6 +1981,21 @@ lame_encode_flush(lame_global_flags * gfp, unsigned char *mp3buffer, int mp3buff
         mp3count += imp3;
     }
     gfp->encoder_padding = end_padding;
+#if 0
+    {
+        int const ed = gfp->encoder_delay;
+        int const ep = gfp->encoder_padding;
+        int const ns = (gfp->frameNum*gfp->framesize) - (ed + ep); 
+        double duration = ns;
+        duration /= gfp->out_samplerate;
+        MSGF(gfc, "frames=%d\n", gfp->frameNum);
+        MSGF(gfc, "framesize=%d\n", gfp->framesize);
+        MSGF(gfc, "encoder delay=%d\n", ed);
+        MSGF(gfc, "encoder padding=%d\n", ep);
+        MSGF(gfc, "sample count=%d (%g)\n", ns, gfp->in_samplerate*duration);
+        MSGF(gfc, "duration=%g sec\n", duration);
+    }
+#endif
     return mp3count;
 }
 
