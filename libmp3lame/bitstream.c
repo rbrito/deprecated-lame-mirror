@@ -106,7 +106,7 @@ putheader_bits(lame_internal_flags * gfc)
 inline static void
 putbits2(lame_internal_flags * gfc, int val, int j)
 {
-    EncStateVar_t *const esv = &gfc->sv_enc;
+    EncStateVar_t const *const esv = &gfc->sv_enc;
     Bit_stream_struc *bs;
     bs = &gfc->bs;
 
@@ -463,7 +463,7 @@ huffman_coder_count1(lame_internal_flags * gfc, gr_info const *gi)
         v = ix[0];
         if (v) {
             p += 8;
-            if (xr[0] < 0)
+            if (xr[0] < 0.0f)
                 huffbits++;
             assert(v <= 1);
         }
@@ -472,7 +472,7 @@ huffman_coder_count1(lame_internal_flags * gfc, gr_info const *gi)
         if (v) {
             p += 4;
             huffbits *= 2;
-            if (xr[1] < 0)
+            if (xr[1] < 0.0f)
                 huffbits++;
             assert(v <= 1);
         }
@@ -481,7 +481,7 @@ huffman_coder_count1(lame_internal_flags * gfc, gr_info const *gi)
         if (v) {
             p += 2;
             huffbits *= 2;
-            if (xr[2] < 0)
+            if (xr[2] < 0.0f)
                 huffbits++;
             assert(v <= 1);
         }
@@ -490,7 +490,7 @@ huffman_coder_count1(lame_internal_flags * gfc, gr_info const *gi)
         if (v) {
             p++;
             huffbits *= 2;
-            if (xr[3] < 0)
+            if (xr[3] < 0.0f)
                 huffbits++;
             assert(v <= 1);
         }
@@ -535,8 +535,8 @@ Huffmancode(lame_internal_flags * const gfc, const unsigned int tableindex,
         assert(gi->l3_enc[i] >= 0);
         assert(gi->l3_enc[i+1] >= 0);
 
-        if (x1 != 0) {
-            if (gi->xr[i] < 0)
+        if (x1 != 0u) {
+            if (gi->xr[i] < 0.0f)
                 ext++;
             cbits--;
         }
@@ -546,7 +546,7 @@ Huffmancode(lame_internal_flags * const gfc, const unsigned int tableindex,
             if (x1 >= 15u) {
                 uint16_t const linbits_x1 = x1 - 15u;
                 assert(linbits_x1 <= h->linmax);
-                ext |= linbits_x1 << 1;
+                ext |= linbits_x1 << 1u;
                 xbits = linbits;
                 x1 = 15u;
             }
@@ -562,9 +562,9 @@ Huffmancode(lame_internal_flags * const gfc, const unsigned int tableindex,
             xlen = 16;
         }
 
-        if (x2 != 0) {
+        if (x2 != 0u) {
             ext <<= 1;
-            if (gi->xr[i + 1] < 0)
+            if (gi->xr[i + 1] < 0.0f)
                 ext++;
             cbits--;
         }
@@ -820,7 +820,7 @@ flush_bitstream(lame_internal_flags * gfc)
 {
     SessionConfig_t const *const cfg = &gfc->cfg;
     EncStateVar_t *const esv = &gfc->sv_enc;
-    RpgStateVar_t *const rsv = &gfc->sv_rpg;
+    RpgStateVar_t const *const rsv = &gfc->sv_rpg;
     RpgResult_t *const rov = &gfc->ov_rpg;
     III_side_info_t *l3_side;
     int     nbytes;
@@ -858,17 +858,17 @@ flush_bitstream(lame_internal_flags * gfc)
         rov->noclipGainChange = (int) ceil(log10(rov->PeakSample / 32767.0) * 20.0 * 10.0); /* round up */
 
         if (rov->noclipGainChange > 0) { /* clipping occurs */
-            if (EQ(cfg->scale, 1.0) || EQ(cfg->scale, 0.0))
-                rov->noclipScale = floor((32767.0 / rov->PeakSample) * 100.0) / 100.0; /* round down */
+            if (EQ(cfg->scale, 1.0f) || EQ(cfg->scale, 0.0f))
+                rov->noclipScale = floor((32767.0f / rov->PeakSample) * 100.0f) / 100.0f; /* round down */
             else
                 /* the user specified his own scaling factor. We could suggest
                  * the scaling factor of (32767.0/gfc->PeakSample)*(cfg->scale)
                  * but it's usually very inaccurate. So we'd rather not advice him
                  * on the scaling factor. */
-                rov->noclipScale = -1;
+                rov->noclipScale = -1.0f;
         }
         else            /* no clipping */
-            rov->noclipScale = -1;
+            rov->noclipScale = -1.0f;
     }
 }
 
@@ -881,7 +881,7 @@ add_dummy_byte(lame_internal_flags * gfc, unsigned char val, unsigned int n)
     EncStateVar_t *const esv = &gfc->sv_enc;
     int     i;
 
-    while (n-- > 0) {
+    while (n-- > 0u) {
         putbits_noheaders(gfc, val, 8);
 
         for (i = 0; i < MAX_HEADER_BUF; ++i)
@@ -985,7 +985,7 @@ int
 copy_buffer(lame_internal_flags * gfc, unsigned char *buffer, int size, int mp3data)
 {
     SessionConfig_t const *const cfg = &gfc->cfg;
-    RpgStateVar_t *const rsv = &gfc->sv_rpg;
+    RpgStateVar_t const *const rsv = &gfc->sv_rpg;
     RpgResult_t *const rov = &gfc->ov_rpg;
     Bit_stream_struc *const bs = &gfc->bs;
     int const minimum = bs->buf_byte_idx + 1;

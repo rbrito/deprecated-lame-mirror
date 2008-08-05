@@ -524,6 +524,8 @@ extern  "C" {
         struct id3tag_spec tag_spec;
         uint16_t nMusicCRC;
 
+        uint16_t _unused;
+
         /* CPU features */
         struct {
             unsigned int MMX:1; /* Pentium MMX, Pentium II...IV, K6, K6-2,
@@ -531,6 +533,7 @@ extern  "C" {
             unsigned int AMD_3DNow:1; /* K6-2, K6-III, Athlon      */
             unsigned int SSE:1; /* Pentium III, Pentium 4    */
             unsigned int SSE2:1; /* Pentium 4, K8             */
+            unsigned int _unused:28;
         } CPU_features;
 
 

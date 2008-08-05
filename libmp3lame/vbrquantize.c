@@ -1119,7 +1119,7 @@ flattenDistribution(const int sfwork[SFBMAX], int sf_out[SFBMAX], int dm, int k,
         }
     }
     else {
-        for (j = SFBMAX, i = 0; j > 0; --j, ++i) {
+        for (j = SFBMAX, i = 0; j > 0u; --j, ++i) {
             x = sfwork[i];
             sf_out[i] = x;
             if (sfmax < x) {
@@ -1315,7 +1315,7 @@ VBR_encode_frame(lame_internal_flags * gfc, const FLOAT xr34orig[2][2][576],
     for (gr = 0; gr < ngr; ++gr) {
         use_nbits_gr[gr] = 0;
         for (ch = 0; ch < nch; ++ch) {
-            algo_t *that = &that_[gr][ch];
+            algo_t const *that = &that_[gr][ch];
             if (max_bits[gr][ch] > 0) {
                 unsigned int const max_nonzero_coeff =
                     (unsigned int) that->cod_info->max_nonzero_coeff;
@@ -1557,11 +1557,11 @@ VBR_encode_frame(lame_internal_flags * gfc, const FLOAT xr34orig[2][2][576],
     for (gr = 0; gr < ngr; ++gr) {
         use_nbits_gr[gr] = 0;
         for (ch = 0; ch < nch; ++ch) {
-            algo_t *that = &that_[gr][ch];
+            algo_t const *that = &that_[gr][ch];
             use_nbits_ch[gr][ch] = 0;
             if (max_bits[gr][ch] > 0) {
                 int    *sfwork = sfwork_[gr][ch];
-                int    *vbrsfmin = vbrsfmin_[gr][ch];
+                int const *vbrsfmin = vbrsfmin_[gr][ch];
                 cutDistribution(sfwork, sfwork, that->cod_info->global_gain);
                 outOfBitsStrategy(that, sfwork, vbrsfmin, max_nbits_ch[gr][ch]);
             }
