@@ -158,6 +158,24 @@ typedef enum MiscIDs { ID_TXXX = FRAME_ID('T', 'X', 'X', 'X')
 
 
 
+static int
+test_tag_spec_flags(lame_internal_flags const *gfc, unsigned int tst)
+{
+    return (gfc->tag_spec.flags & tst) != 0u ? 1 : 0;
+}
+
+static void
+debug_tag_spec_flags(lame_internal_flags * gfc, const char* info)
+{
+    MSGF(gfc, "%s\n", info);
+    MSGF(gfc, "CHANGED_FLAG  : %d\n", test_tag_spec_flags(gfc, CHANGED_FLAG )); 
+    MSGF(gfc, "ADD_V2_FLAG   : %d\n", test_tag_spec_flags(gfc, ADD_V2_FLAG  )); 
+    MSGF(gfc, "V1_ONLY_FLAG  : %d\n", test_tag_spec_flags(gfc, V1_ONLY_FLAG )); 
+    MSGF(gfc, "V2_ONLY_FLAG  : %d\n", test_tag_spec_flags(gfc, V2_ONLY_FLAG )); 
+    MSGF(gfc, "SPACE_V1_FLAG : %d\n", test_tag_spec_flags(gfc, SPACE_V1_FLAG)); 
+    MSGF(gfc, "PAD_V2_FLAG   : %d\n", test_tag_spec_flags(gfc, PAD_V2_FLAG  )); 
+}
+
 
 
 static int
@@ -173,6 +191,9 @@ copyV1ToV2(lame_internal_flags * gfc, int frame_id, char const *s)
     unsigned int flags = gfc->tag_spec.flags;
     id3v2_add_latin1(gfc, frame_id, 0, 0, s);
     gfc->tag_spec.flags = flags;
+#if 0
+    debug_tag_spec_flags(gfc, "copyV1ToV2");
+#endif
 }
 
 
@@ -232,6 +253,8 @@ id3tag_genre_list(void (*handler) (int, const char *, void *), void *cookie)
 }
 
 #define GENRE_NUM_UNKNOWN 255
+
+
 
 void
 id3tag_init(lame_global_flags * gfp)
@@ -1109,18 +1132,28 @@ lame_get_id3v2_tag(lame_global_flags * gfp, unsigned char *buffer, size_t size)
     if (gfc == 0) {
         return 0;
     }
+    if (test_tag_spec_flags(gfc, V1_ONLY_FLAG)) {
+        return 0;
+    }
+#if 0
+    debug_tag_spec_flags(gfc, "lame_get_id3v2_tag");
+#endif
     {
+        int usev2 = test_tag_spec_flags(gfc, ADD_V2_FLAG | V2_ONLY_FLAG);
         /* calculate length of four fields which may not fit in verion 1 tag */
         size_t  title_length = gfc->tag_spec.title ? strlen(gfc->tag_spec.title) : 0;
         size_t  artist_length = gfc->tag_spec.artist ? strlen(gfc->tag_spec.artist) : 0;
         size_t  album_length = gfc->tag_spec.album ? strlen(gfc->tag_spec.album) : 0;
         size_t  comment_length = gfc->tag_spec.comment ? strlen(gfc->tag_spec.comment) : 0;
         /* write tag if explicitly requested or if fields overflow */
-        if ((gfc->tag_spec.flags & (ADD_V2_FLAG | V2_ONLY_FLAG))
-            || (title_length > 30)
-            || (artist_length > 30) || (album_length > 30)
+        if ((title_length > 30)
+            || (artist_length > 30)
+            || (album_length > 30)
             || (comment_length > 30)
             || (gfc->tag_spec.track_id3v1 && (comment_length > 28))) {
+            usev2 = 1;
+        }
+        if (usev2) {
             size_t  tag_size;
             unsigned char *p;
             size_t  adjusted_tag_size;
@@ -1170,7 +1203,7 @@ lame_get_id3v2_tag(lame_global_flags * gfp, unsigned char *buffer, size_t size)
                     }
                 }
             }
-            if (gfc->tag_spec.flags & PAD_V2_FLAG) {
+            if (test_tag_spec_flags(gfc, PAD_V2_FLAG)) {
                 /* add 128 bytes of padding */
                 tag_size += 128;
             }
@@ -1246,8 +1279,13 @@ int
 id3tag_write_v2(lame_global_flags * gfp)
 {
     lame_internal_flags *gfc = gfp->internal_flags;
-    if ((gfc->tag_spec.flags & CHANGED_FLAG)
-        && !(gfc->tag_spec.flags & V1_ONLY_FLAG)) {
+#if 0
+    debug_tag_spec_flags(gfc, "write v2");
+#endif
+    if (test_tag_spec_flags(gfc, V1_ONLY_FLAG)) {
+        return 0;
+    }
+    if (test_tag_spec_flags(gfc, CHANGED_FLAG)) {
         unsigned char *tag = 0;
         size_t  tag_size, n;
 
@@ -1307,10 +1345,12 @@ lame_get_id3v1_tag(lame_global_flags * gfp, unsigned char *buffer, size_t size)
     if (buffer == 0) {
         return 0;
     }
-    if ((gfc->tag_spec.flags & CHANGED_FLAG)
-        && !(gfc->tag_spec.flags & V2_ONLY_FLAG)) {
+    if (test_tag_spec_flags(gfc, V2_ONLY_FLAG)) {
+        return 0;
+    }
+    if (test_tag_spec_flags(gfc, CHANGED_FLAG)) {
         unsigned char *p = buffer;
-        int     pad = (gfc->tag_spec.flags & SPACE_V1_FLAG) ? ' ' : 0;
+        int     pad = test_tag_spec_flags(gfc, SPACE_V1_FLAG) ? ' ' : 0;
         char    year[5];
 
         /* set tag identifier */
