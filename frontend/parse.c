@@ -1710,13 +1710,18 @@ parse_args(lame_global_flags * gfp, int argc, char **argv,
                 T_ELIF("lowpass")
                     val = atof(nextArg);
                 argUsed = 1;
-                /* useful are 0.001 kHz...50 kHz, 50 Hz...50000 Hz */
-                if (val < 0.001 || val > 50000.) {
-                    error_printf("Must specify lowpass with --lowpass freq, freq >= 0.001 kHz\n");
-                    return -1;
+                if (val < 0) {
+                    lame_set_lowpassfreq(gfp, -1);
                 }
-                lame_set_lowpassfreq(gfp, (int) (val * (val < 50. ? 1.e3 : 1.e0) + 0.5));
-
+                else {
+                    /* useful are 0.001 kHz...50 kHz, 50 Hz...50000 Hz */
+                    if (val < 0.001 || val > 50000.) {
+                        error_printf("Must specify lowpass with --lowpass freq, freq >= 0.001 kHz\n");
+                        return -1;
+                    }
+                    lame_set_lowpassfreq(gfp, (int) (val * (val < 50. ? 1.e3 : 1.e0) + 0.5));
+                }
+                
                 T_ELIF("lowpass-width")
                     val = atof(nextArg);
                 argUsed = 1;
@@ -1731,13 +1736,18 @@ parse_args(lame_global_flags * gfp, int argc, char **argv,
                 T_ELIF("highpass")
                     val = atof(nextArg);
                 argUsed = 1;
-                /* useful are 0.001 kHz...16 kHz, 16 Hz...50000 Hz */
-                if (val < 0.001 || val > 50000.) {
-                    error_printf("Must specify highpass with --highpass freq, freq >= 0.001 kHz\n");
-                    return -1;
+                if (val < 0.0) {
+                    lame_set_highpassfreq(gfp, -1);
                 }
-                lame_set_highpassfreq(gfp, (int) (val * (val < 16. ? 1.e3 : 1.e0) + 0.5));
-
+                else {
+                    /* useful are 0.001 kHz...16 kHz, 16 Hz...50000 Hz */
+                    if (val < 0.001 || val > 50000.) {
+                        error_printf("Must specify highpass with --highpass freq, freq >= 0.001 kHz\n");
+                        return -1;
+                    }
+                    lame_set_highpassfreq(gfp, (int) (val * (val < 16. ? 1.e3 : 1.e0) + 0.5));
+                }
+                
                 T_ELIF("highpass-width")
                     val = atof(nextArg);
                 argUsed = 1;
