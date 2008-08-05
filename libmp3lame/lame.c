@@ -170,12 +170,21 @@ lame_init_params_ppflt(lame_internal_flags * gfc)
     }
 
     for (band = 0; band < 32; band++) {
-        freq = band / 31.0;
-        gfc->sv_enc.amp_filter[band]
-            = filter_coef((cfg->highpass2 - freq)
-                          / (cfg->highpass2 - cfg->highpass1 + 1e-20))
-            * filter_coef((freq - cfg->lowpass1)
-                          / (cfg->lowpass2 - cfg->lowpass1 + 1e-20));
+        FLOAT fc1, fc2;
+        freq = band / 31.0f;
+        if (cfg->highpass2 > cfg->highpass1) {
+            fc1 = filter_coef((cfg->highpass2 - freq) / (cfg->highpass2 - cfg->highpass1 + 1e-20));
+        }
+        else {
+            fc1 = 1.0f;
+        }
+        if (cfg->lowpass2 > cfg->lowpass1) {
+            fc2 = filter_coef((freq - cfg->lowpass1)  / (cfg->lowpass2 - cfg->lowpass1 + 1e-20));
+        }
+        else {
+            fc2 = 1.0f;
+        }
+        gfc->sv_enc.amp_filter[band] = fc1 * fc2;
     }
 }
 
@@ -826,6 +835,10 @@ lame_init_params(lame_global_flags * gfp)
         cfg->highpass1 /= cfg->samplerate_out;
         cfg->highpass2 /= cfg->samplerate_out;
     }
+    else {
+        cfg->highpass1 = 0;
+        cfg->highpass2 = 0;
+    }
     /* apply user driven low pass filter */
     if (cfg->lowpassfreq > 0) {
         cfg->lowpass2 = 2. * cfg->lowpassfreq;
@@ -839,6 +852,10 @@ lame_init_params(lame_global_flags * gfp)
         }
         cfg->lowpass1 /= cfg->samplerate_out;
         cfg->lowpass2 /= cfg->samplerate_out;
+    }
+    else {
+        cfg->lowpass1 = 0;
+        cfg->lowpass2 = 0;
     }
 
 
