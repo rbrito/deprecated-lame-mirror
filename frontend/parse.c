@@ -1616,11 +1616,13 @@ parse_args(lame_global_flags * gfp, int argc, char **argv,
                     albumart = (char *)malloc(size);
                     if (!albumart) {
                         error_printf("Insufficient memory for reading the albumart.\n");
+                        fclose(fpi);
                         return -1;
                     }
                     if (fread(albumart, 1, size, fpi) != size) {
                         error_printf("Read error: '%s'.\n", nextArg);
                         free(albumart);
+                        fclose(fpi);
                         return -1;
                     }
                     fclose(fpi);
