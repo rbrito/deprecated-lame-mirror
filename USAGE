@@ -116,13 +116,6 @@ Variable Bit Rate (VBR)
 --abr n        specify average bitrate desired
 
 
-Experimental (undocumented):  may work better or worse:
-
--X n           try different quality measures (when comparing quantizations)
--Y             
--Z             
-
-
 Operational:
 
 -r              assume input file is raw PCM
@@ -174,15 +167,13 @@ won't fit in a version 1 tag (e.g. the title string is longer than 30
 characters), or the '--add-id3v2' or '--id3v2-only' options are used,
 or output is redirected to stdout.
 
-OS/2-specific options:
+Windows and OS/2-specific options:
     --priority <type>     sets the process priority
 
 
 options not yet described:
 --nores            disable bit reservoir
---athlower <n db>  lower the ATH by n db.  
 --disptime
---notemp           disable temporal masking
 
 --lowpass
 --lowpass-width
@@ -749,15 +740,6 @@ result can sound worse.
 
 
 =======================================================================
-voice encoding mode
-=======================================================================
---voice
-
-An experimental voice encoding mode.  Tuned for 44.1 kHz input files.
---voice is deprecated, use --preset voice instead
-
-
-=======================================================================
 swapbytes   
 =======================================================================
 -x
@@ -767,11 +749,11 @@ For sorting out little endian/big endian type problems.  If your
 encodings sound like static, try this first.
 
 =======================================================================
-OS/2 process priority control   
+Window and OS/2 process priority control   
 =======================================================================
 --priority <type>
 
-(OS/2 only)
+(Windows and OS/2 only)
 
 Sets the process priority for LAME while running under IBM OS/2.
 This can be very useful to avoid the system becoming slow and/or
