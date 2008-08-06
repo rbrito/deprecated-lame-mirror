@@ -118,7 +118,7 @@ is more than 4 or fixed bitrates of 160kbs or less.
 At higher fixed bitrates or higher VBR settings,
 the default is stereo. 
 
-.B (s)tereo 
+.B (s)imple stereo 
 .br
 In this mode,
 the encoder makes no use of potentially existing correlations between
@@ -151,14 +151,14 @@ LAME uses a much more sophisticated algorithm than that described
 in the ISO documentation, and thus is safe to use in joint
 stereo mode.
 
-.B (f)orced joint stereo 
+.B (f)orced MS stereo 
 .br
-This mode will force MS joint stereo on all frames.
+This mode will force MS stereo on all frames.
 It is slightly faster than joint stereo,
 but it should be used only if you are sure that every frame of the
 input file has very little stereo separation.
 
-.B (d)ual channels
+.B (d)ual mono
 .br
 In this mode,
 the 2 channels will be totally independently encoded.
@@ -420,17 +420,8 @@ Have a look at the PRESETS section below.
 .B \-\-preset help
 gives more infos about the the used options in these presets.
 .TP
-.B \-\-alt-preset " [fast] type | [cbr] kbps"
+.B \-\-preset " [fast] type | [cbr] kbps"
 Use one of the built-in  presets.
-
-This option is deprecated and offers the same as the
-.B \-\-preset
-option above. Do not use it anymore, it will go away in a later version.
-.TP
-.B \-\-r3mix
-Uses r3mix VBR preset.
-.br
-See http://www.r3mix.net/ for more details. 
 .TP
 .B \-\-noasm " type"
 Disable specific assembly optimizations (
@@ -678,87 +669,7 @@ i.e. when the music level is below the absolute threshold of
 human hearing (ATH). 
 
 .PP
-ATH related:
-.TP
-.B \-\-noath
-Disable any use of the ATH (absolute threshold of hearing) for masking.
-Normally,
-humans are unable to hear any sound below this threshold. 
-.TP
-.B \-\-athshort
-Ignore psychoacoustic model for short blocks,
-use ATH only. 
-.TP
-.B \-\-athonly
-This option causes LAME to ignore the output of the psy-model and only
-use masking from the ATH (absolute threshold of hearing).
-Might be useful at very high bitrates or for testing the ATH. 
-.TP
-.BI \-\-athtype " shape"
-The Absolute Threshold of Hearing is the minimum threshold under which
-humans are unable to hear any sound.
-.br
-In the past,
-LAME was using ATH shape 0 which is the Painter & Spanias formula.
-Tests have shown that this formula is innacurate for the
-13 - 22 kHz area,
-leading to audible artifacts in some cases.
-.br
-Shape 1 was thus implemented,
-which is over sensitive,
-leading to very high bitrates.
-.br
-Shape 2 formula was accurately modelized from real data in order to
-reach optimal quality while not wasting bitrate.
-In CBR and ABR modes,
-LAME uses ATH shape 2 by default,
-VBR selects one depending on the specified parameter to the
-.B -V
-option.
-.TP
-.BI \-\-athlower " n"
-Lower the ATH (absolute threshold of hearing) by
-.I n
-dB.
-.br
-Normally,
-humans are unable to hear any sound below this threshold,
-but for music recorded at very low level this option might be useful.
-.TP
-.BI \-\-athaa-type " n"
-ATH auto adjust types 1 - 3,
-else no adjustment
-.TP
-.BI \-\-athaa-sensitivity " x"
-activation offset in -/+ dB for ATH auto-adjustment
-
-.PP
 PSY related:
-.TP
-.B \-\-short
-Let LAME use short blocks when appropriate.
-It is the default setting.
-.TP
-.B \-\-noshort
-Encode all frames using long blocks only.
-This could increase quality when encoding at very low bitrates,
-but can produce serious pre-echo artefacts. 
-.TP
-.B \-\-allshort
-Use only short blocks,
-no long ones. 
-.TP
-.BI \-\-cwlimit " freq"
-Compute tonality up to
-.I freq
-(in kHz).
-Default setting is 8.8717.
-.TP
-.B \-\-notemp
-Do not make use of the temporal masking effect. 
-.TP
-.B \-\-nspsytune
-Experimental PSY tunings by Naoki Shibata
 .TP
 .B \-\-nssafejoint
 M/S switching criterion
@@ -856,9 +767,6 @@ or
 .TP
 .B -Y
 lets LAME ignore noise in sfb21, like in CBR
-.TP
-.B -Z
-toggles the scalefac feature on
 
 .PP
 MP3 header/stream options:
@@ -916,17 +824,6 @@ This compatibility might be important for hardware players.
 
 .PP
 Filter options:
-.TP
-.B -k
-Tells the encoder to use full bandwidth and to disable all filters.
-By default,
-the encoder uses some highpass filtering at low bitrates,
-in order to keep a good quality by giving more bits to more important
-frequencies.
-.br
-Increasing the bandwidth from the default setting might produce
-ringing artefacts at low bitrates.
-Use with care! 
 .TP
 .BI \-\-lowpass " freq"
 Set a lowpass filtering frequency in kHz.

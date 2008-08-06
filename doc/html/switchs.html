@@ -31,26 +31,6 @@
     <td align="LEFT" nowrap>average bitrate encoding</td>
   </tr>
   <tr valign="TOP"> 
-    <td align="LEFT" nowrap><kbd><a href="#-allshort">--allshort</a></kbd></td>
-    <td align="LEFT" nowrap>use short blocks only</td>
-  </tr>
-  <tr valign="TOP"> 
-    <td align="LEFT" nowrap><kbd><a href="#-athlower">--athlower</a></kbd></td>
-    <td align="LEFT" nowrap>lower the ATH</td>
-  </tr>
-  <tr valign="TOP"> 
-    <td align="LEFT" nowrap><kbd><a href="#-athonly">--athonly</a></kbd></td>
-    <td align="LEFT" nowrap>ATH only</td>
-  </tr>
-  <tr valign="TOP"> 
-    <td align="LEFT" nowrap><kbd><a href="#-athshort">--athshort</a></kbd></td>
-    <td align="LEFT" nowrap>ATH only for short blocks</td>
-  </tr>
-  <tr valign="TOP"> 
-    <td align="LEFT" nowrap><kbd><a href="#-athtype">--athtype</a></kbd></td>
-    <td align="LEFT" nowrap>select ATH type</td>
-  </tr>
-  <tr valign="TOP"> 
     <td align="LEFT" nowrap><kbd><a href="#b">-b</a></kbd></td>
     <td align="LEFT" nowrap>bitrate (8...320)</td>
   </tr>
@@ -77,14 +57,6 @@
   <tr valign="TOP"> 
     <td align="LEFT" nowrap><kbd><a href="#-comp">--comp</a></kbd></td>
     <td align="LEFT" nowrap>choose compression ratio</td>
-  </tr>
-  <tr valign="TOP"> 
-    <td align="LEFT" nowrap><kbd><a href="#-cwlimit">--cwlimit</a></kbd></td>
-    <td align="LEFT" nowrap>tonality limit</td>
-  </tr>
-  <tr valign="TOP"> 
-    <td align="LEFT" nowrap><kbd><a href="#d">-d</a></kbd></td>
-    <td align="LEFT" nowrap>block type control</td>
   </tr>
   <tr valign="TOP"> 
     <td align="LEFT" nowrap><kbd><a href="#-decode">--decode</a></kbd></td>
@@ -127,10 +99,6 @@
     <td align="LEFT" nowrap> width of highpass filtering in kHz</td>
   </tr>
   <tr valign="TOP"> 
-    <td align="LEFT" nowrap><kbd><a href="#k">-k</a></kbd></td>
-    <td align="LEFT" nowrap> full bandwidth</td>
-  </tr>
-  <tr valign="TOP"> 
     <td align="LEFT" nowrap><kbd><a href="#-lowpass">--lowpass</a></kbd></td>
     <td align="LEFT" nowrap> lowpass filtering frequency in kHz</td>
   </tr>
@@ -155,10 +123,6 @@
     <td align="LEFT" nowrap>MPEG Layer III input file</td>
   </tr>
   <tr valign="TOP"> 
-    <td align="LEFT" nowrap><kbd><a href="#-noath">--noath</a></kbd></td>
-    <td align="LEFT" nowrap>disable ATH</td>
-  </tr>
-  <tr valign="TOP"> 
     <td align="LEFT" nowrap><kbd><a href="#-noasm">--noasm</a></kbd></td>
     <td align="LEFT" nowrap>disable assembly optimizations (mmx/3dnow/sse)</td>
   </tr>
@@ -173,10 +137,6 @@
   <tr valign="TOP"> 
     <td align="LEFT" nowrap><kbd><a href="#-nores">--nores</a></kbd></td>
     <td align="LEFT" nowrap>disable bit reservoir</td>
-  </tr>
-  <tr valign="TOP"> 
-    <td align="LEFT" nowrap><kbd><a href="#-noshort">--noshort</a></kbd></td>
-    <td align="LEFT" nowrap>disable short blocks frames</td>
   </tr>
   <tr valign="TOP"> 
     <td align="LEFT" nowrap><kbd><a href="#-notemp">--notemp</a></kbd></td>
@@ -241,10 +201,6 @@
   <tr valign="TOP"> 
     <td align="LEFT" nowrap><kbd><a href="#-scale-r">--scale-r</a></kbd></td>
     <td align="LEFT" nowrap>scale input channel 1 (right)</td>
-  </tr>
-  <tr valign="TOP"> 
-    <td align="LEFT" nowrap><kbd><a href="#-short">--short</a></kbd></td>
-    <td align="LEFT" nowrap>use short blocks</td>
   </tr>
   <tr valign="TOP"> 
     <td align="LEFT" nowrap><kbd><a href="#-silent">--silent</a></kbd></td>
@@ -314,90 +270,6 @@
     lame --abr 123 -b 64 -B 192 a.wav a.mp3<br>
     which would limit the allowed frame sizes between 64 and 192 kbits. <br>
     <br>
-  </dt>
-  <hr width="50%" noshade align="center">
-  <br>
-</dl>
-<dl> 
-  <dt><strong>* <kbd>--allshort</kbd><a name="-allshort">&nbsp;&nbsp;&nbsp;&nbsp;use 
-    short blocks only</a></strong> </dt>
-</dl>
-<dl> 
-  <dd>Use only short blocks, no long ones. 
-</dl>
-<dl> 
-  <dd>&nbsp; 
-  <dt><br>
-  </dt>
-  <hr width="50%" noshade align="center">
-  <br>
-</dl>
-<dl> 
-  <dt><strong>* <kbd>--athlower n</kbd><a name="-athlower">&nbsp;&nbsp;&nbsp;&nbsp;lower 
-    the ATH</a></strong> </dt>
-</dl>
-<dl> 
-  <dd>Lower the ATH (absolute threshold of hearing) by n dB.<br>
-    Normally, humans are unable to hear any sound below this threshold, but for 
-    music recorded at very low level this option might be useful.
-</dl>
-<dl> 
-  <dd>&nbsp; 
-  <dt><br>
-  </dt>
-  <hr width="50%" noshade align="center">
-  <br>
-</dl>
-<dl> 
-  <dt><strong>* <kbd>--athonly</kbd><a name="-athonly">&nbsp;&nbsp;&nbsp;&nbsp;ATH 
-    only</a></strong> </dt>
-</dl>
-<dl> 
-  <dd>This option causes LAME to ignore the output of the psy-model and only use 
-    masking from the ATH (absolute threshold of hearing). Might be useful at very 
-    high bitrates or for testing the ATH. 
-</dl>
-<dl> 
-  <dd>&nbsp; 
-  <dt><br>
-  </dt>
-  <hr width="50%" noshade align="center">
-  <br>
-</dl>
-<dl> 
-  <dt><strong>* <kbd>--athshort</kbd><a name="-athshort">&nbsp;&nbsp;&nbsp;&nbsp;ATH 
-    only for short blocks</a></strong> </dt>
-</dl>
-<dl> 
-  <dd>Ignore psychoacoustic model for short blocks, use ATH only. 
-</dl>
-<dl> 
-  <dd>&nbsp; 
-  <dt><br>
-  </dt>
-  <hr width="50%" noshade align="center">
-  <br>
-</dl>
-<dl> 
-  <dt><strong>* <kbd>--athtype 0/1/2</kbd><a name="-athtype">&nbsp;&nbsp;&nbsp;&nbsp;select 
-    ATH type</a></strong> </dt>
-</dl>
-<dl> 
-  <dd>The Absolute Threshold of Hearing is the minimum threshold under which humans 
-    are unable to hear any sound. In the past, LAME was using ATH shape 0 which 
-    is the Painter & Spanias formula. Tests have shown that this formula is innacurate 
-    for the 13-22 kHz area, leading to audible artifacts in some cases. Shape 1 
-    was thus implemented, which is over sensitive, leading to very high bitrates. 
-    Shape 2 formula was accurately modelized from real data in order to real optimal 
-    quality while not wasting bitrate. In CBR and ABR modes, LAME uses ATH shape 
-    2 by default. <br>
-    <br>
-    In VBR mode, LAME is adapting its shape according to the 
-    -V value, going gradually from the 0 shape at -V9 up to shape 2 at -V0.
-</dl>
-<dl> 
-  <dd>&nbsp; 
-  <dt><br>
   </dt>
   <hr width="50%" noshade align="center">
   <br>
@@ -482,40 +354,12 @@
     <br>
     <hr width="50%" noshade align="center">
     <br>
-  <dt><strong>* <kbd>--cbr</kbd><a name="-cbr">
-    &nbsp;&nbsp;&nbsp;&nbsp;enforce use of constant bitrate</a></strong> 
-  </dt>
-</dl>
-<dl> 
-  <dd>This switch enforces the use of constant bitrate encoding. 
-  <dt><br>
-    <br>
-    <hr width="50%" noshade align="center">
-    <br>
   <dt><strong>* <kbd>--comp</kbd><a name="-comp">&nbsp;&nbsp;&nbsp;&nbsp;choose 
     compression ratio</a></strong> </dt>
 </dl>
 <dl> 
   <dd>Instead of choosing bitrate, using this option, user can choose compression 
     ratio to achieve. 
-  <dt><br>
-    <br>
-    <hr width="50%" noshade align="center">
-    <br>
-  <dt><strong>* <kbd>--cwlimit n</kbd><a name="-cwlimit">&nbsp;&nbsp;&nbsp;tonality 
-    limit</a></strong> </dt>
-</dl>
-<dl> 
-  <dd>Compute tonality up to freq (in kHz). Default setting is 8.8717. 
-  <dt><br>
-    <br>
-    <hr width="50%" noshade align="center">
-    <br>
-  <dt><strong>* <kbd>-d</kbd><a name="d">&nbsp;&nbsp;&nbsp;&nbsp;block type control</a></strong> 
-  </dt>
-</dl>
-<dl> 
-  <dd>Allows the left and right channels to use different block size types. 
   <dt><br>
     <br>
     <hr width="50%" noshade align="center">
@@ -674,21 +518,6 @@
   <hr width="50%" noshade align="center">
   <br>
   <dl> </dl>
-  <dt><strong>* <kbd>-k</kbd><a name="k">&nbsp;&nbsp;&nbsp;&nbsp;full bandwidth</a></strong> 
-  </dt>
-</dl>
-<dl> 
-  <dd> Tells the encoder to use full bandwidth and to disable all filters. By 
-    default, the encoder uses some lowpass filtering at lower bitrates, in order 
-    to keep a good quality by giving more bits to more important frequencies.<br>
-    Increasing the bandwidth from the default setting might produce ringing artefacts 
-    at low bitrates. Use with care! 
-  <dt><br>
-    <br>
-  </dt>
-  <hr width="50%" noshade align="center">
-  <br>
-  <dl> </dl>
   <dt><strong>* <kbd>--lowpass</kbd><a name="-lowpass">&nbsp;&nbsp;&nbsp;&nbsp;lowpass 
     filtering frequency in kHz</a></strong></dt>
 </dl>
@@ -808,19 +637,6 @@
   <hr width="50%" noshade align="center">
   <br>
   <dl> </dl>
-  <dt><strong>* <kbd>--noath</kbd><a name="-noath">&nbsp;&nbsp;&nbsp;&nbsp;disable 
-    ATH</a></strong> </dt>
-</dl>
-<dl> 
-  <dd> Disable any use of the ATH (absolute threshold of hearing) for masking. 
-    Normally, humans are unable to hear any sound below this threshold. 
-  <dt><br>
-  </dt>
-</dl>
-<dl> 
-  <hr width="50%" noshade align="center">
-  <br>
-  <dl> </dl>
   <dt><strong>* <kbd>--noasm mmx/3dnow/sse</kbd><a name="-noasm">
    &nbsp;&nbsp;&nbsp;&nbsp;disable assembly optimizations</a></strong> </dt>
 </dl>
@@ -870,19 +686,6 @@
 <dl> 
   <dd> Disable the bit reservoir. Each frame will then become independent from 
     previous ones, but the quality will be lower. 
-  <dt><br>
-  </dt>
-</dl>
-<dl> 
-  <hr width="50%" noshade align="center">
-  <br>
-  <dl> </dl>
-  <dt><strong>* <kbd>--noshort</kbd><a name="-noshort">&nbsp;&nbsp;&nbsp;&nbsp;disable 
-    short blocks frames</a></strong></dt>
-</dl>
-<dl> 
-  <dd> Encode all frames using long blocks only. This could increase quality when 
-    encoding at very low bitrates, but can produce serious pre-echo artefacts. 
   <dt><br>
   </dt>
 </dl>
@@ -1170,20 +973,6 @@
     <br>
     Use with care, since most MP3 decoders will truncate data which decodes to 
     values greater than 32768. 
-  <dt><br>
-    <br>
-  </dt>
-  <hr width="50%" noshade align="center">
-  <br>
-  <dl> </dl>
-  <dt><strong>* <kbd>--short</kbd><a name="-short">&nbsp;&nbsp;&nbsp;&nbsp;use 
-    short blocks</a></strong> </dt>
-</dl>
-<dl> 
-  <dd>Let LAME use short blocks when appropriate. It is the default setting. 
-</dl>
-<dl> 
-  <dd>&nbsp; 
   <dt><br>
     <br>
   </dt>
