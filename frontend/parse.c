@@ -76,10 +76,10 @@ char   *strchr(), *strrchr();
 #include <errno.h>
 #endif
 
-#if defined DEBUG || _DEBUG || _ALLOW_INTERNAL_OPTIONS
+#if defined _ALLOW_INTERNAL_OPTIONS
 #define INTERNAL_OPTS 1
 #else
-#define INTERNAL_OPTS LAME_ALPHA_VERSION
+#define INTERNAL_OPTS 0
 #endif
 
 #if (INTERNAL_OPTS!=0)
