@@ -138,7 +138,7 @@ apply_vbr_preset(lame_global_flags * gfp, int a, int enforce)
     LERP(ath_sensitivity);
     LERP(interch);
     NOOP(safejoint);
-    LERP(sfb21mod);
+    NOOP(sfb21mod);
     LERP(msfix);
 
     (void) lame_set_VBR_q(gfp, set->vbr_q);
