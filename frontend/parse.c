@@ -1620,6 +1620,7 @@ parse_args(lame_global_flags * gfp, int argc, char **argv,
                     }
                     if (fread(albumart, 1, size, fpi) != size) {
                         error_printf("Read error: '%s'.\n", nextArg);
+                        free(albumart);
                         return -1;
                     }
                     fclose(fpi);
