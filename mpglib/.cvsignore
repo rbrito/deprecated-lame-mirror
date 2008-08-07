@@ -1,5 +1,6 @@
 .deps
 .libs
+libmp3hip.la
 libmpgdecoder.la
 Makefile
 mpglib.a
@@ -7,6 +8,7 @@ config.status
 config.log
 config.cache
 *.d
+*.o
 *.lo
 Debug
 DebugGTK

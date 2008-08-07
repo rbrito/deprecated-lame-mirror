@@ -25,4 +25,3 @@ void dct64( real *a,real *b,real *c);
 
 
 #endif
-

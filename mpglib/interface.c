@@ -218,8 +218,8 @@ check_vbr_header(PMPSTR mp,int bytes)
   for (i=0; i<bytes; ++i) {
     while(pos >= buf->size) {
       buf  = buf->next;
+      if(!buf) 	return -1; /* fatal error */
       pos = buf->pos;
-      if(!buf)  return -1; /* fatal error */
     }
     ++pos;
   }
@@ -598,8 +598,3 @@ int decodeMP3_unclipped( PMPSTR mp,unsigned char *in,int isize,char *out,
         /* passing pointers to the functions which don't clip the samples */
         return decodeMP3_clipchoice(mp, in, isize, out, done, synth_1to1_mono_unclipped, synth_1to1_unclipped);
 }
-
-
-
-
-
