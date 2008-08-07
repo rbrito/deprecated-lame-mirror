@@ -797,14 +797,11 @@ long_help(const lame_global_flags * gfp, FILE * const fp, const char *ProgramNam
 /** OBSOLETE "    --athaa-loudapprox n   n=1 total energy or n=2 equal loudness curve\n"*/
                      "    --athaa-sensitivity x  activation offset in -/+ dB for ATH auto-adjustment\n"
                      "\n");
-        )
         fprintf(fp,
                 "  PSY related:\n"
-                DEV_HELP(
                 "    --short         use short blocks when appropriate\n"
                 "    --noshort       do not use short blocks\n"
                 "    --allshort      use only short blocks\n"
-                )
         );
     fprintf(fp,
             "    --temporal-masking x   x=0 disables, x=1 enables temporal masking effect\n"
@@ -816,22 +813,21 @@ long_help(const lame_global_flags * gfp, FILE * const fp, const char *ProgramNam
             "    --ns-treble x   adjust masking for sfbs 14 - 21 (long) 11 - 12 (short)\n");
     fprintf(fp,
             "    --ns-sfb21 x    change ns-treble by x dB for sfb21\n"
-            DEV_HELP("    --shortthreshold x,y  short block switching threshold,\n"
-                     "                          x for L/R/M channel, y for S channel\n"
-                     "  Noise Shaping related:\n"
-                     "    --substep n     use pseudo substep noise shaping method types 0-2\n")
+            "    --shortthreshold x,y  short block switching threshold,\n"
+            "                          x for L/R/M channel, y for S channel\n"
+            "  Noise Shaping related:\n"
+            "    --substep n     use pseudo substep noise shaping method types 0-2\n"
         );
 
     wait_for(fp, lessmode);
+            )
 
     fprintf(fp,
             "  experimental switches:\n"
+            "    -Y              lets LAME ignore noise in sfb21, like in CBR\n"
             DEV_HELP(
             "    -X n[,m]        selects between different noise measurements\n"
             "                    n for long block, m for short. if m is omitted, m = n\n"
-            )
-            "    -Y              lets LAME ignore noise in sfb21, like in CBR\n"
-            DEV_HELP(
             "    -Z [n]          currently no effects\n"
             )
             );
@@ -1626,6 +1622,9 @@ parse_args(lame_global_flags * gfp, int argc, char **argv,
                     }
                 }
 
+                T_ELIF("ignore-tag-errors")
+                        ignore_tag_errors = 1;
+
                 T_ELIF("add-id3v2")
                     id3tag_add_v2(gfp);
 
@@ -1741,28 +1740,28 @@ parse_args(lame_global_flags * gfp, int argc, char **argv,
                 }
                 lame_set_compression_ratio(gfp, (float) val);
 
-                T_ELIF("notemp")
+                T_ELIF_INTERNAL("notemp")
                     (void) lame_set_useTemporal(gfp, 0);
 
-                T_ELIF("interch")
+                T_ELIF_INTERNAL("interch")
                     argUsed = 1;
                 (void) lame_set_interChRatio(gfp, (float) atof(nextArg));
 
-                T_ELIF("temporal-masking")
+                T_ELIF_INTERNAL("temporal-masking")
                     argUsed = 1;
                 (void) lame_set_useTemporal(gfp, atoi(nextArg) ? 1 : 0);
 
-                T_ELIF("nspsytune")
+                T_ELIF_INTERNAL("nspsytune")
                     ;
 
-                T_ELIF("nssafejoint")
+                T_ELIF_INTERNAL("nssafejoint")
                     lame_set_exp_nspsytune(gfp, lame_get_exp_nspsytune(gfp) | 2);
 
-                T_ELIF("nsmsfix")
+                T_ELIF_INTERNAL("nsmsfix")
                     argUsed = 1;
                 (void) lame_set_msfix(gfp, atof(nextArg));
 
-                T_ELIF("ns-bass")
+                T_ELIF_INTERNAL("ns-bass")
                     argUsed = 1;
                 {
                     double  d;
@@ -1778,7 +1777,7 @@ parse_args(lame_global_flags * gfp, int argc, char **argv,
                     lame_set_exp_nspsytune(gfp, lame_get_exp_nspsytune(gfp) | (k << 2));
                 }
 
-                T_ELIF("ns-alto")
+                T_ELIF_INTERNAL("ns-alto")
                     argUsed = 1;
                 {
                     double  d;
@@ -1794,7 +1793,7 @@ parse_args(lame_global_flags * gfp, int argc, char **argv,
                     lame_set_exp_nspsytune(gfp, lame_get_exp_nspsytune(gfp) | (k << 8));
                 }
 
-                T_ELIF("ns-treble")
+                T_ELIF_INTERNAL("ns-treble")
                     argUsed = 1;
                 {
                     double  d;
@@ -1810,7 +1809,7 @@ parse_args(lame_global_flags * gfp, int argc, char **argv,
                     lame_set_exp_nspsytune(gfp, lame_get_exp_nspsytune(gfp) | (k << 14));
                 }
 
-                T_ELIF("ns-sfb21")
+                T_ELIF_INTERNAL("ns-sfb21")
                     /*  to be compatible with Naoki's original code,
                      *  ns-sfb21 specifies how to change ns-treble for sfb21 */
                     argUsed = 1;
@@ -1828,9 +1827,6 @@ parse_args(lame_global_flags * gfp, int argc, char **argv,
                     lame_set_exp_nspsytune(gfp, lame_get_exp_nspsytune(gfp) | (k << 20));
                 }
 
-                T_ELIF("nspsytune2") {
-                }
-
                 /* some more GNU-ish options could be added
                  * brief         => few messages on screen (name, status report)
                  * o/output file => specifies output filename
@@ -1846,9 +1842,7 @@ parse_args(lame_global_flags * gfp, int argc, char **argv,
 
                 T_ELIF("verbose")
                     silent = -10; /* print a lot on screen */
-                T_ELIF("ignore-tag-errors")
-                    ignore_tag_errors = 1;
-
+                
                 T_ELIF2("version", "license")
                     print_license(stdout);
                 return -2;

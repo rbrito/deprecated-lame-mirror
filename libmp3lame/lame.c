@@ -363,7 +363,8 @@ lame_init_qval(lame_global_flags * gfp)
 {
     lame_internal_flags *const gfc = gfp->internal_flags;
     SessionConfig_t *const cfg = &gfc->cfg;
-
+///if (gfp->quality > 6) gfp->quality = 6;
+///if (gfp->quality < 6) gfp->quality = 3;
     switch (gfp->quality) {
     default:
     case 9:            /* no psymodel, no noise shaping */
