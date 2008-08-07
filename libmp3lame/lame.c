@@ -927,8 +927,6 @@ lame_init_params(lame_global_flags * gfp)
     if (cfg->error_protection)
         cfg->sideinfo_len += 2;
 
-    (void) lame_init_bitstream(gfp);
-
     gfc->class_id = LAME_ID;
 
     {
@@ -1206,6 +1204,8 @@ lame_init_params(lame_global_flags * gfp)
     if (cfg->vbr == vbr_off)
         gfc->sv_enc.slot_lag = gfc->sv_enc.frac_SpF
             = ((cfg->version + 1) * 72000L * cfg->avg_bitrate) % cfg->samplerate_out;
+
+    (void) lame_init_bitstream(gfp);
 
     iteration_init(gfc);
     (void) psymodel_init(gfp);
