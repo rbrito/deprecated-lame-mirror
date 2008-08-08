@@ -111,15 +111,20 @@ static const struct {
 
 
 static void
-quantize_lines_xrpow_01(int l, FLOAT istep, const FLOAT * xr, int *ix)
+quantize_lines_xrpow_01(unsigned int l, FLOAT istep, const FLOAT * xr, int *ix)
 {
-    const FLOAT compareval0 = (1.0 - 0.4054) / istep;
+    const FLOAT compareval0 = (1.0f - 0.4054f) / istep;
+    unsigned int i;
 
     assert(l > 0);
-    l = l >> 1;
-    while (l--) {
-        *(ix++) = (compareval0 > *xr++) ? 0 : 1;
-        *(ix++) = (compareval0 > *xr++) ? 0 : 1;
+    assert(l % 2 == 0);
+    for (i = 0; i < l; i += 2) {
+        FLOAT const xr_0 = xr[i+0];
+        FLOAT const xr_1 = xr[i+1];
+        int const ix_0 = (compareval0 > xr_0) ? 0 : 1;
+        int const ix_1 = (compareval0 > xr_1) ? 0 : 1;
+        ix[i+0] = ix_0;
+        ix[i+1] = ix_1;
     }
 }
 
@@ -137,10 +142,10 @@ typedef union {
 
 
 static void
-quantize_lines_xrpow(int l, FLOAT istep, const FLOAT * xp, int *pi)
+quantize_lines_xrpow(unsigned int l, FLOAT istep, const FLOAT * xp, int *pi)
 {
     fi_union *fi;
-    int     remaining;
+    unsigned int remaining;
 
     assert(l > 0);
 
@@ -215,9 +220,9 @@ quantize_lines_xrpow(int l, FLOAT istep, const FLOAT * xp, int *pi)
 
 
 static void
-quantize_lines_xrpow(int l, FLOAT istep, const FLOAT * xr, int *ix)
+quantize_lines_xrpow(unsigned int l, FLOAT istep, const FLOAT * xr, int *ix)
 {
-    int     remaining;
+    unsigned int remaining;
 
     assert(l > 0);
 
@@ -783,9 +788,12 @@ count_bits(lame_internal_flags const *const gfc,
             else {
                 int     k;
                 for (k = j, j += width; k < j; ++k) {
-                    if (xr[k] < roundfac) {
-                        ix[k] = 0;
+                    FLOAT const xr_k = xr[k];
+                    int ix_k = ix[k];
+                    if (xr_k < roundfac) {
+                        ix_k = 0;
                     }
+                    ix[k] = ix_k;
                 }
             }
         }
