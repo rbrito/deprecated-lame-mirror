@@ -775,14 +775,17 @@ count_bits(lame_internal_flags const *const gfc,
         const FLOAT roundfac = 0.634521682242439 / IPOW20(gain);
         for (sfb = 0; sfb < gi->sfbmax; sfb++) {
             int const width = gi->width[sfb];
-            int     l;
             assert(width >= 0);
             j += width;
-            if (!gfc->pseudohalf[sfb])
-                continue;
-            for (l = -width; l < 0; l++)
-                if (xr[j + l] < roundfac)
-                    ix[j + l] = 0;
+            if (!gfc->pseudohalf[sfb]) {
+                j += width;
+            }
+            else {
+                int     k;
+                for (k = j, j += width; k < j; ++k) {
+                    ix[k] = (xr[k] >= roundfac) ? ix[k] : 0;
+                }
+            }
         }
     }
     return noquant_count_bits(gfc, gi, prev_noise);
