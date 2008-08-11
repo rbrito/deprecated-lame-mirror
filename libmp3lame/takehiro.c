@@ -788,12 +788,7 @@ count_bits(lame_internal_flags const *const gfc,
             else {
                 int     k;
                 for (k = j, j += width; k < j; ++k) {
-                    FLOAT const xr_k = xr[k];
-                    int ix_k = ix[k];
-                    if (xr_k < roundfac) {
-                        ix_k = 0;
-                    }
-                    ix[k] = ix_k;
+                    ix[k] = (xr[k] >= roundfac) ? ix[k] : 0;
                 }
             }
         }
