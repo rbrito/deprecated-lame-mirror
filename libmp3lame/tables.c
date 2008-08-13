@@ -25,6 +25,8 @@
 # include <config.h>
 #endif
 
+#include "machine.h"
+
 #include "lame.h"
 #include "tables.h"
 

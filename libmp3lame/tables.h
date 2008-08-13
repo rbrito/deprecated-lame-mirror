@@ -66,6 +66,7 @@ extern const type5_t table5[6];
 #endif
 
 #define HTN	34
+typedef unsigned short uint16_t;
 
 struct huffcodetab {
     const unsigned int xlen;          /* max. x-index+   */
