@@ -1,5 +1,8 @@
 lame (3.98.1) unstable; urgency=low
 
+  * New upstream version:
+    + Fix executable stacks (Thanks to Gentoo people);
+    + Fix for text relocations (Thanks to the PaX Team and Gentoo people).
   * changes are now (mostly) committed to changelog.
   * debian/rules: include -Wl,--as-needed for the loader at compile time.
 
