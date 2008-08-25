@@ -4,6 +4,8 @@ AUTOMAKE_OPTIONS = foreign $(top_srcdir)/ansi2knr
 
 DEFS = @DEFS@ @CONFIG_DEFS@
 
+ECHO ?= echo
+
 nasm_sources = \
 	choose_table.nas \
 	cpu_feat.nas \
