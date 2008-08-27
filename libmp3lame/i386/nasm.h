@@ -36,7 +36,7 @@ BITS 32
 	%define segment_data segment .data
 	%define segment_bss  segment .bss
 %else
-%ifdef LINUX
+%ifidn __OUTPUT_FORMAT__,elf
 	section .note.GNU-stack progbits noalloc noexec nowrite align=1
 %endif
 	%define segment_code segment .text align=16 class=CODE use32

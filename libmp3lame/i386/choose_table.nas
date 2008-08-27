@@ -111,33 +111,42 @@ choose_table_H
 	dw	0x1d16, 0x1e16, 0x1e17, 0x1f17, 0x1f17
 
 choose_jump_table_L:
-	dd	table_MMX.L_case_0
-	dd	table_MMX.L_case_1
-	dd	table_MMX.L_case_2
-	dd	table_MMX.L_case_3
-	dd	table_MMX.L_case_45
-	dd	table_MMX.L_case_45
-	dd	table_MMX.L_case_67
-	dd	table_MMX.L_case_67
-	dd	table_MMX.L_case_8_15
-	dd	table_MMX.L_case_8_15
-	dd	table_MMX.L_case_8_15
-	dd	table_MMX.L_case_8_15
-	dd	table_MMX.L_case_8_15
-	dd	table_MMX.L_case_8_15
-	dd	table_MMX.L_case_8_15
-	dd	table_MMX.L_case_8_15
+	dd	table_MMX.L_case_0    - choose_table_MMX
+	dd	table_MMX.L_case_1    - choose_table_MMX
+	dd	table_MMX.L_case_2    - choose_table_MMX
+	dd	table_MMX.L_case_3    - choose_table_MMX
+	dd	table_MMX.L_case_45   - choose_table_MMX
+	dd	table_MMX.L_case_45   - choose_table_MMX
+	dd	table_MMX.L_case_67   - choose_table_MMX
+	dd	table_MMX.L_case_67   - choose_table_MMX
+	dd	table_MMX.L_case_8_15 - choose_table_MMX
+	dd	table_MMX.L_case_8_15 - choose_table_MMX
+	dd	table_MMX.L_case_8_15 - choose_table_MMX
+	dd	table_MMX.L_case_8_15 - choose_table_MMX
+	dd	table_MMX.L_case_8_15 - choose_table_MMX
+	dd	table_MMX.L_case_8_15 - choose_table_MMX
+	dd	table_MMX.L_case_8_15 - choose_table_MMX
+	dd	table_MMX.L_case_8_15 - choose_table_MMX
 
 	segment_code
 ;
 ; use MMX
 ;
 
+extern  _GLOBAL_OFFSET_TABLE_
+get_pc.bp:
+	mov ebp, [esp]
+	retn
+
 	align	16
 ; int choose_table(int *ix, int *end, int *s)
 choose_table_MMX:
-	mov	ecx,[esp+4]	;ecx = begin
-	mov	edx,[esp+8]	;edx = end
+	push	ebp
+	call	get_pc.bp
+	add	ebp, _GLOBAL_OFFSET_TABLE_ + $$ - $ wrt ..gotpc
+
+	mov	ecx,[esp+8]	;ecx = begin
+	mov	edx,[esp+12]	;edx = end
 	sub	ecx,edx		;ecx = begin-end(should be minus)
 	test	ecx,8
  	pxor	mm0,mm0		;mm0=[0:0]
@@ -169,13 +178,16 @@ choose_table_MMX:
 
 	cmp	eax,15
 	ja	.with_ESC
-	jmp	[choose_jump_table_L+eax*4]
+	lea	ecx,[ebp + choose_table_MMX wrt ..gotoff]
+	add	ecx,[ebp + choose_jump_table_L+eax*4 wrt ..gotoff]
+	jmp 	ecx
 
 .with_ESC1:
 	emms
-	mov	ecx, [esp+12]	; *s
+	mov	ecx, [esp+16]	; *s
 	mov	[ecx], eax
 	or	eax,-1
+	pop	ebp
 	ret
 
 .with_ESC:
@@ -187,12 +199,12 @@ choose_table_MMX:
 	push	esi
 	bsr	eax, eax
 %assign _P 4*2
-	movq    mm5, [D15_15_15_15]
-	movq	mm6, [D14_14_14_14]
-	movq	mm3, [mul_add]
+	movq    mm5, [ebp + D15_15_15_15 wrt ..gotoff]
+	movq	mm6, [ebp + D14_14_14_14 wrt ..gotoff]
+	movq	mm3, [ebp + mul_add wrt ..gotoff]
 
-	mov	ecx, [esp+_P+4]		; = ix
-;	mov	edx, [esp+_P+8]		; = end
+	mov	ecx, [esp+_P+8]		; = ix
+;	mov	edx, [esp+_P+12]	; = end
 	sub	ecx, edx
 
 	xor	esi, esi	; sum = 0
@@ -209,7 +221,7 @@ choose_table_MMX:
 	psubw	mm7, mm2	; 14より大きいとき linbits_sum++;
 	pmaddwd	mm0, mm3	; {0, 0, y, x}*{1, 16, 1, 16}
 	movd	ebx, mm0
-	mov	esi, [largetbl+ebx*4+(16*16+16)*4]
+	mov	esi, [ebp + largetbl+ebx*4+(16*16+16)*4 wrt ..gotoff]
 
 	jz	.H_dual_exit
 
@@ -224,9 +236,9 @@ choose_table_MMX:
 	pmaddwd	mm0, mm3	; {y, x, y, x}*{1, 16, 1, 16}
 	movd	ebx, mm0
 	punpckhdq	mm0,mm0
-	add	esi, [largetbl+ebx*4+(16*16+16)*4]
+	add	esi, [ebp + largetbl+ebx*4+(16*16+16)*4 wrt ..gotoff]
 	movd	ebx, mm0
-	add	esi, [largetbl+ebx*4+(16*16+16)*4]
+	add	esi, [ebp + largetbl+ebx*4+(16*16+16)*4 wrt ..gotoff]
 	add	ecx, 16
 	psubw	mm7, mm2	; 14より大きいとき linbits_sum++;
 	jnz	.H_dual_lp1
@@ -237,8 +249,8 @@ choose_table_MMX:
 	paddd	mm7,mm1
 	punpckldq	mm7,mm7
 
-	pmaddwd	mm7, [linbits32+eax*8]	; linbits
-	mov	ax, [choose_table_H+eax*2]
+	pmaddwd	mm7, [ebp + linbits32+eax*8 wrt ..gotoff]	; linbits
+	mov	ax, [ebp + choose_table_H+eax*2 wrt ..gotoff]
 
 	movd	ecx, mm7
 	punpckhdq	mm7,mm7
@@ -261,54 +273,57 @@ choose_table_MMX:
 	mov	edx, ecx
 	shr	eax, 8
 .chooseE_s1:
-	mov	ecx, [esp+12] ; *s
+	mov	ecx, [esp+16] ; *s
 	and	eax, 0xff
 	add	[ecx], edx
+	pop	ebp
 	ret
 
 table_MMX.L_case_0:
 	emms
+	pop	ebp
 	ret
 
 table_MMX.L_case_1:
 	emms
-	mov	eax, [esp+12] ; *s
-	mov	ecx, [esp+4] ; *ix
+	mov	eax, [esp+16] ; *s
+	mov	ecx, [esp+8] ; *ix
 	sub	ecx, edx
 	push	ebx
 .lp:
 	mov	ebx, [edx+ecx]
 	add	ebx, ebx
 	add	ebx, [edx+ecx+4]
-	movzx	ebx, byte [ebx+t1l]
+	movzx	ebx, byte [ebp + ebx+t1l wrt ..gotoff]
 	add	[eax], ebx
 	add	ecx, 8
 	jnz	.lp
 	pop	ebx
 	mov	eax, 1
+	pop	ebp
 	ret
 
 table_MMX.L_case_45:
 	push	dword 7
-	mov	ecx, tableABC+9*8
+	lea	ecx, [ebp + tableABC+9*8 wrt ..gotoff]
 	jmp	from3
 
 table_MMX.L_case_67:
 	push	dword 10
-	mov	ecx, tableABC
+	lea	ecx, [ebp + tableABC wrt ..gotoff]
 	jmp	from3
 
 table_MMX.L_case_8_15:
 	push	dword 13
-	mov	ecx, tableDEF
+	lea	ecx, [ebp + tableDEF wrt ..gotoff]
 from3:
-	mov	eax,[esp+8]	;eax = *begin
-;	mov	edx,[esp+12]	;edx = *end
+	mov	eax,[esp+12]	;eax = *begin
+;	mov	edx,[esp+16]	;edx = *end
 
 	push	ebx
 	sub	eax, edx
 
-	movq	mm5,[mul_add]
+	movq	mm5,[ebp + mul_add wrt ..gotoff]
 	pxor	mm2,mm2	;mm2 = sum
 
 	test	eax, 8
@@ -361,22 +376,23 @@ from3:
 .choose3_s2:
 	pop	ecx
 	add	eax, ecx
-	mov	ecx, [esp+12] ; *s
+	mov	ecx, [esp+16] ; *s
 	add	[ecx], edx
+	pop	ebp
 	ret
 
 table_MMX.L_case_2:
 	push	dword 2
-	mov	ecx,table23
-	pmov	mm5,[mul_add23]
+	lea	ecx,[ebp + table23 wrt ..gotoff]
+	pmov	mm5,[ebp + mul_add23 wrt ..gotoff]
 	jmp	from2
 table_MMX.L_case_3:
 	push	dword 5
-	mov	ecx,table56
-	pmov	mm5,[mul_add56]
+	lea	ecx,[ebp + table56 wrt ..gotoff]
+	pmov	mm5,[ebp + mul_add56 wrt ..gotoff]
 from2:
-	mov	eax,[esp+8]	;eax = *begin
-;	mov	edx,[esp+12]	;edx = *end
+	mov	eax,[esp+12]	;eax = *begin
+;	mov	edx,[esp+16]	;edx = *end
 	push	ebx
 	push	edi
 
@@ -426,8 +442,9 @@ from2:
 	mov	edx, ecx
 	inc	eax
 .choose2_s1:
-	mov	ecx, [esp+12] ; *s
+	mov	ecx, [esp+16] ; *s
 	add	[ecx], edx
+	pop	ebp
 	ret
 
 	end

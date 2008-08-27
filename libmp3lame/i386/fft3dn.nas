@@ -24,26 +24,35 @@ D_1_0_0_0	dd	0.0		, 1.0
 
 	segment_code
 
+extern  _GLOBAL_OFFSET_TABLE_
+get_pc.bp:
+	mov ebp, [esp]
+	retn
+
 ;void fht_3DN(float *fz, int nn);
 
 proc	fht_3DN
 
 	pushd	ebp, ebx, esi, edi
 
-	mov	r0, [esp+20]		;fi
-	mov	r1, [esp+24]		;r1 = nn
-	sub	esp, 16
+	sub	esp, 20
 
+	call	get_pc.bp
+	add	ebp, _GLOBAL_OFFSET_TABLE_ + $$ - $ wrt ..gotpc
+
+	mov	r0, [esp+40]		;fi
+	mov	r1, [esp+44]		;r1 = nn
+	lea	r3, [ebp + costab wrt ..gotoff]		;tri = costab
+	lea	r4, [r0+r1*8]		;r4 = fn = &fz[n]
+	mov	[esp+16], r4
 	mov	r4, 8			;kx = k1/2
-	mov	r3, costab		;tri = costab
-	lea	r6, [r0+r1*8]		;r6 = fn = &fz[n]
 
 	pmov	mm7, [r3]
 
 	loopalign 16
 .do1
 	lea	r3, [r3+16]	;tri += 2;
-	pmov	mm6, [costab+8]
+	pmov	mm6, [ebp + costab+8 wrt ..gotoff]
 	lea	r2, [r4+r4*2]		;k3*fsize/2
 	mov	r5, 4		;i = 1*fsize
 
@@ -104,7 +113,7 @@ proc	fht_3DN
 	pmovd	[r1+r4*4], mm4	;gi[k2]
 	puphdq	mm4, mm4
 
-	cmp	r0, r6
+	cmp	r0, [esp + 16]
 	pmovd	[r1+r4*2], mm0	;gi[k1]
 	pmovd	[r1+r2*2], mm4	;gi[k3]
 
@@ -119,12 +128,12 @@ proc	fht_3DN
 ; mm7 = 0x800000000 | 0
 ;
 	pmov	mm1, mm6
-	mov	r0, [esp+36]	; fz
+	mov	r0, [esp+40]	; fz
 	puphdq	mm1, mm1	; c1 | c1
 	lea	r1, [r0+r4*2]
 	pfadd	mm1, mm1	; c1+c1 | c1+c1
 	pfmul	mm1, mm6	; 2*c1*c1 | 2*c1*s1
-	pfsub	mm1, [D_1_0_0_0] ; 2*c1*c1-1.0 | 2*c1*s1 = -c2 | s2
+	pfsub	mm1, [ebp + D_1_0_0_0 wrt ..gotoff] ; 2*c1*c1-1.0 | 2*c1*s1 = -c2 | s2
 
 	pmov	mm0, mm1
 	pxor	mm7, mm6	; c1 | -s1
@@ -134,7 +143,7 @@ proc	fht_3DN
 	puphdq	mm0, mm2	; s2 | c2
 	puphdq	mm6, mm3	;-s1 | c1
 
-	pxor	mm0, [costab]	; c2 | -s2
+	pxor	mm0, [ebp + costab wrt ..gotoff]	; c2 | -s2
 
 ; mm0 =  s2| c2
 ; mm1 = -c2| s2
@@ -233,7 +242,7 @@ proc	fht_3DN
 
 	lea	r0, [r0+r4*8]
 	lea	r1, [r1+r4*8]
-	cmp	r0, r6
+	cmp	r0, [esp + 16]
 	pmov	mm0, [esp]
 	pmov	mm1, [esp+8]
 
@@ -249,17 +258,17 @@ proc	fht_3DN
 	pfsub	mm6, mm7	; c1*a-s1*b | s1*a+c1*b
 	pupldq	mm7,mm6
 	puphdq	mm6,mm7
-	pmov	mm7, [costab]
+	pmov	mm7, [ebp + costab wrt ..gotoff]
 	jb near	.for
 
-	mov	r0, [esp+36]	;fi
-	cmp	r4, [esp+36+4]
+	mov	r0, [esp+40]	;fi
+	cmp	r4, [esp+40+4]
 	lea	r4, [r4*4]	;kx *= 4
 
 	jb near	.do1
 .exitttt
 	femms
-	add	esp,16
+	add	esp,20
 	popd	ebp, ebx, esi, edi
 endproc
 
@@ -270,20 +279,24 @@ proc	fht_E3DN
 
 	pushd	ebp, ebx, esi, edi
 
-	mov	r0, [esp+20]		;fi
-	mov	r1, [esp+24]		;r1 = nn
-	sub	esp, 16
+	sub	esp, 20
 
+	call	get_pc.bp
+	add	ebp, _GLOBAL_OFFSET_TABLE_ + $$ - $ wrt ..gotpc
+
+	mov	r0, [esp+40]		;fi
+	mov	r1, [esp+44]		;r1 = nn
+	lea	r3, [ebp + costab wrt ..gotoff]		;tri = costab
+	lea	r4, [r0+r1*8]		;r4 = fn = &fz[n]
+	mov	[esp+16], r4
 	mov	r4, 8			;kx = k1/2
-	mov	r3, costab		;tri = costab
-	lea	r6, [r0+r1*8]		;r6 = fn = &fz[n]
 
 	pmov	mm7, [r3]
 
 	loopalign 16
 .do1
 	lea	r3, [r3+16]	;tri += 2;
-	pmov	mm6, [costab+8]
+	pmov	mm6, [ebp + costab+8 wrt ..gotoff]
 	lea	r2, [r4+r4*2]		;k3*fsize/2
 	mov	r5, 4		;i = 1*fsize
 
@@ -324,7 +337,7 @@ proc	fht_E3DN
 	pfadd	mm3, mm4	;f0+f2|f1+f3
 	pfsub	mm5, mm4	;f0-f2|f1-f3
 
-	cmp	r0, r6
+	cmp	r0, [esp + 16]
 	pmovd	[r1+r4*2], mm3	;gi[k1]
 	pmovd	[r1+r2*2], mm5	;gi[k3]
 	puphdq	mm3, mm3
@@ -343,12 +356,12 @@ proc	fht_E3DN
 ; mm7 = 0x800000000 | 0
 ;
 	pmov	mm5, mm6
-	mov	r0, [esp+36]	; fz
+	mov	r0, [esp+40]	; fz
 	puphdq	mm5, mm5	; c1 | c1
 	lea	r1, [r0+r4*2]
 	pfadd	mm5, mm5	; c1+c1 | c1+c1
 	pfmul	mm5, mm6	; 2*c1*c1 | 2*c1*s1
-	pfsub	mm5, [D_1_0_0_0] ; 2*c1*c1-1.0 | 2*c1*s1 = -c2 | s2
+	pfsub	mm5, [ebp + D_1_0_0_0 wrt ..gotoff] ; 2*c1*c1-1.0 | 2*c1*s1 = -c2 | s2
 
 	pswapd	mm4, mm5	; s2 |-c2
 	pxor	mm4, mm7	; s2 | c2
@@ -447,7 +460,7 @@ proc	fht_E3DN
 
 	lea	r0, [r0+r4*8]
 	lea	r1, [r1+r4*8]
-	cmp	r0, r6
+	cmp	r0, [esp + 16]
 	pmov	mm4, [esp]
 	pmov	mm5, [esp+8]
 
@@ -462,16 +475,16 @@ proc	fht_E3DN
 
 	pfsub	mm6, mm7	; c1*a-s1*b | s1*a+c1*b
 	pswapd	mm6, mm6 ; ???	; s1*a+c1*b | c1*a-s1*b
-	pmov	mm7, [costab]
+	pmov	mm7, [ebp + costab wrt ..gotoff]
 	jb near	.for
 
-	mov	r0, [esp+36]	;fi
-	cmp	r4, [esp+36+4]
+	mov	r0, [esp+40]	;fi
+	cmp	r4, [esp+40+4]
 	lea	r4, [r4*4]	;kx *= 4
 
 	jb near	.do1
 .exitttt
 	femms
-	add	esp,16
+	add	esp,20
 	popd	ebp, ebx, esi, edi
 endproc
