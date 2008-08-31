@@ -3,7 +3,7 @@
 ; GOGO-no-coda
 ;	Copyright (C) 1999 shigeo
 ;	special thanks to Keiichi SAKAI
-
+ 
 %include "nasm.h"
 
 	globaldef fht_SSE
@@ -26,10 +26,7 @@ S_SQRT2	dd	1.414213562
 
 	segment_code
 
-extern  _GLOBAL_OFFSET_TABLE_
-get_pc.bp:
-	mov ebp, [esp]
-	retn
+PIC_OFFSETTABLE
 
 ;------------------------------------------------------------------------
 ;	by K. SAKAI
@@ -57,9 +54,9 @@ fht_SSE:
 	push	ebp
 
 	call	get_pc.bp
-	add	ebp, _GLOBAL_OFFSET_TABLE_ + $$ - $ wrt ..gotpc
+	add	ebp, PIC_BASE()
 
-	lea	ecx,[ebp + costab_fft wrt ..gotoff]
+	lea	ecx,[PIC_EBP_REL(costab_fft)]
 	xor	eax,eax
 	mov	al,8		; =k1=1*(sizeof float)	// 4, 16, 64, 256,...
 .lp2:				; do{
@@ -112,12 +109,12 @@ fht_SSE:
 ;                       gi[k3] = g1     - g3;
 	fld	dword [edi]
 	fadd	dword [edi+eax*2]
-	fld	dword [ebp + S_SQRT2 wrt ..gotoff]
+	fld	dword [PIC_EBP_REL(S_SQRT2)]
 	fmul	dword [edi+eax*4]
 
 	fld	dword [edi]
 	fsub	dword [edi+eax*2]
-	fld	dword [ebp + S_SQRT2 wrt ..gotoff]
+	fld	dword [PIC_EBP_REL(S_SQRT2)]
 	fmul	dword [edi+edx*2]
 
 	fld	st1
@@ -147,17 +144,17 @@ fht_SSE:
 ;                       s2 = c1*s1 + s1*c1 = 2*s1*c1;
 	shufps	xmm7,xmm7,R4(1,0,0,1)
 	movss	xmm5,xmm7		; = { --,  --,  --, s1}
-	xorps	xmm7,[ebp + Q_MMPP wrt ..gotoff]	; = {-s1, -c1, +c1, +s1} -> 必要
+	xorps	xmm7,[PIC_EBP_REL(Q_MMPP)]	; = {-s1, -c1, +c1, +s1} -> 必要
 
 	addss	xmm5,xmm5		; = (--, --,  --, 2*s1)
 	add	esi,4		; esi = fi = fz + i
 	shufps	xmm5,xmm5,R4(0,0,0,0)	; = (2*s1, 2*s1, 2*s1, 2*s1)
 	mulps	xmm5,xmm6		; = (2*s1*c1, 2*s1*s1, 2*s1*s1, 2*s1*c1)
-	subps	xmm5,[ebp + D_1100 wrt ..gotoff]		; = (--, 2*s1*s1-1, --, 2*s1*c1) = {-- -c2 -- s2}
+	subps	xmm5,[PIC_EBP_REL(D_1100)]		; = (--, 2*s1*s1-1, --, 2*s1*c1) = {-- -c2 -- s2}
 	movaps	xmm4,xmm5
 	shufps	xmm5,xmm5,R4(2,0,2,0)	; = {-c2, s2, -c2, s2} -> 必要
 
-	xorps	xmm4,[ebp + Q_MMPP wrt ..gotoff]		; = {--, c2, --, s2}
+	xorps	xmm4,[PIC_EBP_REL(Q_MMPP)]		; = {--, c2, --, s2}
 	shufps	xmm4,xmm4,R4(0,2,0,2)	; = {s2, c2, s2, c2} -> 必要
 
 	loopalign	16
@@ -258,7 +255,7 @@ fht_SSE:
 	shufps	xmm0,xmm0,R4(1,1,0,0)	; = {t_s, t_s, t_c, t_c}
 	mulps	xmm6,xmm0	; = {c3*ts, s3*ts, s3*tc, c3*tc}
 	movhlps	xmm4,xmm6	; = {--,    --,    c3*ts, s3*ts}
-	xorps	xmm4,[ebp + Q_MPMP wrt ..gotoff]	; = {--,    --,   -c3*ts, s3*ts}
+	xorps	xmm4,[PIC_EBP_REL(Q_MPMP)]	; = {--,    --,   -c3*ts, s3*ts}
 	subps	xmm6,xmm4	; = {-,-, c3*ts+s3*tc, c3*tc-s3*ts}={-,-,s1,c1}
 
 ;                       c3 = c1*t_c - s1*t_s;
@@ -266,7 +263,7 @@ fht_SSE:
 	shufps	xmm6,xmm6,0x14	; = {c1, s1, s1, c1}
 	mulps	xmm0,xmm6	; = {ts*c1 ts*s1 tc*s1 tc*c1}
 	movhlps	xmm3,xmm0
-	xorps	xmm3,[ebp + Q_MPMP wrt ..gotoff]
+	xorps	xmm3,[PIC_EBP_REL(Q_MPMP)]
 	subps	xmm0,xmm3	; = {--, --, s3, c3}
 
 ; {s2 s4 c4 c2} = {2*s1*c1 2*s3*c3 1-2*s3*s3 1-2*s1*s1}
@@ -279,7 +276,7 @@ fht_SSE:
 	sub	edi,ebx			; edi = fz - i/2
 	mulps	xmm7, xmm6		; {s1*s1*2, s3*s3*2, s3*c3*2, s1*c1*2}
 	lea	esi,[edi + ebx*2]	; esi = fi = fz +i/2
-	subps	xmm7, [ebp + D_1100 wrt ..gotoff]		; {-c2, -c4, s4, s2}
+	subps	xmm7, [PIC_EBP_REL(D_1100)]		; {-c2, -c4, s4, s2}
 	lea	edi,[edi + eax*2-4]	; edi = gi = fz +k1-i/2
 
 ;                       fi = fz +i;
@@ -297,7 +294,7 @@ fht_SSE:
 ;                               d       = s2*fi[k3  ] - c2*gi[k3  ];
 
 	movaps	xmm4,xmm7	; = {-c2 -c4  s4  s2}
-	xorps	xmm4,[ebp + Q_MMPP wrt ..gotoff]	; = { c2  c4  s4  s2}
+	xorps	xmm4,[PIC_EBP_REL(Q_MMPP)]	; = { c2  c4  s4  s2}
 	shufps	xmm4,xmm4,0x1B	; = { s2  s4  c4  c2}
 	movlps	xmm0,[esi+eax*2]
 	movlps	xmm1,[edi+eax*2]

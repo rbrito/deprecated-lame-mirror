@@ -133,17 +133,14 @@ choose_jump_table_L:
 ; use MMX
 ;
 
-extern  _GLOBAL_OFFSET_TABLE_
-get_pc.bp:
-	mov ebp, [esp]
-	retn
+PIC_OFFSETTABLE
 
 	align	16
 ; int choose_table(int *ix, int *end, int *s)
 choose_table_MMX:
 	push	ebp
 	call	get_pc.bp
-	add	ebp, _GLOBAL_OFFSET_TABLE_ + $$ - $ wrt ..gotpc
+	add	ebp, PIC_BASE()
 
 	mov	ecx,[esp+8]	;ecx = begin
 	mov	edx,[esp+12]	;edx = end
@@ -178,8 +175,8 @@ choose_table_MMX:
 
 	cmp	eax,15
 	ja	.with_ESC
-	lea	ecx,[ebp + choose_table_MMX wrt ..gotoff]
-	add	ecx,[ebp + choose_jump_table_L+eax*4 wrt ..gotoff]
+	lea	ecx,[PIC_EBP_REL(choose_table_MMX)]
+	add	ecx,[PIC_EBP_REL(choose_jump_table_L+eax*4)]
 	jmp 	ecx
 
 .with_ESC1:
@@ -199,9 +196,9 @@ choose_table_MMX:
 	push	esi
 	bsr	eax, eax
 %assign _P 4*2
-	movq    mm5, [ebp + D15_15_15_15 wrt ..gotoff]
-	movq	mm6, [ebp + D14_14_14_14 wrt ..gotoff]
-	movq	mm3, [ebp + mul_add wrt ..gotoff]
+	movq    mm5, [PIC_EBP_REL(D15_15_15_15)]
+	movq	mm6, [PIC_EBP_REL(D14_14_14_14)]
+	movq	mm3, [PIC_EBP_REL(mul_add)]
 
 	mov	ecx, [esp+_P+8]		; = ix
 ;	mov	edx, [esp+_P+12]	; = end
@@ -221,7 +218,7 @@ choose_table_MMX:
 	psubw	mm7, mm2	; 14より大きいとき linbits_sum++;
 	pmaddwd	mm0, mm3	; {0, 0, y, x}*{1, 16, 1, 16}
 	movd	ebx, mm0
-	mov	esi, [ebp + largetbl+ebx*4+(16*16+16)*4 wrt ..gotoff]
+	mov	esi, [PIC_EBP_REL(largetbl+ebx*4+(16*16+16)*4)]
 
 	jz	.H_dual_exit
 
@@ -236,9 +233,9 @@ choose_table_MMX:
 	pmaddwd	mm0, mm3	; {y, x, y, x}*{1, 16, 1, 16}
 	movd	ebx, mm0
 	punpckhdq	mm0,mm0
-	add	esi, [ebp + largetbl+ebx*4+(16*16+16)*4 wrt ..gotoff]
+	add	esi, [PIC_EBP_REL(largetbl+ebx*4+(16*16+16)*4)]
 	movd	ebx, mm0
-	add	esi, [ebp + largetbl+ebx*4+(16*16+16)*4 wrt ..gotoff]
+	add	esi, [PIC_EBP_REL(largetbl+ebx*4+(16*16+16)*4)]
 	add	ecx, 16
 	psubw	mm7, mm2	; 14より大きいとき linbits_sum++;
 	jnz	.H_dual_lp1
@@ -249,8 +246,8 @@ choose_table_MMX:
 	paddd	mm7,mm1
 	punpckldq	mm7,mm7
 
-	pmaddwd	mm7, [ebp + linbits32+eax*8 wrt ..gotoff]	; linbits
-	mov	ax, [ebp + choose_table_H+eax*2 wrt ..gotoff]
+	pmaddwd	mm7, [PIC_EBP_REL(linbits32+eax*8)]	; linbits
+	mov	ax, [PIC_EBP_REL(choose_table_H+eax*2)]
 
 	movd	ecx, mm7
 	punpckhdq	mm7,mm7
@@ -294,7 +291,7 @@ table_MMX.L_case_1:
 	mov	ebx, [edx+ecx]
 	add	ebx, ebx
 	add	ebx, [edx+ecx+4]
-	movzx	ebx, byte [ebp + ebx+t1l wrt ..gotoff]
+	movzx	ebx, byte [PIC_EBP_REL(ebx+t1l)]
 	add	[eax], ebx
 	add	ecx, 8
 	jnz	.lp
@@ -305,17 +302,17 @@ table_MMX.L_case_1:
 
 table_MMX.L_case_45:
 	push	dword 7
-	lea	ecx, [ebp + tableABC+9*8 wrt ..gotoff]
+	lea	ecx, [PIC_EBP_REL(tableABC+9*8)]
 	jmp	from3
 
 table_MMX.L_case_67:
 	push	dword 10
-	lea	ecx, [ebp + tableABC wrt ..gotoff]
+	lea	ecx, [PIC_EBP_REL(tableABC)]
 	jmp	from3
 
 table_MMX.L_case_8_15:
 	push	dword 13
-	lea	ecx, [ebp + tableDEF wrt ..gotoff]
+	lea	ecx, [PIC_EBP_REL(tableDEF)]
 from3:
 	mov	eax,[esp+12]	;eax = *begin
 ;	mov	edx,[esp+16]	;edx = *end
@@ -323,7 +320,7 @@ from3:
 	push	ebx
 	sub	eax, edx
 
-	movq	mm5,[ebp + mul_add wrt ..gotoff]
+	movq	mm5,[PIC_EBP_REL(mul_add)]
 	pxor	mm2,mm2	;mm2 = sum
 
 	test	eax, 8
@@ -383,13 +380,13 @@ from3:
 
 table_MMX.L_case_2:
 	push	dword 2
-	lea	ecx,[ebp + table23 wrt ..gotoff]
-	pmov	mm5,[ebp + mul_add23 wrt ..gotoff]
+	lea	ecx,[PIC_EBP_REL(table23)]
+	pmov	mm5,[PIC_EBP_REL(mul_add23)]
 	jmp	from2
 table_MMX.L_case_3:
 	push	dword 5
-	lea	ecx,[ebp + table56 wrt ..gotoff]
-	pmov	mm5,[ebp + mul_add56 wrt ..gotoff]
+	lea	ecx,[PIC_EBP_REL(table56)]
+	pmov	mm5,[PIC_EBP_REL(mul_add56)]
 from2:
 	mov	eax,[esp+12]	;eax = *begin
 ;	mov	edx,[esp+16]	;edx = *end
