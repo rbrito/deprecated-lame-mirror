@@ -241,3 +241,26 @@ _%1:
 	loopalignK7 %1
 %endmacro
 %define PACK(x,y,z,w)	(x*64+y*16+z*4+w)
+
+%ifidn __OUTPUT_FORMAT__,elf
+
+%define PIC_BASE(A) (_GLOBAL_OFFSET_TABLE_ + $$ - $ wrt ..gotpc)
+%define PIC_EBP_REL(A) (ebp + A wrt ..gotoff)
+%macro PIC_OFFSETTABLE 0
+extern  _GLOBAL_OFFSET_TABLE_
+get_pc.bp:
+	mov ebp, [esp]
+	retn
+%endmacro
+
+%else
+
+%define PIC_BASE(A) (0)
+%define PIC_EBP_REL(A) (A)
+%macro PIC_OFFSETTABLE 0
+get_pc.bp:
+	mov ebp, [esp]
+	retn
+%endmacro
+
+%endif
