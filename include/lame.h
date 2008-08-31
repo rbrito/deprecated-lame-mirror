@@ -140,8 +140,11 @@ struct hip_global_struct;
 typedef struct hip_global_struct hip_global_flags;
 typedef hip_global_flags *hip_t;
 
+#ifndef plotting_data_defined
+#define plotting_data_defined
 struct plotting_data;
 typedef struct plotting_data plotting_data;
+#endif
 
 /***********************************************************************
  *
