@@ -8,9 +8,6 @@ typedef struct plotting_data plotting_data;
 #endif
 
 
-#ifndef NOANALYSIS
-extern plotting_data *mpg123_pinfo;
-#endif
 
 
 struct buf {
@@ -59,6 +56,7 @@ typedef struct mpstr_tag {
 
     int bitindex;
     unsigned char* wordpointer;
+    plotting_data *mpg123_pinfo;
 } MPSTR, *PMPSTR;
 
 

@@ -136,8 +136,12 @@ struct lame_global_struct;
 typedef struct lame_global_struct lame_global_flags;
 typedef lame_global_flags *lame_t;
 
+struct hip_global_struct;
+typedef struct hip_global_struct hip_global_flags;
+typedef hip_global_flags *hip_t;
 
-
+struct plotting_data;
+typedef struct plotting_data plotting_data;
 
 /***********************************************************************
  *
@@ -982,11 +986,12 @@ typedef struct {
   int framenum;        /* frames decoded counter                         */
 } mp3data_struct;
 
-
 /* required call to initialize decoder
  * NOTE: the decoder should not be used when encoding is performed
  * with decoding on the fly */
-int CDECL lame_decode_init(void);
+hip_t CDECL hip_decode_init(void);
+
+void CDECL hip_decode_set_pinfo(hip_t hip, plotting_data *pinfo);
 
 /*********************************************************************
  * input 1 mp3 frame, output (maybe) pcm data.
@@ -1005,38 +1010,85 @@ int CDECL lame_decode_init(void);
  *    pcm_r[nout]  : right channel data
  *
  *********************************************************************/
-int CDECL lame_decode(
+int CDECL hip_decode( hip_t           gfp
+                    , unsigned char * mp3buf
+                    , size_t          len
+                    , short           pcm_l[]
+                    , short           pcm_r[]
+                    );
+
+/* same as lame_decode, and also returns mp3 header data */
+int CDECL hip_decode_headers( hip_t           gfp
+                            , unsigned char*  mp3buf
+                            , size_t          len
+                            , short           pcm_l[]
+                            , short           pcm_r[]
+                            , mp3data_struct* mp3data
+                            );
+
+/* same as lame_decode, but returns at most one frame */
+int CDECL hip_decode1( hip_t          gfp
+                     , unsigned char* mp3buf
+                     , size_t         len
+                     , short          pcm_l[]
+                     , short          pcm_r[]
+                     );
+
+/* same as lame_decode1, but returns at most one frame and mp3 header data */
+int CDECL hip_decode1_headers( hip_t           gfp
+                             , unsigned char*  mp3buf
+                             , size_t          len
+                             , short           pcm_l[]
+                             , short           pcm_r[]
+                             , mp3data_struct* mp3data
+                             );
+
+/* same as lame_decode1_headers, but also returns enc_delay and enc_padding
+   from VBR Info tag, (-1 if no info tag was found) */
+int CDECL hip_decode1_headersB( hip_t gfp
+                              , unsigned char*   mp3buf
+                              , size_t           len
+                              , short            pcm_l[]
+                              , short            pcm_r[]
+                              , mp3data_struct*  mp3data
+                              , int             *enc_delay
+                              , int             *enc_padding
+                              );
+
+
+/* cleanup call to exit decoder  */
+int CDECL hip_decode_exit(hip_t gfp);
+
+
+#if DEPRECATED_OR_OBSOLETE_CODE_REMOVED
+#else
+/*
+ * OBSOLETE:
+ */
+int CDECL lame_decode_init__API_FIX(void);
+int CDECL lame_decode__API_FIX(
         unsigned char *  mp3buf,
         int              len,
         short            pcm_l[],
         short            pcm_r[] );
-
-/* same as lame_decode, and also returns mp3 header data */
-int CDECL lame_decode_headers(
+int CDECL lame_decode_headers__API_FIX(
         unsigned char*   mp3buf,
         int              len,
         short            pcm_l[],
         short            pcm_r[],
         mp3data_struct*  mp3data );
-
-/* same as lame_decode, but returns at most one frame */
-int CDECL lame_decode1(
+int CDECL lame_decode1__API_FIX(
         unsigned char*  mp3buf,
-        int             len,
+        unsigned int    len,
         short           pcm_l[],
         short           pcm_r[] );
-
-/* same as lame_decode1, but returns at most one frame and mp3 header data */
-int CDECL lame_decode1_headers(
+int CDECL lame_decode1_headers__API_FIX(
         unsigned char*   mp3buf,
         int              len,
         short            pcm_l[],
         short            pcm_r[],
         mp3data_struct*  mp3data );
-
-/* same as lame_decode1_headers, but also returns enc_delay and enc_padding
-   from VBR Info tag, (-1 if no info tag was found) */
-int CDECL lame_decode1_headersB(
+int CDECL lame_decode1_headersB__API_FIX(
         unsigned char*   mp3buf,
         int              len,
         short            pcm_l[],
@@ -1044,11 +1096,8 @@ int CDECL lame_decode1_headersB(
         mp3data_struct*  mp3data,
         int              *enc_delay,
         int              *enc_padding );
-
-
-/* cleanup call to exit decoder  */
-int CDECL lame_decode_exit(void);
-
+int CDECL lame_decode_exit__API_FIX(void);
+#endif
 
 
 /*********************************************************************

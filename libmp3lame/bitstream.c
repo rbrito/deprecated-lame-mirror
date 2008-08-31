@@ -1017,7 +1017,7 @@ copy_buffer(lame_internal_flags * gfc, unsigned char *buffer, int size, int mp3d
             /* re-synthesis to pcm.  Repeat until we get a samples_out=0 */
             while (samples_out != 0) {
 
-                samples_out = lame_decode1_unclipped(buffer, mp3_in, pcm_buf[0], pcm_buf[1]);
+                samples_out = hip_decode1_unclipped(gfc->hip, buffer, mp3_in, pcm_buf[0], pcm_buf[1]);
                 /* samples_out = 0:  need more data to decode
                  * samples_out = -1:  error.  Lets assume 0 pcm output
                  * samples_out = number of samples output */

@@ -750,8 +750,12 @@ lame_init_params(lame_global_flags * gfp)
     }
 
 #ifdef DECODE_ON_THE_FLY
-    if (cfg->decode_on_the_fly && !gfp->decode_only)
-        (void) lame_decode_init(); /* initialize the decoder  */
+    if (cfg->decode_on_the_fly && !gfp->decode_only) {
+        if (gfc->hip) {
+            hip_decode_exit(gfc->hip);
+        }
+        gfc->hip = hip_decode_init();
+    }
 #endif
 
     cfg->disable_reservoir = gfp->disable_reservoir;
