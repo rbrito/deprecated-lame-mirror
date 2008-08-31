@@ -1,11 +1,11 @@
 
 ;	Copyright (C) 1999 URURI
 
-;	nasmÍÑ¥Þ¥¯¥í
-;	1999/08/21 ºîÀ®
-;	1999/10/10 ´ö¤Ä¤«ÄÉ²Ã
-;	1999/10/27 aoutÂÐ±þ
-;	1999/11/07 pushf, popf ¤ÎNASM¤Î¥Ð¥°ÂÐ±þ
+;	nasmï¿½Ñ¥Þ¥ï¿½ï¿½ï¿½
+;	1999/08/21 ï¿½ï¿½ï¿½
+;	1999/10/10 ï¿½ï¿½ï¿½Ä¤ï¿½ï¿½É²ï¿½
+;	1999/10/27 aoutï¿½Ð±ï¿½
+;	1999/11/07 pushf, popf ï¿½ï¿½NASMï¿½Î¥Ð¥ï¿½ï¿½Ð±ï¿½
 ;	1999/12/02 for BCC ( Thanks to Miquel )
 
 ; for Windows Visual C++        -> define WIN32
@@ -14,7 +14,7 @@
 ; for TownsOS                   ->        __tos__
 ; otherwise                     ->   none
 
-;Ì¾Á°¤ÎÉÕ¤±Êý
+;Ì¾ï¿½ï¿½ï¿½ï¿½Õ¤ï¿½ï¿½ï¿½
 
 BITS 32
 
@@ -53,13 +53,13 @@ group CGROUP text
 group DGROUP data
 %endif
 
-;Ã±ÀºÅÙÉâÆ°¾®¿ôÅÀ·Á¼°
+;Ã±ï¿½ï¿½ï¿½ï¿½ï¿½Æ°ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½
 
 %idefine float dword
 %idefine fsize 4
 %idefine fsizen(a) (fsize*(a))
 
-;¥ï¡¼¥É·Á¼°
+;ï¿½ï¡¼ï¿½É·ï¿½ï¿½
 
 %idefine wsize 2
 %idefine wsizen(a) (wsize*(a))
@@ -96,11 +96,11 @@ group DGROUP data
 %define xm6 xmm6
 %define xm7 xmm7
 
-;¥·¥ã¥Ã¥Õ¥ëÍÑ¤Î4¿Ê¥Þ¥¯¥í
+;ï¿½ï¿½ï¿½ï¿½ï¿½Ã¥Õ¥ï¿½ï¿½Ñ¤ï¿½4ï¿½Ê¥Þ¥ï¿½ï¿½ï¿½
 
 %define R4(a,b,c,d) (a*64+b*16+c*4+d)
 
-;C¥é¥¤¥¯¤Ê´Ê°×¥Þ¥¯¥í
+;Cï¿½é¥¤ï¿½ï¿½ï¿½Ê´Ê°×¥Þ¥ï¿½ï¿½ï¿½
 
 %imacro globaldef 1
 	%ifdef _NAMING
@@ -244,8 +244,8 @@ _%1:
 
 %ifidn __OUTPUT_FORMAT__,elf
 
-%define PIC_BASE(A) (_GLOBAL_OFFSET_TABLE_ + $$ - $ wrt ..gotpc)
-%define PIC_EBP_REL(A) (ebp + A wrt ..gotoff)
+%idefine PIC_BASE(A) _GLOBAL_OFFSET_TABLE_ + $$ - $ wrt ..gotpc
+%idefine PIC_EBP_REL(A) ebp + A wrt ..gotoff
 %macro PIC_OFFSETTABLE 0
 extern  _GLOBAL_OFFSET_TABLE_
 get_pc.bp:
