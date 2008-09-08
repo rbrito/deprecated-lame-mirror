@@ -1893,6 +1893,7 @@ parse_args(lame_global_flags * gfp, int argc, char **argv,
                     nogap_tags = 1;
 
                 T_ELIF("nogapout")
+                    /* FIXME: replace strcpy by safer strncpy */
                     strcpy(outPath, nextArg);
                 argUsed = 1;
 

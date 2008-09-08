@@ -38,6 +38,48 @@
 #include "util.h"
 
 
+
+#if DEPRECATED_OR_OBSOLETE_CODE_REMOVED
+/*
+ * OBSOLETE:
+ * - kept to let it link
+ * - forward declaration to silence compiler
+ */
+int CDECL lame_decode_init(void);
+int CDECL lame_decode(
+        unsigned char *  mp3buf,
+        int              len,
+        short            pcm_l[],
+        short            pcm_r[] );
+int CDECL lame_decode_headers(
+        unsigned char*   mp3buf,
+        int              len,
+        short            pcm_l[],
+        short            pcm_r[],
+        mp3data_struct*  mp3data );
+int CDECL lame_decode1(
+        unsigned char*  mp3buf,
+        int             len,
+        short           pcm_l[],
+        short           pcm_r[] );
+int CDECL lame_decode1_headers(
+        unsigned char*   mp3buf,
+        int              len,
+        short            pcm_l[],
+        short            pcm_r[],
+        mp3data_struct*  mp3data );
+int CDECL lame_decode1_headersB(
+        unsigned char*   mp3buf,
+        int              len,
+        short            pcm_l[],
+        short            pcm_r[],
+        mp3data_struct*  mp3data,
+        int              *enc_delay,
+        int              *enc_padding );
+int CDECL lame_decode_exit(void);
+#endif
+
+
 static MPSTR   mp;
 
 int
@@ -84,7 +126,7 @@ lame_decode_init(void)
  */
 
 static int
-decode1_headersB_clipchoice(PMPSTR mp, unsigned char *buffer, int len,
+decode1_headersB_clipchoice(PMPSTR pmp, unsigned char *buffer, int len,
                             char pcm_l_raw[], char pcm_r_raw[], mp3data_struct * mp3data,
                             int *enc_delay, int *enc_padding,
                             char *p, size_t psize, int decoded_sample_size,
@@ -104,57 +146,57 @@ decode1_headersB_clipchoice(PMPSTR mp, unsigned char *buffer, int len,
 
     mp3data->header_parsed = 0;
 
-    ret = (*decodeMP3_ptr) (mp, buffer, len, p, (int) psize, &processed_bytes);
+    ret = (*decodeMP3_ptr) (pmp, buffer, len, p, (int) psize, &processed_bytes);
     /* three cases:  
      * 1. headers parsed, but data not complete
-     *       mp->header_parsed==1 
-     *       mp->framesize=0           
-     *       mp->fsizeold=size of last frame, or 0 if this is first frame
+     *       pmp->header_parsed==1 
+     *       pmp->framesize=0           
+     *       pmp->fsizeold=size of last frame, or 0 if this is first frame
      *
      * 2. headers, data parsed, but ancillary data not complete
-     *       mp->header_parsed==1 
-     *       mp->framesize=size of frame           
-     *       mp->fsizeold=size of last frame, or 0 if this is first frame
+     *       pmp->header_parsed==1 
+     *       pmp->framesize=size of frame           
+     *       pmp->fsizeold=size of last frame, or 0 if this is first frame
      *
      * 3. frame fully decoded:  
-     *       mp->header_parsed==0 
-     *       mp->framesize=0           
-     *       mp->fsizeold=size of frame (which is now the last frame)
+     *       pmp->header_parsed==0 
+     *       pmp->framesize=0           
+     *       pmp->fsizeold=size of frame (which is now the last frame)
      *
      */
-    if (mp->header_parsed || mp->fsizeold > 0 || mp->framesize > 0) {
+    if (pmp->header_parsed || pmp->fsizeold > 0 || pmp->framesize > 0) {
         mp3data->header_parsed = 1;
-        mp3data->stereo = mp->fr.stereo;
-        mp3data->samplerate = freqs[mp->fr.sampling_frequency];
-        mp3data->mode = mp->fr.mode;
-        mp3data->mode_ext = mp->fr.mode_ext;
-        mp3data->framesize = smpls[mp->fr.lsf][mp->fr.lay];
+        mp3data->stereo = pmp->fr.stereo;
+        mp3data->samplerate = freqs[pmp->fr.sampling_frequency];
+        mp3data->mode = pmp->fr.mode;
+        mp3data->mode_ext = pmp->fr.mode_ext;
+        mp3data->framesize = smpls[pmp->fr.lsf][pmp->fr.lay];
 
         /* free format, we need the entire frame before we can determine
          * the bitrate.  If we haven't gotten the entire frame, bitrate=0 */
-        if (mp->fsizeold > 0) /* works for free format and fixed, no overrun, temporal results are < 400.e6 */
-            mp3data->bitrate = 8 * (4 + mp->fsizeold) * mp3data->samplerate /
+        if (pmp->fsizeold > 0) /* works for free format and fixed, no overrun, temporal results are < 400.e6 */
+            mp3data->bitrate = 8 * (4 + pmp->fsizeold) * mp3data->samplerate /
                 (1.e3 * mp3data->framesize) + 0.5;
-        else if (mp->framesize > 0)
-            mp3data->bitrate = 8 * (4 + mp->framesize) * mp3data->samplerate /
+        else if (pmp->framesize > 0)
+            mp3data->bitrate = 8 * (4 + pmp->framesize) * mp3data->samplerate /
                 (1.e3 * mp3data->framesize) + 0.5;
         else
-            mp3data->bitrate = tabsel_123[mp->fr.lsf][mp->fr.lay - 1][mp->fr.bitrate_index];
+            mp3data->bitrate = tabsel_123[pmp->fr.lsf][pmp->fr.lay - 1][pmp->fr.bitrate_index];
 
 
 
-        if (mp->num_frames > 0) {
+        if (pmp->num_frames > 0) {
             /* Xing VBR header found and num_frames was set */
-            mp3data->totalframes = mp->num_frames;
-            mp3data->nsamp = mp3data->framesize * mp->num_frames;
-            *enc_delay = mp->enc_delay;
-            *enc_padding = mp->enc_padding;
+            mp3data->totalframes = pmp->num_frames;
+            mp3data->nsamp = mp3data->framesize * pmp->num_frames;
+            *enc_delay = pmp->enc_delay;
+            *enc_padding = pmp->enc_padding;
         }
     }
 
     switch (ret) {
     case MP3_OK:
-        switch (mp->fr.stereo) {
+        switch (pmp->fr.stereo) {
         case 1:
             processed_samples = processed_bytes / decoded_sample_size;
             if (decoded_sample_size == sizeof(short)) {

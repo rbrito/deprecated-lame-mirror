@@ -1082,7 +1082,7 @@ int CDECL lame_decode_headers(
         mp3data_struct*  mp3data );
 int CDECL lame_decode1(
         unsigned char*  mp3buf,
-        unsigned int    len,
+        int             len,
         short           pcm_l[],
         short           pcm_r[] );
 int CDECL lame_decode1_headers(
