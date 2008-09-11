@@ -1292,6 +1292,186 @@ resample_rate(double freq)
     }
 }
 
+#ifdef _WIN32
+#define SLASH '\\'
+#elif __OS2__
+#define SLASH '\\'
+#else
+#define SLASH '/'
+#endif
+
+static
+size_t scanPath(char const* s, char const** a, char const** b)
+{
+    char const* s1 = s;
+    char const* s2 = s;
+    if (s != 0) {
+        for (; *s; ++s) {
+            switch (*s) {
+            case SLASH:
+            case ':':
+                s2 = s;
+                break;
+            }
+        }
+        if (*s2 == ':') {
+            ++s2;
+        }
+    }
+    if (a) {
+        *a = s1;
+    }
+    if (b) {
+        *b = s2;
+    }
+    return s2-s1;
+}
+
+static
+size_t scanBasename(char const* s, char const** a, char const** b)
+{
+    char const* s1 = s;
+    char const* s2 = s;
+    if (s != 0) {
+        for (; *s; ++s) {
+            switch (*s) {
+            case SLASH:
+            case ':':
+                s1 = s2 = s;
+                break;
+            case '.':
+                s2 = s;
+                break;
+            }
+        }
+        if (s2 == s1) {
+            s2 = s;
+        }
+        if (*s1 == SLASH || *s1 == ':') {
+            ++s1;
+        }
+    }
+    if (a != 0) {
+        *a = s1;
+    }
+    if (b != 0) {
+        *b = s2;
+    }
+    return s2-s1;
+}
+
+static 
+int isCommonSuffix(char const* s_ext)
+{
+    char* suffixes[] = 
+    { ".WAV", ".RAW", ".MP1", ".MP2"
+    , ".MP3", ".MPG", ".MPA", ".CDA"
+    , ".OGG", ".AIF", ".AIFF", ".AU"
+    , ".SND", ".FLAC", ".WV", ".OFR"
+    , ".TAK", ".MP4", ".M4A", ".PCM"
+    };
+    int i;
+    for (i = 0; i < sizeof(suffixes); ++i) {
+        if (stricmp(s_ext, suffixes[i]) == 0) {
+            return 1;
+        }
+    }
+    return 0;
+}
+
+
+static 
+int generateOutPath(lame_t gfp, char const* inPath, char const* outDir, char* outPath)
+{
+    size_t const max_path = PATH_MAX;
+    char const* s_ext = lame_get_decode_only(gfp) ? ".wav" : ".mp3";
+#if 1
+    size_t i = 0;
+    int out_dir_used = 0;
+
+    if (outDir != 0 && outDir[0] != 0) {
+        out_dir_used = 1;
+        while (*outDir) {
+            outPath[i++] = *outDir++;
+            if (i >= max_path) {
+                goto err_generateOutPath;
+            }
+        }
+        if (i > 0 && outPath[i-1] != SLASH) {
+            outPath[i++] = SLASH;
+            if (i >= max_path) {
+                goto err_generateOutPath;
+            }
+        }
+        outPath[i] = 0;
+    }
+    else {
+        char const* pa;
+        char const* pb;
+        size_t j, n = scanPath(inPath, &pa, &pb);
+        if (i+n >= max_path) {
+            goto err_generateOutPath;
+        }
+        for (j = 0; j < n; ++j) {
+            outPath[i++] = pa[j];
+        }
+        if (n > 0) {
+            outPath[i++] = SLASH;
+            if (i >= max_path) {
+                goto err_generateOutPath;
+            }
+        }
+        outPath[i] = 0;
+    }
+    {
+        int replace_suffix = 0;
+        char const* na;
+        char const* nb;
+        size_t j, n = scanBasename(inPath, &na, &nb);
+        if (i+n >= max_path) {
+            goto err_generateOutPath;
+        }
+        for (j = 0; j < n; ++j) {
+            outPath[i++] = na[j];
+        }
+        outPath[i] = 0;
+        if (isCommonSuffix(nb) == 1) {
+            replace_suffix = 1;
+            if (out_dir_used == 0) {
+                if (stricmp(nb, s_ext) == 0) {
+                    replace_suffix = 0;
+                }
+            }
+        }
+        if (replace_suffix == 0) {
+            while (*nb) {
+                outPath[i++] = *nb++;
+                if (i >= max_path) {
+                    goto err_generateOutPath;
+                }
+            }
+            outPath[i] = 0;
+        }
+    }
+    if (i+5 >= max_path) {
+        goto err_generateOutPath;
+    }
+    while (*s_ext) {
+        outPath[i++] = *s_ext++;
+    }
+    outPath[i] = 0;
+    return 0;
+err_generateOutPath:
+    error_printf( "error: output file name too long" );
+    return 1;
+#else
+    strncpy(outPath, inPath, PATH_MAX + 1 - 4);
+    strncat(outPath, s_ext, 4);
+    return 0;
+#endif
+}
+
+
 enum ID3TAG_MODE 
 { ID3TAG_MODE_DEFAULT
 , ID3TAG_MODE_V1_ONLY
@@ -1311,6 +1491,7 @@ int
 parse_args(lame_global_flags * gfp, int argc, char **argv,
            char *const inPath, char *const outPath, char **nogap_inPath, int *num_nogap)
 {
+    char    outDir[1024] = "";
     int     input_file = 0;  /* set to 1 if we parse an input file name  */
     int     i;
     int     autoconvert = 0;
@@ -1897,6 +2078,11 @@ parse_args(lame_global_flags * gfp, int argc, char **argv,
                     strcpy(outPath, nextArg);
                 argUsed = 1;
 
+                T_ELIF("out-dir")
+                    /* FIXME: replace strcpy by safer strncpy */
+                    strcpy(outDir, nextArg);
+                argUsed = 1;
+
                 T_ELIF("nogap")
                     nogap = 1;
 
@@ -2233,12 +2419,8 @@ parse_args(lame_global_flags * gfp, int argc, char **argv,
             strcpy(outPath, "-");
         }
         else {
-            strncpy(outPath, inPath, PATH_MAX + 1 - 4);
-            if (lame_get_decode_only(gfp)) {
-                strncat(outPath, ".wav", 4);
-            }
-            else {
-                strncat(outPath, ".mp3", 4);
+            if (generateOutPath(gfp, inPath, outDir, outPath) != 0) {
+                return -1;
             }
         }
     }
@@ -2269,16 +2451,6 @@ parse_args(lame_global_flags * gfp, int argc, char **argv,
     }
 #endif
 
-
-    if (is_mpeg_file_format(input_format) && print_clipping_info) {
-
-        error_printf("\nError: input cannot be MPEG when --clipdetect is used\n"
-                     "\n--clipdetect requires decoding of MPEG *output* on the fly which\n"
-                     "cannot be performed simultaneously with decoding MPEG *input*.\n"
-                     "\nUse a plain .wav file as input with --clipdetect.\n");
-
-        return -1;
-    }
 
     if (input_format == sf_ogg) {
         error_printf("sorry, vorbis support in LAME is deprecated.\n");
