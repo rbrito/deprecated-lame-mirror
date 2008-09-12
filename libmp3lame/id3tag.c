@@ -263,6 +263,7 @@ id3tag_init(lame_global_flags * gfp)
     free_id3tag(gfc);
     memset(&gfc->tag_spec, 0, sizeof gfc->tag_spec);
     gfc->tag_spec.genre_id3v1 = GENRE_NUM_UNKNOWN;
+    gfc->tag_spec.padding_size = 128;
     id3v2AddLameVersion(gfc);
 }
 
@@ -306,6 +307,15 @@ id3tag_pad_v2(lame_global_flags * gfp)
     lame_internal_flags *gfc = gfp->internal_flags;
     gfc->tag_spec.flags &= ~V1_ONLY_FLAG;
     gfc->tag_spec.flags |= PAD_V2_FLAG;
+}
+
+void
+id3tag_set_pad(lame_global_flags * gfp, size_t n)
+{
+    lame_internal_flags *gfc = gfp->internal_flags;
+    gfc->tag_spec.flags &= ~V1_ONLY_FLAG;
+    gfc->tag_spec.flags |= PAD_V2_FLAG;
+    gfc->tag_spec.padding_size = n;
 }
 
 
@@ -1204,8 +1214,8 @@ lame_get_id3v2_tag(lame_global_flags * gfp, unsigned char *buffer, size_t size)
                 }
             }
             if (test_tag_spec_flags(gfc, PAD_V2_FLAG)) {
-                /* add 128 bytes of padding */
-                tag_size += 128;
+                /* add some bytes of padding */
+                tag_size += gfc->tag_spec.padding_size;
             }
             if (size < tag_size) {
                 return tag_size;
