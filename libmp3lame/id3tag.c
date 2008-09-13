@@ -91,7 +91,7 @@ static const char *const genre_names[] = {
     "Chanson", "Opera", "Chamber Music", "Sonata", "Symphony", "Booty Bass",
     "Primus", "Porn Groove", "Satire", "Slow Jam", "Club", "Tango", "Samba",
     "Folklore", "Ballad", "Power Ballad", "Rhythmic Soul", "Freestyle", "Duet",
-    "Punk Rock", "Drum Solo", "Acappella", "Euro-House", "Dance Hall",
+    "Punk Rock", "Drum Solo", "A Cappella", "Euro-House", "Dance Hall",
     "Goa", "Drum & Bass", "Club-House", "Hardcore", "Terror", "Indie",
     "BritPop", "Negerpunk", "Polsk Punk", "Beat", "Christian Gangsta",
     "Heavy Metal", "Black Metal", "Crossover", "Contemporary Christian",
