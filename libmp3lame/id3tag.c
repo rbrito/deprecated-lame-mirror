@@ -92,7 +92,7 @@ static const char *const genre_names[] = {
     "Chanson", "Opera", "Chamber Music", "Sonata", "Symphony", "Booty Bass",
     "Primus", "Porn Groove", "Satire", "Slow Jam", "Club", "Tango", "Samba",
     "Folklore", "Ballad", "Power Ballad", "Rhythmic Soul", "Freestyle", "Duet",
-    "Punk Rock", "Drum Solo", "Acappella", "Euro-House", "Dance Hall",
+    "Punk Rock", "Drum Solo", "A Cappella", "Euro-House", "Dance Hall",
     "Goa", "Drum & Bass", "Club-House", "Hardcore", "Terror", "Indie",
     "BritPop", "Negerpunk", "Polsk Punk", "Beat", "Christian Gangsta",
     "Heavy Metal", "Black Metal", "Crossover", "Contemporary Christian",
@@ -304,9 +304,7 @@ id3tag_space_v1(lame_global_flags * gfp)
 void
 id3tag_pad_v2(lame_global_flags * gfp)
 {
-    lame_internal_flags *gfc = gfp->internal_flags;
-    gfc->tag_spec.flags &= ~V1_ONLY_FLAG;
-    gfc->tag_spec.flags |= PAD_V2_FLAG;
+    id3tag_set_pad(gfp, 128);
 }
 
 void
@@ -315,6 +313,7 @@ id3tag_set_pad(lame_global_flags * gfp, size_t n)
     lame_internal_flags *gfc = gfp->internal_flags;
     gfc->tag_spec.flags &= ~V1_ONLY_FLAG;
     gfc->tag_spec.flags |= PAD_V2_FLAG;
+    gfc->tag_spec.flags |= ADD_V2_FLAG;
     gfc->tag_spec.padding_size = n;
 }
 
@@ -878,6 +877,72 @@ local_strcasecmp(const char *s1, const char *s2)
 }
 
 
+static 
+const char* nextUpperAlpha(const char* p, char x)
+{
+    char c;
+    for(c = toupper(*p); *p != 0; c = toupper(*++p)) {
+        if ('A' <= c && c <= 'Z') {
+            if (c != x) {
+                return p;
+            }
+        }
+    }
+    return p;
+}
+
+
+static int
+sloppyCompared(const char* p, const char* q)
+{
+    char cp, cq;
+    p = nextUpperAlpha(p, 0);
+    q = nextUpperAlpha(q, 0);
+    cp = toupper(*p);
+    cq = toupper(*q);
+    while (cp == cq) {
+        if (cp == 0) {
+            return 1;
+        }
+        if (p[1] == '.') { /* some abbrevation */
+            while (*q && *q++ != ' ') {
+            }
+        }
+        p = nextUpperAlpha(p, cp);
+        q = nextUpperAlpha(q, cq);
+        cp = toupper(*p);
+        cq = toupper(*q);
+    }
+    return 0;
+}
+
+
+static int 
+sloppySearchGenre(const char *genre)
+{
+    int i;
+    for (i = 0; i < GENRE_NAME_COUNT; ++i) {
+        if (sloppyCompared(genre, genre_names[i])) {
+            return i;
+        }
+    }
+    return GENRE_NAME_COUNT;
+}
+
+
+static int
+searchGenre(const char* genre)
+{
+    int i;
+    for (i = 0; i < GENRE_NAME_COUNT; ++i) {
+        if (!local_strcasecmp(genre, genre_names[i])) {
+            return i;
+        }
+    }
+    return GENRE_NAME_COUNT;
+}
+
+
 int
 id3tag_set_genre(lame_global_flags * gfp, const char *genre)
 {
@@ -888,16 +953,16 @@ id3tag_set_genre(lame_global_flags * gfp, const char *genre)
         int     num = strtol(genre, &str, 10);
         /* is the input a string or a valid number? */
         if (*str) {
-            int     i;
-            for (i = 0; i < GENRE_NAME_COUNT; ++i) {
-                if (!local_strcasecmp(genre, genre_names[i])) {
-                    num = i;
-                    break;
-                }
+            num = searchGenre(genre);
+            if (num == GENRE_NAME_COUNT) {
+                num = sloppySearchGenre(genre);
             }
-            if (i == GENRE_NAME_COUNT) {
+            if (num == GENRE_NAME_COUNT) {
                 num = GENRE_INDEX_OTHER;
                 ret = -2;
+            }
+            else {
+                genre = genre_names[num];
             }
         }
         else {

@@ -878,7 +878,10 @@ add only a version 2 tag
 pad version 1 tag with spaces instead of nulls
 .TP
 .B \-\-pad-id3v2
-pad version 2 tag with extra 128 bytes
+same as --pad-id3v2-size 128
+.TP
+.B \-\-pad-id3v2-size "num"
+adds version 2 tag, pad with extra "num" bytes
 .TP
 .B \-\-genre-list
 print alphabetically sorted ID3 genre list and exit

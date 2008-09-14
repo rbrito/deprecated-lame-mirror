@@ -33,6 +33,10 @@ black = usability, portability, other
 <hr>
 
 <h3>LAME 3.99 alpha 1&nbsp; &nbsp;not yet released</h3>
+
+<hr>
+
+<h3>LAME 3.98.1 &nbsp; &nbsp;not yet released</h3>
 <ul>
   <li>Rog&eacute;rio Brito:
     <ul>
@@ -60,6 +64,14 @@ black = usability, portability, other
     <li>Fix for Bugtracker item <i>[ 2022035 ] encoder_padding value and resampling</i></li>
     <li>Fix for Bugtracker item <i>[ 2029282 ] Frequency filtering API broken in 3.98</i></li>
     <li>Fix for Bugtracker item <i>[ 2039648 ] potential memory leak in parse_args() function in parse.c</i></li>
+    <li>Fix for some tagging issues:
+    <ul>
+    <li>Made search for ID3v1 genres more sloppy, abbrevations may match more often as some simple typos.
+        Examples:<ul><li>--tg "Alt. Rock" matches genre "Alternate Rock"</li>
+                 <li>--tg "acapela" matches genre "A Cappella"</li>
+                 </ul></li>
+    <li>New switch --pad-id3v2-size "n": adds ID3v2 tag with n padding bytes.</li>
+    </ul></li>
     </ul>
   </li>
 </ul>
