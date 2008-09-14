@@ -1371,9 +1371,9 @@ int isCommonSuffix(char const* s_ext)
     , ".SND", ".FLAC", ".WV", ".OFR"
     , ".TAK", ".MP4", ".M4A", ".PCM"
     };
-    int i;
+    size_t i;
     for (i = 0; i < sizeof(suffixes); ++i) {
-        if (stricmp(s_ext, suffixes[i]) == 0) {
+        if (local_strcasecmp(s_ext, suffixes[i]) == 0) {
             return 1;
         }
     }
@@ -1439,7 +1439,7 @@ int generateOutPath(lame_t gfp, char const* inPath, char const* outDir, char* ou
         if (isCommonSuffix(nb) == 1) {
             replace_suffix = 1;
             if (out_dir_used == 0) {
-                if (stricmp(nb, s_ext) == 0) {
+                if (local_strcasecmp(nb, s_ext) == 0) {
                     replace_suffix = 0;
                 }
             }
