@@ -159,7 +159,8 @@ ID3 tagging:
 --id3v1-only    add only a version 1 tag
 --id3v2-only    add only a version 2 tag
 --space-id3v1   pad version 1 tag with spaces instead of nulls
---pad-id3v2     pad version 2 tag with extra 128 bytes
+--pad-id3v2     same as '--pad-id3v2-size 128'
+--pad-id3v2-size <num> adds version 2 tag, pad with extra <num> bytes
 --genre-list    print alphabetically sorted ID3 genre list and exit
 
 Note: A version 2 tag will NOT be added unless one of the input fields

@@ -1095,6 +1095,8 @@ void CDECL id3tag_space_v1 (lame_global_flags *gfp);
 
 /* pad version 2 tag with extra 128 bytes */
 void CDECL id3tag_pad_v2   (lame_global_flags *gfp);
+/* pad version 2 tag with extra n bytes */
+void CDECL id3tag_set_pad  (lame_global_flags *gfp, size_t n);
 
 void CDECL id3tag_set_title(
         lame_global_flags*  gfp,

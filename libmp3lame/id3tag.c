@@ -160,10 +160,10 @@ typedef enum MiscIDs { ID_TXXX = FRAME_ID('T', 'X', 'X', 'X')
 
 
 static int
-        id3v2_add_ucs2(lame_global_flags * gfp, int frame_id, char const *lang,
+id3v2_add_ucs2(lame_global_flags * gfp, int frame_id, char const *lang,
                        unsigned short const *desc, unsigned short const *text);
 static int
-        id3v2_add_latin1(lame_global_flags * gfp, int frame_id, char const *lang, char const *desc,
+id3v2_add_latin1(lame_global_flags * gfp, int frame_id, char const *lang, char const *desc,
                          char const *text);
 
 static void
@@ -240,6 +240,7 @@ id3tag_init(lame_global_flags * gfp)
     free_id3tag(gfc);
     memset(&gfc->tag_spec, 0, sizeof gfc->tag_spec);
     gfc->tag_spec.genre_id3v1 = GENRE_NUM_UNKNOWN;
+    gfc->tag_spec.padding_size = 128;
     id3v2AddLameVersion(gfp);
 }
 
@@ -280,9 +281,17 @@ id3tag_space_v1(lame_global_flags * gfp)
 void
 id3tag_pad_v2(lame_global_flags * gfp)
 {
+    id3tag_set_pad(gfp, 128);
+}
+
+void
+id3tag_set_pad(lame_global_flags * gfp, size_t n)
+{
     lame_internal_flags *gfc = gfp->internal_flags;
     gfc->tag_spec.flags &= ~V1_ONLY_FLAG;
     gfc->tag_spec.flags |= PAD_V2_FLAG;
+    gfc->tag_spec.flags |= ADD_V2_FLAG;
+    gfc->tag_spec.padding_size = n;
 }
 
 
@@ -847,6 +856,72 @@ local_strcasecmp(const char *s1, const char *s2)
 }
 
 
+static 
+const char* nextUpperAlpha(const char* p, char x)
+{
+    char c;
+    for(c = toupper(*p); *p != 0; c = toupper(*++p)) {
+        if ('A' <= c && c <= 'Z') {
+            if (c != x) {
+                return p;
+            }
+        }
+    }
+    return p;
+}
+
+
+static int
+sloppyCompared(const char* p, const char* q)
+{
+    char cp, cq;
+    p = nextUpperAlpha(p, 0);
+    q = nextUpperAlpha(q, 0);
+    cp = toupper(*p);
+    cq = toupper(*q);
+    while (cp == cq) {
+        if (cp == 0) {
+            return 1;
+        }
+        if (p[1] == '.') { /* some abbrevation */
+            while (*q && *q++ != ' ') {
+            }
+        }
+        p = nextUpperAlpha(p, cp);
+        q = nextUpperAlpha(q, cq);
+        cp = toupper(*p);
+        cq = toupper(*q);
+    }
+    return 0;
+}
+
+
+static int 
+sloppySearchGenre(const char *genre)
+{
+    int i;
+    for (i = 0; i < GENRE_NAME_COUNT; ++i) {
+        if (sloppyCompared(genre, genre_names[i])) {
+            return i;
+        }
+    }
+    return GENRE_NAME_COUNT;
+}
+
+
+static int
+searchGenre(const char* genre)
+{
+    int i;
+    for (i = 0; i < GENRE_NAME_COUNT; ++i) {
+        if (!local_strcasecmp(genre, genre_names[i])) {
+            return i;
+        }
+    }
+    return GENRE_NAME_COUNT;
+}
+
+
 int
 id3tag_set_genre(lame_global_flags * gfp, const char *genre)
 {
@@ -857,16 +932,16 @@ id3tag_set_genre(lame_global_flags * gfp, const char *genre)
         int     num = strtol(genre, &str, 10);
         /* is the input a string or a valid number? */
         if (*str) {
-            int     i;
-            for (i = 0; i < GENRE_NAME_COUNT; ++i) {
-                if (!local_strcasecmp(genre, genre_names[i])) {
-                    num = i;
-                    break;
-                }
+            num = searchGenre(genre);
+            if (num == GENRE_NAME_COUNT) {
+                num = sloppySearchGenre(genre);
             }
-            if (i == GENRE_NAME_COUNT) {
+            if (num == GENRE_NAME_COUNT) {
                 num = GENRE_INDEX_OTHER;
                 ret = -2;
+            }
+            else {
+                genre = genre_names[num];
             }
         }
         else {
@@ -1176,8 +1251,8 @@ lame_get_id3v2_tag(lame_global_flags * gfp, unsigned char *buffer, size_t size)
                 }
             }
             if (gfc->tag_spec.flags & PAD_V2_FLAG) {
-                /* add 128 bytes of padding */
-                tag_size += 128;
+                /* add some bytes of padding */
+                tag_size += gfc->tag_spec.padding_size;
             }
             if (size < tag_size) {
                 return tag_size;

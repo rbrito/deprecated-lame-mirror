@@ -876,7 +876,8 @@ long_help(const lame_global_flags * gfp, FILE * const fp, const char *ProgramNam
             "    --id3v1-only    add only a version 1 tag\n"
             "    --id3v2-only    add only a version 2 tag\n"
             "    --space-id3v1   pad version 1 tag with spaces instead of nulls\n"
-            "    --pad-id3v2     pad version 2 tag with extra 128 bytes\n"
+            "    --pad-id3v2     same as '--pad-id3v2-size 128'\n"
+            "    --pad-id3v2-size <value> adds version 2 tag, pad with extra <value> bytes\n"
             "    --genre-list    print alphabetically sorted ID3 genre list and exit\n"
             "    --ignore-tag-errors  ignore errors in values passed for tags\n" "\n");
     fprintf(fp,
@@ -1636,6 +1637,9 @@ parse_args(lame_global_flags * gfp, int argc, char **argv,
                     }
                 }
 
+                T_ELIF("ignore-tag-errors")
+                        ignore_tag_errors = 1;
+
                 T_ELIF("add-id3v2")
                     id3tag_add_v2(gfp);
 
@@ -1652,6 +1656,14 @@ parse_args(lame_global_flags * gfp, int argc, char **argv,
 
                 T_ELIF("pad-id3v2")
                     id3tag_pad_v2(gfp);
+
+                T_ELIF("pad-id3v2-size")
+                    int n = atoi(nextArg);
+                    n = n <= 128000 ? n : 128000;
+                    n = n >= 0      ? n : 0;
+                    id3tag_set_pad(gfp, n);
+                    argUsed = 1;
+
 
                 T_ELIF("genre-list")
                     id3tag_genre_list(genre_list_handler, NULL);
@@ -1856,8 +1868,6 @@ parse_args(lame_global_flags * gfp, int argc, char **argv,
 
                 T_ELIF("verbose")
                     silent = -10; /* print a lot on screen */
-                T_ELIF("ignore-tag-errors")
-                    ignore_tag_errors = 1;
 
                 T_ELIF2("version", "license")
                     print_license(stdout);
