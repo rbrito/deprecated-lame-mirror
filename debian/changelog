@@ -5,6 +5,7 @@ lame (3.98.1) unstable; urgency=low
     + Fix for text relocations (Thanks to the PaX Team and Gentoo people).
   * changes are now (mostly) committed to changelog.
   * debian/rules: include -Wl,--as-needed for the loader at compile time.
+  * Numerous improvements thanks to Fabian Greffrath. Sincere thanks.
 
  -- Rogério Brito <rbrito@users.sf.net>  Sat, 12 Jul 2008 09:14:54 -0300
 
