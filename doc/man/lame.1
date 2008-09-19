@@ -1,4 +1,4 @@
-.TH lame 1 "July 08, 2008" "LAME 3.99" "LAME audio compressor"
+.TH lame 1 "July 08, 2008" "LAME 3.98" "LAME audio compressor"
 .SH NAME
 lame \- create mp3 audio files
 .SH SYNOPSIS
@@ -679,6 +679,27 @@ i.e. when the music level is below the absolute threshold of
 human hearing (ATH). 
 
 .PP
+PSY related:
+.TP
+.B \-\-nssafejoint
+M/S switching criterion
+.TP
+.BI \-\-nsmsfix " arg"
+M/S switching tuning [effective 0-3.5]
+.TP
+.BI \-\-ns-bass " x"
+Adjust masking for sfbs  0 -  6 (long)  0 -  5 (short)
+.TP
+.BI \-\-ns-alto " x"
+Adjust masking for sfbs  7 - 13 (long)  6 - 10 (short)
+.TP
+.BI \-\-ns-treble " x"
+Adjust masking for sfbs 14 - 21 (long) 11 - 12 (short)
+.TP
+.BI \-\-ns-sfb21 " x"
+Change ns-treble by x dB for sfb21
+
+.PP
 Experimental options:
 .TP
 .BI -X " n"
@@ -878,7 +899,7 @@ add only a version 2 tag
 pad version 1 tag with spaces instead of nulls
 .TP
 .B \-\-pad-id3v2
-same as --pad-id3v2-size 128
+same as \-\-pad-id3v2-size 128
 .TP
 .B \-\-pad-id3v2-size "num"
 adds version 2 tag, pad with extra "num" bytes
@@ -1114,7 +1135,6 @@ mpglib by Michael Hipp
 
 Manual page by William Schelter, Nils Faerber, Alexander Leidinger,
 and Rog\['e]rio Brito.
-.f
 .\" Local Variables:
 .\" mode: nroff
 .\" End:
