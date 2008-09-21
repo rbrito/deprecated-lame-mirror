@@ -1,4 +1,4 @@
-.TH lame 1 "July 08, 2008" "LAME 3.98" "LAME audio compressor"
+.TH lame 1 "July 08, 2008" "LAME 3.99" "LAME audio compressor"
 .SH NAME
 lame \- create mp3 audio files
 .SH SYNOPSIS
@@ -677,27 +677,6 @@ Without this option,
 the minimum bitrate will be ignored for passages of analog silence,
 i.e. when the music level is below the absolute threshold of
 human hearing (ATH). 
-
-.PP
-PSY related:
-.TP
-.B \-\-nssafejoint
-M/S switching criterion
-.TP
-.BI \-\-nsmsfix " arg"
-M/S switching tuning [effective 0-3.5]
-.TP
-.BI \-\-ns-bass " x"
-Adjust masking for sfbs  0 -  6 (long)  0 -  5 (short)
-.TP
-.BI \-\-ns-alto " x"
-Adjust masking for sfbs  7 - 13 (long)  6 - 10 (short)
-.TP
-.BI \-\-ns-treble " x"
-Adjust masking for sfbs 14 - 21 (long) 11 - 12 (short)
-.TP
-.BI \-\-ns-sfb21 " x"
-Change ns-treble by x dB for sfb21
 
 .PP
 Experimental options:
