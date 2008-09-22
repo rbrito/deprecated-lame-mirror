@@ -776,7 +776,6 @@ count_bits(lame_internal_flags const *const gfc,
         for (sfb = 0; sfb < gi->sfbmax; sfb++) {
             int const width = gi->width[sfb];
             assert(width >= 0);
-            j += width;
             if (!gfc->pseudohalf[sfb]) {
                 j += width;
             }
