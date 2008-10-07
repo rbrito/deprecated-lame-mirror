@@ -1473,6 +1473,52 @@ err_generateOutPath:
 }
 
 
+static int
+set_id3_albumart(lame_t gfp, char const* file_name)
+{
+    int ret = -1;
+    FILE *fpi = 0;
+    char *albumart = 0;
+
+    if (file_name == 0) {
+        return 0;
+    }
+    fpi = fopen(file_name, "rb");
+    if (!fpi) {
+        ret = 1;
+    }
+    else {
+        size_t size;
+
+        fseek(fpi, 0, SEEK_END);
+        size = ftell(fpi);
+        fseek(fpi, 0, SEEK_SET);
+        albumart = (char *)malloc(size);
+        if (!albumart) {
+            ret = 2;            
+        }
+        else {
+            if (fread(albumart, 1, size, fpi) != size) {
+                ret = 3;
+            }
+            else {
+                ret = id3tag_set_albumart(gfp, albumart, size) ? 4 : 0;
+            }
+            free(albumart);
+        }
+        fclose(fpi);
+    }
+    switch (ret) {
+    case 1: error_printf("Could not find: '%s'.\n", file_name); break;
+    case 2: error_printf("Insufficient memory for reading the albumart.\n"); break;
+    case 3: error_printf("Read error: '%s'.\n", file_name); break;
+    case 4: error_printf("Unsupported image: '%s'.\nSpecify JPEG/PNG/GIF image (128KB maximum)\n", file_name); break;
+    default: break;
+    }
+    return ret;
+}
+
+
 enum ID3TAG_MODE 
 { ID3TAG_MODE_DEFAULT
 , ID3TAG_MODE_V1_ONLY
@@ -1769,40 +1815,11 @@ parse_args(lame_global_flags * gfp, int argc, char **argv,
 
                 T_ELIF("ti")
                     argUsed = 1;
-                if (nextArg) {
-                    FILE *fpi = fopen(nextArg, "rb");
-                    char *albumart = 0;
-                    int ret = 0;
-                    size_t size = 0;
-                    if (!fpi) {
-                        error_printf("Could not find: '%s'.\n", nextArg);
-                        return -1;
+                    if (set_id3_albumart(gfp, nextArg) != 0) {
+                        if (! ignore_tag_errors) {
+                            return -1;
+                        }
                     }
-                    fseek(fpi, 0, SEEK_END);
-                    size = ftell(fpi);
-                    fseek(fpi, 0, SEEK_SET);
-                    albumart = (char *)malloc(size);
-                    if (!albumart) {
-                        error_printf("Insufficient memory for reading the albumart.\n");
-                        fclose(fpi);
-                        return -1;
-                    }
-                    if (fread(albumart, 1, size, fpi) != size) {
-                        error_printf("Read error: '%s'.\n", nextArg);
-                        free(albumart);
-                        fclose(fpi);
-                        return -1;
-                    }
-                    fclose(fpi);
-                    ret = id3tag_set_albumart(gfp, albumart, size);
-                    free(albumart);
-                    albumart = 0;
-                    if (ret) {
-                        error_printf("Unsupported image: '%s'.\nSpecify JPEG/PNG/GIF image (128KB maximum)\n",
-                                     nextArg);
-                        return -1;
-                    }
-                }
 
                 T_ELIF("ignore-tag-errors")
                         ignore_tag_errors = 1;
