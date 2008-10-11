@@ -11,6 +11,57 @@
 
 -- 
 
+2008-10-11 19:08  robert
+
+	* frontend/gtkanal.c, libmp3lame/mpglib_interface.c,
+	  libmp3lame/util.h (lame3_98):
+
+	fixing mp3x build
+
+2008-10-11 18:04  robert
+
+	* doc/html/history.html, frontend/get_audio.c, frontend/gtkanal.c,
+	  frontend/parse.c, libmp3lame/bitstream.c, libmp3lame/id3tag.c,
+	  libmp3lame/lame.c, libmp3lame/mpglib_interface.c,
+	  libmp3lame/util.c, libmp3lame/util.h, mpglib/.cvsignore,
+	  mpglib/common.c, mpglib/interface.c, mpglib/layer3.c,
+	  mpglib/mpg123.h, mpglib/mpglib.h, include/lame.def,
+	  include/lame.h, vc_solution/vc9_libmp3lame.vcproj,
+	  vc_solution/vc9_libmp3lame_dll.vcproj (lame3_98):
+
+	Library API change: lame_decode functions are now obsolete but still present, please use hip_decode instead.
+
+	The reason for this change is: lame_decode functions use a single global variable within the library to store decoder setup, hip_decode functions don't.
+
+	The encoder now uses hip_decode internally and it is now possible to use clipdetect feature while reencoding mp3 to mp3.
+
+2008-10-07 20:24  robert
+
+	* doc/html/history.html, frontend/parse.c, libmp3lame/version.h
+	  (lame3_98):
+
+	- let ignore-tag-errors effect albumart option too
+	- updating history
+
+2008-09-22 20:21  robert
+
+	* libmp3lame/: takehiro.c, version.h (lame3_98):
+
+	source merging resultet in bug: loop var was incremented twice
+	now fixed
+
+2008-09-21 15:53  robert
+
+	* testcase.mp3 (lame3_98):
+
+	updating testcase.mp3 to current version
+
+2008-09-21 15:51  robert
+
+	* ChangeLog (lame3_98):
+
+	updating Changelog of branch lame3_98
+
 2008-09-19 07:30  rbrito
 
 	* debian/: changelog, control, rules (lame3_98):
