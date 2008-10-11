@@ -77,6 +77,7 @@ static void get_II_stuff(struct frame *fr)
 
 #define HDRCMPMASK 0xfffffd00
 
+#define MAX_INPUT_FRAMESIZE 4096
 
 int head_check(unsigned long head,int check_layer)
 {
@@ -191,6 +192,13 @@ int decode_header(struct frame *fr,unsigned long newhead)
         if(fr->error_protection)
           ssize += 2;
 #endif
+	if (fr->framesize>MAX_INPUT_FRAMESIZE) {
+	  fprintf(stderr,"Frame size too big.\n");
+	  fr->framesize = MAX_INPUT_FRAMESIZE;
+	  return (0);
+	} 
+
+
 	if (fr->bitrate_index==0)
 	  fr->framesize=0;
 	else{
@@ -293,7 +301,7 @@ int set_pointer( PMPSTR mp, long backstep)
   unsigned char *bsbufold;
 
   if(mp->fsizeold < 0 && backstep > 0) {
-    fprintf(stderr,"Can't step back %ld!\n",backstep);
+    fprintf(stderr,"Can't step back %ld bytes!\n",backstep);
     return MP3_ERR; 
   }
   bsbufold = mp->bsspace[1-mp->bsnum] + 512;

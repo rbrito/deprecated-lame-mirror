@@ -151,6 +151,12 @@ freegfc(lame_internal_flags * const gfc)
         free(gfc->in_buffer_1);
     }
     free_id3tag(gfc);
+
+    if (gfc->hip) {
+        hip_decode_exit(gfc->hip);
+        gfc->hip = 0;
+    }
+
     free(gfc);
 }
 

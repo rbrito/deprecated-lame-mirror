@@ -4,6 +4,7 @@
  *
  *      Copyright (c) 1999-2000 Mark Taylor
  *      Copyright (c) 2003 Olcios
+ *      Copyright (c) 2008 Robert Hegemann
  *
  * This library is free software; you can redistribute it and/or
  * modify it under the terms of the GNU Lesser General Public
@@ -28,7 +29,7 @@
 #endif
 
 #ifdef HAVE_MPGLIB
-
+#define hip_global_struct mpstr_tag 
 #include "lame.h"
 #include "machine.h"
 #include "encoder.h"
@@ -37,8 +38,7 @@
 #include "util.h"
 
 
-MPSTR   mp;
-plotting_data *mpg123_pinfo = NULL;
+static MPSTR   mp; /* ugly, used by obsolete lame_decode functions */
 
 int
 lame_decode_exit(void)
@@ -84,12 +84,12 @@ lame_decode_init(void)
  */
 
 static int
-lame_decode1_headersB_clipchoice(unsigned char *buffer, int len,
-                                 char pcm_l_raw[], char pcm_r_raw[], mp3data_struct * mp3data,
-                                 int *enc_delay, int *enc_padding,
-                                 char *p, size_t psize, int decoded_sample_size,
-                                 int (*decodeMP3_ptr) (PMPSTR, unsigned char *, int, char *, int,
-                                                       int *))
+decode1_headersB_clipchoice(PMPSTR pmp, unsigned char *buffer, int len,
+                            char pcm_l_raw[], char pcm_r_raw[], mp3data_struct * mp3data,
+                            int *enc_delay, int *enc_padding,
+                            char *p, size_t psize, int decoded_sample_size,
+                            int (*decodeMP3_ptr) (PMPSTR, unsigned char *, int, char *, int,
+                            int *))
 {
     static const int smpls[2][4] = {
         /* Layer   I    II   III */
@@ -104,57 +104,57 @@ lame_decode1_headersB_clipchoice(unsigned char *buffer, int len,
 
     mp3data->header_parsed = 0;
 
-    ret = (*decodeMP3_ptr) (&mp, buffer, len, p, (int) psize, &processed_bytes);
+    ret = (*decodeMP3_ptr) (pmp, buffer, len, p, (int) psize, &processed_bytes);
     /* three cases:  
      * 1. headers parsed, but data not complete
-     *       mp.header_parsed==1 
-     *       mp.framesize=0           
-     *       mp.fsizeold=size of last frame, or 0 if this is first frame
+     *       pmp->header_parsed==1 
+     *       pmp->framesize=0           
+     *       pmp->fsizeold=size of last frame, or 0 if this is first frame
      *
      * 2. headers, data parsed, but ancillary data not complete
-     *       mp.header_parsed==1 
-     *       mp.framesize=size of frame           
-     *       mp.fsizeold=size of last frame, or 0 if this is first frame
+     *       pmp->header_parsed==1 
+     *       pmp->framesize=size of frame           
+     *       pmp->fsizeold=size of last frame, or 0 if this is first frame
      *
      * 3. frame fully decoded:  
-     *       mp.header_parsed==0 
-     *       mp.framesize=0           
-     *       mp.fsizeold=size of frame (which is now the last frame)
+     *       pmp->header_parsed==0 
+     *       pmp->framesize=0           
+     *       pmp->fsizeold=size of frame (which is now the last frame)
      *
      */
-    if (mp.header_parsed || mp.fsizeold > 0 || mp.framesize > 0) {
+    if (pmp->header_parsed || pmp->fsizeold > 0 || pmp->framesize > 0) {
         mp3data->header_parsed = 1;
-        mp3data->stereo = mp.fr.stereo;
-        mp3data->samplerate = freqs[mp.fr.sampling_frequency];
-        mp3data->mode = mp.fr.mode;
-        mp3data->mode_ext = mp.fr.mode_ext;
-        mp3data->framesize = smpls[mp.fr.lsf][mp.fr.lay];
+        mp3data->stereo = pmp->fr.stereo;
+        mp3data->samplerate = freqs[pmp->fr.sampling_frequency];
+        mp3data->mode = pmp->fr.mode;
+        mp3data->mode_ext = pmp->fr.mode_ext;
+        mp3data->framesize = smpls[pmp->fr.lsf][pmp->fr.lay];
 
         /* free format, we need the entire frame before we can determine
          * the bitrate.  If we haven't gotten the entire frame, bitrate=0 */
-        if (mp.fsizeold > 0) /* works for free format and fixed, no overrun, temporal results are < 400.e6 */
-            mp3data->bitrate = 8 * (4 + mp.fsizeold) * mp3data->samplerate /
+        if (pmp->fsizeold > 0) /* works for free format and fixed, no overrun, temporal results are < 400.e6 */
+            mp3data->bitrate = 8 * (4 + pmp->fsizeold) * mp3data->samplerate /
                 (1.e3 * mp3data->framesize) + 0.5;
-        else if (mp.framesize > 0)
-            mp3data->bitrate = 8 * (4 + mp.framesize) * mp3data->samplerate /
+        else if (pmp->framesize > 0)
+            mp3data->bitrate = 8 * (4 + pmp->framesize) * mp3data->samplerate /
                 (1.e3 * mp3data->framesize) + 0.5;
         else
-            mp3data->bitrate = tabsel_123[mp.fr.lsf][mp.fr.lay - 1][mp.fr.bitrate_index];
+            mp3data->bitrate = tabsel_123[pmp->fr.lsf][pmp->fr.lay - 1][pmp->fr.bitrate_index];
 
 
 
-        if (mp.num_frames > 0) {
+        if (pmp->num_frames > 0) {
             /* Xing VBR header found and num_frames was set */
-            mp3data->totalframes = mp.num_frames;
-            mp3data->nsamp = mp3data->framesize * mp.num_frames;
-            *enc_delay = mp.enc_delay;
-            *enc_padding = mp.enc_padding;
+            mp3data->totalframes = pmp->num_frames;
+            mp3data->nsamp = mp3data->framesize * pmp->num_frames;
+            *enc_delay = pmp->enc_delay;
+            *enc_padding = pmp->enc_padding;
         }
     }
 
     switch (ret) {
     case MP3_OK:
-        switch (mp.fr.stereo) {
+        switch (pmp->fr.stereo) {
         case 1:
             processed_samples = processed_bytes / decoded_sample_size;
             if (decoded_sample_size == sizeof(short)) {
@@ -210,26 +210,12 @@ lame_decode1_headersB(unsigned char *buffer,
 {
     static char out[OUTSIZE_CLIPPED];
 
-    return lame_decode1_headersB_clipchoice(buffer, len, (char *) pcm_l, (char *) pcm_r, mp3data,
-                                            enc_delay, enc_padding, out, OUTSIZE_CLIPPED,
-                                            sizeof(short), decodeMP3);
+    return decode1_headersB_clipchoice(&mp, buffer, len, (char *) pcm_l, (char *) pcm_r, mp3data,
+                                       enc_delay, enc_padding, out, OUTSIZE_CLIPPED,
+                                       sizeof(short), decodeMP3);
 }
 
 
-/* we forbid input with more than 1152 samples per channel for output in the unclipped mode */
-#define OUTSIZE_UNCLIPPED (1152*2*sizeof(FLOAT))
-
-int
-lame_decode1_unclipped(unsigned char *buffer, int len, sample_t pcm_l[], sample_t pcm_r[])
-{
-    static char out[OUTSIZE_UNCLIPPED];
-    mp3data_struct mp3data;
-    int     enc_delay, enc_padding;
-
-    return lame_decode1_headersB_clipchoice(buffer, len, (char *) pcm_l, (char *) pcm_r, &mp3data,
-                                            &enc_delay, &enc_padding, out, OUTSIZE_UNCLIPPED,
-                                            sizeof(FLOAT), decodeMP3_unclipped);
-}
 
 
 
@@ -296,6 +282,121 @@ lame_decode(unsigned char *buffer, int len, short pcm_l[], short pcm_r[])
     return lame_decode_headers(buffer, len, pcm_l, pcm_r, &mp3data);
 }
 
+
+
+
+hip_t hip_decode_init(void)
+{
+    hip_t hip = calloc(1, sizeof(hip_global_flags));
+    InitMP3(hip);
+    return hip;
+}
+
+
+int hip_decode_exit(hip_t hip)
+{
+    if (hip) {
+        ExitMP3(hip);
+        free(hip);
+    }
+    return 0;
+}
+
+
+/* we forbid input with more than 1152 samples per channel for output in the unclipped mode */
+#define OUTSIZE_UNCLIPPED (1152*2*sizeof(FLOAT))
+
+int
+hip_decode1_unclipped(hip_t hip, unsigned char *buffer, size_t len, sample_t pcm_l[], sample_t pcm_r[])
+{
+    static char out[OUTSIZE_UNCLIPPED];
+    mp3data_struct mp3data;
+    int     enc_delay, enc_padding;
+
+    if (hip) {
+        return decode1_headersB_clipchoice(hip, buffer, len, (char *) pcm_l, (char *) pcm_r, &mp3data,
+                                           &enc_delay, &enc_padding, out, OUTSIZE_UNCLIPPED,
+                                           sizeof(FLOAT), decodeMP3_unclipped);
+    }
+    return 0;
+}
+
+/*
+ * For lame_decode:  return code
+ *  -1     error
+ *   0     ok, but need more data before outputing any samples
+ *   n     number of samples output.  Will be at most one frame of
+ *         MPEG data.  
+ */
+
+int
+hip_decode1_headers(hip_t hip, unsigned char *buffer,
+                     size_t len, short pcm_l[], short pcm_r[], mp3data_struct * mp3data)
+{
+    int     enc_delay, enc_padding;
+    return hip_decode1_headersB(hip, buffer, len, pcm_l, pcm_r, mp3data, &enc_delay, &enc_padding);
+}
+
+
+int
+hip_decode1(hip_t hip, unsigned char *buffer, size_t len, short pcm_l[], short pcm_r[])
+{
+    mp3data_struct mp3data;
+    return hip_decode1_headers(hip, buffer, len, pcm_l, pcm_r, &mp3data);
+}
+
+
+/*
+ * For lame_decode:  return code
+ *  -1     error
+ *   0     ok, but need more data before outputing any samples
+ *   n     number of samples output.  a multiple of 576 or 1152 depending on MP3 file.
+ */
+
+int
+hip_decode_headers(hip_t hip, unsigned char *buffer,
+                    size_t len, short pcm_l[], short pcm_r[], mp3data_struct * mp3data)
+{
+    int     ret;
+    int     totsize = 0;     /* number of decoded samples per channel */
+
+    for (;;) {
+        switch (ret = hip_decode1_headers(hip, buffer, len, pcm_l + totsize, pcm_r + totsize, mp3data)) {
+        case -1:
+            return ret;
+        case 0:
+            return totsize;
+        default:
+            totsize += ret;
+            len = 0;    /* future calls to decodeMP3 are just to flush buffers */
+            break;
+        }
+    }
+}
+
+
+int
+hip_decode(hip_t hip, unsigned char *buffer, size_t len, short pcm_l[], short pcm_r[])
+{
+    mp3data_struct mp3data;
+    return hip_decode_headers(hip, buffer, len, pcm_l, pcm_r, &mp3data);
+}
+
+
+int
+hip_decode1_headersB(hip_t hip, unsigned char *buffer,
+                      size_t len,
+                      short pcm_l[], short pcm_r[], mp3data_struct * mp3data,
+                      int *enc_delay, int *enc_padding)
+{
+    static char out[OUTSIZE_CLIPPED];
+    if (hip) {
+        return decode1_headersB_clipchoice(hip, buffer, len, (char *) pcm_l, (char *) pcm_r, mp3data,
+                                           enc_delay, enc_padding, out, OUTSIZE_CLIPPED,
+                                           sizeof(short), decodeMP3);
+    }
+    return -1;
+}
 
 #endif
 

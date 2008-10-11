@@ -82,9 +82,10 @@ typedef struct get_audio_global_data {
     int     pcm_is_unsigned_8bit;
     unsigned int num_samples_read;
     FILE   *musicin;
+    hip_t   hip;
 } get_audio_global_data;
 
-static get_audio_global_data global = { 0, 0, 0, 0, 0, 0 };
+static get_audio_global_data global = { 0, 0, 0, 0, 0, 0, 0 };
 
 
 
@@ -1624,7 +1625,10 @@ lame_decode_initfile(FILE * fd, mp3data_struct * mp3data, int *enc_delay, int *e
     int     freeformat = 0;
 
     memset(mp3data, 0, sizeof(mp3data_struct));
-    lame_decode_init();
+    if (global.hip) {
+        hip_decode_exit(global.hip);
+    }
+    global.hip = hip_decode_init();
 
     len = 4;
     if (fread(buf, 1, len, fd) != len)
@@ -1684,7 +1688,7 @@ lame_decode_initfile(FILE * fd, mp3data_struct * mp3data, int *enc_delay, int *e
     /* so mp3data->bitrate will be 0 until we have decoded the first */
     /* frame.  Cannot decode first frame here because we are not */
     /* yet prepared to handle the output. */
-    ret = lame_decode1_headersB(buf, len, pcm_l, pcm_r, mp3data, enc_delay, enc_padding);
+    ret = hip_decode1_headersB(global.hip, buf, len, pcm_l, pcm_r, mp3data, enc_delay, enc_padding);
     if (-1 == ret)
         return -1;
 
@@ -1693,7 +1697,7 @@ lame_decode_initfile(FILE * fd, mp3data_struct * mp3data, int *enc_delay, int *e
         len = fread(buf, 1, sizeof(buf), fd);
         if (len != sizeof(buf))
             return -1;
-        ret = lame_decode1_headersB(buf, len, pcm_l, pcm_r, mp3data, enc_delay, enc_padding);
+        ret = hip_decode1_headersB(global.hip, buf, len, pcm_l, pcm_r, mp3data, enc_delay, enc_padding);
         if (-1 == ret)
             return -1;
     }
@@ -1748,7 +1752,7 @@ lame_decode_fromfile(FILE * fd, short pcm_l[], short pcm_r[], mp3data_struct * m
     unsigned char buf[1024];
 
     /* first see if we still have data buffered in the decoder: */
-    ret = lame_decode1_headers(buf, len, pcm_l, pcm_r, mp3data);
+    ret = hip_decode1_headers(global.hip, buf, len, pcm_l, pcm_r, mp3data);
     if (ret != 0)
         return ret;
 
@@ -1758,17 +1762,19 @@ lame_decode_fromfile(FILE * fd, short pcm_l[], short pcm_r[], mp3data_struct * m
         len = fread(buf, 1, 1024, fd);
         if (len == 0) {
             /* we are done reading the file, but check for buffered data */
-            ret = lame_decode1_headers(buf, len, pcm_l, pcm_r, mp3data);
+            ret = hip_decode1_headers(global.hip, buf, len, pcm_l, pcm_r, mp3data);
             if (ret <= 0) {
-                lame_decode_exit(); /* release mp3decoder memory */
+                hip_decode_exit(global.hip); /* release mp3decoder memory */
+                global.hip = 0;
                 return -1; /* done with file */
             }
             break;
         }
 
-        ret = lame_decode1_headers(buf, len, pcm_l, pcm_r, mp3data);
+        ret = hip_decode1_headers(global.hip, buf, len, pcm_l, pcm_r, mp3data);
         if (ret == -1) {
-            lame_decode_exit(); /* release mp3decoder memory */
+            hip_decode_exit(global.hip); /* release mp3decoder memory */
+            global.hip = 0;
             return -1;
         }
         if (ret > 0)

@@ -1924,6 +1924,10 @@
 				/>
 			</FileConfiguration>
 		</File>
+		<File
+			RelativePath="..\include\lame.h"
+			>
+		</File>
 	</Files>
 	<Globals>
 	</Globals>

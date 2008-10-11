@@ -2313,28 +2313,6 @@ parse_args(lame_global_flags * gfp, int argc, char **argv,
 #endif
 
 
-    if (is_mpeg_file_format(input_format) && print_clipping_info) {
-
-        error_printf("\nError: input cannot be MPEG when --clipdetect is used\n"
-                     "\n--clipdetect requires decoding of MPEG *output* on the fly which\n"
-                     "cannot be performed simultaneously with decoding MPEG *input*.\n"
-                     "\nUse a plain .wav file as input with --clipdetect.\n");
-
-        return -1;
-    }
-
-
-    if (is_mpeg_file_format(input_format) && lame_get_decode_on_the_fly(gfp)) {
-
-        error_printf("\nError: input cannot be MPEG when --replaygain-accurate is used\n"
-                     "\n--replaygain-accurate requires decoding of MPEG *output* on the fly which\n"
-                     "cannot be performed simultaneously with decoding MPEG *input*.\n"
-                     "\nUse a plain .wav file as input with --replaygain-accurate.\n");
-
-        return -1;
-    }
-
-
     if (input_format == sf_ogg) {
         error_printf("sorry, vorbis support in LAME is deprecated.\n");
         return -1;

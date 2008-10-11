@@ -218,8 +218,8 @@ check_vbr_header(PMPSTR mp,int bytes)
   for (i=0; i<bytes; ++i) {
     while(pos >= buf->size) {
       buf  = buf->next;
+      if(!buf) 	return -1; /* fatal error */
       pos = buf->pos;
-      if(!buf)  return -1; /* fatal error */
     }
     ++pos;
   }

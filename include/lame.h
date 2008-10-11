@@ -961,6 +961,12 @@ int CDECL lame_encode_finish(
  * libmp3lame is compiled with HAVE_MPGLIB
  *
  *********************************************************************/
+
+struct hip_global_struct;
+typedef struct hip_global_struct hip_global_flags;
+typedef hip_global_flags *hip_t;
+
+
 typedef struct {
   int header_parsed;   /* 1 if header was parsed and following data was
                           computed                                       */
@@ -979,16 +985,16 @@ typedef struct {
   int framenum;        /* frames decoded counter                         */
 } mp3data_struct;
 
+/* required call to initialize decoder */
+hip_t CDECL hip_decode_init(void);
 
-/* required call to initialize decoder
- * NOTE: the decoder should not be used when encoding is performed
- * with decoding on the fly */
-int CDECL lame_decode_init(void);
+/* cleanup call to exit decoder  */
+int CDECL hip_decode_exit(hip_t gfp);
 
 /*********************************************************************
  * input 1 mp3 frame, output (maybe) pcm data.
  *
- *  nout = lame_decode(mp3buf,len,pcm_l,pcm_r);
+ *  nout = hip_decode(hip, mp3buf,len,pcm_l,pcm_r);
  *
  * input:
  *    len          :  number of bytes of mp3 data in mp3buf
@@ -1002,37 +1008,82 @@ int CDECL lame_decode_init(void);
  *    pcm_r[nout]  : right channel data
  *
  *********************************************************************/
+int CDECL hip_decode( hip_t           gfp
+                    , unsigned char * mp3buf
+                    , size_t          len
+                    , short           pcm_l[]
+                    , short           pcm_r[]
+                    );
+
+/* same as hip_decode, and also returns mp3 header data */
+int CDECL hip_decode_headers( hip_t           gfp
+                            , unsigned char*  mp3buf
+                            , size_t          len
+                            , short           pcm_l[]
+                            , short           pcm_r[]
+                            , mp3data_struct* mp3data
+                            );
+
+/* same as hip_decode, but returns at most one frame */
+int CDECL hip_decode1( hip_t          gfp
+                     , unsigned char* mp3buf
+                     , size_t         len
+                     , short          pcm_l[]
+                     , short          pcm_r[]
+                     );
+
+/* same as hip_decode1, but returns at most one frame and mp3 header data */
+int CDECL hip_decode1_headers( hip_t           gfp
+                             , unsigned char*  mp3buf
+                             , size_t          len
+                             , short           pcm_l[]
+                             , short           pcm_r[]
+                             , mp3data_struct* mp3data
+                             );
+
+/* same as hip_decode1_headers, but also returns enc_delay and enc_padding
+   from VBR Info tag, (-1 if no info tag was found) */
+int CDECL hip_decode1_headersB( hip_t gfp
+                              , unsigned char*   mp3buf
+                              , size_t           len
+                              , short            pcm_l[]
+                              , short            pcm_r[]
+                              , mp3data_struct*  mp3data
+                              , int             *enc_delay
+                              , int             *enc_padding
+                              );
+
+
+
+/* OBSOLETE:
+ * lame_decode... functions are there to keep old code working
+ * but it is strongly recommended to replace calls by hip_decode...
+ * function calls, see above.
+ */
+#if 1
+int CDECL lame_decode_init(void);
 int CDECL lame_decode(
         unsigned char *  mp3buf,
         int              len,
         short            pcm_l[],
         short            pcm_r[] );
-
-/* same as lame_decode, and also returns mp3 header data */
 int CDECL lame_decode_headers(
         unsigned char*   mp3buf,
         int              len,
         short            pcm_l[],
         short            pcm_r[],
         mp3data_struct*  mp3data );
-
-/* same as lame_decode, but returns at most one frame */
 int CDECL lame_decode1(
         unsigned char*  mp3buf,
         int             len,
         short           pcm_l[],
         short           pcm_r[] );
-
-/* same as lame_decode1, but returns at most one frame and mp3 header data */
 int CDECL lame_decode1_headers(
         unsigned char*   mp3buf,
         int              len,
         short            pcm_l[],
         short            pcm_r[],
         mp3data_struct*  mp3data );
-
-/* same as lame_decode1_headers, but also returns enc_delay and enc_padding
-   from VBR Info tag, (-1 if no info tag was found) */
 int CDECL lame_decode1_headersB(
         unsigned char*   mp3buf,
         int              len,
@@ -1041,11 +1092,9 @@ int CDECL lame_decode1_headersB(
         mp3data_struct*  mp3data,
         int              *enc_delay,
         int              *enc_padding );
-
-
-/* cleanup call to exit decoder  */
 int CDECL lame_decode_exit(void);
 
+#endif /* obsolete lame_decode API calls */
 
 
 /*********************************************************************
@@ -1079,66 +1128,48 @@ void CDECL id3tag_genre_list(
         void (*handler)(int, const char *, void *),
         void*  cookie);
 
-void CDECL id3tag_init   (lame_global_flags *gfp);
+void CDECL id3tag_init     (lame_t gfp);
 
 /* force addition of version 2 tag */
-void CDECL id3tag_add_v2   (lame_global_flags *gfp);
+void CDECL id3tag_add_v2   (lame_t gfp);
 
 /* add only a version 1 tag */
-void CDECL id3tag_v1_only  (lame_global_flags *gfp);
+void CDECL id3tag_v1_only  (lame_t gfp);
 
 /* add only a version 2 tag */
-void CDECL id3tag_v2_only  (lame_global_flags *gfp);
+void CDECL id3tag_v2_only  (lame_t gfp);
 
 /* pad version 1 tag with spaces instead of nulls */
-void CDECL id3tag_space_v1 (lame_global_flags *gfp);
+void CDECL id3tag_space_v1 (lame_t gfp);
 
 /* pad version 2 tag with extra 128 bytes */
-void CDECL id3tag_pad_v2   (lame_global_flags *gfp);
-/* pad version 2 tag with extra n bytes */
-void CDECL id3tag_set_pad  (lame_global_flags *gfp, size_t n);
+void CDECL id3tag_pad_v2   (lame_t gfp);
 
-void CDECL id3tag_set_title(
-        lame_global_flags*  gfp,
-        const char*         title );
-void CDECL id3tag_set_artist(
-        lame_global_flags*  gfp,
-        const char*         artist );
-void CDECL id3tag_set_album(
-        lame_global_flags*  gfp,
-        const char*         album );
-void CDECL id3tag_set_year(
-        lame_global_flags*  gfp,
-        const char*         year );
-void CDECL id3tag_set_comment(
-        lame_global_flags*  gfp,
-        const char*         comment );
+/* pad version 2 tag with extra n bytes */
+void CDECL id3tag_set_pad  (lame_t gfp, size_t n);
+
+void CDECL id3tag_set_title(lame_t gfp, const char* title);
+void CDECL id3tag_set_artist(lame_t gfp, const char* artist);
+void CDECL id3tag_set_album(lame_t gfp, const char* album);
+void CDECL id3tag_set_year(lame_t gfp, const char* year);
+void CDECL id3tag_set_comment(lame_t gfp, const char* comment);
             
 /* return -1 result if track number is out of ID3v1 range
                     and ignored for ID3v1 */
-int CDECL id3tag_set_track(
-        lame_global_flags*  gfp,
-        const char*         track );
+int CDECL id3tag_set_track(lame_t gfp, const char* track);
 
 /* return non-zero result if genre name or number is invalid
   result 0: OK
   result -1: genre number out of range
   result -2: no valid ID3v1 genre name, mapped to ID3v1 'Other'
              but taken as-is for ID3v2 genre tag */
-int CDECL id3tag_set_genre(
-        lame_global_flags*  gfp,
-        const char*         genre );
+int CDECL id3tag_set_genre(lame_t gfp, const char* genre);
 
 /* return non-zero result if field name is invalid */
-int CDECL id3tag_set_fieldvalue(
-        lame_global_flags*  gfp,
-        const char*         fieldvalue);
+int CDECL id3tag_set_fieldvalue(lame_t gfp, const char* fieldvalue);
 
 /* return non-zero result if image type is invalid */
-int CDECL id3tag_set_albumart(
-        lame_global_flags*  gfp,
-        const char*         image,
-        unsigned long       size );
+int CDECL id3tag_set_albumart(lame_t gfp, const char* image, size_t size);
 
 /* lame_get_id3v1_tag copies ID3v1 tag into buffer.
  * Function returns number of bytes copied into buffer, or number
@@ -1147,8 +1178,7 @@ int CDECL id3tag_set_albumart(
  * NOTE:
  * This functions does nothing, if user/LAME disabled ID3v1 tag.
  */
-size_t CDECL lame_get_id3v1_tag(
-        lame_global_flags * gfp, unsigned char* buffer, size_t size);
+size_t CDECL lame_get_id3v1_tag(lame_t gfp, unsigned char* buffer, size_t size);
 
 /* lame_get_id3v2_tag copies ID3v2 tag into buffer.
  * Function returns number of bytes copied into buffer, or number
@@ -1157,8 +1187,7 @@ size_t CDECL lame_get_id3v1_tag(
  * NOTE:
  * This functions does nothing, if user/LAME disabled ID3v2 tag.
  */
-size_t CDECL lame_get_id3v2_tag(
-        lame_global_flags * gfp, unsigned char* buffer, size_t size);
+size_t CDECL lame_get_id3v2_tag(lame_t gfp, unsigned char* buffer, size_t size);
 
 /* normaly lame_init_param writes ID3v2 tags into the audio stream
  * Call lame_set_write_id3tag_automatic(gfp, 0) before lame_init_param

@@ -464,6 +464,7 @@ extern  "C" {
 
         /* used by the frame analyzer */
         plotting_data *pinfo;
+        hip_t hip;
 
         int     in_buffer_nsamples;
         sample_t *in_buffer_0;
@@ -509,13 +510,13 @@ extern  "C" {
                                  int desired_len,
                                  sample_t const *inbuf, int len, int *num_used, int channels);
 
-/* same as lame_decode1 (look in lame.h), but returns
+/* same as hip_decode1 (look in lame.h), but returns
    unclipped raw floating-point samples. It is declared
    here, not in lame.h, because it returns LAME's
    internal type sample_t. No more than 1152 samples
    per channel are allowed. */
-    int     lame_decode1_unclipped(unsigned char *mp3buf,
-                                   int len, sample_t pcm_l[], sample_t pcm_r[]);
+    int     hip_decode1_unclipped(hip_t hip, unsigned char *buffer,
+                                  size_t len, sample_t pcm_l[], sample_t pcm_r[]);
 
 
     extern int has_MMX(void);

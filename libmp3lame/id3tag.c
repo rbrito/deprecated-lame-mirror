@@ -372,7 +372,7 @@ as follows.
 (although some are not exactly same)*/
 
 int
-id3tag_set_albumart(lame_global_flags * gfp, const char *image, unsigned long size)
+id3tag_set_albumart(lame_global_flags * gfp, const char *image, size_t size)
 {
     int     mimetype = 0;
     unsigned char const *data = (unsigned char const *) image;

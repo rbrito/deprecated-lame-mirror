@@ -74,14 +74,14 @@ char *strchr (), *strrchr ();
 struct frame {
     int stereo;
     int jsbound;
-    int single;
-    int lsf;
-    int mpeg25;
+    int single;             /* single channel (monophonic) */
+    int lsf;                /* 0 = MPEG-1, 1 = MPEG-2/2.5 */
+    int mpeg25;             /* 1 = MPEG-2.5, 0 = MPEG-1/2 */
     int header_change;
-    int lay;
-    int error_protection;
+    int lay;                /* Layer */
+    int error_protection;   /* 1 = CRC-16 code following header */
     int bitrate_index;
-    int sampling_frequency;
+    int sampling_frequency; /* sample rate of decompressed audio in Hz */
     int padding;
     int extension;
     int mode;
