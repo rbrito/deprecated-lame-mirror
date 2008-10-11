@@ -256,12 +256,12 @@ lame_decode1_headersB	@1005
 lame_decode_exit	@1006
 
 hip_decode_init	@1100
-hip_decode		@1101
-hip_decode_headers	@1102
-hip_decode1		@1103
-hip_decode1_headers	@1104
-hip_decode1_headersB	@1105
-hip_decode_exit	@1106
+hip_decode_exit	@1101
+hip_decode		@1102
+hip_decode_headers	@1103
+hip_decode1		@1104
+hip_decode1_headers	@1105
+hip_decode1_headersB	@1106
 
 
 id3tag_genre_list	@2000

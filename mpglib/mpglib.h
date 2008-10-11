@@ -34,10 +34,10 @@ typedef struct mpstr_tag {
   /* header_parsed, side_parsed and data_parsed must be all set 1
      before the full frame has been parsed */
     int header_parsed;            /* 1 = header of current frame has been parsed */
-    int side_parsed;		/* 1 = header of sideinfo of current frame has been parsed */
+    int side_parsed;		      /* 1 = header of sideinfo of current frame has been parsed */
     int data_parsed;
-    int free_format;             /* 1 = free format frame */
-    int old_free_format;        /* 1 = last frame was free format */
+    int free_format;              /* 1 = free format frame */
+    int old_free_format;          /* 1 = last frame was free format */
     int bsize;
     int framesize;
     int ssize;                    /* number of bytes used for side information, including 2 bytes for CRC-16 if present */
@@ -52,12 +52,13 @@ typedef struct mpstr_tag {
     int bsnum;
     real synth_buffs[2][2][0x110];
     int  synth_bo;
-    int  sync_bitstream; /* 1 = bitstream is yet to be synchronized */
+    int  sync_bitstream;          /* 1 = bitstream is yet to be synchronized */
 
     int bitindex;
     unsigned char* wordpointer;
-    plotting_data *mpg123_pinfo;
+    plotting_data *pinfo;
 } MPSTR, *PMPSTR;
+
 
 
 #define MP3_ERR -1

@@ -1232,6 +1232,10 @@
 				</FileConfiguration>
 			</File>
 		</Filter>
+		<File
+			RelativePath="..\include\lame.h"
+			>
+		</File>
 	</Files>
 	<Globals>
 	</Globals>
