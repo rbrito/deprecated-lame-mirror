@@ -440,6 +440,14 @@ hip_decode1_headersB(hip_t hip, unsigned char *buffer,
     return -1;
 }
 
+
+void hip_set_pinfo(hip_t hip, plotting_data* pinfo)
+{
+    if (hip) {
+        hip->pinfo = pinfo;
+    }
+}
+
 #endif
 
 /* end of mpglib_interface.c */

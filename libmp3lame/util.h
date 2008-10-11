@@ -623,6 +623,8 @@ extern  "C" {
 #define MSGF    lame_msgf
 
     int     is_lame_internal_flags_valid(const lame_internal_flags * gfp);
+    
+    extern void hip_set_pinfo(hip_t hip, plotting_data* pinfo);
 
 #ifdef __cplusplus
 }
