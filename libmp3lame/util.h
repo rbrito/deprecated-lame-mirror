@@ -538,6 +538,7 @@ extern  "C" {
 #define ERRORF  lame_errorf
 #define MSGF    lame_msgf
 
+    extern void hip_set_pinfo(hip_t hip, plotting_data* pinfo);
 
 #ifdef __cplusplus
 }

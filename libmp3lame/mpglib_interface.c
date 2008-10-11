@@ -347,7 +347,7 @@ hip_decode1(hip_t hip, unsigned char *buffer, size_t len, short pcm_l[], short p
 
 
 /*
- * For lame_decode:  return code
+ * For hip_decode:  return code
  *  -1     error
  *   0     ok, but need more data before outputing any samples
  *   n     number of samples output.  a multiple of 576 or 1152 depending on MP3 file.
@@ -396,6 +396,14 @@ hip_decode1_headersB(hip_t hip, unsigned char *buffer,
                                            sizeof(short), decodeMP3);
     }
     return -1;
+}
+
+
+void hip_set_pinfo(hip_t hip, plotting_data* pinfo)
+{
+    if (hip) {
+        hip->pinfo = pinfo;
+    }
 }
 
 #endif

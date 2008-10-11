@@ -135,7 +135,7 @@ gtkmakeframe(void)
     int     mp3count = 0;
     int     mp3out = 0;
     int     channels_out;
-    char    mp3buffer[LAME_MAXMP3BUFFER];
+    unsigned char mp3buffer[LAME_MAXMP3BUFFER];
     static int frameNum = 0;
     int     framesize = lame_get_framesize(gfp);
 
@@ -150,9 +150,7 @@ gtkmakeframe(void)
      * and mpg123 will write data into pinfo.  Set these so
      * the libraries put this data in the right place: */
     gfc->pinfo = pinfo;
-    if (hip) {
-        hip->pinfo = pinfo;
-    }
+    hip_set_pinfo(hip, pinfo);
 
     if (is_mpeg_file_format(input_format)) {
         iread = get_audio16(gfp, Buffer);
@@ -183,9 +181,7 @@ gtkmakeframe(void)
                     hip_decode_exit(hip);
                 }
                 hip = hip_decode_init();
-                if (hip) {
-                	hip->pinfo = pinfo;
-                }
+                hip_set_pinfo(hip, pinfo);
             }
 
             iread = get_audio16(gfp, Buffer);
@@ -201,7 +197,7 @@ gtkmakeframe(void)
                 break;  /* eof */
 
             mp3count = lame_encode_buffer(gfp, Buffer[0], Buffer[1], iread,
-                                          mp3buffer, (int) sizeof(mp3buffer));
+                                          mp3buffer, sizeof(mp3buffer));
 
             assert(!(mp3count > 0 && lame_get_frameNum(gfp) == pinfo->frameNum));
             /* not possible to produce mp3 data without encoding at least
