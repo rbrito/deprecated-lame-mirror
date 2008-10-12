@@ -69,6 +69,7 @@
 			/>
 			<Tool
 				Name="VCResourceCompilerTool"
+				PreprocessorDefinitions="_VC80_UPGRADE=0x0600;_DLL=$(TargetFileName)"
 				Culture="1033"
 			/>
 			<Tool
@@ -162,6 +163,7 @@
 			/>
 			<Tool
 				Name="VCResourceCompilerTool"
+				PreprocessorDefinitions="_VC80_UPGRADE=0x0600;_DLL=$(TargetFileName)"
 				Culture="1033"
 			/>
 			<Tool
@@ -253,6 +255,7 @@
 			/>
 			<Tool
 				Name="VCResourceCompilerTool"
+				PreprocessorDefinitions="_VC80_UPGRADE=0x0600;_DLL=$(TargetFileName);_DEBUG"
 				Culture="1033"
 			/>
 			<Tool
@@ -1926,6 +1929,10 @@
 		</File>
 		<File
 			RelativePath="..\include\lame.h"
+			>
+		</File>
+		<File
+			RelativePath="..\libmp3lame\lame.rc"
 			>
 		</File>
 	</Files>
