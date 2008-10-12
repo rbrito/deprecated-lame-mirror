@@ -63,8 +63,8 @@
 			/>
 			<Tool
 				Name="VCResourceCompilerTool"
-				PreprocessorDefinitions="NDEBUG"
-				Culture="1036"
+				PreprocessorDefinitions="NDEBUG;_APP=$(TargetFileName)"
+				Culture="1033"
 			/>
 			<Tool
 				Name="VCPreLinkEventTool"
@@ -76,7 +76,7 @@
 				SuppressStartupBanner="true"
 				ProgramDatabaseFile="..\output\ReleaseNASM/lame.pdb"
 				SubSystem="1"
-				OptimizeForWindows98="0"
+				OptimizeReferences="2"
 				RandomizedBaseAddress="1"
 				DataExecutionPrevention="0"
 				TargetMachine="1"
@@ -153,8 +153,8 @@
 			/>
 			<Tool
 				Name="VCResourceCompilerTool"
-				PreprocessorDefinitions="_DEBUG"
-				Culture="1036"
+				PreprocessorDefinitions="_DEBUG;_APP=$(TargetFileName)"
+				Culture="1033"
 			/>
 			<Tool
 				Name="VCPreLinkEventTool"
@@ -167,7 +167,7 @@
 				GenerateDebugInformation="true"
 				ProgramDatabaseFile="..\output\Debug/lame.pdb"
 				SubSystem="1"
-				OptimizeForWindows98="0"
+				OptimizeReferences="2"
 				RandomizedBaseAddress="1"
 				DataExecutionPrevention="0"
 				TargetMachine="1"
@@ -244,8 +244,8 @@
 			/>
 			<Tool
 				Name="VCResourceCompilerTool"
-				PreprocessorDefinitions="NDEBUG"
-				Culture="1036"
+				PreprocessorDefinitions="NDEBUG;_APP=$(TargetFileName)"
+				Culture="1033"
 			/>
 			<Tool
 				Name="VCPreLinkEventTool"
@@ -257,7 +257,7 @@
 				SuppressStartupBanner="true"
 				ProgramDatabaseFile="..\output\Release/lame.pdb"
 				SubSystem="1"
-				OptimizeForWindows98="0"
+				OptimizeReferences="2"
 				RandomizedBaseAddress="1"
 				DataExecutionPrevention="0"
 				TargetMachine="1"
@@ -580,6 +580,10 @@
 				>
 			</File>
 		</Filter>
+		<File
+			RelativePath="..\libmp3lame\lame.rc"
+			>
+		</File>
 	</Files>
 	<Globals>
 	</Globals>

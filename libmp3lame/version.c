@@ -42,10 +42,6 @@
 #include "version.h"    /* macros of version numbers */
 
 
-/*! Stringify \a x. */
-#define STR(x)   #x
-/*! Stringify \a x, perform macro expansion. */
-#define XSTR(x)  STR(x)
 
 
 
@@ -61,18 +57,18 @@ get_lame_version(void)
 
 #if   LAME_ALPHA_VERSION
     static /*@observer@ */ const char *const str =
-        XSTR(LAME_MAJOR_VERSION) "." XSTR(LAME_MINOR_VERSION) " "
-        "(alpha " XSTR(LAME_PATCH_VERSION) ", " __DATE__ " " __TIME__ ")";
+        STR(LAME_MAJOR_VERSION) "." STR(LAME_MINOR_VERSION) " "
+        "(alpha " STR(LAME_PATCH_VERSION) ", " __DATE__ " " __TIME__ ")";
 #elif LAME_BETA_VERSION
     static /*@observer@ */ const char *const str =
-        XSTR(LAME_MAJOR_VERSION) "." XSTR(LAME_MINOR_VERSION) " "
-        "(beta " XSTR(LAME_PATCH_VERSION) ", " __DATE__ ")";
+        STR(LAME_MAJOR_VERSION) "." STR(LAME_MINOR_VERSION) " "
+        "(beta " STR(LAME_PATCH_VERSION) ", " __DATE__ ")";
 #elif LAME_RELEASE_VERSION && (LAME_PATCH_VERSION > 0)
     static /*@observer@ */ const char *const str =
-        XSTR(LAME_MAJOR_VERSION) "." XSTR(LAME_MINOR_VERSION) "." XSTR(LAME_PATCH_VERSION);
+        STR(LAME_MAJOR_VERSION) "." STR(LAME_MINOR_VERSION) "." STR(LAME_PATCH_VERSION);
 #else
     static /*@observer@ */ const char *const str =
-        XSTR(LAME_MAJOR_VERSION) "." XSTR(LAME_MINOR_VERSION);
+        STR(LAME_MAJOR_VERSION) "." STR(LAME_MINOR_VERSION);
 #endif
 
     return str;
@@ -94,16 +90,16 @@ get_lame_short_version(void)
 
 #if   LAME_ALPHA_VERSION
     static /*@observer@ */ const char *const str =
-        XSTR(LAME_MAJOR_VERSION) "." XSTR(LAME_MINOR_VERSION) " (alpha)";
+        STR(LAME_MAJOR_VERSION) "." STR(LAME_MINOR_VERSION) " (alpha)";
 #elif LAME_BETA_VERSION
     static /*@observer@ */ const char *const str =
-        XSTR(LAME_MAJOR_VERSION) "." XSTR(LAME_MINOR_VERSION) " (beta)";
+        STR(LAME_MAJOR_VERSION) "." STR(LAME_MINOR_VERSION) " (beta)";
 #elif LAME_RELEASE_VERSION && (LAME_PATCH_VERSION > 0)
     static /*@observer@ */ const char *const str =
-        XSTR(LAME_MAJOR_VERSION) "." XSTR(LAME_MINOR_VERSION) "." XSTR(LAME_PATCH_VERSION);
+        STR(LAME_MAJOR_VERSION) "." STR(LAME_MINOR_VERSION) "." STR(LAME_PATCH_VERSION);
 #else
     static /*@observer@ */ const char *const str =
-        XSTR(LAME_MAJOR_VERSION) "." XSTR(LAME_MINOR_VERSION);
+        STR(LAME_MAJOR_VERSION) "." STR(LAME_MINOR_VERSION);
 #endif
 
     return str;
@@ -124,16 +120,16 @@ get_lame_very_short_version(void)
 
 #if   LAME_ALPHA_VERSION
     static /*@observer@ */ const char *const str =
-        "LAME" XSTR(LAME_MAJOR_VERSION) "." XSTR(LAME_MINOR_VERSION) "a";
+        "LAME" STR(LAME_MAJOR_VERSION) "." STR(LAME_MINOR_VERSION) "a";
 #elif LAME_BETA_VERSION
     static /*@observer@ */ const char *const str =
-        "LAME" XSTR(LAME_MAJOR_VERSION) "." XSTR(LAME_MINOR_VERSION) "b";
+        "LAME" STR(LAME_MAJOR_VERSION) "." STR(LAME_MINOR_VERSION) "b";
 #elif LAME_RELEASE_VERSION && (LAME_PATCH_VERSION > 0)
     static /*@observer@ */ const char *const str =
-        "LAME" XSTR(LAME_MAJOR_VERSION) "." XSTR(LAME_MINOR_VERSION) "r";
+        "LAME" STR(LAME_MAJOR_VERSION) "." STR(LAME_MINOR_VERSION) "r";
 #else
     static /*@observer@ */ const char *const str =
-        "LAME" XSTR(LAME_MAJOR_VERSION) "." XSTR(LAME_MINOR_VERSION) " ";
+        "LAME" STR(LAME_MAJOR_VERSION) "." STR(LAME_MINOR_VERSION) " ";
 #endif
 
     return str;
@@ -149,15 +145,15 @@ get_psy_version(void)
 {
 #if   PSY_ALPHA_VERSION > 0
     static /*@observer@ */ const char *const str =
-        XSTR(PSY_MAJOR_VERSION) "." XSTR(PSY_MINOR_VERSION)
-        " (alpha " XSTR(PSY_ALPHA_VERSION) ", " __DATE__ " " __TIME__ ")";
+        STR(PSY_MAJOR_VERSION) "." STR(PSY_MINOR_VERSION)
+        " (alpha " STR(PSY_ALPHA_VERSION) ", " __DATE__ " " __TIME__ ")";
 #elif PSY_BETA_VERSION > 0
     static /*@observer@ */ const char *const str =
-        XSTR(PSY_MAJOR_VERSION) "." XSTR(PSY_MINOR_VERSION)
-        " (beta " XSTR(PSY_BETA_VERSION) ", " __DATE__ ")";
+        STR(PSY_MAJOR_VERSION) "." STR(PSY_MINOR_VERSION)
+        " (beta " STR(PSY_BETA_VERSION) ", " __DATE__ ")";
 #else
     static /*@observer@ */ const char *const str =
-        XSTR(PSY_MAJOR_VERSION) "." XSTR(PSY_MINOR_VERSION);
+        STR(PSY_MAJOR_VERSION) "." STR(PSY_MINOR_VERSION);
 #endif
 
     return str;
