@@ -1,18 +1,23 @@
-MP3 library
------------
-Version 0.2
+hip - Hip Isn't a Player
+A LGPLed mpeg audio decoding library.
 
-This decoder is a 'light' version (thrown out all unnecessay parts)
-from the mpg123 package. I made this for a company.
+Based off of Michael Hipp's mpglib 0.2a <http://www.mpg123.de/>, with many
+improvements by the lame development team (see AUTHORS).
 
-Currently only Layer III is enabled to save some space. Layer I and II isn't
-tested at all. The interface will not change significantly. 
-A backport to the mpg123 package is planed.
+The interface to the library is based off of vorbisfile.  If you add mp3
+support to your app using this library it should be a snap to add Ogg Vorbis
+support as well.
 
-compiled and tested only on Solaris 2.6
-main.c contains a simple demo application for library.
+This isn't as fast as mpg123 will be for decoding as none of it is in
+assmbler.  
 
-COPYING: you may use this source under GPL terms!
+Seeking currently isn't implemented.  Also the hip.dsp file needs some work.
+
+There are python wrappers, and this is packaged in debian
+
+
+From mpglib's orginal README:
+=============================
 
 PLEASE NOTE: This software may contain patented algorithms (at least
   patented in some countries). It may be not allowed to sell/use products
@@ -21,13 +26,3 @@ PLEASE NOTE: This software may contain patented algorithms (at least
 COPYRIGHT of MP3 music:
   Please note, that the duplicating of copyrighted music without explicit
   permission violates the rights of the owner.
-
-SENDING PATCHES:
-  Maybe I change the copyright policy (i.e. some kind of more free BSD license).
-  Please consider this when sending patches/changes.
-
-FEEDBACK:
-  I'm interested to here from you, when you use this package as part
-  of another project.
-
-

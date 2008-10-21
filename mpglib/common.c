@@ -1,3 +1,22 @@
+/*
+ * Copyright (C) 2000 Albert L. Faber
+ *  
+ * This library is free software; you can redistribute it and/or
+ * modify it under the terms of the GNU Library General Public
+ * License as published by the Free Software Foundation; either
+ * version 2 of the License, or (at your option) any later version.
+ *
+ * This library is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.	 See the GNU
+ * Library General Public License for more details.
+ *
+ * You should have received a copy of the GNU Library General Public
+ * License along with this library; if not, write to the
+ * Free Software Foundation, Inc., 59 Temple Place - Suite 330,
+ * Boston, MA 02111-1307, USA.
+ */
+ 
 /* $Id$ */
 
 #ifdef HAVE_CONFIG_H
@@ -117,7 +136,7 @@ int head_check(unsigned long head,int check_layer)
 
 
 /*
- * the code a header and write the information
+ * decode a header and write the information
  * into the frame structure
  */
 int decode_header(struct frame *fr,unsigned long newhead)
@@ -301,7 +320,7 @@ int set_pointer( PMPSTR mp, long backstep)
   unsigned char *bsbufold;
 
   if(mp->fsizeold < 0 && backstep > 0) {
-    fprintf(stderr,"Can't step back %ld bytes!\n",backstep);
+    fprintf(stderr,"hip: Can't step back %ld bytes!\n",backstep);
     return MP3_ERR; 
   }
   bsbufold = mp->bsspace[1-mp->bsnum] + 512;
