@@ -29,6 +29,8 @@
 #include "interface.h"
 #include "tabinit.h"
 #include "layer3.h"
+#include "lame.h"
+#include "machine.h"
 #include "VbrTag.h"
 #include "decode_i386.h"
 
@@ -207,7 +209,7 @@ copy_mp(PMPSTR mp, int size, unsigned char *ptr)
   }
 }
 
-/* number of bytes needed by hip_GetVbrTag to parse header */
+/* number of bytes needed by GetVbrTag to parse header */
 #define XING_HEADER_SIZE 194
 
 /*
@@ -222,7 +224,8 @@ copy_mp(PMPSTR mp, int size, unsigned char *ptr)
  before starting to read
  return value: number of bytes in VBR header, including syncword
 */
-static int check_vbr_header(PMPSTR mp,int bytes)
+static int
+check_vbr_header(PMPSTR mp,int bytes)
 {
   int i,pos;
   struct buf *buf=mp->tail;
@@ -251,7 +254,7 @@ static int check_vbr_header(PMPSTR mp,int bytes)
   }
 
   /* check first bytes for Xing header */
-  mp->vbr_header = hip_GetVbrTag(&pTagData,xing);
+  mp->vbr_header = GetVbrTag(&pTagData,xing);
   if (mp->vbr_header) {
     mp->num_frames=pTagData.frames;
     mp->enc_delay=pTagData.enc_delay;
@@ -408,7 +411,7 @@ decodeMP3_clipchoice( PMPSTR mp,unsigned char *in,int isize,char *out,int *done,
       if (mp->vbr_header) {
 	/* do we have enough data to parse entire Xing header? */
 	  if (bytes + vbrbytes > mp->bsize) {
-	      fprintf(stderr,"hip: not enough data to parse entire Xing header\n");
+	      //fprintf(stderr,"hip: not enough data to parse entire Xing header\n");
 	      return MP3_NEED_MORE;
 	  }
 	
@@ -431,7 +434,7 @@ decodeMP3_clipchoice( PMPSTR mp,unsigned char *in,int isize,char *out,int *done,
 
     /* buffer now synchronized */
     if (bytes < 0) {
-	fprintf(stderr,"hip: need more bytes %d\n", bytes);
+	//fprintf(stderr,"hip: need more bytes %d\n", bytes);
 	return MP3_NEED_MORE;
     } 
     if (bytes > 0) {
@@ -446,8 +449,10 @@ decodeMP3_clipchoice( PMPSTR mp,unsigned char *in,int isize,char *out,int *done,
       fprintf(stderr,"hip: bitstream problem, resyncing skipping %d bytes...\n", bytes);
 #endif
       mp->old_free_format = 0;
-      // mp->sync_bitstream = 1;
-		
+#if 0
+      /* FIXME: correct ??? */
+      mp->sync_bitstream = 1;
+#endif		
       /* skip some bytes, buffer the rest */
       size = (int) (mp->wordpointer - (mp->bsspace[mp->bsnum] + 512));
 		
@@ -610,11 +615,14 @@ decodeMP3_clipchoice( PMPSTR mp,unsigned char *in,int isize,char *out,int *done,
   
   if (bytes > 0) {
     int size;
+#if 1
+    /* FIXME: while loop OK ??? */
     while (bytes > 512) {
       read_buf_byte(mp);
       bytes--;
       mp->framesize--;
     }
+#endif
     copy_mp(mp, bytes, mp->wordpointer);
     mp->wordpointer += bytes;
     
@@ -652,7 +660,7 @@ int decodeMP3_unclipped( PMPSTR mp,unsigned char *in,int isize,char *out,
 		          int osize,int *done)
 {
   /* we forbid input with more than 1152 samples per channel for output in unclipped mode */
-  if(osize < 1152 * 2 * sizeof(real) ) { 
+  if(osize < (int)(1152 * 2 * sizeof(real)) ) { 
     fprintf(stderr,"hip: out space too small for unclipped mode\n");
     return MP3_ERR;
   }
