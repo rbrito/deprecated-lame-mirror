@@ -35,9 +35,9 @@
 extern "C" {
 #endif
 
-#if defined(WIN32)
+#if defined(WIN32) || defined(_WIN32)
 #undef CDECL
-#define CDECL _cdecl
+#define CDECL __cdecl
 #else
 #define CDECL
 #endif
