@@ -8,7 +8,7 @@
  *
  * This library is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.	 See the GNU
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the GNU
  * Library General Public License for more details.
  *
  * You should have received a copy of the GNU Library General Public
@@ -25,24 +25,23 @@
 
 struct newhuff 
 {
-  const unsigned int linbits;
-  const short * const table;
+    const unsigned int linbits;
+    const short * const table;
 };
 
 static const short tab0[] = 
 { 
-   0
+    0
 };
 
 static const short tab1[] =
 {
-  -5,  -3,  -1,  17,   1,  16,   0
+    -5,  -3,  -1,  17,   1,  16,   0
 };
 
 static const short tab2[] =
 {
- -15, -11,  -9,  -5,  -3,  -1,  34,   2,  18,  -1,  33,  32,  17,  -1,   1,
-  16,   0
+    -15, -11,  -9,  -5,  -3,  -1,  34,   2,  18,  -1,  33,  32,  17,  -1,   1,   16,   0
 };
 
 static const short tab3[] =
