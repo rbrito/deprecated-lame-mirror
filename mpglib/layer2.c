@@ -257,6 +257,7 @@ II_step_two(PMPSTR mp, unsigned int *bit_alloc,real fraction[2][4][SBLIMIT],int 
 
 static void II_select_table(struct frame *fr)
 {
+    /* *INDENT-OFF* */
   static const int translate[3][2][16] =
    { { { 0,2,2,2,2,2,2,0,0,0,1,1,1,1,1,0 } ,
        { 0,2,2,0,0,0,1,1,1,1,1,1,1,1,1,0 } } ,
@@ -264,6 +265,7 @@ static void II_select_table(struct frame *fr)
        { 0,2,2,0,0,0,0,0,0,0,0,0,0,0,0,0 } } ,
      { { 0,3,3,3,3,3,3,0,0,0,1,1,1,1,1,0 } ,
        { 0,3,3,0,0,0,1,1,1,1,1,1,1,1,1,0 } } };
+    /* *INDENT-ON* */
 
   int table,sblim;
   static const struct al_table2 *tables[5] =

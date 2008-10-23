@@ -23,6 +23,9 @@
  * smaller tables are often the part of a bigger table
  */
 
+/* *INDENT-OFF* */
+
+
 struct newhuff 
 {
     const unsigned int linbits;
@@ -345,4 +348,5 @@ static const struct newhuff htc[] =
  { /* 1 , 1 , */ 0 , tab_c1 }
 };
 
+    /* *INDENT-ON* */
 

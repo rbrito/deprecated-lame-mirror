@@ -14,7 +14,7 @@
  *
  * This library is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.	 See the GNU
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the GNU
  * Library General Public License for more details.
  *
  * You should have received a copy of the GNU Library General Public
@@ -50,9 +50,9 @@ char *strchr (), *strrchr ();
 #endif
 
 #if defined(__riscos__) && defined(FPA10)
-#include	"ymath.h"
+#include "ymath.h"
 #else
-#include	<math.h>
+#include <math.h>
 #endif
 
 #include "decode_i386.h"
@@ -73,6 +73,7 @@ char *strchr (), *strrchr ();
 #define WRITE_SAMPLE_UNCLIPPED(TYPE,samples,sum,clip) \
   *samples = (TYPE)sum;
 
+  /* *INDENT-OFF* */
 
  /* versions: clipped (when TYPE == short) and unclipped (when TYPE == real) of synth_1to1_mono* functions */
 #define SYNTH_1TO1_MONO_CLIPCHOICE(TYPE,SYNTH_1TO1)                    \
@@ -93,6 +94,8 @@ char *strchr (), *strrchr ();
                                                                        \
   return ret; 
 
+  /* *INDENT-ON* */
+
 
 int synth_1to1_mono(PMPSTR mp, real *bandPtr,unsigned char *out,int *pnt)
 {
@@ -104,6 +107,7 @@ int synth_1to1_mono_unclipped(PMPSTR mp, real *bandPtr, unsigned char *out,int *
   SYNTH_1TO1_MONO_CLIPCHOICE(real,synth_1to1_unclipped)
 }
 
+    /* *INDENT-OFF* */
 /* versions: clipped (when TYPE == short) and unclipped (when TYPE == real) of synth_1to1* functions */
 #define SYNTH_1TO1_CLIPCHOICE(TYPE,WRITE_SAMPLE)         \
   static const int step = 2;                             \
@@ -207,6 +211,7 @@ int synth_1to1_mono_unclipped(PMPSTR mp, real *bandPtr, unsigned char *out,int *
   *pnt += 64*sizeof(TYPE);                               \
                                                          \
   return clip;                                           
+    /* *INDENT-ON* */
 
 
 int synth_1to1(PMPSTR mp, real *bandPtr,int channel,unsigned char *out, int *pnt)

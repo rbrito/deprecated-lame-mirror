@@ -1,7 +1,7 @@
 /*
- *	Command line frontend program
+ *      Command line frontend program
  *
- *	Copyright (c) 1999 Mark Taylor
+ *      Copyright (c) 1999 Mark Taylor
  *                    2000 Takehiro TOMIANGA
  *
  * This library is free software; you can redistribute it and/or
@@ -11,7 +11,7 @@
  *
  * This library is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.	 See the GNU
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the GNU
  * Library General Public License for more details.
  *
  * You should have received a copy of the GNU Lesser General Public

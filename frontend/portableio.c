@@ -50,13 +50,13 @@
 # include <config.h>
 #endif
 
-#include	<stdio.h>
+#include <stdio.h>
 #if defined(__riscos__) && defined(FPA10)
-#include	"ymath.h"
+#include "ymath.h"
 #else
-#include	<math.h>
+#include <math.h>
 #endif
-#include	"portableio.h"
+#include "portableio.h"
 
 #ifdef WITH_DMALLOC
 #include <dmalloc.h>
@@ -132,7 +132,7 @@ Read16BitsLowHigh(FILE * fp)
     second = 0xff & getc(fp);
 
     result = (second << 8) + first;
-#ifndef	THINK_C42
+#ifndef THINK_C42
     if (result & 0x8000)
         result = result - 0x10000;
 #endif /* THINK_C */
@@ -183,7 +183,7 @@ Read16BitsHighLow(FILE * fp)
      * Another nasty thing is that the rest of the code doesn't work for 16 bit ints,
      * so this patch don't solve the 16 bit problem.
      */
-#ifndef	THINK_C42
+#ifndef THINK_C42
     if (result & 0x8000)
         result = result - 0x10000;
 #endif /* THINK_C */
@@ -243,7 +243,7 @@ Read24BitsHighLow(FILE * fp)
 }
 #endif
 
-#define	Read32BitsLowHigh(f)	Read32Bits(f)
+#define Read32BitsLowHigh(f) Read32Bits(f)
 
 #ifdef KLEMM_36
 
@@ -269,7 +269,7 @@ Read32Bits(FILE * fp)
     second = 0xffff & Read16BitsLowHigh(fp);
 
     result = (second << 16) + first;
-#ifdef	CRAY
+#ifdef CRAY
     if (result & 0x80000000)
         result = result - 0x100000000;
 #endif /* CRAY */
@@ -302,7 +302,7 @@ Read32BitsHighLow(FILE * fp)
     second = 0xffff & Read16BitsHighLow(fp);
 
     result = (first << 16) + second;
-#ifdef	CRAY
+#ifdef CRAY
     if (result & 0x80000000)
         result = result - 0x100000000;
 #endif
@@ -417,11 +417,11 @@ WriteBytesSwapped(FILE * fp, char *p, int n)
  ****************************************************************/
 
 #ifdef applec           /* The Apple C compiler works */
-# define FloatToUnsigned(f)	((unsigned long)(f))
-# define UnsignedToFloat(u)	((double)(u))
+# define FloatToUnsigned(f) ((unsigned long)(f))
+# define UnsignedToFloat(u) ((double)(u))
 #else /* applec */
-# define FloatToUnsigned(f)	((unsigned long)(((long)((f) - 2147483648.0)) + 2147483647L + 1))
-# define UnsignedToFloat(u)	(((double)((long)((u) - 2147483647L - 1))) + 2147483648.0)
+# define FloatToUnsigned(f) ((unsigned long)(((long)((f) - 2147483648.0)) + 2147483647L + 1))
+# define UnsignedToFloat(u) (((double)((long)((u) - 2147483647L - 1))) + 2147483648.0)
 #endif /* applec */
 /****************************************************************
  * Extended precision IEEE floating-point conversion routines
@@ -434,7 +434,7 @@ ConvertFromIeeeExtended(char *bytes)
     long    expon;
     unsigned long hiMant, loMant;
 
-#ifdef	TEST
+#ifdef TEST
     printf("ConvertFromIEEEExtended(%lx,%lx,%lx,%lx,%lx,%lx,%lx,%lx,%lx,%lx\r",
            (long) bytes[0], (long) bytes[1], (long) bytes[2], (long) bytes[3],
            (long) bytes[4], (long) bytes[5], (long) bytes[6],

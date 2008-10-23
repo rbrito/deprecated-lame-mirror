@@ -13,7 +13,7 @@
  *
  * This library is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.	 See the GNU
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the GNU
  * Library General Public License for more details.
  *
  * You should have received a copy of the GNU Library General Public
@@ -65,6 +65,8 @@ struct bandInfoStruct {
 static int longLimit[9][23];
 static int shortLimit[9][14];
 
+/* *INDENT-OFF* */
+
 const struct bandInfoStruct bandInfo[9] = { 
 
 /* MPEG 1.0 */
@@ -112,6 +114,7 @@ const struct bandInfoStruct bandInfo[9] = {
    {0, 24, 48, 72,108,156,216,288,372,480,486,492,498,576},
    {8,8,8,12,16,20,24,28,36,2,2,2,26} } ,
 };
+/* *INDENT-ON* */
 
 static int mapbuf0[9][152];
 static int mapbuf1[9][156];
@@ -369,11 +372,11 @@ static void III_get_side_info_1(PMPSTR mp, struct III_sideinfo *si,int stereo,
           gr_infos->big_values = 288;
        }
        {
-	 unsigned int qss = getbits_fast(mp,8);
-	 gr_infos->pow2gain = gainpow2+256 - qss + powdiff;
+         unsigned int qss = getbits_fast(mp,8);
+         gr_infos->pow2gain = gainpow2+256 - qss + powdiff;
          if (mp->pinfo != NULL) {
            mp->pinfo->qss[gr][ch]=qss;
-	 }
+         }
        }
        if(ms_stereo)
          gr_infos->pow2gain += 2;
@@ -394,15 +397,15 @@ static void III_get_side_info_1(PMPSTR mp, struct III_sideinfo *si,int stereo,
           */
          gr_infos->table_select[2] = 0;
          for(i=0;i<3;i++) {
-	   unsigned int sbg = (getbits_fast(mp,3)<<3);
+           unsigned int sbg = (getbits_fast(mp,3)<<3);
            gr_infos->full_gain[i] = gr_infos->pow2gain + sbg;
            if (mp->pinfo != NULL)
              mp->pinfo->sub_gain[gr][ch][i]=sbg/8;
-	 }
+         }
 
          if(gr_infos->block_type == 0) {
            fprintf(stderr,"Blocktype == 0 and window-switching == 1 not allowed.\n");
-		   /* error seems to be very good recoverable, so don't exit */
+           /* error seems to be very good recoverable, so don't exit */
            /* exit(1); */
          }
          /* region_count/start parameters are implicit in this case. */       
@@ -479,16 +482,16 @@ static void III_get_side_info_2(PMPSTR mp, struct III_sideinfo *si,int stereo,
           */
          gr_infos->table_select[2] = 0;
          for(i=0;i<3;i++) {
-	   unsigned int sbg = (getbits_fast(mp,3)<<3);
+           unsigned int sbg = (getbits_fast(mp,3)<<3);
            gr_infos->full_gain[i] = gr_infos->pow2gain + sbg;
            if (mp->pinfo!=NULL)
              mp->pinfo->sub_gain[0][ch][i]=sbg/8;
 
-	 }
+         }
 
          if(gr_infos->block_type == 0) {
            fprintf(stderr,"Blocktype == 0 and window-switching == 1 not allowed.\n");
-		   /* error seems to be very good recoverable, so don't exit */
+      /* error seems to be very good recoverable, so don't exit */
            /* exit(1); */
          }
          /* region_count/start parameters are implicit in this case. */       
@@ -622,6 +625,7 @@ III_get_scale_factors_2(PMPSTR mp, int *scf,struct gr_info_s *gr_infos,int i_ste
   int n = 0;
   int numbits = 0;
 
+  /* *INDENT-OFF* */
   static const unsigned char stab[3][6][4] = {
    { { 6, 5, 5,5 } , { 6, 5, 7,3 } , { 11,10,0,0} ,
      { 7, 7, 7,0 } , { 6, 6, 6,3 } , {  8, 8,5,0} } ,
@@ -629,6 +633,7 @@ III_get_scale_factors_2(PMPSTR mp, int *scf,struct gr_info_s *gr_infos,int i_ste
      {12,12,12,0 } , {12, 9, 9,6 } , { 15,12,9,0} } ,
    { { 6, 9, 9,9 } , { 6, 9,12,6 } , { 15,18,0,0} ,
      { 6,15,12,0 } , { 6,12, 9,6 } , {  6,18,9,0} } }; 
+  /* *INDENT-ON* */
 
   if(i_stereo) /* i_stereo AND second channel -> do_layer3() checks this */
     slen = i_slen2[gr_infos->scalefac_compress>>1];
@@ -667,8 +672,10 @@ III_get_scale_factors_2(PMPSTR mp, int *scf,struct gr_info_s *gr_infos,int i_ste
   return numbits;
 }
 
+/* *INDENT-OFF* */
 static const int pretab1 [22] = {0,0,0,0,0,0,0,0,0,0,0,1,1,1,1,2,2,3,3,3,2,0}; /* char enough ? */
 static const int pretab2 [22] = {0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0};
+/* *INDENT-ON* */
 
 /*
  * don't forget to apply the same changes to III_dequantize_sample_ms() !!!
@@ -683,7 +690,7 @@ static int III_dequantize_sample(PMPSTR mp, real xr[SBLIMIT][SSLIMIT],int *scf,
   int *me;
 
   /* fprintf(stderr,"part2remain = %d, gr_infos->part2_3_length = %d, part2bits = %d\n",
-	  part2remain, gr_infos->part2_3_length, part2bits); */
+   part2remain, gr_infos->part2_3_length, part2bits); */
 
   {
     int i;
@@ -723,10 +730,10 @@ static int III_dequantize_sample(PMPSTR mp, real xr[SBLIMIT][SSLIMIT],int *scf,
   {
       int i;
       for (i = 0; i < 3; i++) {
-	  if (l[i] < 0) {
-	      fprintf(stderr, "hip: Bogus region length (%d)\n", l[i]);
-	      l[i] = 0;
-	  }
+          if (l[i] < 0) {
+              fprintf(stderr, "hip: Bogus region length (%d)\n", l[i]);
+              l[i] = 0;
+          }
       }
   }
   /* end MDH crash fix */
@@ -911,7 +918,7 @@ static int III_dequantize_sample(PMPSTR mp, real xr[SBLIMIT][SSLIMIT],int *scf,
 
   }
   else {
-	/*
+    /*
      * decoding with 'long' BandIndex table (block_type != 2)
      */
     int const *pretab = (int const *)(gr_infos->preflag ? pretab1 : pretab2);
@@ -921,7 +928,7 @@ static int III_dequantize_sample(PMPSTR mp, real xr[SBLIMIT][SSLIMIT],int *scf,
     real v = 0.0;
     int mc = 0;
 
-	/*
+    /*
      * long hash table values
      */
     for(i=0;i<3;i++) {
@@ -988,7 +995,7 @@ static int III_dequantize_sample(PMPSTR mp, real xr[SBLIMIT][SSLIMIT],int *scf,
       }
     }
 
-	/*
+    /*
      * short (count1table) values
      */
     for(;l3 && (part2remain > 0);l3--) {
@@ -1032,7 +1039,7 @@ static int III_dequantize_sample(PMPSTR mp, real xr[SBLIMIT][SSLIMIT],int *scf,
       }
     }
 
-	/* 
+    /* 
      * zero part
      */
     for(i=(&xr[SBLIMIT][0]-xrpnt)>>1;i;i--) {
@@ -1070,7 +1077,7 @@ static void III_i_stereo(real xr_buf[2][SBLIMIT][SSLIMIT],int *scalefac,
 
       if(lsf) {
         int p = gr_infos->scalefac_compress & 0x1;
-	    if(ms_stereo) {
+        if(ms_stereo) {
           tabl1 = pow1_2[p]; tabl2 = pow2_2[p];
         }
         else {
@@ -1242,6 +1249,9 @@ static void III_antialias(real xr[SBLIMIT][SSLIMIT],struct gr_info_s *gr_infos)
   }
 }
 
+
+/* *INDENT-OFF* */
+
 /*
  DCT insipired by Jeff Tsay's DCT from the maplay package
  this is an optimized version with manual unroll.
@@ -1267,7 +1277,6 @@ static void dct36(real *inbuf,real *o1,real *o2,real *wintab,real *tsbuf)
     in[17]+=in[15]; in[15]+=in[13]; in[13]+=in[11]; in[11]+=in[9];
     in[9] +=in[7];  in[7] +=in[5];  in[5] +=in[3];  in[3] +=in[1];
 
-
   {
 
 #define MACRO0(v) { \
@@ -1278,21 +1287,21 @@ static void dct36(real *inbuf,real *o1,real *o2,real *wintab,real *tsbuf)
     ts[SBLIMIT*(8-(v))] = out1[8-(v)] + sum0 * w[8-(v)]; \
     ts[SBLIMIT*(9+(v))] = out1[9+(v)] + sum0 * w[9+(v)]; 
 #define MACRO1(v) { \
-	real sum0,sum1; \
+    real sum0,sum1; \
     sum0 = tmp1a + tmp2a; \
-	sum1 = (tmp1b + tmp2b) * tfcos36[(v)]; \
-	MACRO0(v); }
+    sum1 = (tmp1b + tmp2b) * tfcos36[(v)]; \
+    MACRO0(v); }
 #define MACRO2(v) { \
     real sum0,sum1; \
     sum0 = tmp2a - tmp1a; \
     sum1 = (tmp2b - tmp1b) * tfcos36[(v)]; \
-	MACRO0(v); }
+    MACRO0(v); }
 
     const real *c = COS9;
     real *out2 = o2;
-	real *w = wintab;
-	real *out1 = o1;
-	real *ts = tsbuf;
+    real *w = wintab;
+    real *out1 = o1;
+    real *ts = tsbuf;
 
     real ta33,ta66,tb33,tb66;
 
@@ -1345,16 +1354,17 @@ static void dct36(real *inbuf,real *o1,real *o2,real *wintab,real *tsbuf)
       MACRO2(5);
     }
 
-	{
-		real sum0,sum1;
-    	sum0 =  in[2*0+0] - in[2*2+0] + in[2*4+0] - in[2*6+0] + in[2*8+0];
-    	sum1 = (in[2*0+1] - in[2*2+1] + in[2*4+1] - in[2*6+1] + in[2*8+1] ) * tfcos36[4];
-		MACRO0(4);
-	}
+    {
+      real sum0,sum1;
+      sum0 =  in[2*0+0] - in[2*2+0] + in[2*4+0] - in[2*6+0] + in[2*8+0];
+      sum1 = (in[2*0+1] - in[2*2+1] + in[2*4+1] - in[2*6+1] + in[2*8+1] ) * tfcos36[4];
+      MACRO0(4);
+    }
   }
 
   }
 }
+
 
 /*
  * new DCT12
@@ -1495,6 +1505,7 @@ static void dct12(real *in,real *rawout1,real *rawout2,real *wi,real *ts)
      out2[5-2] += in4 * wi[5-2];
   }
 }
+/* *INDENT-ON* */
 
 /*
  * III_hybrid
@@ -1561,7 +1572,7 @@ int layer3_audiodata_precedesframes(PMPSTR mp)
     /* specific to Layer 3, since Layer 1 & 2 the audio data starts at the frame that describes it. */
     /* determine how many bytes and therefore bitstream frames the audio data precedes it's matching frame */
     /* fprintf(stderr, "hip: main_data_begin = %d, mp->bsize %d, mp->fsizeold %d, mp->ssize %d\n",
-	  sideinfo.main_data_begin, mp->bsize, mp->fsizeold, mp->ssize); */
+       sideinfo.main_data_begin, mp->bsize, mp->fsizeold, mp->ssize); */
     /* compute the number of frames to backtrack, 4 for the header, ssize already holds the CRC */
     /* TODO Erroneously assumes current frame is same as previous frame. */
     audioDataInFrame = mp->bsize - 4 - mp->ssize;
@@ -1669,9 +1680,9 @@ int  do_layer3( PMPSTR mp,unsigned char *pcm_sample,int *pcm_point,
       }
 
       if (mp->pinfo!=NULL) {
-	int i;
+        int i;
         mp->pinfo->sfbits[gr][0] = part2bits;
-	for (i=0; i<39; i++) 
+        for (i=0; i<39; i++) 
           mp->pinfo->sfb_s[gr][0][i]=scalefacs[0][i];
       }
 
@@ -1688,9 +1699,9 @@ int  do_layer3( PMPSTR mp,unsigned char *pcm_sample,int *pcm_point,
         part2bits = III_get_scale_factors_1(mp,scalefacs[1],gr_infos);
       }
       if (mp->pinfo!=NULL) {
-	int i;
+        int i;
         mp->pinfo->sfbits[gr][1] = part2bits;
-	for (i=0; i<39; i++) 
+        for (i=0; i<39; i++) 
           mp->pinfo->sfb_s[gr][1][i]=scalefacs[1][i];
       }
 
@@ -1771,25 +1782,25 @@ int  do_layer3( PMPSTR mp,unsigned char *pcm_sample,int *pcm_point,
       struct gr_info_s *gr_infos = &(sideinfo.ch[ch].gr[gr]);
       ifqstep = ( mp->pinfo->scalefac_scale[gr][ch] == 0 ) ? .5 : 1.0;
       if (2==gr_infos->block_type) {
-	for (i=0; i<3; i++) {
-	  for (sb=0; sb<12; sb++) {
-	    int j = 3*sb+i;
-	    /*
-           is_p = scalefac[sfb*3+lwin-gr_infos->mixed_block_flag]; 
-	    */
+        for (i=0; i<3; i++) {
+          for (sb=0; sb<12; sb++) {
+            int j = 3*sb+i;
+            /*
+            is_p = scalefac[sfb*3+lwin-gr_infos->mixed_block_flag]; 
+             */
             /* scalefac was copied into pinfo->sfb_s[] above */
             mp->pinfo->sfb_s[gr][ch][j] = -ifqstep*mp->pinfo->sfb_s[gr][ch][j-gr_infos->mixed_block_flag];
             mp->pinfo->sfb_s[gr][ch][j] -= 2*(mp->pinfo->sub_gain[gr][ch][i]);
-	  }
+          }
           mp->pinfo->sfb_s[gr][ch][3*sb+i] = - 2*(mp->pinfo->sub_gain[gr][ch][i]);
-	}
+        }
       }else{
-	for (sb=0; sb<21; sb++) {
+        for (sb=0; sb<21; sb++) {
           /* scalefac was copied into pinfo->sfb[] above */
           mp->pinfo->sfb[gr][ch][sb] = mp->pinfo->sfb_s[gr][ch][sb];
           if (gr_infos->preflag) mp->pinfo->sfb[gr][ch][sb] += pretab1[sb];
           mp->pinfo->sfb[gr][ch][sb] *= -ifqstep;
-	}
+        }
         mp->pinfo->sfb[gr][ch][21]=0;
       }
     }
@@ -1799,7 +1810,7 @@ int  do_layer3( PMPSTR mp,unsigned char *pcm_sample,int *pcm_point,
     for(ch=0;ch<stereo1;ch++) { 
       int j=0;
       for (sb=0;sb<SBLIMIT;sb++)
-	for(ss=0;ss<SSLIMIT;ss++,j++) 
+        for(ss=0;ss<SSLIMIT;ss++,j++) 
           mp->pinfo->mpg123xr[gr][ch][j]=hybridIn[ch][sb][ss];
     }
   }

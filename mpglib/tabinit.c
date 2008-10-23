@@ -8,7 +8,7 @@
  *
  * This library is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.	 See the GNU
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the GNU
  * Library General Public License for more details.
  *
  * You should have received a copy of the GNU Library General Public
@@ -33,6 +33,8 @@
 real decwin[512+32];
 static real cos64[16],cos32[8],cos16[4],cos8[2],cos4[1];
 real *pnts[] = { cos64,cos32,cos16,cos8,cos4 };
+
+/* *INDENT-OFF* */
 
 static const double dewin[512] = {
    0.000000000,-0.000015259,-0.000015259,-0.000015259,
@@ -101,6 +103,7 @@ static const double dewin[512] = {
    1.133926392, 1.138763428, 1.142211914, 1.144287109,
    1.144989014
 };
+/* *INDENT-ON* */
 
 void make_decode_tables(long scaleval)
 {

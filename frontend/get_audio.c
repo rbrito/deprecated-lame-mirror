@@ -1,7 +1,7 @@
 /*
- *	Get Audio routines source file
+ *      Get Audio routines source file
  *
- *	Copyright (c) 1999 Albert L Faber
+ *      Copyright (c) 1999 Albert L Faber
  *
  * This library is free software; you can redistribute it and/or
  * modify it under the terms of the GNU Lesser General Public
@@ -10,7 +10,7 @@
  *
  * This library is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.	 See the GNU
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the GNU
  * Library General Public License for more details.
  *
  * You should have received a copy of the GNU Lesser General Public
@@ -143,7 +143,7 @@ fskip(FILE * fp, long offset, int whence)
 #ifndef S_ISFIFO
 # ifdef _S_IFIFO
     /* _S_IFIFO is defined on Win32 and Cygwin */
-#  define	S_ISFIFO(m)	(((m)&_S_IFIFO) == _S_IFIFO)
+#  define S_ISFIFO(m) (((m)&_S_IFIFO) == _S_IFIFO)
 # endif
 #endif
 
@@ -546,7 +546,7 @@ WriteWaveHeader(FILE * const fp, const int pcmbytes,
  *
  * This library is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.	 See the GNU
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the GNU
  * Library General Public License for more details.
  *
  * You should have received a copy of the GNU Library General Public
@@ -931,7 +931,7 @@ unpack_read_samples(const int samples_to_read, const int bytes_per_sample,
 
 #define GA_URS_IFLOOP( ga_urs_bps ) \
     if( bytes_per_sample == ga_urs_bps ) \
-	for( i = samples_read * bytes_per_sample; (i -= bytes_per_sample) >=0;)
+      for( i = samples_read * bytes_per_sample; (i -= bytes_per_sample) >=0;)
 
     samples_read = fread(sample_buffer, bytes_per_sample, samples_to_read, pcm_in);
     op = sample_buffer + samples_read;
