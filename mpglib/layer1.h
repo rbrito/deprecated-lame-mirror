@@ -20,6 +20,6 @@
 #ifndef LAYER1_H_INCLUDED
 #define LAYER1_H_INCLUDED
 
-int do_layer1(PMPSTR mp, unsigned char *pcm_sample,int *pcm_point);
+int     do_layer1(PMPSTR mp, unsigned char *pcm_sample, int *pcm_point);
 
 #endif

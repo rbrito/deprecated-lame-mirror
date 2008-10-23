@@ -24,19 +24,18 @@
 #include "mpg123.h"
 #include "mpglib.h"
 
-extern const int  tabsel_123[2][3][16];
+extern const int tabsel_123[2][3][16];
 extern const long freqs[9];
 
 extern real muls[27][64];
 
 
-int  head_check(unsigned long head,int check_layer);
-int  decode_header(struct frame *fr,unsigned long newhead);
-void print_header(struct frame *fr);
-void print_header_compact(struct frame *fr);
+int     head_check(unsigned long head, int check_layer);
+int     decode_header(struct frame *fr, unsigned long newhead);
+void    print_header(struct frame *fr);
+void    print_header_compact(struct frame *fr);
 unsigned int getbits(PMPSTR mp, int number_of_bits);
 unsigned int getbits_fast(PMPSTR mp, int number_of_bits);
-int set_pointer( PMPSTR mp, long backstep);
+int     set_pointer(PMPSTR mp, long backstep);
 
 #endif
-

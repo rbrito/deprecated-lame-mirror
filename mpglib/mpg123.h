@@ -28,7 +28,7 @@
 #  define strchr index
 #  define strrchr rindex
 # endif
-char *strchr (), *strrchr ();
+char   *strchr(), *strrchr();
 # ifndef HAVE_MEMCPY
 #  define memcpy(d, s, n) bcopy ((s), (d), (n))
 #  define memmove(d, s, n) bcopy ((s), (d), (n))
@@ -90,64 +90,62 @@ char *strchr (), *strrchr ();
 #define AUSHIFT (3)
 
 struct frame {
-    int stereo;
-    int jsbound;
-    int single;             /* single channel (monophonic) */
-    int lsf;                /* 0 = MPEG-1, 1 = MPEG-2/2.5 */
-    int mpeg25;             /* 1 = MPEG-2.5, 0 = MPEG-1/2 */
-    int header_change;
-    int lay;                /* Layer */
-    int error_protection;   /* 1 = CRC-16 code following header */
-    int bitrate_index;
-    int sampling_frequency; /* sample rate of decompressed audio in Hz */
-    int padding;
-    int extension;
-    int mode;
-    int mode_ext;
-    int copyright;
-    int original;
-    int emphasis;
-    int framesize; /* computed framesize */
+    int     stereo;
+    int     jsbound;
+    int     single;          /* single channel (monophonic) */
+    int     lsf;             /* 0 = MPEG-1, 1 = MPEG-2/2.5 */
+    int     mpeg25;          /* 1 = MPEG-2.5, 0 = MPEG-1/2 */
+    int     header_change;
+    int     lay;             /* Layer */
+    int     error_protection; /* 1 = CRC-16 code following header */
+    int     bitrate_index;
+    int     sampling_frequency; /* sample rate of decompressed audio in Hz */
+    int     padding;
+    int     extension;
+    int     mode;
+    int     mode_ext;
+    int     copyright;
+    int     original;
+    int     emphasis;
+    int     framesize;       /* computed framesize */
 
     /* AF: ADDED FOR LAYER1/LAYER2 */
-    int II_sblimit;
+    int     II_sblimit;
     struct al_table2 const *alloc;
-    int down_sample_sblimit;
-    int down_sample;
+    int     down_sample_sblimit;
+    int     down_sample;
 
 
 };
 
 struct gr_info_s {
-      int scfsi;
-      unsigned part2_3_length;
-      unsigned big_values;
-      unsigned scalefac_compress;
-      unsigned block_type;
-      unsigned mixed_block_flag;
-      unsigned table_select[3];
-      unsigned subblock_gain[3];
-      unsigned maxband[3];
-      unsigned maxbandl;
-      unsigned maxb;
-      unsigned region1start;
-      unsigned region2start;
-      unsigned preflag;
-      unsigned scalefac_scale;
-      unsigned count1table_select;
-      real *full_gain[3];
-      real *pow2gain;
+    int     scfsi;
+    unsigned part2_3_length;
+    unsigned big_values;
+    unsigned scalefac_compress;
+    unsigned block_type;
+    unsigned mixed_block_flag;
+    unsigned table_select[3];
+    unsigned subblock_gain[3];
+    unsigned maxband[3];
+    unsigned maxbandl;
+    unsigned maxb;
+    unsigned region1start;
+    unsigned region2start;
+    unsigned preflag;
+    unsigned scalefac_scale;
+    unsigned count1table_select;
+    real   *full_gain[3];
+    real   *pow2gain;
 };
 
-struct III_sideinfo
-{
-  unsigned main_data_begin;
-  unsigned private_bits;
-  struct {
-    struct gr_info_s gr[2];
-  } ch[2];
+struct III_sideinfo {
+    unsigned main_data_begin;
+    unsigned private_bits;
+    struct {
+        struct gr_info_s gr[2];
+    } ch[2];
 };
 
 
 #endif
-

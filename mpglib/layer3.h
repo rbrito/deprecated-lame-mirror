@@ -20,13 +20,11 @@
 #ifndef LAYER3_H_INCLUDED
 #define LAYER3_H_INCLUDED
 
-void init_layer3(int);
-int  do_layer3_sideinfo(PMPSTR mp);
-int  do_layer3( PMPSTR mp,unsigned char *pcm_sample,int *pcm_point,
-                int (*synth_1to1_mono_ptr)(PMPSTR,real *,unsigned char *,int *),
-                int (*synth_1to1_ptr)(PMPSTR,real *,int,unsigned char *, int *) );
-int layer3_audiodata_precedesframes(PMPSTR mp);
+void    init_layer3(int);
+int     do_layer3_sideinfo(PMPSTR mp);
+int     do_layer3(PMPSTR mp, unsigned char *pcm_sample, int *pcm_point,
+                  int (*synth_1to1_mono_ptr) (PMPSTR, real *, unsigned char *, int *),
+                  int (*synth_1to1_ptr) (PMPSTR, real *, int, unsigned char *, int *));
+int     layer3_audiodata_precedesframes(PMPSTR mp);
 
 #endif
-
-

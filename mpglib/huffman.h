@@ -349,4 +349,3 @@ static const struct newhuff htc[] =
 };
 
     /* *INDENT-ON* */
-
