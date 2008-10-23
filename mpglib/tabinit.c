@@ -1,3 +1,21 @@
+/*
+ * Copyright (C) 2000 Albert L. Faber
+ *  
+ * This library is free software; you can redistribute it and/or
+ * modify it under the terms of the GNU Library General Public
+ * License as published by the Free Software Foundation; either
+ * version 2 of the License, or (at your option) any later version.
+ *
+ * This library is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the GNU
+ * Library General Public License for more details.
+ *
+ * You should have received a copy of the GNU Library General Public
+ * License along with this library; if not, write to the
+ * Free Software Foundation, Inc., 59 Temple Place - Suite 330,
+ * Boston, MA 02111-1307, USA.
+ */
 /* $Id$ */
 
 #ifdef HAVE_CONFIG_H
@@ -12,9 +30,11 @@
 #include <dmalloc.h>
 #endif
 
-real decwin[512+32];
-static real cos64[16],cos32[8],cos16[4],cos8[2],cos4[1];
-real *pnts[] = { cos64,cos32,cos16,cos8,cos4 };
+real    decwin[512 + 32];
+static real cos64[16], cos32[8], cos16[4], cos8[2], cos4[1];
+real   *pnts[] = { cos64, cos32, cos16, cos8, cos4 };
+
+/* *INDENT-OFF* */
 
 static const double dewin[512] = {
    0.000000000,-0.000015259,-0.000015259,-0.000015259,
@@ -83,41 +103,40 @@ static const double dewin[512] = {
    1.133926392, 1.138763428, 1.142211914, 1.144287109,
    1.144989014
 };
+/* *INDENT-ON* */
 
-void make_decode_tables(long scaleval)
+void
+make_decode_tables(long scaleval)
 {
-  int i,j,k,kr,divv;
-  real *table,*costab;
+    int     i, j, k, kr, divv;
+    real   *table, *costab;
 
-  
-  for(i=0;i<5;i++)
-  {
-    kr=0x10>>i; divv=0x40>>i;
-    costab = pnts[i];
-    for(k=0;k<kr;k++)
-      costab[k] = (real)( 1.0 / (2.0 * cos(M_PI * ((double) k * 2.0 + 1.0) / (double) divv)) );
-  }
 
-  table = decwin;
-  scaleval = -scaleval;
-  for(i=0,j=0;i<256;i++,j++,table+=32)
-  {
-    if(table < decwin+512+16)
-      table[16] = table[0] = (real)( dewin[j] * scaleval );
-    if(i % 32 == 31)
-      table -= 1023;
-    if(i % 64 == 63)
-      scaleval = - scaleval;
-  }
+    for (i = 0; i < 5; i++) {
+        kr = 0x10 >> i;
+        divv = 0x40 >> i;
+        costab = pnts[i];
+        for (k = 0; k < kr; k++)
+            costab[k] = (real) (1.0 / (2.0 * cos(M_PI * ((double) k * 2.0 + 1.0) / (double) divv)));
+    }
 
-  for( /* i=256 */ ;i<512;i++,j--,table+=32)
-  {
-    if(table < decwin+512+16)
-      table[16] = table[0] = (real) ( dewin[j] * scaleval );
-    if(i % 32 == 31)
-      table -= 1023;
-    if(i % 64 == 63)
-      scaleval = - scaleval;
-  }
+    table = decwin;
+    scaleval = -scaleval;
+    for (i = 0, j = 0; i < 256; i++, j++, table += 32) {
+        if (table < decwin + 512 + 16)
+            table[16] = table[0] = (real) (dewin[j] * scaleval);
+        if (i % 32 == 31)
+            table -= 1023;
+        if (i % 64 == 63)
+            scaleval = -scaleval;
+    }
+
+    for ( /* i=256 */ ; i < 512; i++, j--, table += 32) {
+        if (table < decwin + 512 + 16)
+            table[16] = table[0] = (real) (dewin[j] * scaleval);
+        if (i % 32 == 31)
+            table -= 1023;
+        if (i % 64 == 63)
+            scaleval = -scaleval;
+    }
 }
-

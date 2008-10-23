@@ -5,6 +5,23 @@
  * modified by Aleksander Korzynski (Olcios) '2003
  * See also 'README'
  *
+ * Copyright (C) 2000 Albert L. Faber
+ *  
+ * This library is free software; you can redistribute it and/or
+ * modify it under the terms of the GNU Library General Public
+ * License as published by the Free Software Foundation; either
+ * version 2 of the License, or (at your option) any later version.
+ *
+ * This library is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the GNU
+ * Library General Public License for more details.
+ *
+ * You should have received a copy of the GNU Library General Public
+ * License along with this library; if not, write to the
+ * Free Software Foundation, Inc., 59 Temple Place - Suite 330,
+ * Boston, MA 02111-1307, USA.
+ *
  * slighlty optimized for machines without autoincrement/decrement.
  * The performance is highly compiler dependend. Maybe
  * the decode.c version for 'normal' processor may be faster
@@ -25,7 +42,7 @@
 #  define strchr index
 #  define strrchr rindex
 # endif
-char *strchr (), *strrchr ();
+char   *strchr(), *strrchr();
 # ifndef HAVE_MEMCPY
 #  define memcpy(d, s, n) bcopy ((s), (d), (n))
 #  define memmove(d, s, n) bcopy ((s), (d), (n))
@@ -33,9 +50,9 @@ char *strchr (), *strrchr ();
 #endif
 
 #if defined(__riscos__) && defined(FPA10)
-#include	"ymath.h"
+#include "ymath.h"
 #else
-#include	<math.h>
+#include <math.h>
 #endif
 
 #include "decode_i386.h"
@@ -56,6 +73,7 @@ char *strchr (), *strrchr ();
 #define WRITE_SAMPLE_UNCLIPPED(TYPE,samples,sum,clip) \
   *samples = (TYPE)sum;
 
+  /* *INDENT-OFF* */
 
  /* versions: clipped (when TYPE == short) and unclipped (when TYPE == real) of synth_1to1_mono* functions */
 #define SYNTH_1TO1_MONO_CLIPCHOICE(TYPE,SYNTH_1TO1)                    \
@@ -76,17 +94,20 @@ char *strchr (), *strrchr ();
                                                                        \
   return ret; 
 
+  /* *INDENT-ON* */
 
-int synth_1to1_mono(PMPSTR mp, real *bandPtr,unsigned char *out,int *pnt)
+
+int
+synth_1to1_mono(PMPSTR mp, real * bandPtr, unsigned char *out, int *pnt)
 {
-  SYNTH_1TO1_MONO_CLIPCHOICE(short,synth_1to1)
+    SYNTH_1TO1_MONO_CLIPCHOICE(short, synth_1to1)
+} int
+synth_1to1_mono_unclipped(PMPSTR mp, real * bandPtr, unsigned char *out, int *pnt)
+{
+    SYNTH_1TO1_MONO_CLIPCHOICE(real, synth_1to1_unclipped)
 }
 
-int synth_1to1_mono_unclipped(PMPSTR mp, real *bandPtr, unsigned char *out,int *pnt)
-{
-  SYNTH_1TO1_MONO_CLIPCHOICE(real,synth_1to1_unclipped)
-}
-
+    /* *INDENT-OFF* */
 /* versions: clipped (when TYPE == short) and unclipped (when TYPE == real) of synth_1to1* functions */
 #define SYNTH_1TO1_CLIPCHOICE(TYPE,WRITE_SAMPLE)         \
   static const int step = 2;                             \
@@ -190,16 +211,15 @@ int synth_1to1_mono_unclipped(PMPSTR mp, real *bandPtr, unsigned char *out,int *
   *pnt += 64*sizeof(TYPE);                               \
                                                          \
   return clip;                                           
+    /* *INDENT-ON* */
 
 
-int synth_1to1(PMPSTR mp, real *bandPtr,int channel,unsigned char *out, int *pnt)
+int
+synth_1to1(PMPSTR mp, real * bandPtr, int channel, unsigned char *out, int *pnt)
 {
-  SYNTH_1TO1_CLIPCHOICE(short,WRITE_SAMPLE_CLIPPED)
-}
-
-int synth_1to1_unclipped(PMPSTR mp, real *bandPtr,int channel, unsigned char *out, int *pnt)
+    SYNTH_1TO1_CLIPCHOICE(short, WRITE_SAMPLE_CLIPPED)
+} int
+synth_1to1_unclipped(PMPSTR mp, real * bandPtr, int channel, unsigned char *out, int *pnt)
 {
-  SYNTH_1TO1_CLIPCHOICE(real,WRITE_SAMPLE_UNCLIPPED)
+    SYNTH_1TO1_CLIPCHOICE(real, WRITE_SAMPLE_UNCLIPPED)
 }
-
-

@@ -1,4 +1,21 @@
 /*
+ * Copyright (C) 2000 Albert L. Faber
+ *  
+ * This library is free software; you can redistribute it and/or
+ * modify it under the terms of the GNU Library General Public
+ * License as published by the Free Software Foundation; either
+ * version 2 of the License, or (at your option) any later version.
+ *
+ * This library is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the GNU
+ * Library General Public License for more details.
+ *
+ * You should have received a copy of the GNU Library General Public
+ * License along with this library; if not, write to the
+ * Free Software Foundation, Inc., 59 Temple Place - Suite 330,
+ * Boston, MA 02111-1307, USA.
+ *
  * huffman tables ... recalcualted to work with my optimzed
  * decoder scheme (MH)
  * 
@@ -6,26 +23,28 @@
  * smaller tables are often the part of a bigger table
  */
 
+/* *INDENT-OFF* */
+
+
 struct newhuff 
 {
-  const unsigned int linbits;
-  const short * const table;
+    const unsigned int linbits;
+    const short * const table;
 };
 
 static const short tab0[] = 
 { 
-   0
+    0
 };
 
 static const short tab1[] =
 {
-  -5,  -3,  -1,  17,   1,  16,   0
+    -5,  -3,  -1,  17,   1,  16,   0
 };
 
 static const short tab2[] =
 {
- -15, -11,  -9,  -5,  -3,  -1,  34,   2,  18,  -1,  33,  32,  17,  -1,   1,
-  16,   0
+    -15, -11,  -9,  -5,  -3,  -1,  34,   2,  18,  -1,  33,  32,  17,  -1,   1,   16,   0
 };
 
 static const short tab3[] =
@@ -329,5 +348,4 @@ static const struct newhuff htc[] =
  { /* 1 , 1 , */ 0 , tab_c1 }
 };
 
-
-
+    /* *INDENT-ON* */
