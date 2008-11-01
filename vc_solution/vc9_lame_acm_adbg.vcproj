@@ -16,10 +16,8 @@
 	<Configurations>
 		<Configuration
 			Name="Debug|Win32"
-			OutputDirectory="$(SolutionDir)..\output\$(ConfigurationName)"
-			IntermediateDirectory="$(SolutionDir)..\obj\$(ConfigurationName)\$(ProjectName)"
 			ConfigurationType="4"
-			InheritedPropertySheets="$(VCInstallDir)VCProjectDefaults\UpgradeFromVC60.vsprops"
+			InheritedPropertySheets=".\vc9_lame_config.vsprops"
 			UseOfMFC="0"
 			ATLMinimizesCRunTimeLibraryUsage="false"
 			>
@@ -42,14 +40,9 @@
 				Name="VCCLCompilerTool"
 				Optimization="0"
 				PreprocessorDefinitions="WIN32;_DEBUG;_WINDOWS"
+				StringPooling="true"
 				RuntimeLibrary="3"
-				PrecompiledHeaderFile="..\obj\Debug\ADbg\ADbg.pch"
-				AssemblerListingLocation="..\obj\Debug\ADbg\"
-				ObjectFile="..\obj\Debug\ADbg\"
-				ProgramDataBaseFileName="..\obj\Debug\ADbg\"
-				WarningLevel="3"
-				SuppressStartupBanner="true"
-				DebugInformationFormat="4"
+				DebugInformationFormat="3"
 			/>
 			<Tool
 				Name="VCManagedResourceCompilerTool"
@@ -63,8 +56,7 @@
 			/>
 			<Tool
 				Name="VCLibrarianTool"
-				OutputFile="..\obj\Debug\ADbg.lib"
-				SuppressStartupBanner="true"
+				OutputFile="$(IntDir)\$(ProjectName).lib"
 			/>
 			<Tool
 				Name="VCALinkTool"
@@ -74,8 +66,6 @@
 			/>
 			<Tool
 				Name="VCBscMakeTool"
-				SuppressStartupBanner="true"
-				OutputFile="..\obj\Debug\ADbg.bsc"
 			/>
 			<Tool
 				Name="VCFxCopTool"
@@ -86,10 +76,8 @@
 		</Configuration>
 		<Configuration
 			Name="Release|Win32"
-			OutputDirectory="$(SolutionDir)..\output\$(ConfigurationName)"
-			IntermediateDirectory="$(SolutionDir)..\obj\$(ConfigurationName)\$(ProjectName)"
 			ConfigurationType="4"
-			InheritedPropertySheets="$(VCInstallDir)VCProjectDefaults\UpgradeFromVC60.vsprops"
+			InheritedPropertySheets=".\vc9_lame_config.vsprops"
 			UseOfMFC="0"
 			ATLMinimizesCRunTimeLibraryUsage="false"
 			>
@@ -115,13 +103,6 @@
 				PreprocessorDefinitions="WIN32;NDEBUG;_WINDOWS"
 				StringPooling="true"
 				RuntimeLibrary="2"
-				EnableFunctionLevelLinking="true"
-				PrecompiledHeaderFile="..\obj\Release\ADbg\ADbg.pch"
-				AssemblerListingLocation="..\obj\Release\ADbg\"
-				ObjectFile="..\obj\Release\ADbg\"
-				ProgramDataBaseFileName="..\obj\Release\ADbg\"
-				WarningLevel="3"
-				SuppressStartupBanner="true"
 			/>
 			<Tool
 				Name="VCManagedResourceCompilerTool"
@@ -135,8 +116,7 @@
 			/>
 			<Tool
 				Name="VCLibrarianTool"
-				OutputFile="..\obj\Release\ADbg.lib"
-				SuppressStartupBanner="true"
+				OutputFile="$(IntDir)\$(ProjectName).lib"
 			/>
 			<Tool
 				Name="VCALinkTool"
@@ -146,8 +126,6 @@
 			/>
 			<Tool
 				Name="VCBscMakeTool"
-				SuppressStartupBanner="true"
-				OutputFile="..\obj\Release\ADbg.bsc"
 			/>
 			<Tool
 				Name="VCFxCopTool"
