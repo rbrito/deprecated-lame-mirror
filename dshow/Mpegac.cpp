@@ -111,7 +111,7 @@ AMOVIESETUP_PIN sudMpgPins[] =
 
 AMOVIESETUP_FILTER sudMpgAEnc =
 {
-	&CLSID_LAMEDShowFilter,
+    &CLSID_LAMEDShowFilter,
     L"LAME Audio Encoder",
     MERIT_SW_COMPRESSOR,                   // Don't use us for real!
     NUMELMS(sudMpgPins),                   // 3 pins
@@ -122,7 +122,7 @@ AMOVIESETUP_FILTER sudMpgAEnc =
 // COM Global table of objects in this dll
 CFactoryTemplate g_Templates[] = 
 {
-	{ L"LAME Audio Encoder", &CLSID_LAMEDShowFilter, CMpegAudEnc::CreateInstance, NULL, &sudMpgAEnc },
+  { L"LAME Audio Encoder", &CLSID_LAMEDShowFilter, CMpegAudEnc::CreateInstance, NULL, &sudMpgAEnc },
   { L"LAME Audio Encoder Property Page", &CLSID_LAMEDShow_PropertyPage, CMpegAudEncPropertyPage::CreateInstance},
   { L"LAME Audio Encoder Property Page", &CLSID_LAMEDShow_PropertyPageAdv, CMpegAudEncPropertyPageAdv::CreateInstance},
   { L"LAME Audio Encoder About", &CLSID_LAMEDShow_About, CMAEAbout::CreateInstance}
@@ -1540,7 +1540,10 @@ STDAPI DllRegisterServer()
 	HKEY hKey;
 
 	HRESULT hr = StringFromGUID2(*g_Templates[0].m_ClsID, szCLSID, CHARS_IN_GUID);
+#pragma warning(push)
+#pragma warning(disable: 4995)
 	wsprintf(achTemp, TEXT("Filter\\%ls"), szCLSID);
+#pragma warning(pop)
 	// create key
 	RegCreateKey(HKEY_CLASSES_ROOT, (LPCTSTR)achTemp, &hKey);
 	RegCloseKey(hKey);
@@ -1554,7 +1557,10 @@ STDAPI DllUnregisterServer()
 	TCHAR achTemp[MAX_PATH];
 
 	HRESULT hr = StringFromGUID2(*g_Templates[0].m_ClsID, szCLSID, CHARS_IN_GUID);
+#pragma warning(push)
+#pragma warning(disable: 4995)
 	wsprintf(achTemp, TEXT("Filter\\%ls"), szCLSID);
+#pragma warning(pop)
 	// create key
 	RegDeleteKey(HKEY_CLASSES_ROOT, (LPCTSTR)achTemp);
 	return AMovieDllRegisterServer2(FALSE);

@@ -1329,13 +1329,13 @@ void AEncodeProperties::SaveValuesToElement(TiXmlElement * the_element) const
 	{
 		tmpElt = new TiXmlElement("Smart");
 		SetAttributeBool( tmpElt, "use", bSmartOutput);
-		tmpElt->SetAttribute("ratio", SmartRatioMax);
+		tmpElt->SetAttribute("ratio", int(SmartRatioMax));
 		the_element->InsertEndChild(*tmpElt);
 	}
 	else
 	{
 		SetAttributeBool( tmpElt, "use", bSmartOutput);
-		tmpElt->SetAttribute("ratio", SmartRatioMax);
+		tmpElt->SetAttribute("ratio", int(SmartRatioMax));
 	}
 
 	// Smart Output parameter

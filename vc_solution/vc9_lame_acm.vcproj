@@ -16,9 +16,8 @@
 	<Configurations>
 		<Configuration
 			Name="Release|Win32"
-			OutputDirectory="$(SolutionDir)..\output\$(ConfigurationName)"
-			IntermediateDirectory="$(SolutionDir)..\obj\$(ConfigurationName)\$(ProjectName)"
 			ConfigurationType="2"
+			InheritedPropertySheets=".\vc9_lame_config.vsprops"
 			UseOfMFC="0"
 			ATLMinimizesCRunTimeLibraryUsage="false"
 			>
@@ -48,16 +47,10 @@
 				InlineFunctionExpansion="2"
 				AdditionalIncludeDirectories="../include,../mpglib,../ACM,../ACM/ddk"
 				PreprocessorDefinitions="NDEBUG;_BLADEDLL;_WINDOWS;WIN32;LAME_ACM"
+				StringPooling="true"
 				RuntimeLibrary="2"
 				StructMemberAlignment="2"
 				TreatWChar_tAsBuiltInType="false"
-				PrecompiledHeaderFile="..\obj\Release\lameACM\lameACM.pch"
-				AssemblerListingLocation="..\obj\Release\lameACM\"
-				ObjectFile="..\obj\Release\lameACM\"
-				ProgramDataBaseFileName="..\obj\Release\lameACM\"
-				WarningLevel="3"
-				SuppressStartupBanner="true"
-				DisableSpecificWarnings="4996"
 			/>
 			<Tool
 				Name="VCManagedResourceCompilerTool"
@@ -76,16 +69,11 @@
 				AdditionalDependencies="libmp3lame.lib url.lib winmm.lib"
 				OutputFile="..\output\Release\lameACM.acm"
 				LinkIncremental="1"
-				SuppressStartupBanner="true"
-				AdditionalLibraryDirectories="..\output\Release"
+				AdditionalLibraryDirectories=""
 				IgnoreAllDefaultLibraries="false"
 				ModuleDefinitionFile="..\ACM\lameACM.def"
 				SubSystem="2"
-				OptimizeForWindows98="0"
-				RandomizedBaseAddress="1"
-				DataExecutionPrevention="0"
-				ImportLibrary="..\output\Release\lameACM.lib"
-				TargetMachine="1"
+				ImportLibrary="$(IntDir)/$(TargetName).lib"
 			/>
 			<Tool
 				Name="VCALinkTool"
@@ -98,8 +86,6 @@
 			/>
 			<Tool
 				Name="VCBscMakeTool"
-				SuppressStartupBanner="true"
-				OutputFile="..\obj\Release\lameACM.bsc"
 			/>
 			<Tool
 				Name="VCFxCopTool"
@@ -115,9 +101,8 @@
 		</Configuration>
 		<Configuration
 			Name="Debug|Win32"
-			OutputDirectory="$(SolutionDir)..\output\$(ConfigurationName)"
-			IntermediateDirectory="$(SolutionDir)..\obj\$(ConfigurationName)\$(ProjectName)"
 			ConfigurationType="2"
+			InheritedPropertySheets=".\vc9_lame_config.vsprops"
 			UseOfMFC="0"
 			ATLMinimizesCRunTimeLibraryUsage="false"
 			>
@@ -147,17 +132,11 @@
 				Optimization="0"
 				AdditionalIncludeDirectories="../include,../mpglib,../ACM,../ACM/ddk"
 				PreprocessorDefinitions="_DEBUG;_BLADEDLL;_WINDOWS;WIN32;LAME_ACM"
+				StringPooling="true"
 				RuntimeLibrary="3"
 				StructMemberAlignment="2"
 				TreatWChar_tAsBuiltInType="false"
-				PrecompiledHeaderFile="..\obj\Debug\lameACM\lameACM.pch"
-				AssemblerListingLocation="..\obj\Debug\lameACM\"
-				ObjectFile="..\obj\Debug\lameACM\"
-				ProgramDataBaseFileName="..\obj\Debug\lameACM\"
-				WarningLevel="3"
-				SuppressStartupBanner="true"
-				DebugInformationFormat="4"
-				DisableSpecificWarnings="4996"
+				DebugInformationFormat="3"
 			/>
 			<Tool
 				Name="VCManagedResourceCompilerTool"
@@ -175,19 +154,12 @@
 				IgnoreImportLibrary="true"
 				AdditionalDependencies="libmp3lame.lib url.lib winmm.lib"
 				OutputFile="..\output\Debug\lameACM.acm"
-				LinkIncremental="2"
-				SuppressStartupBanner="true"
-				AdditionalLibraryDirectories="..\output\Debug"
+				AdditionalLibraryDirectories=""
 				IgnoreAllDefaultLibraries="false"
 				ModuleDefinitionFile="..\ACM\lameACM.def"
 				GenerateDebugInformation="true"
-				ProgramDatabaseFile="..\output\Debug\lameACM.pdb"
 				SubSystem="2"
-				OptimizeForWindows98="0"
-				RandomizedBaseAddress="1"
-				DataExecutionPrevention="0"
-				ImportLibrary="..\output\Debug\lameACM.lib"
-				TargetMachine="1"
+				ImportLibrary="$(IntDir)/$(TargetName).lib"
 			/>
 			<Tool
 				Name="VCALinkTool"
@@ -200,8 +172,6 @@
 			/>
 			<Tool
 				Name="VCBscMakeTool"
-				SuppressStartupBanner="true"
-				OutputFile="..\obj\Debug\lameACM.bsc"
 			/>
 			<Tool
 				Name="VCFxCopTool"

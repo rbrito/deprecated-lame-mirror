@@ -2,8 +2,9 @@
 <VisualStudioProject
 	ProjectType="Visual C++"
 	Version="9,00"
-	Name="lame_enc DLL"
+	Name="lame_enc_dll"
 	ProjectGUID="{0E4820D3-DBE3-477A-910B-7C020D6066D1}"
+	RootNamespace="lame_enc_dll"
 	TargetFrameworkVersion="0"
 	>
 	<Platforms>
@@ -16,9 +17,8 @@
 	<Configurations>
 		<Configuration
 			Name="Debug|Win32"
-			OutputDirectory="$(SolutionDir)..\output\$(ConfigurationName)"
-			IntermediateDirectory="$(SolutionDir)..\obj\$(ConfigurationName)\$(ProjectName)"
 			ConfigurationType="2"
+			InheritedPropertySheets=".\vc9_lame_config.vsprops"
 			UseOfMFC="0"
 			ATLMinimizesCRunTimeLibraryUsage="false"
 			CharacterSet="2"
@@ -49,17 +49,9 @@
 				Optimization="0"
 				AdditionalIncludeDirectories="../include"
 				PreprocessorDefinitions="WIN32;_DEBUG;_WINDOWS;_USRDLL;LAMEMP3ENCDLL_EXPORTS"
-				MinimalRebuild="true"
-				BasicRuntimeChecks="3"
+				StringPooling="true"
 				RuntimeLibrary="3"
-				PrecompiledHeaderFile="..\obj\Debug\LameMp3EncDll/LameDll.pch"
-				AssemblerListingLocation="..\obj\Debug\LameMp3EncDll/"
-				ObjectFile="..\obj\Debug\LameMp3EncDll/"
-				ProgramDataBaseFileName="..\obj\Debug\LameMp3EncDll/"
-				WarningLevel="3"
-				SuppressStartupBanner="true"
-				DebugInformationFormat="4"
-				DisableSpecificWarnings="4996"
+				DebugInformationFormat="3"
 			/>
 			<Tool
 				Name="VCManagedResourceCompilerTool"
@@ -76,16 +68,9 @@
 				Name="VCLinkerTool"
 				AdditionalDependencies="libmp3lame.lib odbc32.lib odbccp32.lib"
 				OutputFile="..\output\Debug\lame_enc.dll"
-				LinkIncremental="2"
-				SuppressStartupBanner="true"
-				AdditionalLibraryDirectories="..\output\Debug"
+				AdditionalLibraryDirectories=""
 				GenerateDebugInformation="true"
-				ProgramDatabaseFile="..\output\Debug/lame_enc.pdb"
-				OptimizeForWindows98="0"
-				RandomizedBaseAddress="1"
-				DataExecutionPrevention="0"
-				ImportLibrary="..\output\Debug/lame_enc.lib"
-				TargetMachine="1"
+				ImportLibrary="$(OutDir)/lame_enc.lib"
 			/>
 			<Tool
 				Name="VCALinkTool"
@@ -98,8 +83,6 @@
 			/>
 			<Tool
 				Name="VCBscMakeTool"
-				SuppressStartupBanner="true"
-				OutputFile="..\obj\Debug/LameDll.bsc"
 			/>
 			<Tool
 				Name="VCFxCopTool"
@@ -113,9 +96,8 @@
 		</Configuration>
 		<Configuration
 			Name="Release|Win32"
-			OutputDirectory="$(SolutionDir)..\output\$(ConfigurationName)"
-			IntermediateDirectory="$(SolutionDir)..\obj\$(ConfigurationName)\$(ProjectName)"
 			ConfigurationType="2"
+			InheritedPropertySheets=".\vc9_lame_config.vsprops"
 			UseOfMFC="0"
 			ATLMinimizesCRunTimeLibraryUsage="false"
 			CharacterSet="2"
@@ -143,20 +125,11 @@
 			/>
 			<Tool
 				Name="VCCLCompilerTool"
-				Optimization="2"
-				InlineFunctionExpansion="1"
+				InlineFunctionExpansion="2"
 				AdditionalIncludeDirectories="../include"
 				PreprocessorDefinitions="WIN32;NDEBUG;_WINDOWS;_USRDLL;LAMEMP3ENCDLL_EXPORTS"
 				StringPooling="true"
 				RuntimeLibrary="2"
-				EnableFunctionLevelLinking="true"
-				PrecompiledHeaderFile="..\obj\Release\LameMp3EncDll/LameDll.pch"
-				AssemblerListingLocation="..\obj\Release\LameMp3EncDll/"
-				ObjectFile="..\obj\Release\LameMp3EncDll/"
-				ProgramDataBaseFileName="..\obj\Release\LameMp3EncDll/"
-				WarningLevel="3"
-				SuppressStartupBanner="true"
-				DisableSpecificWarnings="4996"
 			/>
 			<Tool
 				Name="VCManagedResourceCompilerTool"
@@ -174,13 +147,8 @@
 				AdditionalDependencies="libmp3lame.lib"
 				OutputFile="..\output\Release\lame_enc.dll"
 				LinkIncremental="1"
-				SuppressStartupBanner="true"
-				AdditionalLibraryDirectories="..\output\Release"
-				OptimizeForWindows98="0"
-				RandomizedBaseAddress="1"
-				DataExecutionPrevention="0"
-				ImportLibrary="..\output\Release/lame_enc.lib"
-				TargetMachine="1"
+				AdditionalLibraryDirectories=""
+				ImportLibrary="$(OutDir)/lame_enc.lib"
 			/>
 			<Tool
 				Name="VCALinkTool"
@@ -193,8 +161,6 @@
 			/>
 			<Tool
 				Name="VCBscMakeTool"
-				SuppressStartupBanner="true"
-				OutputFile="..\obj\Release/LameDll.bsc"
 			/>
 			<Tool
 				Name="VCFxCopTool"
