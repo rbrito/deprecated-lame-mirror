@@ -765,7 +765,7 @@ void CMpegAudEnc::ReadPresetSettings(MPEG_ENCODER_CONFIG * pmec)
 {
     DbgLog((LOG_TRACE,1,TEXT("CMpegAudEnc::ReadPresetSettings()")));
 
-    CRegKey rk(HKEY_CURRENT_USER, KEY_LAME_ENCODER);
+    Lame::CRegKey rk(HKEY_CURRENT_USER, KEY_LAME_ENCODER);
 
     pmec->dwBitrate         = rk.getDWORD(VALUE_BITRATE,DEFAULT_BITRATE);
     pmec->dwVariableMin     = rk.getDWORD(VALUE_VARIABLEMIN,DEFAULT_VARIABLEMIN);
@@ -1416,7 +1416,7 @@ STDMETHODIMP CMpegAudEnc::LoadAudioEncoderPropertiesFromRegistry()
 STDMETHODIMP CMpegAudEnc::SaveAudioEncoderPropertiesToRegistry()
 {
     DbgLog((LOG_TRACE, 1, TEXT("SaveAudioEncoderPropertiesToRegistry()")));
-    CRegKey rk;
+    Lame::CRegKey rk;
 
     MPEG_ENCODER_CONFIG mec;
     if(m_Encoder.GetOutputType(&mec) == S_FALSE)
@@ -1540,7 +1540,10 @@ STDAPI DllRegisterServer()
 	HKEY hKey;
 
 	HRESULT hr = StringFromGUID2(*g_Templates[0].m_ClsID, szCLSID, CHARS_IN_GUID);
+#pragma warning(push)
+#pragma warning(disable: 4995)
 	wsprintf(achTemp, TEXT("Filter\\%ls"), szCLSID);
+#pragma warning(pop)
 	// create key
 	RegCreateKey(HKEY_CLASSES_ROOT, (LPCTSTR)achTemp, &hKey);
 	RegCloseKey(hKey);
@@ -1554,7 +1557,10 @@ STDAPI DllUnregisterServer()
 	TCHAR achTemp[MAX_PATH];
 
 	HRESULT hr = StringFromGUID2(*g_Templates[0].m_ClsID, szCLSID, CHARS_IN_GUID);
+#pragma warning(push)
+#pragma warning(disable: 4995)
 	wsprintf(achTemp, TEXT("Filter\\%ls"), szCLSID);
+#pragma warning(pop)
 	// create key
 	RegDeleteKey(HKEY_CLASSES_ROOT, (LPCTSTR)achTemp);
 	return AMovieDllRegisterServer2(FALSE);
