@@ -23,6 +23,8 @@
 #ifndef	__REG__
 #define	__REG__
 
+namespace Lame
+{
 class	CRegKey 
 {
 protected:
@@ -86,5 +88,5 @@ protected:
 	HKEY	m_hKey;
 	DWORD	m_dwIndex;
 };
-
+}
 #endif // __REG__

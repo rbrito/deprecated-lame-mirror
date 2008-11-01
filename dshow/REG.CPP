@@ -24,6 +24,8 @@
 
 #include "reg.h"
 
+namespace Lame
+{
 
 CRegKey::CRegKey(void)
 {
@@ -284,3 +286,4 @@ DWORD CRegKey::setBinary(PTSTR valuename, PVOID pData, int cbSize)
     return cbSize;
 }
 
+} // namespace Lame
