@@ -1,7 +1,10 @@
-lame (3.99~alpha1) unstable; urgency=low
+lame (3.99~cvs20081106) unstable; urgency=low
 
   * changes are now (mostly) committed to changelog.
   * debian/rules: include -Wl,--as-needed for the loader at compile time.
+  * debian/rules: remove (not needed) hack for rpath (Tks Fabian Greffrath).
+  * debian/control: depend libsndfile1-dev (Tks Fabian Greffrath).
+  * debian/control: get rid of transitional liblame0.
 
  -- Rogério Brito <rbrito@users.sf.net>  Sat, 12 Jul 2008 09:14:54 -0300
 
