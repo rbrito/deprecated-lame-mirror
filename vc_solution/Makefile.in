@@ -35,7 +35,7 @@ build_triplet = @build@
 host_triplet = @host@
 DIST_COMMON = $(srcdir)/Makefile.am $(srcdir)/Makefile.in \
 	$(top_srcdir)/Makefile.am.global
-subdir = ACM/tinyxml
+subdir = vc_solution
 ACLOCAL_M4 = $(top_srcdir)/aclocal.m4
 am__aclocal_m4_deps = $(top_srcdir)/acinclude.m4 \
 	$(top_srcdir)/configure.in
@@ -186,17 +186,20 @@ top_builddir = @top_builddir@
 top_srcdir = @top_srcdir@
 AUTOMAKE_OPTIONS = 1.9 foreign $(top_srcdir)/ansi2knr
 EXTRA_DIST = \
-	Makefile.tinyxml \
-	changes.txt \
-	dox \
-	makedistlinux \
-	makedistwin.bat \
-	readme.txt \
-	tinyxml.cpp \
-	tinyxml.h \
-	tinyxmlerror.cpp \
-	tinyxmlparser.cpp \
-	xmltest.cpp
+	vc9_lame.sln \
+	vc9_lame_acm.vcproj \
+	vc9_lame_acm_adbg.vcproj \
+	vc9_lame_acm_tinyxml.vcproj \
+	vc9_lame_clients.sln \
+	vc9_lame_dll.vcproj \
+	vc9_lame_dll_example.vcproj \
+	vc9_lame_dshow.vcproj \
+	vc9_lame_lame.vcproj \
+	vc9_lame_mp3x.vcproj \
+	vc9_libmp3lame.vcproj \
+	vc9_libmp3lame_dll.vcproj \
+	vc9_mpglib.vcproj \
+	vc9_nasm.rules
 
 all: all-am
 
@@ -210,9 +213,9 @@ $(srcdir)/Makefile.in: @MAINTAINER_MODE_TRUE@ $(srcdir)/Makefile.am $(top_srcdir
 	      exit 1;; \
 	  esac; \
 	done; \
-	echo ' cd $(top_srcdir) && $(AUTOMAKE) --foreign  ACM/tinyxml/Makefile'; \
+	echo ' cd $(top_srcdir) && $(AUTOMAKE) --foreign  vc_solution/Makefile'; \
 	cd $(top_srcdir) && \
-	  $(AUTOMAKE) --foreign  ACM/tinyxml/Makefile
+	  $(AUTOMAKE) --foreign  vc_solution/Makefile
 .PRECIOUS: Makefile
 Makefile: $(srcdir)/Makefile.in $(top_builddir)/config.status
 	@case '$?' in \
