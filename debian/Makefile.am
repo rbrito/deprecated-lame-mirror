@@ -4,6 +4,7 @@ include $(top_srcdir)/Makefile.am.global
 
 EXTRA_DIST = \
 	changelog \
+	compat \
 	control \
 	copyright \
 	libmp3lame0-dev.docs \
@@ -11,7 +12,9 @@ EXTRA_DIST = \
 	libmp3lame0.files \
 	lame.docs \
 	lame.files \
-	rules
+	lame.manpages \
+	rules \
+	watch
 
 dist-hook:
 	chmod +x $(distdir)/rules

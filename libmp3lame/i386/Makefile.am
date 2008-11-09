@@ -43,7 +43,8 @@ CLEANFILES = \
 EXTRA_DIST = \
 	fft.nas \
 	fftfpu.nas \
-	ffttbl.nas
+	ffttbl.nas \
+	scalar.nas
 
 NASM = @NASM@
 NASMFLAGS=@NASM_FORMAT@ -i $(top_srcdir)/libmp3lame/@CPUTYPE@/
