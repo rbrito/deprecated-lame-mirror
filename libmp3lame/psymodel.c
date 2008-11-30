@@ -1654,7 +1654,6 @@ vbrpsy_attack_detection(lame_internal_flags * gfc, const sample_t *const buffer[
             for (; pf < pfe; pf++)
                 if (p < fabs(*pf))
                     p = fabs(*pf);
-
             psv->last_en_subshort[chn][i] = en_subshort[i + 3] = p;
             en_short[1 + i / 3] += p;
             if (p > en_subshort[i + 3 - 2]) {
@@ -1670,6 +1669,7 @@ vbrpsy_attack_detection(lame_internal_flags * gfc, const sample_t *const buffer[
             }
             attack_intensity[i + 3] = p;
         }
+                
         /* pulse like signal detection for fatboy.wav and so on */
         for (i = 0; i < 3; ++i) {
             FLOAT const enn =
@@ -1706,7 +1706,23 @@ vbrpsy_attack_detection(lame_internal_flags * gfc, const sample_t *const buffer[
                 }
             }
         }
-
+#define TEST_0811
+#ifdef TEST_0811
+        {
+            FLOAT en_min = en_short[0], en_max = en_short[0];
+            for (i = 1; i < 4; ++i) {
+                en_min = en_min < en_short[i] ? en_min : en_short[i];
+                en_max = en_max > en_short[i] ? en_max : en_short[i];
+            }
+            if (en_max < 40000) {
+                if (4*en_min > en_max || en_max < 1200) {
+                    for (i = 0; i < 4; ++i) {
+                        ns_attacks[chn][i] = 0;
+                    }
+                }
+            }
+        }
+#else
         /* should have energy change between short blocks, in order to avoid periodic signals */
         /* Good samples to show the effect are Trumpet test songs */
         /* GB: tuned (1) to avoid too many short blocks for test sample TRUMPET */
@@ -1724,7 +1740,7 @@ vbrpsy_attack_detection(lame_internal_flags * gfc, const sample_t *const buffer[
                 }
             }
         }
-
+#endif
         if (ns_attacks[chn][0] <= psv->last_attacks[chn]) {
             ns_attacks[chn][0] = 0;
         }
@@ -1864,6 +1880,23 @@ psyvbr_calc_mask_index_s(lame_internal_flags const *gfc, FLOAT const *max,
 }
 
 
+#ifdef TEST_0811
+static void
+take_strongest(FLOAT const* eb, unsigned char const* mask_idx, FLOAT* tmp, int ta, int tb)
+{
+    FLOAT sum = 0, mx = 0;
+    int i, mi;
+    for (i = mi = ta; i <= tb; ++i) {
+        FLOAT x = eb[i] * tab[mask_idx[i]];
+        sum += x;
+        mi = mx > x ? mi : i;
+        mx = mx > x ? mx : x;
+        tmp[i] = x;
+    }
+    tmp[mi] = (sum-mx)/(tb-ta+1);
+}
+#endif
+
 static void
 vbrpsy_compute_masking_s(lame_internal_flags * gfc, const FLOAT(*fftenergy_s)[HBLKSIZE_s], FLOAT * eb,
                          FLOAT * thr, int chn, int sblock)
@@ -1871,6 +1904,9 @@ vbrpsy_compute_masking_s(lame_internal_flags * gfc, const FLOAT(*fftenergy_s)[HB
     PsyStateVar_t *const psv = &gfc->sv_psy;
     PsyConst_s_t const *const gds = &gfc->cd_psy->s;
     FLOAT   max[CBANDS], avg[CBANDS];
+#ifdef TEST_0811
+    FLOAT   tmp[CBANDS];
+#endif
     int     i, j, b;
     unsigned char mask_idx_s[CBANDS];
 
@@ -1901,14 +1937,25 @@ vbrpsy_compute_masking_s(lame_internal_flags * gfc, const FLOAT(*fftenergy_s)[HB
         int const last = gds->s3ind[b][1];
         int     dd, dd_n;
         FLOAT   x, ecb, avg_mask;
+#ifdef TEST_0811
+        take_strongest(eb, mask_idx_s, tmp, kk, last);
+#endif
         dd = mask_idx_s[kk];
         dd_n = 1;
+#ifdef TEST_0811
+        ecb = gds->s3[j] * tmp[kk];
+#else
         ecb = gds->s3[j] * eb[kk] * tab[mask_idx_s[kk]];
+#endif
         ++j, ++kk;
         while (kk <= last) {
             dd += mask_idx_s[kk];
             dd_n += 1;
+#ifdef TEST_0811
+            x = gds->s3[j] * tmp[kk];
+#else
             x = gds->s3[j] * eb[kk] * tab[mask_idx_s[kk]];
+#endif
             ecb = vbrpsy_mask_add(ecb, x, kk - b);
             ++j, ++kk;
         }
@@ -1971,6 +2018,9 @@ vbrpsy_compute_masking_l(lame_internal_flags * gfc, const FLOAT fftenergy[HBLKSI
     PsyStateVar_t *const psv = &gfc->sv_psy;
     PsyConst_l_t const *const gdl = &gfc->cd_psy->l;
     FLOAT   max[CBANDS], avg[CBANDS];
+#ifdef TEST_0811
+    FLOAT   tmp[CBANDS];
+#endif
     unsigned char mask_idx_l[CBANDS + 2];
     int     k, b;
 
@@ -1991,14 +2041,25 @@ vbrpsy_compute_masking_l(lame_internal_flags * gfc, const FLOAT fftenergy[HBLKSI
         int     kk = gdl->s3ind[b][0];
         int const last = gdl->s3ind[b][1];
         int     dd = 0, dd_n = 0;
+#ifdef TEST_0811
+        take_strongest(eb_l, mask_idx_l, tmp, kk, last);
+#endif
         dd = mask_idx_l[kk];
         dd_n += 1;
+#ifdef TEST_0811
+        ecb = gdl->s3[k] * tmp[kk];
+#else
         ecb = gdl->s3[k] * eb_l[kk] * tab[mask_idx_l[kk]];
+#endif
         ++k, ++kk;
         while (kk <= last) {
             dd += mask_idx_l[kk];
             dd_n += 1;
+#ifdef TEST_0811
+            x = gdl->s3[k] * tmp[kk];
+#else
             x = gdl->s3[k] * eb_l[kk] * tab[mask_idx_l[kk]];
+#endif
             t = vbrpsy_mask_add(ecb, x, kk - b);
 #if 0
             ecb += eb_l[kk];
@@ -2894,9 +2955,15 @@ psymodel_init(lame_global_flags const* gfp)
         if (x > 6) {
             x = 100;
         }
+#ifdef TEST_0811
+        if (x < -10) {
+            x = -10;
+        }
+#else
         if (x < -15) {
             x = -15;
         }
+#endif
         x -= 8.;
         gd->l.minval[i] = pow(10.0, x / 10.) * gd->l.numlines[i];
     }
@@ -2951,9 +3018,18 @@ psymodel_init(lame_global_flags const* gfp)
         if (bval[i] < 12) {
             x *= 1 + log(1 - x) * 2.3;
         }
+#ifdef TEST_0811
+        if (x > 6) {
+            x = 100;
+        }
+        if (x < -10) {
+            x = -10;
+        }
+#else
         if (x < -15) {
             x = -15;
         }
+#endif
         x -= 8;
         gd->s.minval[i] = pow(10.0, x / 10) * gd->s.numlines[i];
     }
