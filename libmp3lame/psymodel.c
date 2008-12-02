@@ -2840,6 +2840,8 @@ psymodel_init(lame_global_flags const* gfp)
     FLOAT   bval_width[CBANDS];
     FLOAT   norm[CBANDS];
     FLOAT const sfreq = cfg->samplerate_out;
+    
+    FLOAT   xav = 10, xbv = 12;
 
     if (gfc->cd_psy != 0) {
         return 0;
@@ -2924,7 +2926,21 @@ psymodel_init(lame_global_flags const* gfp)
     i = init_s3_values(&gd->l.s3, gd->l.s3ind, gd->l.npart, bval, bval_width, norm, use_old_s3);
     if (i)
         return i;
-
+#define TEST_0812
+#ifdef TEST_0812
+    {
+        int sum = 0;
+        for (i = 0; i < CBANDS; ++i) {
+            sum += gd->l.numlines[i];
+            if (sum <= 33) {
+                xav = bval[i];
+            }
+            else {
+                break;
+            }
+        }
+    }
+#endif
     /* compute long block specific values, ATH and MINVAL */
     j = 0;
     for (i = 0; i < gd->l.npart; i++) {
@@ -2951,7 +2967,7 @@ psymodel_init(lame_global_flags const* gfp)
            and lead-voice samples, but introduces some 3 kbps bit bloat too.
            TODO: Further refinement of the shape of this hack.
          */
-        x = -20 + bval[i] * 20 / 10;
+        x = 20.0 * (bval[i] / xav - 1.0);
         if (x > 6) {
             x = 100;
         }
@@ -2967,7 +2983,7 @@ psymodel_init(lame_global_flags const* gfp)
         x -= 8.;
         gd->l.minval[i] = pow(10.0, x / 10.) * gd->l.numlines[i];
     }
-
+    
     /************************************************************************
      * do the same things for short blocks
      ************************************************************************/
@@ -2976,6 +2992,20 @@ psymodel_init(lame_global_flags const* gfp)
                        bval, bval_width, gd->s.mld, gd->s.bo_weight,
                        sfreq, BLKSIZE_s, gfc->scalefac_band.s, BLKSIZE_s / (2.0 * 192), SBMAX_s);
     assert(gd->s.npart < CBANDS);
+#ifdef TEST_0812
+    {
+        int sum = 0;
+        for (i = 0; i < CBANDS; ++i) {
+            sum += gd->s.numlines[i];
+            if (sum <= 11) {
+                xbv = bval[i];
+            }
+            else {
+                break;
+            }
+        }
+    }
+#endif
 
     /* SNR formula. short block is normalized by SNR. is it still right ? */
     j = 0;
@@ -3011,11 +3041,11 @@ psymodel_init(lame_global_flags const* gfp)
         /* MINVAL.
            For low freq, the strength of the masking is limited by minval
            this is an ISO MPEG1 thing, dont know if it is really needed */
-        x = (-7.0 + bval[i] * 7.0 / 12.0);
-        if (bval[i] > 12) {
+        x = 7.0 * (bval[i] / xbv - 1.0);
+        if (bval[i] > xbv) {
             x *= 1 + log(1 + x) * 3.1;
         }
-        if (bval[i] < 12) {
+        if (bval[i] < xbv) {
             x *= 1 + log(1 - x) * 2.3;
         }
 #ifdef TEST_0811
@@ -3033,7 +3063,7 @@ psymodel_init(lame_global_flags const* gfp)
         x -= 8;
         gd->s.minval[i] = pow(10.0, x / 10) * gd->s.numlines[i];
     }
-
+    
     i = init_s3_values(&gd->s.s3, gd->s.s3ind, gd->s.npart, bval, bval_width, norm, use_old_s3);
     if (i)
         return i;
