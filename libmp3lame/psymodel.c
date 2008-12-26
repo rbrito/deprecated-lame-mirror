@@ -1706,7 +1706,7 @@ vbrpsy_attack_detection(lame_internal_flags * gfc, const sample_t *const buffer[
                 }
             }
         }
-#define TEST_0811
+/*#define TEST_0811*/
 #ifdef TEST_0811
         {
             FLOAT en_min = en_short[0], en_max = en_short[0];
@@ -2926,7 +2926,7 @@ psymodel_init(lame_global_flags const* gfp)
     i = init_s3_values(&gd->l.s3, gd->l.s3ind, gd->l.npart, bval, bval_width, norm, use_old_s3);
     if (i)
         return i;
-#define TEST_0812
+/*#define TEST_0812*/
 #ifdef TEST_0812
     {
         int sum = 0;
