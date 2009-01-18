@@ -42,7 +42,9 @@ extern "C" {
 #define CDECL
 #endif
 
+
 #define DEPRECATED_OR_OBSOLETE_CODE_REMOVED 1
+
 
 typedef enum vbr_mode_e {
   vbr_off=0,

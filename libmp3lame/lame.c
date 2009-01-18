@@ -2056,7 +2056,12 @@ lame_close(lame_global_flags * gfp)
 /* flush internal mp3 buffers, and free internal buffers         */
 /*****************************************************************/
 #if DEPRECATED_OR_OBSOLETE_CODE_REMOVED
+/* OBSOLETE */
+int CDECL
+lame_encode_finish(lame_global_flags * gfp, unsigned char *mp3buffer, int mp3buffer_size);
 #else
+#endif
+
 int
 lame_encode_finish(lame_global_flags * gfp, unsigned char *mp3buffer, int mp3buffer_size)
 {
@@ -2066,7 +2071,6 @@ lame_encode_finish(lame_global_flags * gfp, unsigned char *mp3buffer, int mp3buf
 
     return ret;
 }
-#endif
 
 /*****************************************************************/
 /* write VBR Xing header, and ID3 version 1 tag, if asked for    */

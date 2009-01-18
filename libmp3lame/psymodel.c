@@ -2826,7 +2826,7 @@ psymodel_init(lame_global_flags * gfp)
         for (k = 0; k < gfc->numlines_l[i]; k++, j++) {
             FLOAT const freq = sfreq * j / (1000.0 * BLKSIZE);
             FLOAT   level;
-            /* freq = Min(.1,freq); *//* ATH below 100 Hz constant, not further climbing */
+            /* freq = Min(.1,freq); */ /* ATH below 100 Hz constant, not further climbing */
             level = ATHformula(freq * 1000, gfp) - 20; /* scale to FFT units; returned value is in dB */
             level = pow(10., 0.1 * level); /* convert from dB -> energy */
             level *= gfc->numlines_l[i];
@@ -2878,7 +2878,7 @@ psymodel_init(lame_global_flags * gfp)
         for (k = 0; k < gfc->numlines_s[i]; k++, j++) {
             FLOAT const freq = sfreq * j / (1000.0 * BLKSIZE_s);
             FLOAT   level;
-            /* freq = Min(.1,freq); *//* ATH below 100 Hz constant, not further climbing */
+            /* freq = Min(.1,freq); */ /* ATH below 100 Hz constant, not further climbing */
             level = ATHformula(freq * 1000, gfp) - 20; /* scale to FFT units; returned value is in dB */
             level = pow(10., 0.1 * level); /* convert from dB -> energy */
             level *= gfc->numlines_s[i];
