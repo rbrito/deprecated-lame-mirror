@@ -63,7 +63,7 @@ typedef struct mpstr_tag {
     int     fsizeold;        /* size of previous frame, -1 for first */
     int     fsizeold_nopadding;
     struct frame fr;         /* holds the parameters decoded from the header */
-    unsigned char bsspace[2][MAXFRAMESIZE + 1024]; /* bit stream space used ???? *//* MAXFRAMESIZE */
+    unsigned char bsspace[2][MAXFRAMESIZE + 1024]; /* bit stream space used ???? */ /* MAXFRAMESIZE */
     real    hybrid_block[2][2][SBLIMIT * SSLIMIT];
     int     hybrid_blc[2];
     unsigned long header;

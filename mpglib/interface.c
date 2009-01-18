@@ -367,7 +367,7 @@ decode_reset(PMPSTR mp)
 #if 0
     remove_buf(mp);
     /* start looking for next frame */
-    // mp->fsizeold = mp->framesize;
+    /* mp->fsizeold = mp->framesize; */
     mp->fsizeold = -1;
     mp->old_free_format = mp->free_format;
     mp->framesize = 0;

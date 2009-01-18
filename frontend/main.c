@@ -233,28 +233,28 @@ lame_decoder(lame_global_flags * gfp, FILE * outf, int skip_start, char *inPath,
             console_printf("raw PCM data");
         mp3input_data.nsamp = lame_get_num_samples(gfp);
         mp3input_data.framesize = 1152;
-        skip_start = 0; /* other formats have no delay *//* is += 0 not better ??? */
+        skip_start = 0; /* other formats have no delay */ /* is += 0 not better ??? */
         break;
     case sf_wave:
         if (silent < 10)
             console_printf("Microsoft WAVE");
         mp3input_data.nsamp = lame_get_num_samples(gfp);
         mp3input_data.framesize = 1152;
-        skip_start = 0; /* other formats have no delay *//* is += 0 not better ??? */
+        skip_start = 0; /* other formats have no delay */ /* is += 0 not better ??? */
         break;
     case sf_aiff:
         if (silent < 10)
             console_printf("SGI/Apple AIFF");
         mp3input_data.nsamp = lame_get_num_samples(gfp);
         mp3input_data.framesize = 1152;
-        skip_start = 0; /* other formats have no delay *//* is += 0 not better ??? */
+        skip_start = 0; /* other formats have no delay */ /* is += 0 not better ??? */
         break;
     default:
         if (silent < 10)
             console_printf("unknown");
         mp3input_data.nsamp = lame_get_num_samples(gfp);
         mp3input_data.framesize = 1152;
-        skip_start = 0; /* other formats have no delay *//* is += 0 not better ??? */
+        skip_start = 0; /* other formats have no delay */ /* is += 0 not better ??? */
         assert(0);
         break;
     }

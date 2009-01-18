@@ -65,16 +65,16 @@ init_xrpow_core_sse(gr_info * const cod_info, FLOAT xrpow[576], int upper, FLOAT
     for (i = 0; i < upper4; i += 4) {
         __m128  vec_tmp;
 
-        vec_tmp = _mm_loadu_ps(&(cod_info->xr[i])); //load
-        vec_tmp = _mm_and_ps(vec_tmp, vec_fabs_mask); //fabs
+        vec_tmp = _mm_loadu_ps(&(cod_info->xr[i])); /* load */
+        vec_tmp = _mm_and_ps(vec_tmp, vec_fabs_mask); /* fabs */
 
         vec_sum._m128 = _mm_add_ps(vec_sum._m128, vec_tmp);
 
         vec_tmp = _mm_sqrt_ps(_mm_mul_ps(vec_tmp, _mm_sqrt_ps(vec_tmp)));
 
-        _mm_storeu_ps(&(xrpow[i]), vec_tmp); //store into xrpow[]
+        _mm_storeu_ps(&(xrpow[i]), vec_tmp); /* store into xrpow[] */
 
-        vec_xrpow_max._m128 = _mm_max_ps(vec_xrpow_max._m128, vec_tmp); //retrieve max
+        vec_xrpow_max._m128 = _mm_max_ps(vec_xrpow_max._m128, vec_tmp); /* retrieve max */
     }
 
     *sum = vec_sum._float[0] + vec_sum._float[1] + vec_sum._float[2] + vec_sum._float[3];

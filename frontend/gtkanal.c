@@ -1107,7 +1107,7 @@ key_press_event(GtkWidget * widget, GdkEventKey * event)
         subblock_draw[2] = 1;
         analyze();
     }
-    /* analyze(); *//* dont redraw entire window for every key! */
+    /* analyze(); */ /* dont redraw entire window for every key! */
     return 0;
 }
 
@@ -1625,7 +1625,7 @@ gtkcontrol(lame_global_flags * gfp2, char *inPath)
     /* make window bigger.   */
     /* now the user will be able to shrink it, if desired */
     /* gtk_widget_set_usize(mbox,500,500);  */
-    /* gtk_widget_show (window); *//* show smallest allowed window */
+    /* gtk_widget_show (window); */ /* show smallest allowed window */
 
 
 
