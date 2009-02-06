@@ -165,7 +165,6 @@
 		</Configuration>
 		<Configuration
 			Name="ReleaseSSE2|Win32"
-			IntermediateDirectory="$(ConfigurationName)"
 			ConfigurationType="1"
 			InheritedPropertySheets=".\vc9_lame_config.vsprops;.\arch_sse2.vsprops"
 			UseOfMFC="0"

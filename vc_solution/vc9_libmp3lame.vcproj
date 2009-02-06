@@ -214,7 +214,6 @@
 		</Configuration>
 		<Configuration
 			Name="ReleaseSSE2|Win32"
-			IntermediateDirectory="$(ConfigurationName)"
 			ConfigurationType="4"
 			InheritedPropertySheets=".\vc9_lame_config.vsprops;.\arch_sse2.vsprops"
 			UseOfMFC="0"
@@ -1207,13 +1206,6 @@
 						Name="NASM"
 					/>
 				</FileConfiguration>
-				<FileConfiguration
-					Name="ReleaseSSE2|Win32"
-					>
-					<Tool
-						Name="NASM"
-					/>
-				</FileConfiguration>
 			</File>
 			<File
 				RelativePath="..\libmp3lame\i386\cpu_feat.nas"
@@ -1229,13 +1221,6 @@
 				<FileConfiguration
 					Name="Debug|Win32"
 					ExcludedFromBuild="true"
-					>
-					<Tool
-						Name="NASM"
-					/>
-				</FileConfiguration>
-				<FileConfiguration
-					Name="ReleaseSSE2|Win32"
 					>
 					<Tool
 						Name="NASM"
@@ -1297,13 +1282,6 @@
 						Name="NASM"
 					/>
 				</FileConfiguration>
-				<FileConfiguration
-					Name="ReleaseSSE2|Win32"
-					>
-					<Tool
-						Name="NASM"
-					/>
-				</FileConfiguration>
 			</File>
 			<File
 				RelativePath="..\libmp3lame\i386\fftfpu.nas"
@@ -1355,13 +1333,6 @@
 				<FileConfiguration
 					Name="Debug|Win32"
 					ExcludedFromBuild="true"
-					>
-					<Tool
-						Name="NASM"
-					/>
-				</FileConfiguration>
-				<FileConfiguration
-					Name="ReleaseSSE2|Win32"
 					>
 					<Tool
 						Name="NASM"

@@ -172,7 +172,6 @@
 		</Configuration>
 		<Configuration
 			Name="Debug|Win32"
-			OutputDirectory="$(SolutionDir)$(ConfigurationName)"
 			ConfigurationType="2"
 			InheritedPropertySheets=".\vc9_lame_config.vsprops;.\arch_x87.vsprops"
 			UseOfMFC="0"
@@ -248,8 +247,6 @@
 		</Configuration>
 		<Configuration
 			Name="ReleaseSSE2|Win32"
-			OutputDirectory="$(SolutionDir)$(ConfigurationName)"
-			IntermediateDirectory="$(ConfigurationName)"
 			ConfigurationType="2"
 			InheritedPropertySheets=".\vc9_lame_config.vsprops;.\arch_sse2.vsprops"
 			UseOfMFC="0"
