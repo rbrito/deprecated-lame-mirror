@@ -1987,7 +1987,7 @@ lame_init_bitstream(lame_global_flags * gfp)
             gfc->ov_rpg.PeakSample = 0.0;
 
             /* Write initial VBR Header to bitstream and init VBR data */
-            if (gfp->write_lame_tag)
+            if (gfc->cfg.write_lame_tag)
                 (void) InitVbrTag(gfp);
 
 
