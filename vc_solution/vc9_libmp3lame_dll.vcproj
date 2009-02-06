@@ -21,7 +21,7 @@
 		<Configuration
 			Name="Release|Win32"
 			ConfigurationType="2"
-			InheritedPropertySheets=".\vc9_lame_config.vsprops"
+			InheritedPropertySheets=".\vc9_lame_config.vsprops;.\arch_x87.vsprops"
 			UseOfMFC="0"
 			ATLMinimizesCRunTimeLibraryUsage="false"
 			>
@@ -97,7 +97,7 @@
 		<Configuration
 			Name="ReleaseNASM|Win32"
 			ConfigurationType="2"
-			InheritedPropertySheets=".\vc9_lame_config.vsprops"
+			InheritedPropertySheets=".\vc9_lame_config.vsprops;.\arch_nasm.vsprops"
 			UseOfMFC="0"
 			ATLMinimizesCRunTimeLibraryUsage="false"
 			>
@@ -128,7 +128,7 @@
 				EnableIntrinsicFunctions="true"
 				FavorSizeOrSpeed="1"
 				AdditionalIncludeDirectories="../libmp3lame,../,../mpglib,../include,.."
-				PreprocessorDefinitions="NDEBUG;_WINDOWS;HAVE_MPGLIB;HAVE_CONFIG_H;HAVE_NASM;MMX_choose_table;WIN32;_CRT_SECURE_NO_DEPRECATE"
+				PreprocessorDefinitions="NDEBUG;_WINDOWS;HAVE_MPGLIB;HAVE_CONFIG_H;WIN32;_CRT_SECURE_NO_DEPRECATE"
 				RuntimeLibrary="2"
 			/>
 			<Tool
@@ -172,8 +172,9 @@
 		</Configuration>
 		<Configuration
 			Name="Debug|Win32"
+			OutputDirectory="$(SolutionDir)$(ConfigurationName)"
 			ConfigurationType="2"
-			InheritedPropertySheets=".\vc9_lame_config.vsprops"
+			InheritedPropertySheets=".\vc9_lame_config.vsprops;.\arch_x87.vsprops"
 			UseOfMFC="0"
 			ATLMinimizesCRunTimeLibraryUsage="false"
 			>
@@ -245,6 +246,84 @@
 				Name="VCPostBuildEventTool"
 			/>
 		</Configuration>
+		<Configuration
+			Name="ReleaseSSE2|Win32"
+			OutputDirectory="$(SolutionDir)$(ConfigurationName)"
+			IntermediateDirectory="$(ConfigurationName)"
+			ConfigurationType="2"
+			InheritedPropertySheets=".\vc9_lame_config.vsprops;.\arch_sse2.vsprops"
+			UseOfMFC="0"
+			ATLMinimizesCRunTimeLibraryUsage="false"
+			>
+			<Tool
+				Name="VCPreBuildEventTool"
+			/>
+			<Tool
+				Name="VCCustomBuildTool"
+			/>
+			<Tool
+				Name="NASM"
+			/>
+			<Tool
+				Name="VCXMLDataGeneratorTool"
+			/>
+			<Tool
+				Name="VCWebServiceProxyGeneratorTool"
+			/>
+			<Tool
+				Name="VCMIDLTool"
+				TypeLibraryName="..\output\Release/libmp3lame_dll.tlb"
+				HeaderFileName=""
+			/>
+			<Tool
+				Name="VCCLCompilerTool"
+				Optimization="3"
+				InlineFunctionExpansion="2"
+				EnableIntrinsicFunctions="true"
+				FavorSizeOrSpeed="1"
+				AdditionalIncludeDirectories="../libmp3lame,../,../mpglib,../include,.."
+				PreprocessorDefinitions="NDEBUG;_WINDOWS;HAVE_MPGLIB;WIN32;HAVE_CONFIG_H"
+				RuntimeLibrary="2"
+			/>
+			<Tool
+				Name="VCManagedResourceCompilerTool"
+			/>
+			<Tool
+				Name="VCResourceCompilerTool"
+				PreprocessorDefinitions="_VC80_UPGRADE=0x0600;_DLL=$(TargetFileName)"
+				Culture="1033"
+			/>
+			<Tool
+				Name="VCPreLinkEventTool"
+			/>
+			<Tool
+				Name="VCLinkerTool"
+				OutputFile="$(OutDir)/libmp3lame.dll"
+				ModuleDefinitionFile="..\include\lame.def"
+				ImportLibrary="$(OutDir)/libmp3lame.lib"
+			/>
+			<Tool
+				Name="VCALinkTool"
+			/>
+			<Tool
+				Name="VCManifestTool"
+			/>
+			<Tool
+				Name="VCXDCMakeTool"
+			/>
+			<Tool
+				Name="VCBscMakeTool"
+			/>
+			<Tool
+				Name="VCFxCopTool"
+			/>
+			<Tool
+				Name="VCAppVerifierTool"
+			/>
+			<Tool
+				Name="VCPostBuildEventTool"
+			/>
+		</Configuration>
 	</Configurations>
 	<References>
 	</References>
@@ -282,6 +361,14 @@
 						AdditionalIncludeDirectories=""
 					/>
 				</FileConfiguration>
+				<FileConfiguration
+					Name="ReleaseSSE2|Win32"
+					>
+					<Tool
+						Name="VCCLCompilerTool"
+						AdditionalIncludeDirectories=""
+					/>
+				</FileConfiguration>
 			</File>
 			<File
 				RelativePath="..\libmp3lame\encoder.c"
@@ -306,6 +393,14 @@
 				</FileConfiguration>
 				<FileConfiguration
 					Name="Debug|Win32"
+					>
+					<Tool
+						Name="VCCLCompilerTool"
+						AdditionalIncludeDirectories=""
+					/>
+				</FileConfiguration>
+				<FileConfiguration
+					Name="ReleaseSSE2|Win32"
 					>
 					<Tool
 						Name="VCCLCompilerTool"
@@ -342,6 +437,14 @@
 						AdditionalIncludeDirectories=""
 					/>
 				</FileConfiguration>
+				<FileConfiguration
+					Name="ReleaseSSE2|Win32"
+					>
+					<Tool
+						Name="VCCLCompilerTool"
+						AdditionalIncludeDirectories=""
+					/>
+				</FileConfiguration>
 			</File>
 			<File
 				RelativePath="..\libmp3lame\gain_analysis.c"
@@ -366,6 +469,14 @@
 				</FileConfiguration>
 				<FileConfiguration
 					Name="Debug|Win32"
+					>
+					<Tool
+						Name="VCCLCompilerTool"
+						AdditionalIncludeDirectories=""
+					/>
+				</FileConfiguration>
+				<FileConfiguration
+					Name="ReleaseSSE2|Win32"
 					>
 					<Tool
 						Name="VCCLCompilerTool"
@@ -402,6 +513,14 @@
 						AdditionalIncludeDirectories=""
 					/>
 				</FileConfiguration>
+				<FileConfiguration
+					Name="ReleaseSSE2|Win32"
+					>
+					<Tool
+						Name="VCCLCompilerTool"
+						AdditionalIncludeDirectories=""
+					/>
+				</FileConfiguration>
 			</File>
 			<File
 				RelativePath="..\libmp3lame\lame.c"
@@ -426,6 +545,14 @@
 				</FileConfiguration>
 				<FileConfiguration
 					Name="Debug|Win32"
+					>
+					<Tool
+						Name="VCCLCompilerTool"
+						AdditionalIncludeDirectories=""
+					/>
+				</FileConfiguration>
+				<FileConfiguration
+					Name="ReleaseSSE2|Win32"
 					>
 					<Tool
 						Name="VCCLCompilerTool"
@@ -462,6 +589,14 @@
 						AdditionalIncludeDirectories=""
 					/>
 				</FileConfiguration>
+				<FileConfiguration
+					Name="ReleaseSSE2|Win32"
+					>
+					<Tool
+						Name="VCCLCompilerTool"
+						AdditionalIncludeDirectories=""
+					/>
+				</FileConfiguration>
 			</File>
 			<File
 				RelativePath="..\libmp3lame\newmdct.c"
@@ -486,6 +621,14 @@
 				</FileConfiguration>
 				<FileConfiguration
 					Name="Debug|Win32"
+					>
+					<Tool
+						Name="VCCLCompilerTool"
+						AdditionalIncludeDirectories=""
+					/>
+				</FileConfiguration>
+				<FileConfiguration
+					Name="ReleaseSSE2|Win32"
 					>
 					<Tool
 						Name="VCCLCompilerTool"
@@ -522,6 +665,14 @@
 						AdditionalIncludeDirectories=""
 					/>
 				</FileConfiguration>
+				<FileConfiguration
+					Name="ReleaseSSE2|Win32"
+					>
+					<Tool
+						Name="VCCLCompilerTool"
+						AdditionalIncludeDirectories=""
+					/>
+				</FileConfiguration>
 			</File>
 			<File
 				RelativePath="..\libmp3lame\psymodel.c"
@@ -546,6 +697,14 @@
 				</FileConfiguration>
 				<FileConfiguration
 					Name="Debug|Win32"
+					>
+					<Tool
+						Name="VCCLCompilerTool"
+						AdditionalIncludeDirectories=""
+					/>
+				</FileConfiguration>
+				<FileConfiguration
+					Name="ReleaseSSE2|Win32"
 					>
 					<Tool
 						Name="VCCLCompilerTool"
@@ -582,6 +741,14 @@
 						AdditionalIncludeDirectories=""
 					/>
 				</FileConfiguration>
+				<FileConfiguration
+					Name="ReleaseSSE2|Win32"
+					>
+					<Tool
+						Name="VCCLCompilerTool"
+						AdditionalIncludeDirectories=""
+					/>
+				</FileConfiguration>
 			</File>
 			<File
 				RelativePath="..\libmp3lame\quantize_pvt.c"
@@ -606,6 +773,14 @@
 				</FileConfiguration>
 				<FileConfiguration
 					Name="Debug|Win32"
+					>
+					<Tool
+						Name="VCCLCompilerTool"
+						AdditionalIncludeDirectories=""
+					/>
+				</FileConfiguration>
+				<FileConfiguration
+					Name="ReleaseSSE2|Win32"
 					>
 					<Tool
 						Name="VCCLCompilerTool"
@@ -642,6 +817,14 @@
 						AdditionalIncludeDirectories=""
 					/>
 				</FileConfiguration>
+				<FileConfiguration
+					Name="ReleaseSSE2|Win32"
+					>
+					<Tool
+						Name="VCCLCompilerTool"
+						AdditionalIncludeDirectories=""
+					/>
+				</FileConfiguration>
 			</File>
 			<File
 				RelativePath="..\libmp3lame\set_get.c"
@@ -666,6 +849,14 @@
 				</FileConfiguration>
 				<FileConfiguration
 					Name="Debug|Win32"
+					>
+					<Tool
+						Name="VCCLCompilerTool"
+						AdditionalIncludeDirectories=""
+					/>
+				</FileConfiguration>
+				<FileConfiguration
+					Name="ReleaseSSE2|Win32"
 					>
 					<Tool
 						Name="VCCLCompilerTool"
@@ -702,6 +893,14 @@
 						AdditionalIncludeDirectories=""
 					/>
 				</FileConfiguration>
+				<FileConfiguration
+					Name="ReleaseSSE2|Win32"
+					>
+					<Tool
+						Name="VCCLCompilerTool"
+						AdditionalIncludeDirectories=""
+					/>
+				</FileConfiguration>
 			</File>
 			<File
 				RelativePath="..\libmp3lame\takehiro.c"
@@ -726,6 +925,14 @@
 				</FileConfiguration>
 				<FileConfiguration
 					Name="Debug|Win32"
+					>
+					<Tool
+						Name="VCCLCompilerTool"
+						AdditionalIncludeDirectories=""
+					/>
+				</FileConfiguration>
+				<FileConfiguration
+					Name="ReleaseSSE2|Win32"
 					>
 					<Tool
 						Name="VCCLCompilerTool"
@@ -762,6 +969,14 @@
 						AdditionalIncludeDirectories=""
 					/>
 				</FileConfiguration>
+				<FileConfiguration
+					Name="ReleaseSSE2|Win32"
+					>
+					<Tool
+						Name="VCCLCompilerTool"
+						AdditionalIncludeDirectories=""
+					/>
+				</FileConfiguration>
 			</File>
 			<File
 				RelativePath="..\libmp3lame\vbrquantize.c"
@@ -786,6 +1001,14 @@
 				</FileConfiguration>
 				<FileConfiguration
 					Name="Debug|Win32"
+					>
+					<Tool
+						Name="VCCLCompilerTool"
+						AdditionalIncludeDirectories=""
+					/>
+				</FileConfiguration>
+				<FileConfiguration
+					Name="ReleaseSSE2|Win32"
 					>
 					<Tool
 						Name="VCCLCompilerTool"
@@ -822,6 +1045,14 @@
 						AdditionalIncludeDirectories=""
 					/>
 				</FileConfiguration>
+				<FileConfiguration
+					Name="ReleaseSSE2|Win32"
+					>
+					<Tool
+						Name="VCCLCompilerTool"
+						AdditionalIncludeDirectories=""
+					/>
+				</FileConfiguration>
 			</File>
 			<File
 				RelativePath="..\libmp3lame\version.c"
@@ -852,6 +1083,14 @@
 						AdditionalIncludeDirectories=""
 					/>
 				</FileConfiguration>
+				<FileConfiguration
+					Name="ReleaseSSE2|Win32"
+					>
+					<Tool
+						Name="VCCLCompilerTool"
+						AdditionalIncludeDirectories=""
+					/>
+				</FileConfiguration>
 			</File>
 			<File
 				RelativePath="..\libmp3lame\.\vector\xmm_quantize_sub.c"
@@ -874,6 +1113,14 @@
 				</FileConfiguration>
 				<FileConfiguration
 					Name="Debug|Win32"
+					>
+					<Tool
+						Name="VCCLCompilerTool"
+						AdditionalIncludeDirectories="../libmp3lame"
+					/>
+				</FileConfiguration>
+				<FileConfiguration
+					Name="ReleaseSSE2|Win32"
 					>
 					<Tool
 						Name="VCCLCompilerTool"
@@ -1221,6 +1468,14 @@
 						Name="NASM"
 					/>
 				</FileConfiguration>
+				<FileConfiguration
+					Name="ReleaseSSE2|Win32"
+					ExcludedFromBuild="true"
+					>
+					<Tool
+						Name="NASM"
+					/>
+				</FileConfiguration>
 			</File>
 			<File
 				RelativePath="..\libmp3lame\i386\fft3dn.nas"
@@ -1263,6 +1518,14 @@
 				</FileConfiguration>
 				<FileConfiguration
 					Name="Debug|Win32"
+					ExcludedFromBuild="true"
+					>
+					<Tool
+						Name="NASM"
+					/>
+				</FileConfiguration>
+				<FileConfiguration
+					Name="ReleaseSSE2|Win32"
 					ExcludedFromBuild="true"
 					>
 					<Tool
@@ -1317,6 +1580,14 @@
 						Name="NASM"
 					/>
 				</FileConfiguration>
+				<FileConfiguration
+					Name="ReleaseSSE2|Win32"
+					ExcludedFromBuild="true"
+					>
+					<Tool
+						Name="NASM"
+					/>
+				</FileConfiguration>
 			</File>
 			<File
 				RelativePath="..\libmp3lame\i386\scalar.nas"
@@ -1339,6 +1610,14 @@
 				</FileConfiguration>
 				<FileConfiguration
 					Name="Debug|Win32"
+					ExcludedFromBuild="true"
+					>
+					<Tool
+						Name="NASM"
+					/>
+				</FileConfiguration>
+				<FileConfiguration
+					Name="ReleaseSSE2|Win32"
 					ExcludedFromBuild="true"
 					>
 					<Tool
@@ -1380,6 +1659,14 @@
 						AdditionalIncludeDirectories=""
 					/>
 				</FileConfiguration>
+				<FileConfiguration
+					Name="ReleaseSSE2|Win32"
+					>
+					<Tool
+						Name="VCCLCompilerTool"
+						AdditionalIncludeDirectories=""
+					/>
+				</FileConfiguration>
 			</File>
 			<File
 				RelativePath="..\libmp3lame\..\mpglib\dct64_i386.c"
@@ -1404,6 +1691,14 @@
 				</FileConfiguration>
 				<FileConfiguration
 					Name="Debug|Win32"
+					>
+					<Tool
+						Name="VCCLCompilerTool"
+						AdditionalIncludeDirectories=""
+					/>
+				</FileConfiguration>
+				<FileConfiguration
+					Name="ReleaseSSE2|Win32"
 					>
 					<Tool
 						Name="VCCLCompilerTool"
@@ -1440,6 +1735,14 @@
 						AdditionalIncludeDirectories=""
 					/>
 				</FileConfiguration>
+				<FileConfiguration
+					Name="ReleaseSSE2|Win32"
+					>
+					<Tool
+						Name="VCCLCompilerTool"
+						AdditionalIncludeDirectories=""
+					/>
+				</FileConfiguration>
 			</File>
 			<File
 				RelativePath="..\libmp3lame\..\mpglib\interface.c"
@@ -1464,6 +1767,14 @@
 				</FileConfiguration>
 				<FileConfiguration
 					Name="Debug|Win32"
+					>
+					<Tool
+						Name="VCCLCompilerTool"
+						AdditionalIncludeDirectories=""
+					/>
+				</FileConfiguration>
+				<FileConfiguration
+					Name="ReleaseSSE2|Win32"
 					>
 					<Tool
 						Name="VCCLCompilerTool"
@@ -1500,6 +1811,14 @@
 						AdditionalIncludeDirectories=""
 					/>
 				</FileConfiguration>
+				<FileConfiguration
+					Name="ReleaseSSE2|Win32"
+					>
+					<Tool
+						Name="VCCLCompilerTool"
+						AdditionalIncludeDirectories=""
+					/>
+				</FileConfiguration>
 			</File>
 			<File
 				RelativePath="..\libmp3lame\..\mpglib\layer2.c"
@@ -1524,6 +1843,14 @@
 				</FileConfiguration>
 				<FileConfiguration
 					Name="Debug|Win32"
+					>
+					<Tool
+						Name="VCCLCompilerTool"
+						AdditionalIncludeDirectories=""
+					/>
+				</FileConfiguration>
+				<FileConfiguration
+					Name="ReleaseSSE2|Win32"
 					>
 					<Tool
 						Name="VCCLCompilerTool"
@@ -1560,6 +1887,14 @@
 						AdditionalIncludeDirectories=""
 					/>
 				</FileConfiguration>
+				<FileConfiguration
+					Name="ReleaseSSE2|Win32"
+					>
+					<Tool
+						Name="VCCLCompilerTool"
+						AdditionalIncludeDirectories=""
+					/>
+				</FileConfiguration>
 			</File>
 			<File
 				RelativePath="..\libmp3lame\..\mpglib\tabinit.c"
@@ -1584,6 +1919,14 @@
 				</FileConfiguration>
 				<FileConfiguration
 					Name="Debug|Win32"
+					>
+					<Tool
+						Name="VCCLCompilerTool"
+						AdditionalIncludeDirectories=""
+					/>
+				</FileConfiguration>
+				<FileConfiguration
+					Name="ReleaseSSE2|Win32"
 					>
 					<Tool
 						Name="VCCLCompilerTool"
@@ -1760,6 +2103,16 @@
 					Outputs="..\config.h"
 				/>
 			</FileConfiguration>
+			<FileConfiguration
+				Name="ReleaseSSE2|Win32"
+				>
+				<Tool
+					Name="VCCustomBuildTool"
+					Description="Performing Custom Build Step on $(InputName)"
+					CommandLine="copy ..\configMS.h ..\config.h&#x0D;&#x0A;"
+					Outputs="..\config.h"
+				/>
+			</FileConfiguration>
 		</File>
 		<File
 			RelativePath="..\libmp3lame\..\include\lame.def"
@@ -1782,6 +2135,14 @@
 			</FileConfiguration>
 			<FileConfiguration
 				Name="Debug|Win32"
+				ExcludedFromBuild="true"
+				>
+				<Tool
+					Name="VCCustomBuildTool"
+				/>
+			</FileConfiguration>
+			<FileConfiguration
+				Name="ReleaseSSE2|Win32"
 				ExcludedFromBuild="true"
 				>
 				<Tool
