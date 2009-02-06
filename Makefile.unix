@@ -59,15 +59,14 @@ CPP_OPTS += -DHAVE_CONFIG_H -I.
 CPP_OPTS += -DHAVE_MPGLIB
 
 ##########################################################################
-# -DUSE_LAYER_1/2 enables Layer1 or Layer2 *decoding* abilities
-##########################################################################
-CPP_OPTS += -DUSE_LAYER_1 -DUSE_LAYER_2
-
-##########################################################################
 # -DTAKEHIRO_IEEE754_HACK enables Takehiro's IEEE hack
 ##########################################################################
 ifeq ($(iARCH),x86)
+ ifeq ($(CFG),RH_SSE)
+# SSE and IEEE754 HACK don't work together
+ else
 	CPP_OPTS += -DTAKEHIRO_IEEE754_HACK
+ endif
 endif
 
 ##########################################################################
@@ -155,7 +154,7 @@ ifeq ($(UNAME),Linux)
 ifeq ($(CFG),RH)
    GTK = -DHAVE_GTK `gtk-config --cflags`
    GTKLIBS = `gtk-config --libs`
-  CPP_OPTS += -DFLOAT8=float -DREAL_IS_FLOAT=1 -DHAVE_ICONV -DHAVE_XMMINTRIN_H -D_ALLOW_INTERNAL_OPTIONS
+   CPP_OPTS += -DFLOAT8=float -DREAL_IS_FLOAT=1 -DHAVE_ICONV -DHAVE_XMMINTRIN_H -D_ALLOW_INTERNAL_OPTIONS
 # these options for gcc-3.2 & AthlonXP
    CC_OPTS = \
 	-pipe -O3 \
@@ -164,6 +163,27 @@ ifeq ($(CFG),RH)
 	-march=athlon-xp \
 	-malign-double \
 	-maccumulate-outgoing-args
+#	-Wconversion -Wunreachable-code \
+
+   HAVE_NEWER_GLIBC = YES
+   HAVE_NASM = YES
+endif
+
+ifeq ($(CFG),RH_SSE)
+   GTK = -DHAVE_GTK `gtk-config --cflags`
+   GTKLIBS = `gtk-config --libs`
+   CPP_OPTS += -DFLOAT8=float -DREAL_IS_FLOAT=1 -DHAVE_ICONV -DHAVE_XMMINTRIN_H -D_ALLOW_INTERNAL_OPTIONS
+# these options for gcc-3.2 & AthlonXP
+   CC_OPTS = \
+	-std=c89 -pipe -O3 -fstrict-aliasing -ftree-vectorizer-verbose=10 \
+	-Wall -W -Wmissing-declarations -Wfloat-equal \
+	-Wcast-qual -Wcast-align -Wdisabled-optimization -Wshadow \
+	-Wunsafe-loop-optimizations -funsafe-loop-optimizations \
+	-march=k8 \
+	-ffast-math -funsafe-math-optimizations -mfpmath=sse -msse -msse2  \
+	-malign-double \
+	-maccumulate-outgoing-args
+#	-fsingle-precision-constant \
 #	-Wconversion -Wunreachable-code \
 
    HAVE_NEWER_GLIBC = YES
