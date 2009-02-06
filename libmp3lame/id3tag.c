@@ -48,13 +48,7 @@
 char   *strchr(), *strrchr();
 # ifndef HAVE_MEMCPY
 #  define memcpy(d, s, n) bcopy ((s), (d), (n))
-#  define memmove(d, s, n) bcopy ((s), (d), (n))
 # endif
-#endif
-
-
-#ifdef _MSC_VER
-#define snprintf _snprintf
 #endif
 
 
@@ -66,6 +60,7 @@ char   *strchr(), *strrchr();
 #include "util.h"
 #include "bitstream.h"
 
+extern char* strdup( char const* );
 
 static const char *const genre_names[] = {
     /*
@@ -164,6 +159,7 @@ test_tag_spec_flags(lame_internal_flags const *gfc, unsigned int tst)
     return (gfc->tag_spec.flags & tst) != 0u ? 1 : 0;
 }
 
+#if 0
 static void
 debug_tag_spec_flags(lame_internal_flags * gfc, const char* info)
 {
@@ -175,6 +171,7 @@ debug_tag_spec_flags(lame_internal_flags * gfc, const char* info)
     MSGF(gfc, "SPACE_V1_FLAG : %d\n", test_tag_spec_flags(gfc, SPACE_V1_FLAG)); 
     MSGF(gfc, "PAD_V2_FLAG   : %d\n", test_tag_spec_flags(gfc, PAD_V2_FLAG  )); 
 }
+#endif
 
 
 
@@ -234,7 +231,7 @@ id3v2AddAudioDuration(lame_internal_flags * gfc, double ms)
     else {
         playlength_ms = ms;
     }
-    snprintf(buffer, sizeof(buffer), "%lu", playlength_ms);
+    sprintf(buffer, "%lu", playlength_ms);
     copyV1ToV2(gfc, ID_PLAYLENGTH, buffer);
 }
 
@@ -1436,7 +1433,7 @@ lame_get_id3v1_tag(lame_global_flags * gfp, unsigned char *buffer, size_t size)
         p = set_text_field(p, gfc->tag_spec.title, 30, pad);
         p = set_text_field(p, gfc->tag_spec.artist, 30, pad);
         p = set_text_field(p, gfc->tag_spec.album, 30, pad);
-        snprintf(year, sizeof(year), "%d", gfc->tag_spec.year);
+        sprintf(year, "%d", gfc->tag_spec.year);
         p = set_text_field(p, gfc->tag_spec.year ? year : NULL, 4, pad);
         /* limit comment field to 28 bytes if a track is specified */
         p = set_text_field(p, gfc->tag_spec.comment, gfc->tag_spec.track_id3v1 ? 28 : 30, pad);
