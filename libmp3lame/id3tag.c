@@ -60,7 +60,9 @@ char   *strchr(), *strrchr();
 #include "util.h"
 #include "bitstream.h"
 
+#if _MSC_VER == 0
 extern char* strdup( char const* );
+#endif
 
 static const char *const genre_names[] = {
     /*
