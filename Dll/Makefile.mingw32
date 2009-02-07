@@ -13,8 +13,8 @@ DLL_NAME = lame_enc
 LAME_SRC_ROOT = ..
 OFILES = BladeMP3EncDLL.o $(DLL_NAME)_exp.o
 CFLAGS = -I$(LAME_SRC_ROOT)/include -I$(LAME_SRC_ROOT)/libmp3lame
-CC = gcc
-LD = gcc
+CC = g++
+LD = g++
 LFLAGS = -L$(LAME_SRC_ROOT)/libmp3lame -o $(DLL_NAME).dll -mdll -s
 LIBS = -lmp3lame
 
@@ -33,7 +33,7 @@ $(DLL_NAME)_exp.o : BladeMP3EncDLL.o
 	$(CC) $(CFLAGS) -c $< -o $@
 
 example.exe : Example.cpp BladeMP3EncDLL.h
-	gcc Example.cpp -o example.exe
+	$(CC) Example.cpp -o example.exe
 
 clean :
 	rm -f $(DLL_NAME).dll $(OFILES) example.exe
