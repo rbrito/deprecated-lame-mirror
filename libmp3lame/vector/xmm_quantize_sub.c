@@ -50,6 +50,8 @@ static const FLOAT costab[TRI_SIZE * 2] = {
     9.999811752826011e-01, 6.135884649154475e-03
 };
 
+
+
 void
 init_xrpow_core_sse(gr_info * const cod_info, FLOAT xrpow[576], int upper, FLOAT * sum)
 {
@@ -111,6 +113,16 @@ init_xrpow_core_sse(gr_info * const cod_info, FLOAT xrpow[576], int upper, FLOAT
 }
 
 
+static void store4(__m128 v, float* f0, float* f1, float* f2, float* f3)
+{
+    vecfloat_union r;
+    r._m128 = v;
+    *f0 = r._float[0];
+    *f1 = r._float[1];
+    *f2 = r._float[2];
+    *f3 = r._float[3];
+}
+
 
 void
 fht_SSE2(FLOAT * fz, int n)
@@ -165,7 +177,7 @@ fht_SSE2(FLOAT * fz, int n)
             do {
                 __m128 p, q, t;
 
-                q = _mm_set_ps(gi[k3], gi[k1], fi[k3], fi[k1]); /* Q := {fi_k1,fi_k3,gi_k1,gi_k3}*/
+                q = _mm_setr_ps(fi[k1], fi[k3], gi[k1], gi[k3]); /* Q := {fi_k1,fi_k3,gi_k1,gi_k3}*/
                 p = _mm_mul_ps(_mm_set_ps1(s2), q);             /* Q := s2 * Q */
                 q = _mm_mul_ps(_mm_set_ps1(c2), q);             /* P := c2 * Q */
                 q = _mm_shuffle_ps(q, q, _MM_SHUFFLE(1,0,3,2)); /* Q := {c2*gi_k1,c2*gi_k3,c2*fi_k1,c2*fi_k3} */
@@ -192,22 +204,8 @@ fht_SSE2(FLOAT * fz, int n)
                 }
                 q = _mm_shuffle_ps(q, q, _MM_SHUFFLE(0,1,2,3));
                 q = _mm_add_ps(q, t);
-                {
-                    vecfloat_union r;
-                    r._m128 = _mm_sub_ps(p, q);
-                    gi[k3] = r._float[0];
-                    gi[k2] = r._float[1];
-                    fi[k3] = r._float[2];
-                    fi[k2] = r._float[3];
-                }
-                {
-                    vecfloat_union s;
-                    s._m128 = _mm_add_ps(p, q);
-                    gi[k1] = s._float[0];
-                    gi[0] = s._float[1];
-                    fi[k1] = s._float[2];
-                    fi[0] = s._float[3];
-                }
+                store4(_mm_sub_ps(p, q), &gi[k3], &gi[k2], &fi[k3], &fi[k2]);
+                store4(_mm_add_ps(p, q), &gi[k1], &gi[0], &fi[k1], &fi[0]);
                 gi += k4;
                 fi += k4;
             } while (fi < fn);

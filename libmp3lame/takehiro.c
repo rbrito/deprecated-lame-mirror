@@ -489,12 +489,13 @@ count_bit_ESC(const int *ix, const int *const end, int t1, const int t2, unsigne
 }
 
 
-inline static int
-count_bit_noESC(const int *ix, const int *const end, unsigned int *const s)
+static int
+count_bit_noESC(const int *ix, const int *end, int mx, unsigned int *s)
 {
     /* No ESC-words */
     unsigned int sum1 = 0;
     const uint8_t *const hlen1 = ht[1].hlen;
+    (void) mx;
 
     for (; ix < end; ix += 2) {
         unsigned int const x = ix[0] * 2 + ix[1];
@@ -506,10 +507,15 @@ count_bit_noESC(const int *ix, const int *const end, unsigned int *const s)
 }
 
 
+static const int huf_tbl_noESC[] = {
+    1, 2, 5, 7, 7, 10, 10, 13, 13, 13, 13, 13, 13, 13, 13
+};
 
-inline static int
-count_bit_noESC_from2(const int *ix, const int *const end, int t1, unsigned int *const s)
+
+static int
+count_bit_noESC_from2(const int *ix, const int *end, int max, unsigned int *s)
 {
+    int t1 = huf_tbl_noESC[max - 1];
     /* No ESC-words */
     unsigned int sum = 0, sum2;
     const unsigned int xlen = ht[t1].xlen;
@@ -540,8 +546,9 @@ count_bit_noESC_from2(const int *ix, const int *const end, int t1, unsigned int 
 
 
 inline static int
-count_bit_noESC_from3(const int *ix, const int *const end, int t1, unsigned int *const s)
+count_bit_noESC_from3(const int *ix, const int *end, int max, unsigned int * s)
 {
+    int t1 = huf_tbl_noESC[max - 1];
     /* No ESC-words */
     unsigned int sum1 = 0;
     unsigned int sum2 = 0;
@@ -570,7 +577,7 @@ count_bit_noESC_from3(const int *ix, const int *const end, int t1, unsigned int 
     }
     *s += sum1;
 
-    return t;
+    return t;  
 }
 
 
@@ -586,6 +593,31 @@ count_bit_noESC_from3(const int *ix, const int *const end, int t1, unsigned int 
   of the Huffman tables as defined in the IS (Table B.7), and will not work
   with any arbitrary tables.
 */
+static int count_bit_null(const int* ix, const int* end, int max, unsigned int* s)
+{
+  return 0;
+}
+
+typedef int (*count_fnc)(const int* ix, const int* end, int max, unsigned int* s);
+  
+static count_fnc count_fncs[] = 
+{ &count_bit_null
+, &count_bit_noESC
+, &count_bit_noESC_from2
+, &count_bit_noESC_from2
+, &count_bit_noESC_from3
+, &count_bit_noESC_from3
+, &count_bit_noESC_from3
+, &count_bit_noESC_from3
+, &count_bit_noESC_from3
+, &count_bit_noESC_from3
+, &count_bit_noESC_from3
+, &count_bit_noESC_from3
+, &count_bit_noESC_from3
+, &count_bit_noESC_from3
+, &count_bit_noESC_from3
+, &count_bit_noESC_from3
+};
 
 static int
 choose_table_nonMMX(const int *ix, const int *const end, int *const _s)
@@ -593,57 +625,29 @@ choose_table_nonMMX(const int *ix, const int *const end, int *const _s)
     unsigned int* s = (unsigned int*)_s;
     unsigned int  max;
     int     choice, choice2;
-    static const int huf_tbl_noESC[] = {
-        1, 2, 5, 7, 7, 10, 10, 13, 13, 13, 13, 13, 13, 13, 13
-    };
-
     max = ix_max(ix, end);
 
-    switch (max) {
-    case 0:
-        return 0;
-
-    case 1:
-        return count_bit_noESC(ix, end, s);
-
-    case 2:
-    case 3:
-        return count_bit_noESC_from2(ix, end, huf_tbl_noESC[max - 1], s);
-
-    case 4:
-    case 5:
-    case 6:
-    case 7:
-    case 8:
-    case 9:
-    case 10:
-    case 11:
-    case 12:
-    case 13:
-    case 14:
-    case 15:
-        return count_bit_noESC_from3(ix, end, huf_tbl_noESC[max - 1], s);
-
-    default:
-        /* try tables with linbits */
-        if (max > IXMAX_VAL) {
-            *s = LARGE_BITS;
-            return -1;
-        }
-        max -= 15u;
-        for (choice2 = 24; choice2 < 32; choice2++) {
-            if (ht[choice2].linmax >= max) {
-                break;
-            }
-        }
-
-        for (choice = choice2 - 8; choice < 24; choice++) {
-            if (ht[choice].linmax >= max) {
-                break;
-            }
-        }
-        return count_bit_ESC(ix, end, choice, choice2, s);
+    if (max <= 15) {
+      return count_fncs[max](ix, end, max, s);
     }
+    /* try tables with linbits */
+    if (max > IXMAX_VAL) {
+        *s = LARGE_BITS;
+        return -1;
+    }
+    max -= 15u;
+    for (choice2 = 24; choice2 < 32; choice2++) {
+        if (ht[choice2].linmax >= max) {
+            break;
+        }
+    }
+
+    for (choice = choice2 - 8; choice < 24; choice++) {
+        if (ht[choice].linmax >= max) {
+            break;
+        }
+    }
+    return count_bit_ESC(ix, end, choice, choice2, s);
 }
 
 
