@@ -42,6 +42,13 @@ typedef union {
     __m128  _m128;
 } vecfloat_union;
 
+#define TRI_SIZE (5-1)  /* 1024 =  4**5 */
+static const FLOAT costab[TRI_SIZE * 2] = {
+    9.238795325112867e-01, 3.826834323650898e-01,
+    9.951847266721969e-01, 9.801714032956060e-02,
+    9.996988186962042e-01, 2.454122852291229e-02,
+    9.999811752826011e-01, 6.135884649154475e-03
+};
 
 void
 init_xrpow_core_sse(gr_info * const cod_info, FLOAT xrpow[576], int upper, FLOAT * sum)
@@ -101,6 +108,115 @@ init_xrpow_core_sse(gr_info * const cod_info, FLOAT xrpow[576], int upper, FLOAT
     }
     cod_info->xrpow_max = tmp_max;
     *sum = tmp_sum;
+}
+
+
+
+void
+fht_SSE2(FLOAT * fz, int n)
+{
+    const FLOAT *tri = costab;
+    int     k4;
+    FLOAT  *fi, *gi;
+    FLOAT const *fn;
+
+    n <<= 1;            /* to get BLKSIZE, because of 3DNow! ASM routine */
+    fn = fz + n;
+    k4 = 4;
+    do {
+        FLOAT   s1, c1;
+        int     i, k1, k2, k3, kx;
+        kx = k4 >> 1;
+        k1 = k4;
+        k2 = k4 << 1;
+        k3 = k2 + k1;
+        k4 = k2 << 1;
+        fi = fz;
+        gi = fi + kx;
+        do {
+            FLOAT   f0, f1, f2, f3;
+            f1 = fi[0] - fi[k1];
+            f0 = fi[0] + fi[k1];
+            f3 = fi[k2] - fi[k3];
+            f2 = fi[k2] + fi[k3];
+            fi[k2] = f0 - f2;
+            fi[0] = f0 + f2;
+            fi[k3] = f1 - f3;
+            fi[k1] = f1 + f3;
+            f1 = gi[0] - gi[k1];
+            f0 = gi[0] + gi[k1];
+            f3 = SQRT2 * gi[k3];
+            f2 = SQRT2 * gi[k2];
+            gi[k2] = f0 - f2;
+            gi[0] = f0 + f2;
+            gi[k3] = f1 - f3;
+            gi[k1] = f1 + f3;
+            gi += k4;
+            fi += k4;
+        } while (fi < fn);
+        c1 = tri[0];
+        s1 = tri[1];
+        for (i = 1; i < kx; i++) {
+            FLOAT   c2, s2, s1_2 = s1+s1;
+            c2 = 1 - s1_2 * s1;
+            s2 = s1_2 * c1;
+            fi = fz + i;
+            gi = fz + k1 - i;
+            do {
+                __m128 p, q, t;
+
+                q = _mm_set_ps(gi[k3], gi[k1], fi[k3], fi[k1]); /* Q := {fi_k1,fi_k3,gi_k1,gi_k3}*/
+                p = _mm_mul_ps(_mm_set_ps1(s2), q);             /* Q := s2 * Q */
+                q = _mm_mul_ps(_mm_set_ps1(c2), q);             /* P := c2 * Q */
+                q = _mm_shuffle_ps(q, q, _MM_SHUFFLE(1,0,3,2)); /* Q := {c2*gi_k1,c2*gi_k3,c2*fi_k1,c2*fi_k3} */
+                {
+                    static const vecfloat_union sign_mask = {{0x80000000,0x80000000,0,0}};
+                    q = _mm_xor_ps(sign_mask._m128, q);         /* Q := {-c2*gi_k1,-c2*gi_k3,c2*fi_k1,c2*fi_k3} */
+                }
+                p = _mm_add_ps(p, q);
+                t = _mm_set_ps(fi[k2],fi[0],gi[k2],gi[0]);
+                q = _mm_sub_ps(t, p);
+                t = _mm_add_ps(t, p);
+                p = _mm_shuffle_ps(q, t, _MM_SHUFFLE(2,0,2,0));
+                p = _mm_shuffle_ps(p, p, _MM_SHUFFLE(3,1,2,0));
+                q = _mm_shuffle_ps(q, t, _MM_SHUFFLE(3,1,3,1));
+                t = _mm_mul_ps(_mm_set_ps1(c1), q);
+                q = _mm_mul_ps(_mm_set_ps1(s1), q);
+                {
+                    static const vecfloat_union sign_mask = {{0x80000000,0,0,0}};
+                    t = _mm_xor_ps(sign_mask._m128, t);
+                }
+                {
+                    static const vecfloat_union sign_mask = {{0,0x80000000,0,0}};
+                    q = _mm_xor_ps(sign_mask._m128, q);
+                }
+                q = _mm_shuffle_ps(q, q, _MM_SHUFFLE(0,1,2,3));
+                q = _mm_add_ps(q, t);
+                {
+                    vecfloat_union r;
+                    r._m128 = _mm_sub_ps(p, q);
+                    gi[k3] = r._float[0];
+                    gi[k2] = r._float[1];
+                    fi[k3] = r._float[2];
+                    fi[k2] = r._float[3];
+                }
+                {
+                    vecfloat_union s;
+                    s._m128 = _mm_add_ps(p, q);
+                    gi[k1] = s._float[0];
+                    gi[0] = s._float[1];
+                    fi[k1] = s._float[2];
+                    fi[0] = s._float[3];
+                }
+                gi += k4;
+                fi += k4;
+            } while (fi < fn);
+            c2 = c1;
+            c1 = c2 * tri[0] - s1 * tri[1];
+            s1 = c2 * tri[1] + s1 * tri[0];
+        }
+        tri += 2;
+    } while (k4 < n);
 }
 
 #endif	/* HAVE_XMMINTRIN_H */

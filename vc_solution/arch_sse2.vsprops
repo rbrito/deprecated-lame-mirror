@@ -6,7 +6,7 @@
 	>
 	<Tool
 		Name="VCCLCompilerTool"
-		PreprocessorDefinitions="HAVE_NASM;MMX_choose_table"
+		PreprocessorDefinitions="HAVE_XMMINTRIN_H"
 		EnableEnhancedInstructionSet="2"
 		FloatingPointModel="2"
 	/>
