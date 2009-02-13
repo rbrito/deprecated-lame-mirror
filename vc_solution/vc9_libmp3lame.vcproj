@@ -1206,6 +1206,14 @@
 						Name="NASM"
 					/>
 				</FileConfiguration>
+				<FileConfiguration
+					Name="ReleaseSSE2|Win32"
+					ExcludedFromBuild="true"
+					>
+					<Tool
+						Name="NASM"
+					/>
+				</FileConfiguration>
 			</File>
 			<File
 				RelativePath="..\libmp3lame\i386\cpu_feat.nas"
@@ -1220,6 +1228,14 @@
 				</FileConfiguration>
 				<FileConfiguration
 					Name="Debug|Win32"
+					ExcludedFromBuild="true"
+					>
+					<Tool
+						Name="NASM"
+					/>
+				</FileConfiguration>
+				<FileConfiguration
+					Name="ReleaseSSE2|Win32"
 					ExcludedFromBuild="true"
 					>
 					<Tool
@@ -1282,6 +1298,14 @@
 						Name="NASM"
 					/>
 				</FileConfiguration>
+				<FileConfiguration
+					Name="ReleaseSSE2|Win32"
+					ExcludedFromBuild="true"
+					>
+					<Tool
+						Name="NASM"
+					/>
+				</FileConfiguration>
 			</File>
 			<File
 				RelativePath="..\libmp3lame\i386\fftfpu.nas"
@@ -1332,6 +1356,14 @@
 				</FileConfiguration>
 				<FileConfiguration
 					Name="Debug|Win32"
+					ExcludedFromBuild="true"
+					>
+					<Tool
+						Name="NASM"
+					/>
+				</FileConfiguration>
+				<FileConfiguration
+					Name="ReleaseSSE2|Win32"
 					ExcludedFromBuild="true"
 					>
 					<Tool

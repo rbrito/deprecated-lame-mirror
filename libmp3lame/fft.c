@@ -320,9 +320,9 @@ init_fft(lame_internal_flags * const gfc)
 #ifdef HAVE_XMMINTRIN_H
 #ifdef MIN_ARCH_SSE
     gfc->fft_fht = fht_SSE2;
-#endif
-#endif
     if (0)
+#endif
+#endif
 #endif
     {
         gfc->fft_fht = fht;
