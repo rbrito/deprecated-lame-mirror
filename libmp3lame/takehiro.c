@@ -457,22 +457,16 @@ count_bit_ESC(const int *ix, const int *const end, int t1, const int t2, unsigne
         unsigned int x = *ix++;
         unsigned int y = *ix++;
 
-        if (x != 0u) {
-            if (x >= 15u) {
-                x = 15u;
-                sum += linbits;
-            }
-            x *= 16u;
+        if (x >= 15u) {
+            x = 15u;
+            sum += linbits;
         }
-
-        if (y != 0u) {
-            if (y >= 15u) {
-                y = 15u;
-                sum += linbits;
-            }
-            x += y;
+        if (y >= 15u) {
+            y = 15u;
+            sum += linbits;
         }
-
+        x <<= 4u;
+        x += y;
         sum += largetbl[x];
     } while (ix < end);
 
@@ -497,10 +491,11 @@ count_bit_noESC(const int *ix, const int *end, int mx, unsigned int *s)
     const uint8_t *const hlen1 = ht[1].hlen;
     (void) mx;
 
-    for (; ix < end; ix += 2) {
-        unsigned int const x = ix[0] * 2 + ix[1];
-        sum1 += hlen1[x];
-    }
+    do {
+        unsigned int const x0 = *ix++;
+        unsigned int const x1 = *ix++;
+        sum1 += hlen1[ x0+x0 + x1 ];
+    } while (ix < end);
 
     *s += sum1;
     return 1;
@@ -517,20 +512,15 @@ count_bit_noESC_from2(const int *ix, const int *end, int max, unsigned int *s)
 {
     int t1 = huf_tbl_noESC[max - 1];
     /* No ESC-words */
-    unsigned int sum = 0, sum2;
     const unsigned int xlen = ht[t1].xlen;
-    if (t1 == 2) {
-        for (; ix < end; ix += 2) {
-            unsigned int const x = ix[0] * xlen + ix[1];
-            sum += table23[x];
-        }
-    }
-    else {
-        for (; ix < end; ix += 2) {
-            unsigned int const x = ix[0] * xlen + ix[1];
-            sum += table56[x];
-        }
-    }
+    uint32_t const* table = (t1 == 2) ? &table23[0] : &table56[0];
+    unsigned int sum = 0, sum2;
+
+    do {
+        unsigned int const x0 = *ix++;
+        unsigned int const x1 = *ix++;
+        sum += table[ x0 * xlen + x1 ];
+    } while (ix < end);
 
     sum2 = sum & 0xffffu;
     sum >>= 16u;
@@ -559,12 +549,14 @@ count_bit_noESC_from3(const int *ix, const int *end, int max, unsigned int * s)
     const uint8_t *const hlen3 = ht[t1 + 2].hlen;
     int     t;
 
-    for (; ix < end; ix += 2) {
-        unsigned int const x = ix[0] * xlen + ix[1];
+    do {
+        unsigned int x0 = *ix++;
+        unsigned int x1 = *ix++;
+        unsigned int x = x0 * xlen + x1;
         sum1 += hlen1[x];
         sum2 += hlen2[x];
         sum3 += hlen3[x];
-    }
+    } while (ix < end);
 
     t = t1;
     if (sum1 > sum2) {
@@ -678,12 +670,16 @@ noquant_count_bits(lame_internal_flags const *const gfc,
     /* Determines the number of bits to encode the quadruples. */
     a1 = a2 = 0;
     for (; i > 3; i -= 4) {
+        int x4 = ix[i-4];
+        int x3 = ix[i-3];
+        int x2 = ix[i-2];
+        int x1 = ix[i-1];
         int     p;
         /* hack to check if all values <= 1 */
-        if ((unsigned int) (ix[i - 1] | ix[i - 2] | ix[i - 3] | ix[i - 4]) > 1)
+        if ((unsigned int) (x4 | x3 | x2 | x1) > 1)
             break;
 
-        p = ((ix[i - 4] * 2 + ix[i - 3]) * 2 + ix[i - 2]) * 2 + ix[i - 1];
+        p = ((x4 * 2 + x3) * 2 + x2) * 2 + x1;
         a1 += t32l[p];
         a2 += t33l[p];
     }

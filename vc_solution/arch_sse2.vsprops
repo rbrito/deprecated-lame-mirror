@@ -6,7 +6,7 @@
 	>
 	<Tool
 		Name="VCCLCompilerTool"
-		PreprocessorDefinitions="HAVE_XMMINTRIN_H"
+		PreprocessorDefinitions="HAVE_XMMINTRIN_H;MIN_ARCH_SSE"
 		EnableEnhancedInstructionSet="2"
 		FloatingPointModel="2"
 	/>
