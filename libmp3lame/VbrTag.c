@@ -361,13 +361,18 @@ int
 GetVbrTag(VBRTAGDATA * pTagData, const unsigned char *buf)
 {
     int     i, head_flags;
-    int     h_bitrate, h_id, h_mode, h_sr_index;
+    int     h_bitrate, h_id, h_mode, h_sr_index, h_layer;
     int     enc_delay, enc_padding;
 
     /* get Vbr header data */
     pTagData->flags = 0;
 
     /* get selected MPEG header data */
+    h_layer = (buf[1] >> 1) & 3;
+    if ( h_layer != 0x01 ) {
+        /* the following code assumes Layer-3, so give up here */
+        return 0;
+    }
     h_id = (buf[1] >> 3) & 1;
     h_sr_index = (buf[2] >> 2) & 3;
     h_mode = (buf[3] >> 6) & 3;
