@@ -1476,6 +1476,27 @@ update_inbuffer_size(lame_internal_flags * gfc, const int nsamples)
 }
 
 
+static int
+calcNeeded(lame_global_flags* gfp)
+{
+    int mf_needed;
+    /* some sanity checks */
+#if ENCDELAY < MDCTDELAY
+# error ENCDELAY is less than MDCTDELAY, see encoder.h
+#endif
+#if FFTOFFSET > BLKSIZE
+# error FFTOFFSET is greater than BLKSIZE, see encoder.h
+#endif
+
+    mf_needed = BLKSIZE + gfp->framesize - FFTOFFSET; /* amount needed for FFT */
+    /*mf_needed = Max(mf_needed, 286 + 576 * (1 + gfc->mode_gr)); */
+    mf_needed = Max(mf_needed, 512 + gfp->framesize - 32);
+
+    assert(MFSIZE >= mf_needed);
+    
+    return mf_needed;
+}
+
 /*
  * THE MAIN LAME ENCODING INTERFACE
  * mt 3/00
@@ -1559,20 +1580,7 @@ lame_encode_buffer_sample_t(lame_global_flags * gfp,
         }
     }
 
-
-    /* some sanity checks */
-#if ENCDELAY < MDCTDELAY
-# error ENCDELAY is less than MDCTDELAY, see encoder.h
-#endif
-#if FFTOFFSET > BLKSIZE
-# error FFTOFFSET is greater than BLKSIZE, see encoder.h
-#endif
-
-    mf_needed = BLKSIZE + gfp->framesize - FFTOFFSET; /* amount needed for FFT */
-    /*mf_needed = Max(mf_needed, 286 + 576 * (1 + gfc->mode_gr)); */
-    mf_needed = Max(mf_needed, 512 + gfp->framesize - 32);
-
-    assert(MFSIZE >= mf_needed);
+    mf_needed = calcNeeded(gfp);
 
     mfbuf[0] = gfc->mfbuf[0];
     mfbuf[1] = gfc->mfbuf[1];
@@ -1930,24 +1938,30 @@ lame_encode_flush(lame_global_flags * gfp, unsigned char *mp3buffer, int mp3buff
 
     /* we always add POSTDELAY=288 padding to make sure granule with real
      * data can be complety decoded (because of 50% overlap with next granule */
-    int     end_padding = POSTDELAY;
-    int     pad_out_samples;
+    int     end_padding;
     int     frames_left;
-    int     samples_to_encode = gfc->mf_samples_to_encode;
+    int     samples_to_encode = gfc->mf_samples_to_encode - POSTDELAY;
+    int     mf_needed = calcNeeded(gfp);
 
     memset(buffer, 0, sizeof(buffer));
     mp3count = 0;
-    
+
     if (gfp->in_samplerate != gfp->out_samplerate) {
         /* delay due to resampling; needs to be fixed, if resampling code gets changed */
         samples_to_encode += 16.*gfp->out_samplerate/gfp->in_samplerate;
     }
-    pad_out_samples = gfp->framesize - (samples_to_encode % gfp->framesize);
-    end_padding += pad_out_samples;
+    end_padding = gfp->framesize - (samples_to_encode % gfp->framesize);
+    gfp->encoder_padding = end_padding;
 
-    frames_left = (samples_to_encode + pad_out_samples) / gfp->framesize;
+    frames_left = (samples_to_encode + end_padding) / gfp->framesize;
     while (frames_left > 0) {
+        int bunch = mf_needed-gfc->mf_size;
         int frame_num = gfp->frameNum;
+        
+        bunch *= gfp->in_samplerate;
+        bunch /= gfp->out_samplerate;
+        if (bunch > 1152) bunch = 1152;
+        if (bunch < 1) bunch = 1;
 
         mp3buffer_size_remaining = mp3buffer_size - mp3count;
 
@@ -1958,7 +1972,7 @@ lame_encode_flush(lame_global_flags * gfp, unsigned char *mp3buffer, int mp3buff
         /* send in a frame of 0 padding until all internal sample buffers
          * are flushed
          */
-        imp3 = lame_encode_buffer(gfp, buffer[0], buffer[1], 32,
+        imp3 = lame_encode_buffer(gfp, buffer[0], buffer[1], bunch,
                                   mp3buffer, mp3buffer_size_remaining);
         
         if (frame_num != gfp->frameNum) {
@@ -2001,7 +2015,6 @@ lame_encode_flush(lame_global_flags * gfp, unsigned char *mp3buffer, int mp3buff
         }
         mp3count += imp3;
     }
-    gfp->encoder_padding = end_padding;
 #if 0
     {
         int const ed = gfp->encoder_delay;
@@ -2015,6 +2028,8 @@ lame_encode_flush(lame_global_flags * gfp, unsigned char *mp3buffer, int mp3buff
         MSGF(gfc, "encoder padding=%d\n", ep);
         MSGF(gfc, "sample count=%d (%g)\n", ns, gfp->in_samplerate*duration);
         MSGF(gfc, "duration=%g sec\n", duration);
+        MSGF(gfc, "mf_size=%d\n",gfc->mf_size);
+        MSGF(gfc, "mf_samples_to_encode=%d\n",gfc->mf_samples_to_encode);
     }
 #endif
     return mp3count;
