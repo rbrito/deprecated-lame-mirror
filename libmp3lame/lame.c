@@ -765,8 +765,6 @@ lame_init_params(lame_global_flags * gfp)
     cfg->mode_gr = cfg->samplerate_out <= 24000 ? 1 : 2; /* Number of granules per frame */
     gfc->ov_enc.encoder_delay = ENCDELAY;
 
-    cfg->resample_ratio = cfg->samplerate_in;
-    cfg->resample_ratio /= cfg->samplerate_out;
 
     /*
      *  sample freq       bitrate     compression ratio
@@ -1232,7 +1230,7 @@ lame_print_config(const lame_global_flags * gfp)
     lame_internal_flags const *const gfc = gfp->internal_flags;
     SessionConfig_t const *const cfg = &gfc->cfg;
     double const out_samplerate = cfg->samplerate_out;
-    double const in_samplerate = out_samplerate * cfg->resample_ratio;
+    double const in_samplerate = cfg->samplerate_in;
 
     MSGF(gfc, "LAME %s %s (%s)\n", get_lame_version(), get_lame_os_bitness(), get_lame_url());
 
@@ -1293,7 +1291,7 @@ lame_print_config(const lame_global_flags * gfp)
         MSGF(gfc, "Autoconverting from stereo to mono. Setting encoding to mono mode.\n");
     }
 
-    if (NEQ(cfg->resample_ratio, 1.)) {
+    if (isResamplingNecessary(cfg)) {
         MSGF(gfc, "Resampling:  input %g kHz  output %g kHz\n",
              1.e-3 * in_samplerate, 1.e-3 * out_samplerate);
     }
@@ -1532,6 +1530,30 @@ update_inbuffer_size(lame_internal_flags * gfc, const int nsamples)
 }
 
 
+static int
+calcNeeded(SessionConfig_t const * cfg)
+{
+    int     mf_needed;
+    int     framesize = 576 * cfg->mode_gr;
+
+    /* some sanity checks */
+#if ENCDELAY < MDCTDELAY
+# error ENCDELAY is less than MDCTDELAY, see encoder.h
+#endif
+#if FFTOFFSET > BLKSIZE
+# error FFTOFFSET is greater than BLKSIZE, see encoder.h
+#endif
+
+    mf_needed = BLKSIZE + framesize - FFTOFFSET; /* amount needed for FFT */
+    /*mf_needed = Max(mf_needed, 286 + 576 * (1 + gfc->mode_gr)); */
+    mf_needed = Max(mf_needed, 512 + framesize - 32);
+
+    assert(MFSIZE >= mf_needed);
+    
+    return mf_needed;
+}
+
+
 /*
  * THE MAIN LAME ENCODING INTERFACE
  * mt 3/00
@@ -1617,20 +1639,7 @@ lame_encode_buffer_sample_t(lame_internal_flags * gfc,
         }
     }
 
-
-    /* some sanity checks */
-#if ENCDELAY < MDCTDELAY
-# error ENCDELAY is less than MDCTDELAY, see encoder.h
-#endif
-#if FFTOFFSET > BLKSIZE
-# error FFTOFFSET is greater than BLKSIZE, see encoder.h
-#endif
-
-    mf_needed = BLKSIZE + framesize - FFTOFFSET; /* amount needed for FFT */
-    /*mf_needed = Max(mf_needed, 286 + 576 * (1 + cfg->mode_gr)); */
-    mf_needed = Max(mf_needed, 512 + framesize - 32);
-
-    assert(MFSIZE >= mf_needed);
+    mf_needed = calcNeeded(cfg);
 
     mfbuf[0] = esv->mfbuf[0];
     mfbuf[1] = esv->mfbuf[1];
@@ -1664,6 +1673,13 @@ lame_encode_buffer_sample_t(lame_internal_flags * gfc,
         /* update mfbuf[] counters */
         esv->mf_size += n_out;
         assert(esv->mf_size <= MFSIZE);
+        
+        /* lame_encode_flush may have set gfc->mf_sample_to_encode to 0
+         * so we have to reinitialize it here when that happened.
+         */
+        if (esv->mf_samples_to_encode < 1) {
+            esv->mf_samples_to_encode = ENCDELAY + POSTDELAY;
+        }        
         esv->mf_samples_to_encode += n_out;
 
 
@@ -2014,11 +2030,13 @@ lame_encode_flush(lame_global_flags * gfp, unsigned char *mp3buffer, int mp3buff
 
     /* we always add POSTDELAY=288 padding to make sure granule with real
      * data can be complety decoded (because of 50% overlap with next granule */
-    int     end_padding = POSTDELAY;
-    int     pad_out_samples;
+    int     end_padding;
     int     frames_left;
     int     samples_to_encode;
     int     framesize;
+    int     mf_needed;
+    int     is_resampling_necessary;
+    double  resample_ratio = 1;
 
     if (!is_lame_global_flags_valid(gfp)) {
         return -3;
@@ -2030,23 +2048,35 @@ lame_encode_flush(lame_global_flags * gfp, unsigned char *mp3buffer, int mp3buff
     cfg = &gfc->cfg;
     esv = &gfc->sv_enc;
     
+    /* Was flush already called? */
+    if (esv->mf_samples_to_encode < 1) {
+        return 0;
+    }
     framesize = 576 * cfg->mode_gr;
+    mf_needed = calcNeeded(cfg);
 
-    samples_to_encode = esv->mf_samples_to_encode;
+    samples_to_encode = esv->mf_samples_to_encode - POSTDELAY;
 
     memset(buffer, 0, sizeof(buffer));
     mp3count = 0;
 
-    if (cfg->samplerate_in != cfg->samplerate_out) {
+    is_resampling_necessary = isResamplingNecessary(cfg);
+    if (is_resampling_necessary) {
+        resample_ratio = (double)cfg->samplerate_in / (double)cfg->samplerate_out;
         /* delay due to resampling; needs to be fixed, if resampling code gets changed */
-        samples_to_encode += 16. * cfg->samplerate_out / cfg->samplerate_in;
+        samples_to_encode += 16. / resample_ratio;
     }
-    pad_out_samples = framesize - (samples_to_encode % framesize);
-    end_padding += pad_out_samples;
+    end_padding = framesize - (samples_to_encode % framesize);
+    gfc->ov_enc.encoder_padding = end_padding;
+    
+    frames_left = (samples_to_encode + end_padding) / framesize;
+    while (frames_left > 0 && imp3 >= 0) {
+        int const frame_num = gfc->ov_enc.frame_number;
+        int     bunch = mf_needed - esv->mf_size;
 
-    frames_left = (samples_to_encode + pad_out_samples) / framesize;
-    while (frames_left > 0) {
-        int     frame_num = gfc->ov_enc.frame_number;
+        bunch *= resample_ratio;
+        if (bunch > 1152) bunch = 1152;
+        if (bunch < 1) bunch = 1;
 
         mp3buffer_size_remaining = mp3buffer_size - mp3count;
 
@@ -2057,19 +2087,23 @@ lame_encode_flush(lame_global_flags * gfp, unsigned char *mp3buffer, int mp3buff
         /* send in a frame of 0 padding until all internal sample buffers
          * are flushed
          */
-        imp3 = lame_encode_buffer(gfp, buffer[0], buffer[1], 32,
+        imp3 = lame_encode_buffer(gfp, buffer[0], buffer[1], bunch,
                                   mp3buffer, mp3buffer_size_remaining);
 
-        if (frame_num != gfc->ov_enc.frame_number) {
-            --frames_left;
-        }
-        if (imp3 < 0) {
-            /* some type of fatal error */
-            return imp3;
-        }
         mp3buffer += imp3;
         mp3count += imp3;
+        frames_left -= (frame_num != gfc->ov_enc.frame_number) ? 1 : 0;
     }
+    /* Set esv->mf_samples_to_encode to 0, so we may detect
+     * and break loops calling it more than once in a row.
+     */
+    esv->mf_samples_to_encode = 0;
+
+    if (imp3 < 0) {
+        /* some type of fatal error */
+        return imp3;
+    }
+
     mp3buffer_size_remaining = mp3buffer_size - mp3count;
     /* if user specifed buffer size = 0, dont check size */
     if (mp3buffer_size == 0)
@@ -2100,7 +2134,6 @@ lame_encode_flush(lame_global_flags * gfp, unsigned char *mp3buffer, int mp3buff
         }
         mp3count += imp3;
     }
-    gfc->ov_enc.encoder_padding = end_padding;
 #if 0
     {
         int const ed = gfp->encoder_delay;
@@ -2276,8 +2309,6 @@ lame_init_old(lame_global_flags * gfp)
     gfp->quant_comp_short = -1;
 
     gfp->msfix = -1;
-
-    gfc->cfg.resample_ratio = 1;
 
     gfc->sv_qnt.OldValue[0] = 180;
     gfc->sv_qnt.OldValue[1] = 180;

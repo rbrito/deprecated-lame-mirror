@@ -466,7 +466,6 @@ extern  "C" {
         float   adjust_sfb21;
 
         float   compression_ratio; /* sizeof(wav file)/sizeof(mp3 file)          */
-        float   resample_ratio; /* input_samp_rate/output_samp_rate */
 
         /* lowpass and highpass filter control */
         FLOAT   lowpass1, lowpass2; /* normalized frequency bounds of passband */
@@ -589,6 +588,7 @@ extern  "C" {
     extern void init_log_table(void);
     extern ieee754_float32_t fast_log2(ieee754_float32_t x);
 
+    int     isResamplingNecessary(SessionConfig_t const* cfg);
 
     void    fill_buffer(lame_internal_flags * gfc,
                         sample_t *const mfbuf[2],

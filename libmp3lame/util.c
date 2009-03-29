@@ -535,6 +535,7 @@ fill_buffer_resample(lame_internal_flags * gfc,
 {
     SessionConfig_t const *const cfg = &gfc->cfg;
     EncStateVar_t *esv = &gfc->sv_enc;
+    double  resample_ratio = (double)cfg->samplerate_in / (double)cfg->samplerate_out;
     int     BLACKSIZE;
     FLOAT   offset, xvalue;
     int     i, j = 0, k;
@@ -546,8 +547,8 @@ fill_buffer_resample(lame_internal_flags * gfc,
     if (bpc > BPC)
         bpc = BPC;
 
-    intratio = (fabs(cfg->resample_ratio - floor(.5 + cfg->resample_ratio)) < .0001);
-    fcn = 1.00 / cfg->resample_ratio;
+    intratio = (fabs(resample_ratio - floor(.5 + resample_ratio)) < .0001);
+    fcn = 1.00 / resample_ratio;
     if (fcn > 1.00)
         fcn = 1.00;
     filter_l = 31;     /* must be odd */
@@ -585,7 +586,7 @@ fill_buffer_resample(lame_internal_flags * gfc,
         FLOAT   time0;
         int     joff;
 
-        time0 = k * cfg->resample_ratio; /* time of k'th output sample */
+        time0 = k * resample_ratio; /* time of k'th output sample */
         j = floor(time0 - esv->itime[ch]);
 
         /* check if we need more input data */
@@ -626,7 +627,7 @@ fill_buffer_resample(lame_internal_flags * gfc,
     /* adjust our input time counter.  Incriment by the number of samples used,
      * then normalize so that next output sample is at time 0, next
      * input buffer is at time itime[ch] */
-    esv->itime[ch] += *num_used - k * cfg->resample_ratio;
+    esv->itime[ch] += *num_used - k * resample_ratio;
 
     /* save the last BLACKSIZE samples into the inbuf_old buffer */
     if (*num_used >= BLACKSIZE) {
@@ -651,7 +652,13 @@ fill_buffer_resample(lame_internal_flags * gfc,
     return k;           /* return the number samples created at the new samplerate */
 }
 
-
+int
+isResamplingNecessary(SessionConfig_t const* cfg)
+{
+    int const l = cfg->samplerate_out * 0.9995f;
+    int const h = cfg->samplerate_out * 1.0005f;
+    return (cfg->samplerate_in < l) || (h < cfg->samplerate_in) ? 1 : 0;
+}
 
 /* copy in new samples from in_buffer into mfbuf, with resampling
    if necessary.  n_in = number of samples from the input buffer that
@@ -664,25 +671,25 @@ fill_buffer(lame_internal_flags * gfc,
     SessionConfig_t const *const cfg = &gfc->cfg;
     int     mf_size = gfc->sv_enc.mf_size;
     int     framesize = 576 * cfg->mode_gr;
-    int     ch, i;
+    int     nout, ch = 0;
+    int     nch = cfg->channels_out;
 
     /* copy in new samples into mfbuf, with resampling if necessary */
-    if ((cfg->resample_ratio < .9999) || (cfg->resample_ratio > 1.0001)) {
-
-        for (ch = 0; ch < cfg->channels_out; ch++) {
-            *n_out =
+    if (isResamplingNecessary(cfg)) {
+        do {
+            nout =
                 fill_buffer_resample(gfc, &mfbuf[ch][mf_size],
                                      framesize, in_buffer[ch], nsamples, n_in, ch);
-        }
+        } while (++ch < nch);
+        *n_out = nout;
     }
     else {
-        *n_out = Min(framesize, nsamples);
-        *n_in = *n_out;
-        for (i = 0; i < *n_out; ++i) {
-            mfbuf[0][mf_size + i] = in_buffer[0][i];
-            if (cfg->channels_out == 2)
-                mfbuf[1][mf_size + i] = in_buffer[1][i];
-        }
+        nout = Min(framesize, nsamples);
+        do {
+            memcpy(&mfbuf[ch][mf_size], &in_buffer[ch][0], nout * sizeof(mfbuf[0][0]));
+        } while (++ch < nch);
+        *n_out = nout;
+        *n_in = nout;
     }
 }
 
