@@ -2969,7 +2969,7 @@ psymodel_init(lame_global_flags const* gfp)
          */
         x = 20.0 * (bval[i] / xav - 1.0);
         if (x > 6) {
-            x = 100;
+            x = 30;
         }
 #ifdef TEST_0811
         if (x < -10) {
@@ -2980,6 +2980,9 @@ psymodel_init(lame_global_flags const* gfp)
             x = -15;
         }
 #endif
+        if (cfg->samplerate_out < 44000) {
+            x = 30;
+        }
         x -= 8.;
         gd->l.minval[i] = pow(10.0, x / 10.) * gd->l.numlines[i];
     }
@@ -3048,10 +3051,10 @@ psymodel_init(lame_global_flags const* gfp)
         if (bval[i] < xbv) {
             x *= 1 + log(1 - x) * 2.3;
         }
-#ifdef TEST_0811
         if (x > 6) {
-            x = 100;
+            x = 30;
         }
+#ifdef TEST_0811
         if (x < -10) {
             x = -10;
         }
@@ -3060,6 +3063,9 @@ psymodel_init(lame_global_flags const* gfp)
             x = -15;
         }
 #endif
+        if (cfg->samplerate_out < 44000) {
+            x = 30;
+        }
         x -= 8;
         gd->s.minval[i] = pow(10.0, x / 10) * gd->s.numlines[i];
     }
