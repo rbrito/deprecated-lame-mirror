@@ -1614,6 +1614,13 @@ lame_encode_buffer_sample_t(lame_global_flags * gfp,
         /* update mfbuf[] counters */
         gfc->mf_size += n_out;
         assert(gfc->mf_size <= MFSIZE);
+
+        /* lame_encode_flush may have set gfc->mf_sample_to_encode to 0
+         * so we have to reinitialize it here when that happened.
+         */
+        if (gfc->mf_samples_to_encode < 1) {
+            gfc->mf_samples_to_encode = ENCDELAY + POSTDELAY;
+        }
         gfc->mf_samples_to_encode += n_out;
 
 
@@ -1943,6 +1950,10 @@ lame_encode_flush(lame_global_flags * gfp, unsigned char *mp3buffer, int mp3buff
     int     samples_to_encode = gfc->mf_samples_to_encode - POSTDELAY;
     int     mf_needed = calcNeeded(gfp);
 
+    /* Was flush already called? */
+    if (gfc->mf_samples_to_encode < 1) {
+        return 0;
+    }
     memset(buffer, 0, sizeof(buffer));
     mp3count = 0;
 
@@ -1954,7 +1965,9 @@ lame_encode_flush(lame_global_flags * gfp, unsigned char *mp3buffer, int mp3buff
     gfp->encoder_padding = end_padding;
 
     frames_left = (samples_to_encode + end_padding) / gfp->framesize;
-    while (frames_left > 0) {
+
+    /* send in a frame of 0 padding until all internal sample buffers are flushed */
+    while (frames_left > 0 && imp3 >= 0) {
         int bunch = mf_needed-gfc->mf_size;
         int frame_num = gfp->frameNum;
         
@@ -1969,22 +1982,23 @@ lame_encode_flush(lame_global_flags * gfp, unsigned char *mp3buffer, int mp3buff
         if (mp3buffer_size == 0)
             mp3buffer_size_remaining = 0;
 
-        /* send in a frame of 0 padding until all internal sample buffers
-         * are flushed
-         */
         imp3 = lame_encode_buffer(gfp, buffer[0], buffer[1], bunch,
                                   mp3buffer, mp3buffer_size_remaining);
         
-        if (frame_num != gfp->frameNum) {
-            --frames_left;
-        }
-        if (imp3 < 0) {
-            /* some type of fatal error */
-            return imp3;
-        }
         mp3buffer += imp3;
         mp3count += imp3;
+        frames_left -= (frame_num != gfp->frameNum) ? 1 : 0;
     }
+    /* Set gfc->mf_samples_to_encode to 0, so we may detect
+     * and break loops calling it more than once in a row.
+     */
+    gfc->mf_samples_to_encode = 0;
+
+    if (imp3 < 0) {
+        /* some type of fatal error */
+        return imp3;
+    }
+
     mp3buffer_size_remaining = mp3buffer_size - mp3count;
     /* if user specifed buffer size = 0, dont check size */
     if (mp3buffer_size == 0)
