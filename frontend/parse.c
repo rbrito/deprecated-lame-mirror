@@ -94,6 +94,7 @@ char   *strchr(), *strrchr();
 /* we need to clean this up */
 sound_file_format input_format;
 int     swapbytes = 0;       /* force byte swapping   default=0 */
+int     swap_channel = 0;
 int     silent;              /* Verbosity */
 int     ignore_tag_errors;   /* Ignore errors in values passed for tags */
 int     brhist;
@@ -740,6 +741,7 @@ long_help(const lame_global_flags * gfp, FILE * const fp, const char *ProgramNam
             "    --flush         flush output stream as soon as possible\n"
             "    --freeformat    produce a free format bitstream\n"
             "    --decode        input=mp3 file, output=wav\n"
+            "    --swap-channel  swap L/R channels\n"
             "    -t              disable writing wav header when using --decode\n");
 
     wait_for(fp, lessmode);
@@ -2112,6 +2114,8 @@ parse_args(lame_global_flags * gfp, int argc, char **argv,
                 T_ELIF("nogap")
                     nogap = 1;
 
+                T_ELIF("swap-channel")
+                    swap_channel = 1;
 
                 T_ELIF_INTERNAL("tune") /*without helptext */
                     argUsed = 1;

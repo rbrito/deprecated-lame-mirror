@@ -178,7 +178,7 @@ lame_decoder(lame_global_flags * gfp, FILE * outf, int skip_start, char *inPath,
     int     iread;
     int     skip_end = 0;
     double  wavsize;
-    int     i;
+    int     i, ch0, ch1;
     void    (*WriteFunction) (FILE * fp, char *p, int n);
     int     tmp_num_channels = lame_get_num_channels(gfp);
 
@@ -280,6 +280,12 @@ lame_decoder(lame_global_flags * gfp, FILE * outf, int skip_start, char *inPath,
 
     assert(tmp_num_channels >= 1 && tmp_num_channels <= 2);
 
+    ch0 = 0;
+    ch1 = 1;
+    if (tmp_num_channels == 2 && swap_channel == 1) {
+        ch0 = 1;
+        ch1 = 0;
+    }
     do {
         iread = get_audio16(gfp, Buffer); /* read in 'iread' samples */
         if (iread >= 0) {
@@ -302,14 +308,14 @@ lame_decoder(lame_global_flags * gfp, FILE * outf, int skip_start, char *inPath,
 
             for (; i < iread; i++) {
                 if (disable_wav_header) {
-                    WriteFunction(outf, (char *) &Buffer[0][i], sizeof(short));
+                    WriteFunction(outf, (char *) &Buffer[ch0][i], sizeof(short));
                     if (tmp_num_channels == 2)
-                        WriteFunction(outf, (char *) &Buffer[1][i], sizeof(short));
+                        WriteFunction(outf, (char *) &Buffer[ch1][i], sizeof(short));
                 }
                 else {
-                    Write16BitsLowHigh(outf, Buffer[0][i]);
+                    Write16BitsLowHigh(outf, Buffer[ch0][i]);
                     if (tmp_num_channels == 2)
-                        Write16BitsLowHigh(outf, Buffer[1][i]);
+                        Write16BitsLowHigh(outf, Buffer[ch1][i]);
                 }
             }
             if (flush_write == 1) {
@@ -450,6 +456,7 @@ lame_encoder(lame_global_flags * gf, FILE * outf, int nogap, char *inPath, char 
     unsigned char mp3buffer[LAME_MAXMP3BUFFER];
     int     Buffer[2][1152];
     int     iread, imp3, owrite, id3v2_size;
+    int     num_channels, ch0, ch1;
 
     encoder_progress_begin(gf, inPath, outPath);
 
@@ -473,6 +480,13 @@ lame_encoder(lame_global_flags * gf, FILE * outf, int nogap, char *inPath, char 
     }    
     id3v2_size = imp3;
     
+    num_channels = lame_get_num_channels(gf);
+    ch0 = 0;
+    ch1 = 1;
+    if (num_channels == 2 && swap_channel) {
+        ch0 = 1;
+        ch1 = 0;
+    }
     /* encode until we hit eof */
     do {
         /* read in 'iread' samples */
@@ -482,7 +496,7 @@ lame_encoder(lame_global_flags * gf, FILE * outf, int nogap, char *inPath, char 
             encoder_progress(gf);
 
             /* encode */
-            imp3 = lame_encode_buffer_int(gf, Buffer[0], Buffer[1], iread,
+            imp3 = lame_encode_buffer_int(gf, Buffer[ch0], Buffer[ch1], iread,
                                           mp3buffer, sizeof(mp3buffer));
 
             /* was our output buffer big enough? */

@@ -36,6 +36,7 @@
    instantiated in parce.c.  ugly, ugly */
 extern sound_file_format input_format;
 extern int swapbytes;        /* force byte swapping   default=0 */
+extern int swap_channel;     /* 0: no-op, 1: swaps input channels */
 extern int silent;
 extern int brhist;
 
