@@ -604,7 +604,7 @@ fill_buffer_resample(lame_global_flags const *gfp,
     /* time of j'th element in inbuf = itime + j/ifreq; */
     /* time of k'th element in outbuf   =  j/ofreq */
     for (k = 0; k < desired_len; k++) {
-        FLOAT   time0;
+        double  time0;
         int     joff;
 
         time0 = k * gfc->resample_ratio; /* time of k'th output sample */

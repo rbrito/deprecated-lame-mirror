@@ -259,7 +259,7 @@ extern  "C" {
         int     mode_gr;     /* granules per frame */
         int     channels_in; /* number of channels in the input data stream (PCM or decoded PCM) */
         int     channels_out; /* number of channels in the output data stream (not used for decoding) */
-        FLOAT   resample_ratio; /* input_samp_rate/output_samp_rate */
+        double  resample_ratio; /* input_samp_rate/output_samp_rate */
 
         int     mf_samples_to_encode;
         int     mf_size;
@@ -336,7 +336,7 @@ extern  "C" {
 #define BPC 320
         sample_t *inbuf_old[2];
         sample_t *blackfilt[2 * BPC + 1];
-        FLOAT   itime[2];
+        double  itime[2];
         int     sideinfo_len;
 
         /* variables for newmdct.c */
