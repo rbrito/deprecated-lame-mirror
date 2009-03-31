@@ -583,10 +583,9 @@ fill_buffer_resample(lame_internal_flags * gfc,
     /* time of j'th element in inbuf = itime + j/ifreq; */
     /* time of k'th element in outbuf   =  j/ofreq */
     for (k = 0; k < desired_len; k++) {
-        FLOAT   time0;
+        double  time0 = k * resample_ratio; /* time of k'th output sample */
         int     joff;
 
-        time0 = k * resample_ratio; /* time of k'th output sample */
         j = floor(time0 - esv->itime[ch]);
 
         /* check if we need more input data */
