@@ -184,7 +184,7 @@ lame_decoder(lame_global_flags * gfp, FILE * outf, int skip_start, char *inPath,
 
 
 
-    if (silent < 10)
+    if (silent < 9)
         console_printf("\rinput:  %s%s(%g kHz, %i channel%s, ",
                        strcmp(inPath, "-") ? inPath : "<stdin>",
                        strlen(inPath) > 26 ? "\n\t" : "  ",
@@ -212,45 +212,45 @@ lame_decoder(lame_global_flags * gfp, FILE * outf, int skip_start, char *inPath,
             skip_start += 528 + 1; /* mp3 decoder has a 528 sample delay, plus user supplied "skip" */
         }
 
-        if (silent < 10)
+        if (silent < 9)
             console_printf("MPEG-%u%s Layer %s", 2 - lame_get_version(gfp),
                            lame_get_out_samplerate(gfp) < 16000 ? ".5" : "", "III");
         break;
     case sf_mp2:
         skip_start += 240 + 1;
-        if (silent < 10)
+        if (silent < 9)
             console_printf("MPEG-%u%s Layer %s", 2 - lame_get_version(gfp),
                            lame_get_out_samplerate(gfp) < 16000 ? ".5" : "", "II");
         break;
     case sf_mp1:
         skip_start += 240 + 1;
-        if (silent < 10)
+        if (silent < 9)
             console_printf("MPEG-%u%s Layer %s", 2 - lame_get_version(gfp),
                            lame_get_out_samplerate(gfp) < 16000 ? ".5" : "", "I");
         break;
     case sf_raw:
-        if (silent < 10)
+        if (silent < 9)
             console_printf("raw PCM data");
         mp3input_data.nsamp = lame_get_num_samples(gfp);
         mp3input_data.framesize = 1152;
         skip_start = 0; /* other formats have no delay */ /* is += 0 not better ??? */
         break;
     case sf_wave:
-        if (silent < 10)
+        if (silent < 9)
             console_printf("Microsoft WAVE");
         mp3input_data.nsamp = lame_get_num_samples(gfp);
         mp3input_data.framesize = 1152;
         skip_start = 0; /* other formats have no delay */ /* is += 0 not better ??? */
         break;
     case sf_aiff:
-        if (silent < 10)
+        if (silent < 9)
             console_printf("SGI/Apple AIFF");
         mp3input_data.nsamp = lame_get_num_samples(gfp);
         mp3input_data.framesize = 1152;
         skip_start = 0; /* other formats have no delay */ /* is += 0 not better ??? */
         break;
     default:
-        if (silent < 10)
+        if (silent < 9)
             console_printf("unknown");
         mp3input_data.nsamp = lame_get_num_samples(gfp);
         mp3input_data.framesize = 1152;
@@ -259,7 +259,7 @@ lame_decoder(lame_global_flags * gfp, FILE * outf, int skip_start, char *inPath,
         break;
     }
 
-    if (silent < 10) {
+    if (silent < 9) {
         console_printf(")\noutput: %s%s(16 bit, Microsoft WAVE)\n",
                        strcmp(outPath, "-") ? outPath : "<stdout>",
                        strlen(outPath) > 45 ? "\n\t" : "  ");
@@ -755,9 +755,9 @@ main(int argc, char **argv)
         frontend_close_console();
         return 1;
     }
-    lame_set_errorf(gf, &frontend_errorf);
+    lame_set_msgf  (gf, silent < 10 ? &frontend_msgf   : 0);
+    lame_set_errorf(gf, silent < 10 ? &frontend_errorf : 0);
     lame_set_debugf(gf, &frontend_debugf);
-    lame_set_msgf(gf, &frontend_msgf);
     if (argc <= 1) {
         usage(stderr, argv[0]); /* no command-line args, print usage, exit  */
         lame_close(gf);

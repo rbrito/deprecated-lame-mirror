@@ -2364,6 +2364,10 @@ lame_init_old(lame_global_flags * gfp)
     gfp->preset = 0;
 
     gfp->write_id3tag_automatic = 1;
+
+    gfp->report.debugf = &lame_report_def;
+    gfp->report.errorf = &lame_report_def;
+    gfp->report.msgf = &lame_report_def;
     return 0;
 }
 

@@ -30,7 +30,6 @@ typedef struct plotting_data plotting_data;
 
 extern void lame_report_fnc(lame_report_function f, const char *format, ...);
 
-
 struct buf {
     unsigned char *pnt;
     long    size;

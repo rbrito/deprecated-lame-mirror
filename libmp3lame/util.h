@@ -611,6 +611,9 @@ extern  "C" {
 *  Macros about Message Printing and Exit
 *
 ***********************************************************************/
+
+    extern void lame_report_def(const char* format, va_list args);
+
     extern void lame_errorf(const lame_internal_flags * gfc, const char *, ...);
     extern void lame_debugf(const lame_internal_flags * gfc, const char *, ...);
     extern void lame_msgf(const lame_internal_flags * gfc, const char *, ...);

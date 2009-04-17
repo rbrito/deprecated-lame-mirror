@@ -39,6 +39,7 @@ extern void frontend_close_console(void);
 extern void frontend_msgf(const char *format, va_list ap);
 extern void frontend_debugf(const char *format, va_list ap);
 extern void frontend_errorf(const char *format, va_list ap);
+extern void frontend_print_null(const char *format, va_list ap);
 
 int     console_printf(const char *format, ...);
 int     error_printf(const char *format, ...);

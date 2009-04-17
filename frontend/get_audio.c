@@ -1501,7 +1501,7 @@ OpenSndFile(lame_global_flags * gfp, char *inPath, int *enc_delay, int *enc_padd
     }
     else if (input_format == sf_raw) {
         /* assume raw PCM */
-        if (silent < 10) {
+        if (silent < 9) {
             console_printf("Assuming raw pcm input file");
             if (swapbytes)
                 console_printf(" : Forcing byte-swapping\n");
@@ -1629,15 +1629,15 @@ lame_decode_initfile(FILE * fd, mp3data_struct * mp3data, int *enc_delay, int *e
         hip_decode_exit(global.hip);
     }
     global.hip = hip_decode_init();
-    hip_set_errorf(global.hip, &frontend_errorf);
+    hip_set_msgf  (global.hip, silent < 10 ? &frontend_msgf   : 0);
+    hip_set_errorf(global.hip, silent < 10 ? &frontend_errorf : 0);
     hip_set_debugf(global.hip, &frontend_debugf);
-    hip_set_msgf(global.hip, &frontend_msgf);
 
     len = 4;
     if (fread(buf, 1, len, fd) != len)
         return -1;      /* failed */
     if (buf[0] == 'I' && buf[1] == 'D' && buf[2] == '3') {
-        if (silent < 10) {
+        if (silent < 9) {
             console_printf("ID3v2 found. "
                            "Be aware that the ID3 tag is currently lost when transcoding.\n");
         }
@@ -1659,7 +1659,7 @@ lame_decode_initfile(FILE * fd, mp3data_struct * mp3data, int *enc_delay, int *e
         if (fread(&buf, 1, 2, fd) != 2)
             return -1;  /* failed */
         aid_header = (unsigned char) buf[0] + 256 * (unsigned char) buf[1];
-        if (silent < 10) {
+        if (silent < 9) {
             console_printf("Album ID found.  length=%i \n", aid_header);
         }
         /* skip rest of AID, except for 6 bytes we have already read */
@@ -1679,7 +1679,7 @@ lame_decode_initfile(FILE * fd, mp3data_struct * mp3data, int *enc_delay, int *e
     }
 
     if ((buf[2] & 0xf0) == 0) {
-        if (silent < 10) {
+        if (silent < 9) {
             console_printf("Input file is freeformat.\n");
         }
         freeformat = 1;

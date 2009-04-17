@@ -750,8 +750,8 @@ long_help(const lame_global_flags * gfp, FILE * const fp, const char *ProgramNam
             "    --disptime <arg>print progress report every arg seconds\n"
             "    -S              don't print progress report, VBR histograms\n"
             "    --nohist        disable VBR histogram display\n"
-            "    --silent        don't print anything on screen\n"
             "    --quiet         don't print anything on screen\n"
+            "    --silent        don't print anything on screen, but fatal errors\n"
             "    --brief         print more useful information\n"
             "    --verbose       print a lot of useful information\n" "\n");
     fprintf(fp,
@@ -1763,14 +1763,16 @@ parse_args(lame_global_flags * gfp, int argc, char **argv,
                     if (ret != 0) {
                         if (0 == ignore_tag_errors) {
                             if (id3tag_mode == ID3TAG_MODE_V1_ONLY) {
-                                error_printf("The track number has to be between 1 and 255 for ID3v1.\n");
+                                if (silent < 9) {
+                                    error_printf("The track number has to be between 1 and 255 for ID3v1.\n");
+                                }
                                 return -1;
                             }
                             else if (id3tag_mode == ID3TAG_MODE_V2_ONLY) {
                                 /* track will be stored as-is in ID3v2 case, so no problem here */
                             }
                             else {
-                                if (silent < 10) {
+                                if (silent < 9) {
                                     error_printf("The track number has to be between 1 and 255 for ID3v1, ignored for ID3v1.\n");
                                 }
                             }
@@ -1795,13 +1797,14 @@ parse_args(lame_global_flags * gfp, int argc, char **argv,
                                     /* genre will be stored as-is in ID3v2 case, so no problem here */
                                 }
                                 else {
-                                    if (silent < 10) {
+                                    if (silent < 9) {
                                         error_printf("Unknown ID3v1 genre: '%s'.  Setting ID3v1 genre to 'Other'\n", nextArg);
                                     }
                                 }
                             }
                             else {
-                                error_printf("Internal error.\n");
+                                if (silent < 10)
+                                    error_printf("Internal error.\n");
                                 return -1;
                             }
                         }
@@ -1810,7 +1813,7 @@ parse_args(lame_global_flags * gfp, int argc, char **argv,
                 T_ELIF("tv")
                     argUsed = 1;
                     if (id3_tag(gfp, 'v', TENC_RAW, nextArg)) {
-                        if (silent < 10) {
+                        if (silent < 9) {
                             error_printf("Invalid field value: '%s'. Ignored\n", nextArg);
                         }
                     }
@@ -1867,7 +1870,7 @@ parse_args(lame_global_flags * gfp, int argc, char **argv,
                 T_ELIF("lFieldvalue")
                     argUsed = 1;
                     if (id3_tag(gfp, 'v', TENC_LATIN1, nextArg)) {
-                        if (silent < 10) {
+                        if (silent < 9) {
                             error_printf("Invalid field value: '%s'. Ignored\n", nextArg);
                         }
                     }
@@ -1881,7 +1884,7 @@ parse_args(lame_global_flags * gfp, int argc, char **argv,
                 T_ELIF("uFieldvalue")
                     argUsed = 1;
                     if (id3_tag(gfp, 'v', TENC_UCS2, nextArg)) {
-                        if (silent < 10) {
+                        if (silent < 9) {
                             error_printf("Invalid field value: '%s'. Ignored\n", nextArg);
                         }
                     }
@@ -2043,8 +2046,11 @@ parse_args(lame_global_flags * gfp, int argc, char **argv,
                  * i/input file  => specifies input filename
                  * I             => stdin
                  */
-                T_ELIF2("quiet", "silent")
+                T_ELIF("quiet")
                     silent = 10; /* on a scale from 1 to 10 be very silent */
+
+                T_ELIF("silent")
+                    silent = 9;
 
                 T_ELIF("brief")
                     silent = -5; /* print few info on screen */
@@ -2317,7 +2323,7 @@ parse_args(lame_global_flags * gfp, int argc, char **argv,
                         error_printf("WARNING: -%c is obsolete.\n", c);
                         break;
                     case 'S':
-                        silent = 10;
+                        silent = 5;
                         break;
                     case 'X':
                         /*  experimental switch -X:

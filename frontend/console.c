@@ -226,6 +226,13 @@ frontend_errorf(const char *format, va_list ap)
     (void) my_error_printing(Console_IO.Error_fp, format, ap);
 }
 
+void
+frontend_print_null(const char *format, va_list ap)
+{
+    (void) format;
+    (void) ap;
+}
+
 int
 console_printf(const char *format, ...)
 {

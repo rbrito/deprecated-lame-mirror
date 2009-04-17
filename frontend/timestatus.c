@@ -195,7 +195,7 @@ encoder_progress_begin( lame_global_flags const* gf
                       , char              const* outPath
                       )
 {
-    if (silent < 10) {
+    if (silent < 9) {
         lame_print_config(gf); /* print useful information about options being used */
 
         console_printf("Encoding %s%s to %s\n",

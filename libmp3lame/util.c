@@ -703,55 +703,59 @@ fill_buffer(lame_internal_flags * gfc,
 *  Message Output
 *
 ***********************************************************************/
-static void
-lame_report(lame_report_function f, const char *format, va_list args)
+
+void
+lame_report_def(const char *format, va_list args)
 {
-    if (f != NULL) {
-        f(format, args);
-    }
-    else {
-        (void) vfprintf(stderr, format, args);
-        fflush(stderr); /* an debug function should flush immediately */
-    }
+    (void) vfprintf(stderr, format, args);
+    fflush(stderr); /* an debug function should flush immediately */
 }
 
 void 
-lame_report_fnc(lame_report_function f, const char *format, ...)
+lame_report_fnc(lame_report_function print_f, const char *format, ...)
 {
-    va_list args;
-    va_start(args, format);
-    lame_report(f, format, args);
-    va_end(args);
+    if (print_f) {
+        va_list args;
+        va_start(args, format);
+        print_f(format, args);
+        va_end(args);
+    }
 }
 
 
 void
 lame_debugf(const lame_internal_flags* gfc, const char *format, ...)
 {
-    va_list args;
-    va_start(args, format);
-    lame_report(gfc->report_dbg, format, args);
-    va_end(args);
+    if (gfc && gfc->report_dbg) {
+        va_list args;
+        va_start(args, format);
+        gfc->report_dbg(format, args);
+        va_end(args);
+    }
 }
 
 
 void
 lame_msgf(const lame_internal_flags* gfc, const char *format, ...)
 {
-    va_list args;
-    va_start(args, format);
-    lame_report(gfc->report_msg, format, args);
-    va_end(args);
+    if (gfc && gfc->report_msg) {
+        va_list args;
+        va_start(args, format);
+        gfc->report_msg(format, args);
+        va_end(args);
+    }
 }
 
 
 void
 lame_errorf(const lame_internal_flags* gfc, const char *format, ...)
 {
-    va_list args;
-    va_start(args, format);
-    lame_report(gfc->report_err, format, args);
-    va_end(args);
+    if (gfc && gfc->report_err) {
+        va_list args;
+        va_start(args, format);
+        gfc->report_err(format, args);
+        va_end(args);
+    }
 }
 
 
