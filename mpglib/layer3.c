@@ -375,7 +375,7 @@ III_get_side_info_1(PMPSTR mp, struct III_sideinfo *si, int stereo,
             gr_infos->part2_3_length = getbits(mp, 12);
             gr_infos->big_values = getbits_fast(mp, 9);
             if (gr_infos->big_values > 288) {
-                fprintf(stderr, "big_values too large! %i\n", gr_infos->big_values);
+                lame_report_fnc(mp->report_err, "big_values too large! %i\n", gr_infos->big_values);
                 gr_infos->big_values = 288;
             }
             {
@@ -410,7 +410,7 @@ III_get_side_info_1(PMPSTR mp, struct III_sideinfo *si, int stereo,
                 }
 
                 if (gr_infos->block_type == 0) {
-                    fprintf(stderr, "Blocktype == 0 and window-switching == 1 not allowed.\n");
+                    lame_report_fnc(mp->report_err, "Blocktype == 0 and window-switching == 1 not allowed.\n");
                     /* error seems to be very good recoverable, so don't exit */
                     /* exit(1); */
                 }
@@ -460,7 +460,7 @@ III_get_side_info_2(PMPSTR mp, struct III_sideinfo *si, int stereo,
         gr_infos->part2_3_length = getbits(mp, 12);
         gr_infos->big_values = getbits_fast(mp, 9);
         if (gr_infos->big_values > 288) {
-            fprintf(stderr, "big_values too large! %i\n", gr_infos->big_values);
+            lame_report_fnc(mp->report_err, "big_values too large! %i\n", gr_infos->big_values);
             gr_infos->big_values = 288;
         }
         qss = getbits_fast(mp, 8);
@@ -494,7 +494,7 @@ III_get_side_info_2(PMPSTR mp, struct III_sideinfo *si, int stereo,
             }
 
             if (gr_infos->block_type == 0) {
-                fprintf(stderr, "Blocktype == 0 and window-switching == 1 not allowed.\n");
+                lame_report_fnc(mp->report_err, "Blocktype == 0 and window-switching == 1 not allowed.\n");
                 /* error seems to be very good recoverable, so don't exit */
                 /* exit(1); */
             }
@@ -693,7 +693,7 @@ III_dequantize_sample(PMPSTR mp, real xr[SBLIMIT][SSLIMIT], int *scf,
     int     part2remain = gr_infos->part2_3_length - part2bits;
     int    *me;
 
-    /* fprintf(stderr,"part2remain = %d, gr_infos->part2_3_length = %d, part2bits = %d\n",
+    /* lame_report_fnc(mp->report_dbg,"part2remain = %d, gr_infos->part2_3_length = %d, part2bits = %d\n",
        part2remain, gr_infos->part2_3_length, part2bits); */
 
     {
@@ -739,7 +739,7 @@ III_dequantize_sample(PMPSTR mp, real xr[SBLIMIT][SSLIMIT], int *scf,
         int     i;
         for (i = 0; i < 3; i++) {
             if (l[i] < 0) {
-                fprintf(stderr, "hip: Bogus region length (%d)\n", l[i]);
+                lame_report_fnc(mp->report_err, "hip: Bogus region length (%d)\n", l[i]);
                 l[i] = 0;
             }
         }
@@ -1066,7 +1066,7 @@ III_dequantize_sample(PMPSTR mp, real xr[SBLIMIT][SSLIMIT], int *scf,
     if (part2remain > 0)
         getbits(mp, part2remain);
     else if (part2remain < 0) {
-        fprintf(stderr, "hip: Can't rewind stream by %d bits!\n", -part2remain);
+        lame_report_fnc(mp->report_err, "hip: Can't rewind stream by %d bits!\n", -part2remain);
         return 1;       /* -> error */
     }
     return 0;
@@ -1577,13 +1577,13 @@ layer3_audiodata_precedesframes(PMPSTR mp)
 
     /* specific to Layer 3, since Layer 1 & 2 the audio data starts at the frame that describes it. */
     /* determine how many bytes and therefore bitstream frames the audio data precedes it's matching frame */
-    /* fprintf(stderr, "hip: main_data_begin = %d, mp->bsize %d, mp->fsizeold %d, mp->ssize %d\n",
+    /* lame_report_fnc(mp->report_err, "hip: main_data_begin = %d, mp->bsize %d, mp->fsizeold %d, mp->ssize %d\n",
        sideinfo.main_data_begin, mp->bsize, mp->fsizeold, mp->ssize); */
     /* compute the number of frames to backtrack, 4 for the header, ssize already holds the CRC */
     /* TODO Erroneously assumes current frame is same as previous frame. */
     audioDataInFrame = mp->bsize - 4 - mp->ssize;
     framesToBacktrack = (sideinfo.main_data_begin + audioDataInFrame - 1) / audioDataInFrame;
-    /* fprintf(stderr, "hip: audioDataInFrame %d framesToBacktrack %d\n", audioDataInFrame, framesToBacktrack); */
+    /* lame_report_fnc(mp->report_err, "hip: audioDataInFrame %d framesToBacktrack %d\n", audioDataInFrame, framesToBacktrack); */
     return framesToBacktrack;
 }
 
@@ -1693,7 +1693,7 @@ do_layer3(PMPSTR mp, unsigned char *pcm_sample, int *pcm_point,
                     mp->pinfo->sfb_s[gr][0][i] = scalefacs[0][i];
             }
 
-            /* fprintf(stderr, "calling III dequantize sample 1 gr_infos->part2_3_length %d\n", gr_infos->part2_3_length); */
+            /* lame_report_fnc(mp->report_err, "calling III dequantize sample 1 gr_infos->part2_3_length %d\n", gr_infos->part2_3_length); */
             if (III_dequantize_sample(mp, hybridIn[0], scalefacs[0], gr_infos, sfreq, part2bits))
                 return clip;
         }
@@ -1712,7 +1712,7 @@ do_layer3(PMPSTR mp, unsigned char *pcm_sample, int *pcm_point,
                     mp->pinfo->sfb_s[gr][1][i] = scalefacs[1][i];
             }
 
-            /* fprintf(stderr, "calling III dequantize sample 2  gr_infos->part2_3_length %d\n", gr_infos->part2_3_length); */
+            /* lame_report_fnc(mp->report_err, "calling III dequantize sample 2  gr_infos->part2_3_length %d\n", gr_infos->part2_3_length); */
             if (III_dequantize_sample(mp, hybridIn[1], scalefacs[1], gr_infos, sfreq, part2bits))
                 return clip;
 

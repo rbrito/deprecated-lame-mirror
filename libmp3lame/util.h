@@ -131,7 +131,6 @@ extern  "C" {
     void    free_aligned(aligned_pointer_t * ptr);
 
 
-
     typedef void (*iteration_loop_t) (lame_internal_flags * gfc,
                                       FLOAT pe[2][2], FLOAT ms_ratio[2], III_psy_ratio ratio[2][2]);
 
@@ -554,12 +553,9 @@ extern  "C" {
         void    (*init_xrpow_core) (gr_info * const cod_info, FLOAT xrpow[576], int upper,
                                     FLOAT * sum);
 
-        struct {
-            void    (*msgf) (const char *format, va_list ap);
-            void    (*debugf) (const char *format, va_list ap);
-            void    (*errorf) (const char *format, va_list ap);
-        } report;
-
+        lame_report_function report_msg;
+        lame_report_function report_dbg;
+        lame_report_function report_err;
     };
 
 #ifndef lame_internal_flags_defined

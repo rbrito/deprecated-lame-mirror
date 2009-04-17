@@ -35,6 +35,8 @@
 extern "C" {
 #endif
 
+typedef void (*lame_report_function)(const char *format, va_list ap);
+
 #if defined(WIN32) || defined(_WIN32)
 #undef CDECL
 #define CDECL __cdecl
@@ -335,12 +337,9 @@ int CDECL lame_get_nogap_currentindex(const lame_global_flags*);
  * To quiet any output you have to replace the body of the example function
  * with just "return;" and use it in the set function.
  */
-int CDECL lame_set_errorf(lame_global_flags *,
-                          void (*func)(const char *, va_list));
-int CDECL lame_set_debugf(lame_global_flags *,
-                          void (*func)(const char *, va_list));
-int CDECL lame_set_msgf  (lame_global_flags *,
-                          void (*func)(const char *, va_list));
+int CDECL lame_set_errorf(lame_global_flags *, lame_report_function);
+int CDECL lame_set_debugf(lame_global_flags *, lame_report_function);
+int CDECL lame_set_msgf  (lame_global_flags *, lame_report_function);
 
 
 
@@ -993,6 +992,11 @@ hip_t CDECL hip_decode_init(void);
 
 /* cleanup call to exit decoder  */
 int CDECL hip_decode_exit(hip_t gfp);
+
+/* HIP reporting functions */
+void CDECL hip_set_errorf(hip_t gfp, lame_report_function f);
+void CDECL hip_set_debugf(hip_t gfp, lame_report_function f);
+void CDECL hip_set_msgf  (hip_t gfp, lame_report_function f);
 
 /*********************************************************************
  * input 1 mp3 frame, output (maybe) pcm data.

@@ -553,9 +553,9 @@ lame_init_params(lame_global_flags * gfp)
         gfp->write_lame_tag = 0; /* disable Xing VBR tag */
 
     /* report functions */
-    gfc->report.msgf = gfp->report.msgf;
-    gfc->report.debugf = gfp->report.debugf;
-    gfc->report.errorf = gfp->report.errorf;
+    gfc->report_msg = gfp->report.msgf;
+    gfc->report_dbg = gfp->report.debugf;
+    gfc->report_err = gfp->report.errorf;
 
     if (gfp->asm_optimizations.amd3dnow)
         gfc->CPU_features.AMD_3DNow = has_3DNow();
@@ -754,6 +754,10 @@ lame_init_params(lame_global_flags * gfp)
             hip_decode_exit(gfc->hip);
         }
         gfc->hip = hip_decode_init();
+        /* report functions */
+        hip_set_errorf(gfc->hip, gfp->report.errorf);
+        hip_set_debugf(gfc->hip, gfp->report.debugf);
+        hip_set_msgf(gfc->hip, gfp->report.msgf);
     }
 #endif
 

@@ -448,6 +448,29 @@ void hip_set_pinfo(hip_t hip, plotting_data* pinfo)
     }
 }
 
+
+
+void hip_set_errorf(hip_t hip, lame_report_function func)
+{
+    if (hip) {
+        hip->report_err = func;
+    }
+}
+
+void hip_set_debugf(hip_t hip, lame_report_function func)
+{
+    if (hip) {
+        hip->report_dbg = func;
+    }
+}
+
+void hip_set_msgf  (hip_t hip, lame_report_function func)
+{
+    if (hip) {
+        hip->report_msg = func;
+    }
+}
+
 #endif
 
 /* end of mpglib_interface.c */
