@@ -5,6 +5,7 @@
  * near unoptimzed ...
  *
  * Copyright (C) 2000 Albert L. Faber
+ *               2009 Robert Hegemann
  *  
  * This library is free software; you can redistribute it and/or
  * modify it under the terms of the GNU Library General Public
@@ -41,121 +42,135 @@
 
 #include "layer1.h"
 
-static void
-I_step_one(PMPSTR mp, unsigned int balloc[], unsigned int scale_index[2][SBLIMIT], struct frame *fr)
+typedef struct sideinfo_layer_I_struct
 {
-    unsigned int *ba = balloc;
-    unsigned int *sca = (unsigned int *) scale_index;
+    unsigned char allocation[SBLIMIT][2]; 
+    unsigned char scalefactor[SBLIMIT][2];
+} sideinfo_layer_I;
 
+static void
+I_step_one(PMPSTR mp, sideinfo_layer_I* si)
+{
+    struct frame *fr = &(mp->fr);
+    int     jsbound = (fr->mode == MPG_MD_JOINT_STEREO) ? (fr->mode_ext << 2) + 4 : 32;
+    int     i;
+    memset(si, 0, sizeof(*si));
     assert(fr->stereo == 1 || fr->stereo == 2);
+
     if (fr->stereo == 2) {
-        int     i;
-        int     jsbound = fr->jsbound;
         for (i = 0; i < jsbound; i++) {
-            *ba++ = getbits(mp, 4);
-            *ba++ = getbits(mp, 4);
+            unsigned char b0 = getbits(mp, 4);              /* values 0-15 */
+            unsigned char b1 = getbits(mp, 4);              /* values 0-15 */
+            si->allocation[i][0] = b0;
+            si->allocation[i][1] = b1;
         }
-        for (i = jsbound; i < SBLIMIT; i++)
-            *ba++ = getbits(mp, 4);
-
-        ba = balloc;
-
-        for (i = 0; i < jsbound; i++) {
-            if ((*ba++))
-                *sca++ = getbits(mp, 6);
-            if ((*ba++))
-                *sca++ = getbits(mp, 6);
+        for (i = jsbound; i < SBLIMIT; i++) {
+            unsigned char b = getbits(mp, 4);               /* values 0-15 */
+            si->allocation[i][0] = b;
+            si->allocation[i][1] = b;
         }
-        for (i = jsbound; i < SBLIMIT; i++)
-            if ((*ba++)) {
-                *sca++ = getbits(mp, 6);
-                *sca++ = getbits(mp, 6);
-            }
+        for (i = 0; i < SBLIMIT; i++) {
+            unsigned char n0 = si->allocation[i][0];
+            unsigned char n1 = si->allocation[i][1];
+            unsigned char b0 = n0 ? getbits(mp, 6) : 0;     /* values 0-63 */
+            unsigned char b1 = n1 ? getbits(mp, 6) : 0;     /* values 0-63 */
+            si->scalefactor[i][0] = b0;
+            si->scalefactor[i][1] = b1;
+        }
     }
     else {
-        int     i;
-        for (i = 0; i < SBLIMIT; i++)
-            *ba++ = getbits(mp, 4);
-        ba = balloc;
-        for (i = 0; i < SBLIMIT; i++)
-            if ((*ba++))
-                *sca++ = getbits(mp, 6);
+        for (i = 0; i < SBLIMIT; i++) {
+            unsigned char b0 =  getbits(mp, 4);             /* values 0-15 */
+            si->allocation[i][0] = b0;
+        }
+        for (i = 0; i < SBLIMIT; i++) {
+            unsigned char n0 = si->allocation[i][0];
+            unsigned char b0 = n0 ? getbits(mp, 6) : 0;     /* values 0-63 */
+            si->scalefactor[i][0] = b0;
+        }
     }
 }
 
 static void
-I_step_two(PMPSTR mp, real fraction[2][SBLIMIT], unsigned int balloc[2 * SBLIMIT],
-           unsigned int scale_index[2][SBLIMIT], struct frame *fr)
+I_step_two(PMPSTR mp, sideinfo_layer_I *si, real fraction[2][SBLIMIT])
 {
-    int     i, n;
-    int     smpb[2 * SBLIMIT]; /* values: 0-65535 */
-    int    *sample;
-    unsigned int *ba;
-    unsigned int *sca = (unsigned int *) scale_index;
+    double  r0, r1;
+    struct frame *fr = &(mp->fr);
+    int     jsbound = (fr->mode == MPG_MD_JOINT_STEREO) ? (fr->mode_ext << 2) + 4 : 32;
+    int     ds_limit = fr->down_sample_sblimit;
+    int     i;
 
     assert(fr->stereo == 1 || fr->stereo == 2);
     if (fr->stereo == 2) {
-        int     jsbound = fr->jsbound;
-        real   *f0 = fraction[0];
-        real   *f1 = fraction[1];
-        ba = balloc;
-        for (sample = smpb, i = 0; i < jsbound; i++) {
-            n = *ba++;
-            if (n)
-                *sample++ = getbits(mp, n + 1);
-            n = *ba++;
-            if (n)
-                *sample++ = getbits(mp, n + 1);
-        }
-        for (i = jsbound; i < SBLIMIT; i++) {
-            n = *ba++;
-            if (n)
-                *sample++ = getbits(mp, n + 1);
-        }
-        ba = balloc;
-        for (sample = smpb, i = 0; i < jsbound; i++) {
-            n = *ba++;
-            if (n)
-                *f0++ = (real) (((-1) << n) + (*sample++) + 1) * muls[n + 1][*sca++];
-            else
-                *f0++ = 0.0;
-            n = *ba++;
-            if (n)
-                *f1++ = (real) (((-1) << n) + (*sample++) + 1) * muls[n + 1][*sca++];
-            else
-                *f1++ = 0.0;
-        }
-        for (i = jsbound; i < SBLIMIT; i++) {
-            n = *ba++;
-            if (n) {
-                real    samp = (real) (((-1) << n) + (*sample++) + 1);
-                *f0++ = samp * muls[n + 1][*sca++];
-                *f1++ = samp * muls[n + 1][*sca++];
+        int     jsbound = (fr->mode == MPG_MD_JOINT_STEREO) ? (fr->mode_ext << 2) + 4 : 32;
+        for (i = 0; i < jsbound; i++) {
+            unsigned char i0 = si->scalefactor[i][0];
+            unsigned char i1 = si->scalefactor[i][1];
+            unsigned char n0 = si->allocation[i][0];
+            unsigned char n1 = si->allocation[i][1];
+            assert( i0 < 64 );
+            assert( i1 < 64 );
+            assert( n0 < 16 );
+            assert( n1 < 16 );
+            if (n0 > 0) {
+                unsigned short v = getbits(mp, n0 + 1); /* 0-65535 */
+                r0 = (((-1) << n0) + v + 1) * muls[n0 + 1][i0];
             }
-            else
-                *f0++ = *f1++ = 0.0;
+            else {
+                r0 = 0;
+            }
+            if (n1 > 0) {
+                unsigned short v = getbits(mp, n1 + 1); /* 0-65535 */
+                r1 = (((-1) << n1) + v + 1) * muls[n1 + 1][i1];
+            }
+            else {
+                r1 = 0;
+            }
+            fraction[0][i] = (real)r0;
+            fraction[1][i] = (real)r1;
         }
-        for (i = fr->down_sample_sblimit; i < 32; i++)
-            fraction[0][i] = fraction[1][i] = 0.0;
+        for (i = jsbound; i < SBLIMIT; i++) {
+            unsigned char i0 = si->scalefactor[i][0];
+            unsigned char i1 = si->scalefactor[i][1];
+            unsigned char n = si->allocation[i][0];
+            assert( i0 < 64 );
+            assert( i1 < 64 );
+            assert( n < 16 );
+            if (n > 0) {
+                unsigned short v = getbits(mp, n + 1); /* 0-65535 */
+                unsigned int w = (((-1) << n) + v + 1);
+                r0 = w * muls[n + 1][i0];
+                r1 = w * muls[n + 1][i1];
+            }
+            else {
+                r0 = r1 = 0;
+            }
+            fraction[0][i] = (real)r0;
+            fraction[1][i] = (real)r1;
+        }
+        for (i = ds_limit; i < SBLIMIT; i++) {
+            fraction[0][i] = 0.0;
+            fraction[1][i] = 0.0;
+        }
     }
     else {
-        real   *f0 = fraction[0];
-        ba = balloc;
-        for (sample = smpb, i = 0; i < SBLIMIT; i++) {
-            n = *ba++;
-            if (n)
-                *sample++ = getbits(mp, n + 1);
+        for (i = 0; i < SBLIMIT; i++) {
+            unsigned char n = si->allocation[i][0];
+            unsigned char j = si->scalefactor[i][0];
+            assert( j < 64 );
+            assert( n < 16 );
+            if (n > 0) {
+                unsigned short v = getbits(mp, n + 1);
+                r0 = (((-1) << n) + v + 1) * muls[n + 1][j];
+            }
+            else {
+                r0 = 0;
+            }
+            fraction[0][i] = (real)r0;
         }
-        ba = balloc;
-        for (sample = smpb, i = 0; i < SBLIMIT; i++) {
-            n = *ba++;
-            if (n)
-                *f0++ = (real) (((-1) << n) + (*sample++) + 1) * muls[n + 1][*sca++];
-            else
-                *f0++ = 0.0;
-        }
-        for (i = fr->down_sample_sblimit; i < 32; i++)
+        for (i = ds_limit; i < SBLIMIT; i++) {
             fraction[0][i] = 0.0;
+        }
     }
 }
 
@@ -163,29 +178,28 @@ I_step_two(PMPSTR mp, real fraction[2][SBLIMIT], unsigned int balloc[2 * SBLIMIT
 int
 do_layer1(PMPSTR mp, unsigned char *pcm_sample, int *pcm_point)
 {
-    int     clip = 0;
-    unsigned int balloc[2 * SBLIMIT];
-    unsigned int scale_index[2][SBLIMIT];
-    real    fraction[2][SBLIMIT];
+    real    fraction[2][SBLIMIT]; /* FIXME: change real -> double ? */
+    sideinfo_layer_I si;
     struct frame *fr = &(mp->fr);
-    int     i, stereo = fr->stereo;
     int     single = fr->single;
+    int     i, clip = 0;
 
-    fr->jsbound = (fr->mode == MPG_MD_JOINT_STEREO) ? (fr->mode_ext << 2) + 4 : 32;
+    I_step_one(mp, &si);
 
-    if (stereo == 1 || single == 3)
+    if (fr->stereo == 1 || single == 3)
         single = 0;
 
-    I_step_one(mp, balloc, scale_index, fr);
-
-    for (i = 0; i < SCALE_BLOCK; i++) {
-        I_step_two(mp, fraction, balloc, scale_index, fr);
-
-        if (single >= 0) {
+    if (single >= 0) {
+        /* decoding one of possibly two channels */
+        for (i = 0; i < SCALE_BLOCK; i++) {
+            I_step_two(mp, &si, fraction);
             clip += synth_1to1_mono(mp, (real *) fraction[single], pcm_sample, pcm_point);
         }
-        else {
+    }
+    else {
+        for (i = 0; i < SCALE_BLOCK; i++) {
             int     p1 = *pcm_point;
+            I_step_two(mp, &si, fraction);
             clip += synth_1to1(mp, (real *) fraction[0], 0, pcm_sample, &p1);
             clip += synth_1to1(mp, (real *) fraction[1], 1, pcm_sample, pcm_point);
         }

@@ -80,7 +80,7 @@ InitMP3(PMPSTR mp)
 
     init_layer3(SBLIMIT);
 
-    init_layer2();
+    init_layer2(); /* layer1 shares some global vars with layer2 */
 
     return 1;
 }
