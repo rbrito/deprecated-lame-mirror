@@ -587,7 +587,11 @@ count_bit_noESC_from3(const int *ix, const int *end, int max, unsigned int * s)
 */
 static int count_bit_null(const int* ix, const int* end, int max, unsigned int* s)
 {
-  return 0;
+    (void) ix;
+    (void) end;
+    (void) max;
+    (void) s;
+    return 0;
 }
 
 typedef int (*count_fnc)(const int* ix, const int* end, int max, unsigned int* s);

@@ -96,7 +96,6 @@ I_step_two(PMPSTR mp, sideinfo_layer_I *si, real fraction[2][SBLIMIT])
 {
     double  r0, r1;
     struct frame *fr = &(mp->fr);
-    int     jsbound = (fr->mode == MPG_MD_JOINT_STEREO) ? (fr->mode_ext << 2) + 4 : 32;
     int     ds_limit = fr->down_sample_sblimit;
     int     i;
 

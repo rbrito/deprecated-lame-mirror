@@ -60,9 +60,6 @@ char   *strchr(), *strrchr();
 #include "util.h"
 #include "bitstream.h"
 
-#if _MSC_VER == 0
-extern char* strdup( char const* );
-#endif
 
 static const char *const genre_names[] = {
     /*
@@ -1186,7 +1183,7 @@ id3tag_set_fieldvalue(lame_global_flags * gfp, const char *fieldvalue)
                     return -1;
                 }
                 gfc->tag_spec.values = (char **) p;
-                gfc->tag_spec.values[gfc->tag_spec.num_values++] = strdup(fieldvalue);
+                local_strdup(&gfc->tag_spec.values[gfc->tag_spec.num_values++], fieldvalue);
             }
         }
         gfc->tag_spec.flags |= CHANGED_FLAG;
