@@ -625,11 +625,11 @@ decodeMP3_clipchoice(PMPSTR mp, unsigned char *in, int isize, char *out, int *do
                 return iret;
             mp->framesize = bytes + mp->ssize + mp->dsize;
             mp->fsizeold_nopadding = mp->framesize - mp->fr.padding;
-            /*
+#if 0
                lame_report_fnc(mp->report_dbg,"hip: freeformat bitstream:  estimated bitrate=%ikbs  \n",
                8*(4+mp->framesize)*freqs[mp->fr.sampling_frequency]/
                (1000*576*(2-mp->fr.lsf)));
-             */
+#endif
         }
     }
 
@@ -641,7 +641,7 @@ decodeMP3_clipchoice(PMPSTR mp, unsigned char *in, int isize, char *out, int *do
 
     if (bytes > 0) {
         int     size;
-#if 0
+#if 1
         /* FIXME: while loop OK ??? */
         while (bytes > 512) {
             read_buf_byte(mp);
