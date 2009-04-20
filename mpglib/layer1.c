@@ -59,33 +59,33 @@ I_step_one(PMPSTR mp, sideinfo_layer_I* si)
 
     if (fr->stereo == 2) {
         for (i = 0; i < jsbound; i++) {
-            unsigned char b0 = getbits(mp, 4);              /* values 0-15 */
-            unsigned char b1 = getbits(mp, 4);              /* values 0-15 */
+            unsigned char b0 = get_leq_8_bits(mp, 4);       /* values 0-15 */
+            unsigned char b1 = get_leq_8_bits(mp, 4);       /* values 0-15 */
             si->allocation[i][0] = b0;
             si->allocation[i][1] = b1;
         }
         for (i = jsbound; i < SBLIMIT; i++) {
-            unsigned char b = getbits(mp, 4);               /* values 0-15 */
+            unsigned char b = get_leq_8_bits(mp, 4);        /* values 0-15 */
             si->allocation[i][0] = b;
             si->allocation[i][1] = b;
         }
         for (i = 0; i < SBLIMIT; i++) {
             unsigned char n0 = si->allocation[i][0];
             unsigned char n1 = si->allocation[i][1];
-            unsigned char b0 = n0 ? getbits(mp, 6) : 0;     /* values 0-63 */
-            unsigned char b1 = n1 ? getbits(mp, 6) : 0;     /* values 0-63 */
+            unsigned char b0 = n0 ? get_leq_8_bits(mp, 6) : 0;  /* values 0-63 */
+            unsigned char b1 = n1 ? get_leq_8_bits(mp, 6) : 0;  /* values 0-63 */
             si->scalefactor[i][0] = b0;
             si->scalefactor[i][1] = b1;
         }
     }
     else {
         for (i = 0; i < SBLIMIT; i++) {
-            unsigned char b0 =  getbits(mp, 4);             /* values 0-15 */
+            unsigned char b0 =  get_leq_8_bits(mp, 4);          /* values 0-15 */
             si->allocation[i][0] = b0;
         }
         for (i = 0; i < SBLIMIT; i++) {
             unsigned char n0 = si->allocation[i][0];
-            unsigned char b0 = n0 ? getbits(mp, 6) : 0;     /* values 0-63 */
+            unsigned char b0 = n0 ? get_leq_8_bits(mp, 6) : 0;  /* values 0-63 */
             si->scalefactor[i][0] = b0;
         }
     }
@@ -112,14 +112,14 @@ I_step_two(PMPSTR mp, sideinfo_layer_I *si, real fraction[2][SBLIMIT])
             assert( n0 < 16 );
             assert( n1 < 16 );
             if (n0 > 0) {
-                unsigned short v = getbits(mp, n0 + 1); /* 0-65535 */
+                unsigned short v = get_leq_16_bits(mp, n0 + 1); /* 0-65535 */
                 r0 = (((-1) << n0) + v + 1) * muls[n0 + 1][i0];
             }
             else {
                 r0 = 0;
             }
             if (n1 > 0) {
-                unsigned short v = getbits(mp, n1 + 1); /* 0-65535 */
+                unsigned short v = get_leq_16_bits(mp, n1 + 1); /* 0-65535 */
                 r1 = (((-1) << n1) + v + 1) * muls[n1 + 1][i1];
             }
             else {
@@ -136,7 +136,7 @@ I_step_two(PMPSTR mp, sideinfo_layer_I *si, real fraction[2][SBLIMIT])
             assert( i1 < 64 );
             assert( n < 16 );
             if (n > 0) {
-                unsigned short v = getbits(mp, n + 1); /* 0-65535 */
+                unsigned short v = get_leq_16_bits(mp, n + 1); /* 0-65535 */
                 unsigned int w = (((-1) << n) + v + 1);
                 r0 = w * muls[n + 1][i0];
                 r1 = w * muls[n + 1][i1];
@@ -159,7 +159,7 @@ I_step_two(PMPSTR mp, sideinfo_layer_I *si, real fraction[2][SBLIMIT])
             assert( j < 64 );
             assert( n < 16 );
             if (n > 0) {
-                unsigned short v = getbits(mp, n + 1);
+                unsigned short v = get_leq_16_bits(mp, n + 1);
                 r0 = (((-1) << n) + v + 1) * muls[n + 1][j];
             }
             else {

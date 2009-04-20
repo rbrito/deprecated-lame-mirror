@@ -348,7 +348,7 @@ ReadBytes(FILE * fp, char *p, int n)
     /* What about fread? */
 
     while (!feof(fp) & (n-- > 0))
-        *p++ = getc(fp);
+        *p++ = (char) getc(fp);
 }
 #endif
 
@@ -360,7 +360,7 @@ ReadBytesSwapped(FILE * fp, char *p, int n)
     /* What about fread? */
 
     while (!feof(fp) & (n-- > 0))
-        *q++ = getc(fp);
+        *q++ = (char) getc(fp);
 
     /* If not all bytes could be read, the resorting is different
      * from the normal resorting. Is this intention or another bug?
@@ -368,7 +368,7 @@ ReadBytesSwapped(FILE * fp, char *p, int n)
     for (q--; p < q; p++, q--) {
         n = *p;
         *p = *q;
-        *q = n;
+        *q = (char) n;
     }
 }
 

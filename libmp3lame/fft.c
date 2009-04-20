@@ -308,6 +308,7 @@ init_fft(lame_internal_flags * const gfc)
     for (i = 0; i < BLKSIZE_s / 2; i++)
         window_s[i] = 0.5 * (1.0 - cos(2.0 * PI * (i + 0.5) / BLKSIZE_s));
 
+    gfc->fft_fht = fht;
 #ifdef HAVE_NASM
     if (gfc->CPU_features.AMD_3DNow) {
         gfc->fft_fht = fht_3DN;
@@ -315,16 +316,14 @@ init_fft(lame_internal_flags * const gfc)
     else if (gfc->CPU_features.SSE) {
         gfc->fft_fht = fht_SSE;
     }
-    else
+    else {
+        gfc->fft_fht = fht;
+    }
 #else
 #ifdef HAVE_XMMINTRIN_H
 #ifdef MIN_ARCH_SSE
     gfc->fft_fht = fht_SSE2;
-    if (0)
 #endif
 #endif
 #endif
-    {
-        gfc->fft_fht = fht;
-    }
 }

@@ -39,6 +39,8 @@
 #include  <sys/stat.h>
 #endif
 
+#include <assert.h>
+
 #include "common.h"
 
 #ifdef WITH_DMALLOC
@@ -322,6 +324,19 @@ getbits_fast(PMPSTR mp, int number_of_bits)
     return rval;
 }
 
+unsigned char
+get_leq_8_bits(PMPSTR mp, unsigned int number_of_bits)
+{
+    assert(number_of_bits <= 8);
+    return (unsigned char) getbits_fast(mp, number_of_bits);
+}
+
+unsigned short
+get_leq_16_bits(PMPSTR mp, unsigned int number_of_bits)
+{
+    assert(number_of_bits <= 16);
+    return (unsigned short) getbits_fast(mp, number_of_bits);
+}
 
 int
 set_pointer(PMPSTR mp, long backstep)

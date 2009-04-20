@@ -1269,11 +1269,11 @@ parse_aiff_header(lame_global_flags * gfp, FILE * sf)
             ckSize = make_even_number_of_bytes_in_length(subSize);
             chunkSize -= ckSize;
 
-            aiff_info.numChannels = Read16BitsHighLow(sf);
+            aiff_info.numChannels = (short) Read16BitsHighLow(sf);
             ckSize -= 2;
             aiff_info.numSampleFrames = Read32BitsHighLow(sf);
             ckSize -= 4;
-            aiff_info.sampleSize = Read16BitsHighLow(sf);
+            aiff_info.sampleSize = (short) Read16BitsHighLow(sf);
             ckSize -= 2;
             aiff_info.sampleRate = ReadIeeeExtendedHighLow(sf);
             ckSize -= 10;
@@ -1761,7 +1761,7 @@ lame_decode_fromfile(FILE * fd, short pcm_l[], short pcm_r[], mp3data_struct * m
 
 
     /* read until we get a valid output frame */
-    while (1) {
+    for (;;) {
         len = fread(buf, 1, 1024, fd);
         if (len == 0) {
             /* we are done reading the file, but check for buffered data */

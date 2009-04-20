@@ -300,7 +300,7 @@ console_up(int n_lines)
 
         console_flush();
         GetConsoleScreenBufferInfo(Console_IO.Console_Handle, &CSBI);
-        Pos.Y = CSBI.dwCursorPosition.Y - n_lines;
+        Pos.Y = (SHORT)(CSBI.dwCursorPosition.Y - n_lines);
         Pos.X = 0;
         SetConsoleCursorPosition(Console_IO.Console_Handle, Pos);
     }

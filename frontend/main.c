@@ -110,7 +110,7 @@ parse_args_from_string(lame_global_flags * const gfp, const char *p, char *inPat
     strcpy(q, p);
 
     r[c++] = "lhama";
-    while (1) {
+    for (;;) {
         r[c++] = q;
         while (*q != ' ' && *q != '\0')
             q++;

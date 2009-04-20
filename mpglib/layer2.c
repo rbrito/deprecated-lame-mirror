@@ -137,15 +137,15 @@ II_step_one(PMPSTR mp, sideinfo_layer_II *si, struct frame *fr)
     if (nch == 2) {
         for (i = 0; i < jsbound; ++i) {
             short   step = alloc1->bits;
-            unsigned char b0 = getbits(mp, step);
-            unsigned char b1 = getbits(mp, step);
+            unsigned char b0 = get_leq_8_bits(mp, step);
+            unsigned char b1 = get_leq_8_bits(mp, step);
             alloc1 += (1 << step);
             si->allocation[i][0] = b0;
             si->allocation[i][1] = b1;
         }
         for (i = jsbound; i < sblimit; ++i) {
             short   step = alloc1->bits;
-            unsigned char b0 = getbits(mp, step);
+            unsigned char b0 = get_leq_8_bits(mp, step);
             alloc1 += (1 << step);
             si->allocation[i][0] = b0;
             si->allocation[i][1] = b0;
@@ -153,8 +153,8 @@ II_step_one(PMPSTR mp, sideinfo_layer_II *si, struct frame *fr)
         for (i = 0; i < sblimit; ++i) {
             unsigned char n0 = si->allocation[i][0];
             unsigned char n1 = si->allocation[i][1];
-            unsigned char b0 = n0 ? getbits_fast(mp, 2) : 0;
-            unsigned char b1 = n1 ? getbits_fast(mp, 2) : 0;
+            unsigned char b0 = n0 ? get_leq_8_bits(mp, 2) : 0;
+            unsigned char b1 = n1 ? get_leq_8_bits(mp, 2) : 0;
             scfsi[i][0] = b0;
             scfsi[i][1] = b1;
         }
@@ -162,13 +162,13 @@ II_step_one(PMPSTR mp, sideinfo_layer_II *si, struct frame *fr)
     else {              /* mono */
         for (i = 0; i < sblimit; ++i) {
             short   step = alloc1->bits;
-            unsigned char b0 = getbits(mp, step);
+            unsigned char b0 = get_leq_8_bits(mp, step);
             alloc1 += (1 << step);
             si->allocation[i][0] = b0;
         }
         for (i = 0; i < sblimit; ++i) {
             unsigned char n0 = si->allocation[i][0];
-            unsigned char b0 = n0 ? getbits_fast(mp, 2) : 0;
+            unsigned char b0 = n0 ? get_leq_8_bits(mp, 2) : 0;
             scfsi[i][0] = b0;
         }
     }
@@ -178,23 +178,23 @@ II_step_one(PMPSTR mp, sideinfo_layer_II *si, struct frame *fr)
             if (si->allocation[i][ch]) {
                 switch (scfsi[i][ch]) {
                     case 0:
-                        s0 = getbits_fast(mp, 6);
-                        s1 = getbits_fast(mp, 6);
-                        s2 = getbits_fast(mp, 6);
+                        s0 = get_leq_8_bits(mp, 6);
+                        s1 = get_leq_8_bits(mp, 6);
+                        s2 = get_leq_8_bits(mp, 6);
                         break;
                     case 1:
-                        s0 = getbits_fast(mp, 6);
+                        s0 = get_leq_8_bits(mp, 6);
                         s1 = s0;
-                        s2 = getbits_fast(mp, 6);
+                        s2 = get_leq_8_bits(mp, 6);
                         break;
                     case 2:
-                        s0 = getbits_fast(mp, 6);
+                        s0 = get_leq_8_bits(mp, 6);
                         s1 = s0;
                         s2 = s0;
                         break;
                     case 3:
-                        s0 = getbits_fast(mp, 6); 
-                        s1 = getbits_fast(mp, 6);
+                        s0 = get_leq_8_bits(mp, 6); 
+                        s1 = get_leq_8_bits(mp, 6);
                         s2 = s1;
                         break;
                     default:

@@ -88,7 +88,9 @@ char   *strchr(), *strrchr();
 #define DEV_HELP(a)
 #endif
 
-
+static int lame_alpha_version_enabled = LAME_ALPHA_VERSION;
+static int internal_opts_enabled = INTERNAL_OPTS;
+extern void lame_set_tune(lame_t, float); /* FOR INTERNAL USE ONLY */
 
 /* GLOBAL VARIABLES.  set by parse_args() */
 /* we need to clean this up */
@@ -170,6 +172,7 @@ SetPriorityClassMacro(DWORD p)
 static void
 setWin32Priority(lame_global_flags * gfp, int Priority)
 {
+    (void) gfp;
     switch (Priority) {
     case 0:
     case 1:
@@ -520,7 +523,7 @@ lame_version_print(FILE * const fp)
     else
         fprintf(fp, "LAME version %s\n%*s(%s)\n\n", v, lw - 2 - lenu, "", u);
 
-    if (LAME_ALPHA_VERSION)
+    if (lame_alpha_version_enabled)
         fprintf(fp, "warning: alpha versions should be used for testing only\n\n");
 
 
@@ -1220,8 +1223,8 @@ local_strcasecmp(const char *s1, const char *s2)
     unsigned char c2;
 
     do {
-        c1 = tolower(*s1);
-        c2 = tolower(*s2);
+        c1 = (unsigned char) tolower(*s1);
+        c2 = (unsigned char) tolower(*s2);
         if (!c1) {
             break;
         }
@@ -1531,7 +1534,7 @@ enum ID3TAG_MODE
 
 #define T_IF(str)          if ( 0 == local_strcasecmp (token,str) ) {
 #define T_ELIF(str)        } else if ( 0 == local_strcasecmp (token,str) ) {
-#define T_ELIF_INTERNAL(str)        } else if (INTERNAL_OPTS && (0 == local_strcasecmp (token,str)) ) {
+#define T_ELIF_INTERNAL(str) } else if (internal_opts_enabled && (0 == local_strcasecmp (token,str)) ) {
 #define T_ELIF2(str1,str2) } else if ( 0 == local_strcasecmp (token,str1)  ||  0 == local_strcasecmp (token,str2) ) {
 #define T_ELSE             } else {
 #define T_END              }
@@ -2125,10 +2128,7 @@ parse_args(lame_global_flags * gfp, int argc, char **argv,
 
                 T_ELIF_INTERNAL("tune") /*without helptext */
                     argUsed = 1;
-                {
-                    extern void lame_set_tune(lame_t, float);
                     lame_set_tune(gfp, (float) atof(nextArg));
-                }
 
                 T_ELIF_INTERNAL("shortthreshold") {
                     float   x, y;
@@ -2338,7 +2338,7 @@ parse_args(lame_global_flags * gfp, int argc, char **argv,
                                 y = x;
                             }
                             argUsed = 1;
-                            if (INTERNAL_OPTS) {
+                            if (internal_opts_enabled) {
                                 lame_set_quant_comp(gfp, x);
                                 lame_set_quant_comp_short(gfp, y);
                             }
@@ -2354,7 +2354,7 @@ parse_args(lame_global_flags * gfp, int argc, char **argv,
                         {
                             int     n = 1;
                             argUsed = sscanf(arg, "%d", &n);
-                            if (INTERNAL_OPTS) {
+                            if (internal_opts_enabled) {
                                 lame_set_experimentalZ(gfp, n);
                             }
                         }
