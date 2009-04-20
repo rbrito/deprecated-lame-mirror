@@ -1,3 +1,15 @@
+lame (3.99~cvs20090419) unstable; urgency=low
+
+  * Updating the packaging of lame.
+  * debian/control: include autotools-dev as a build dependency.
+  * debian/rules:
+    + made use of autotools-dev.
+    + remove switch --without-vorbis.
+    + substituted `pwd` by $(CURDIR).
+  * debian/watch: also consider versions with a letter in them.
+
+ -- Rogério Brito <rbrito@users.sf.net>  Sun, 19 Apr 2009 20:20:27 -0300
+
 lame (3.99~cvs20081106) unstable; urgency=low
 
   * changes are now (mostly) committed to changelog.
