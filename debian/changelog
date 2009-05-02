@@ -1,3 +1,24 @@
+lame (3.99~cvs20090502) unstable; urgency=low
+
+  * Update based on many suggestions by Fabian Greffrath.
+  * debian/compat: update to 7.
+  * debian/control:
+    + remame libmp3lame0-dev to libmp3lame-dev.
+    + remove dependency on libc6-dev from libmp3lame-dev.
+    + bump dependency on debhelper to 7.
+    + bump Standards-Version to 3.8.0.
+  * debian/libmp3lame0-dev.files: rename to libmp3lame-dev.files.
+  * debian/*.files: rename to *.install.
+  * debian/rules:
+    + replace obsolete dh_clean -k with dh_prep.
+    + substitute the use of dh_movefiles with dh_install.
+    + changed the *FLAGS variables to use appends, not attributions.
+    + include options -O1, -z,defs for the linker.
+    + no need to pass options to dh_installman.
+    + no need to pass options to dh_installchangelogs.
+
+ -- Rogério Brito <rbrito@users.sf.net>  Sat, 02 May 2009 10:26:40 -0300
+
 lame (3.99~cvs20090419) unstable; urgency=low
 
   * Updating the packaging of lame.

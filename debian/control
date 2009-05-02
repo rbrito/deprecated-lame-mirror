@@ -4,8 +4,8 @@ Priority: optional
 Maintainer: Rogério Brito <rbrito@users.sf.net>
 Bugs: mailto:lame-dev@lists.sourceforge.net
 Homepage: http://lame.sourceforge.net/
-Build-Depends: debhelper (>= 5), libncurses5-dev, nasm [i386], libsndfile1-dev, autotools-dev
-Standards-Version: 3.7.3
+Build-Depends: debhelper (>= 7), libncurses5-dev, nasm [i386], libsndfile1-dev, autotools-dev
+Standards-Version: 3.8.0
 
 Package: lame
 Architecture: any
@@ -32,10 +32,10 @@ Description: shared libraries for MP3 encoding
  .
  This package contains the dynamic library.
 
-Package: libmp3lame0-dev
+Package: libmp3lame-dev
 Architecture: any
 Section: libdevel
-Depends: libmp3lame0 (= ${binary:Version}), libc6-dev
+Depends: libmp3lame0 (= ${binary:Version})
 Conflicts: liblame-dev
 Replaces: liblame-dev
 Description: development files for lame
