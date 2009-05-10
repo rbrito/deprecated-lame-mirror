@@ -235,8 +235,8 @@ private:
 
 	REFERENCE_TIME m_rtBytePos;
 
-	BOOL						m_bStreamOutput;	// Binary stream output
-	long						m_cbStramAlignment;	// Stream block size
+	BOOL						m_bStreamOutput;      // Binary stream output
+	long						m_cbStreamAlignment;  // Stream block size
     int                         m_CapsNum;
 	int                         m_currentMediaTypeIndex;
     output_caps_t               OutputCaps[MAX_IAMSTREAMCONFIG_CAPS];
