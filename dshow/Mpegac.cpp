@@ -385,9 +385,9 @@ HRESULT CMpegAudEnc::FlushEncodedSamples()
 		HRESULT hr = S_OK;
 		const unsigned char *   pblock      = NULL;
 		int iBufferSize;
-		int iBlockLenght = m_Encoder.GetBlockAligned(&pblock, &iBufferSize, m_cbStramAlignment);
+		int iBlockLength = m_Encoder.GetBlockAligned(&pblock, &iBufferSize, m_cbStreamAlignment);
 		
-		if(!iBlockLenght)
+		if(!iBlockLength)
 			return S_OK;
 
 		hr = m_pOutput->GetDeliveryBuffer(&pOutSample, NULL, NULL, 0);
@@ -396,11 +396,11 @@ HRESULT CMpegAudEnc::FlushEncodedSamples()
 			hr = pOutSample->GetPointer(&pDst);
 			if (hr == S_OK && pDst)
 			{
-				CopyMemory(pDst, pblock, iBlockLenght);
+				CopyMemory(pDst, pblock, iBlockLength);
 				REFERENCE_TIME rtEndPos = m_rtBytePos + iBufferSize;
 				EXECUTE_ASSERT(S_OK == pOutSample->SetTime(&m_rtBytePos, &rtEndPos));
 				pOutSample->SetActualDataLength(iBufferSize);
-				m_rtBytePos += iBlockLenght;
+				m_rtBytePos += iBlockLength;
 				m_pOutput->Deliver(pOutSample);
 			}
 
@@ -731,10 +731,10 @@ HRESULT CMpegAudEnc::DecideBufferSize(
     HRESULT hr = S_OK;
 
 	if(m_bStreamOutput)
-		m_cbStramAlignment = pProperties->cbAlign;
+		m_cbStreamAlignment = pProperties->cbAlign;
 
     ///
-    pProperties->cBuffers = 1;
+    if (pProperties->cBuffers == 0) pProperties->cBuffers = 1;  // If downstream filter didn't suggest a buffer count then default to 1
     pProperties->cbBuffer = OUT_BUFFER_SIZE;
 	//
 	
