@@ -43,6 +43,7 @@
 #endif
 
 
+static int gd_are_hip_tables_layer3_initialized = 0;
 
 static real ispow[8207];
 static real aa_ca[8], aa_cs[8];
@@ -148,9 +149,14 @@ get1bit(PMPSTR mp)
  * init tables for layer-3 
  */
 void
-init_layer3(int down_sample_sblimit)
+hip_init_tables_layer3(void)
 {
     int     i, j, k;
+
+    if (gd_are_hip_tables_layer3_initialized) {
+        return;
+    }
+    gd_are_hip_tables_layer3_initialized = 1;
 
     for (i = -256; i < 118 + 4; i++)
         gainpow2[i + 256] = pow((double) 2.0, -0.25 * (double) (i + 210));
@@ -207,7 +213,7 @@ init_layer3(int down_sample_sblimit)
     }
 
     for (j = 0; j < 4; j++) {
-        static int len[4] = { 36, 36, 12, 36 };
+        static int const len[4] = { 36, 36, 12, 36 };
         for (i = 0; i < len[j]; i += 2)
             win1[j][i] = +win[j][i];
         for (i = 1; i < len[j]; i += 2)
@@ -291,13 +297,13 @@ init_layer3(int down_sample_sblimit)
     for (j = 0; j < 9; j++) {
         for (i = 0; i < 23; i++) {
             longLimit[j][i] = (bandInfo[j].longIdx[i] - 1 + 8) / 18 + 1;
-            if (longLimit[j][i] > (down_sample_sblimit))
-                longLimit[j][i] = down_sample_sblimit;
+            if (longLimit[j][i] > SBLIMIT)
+                longLimit[j][i] = SBLIMIT;
         }
         for (i = 0; i < 14; i++) {
             shortLimit[j][i] = (bandInfo[j].shortIdx[i] - 1) / 18 + 1;
-            if (shortLimit[j][i] > (down_sample_sblimit))
-                shortLimit[j][i] = down_sample_sblimit;
+            if (shortLimit[j][i] > SBLIMIT)
+                shortLimit[j][i] = SBLIMIT;
         }
     }
 
@@ -1588,7 +1594,7 @@ layer3_audiodata_precedesframes(PMPSTR mp)
 }
 
 int
-do_layer3_sideinfo(PMPSTR mp)
+decode_layer3_sideinfo(PMPSTR mp)
 {
     struct frame *fr = &mp->fr;
     int     stereo = fr->stereo;
@@ -1631,7 +1637,7 @@ do_layer3_sideinfo(PMPSTR mp)
 
 
 int
-do_layer3(PMPSTR mp, unsigned char *pcm_sample, int *pcm_point,
+decode_layer3_frame(PMPSTR mp, unsigned char *pcm_sample, int *pcm_point,
           int (*synth_1to1_mono_ptr) (PMPSTR, real *, unsigned char *, int *),
           int (*synth_1to1_ptr) (PMPSTR, real *, int, unsigned char *, int *))
 {

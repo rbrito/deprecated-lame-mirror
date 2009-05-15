@@ -48,6 +48,10 @@ extern void lame_report_def(const char* format, va_list args);
 int
 InitMP3(PMPSTR mp)
 {
+    hip_init_tables_layer1();
+    hip_init_tables_layer2();
+    hip_init_tables_layer3();
+
     memset(mp, 0, sizeof(MPSTR));
 
     mp->framesize = 0;
@@ -77,10 +81,6 @@ InitMP3(PMPSTR mp)
     mp->report_msg = &lame_report_def;
 
     make_decode_tables(32767);
-
-    init_layer3(SBLIMIT);
-
-    init_layer2(); /* layer1 shares some global vars with layer2 */
 
     return 1;
 }
@@ -536,7 +536,7 @@ decodeMP3_clipchoice(PMPSTR mp, unsigned char *in, int isize, char *out, int *do
 
             if (mp->fr.error_protection)
                 getbits(mp, 16);
-            bits = do_layer3_sideinfo(mp);
+            bits = decode_layer3_sideinfo(mp);
             /* bits = actual number of bits needed to parse this frame */
             /* can be negative, if all bits needed are in the reservoir */
             if (bits < 0)
@@ -544,7 +544,17 @@ decodeMP3_clipchoice(PMPSTR mp, unsigned char *in, int isize, char *out, int *do
 
             /* read just as many bytes as necessary before decoding */
             mp->dsize = (bits + 7) / 8;
-
+            
+            if (!mp->free_format) {
+                /* do not read more than framsize data */
+                int framesize = mp->fr.framesize - mp->ssize;
+                if (mp->dsize > framesize) {
+                    lame_report_fnc(mp->report_err,
+                            "hip: error audio data exceeds framesize by %d bytes\n", 
+                            mp->dsize - framesize);
+                    mp->dsize = framesize;
+                }
+            }
 #ifdef HIP_DEBUG
             lame_report_fnc(mp->report_dbg,
                     "hip: %d bits needed to parse layer III frame, number of bytes to read before decoding dsize = %d\n",
@@ -587,18 +597,18 @@ decodeMP3_clipchoice(PMPSTR mp, unsigned char *in, int isize, char *out, int *do
             if (mp->fr.error_protection)
                 getbits(mp, 16);
 
-            do_layer1(mp, (unsigned char *) out, done);
+            decode_layer1_frame(mp, (unsigned char *) out, done);
             break;
 
         case 2:
             if (mp->fr.error_protection)
                 getbits(mp, 16);
 
-            do_layer2(mp, (unsigned char *) out, done);
+            decode_layer2_frame(mp, (unsigned char *) out, done);
             break;
 
         case 3:
-            do_layer3(mp, (unsigned char *) out, done, synth_1to1_mono_ptr, synth_1to1_ptr);
+            decode_layer3_frame(mp, (unsigned char *) out, done, synth_1to1_mono_ptr, synth_1to1_ptr);
             break;
         default:
             lame_report_fnc(mp->report_err, "hip: invalid layer %d\n", mp->fr.lay);

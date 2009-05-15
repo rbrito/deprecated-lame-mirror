@@ -38,13 +38,15 @@
 #endif
 #include <assert.h>
 
+static int gd_are_hip_tables_layer2_initialized = 0;
+
 static unsigned char grp_3tab[32 * 3] = { 0, }; /* used: 27 */
 static unsigned char grp_5tab[128 * 3] = { 0, }; /* used: 125 */
 static unsigned char grp_9tab[1024 * 3] = { 0, }; /* used: 729 */
 
 
 void
-init_layer2(void)
+hip_init_tables_layer2(void)
 {
     static const double mulmul[27] = {
         0.0, -2.0 / 3.0, 2.0 / 3.0,
@@ -63,6 +65,11 @@ init_layer2(void)
     real   *table;
     static const int tablen[3] = { 3, 5, 9 };
     static unsigned char *itable, *tables[3] = { grp_3tab, grp_5tab, grp_9tab };
+
+    if (gd_are_hip_tables_layer2_initialized) {
+        return;
+    }
+    gd_are_hip_tables_layer2_initialized = 1;
 
     for (i = 0; i < 3; i++) {
         itable = tables[i];
@@ -350,7 +357,15 @@ II_select_table(struct frame *fr)
 
 
 int
-do_layer2(PMPSTR mp, unsigned char *pcm_sample, int *pcm_point)
+decode_layer2_sideinfo(PMPSTR mp)
+{
+    (void) mp;
+    /* FIXME: extract side information and check values */
+    return 0;
+}
+
+int
+decode_layer2_frame(PMPSTR mp, unsigned char *pcm_sample, int *pcm_point)
 {
     real    fraction[2][4][SBLIMIT]; /* pick_table clears unused subbands */
     sideinfo_layer_II si;
