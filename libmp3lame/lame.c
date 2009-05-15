@@ -1501,6 +1501,39 @@ lame_print_internals(const lame_global_flags * gfp)
 }
 
 
+static void
+save_gain_values(lame_internal_flags * gfc)
+{
+    SessionConfig_t const *const cfg = &gfc->cfg;
+    RpgStateVar_t const *const rsv = &gfc->sv_rpg;
+    RpgResult_t *const rov = &gfc->ov_rpg;
+    /* save the ReplayGain value */
+    if (cfg->findReplayGain) {
+        FLOAT const RadioGain = (FLOAT) GetTitleGain(rsv->rgdata);
+        assert(NEQ(RadioGain, GAIN_NOT_ENOUGH_SAMPLES));
+        rov->RadioGain = (int) floor(RadioGain * 10.0 + 0.5); /* round to nearest */
+    }
+
+    /* find the gain and scale change required for no clipping */
+    if (cfg->findPeakSample) {
+        rov->noclipGainChange = (int) ceil(log10(rov->PeakSample / 32767.0) * 20.0 * 10.0); /* round up */
+
+        if (rov->noclipGainChange > 0) { /* clipping occurs */
+            if (EQ(cfg->scale, 1.0f) || EQ(cfg->scale, 0.0f))
+                rov->noclipScale = floor((32767.0f / rov->PeakSample) * 100.0f) / 100.0f; /* round down */
+            else
+                /* the user specified his own scaling factor. We could suggest
+                 * the scaling factor of (32767.0/gfc->PeakSample)*(cfg->scale)
+                 * but it's usually very inaccurate. So we'd rather not advice him
+                 * on the scaling factor. */
+                rov->noclipScale = -1.0f;
+        }
+        else            /* no clipping */
+            rov->noclipScale = -1.0f;
+    }
+}
+
+
 
 static int
 update_inbuffer_size(lame_internal_flags * gfc, const int nsamples)
@@ -1974,14 +2007,16 @@ lame_encode_buffer_interleaved(lame_global_flags * gfp,
 int
 lame_encode_flush_nogap(lame_global_flags * gfp, unsigned char *mp3buffer, int mp3buffer_size)
 {
+    int     rc = -3;
     if (is_lame_global_flags_valid(gfp)) {
         lame_internal_flags *const gfc = gfp->internal_flags;
         if (is_lame_internal_flags_valid(gfc)) {
             flush_bitstream(gfc);
-            return copy_buffer(gfc, mp3buffer, mp3buffer_size, 1);
+            rc = copy_buffer(gfc, mp3buffer, mp3buffer_size, 1);
+            save_gain_values(gfc);
         }
     }
-    return -3;
+    return rc;
 }
 
 
@@ -2116,6 +2151,7 @@ lame_encode_flush(lame_global_flags * gfp, unsigned char *mp3buffer, int mp3buff
     /* mp3 related stuff.  bit buffer might still contain some mp3 data */
     flush_bitstream(gfc);
     imp3 = copy_buffer(gfc, mp3buffer, mp3buffer_size_remaining, 1);
+    save_gain_values(gfc);
     if (imp3 < 0) {
         /* some type of fatal error */
         return imp3;

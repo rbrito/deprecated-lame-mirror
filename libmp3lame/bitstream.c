@@ -814,14 +814,10 @@ compute_flushbits(const lame_internal_flags * gfc, int *total_bytes_output)
 }
 
 
-
 void
 flush_bitstream(lame_internal_flags * gfc)
 {
-    SessionConfig_t const *const cfg = &gfc->cfg;
     EncStateVar_t *const esv = &gfc->sv_enc;
-    RpgStateVar_t const *const rsv = &gfc->sv_rpg;
-    RpgResult_t *const rov = &gfc->ov_rpg;
     III_side_info_t *l3_side;
     int     nbytes;
     int     flushbits;
@@ -843,32 +839,6 @@ flush_bitstream(lame_internal_flags * gfc)
        same as filling the bitreservoir with ancillary data, so : */
     esv->ResvSize = 0;
     l3_side->main_data_begin = 0;
-
-
-    /* save the ReplayGain value */
-    if (cfg->findReplayGain) {
-        FLOAT const RadioGain = (FLOAT) GetTitleGain(rsv->rgdata);
-        assert(NEQ(RadioGain, GAIN_NOT_ENOUGH_SAMPLES));
-        rov->RadioGain = (int) floor(RadioGain * 10.0 + 0.5); /* round to nearest */
-    }
-
-    /* find the gain and scale change required for no clipping */
-    if (cfg->findPeakSample) {
-        rov->noclipGainChange = (int) ceil(log10(rov->PeakSample / 32767.0) * 20.0 * 10.0); /* round up */
-
-        if (rov->noclipGainChange > 0) { /* clipping occurs */
-            if (EQ(cfg->scale, 1.0f) || EQ(cfg->scale, 0.0f))
-                rov->noclipScale = floor((32767.0f / rov->PeakSample) * 100.0f) / 100.0f; /* round down */
-            else
-                /* the user specified his own scaling factor. We could suggest
-                 * the scaling factor of (32767.0/gfc->PeakSample)*(cfg->scale)
-                 * but it's usually very inaccurate. So we'd rather not advice him
-                 * on the scaling factor. */
-                rov->noclipScale = -1.0f;
-        }
-        else            /* no clipping */
-            rov->noclipScale = -1.0f;
-    }
 }
 
 
@@ -969,8 +939,88 @@ format_bitstream(lame_internal_flags * gfc)
 }
 
 
+static int
+do_gain_analysis(lame_internal_flags * gfc, unsigned char* buffer, int minimum)
+{
+    SessionConfig_t const *const cfg = &gfc->cfg;
+    RpgStateVar_t const *const rsv = &gfc->sv_rpg;
+    RpgResult_t *const rov = &gfc->ov_rpg;
+#ifdef DECODE_ON_THE_FLY
+    if (cfg->decode_on_the_fly) { /* decode the frame */
+        sample_t pcm_buf[2][1152];
+        int     mp3_in = minimum;
+        int     samples_out = -1;
 
+        /* re-synthesis to pcm.  Repeat until we get a samples_out=0 */
+        while (samples_out != 0) {
 
+            samples_out = hip_decode1_unclipped(gfc->hip, buffer, mp3_in, pcm_buf[0], pcm_buf[1]);
+            /* samples_out = 0:  need more data to decode
+             * samples_out = -1:  error.  Lets assume 0 pcm output
+             * samples_out = number of samples output */
+
+            /* set the lenght of the mp3 input buffer to zero, so that in the
+             * next iteration of the loop we will be querying mpglib about
+             * buffered data */
+            mp3_in = 0;
+
+            if (samples_out == -1) {
+                /* error decoding. Not fatal, but might screw up
+                 * the ReplayGain tag. What should we do? Ignore for now */
+                samples_out = 0;
+            }
+            if (samples_out > 0) {
+                /* process the PCM data */
+
+                /* this should not be possible, and indicates we have
+                 * overflown the pcm_buf buffer */
+                assert(samples_out <= 1152);
+
+                if (cfg->findPeakSample) {
+                    int     i;
+                    /* FIXME: is this correct? maybe Max(fabs(pcm),PeakSample) */
+                    for (i = 0; i < samples_out; i++) {
+                        if (pcm_buf[0][i] > rov->PeakSample)
+                            rov->PeakSample = pcm_buf[0][i];
+                        else if (-pcm_buf[0][i] > rov->PeakSample)
+                            rov->PeakSample = -pcm_buf[0][i];
+                    }
+                    if (cfg->channels_out > 1)
+                        for (i = 0; i < samples_out; i++) {
+                            if (pcm_buf[1][i] > rov->PeakSample)
+                                rov->PeakSample = pcm_buf[1][i];
+                            else if (-pcm_buf[1][i] > rov->PeakSample)
+                                rov->PeakSample = -pcm_buf[1][i];
+                        }
+                }
+
+                if (cfg->findReplayGain)
+                    if (AnalyzeSamples
+                        (rsv->rgdata, pcm_buf[0], pcm_buf[1], samples_out,
+                         cfg->channels_out) == GAIN_ANALYSIS_ERROR)
+                        return -6;
+
+            }       /* if (samples_out>0) */
+        }           /* while (samples_out!=0) */
+    }               /* if (gfc->decode_on_the_fly) */
+#endif
+    return minimum;
+}
+
+static int
+do_copy_buffer(lame_internal_flags * gfc, unsigned char *buffer, int size)
+{
+    Bit_stream_struc *const bs = &gfc->bs;
+    int const minimum = bs->buf_byte_idx + 1;
+    if (minimum <= 0)
+        return 0;
+    if (size != 0 && minimum > size)
+        return -1;      /* buffer is too small */
+    memcpy(buffer, bs->buf, minimum);
+    bs->buf_byte_idx = -1;
+    bs->buf_bit_idx = 0;
+    return minimum;
+}
 
 /* copy data out of the internal MP3 bit buffer into a user supplied
    unsigned char buffer.
@@ -983,89 +1033,16 @@ format_bitstream(lame_internal_flags * gfc)
 int
 copy_buffer(lame_internal_flags * gfc, unsigned char *buffer, int size, int mp3data)
 {
-    SessionConfig_t const *const cfg = &gfc->cfg;
-    RpgStateVar_t const *const rsv = &gfc->sv_rpg;
-    RpgResult_t *const rov = &gfc->ov_rpg;
-    Bit_stream_struc *const bs = &gfc->bs;
-    int const minimum = bs->buf_byte_idx + 1;
-    if (minimum <= 0)
-        return 0;
-    if (size != 0 && minimum > size)
-        return -1;      /* buffer is too small */
-    memcpy(buffer, bs->buf, minimum);
-    bs->buf_byte_idx = -1;
-    bs->buf_bit_idx = 0;
-
-    if (mp3data) {
+    int const minimum = do_copy_buffer(gfc, buffer, size);
+    if (minimum > 0 && mp3data) {
         UpdateMusicCRC(&gfc->nMusicCRC, buffer, minimum);
 
         /** sum number of bytes belonging to the mp3 stream
          *  this info will be written into the Xing/LAME header for seeking
          */
-        if (minimum > 0) {
-            gfc->VBR_seek_table.nBytesWritten += minimum;
-        }
+        gfc->VBR_seek_table.nBytesWritten += minimum;
 
-#ifdef DECODE_ON_THE_FLY
-        if (cfg->decode_on_the_fly) { /* decode the frame */
-            sample_t pcm_buf[2][1152];
-            int     mp3_in = minimum;
-            int     samples_out = -1;
-            int     i;
-
-            /* re-synthesis to pcm.  Repeat until we get a samples_out=0 */
-            while (samples_out != 0) {
-
-                samples_out = hip_decode1_unclipped(gfc->hip, buffer, mp3_in, pcm_buf[0], pcm_buf[1]);
-                /* samples_out = 0:  need more data to decode
-                 * samples_out = -1:  error.  Lets assume 0 pcm output
-                 * samples_out = number of samples output */
-
-                /* set the lenght of the mp3 input buffer to zero, so that in the
-                 * next iteration of the loop we will be querying mpglib about
-                 * buffered data */
-                mp3_in = 0;
-
-                if (samples_out == -1) {
-                    /* error decoding. Not fatal, but might screw up
-                     * the ReplayGain tag. What should we do? Ignore for now */
-                    samples_out = 0;
-                }
-                if (samples_out > 0) {
-                    /* process the PCM data */
-
-                    /* this should not be possible, and indicates we have
-                     * overflown the pcm_buf buffer */
-                    assert(samples_out <= 1152);
-
-                    if (cfg->findPeakSample) {
-                        /* FIXME: is this correct? maybe Max(fabs(pcm),PeakSample) */
-                        for (i = 0; i < samples_out; i++) {
-                            if (pcm_buf[0][i] > rov->PeakSample)
-                                rov->PeakSample = pcm_buf[0][i];
-                            else if (-pcm_buf[0][i] > rov->PeakSample)
-                                rov->PeakSample = -pcm_buf[0][i];
-                        }
-                        if (cfg->channels_out > 1)
-                            for (i = 0; i < samples_out; i++) {
-                                if (pcm_buf[1][i] > rov->PeakSample)
-                                    rov->PeakSample = pcm_buf[1][i];
-                                else if (-pcm_buf[1][i] > rov->PeakSample)
-                                    rov->PeakSample = -pcm_buf[1][i];
-                            }
-                    }
-
-                    if (cfg->findReplayGain)
-                        if (AnalyzeSamples
-                            (rsv->rgdata, pcm_buf[0], pcm_buf[1], samples_out,
-                             cfg->channels_out) == GAIN_ANALYSIS_ERROR)
-                            return -6;
-
-                }       /* if (samples_out>0) */
-            }           /* while (samples_out!=0) */
-        }               /* if (gfc->decode_on_the_fly) */
-#endif
-
+        return do_gain_analysis(gfc, buffer, minimum);
     }                   /* if (mp3data) */
     return minimum;
 }
