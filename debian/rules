@@ -58,9 +58,9 @@ clean:
 	rm -f build-stamp configure-stamp
 
 	[ ! -f Makefile ] || $(MAKE) distclean
-	dh_clean config.sub config.guess
-	# confcache libmp3lame/i386/choose_table.nas.lst \
-	#	libmp3lame/i386/cpu_feat.nas.lst libmp3lame/i386/scalar.nas.lst \
+	dh_clean confcache libmp3lame/i386/choose_table.nas.lst \
+	libmp3lame/i386/cpu_feat.nas.lst libmp3lame/i386/scalar.nas.lst \
+	config.sub config.guess
 
 install: build
 	dh_testdir
