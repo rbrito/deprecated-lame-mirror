@@ -7,11 +7,11 @@ EXTRA_DIST = \
 	compat \
 	control \
 	copyright \
-	libmp3lame0-dev.docs \
-	libmp3lame0-dev.files \
-	libmp3lame0.files \
+	libmp3lame-dev.docs \
+	libmp3lame-dev.install \
+	libmp3lame0.install \
 	lame.docs \
-	lame.files \
+	lame.install \
 	lame.manpages \
 	rules \
 	watch
