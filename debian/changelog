@@ -1,4 +1,4 @@
-lame (3.99~cvs20090502) unstable; urgency=low
+lame (3.99~cvs20091122) unstable; urgency=low
 
   * Update based on many suggestions by Fabian Greffrath.
   * debian/compat: update to 7.
@@ -16,8 +16,9 @@ lame (3.99~cvs20090502) unstable; urgency=low
     + include options -O1, -z,defs for the linker.
     + no need to pass options to dh_installman.
     + no need to pass options to dh_installchangelogs.
+  * Initial transition to source format "3.0 (quilt)".
 
- -- Rogério Brito <rbrito@users.sf.net>  Sat, 02 May 2009 10:26:40 -0300
+ -- Rogério Brito <rbrito@users.sf.net>  Sun, 22 Nov 2009 19:19:39 -0200
 
 lame (3.99~cvs20090419) unstable; urgency=low
 
