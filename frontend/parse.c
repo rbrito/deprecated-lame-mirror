@@ -162,7 +162,7 @@ dosToLongFileName(char *fn)
 BOOL
 SetPriorityClassMacro(DWORD p)
 {
-    HANDLE  op = OpenProcess(PROCESS_ALL_ACCESS, TRUE, GetCurrentProcessId());
+    HANDLE  op = GetCurrentProcess();
     return SetPriorityClass(op, p);
 }
 
