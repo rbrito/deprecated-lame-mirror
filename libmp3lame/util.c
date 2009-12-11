@@ -158,10 +158,12 @@ freegfc(lame_internal_flags * const gfc)
     }
     free_id3tag(gfc);
 
+#ifdef DECODE_ON_THE_FLY
     if (gfc->hip) {
         hip_decode_exit(gfc->hip);
         gfc->hip = 0;
     }
+#endif
 
     free_global_data(gfc);
 
