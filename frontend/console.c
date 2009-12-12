@@ -81,66 +81,46 @@ my_report_printing(FILE * fp, const char *format, va_list ap)
  */
 
 #ifdef HAVE_TERMCAP
+
+static void
+get_termcap_string(char const* id, char* dest, size_t n)
+{
+    char    tc[16];
+    char   *tp = tc;
+    tp[0] = '\0';
+    tp = tgetstr(id, &tp);
+    if (tp != NULL && dest != NULL && n > 0) {
+        strncpy(dest, tp, n);
+        dest[n-1] = '\0';
+    }
+}
+
+static void 
+get_termcap_number(char const* id, int* dest, int low, int high)
+{
+    int const val = tgetnum(id);
+    if (low <= val && val <= high) {
+        *dest = val;
+    }
+}
+
 static void
 apply_termcap_settings(Console_IO_t * const mfp)
 {
-    const char *term_name;
-    char    term_buff[2048];
-    char   *tp;
-    char    tc[10];
-    int     val;
-
     /* try to catch additional information about special console sequences */
-
-    if ((term_name = getenv("TERM")) == NULL) {
-        /*  rh 061105:
-            silently ignore it and fallback to the behaviour as if
-            TERMCAP wasn't defined at all
-         */
-        return;
-        /*
-        fprintf(mfp->Error_fp, "LAME: Can't get \"TERM\" environment string.\n");
-        return -1;
-        */
+    char const* term_name = getenv("TERM");
+    if (NULL != term_name) {
+        char    term_buff[4096];
+        int const ret = tgetent(term_buff, term_name);
+        if (1 == ret) {
+            get_termcap_number("co", &mfp->disp_width, 40, 512);
+            get_termcap_number("li", &mfp->disp_height, 16, 256);
+            get_termcap_string("up", mfp->str_up, sizeof(mfp->str_up));
+            get_termcap_string("md", mfp->str_emph, sizeof(mfp->str_emph));
+            get_termcap_string("me", mfp->str_norm, sizeof(mfp->str_norm));
+            get_termcap_string("ce", mfp->str_clreoln, sizeof(mfp->str_clreoln));
+        }
     }
-    if (tgetent(term_buff, term_name) != 1) {
-        /*  rh 061105:
-            silently ignore it and fallback to the behaviour as if
-            TERMCAP wasn't defined at all
-         */
-        return;
-        /*
-        fprintf(mfp->Error_fp, "LAME: Can't find termcap entry for terminal \"%s\"\n", term_name);
-        return -1;
-        */
-    }
-
-    val = tgetnum("co");
-    if (val >= 40 && val <= 512)
-        mfp->disp_width = val;
-    val = tgetnum("li");
-    if (val >= 16 && val <= 256)
-        mfp->disp_height = val;
-
-    *(tp = tc) = '\0';
-    tp = tgetstr("up", &tp);
-    if (tp != NULL)
-        strcpy(mfp->str_up, tp);
-
-    *(tp = tc) = '\0';
-    tp = tgetstr("ce", &tp);
-    if (tp != NULL)
-        strcpy(mfp->str_clreoln, tp);
-
-    *(tp = tc) = '\0';
-    tp = tgetstr("md", &tp);
-    if (tp != NULL)
-        strcpy(mfp->str_emph, tp);
-
-    *(tp = tc) = '\0';
-    tp = tgetstr("me", &tp);
-    if (tp != NULL)
-        strcpy(mfp->str_norm, tp);
 }
 #endif /* TERMCAP_AVAILABLE */
 
