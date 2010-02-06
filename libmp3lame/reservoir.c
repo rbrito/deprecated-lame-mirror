@@ -140,26 +140,29 @@ ResvFrameBegin(lame_internal_flags * gfc, int *mean_bits)
             8 * ((int) ((cfg->avg_bitrate * 1000) / (cfg->samplerate_out / (FLOAT) 1152) / 8 + .5));
     }
     else {
-        /*all mp3 decoders should have enough buffer to handle this value: size of a 320kbps 32kHz frame */
-        maxmp3buf = 8 * 1440;
-
-        /* Bouvigne suggests this more lax interpretation of the ISO doc
-           instead of using 8*960. */
-
-        /*
-           if (cfg->strict_ISO == old_FhG_decoder)
-           always enabled because of compatibility problems with some old FhG decoders
-           which is distributed with almost every Windows Installation
-         */
-        {
-            maxmp3buf = 8 * ((int) (320000 / (cfg->samplerate_out / (FLOAT) 1152) / 8 + .5));
+        switch (cfg->buffer_constraint) {
+        default:
+        case MDB_DEFAULT:
+          maxmp3buf = 8 * ((int) (320000 / (cfg->samplerate_out / (FLOAT) 1152) / 8 + .5));
             /* adding (almost all) bits used for sideinfo seems still to work with old FhG
                decoders, so in 320 kbps case the backpointer may point back some bytes too
              */
-            maxmp3buf += (cfg->sideinfo_len - 8) * 8;
-        }
-        if (cfg->strict_ISO) {
-            maxmp3buf = 8 * ((int) (320000 / (cfg->samplerate_out / (FLOAT) 1152) / 8 + .5));
+          maxmp3buf += (cfg->sideinfo_len - 8) * 8;
+          break;
+        case MDB_STRICT_ISO:
+          maxmp3buf = 8 * ((int) (320000 / (cfg->samplerate_out / (FLOAT) 1152) / 8 + .5));
+          break;
+        case MDB_MINIMUM:
+          maxmp3buf = frameLength;
+          break;
+        case MDB_LAX:
+          /* Bouvigne suggests this more lax interpretation of the ISO doc instead of using 8*960. */
+          /* All mp3 decoders should have enough buffer to handle this value: size of a 320kbps 32kHz frame */
+          maxmp3buf = 8 * 1440;
+          break;
+        case MDB_MAXIMUM:
+          maxmp3buf = 8 * 1440 + resvLimit;
+          break;
         }
     }
 

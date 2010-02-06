@@ -847,7 +847,12 @@ long_help(const lame_global_flags * gfp, FILE * const fp, const char *ProgramNam
             "    -p              error protection.  adds 16 bit checksum to every frame\n"
             "                    (the checksum is computed correctly)\n"
             "    --nores         disable the bit reservoir\n"
-            "    --strictly-enforce-ISO   comply as much as possible to ISO MPEG spec\n" "\n");
+            "    --strictly-enforce-ISO   comply as much as possible to ISO MPEG spec\n");
+    fprintf(fp,
+            "    --buffer-constraint <constraint> available values for constraint:\n"
+            "                                     default, strict, minimum, lax, maximum\n"
+            "\n"
+            );
     fprintf(fp,
             "  Filter options:\n"
             "  --lowpass <freq>        frequency(kHz), lowpass filter cutoff above freq\n"
@@ -1676,7 +1681,24 @@ parse_args(lame_global_flags * gfp, int argc, char **argv,
                     lame_set_disable_reservoir(gfp, 1);
 
                 T_ELIF("strictly-enforce-ISO")
-                    lame_set_strict_ISO(gfp, 1);
+                    lame_set_strict_ISO(gfp, MDB_STRICT_ISO);
+
+                T_ELIF("buffer-constraint")
+                  argUsed = 1;
+                if (strcmp(nextArg, "default") == 0)
+                  (void) lame_set_strict_ISO(gfp, MDB_DEFAULT);
+                else if (strcmp(nextArg, "strict") == 0)
+                  (void) lame_set_strict_ISO(gfp, MDB_STRICT_ISO);
+                else if (strcmp(nextArg, "minimum") == 0)
+                  (void) lame_set_strict_ISO(gfp, MDB_MINIMUM);
+                else if (strcmp(nextArg, "lax") == 0)
+                  (void) lame_set_strict_ISO(gfp, MDB_LAX);
+                else if (strcmp(nextArg, "maximum") == 0)
+                  (void) lame_set_strict_ISO(gfp, MDB_MAXIMUM);
+                else {
+                    error_printf("unknown buffer constraint '%s'\n", nextArg);
+                    return -1;
+                }
 
                 T_ELIF("scale")
                     argUsed = 1;

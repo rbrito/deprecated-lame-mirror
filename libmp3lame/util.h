@@ -426,7 +426,7 @@ extern  "C" {
         int     decode_on_the_fly; /* decode on the fly? default=0                */
         int     analysis;
         int     disable_reservoir;
-        int     strict_ISO;  /* enforce ISO spec as much as possible   */
+        int     buffer_constraint;  /* enforce ISO spec as much as possible   */
         int     free_format;
         int     write_lame_tag; /* add Xing VBR tag?                           */
 

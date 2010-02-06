@@ -134,6 +134,16 @@ typedef enum Psy_model_e {
 } Psy_model;
 
 
+/* buffer considerations */
+typedef enum buffer_constraint_e {
+    MDB_DEFAULT=0,
+    MDB_STRICT_ISO=1,
+    MDB_MINIMUM=2,
+    MDB_LAX=3,
+    MDB_MAXIMUM=4
+} buffer_constraint;
+
+
 struct lame_global_struct;
 typedef struct lame_global_struct lame_global_flags;
 typedef lame_global_flags *lame_t;
