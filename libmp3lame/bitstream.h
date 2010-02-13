@@ -35,5 +35,6 @@ void    init_bit_stream_w(lame_internal_flags * gfc);
 void    CRC_writeheader(lame_internal_flags const *gfc, char *buffer);
 int     compute_flushbits(const lame_internal_flags * gfp, int *nbytes);
 
+int     get_max_frame_buffer_size_by_constraint(SessionConfig_t const * cfg, int constraint);
 
 #endif

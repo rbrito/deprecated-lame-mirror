@@ -61,7 +61,7 @@
 
 extern Console_IO_t Console_IO;
 
-static struct {
+static struct brhist_struct {
     int     vbr_bitrate_min_index;
     int     vbr_bitrate_max_index;
     int     kbps[BRHIST_WIDTH];

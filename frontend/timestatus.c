@@ -56,7 +56,7 @@
 #include <dmalloc.h>
 #endif
 
-typedef struct {
+typedef struct time_status_struct {
     double  last_time;       /* result of last call to clock */
     double  elapsed_time;    /* total time */
     double  estimated_time;  /* estimated total duration time [s] */

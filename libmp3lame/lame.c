@@ -1167,8 +1167,6 @@ lame_init_params(lame_global_flags * gfp)
     cfg->scale_left = gfp->scale_left;
     cfg->scale_right = gfp->scale_right;
 
-    cfg->buffer_constraint = gfp->strict_ISO;
-
     cfg->quant_comp = gfp->quant_comp;
     cfg->quant_comp_short = gfp->quant_comp_short;
 
@@ -1198,6 +1196,7 @@ lame_init_params(lame_global_flags * gfp)
         cfg->adjust_sfb21 = cfg->adjust_treble * pow(10, i / 4.0 / 10.0);
     }
 
+
     /* padding method as described in
      * "MPEG-Layer3 / Bitstream Syntax and Decoding"
      * by Martin Sieler, Ralph Sperschneider
@@ -1216,6 +1215,7 @@ lame_init_params(lame_global_flags * gfp)
     iteration_init(gfc);
     (void) psymodel_init(gfp);
 
+    cfg->buffer_constraint = get_max_frame_buffer_size_by_constraint(cfg, gfp->strict_ISO);
     return 0;
 }
 
@@ -1319,16 +1319,6 @@ lame_print_config(const lame_global_flags * gfp)
             MSGF(gfc,
                  "Warning: many decoders cannot handle free format bitrates >320 kbps (see documentation)\n");
         }
-    }
-    switch (cfg->buffer_constraint) {
-    case MDB_LAX:
-        MSGF(gfc, "Warning: buffer constraint lax.\n");
-        MSGF(gfc, "         Some decoders might not be able to decode this!\n");
-        break;
-    case MDB_MAXIMUM:
-        MSGF(gfc, "Warning: buffer constraint maximum.\n");
-        MSGF(gfc, "         Some decoders might not be able to decode this!\n");
-        break;
     }
 }
 

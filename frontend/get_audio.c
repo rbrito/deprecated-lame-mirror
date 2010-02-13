@@ -75,7 +75,7 @@ char   *strchr(), *strrchr();
 
 
 /* global data for get_audio.c. */
-typedef struct get_audio_global_data {
+typedef struct get_audio_global_data_struct {
     int     count_samples_carefully;
     int     pcmbitwidth;
     int     pcmswapbytes;

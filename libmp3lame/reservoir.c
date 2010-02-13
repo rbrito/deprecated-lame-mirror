@@ -36,6 +36,7 @@
 #include "lame-analysis.h"
 #include "lame_global_flags.h"
 
+
 /*
   ResvFrameBegin:
   Called (repeatedly) at the beginning of a frame. Updates the maximum
@@ -88,9 +89,10 @@ ResvFrameBegin(lame_internal_flags * gfc, int *mean_bits)
     int     maxmp3buf;
     III_side_info_t *const l3_side = &gfc->l3_side;
     int     frameLength;
+    int     meanBits;
 
     frameLength = getframebits(gfc);
-    *mean_bits = (frameLength - cfg->sideinfo_len * 8) / cfg->mode_gr;
+    meanBits = (frameLength - cfg->sideinfo_len * 8) / cfg->mode_gr;
 
 /*
  *  Meaning of the variables:
@@ -123,6 +125,9 @@ ResvFrameBegin(lame_internal_flags * gfc, int *mean_bits)
  *         (only usefull in VBR modes if it is possible to have
  *         maxmp3buf < fullFrameBits)).  Currently disabled,
  *         see #define NEW_DRAIN
+ *         2010-02-13: RH now enabled, it seems to be needed for CBR too,
+ *                     as there exists one example, where the FhG decoder
+ *                     can't decode a -b320 CBR file anymore.
  *
  *      l3_side->resvDrain_post:
  *         ancillary data to be added to this frame:
@@ -134,45 +139,14 @@ ResvFrameBegin(lame_internal_flags * gfc, int *mean_bits)
 
     /* maximum allowed frame size.  dont use more than this number of
        bits, even if the frame has the space for them: */
-    if (cfg->avg_bitrate > 320) {
-        /* in freeformat the buffer is constant */
-        maxmp3buf =
-            8 * ((int) ((cfg->avg_bitrate * 1000) / (cfg->samplerate_out / (FLOAT) 1152) / 8 + .5));
-    }
-    else {
-        switch (cfg->buffer_constraint) {
-        default:
-        case MDB_DEFAULT:
-          maxmp3buf = 8 * ((int) (320000 / (cfg->samplerate_out / (FLOAT) 1152) / 8 + .5));
-            /* adding (almost all) bits used for sideinfo seems still to work with old FhG
-               decoders, so in 320 kbps case the backpointer may point back some bytes too
-             */
-          maxmp3buf += (cfg->sideinfo_len - 8) * 8;
-          break;
-        case MDB_STRICT_ISO:
-          maxmp3buf = 8 * ((int) (320000 / (cfg->samplerate_out / (FLOAT) 1152) / 8 + .5));
-          break;
-        case MDB_MINIMUM:
-          maxmp3buf = frameLength;
-          break;
-        case MDB_LAX:
-          /* Bouvigne suggests this more lax interpretation of the ISO doc instead of using 8*960. */
-          /* All mp3 decoders should have enough buffer to handle this value: size of a 320kbps 32kHz frame */
-          maxmp3buf = 8 * 1440;
-          break;
-        case MDB_MAXIMUM:
-          maxmp3buf = 8 * 1440 + resvLimit;
-          break;
-        }
-    }
-
+    maxmp3buf = cfg->buffer_constraint;
     esv->ResvMax = maxmp3buf - frameLength;
     if (esv->ResvMax > resvLimit)
         esv->ResvMax = resvLimit;
     if (esv->ResvMax < 0 || cfg->disable_reservoir)
         esv->ResvMax = 0;
-
-    fullFrameBits = *mean_bits * cfg->mode_gr + Min(esv->ResvSize, esv->ResvMax);
+    
+    fullFrameBits = meanBits * cfg->mode_gr + Min(esv->ResvSize, esv->ResvMax);
 
     if (fullFrameBits > maxmp3buf)
         fullFrameBits = maxmp3buf;
@@ -183,10 +157,10 @@ ResvFrameBegin(lame_internal_flags * gfc, int *mean_bits)
     l3_side->resvDrain_pre = 0;
 
     if (gfc->pinfo != NULL) {
-        gfc->pinfo->mean_bits = *mean_bits / 2; /* expected bits per channel per granule [is this also right for mono/stereo, MPEG-1/2 ?] */
+        gfc->pinfo->mean_bits = meanBits / 2; /* expected bits per channel per granule [is this also right for mono/stereo, MPEG-1/2 ?] */
         gfc->pinfo->resvsize = esv->ResvSize;
     }
-
+    *mean_bits = meanBits;
     return fullFrameBits;
 }
 
@@ -202,7 +176,7 @@ ResvMaxBits(lame_internal_flags * gfc, int mean_bits, int *targ_bits, int *extra
 {
     SessionConfig_t const *const cfg = &gfc->cfg;
     EncStateVar_t *const esv = &gfc->sv_enc;
-    int     add_bits;
+    int     add_bits, targBits, extraBits;
     int     ResvSize = esv->ResvSize, ResvMax = esv->ResvMax;
 
     /* conpensate the saved bits used in the 1st granule */
@@ -212,12 +186,12 @@ ResvMaxBits(lame_internal_flags * gfc, int mean_bits, int *targ_bits, int *extra
     if (gfc->sv_qnt.substep_shaping & 1)
         ResvMax *= 0.9;
 
-    *targ_bits = mean_bits;
+    targBits = mean_bits;
 
     /* extra bits if the reservoir is almost full */
     if (ResvSize * 10 > ResvMax * 9) {
         add_bits = ResvSize - (ResvMax * 9) / 10;
-        *targ_bits += add_bits;
+        targBits += add_bits;
         gfc->sv_qnt.substep_shaping |= 0x80;
     }
     else {
@@ -228,18 +202,19 @@ ResvMaxBits(lame_internal_flags * gfc, int mean_bits, int *targ_bits, int *extra
          * to always produce 100 (the old value) at 128kbs */
         /*    *targ_bits -= (int) (mean_bits/15.2); */
         if (!cfg->disable_reservoir && !(gfc->sv_qnt.substep_shaping & 1))
-            *targ_bits -= .1 * mean_bits;
+            targBits -= .1 * mean_bits;
     }
 
 
     /* amount from the reservoir we are allowed to use. ISO says 6/10 */
-    *extra_bits = (ResvSize < (esv->ResvMax * 6) / 10 ? ResvSize : (esv->ResvMax * 6) / 10);
-    *extra_bits -= add_bits;
+    extraBits = (ResvSize < (esv->ResvMax * 6) / 10 ? ResvSize : (esv->ResvMax * 6) / 10);
+    extraBits -= add_bits;
 
-    if (*extra_bits < 0)
-        *extra_bits = 0;
+    if (extraBits < 0)
+        extraBits = 0;
 
-
+    *targ_bits = targBits;
+    *extra_bits = extraBits;
 }
 
 /*
@@ -269,7 +244,6 @@ ResvFrameEnd(lame_internal_flags * gfc, int mean_bits)
     int     stuffingBits;
     int     over_bits;
 
-
     esv->ResvSize += mean_bits * cfg->mode_gr;
     stuffingBits = 0;
     l3_side->resvDrain_post = 0;
@@ -288,7 +262,21 @@ ResvFrameEnd(lame_internal_flags * gfc, int mean_bits)
     }
 
 
-#undef NEW_DRAIN
+#define NEW_DRAIN
+    /* NOTE: enabling the NEW_DRAIN code fixes some problems with FhG decoder
+             shipped with MS Windows operating systems. Using this, it is even
+             possible to use Gabriel's lax buffer consideration again, which
+             assumes, any decoder should have a buffer large enough
+             for a 320 kbps frame at 32 kHz sample rate.
+
+       old drain code:
+             lame -b320 BlackBird.wav ---> does not play with GraphEdit.exe using FhG decoder V1.5 Build 50
+
+       new drain code:
+             lame -b320 BlackBird.wav ---> plays fine with GraphEdit.exe using FhG decoder V1.5 Build 50
+
+             Robert Hegemann, 2010-02-13.
+     */
 #ifdef NEW_DRAIN
     /* drain as many bits as possible into previous frame ancillary data
      * In particular, in VBR mode ResvMax may have changed, and we have
@@ -315,6 +303,4 @@ ResvFrameEnd(lame_internal_flags * gfc, int mean_bits)
     l3_side->resvDrain_post += stuffingBits;
     esv->ResvSize -= stuffingBits;
 #endif
-
-    return;
 }

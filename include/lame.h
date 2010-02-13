@@ -138,9 +138,7 @@ typedef enum Psy_model_e {
 typedef enum buffer_constraint_e {
     MDB_DEFAULT=0,
     MDB_STRICT_ISO=1,
-    MDB_MINIMUM=2,
-    MDB_LAX=3,
-    MDB_MAXIMUM=4
+    MDB_MAXIMUM=2
 } buffer_constraint;
 
 

@@ -56,6 +56,11 @@ static int hogege;
 
 
 
+static int
+calcFrameLength(SessionConfig_t const *const cfg, int kbps, int pad)
+{
+  return 8 * ((cfg->version + 1) * 72000 * kbps / cfg->samplerate_out + pad);
+}
 
 
 /***********************************************************************
@@ -78,10 +83,44 @@ getframebits(const lame_internal_flags * gfc)
 
     /* main encoding routine toggles padding on and off */
     /* one Layer3 Slot consists of 8 bits */
-    return 8 * ((cfg->version + 1) * 72000 * bit_rate / cfg->samplerate_out + eov->padding);
+    return calcFrameLength(cfg, bit_rate, eov->padding);
 }
 
-
+int
+get_max_frame_buffer_size_by_constraint(SessionConfig_t const * cfg, int constraint)
+{
+    int     maxmp3buf = 0;
+    if (cfg->avg_bitrate > 320) {
+        /* in freeformat the buffer is constant */
+        maxmp3buf = calcFrameLength(cfg, cfg->avg_bitrate, 0);
+    }
+    else {
+        int const resvLimit = (8 * 256) * cfg->mode_gr - 8;
+        int     max_kbps;
+        if (cfg->samplerate_out < 16000) {
+            max_kbps = bitrate_table[cfg->version][8]; /* default: allow 64 kbps (MPEG-2.5) */
+        }
+        else {
+            max_kbps = bitrate_table[cfg->version][14];
+        }
+        switch (constraint) 
+        {
+        default:
+        case MDB_DEFAULT:
+            /* Bouvigne suggests this more lax interpretation of the ISO doc instead of using 8*960. */
+            /* All mp3 decoders should have enough buffer to handle this value: size of a 320kbps 32kHz frame */
+            maxmp3buf = 8 * 1440;
+            break;
+        case MDB_STRICT_ISO:
+            maxmp3buf = calcFrameLength(cfg, max_kbps, 0);
+            break;
+        case MDB_MAXIMUM:
+            maxmp3buf = 8 * 1440 + resvLimit;
+            break;
+        }
+    }
+    return maxmp3buf;
+}
 
 
 static void

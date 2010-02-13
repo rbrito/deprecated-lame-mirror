@@ -13,7 +13,7 @@
 # include <windows.h>
 #endif
 
-typedef struct {
+typedef struct console_io_struct {
     unsigned long ClassID;
     unsigned long ClassProt;
     FILE   *Console_fp;      /* filepointer to stream reporting information */
