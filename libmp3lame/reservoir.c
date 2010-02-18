@@ -122,6 +122,9 @@ ResvFrameBegin(lame_global_flags const *gfp, int *mean_bits)
  *         (only usefull in VBR modes if it is possible to have
  *         maxmp3buf < fullFrameBits)).  Currently disabled,
  *         see #define NEW_DRAIN
+ *         2010-02-13: RH now enabled, it seems to be needed for CBR too,
+ *                     as there exists one example, where the FhG decoder
+ *                     can't decode a -b320 CBR file anymore.
  *
  *      l3_side->resvDrain_post:
  *         ancillary data to be added to this frame:
@@ -145,18 +148,6 @@ ResvFrameBegin(lame_global_flags const *gfp, int *mean_bits)
         /* Bouvigne suggests this more lax interpretation of the ISO doc
            instead of using 8*960. */
 
-        /*
-           if (gfp->strict_ISO == old_FhG_decoder)
-           always enabled because of compatibility problems with some old FhG decoders
-           which is distributed with almost every Windows Installation
-         */
-        {
-            maxmp3buf = 8 * ((int) (320000 / (gfp->out_samplerate / (FLOAT) 1152) / 8 + .5));
-            /* adding (almost all) bits used for sideinfo seems still to work with old FhG
-               decoders, so in 320 kbps case the backpointer may point back some bytes too
-             */
-            maxmp3buf += (gfc->sideinfo_len - 8) * 8;
-        }
         if (gfp->strict_ISO) {
             maxmp3buf = 8 * ((int) (320000 / (gfp->out_samplerate / (FLOAT) 1152) / 8 + .5));
         }
@@ -281,7 +272,21 @@ ResvFrameEnd(lame_internal_flags * gfc, int mean_bits)
     }
 
 
-#undef NEW_DRAIN
+#define NEW_DRAIN
+    /* NOTE: enabling the NEW_DRAIN code fixes some problems with FhG decoder
+             shipped with MS Windows operating systems. Using this, it is even
+             possible to use Gabriel's lax buffer consideration again, which
+             assumes, any decoder should have a buffer large enough
+             for a 320 kbps frame at 32 kHz sample rate.
+
+       old drain code:
+             lame -b320 BlackBird.wav ---> does not play with GraphEdit.exe using FhG decoder V1.5 Build 50
+
+       new drain code:
+             lame -b320 BlackBird.wav ---> plays fine with GraphEdit.exe using FhG decoder V1.5 Build 50
+
+             Robert Hegemann, 2010-02-13.
+     */
 #ifdef NEW_DRAIN
     /* drain as many bits as possible into previous frame ancillary data
      * In particular, in VBR mode ResvMax may have changed, and we have
