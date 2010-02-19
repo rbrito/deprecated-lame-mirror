@@ -1234,7 +1234,9 @@ lame_get_id3v2_tag(lame_global_flags * gfp, unsigned char *buffer, size_t size)
             static const char *mime_png = "image/png";
             static const char *mime_gif = "image/gif";
 
-            id3v2AddAudioDuration(gfc, gfp->num_samples);
+            if (gfp->num_samples != MAX_U_32_NUM) {
+                id3v2AddAudioDuration(gfc, gfp->num_samples);
+            }
 
             /* calulate size of tag starting with 10-byte tag header */
             tag_size = 10;
