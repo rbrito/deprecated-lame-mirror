@@ -47,7 +47,7 @@ static lame_global_flags*	gfp_save = NULL;
 // Local function prototypes
 static void dump_config( 	lame_global_flags*	gfp );
 static void DebugPrintf( const char* pzFormat, ... );
-static void DispErr( LPSTR strErr );
+static void DispErr( char const* strErr );
 static void PresetOptions( lame_global_flags *gfp, LONG myPreset );
 
 
@@ -58,7 +58,7 @@ static void DebugPrintf(const char* pzFormat, ...)
     va_list ap;
 
     // Get the full module (DLL) file name
-    GetModuleFileName(	gs_hModule, 
+    GetModuleFileNameA(	gs_hModule, 
         szFileName,
         sizeof( szFileName ) );
 
@@ -93,7 +93,7 @@ static void DebugPrintf(const char* pzFormat, ...)
     }
 
 #if defined _DEBUG || defined _RELEASEDEBUG
-    OutputDebugString( szBuffer );
+    OutputDebugStringA( szBuffer );
 #endif
 
     va_end(ap);
@@ -915,7 +915,7 @@ BOOL APIENTRY DllMain(HANDLE hModule,
     {
     case DLL_PROCESS_ATTACH:
         // Enable debug/logging?
-        gs_bLogFile = GetPrivateProfileInt("Debug","WriteLogFile",gs_bLogFile,"lame_enc.ini");
+        gs_bLogFile = GetPrivateProfileIntA("Debug","WriteLogFile",gs_bLogFile,"lame_enc.ini");
         break;
     case DLL_THREAD_ATTACH:
         break;
@@ -1015,7 +1015,7 @@ static void dump_config( 	lame_global_flags*	gfp )
 }
 
 
-static void DispErr(LPSTR strErr)
+static void DispErr(char const* strErr)
 {
-    MessageBox(NULL,strErr,"LAME_ENC.DLL",MB_OK|MB_ICONHAND);
+    MessageBoxA(NULL,strErr,"LAME_ENC.DLL",MB_OK|MB_ICONHAND);
 }
