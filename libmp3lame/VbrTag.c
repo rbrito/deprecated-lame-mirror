@@ -601,8 +601,7 @@ UpdateMusicCRC(uint16_t * crc, unsigned char *buffer, int size)
  ****************************************************************************
 */
 static int
-PutLameVBR(lame_global_flags const *gfp, size_t nFilesize, uint8_t * pbtStreamBuffer,
-           size_t id3v2size, uint16_t crc)
+PutLameVBR(lame_global_flags const *gfp, size_t nMusicLength, uint8_t * pbtStreamBuffer, uint16_t crc)
 {
     lame_internal_flags *gfc = gfp->internal_flags;
 
@@ -637,9 +636,6 @@ PutLameVBR(lame_global_flags const *gfp, size_t nFilesize, uint8_t * pbtStreamBu
     int     bNonOptimal = 0;
     uint8_t nSourceFreq = 0;
     uint8_t nMisc = 0;
-    size_t  nMusicLength = 0;
-    int     bId3v1Present = ((gfp->internal_flags->tag_spec.flags & CHANGED_FLAG)
-                             && !(gfp->internal_flags->tag_spec.flags & V2_ONLY_FLAG));
     uint16_t nMusicCRC = 0;
 
     /*psy model type: Gpsycho or NsPsytune */
@@ -776,10 +772,6 @@ PutLameVBR(lame_global_flags const *gfp, size_t nFilesize, uint8_t * pbtStreamBu
         + (nSourceFreq << 6);
 
 
-
-    nMusicLength = nFilesize - id3v2size; /*omit current frame */
-    if (bId3v1Present)
-        nMusicLength -= 128; /*id3v1 present. */
     nMusicCRC = gfc->nMusicCRC;
 
 
@@ -988,7 +980,7 @@ lame_get_lametag_frame(lame_global_flags const *gfp, unsigned char *buffer, size
         for (i = 0; i < nStreamIndex; i++)
             crc = CRC_update_lookup(buffer[i], crc);
         /*Put LAME VBR info */
-        nStreamIndex += PutLameVBR(gfp, stream_size, buffer + nStreamIndex, 0, crc);
+        nStreamIndex += PutLameVBR(gfp, stream_size, buffer + nStreamIndex, crc);
     }
 
 #ifdef DEBUG_VBRTAG
