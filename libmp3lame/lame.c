@@ -1571,7 +1571,7 @@ static int
 calcNeeded(SessionConfig_t const * cfg)
 {
     int     mf_needed;
-    int     framesize = 576 * cfg->mode_gr;
+    int     pcm_samples_per_frame = 576 * cfg->mode_gr;
 
     /* some sanity checks */
 #if ENCDELAY < MDCTDELAY
@@ -1581,9 +1581,9 @@ calcNeeded(SessionConfig_t const * cfg)
 # error FFTOFFSET is greater than BLKSIZE, see encoder.h
 #endif
 
-    mf_needed = BLKSIZE + framesize - FFTOFFSET; /* amount needed for FFT */
+    mf_needed = BLKSIZE + pcm_samples_per_frame - FFTOFFSET; /* amount needed for FFT */
     /*mf_needed = Max(mf_needed, 286 + 576 * (1 + gfc->mode_gr)); */
-    mf_needed = Max(mf_needed, 512 + framesize - 32);
+    mf_needed = Max(mf_needed, 512 + pcm_samples_per_frame - 32);
 
     assert(MFSIZE >= mf_needed);
     
@@ -1619,7 +1619,7 @@ lame_encode_buffer_sample_t(lame_internal_flags * gfc,
 {
     SessionConfig_t const *const cfg = &gfc->cfg;
     EncStateVar_t *const esv = &gfc->sv_enc;
-    int     framesize = 576 * cfg->mode_gr;
+    int     pcm_samples_per_frame = 576 * cfg->mode_gr;
     int     mp3size = 0, ret, i, ch, mf_needed;
     int     mp3out;
     sample_t *mfbuf[2];
@@ -1742,11 +1742,11 @@ lame_encode_buffer_sample_t(lame_internal_flags * gfc,
             mp3size += ret;
 
             /* shift out old samples */
-            esv->mf_size -= framesize;
-            esv->mf_samples_to_encode -= framesize;
+            esv->mf_size -= pcm_samples_per_frame;
+            esv->mf_samples_to_encode -= pcm_samples_per_frame;
             for (ch = 0; ch < cfg->channels_out; ch++)
                 for (i = 0; i < esv->mf_size; i++)
-                    mfbuf[ch][i] = mfbuf[ch][i + framesize];
+                    mfbuf[ch][i] = mfbuf[ch][i + pcm_samples_per_frame];
         }
     }
     assert(nsamples == 0);
@@ -2072,7 +2072,7 @@ lame_encode_flush(lame_global_flags * gfp, unsigned char *mp3buffer, int mp3buff
     int     end_padding;
     int     frames_left;
     int     samples_to_encode;
-    int     framesize;
+    int     pcm_samples_per_frame;
     int     mf_needed;
     int     is_resampling_necessary;
     double  resample_ratio = 1;
@@ -2091,10 +2091,10 @@ lame_encode_flush(lame_global_flags * gfp, unsigned char *mp3buffer, int mp3buff
     if (esv->mf_samples_to_encode < 1) {
         return 0;
     }
-    framesize = 576 * cfg->mode_gr;
+    pcm_samples_per_frame = 576 * cfg->mode_gr;
     mf_needed = calcNeeded(cfg);
 
-    samples_to_encode = esv->mf_samples_to_encode - POSTDELAY+288;
+    samples_to_encode = esv->mf_samples_to_encode - POSTDELAY;
 
     memset(buffer, 0, sizeof(buffer));
     mp3count = 0;
@@ -2105,10 +2105,12 @@ lame_encode_flush(lame_global_flags * gfp, unsigned char *mp3buffer, int mp3buff
         /* delay due to resampling; needs to be fixed, if resampling code gets changed */
         samples_to_encode += 16. / resample_ratio;
     }
-    end_padding = framesize - (samples_to_encode % framesize);
+    end_padding = pcm_samples_per_frame - (samples_to_encode % pcm_samples_per_frame);
+    if (end_padding < 576)
+        end_padding += pcm_samples_per_frame;
     gfc->ov_enc.encoder_padding = end_padding;
     
-    frames_left = (samples_to_encode + end_padding) / framesize;
+    frames_left = (samples_to_encode + end_padding) / pcm_samples_per_frame;
     while (frames_left > 0 && imp3 >= 0) {
         int const frame_num = gfc->ov_enc.frame_number;
         int     bunch = mf_needed - esv->mf_size;
@@ -2178,11 +2180,11 @@ lame_encode_flush(lame_global_flags * gfp, unsigned char *mp3buffer, int mp3buff
     {
         int const ed = gfc->ov_enc.encoder_delay;
         int const ep = gfc->ov_enc.encoder_padding;
-        int const ns = (gfc->ov_enc.frame_number * framesize) - (ed + ep);
+        int const ns = (gfc->ov_enc.frame_number * pcm_samples_per_frame) - (ed + ep);
         double  duration = ns;
         duration /= cfg->samplerate_out;
         MSGF(gfc, "frames=%d\n", gfc->ov_enc.frame_number);
-        MSGF(gfc, "framesize=%d\n", framesize);
+        MSGF(gfc, "pcm_samples_per_frame=%d\n", pcm_samples_per_frame);
         MSGF(gfc, "encoder delay=%d\n", ed);
         MSGF(gfc, "encoder padding=%d\n", ep);
         MSGF(gfc, "sample count=%d (%g)\n", ns, cfg->samplerate_in * duration);
