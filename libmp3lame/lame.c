@@ -1947,7 +1947,7 @@ lame_encode_flush(lame_global_flags * gfp, unsigned char *mp3buffer, int mp3buff
      * data can be complety decoded (because of 50% overlap with next granule */
     int     end_padding;
     int     frames_left;
-    int     samples_to_encode = gfc->mf_samples_to_encode - POSTDELAY+288;
+    int     samples_to_encode = gfc->mf_samples_to_encode - POSTDELAY;
     int     mf_needed = calcNeeded(gfp);
 
     /* Was flush already called? */
@@ -1962,6 +1962,8 @@ lame_encode_flush(lame_global_flags * gfp, unsigned char *mp3buffer, int mp3buff
         samples_to_encode += 16.*gfp->out_samplerate/gfp->in_samplerate;
     }
     end_padding = gfp->framesize - (samples_to_encode % gfp->framesize);
+    if (end_padding < 576)
+        end_padding += gfp->framesize;
     gfp->encoder_padding = end_padding;
 
     frames_left = (samples_to_encode + end_padding) / gfp->framesize;
