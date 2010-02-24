@@ -1,3 +1,20 @@
+lame (3.98.3) unstable; urgency=low
+
+  * New upstream bugfix version.
+  * debian/rules:
+    + remove excessive quoting from the LDFLAGS variable.
+    + remove useless comments from the file, to make it tidier.
+    + make the detection of the cross-compilation more robust.
+    + avoid passing -O2 to CFLAGS, so that we can optimize for size.
+  * debian/control:
+    + add ${misc:Depends} to each binary package (due to debhelper).
+  * debian/copyright:
+    + update copyright years.
+    + add the © symbol, since (C) may not have legal value.
+    + update reference to a versioned LGPL.
+
+ -- Rogério Brito <rbrito@users.sf.net>  Wed, 24 Feb 2010 04:51:34 -0300
+
 lame (3.98.1) unstable; urgency=low
 
   * New upstream version:
