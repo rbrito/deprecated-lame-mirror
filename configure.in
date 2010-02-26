@@ -18,7 +18,7 @@ dnl FRONTEND_CFLAGS
 dnl FRONTEND_LDADD
 
 AC_PREREQ(2.59)
-AC_INIT([lame],[3.98.1],[lame-dev@lists.sf.net])
+AC_INIT([lame],[3.98.3],[lame-dev@lists.sf.net])
 AC_CONFIG_SRCDIR([libmp3lame/lame.c])
 
 dnl check system
@@ -1172,6 +1172,6 @@ AC_SUBST(CPUCCODE)
 
 AC_SUBST(CONFIG_DEFS)
 
-AC_CONFIG_FILES([Makefile libmp3lame/Makefile libmp3lame/i386/Makefile libmp3lame/vector/Makefile frontend/Makefile mpglib/Makefile doc/Makefile doc/html/Makefile doc/man/Makefile include/Makefile Dll/Makefile misc/Makefile debian/Makefile dshow/Makefile ACM/Makefile ACM/ADbg/Makefile ACM/ddk/Makefile ACM/tinyxml/Makefile lame.spec mac/Makefile macosx/Makefile macosx/English.lproj/Makefile macosx/LAME.xcodeproj/Makefile])
+AC_CONFIG_FILES([Makefile libmp3lame/Makefile libmp3lame/i386/Makefile libmp3lame/vector/Makefile frontend/Makefile mpglib/Makefile doc/Makefile doc/html/Makefile doc/man/Makefile include/Makefile Dll/Makefile misc/Makefile debian/Makefile dshow/Makefile ACM/Makefile ACM/ADbg/Makefile ACM/ddk/Makefile ACM/tinyxml/Makefile lame.spec mac/Makefile macosx/Makefile macosx/English.lproj/Makefile macosx/LAME.xcodeproj/Makefile] vc_solution/Makefile)
 
 AC_OUTPUT
