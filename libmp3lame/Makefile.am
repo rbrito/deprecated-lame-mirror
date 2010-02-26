@@ -30,6 +30,7 @@ DEFS = @DEFS@ @CONFIG_DEFS@
 
 EXTRA_DIST = \
 	libmp3lame_vc6.dsp \
+	libmp3lame_dll_vc6.dsp \
 	libmp3lame_vc8.vcproj \
 	lame.rc \
 	logoe.ico
