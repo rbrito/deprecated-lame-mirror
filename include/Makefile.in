@@ -194,6 +194,7 @@ target_alias = @target_alias@
 top_builddir = @top_builddir@
 top_srcdir = @top_srcdir@
 AUTOMAKE_OPTIONS = 1.9 foreign $(top_srcdir)/ansi2knr
+EXTRA_DIST = lame.def
 pkginclude_HEADERS = lame.h
 all: all-am
 

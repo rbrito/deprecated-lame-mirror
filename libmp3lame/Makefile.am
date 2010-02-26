@@ -31,7 +31,8 @@ DEFS = @DEFS@ @CONFIG_DEFS@
 EXTRA_DIST = \
 	libmp3lame_vc6.dsp \
 	libmp3lame_vc8.vcproj \
-	vbrquantize.h
+	lame.rc \
+	logoe.ico
 
 libmp3lame_la_SOURCES = \
         VbrTag.c \
