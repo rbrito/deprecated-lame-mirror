@@ -37,8 +37,7 @@ build_triplet = @build@
 host_triplet = @host@
 ANSI2KNR = $(top_srcdir)/ansi2knr
 DIST_COMMON = README $(noinst_HEADERS) $(srcdir)/Makefile.am \
-	$(srcdir)/Makefile.in $(top_srcdir)/Makefile.am.global TODO \
-	depcomp
+	$(srcdir)/Makefile.in $(top_srcdir)/Makefile.am.global depcomp
 subdir = mpglib
 ACLOCAL_M4 = $(top_srcdir)/aclocal.m4
 am__aclocal_m4_deps = $(top_srcdir)/acinclude.m4 \
