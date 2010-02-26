@@ -210,7 +210,7 @@ top_builddir = @top_builddir@
 top_srcdir = @top_srcdir@
 AUTOMAKE_OPTIONS = 1.9 foreign $(top_srcdir)/ansi2knr
 SUBDIRS = mpglib libmp3lame frontend Dll debian doc include misc dshow ACM \
-	mac macosx
+	mac macosx vc_solution
 
 CLEANFILES = testcase.new.mp3
 EXTRA_DIST = \
