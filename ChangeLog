@@ -11,6 +11,282 @@
 
 -- 
 
+2010-02-27 02:51  robert
+
+	* doc/html/history.html (lame3_98):
+
+	updating history text
+
+2010-02-26 23:23  robert
+
+	* Dll/: Example_vc6.dsp, LameDll_vc6.dsp (lame3_98):
+
+	Bug fix for tracker ID: 2688413
+	lib name problem in VS6
+
+2010-02-26 22:59  robert
+
+	* dshow/dshow.dsw (lame3_98):
+
+	seems dshow workspace got messed up some time ago
+
+2010-02-26 22:33  robert
+
+	* Makefile.am, Makefile.in (lame3_98):
+
+	add some missing files used by "make dist" to the configure magic
+
+2010-02-26 22:24  robert
+
+	* libmp3lame/: Makefile.in, Makefile.am (lame3_98):
+
+	add some missing files used by "make dist" to the configure magic
+
+2010-02-26 03:40  robert
+
+	* include/Makefile.am, include/Makefile.in, libmp3lame/Makefile.am,
+	  libmp3lame/Makefile.in, libmp3lame/lame.rc (lame3_98):
+
+	adding some files missing after "make dist"
+
+2010-02-26 03:04  robert
+
+	* Makefile.in (lame3_98):
+
+	adding vc_solution path to configure magic
+
+2010-02-26 02:49  robert
+
+	* configure, mpglib/Makefile.in (lame3_98):
+
+	adding vc_solution path to configure magic
+
+2010-02-26 01:59  robert
+
+	* Makefile.am, configure.in (lame3_98):
+
+	adding vc_solution dir, used for "make dist"
+
+2010-02-26 01:56  robert
+
+	* vc_solution/: Makefile.am, Makefile.in (lame3_98):
+
+	initial check in, used by "make dist"
+
+2010-02-26 00:55  robert
+
+	* libmp3lame/i386/Makefile.am (lame3_98):
+
+	Tracker item ID: 2807676:
+	Error when building Lame with NASM support
+
+	Patch reported by Bernhard Doebler.
+
+2010-02-25 23:33  robert
+
+	* testcase.mp3 (lame3_98):
+
+	updating testcase for 3.98.3
+
+2010-02-24 08:54  rbrito
+
+	* debian/: changelog, control, copyright, rules (lame3_98):
+
+	Update the debian packaging for the new release.
+
+2010-02-20 21:08  robert
+
+	* libmp3lame/lame.c (lame3_98):
+
+	Bug fix for tracker ID: 2824296
+	wrong enc_padding value in LAME 3.99a & 3.98.3 (from CVS)
+
+2010-02-20 21:01  robert
+
+	* libmp3lame/VbrTag.c (lame3_98):
+
+	Bug fix for tracker ID: 2872590
+	LameTAG: "Music length" missmatch in Lame3.98
+
+2010-02-19 00:44  robert
+
+	* libmp3lame/id3tag.c (lame3_98):
+
+	Bug fix for tracker ID: 2887359
+	Wrong length in ID3v2 tag when num_samples isn't set
+
+2010-02-19 00:30  robert
+
+	* Dll/BladeMP3EncDLL.c (lame3_98):
+
+	Bug fix for tracker ID: 2893101
+	Access Violation in BladeMP3EncDLL if UNICODE was defined.
+
+2010-02-19 00:03  robert
+
+	* doc/man/lame.1 (lame3_98):
+
+	Bug fix for tracker ID: 2928684
+	Error in man page about "fast insane"
+
+2010-02-18 22:42  robert
+
+	* libmp3lame/reservoir.c (lame3_98):
+
+	Revisiting the FhG decoder problem (FhG V1.5 build 50, ships with MS Windows):
+	enabling the new drain code seems to solve that issue better, than restricting the buffer size.
+
+2009-12-11 22:44  robert
+
+	* frontend/parse.c (lame3_98):
+
+	Tracker ID: 2891879
+	Because of Windows API change, there was a problem with prority switch. Should work again.
+
+2009-03-31 22:37  robert
+
+	* libmp3lame/: util.c, util.h (lame3_98):
+
+	fix for tracker item 2723518: resampling in 3.98 and 3.99alpha
+
+2009-03-30 19:48  robert
+
+	* libmp3lame/lame.c (lame3_98):
+
+	ensure we padd at least 288 samples
+
+2009-03-29 14:43  robert
+
+	* libmp3lame/lame.c (lame3_98):
+
+	workaround for FFMPEG bug, which uses to call lame_encode_flush more than once in loop
+
+2009-03-28 22:09  robert
+
+	* libmp3lame/lame.c (lame3_98):
+
+	avoid extra frame at end
+
+2009-02-07 11:18  robert
+
+	* Dll/Makefile.mingw32 (lame3_98):
+
+	applying patch from item tracker: [ 2406420 ] compile lame_enc.dll under cygwin
+
+2009-01-18 15:44  robert
+
+	* libmp3lame/bitstream.c, libmp3lame/lame.c, libmp3lame/psymodel.c,
+	  frontend/get_audio.c, frontend/gtkanal.c, frontend/lametime.c,
+	  frontend/main.c, include/lame.h, libmp3lame/quantize_pvt.c,
+	  libmp3lame/vector/xmm_quantize_sub.c, mpglib/interface.c,
+	  mpglib/mpglib.h (lame3_98):
+
+	replacing C++ style comments by C style comments
+
+2009-01-18 13:59  robert
+
+	* doc/: html/switchs.html, man/lame.1 (lame3_98):
+
+	fix for bug tracker item [ 2051870 ] documentation clarifications
+
+2009-01-18 13:10  robert
+
+	* doc/man/lame.1 (lame3_98):
+
+	fix for bug tracker item 2423650
+
+2008-11-09 14:14  robert
+
+	* vc_solution/Makefile.in (lame3_98):
+
+	file Makefile.in was added on branch lame3_98 on 2010-02-26 01:56:52 +0000
+
+2008-11-09 14:13  aleidinger
+
+	* vc_solution/Makefile.in:
+
+	regen
+
+2008-11-09 14:06  robert
+
+	* vc_solution/Makefile.am (lame3_98):
+
+	file Makefile.am was added on branch lame3_98 on 2010-02-26 01:56:52 +0000
+
+2008-11-09 14:06  aleidinger
+
+	* vc_solution/Makefile.am:
+
+	Add missing automake Makefile.
+
+2008-11-01 20:41  robert
+
+	* ACM/ACM.cpp, ACM/ACMStream.cpp, ACM/AEncodeProperties.cpp,
+	  ACM/lameACM.def, dshow/Mpegac.cpp, dshow/aboutprp.cpp,
+	  vc_solution/vc9_lame_acm.vcproj,
+	  vc_solution/vc9_lame_acm_adbg.vcproj,
+	  vc_solution/vc9_lame_acm_tinyxml.vcproj,
+	  vc_solution/vc9_lame_config.vsprops,
+	  vc_solution/vc9_lame_dll.vcproj,
+	  vc_solution/vc9_lame_dll_example.vcproj,
+	  vc_solution/vc9_lame_dshow.vcproj,
+	  vc_solution/vc9_lame_lame.vcproj,
+	  vc_solution/vc9_lame_mp3x.vcproj,
+	  vc_solution/vc9_libmp3lame.vcproj,
+	  vc_solution/vc9_libmp3lame_dll.vcproj,
+	  vc_solution/vc9_mpglib.vcproj (lame3_98):
+
+	moving common VS projects settings into own property page
+
+2008-11-01 13:32  robert
+
+	* dshow/Mpegac.cpp, dshow/REG.CPP, dshow/REG.H,
+	  vc_solution/vc9_lame_acm.vcproj,
+	  vc_solution/vc9_lame_acm_adbg.vcproj,
+	  vc_solution/vc9_lame_acm_tinyxml.vcproj,
+	  vc_solution/vc9_lame_dll.vcproj,
+	  vc_solution/vc9_lame_dll_example.vcproj,
+	  vc_solution/vc9_lame_dshow.vcproj (lame3_98):
+
+	- VC6 upgrade property pages removed, not needed
+	- Name clash with our CRegKey class and ATL::CRegKey class solved by putting ours in namespace Lame.
+
+2008-10-23 23:35  robert
+
+	* mpglib/: README, TODO, common.c, common.h, dct64_i386.c,
+	  dct64_i386.h, decode_i386.c, decode_i386.h, huffman.h,
+	  interface.c, interface.h, l2tables.h, layer1.c, layer1.h,
+	  layer2.c, layer2.h, layer3.c, layer3.h, mpg123.h, mpglib.h,
+	  tabinit.c, tabinit.h (lame3_98):
+
+	exchanging mpglib by libhip from main-branch
+
+2008-10-21 22:06  robert
+
+	* include/lame.h (lame3_98):
+
+	fix small issues with C99
+
+2008-10-12 19:46  robert
+
+	* libmp3lame/version.h (lame3_98):
+
+	Adding resources to EXE and DLL
+
+2008-10-12 19:33  robert
+
+	* libmp3lame/lame.rc, libmp3lame/logoe.ico, libmp3lame/version.c,
+	  libmp3lame/version.h, vc_solution/vc9_lame_lame.vcproj,
+	  vc_solution/vc9_libmp3lame_dll.vcproj (lame3_98):
+
+	Adding resources to EXE and DLL
+
+2008-10-11 19:12  robert
+
+	* ChangeLog (lame3_98):
+
+	updating Changelog
+
 2008-10-11 19:08  robert
 
 	* frontend/gtkanal.c, libmp3lame/mpglib_interface.c,
