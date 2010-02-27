@@ -32,18 +32,50 @@ affect speed</font> <br>
 black = usability, portability, other
 <hr>
 
-<h3>LAME 3.98.3 &nbsp; &nbsp;not yet released</h3>
+<h3>LAME 3.98.3 &nbsp; &nbsp;February 27 2010</h3>
 <ul>
+  <li>Rog&eacute;rio Brito:
+    <ul>
+      <li>Update the debian packaging for the new release.
+      </li>
+    </ul>
+  </li>
   <li>Robert Hegemann
     <ul>
-      <li>The <b>ignore-tag-errors</b> switch had no effect when embedding album art, fixed.
+      <li>The <b>ignore-tag-errors</b> switch had no effect when embedding album art, fixed.</li>
       <li>Library API change: lame_decode functions are now obsolete but still present, please use hip_decode instead.
       The reason for this change is: lame_decode functions use a single global variable within the library
       to store decoder setup, hip_decode functions don't.
       The encoder now uses hip_decode internally and it is now possible to use <b>clipdetect</b>
       feature while reencoding mp3 to mp3.
       </li>
-    </li>
+      <li>Workaround for FFMPEG bug, which uses to call lame_encode_flush more than once in a loop.
+      </li>
+      <li>Windows: program icon and version info added (when building with VC9)
+      </li>
+      <li>Fix for Bugtracker item <i>[ 2688413 ] lib name problem in Microsoft Visual Studio 6</i>
+      </li>
+      <li>Fix for Bugtracker items <i>[ 2051870, 2423650, 2928684 ] several small documentation issues</i>
+      </li>
+      <li>Fix for Bugtracker item <i>[ 2723518 ] resampling in 3.98 and 3.99alpha</i>
+      </li>
+      <li>Fix for Bugtracker item <i>[ 2891879 ] Because of Windows API change, there was a problem with the <b>prority</b> switch.</i>
+      </li>
+      <li>Fix for Bugtracker item <i>[ 2893101 ] Access Violation in BladeMP3EncDLL if UNICODE was defined.</i>
+      </li>
+      <li>Fix for Bugtracker item <i>[ 2887359 ] Wrong length in ID3v2 tag when num_samples isn't set</i>
+      </li>
+      <li>Fix for Bugtracker item <i>[ 2872590 ] LameTAG: "Music length" missmatch in LAME 3.98</i>
+      </li>
+      <li>Fix for Bugtracker item <i>[ 2824296 ] wrong enc_padding value in LAME 3.99a and 3.98.3 (from CVS)</i>
+      </li>
+      <li><font color="#ff0000">Revisiting the FhG decoder problem (FhG V1.5 build 50, ships with MS Windows):
+      enabling the new-drain-code seems to solve that issue better, than restricting the buffer size (see below: 3.98 beta 1, May 16 2007).</font>
+      </li>
+      <li>Patch submitted by Bernhard Doebler, tracker item <i>[ 2807676 ] Error when building Lame with NASM support</i>
+      </li>
+      <li>Patch submitted by Mancuso Raffaele, tracker item <i>[ 2406420 ] compile lame_enc.dll under cygwin</i>
+      </li>
     </ul>
   </li>
 </ul>  
