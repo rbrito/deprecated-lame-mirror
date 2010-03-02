@@ -247,8 +247,8 @@ main(int argc, char **argv)
 
     lame_print_config(gf); /* print useful information about options being used */
 
-    if (update_interval < 0.)
-        update_interval = 2.;
+    if (global_ui_config.update_interval < 0.)
+        global_ui_config.update_interval = 2.;
 
     /* encode until we hit EOF */
     while ((wavsamples = get_audio(gf, Buffer)) > 0) { /* read in 'wavsamples' samples */

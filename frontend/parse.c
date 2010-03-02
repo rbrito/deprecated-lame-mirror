@@ -27,7 +27,7 @@
 
 #include <assert.h>
 #include <ctype.h>
-
+ 
 #ifdef STDC_HEADERS
 # include <stdio.h>
 # include <stdlib.h>
@@ -88,37 +88,25 @@ char   *strchr(), *strrchr();
 #define DEV_HELP(a)
 #endif
 
-static int lame_alpha_version_enabled = LAME_ALPHA_VERSION;
-static int internal_opts_enabled = INTERNAL_OPTS;
+static int const lame_alpha_version_enabled = LAME_ALPHA_VERSION;
+static int const internal_opts_enabled = INTERNAL_OPTS;
 extern void lame_set_tune(lame_t, float); /* FOR INTERNAL USE ONLY */
 
 /* GLOBAL VARIABLES.  set by parse_args() */
 /* we need to clean this up */
-sound_file_format input_format;
-int     swapbytes = 0;       /* force byte swapping   default=0 */
-int     swap_channel = 0;
-int     silent;              /* Verbosity */
-int     ignore_tag_errors;   /* Ignore errors in values passed for tags */
-int     brhist;
-float   update_interval;     /* to use Frank's time status display */
-int     mp3_delay;           /* to adjust the number of samples truncated
-                                during decode */
-int     mp3_delay_set;       /* user specified the value of the mp3 encoder
-                                delay to assume for decoding */
 
-int     disable_wav_header;
-mp3data_struct mp3input_data; /* used by MP3 */
-int     print_clipping_info; /* print info whether waveform clips */
+ReaderConfig global_reader = { 0, 0, 0 };
+WriterConfig global_writer = { 0 };
 
+UiConfig global_ui_config = {0,0,0,0};
 
-int     in_signed = -1;
+DecoderConfig global_decoder;
 
-enum ByteOrder in_endian = ByteOrderLittleEndian;
-
-int     in_bitwidth = 16;
-
-int     flush_write = 0;
-
+RawPCMConfig global_raw_pcm = 
+{ /* in_bitwidth */ 16
+, /* in_signed   */ -1
+, /* in_endian   */ ByteOrderLittleEndian
+};
 
 
 /**
@@ -1558,18 +1546,18 @@ parse_args(lame_global_flags * gfp, int argc, char **argv,
     const char *ProgramName = argv[0];
     int     count_nogap = 0;
     int     noreplaygain = 0; /* is RG explicitly disabled by the user */
-    int     id3tag_mode = ID3TAG_MODE_DEFAULT; 
+    int     id3tag_mode = ID3TAG_MODE_DEFAULT;
+    int     ignore_tag_errors = 0;  /* Ignore errors in values passed for tags */
 
     inPath[0] = '\0';
     outPath[0] = '\0';
     /* turn on display options. user settings may turn them off below */
-    silent = 0;
-    ignore_tag_errors = 0;
-    brhist = 1;
-    mp3_delay = 0;
-    mp3_delay_set = 0;
-    print_clipping_info = 0;
-    disable_wav_header = 0;
+    global_ui_config.silent = 0;
+    global_ui_config.brhist = 1;
+    global_decoder.mp3_delay = 0;
+    global_decoder.mp3_delay_set = 0;
+    global_decoder.disable_wav_header = 0;
+    global_ui_config.print_clipping_info = 0;
     id3tag_init(gfp);
 
     /* process args */
@@ -1612,45 +1600,48 @@ parse_args(lame_global_flags * gfp, int argc, char **argv,
                     lame_set_VBR(gfp, vbr_off);
 
                 T_ELIF("abr")
+                    /* values larger than 8000 are bps (like Fraunhofer), so it's strange to get 320000 bps MP3 when specifying 8000 bps MP3 */
+                    int m = atoi(nextArg);
                     argUsed = 1;
-                lame_set_VBR(gfp, vbr_abr);
-                lame_set_VBR_mean_bitrate_kbps(gfp, atoi(nextArg));
-                /* values larger than 8000 are bps (like Fraunhofer), so it's strange to get 320000 bps MP3 when specifying 8000 bps MP3 */
-                if (lame_get_VBR_mean_bitrate_kbps(gfp) >= 8000)
-                    lame_set_VBR_mean_bitrate_kbps(gfp,
-                                                   (lame_get_VBR_mean_bitrate_kbps(gfp) +
-                                                    500) / 1000);
-
-                lame_set_VBR_mean_bitrate_kbps(gfp, Min(lame_get_VBR_mean_bitrate_kbps(gfp), 320));
-                lame_set_VBR_mean_bitrate_kbps(gfp, Max(lame_get_VBR_mean_bitrate_kbps(gfp), 8));
+                    if (m >= 8000) {
+                        m = (m + 500) / 1000;
+                    }
+                    if (m > 320) {
+                        m = 320;
+                    }
+                    if (m < 8) {
+                        m = 8;
+                    }
+                    lame_set_VBR(gfp, vbr_abr);
+                    lame_set_VBR_mean_bitrate_kbps(gfp, m);
 
                 T_ELIF("r3mix")
                     lame_set_preset(gfp, R3MIX);
 
                 T_ELIF("bitwidth")
                     argUsed = 1;
-                in_bitwidth = atoi(nextArg);
+                    global_raw_pcm.in_bitwidth = atoi(nextArg);
                 
                 T_ELIF("signed")
-                    in_signed = 1;
+                    global_raw_pcm.in_signed = 1;
 
                 T_ELIF("unsigned")
-                    in_signed = 0;
+                    global_raw_pcm.in_signed = 0;
 
                 T_ELIF("little-endian")
-                    in_endian = ByteOrderLittleEndian;
+                    global_raw_pcm.in_endian = ByteOrderLittleEndian;
 
                 T_ELIF("big-endian")
-                    in_endian = ByteOrderBigEndian;
+                    global_raw_pcm.in_endian = ByteOrderBigEndian;
 
                 T_ELIF("mp1input")
-                    input_format = sf_mp1;
+                    global_reader.input_format = sf_mp1;
 
                 T_ELIF("mp2input")
-                    input_format = sf_mp2;
+                    global_reader.input_format = sf_mp2;
 
                 T_ELIF("mp3input")
-                    input_format = sf_mp3;
+                    global_reader.input_format = sf_mp3;
 
                 T_ELIF("ogginput")
                     error_printf("sorry, vorbis support in LAME is deprecated.\n");
@@ -1670,12 +1661,12 @@ parse_args(lame_global_flags * gfp, int argc, char **argv,
                     (void) lame_set_decode_only(gfp, 1);
 
                 T_ELIF("flush")
-                    flush_write = 1;
+                    global_writer.flush_write = 1;
 
                 T_ELIF("decode-mp3delay")
-                    mp3_delay = atoi(nextArg);
-                mp3_delay_set = 1;
-                argUsed = 1;
+                    global_decoder.mp3_delay = atoi(nextArg);
+                    global_decoder.mp3_delay_set = 1;
+                    argUsed = 1;
 
                 T_ELIF("nores")
                     lame_set_disable_reservoir(gfp, 1);
@@ -1736,12 +1727,12 @@ parse_args(lame_global_flags * gfp, int argc, char **argv,
 
 #ifdef DECODE_ON_THE_FLY
                 T_ELIF("clipdetect")
-                    print_clipping_info = 1;
-                lame_set_decode_on_the_fly(gfp, 1);
+                    global_ui_config.print_clipping_info = 1;
+                    lame_set_decode_on_the_fly(gfp, 1);
 #endif
 
                 T_ELIF("nohist")
-                    brhist = 0;
+                    global_ui_config.brhist = 0;
 
 #if defined(__OS2__) || defined(WIN32)
                 T_ELIF("priority")
@@ -1784,7 +1775,7 @@ parse_args(lame_global_flags * gfp, int argc, char **argv,
                     if (ret != 0) {
                         if (0 == ignore_tag_errors) {
                             if (id3tag_mode == ID3TAG_MODE_V1_ONLY) {
-                                if (silent < 9) {
+                                if (global_ui_config.silent < 9) {
                                     error_printf("The track number has to be between 1 and 255 for ID3v1.\n");
                                 }
                                 return -1;
@@ -1793,7 +1784,7 @@ parse_args(lame_global_flags * gfp, int argc, char **argv,
                                 /* track will be stored as-is in ID3v2 case, so no problem here */
                             }
                             else {
-                                if (silent < 9) {
+                                if (global_ui_config.silent < 9) {
                                     error_printf("The track number has to be between 1 and 255 for ID3v1, ignored for ID3v1.\n");
                                 }
                             }
@@ -1818,13 +1809,13 @@ parse_args(lame_global_flags * gfp, int argc, char **argv,
                                     /* genre will be stored as-is in ID3v2 case, so no problem here */
                                 }
                                 else {
-                                    if (silent < 9) {
+                                    if (global_ui_config.silent < 9) {
                                         error_printf("Unknown ID3v1 genre: '%s'.  Setting ID3v1 genre to 'Other'\n", nextArg);
                                     }
                                 }
                             }
                             else {
-                                if (silent < 10)
+                                if (global_ui_config.silent < 10)
                                     error_printf("Internal error.\n");
                                 return -1;
                             }
@@ -1834,7 +1825,7 @@ parse_args(lame_global_flags * gfp, int argc, char **argv,
                 T_ELIF("tv")
                     argUsed = 1;
                     if (id3_tag(gfp, 'v', TENC_RAW, nextArg)) {
-                        if (silent < 9) {
+                        if (global_ui_config.silent < 9) {
                             error_printf("Invalid field value: '%s'. Ignored\n", nextArg);
                         }
                     }
@@ -1891,7 +1882,7 @@ parse_args(lame_global_flags * gfp, int argc, char **argv,
                 T_ELIF("lFieldvalue")
                     argUsed = 1;
                     if (id3_tag(gfp, 'v', TENC_LATIN1, nextArg)) {
-                        if (silent < 9) {
+                        if (global_ui_config.silent < 9) {
                             error_printf("Invalid field value: '%s'. Ignored\n", nextArg);
                         }
                     }
@@ -1905,7 +1896,7 @@ parse_args(lame_global_flags * gfp, int argc, char **argv,
                 T_ELIF("uFieldvalue")
                     argUsed = 1;
                     if (id3_tag(gfp, 'v', TENC_UCS2, nextArg)) {
-                        if (silent < 9) {
+                        if (global_ui_config.silent < 9) {
                             error_printf("Invalid field value: '%s'. Ignored\n", nextArg);
                         }
                     }
@@ -2068,16 +2059,16 @@ parse_args(lame_global_flags * gfp, int argc, char **argv,
                  * I             => stdin
                  */
                 T_ELIF("quiet")
-                    silent = 10; /* on a scale from 1 to 10 be very silent */
+                    global_ui_config.silent = 10; /* on a scale from 1 to 10 be very silent */
 
                 T_ELIF("silent")
-                    silent = 9;
+                    global_ui_config.silent = 9;
 
                 T_ELIF("brief")
-                    silent = -5; /* print few info on screen */
+                    global_ui_config.silent = -5; /* print few info on screen */
 
                 T_ELIF("verbose")
-                    silent = -10; /* print a lot on screen */
+                    global_ui_config.silent = -10; /* print a lot on screen */
                 
                 T_ELIF2("version", "license")
                     print_license(stdout);
@@ -2123,7 +2114,7 @@ parse_args(lame_global_flags * gfp, int argc, char **argv,
 
                 T_ELIF("disptime")
                     argUsed = 1;
-                update_interval = (float) atof(nextArg);
+                    global_ui_config.update_interval = (float) atof(nextArg);
 
                 T_ELIF("nogaptags")
                     nogap_tags = 1;
@@ -2142,7 +2133,7 @@ parse_args(lame_global_flags * gfp, int argc, char **argv,
                     nogap = 1;
 
                 T_ELIF("swap-channel")
-                    swap_channel = 1;
+                    global_reader.swap_channel = 1;
 
                 T_ELIF_INTERNAL("tune") /*without helptext */
                     argUsed = 1;
@@ -2310,12 +2301,12 @@ parse_args(lame_global_flags * gfp, int argc, char **argv,
                         break;
                     case 't': /* dont write VBR tag */
                         (void) lame_set_bWriteVbrTag(gfp, 0);
-                        disable_wav_header = 1;
+                        global_decoder.disable_wav_header = 1;
                         break;
                     case 'T': /* do write VBR tag */
                         (void) lame_set_bWriteVbrTag(gfp, 1);
                         nogap_tags = 1;
-                        disable_wav_header = 0;
+                        global_decoder.disable_wav_header = 0;
                         break;
                     case 'r': /* force raw pcm input file */
 #if defined(LIBSNDFILE)
@@ -2323,10 +2314,10 @@ parse_args(lame_global_flags * gfp, int argc, char **argv,
                             ("WARNING: libsndfile may ignore -r and perform fseek's on the input.\n"
                              "Compile without libsndfile if this is a problem.\n");
 #endif
-                        input_format = sf_raw;
+                        global_reader.input_format = sf_raw;
                         break;
                     case 'x': /* force byte swapping */
-                        swapbytes = 1;
+                        global_reader.swapbytes = 1;
                         break;
                     case 'p': /* (jo) error_protection: add crc16 information to stream */
                         lame_set_error_protection(gfp, 1);
@@ -2341,7 +2332,7 @@ parse_args(lame_global_flags * gfp, int argc, char **argv,
                         error_printf("WARNING: -%c is obsolete.\n", c);
                         break;
                     case 'S':
-                        silent = 5;
+                        global_ui_config.silent = 5;
                         break;
                     case 'X':
                         /*  experimental switch -X:
@@ -2461,7 +2452,7 @@ parse_args(lame_global_flags * gfp, int argc, char **argv,
     }
 
     if (inPath[0] == '-')
-        silent = (silent <= 1 ? 1 : silent);
+        global_ui_config.silent = (global_ui_config.silent <= 1 ? 1 : global_ui_config.silent);
 #ifdef WIN32
     else
         dosToLongFileName(inPath);
@@ -2495,18 +2486,18 @@ parse_args(lame_global_flags * gfp, int argc, char **argv,
     }
 
     /* if user did not explicitly specify input is mp3, check file name */
-    if (input_format == sf_unknown)
-        input_format = filename_to_type(inPath);
+    if (global_reader.input_format == sf_unknown)
+        global_reader.input_format = filename_to_type(inPath);
 
 #if !(defined HAVE_MPGLIB || defined AMIGA_MPEGA)
-    if (is_mpeg_file_format(input_format)) {
+    if (is_mpeg_file_format(global_reader.input_format)) {
         error_printf("Error: libmp3lame not compiled with mpg123 *decoding* support \n");
         return -1;
     }
 #endif
 
 
-    if (input_format == sf_ogg) {
+    if (global_reader.input_format == sf_ogg) {
         error_printf("sorry, vorbis support in LAME is deprecated.\n");
         return -1;
     }

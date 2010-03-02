@@ -13,6 +13,10 @@
 # include <windows.h>
 #endif
 
+#if defined(__cplusplus)
+extern "C" {
+#endif
+
 typedef struct console_io_struct {
     unsigned long ClassID;
     unsigned long ClassProt;
@@ -52,6 +56,10 @@ void    report_flush(void);
 void    console_up(int n_lines);
 
 void    set_debug_file(const char *fn);
+
+#if defined(__cplusplus)
+}
+#endif
 
 #endif /* LAME_CONSOLE_H */
 

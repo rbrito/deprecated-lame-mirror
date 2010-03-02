@@ -22,6 +22,10 @@
 #ifndef LAME_TIMESTATUS_H
 #define LAME_TIMESTATUS_H
 
+#if defined(__cplusplus)
+extern "C" {
+#endif
+
 void    encoder_progress_begin( lame_global_flags const*    gfp
                               , char const*                 inpath
                               , char const*                 outpath );
@@ -30,5 +34,9 @@ void    encoder_progress_end(lame_global_flags const* gfp);
 
 void    decoder_progress(const mp3data_struct * const);
 void    decoder_progress_finish();
+
+#if defined(__cplusplus)
+}
+#endif
 
 #endif /* LAME_TIMESTATUS_H */

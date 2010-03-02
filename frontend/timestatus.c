@@ -195,7 +195,7 @@ encoder_progress_begin( lame_global_flags const* gf
                       , char              const* outPath
                       )
 {
-    if (silent < 9) {
+    if (global_ui_config.silent < 9) {
         lame_print_config(gf); /* print useful information about options being used */
 
         console_printf("Encoding %s%s to %s\n",
@@ -248,7 +248,7 @@ encoder_progress_begin( lame_global_flags const* gf
             }
         }
 
-        if (silent <= -10) {
+        if (global_ui_config.silent <= -10) {
             lame_print_internals(gf);
         }
     }
@@ -257,9 +257,9 @@ encoder_progress_begin( lame_global_flags const* gf
 void
 encoder_progress( lame_global_flags const* gf )
 {
-    if (silent <= 0) {
+    if (global_ui_config.silent <= 0) {
         int const frames = lame_get_frameNum(gf);
-        if (update_interval <= 0) {     /*  most likely --disptime x not used */
+        if (global_ui_config.update_interval <= 0) {     /*  most likely --disptime x not used */
             if ((frames % 100) != 0) {  /*  true, most of the time */
                 return;
             }
@@ -269,20 +269,20 @@ encoder_progress( lame_global_flags const* gf )
             if (frames != 0 && frames != 9) {
                 double const act = GetRealTime();
                 double const dif = act - last_time;
-                if (dif >= 0 && dif < update_interval) {
+                if (dif >= 0 && dif < global_ui_config.update_interval) {
                     return;
                 }
             }
             last_time = GetRealTime(); /* from now! disp_time seconds */
         }
 #ifdef BRHIST
-        if (brhist) {
+        if (global_ui_config.brhist) {
             brhist_jump_back();
         }
 #endif
         timestatus(gf);
 #ifdef BRHIST
-        if (brhist) {
+        if (global_ui_config.brhist) {
             brhist_disp(gf);
         }
 #endif
@@ -293,15 +293,15 @@ encoder_progress( lame_global_flags const* gf )
 void
 encoder_progress_end( lame_global_flags const* gf )
 {
-    if (silent <= 0) {
+    if (global_ui_config.silent <= 0) {
 #ifdef BRHIST
-        if (brhist) {
+        if (global_ui_config.brhist) {
             brhist_jump_back();
         }
 #endif
         timestatus(gf);
 #ifdef BRHIST
-        if (brhist) {
+        if (global_ui_config.brhist) {
             brhist_disp(gf);
         }
 #endif

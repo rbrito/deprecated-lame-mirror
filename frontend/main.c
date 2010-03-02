@@ -184,14 +184,14 @@ lame_decoder(lame_global_flags * gfp, FILE * outf, int skip_start, char *inPath,
 
 
 
-    if (silent < 9)
+    if (global_ui_config.silent < 9)
         console_printf("\rinput:  %s%s(%g kHz, %i channel%s, ",
                        strcmp(inPath, "-") ? inPath : "<stdin>",
                        strlen(inPath) > 26 ? "\n\t" : "  ",
                        lame_get_in_samplerate(gfp) / 1.e3,
                        tmp_num_channels, tmp_num_channels != 1 ? "s" : "");
 
-    switch (input_format) {
+    switch (global_reader.input_format) {
     case sf_mp123: /* FIXME: !!! */
       error_printf("Internal error.  Aborting.");
       exit(-1);
@@ -212,54 +212,54 @@ lame_decoder(lame_global_flags * gfp, FILE * outf, int skip_start, char *inPath,
             skip_start += 528 + 1; /* mp3 decoder has a 528 sample delay, plus user supplied "skip" */
         }
 
-        if (silent < 9)
+        if (global_ui_config.silent < 9)
             console_printf("MPEG-%u%s Layer %s", 2 - lame_get_version(gfp),
                            lame_get_out_samplerate(gfp) < 16000 ? ".5" : "", "III");
         break;
     case sf_mp2:
         skip_start += 240 + 1;
-        if (silent < 9)
+        if (global_ui_config.silent < 9)
             console_printf("MPEG-%u%s Layer %s", 2 - lame_get_version(gfp),
                            lame_get_out_samplerate(gfp) < 16000 ? ".5" : "", "II");
         break;
     case sf_mp1:
         skip_start += 240 + 1;
-        if (silent < 9)
+        if (global_ui_config.silent < 9)
             console_printf("MPEG-%u%s Layer %s", 2 - lame_get_version(gfp),
                            lame_get_out_samplerate(gfp) < 16000 ? ".5" : "", "I");
         break;
     case sf_raw:
-        if (silent < 9)
+        if (global_ui_config.silent < 9)
             console_printf("raw PCM data");
-        mp3input_data.nsamp = lame_get_num_samples(gfp);
-        mp3input_data.framesize = 1152;
+        global_decoder.mp3input_data.nsamp = lame_get_num_samples(gfp);
+        global_decoder.mp3input_data.framesize = 1152;
         skip_start = 0; /* other formats have no delay */ /* is += 0 not better ??? */
         break;
     case sf_wave:
-        if (silent < 9)
+        if (global_ui_config.silent < 9)
             console_printf("Microsoft WAVE");
-        mp3input_data.nsamp = lame_get_num_samples(gfp);
-        mp3input_data.framesize = 1152;
+        global_decoder.mp3input_data.nsamp = lame_get_num_samples(gfp);
+        global_decoder.mp3input_data.framesize = 1152;
         skip_start = 0; /* other formats have no delay */ /* is += 0 not better ??? */
         break;
     case sf_aiff:
-        if (silent < 9)
+        if (global_ui_config.silent < 9)
             console_printf("SGI/Apple AIFF");
-        mp3input_data.nsamp = lame_get_num_samples(gfp);
-        mp3input_data.framesize = 1152;
+        global_decoder.mp3input_data.nsamp = lame_get_num_samples(gfp);
+        global_decoder.mp3input_data.framesize = 1152;
         skip_start = 0; /* other formats have no delay */ /* is += 0 not better ??? */
         break;
     default:
-        if (silent < 9)
+        if (global_ui_config.silent < 9)
             console_printf("unknown");
-        mp3input_data.nsamp = lame_get_num_samples(gfp);
-        mp3input_data.framesize = 1152;
+        global_decoder.mp3input_data.nsamp = lame_get_num_samples(gfp);
+        global_decoder.mp3input_data.framesize = 1152;
         skip_start = 0; /* other formats have no delay */ /* is += 0 not better ??? */
         assert(0);
         break;
     }
 
-    if (silent < 9) {
+    if (global_ui_config.silent < 9) {
         console_printf(")\noutput: %s%s(16 bit, Microsoft WAVE)\n",
                        strcmp(outPath, "-") ? outPath : "<stdout>",
                        strlen(outPath) > 45 ? "\n\t" : "  ");
@@ -270,44 +270,44 @@ lame_decoder(lame_global_flags * gfp, FILE * outf, int skip_start, char *inPath,
             console_printf("skipping final %i samples (encoder padding-decoder delay)\n", skip_end);
     }
 
-    if (0 == disable_wav_header)
+    if (0 == global_decoder.disable_wav_header)
         WriteWaveHeader(outf, 0x7FFFFFFF, lame_get_in_samplerate(gfp), tmp_num_channels, 16);
     /* unknown size, so write maximum 32 bit signed value */
 
     wavsize = -(skip_start + skip_end);
-    WriteFunction = swapbytes ? WriteBytesSwapped : WriteBytes;
-    mp3input_data.totalframes = mp3input_data.nsamp / mp3input_data.framesize;
+    WriteFunction = global_reader.swapbytes ? WriteBytesSwapped : WriteBytes;
+    global_decoder.mp3input_data.totalframes = global_decoder.mp3input_data.nsamp / global_decoder.mp3input_data.framesize;
 
     assert(tmp_num_channels >= 1 && tmp_num_channels <= 2);
 
     ch0 = 0;
     ch1 = 1;
-    if (tmp_num_channels == 2 && swap_channel == 1) {
+    if (tmp_num_channels == 2 && global_reader.swap_channel == 1) {
         ch0 = 1;
         ch1 = 0;
     }
     do {
         iread = get_audio16(gfp, Buffer); /* read in 'iread' samples */
         if (iread >= 0) {
-            mp3input_data.framenum += iread / mp3input_data.framesize;
+            global_decoder.mp3input_data.framenum += iread / global_decoder.mp3input_data.framesize;
             wavsize += iread;
 
-            if (silent <= 0) {
-                decoder_progress(&mp3input_data);
+            if (global_ui_config.silent <= 0) {
+                decoder_progress(&global_decoder.mp3input_data);
                 console_flush();
             }
 
             skip_start -= (i = skip_start < iread ? skip_start : iread); /* 'i' samples are to skip in this frame */
 
-            if (skip_end > 1152 && mp3input_data.framenum + 2 > mp3input_data.totalframes) {
+            if (skip_end > 1152 && global_decoder.mp3input_data.framenum + 2 > global_decoder.mp3input_data.totalframes) {
                 iread -= (skip_end - 1152);
                 skip_end = 1152;
             }
-            else if (mp3input_data.framenum == mp3input_data.totalframes && iread != 0)
+            else if (global_decoder.mp3input_data.framenum == global_decoder.mp3input_data.totalframes && iread != 0)
                 iread -= skip_end;
 
             for (; i < iread; i++) {
-                if (disable_wav_header) {
+                if (global_decoder.disable_wav_header) {
                     WriteFunction(outf, (char *) &Buffer[ch0][i], sizeof(short));
                     if (tmp_num_channels == 2)
                         WriteFunction(outf, (char *) &Buffer[ch1][i], sizeof(short));
@@ -318,7 +318,7 @@ lame_decoder(lame_global_flags * gfp, FILE * outf, int skip_start, char *inPath,
                         Write16BitsLowHigh(outf, Buffer[ch1][i]);
                 }
             }
-            if (flush_write == 1) {
+            if (global_writer.flush_write == 1) {
                 fflush(outf);
             }
         }
@@ -327,12 +327,12 @@ lame_decoder(lame_global_flags * gfp, FILE * outf, int skip_start, char *inPath,
     i = (16 / 8) * tmp_num_channels;
     assert(i > 0);
     if (wavsize <= 0) {
-        if (silent < 10)
+        if (global_ui_config.silent < 10)
             error_printf("WAVE file contains 0 PCM samples\n");
         wavsize = 0;
     }
     else if (wavsize > 0xFFFFFFD0 / i) {
-        if (silent < 10)
+        if (global_ui_config.silent < 10)
             error_printf("Very huge WAVE file, can't set filesize accordingly\n");
         wavsize = 0xFFFFFFD0;
     }
@@ -341,13 +341,13 @@ lame_decoder(lame_global_flags * gfp, FILE * outf, int skip_start, char *inPath,
     }
 
     /* if outf is seekable, rewind and adjust length */
-    if (!disable_wav_header && strcmp("-", outPath)
+    if (!global_decoder.disable_wav_header && strcmp("-", outPath)
         && !fseek(outf, 0l, SEEK_SET))
         WriteWaveHeader(outf, (int) wavsize, lame_get_in_samplerate(gfp),
                         tmp_num_channels, 16);
     fclose(outf);
 
-    if (silent <= 0)
+    if (global_ui_config.silent <= 0)
         decoder_progress_finish();
     return 0;
 }
@@ -379,7 +379,7 @@ print_trailing_info(lame_global_flags * gf)
 
     /* if (the user requested printing info about clipping) and (decoding
     on the fly has actually been performed) */
-    if (print_clipping_info && lame_get_decode_on_the_fly(gf)) {
+    if (global_ui_config.print_clipping_info && lame_get_decode_on_the_fly(gf)) {
         float   noclipGainChange = (float) lame_get_noclipGainChange(gf) / 10.0f;
         float   noclipScale = lame_get_noclipScale(gf);
 
@@ -442,7 +442,7 @@ write_xing_frame(lame_global_flags * gf, FILE * outf)
         error_printf("Error writing LAME-tag \n");
         return -1;
     }
-    if (flush_write == 1) {
+    if (global_writer.flush_write == 1) {
         fflush(outf);
     }
     return imp3;
@@ -475,7 +475,7 @@ lame_encoder(lame_global_flags * gf, FILE * outf, int nogap, char *inPath, char 
         error_printf("Error writing ID3v2 tag \n");
         return 1;
     }
-    if (flush_write == 1) {
+    if (global_writer.flush_write == 1) {
         fflush(outf);
     }    
     id3v2_size = imp3;
@@ -483,7 +483,7 @@ lame_encoder(lame_global_flags * gf, FILE * outf, int nogap, char *inPath, char 
     num_channels = lame_get_num_channels(gf);
     ch0 = 0;
     ch1 = 1;
-    if (num_channels == 2 && swap_channel) {
+    if (num_channels == 2 && global_reader.swap_channel) {
         ch0 = 1;
         ch1 = 0;
     }
@@ -513,7 +513,7 @@ lame_encoder(lame_global_flags * gf, FILE * outf, int nogap, char *inPath, char 
                 return 1;
             }
         }
-        if (flush_write == 1) {
+        if (global_writer.flush_write == 1) {
             fflush(outf);
         }
     } while (iread > 0);
@@ -539,7 +539,7 @@ lame_encoder(lame_global_flags * gf, FILE * outf, int nogap, char *inPath, char 
         error_printf("Error writing mp3 output \n");
         return 1;
     }
-    if (flush_write == 1) {
+    if (global_writer.flush_write == 1) {
         fflush(outf);
     }
 
@@ -558,13 +558,13 @@ lame_encoder(lame_global_flags * gf, FILE * outf, int nogap, char *inPath, char 
                 error_printf("Error writing ID3v1 tag \n");
                 return 1;
             }
-            if (flush_write == 1) {
+            if (global_writer.flush_write == 1) {
                 fflush(outf);
             }
         }
     }
     
-    if (silent <= 0) {
+    if (global_ui_config.silent <= 0) {
         print_lame_tag_leading_info(gf);
     }
     if (fseek(outf, id3v2_size, SEEK_SET) != 0) {
@@ -574,7 +574,7 @@ lame_encoder(lame_global_flags * gf, FILE * outf, int nogap, char *inPath, char 
         write_xing_frame(gf, outf);
     }
 
-    if (silent <= 0) {
+    if (global_ui_config.silent <= 0) {
         print_trailing_info(gf);
     }    
     return 0;
@@ -589,10 +589,10 @@ static void
 brhist_init_package(lame_global_flags * gf)
 {
 #ifdef BRHIST
-    if (brhist) {
+    if (global_ui_config.brhist) {
         if (brhist_init(gf, lame_get_VBR_min_bitrate_kbps(gf), lame_get_VBR_max_bitrate_kbps(gf))) {
             /* fail to initialize */
-            brhist = 0;
+            global_ui_config.brhist = 0;
         }
     }
     else {
@@ -749,14 +749,14 @@ main(int argc, char **argv)
     frontend_open_console();
 
     /* initialize libmp3lame */
-    input_format = sf_unknown;
+    global_reader.input_format = sf_unknown;
     if (NULL == (gf = lame_init())) {
         error_printf("fatal error during initialization\n");
         frontend_close_console();
         return 1;
     }
-    lame_set_msgf  (gf, silent < 10 ? &frontend_msgf   : 0);
-    lame_set_errorf(gf, silent < 10 ? &frontend_errorf : 0);
+    lame_set_msgf  (gf, global_ui_config.silent < 10 ? &frontend_msgf   : 0);
+    lame_set_errorf(gf, global_ui_config.silent < 10 ? &frontend_errorf : 0);
     lame_set_debugf(gf, &frontend_debugf);
     if (argc <= 1) {
         usage(stderr, argv[0]); /* no command-line args, print usage, exit  */
@@ -778,8 +778,8 @@ main(int argc, char **argv)
         frontend_close_console();
         return ret == -2 ? 0 : 1;
     }
-    if (update_interval < 0.)
-        update_interval = 2.;
+    if (global_ui_config.update_interval < 0.)
+        global_ui_config.update_interval = 2.;
 
     if (outPath[0] != '\0' && max_nogap > 0) {
         strncpy(nogapdir, outPath, PATH_MAX + 1);
@@ -822,15 +822,15 @@ main(int argc, char **argv)
         return i;
     }
 
-    if (silent > 0) {
-        brhist = 0;     /* turn off VBR histogram */
+    if (global_ui_config.silent > 0) {
+        global_ui_config.brhist = 0;     /* turn off VBR histogram */
     }
 
 
     if (lame_get_decode_only(gf)) {
         /* decode an mp3 file to a .wav */
-        if (mp3_delay_set)
-            lame_decoder(gf, outf, mp3_delay, inPath, outPath, &enc_delay, &enc_padding);
+        if (global_decoder.mp3_delay_set)
+            lame_decoder(gf, outf, global_decoder.mp3_delay, inPath, outPath, &enc_delay, &enc_padding);
         else
             lame_decoder(gf, outf, 0, inPath, outPath, &enc_delay, &enc_padding);
 
