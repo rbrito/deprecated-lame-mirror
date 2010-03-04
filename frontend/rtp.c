@@ -55,29 +55,12 @@ struct rtpheader {           /* in network byte order */
 
 #ifndef _MSC_VER
 
-#ifndef __GNUC__
-# if HAVE_ALLOCA_H
-#  include <alloca.h>
-# else
-#  ifdef _AIX
-#pragma alloca
-#  else
-#   ifndef alloca       /* predefined by HP cc +Olibcalls */
-char   *alloca();
-#   endif
-#  endif
-# endif
-#endif
-
 #ifdef STDC_HEADERS
+# include <stdio.h>
+# include <stdarg.h>
 # include <stdlib.h>
 # include <string.h>
 #else
-# ifndef HAVE_STRCHR
-#  define strchr index
-#  define strrchr rindex
-# endif
-char   *strchr(), *strrchr();
 # ifndef HAVE_MEMCPY
 #  define memcpy(d, s, n) bcopy ((s), (d), (n))
 #  define memmove(d, s, n) bcopy ((s), (d), (n))
@@ -93,41 +76,24 @@ char   *strchr(), *strrchr();
 #include <netinet/in.h>
 #include <arpa/inet.h>
 
-#include "console.h"
-
 #ifdef WITH_DMALLOC
 #include <dmalloc.h>
 #endif
 
+#include "rtp.h"
+#include "console.h"
+
+typedef int SOCKET;
+
 struct rtpheader RTPheader;
 struct sockaddr_in rtpsi;
-int     rtpsocket;
+SOCKET  rtpsocket;
 
-
-int
-rtp_send(unsigned char const* data, int len)
-{
-    int     fd = rtpsocket;
-    struct sockaddr_in *sSockAddr = &rtpsi;
-    srtuct rtpheader* foo = &RTPheader;
-    char   *buf = alloca(len + sizeof(struct rtpheader));
-    int    *cast = (int *) foo;
-    int    *outcast = (int *) buf;
-    outcast[0] = htonl(cast[0]);
-    outcast[1] = htonl(cast[1]);
-    outcast[2] = htonl(cast[2]);
-    outcast[3] = htonl(cast[3]);
-    memmove(buf + sizeof(struct rtpheader), data, len);
-    return sendto(fd, buf, len + sizeof(*foo), 0,
-                  (struct sockaddr *) sSockAddr, sizeof(*sSockAddr));
-/*  return write(fd,buf,len+sizeof(*foo))==len+sizeof(*foo); */
-}
 
 /* create a sender socket. */
 int
-makesocket(char *szAddr, unsigned short port, unsigned char TTL)
+rtp_socket(char const *address, unsigned int port, unsigned int TTL)
 {
-    struct sockaddr_in *sSockAddr = &rtpsi;
     int     iRet, iLoop = 1;
     struct sockaddr_in sin;
     unsigned char cTtl = TTL;
@@ -137,18 +103,19 @@ makesocket(char *szAddr, unsigned short port, unsigned char TTL)
     int     iSocket = socket(AF_INET, SOCK_DGRAM, 0);
     if (iSocket < 0) {
         error_printf("socket() failed.\n");
-        exit(1);
+        return 1;
     }
 
-    tempaddr = inet_addr(szAddr);
-    sSockAddr->sin_family = sin.sin_family = AF_INET;
-    sSockAddr->sin_port = sin.sin_port = htons(port);
-    sSockAddr->sin_addr.s_addr = tempaddr;
+    memset(&sin, 0, sizeof(sin));
+    tempaddr = inet_addr(address);
+    sin.sin_family = AF_INET;
+    sin.sin_port = htons(port);
+    sin.sin_addr.s_addr = tempaddr;
 
     iRet = setsockopt(iSocket, SOL_SOCKET, SO_REUSEADDR, &iLoop, sizeof(int));
     if (iRet < 0) {
         error_printf("setsockopt SO_REUSEADDR failed\n");
-        exit(1);
+        return 1;
     }
 
     if ((ntohl(tempaddr) >> 28) == 0xe) {
@@ -156,23 +123,36 @@ makesocket(char *szAddr, unsigned short port, unsigned char TTL)
         iRet = setsockopt(iSocket, IPPROTO_IP, IP_MULTICAST_TTL, &cTtl, sizeof(char));
         if (iRet < 0) {
             error_printf("setsockopt IP_MULTICAST_TTL failed.  multicast in kernel?\n");
-            exit(1);
+            return 1;
         }
 
         cLoop = 1;      /* !? */
         iRet = setsockopt(iSocket, IPPROTO_IP, IP_MULTICAST_LOOP, &cLoop, sizeof(char));
         if (iRet < 0) {
             error_printf("setsockopt IP_MULTICAST_LOOP failed.  multicast in kernel?\n");
-            exit(1);
+            return 1;
         }
     }
+    iRet = connect(iSocket, (struct sockaddr *) &sin, sizeof(struct sockaddr_in));
+    if (iRet < 0) {
+        error_printf("connect IP_MULTICAST_LOOP failed.  multicast in kernel?\n");
+        return 1;
+    }
 
-    return iSocket;
+    rtpsi = sin;
+    rtpsocket = iSocket;
+
+    return 0;
 }
 
 
 static void
 rtp_initialization_extra(void)
+{
+}
+
+static void
+rtp_close_extra(void)
 {
 }
 
@@ -193,27 +173,24 @@ struct rtpheader RTPheader;
 struct sockaddr_in rtpsi;
 SOCKET  rtpsocket;
 
-static char* 
-last_error_message( int err_code )
+static char *
+last_error_message(int err_code)
 {
-    char* msg;
-    void* p_msg_buf;
-    FormatMessageA( FORMAT_MESSAGE_FROM_SYSTEM | FORMAT_MESSAGE_ALLOCATE_BUFFER,
-                   (void*)0,
+    char   *msg;
+    void   *p_msg_buf;
+    FormatMessageA(FORMAT_MESSAGE_FROM_SYSTEM | FORMAT_MESSAGE_ALLOCATE_BUFFER,
+                   (void *) 0,
                    (DWORD) err_code,
-                   MAKELANGID( LANG_NEUTRAL, SUBLANG_DEFAULT ),
-                   (LPSTR) &p_msg_buf,
-                   0,
-                   NULL );
+                   MAKELANGID(LANG_NEUTRAL, SUBLANG_DEFAULT), (LPSTR) & p_msg_buf, 0, NULL);
     msg = strdup(p_msg_buf);
-    LocalFree( p_msg_buf );
+    LocalFree(p_msg_buf);
     return msg;
 }
 
 static int
 print_socket_error(int error)
 {
-    char* err_txt = last_error_message(error);
+    char   *err_txt = last_error_message(error);
     error_printf("error %d\n%s\n", error, err_txt);
     free(err_txt);
     return error;
@@ -222,7 +199,7 @@ print_socket_error(int error)
 static int
 on_socket_error(SOCKET s)
 {
-    int   error = WSAGetLastError();
+    int     error = WSAGetLastError();
     print_socket_error(error);
     if (s != INVALID_SOCKET) {
         closesocket(s);
@@ -230,31 +207,9 @@ on_socket_error(SOCKET s)
     return error;
 }
 
-static int
-rtp_send(unsigned char const* data, int len)
-{
-    SOCKET  s = rtpsocket;
-    struct rtpheader* foo = &RTPheader;
-    char   *buffer = malloc(len + sizeof(struct rtpheader));
-    int    *cast = (int *) foo;
-    int    *outcast = (int *) buffer;
-    int     count, size;
-
-    outcast[0] = htonl(cast[0]);
-    outcast[1] = htonl(cast[1]);
-    outcast[2] = htonl(cast[2]);
-    outcast[3] = htonl(cast[3]);
-    memmove(buffer + sizeof(struct rtpheader), data, len);
-    size = len + sizeof(*foo);
-    count = send(s, buffer, size, 0);
-    free(buffer);
-
-    return count != size;
-}
-
 /* create a sender socket. */
 int
-rtp_socket(char const* address, unsigned int port, unsigned int TTL)
+rtp_socket(char const *address, unsigned int port, unsigned int TTL)
 {
     char const True = 1;
     char const *c = "";
@@ -317,7 +272,7 @@ rtp_socket(char const* address, unsigned int port, unsigned int TTL)
         error_printf("broadcast %s:%u %s\r\n", inet_ntoa(dest.sin_addr), ntohs(dest.sin_port), c);
         error = setsockopt(s, SOL_SOCKET, SO_BROADCAST, &True, sizeof(True));
         if (error == SOCKET_ERROR) {
-            error_printf("setsockopt (%u, SOL_SOCKET, SO_BROADCAST, ...) ", s );
+            error_printf("setsockopt (%u, SOL_SOCKET, SO_BROADCAST, ...) ", s);
             return on_socket_error(s);
         }
     }
@@ -342,7 +297,7 @@ static void
 rtp_initialization_extra(void)
 {
     WSADATA wsaData;
-    int     rc = WSAStartup( MAKEWORD( 2,2 ), &wsaData );
+    int     rc = WSAStartup(MAKEWORD(2, 2), &wsaData);
     if (rc != 0) {
         print_socket_error(rc);
     }
@@ -356,6 +311,29 @@ rtp_close_extra(void)
 
 #endif
 
+
+static int
+rtp_send(unsigned char const *data, int len)
+{
+    SOCKET  s = rtpsocket;
+    struct sockaddr *sSockAddr = (struct sockaddr *) &rtpsi;
+    struct rtpheader *foo = &RTPheader;
+    char   *buffer = malloc(len + sizeof(struct rtpheader));
+    int    *cast = (int *) foo;
+    int    *outcast = (int *) buffer;
+    int     count, size;
+
+    outcast[0] = htonl(cast[0]);
+    outcast[1] = htonl(cast[1]);
+    outcast[2] = htonl(cast[2]);
+    outcast[3] = htonl(cast[3]);
+    memmove(buffer + sizeof(struct rtpheader), data, len);
+    size = len + sizeof(*foo);
+    count = sendto(s, buffer, size, 0, sSockAddr, sizeof(struct sockaddr_in));
+    free(buffer);
+
+    return count != size;
+}
 
 void
 rtp_output(unsigned char const *mp3buffer, int mp3size)

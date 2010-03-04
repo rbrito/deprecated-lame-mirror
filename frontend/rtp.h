@@ -26,19 +26,19 @@
 #define LAME_RTP_H
 
 #if defined(__cplusplus)
-extern "C" {
+extern  "C" {
 #endif
 
-struct RtpStruct;
-typedef struct RtpStruct* RtpHandle;
+    struct RtpStruct;
+    typedef struct RtpStruct *RtpHandle;
 
-void    rtp_initialization(void);
-void    rtp_deinitialization(void);
-int     rtp_socket(/*RtpHandle rtp,*/ char const* Address, unsigned int port, unsigned int TTL);
-void    rtp_output(/*RtpHandle rtp,*/ unsigned char const *mp3buffer, int mp3size);
+    void    rtp_initialization(void);
+    void    rtp_deinitialization(void);
+    int     rtp_socket( /*RtpHandle rtp, */ char const *Address, unsigned int port,
+                       unsigned int TTL);
+    void    rtp_output( /*RtpHandle rtp, */ unsigned char const *mp3buffer, int mp3size);
 
 #if defined(__cplusplus)
 }
 #endif
-
 #endif

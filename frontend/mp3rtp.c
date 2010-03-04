@@ -47,16 +47,6 @@
 #ifdef STDC_HEADERS
 # include <stdlib.h>
 # include <string.h>
-#else
-# ifndef HAVE_STRCHR
-#  define strchr index
-#  define strrchr rindex
-# endif
-char   *strchr(), *strrchr();
-# ifndef HAVE_MEMCPY
-#  define memcpy(d, s, n) bcopy ((s), (d), (n))
-#  define memmove(d, s, n) bcopy ((s), (d), (n))
-# endif
 #endif
 
 #include <time.h>
@@ -183,15 +173,12 @@ main(int argc, char **argv)
         frontend_close_console();
         return -1;
     }
-/*    srand(getpid() ^ time(NULL)); */
     rtp_initialization();
-    {
-      if ( rtp_socket(ip, port, ttl) ) {
+    if (rtp_socket(ip, port, ttl)) {
         rtp_deinitialization();
         error_printf("fatal error during initialization\n");
         frontend_close_console();
         return 1;
-      }
     }
 
     /* initialize encoder */
