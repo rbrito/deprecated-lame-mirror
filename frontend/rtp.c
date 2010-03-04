@@ -28,9 +28,6 @@
 # include <config.h>
 #endif
 
-#ifdef _MSC_VER
-#endif
-
 #ifdef HAVE_STDINT_H
 # include <stdint.h>
 #endif
@@ -53,7 +50,7 @@ struct rtpheader {           /* in network byte order */
 };
 
 
-#ifndef _MSC_VER
+#ifndef _WINDOWS
 
 #ifdef STDC_HEADERS
 # include <stdio.h>
@@ -349,13 +346,8 @@ rtp_initialization(void)
     foo->b.cc = 0;
     foo->b.m = 0;
     foo->b.pt = 14;     /* MPEG Audio */
-#ifdef FEFE
-    foo->b.sequence = 42;
-    foo->timestamp = 0;
-#else
     foo->b.sequence = rand() & 65535;
     foo->timestamp = rand();
-#endif
     foo->ssrc = rand();
     foo->iAudioHeader = 0;
     rtp_initialization_extra();
