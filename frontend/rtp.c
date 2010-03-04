@@ -86,7 +86,6 @@ struct rtpheader {           /* in network byte order */
 typedef int SOCKET;
 
 struct rtpheader RTPheader;
-struct sockaddr_in rtpsi;
 SOCKET  rtpsocket;
 
 
@@ -139,7 +138,6 @@ rtp_socket(char const *address, unsigned int port, unsigned int TTL)
         return 1;
     }
 
-    rtpsi = sin;
     rtpsocket = iSocket;
 
     return 0;
@@ -170,7 +168,6 @@ rtp_close_extra(void)
 
 
 struct rtpheader RTPheader;
-struct sockaddr_in rtpsi;
 SOCKET  rtpsocket;
 
 static char *
@@ -316,7 +313,6 @@ static int
 rtp_send(unsigned char const *data, int len)
 {
     SOCKET  s = rtpsocket;
-    struct sockaddr *sSockAddr = (struct sockaddr *) &rtpsi;
     struct rtpheader *foo = &RTPheader;
     char   *buffer = malloc(len + sizeof(struct rtpheader));
     int    *cast = (int *) foo;
@@ -329,7 +325,7 @@ rtp_send(unsigned char const *data, int len)
     outcast[3] = htonl(cast[3]);
     memmove(buffer + sizeof(struct rtpheader), data, len);
     size = len + sizeof(*foo);
-    count = sendto(s, buffer, size, 0, sSockAddr, sizeof(struct sockaddr_in));
+    count = send(s, buffer, size, 0);
     free(buffer);
 
     return count != size;
