@@ -1,6 +1,32 @@
+/*
+ *      mp3rtp command line frontend program
+ *
+ *      initially contributed by Felix von Leitner
+ *
+ *      Copyright (c) 2000 Mark Taylor
+ *                    2010 Robert Hegemann
+ *
+ * This library is free software; you can redistribute it and/or
+ * modify it under the terms of the GNU Lesser General Public
+ * License as published by the Free Software Foundation; either
+ * version 2 of the License, or (at your option) any later version.
+ *
+ * This library is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
+ * Library General Public License for more details.
+ *
+ * You should have received a copy of the GNU Lesser General Public
+ * License along with this library; if not, write to the
+ * Free Software Foundation, Inc., 59 Temple Place - Suite 330,
+ * Boston, MA 02111-1307, USA.
+ */
+
 /* $Id$ */
 
 /* Still under work ..., need a client for test, where can I get one? */
+
+/* An audio player named Zinf (aka freeamp) can play rtp streams */
 
 /* 
  *  experimental translation:
@@ -65,33 +91,6 @@ char   *strchr(), *strrchr();
  *
  */
 
-struct rtpheader RTPheader;
-struct sockaddr_in rtpsi;
-int     rtpsocket;
-
-void
-rtp_output(const char *mp3buffer, const int mp3size)
-{
-    sendrtp(rtpsocket, &rtpsi, &RTPheader, mp3buffer, mp3size);
-    RTPheader.timestamp += 5;
-    RTPheader.b.sequence++;
-}
-
-#if 0
-struct rtpheader RTPheader;
-SOCKET  rtpsocket;
-
-void
-rtp_output(char *mp3buffer, int mp3size)
-{
-    rtp_send(rtpsocket, &RTPheader, mp3buffer, mp3size);
-    RTPheader.timestamp += 5;
-    RTPheader.b.sequence++;
-}
-#endif
-
-
-
 
 static unsigned int
 maxvalue(int Buffer[2][1152])
@@ -153,8 +152,8 @@ main(int argc, char **argv)
     FILE   *outf;
 
     char    ip[16];
-    unsigned port = 5004;
-    unsigned ttl = 2;
+    unsigned int port = 5004;
+    unsigned int ttl = 2;
     char    dummy;
 
     int     enc_delay = -1;
@@ -184,14 +183,21 @@ main(int argc, char **argv)
         frontend_close_console();
         return -1;
     }
-
-    rtpsocket = makesocket(ip, port, ttl, &rtpsi);
-    srand(getpid() ^ time(NULL));
-    initrtp(&RTPheader);
+/*    srand(getpid() ^ time(NULL)); */
+    rtp_initialization();
+    {
+      if ( rtp_socket(ip, port, ttl) ) {
+        rtp_deinitialization();
+        error_printf("fatal error during initialization\n");
+        frontend_close_console();
+        return 1;
+      }
+    }
 
     /* initialize encoder */
     gf = lame_init();
     if (NULL == gf) {
+        rtp_deinitialization();
         error_printf("fatal error during initialization\n");
         frontend_close_console();
         return 1;
@@ -217,6 +223,7 @@ main(int argc, char **argv)
     }
     else {
         if ((outf = fopen(outPath, "wb+")) == NULL) {
+            rtp_deinitialization();
             error_printf("Could not create \"%s\".\n", outPath);
             frontend_close_console();
             return 1;
@@ -240,6 +247,7 @@ main(int argc, char **argv)
     if (ret < 0) {
         if (ret == -1)
             display_bitrates(stderr);
+        rtp_deinitialization();
         error_printf("fatal error during initialization\n");
         frontend_close_console();
         return -1;
@@ -256,7 +264,6 @@ main(int argc, char **argv)
         mp3bytes = lame_encode_buffer_int(gf, /* encode the frame */
                                           Buffer[0], Buffer[1], wavsamples,
                                           mp3buffer, sizeof(mp3buffer));
-
         rtp_output(mp3buffer, mp3bytes); /* write MP3 output to RTP port */
         fwrite(mp3buffer, 1, mp3bytes, outf); /* write the MP3 output to file */
     }
@@ -269,6 +276,7 @@ main(int argc, char **argv)
     lame_mp3_tags_fid(gf, outf); /* add VBR tags to mp3 file */
 
     lame_close(gf);
+    rtp_deinitialization();
     fclose(outf);
     close_infile();     /* close the sound input file */
     frontend_close_console();
