@@ -2,6 +2,7 @@
  *      Command line parsing related functions
  *
  *      Copyright (c) 1999 Mark Taylor
+ *                    2010 Robert Hegemann
  *
  * This library is free software; you can redistribute it and/or
  * modify it under the terms of the GNU Lesser General Public
@@ -95,7 +96,7 @@ extern void lame_set_tune(lame_t, float); /* FOR INTERNAL USE ONLY */
 /* GLOBAL VARIABLES.  set by parse_args() */
 /* we need to clean this up */
 
-ReaderConfig global_reader = { 0, 0, 0 };
+ReaderConfig global_reader = { sf_unknown, 0, 0 };
 WriterConfig global_writer = { 0 };
 
 UiConfig global_ui_config = {0,0,0,0};

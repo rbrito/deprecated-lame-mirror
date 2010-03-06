@@ -2,6 +2,7 @@
  *      Get Audio routines source file
  *
  *      Copyright (c) 1999 Albert L Faber
+ *                    2010 Robert Hegemann
  *
  * This library is free software; you can redistribute it and/or
  * modify it under the terms of the GNU Lesser General Public
@@ -81,11 +82,13 @@ typedef struct get_audio_global_data_struct {
     int     pcmswapbytes;
     int     pcm_is_unsigned_8bit;
     unsigned int num_samples_read;
+    int     skip_start;
+    int     skip_end;
     FILE   *musicin;
     hip_t   hip;
 } get_audio_global_data;
 
-static get_audio_global_data global = { 0, 0, 0, 0, 0, 0, 0 };
+static get_audio_global_data global = { 0, 0, 0, 0, 0, 0, 0, 0, 0 };
 
 
 
@@ -236,7 +239,56 @@ init_outfile(char *outPath, int decode)
 }
 
 
+static void
+setSkipStartAndEnd(lame_t gfp, int enc_delay, int enc_padding)
+{
+    int skip_start = 0, skip_end = 0;
 
+    if (global_decoder.mp3_delay_set)
+        skip_start = global_decoder.mp3_delay;
+
+    switch (global_reader.input_format) {
+    case sf_mp123:
+        break;
+
+    case sf_mp3:
+        if (skip_start == 0) {
+            if (enc_delay > -1 || enc_padding > -1) {
+                if (enc_delay > -1)
+                    skip_start = enc_delay + 528 + 1;
+                if (enc_padding > -1)
+                    skip_end = enc_padding - (528 + 1);
+            }
+            else
+                skip_start = lame_get_encoder_delay(gfp) + 528 + 1;
+        }
+        else {
+            /* user specified a value of skip. just add for decoder */
+            skip_start += 528 + 1; /* mp3 decoder has a 528 sample delay, plus user supplied "skip" */
+        }
+        break;
+    case sf_mp2:
+        skip_start += 240 + 1;
+        break;
+    case sf_mp1:
+        skip_start += 240 + 1;
+        break;
+    case sf_raw:
+        skip_start = 0; /* other formats have no delay */ /* is += 0 not better ??? */
+        break;
+    case sf_wave:
+        skip_start = 0; /* other formats have no delay */ /* is += 0 not better ??? */
+        break;
+    case sf_aiff:
+        skip_start = 0; /* other formats have no delay */ /* is += 0 not better ??? */
+        break;
+    default:
+        skip_start = 0; /* other formats have no delay */ /* is += 0 not better ??? */
+        break;
+    }
+    global. skip_start = skip_start;
+    global. skip_end = skip_end;
+}
 
 
 
@@ -249,7 +301,10 @@ init_infile(lame_global_flags * gfp, char *inPath, int *enc_delay, int *enc_padd
     global. pcmbitwidth = global_raw_pcm.in_bitwidth;
     global. pcmswapbytes = global_reader.swapbytes;
     global. pcm_is_unsigned_8bit = global_raw_pcm.in_signed == 1 ? 0 : 1;
+    global. skip_start = 0;
+    global. skip_end = 0;
     global. musicin = OpenSndFile(gfp, inPath, enc_delay, enc_padding);
+    setSkipStartAndEnd(gfp, *enc_delay, *enc_padding);
 }
 
 void

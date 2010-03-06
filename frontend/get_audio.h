@@ -2,6 +2,7 @@
  *    Get Audio routines include file
  *
  *    Copyright (c) 1999 Albert L Faber
+ *                  2010 Robert Hegemann
  *
  * This library is free software; you can redistribute it and/or
  * modify it under the terms of the GNU Lesser General Public
@@ -47,21 +48,6 @@ int     get_audio(lame_global_flags * const gfp, int buffer[2][1152]);
 int     get_audio16(lame_global_flags * const gfp, short buffer[2][1152]);
 int     WriteWaveHeader(FILE * const fp, const int pcmbytes,
                         const int freq, const int channels, const int bits);
-
-
-
-/* the simple lame decoder */
-/* After calling lame_init(), lame_init_params() and
- * init_infile(), call this routine to read the input MP3 file 
- * and output .wav data to the specified file pointer
- * lame_decoder will ignore the first 528 samples, since these samples
- * represent the mpglib decoding delay (and are all 0).  
- *skip = number of additional
- * samples to skip, to (for example) compensate for the encoder delay,
- * only used when decoding mp3 
-*/
-int     lame_decoder(lame_global_flags * gfp, FILE * outf, int skip, char *inPath, char *outPath,
-                     int *enc_delay, int *enc_padding);
 
 
 

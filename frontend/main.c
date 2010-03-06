@@ -3,6 +3,7 @@
  *
  *      Copyright (c) 1999 Mark Taylor
  *                    2000 Takehiro TOMINAGA
+ *                    2010 Robert Hegemann
  *
  * This library is free software; you can redistribute it and/or
  * modify it under the terms of the GNU Lesser General Public
@@ -94,6 +95,50 @@ char   *strchr(), *strrchr();
 *
 ************************************************************************/
 
+
+static void
+brhist_init_package(lame_global_flags * gf)
+{
+#ifdef BRHIST
+    if (global_ui_config.brhist) {
+        if (brhist_init(gf, lame_get_VBR_min_bitrate_kbps(gf), lame_get_VBR_max_bitrate_kbps(gf))) {
+            /* fail to initialize */
+            global_ui_config.brhist = 0;
+        }
+    }
+    else {
+        brhist_init(gf, 128, 128); /* Dirty hack */
+    }
+#endif
+}
+
+
+static void
+set_process_affinity()
+{
+#if 0
+    /* rh 061207
+       the following fix seems to be a workaround for a problem in the
+       parent process calling LAME. It would be better to fix the broken
+       application => code disabled.
+     */
+#if defined(_WIN32)
+    /* set affinity back to all CPUs.  Fix for EAC/lame on SMP systems from
+       "Todd Richmond" <todd.richmond@openwave.com> */
+    typedef BOOL(WINAPI * SPAMFunc) (HANDLE, DWORD_PTR);
+    SPAMFunc func;
+    SYSTEM_INFO si;
+
+    if ((func = (SPAMFunc) GetProcAddress(GetModuleHandleW(L"KERNEL32.DLL"),
+                                          "SetProcessAffinityMask")) != NULL) {
+        GetSystemInfo(&si);
+        func(GetCurrentProcess(), si.dwActiveProcessorMask);
+    }
+#endif
+#endif
+}
+
+
 static int
 parse_args_from_string(lame_global_flags * const gfp, const char *p, char *inPath, char *outPath)
 {                       /* Quick & very Dirty */
@@ -170,19 +215,21 @@ init_files(lame_global_flags * gf, char *inPath, char *outPath, int *enc_delay, 
  * represent the mpglib delay (and are all 0).  skip = number of additional
  * samples to skip, to (for example) compensate for the encoder delay */
 
-int
-lame_decoder(lame_global_flags * gfp, FILE * outf, int skip_start, char *inPath, char *outPath,
+static int
+lame_decoder(lame_global_flags * gfp, FILE * outf, char *inPath, char *outPath,
              int *enc_delay, int *enc_padding)
 {
     short int Buffer[2][1152];
     int     iread;
+    int     skip_start = 0;
     int     skip_end = 0;
     double  wavsize;
     int     i, ch0, ch1;
     void    (*WriteFunction) (FILE * fp, char *p, int n);
     int     tmp_num_channels = lame_get_num_channels(gfp);
 
-
+    if (global_decoder.mp3_delay_set)
+        skip_start = global_decoder.mp3_delay;
 
     if (global_ui_config.silent < 9)
         console_printf("\rinput:  %s%s(%g kHz, %i channel%s, ",
@@ -361,6 +408,7 @@ print_lame_tag_leading_info(lame_global_flags * gf)
         console_printf("Writing LAME Tag...");
 }
 
+
 static void
 print_trailing_info(lame_global_flags * gf)
 {
@@ -418,8 +466,6 @@ print_trailing_info(lame_global_flags * gf)
 }
 
 
-
-
 static int
 write_xing_frame(lame_global_flags * gf, FILE * outf)
 {
@@ -449,9 +495,8 @@ write_xing_frame(lame_global_flags * gf, FILE * outf)
 }
 
 
-
 static int
-lame_encoder(lame_global_flags * gf, FILE * outf, int nogap, char *inPath, char *outPath)
+lame_encoder_loop(lame_global_flags * gf, FILE * outf, int nogap, char *inPath, char *outPath)
 {
     unsigned char mp3buffer[LAME_MAXMP3BUFFER];
     int     Buffer[2][1152];
@@ -464,8 +509,8 @@ lame_encoder(lame_global_flags * gf, FILE * outf, int nogap, char *inPath, char 
     if ((size_t)imp3 > sizeof(mp3buffer)) {
         encoder_progress_end(gf);
         error_printf("Error writing ID3v2 tag: buffer too small: buffer size=%d  ID3v2 size=%d\n"
-                , sizeof(mp3buffer)
-                , imp3
+                    , sizeof(mp3buffer)
+                    , imp3
                     );
         return 1;
     }
@@ -543,12 +588,11 @@ lame_encoder(lame_global_flags * gf, FILE * outf, int nogap, char *inPath, char 
         fflush(outf);
     }
 
-    
     imp3 = lame_get_id3v1_tag(gf, mp3buffer, sizeof(mp3buffer));
     if ((size_t)imp3 > sizeof(mp3buffer)) {
         error_printf("Error writing ID3v1 tag: buffer too small: buffer size=%d  ID3v1 size=%d\n"
-                , sizeof(mp3buffer)
-                , imp3
+                    , sizeof(mp3buffer)
+                    , imp3
                     );
     }
     else {
@@ -581,34 +625,23 @@ lame_encoder(lame_global_flags * gf, FILE * outf, int nogap, char *inPath, char 
 }
 
 
-
-
-
-
-static void
-brhist_init_package(lame_global_flags * gf)
+static int
+lame_encoder(lame_global_flags * gf, FILE * outf, int nogap, char *inPath, char *outPath)
 {
-#ifdef BRHIST
-    if (global_ui_config.brhist) {
-        if (brhist_init(gf, lame_get_VBR_min_bitrate_kbps(gf), lame_get_VBR_max_bitrate_kbps(gf))) {
-            /* fail to initialize */
-            global_ui_config.brhist = 0;
-        }
-    }
-    else {
-        brhist_init(gf, 128, 128); /* Dirty hack */
-    }
-#endif
+    int     ret;
+
+    brhist_init_package(gf);
+    ret = lame_encoder_loop(gf, outf, nogap, inPath, outPath);
+    fclose(outf); /* close the output file */
+    close_infile(); /* close the input file */
+    return ret;
 }
 
 
-
-static
-    void
-parse_nogap_filenames(int nogapout, char *inPath, char *outPath, char *outdir)
+static void
+parse_nogap_filenames(int nogapout, char const *inPath, char *outPath, char *outdir)
 {
-
-    char   *slasher;
+    char const *slasher;
     size_t  n;
 
     /* FIXME: replace strcpy by safer strncpy */
@@ -678,28 +711,11 @@ parse_nogap_filenames(int nogapout, char *inPath, char *outPath, char *outdir)
 }
 
 
-
-
-/***********************************************************************
-*
-*  Message Output
-*
-***********************************************************************/
-
-
-int
-main(int argc, char **argv)
+int lame_main(lame_t gf, int argc, char** argv)
 {
-    int     ret;
-    lame_global_flags *gf;
+    char    inPath[PATH_MAX + 1];
     char    outPath[PATH_MAX + 1];
     char    nogapdir[PATH_MAX + 1];
-    char    inPath[PATH_MAX + 1];
-
-    /* add variables for encoder delay/padding */
-    int     enc_delay = -1;
-    int     enc_padding = -1;
-
     /* support for "nogap" encoding of up to 200 .wav files */
 #define MAX_NOGAP 200
     int     nogapout = 0;
@@ -707,62 +723,26 @@ main(int argc, char **argv)
     char    nogap_inPath_[MAX_NOGAP][PATH_MAX+1];
     char*   nogap_inPath[MAX_NOGAP];
 
+    /* add variables for encoder delay/padding */
+    int     enc_delay = -1;
+    int     enc_padding = -1;
+
+    int     ret;
     int     i;
     FILE   *outf;
 
-#if macintosh
-    argc = ccommand(&argv);
-#endif
-#if 0
-    /* rh 061207
-       the following fix seems to be a workaround for a problem in the
-       parent process calling LAME. It would be better to fix the broken
-       application => code disabled.
-     */
-#if defined(_WIN32)
-    /* set affinity back to all CPUs.  Fix for EAC/lame on SMP systems from
-       "Todd Richmond" <todd.richmond@openwave.com> */
-    typedef BOOL(WINAPI * SPAMFunc) (HANDLE, DWORD_PTR);
-    SPAMFunc func;
-    SYSTEM_INFO si;
-
-    if ((func = (SPAMFunc) GetProcAddress(GetModuleHandleW(L"KERNEL32.DLL"),
-                                          "SetProcessAffinityMask")) != NULL) {
-        GetSystemInfo(&si);
-        func(GetCurrentProcess(), si.dwActiveProcessorMask);
-    }
-#endif
-#endif
-
-#ifdef __EMX__
-    /* This gives wildcard expansion on Non-POSIX shells with OS/2 */
-    _wildcard(&argc, &argv);
-#endif
-
-    memset(nogap_inPath_, 0, sizeof(nogap_inPath_));
-    for (i = 0; i < MAX_NOGAP; ++i) {
-        nogap_inPath[i] = &nogap_inPath_[i][0];
-    }
-
-    memset(inPath, 0, sizeof(inPath));
-
-    frontend_open_console();
-
-    /* initialize libmp3lame */
-    global_reader.input_format = sf_unknown;
-    if (NULL == (gf = lame_init())) {
-        error_printf("fatal error during initialization\n");
-        frontend_close_console();
-        return 1;
-    }
-    lame_set_msgf  (gf, global_ui_config.silent < 10 ? &frontend_msgf   : 0);
-    lame_set_errorf(gf, global_ui_config.silent < 10 ? &frontend_errorf : 0);
+    lame_set_msgf  (gf, &frontend_msgf);
+    lame_set_errorf(gf, &frontend_errorf);
     lame_set_debugf(gf, &frontend_debugf);
     if (argc <= 1) {
         usage(stderr, argv[0]); /* no command-line args, print usage, exit  */
-        lame_close(gf);
-        frontend_close_console();
         return 1;
+    }
+
+    memset(inPath, 0, sizeof(inPath));
+    memset(nogap_inPath_, 0, sizeof(nogap_inPath_));
+    for (i = 0; i < MAX_NOGAP; ++i) {
+        nogap_inPath[i] = &nogap_inPath_[i][0];
     }
 
     /* parse the command line arguments, setting various flags in the
@@ -774,8 +754,6 @@ main(int argc, char **argv)
     parse_args_from_string(gf, getenv("LAMEOPT"), inPath, outPath);
     ret = parse_args(gf, argc, argv, inPath, outPath, nogap_inPath, &max_nogap);
     if (ret < 0) {
-        lame_close(gf);
-        frontend_close_console();
         return ret == -2 ? 0 : 1;
     }
     if (global_ui_config.update_interval < 0.)
@@ -798,8 +776,6 @@ main(int argc, char **argv)
         outf = init_files(gf, inPath, outPath, &enc_delay, &enc_padding);
     }
     if (outf == NULL) {
-        lame_close(gf);
-        frontend_close_console();
         return -1;
     }
     /* turn off automatic writing of ID3 tag data into mp3 stream 
@@ -811,70 +787,83 @@ main(int argc, char **argv)
     /* Now that all the options are set, lame needs to analyze them and
      * set some more internal options and check for problems
      */
-    i = lame_init_params(gf);
-    if (i < 0) {
-        if (i == -1) {
+    ret = lame_init_params(gf);
+    if (ret < 0) {
+        if (ret == -1) {
             display_bitrates(stderr);
         }
         error_printf("fatal error during initialization\n");
-        lame_close(gf);
-        frontend_close_console();
-        return i;
+        return ret;
     }
 
     if (global_ui_config.silent > 0) {
         global_ui_config.brhist = 0;     /* turn off VBR histogram */
     }
 
-
     if (lame_get_decode_only(gf)) {
         /* decode an mp3 file to a .wav */
-        if (global_decoder.mp3_delay_set)
-            lame_decoder(gf, outf, global_decoder.mp3_delay, inPath, outPath, &enc_delay, &enc_padding);
-        else
-            lame_decoder(gf, outf, 0, inPath, outPath, &enc_delay, &enc_padding);
-
+        ret = lame_decoder(gf, outf, inPath, outPath, &enc_delay, &enc_padding);
+    }
+    else if (max_nogap == 0) {
+        /* encode a single input file */
+        ret = lame_encoder(gf, outf, 0, inPath, outPath);
     }
     else {
-        if (max_nogap > 0) {
-            /*
-             * encode multiple input files using nogap option
-             */
-            for (i = 0; i < max_nogap; ++i) {
-                int     use_flush_nogap = (i != (max_nogap - 1));
-                if (i > 0) {
-                    parse_nogap_filenames(nogapout, nogap_inPath[i], outPath, nogapdir);
-                    /* note: if init_files changes anything, like
-                       samplerate, num_channels, etc, we are screwed */
-                    outf = init_files(gf, nogap_inPath[i], outPath, &enc_delay, &enc_padding);
-                    /* reinitialize bitstream for next encoding.  this is normally done
-                     * by lame_init_params(), but we cannot call that routine twice */
-                    lame_init_bitstream(gf);
-                }
-                brhist_init_package(gf);
-                lame_set_nogap_total(gf, max_nogap);
-                lame_set_nogap_currentindex(gf, i);
-                
-                ret = lame_encoder(gf, outf, use_flush_nogap, nogap_inPath[i], outPath);
-
-                fclose(outf); /* close the output file */
-                close_infile(); /* close the input file */
-
+        /* encode multiple input files using nogap option */
+        for (i = 0; i < max_nogap; ++i) {
+            int     use_flush_nogap = (i != (max_nogap - 1));
+            if (i > 0) {
+                parse_nogap_filenames(nogapout, nogap_inPath[i], outPath, nogapdir);
+                /* note: if init_files changes anything, like
+                   samplerate, num_channels, etc, we are screwed */
+                outf = init_files(gf, nogap_inPath[i], outPath, &enc_delay, &enc_padding);
+                /* reinitialize bitstream for next encoding.  this is normally done
+                 * by lame_init_params(), but we cannot call that routine twice */
+                lame_init_bitstream(gf);
             }
-        }
-        else {
-            /*
-             * encode a single input file
-             */
-            brhist_init_package(gf);
-            
-            ret = lame_encoder(gf, outf, 0, inPath, outPath);
-
-            fclose(outf); /* close the output file */
-            close_infile(); /* close the input file */
+            lame_set_nogap_total(gf, max_nogap);
+            lame_set_nogap_currentindex(gf, i);                
+            ret = lame_encoder(gf, outf, use_flush_nogap, nogap_inPath[i], outPath);
         }
     }
-    lame_close(gf);
+    return ret;
+}
+
+
+/***********************************************************************
+*
+*  Message Output
+*
+***********************************************************************/
+
+
+int
+main(int argc, char **argv)
+{
+    lame_t  gf;
+    int     ret;
+
+#if macintosh
+    argc = ccommand(&argv);
+#endif
+#ifdef __EMX__
+    /* This gives wildcard expansion on Non-POSIX shells with OS/2 */
+    _wildcard(&argc, &argv);
+#endif
+#ifdef _WINDOWS
+    set_process_affinity();
+#endif
+
+    frontend_open_console();    
+    gf = lame_init(); /* initialize libmp3lame */
+    if (NULL == gf) {
+        error_printf("fatal error during initialization\n");
+        ret = 1;
+    }
+    else {
+        ret = lame_main(gf, argc, argv);
+        lame_close(gf);
+    }
     frontend_close_console();
     return ret;
 }
