@@ -74,6 +74,111 @@ char   *strchr(), *strrchr();
 #include <dmalloc.h>
 #endif
 
+struct PcmBuffer
+{
+  void* ch[2]; /* buffer for each channel */
+  int   w; /* sample width */
+  int   n; /* number samples allocated */
+  int   u; /* number samples used */
+  int   skip_start; /* number samples to ignore at the beginning */
+  int   skip_end;   /* number samples to ignore at the end */
+};
+
+typedef struct PcmBuffer PcmBuffer;
+
+static void
+initPcmBuffer(PcmBuffer* b, int w)
+{
+    b->ch[0] = 0;
+    b->ch[1] = 0;
+    b->w = w;
+    b->n = 0;
+    b->u = 0;
+    b->skip_start = 0;
+    b->skip_end = 0;
+}
+
+static void
+freePcmBuffer(PcmBuffer* b)
+{
+    if (b != 0) {
+        free(b->ch[0]);
+        free(b->ch[1]);
+        b->ch[0] = 0;
+        b->ch[1] = 0;
+        b->n = 0;
+        b->u = 0;
+    }
+}
+
+static int
+addPcmBuffer(PcmBuffer* b, void* a0, void* a1, int read)
+{
+    int a_n;
+
+    if (b == 0) {
+        return 0;
+    }
+    if (read < 0) {
+        return b->u - b->skip_end;
+    }
+    if (b->skip_start >= read) {
+        b->skip_start -= read;
+        return b->u - b->skip_end;
+    }
+    a_n = read - b->skip_start;
+
+    if (b != 0 && a_n > 0) {
+        int const b_free = b->n - b->u;
+        int const a_need = b->w * a_n;
+        int const b_used = b->w * b->u;
+        if (b_free < a_need) {
+            b->n += a_n;
+            b->ch[0] = realloc(b->ch[0], b->w * b->n);
+            b->ch[1] = realloc(b->ch[1], b->w * b->n);
+        }
+        b->u += a_n;
+        if (b->ch[0] != 0 && a0 != 0) {
+            char* src = a0;
+            memcpy((char*)b->ch[0] + b_used, src + b->skip_start, a_need);
+        }
+        if (b->ch[1] != 0 && a1 != 0) {
+            char* src = a1;
+            memcpy((char*)b->ch[1] + b_used, src + b->skip_start, a_need);
+        }
+    }
+    b->skip_start = 0;
+    return b->u - b->skip_end;
+}
+
+static int
+subPcmBuffer(PcmBuffer* b, void* a0, void* a1, int a_n, int mm)
+{
+    if (a_n > mm) {
+        a_n = mm;
+    }
+    if (b != 0 && a_n > 0) {    
+        int const a_take = b->w * a_n;
+        if (a0 != 0 && b->ch[0] != 0) {
+            memcpy(a0, b->ch[0], a_take);
+        }
+        if (a1 != 0 && b->ch[1] != 0) {
+            memcpy(a1, b->ch[1], a_take);
+        }
+        b->u -= a_n;
+        if (b->u < 0) {
+            b->u = 0;
+            return a_n;
+        }
+        if (b->ch[0] != 0) {
+            memmove(b->ch[0], (char*)b->ch[0] + a_take, b->w * b->u);
+        }
+        if (b->ch[1] != 0) {
+            memmove(b->ch[1], (char*)b->ch[1] + a_take, b->w * b->u);
+        }
+    }
+    return a_n;
+}
 
 /* global data for get_audio.c. */
 typedef struct get_audio_global_data_struct {
@@ -82,10 +187,10 @@ typedef struct get_audio_global_data_struct {
     int     pcmswapbytes;
     int     pcm_is_unsigned_8bit;
     unsigned int num_samples_read;
-    int     skip_start;
-    int     skip_end;
     FILE   *musicin;
     hip_t   hip;
+    PcmBuffer pcm32;
+    PcmBuffer pcm16;
 } get_audio_global_data;
 
 static get_audio_global_data global = { 0, 0, 0, 0, 0, 0, 0, 0, 0 };
@@ -274,43 +379,50 @@ setSkipStartAndEnd(lame_t gfp, int enc_delay, int enc_padding)
         skip_start += 240 + 1;
         break;
     case sf_raw:
-        skip_start = 0; /* other formats have no delay */ /* is += 0 not better ??? */
+        skip_start += 0; /* other formats have no delay */ /* is += 0 not better ??? */
         break;
     case sf_wave:
-        skip_start = 0; /* other formats have no delay */ /* is += 0 not better ??? */
+        skip_start += 0; /* other formats have no delay */ /* is += 0 not better ??? */
         break;
     case sf_aiff:
-        skip_start = 0; /* other formats have no delay */ /* is += 0 not better ??? */
+        skip_start += 0; /* other formats have no delay */ /* is += 0 not better ??? */
         break;
     default:
-        skip_start = 0; /* other formats have no delay */ /* is += 0 not better ??? */
+        skip_start += 0; /* other formats have no delay */ /* is += 0 not better ??? */
         break;
     }
-    global. skip_start = skip_start;
-    global. skip_end = skip_end;
+    skip_start = skip_start < 0 ? 0 : skip_start;
+    skip_end = skip_end < 0 ? 0 : skip_end;
+    global.pcm16.skip_start = global.pcm32.skip_start = skip_start;
+    global.pcm16.skip_end = global.pcm32.skip_end = skip_end;
 }
 
 
 
 void
-init_infile(lame_global_flags * gfp, char *inPath, int *enc_delay, int *enc_padding)
+init_infile(lame_global_flags * gfp, char *inPath, int *skip_start, int *skip_end)
 {
+    int     enc_delay = 0, enc_padding = 0;
     /* open the input file */
     global. count_samples_carefully = 0;
     global. num_samples_read = 0;
     global. pcmbitwidth = global_raw_pcm.in_bitwidth;
     global. pcmswapbytes = global_reader.swapbytes;
     global. pcm_is_unsigned_8bit = global_raw_pcm.in_signed == 1 ? 0 : 1;
-    global. skip_start = 0;
-    global. skip_end = 0;
-    global. musicin = OpenSndFile(gfp, inPath, enc_delay, enc_padding);
-    setSkipStartAndEnd(gfp, *enc_delay, *enc_padding);
+    global. musicin = OpenSndFile(gfp, inPath, &enc_delay, &enc_padding);
+    initPcmBuffer(&global.pcm32, sizeof(int));
+    initPcmBuffer(&global.pcm16, sizeof(short));
+    setSkipStartAndEnd(gfp, enc_delay, enc_padding);
+    if (skip_start != 0) *skip_start = global.pcm32.skip_start;
+    if (skip_end != 0) *skip_end = global.pcm32.skip_end;
 }
 
 void
 close_infile(void)
 {
     CloseSndFile(global_reader.input_format, global.musicin);
+    freePcmBuffer(&global.pcm32);
+    freePcmBuffer(&global.pcm16);
 }
 
 
@@ -384,7 +496,12 @@ get_audio_common(lame_global_flags * const gfp,
 int
 get_audio(lame_global_flags * const gfp, int buffer[2][1152])
 {
-    return (get_audio_common(gfp, buffer, NULL));
+    int     used = 0, read = 0;
+    do {
+        read = get_audio_common(gfp, buffer, NULL);
+        used = addPcmBuffer(&global.pcm32, buffer[0], buffer[1], read);
+    } while (used <= 0 && read > 0);    
+    return subPcmBuffer(&global.pcm32, buffer[0], buffer[1], used, 1152);
 }
 
 /*
@@ -394,7 +511,12 @@ get_audio(lame_global_flags * const gfp, int buffer[2][1152])
 int
 get_audio16(lame_global_flags * const gfp, short buffer[2][1152])
 {
-    return (get_audio_common(gfp, NULL, buffer));
+    int     used = 0, read = 0;
+    do {
+        read = get_audio_common(gfp, NULL, buffer);
+        used = addPcmBuffer(&global.pcm16, buffer[0], buffer[1], read);
+    } while (used <= 0 && read > 0);
+    return subPcmBuffer(&global.pcm16, buffer[0], buffer[1], used, 1152);
 }
 
 /************************************************************************
