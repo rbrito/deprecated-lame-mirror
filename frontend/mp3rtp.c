@@ -146,9 +146,6 @@ main(int argc, char **argv)
     unsigned int ttl = 2;
     char    dummy;
 
-    int     enc_delay = -1;
-    int     enc_padding = -1;
-
     frontend_open_console();
     if (argc <= 2) {
         console_printf("Encode (via LAME) to mp3 with RTP streaming of the output\n"
@@ -224,7 +221,7 @@ main(int argc, char **argv)
      * if you want to do your own file input, skip this call and set
      * these values yourself.  
      */
-    init_infile(gf, inPath, &enc_delay, &enc_padding);
+    init_infile(gf, inPath);
 
 
     /* Now that all the options are set, lame needs to analyze them and

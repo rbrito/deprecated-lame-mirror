@@ -26,6 +26,10 @@
 #include "lame.h"
 #include <stdio.h>
 
+#ifdef __cplusplus
+extern "C" {
+#endif
+
 typedef enum sound_file_format_e {
     sf_unknown,
     sf_raw,
@@ -38,57 +42,42 @@ typedef enum sound_file_format_e {
     sf_ogg
 } sound_file_format;
 
-
 int     is_mpeg_file_format( int input_format );
 
-FILE   *init_outfile(char *outPath, int decode);
-void    init_infile(lame_global_flags *, char *inPath, int *enc_delay, int *enc_padding);
+void    init_infile(lame_t gfp, char const * inPath);
+int     samples_to_skip_at_start(void);
+int     samples_to_skip_at_end(void);
 void    close_infile(void);
-int     get_audio(lame_global_flags * const gfp, int buffer[2][1152]);
-int     get_audio16(lame_global_flags * const gfp, short buffer[2][1152]);
-int     WriteWaveHeader(FILE * const fp, const int pcmbytes,
-                        const int freq, const int channels, const int bits);
+int     get_audio(lame_t gfp, int buffer[2][1152]);
+int     get_audio16(lame_t gfp, short buffer[2][1152]);
 
+FILE   *init_outfile(char const *outPath, int decode);
+int     WriteWaveHeader(FILE * const fp, int pcmbytes, int freq, int channels, int bits);
+void    put_audio16(FILE* outf, short Buffer[2][1152], int iread, int nch);
+/*
+struct AudioReader;
+typedef struct AudioReader* AudioReader;
 
+AudioReader ar_open(lame_t gfp, char const* inPath);
+int     ar_samplesToSkipAtStart(AudioReader ar);
+int     ar_samplesToSkipAtEnd(AudioReader ar);
+void    ar_close(AudioReader ar);
+int     ar_readInt(AudioReader ar, lame_t gfp, int buffer[2][1152]);
+int     ar_readShort(AudioReader ar, lame_t gfp, short buffer[2][1152]);
+int     ar_readFloat(AudioReader ar, lame_t gfp, float buffer[2][1152]);
 
-void    SwapBytesInWords(short *loc, int words);
+struct AudioWriter;
+typedef struct AudioWriter* AudioWriter;
 
+AudioWriter aw_open(lame_t gfp, char const* outPath, int pcmbystes, int freq, int channels, int bits);
+int     aw_writeWaveHeader(AudioWriter aw);
+int     aw_write(AudioWriter aw, short buffer[2][1152], int n);
+int     aw_write(AudioWriter aw, float buffer[2][1152], int n);
 
+*/
 
-#ifdef LIBSNDFILE
+#ifdef _cplusplus
+}
+#endif
 
-#include "sndfile.h"
-
-
-#else
-/*****************************************************************
- * LAME/ISO built in audio file I/O routines 
- *******************************************************************/
-#include "portableio.h"
-
-
-typedef struct blockAlign_struct {
-    unsigned long offset;
-    unsigned long blockSize;
-} blockAlign;
-
-typedef struct IFF_AIFF_struct {
-    short   numChannels;
-    unsigned long numSampleFrames;
-    short   sampleSize;
-    double  sampleRate;
-    unsigned long sampleType;
-    blockAlign blkAlgn;
-} IFF_AIFF;
-
-extern int aiff_read_headers(FILE *, IFF_AIFF *);
-extern int aiff_seek_to_sound_data(FILE *);
-extern int aiff_write_headers(FILE *, IFF_AIFF *);
-extern int parse_wavheader(void);
-extern int parse_aiff(const char fn[]);
-extern void aiff_check(const char *, IFF_AIFF *, int *);
-
-
-
-#endif /* ifdef LIBSNDFILE */
 #endif /* ifndef LAME_GET_AUDIO_H */

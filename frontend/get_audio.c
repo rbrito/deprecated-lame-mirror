@@ -74,6 +74,39 @@ char   *strchr(), *strrchr();
 #include <dmalloc.h>
 #endif
 
+
+
+#ifdef LIBSNDFILE
+
+#include "sndfile.h"
+
+
+#else
+/*****************************************************************
+ * LAME/ISO built in audio file I/O routines 
+ *******************************************************************/
+#include "portableio.h"
+
+
+typedef struct blockAlign_struct {
+    unsigned long offset;
+    unsigned long blockSize;
+} blockAlign;
+
+typedef struct IFF_AIFF_struct {
+    short   numChannels;
+    unsigned long numSampleFrames;
+    short   sampleSize;
+    double  sampleRate;
+    unsigned long sampleType;
+    blockAlign blkAlgn;
+} IFF_AIFF;
+
+#endif /* ifdef LIBSNDFILE */
+
+static void SwapBytesInWords(short *loc, int words);
+
+
 struct PcmBuffer
 {
   void* ch[2]; /* buffer for each channel */
@@ -152,7 +185,7 @@ addPcmBuffer(PcmBuffer* b, void* a0, void* a1, int read)
 }
 
 static int
-subPcmBuffer(PcmBuffer* b, void* a0, void* a1, int a_n, int mm)
+takePcmBuffer(PcmBuffer* b, void* a0, void* a1, int a_n, int mm)
 {
     if (a_n > mm) {
         a_n = mm;
@@ -209,10 +242,9 @@ int     lame_decode_fromfile(FILE * fd, short int pcm_l[], short int pcm_r[],
 
 
 static int read_samples_pcm(FILE * musicin, int sample_buffer[2304], int samples_to_read);
-static int read_samples_mp3(lame_global_flags * const gfp, FILE * const musicin,
-                            short int mpg123pcm[2][1152]);
-void    CloseSndFile(sound_file_format input, FILE * musicin);
-FILE   *OpenSndFile(lame_global_flags * gfp, char *, int *enc_delay, int *enc_padding);
+static int read_samples_mp3(lame_t gfp, FILE * musicin, short int mpg123pcm[2][1152]);
+static void CloseSndFile(sound_file_format input, FILE * musicin);
+static FILE *OpenSndFile(lame_t gfp, char const *, int *enc_delay, int *enc_padding);
 
 
 static  size_t
@@ -310,32 +342,34 @@ fskip(FILE * fp, long offset, int whence)
 
 
 FILE   *
-init_outfile(char *outPath, int decode)
+init_outfile(char const *outPath, int decode)
 {
     FILE   *outf;
-#ifdef __riscos__
-    char   *p;
-#endif
 
     /* open the output file */
     if (0 == strcmp(outPath, "-")) {
-        lame_set_stream_binary_mode(outf = stdout);
+        outf = stdout;
+        lame_set_stream_binary_mode(outf);
     }
     else {
-        if ((outf = fopen(outPath, "w+b")) == NULL)
-            return NULL;
+        outf = fopen(outPath, "w+b");
 #ifdef __riscos__
         /* Assign correct file type */
-        for (p = outPath; *p; p++) /* ugly, ugly to modify a string */
-            switch (*p) {
-            case '.':
-                *p = '/';
-                break;
-            case '/':
-                *p = '.';
-                break;
+        if (outf != NULL) {
+            char *p, *out_path = strdup(outPath);
+            for (p = out_path; *p; p++) { /* ugly, ugly to modify a string */
+                switch (*p) {
+                case '.':
+                    *p = '/';
+                    break;
+                case '/':
+                    *p = '.';
+                    break;
+                }
             }
-        SetFiletype(outPath, decode ? 0xFB1 /*WAV*/ : 0x1AD /*AMPEG*/);
+            SetFiletype(out_path, decode ? 0xFB1 /*WAV*/ : 0x1AD /*AMPEG*/);
+            free(out_path);
+        }
 #else
         (void) decode;
 #endif
@@ -400,7 +434,7 @@ setSkipStartAndEnd(lame_t gfp, int enc_delay, int enc_padding)
 
 
 void
-init_infile(lame_global_flags * gfp, char *inPath, int *skip_start, int *skip_end)
+init_infile(lame_t gfp, char const *inPath)
 {
     int     enc_delay = 0, enc_padding = 0;
     /* open the input file */
@@ -413,8 +447,18 @@ init_infile(lame_global_flags * gfp, char *inPath, int *skip_start, int *skip_en
     initPcmBuffer(&global.pcm32, sizeof(int));
     initPcmBuffer(&global.pcm16, sizeof(short));
     setSkipStartAndEnd(gfp, enc_delay, enc_padding);
-    if (skip_start != 0) *skip_start = global.pcm32.skip_start;
-    if (skip_end != 0) *skip_end = global.pcm32.skip_end;
+}
+
+int
+samples_to_skip_at_start(void)
+{
+    return global.pcm32.skip_start;
+}
+
+int
+samples_to_skip_at_end(void)
+{
+    return global.pcm32.skip_end;
 }
 
 void
@@ -481,8 +525,7 @@ SwapBytesInWords(short *ptr, int short_words)
 
 
 static int
-get_audio_common(lame_global_flags * const gfp,
-                 int buffer[2][1152], short buffer16[2][1152]);
+get_audio_common(lame_t gfp, int buffer[2][1152], short buffer16[2][1152]);
 
 /************************************************************************
 *
@@ -494,14 +537,17 @@ get_audio_common(lame_global_flags * const gfp,
 *
 ************************************************************************/
 int
-get_audio(lame_global_flags * const gfp, int buffer[2][1152])
+get_audio(lame_t gfp, int buffer[2][1152])
 {
     int     used = 0, read = 0;
     do {
         read = get_audio_common(gfp, buffer, NULL);
         used = addPcmBuffer(&global.pcm32, buffer[0], buffer[1], read);
     } while (used <= 0 && read > 0);    
-    return subPcmBuffer(&global.pcm32, buffer[0], buffer[1], used, 1152);
+    if (global_reader.swap_channel == 0)
+        return takePcmBuffer(&global.pcm32, buffer[0], buffer[1], used, 1152);
+    else
+        return takePcmBuffer(&global.pcm32, buffer[1], buffer[0], used, 1152);
 }
 
 /*
@@ -509,14 +555,17 @@ get_audio(lame_global_flags * const gfp, int buffer[2][1152])
                 16 bit per sample output
 */
 int
-get_audio16(lame_global_flags * const gfp, short buffer[2][1152])
+get_audio16(lame_t gfp, short buffer[2][1152])
 {
     int     used = 0, read = 0;
     do {
         read = get_audio_common(gfp, NULL, buffer);
         used = addPcmBuffer(&global.pcm16, buffer[0], buffer[1], read);
     } while (used <= 0 && read > 0);
-    return subPcmBuffer(&global.pcm16, buffer[0], buffer[1], used, 1152);
+    if (global_reader.swap_channel == 0)
+        return takePcmBuffer(&global.pcm16, buffer[0], buffer[1], used, 1152);
+    else
+        return takePcmBuffer(&global.pcm16, buffer[1], buffer[0], used, 1152);
 }
 
 /************************************************************************
@@ -529,7 +578,7 @@ returns: samples read
 note: either buffer or buffer16 must be allocated upon call
 */
 static int
-get_audio_common(lame_global_flags * const gfp, int buffer[2][1152], short buffer16[2][1152])
+get_audio_common(lame_t gfp, int buffer[2][1152], short buffer16[2][1152])
 {
     int     num_channels = lame_get_num_channels(gfp);
     int     insamp[2 * 1152];
@@ -653,7 +702,7 @@ get_audio_common(lame_global_flags * const gfp, int buffer[2][1152], short buffe
 
 
 static int
-read_samples_mp3(lame_global_flags * const gfp, FILE * const musicin, short int mpg123pcm[2][1152])
+read_samples_mp3(lame_t gfp, FILE * musicin, short int mpg123pcm[2][1152])
 {
     int     out;
 #if defined(AMIGA_MPEGA)  ||  defined(HAVE_MPGLIB)
@@ -691,8 +740,7 @@ read_samples_mp3(lame_global_flags * const gfp, FILE * const musicin, short int 
 
 
 int
-WriteWaveHeader(FILE * const fp, const int pcmbytes,
-                const int freq, const int channels, const int bits)
+WriteWaveHeader(FILE * const fp, int pcmbytes, int freq, int channels, int bits)
 {
     int     bytes = (bits + 7) / 8;
 
@@ -770,8 +818,8 @@ CloseSndFile(sound_file_format input, FILE * musicin)
 
 
 
-FILE   *
-OpenSndFile(lame_global_flags * gfp, char *inPath, int *enc_delay, int *enc_padding)
+static FILE   *
+OpenSndFile(lame_t gfp, char const *inPath, int *enc_delay, int *enc_padding)
 {
     char   *lpszFileName = inPath;
     FILE   *musicin;
@@ -1628,8 +1676,8 @@ CloseSndFile(sound_file_format input, FILE * musicin)
 
 
 
-FILE   *
-OpenSndFile(lame_global_flags * gfp, char *inPath, int *enc_delay, int *enc_padding)
+static FILE   *
+OpenSndFile(lame_t gfp, char const *inPath, int *enc_delay, int *enc_padding)
 {
     FILE   *musicin;
 
@@ -1986,6 +2034,66 @@ is_mpeg_file_format(int input_file_format)
         break;
     }
     return 0;
+}
+
+
+#define LOW__BYTE(x) (x & 0x00ff)
+#define HIGH_BYTE(x) ((x >> 8) & 0x00ff)
+
+void
+put_audio16(FILE* outf, short Buffer[2][1152], int iread, int nch)
+{
+    char    data[2*1152*2];
+    int     i, m = 0;
+
+    if (global_decoder.disable_wav_header && global_reader.swapbytes) {
+      if (nch == 1) {
+        for (i = 0; i < iread; i++) {
+            short x = Buffer[0][i];
+            /* write 16 Bits High Low */
+            data[m++] = HIGH_BYTE(x);
+            data[m++] = LOW__BYTE(x);
+        }
+      }
+      else {
+        for (i = 0; i < iread; i++) {
+            short x = Buffer[0][i], y = Buffer[1][i];
+            /* write 16 Bits High Low */
+            data[m++] = HIGH_BYTE(x);
+            data[m++] = LOW__BYTE(x);
+            /* write 16 Bits High Low */
+            data[m++] = HIGH_BYTE(y);
+            data[m++] = LOW__BYTE(y);
+        }
+      }
+    }
+    else {
+      if (nch == 1) {
+        for (i = 0; i < iread; i++) {
+            short x = Buffer[0][i];
+            /* write 16 Bits Low High */
+            data[m++] = LOW__BYTE(x);
+            data[m++] = HIGH_BYTE(x);
+        }
+      }
+      else {
+        for (i = 0; i < iread; i++) {
+            short x = Buffer[0][i], y = Buffer[1][i];
+            /* write 16 Bits Low High */
+            data[m++] = LOW__BYTE(x);
+            data[m++] = HIGH_BYTE(x);
+            /* write 16 Bits Low High */
+            data[m++] = LOW__BYTE(y);
+            data[m++] = HIGH_BYTE(y);
+        }
+      }
+    }
+    if (m > 0) {
+        fwrite(data, 1, m, outf);    
+    }
+    if (global_writer.flush_write == 1) {
+        fflush(outf);
+    }
 }
 
 /* end of get_audio.c */

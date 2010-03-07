@@ -2,6 +2,7 @@
  *      time status related function source file
  *
  *      Copyright (c) 1999 Mark Taylor
+ *                    2010 Robert Hegemann
  *
  * This library is free software; you can redistribute it and/or
  * modify it under the terms of the GNU Lesser General Public
@@ -24,10 +25,6 @@
 #ifdef HAVE_CONFIG_H
 # include <config.h>
 #endif
-
-
-/* Hope it works now, otherwise complain or flame ;-)
- */
 
 
 #if 1
@@ -63,6 +60,15 @@ typedef struct time_status_struct {
     double  speed_index;     /* speed relative to realtime coding [100%] */
 } timestatus_t;
 
+static struct EncoderProgress {
+    timestatus_t real_time;
+    timestatus_t proc_time;
+    double  last_time;
+    int     last_frame_num;
+    int     time_status_init;
+} global_encoder_progress = {0,0,0,0,0,0,0};
+
+
 /*
  *  Calculates from the input (see below) the following values:
  *    - total estimated time
@@ -93,8 +99,9 @@ ts_calc_times(timestatus_t * const tstime, /* tstime->elapsed_time: elapsed time
  */
 
 static void
-ts_time_decompose(const unsigned long time_in_sec, const char padded_char)
+ts_time_decompose(const double x, const char padded_char)
 {
+    const unsigned long time_in_sec = (unsigned long)x;
     const unsigned long hour = time_in_sec / 3600;
     const unsigned int min = time_in_sec / 60 % 60;
     const unsigned int sec = time_in_sec % 60;
@@ -110,10 +117,9 @@ ts_time_decompose(const unsigned long time_in_sec, const char padded_char)
 static void
 timestatus(const lame_global_flags * const gfp)
 {
-    static timestatus_t real_time;
-    static timestatus_t proc_time;
+    timestatus_t* real_time = &global_encoder_progress.real_time;
+    timestatus_t* proc_time = &global_encoder_progress.proc_time;
     int     percent;
-    static int init = 0;     /* What happens here? A work around instead of a bug fix ??? */
     double  tmx, delta;
     int samp_rate     = lame_get_out_samplerate(gfp)
       , frameNum      = lame_get_frameNum(gfp)
@@ -124,44 +130,41 @@ timestatus(const lame_global_flags * const gfp)
     if (totalframes < frameNum) {
         totalframes = frameNum;
     }
-    if (frameNum == 0) {
-        real_time.last_time = GetRealTime();
-        proc_time.last_time = GetCPUTime();
-        real_time.elapsed_time = 0;
-        proc_time.elapsed_time = 0;
+    if (global_encoder_progress.time_status_init == 0) {
+        real_time->last_time = GetRealTime();
+        proc_time->last_time = GetCPUTime();
+        real_time->elapsed_time = 0;
+        proc_time->elapsed_time = 0;
     }
 
     /* we need rollover protection for GetCPUTime, and maybe GetRealTime(): */
     tmx = GetRealTime();
-    delta = tmx - real_time.last_time;
+    delta = tmx - real_time->last_time;
     if (delta < 0)
         delta = 0;      /* ignore, clock has rolled over */
-    real_time.elapsed_time += delta;
-    real_time.last_time = tmx;
+    real_time->elapsed_time += delta;
+    real_time->last_time = tmx;
 
 
     tmx = GetCPUTime();
-    delta = tmx - proc_time.last_time;
+    delta = tmx - proc_time->last_time;
     if (delta < 0)
         delta = 0;      /* ignore, clock has rolled over */
-    proc_time.elapsed_time += delta;
-    proc_time.last_time = tmx;
+    proc_time->elapsed_time += delta;
+    proc_time->last_time = tmx;
 
-    if (frameNum == 0 && init == 0) {
+    if (global_encoder_progress.time_status_init == 0) {
         console_printf("\r"
                        "    Frame          |  CPU time/estim | REAL time/estim | play/CPU |    ETA \n"
                        "     0/       ( 0%%)|    0:00/     :  |    0:00/     :  |         "
                        SPEED_CHAR "|     :  \r"
                        /* , Console_IO.str_clreoln, Console_IO.str_clreoln */ );
-        init = 1;
+        global_encoder_progress.time_status_init = 1;
         return;
     }
-    /* reset init counter for next time we are called with frameNum==0 */
-    if (frameNum > 0)
-        init = 0;
 
-    ts_calc_times(&real_time, samp_rate, frameNum, totalframes, framesize);
-    ts_calc_times(&proc_time, samp_rate, frameNum, totalframes, framesize);
+    ts_calc_times(real_time, samp_rate, frameNum, totalframes, framesize);
+    ts_calc_times(proc_time, samp_rate, frameNum, totalframes, framesize);
 
     if (frameNum < totalframes) {
         percent = (int) (100. * frameNum / totalframes + 0.5);
@@ -172,14 +175,14 @@ timestatus(const lame_global_flags * const gfp)
 
     console_printf("\r%6i/%-6i", frameNum, totalframes);
     console_printf(percent < 100 ? " (%2d%%)|" : "(%3.3d%%)|", percent);
-    ts_time_decompose((unsigned long) proc_time.elapsed_time, '/');
-    ts_time_decompose((unsigned long) proc_time.estimated_time, '|');
-    ts_time_decompose((unsigned long) real_time.elapsed_time, '/');
-    ts_time_decompose((unsigned long) real_time.estimated_time, '|');
-    console_printf(proc_time.speed_index <= 1. ?
+    ts_time_decompose(proc_time->elapsed_time, '/');
+    ts_time_decompose(proc_time->estimated_time, '|');
+    ts_time_decompose(real_time->elapsed_time, '/');
+    ts_time_decompose(real_time->estimated_time, '|');
+    console_printf(proc_time->speed_index <= 1. ?
                    "%9.4f" SPEED_CHAR "|" : "%#9.5g" SPEED_CHAR "|",
-                   SPEED_MULT * proc_time.speed_index);
-    ts_time_decompose((unsigned long) (real_time.estimated_time - real_time.elapsed_time), ' ');
+                   SPEED_MULT * proc_time->speed_index);
+    ts_time_decompose((real_time->estimated_time - real_time->elapsed_time), ' ');
 }
 
 static void
@@ -195,6 +198,8 @@ encoder_progress_begin( lame_global_flags const* gf
                       , char              const* outPath
                       )
 {
+    global_encoder_progress.last_frame_num = 0;
+    global_encoder_progress.time_status_init = 0;
     if (global_ui_config.silent < 9) {
         lame_print_config(gf); /* print useful information about options being used */
 
@@ -259,21 +264,22 @@ encoder_progress( lame_global_flags const* gf )
 {
     if (global_ui_config.silent <= 0) {
         int const frames = lame_get_frameNum(gf);
+        int const frames_diff = frames - global_encoder_progress.last_frame_num;
         if (global_ui_config.update_interval <= 0) {     /*  most likely --disptime x not used */
-            if ((frames % 100) != 0) {  /*  true, most of the time */
+            if (frames_diff < 100) {  /*  true, most of the time */
                 return;
             }
+            global_encoder_progress.last_frame_num = (frames/100)*100;
         }
         else {
-            static double last_time = 0.0;
             if (frames != 0 && frames != 9) {
                 double const act = GetRealTime();
-                double const dif = act - last_time;
+                double const dif = act - global_encoder_progress.last_time;
                 if (dif >= 0 && dif < global_ui_config.update_interval) {
                     return;
                 }
             }
-            last_time = GetRealTime(); /* from now! disp_time seconds */
+            global_encoder_progress.last_time = GetRealTime(); /* from now! disp_time seconds */
         }
 #ifdef BRHIST
         if (global_ui_config.brhist) {
@@ -311,11 +317,13 @@ encoder_progress_end( lame_global_flags const* gf )
 
 
 /* these functions are used in get_audio.c */
+static struct DecoderProgress {
+  int     last_mode_ext;
+} global_decoder_progress;
 
 void
 decoder_progress(const mp3data_struct * const mp3data)
 {
-    static int last;
     console_printf("\rFrame#%6i/%-6i %3i kbps",
                    mp3data->framenum, mp3data->totalframes, mp3data->bitrate);
 
@@ -328,14 +336,15 @@ decoder_progress(const mp3data_struct * const mp3data)
 
     if (mp3data->mode == JOINT_STEREO) {
         int     curr = mp3data->mode_ext;
+        int     last = global_decoder_progress.last_mode_ext;
         console_printf("  %s  %c",
                        curr & 2 ? last & 2 ? " MS " : "LMSR" : last & 2 ? "LMSR" : "L  R",
                        curr & 1 ? last & 1 ? 'I' : 'i' : last & 1 ? 'i' : ' ');
-        last = curr;
+        global_decoder_progress.last_mode_ext = curr;
     }
     else {
         console_printf("         ");
-        last = 0;
+        global_decoder_progress.last_mode_ext = 0;
     }
 /*    console_printf ("%s", Console_IO.str_clreoln ); */
     console_printf("        \b\b\b\b\b\b\b\b");
