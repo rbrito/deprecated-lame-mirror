@@ -112,6 +112,7 @@ brhist_init_package(lame_global_flags * gf)
 }
 
 
+#ifdef _WINDOWS
 static void
 set_process_affinity()
 {
@@ -136,6 +137,7 @@ set_process_affinity()
 #endif
 #endif
 }
+#endif
 
 
 static int
@@ -300,21 +302,20 @@ lame_decoder(lame_t gfp, FILE * outf, char *inPath, char *outPath)
 
     wavsize = 0;
     fnq = 1./global_decoder.mp3input_data.framesize;
+    if (0)
     {
-        int x = global_decoder.mp3input_data.nsamp;
-        x -= skip_start + skip_end;
-        x += global_decoder.mp3input_data.framesize-1;
-        global_decoder.mp3input_data.totalframes = x / global_decoder.mp3input_data.framesize;
+        double samples = global_decoder.mp3input_data.nsamp - skip_start - skip_end + 576
+                       + global_decoder.mp3input_data.framesize-1;
+        global_decoder.mp3input_data.totalframes = (int)(samples * fnq);
     }
-
     do {
         iread = get_audio16(gfp, Buffer); /* read in 'iread' samples */
         if (iread >= 0) {
-            double frame_number = (wavsize + skip_start+skip_end) * fnq;
-            global_decoder.mp3input_data.framenum = (int)frame_number;
             wavsize += iread;
-
             if (global_ui_config.silent <= 0) {
+                double samples = wavsize /*+ skip_start + skip_end*/ + 576
+                               + global_decoder.mp3input_data.framesize-1;
+                global_decoder.mp3input_data.framenum = (int)(samples * fnq);
                 decoder_progress(&global_decoder.mp3input_data);
                 console_flush();
             }
@@ -337,7 +338,6 @@ lame_decoder(lame_t gfp, FILE * outf, char *inPath, char *outPath)
     else {
         wavsize *= i;
     }
-
     /* if outf is seekable, rewind and adjust length */
     if (!global_decoder.disable_wav_header && strcmp("-", outPath)
         && !fseek(outf, 0l, SEEK_SET))
@@ -655,6 +655,7 @@ parse_nogap_filenames(int nogapout, char const *inPath, char *outPath, char *out
 }
 
 
+static
 int lame_main(lame_t gf, int argc, char** argv)
 {
     char    inPath[PATH_MAX + 1];

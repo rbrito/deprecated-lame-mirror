@@ -101,7 +101,6 @@ get_max_frame_buffer_size_by_constraint(SessionConfig_t const * cfg, int constra
         }
     }
     else {
-        int const resvLimit = (8 * 256) * cfg->mode_gr - 8;
         int     max_kbps;
         if (cfg->samplerate_out < 16000) {
             max_kbps = bitrate_table[cfg->version][8]; /* default: allow 64 kbps (MPEG-2.5) */

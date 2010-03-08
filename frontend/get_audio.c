@@ -104,7 +104,6 @@ typedef struct IFF_AIFF_struct {
 
 #endif /* ifdef LIBSNDFILE */
 
-static void SwapBytesInWords(short *loc, int words);
 
 
 struct PcmBuffer
@@ -226,7 +225,7 @@ typedef struct get_audio_global_data_struct {
     PcmBuffer pcm16;
 } get_audio_global_data;
 
-static get_audio_global_data global = { 0, 0, 0, 0, 0, 0, 0, 0, 0 };
+static get_audio_global_data global;
 
 
 
@@ -443,6 +442,7 @@ init_infile(lame_t gfp, char const *inPath)
     global. pcmbitwidth = global_raw_pcm.in_bitwidth;
     global. pcmswapbytes = global_reader.swapbytes;
     global. pcm_is_unsigned_8bit = global_raw_pcm.in_signed == 1 ? 0 : 1;
+    global. hip = 0;
     global. musicin = OpenSndFile(gfp, inPath, &enc_delay, &enc_padding);
     initPcmBuffer(&global.pcm32, sizeof(int));
     initPcmBuffer(&global.pcm16, sizeof(short));
@@ -468,60 +468,6 @@ close_infile(void)
     freePcmBuffer(&global.pcm32);
     freePcmBuffer(&global.pcm16);
 }
-
-
-void
-SwapBytesInWords(short *ptr, int short_words)
-{                       /* Some speedy code */
-    unsigned long val;
-    unsigned long *p = (unsigned long *) ptr;
-
-#ifndef lint
-# if defined(CHAR_BIT)
-#  if CHAR_BIT != 8
-#   error CHAR_BIT != 8
-#  endif
-# else
-#  error can not determine number of bits in a char
-# endif
-#endif /* lint */
-
-    assert(sizeof(short) == 2);
-
-
-#if defined(SIZEOF_UNSIGNED_LONG) && SIZEOF_UNSIGNED_LONG == 4
-    for (; short_words >= 2; short_words -= 2, p++) {
-        val = *p;
-        *p = ((val << 8) & 0xFF00FF00) | ((val >> 8) & 0x00FF00FF);
-    }
-    ptr = (short *) p;
-    for (; short_words >= 1; short_words -= 1, ptr++) {
-        val = *ptr;
-        *ptr = (short) (((val << 8) & 0xFF00) | ((val >> 8) & 0x00FF));
-    }
-#elif defined(SIZEOF_UNSIGNED_LONG) && SIZEOF_UNSIGNED_LONG == 8
-    for (; short_words >= 4; short_words -= 4, p++) {
-        val = *p;
-        *p = ((val << 8) & 0xFF00FF00FF00FF00) | ((val >> 8) & 0x00FF00FF00FF00FF);
-    }
-    ptr = (short *) p;
-    for (; short_words >= 1; short_words -= 1, ptr++) {
-        val = *ptr;
-        *ptr = ((val << 8) & 0xFF00) | ((val >> 8) & 0x00FF);
-    }
-#else
-# ifdef SIZEOF_UNSIGNED_LONG
-#  warning Using unoptimized SwapBytesInWords().
-# endif
-    for (; short_words >= 1; short_words -= 1, ptr++) {
-        val = *ptr;
-        *ptr = ((val << 8) & 0xFF00) | ((val >> 8) & 0x00FF);
-    }
-#endif
-
-    assert(short_words == 0);
-}
-
 
 
 static int
