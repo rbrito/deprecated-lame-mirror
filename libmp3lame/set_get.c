@@ -2116,18 +2116,28 @@ lame_get_totalframes(const lame_global_flags * gfp)
         lame_internal_flags const *const gfc = gfp->internal_flags;
         if (is_lame_internal_flags_valid(gfc)) {
             SessionConfig_t const *const cfg = &gfc->cfg;
-            int     framesize = 576 * cfg->mode_gr;
-            int     totalframes;
-            /* estimate based on user set num_samples: */
-            totalframes =
-                2 + ((double) gfp->num_samples * gfp->samplerate_out) /
-                ((double) gfp->samplerate_in * framesize);
+            unsigned long const pcm_samples_per_frame = 576 * cfg->mode_gr;
+            unsigned long pcm_samples_to_encode = gfp->num_samples;
+            unsigned long end_padding = 0;
 
+            /* estimate based on user set num_samples: */
+            if (pcm_samples_to_encode == -1) {
+                return 0;
+            }
+            if (gfp->samplerate_in != gfp->samplerate_out && gfp->samplerate_in > 0) {
+                double const q = (double)gfp->samplerate_out / gfp->samplerate_in;
+                pcm_samples_to_encode *= q;
+            }
+            pcm_samples_to_encode += 576;
+            end_padding = pcm_samples_per_frame - (pcm_samples_to_encode % pcm_samples_per_frame);
+            if (end_padding < 576) {
+                end_padding += pcm_samples_per_frame;
+            }
+            pcm_samples_to_encode += end_padding;
             /* check to see if we underestimated totalframes */
             /*    if (totalframes < gfp->frameNum) */
             /*        totalframes = gfp->frameNum; */
-
-            return totalframes;
+            return pcm_samples_to_encode / pcm_samples_per_frame;
         }
     }
     return 0;
