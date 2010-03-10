@@ -267,7 +267,7 @@ encoder_progress( lame_global_flags const* gf )
         int const frames = lame_get_frameNum(gf);
         int const frames_diff = frames - global_encoder_progress.last_frame_num;
         if (global_ui_config.update_interval <= 0) {     /*  most likely --disptime x not used */
-            if (frames_diff < 100) {  /*  true, most of the time */
+            if (frames_diff < 100 && frames_diff != 0) {  /*  true, most of the time */
                 return;
             }
             global_encoder_progress.last_frame_num = (frames/100)*100;
