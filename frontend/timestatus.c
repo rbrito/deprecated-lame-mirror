@@ -319,14 +319,68 @@ encoder_progress_end( lame_global_flags const* gf )
 
 /* these functions are used in get_audio.c */
 static struct DecoderProgress {
-  int     last_mode_ext;
+    int     last_mode_ext;
+    int     frames_total;
+    int     frame_ctr;
+    int     framesize;
+    unsigned long samples;
 } global_decoder_progress;
 
-void
-decoder_progress(const mp3data_struct * const mp3data)
+static
+unsigned long calcEndPadding(unsigned long samples, int pcm_samples_per_frame)
 {
+    unsigned long end_padding;
+    samples += 576;
+    end_padding = pcm_samples_per_frame - (samples % pcm_samples_per_frame);
+    if (end_padding < 576)
+        end_padding += pcm_samples_per_frame;
+    return end_padding;
+}
+
+static
+unsigned long calcNumBlocks(unsigned long samples, int pcm_samples_per_frame)
+{
+    unsigned long end_padding;
+    samples += 576;
+    end_padding = pcm_samples_per_frame - (samples % pcm_samples_per_frame);
+    if (end_padding < 576)
+        end_padding += pcm_samples_per_frame;
+    return (samples + end_padding) / pcm_samples_per_frame;
+}
+
+DecoderProgress
+decoder_progress_init(unsigned long n, int framesize)
+{
+    DecoderProgress dp = &global_decoder_progress;
+    dp->last_mode_ext =0;
+    dp->frames_total = n;
+    dp->frame_ctr = 0;
+    dp->framesize = framesize;
+    dp->samples = 0;
+    if (n != -1) {
+        if (framesize == 576 || framesize == 1152) {
+            dp->frames_total = calcNumBlocks(n, framesize);
+            dp->samples = 576 + calcEndPadding(n, framesize);
+        }
+    }
+    return dp;
+}
+
+static void
+addSamples(DecoderProgress dp, int iread)
+{
+    dp->samples += iread;
+    dp->frame_ctr += dp->samples / dp->framesize;
+    dp->samples %= dp->framesize;
+}
+
+void
+decoder_progress(DecoderProgress dp, const mp3data_struct * mp3data, int iread)
+{
+    addSamples(dp, iread);
+
     console_printf("\rFrame#%6i/%-6i %3i kbps",
-                   mp3data->framenum, mp3data->totalframes, mp3data->bitrate);
+                   dp->frame_ctr, dp->frames_total, mp3data->bitrate);
 
     /* Programmed with a single frame hold delay */
     /* Attention: static data */
@@ -337,22 +391,24 @@ decoder_progress(const mp3data_struct * const mp3data)
 
     if (mp3data->mode == JOINT_STEREO) {
         int     curr = mp3data->mode_ext;
-        int     last = global_decoder_progress.last_mode_ext;
+        int     last = dp->last_mode_ext;
         console_printf("  %s  %c",
                        curr & 2 ? last & 2 ? " MS " : "LMSR" : last & 2 ? "LMSR" : "L  R",
                        curr & 1 ? last & 1 ? 'I' : 'i' : last & 1 ? 'i' : ' ');
-        global_decoder_progress.last_mode_ext = curr;
+        dp->last_mode_ext = curr;
     }
     else {
         console_printf("         ");
-        global_decoder_progress.last_mode_ext = 0;
+        dp->last_mode_ext = 0;
     }
 /*    console_printf ("%s", Console_IO.str_clreoln ); */
     console_printf("        \b\b\b\b\b\b\b\b");
+    console_flush();
 }
 
 void
-decoder_progress_finish()
+decoder_progress_finish(DecoderProgress dp)
 {
+    (void) dp;
     console_printf("\n");
 }

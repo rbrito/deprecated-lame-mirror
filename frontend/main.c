@@ -204,9 +204,37 @@ init_files(lame_global_flags * gf, char const *inPath, char const *outPath)
 }
 
 
-
-
-
+static
+void printInputFormat(lame_t gfp)
+{
+    int const v_main = 2-lame_get_version(gfp);
+    char const* v_ex = lame_get_out_samplerate(gfp) < 16000 ? ".5" : "";
+    switch (global_reader.input_format) {
+    case sf_mp123: /* FIXME: !!! */
+        break;
+    case sf_mp3:
+        console_printf("MPEG-%u%s Layer %s", v_main, v_ex, "III");
+        break;
+    case sf_mp2:
+        console_printf("MPEG-%u%s Layer %s", v_main, v_ex, "II");
+        break;
+    case sf_mp1:
+        console_printf("MPEG-%u%s Layer %s", v_main, v_ex, "I");
+        break;
+    case sf_raw:
+        console_printf("raw PCM data");
+        break;
+    case sf_wave:
+        console_printf("Microsoft WAVE");
+        break;
+    case sf_aiff:
+        console_printf("SGI/Apple AIFF");
+        break;
+    default:
+        console_printf("unknown");
+        break;
+    }
+}
 
 /* the simple lame decoder */
 /* After calling lame_init(), lame_init_params() and
@@ -221,71 +249,26 @@ lame_decoder(lame_t gfp, FILE * outf, char *inPath, char *outPath)
 {
     short int Buffer[2][1152];
     int     i, iread;
-    double  wavsize, fnq;
+    double  wavsize;
     int     tmp_num_channels = lame_get_num_channels(gfp);
     int     skip_start = samples_to_skip_at_start();
     int     skip_end = samples_to_skip_at_end();
+    DecoderProgress dp = 0;
 
     if (!(tmp_num_channels >= 1 && tmp_num_channels <= 2)) {
       error_printf("Internal error.  Aborting.");
       exit(-1);
     }
 
-    if (global_ui_config.silent < 9)
+    if (global_ui_config.silent < 9) {
         console_printf("\rinput:  %s%s(%g kHz, %i channel%s, ",
                        strcmp(inPath, "-") ? inPath : "<stdin>",
                        strlen(inPath) > 26 ? "\n\t" : "  ",
                        lame_get_in_samplerate(gfp) / 1.e3,
                        tmp_num_channels, tmp_num_channels != 1 ? "s" : "");
+        
+        printInputFormat(gfp);
 
-    switch (global_reader.input_format) {
-    case sf_mp123: /* FIXME: !!! */
-      error_printf("Internal error.  Aborting.");
-      exit(-1);
-
-    case sf_mp3:
-        if (global_ui_config.silent < 9)
-            console_printf("MPEG-%u%s Layer %s", 2 - lame_get_version(gfp),
-                           lame_get_out_samplerate(gfp) < 16000 ? ".5" : "", "III");
-        break;
-    case sf_mp2:
-        if (global_ui_config.silent < 9)
-            console_printf("MPEG-%u%s Layer %s", 2 - lame_get_version(gfp),
-                           lame_get_out_samplerate(gfp) < 16000 ? ".5" : "", "II");
-        break;
-    case sf_mp1:
-        if (global_ui_config.silent < 9)
-            console_printf("MPEG-%u%s Layer %s", 2 - lame_get_version(gfp),
-                           lame_get_out_samplerate(gfp) < 16000 ? ".5" : "", "I");
-        break;
-    case sf_raw:
-        if (global_ui_config.silent < 9)
-            console_printf("raw PCM data");
-        global_decoder.mp3input_data.nsamp = lame_get_num_samples(gfp);
-        global_decoder.mp3input_data.framesize = 1152;
-        break;
-    case sf_wave:
-        if (global_ui_config.silent < 9)
-            console_printf("Microsoft WAVE");
-        global_decoder.mp3input_data.nsamp = lame_get_num_samples(gfp);
-        global_decoder.mp3input_data.framesize = 1152;
-        break;
-    case sf_aiff:
-        if (global_ui_config.silent < 9)
-            console_printf("SGI/Apple AIFF");
-        global_decoder.mp3input_data.nsamp = lame_get_num_samples(gfp);
-        global_decoder.mp3input_data.framesize = 1152;
-        break;
-    default:
-        if (global_ui_config.silent < 9)
-            console_printf("unknown");
-        global_decoder.mp3input_data.nsamp = lame_get_num_samples(gfp);
-        global_decoder.mp3input_data.framesize = 1152;
-        assert(0);
-        break;
-    }
-
-    if (global_ui_config.silent < 9) {
         console_printf(")\noutput: %s%s(16 bit, Microsoft WAVE)\n",
                        strcmp(outPath, "-") ? outPath : "<stdout>",
                        strlen(outPath) > 45 ? "\n\t" : "  ");
@@ -294,6 +277,21 @@ lame_decoder(lame_t gfp, FILE * outf, char *inPath, char *outPath)
             console_printf("skipping initial %i samples (encoder+decoder delay)\n", skip_start);
         if (skip_end > 0)
             console_printf("skipping final %i samples (encoder padding-decoder delay)\n", skip_end);
+
+        switch (global_reader.input_format) {
+        case sf_mp3:
+        case sf_mp2:
+        case sf_mp1:
+            dp = decoder_progress_init(lame_get_num_samples(gfp),
+                                       global_decoder.mp3input_data.framesize);
+            break;
+        case sf_raw:
+        case sf_wave:
+        case sf_aiff:
+        default:
+            dp = decoder_progress_init(lame_get_num_samples(gfp), 1152);
+            break;
+        }
     }
 
     if (0 == global_decoder.disable_wav_header)
@@ -301,23 +299,12 @@ lame_decoder(lame_t gfp, FILE * outf, char *inPath, char *outPath)
     /* unknown size, so write maximum 32 bit signed value */
 
     wavsize = 0;
-    fnq = 1./global_decoder.mp3input_data.framesize;
-    if (0)
-    {
-        double samples = global_decoder.mp3input_data.nsamp - skip_start - skip_end + 576
-                       + global_decoder.mp3input_data.framesize-1;
-        global_decoder.mp3input_data.totalframes = (int)(samples * fnq);
-    }
     do {
         iread = get_audio16(gfp, Buffer); /* read in 'iread' samples */
         if (iread >= 0) {
             wavsize += iread;
-            if (global_ui_config.silent <= 0) {
-                double samples = wavsize /*+ skip_start + skip_end*/ + 576
-                               + global_decoder.mp3input_data.framesize-1;
-                global_decoder.mp3input_data.framenum = (int)(samples * fnq);
-                decoder_progress(&global_decoder.mp3input_data);
-                console_flush();
+            if (dp != 0) {
+                decoder_progress(dp, &global_decoder.mp3input_data, iread);
             }
             put_audio16(outf, Buffer, iread, tmp_num_channels);
         }
@@ -346,8 +333,8 @@ lame_decoder(lame_t gfp, FILE * outf, char *inPath, char *outPath)
     fclose(outf);
     close_infile();
 
-    if (global_ui_config.silent <= 0)
-        decoder_progress_finish();
+    if (dp != 0)
+        decoder_progress_finish(dp);
     return 0;
 }
 

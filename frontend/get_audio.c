@@ -447,6 +447,13 @@ init_infile(lame_t gfp, char const *inPath)
     initPcmBuffer(&global.pcm32, sizeof(int));
     initPcmBuffer(&global.pcm16, sizeof(short));
     setSkipStartAndEnd(gfp, enc_delay, enc_padding);
+    {
+      unsigned long n = lame_get_num_samples(gfp);
+      if (n != MAX_U_32_NUM) {
+          unsigned long const discard = global.pcm32.skip_start + global.pcm32.skip_end;  
+          lame_set_num_samples(gfp, n > discard ? n - discard : 0);
+      }
+    }
 }
 
 int
@@ -547,7 +554,12 @@ get_audio_common(lame_t gfp, int buffer[2][1152], short buffer16[2][1152])
     assert(framesize <= 1152);
 
     /* get num_samples */
-    tmp_num_samples = lame_get_num_samples(gfp);
+    if (is_mpeg_file_format(global_reader.input_format)) {
+        tmp_num_samples = global_decoder.mp3input_data.nsamp;
+    }
+    else {
+        tmp_num_samples = lame_get_num_samples(gfp);
+    }
 
     /* if this flag has been set, then we are carefull to read
      * exactly num_samples and no more.  This is useful for .wav and .aiff
