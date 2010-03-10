@@ -289,7 +289,8 @@ lame_decoder(lame_t gfp, FILE * outf, char *inPath, char *outPath)
         case sf_wave:
         case sf_aiff:
         default:
-            dp = decoder_progress_init(lame_get_num_samples(gfp), 1152);
+            dp = decoder_progress_init(lame_get_num_samples(gfp),
+                                       lame_get_in_samplerate(gfp) < 32000 ? 576 : 1152);
             break;
         }
     }
@@ -763,6 +764,115 @@ int lame_main(lame_t gf, int argc, char** argv)
 *  Message Output
 *
 ***********************************************************************/
+
+
+#if defined( _WINDOWS ) && 0 && defined( UNICODE )
+/* Idea for unicode support in LAME, work in progress
+ * - map UTF-16 to UTF-8
+ * - advantage, the rest can be kept unchanged (mostly)
+ * - make sure, fprintf on console is in correct code page
+ *   + normal text in source code is in ASCII anyway
+ *   + ID3 tags and filenames coming from command line need attention
+ * - call wfopen with UTF-16 names where needed
+ *
+ * why not wchar_t all the way?
+ * well, that seems to be a big mess and not portable at all
+ */
+#include <wchar.h>
+#include <mbstring.h>
+
+static wchar_t *mbsToUnicode(const char *mbstr, int code_page)
+{
+  int n = 1+MultiByteToWideChar(code_page, 0, mbstr, -1, NULL, 0);
+  wchar_t* wstr = malloc( n*sizeof(wstr[0]) );
+  if ( wstr !=0 ) {
+    n = MultiByteToWideChar(code_page, 0, mbstr, -1, wstr, n);
+    if ( n==0 ) {
+      free( wstr );
+      wstr = 0;
+    }
+  }
+  return wstr;
+}
+
+static char *unicodeToMbs(const wchar_t *wstr, int code_page)
+{
+  int n = 1+WideCharToMultiByte(code_page, 0, wstr, -1, 0, 0, 0, 0);
+  char* mbstr = malloc( n*sizeof(mbstr[0]) );
+  if ( mbstr !=0 ) {
+    n = WideCharToMultiByte(code_page, 0, wstr, -1, mbstr, n, 0, 0);
+    if( n == 0 ){
+      free( mbstr );
+      mbstr = 0;
+    }
+  }
+  return mbstr;
+}
+
+char* mbsToMbs(const char* str, int cp_from, int cp_to)
+{
+  wchar_t* wstr = mbsToUnicode(str, cp_from);
+  if ( wstr != 0 ) {
+    char* local8bit = unicodeToMbs(wstr, cp_to);
+    free( wstr );
+    return local8bit;
+  }
+  return 0;
+}
+
+enum { cp_utf8, cp_console, cp_actual };
+
+wchar_t *utf8ToUnicode(const char *mbstr)
+{
+  return mbsToUnicode(mbstr, CP_UTF8);
+}
+
+char *unicodeToUtf8(const wchar_t *wstr)
+{
+  return unicodeToMbs(wstr, CP_UTF8);
+}
+
+char* utf8ToLocal8Bit(const char* str)
+{
+  return mbsToMbs(str, CP_UTF8, CP_ACP);
+}
+
+char* utf8ToConsole8Bit(const char* str)
+{
+  return mbsToMbs(str, CP_UTF8, GetConsoleOutputCP());
+}
+
+char* local8BitToUtf8(const char* str)
+{
+  return mbsToMbs(str, CP_ACP, CP_UTF8);
+}
+
+char* console8BitToUtf8(const char* str)
+{
+  return mbsToMbs(str, GetConsoleOutputCP(), CP_UTF8);
+}
+
+int c_main(int argc, char** argv);
+#define main c_main
+
+int wmain(int argc, wchar_t* argv[])
+{
+  char **utf8_argv;
+  int i, ret;
+
+  utf8_argv = calloc(argc, sizeof(char*));
+  for (i = 0; i < argc; ++i) {
+    utf8_argv[i] = unicodeToUtf8(argv[i]);
+  }
+  ret = c_main(argc, utf8_argv);
+  for (i = 0; i < argc; ++i) {
+    free( utf8_argv[i] );
+  }
+  free( utf8_argv );
+  return ret;
+}
+
+#endif
 
 
 int
