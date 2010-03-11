@@ -351,7 +351,7 @@ init_outfile(char const *outPath, int decode)
         lame_set_stream_binary_mode(outf);
     }
     else {
-        outf = fopen(outPath, "w+b");
+        outf = lame_fopen(outPath, "w+b");
 #ifdef __riscos__
         /* Assign correct file type */
         if (outf != NULL) {
@@ -794,7 +794,7 @@ OpenSndFile(lame_t gfp, char const *inPath, int *enc_delay, int *enc_padding)
         }
 #endif
 #ifdef HAVE_MPGLIB
-        if ((musicin = fopen(lpszFileName, "rb")) == NULL) {
+        if ((musicin = lame_fopen(lpszFileName, "rb")) == NULL) {
             if (global_ui_config.silent < 10) {
                 error_printf("Could not find \"%s\".\n", lpszFileName);
             }
@@ -1647,7 +1647,7 @@ OpenSndFile(lame_t gfp, char const *inPath, int *enc_delay, int *enc_padding)
         lame_set_stream_binary_mode(musicin = stdin); /* Read from standard input. */
     }
     else {
-        if ((musicin = fopen(inPath, "rb")) == NULL) {
+        if ((musicin = lame_fopen(inPath, "rb")) == NULL) {
             if (global_ui_config.silent < 10) {
                 error_printf("Could not find \"%s\".\n", inPath);
             }

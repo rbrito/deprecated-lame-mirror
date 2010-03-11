@@ -31,6 +31,7 @@ char   *strchr(), *strrchr();
 #include <stdio.h>
 #include <stdarg.h>
 #include "console.h"
+#include "main.h"
 
 #ifdef WITH_DMALLOC
 #include <dmalloc.h>
@@ -296,7 +297,7 @@ void
 set_debug_file(const char *fn)
 {
     if (Console_IO.Report_fp == NULL) {
-        Console_IO.Report_fp = fopen(fn, "a");
+        Console_IO.Report_fp = lame_fopen(fn, "a");
         if (Console_IO.Report_fp != NULL) {
             error_printf("writing debug info into: %s\n", fn);
         }

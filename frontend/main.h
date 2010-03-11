@@ -85,6 +85,13 @@ extern UiConfig global_ui_config;
 extern DecoderConfig global_decoder;
 extern RawPCMConfig global_raw_pcm;
 
+
+extern FILE* lame_fopen(char const* file, char const* mode);
+extern char* utf8ToConsole8Bit(const char* str);
+extern char* utf8ToLocal8Bit(const char* str);
+extern unsigned short* utf8ToUcs2(char const* str);
+extern char* utf8ToLatin1(char const* str);
+
 #if defined(__cplusplus)
 }
 #endif

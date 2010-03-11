@@ -206,7 +206,7 @@ main(int argc, char **argv)
         lame_set_stream_binary_mode(outf = stdout);
     }
     else {
-        if ((outf = fopen(outPath, "wb+")) == NULL) {
+        if ((outf = lame_fopen(outPath, "wb+")) == NULL) {
             rtp_deinitialization();
             error_printf("Could not create \"%s\".\n", outPath);
             frontend_close_console();

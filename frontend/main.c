@@ -112,7 +112,7 @@ brhist_init_package(lame_global_flags * gf)
 }
 
 
-#ifdef _WINDOWS
+#if defined( _WIN32 ) && !defined(__MINGW32__)
 static void
 set_process_affinity()
 {
@@ -766,7 +766,7 @@ int lame_main(lame_t gf, int argc, char** argv)
 ***********************************************************************/
 
 
-#if defined( _WINDOWS ) && 0 && defined( UNICODE )
+#if defined( _WIN32 ) && !defined(__MINGW32__)
 /* Idea for unicode support in LAME, work in progress
  * - map UTF-16 to UTF-8
  * - advantage, the rest can be kept unchanged (mostly)
@@ -783,7 +783,7 @@ int lame_main(lame_t gf, int argc, char** argv)
 
 static wchar_t *mbsToUnicode(const char *mbstr, int code_page)
 {
-  int n = 1+MultiByteToWideChar(code_page, 0, mbstr, -1, NULL, 0);
+  int n = MultiByteToWideChar(code_page, 0, mbstr, -1, NULL, 0);
   wchar_t* wstr = malloc( n*sizeof(wstr[0]) );
   if ( wstr !=0 ) {
     n = MultiByteToWideChar(code_page, 0, mbstr, -1, wstr, n);
@@ -851,6 +851,27 @@ char* console8BitToUtf8(const char* str)
 {
   return mbsToMbs(str, GetConsoleOutputCP(), CP_UTF8);
 }
+ 
+char* utf8ToLatin1(char const* str)
+{
+  return mbsToMbs(str, CP_UTF8, 28591); /* Latin-1 is code page 28591 */
+}
+
+unsigned short* utf8ToUcs2(char const* mbstr) /* additional Byte-Order-Marker */
+{
+  int n = MultiByteToWideChar(CP_UTF8, 0, mbstr, -1, NULL, 0);
+  wchar_t* wstr = malloc( (n+1)*sizeof(wstr[0]) );
+  if ( wstr !=0 ) {
+    wstr[0] = 0xfeff; /* BOM */
+    n = MultiByteToWideChar(CP_UTF8, 0, mbstr, -1, wstr+1, n);
+    if ( n==0 ) {
+      free( wstr );
+      wstr = 0;
+    }
+  }
+  return wstr;
+}
+
 
 int c_main(int argc, char** argv);
 #define main c_main
@@ -872,6 +893,27 @@ int wmain(int argc, wchar_t* argv[])
   return ret;
 }
 
+FILE* lame_fopen(char const* file, char const* mode)
+{
+    FILE* fh = 0;
+    wchar_t* wfile = utf8ToUnicode(file);
+    wchar_t* wmode = utf8ToUnicode(mode);
+    if (wfile != 0 && wmode != 0) {
+        fh = _wfopen(wfile, wmode);
+    }
+    else {
+        fh = fopen(file, mode);
+    }
+    free(wfile);
+    free(wmode);
+    return fh;
+}
+
+#else
+FILE* lame_fopen(char const* file, char const* mode)
+{
+    return fopen(file, mode);
+}
 #endif
 
 
@@ -888,7 +930,7 @@ main(int argc, char **argv)
     /* This gives wildcard expansion on Non-POSIX shells with OS/2 */
     _wildcard(&argc, &argv);
 #endif
-#ifdef _WINDOWS
+#if defined( _WIN32 ) && !defined(__MINGW32__)
     set_process_affinity();
 #endif
 

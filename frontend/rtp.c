@@ -50,7 +50,7 @@ struct rtpheader {           /* in network byte order */
 };
 
 
-#ifndef _WINDOWS
+#if !defined( _WIN32 ) && !defined(__MINGW32__)
 
 #ifdef STDC_HEADERS
 # include <stdio.h>

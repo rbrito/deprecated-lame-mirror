@@ -202,12 +202,21 @@ encoder_progress_begin( lame_global_flags const* gf
     global_encoder_progress.last_time = 0;
     global_encoder_progress.last_frame_num = 0;
     if (global_ui_config.silent < 9) {
+        char* i_file = 0;
+        char* o_file = 0;
+#if defined( _WIN32 ) && !defined(__MINGW32__)
+        inPath = i_file = utf8ToLocal8Bit(inPath);
+        outPath = o_file = utf8ToConsole8Bit(outPath);
+#endif
         lame_print_config(gf); /* print useful information about options being used */
 
         console_printf("Encoding %s%s to %s\n",
                        strcmp(inPath, "-") ? inPath : "<stdin>",
                        strlen(inPath) + strlen(outPath) < 66 ? "" : "\n     ",
                        strcmp(outPath, "-") ? outPath : "<stdout>");
+
+        free(i_file);
+        free(o_file);
 
         console_printf("Encoding as %g kHz ", 1.e-3 * lame_get_out_samplerate(gf));
 
