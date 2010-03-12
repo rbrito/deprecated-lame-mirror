@@ -74,6 +74,11 @@ char   *strchr(), *strrchr();
 #include <dmalloc.h>
 #endif
 
+#ifndef STR
+# define __STR(x)  #x
+# define STR(x)    __STR(x)
+#define __LOC__ __FILE__ "("STR(__LINE__)") : "
+#endif
 
 
 #ifdef LIBSNDFILE
@@ -218,6 +223,7 @@ typedef struct get_audio_global_data_struct {
     int     pcmbitwidth;
     int     pcmswapbytes;
     int     pcm_is_unsigned_8bit;
+    int     pcm_is_ieee_float;
     unsigned int num_samples_read;
     FILE   *musicin;
     hip_t   hip;
@@ -442,6 +448,7 @@ init_infile(lame_t gfp, char const *inPath)
     global. pcmbitwidth = global_raw_pcm.in_bitwidth;
     global. pcmswapbytes = global_reader.swapbytes;
     global. pcm_is_unsigned_8bit = global_raw_pcm.in_signed == 1 ? 0 : 1;
+    global. pcm_is_ieee_float = 0;
     global. hip = 0;
     global. musicin = OpenSndFile(gfp, inPath, &enc_delay, &enc_padding);
     initPcmBuffer(&global.pcm32, sizeof(int));
@@ -1149,6 +1156,29 @@ unpack_read_samples(const int samples_to_read, const int bytes_per_sample,
                                                                                              32);
     }
 #undef GA_URS_IFLOOP
+    if (global.pcm_is_ieee_float) {
+        float32_t const m_max = INT_MAX;
+        float32_t const m_min = -(float32_t)INT_MIN;
+        float32_t* x = (float32_t*)sample_buffer;
+        assert(sizeof(float32_t) == sizeof(int));
+        for (i = 0; i < samples_to_read; ++i) {
+            float32_t const u = x[i];
+            int     v;
+            if (u >= 1) {
+                v = INT_MAX;
+            }
+            else if (u <= -1) {
+                v = INT_MIN;
+            }
+            else if (u >= 0) {
+                v = (int)(u * m_max + 0.5f);
+            }
+            else {
+                v = (int)(u * m_min - 0.5f);
+            }
+            sample_buffer[i] = v;
+        }
+    }
     return (samples_read);
 }
 
@@ -1239,6 +1269,9 @@ static int const WAV_ID_DATA = 0x64617461; /* "data" */
 
 #ifndef WAVE_FORMAT_PCM
 static short const WAVE_FORMAT_PCM = 0x0001;
+#endif
+#ifndef WAVE_FORMAT_IEEE_FLOAT
+static short const WAVE_FORMAT_IEEE_FLOAT = 0x0003;
 #endif
 #ifndef WAVE_FORMAT_EXTENSIBLE
 static short const WAVE_FORMAT_EXTENSIBLE = 0xFFFE;
@@ -1331,8 +1364,8 @@ parse_wave_header(lame_global_flags * gfp, FILE * sf)
         }
     }
 
-    if (is_wav) {
-        if (format_tag != WAVE_FORMAT_PCM) {
+    if (is_wav) {        
+        if (format_tag != WAVE_FORMAT_PCM && format_tag != WAVE_FORMAT_IEEE_FLOAT) {
             if (global_ui_config.silent < 10) {
                 error_printf("Unsupported data format: 0x%04X\n", format_tag);
             }
@@ -1350,6 +1383,7 @@ parse_wave_header(lame_global_flags * gfp, FILE * sf)
         (void) lame_set_in_samplerate(gfp, samples_per_sec);
         global. pcmbitwidth = bits_per_sample;
         global. pcm_is_unsigned_8bit = 1;
+        global. pcm_is_ieee_float = (format_tag == WAVE_FORMAT_IEEE_FLOAT ? 1 : 0);
         (void) lame_set_num_samples(gfp, data_length / (channels * ((bits_per_sample + 7) / 8)));
         return 1;
     }
@@ -1535,7 +1569,7 @@ parse_aiff_header(lame_global_flags * gfp, FILE * sf)
         (void) lame_set_num_samples(gfp, aiff_info.numSampleFrames);
         global. pcmbitwidth = aiff_info.sampleSize;
         global. pcm_is_unsigned_8bit = 0;
-        
+        global. pcm_is_ieee_float = 0; /* FIXME: possible ??? */
         if (pcm_data_pos >= 0) {
             if (fseek(sf, pcm_data_pos, SEEK_SET) != 0) {
                 if (global_ui_config.silent < 10) {
