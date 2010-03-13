@@ -39,6 +39,7 @@
 
 T_LAME = lame.exe
 T_MP3X = mp3x.exe
+T_MP3RTP = mp3rtp.exe
 T_DLL = libmp3lame.dll
 T_LIB_DYNAMIC = libmp3lame.lib
 T_LIB_STATIC = libmp3lame-static.lib
@@ -444,11 +445,15 @@ mpx_sources = \
 	frontend/gtkanal.c \
 	frontend/mp3x.c
 
+mp3rtp_sources = \
+	frontend/rtp.c \
+	frontend/mp3rtp.c
+
 dll_sources = \
 	dll/BladeMP3EncDll.c
 
 common_sources = \
-	frontend/portableio.c \
+	frontend/main.c \
 	frontend/portableio.c \
 	frontend/get_audio.c \
 	frontend/parse.c \
@@ -616,7 +621,7 @@ $(T_MP3X) : target_directory config.h lib common $(MPX_OBJ)
 
 $(T_MP3RTP) : target_directory config.h lib common $(MPRTP_OBJ)
 	@$(LN) $(LN_OUT)$(TARGET_DIR)$@ $(LN_SWITCHES) $(LIBSNDFILE) \
-	       $(TARGET_DIR)$(T_LIB_STATIC) $(CMMN_OBJ) $(MPRTP_OBJ) $(ADDL_OBJ)
+	       $(TARGET_DIR)$(T_LIB_STATIC) $(CMMN_OBJ) $(MPRTP_OBJ) $(ADDL_OBJ) wsock32.lib
 	@echo.
 	@echo --=*  $(TARGET_DIR)$@ ready  *=--
 	@echo.
@@ -679,7 +684,7 @@ mp3x	:	$(T_MP3X)
 mp3rtp	:	$(T_MP3RTP)
 
 
-all :	$(PGM) dll lame_enc 
+all :	$(PGM) mp3rtp dll lame_enc 
 	@echo.
 	@echo --=*  all uptodate  *=--
 	@echo.
