@@ -437,7 +437,7 @@ CC_SWITCHES = $(CC_OPTS) $(SNDFILE_OPTS) $(BRHIST_SWITCH) \
 LN_SWITCHES = $(LN_OPTS)
 
 lame_sources = \
-	frontend/main.c
+	frontend/lame_main.c
 
 mpx_sources = \
 	frontend/gpkplotting.c \
@@ -448,6 +448,7 @@ dll_sources = \
 	dll/BladeMP3EncDll.c
 
 common_sources = \
+	frontend/portableio.c \
 	frontend/portableio.c \
 	frontend/get_audio.c \
 	frontend/parse.c \
@@ -499,6 +500,7 @@ MPG_OBJ = $(mpglib_sources:.c=.obj)
 CMMN_OBJ = $(common_sources:.c=.obj)
 LAME_OBJ = $(lame_sources:.c=.obj)
 MPX_OBJ = $(mpx_sources:.c=.obj)
+MPRTP_OBJ = $(mp3rtp_sources:.c=.obj)
 DLL_OBJ = $(dll_sources:.c=.obj)
 
 
@@ -612,6 +614,13 @@ $(T_MP3X) : target_directory config.h lib common $(MPX_OBJ)
 	@echo --=*  $(TARGET_DIR)$@ ready  *=--
 	@echo.
 
+$(T_MP3RTP) : target_directory config.h lib common $(MPRTP_OBJ)
+	@$(LN) $(LN_OUT)$(TARGET_DIR)$@ $(LN_SWITCHES) $(LIBSNDFILE) \
+	       $(TARGET_DIR)$(T_LIB_STATIC) $(CMMN_OBJ) $(MPRTP_OBJ) $(ADDL_OBJ)
+	@echo.
+	@echo --=*  $(TARGET_DIR)$@ ready  *=--
+	@echo.
+
 $(T_LEGACY_DLL) : target_directory config.h $(DLL_OBJ)
 	@$(LN) $(LN_OUT)$(TARGET_DIR)$@ $(LN_SWITCHES) \
 	       $(TARGET_DIR)$(T_LIB_STATIC) $(LN_DLL) \
@@ -644,6 +653,7 @@ config.h : configMS.h
 clean:
 	@-del $(TARGET_DIR)$(T_LAME)
 	@-del $(TARGET_DIR)$(T_MP3X)
+	@-del $(TARGET_DIR)$(T_MP3RTP)
 	@-del $(TARGET_DIR)$(T_DLL)
 	@-del $(TARGET_DIR)$(T_LIB_STATIC)
 	@-del $(TARGET_DIR)$(T_LIB_DYNAMIC)
@@ -666,6 +676,7 @@ lame	:	$(T_LAME)
 lame_enc:	$(T_LEGACY_DLL)
 dll 	:	$(T_DLL) $(T_LEGACY_DLL) 
 mp3x	:	$(T_MP3X)
+mp3rtp	:	$(T_MP3RTP)
 
 
 all :	$(PGM) dll lame_enc 

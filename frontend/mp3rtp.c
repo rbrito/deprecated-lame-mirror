@@ -127,14 +127,12 @@ levelmessage(unsigned int maxv)
 ************************************************************************/
 
 int
-main(int argc, char **argv)
+lame_main(lame_t gf, int argc, char **argv)
 {
     unsigned char mp3buffer[LAME_MAXMP3BUFFER];
     char    inPath[PATH_MAX + 1];
     char    outPath[PATH_MAX + 1];
     int     Buffer[2][1152];
-
-    lame_global_flags *gf;
 
     int     ret;
     int     wavsamples;
@@ -146,7 +144,6 @@ main(int argc, char **argv)
     unsigned int ttl = 2;
     char    dummy;
 
-    frontend_open_console();
     if (argc <= 2) {
         console_printf("Encode (via LAME) to mp3 with RTP streaming of the output\n"
                        "\n"
@@ -156,7 +153,6 @@ main(int argc, char **argv)
                        "      arecord -b 16 -s 22050 -w | ./mp3rtp 224.17.23.42:5004:2 -b 56 - /dev/null\n"
                        "      arecord -b 16 -s 44100 -w | ./mp3rtp 10.1.1.42 -V2 -b128 -B256 - my_mp3file.mp3\n"
                        "\n");
-        frontend_close_console();
         return 1;
     }
 
@@ -167,25 +163,15 @@ main(int argc, char **argv)
         break;
     default:
         error_printf("Illegal destination selector '%s', must be ip[:port[:ttl]]\n", argv[1]);
-        frontend_close_console();
         return -1;
     }
     rtp_initialization();
     if (rtp_socket(ip, port, ttl)) {
         rtp_deinitialization();
         error_printf("fatal error during initialization\n");
-        frontend_close_console();
         return 1;
     }
 
-    /* initialize encoder */
-    gf = lame_init();
-    if (NULL == gf) {
-        rtp_deinitialization();
-        error_printf("fatal error during initialization\n");
-        frontend_close_console();
-        return 1;
-    }
     lame_set_errorf(gf, &frontend_errorf);
     lame_set_debugf(gf, &frontend_debugf);
     lame_set_msgf(gf, &frontend_msgf);
@@ -209,7 +195,6 @@ main(int argc, char **argv)
         if ((outf = lame_fopen(outPath, "wb+")) == NULL) {
             rtp_deinitialization();
             error_printf("Could not create \"%s\".\n", outPath);
-            frontend_close_console();
             return 1;
         }
     }
@@ -233,7 +218,6 @@ main(int argc, char **argv)
             display_bitrates(stderr);
         rtp_deinitialization();
         error_printf("fatal error during initialization\n");
-        frontend_close_console();
         return -1;
     }
 
@@ -259,11 +243,9 @@ main(int argc, char **argv)
 
     lame_mp3_tags_fid(gf, outf); /* add VBR tags to mp3 file */
 
-    lame_close(gf);
     rtp_deinitialization();
     fclose(outf);
     close_infile();     /* close the sound input file */
-    frontend_close_console();
     return 0;
 }
 
