@@ -880,29 +880,30 @@ OpenSndFile(lame_t gfp, char const *inPath, int *enc_delay, int *enc_padding)
             }
             exit(1);
         }
+        sf_command(gs_pSndFileIn, SFC_SET_SCALE_FLOAT_INT_READ, NULL, SF_TRUE) ;
 
         if ((gs_wfInfo.format & SF_FORMAT_RAW) == SF_FORMAT_RAW) {
             global_reader.input_format = sf_raw;
         }
 
 #ifdef _DEBUG_SND_FILE
-        DEBUGF("\n\nSF_INFO structure\n");
-        DEBUGF("samplerate        :%d\n", gs_wfInfo.samplerate);
-        DEBUGF("samples           :%d\n", gs_wfInfo.frames);
-        DEBUGF("channels          :%d\n", gs_wfInfo.channels);
-        DEBUGF("format            :");
+        printf("\n\nSF_INFO structure\n");
+        printf("samplerate        :%d\n", gs_wfInfo.samplerate);
+        printf("samples           :%d\n", gs_wfInfo.frames);
+        printf("channels          :%d\n", gs_wfInfo.channels);
+        printf("format            :");
 
         /* new formats from sbellon@sbellon.de  1/2000 */
 
         switch (gs_wfInfo.format & SF_FORMAT_TYPEMASK) {
         case SF_FORMAT_WAV:
-            DEBUGF("Microsoft WAV format (big endian). ");
+            printf("Microsoft WAV format (big endian). ");
             break;
         case SF_FORMAT_AIFF:
-            DEBUGF("Apple/SGI AIFF format (little endian). ");
+            printf("Apple/SGI AIFF format (little endian). ");
             break;
         case SF_FORMAT_AU:
-            DEBUGF("Sun/NeXT AU format (big endian). ");
+            printf("Sun/NeXT AU format (big endian). ");
             break;
             /*
                case SF_FORMAT_AULE:
@@ -910,16 +911,16 @@ OpenSndFile(lame_t gfp, char const *inPath, int *enc_delay, int *enc_padding)
                break;
              */
         case SF_FORMAT_RAW:
-            DEBUGF("RAW PCM data. ");
+            printf("RAW PCM data. ");
             break;
         case SF_FORMAT_PAF:
-            DEBUGF("Ensoniq PARIS file format. ");
+            printf("Ensoniq PARIS file format. ");
             break;
         case SF_FORMAT_SVX:
-            DEBUGF("Amiga IFF / SVX8 / SV16 format. ");
+            printf("Amiga IFF / SVX8 / SV16 format. ");
             break;
         case SF_FORMAT_NIST:
-            DEBUGF("Sphere NIST format. ");
+            printf("Sphere NIST format. ");
             break;
         default:
             assert(0);
@@ -933,19 +934,19 @@ OpenSndFile(lame_t gfp, char const *inPath, int *enc_delay, int *enc_padding)
                break;
              */
         case SF_FORMAT_FLOAT:
-            DEBUGF("32 bit Intel x86 floats.");
+            printf("32 bit Intel x86 floats.");
             break;
         case SF_FORMAT_ULAW:
-            DEBUGF("U-Law encoded.");
+            printf("U-Law encoded.");
             break;
         case SF_FORMAT_ALAW:
-            DEBUGF("A-Law encoded.");
+            printf("A-Law encoded.");
             break;
         case SF_FORMAT_IMA_ADPCM:
-            DEBUGF("IMA ADPCM.");
+            printf("IMA ADPCM.");
             break;
         case SF_FORMAT_MS_ADPCM:
-            DEBUGF("Microsoft ADPCM.");
+            printf("Microsoft ADPCM.");
             break;
             /*
                case SF_FORMAT_PCM_BE:
@@ -956,19 +957,19 @@ OpenSndFile(lame_t gfp, char const *inPath, int *enc_delay, int *enc_padding)
                break;
              */
         case SF_FORMAT_PCM_S8:
-            DEBUGF("Signed 8 bit PCM.");
+            printf("Signed 8 bit PCM.");
             break;
         case SF_FORMAT_PCM_U8:
-            DEBUGF("Unsigned 8 bit PCM.");
+            printf("Unsigned 8 bit PCM.");
             break;
         case SF_FORMAT_PCM_16:
-            DEBUGF("Signed 16 bit PCM.");
+            printf("Signed 16 bit PCM.");
             break;
         case SF_FORMAT_PCM_24:
-            DEBUGF("Signed 24 bit PCM.");
+            printf("Signed 24 bit PCM.");
             break;
         case SF_FORMAT_PCM_32:
-            DEBUGF("Signed 32 bit PCM.");
+            printf("Signed 32 bit PCM.");
             break;
             /*
                case SF_FORMAT_SVX_FIB:
@@ -983,9 +984,9 @@ OpenSndFile(lame_t gfp, char const *inPath, int *enc_delay, int *enc_padding)
             break;
         }
 
-        DEBUGF("\n");
-        DEBUGF("sections          :%d\n", gs_wfInfo.sections);
-        DEBUGF("seekable          :\n", gs_wfInfo.seekable);
+        printf("\n");
+        printf("sections          :%d\n", gs_wfInfo.sections);
+        printf("seekable          :\n", gs_wfInfo.seekable);
 #endif
         /* Check result */
         if (gs_pSndFileIn == NULL) {
@@ -1055,6 +1056,7 @@ read_samples_pcm(FILE * const musicin, int sample_buffer[2304], int samples_to_r
 
 #if 0
     switch (global.pcmbitwidth) {
+        int     i;
     case 8:
         for (i = 0; i < samples_read; i++)
             sample_buffer[i] <<= (8 * sizeof(int) - 8);
@@ -1076,7 +1078,6 @@ read_samples_pcm(FILE * const musicin, int sample_buffer[2304], int samples_to_r
         exit(1);
     }
 #endif
-
     return samples_read;
 }
 
@@ -1157,12 +1158,12 @@ unpack_read_samples(const int samples_to_read, const int bytes_per_sample,
     }
 #undef GA_URS_IFLOOP
     if (global.pcm_is_ieee_float) {
-        float32_t const m_max = INT_MAX;
-        float32_t const m_min = -(float32_t)INT_MIN;
-        float32_t* x = (float32_t*)sample_buffer;
-        assert(sizeof(float32_t) == sizeof(int));
+        ieee754_float32_t const m_max = INT_MAX;
+        ieee754_float32_t const m_min = -(ieee754_float32_t)INT_MIN;
+        ieee754_float32_t* x = (ieee754_float32_t*)sample_buffer;
+        assert(sizeof(ieee754_float32_t) == sizeof(int));
         for (i = 0; i < samples_to_read; ++i) {
-            float32_t const u = x[i];
+            ieee754_float32_t const u = x[i];
             int     v;
             if (u >= 1) {
                 v = INT_MAX;
