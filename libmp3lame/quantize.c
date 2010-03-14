@@ -1551,7 +1551,7 @@ VBR_old_iteration_loop(lame_internal_flags * gfc, const FLOAT pe[2][2],
         if (used_bits <= bits)
             break;
 
-        bitpressure_strategy(gfc, l3_xmin, min_bits, max_bits);
+        bitpressure_strategy(gfc, l3_xmin, (const int (*)[2])min_bits, max_bits);
 
     }                   /* breaks adjusted */
     /*--------------------------------------*/
@@ -1639,6 +1639,10 @@ VBR_new_iteration_loop(lame_internal_flags * gfc, const FLOAT pe[2][2],
     int     ch, gr, analog_silence;
     III_side_info_t *const l3_side = &gfc->l3_side;
 
+    const FLOAT (*const_l3_xmin)[2][SFBMAX] = (const FLOAT (*)[2][SFBMAX])l3_xmin;
+    const FLOAT (*const_xrpow)[2][576] = (const FLOAT (*)[2][576])xrpow;
+    const int (*const_max_bits)[2] = (const int (*)[2])max_bits;
+    
     (void) ms_ener_ratio; /* not used */
 
     memset(xrpow, 0, sizeof(xrpow));
@@ -1660,7 +1664,7 @@ VBR_new_iteration_loop(lame_internal_flags * gfc, const FLOAT pe[2][2],
     /*  quantize granules with lowest possible number of bits
      */
 
-    used_bits = VBR_encode_frame(gfc, xrpow, l3_xmin, max_bits);
+    used_bits = VBR_encode_frame(gfc, const_xrpow, const_l3_xmin, const_max_bits);
 
     if (!cfg->free_format) {
         /*  find lowest bitrate able to hold used bits

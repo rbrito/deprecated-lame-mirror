@@ -313,15 +313,15 @@ lame_encode_mp3_frame(       /* Output */
     int     mp3count;
     III_psy_ratio masking_LR[2][2]; /*LR masking & energy */
     III_psy_ratio masking_MS[2][2]; /*MS masking & energy */
-    III_psy_ratio(*masking)[2][2]; /*pointer to selected maskings */
+    const III_psy_ratio (*masking)[2]; /*pointer to selected maskings */
     const sample_t *inbuf[2];
 
     FLOAT   tot_ener[2][4];
     FLOAT   ms_ener_ratio[2] = { .5, .5 };
-    chgrdata pe = { {0., 0.}, {0., 0.} }, pe_MS = { {
+    FLOAT   pe[2][2] = { {0., 0.}, {0., 0.} }, pe_MS[2][2] = { {
     0., 0.}, {
     0., 0.}};
-    chgrdata *pe_use;
+    FLOAT (*pe_use)[2];
 
     int     ch, gr;
 
@@ -458,12 +458,12 @@ lame_encode_mp3_frame(       /* Output */
 
     /* bit and noise allocation */
     if (gfc->ov_enc.mode_ext == MPG_MD_MS_LR) {
-        masking = &masking_MS; /* use MS masking */
-        pe_use = &pe_MS;
+        masking = (const III_psy_ratio (*)[2])masking_MS; /* use MS masking */
+        pe_use = pe_MS;
     }
     else {
-        masking = &masking_LR; /* use LR masking */
-        pe_use = &pe;
+        masking = (const III_psy_ratio (*)[2])masking_LR; /* use LR masking */
+        pe_use = pe;
     }
 
 
@@ -474,7 +474,7 @@ lame_encode_mp3_frame(       /* Output */
                 gfc->pinfo->ms_ratio[gr] = 0;
                 gfc->pinfo->ms_ener_ratio[gr] = ms_ener_ratio[gr];
                 gfc->pinfo->blocktype[gr][ch] = gfc->l3_side.tt[gr][ch].block_type;
-                gfc->pinfo->pe[gr][ch] = (*pe_use)[gr][ch];
+                gfc->pinfo->pe[gr][ch] = pe_use[gr][ch];
                 memcpy(gfc->pinfo->xr[gr][ch], &gfc->l3_side.tt[gr][ch].xr[0], sizeof(FLOAT) * 576);
                 /* in psymodel, LR and MS data was stored in pinfo.  
                    switch to MS data: */
@@ -508,7 +508,7 @@ lame_encode_mp3_frame(       /* Output */
         f = 0.0;
         for (gr = 0; gr < cfg->mode_gr; gr++)
             for (ch = 0; ch < cfg->channels_out; ch++)
-                f += (*pe_use)[gr][ch];
+                f += pe_use[gr][ch];
         gfc->sv_enc.pefirbuf[18] = f;
 
         f = gfc->sv_enc.pefirbuf[9];
@@ -518,11 +518,11 @@ lame_encode_mp3_frame(       /* Output */
         f = (670 * 5 * cfg->mode_gr * cfg->channels_out) / f;
         for (gr = 0; gr < cfg->mode_gr; gr++) {
             for (ch = 0; ch < cfg->channels_out; ch++) {
-                (*pe_use)[gr][ch] *= f;
+                pe_use[gr][ch] *= f;
             }
         }
     }
-    gfc->iteration_loop(gfc, *pe_use, ms_ener_ratio, *masking);
+    gfc->iteration_loop(gfc, (const FLOAT (*)[2])pe_use, ms_ener_ratio, masking);
 
 
     /****************************************
@@ -553,7 +553,7 @@ lame_encode_mp3_frame(       /* Output */
         }
         gfc->sv_qnt.masking_lower = 1.0;
 
-        set_frame_pinfo(gfc, *masking);
+        set_frame_pinfo(gfc, masking);
     }
 
     ++gfc->ov_enc.frame_number;

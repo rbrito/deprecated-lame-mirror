@@ -131,8 +131,8 @@ extern  "C" {
     void    free_aligned(aligned_pointer_t * ptr);
 
 
-    typedef void (*iteration_loop_t) (lame_internal_flags * gfc,
-                                      FLOAT pe[2][2], FLOAT ms_ratio[2], III_psy_ratio ratio[2][2]);
+    typedef void (*iteration_loop_t) (lame_internal_flags * gfc, const FLOAT pe[2][2],
+                                      const FLOAT ms_ratio[2], const III_psy_ratio ratio[2][2]);
 
 
     /* "bit_stream.h" Type Definitions */

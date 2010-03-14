@@ -38,6 +38,7 @@
 #include <assert.h>
 #include <time.h>
 #include <string.h>
+#include <stdlib.h>
 
 #include "lame.h"
 #include "main.h"
@@ -366,7 +367,7 @@ decoder_progress_init(unsigned long n, int framesize)
     dp->frame_ctr = 0;
     dp->framesize = framesize;
     dp->samples = 0;
-    if (n != -1) {
+    if (n != -1ul) {
         if (framesize == 576 || framesize == 1152) {
             dp->frames_total = calcNumBlocks(n, framesize);
             dp->samples = 576 + calcEndPadding(n, framesize);

@@ -83,6 +83,8 @@ char   *strchr(), *strrchr();
 #endif
 
 
+static int c_main(int argc, char *argv[]);
+extern int lame_main(lame_t gf, int argc, char *argv[]);
 
 
 /************************************************************************
@@ -121,40 +123,6 @@ set_process_affinity()
 #endif
 }
 #endif
-
-extern int lame_main(lame_t gf, int argc, char** argv);
-
-
-int
-c_main(int argc, char **argv)
-{
-    lame_t  gf;
-    int     ret;
-
-#if macintosh
-    argc = ccommand(&argv);
-#endif
-#ifdef __EMX__
-    /* This gives wildcard expansion on Non-POSIX shells with OS/2 */
-    _wildcard(&argc, &argv);
-#endif
-#if defined( _WIN32 ) && !defined(__MINGW32__)
-    set_process_affinity();
-#endif
-
-    frontend_open_console();    
-    gf = lame_init(); /* initialize libmp3lame */
-    if (NULL == gf) {
-        error_printf("fatal error during initialization\n");
-        ret = 1;
-    }
-    else {
-        ret = lame_main(gf, argc, argv);
-        lame_close(gf);
-    }
-    frontend_close_console();
-    return ret;
-}
 
 
 /***********************************************************************
@@ -271,6 +239,7 @@ unsigned short* utf8ToUcs2(char const* mbstr) /* additional Byte-Order-Marker */
 }
 
 
+
 int wmain(int argc, wchar_t* argv[])
 {
   char **utf8_argv;
@@ -311,10 +280,43 @@ FILE* lame_fopen(char const* file, char const* mode)
     return fopen(file, mode);
 }
 
-int main(int argc, char** argv)
+int main(int argc, char *argv[])
 {
     return c_main(argc, argv);
 }
 
 #endif
 
+
+
+
+static int
+c_main(int argc, char *argv[])
+{
+    lame_t  gf;
+    int     ret;
+
+#if macintosh
+    argc = ccommand(&argv);
+#endif
+#ifdef __EMX__
+    /* This gives wildcard expansion on Non-POSIX shells with OS/2 */
+    _wildcard(&argc, &argv);
+#endif
+#if defined( _WIN32 ) && !defined(__MINGW32__)
+    set_process_affinity();
+#endif
+
+    frontend_open_console();    
+    gf = lame_init(); /* initialize libmp3lame */
+    if (NULL == gf) {
+        error_printf("fatal error during initialization\n");
+        ret = 1;
+    }
+    else {
+        ret = lame_main(gf, argc, argv);
+        lame_close(gf);
+    }
+    frontend_close_console();
+    return ret;
+}

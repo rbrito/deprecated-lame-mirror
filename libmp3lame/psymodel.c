@@ -1180,6 +1180,7 @@ L3psycho_anal_ns(lame_internal_flags * gfc,
         FLOAT   fftenergy[HBLKSIZE];
         FLOAT   fftenergy_s[3][HBLKSIZE_s];
 
+        const FLOAT (*const_fftenergy_s)[HBLKSIZE_s] = (const FLOAT (*)[HBLKSIZE_s])fftenergy_s;
 
         /*  rh 20040301: the following loops do access one off the limits
          *  so I increase  the array dimensions by one and initialize the
@@ -1318,7 +1319,7 @@ L3psycho_anal_ns(lame_internal_flags * gfc,
         /* compute masking thresholds for short blocks */
         for (sblock = 0; sblock < 3; sblock++) {
             FLOAT   enn, thmm;
-            compute_masking_s(gfc, fftenergy_s, eb_s, thr, chn, sblock);
+            compute_masking_s(gfc, const_fftenergy_s, eb_s, thr, chn, sblock);
             convert_partition2scalefac_s(gfc, eb_s, thr, chn, sblock);
 
             /****   short block pre-echo control   ****/
@@ -2308,6 +2309,9 @@ L3psycho_anal_vbr(lame_internal_flags * gfc,
     FLOAT   sub_short_factor[4][3];
     FLOAT   thmm;
     FLOAT   pcfact = 0.6f;
+    
+    const FLOAT (*const_eb)[CBANDS] = (const FLOAT (*)[CBANDS])eb;
+    const FLOAT (*const_fftenergy_s)[HBLKSIZE_s] = (const FLOAT (*)[HBLKSIZE_s])fftenergy_s;
 
     /* block type  */
     int     ns_attacks[4][4] = { {0, 0, 0, 0}, {0, 0, 0, 0}, {0, 0, 0, 0}, {0, 0, 0, 0} };
@@ -2343,7 +2347,7 @@ L3psycho_anal_vbr(lame_internal_flags * gfc,
         if ((uselongblock[0] + uselongblock[1]) == 2) {
             /* M/S channel */
             if (cfg->mode == JOINT_STEREO) {
-                vbrpsy_compute_MS_thresholds(eb, thr, gdl->mld_cb, gfc->ATH->cb_l,
+                vbrpsy_compute_MS_thresholds(const_eb, thr, gdl->mld_cb, gfc->ATH->cb_l,
                                              cfg->ATHlower * gfc->ATH->adjust, cfg->msfix,
                                              gdl->npart);
             }
@@ -2375,13 +2379,13 @@ L3psycho_anal_vbr(lame_internal_flags * gfc,
                     /* compute masking thresholds for short blocks */
                     wsamp_s = wsamp_S + ch01;
                     vbrpsy_compute_fft_s(gfc, buffer, chn, sblock, fftenergy_s, wsamp_s);
-                    vbrpsy_compute_masking_s(gfc, fftenergy_s, eb[chn], thr[chn], chn, sblock);
+                    vbrpsy_compute_masking_s(gfc, const_fftenergy_s, eb[chn], thr[chn], chn, sblock);
                 }
             }
             if ((uselongblock[0] + uselongblock[1]) == 0) {
                 /* M/S channel */
                 if (cfg->mode == JOINT_STEREO) {
-                    vbrpsy_compute_MS_thresholds(eb, thr, gds->mld_cb, gfc->ATH->cb_s,
+                    vbrpsy_compute_MS_thresholds(const_eb, thr, gds->mld_cb, gfc->ATH->cb_s,
                                                  cfg->ATHlower * gfc->ATH->adjust, cfg->msfix,
                                                  gds->npart);
                 }
