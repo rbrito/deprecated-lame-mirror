@@ -54,7 +54,7 @@
 			/>
 			<Tool
 				Name="VCResourceCompilerTool"
-				PreprocessorDefinitions="NDEBUG"
+				PreprocessorDefinitions="NDEBUG;_APP=$(TargetFileName)"
 				Culture="1033"
 			/>
 			<Tool
@@ -413,6 +413,10 @@
 				>
 			</File>
 		</Filter>
+		<File
+			RelativePath="..\libmp3lame\lame.rc"
+			>
+		</File>
 		<File
 			RelativePath="..\frontend\..\README.WINGTK"
 			>
