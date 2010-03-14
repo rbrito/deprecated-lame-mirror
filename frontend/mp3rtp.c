@@ -85,7 +85,7 @@
 static unsigned int
 maxvalue(int Buffer[2][1152])
 {
-    unsigned int max = 0;
+    int     max = 0;
     int     i;
 
     for (i = 0; i < 1152; i++) {
@@ -98,11 +98,10 @@ maxvalue(int Buffer[2][1152])
 }
 
 static void
-levelmessage(unsigned int maxv)
+levelmessage(unsigned int maxv, int* maxx, int* tmpx)
 {
     char    buff[] = "|  .  |  .  |  .  |  .  |  .  |  .  |  .  |  .  |  .  |  .  |  \r";
-    static unsigned int max = 0;
-    static unsigned int tmp = 0;
+    int     tmp = *tmpx, max = *maxx;
 
     buff[tmp] = '+';
     tmp = (maxv * 61 + 16384) / (32767 + 16384 / 61);
@@ -114,6 +113,8 @@ levelmessage(unsigned int maxv)
     buff[tmp] = '#';
     console_printf(buff);
     console_flush();
+    *maxx = max;
+    *tmpx = tmp;
 }
 
 
@@ -134,6 +135,7 @@ lame_main(lame_t gf, int argc, char **argv)
     char    outPath[PATH_MAX + 1];
     int     Buffer[2][1152];
 
+    int     maxx = 0, tmpx = 0;
     int     ret;
     int     wavsamples;
     int     mp3bytes;
@@ -228,7 +230,7 @@ lame_main(lame_t gf, int argc, char **argv)
 
     /* encode until we hit EOF */
     while ((wavsamples = get_audio(gf, Buffer)) > 0) { /* read in 'wavsamples' samples */
-        levelmessage(maxvalue(Buffer));
+        levelmessage(maxvalue(Buffer), &maxx, &tmpx);
         mp3bytes = lame_encode_buffer_int(gf, /* encode the frame */
                                           Buffer[0], Buffer[1], wavsamples,
                                           mp3buffer, sizeof(mp3buffer));

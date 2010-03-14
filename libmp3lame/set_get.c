@@ -2121,7 +2121,7 @@ lame_get_totalframes(const lame_global_flags * gfp)
             unsigned long end_padding = 0;
 
             /* estimate based on user set num_samples: */
-            if (pcm_samples_to_encode == -1ul) {
+            if (pcm_samples_to_encode == (0ul-1ul)) {
                 return 0;
             }
             if (gfp->samplerate_in != gfp->samplerate_out && gfp->samplerate_in > 0) {
