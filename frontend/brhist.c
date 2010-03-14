@@ -25,8 +25,6 @@
 #include <config.h>
 #endif
 
-#ifdef BRHIST
-
 /* basic #define's */
 
 #ifndef BRHIST_WIDTH
@@ -385,4 +383,4 @@ brhist_jump_back(void)
  * But one day, for one kind of terminal, that was not enough.)
  */
 
-#endif /* ifdef BRHIST */
+

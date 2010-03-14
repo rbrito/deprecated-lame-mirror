@@ -44,10 +44,7 @@
 #include "main.h"
 #include "lametime.h"
 #include "timestatus.h"
-
-#if defined(BRHIST)
-# include "brhist.h"
-#endif
+#include "brhist.h"
 #include "console.h"
 
 #ifdef WITH_DMALLOC
@@ -292,17 +289,13 @@ encoder_progress( lame_global_flags const* gf )
             }
             global_encoder_progress.last_time = GetRealTime(); /* from now! disp_time seconds */
         }
-#ifdef BRHIST
         if (global_ui_config.brhist) {
             brhist_jump_back();
         }
-#endif
         timestatus(gf);
-#ifdef BRHIST
         if (global_ui_config.brhist) {
             brhist_disp(gf);
         }
-#endif
         console_flush();
     }
 }
@@ -311,17 +304,13 @@ void
 encoder_progress_end( lame_global_flags const* gf )
 {
     if (global_ui_config.silent <= 0) {
-#ifdef BRHIST
         if (global_ui_config.brhist) {
             brhist_jump_back();
         }
-#endif
         timestatus(gf);
-#ifdef BRHIST
         if (global_ui_config.brhist) {
             brhist_disp(gf);
         }
-#endif
         timestatus_finish();
     }
 }

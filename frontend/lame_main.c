@@ -98,7 +98,6 @@ char   *strchr(), *strrchr();
 static void
 brhist_init_package(lame_global_flags * gf)
 {
-#ifdef BRHIST
     if (global_ui_config.brhist) {
         if (brhist_init(gf, lame_get_VBR_min_bitrate_kbps(gf), lame_get_VBR_max_bitrate_kbps(gf))) {
             /* fail to initialize */
@@ -108,7 +107,6 @@ brhist_init_package(lame_global_flags * gf)
     else {
         brhist_init(gf, 128, 128); /* Dirty hack */
     }
-#endif
 }
 
 

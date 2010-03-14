@@ -5,10 +5,7 @@ include $(top_srcdir)/Makefile.am.global
 bin_PROGRAMS = @WITH_FRONTEND@ @WITH_MP3RTP@ @WITH_MP3X@
 EXTRA_PROGRAMS = lame$(EXEEXT) mp3rtp$(EXEEXT) mp3x$(EXEEXT)
 
-brhist_sources = brhist.c brhist.h
-
 EXTRA_DIST = \
-	$(brhist_sources) \
 	lame_vc8.vcproj \
 	mp3x_vc8.vcproj \
 	amiga_mpega.c
@@ -17,6 +14,7 @@ DEFS = @DEFS@ @CONFIG_DEFS@
 
 common_sources = \
 	main.c \
+	brhist.c \
 	console.c \
 	get_audio.c \
 	lametime.c \
@@ -25,6 +23,7 @@ common_sources = \
 	timestatus.c
 
 noinst_HEADERS = \
+	brhist.h \
 	console.h \
 	get_audio.h \
 	gtkanal.h \
@@ -35,21 +34,9 @@ noinst_HEADERS = \
 	portableio.h \
 	timestatus.h
 
-## EXTRA_lame__EXEEXT__SOURCES = $(brhist_sources)
-## EXTRA_mp3rtp__EXEEXT__SOURCES = $(brhist_sources)
-## EXTRA_mp3x__EXEEXT__SOURCES = $(brhist_sources)
-
-if WITH_BRHIST
-lame_SOURCES = lame_main.c $(common_sources) $(brhist_sources)
-mp3rtp_SOURCES = mp3rtp.c rtp.c rtp.h $(common_sources) \
-	$(brhist_sources)
-mp3x_SOURCES = mp3x.c gtkanal.c gpkplotting.c \
-	$(common_sources) $(brhist_sources)
-else
 lame_SOURCES = lame_main.c $(common_sources)
-mp3rtp_SOURCES = mp3rtp.c rtp.c rtp.h $(common_sources)
+mp3rtp_SOURCES = mp3rtp.c rtp.c $(common_sources)
 mp3x_SOURCES = mp3x.c gtkanal.c gpkplotting.c $(common_sources)
-endif
 
 CFLAGS = @CFLAGS@ @GTK_CFLAGS@ @FRONTEND_CFLAGS@ @SNDFILE_CFLAGS@
 LDFLAGS = @LDFLAGS@ @FRONTEND_LDFLAGS@ @SNDFILE_LIBS@

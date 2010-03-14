@@ -56,8 +56,8 @@ am__objects_1 = main$U.$(OBJEXT) console$U.$(OBJEXT) get_audio$U.$(OBJEXT) \
 	lametime$U.$(OBJEXT) parse$U.$(OBJEXT) portableio$U.$(OBJEXT) \
 	timestatus$U.$(OBJEXT)
 am__objects_2 = brhist$U.$(OBJEXT)
-@WITH_BRHIST_FALSE@am_lame_OBJECTS = main$U.$(OBJEXT) $(am__objects_1)
-@WITH_BRHIST_TRUE@am_lame_OBJECTS = main$U.$(OBJEXT) $(am__objects_1) \
+@WITH_BRHIST_FALSE@am_lame_OBJECTS = lame_main$U.$(OBJEXT) $(am__objects_1)
+@WITH_BRHIST_TRUE@am_lame_OBJECTS = lame_main$U.$(OBJEXT) $(am__objects_1) \
 @WITH_BRHIST_TRUE@	$(am__objects_2)
 lame_OBJECTS = $(am_lame_OBJECTS)
 lame_LDADD = $(LDADD)

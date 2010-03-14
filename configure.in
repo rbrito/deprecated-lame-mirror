@@ -408,7 +408,7 @@ no)
 	AC_MSG_RESULT(${CONFIG_EFENCE})
 	;;
 *)
-	AC_MSG_ERROR(bad value »${CONFIG_EFENCE}« for efence option)
+	AC_MSG_ERROR(bad value ï¿½${CONFIG_EFENCE}ï¿½ for efence option)
 	;;
 esac
 
@@ -471,7 +471,7 @@ no)
 	AC_DEFINE(NOANALYSIS, 1, build without hooks for analyzer)
 	;;
 *)
-	AC_MSG_ERROR(bad value »${CONFIG_ANALYZER}« for analyzer-hooks option)
+	AC_MSG_ERROR(bad value ï¿½${CONFIG_ANALYZER}ï¿½ for analyzer-hooks option)
 	;;
 esac
 AC_MSG_RESULT($CONFIG_ANALYZER)
@@ -482,29 +482,13 @@ AC_MSG_CHECKING(use of mpg123 decoder)
 AC_ARG_ENABLE(decoder, 
   [  --disable-decoder          Exclude mpg123 decoder],
   CONFIG_DECODER="${enableval}", CONFIG_DECODER="yes")
-AC_ARG_ENABLE(decode-layer1, 
-  [  --enable-decode-layer1     Include layer1 decoding [default=no]],
-  CONFIG_DECODER_L1="${enableval}", CONFIG_DECODER_L1="no")
-AC_ARG_ENABLE(decode-layer2, 
-  [  --disable-decode-layer2    Exclude layer2 decoding],
-  CONFIG_DECODER_L2="${enableval}", CONFIG_DECODER_L2="yes")
 
 AM_CONDITIONAL(LIB_WITH_DECODER, test "x${CONFIG_DECODER}" = "xyes")
 
 if test "${CONFIG_DECODER}" != "no" ; then
-	CONFIG_DECODER="yes (Layer"
+	CONFIG_DECODER="yes (Layer 1, 2, 3)"
 	AC_DEFINE(HAVE_MPGLIB, 1, build with mpglib support)
 	AC_DEFINE(DECODE_ON_THE_FLY, 1, allow to compute a more accurate replaygain value)
-  
-	if test "${CONFIG_DECODER_L1}" != "no"; then
-		CONFIG_DECODER="${CONFIG_DECODER} 1,"
-		AC_DEFINE(USE_LAYER_1, 1, build with layer 1 decoding)
-	fi
-	if test "${CONFIG_DECODER_L2}" != "no"; then
-		CONFIG_DECODER="${CONFIG_DECODER} 2,"
-		AC_DEFINE(USE_LAYER_2, 1, build with layer 2 decoding)
-	fi
-	CONFIG_DECODER="${CONFIG_DECODER} 3)"
 fi
 AC_MSG_RESULT($CONFIG_DECODER)
 
@@ -625,34 +609,6 @@ case $host in
 esac
 
 
-dnl configure use of VBR bitrate histogram
-dnl todo: always use yes as default, use simulation instead ?
-AC_MSG_CHECKING(use of VBR bitrate histogram)
-if test "x${HAVE_TERMCAP}" != "x"; then
-  TERMCAP_DEFAULT="yes"
-else
-  TERMCAP_DEFAULT="no"
-fi
-AC_ARG_ENABLE(brhist, 
-  [  --disable-brhist          Include the VBR bitrate histogram feature]
-  [                           [default=yes]],
-  CONFIG_BRHIST="${enableval}", CONFIG_BRHIST="yes")
-if test "${CONFIG_BRHIST}" != "no" ; then
-	AC_DEFINE(BRHIST, 1, enable VBR bitrate histogram)
-
-	if test "${TERMCAP_DEFAULT}" = "yes" ; then
-		FRONTEND_LDADD="-l${HAVE_TERMCAP} ${FRONTEND_LDADD}"
-		CONFIG_BRHIST="yes, with ${HAVE_TERMCAP}"
-		AC_DEFINE(HAVE_TERMCAP, 1, have termcap)
-	else
-		CONFIG_BRHIST="yes, simulated termcap"
-	fi
-fi
-AC_MSG_RESULT(${CONFIG_BRHIST})
-AM_CONDITIONAL(WITH_BRHIST, test "${CONFIG_BRHIST}" != "no")
-
-
-
 dnl ### processor specific options ###
 WITH_VECTOR=no
 case $host_cpu in
@@ -712,7 +668,7 @@ yes)
 	AC_DEFINE(FLOAT8, float, float instead of double)
 	;;
 *)
-	AC_MSG_ERROR(bad value »${CONFIG_ALLFLOAT}« for all-float option)
+	AC_MSG_ERROR(bad value ï¿½${CONFIG_ALLFLOAT}ï¿½ for all-float option)
 	;;
 esac
 AC_MSG_RESULT(${CONFIG_ALLFLOAT})
@@ -942,7 +898,7 @@ if test "x$GCC" = "xyes"; then
 		esac
 		;;
 	*)
-		AC_MSG_ERROR(bad value »${CONFIG_EXPOPT}« for expopt option)
+		AC_MSG_ERROR(bad value ï¿½${CONFIG_EXPOPT}ï¿½ for expopt option)
 		;;
 	esac
 
@@ -991,7 +947,7 @@ if test "x$GCC" = "xyes"; then
 		OPTIMIZATION="${DEBUG_NORM_OPT}"
 		;;
 	*)
-		AC_MSG_ERROR(bad value »${CONFIG_DEBUG}« for debug option)
+		AC_MSG_ERROR(bad value ï¿½${CONFIG_DEBUG}ï¿½ for debug option)
 	esac
 
 	AC_MSG_RESULT(${CONFIG_DEBUG})
