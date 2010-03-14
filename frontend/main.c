@@ -54,6 +54,14 @@ char   *strchr(), *strrchr();
 #include <unistd.h>
 #endif
 
+#ifdef __OS2__
+#include <os2.h>
+#define PRTYC_IDLE 1
+#define PRTYC_REGULAR 2
+#define PRTYD_MINIMUM -31
+#define PRTYD_MAXIMUM 31
+#endif
+
 #if defined(_WIN32)
 # include <windows.h>
 #endif
@@ -67,11 +75,7 @@ char   *strchr(), *strrchr();
 #include "lame.h"
 
 #include "console.h"
-#include "brhist.h"
-#include "parse.h"
 #include "main.h"
-#include "get_audio.h"
-#include "timestatus.h"
 
 /* PLL 14/04/2000 */
 #if macintosh
@@ -121,6 +125,132 @@ set_process_affinity()
     }
 #endif
 #endif
+}
+#endif
+
+#if defined(WIN32)
+
+/**
+ *  Long Filename support for the WIN32 platform
+ *
+ */
+
+void
+dosToLongFileName(char *fn)
+{
+    const int MSIZE = PATH_MAX + 1 - 4; /*  we wanna add ".mp3" later */
+    WIN32_FIND_DATAA lpFindFileData;
+    HANDLE  h = FindFirstFileA(fn, &lpFindFileData);
+    if (h != INVALID_HANDLE_VALUE) {
+        int     a;
+        char   *q, *p;
+        FindClose(h);
+        for (a = 0; a < MSIZE; a++) {
+            if ('\0' == lpFindFileData.cFileName[a])
+                break;
+        }
+        if (a >= MSIZE || a == 0)
+            return;
+        q = strrchr(fn, '\\');
+        p = strrchr(fn, '/');
+        if (p - q > 0)
+            q = p;
+        if (q == NULL)
+            q = strrchr(fn, ':');
+        if (q == NULL)
+            strncpy(fn, lpFindFileData.cFileName, a);
+        else {
+            a += q - fn + 1;
+            if (a >= MSIZE)
+                return;
+            strncpy(++q, lpFindFileData.cFileName, MSIZE - a);
+        }
+    }
+}
+
+BOOL
+SetPriorityClassMacro(DWORD p)
+{
+    HANDLE  op = GetCurrentProcess();
+    return SetPriorityClass(op, p);
+}
+
+void
+setProcessPriority(int Priority)
+{
+    switch (Priority) {
+    case 0:
+    case 1:
+        SetPriorityClassMacro(IDLE_PRIORITY_CLASS);
+        console_printf("==> Priority set to Low.\n");
+        break;
+    default:
+    case 2:
+        SetPriorityClassMacro(NORMAL_PRIORITY_CLASS);
+        console_printf("==> Priority set to Normal.\n");
+        break;
+    case 3:
+    case 4:
+        SetPriorityClassMacro(HIGH_PRIORITY_CLASS);
+        console_printf("==> Priority set to High.\n");
+        break;
+    }
+}
+#endif
+
+
+#if defined(__OS2__)
+/* OS/2 priority functions */
+static void
+setProcessPriority(int Priority)
+{
+    int     rc;
+
+    switch (Priority) {
+
+    case 0:
+        rc = DosSetPriority(0, /* Scope: only one process */
+                            PRTYC_IDLE, /* select priority class (idle, regular, etc) */
+                            0, /* set delta */
+                            0); /* Assume current process */
+        console_printf("==> Priority set to 0 (Low priority).\n");
+        break;
+
+    case 1:
+        rc = DosSetPriority(0, /* Scope: only one process */
+                            PRTYC_IDLE, /* select priority class (idle, regular, etc) */
+                            PRTYD_MAXIMUM, /* set delta */
+                            0); /* Assume current process */
+        console_printf("==> Priority set to 1 (Medium priority).\n");
+        break;
+
+    case 2:
+        rc = DosSetPriority(0, /* Scope: only one process */
+                            PRTYC_REGULAR, /* select priority class (idle, regular, etc) */
+                            PRTYD_MINIMUM, /* set delta */
+                            0); /* Assume current process */
+        console_printf("==> Priority set to 2 (Regular priority).\n");
+        break;
+
+    case 3:
+        rc = DosSetPriority(0, /* Scope: only one process */
+                            PRTYC_REGULAR, /* select priority class (idle, regular, etc) */
+                            0, /* set delta */
+                            0); /* Assume current process */
+        console_printf("==> Priority set to 3 (High priority).\n");
+        break;
+
+    case 4:
+        rc = DosSetPriority(0, /* Scope: only one process */
+                            PRTYC_REGULAR, /* select priority class (idle, regular, etc) */
+                            PRTYD_MAXIMUM, /* set delta */
+                            0); /* Assume current process */
+        console_printf("==> Priority set to 4 (Maximum priority). I hope you enjoy it :)\n");
+        break;
+
+    default:
+        console_printf("==> Invalid priority specified! Assuming idle priority.\n");
+    }
 }
 #endif
 

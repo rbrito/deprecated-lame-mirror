@@ -66,7 +66,6 @@ char   *strchr(), *strrchr();
 #include "main.h"
 #include "get_audio.h"
 #include "portableio.h"
-#include "timestatus.h"
 #include "lametime.h"
 #include "console.h"
 

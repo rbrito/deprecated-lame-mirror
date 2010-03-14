@@ -67,7 +67,6 @@ char   *strchr(), *strrchr();
 #include "lame.h"
 
 #include "console.h"
-#include "brhist.h"
 #include "parse.h"
 #include "main.h"
 #include "get_audio.h"
@@ -93,21 +92,6 @@ char   *strchr(), *strrchr();
 * psychoacoustic model.
 *
 ************************************************************************/
-
-
-static void
-brhist_init_package(lame_global_flags * gf)
-{
-    if (global_ui_config.brhist) {
-        if (brhist_init(gf, lame_get_VBR_min_bitrate_kbps(gf), lame_get_VBR_max_bitrate_kbps(gf))) {
-            /* fail to initialize */
-            global_ui_config.brhist = 0;
-        }
-    }
-    else {
-        brhist_init(gf, 128, 128); /* Dirty hack */
-    }
-}
 
 
 static int
@@ -532,7 +516,6 @@ lame_encoder(lame_global_flags * gf, FILE * outf, int nogap, char *inPath, char 
 {
     int     ret;
 
-    brhist_init_package(gf);
     ret = lame_encoder_loop(gf, outf, nogap, inPath, outPath);
     fclose(outf); /* close the output file */
     close_infile(); /* close the input file */

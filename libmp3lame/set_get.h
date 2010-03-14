@@ -73,6 +73,8 @@ extern  "C" {
 /*presets*/
     int     apply_preset(lame_global_flags *, int preset, int enforce);
 
+    void CDECL lame_set_tune(lame_t, float); /* FOR INTERNAL USE ONLY */
+    void CDECL lame_set_msfix(lame_t gfp, double msfix);
 
 
 #if defined(__cplusplus)

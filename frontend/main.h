@@ -92,6 +92,9 @@ extern char* utf8ToLocal8Bit(const char* str);
 extern unsigned short* utf8ToUcs2(char const* str);
 extern char* utf8ToLatin1(char const* str);
 
+extern void dosToLongFileName(char* filename);
+extern void setProcessPriority(int priority);
+
 #if defined(__cplusplus)
 }
 #endif

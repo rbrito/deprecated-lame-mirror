@@ -45,22 +45,13 @@ char   *strchr(), *strrchr();
 # endif
 #endif
 
-#ifdef __OS2__
-#include <os2.h>
-#define PRTYC_IDLE 1
-#define PRTYC_REGULAR 2
-#define PRTYD_MINIMUM -31
-#define PRTYD_MAXIMUM 31
-#endif
 
 #ifdef HAVE_LIMITS_H
 # include <limits.h>
 #endif
 
 #include "lame.h"
-#include "set_get.h"
 
-#include "brhist.h"
 #include "parse.h"
 #include "main.h"
 #include "get_audio.h"
@@ -84,6 +75,7 @@ char   *strchr(), *strrchr();
 #endif
 
 #if (INTERNAL_OPTS!=0)
+#include "set_get.h"
 #define DEV_HELP(a) a
 #else
 #define DEV_HELP(a)
@@ -91,7 +83,6 @@ char   *strchr(), *strrchr();
 
 static int const lame_alpha_version_enabled = LAME_ALPHA_VERSION;
 static int const internal_opts_enabled = INTERNAL_OPTS;
-extern void lame_set_tune(lame_t, float); /* FOR INTERNAL USE ONLY */
 
 /* GLOBAL VARIABLES.  set by parse_args() */
 /* we need to clean this up */
@@ -110,143 +101,6 @@ RawPCMConfig global_raw_pcm =
 };
 
 
-/**
- *  Long Filename support for the WIN32 platform
- *
- */
-#ifdef WIN32
-#include <winbase.h>
-static void
-dosToLongFileName(char *fn)
-{
-    const int MSIZE = PATH_MAX + 1 - 4; /*  we wanna add ".mp3" later */
-    WIN32_FIND_DATAA lpFindFileData;
-    HANDLE  h = FindFirstFileA(fn, &lpFindFileData);
-    if (h != INVALID_HANDLE_VALUE) {
-        int     a;
-        char   *q, *p;
-        FindClose(h);
-        for (a = 0; a < MSIZE; a++) {
-            if ('\0' == lpFindFileData.cFileName[a])
-                break;
-        }
-        if (a >= MSIZE || a == 0)
-            return;
-        q = strrchr(fn, '\\');
-        p = strrchr(fn, '/');
-        if (p - q > 0)
-            q = p;
-        if (q == NULL)
-            q = strrchr(fn, ':');
-        if (q == NULL)
-            strncpy(fn, lpFindFileData.cFileName, a);
-        else {
-            a += q - fn + 1;
-            if (a >= MSIZE)
-                return;
-            strncpy(++q, lpFindFileData.cFileName, MSIZE - a);
-        }
-    }
-}
-#endif
-#if defined(WIN32)
-#include <windows.h>
-BOOL
-SetPriorityClassMacro(DWORD p)
-{
-    HANDLE  op = GetCurrentProcess();
-    return SetPriorityClass(op, p);
-}
-
-static void
-setWin32Priority(lame_global_flags * gfp, int Priority)
-{
-    (void) gfp;
-    switch (Priority) {
-    case 0:
-    case 1:
-        SetPriorityClassMacro(IDLE_PRIORITY_CLASS);
-        console_printf("==> Priority set to Low.\n");
-        break;
-    default:
-    case 2:
-        SetPriorityClassMacro(NORMAL_PRIORITY_CLASS);
-        console_printf("==> Priority set to Normal.\n");
-        break;
-    case 3:
-    case 4:
-        SetPriorityClassMacro(HIGH_PRIORITY_CLASS);
-        console_printf("==> Priority set to High.\n");
-        break;
-    }
-}
-#endif
-
-
-#if defined(__OS2__)
-/* OS/2 priority functions */
-static int
-setOS2Priority(lame_global_flags * gfp, int Priority)
-{
-    int     rc;
-
-    switch (Priority) {
-
-    case 0:
-        rc = DosSetPriority(0, /* Scope: only one process */
-                            PRTYC_IDLE, /* select priority class (idle, regular, etc) */
-                            0, /* set delta */
-                            0); /* Assume current process */
-        console_printf("==> Priority set to 0 (Low priority).\n");
-        break;
-
-    case 1:
-        rc = DosSetPriority(0, /* Scope: only one process */
-                            PRTYC_IDLE, /* select priority class (idle, regular, etc) */
-                            PRTYD_MAXIMUM, /* set delta */
-                            0); /* Assume current process */
-        console_printf("==> Priority set to 1 (Medium priority).\n");
-        break;
-
-    case 2:
-        rc = DosSetPriority(0, /* Scope: only one process */
-                            PRTYC_REGULAR, /* select priority class (idle, regular, etc) */
-                            PRTYD_MINIMUM, /* set delta */
-                            0); /* Assume current process */
-        console_printf("==> Priority set to 2 (Regular priority).\n");
-        break;
-
-    case 3:
-        rc = DosSetPriority(0, /* Scope: only one process */
-                            PRTYC_REGULAR, /* select priority class (idle, regular, etc) */
-                            0, /* set delta */
-                            0); /* Assume current process */
-        console_printf("==> Priority set to 3 (High priority).\n");
-        break;
-
-    case 4:
-        rc = DosSetPriority(0, /* Scope: only one process */
-                            PRTYC_REGULAR, /* select priority class (idle, regular, etc) */
-                            PRTYD_MAXIMUM, /* set delta */
-                            0); /* Assume current process */
-        console_printf("==> Priority set to 4 (Maximum priority). I hope you enjoy it :)\n");
-        break;
-
-    default:
-        console_printf("==> Invalid priority specified! Assuming idle priority.\n");
-    }
-
-
-    return 0;
-}
-#endif
-
-
-extern int
-id3tag_set_textinfo_ucs2(lame_global_flags* gfp, char const* id, unsigned short const* text);
-
-extern int
-id3tag_set_comment_ucs2(lame_global_flags* gfp, char const* lng, unsigned short const* desc, unsigned short const* text);
 
 /* possible text encodings */
 typedef enum TextEncoding
@@ -1057,10 +911,6 @@ presets_longinfo_dm(FILE * msgfp)
 }
 
 
-extern void lame_set_msfix(lame_t gfp, double msfix);
-
-
-
 static int
 presets_set(lame_t gfp, int fast, int cbr, const char *preset_name, const char *ProgramName)
 {
@@ -1072,8 +922,6 @@ presets_set(lame_t gfp, int fast, int cbr, const char *preset_name, const char *
         presets_longinfo_dm(stdout);
         return -1;
     }
-
-
 
     /*aliases for compatibility with old presets */
 
@@ -1662,7 +1510,7 @@ parse_args(lame_global_flags * gfp, int argc, char **argv,
                 T_ELIF("ogginput")
                     error_printf("sorry, vorbis support in LAME is deprecated.\n");
                 return -1;
-
+#if INTERNAL_OPTS
                 T_ELIF_INTERNAL("noshort")
                     (void) lame_set_no_short_blocks(gfp, 1);
 
@@ -1671,7 +1519,7 @@ parse_args(lame_global_flags * gfp, int argc, char **argv,
 
                 T_ELIF_INTERNAL("allshort")
                     (void) lame_set_force_short_blocks(gfp, 1);
-
+#endif
 
                 T_ELIF("decode")
                     (void) lame_set_decode_only(gfp, 1);
@@ -1757,36 +1605,32 @@ parse_args(lame_global_flags * gfp, int argc, char **argv,
                 if (endptr != nextArg) {
                     argUsed = 1;
                 }
-# if defined(__OS2__)
-                setOS2Priority(gfp, priority);
-# else /* WIN32 */
-                setWin32Priority(gfp, priority);
-# endif
+                setProcessPriority(priority);
 #endif
 
                 /* options for ID3 tag */
                 T_ELIF("tt")
                     argUsed = 1;
-                    id3_tag(gfp, 't', TENC_RAW, nextArg);
+                    id3_tag(gfp, 't', TENC_LATIN1, nextArg);
 
                 T_ELIF("ta")
                     argUsed = 1;
-                id3_tag(gfp, 'a', TENC_RAW, nextArg);
+                    id3_tag(gfp, 'a', TENC_LATIN1, nextArg);
 
                 T_ELIF("tl")
                     argUsed = 1;
-                id3_tag(gfp, 'l', TENC_RAW, nextArg);
+                    id3_tag(gfp, 'l', TENC_LATIN1, nextArg);
 
                 T_ELIF("ty")
                     argUsed = 1;
-                id3_tag(gfp, 'y', TENC_RAW, nextArg);
+                    id3_tag(gfp, 'y', TENC_LATIN1, nextArg);
 
                 T_ELIF("tc")
                     argUsed = 1;
-                id3_tag(gfp, 'c', TENC_RAW, nextArg);
+                    id3_tag(gfp, 'c', TENC_LATIN1, nextArg);
 
                 T_ELIF("tn")
-                    int ret = id3_tag(gfp, 'n', TENC_RAW, nextArg);
+                    int ret = id3_tag(gfp, 'n', TENC_LATIN1, nextArg);
                     argUsed = 1;
                     if (ret != 0) {
                         if (0 == ignore_tag_errors) {
@@ -1808,7 +1652,7 @@ parse_args(lame_global_flags * gfp, int argc, char **argv,
                     }
 
                 T_ELIF("tg")
-                    int ret = id3_tag(gfp, 'g', TENC_RAW, nextArg);
+                    int ret = id3_tag(gfp, 'g', TENC_LATIN1, nextArg);
                     argUsed = 1;
                     if (ret != 0) {
                         if (0 == ignore_tag_errors) {
@@ -1840,7 +1684,7 @@ parse_args(lame_global_flags * gfp, int argc, char **argv,
 
                 T_ELIF("tv")
                     argUsed = 1;
-                    if (id3_tag(gfp, 'v', TENC_RAW, nextArg)) {
+                    if (id3_tag(gfp, 'v', TENC_LATIN1, nextArg)) {
                         if (global_ui_config.silent < 9) {
                             error_printf("Invalid field value: '%s'. Ignored\n", nextArg);
                         }
@@ -1855,7 +1699,7 @@ parse_args(lame_global_flags * gfp, int argc, char **argv,
                     }
 
                 T_ELIF("ignore-tag-errors")
-                        ignore_tag_errors = 1;
+                    ignore_tag_errors = 1;
 
                 T_ELIF("add-id3v2")
                     id3tag_add_v2(gfp);
@@ -1979,7 +1823,7 @@ parse_args(lame_global_flags * gfp, int argc, char **argv,
                     return -1;
                 }
                 lame_set_compression_ratio(gfp, (float) val);
-
+#if INTERNAL_OPTS
                 T_ELIF_INTERNAL("notemp")
                     (void) lame_set_useTemporal(gfp, 0);
 
@@ -2066,7 +1910,7 @@ parse_args(lame_global_flags * gfp, int argc, char **argv,
                         k += 64;
                     lame_set_exp_nspsytune(gfp, lame_get_exp_nspsytune(gfp) | (k << 20));
                 }
-
+#endif
                 /* some more GNU-ish options could be added
                  * brief         => few messages on screen (name, status report)
                  * o/output file => specifies output filename
@@ -2150,7 +1994,7 @@ parse_args(lame_global_flags * gfp, int argc, char **argv,
 
                 T_ELIF("swap-channel")
                     global_reader.swap_channel = 1;
-
+#if INTERNAL_OPTS
                 T_ELIF_INTERNAL("tune") /*without helptext */
                     argUsed = 1;
                     lame_set_tune(gfp, (float) atof(nextArg));
@@ -2211,7 +2055,7 @@ parse_args(lame_global_flags * gfp, int argc, char **argv,
                 T_ELIF_INTERNAL("athaa-type") /*  switch for developing, no DOCU */
                     argUsed = 1; /* once was 1:Gaby, 2:Robert, 3:Jon, else:off */
                 lame_set_athaa_type(gfp, atoi(nextArg)); /* now: 0:off else:Jon */
-
+#endif
                 T_ELIF ("athaa-sensitivity")
                     argUsed=1;
                 lame_set_athaa_sensitivity(gfp, (float) atof(nextArg));
