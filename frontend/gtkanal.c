@@ -256,7 +256,7 @@ plot_frame(void)
     plotting_data *pplot2 = NULL;
 
     double  en, samp;
-    int     sampindex, version = 0;
+    /*int     sampindex, version = 0;*/
     int     barthick;
     static int firstcall = 1;
     static GdkColor *barcolor, *color, *grcolor[2];
@@ -315,7 +315,7 @@ plot_frame(void)
         samp = pplot1->sampfreq;
     else
         samp = 1;
-    sampindex = SmpFrqIndex((long) samp, &version);
+    /*sampindex = SmpFrqIndex((long) samp, &version);*/
 
     ch = gtkinfo.chflag;
 
