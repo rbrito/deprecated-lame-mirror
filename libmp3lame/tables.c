@@ -535,6 +535,28 @@ const int samplerate_table[3][4] = {
     {11025, 12000, 8000, -1}, /* MPEG 2.5 */
 };
 
+int
+lame_get_bitrate(int mpeg_version, int table_index)
+{
+    if (0 <= mpeg_version && mpeg_version <= 2) {
+        if (0 <= table_index && table_index <= 15) {
+            return bitrate_table[mpeg_version][table_index];
+        }
+    }
+    return -1;
+}
+
+int
+lame_get_samplerate(int mpeg_version, int table_index)
+{
+    if (0 <= mpeg_version && mpeg_version <= 2) {
+        if (0 <= table_index && table_index <= 3) {
+            return samplerate_table[mpeg_version][table_index];
+        }
+    }
+    return -1;
+}
+
 
 /* This is the scfsi_band table from 2.4.2.7 of the IS */
 const int scfsi_band[5] = { 0, 6, 11, 16, 21 };

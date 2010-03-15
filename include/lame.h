@@ -1236,9 +1236,13 @@ int CDECL id3tag_set_comment_ucs2(lame_global_flags * gfp,
 *               1: MPEG-1   values  (sample frequencies 32...48 kHz)
 *               2: MPEG-2.5 values  (sample frequencies  8...12 kHz)
 ***********************************************************************/
-extern const int      bitrate_table    [3] [16];
-extern const int      samplerate_table [3] [ 4];
 
+extern const int     bitrate_table    [3][16];
+extern const int     samplerate_table [3][ 4];
+
+/* access functions for use in DLL, global vars are not exported */
+int CDECL lame_get_bitrate(int mpeg_version, int table_index);
+int CDECL lame_get_samplerate_table(int mpeg_version, int table_index);
 
 
 /* maximum size of albumart image (128KB), which affects LAME_MAXMP3BUFFER

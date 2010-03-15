@@ -33,6 +33,7 @@
 #include "bitstream.h"
 #include "VbrTag.h"
 #include "lame_global_flags.h"
+#include "tables.h"
 
 #ifdef __sun__
 /* woraround for SunOS 4.x, it has SEEK_* defined here */

@@ -45,6 +45,7 @@
 #include "psymodel.h"
 #include "version.h"
 #include "VbrTag.h"
+#include "tables.h"
 
 
 #if defined(__FreeBSD__) && !defined(__alpha__)

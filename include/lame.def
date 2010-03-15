@@ -244,8 +244,8 @@ lame_set_VBR_quality	@167
 lame_get_VBR_quality	@168
 
 
-bitrate_table		@500
-samplerate_table	@501
+lame_get_bitrate	@502
+lame_get_samplerate	@503
 
 lame_decode_init	@1000
 lame_decode		@1001

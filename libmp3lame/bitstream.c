@@ -40,6 +40,7 @@
 #include "gain_analysis.h"
 #include "VbrTag.h"
 #include "bitstream.h"
+#include "tables.h"
 
 
 
