@@ -342,7 +342,15 @@ int
 lame_set_quality(lame_global_flags * gfp, int quality)
 {
     if (is_lame_global_flags_valid(gfp)) {
-        gfp->quality = quality;
+        if (quality < 0) {
+            gfp->quality = 0;
+        }
+        else if (quality > 9) {
+            gfp->quality = 9;
+        }
+        else {
+            gfp->quality = quality;
+        }
         return 0;
     }
     return -1;

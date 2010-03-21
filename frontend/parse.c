@@ -326,10 +326,11 @@ id3_tag(lame_global_flags* gfp, int type, TextEncoding enc, char* str)
     switch (enc) 
     {
         default:
-        case TENC_RAW:    x = strdup(str);   break;
 #ifdef ID3TAGS_EXTENDED
         case TENC_LATIN1: x = toLatin1(str); break;
         case TENC_UCS2:   x = toUcs2(str);   break;
+#else
+        case TENC_RAW:    x = strdup(str);   break;
 #endif
     }
     switch (enc)
@@ -2121,17 +2122,7 @@ parse_args(lame_global_flags * gfp, int argc, char **argv,
 
                     case 'q':
                         argUsed = 1;
-                        {
-                            int     tmp_quality = atoi(arg);
-
-                            /* XXX should we move this into lame_set_quality()? */
-                            if (tmp_quality < 0)
-                                tmp_quality = 0;
-                            if (tmp_quality > 9)
-                                tmp_quality = 9;
-
-                            (void) lame_set_quality(gfp, tmp_quality);
-                        }
+                        (void) lame_set_quality(gfp, atoi(arg));
                         break;
                     case 'f':
                         (void) lame_set_quality(gfp, 7);

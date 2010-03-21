@@ -49,7 +49,6 @@
 
 /* In C++ the array first must be prototyped, why ? */
 
-extern const int tabsel_123[2][3][16];
 
     /* *INDENT-OFF* */
 const int tabsel_123 [2] [3] [16] = {
