@@ -4,6 +4,7 @@ include $(top_srcdir)/Makefile.am.global
 
 EXTRA_DIST = \
 	changelog \
+	compat \
 	control \
 	copyright \
 	libmp3lame0-dev.docs \
