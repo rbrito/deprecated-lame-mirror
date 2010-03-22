@@ -627,6 +627,10 @@
 				>
 			</File>
 			<File
+				RelativePath="..\mpglib\l2tables.h"
+				>
+			</File>
+			<File
 				RelativePath="..\mpglib\layer1.h"
 				>
 			</File>
