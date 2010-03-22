@@ -1569,7 +1569,8 @@ VBR_old_iteration_loop(lame_internal_flags * gfc, const FLOAT pe[2][2],
 static int
 VBR_new_prepare(lame_internal_flags * gfc,
                 const FLOAT pe[2][2], const III_psy_ratio ratio[2][2],
-                FLOAT l3_xmin[2][2][SFBMAX], int frameBits[16], int max_bits[2][2])
+                FLOAT l3_xmin[2][2][SFBMAX], int frameBits[16], int max_bits[2][2],
+                int* max_resv)
 {
     SessionConfig_t const *const cfg = &gfc->cfg;
     EncResult_t *const eov = &gfc->ov_enc;
@@ -1582,6 +1583,7 @@ VBR_new_prepare(lame_internal_flags * gfc,
     if (!cfg->free_format) {
         eov->bitrate_index = cfg->vbr_max_bitrate_index;
         (void) ResvFrameBegin(gfc, &avg);
+        *max_resv = gfc->sv_enc.ResvMax;
 
         get_framebits(gfc, frameBits);
         maximum_framebits = frameBits[cfg->vbr_max_bitrate_index];
@@ -1590,6 +1592,7 @@ VBR_new_prepare(lame_internal_flags * gfc,
         eov->bitrate_index = 0;
         maximum_framebits = ResvFrameBegin(gfc, &avg);
         frameBits[0] = maximum_framebits;
+        *max_resv = gfc->sv_enc.ResvMax;
     }
 
     for (gr = 0; gr < cfg->mode_gr; gr++) {
@@ -1618,7 +1621,9 @@ VBR_new_prepare(lame_internal_flags * gfc,
 
         }               /* for ch */
     }                   /* for gr */
-
+    if (analog_silence) {
+        *max_resv = 0;
+    }
     return analog_silence;
 }
 
@@ -1636,7 +1641,7 @@ VBR_new_iteration_loop(lame_internal_flags * gfc, const FLOAT pe[2][2],
     int     frameBits[15];
     int     used_bits;
     int     max_bits[2][2];
-    int     ch, gr, analog_silence;
+    int     ch, gr, analog_silence, pad;
     III_side_info_t *const l3_side = &gfc->l3_side;
 
     const FLOAT (*const_l3_xmin)[2][SFBMAX] = (const FLOAT (*)[2][SFBMAX])l3_xmin;
@@ -1647,7 +1652,7 @@ VBR_new_iteration_loop(lame_internal_flags * gfc, const FLOAT pe[2][2],
 
     memset(xrpow, 0, sizeof(xrpow));
 
-    analog_silence = VBR_new_prepare(gfc, pe, ratio, l3_xmin, frameBits, max_bits);
+    analog_silence = VBR_new_prepare(gfc, pe, ratio, l3_xmin, frameBits, max_bits, &pad);
 
     for (gr = 0; gr < cfg->mode_gr; gr++) {
         for (ch = 0; ch < cfg->channels_out; ch++) {
@@ -1667,24 +1672,37 @@ VBR_new_iteration_loop(lame_internal_flags * gfc, const FLOAT pe[2][2],
     used_bits = VBR_encode_frame(gfc, const_xrpow, const_l3_xmin, const_max_bits);
 
     if (!cfg->free_format) {
+        int     i, j;
+
         /*  find lowest bitrate able to hold used bits
          */
         if (analog_silence && !cfg->enforce_min_bitrate) {
             /*  we detected analog silence and the user did not specify
              *  any hard framesize limit, so start with smallest possible frame
              */
-            eov->bitrate_index = 1;
+            i = 1;
         }
         else {
-            eov->bitrate_index = cfg->vbr_min_bitrate_index;
+            i = cfg->vbr_min_bitrate_index;
         }
 
-        for (; eov->bitrate_index < cfg->vbr_max_bitrate_index; eov->bitrate_index++) {
-            if (used_bits <= frameBits[eov->bitrate_index])
+        for (; i < cfg->vbr_max_bitrate_index; i++) {
+            if (used_bits <= frameBits[i]) 
                 break;
         }
-        if (eov->bitrate_index > cfg->vbr_max_bitrate_index) {
-            eov->bitrate_index = cfg->vbr_max_bitrate_index;
+        if (i > cfg->vbr_max_bitrate_index) {
+            i = cfg->vbr_max_bitrate_index;
+        }
+        if (pad > 0) {
+            for (j = cfg->vbr_max_bitrate_index; j > i; --j) {
+                int const unused = frameBits[j] - used_bits;
+                if (unused <= pad) 
+                    break;
+            }
+            eov->bitrate_index = j;
+        }
+        else {
+            eov->bitrate_index = i;
         }
     }
     else {
