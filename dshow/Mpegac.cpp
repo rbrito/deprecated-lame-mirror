@@ -66,13 +66,60 @@
 #define         DEFAULT_VBR_QUALITY         4
 #define         DEFAULT_PES                 0
 
+#define         DEFAULT_FILTER_MERIT        MERIT_DO_NOT_USE                // Standard compressor merit value
+
+#define GET_DATARATE(kbps) (kbps * 1000 / 8)
+#define GET_FRAMELENGTH(bitrate, sample_rate) ((WORD)(((sample_rate < 32000 ? 72000 : 144000) * (bitrate))/(sample_rate)))
+#define DECLARE_PTR(type, ptr, expr) type* ptr = (type*)(expr);
+
+// Create a list of all (or mostly all) of the encoder CBR output capabilities which
+// will be parsed into a list of capabilities used by the IAMStreamConfig Interface
+output_caps_t OutputCapabilities[] = 
+{ // {SampleRate, BitRate}
+    { 48000, 320 },{ 48000, 256 },{ 48000, 224 },{ 48000, 192 },            // MPEG 1.0 Spec @ 48KHz
+    { 48000, 160 },{ 48000, 128 },{ 48000, 112 },{ 48000, 96 },
+    { 48000, 80 },{ 48000, 64 },{ 48000, 56 },{ 48000, 48 },
+    { 48000, 40 },{ 48000, 32 },
+
+    { 24000, 160 },{ 24000, 144 },{ 24000, 128 },{ 24000, 112 },            // MPEG 2.0 Spec @ 24KHz
+    { 24000, 96 },{ 24000, 80 },{ 24000, 64 },{ 24000, 56 },
+    { 24000, 48 },{ 24000, 40 },{ 24000, 32 },{ 24000, 24 },
+    { 24000, 16 },{ 24000, 8 },
+
+    { 12000, 64 },{ 12000, 56 },{ 12000, 48 },{ 12000, 40 },                // MPEG 2.5 Spec @ 12KHz
+    { 12000, 32 },{ 12000, 24 },{ 12000, 16 },{ 12000, 8 },
+    // ---------------------------                                          --------------------------
+    { 44100, 320 },{ 44100, 256 },{ 44100, 224 },{ 44100, 192 },            // MPEG 1.0 Spec @ 44.1KHz
+    { 44100, 160 },{ 44100, 128 },{ 44100, 112 },{ 44100, 96 },
+    { 44100, 80 },{ 44100, 64 },{ 44100, 56 },{ 44100, 48 },
+    { 44100, 40 },{ 44100, 32 },
+
+    { 22050, 160 },{ 22050, 144 },{ 22050, 128 },{ 22050, 112 },            // MPEG 2.0 Spec @ 22.05KHz
+    { 22050, 96 },{ 22050, 80 },{ 22050, 64 },{ 22050, 56 },
+    { 22050, 48 },{ 22050, 40 },{ 22050, 32 },{ 22050, 24 },
+    { 22050, 16 },{ 22050, 8 },
+
+    { 11025, 64 },{ 11025, 56 },{ 11025, 48 },{ 11025, 40 },                // MPEG 2.5 Spec @ 11.025KHz
+    { 11025, 32 },{ 11025, 24 },{ 11025, 16 },{ 11025, 8 },
+    // ---------------------------                                          --------------------------
+    { 32000, 320 },{ 32000, 256 },{ 32000, 224 },{ 32000, 192 },            // MPEG 1.0 Spec @ 32KHz
+    { 32000, 160 },{ 32000, 128 },{ 32000, 112 },{ 32000, 96 },
+    { 32000, 80 },{ 32000, 64 },{ 32000, 56 },{ 32000, 48 },
+    { 32000, 40 },{ 32000, 32 },
+
+    { 16000, 160 },{ 16000, 144 },{ 16000, 128 },{ 16000, 112 },            // MPEG 2.0 Spec @ 16KHz
+    { 16000, 96 },{ 16000, 80 },{ 16000, 64 },{ 16000, 56 },
+    { 16000, 48 },{ 16000, 40 },{ 16000, 32 },{ 16000, 24 },
+    { 16000, 16 },{ 16000, 8 },
+
+    { 8000, 64 },{ 8000, 56 },{ 8000, 48 },{ 8000, 40 },                    // MPEG 2.5 Spec @ 8KHz
+    { 8000, 32 },{ 8000, 24 },{ 8000, 16 },{ 8000, 8 }
+};
+
 
 /*  Registration setup stuff */
 //  Setup data
 
-#define OUT_STREAM_TYPE MEDIATYPE_Stream
-#define OUT_STREAM_SUBTYPE MEDIASUBTYPE_MPEG1Audio
-//#define OUT_STREAM_SUBTYPE MEDIASUBTYPE_NULL
 
 AMOVIESETUP_MEDIATYPE sudMpgInputType[] =
 {
@@ -82,7 +129,8 @@ AMOVIESETUP_MEDIATYPE sudMpgOutputType[] =
 {
     { &MEDIATYPE_Audio, &MEDIASUBTYPE_MPEG1AudioPayload },
     { &MEDIATYPE_Audio, &MEDIASUBTYPE_MPEG2_AUDIO },
-	{ &OUT_STREAM_TYPE, &OUT_STREAM_SUBTYPE},
+    { &MEDIATYPE_Audio, &MEDIASUBTYPE_MP3 },
+    { &MEDIATYPE_Stream, &MEDIASUBTYPE_MPEG1Audio }
 };
 
 AMOVIESETUP_PIN sudMpgPins[] =
@@ -111,18 +159,19 @@ AMOVIESETUP_PIN sudMpgPins[] =
 
 AMOVIESETUP_FILTER sudMpgAEnc =
 {
-    &CLSID_LAMEDShowFilter,
+	&CLSID_LAMEDShowFilter,
     L"LAME Audio Encoder",
-    MERIT_SW_COMPRESSOR,                   // Don't use us for real!
-    NUMELMS(sudMpgPins),                   // 3 pins
+    DEFAULT_FILTER_MERIT,                  // Standard compressor merit value
+    NUMELMS(sudMpgPins),                   // 2 pins
     sudMpgPins
 };
 
 /*****************************************************************************/
 // COM Global table of objects in this dll
+static WCHAR g_wszName[] = L"LAME Audio Encoder";
 CFactoryTemplate g_Templates[] = 
 {
-  { L"LAME Audio Encoder", &CLSID_LAMEDShowFilter, CMpegAudEnc::CreateInstance, NULL, &sudMpgAEnc },
+  { g_wszName, &CLSID_LAMEDShowFilter, CMpegAudEnc::CreateInstance, NULL, &sudMpgAEnc },
   { L"LAME Audio Encoder Property Page", &CLSID_LAMEDShow_PropertyPage, CMpegAudEncPropertyPage::CreateInstance},
   { L"LAME Audio Encoder Property Page", &CLSID_LAMEDShow_PropertyPageAdv, CMpegAudEncPropertyPageAdv::CreateInstance},
   { L"LAME Audio Encoder About", &CLSID_LAMEDShow_About, CMAEAbout::CreateInstance}
@@ -130,24 +179,114 @@ CFactoryTemplate g_Templates[] =
 // Count of objects listed in g_cTemplates
 int g_cTemplates = sizeof(g_Templates) / sizeof(g_Templates[0]);
 
+
+
+////////////////////////////////////////////
+// Declare the DirectShow filter information.
+
+// Used by IFilterMapper2() in the call to DllRegisterServer()
+// to register the filter in the CLSID_AudioCompressorCategory.
+REGFILTER2 rf2FilterReg = {
+    1,                     // Version number.
+    DEFAULT_FILTER_MERIT,  // Merit. This should match the merit specified in the AMOVIESETUP_FILTER definition
+    NUMELMS(sudMpgPins),   // Number of pins.
+    sudMpgPins             // Pointer to pin information.
+};
+
+STDAPI DllRegisterServer(void)
+{
+    HRESULT hr = AMovieDllRegisterServer2(TRUE);
+    if (FAILED(hr)) {
+        return hr;
+    }
+
+    IFilterMapper2 *pFM2 = NULL;
+    hr = CoCreateInstance(CLSID_FilterMapper2, NULL, CLSCTX_INPROC_SERVER, IID_IFilterMapper2, (void **)&pFM2);
+    if (SUCCEEDED(hr)) {
+        hr = pFM2->RegisterFilter(
+            CLSID_LAMEDShowFilter,           // Filter CLSID. 
+            g_wszName,                       // Filter name.
+            NULL,                            // Device moniker. 
+            &CLSID_AudioCompressorCategory,  // Audio compressor category.
+            g_wszName,                       // Instance data.
+            &rf2FilterReg                    // Filter information.
+            );
+        pFM2->Release();
+    }
+    return hr;
+}
+
+STDAPI DllUnregisterServer()
+{
+    HRESULT hr = AMovieDllRegisterServer2(FALSE);
+    if (FAILED(hr)) {
+        return hr;
+    }
+
+    IFilterMapper2 *pFM2 = NULL;
+    hr = CoCreateInstance(CLSID_FilterMapper2, NULL, CLSCTX_INPROC_SERVER, IID_IFilterMapper2, (void **)&pFM2);
+    if (SUCCEEDED(hr)) {
+        hr = pFM2->UnregisterFilter(&CLSID_AudioCompressorCategory, g_wszName, CLSID_LAMEDShowFilter);
+        pFM2->Release();
+    }
+    return hr;
+}
+
+
+
 CUnknown *CMpegAudEnc::CreateInstance(LPUNKNOWN lpunk, HRESULT *phr) 
 {
-    CUnknown *punk = new CMpegAudEnc(lpunk, phr);
+    CMpegAudEnc *punk = new CMpegAudEnc(lpunk, phr);
     if (punk == NULL) 
         *phr = E_OUTOFMEMORY;
     return punk;
 }
 
 CMpegAudEnc::CMpegAudEnc(LPUNKNOWN lpunk, HRESULT *phr)
- :  CTransformFilter(NAME("LAME Audio Encoder"), lpunk, 
-    CLSID_LAMEDShowFilter),
+ :  CTransformFilter(NAME("LAME Audio Encoder"), lpunk, CLSID_LAMEDShowFilter),
     CPersistStream(lpunk, phr)
 {
+    // ENCODER OUTPUT PIN
+    // Override the output pin with our own which will implement the IAMStreamConfig Interface
+    CTransformOutputPin *pOut = new CMpegAudEncOutPin( this, phr );
+    if (pOut == NULL) {
+        *phr = E_OUTOFMEMORY;
+        return;
+    }
+    else if (FAILED(*phr)) {             // A failed return code should delete the object
+        delete pOut;
+        return;
+    }
+    m_pOutput = pOut;
+
+    // ENCODER INPUT PIN
+    // Since we've created our own output pin we must also create
+    // the input pin ourselves because the CTransformFilter base class 
+    // will create an extra output pin if the input pin wasn't created.        
+    CTransformInputPin *pIn = new CTransformInputPin(NAME("LameEncoderInputPin"),
+                                                     this,              // Owner filter
+                                                     phr,               // Result code
+                                                     L"Input");         // Pin name
+
+    if (pIn == NULL) {
+        *phr = E_OUTOFMEMORY;
+        return;
+    }
+    else if (FAILED(*phr)) {             // A failed return code should delete the object
+        delete pIn;
+        return;
+    }
+    m_pInput = pIn;
+
+
     MPEG_ENCODER_CONFIG mec;
     ReadPresetSettings(&mec);
     m_Encoder.SetOutputType(mec);
 
+    m_CapsNum = 0;
     m_hasFinished = TRUE;
+    m_bStreamOutput = FALSE;
+    m_currentMediaTypeIndex = 0;
 }
 
 CMpegAudEnc::~CMpegAudEnc(void)
@@ -246,9 +385,9 @@ HRESULT CMpegAudEnc::FlushEncodedSamples()
 		HRESULT hr = S_OK;
 		const unsigned char *   pblock      = NULL;
 		int iBufferSize;
-		int iBlockLenght = m_Encoder.GetBlockAligned(&pblock, &iBufferSize, m_cbStramAlignment);
+		int iBlockLength = m_Encoder.GetBlockAligned(&pblock, &iBufferSize, m_cbStreamAlignment);
 		
-		if(!iBlockLenght)
+		if(!iBlockLength)
 			return S_OK;
 
 		hr = m_pOutput->GetDeliveryBuffer(&pOutSample, NULL, NULL, 0);
@@ -257,11 +396,11 @@ HRESULT CMpegAudEnc::FlushEncodedSamples()
 			hr = pOutSample->GetPointer(&pDst);
 			if (hr == S_OK && pDst)
 			{
-				CopyMemory(pDst, pblock, iBlockLenght);
+				CopyMemory(pDst, pblock, iBlockLength);
 				REFERENCE_TIME rtEndPos = m_rtBytePos + iBufferSize;
 				EXECUTE_ASSERT(S_OK == pOutSample->SetTime(&m_rtBytePos, &rtEndPos));
 				pOutSample->SetActualDataLength(iBufferSize);
-				m_rtBytePos += iBlockLenght;
+				m_rtBytePos += iBlockLength;
 				m_pOutput->Deliver(pOutSample);
 			}
 
@@ -505,19 +644,34 @@ HRESULT CMpegAudEnc::SetMediaType(PIN_DIRECTION direction, const CMediaType * pm
         else
             m_bytesToDuration = 0.0;
 
+        // Parse the encoder output capabilities into the subset of capabilities that are supported 
+        // for the current input format. This listing will be utilized by the IAMStreamConfig Interface.
+        LoadOutputCapabilities(pwfx->nSamplesPerSec);
+
         Reconnect();
     }
     else if (direction == PINDIR_OUTPUT)
     {
-		if(MEDIATYPE_Stream != *pmt->Type())
-		{
-			WAVEFORMATEX wfIn;
-			m_Encoder.GetInputType(&wfIn);
+        // Before we set the output type, we might need to reconnect 
+        // the input pin with a new type.
+        if (m_pInput && m_pInput->IsConnected()) 
+        {
+            // Check if the current input type is compatible.
+            hr = CheckTransform(&m_pInput->CurrentMediaType(), &m_pOutput->CurrentMediaType());
+            if (FAILED(hr)) {
+                // We need to reconnect the input pin. 
+                // Note: The CheckMediaType method has already called QueryAccept on the upstream filter. 
+                hr = m_pGraph->Reconnect(m_pInput);
+                return hr;
+            }
+        }
 
-			if (wfIn.nSamplesPerSec %
-				((LPWAVEFORMATEX)pmt->Format())->nSamplesPerSec != 0)
-	            return VFW_E_TYPE_NOT_ACCEPTED;
-		}
+//        WAVEFORMATEX wfIn;
+//        m_Encoder.GetInputType(&wfIn);
+
+//        if (wfIn.nSamplesPerSec %
+//            ((LPWAVEFORMATEX)pmt->Format())->nSamplesPerSec != 0)
+//            return VFW_E_TYPE_NOT_ACCEPTED;
     }
 
     return hr;
@@ -561,7 +715,7 @@ HRESULT CMpegAudEnc::CheckTransform(const CMediaType* mtIn, const CMediaType* mt
 
 		return S_OK;
 	}
-	else if(mtOut->subtype == OUT_STREAM_SUBTYPE)
+	else if(mtOut->subtype == MEDIASUBTYPE_MPEG1Audio)
 		return S_OK;
 
 	return VFW_E_TYPE_NOT_ACCEPTED;
@@ -576,12 +730,11 @@ HRESULT CMpegAudEnc::DecideBufferSize(
 {
     HRESULT hr = S_OK;
 
-	m_bStreamOutput = (OUT_STREAM_TYPE == m_pOutput->CurrentMediaType().majortype);
 	if(m_bStreamOutput)
-		m_cbStramAlignment = pProperties->cbAlign;
+		m_cbStreamAlignment = pProperties->cbAlign;
 
     ///
-    pProperties->cBuffers = 1;
+    if (pProperties->cBuffers == 0) pProperties->cBuffers = 1;  // If downstream filter didn't suggest a buffer count then default to 1
     pProperties->cbBuffer = OUT_BUFFER_SIZE;
 	//
 	
@@ -601,135 +754,20 @@ HRESULT CMpegAudEnc::DecideBufferSize(
 }
 
 ////////////////////////////////////////////////////////////////////////////
-// GetMediaType - overrideble for suggesting outpu pin media types
+// GetMediaType - overrideable for suggesting output pin media types
 ////////////////////////////////////////////////////////////////////////////
 HRESULT CMpegAudEnc::GetMediaType(int iPosition, CMediaType *pMediaType)
 {
     DbgLog((LOG_TRACE,1,TEXT("CMpegAudEnc::GetMediaType()")));
 
-    if (iPosition < 0)
-        return E_INVALIDARG;
-
-    switch (iPosition)
-    {
-    case 0:
-        {// We can support two output streams - PES or AES	
-            if(m_Encoder.IsPES())
-            {
-                pMediaType->SetType(&MEDIATYPE_MPEG2_PES);
-                pMediaType->SetSubtype(&MEDIASUBTYPE_MPEG2_AUDIO);
-            }
-            else
-            {
-                pMediaType->SetType(&MEDIATYPE_Audio);
-                pMediaType->SetSubtype(&MEDIASUBTYPE_MP3);
-            }
-            break;
-        }
-	case 1:
-		{
-			pMediaType->SetType(&MEDIATYPE_Stream);
-			pMediaType->SetSubtype(&OUT_STREAM_SUBTYPE);
-			break;
-		}
-    default:
-        return VFW_S_NO_MORE_ITEMS;
-    }
-
-    if (m_pInput->IsConnected() == FALSE)
-    {
-        pMediaType->SetFormatType(&FORMAT_None);
-        return NOERROR;
-    }
-
-    SetOutMediaType();
-    
-	if(iPosition != 1)
-	{
-		pMediaType->SetTemporalCompression(FALSE);
-		pMediaType->SetSampleSize(OUT_BUFFER_SIZE);
-		pMediaType->AllocFormatBuffer(sizeof(MPEGLAYER3WAVEFORMAT));
-		pMediaType->SetFormat((LPBYTE)&m_mwf, sizeof(MPEGLAYER3WAVEFORMAT));
-		pMediaType->SetFormatType(&FORMAT_WaveFormatEx);
-	}
-    return S_OK;
+    return m_pOutput->GetMediaType(iPosition, pMediaType);
 }
 
 ////////////////////////////////////////////////////////////////////////////
-//	SetOutMediaType - sets filter output media type according to 
-//  current encoder out MPEG audio properties 
+//  Reconnect - called after a manual change has been made to the 
+//  encoder parameters to reset the filter output media type structure
+//  to match the current encoder out MPEG audio properties 
 ////////////////////////////////////////////////////////////////////////////
-void CMpegAudEnc::SetOutMediaType()
-{
-	MPEG_ENCODER_CONFIG mec;
-	if(FAILED(m_Encoder.GetOutputType(&mec)))
-		return ;
-	WAVEFORMATEX wf;
-	if(FAILED(m_Encoder.GetInputType(&wf)))
-		return ;
-
-//	BOOL bDirty = FALSE;
-
-	if ((wf.nSamplesPerSec % mec.dwSampleRate) != 0)
-	{
-		mec.dwSampleRate = wf.nSamplesPerSec;
-		m_Encoder.SetOutputType(mec);
-//		bDirty = TRUE;
-	}
-
-	if (wf.nChannels == 1 && mec.ChMode != MONO)
-	{
-		mec.ChMode = MONO;
-		m_Encoder.SetOutputType(mec);
-//		bDirty = TRUE;
-	}
-
-	if (wf.nChannels == 2 && !mec.bForceMono && mec.ChMode == MONO)
-	{
-		mec.ChMode = STEREO;
-		m_Encoder.SetOutputType(mec);
-//		bDirty = TRUE;
-	}
-
-	if (wf.nChannels == 2 && mec.bForceMono)
-	{
-		mec.ChMode = MONO;
-		m_Encoder.SetOutputType(mec);
-//		bDirty = TRUE;
-	}
-/*
-    if (bDirty)
-	{
-		// we are tied to the registry, especially our configuration
-		// so when we change the incorrect sample rate, we need
-		// to change the value in registry too. Same to channel mode
-		SaveAudioEncoderPropertiesToRegistry();
-		DbgLog((LOG_TRACE, 1, TEXT("Changed sampling rate internally")));
-	}
-*/
-	// Fill MPEG1WAVEFORMAT DirectShow SDK structure
-	m_mwf.wfx.wFormatTag		= WAVE_FORMAT_MPEGLAYER3;
-	m_mwf.wfx.cbSize			= sizeof(MPEGLAYER3WAVEFORMAT) - sizeof(WAVEFORMATEX);
-
-	if(mec.ChMode == MONO)
-		m_mwf.wfx.nChannels = 1;
-	else
-		m_mwf.wfx.nChannels = 2;
-
-	m_mwf.wfx.nSamplesPerSec	= mec.dwSampleRate;
-	m_mwf.wfx.nBlockAlign		= 1;
-
-	m_mwf.wfx.wBitsPerSample	= 0;
-	m_mwf.wfx.nAvgBytesPerSec	= mec.dwBitrate * 1000 / 8;
-
-
-	m_mwf.wID = MPEGLAYER3_ID_MPEG;
-	m_mwf.fdwFlags = MPEGLAYER3_FLAG_PADDING_ISO;
-	m_mwf.nBlockSize = 1;
-	m_mwf.nFramesPerBlock = 1;
-	m_mwf.nCodecDelay = 0;
-}
-
 HRESULT CMpegAudEnc::Reconnect()
 {
     HRESULT hr = S_FALSE;
@@ -741,15 +779,21 @@ HRESULT CMpegAudEnc::Reconnect()
 
         if ((hr = m_Encoder.SetOutputType(mec)) == S_OK)
         {
+            // Create an updated output MediaType using the current encoder settings
             CMediaType cmt;
 			cmt.InitMediaType();
-			if(!m_bStreamOutput)
-				GetMediaType(0, &cmt);
-			else
-				GetMediaType(1, &cmt);
+            m_pOutput->GetMediaType(m_currentMediaTypeIndex, &cmt);
 
-            if (S_OK == (hr = m_pOutput->GetConnected()->QueryAccept(&cmt)))
+            // If the updated MediaType matches the current output MediaType no reconnect is needed
+            if (m_pOutput->CurrentMediaType() == cmt) return S_OK;
+
+            // Attempt to reconnect the output pin using the updated MediaType
+            if (S_OK == (hr = m_pOutput->GetConnected()->QueryAccept(&cmt))) {
+                hr = m_pOutput->SetMediaType(&cmt);
+                if ( FAILED(hr) ) { return(hr); }
+
                 hr = m_pGraph->Reconnect(m_pOutput);
+            }
             else
                 hr = m_pOutput->SetMediaType(&cmt);
         }
@@ -757,6 +801,33 @@ HRESULT CMpegAudEnc::Reconnect()
 
     return hr;
 }
+
+////////////////////////////////////////////////////////////////////////////
+//  LoadOutputCapabilities - create a list of the currently supported output 
+//  format capabilities which will be used by the IAMStreamConfig Interface
+////////////////////////////////////////////////////////////////////////////
+void CMpegAudEnc::LoadOutputCapabilities(DWORD sample_rate)
+{
+    m_CapsNum = 0;
+
+    // Clear out any existing output capabilities
+    ZeroMemory(OutputCaps, sizeof(OutputCaps));
+
+    // Create the set of Constant Bit Rate output capabilities that are
+    // supported for the current input pin sampling rate.
+    for (int i = 0;  i < NUMELMS(OutputCapabilities); i++) {
+        if (0 == sample_rate % OutputCapabilities[i].nSampleRate) {
+
+            // Add this output capability to the OutputCaps list
+            OutputCaps[m_CapsNum] = OutputCapabilities[i];
+            m_CapsNum++;
+
+            // Don't overrun the hard-coded capabilities array limit
+            if (m_CapsNum > (int)MAX_IAMSTREAMCONFIG_CAPS) break;
+        }
+    }
+}
+
 
 //
 // Read persistent configuration from Registry
@@ -1531,38 +1602,424 @@ int CMpegAudEnc::SizeMax()
 
 
 
-////////////////////////////////////////////
-STDAPI DllRegisterServer()
-{
-	// Create entry in HKEY_CLASSES_ROOT\Filter
-	OLECHAR szCLSID[CHARS_IN_GUID];
-	TCHAR achTemp[MAX_PATH];
-	HKEY hKey;
 
-	HRESULT hr = StringFromGUID2(*g_Templates[0].m_ClsID, szCLSID, CHARS_IN_GUID);
-#pragma warning(push)
-#pragma warning(disable: 4995)
-	wsprintf(achTemp, TEXT("Filter\\%ls"), szCLSID);
-#pragma warning(pop)
-	// create key
-	RegCreateKey(HKEY_CLASSES_ROOT, (LPCTSTR)achTemp, &hKey);
-	RegCloseKey(hKey);
-	return AMovieDllRegisterServer2(TRUE);
+
+//////////////////////////////////////////////////////////////////////////
+// CMpegAudEncOutPin is the one and only output pin of CMpegAudEnc  
+// 
+//////////////////////////////////////////////////////////////////////////
+CMpegAudEncOutPin::CMpegAudEncOutPin( CMpegAudEnc * pFilter, HRESULT * pHr ) :
+        CTransformOutputPin( NAME("LameEncoderOutputPin"), pFilter, pHr, L"Output\0" ),
+        m_pFilter(pFilter)
+{
+    m_SetFormat = FALSE;
 }
 
-STDAPI DllUnregisterServer()
+CMpegAudEncOutPin::~CMpegAudEncOutPin()
 {
-	// Delete entry in HKEY_CLASSES_ROOT\Filter
-	OLECHAR szCLSID[CHARS_IN_GUID];
-	TCHAR achTemp[MAX_PATH];
+} 
 
-	HRESULT hr = StringFromGUID2(*g_Templates[0].m_ClsID, szCLSID, CHARS_IN_GUID);
-#pragma warning(push)
-#pragma warning(disable: 4995)
-	wsprintf(achTemp, TEXT("Filter\\%ls"), szCLSID);
-#pragma warning(pop)
-	// create key
-	RegDeleteKey(HKEY_CLASSES_ROOT, (LPCTSTR)achTemp);
-	return AMovieDllRegisterServer2(FALSE);
+STDMETHODIMP CMpegAudEncOutPin::NonDelegatingQueryInterface(REFIID riid, void **ppv)
+{
+    if(riid == IID_IAMStreamConfig) {
+        CheckPointer(ppv, E_POINTER);
+        return GetInterface((IAMStreamConfig*)(this), ppv);
+    }
+    return CBaseOutputPin::NonDelegatingQueryInterface(riid, ppv);
+}
+
+
+//////////////////////////////////////////////////////////////////////////
+// This is called after the output format has been negotiated and
+// will update the LAME encoder settings so that it matches the
+// settings specified in the MediaType structure.
+//////////////////////////////////////////////////////////////////////////
+HRESULT CMpegAudEncOutPin::SetMediaType(const CMediaType *pmt)
+{
+    // Retrieve the current LAME encoder configuration
+    MPEG_ENCODER_CONFIG mec;
+    m_pFilter->m_Encoder.GetOutputType(&mec);
+
+    // Annotate if we are using the MEDIATYPE_Stream output type
+    m_pFilter->m_bStreamOutput = (pmt->majortype == MEDIATYPE_Stream);
+
+    if (pmt->majortype == MEDIATYPE_Stream) {
+        // Update the encoder configuration using the settings that were
+        // cached in the CMpegAudEncOutPin::GetMediaType() call
+        mec.dwSampleRate = m_CurrentOutputFormat.nSampleRate;
+        mec.dwBitrate = m_CurrentOutputFormat.nBitRate;
+        mec.ChMode = m_CurrentOutputFormat.ChMode;
+    }
+    else {
+        // Update the encoder configuration directly using the values
+        // passed via the CMediaType structure.  
+        MPEGLAYER3WAVEFORMAT *pfmt = (MPEGLAYER3WAVEFORMAT*) pmt->Format();
+        mec.dwSampleRate = pfmt->wfx.nSamplesPerSec;
+        mec.dwBitrate = pfmt->wfx.nAvgBytesPerSec * 8 / 1000;
+
+        if (pfmt->wfx.nChannels == 1) { mec.ChMode = MONO; }
+        else if (pfmt->wfx.nChannels == 2 && mec.ChMode == MONO && !mec.bForceMono) { mec.ChMode = STEREO; }
+    }
+    m_pFilter->m_Encoder.SetOutputType(mec);
+
+    // Now configure this MediaType on the output pin
+    HRESULT hr = CTransformOutputPin::SetMediaType(pmt);
+    return hr;
+}
+
+
+//////////////////////////////////////////////////////////////////////////
+// Retrieve the various MediaTypes that match the advertised formats
+// supported on the output pin and configure an AM_MEDIA_TYPE output 
+// structure that is based on the selected format.
+//////////////////////////////////////////////////////////////////////////
+HRESULT CMpegAudEncOutPin::GetMediaType(int iPosition, CMediaType *pmt)
+{
+    if (iPosition < 0) return E_INVALIDARG;
+
+    // If iPosition equals zero then we always return the currently configured MediaType 
+    if (iPosition == 0) {
+        *pmt = m_mt;
+        return S_OK;
+    }
+
+    switch (iPosition)
+    {
+        case 1:
+        {
+            pmt->SetType(&MEDIATYPE_Audio);
+            pmt->SetSubtype(&MEDIASUBTYPE_MP3);
+            break;
+        }
+        case 2:
+        {
+            pmt->SetType(&MEDIATYPE_Stream);
+            pmt->SetSubtype(&MEDIASUBTYPE_MPEG1Audio);
+            pmt->SetFormatType(&GUID_NULL);
+            break;
+        }
+        case 3:
+        {   // The last case that we evaluate is the MPEG2_PES format, but if the 
+            // encoder isn't configured for it then just return VFW_S_NO_MORE_ITEMS
+            if ( !m_pFilter->m_Encoder.IsPES() ) { return VFW_S_NO_MORE_ITEMS; }
+
+            pmt->SetType(&MEDIATYPE_MPEG2_PES);
+            pmt->SetSubtype(&MEDIASUBTYPE_MPEG2_AUDIO);
+            break;
+        }
+        default:
+            return VFW_S_NO_MORE_ITEMS;
+    }
+
+
+    // Output capabilities are dependent on the input so insure it is connected
+    if ( !m_pFilter->m_pInput->IsConnected() ) {
+        pmt->SetFormatType(&FORMAT_None);
+        return NOERROR;
+    }
+
+
+    // Annotate the current MediaType index for recall in CMpegAudEnc::Reconnect()
+    m_pFilter->m_currentMediaTypeIndex = iPosition;
+
+    // Configure the remaining AM_MEDIA_TYPE parameters using the cached encoder settings.
+    // Since MEDIATYPE_Stream doesn't have a format block the current settings 
+    // for CHANNEL MODE, BITRATE and SAMPLERATE are cached in m_CurrentOutputFormat for use
+    // when we setup the LAME encoder in the call to CMpegAudEncOutPin::SetMediaType()
+    MPEG_ENCODER_CONFIG mec;
+    m_pFilter->m_Encoder.GetOutputType(&mec);           // Retrieve the current encoder config
+
+    WAVEFORMATEX wf;                                    // Retrieve the input configuration
+    m_pFilter->m_Encoder.GetInputType(&wf);
+
+    // Use the current encoder sample rate unless it isn't a modulus of the input rate
+    if ((wf.nSamplesPerSec % mec.dwSampleRate) == 0) { 
+        m_CurrentOutputFormat.nSampleRate = mec.dwSampleRate;
+    }
+    else {
+        m_CurrentOutputFormat.nSampleRate = wf.nSamplesPerSec;
+    }
+
+    // Select the output channel config based on the encoder config and input channel count
+    m_CurrentOutputFormat.ChMode = mec.ChMode;
+    switch (wf.nChannels)                    // Determine if we need to alter ChMode based upon the channel count and ForceMono flag 
+    {
+        case 1:
+        {
+            m_CurrentOutputFormat.ChMode = MONO;
+            break;
+        }
+        case 2:
+        {
+            if (mec.ChMode == MONO && !mec.bForceMono) { m_CurrentOutputFormat.ChMode = STEREO; }
+            else if ( mec.bForceMono ) { m_CurrentOutputFormat.ChMode = MONO; }
+            break;
+        }
+    }
+
+    // Select the encoder bit rate. In VBR mode we set the data rate parameter
+    // of the WAVE_FORMAT_MPEGLAYER3 structure to the minimum VBR value
+    m_CurrentOutputFormat.nBitRate = (mec.vmVariable == vbr_off) ? mec.dwBitrate : mec.dwVariableMin;
+
+    if (pmt->majortype == MEDIATYPE_Stream) return NOERROR;     // No further config required for MEDIATYPE_Stream
+
+
+    // Now configure the remainder of the WAVE_FORMAT_MPEGLAYER3 format block
+    // and its parent AM_MEDIA_TYPE structure
+    DECLARE_PTR(MPEGLAYER3WAVEFORMAT, p_mp3wvfmt, pmt->AllocFormatBuffer(sizeof(MPEGLAYER3WAVEFORMAT)));
+    ZeroMemory(p_mp3wvfmt, sizeof(MPEGLAYER3WAVEFORMAT));
+
+    p_mp3wvfmt->wfx.wFormatTag = WAVE_FORMAT_MPEGLAYER3;
+    p_mp3wvfmt->wfx.nChannels = (m_CurrentOutputFormat.ChMode == MONO) ? 1 : 2;
+    p_mp3wvfmt->wfx.nSamplesPerSec = m_CurrentOutputFormat.nSampleRate;
+    p_mp3wvfmt->wfx.nAvgBytesPerSec = GET_DATARATE(m_CurrentOutputFormat.nBitRate);
+    p_mp3wvfmt->wfx.nBlockAlign = 1;
+    p_mp3wvfmt->wfx.wBitsPerSample = 0;
+    p_mp3wvfmt->wfx.cbSize = sizeof(MPEGLAYER3WAVEFORMAT) - sizeof(WAVEFORMATEX);
+
+    p_mp3wvfmt->wID = MPEGLAYER3_ID_MPEG;
+    p_mp3wvfmt->fdwFlags = MPEGLAYER3_FLAG_PADDING_ISO;
+    p_mp3wvfmt->nBlockSize = GET_FRAMELENGTH(m_CurrentOutputFormat.nBitRate, p_mp3wvfmt->wfx.nSamplesPerSec);
+    p_mp3wvfmt->nFramesPerBlock = 1;
+    p_mp3wvfmt->nCodecDelay = 0;
+
+    pmt->SetTemporalCompression(FALSE);
+    pmt->SetSampleSize(OUT_BUFFER_SIZE);
+    pmt->SetFormat((LPBYTE)p_mp3wvfmt, sizeof(MPEGLAYER3WAVEFORMAT));
+    pmt->SetFormatType(&FORMAT_WaveFormatEx);
+
+    return NOERROR;
+}
+
+
+//////////////////////////////////////////////////////////////////////////
+// This method is called to see if a given output format is supported
+//////////////////////////////////////////////////////////////////////////
+HRESULT CMpegAudEncOutPin::CheckMediaType(const CMediaType *pmtOut)
+{
+    // Fail if the input pin is not connected.
+    if (!m_pFilter->m_pInput->IsConnected()) {
+        return VFW_E_NOT_CONNECTED;
+    }
+
+    // Reject any media types that we know in advance our 
+    // filter cannot use.
+    if (pmtOut->majortype != MEDIATYPE_Audio && pmtOut->majortype != MEDIATYPE_Stream) { return S_FALSE; }
+
+    // If SetFormat was previously called, check whether pmtOut exactly 
+    // matches the format that was specified in SetFormat.
+    // Return S_OK if they match, or VFW_E_INVALIDMEDIATYPE otherwise.)
+    if ( m_SetFormat ) {
+        if (*pmtOut != m_mt) { return VFW_E_INVALIDMEDIATYPE; }
+        else { return S_OK; }
+    }
+
+    // Now do the normal check for this media type.
+    HRESULT hr;
+    hr = m_pFilter->CheckTransform (&m_pFilter->m_pInput->CurrentMediaType(),  // The input type.
+                                    pmtOut);                                   // The proposed output type.
+
+    if (hr == S_OK) {
+        return S_OK;           // This format is compatible with the current input type.
+    }
+ 
+    // This format is not compatible with the current input type. 
+    // Maybe we can reconnect the input pin with a new input type.
+    
+    // Enumerate the upstream filter's preferred output types, and 
+    // see if one of them will work.
+    CMediaType *pmtEnum;
+    BOOL fFound = FALSE;
+    IEnumMediaTypes *pEnum;
+    hr = m_pFilter->m_pInput->GetConnected()->EnumMediaTypes(&pEnum);
+    if (hr != S_OK) {
+        return E_FAIL;
+    }
+
+    while (hr = pEnum->Next(1, (AM_MEDIA_TYPE **)&pmtEnum, NULL), hr == S_OK)
+    {
+        // Check this input type against the proposed output type.
+        hr = m_pFilter->CheckTransform(pmtEnum, pmtOut);
+        if (hr != S_OK) {
+            DeleteMediaType(pmtEnum);
+            continue; // Try the next one.
+        }
+
+        // This input type is a possible candidate. But, we have to make
+        // sure that the upstream filter can switch to this type. 
+        hr = m_pFilter->m_pInput->GetConnected()->QueryAccept(pmtEnum);
+        if (hr != S_OK) {
+            // The upstream filter will not switch to this type.
+            DeleteMediaType(pmtEnum);
+            continue; // Try the next one.
+        }
+        fFound = TRUE;
+        DeleteMediaType(pmtEnum);
+        break;
+    }
+    pEnum->Release();
+
+    if (fFound) {
+        // This output type is OK, but if we are asked to use it, we will
+        // need to reconnect our input pin. (See SetFormat, below.)
+        return S_OK;
+    }
+    else {
+        return VFW_E_INVALIDMEDIATYPE;
+    }
+}
+
+
+
+//////////////////////////////////////////////////////////////////////////
+//  IAMStreamConfig
+//////////////////////////////////////////////////////////////////////////
+
+HRESULT STDMETHODCALLTYPE CMpegAudEncOutPin::SetFormat(AM_MEDIA_TYPE *pmt)
+{
+    CheckPointer(pmt, E_POINTER);
+    HRESULT hr;
+
+    // Hold the filter state lock, to make sure that streaming isn't 
+    // in the middle of starting or stopping:
+    CAutoLock cObjectLock(&m_pFilter->m_csFilter);
+
+    // Cannot set the format unless the filter is stopped.
+    if (m_pFilter->m_State != State_Stopped) {
+        return VFW_E_NOT_STOPPED;
+    }
+
+    // The set of possible output formats depends on the input format,
+    // so if the input pin is not connected, return a failure code.
+    if (!m_pFilter->m_pInput->IsConnected()) {
+        return VFW_E_NOT_CONNECTED;
+    }
+
+    // If the pin is already using this format, there's nothing to do.
+    if (IsConnected() && CurrentMediaType() == *pmt) {
+        if ( m_SetFormat ) return S_OK;
+    }
+
+    // See if this media type is acceptable.
+    if ((hr = CheckMediaType((CMediaType *)pmt)) != S_OK) {
+        return hr;
+    }
+
+    // If we're connected to a downstream filter, we have to make
+    // sure that the downstream filter accepts this media type.
+    if (IsConnected()) {
+        hr = GetConnected()->QueryAccept(pmt);
+        if (hr != S_OK) {
+            return VFW_E_INVALIDMEDIATYPE;
+        }
+    }
+
+    // Now make a note that from now on, this is the only format allowed,
+    // and refuse anything but this in the CheckMediaType() code above.
+    m_SetFormat = TRUE;
+    m_mt = *pmt;
+
+    // Changing the format means reconnecting if necessary.
+    if (IsConnected()) {
+        m_pFilter->m_pGraph->Reconnect(this);
+    }
+
+    return NOERROR;
+}
+
+HRESULT STDMETHODCALLTYPE CMpegAudEncOutPin::GetFormat(AM_MEDIA_TYPE **ppmt)
+{
+    *ppmt = CreateMediaType(&m_mt);
+    return S_OK;
+}
+
+HRESULT STDMETHODCALLTYPE CMpegAudEncOutPin::GetNumberOfCapabilities(int *piCount, int *piSize)
+{
+    // The set of possible output formats depends on the input format,
+    // so if the input pin is not connected, return a failure code.
+    if (!m_pFilter->m_pInput->IsConnected()) {
+        return VFW_E_NOT_CONNECTED;
+    }
+
+    // Retrieve the current encoder configuration
+    MPEG_ENCODER_CONFIG mec;
+    m_pFilter->m_Encoder.GetOutputType(&mec);
+
+    // If the encoder is in VBR mode GetStreamCaps() isn't implemented
+    if (mec.vmVariable != vbr_off) { *piCount = 0; }
+    else { *piCount = m_pFilter->m_CapsNum; }
+
+    *piSize = sizeof(AUDIO_STREAM_CONFIG_CAPS);
+    return S_OK;
+}
+
+HRESULT STDMETHODCALLTYPE CMpegAudEncOutPin::GetStreamCaps(int iIndex, AM_MEDIA_TYPE **pmt, BYTE *pSCC)
+{
+    // The set of possible output formats depends on the input format,
+    // so if the input pin is not connected, return a failure code.
+    if (!m_pFilter->m_pInput->IsConnected()) {
+        return VFW_E_NOT_CONNECTED;
+    }
+
+    // If we don't have a capabilities array GetStreamCaps() isn't implemented
+    if (m_pFilter->m_CapsNum == 0) return E_NOTIMPL;
+
+    // If the encoder is in VBR mode GetStreamCaps() isn't implemented
+    MPEG_ENCODER_CONFIG mec;
+    m_pFilter->m_Encoder.GetOutputType(&mec);
+    if (mec.vmVariable != vbr_off) return E_NOTIMPL;
+
+    if (iIndex < 0) return E_INVALIDARG;
+    if (iIndex > m_pFilter->m_CapsNum) return S_FALSE;
+
+    // Load the MPEG Layer3 WaveFormatEx structure with the appropriate entries 
+    // for this IAMStreamConfig index element.
+    *pmt = CreateMediaType(&m_mt);
+    if (*pmt == NULL) return E_OUTOFMEMORY;
+
+    DECLARE_PTR(MPEGLAYER3WAVEFORMAT, p_mp3wvfmt, (*pmt)->pbFormat);
+
+    (*pmt)->majortype = MEDIATYPE_Audio;
+    (*pmt)->subtype = MEDIASUBTYPE_MP3;
+    (*pmt)->bFixedSizeSamples = TRUE;
+    (*pmt)->bTemporalCompression = FALSE;
+    (*pmt)->lSampleSize = OUT_BUFFER_SIZE;
+    (*pmt)->formattype = FORMAT_WaveFormatEx;
+    (*pmt)->cbFormat = sizeof(MPEGLAYER3WAVEFORMAT);
+
+    p_mp3wvfmt->wfx.wFormatTag = WAVE_FORMAT_MPEGLAYER3;
+    p_mp3wvfmt->wfx.nChannels = 2;
+    p_mp3wvfmt->wfx.nSamplesPerSec = m_pFilter->OutputCaps[iIndex].nSampleRate;
+    p_mp3wvfmt->wfx.nAvgBytesPerSec = GET_DATARATE(m_pFilter->OutputCaps[iIndex].nBitRate);
+    p_mp3wvfmt->wfx.nBlockAlign = 1;
+    p_mp3wvfmt->wfx.wBitsPerSample = 0;
+    p_mp3wvfmt->wfx.cbSize = sizeof(MPEGLAYER3WAVEFORMAT) - sizeof(WAVEFORMATEX);
+
+    p_mp3wvfmt->wID = MPEGLAYER3_ID_MPEG;
+    p_mp3wvfmt->fdwFlags = MPEGLAYER3_FLAG_PADDING_ISO;
+    p_mp3wvfmt->nBlockSize = GET_FRAMELENGTH(m_pFilter->OutputCaps[iIndex].nBitRate, m_pFilter->OutputCaps[iIndex].nSampleRate);
+    p_mp3wvfmt->nFramesPerBlock = 1;
+    p_mp3wvfmt->nCodecDelay = 0;
+
+    // Set up the companion AUDIO_STREAM_CONFIG_CAPS structure
+    // We are only using the CHANNELS element of the structure
+    DECLARE_PTR(AUDIO_STREAM_CONFIG_CAPS, pascc, pSCC);
+
+    ZeroMemory(pascc, sizeof(AUDIO_STREAM_CONFIG_CAPS));
+    pascc->guid = MEDIATYPE_Audio;
+
+    pascc->MinimumChannels = 1;
+    pascc->MaximumChannels = 2;
+    pascc->ChannelsGranularity = 1;
+
+    pascc->MinimumSampleFrequency = p_mp3wvfmt->wfx.nSamplesPerSec;
+    pascc->MaximumSampleFrequency = p_mp3wvfmt->wfx.nSamplesPerSec;
+    pascc->SampleFrequencyGranularity = 0;
+
+    pascc->MinimumBitsPerSample = p_mp3wvfmt->wfx.wBitsPerSample;
+    pascc->MaximumBitsPerSample = p_mp3wvfmt->wfx.wBitsPerSample;
+    pascc->BitsPerSampleGranularity = 0;
+
+    return S_OK;
 }
 

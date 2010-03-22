@@ -54,6 +54,19 @@
 #define VALUE_MODE_FIXED            "Mode Fixed"
 
 
+typedef struct 
+{
+    DWORD      nSampleRate;
+    DWORD      nBitRate;
+    MPEG_mode  ChMode;                       //Channel coding mode
+} current_output_format_t;
+
+typedef struct 
+{
+    DWORD   nSampleRate;
+    DWORD   nBitRate;
+} output_caps_t;
+
 typedef struct
 {
     LONGLONG        sample;
@@ -64,9 +77,17 @@ typedef struct
 
 #define RESYNC_COUNT    4
 
+// The maximum number of capabilities that we can expose in our IAMStreamConfig
+// implementation is currently set to 100. This number is larger than we
+// should ever realistically need. However, a cleaner implementation might
+// be to use a dynamically sized array like std::vector or CAtlArray to 
+// hold this data.
+#define MAX_IAMSTREAMCONFIG_CAPS 100
+
 ///////////////////////////////////////////////////////////////////
 // CMpegAudEnc class - implementation for ITransformFilter interface
 ///////////////////////////////////////////////////////////////////
+class CMpegAudEncOutPin;
 class CMpegAudEncPropertyPage;
 class CMpegAudEnc : public CTransformFilter,
                     public ISpecifyPropertyPages,
@@ -183,15 +204,12 @@ private:
 
     HRESULT FlushEncodedSamples();
 
-    void SetOutMediaType();
-
     void ReadPresetSettings(MPEG_ENCODER_CONFIG *pmabsi);
+
+    void LoadOutputCapabilities(DWORD sample_rate);
 
     // Encoder object
     CEncoder                    m_Encoder;
-
-    // Current media out format
-    MPEGLAYER3WAVEFORMAT        m_mwf;
 
     REFERENCE_TIME              m_rtStreamTime;
     REFERENCE_TIME              m_rtFrameTime;
@@ -217,10 +235,53 @@ private:
 
 	REFERENCE_TIME m_rtBytePos;
 
-	BOOL						m_bStreamOutput;	// Binary stream output
-	long						m_cbStramAlignment;	// Stream block size
+	BOOL						m_bStreamOutput;      // Binary stream output
+	long						m_cbStreamAlignment;  // Stream block size
+    int                         m_CapsNum;
+	int                         m_currentMediaTypeIndex;
+    output_caps_t               OutputCaps[MAX_IAMSTREAMCONFIG_CAPS];
+
 protected:
+    friend class CMpegAudEncOutPin;
     friend class CMpegAudEncPropertyPage;
 };
 
 
+class CMpegAudEncOutPin : public CTransformOutputPin, public IAMStreamConfig
+{
+public:
+
+    //////////////////////////////////////////////////////////////////////////
+    //  IUnknown
+    //////////////////////////////////////////////////////////////////////////
+    DECLARE_IUNKNOWN
+    STDMETHODIMP NonDelegatingQueryInterface(REFIID riid, void ** ppv);
+
+    //////////////////////////////////////////////////////////////////////////
+    //  IAMStreamConfig
+    //////////////////////////////////////////////////////////////////////////
+    HRESULT STDMETHODCALLTYPE SetFormat(AM_MEDIA_TYPE *pmt);
+    HRESULT STDMETHODCALLTYPE GetFormat(AM_MEDIA_TYPE **ppmt);
+    HRESULT STDMETHODCALLTYPE GetNumberOfCapabilities(int *piCount, int *piSize);
+    HRESULT STDMETHODCALLTYPE GetStreamCaps(int iIndex, AM_MEDIA_TYPE **pmt, BYTE *pSCC);
+
+    //////////////////////////////////////////////////////////////////////////
+    //  CTransformOutputPin
+    //////////////////////////////////////////////////////////////////////////
+    CMpegAudEncOutPin( CMpegAudEnc * pFilter, HRESULT * pHr );
+    ~CMpegAudEncOutPin();
+
+    HRESULT CheckMediaType(const CMediaType *pmtOut);
+    HRESULT GetMediaType(int iPosition, CMediaType *pmt);
+    HRESULT SetMediaType(const CMediaType *pmt);
+    
+private:
+    BOOL        m_SetFormat;
+    CMpegAudEnc *m_pFilter;
+
+    current_output_format_t  m_CurrentOutputFormat;
+
+protected:
+    friend class CMpegAudEnc;
+
+};
