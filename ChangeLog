@@ -11,6 +11,97 @@
 
 -- 
 
+2010-03-22 20:28  robert
+
+	* doc/html/history.html (lame3_98):
+
+	updating latest changes
+
+2010-03-22 20:25  robert
+
+	* configure, configure.in (lame3_98):
+
+	Update version number in preparation for release.
+
+2010-03-22 20:19  robert
+
+	* doc/html/history.html (lame3_98):
+
+	updating latest changes
+
+2010-03-22 20:08  robert
+
+	* dshow/: Mpegac.cpp, Mpegac.h, Property.rc, README (lame3_98):
+
+	Joseph Flynn's direct show improvements
+
+2010-03-22 14:43  robert
+
+	* mpglib/README (lame3_98):
+
+	update licence information/header in decoder files
+
+2010-03-22 14:30  robert
+
+	* mpglib/common.c (lame3_98):
+
+	update licence information/header in decoder files
+
+2010-03-22 14:17  robert
+
+	* mpglib/AUTHORS, mpglib/Makefile.am, mpglib/Makefile.in,
+	  mpglib/common.c, mpglib/common.h, mpglib/dct64_i386.c,
+	  mpglib/dct64_i386.h, mpglib/decode_i386.c, mpglib/decode_i386.h,
+	  mpglib/huffman.h, mpglib/interface.c, mpglib/interface.h,
+	  mpglib/l2tables.h, mpglib/layer1.c, mpglib/layer1.h,
+	  mpglib/layer2.c, mpglib/layer2.h, mpglib/layer3.c,
+	  mpglib/layer3.h, mpglib/mpg123.h, mpglib/mpglib.h,
+	  mpglib/tabinit.c, mpglib/tabinit.h, LICENSE (lame3_98):
+
+	update licence information/header in decoder files
+
+2010-03-22 11:49  robert
+
+	* vc_solution/vc9_mpglib.vcproj (lame3_98):
+
+	adding header file to project
+
+2010-03-21 12:34  robert
+
+	* libmp3lame/version.h (lame3_98):
+
+	Update version number in preparation for release.
+
+2010-03-21 12:28  robert
+
+	* debian/: Makefile.am, Makefile.in (lame3_98):
+
+	Bug fix for tracker item ID: 2964898: Missing debian/compat
+
+2010-03-21 12:15  robert
+
+	* libmp3lame/util.c (lame3_98):
+
+	Bug fix for tracker item ID 2963080: Missing #ifdef/#endif in util.c ?
+
+2010-03-21 12:11  robert
+
+	* libmp3lame/reservoir.c (lame3_98):
+
+	Bug fix for tracker item ID: 2973877: A problem regarding the new drain code
+
+2010-02-27 03:57  robert
+
+	* dshow/: dshow.dsp, dshow.dsw (lame3_98):
+
+	Fixing line ending problem in VC project files, when checked out via make dist.
+
+2010-02-27 02:58  robert
+
+	* ChangeLog (lame3_98):
+
+	updating Changelog
+
 2010-02-27 02:51  robert
 
 	* doc/html/history.html (lame3_98):
