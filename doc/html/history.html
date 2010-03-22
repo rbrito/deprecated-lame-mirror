@@ -32,6 +32,36 @@ affect speed</font> <br>
 black = usability, portability, other
 <hr>
 
+<hr>
+<h3>LAME 3.98.4 &nbsp; &nbsp;March 22 2010</h3>
+<ul>
+  <li>Joseph Flynn
+    <ul>
+      <li>Improvements for LAME DirectShow filter:
+    <ul>
+      <li>Added support for the DirectShow IAMStreamConfig Interface to the LAME encoder filter output pin.
+      </li>
+      <li>Modified the DirectShow filter registration section so that the LAME Encoder filter is correctly registered in the Audio Compressors filter category. This will allow third-party encoding applications using the DirectShow System Device Enumerator Interface to correctly detect the LAME encoder when querying the Audio Compressors filter group.
+      </li>
+      <li>Modified the filter registration information so that the MP3 audio subtype is correctly reported as being supported on the encoder output pin. This will allow third-party encoding applications using the DirectShow IFilterMapper2 Interface to recognize that the LAME encoder supports MP3 output.
+      </li>
+      <li>Altered the Filter Merit Value that was being used when the filter was registered so that it is now using the standard DirectShow compressor filter merit value of MERIT_DO_NOT_USE (0x200000). Previously, the filter was being registered using a value of MERIT_SW_COMPRESSOR (0x100000), which was at a lower priority (i.e. worse priority) than MERIT_DO_NOT_USE. This prevented the LAME Encoder filter from being selected for use by some third-party encoding applications.
+      </li>
+      <li>Added code to calculate the frame length of the audio frames used for the nBlockSize element of the WAVEFORMATEX output structure. Previously this value was simply hard-coded to 1.
+      </li>
+    </ul>
+      </li>
+    </ul>
+  </li>
+
+  <li>Robert Hegemann
+    <ul>
+      <li><font color="#ff0000">Bug fix for tracker item <i>[ 2973877 ] A problem regarding the new drain code</i></font>
+      </li>
+    </ul>
+  </li>
+</ul>
+
 <h3>LAME 3.98.3 &nbsp; &nbsp;February 27 2010</h3>
 <ul>
   <li>Rog&eacute;rio Brito:
