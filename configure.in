@@ -18,7 +18,7 @@ dnl FRONTEND_CFLAGS
 dnl FRONTEND_LDADD
 
 AC_PREREQ(2.59)
-AC_INIT([lame],[3.98.3],[lame-dev@lists.sf.net])
+AC_INIT([lame],[3.98.4],[lame-dev@lists.sf.net])
 AC_CONFIG_SRCDIR([libmp3lame/lame.c])
 
 dnl check system
