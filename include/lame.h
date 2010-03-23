@@ -1242,7 +1242,7 @@ extern const int     samplerate_table [3][ 4];
 
 /* access functions for use in DLL, global vars are not exported */
 int CDECL lame_get_bitrate(int mpeg_version, int table_index);
-int CDECL lame_get_samplerate_table(int mpeg_version, int table_index);
+int CDECL lame_get_samplerate(int mpeg_version, int table_index);
 
 
 /* maximum size of albumart image (128KB), which affects LAME_MAXMP3BUFFER
