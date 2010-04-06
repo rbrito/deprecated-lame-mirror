@@ -747,13 +747,30 @@ int CDECL lame_encode_buffer_interleaved(
  */
 int CDECL lame_encode_buffer_float(
         lame_global_flags*  gfp,           /* global context handle         */
-        const float     buffer_l [],       /* PCM data for left channel     */
-        const float     buffer_r [],       /* PCM data for right channel    */
+        const float         pcm_l [],      /* PCM data for left channel     */
+        const float         pcm_r [],      /* PCM data for right channel    */
         const int           nsamples,      /* number of samples per channel */
         unsigned char*      mp3buf,        /* pointer to encoded MP3 stream */
         const int           mp3buf_size ); /* number of valid octets in this
                                               stream                        */
 
+/* as lame_encode_buffer, but for 'float's.
+ * !! NOTE: !! data must be scaled to +/- 1
+ */
+int CDECL lame_encode_buffer_ieee_float(
+        lame_t          gfp,
+        const float     pcm_l [],          /* PCM data for left channel     */
+        const float     pcm_r [],          /* PCM data for right channel    */
+        const int       nsamples,
+        unsigned char * mp3buf,
+        const int       mp3buf_size);
+int CDECL lame_encode_buffer_interleaved_ieee_float(
+        lame_t          gfp,
+        const float     pcm[],             /* PCM data for left and right
+                                              channel, interleaved          */
+        const int       nsamples,
+        unsigned char * mp3buf,
+        const int       mp3buf_size);
 
 /* as lame_encode_buffer, but for long's
  * !! NOTE: !! data must still be scaled to be in the same range as
@@ -1228,6 +1245,9 @@ int CDECL id3tag_set_comment_latin1(lame_global_flags * gfp,
 int CDECL id3tag_set_comment_ucs2(lame_global_flags * gfp,
                                   char const *lang,
                                   unsigned short const *desc, unsigned short const *text);
+
+/* experimental */
+int CDECL id3tag_set_fieldvalue_ucs2(lame_t gfp, const unsigned short *fieldvalue);
 
 /***********************************************************************
 *

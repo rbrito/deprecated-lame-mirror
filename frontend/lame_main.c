@@ -394,29 +394,28 @@ lame_encoder_loop(lame_global_flags * gf, FILE * outf, int nogap, char *inPath, 
 {
     unsigned char mp3buffer[LAME_MAXMP3BUFFER];
     int     Buffer[2][1152];
-    int     iread, imp3, owrite, id3v2_size;
+    int     iread, imp3, owrite;
+    size_t  id3v2_size;
 
     encoder_progress_begin(gf, inPath, outPath);
 
-    imp3 = lame_get_id3v2_tag(gf, mp3buffer, sizeof(mp3buffer));
-    if ((size_t)imp3 > sizeof(mp3buffer)) {
-        encoder_progress_end(gf);
-        error_printf("Error writing ID3v2 tag: buffer too small: buffer size=%d  ID3v2 size=%d\n"
-                    , sizeof(mp3buffer)
-                    , imp3
-                    );
-        return 1;
-    }
-    owrite = (int) fwrite(mp3buffer, 1, imp3, outf);
-    if (owrite != imp3) {
-        encoder_progress_end(gf);
-        error_printf("Error writing ID3v2 tag \n");
-        return 1;
+    id3v2_size = lame_get_id3v2_tag(gf, 0, 0);
+    if (id3v2_size > 0) {
+        unsigned char* id3v2tag = malloc(id3v2_size);
+        if (id3v2tag != 0) {
+            imp3 = lame_get_id3v2_tag(gf, id3v2tag, id3v2_size);
+            owrite = (int) fwrite(id3v2tag, 1, imp3, outf);    
+            free(id3v2tag);
+            if (owrite != imp3) {
+                encoder_progress_end(gf);
+                error_printf("Error writing ID3v2 tag \n");
+                return 1;
+            }
+        }
     }
     if (global_writer.flush_write == 1) {
         fflush(outf);
     }    
-    id3v2_size = imp3;
     
     /* encode until we hit eof */
     do {

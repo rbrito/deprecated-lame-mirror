@@ -313,6 +313,15 @@ id3tag_set_pad(lame_global_flags * gfp, size_t n)
     gfc->tag_spec.padding_size = n;
 }
 
+static int
+hasUcs2ByteOrderMarker(unsigned short bom)
+{
+    if (bom == 0xFFFEu || bom == 0xFEFFu) {
+        return 1;
+    }
+    return 0;
+}
+
 
 static  size_t
 local_strdup(char **dst, const char *src)
@@ -365,7 +374,7 @@ local_ucs2_strdup(unsigned short **dst, unsigned short const *src)
     return 0;
 }
 
-#if 0
+
 static  size_t
 local_ucs2_strlen(unsigned short const *s)
 {
@@ -377,7 +386,42 @@ local_ucs2_strlen(unsigned short const *s)
     }
     return n;
 }
-#endif
+
+
+static size_t
+local_ucs2_substr(unsigned short** dst, unsigned short const* src, size_t start, size_t end)
+{
+    unsigned short *ptr;
+    size_t len = 1 + 1 + ((start < end) ? (end - start) : 0);
+    ptr = malloc(len * sizeof(ptr[0]));
+    *dst = ptr;
+    if (ptr == 0) return 0;
+    if (hasUcs2ByteOrderMarker(src[0])) {
+        *ptr++ = src[0];
+        if (start == 0) {
+            ++start;
+        }
+    }
+    while (start < end) {
+        *ptr++ = src[start];
+        ++start;
+    }
+    *ptr++ = 0;
+    return len;
+}
+
+static int
+local_ucs2_pos(unsigned short const* str, unsigned short c)
+{
+    int     i;
+    for (i = 0; str != 0 && str[i] != 0; ++i) {
+        if (str[i] == c) {
+            return i;
+        }
+    }
+    return -1;
+}
+
 
 /*
 Some existing options for ID3 tag can be specified by --tv option
@@ -397,10 +441,6 @@ id3tag_set_albumart(lame_global_flags * gfp, const char *image, size_t size)
     unsigned char const *data = (unsigned char const *) image;
     lame_internal_flags *gfc = gfp->internal_flags;
 
-    /* make sure the image size is no larger than the maximum value */
-    if (LAME_MAXALBUMART < size) {
-        return -1;
-    }
     /* determine MIME type from the actual image data */
     if (2 < size && data[0] == 0xFF && data[1] == 0xD8) {
         mimetype = MIMETYPE_JPEG;
@@ -466,6 +506,27 @@ toID3v2TagId(char const *s)
     return x;
 }
 
+static uint32_t
+toID3v2TagId_ucs2(unsigned short const *s)
+{
+    unsigned int i, x = 0;
+    if (s == 0) {
+        return 0;
+    }
+    for (i = 0; i < 4 && s[i] != 0; ++i) {
+        unsigned short const c = s[i];
+        unsigned int const u = 0x0ff & c;
+        x <<= 8;
+        x |= u;
+        if (c < 'A' || 'Z' < c) {
+            if (c < '0' || '9' < c) {
+                return 0;
+            }
+        }
+    }
+    return x;
+}
+
 static int
 isNumericString(uint32_t frame_id)
 {
@@ -513,15 +574,6 @@ isFullTextString(int frame_id)
     return 0;
 }
 #endif
-
-static int
-hasUcs2ByteOrderMarker(unsigned short bom)
-{
-    if (bom == 0xFFFEu || bom == 0xFEFFu) {
-        return 1;
-    }
-    return 0;
-}
 
 static FrameDataNode *
 findNode(id3tag_spec const *tag, uint32_t frame_id, FrameDataNode const *last)
@@ -689,6 +741,40 @@ id3v2_add_latin1(lame_internal_flags * gfc, uint32_t frame_id, char const *lang,
 }
 
 
+static int
+id3tag_set_userinfo_latin1(lame_internal_flags* gfc, char const *fieldvalue)
+{
+    int     rc;
+    char* dsc = 0, *val;
+    local_strdup(&dsc, fieldvalue);
+    val = dsc;
+    while (*val) {
+        if (*val == '=') {
+            *val++ = 0;
+            break;
+        }
+        ++val;
+    }
+    rc = id3v2_add_latin1(gfc, ID_TXXX, "XXX", dsc, val);
+    free(dsc);
+    return rc;
+}
+
+static int
+id3tag_set_userinfo_ucs2(lame_internal_flags* gfc, unsigned short const *fieldvalue)
+{
+    int     a, b, rc;
+    unsigned short* dsc = 0, *val = 0;
+    b = local_ucs2_strlen(fieldvalue);
+    a = local_ucs2_pos(fieldvalue, '=');
+    local_ucs2_substr(&dsc, fieldvalue, 0, a);
+    local_ucs2_substr(&val, fieldvalue, a+1, b);
+    rc = id3v2_add_ucs2(gfc, ID_TXXX, "XXX", dsc, val);
+    free(dsc);
+    free(val);
+    return rc;
+}
+
 int
 id3tag_set_textinfo_ucs2(lame_global_flags * gfp, char const *id, unsigned short const *text)
 {
@@ -708,6 +794,9 @@ id3tag_set_textinfo_ucs2(lame_global_flags * gfp, char const *id, unsigned short
             return -3;  /* BOM missing */
         }
         if (gfp != 0) {
+            if (frame_id == ID_TXXX) {
+                return id3tag_set_userinfo_ucs2(gfp->internal_flags, text);
+            }
             return id3v2_add_ucs2(gfp->internal_flags, frame_id, 0, 0, text);
         }
     }
@@ -727,6 +816,9 @@ id3tag_set_textinfo_latin1(lame_global_flags * gfp, char const *id, char const *
             return 0;
         }
         if (gfp != 0) {
+            if (frame_id == ID_TXXX) {
+                return id3tag_set_userinfo_latin1(gfp->internal_flags, text);
+            }
             return id3v2_add_latin1(gfp->internal_flags, frame_id, 0, 0, text);
         }
     }
@@ -1011,9 +1103,15 @@ sizeOfNode(FrameDataNode const *node)
         switch (node->txt.enc) {
         default:
         case 0:
+            if (node->dsc.dim > 0) {
+                n += node->dsc.dim + 1;
+            }
             n += node->txt.dim;
             break;
         case 1:
+            if (node->dsc.dim > 0) {
+                n += (node->dsc.dim+1) * 2;
+            }
             n += node->txt.dim * 2;
             break;
         }
@@ -1075,7 +1173,7 @@ set_frame_comment(unsigned char *frame, FrameDataNode const *node)
 {
     size_t const n = sizeOfCommentNode(node);
     if (n > 10) {
-        frame = set_4_byte_value(frame, ID_COMMENT);
+        frame = set_4_byte_value(frame, node->fid);
         frame = set_4_byte_value(frame, (uint32_t) (n - 10));
         /* clear 2-byte header flags */
         *frame++ = 0;
@@ -1119,6 +1217,17 @@ set_frame_custom2(unsigned char *frame, FrameDataNode const *node)
         *frame++ = 0;
         /* clear 1 encoding descriptor byte to indicate ISO-8859-1 format */
         *frame++ = node->txt.enc == 1 ? 1 : 0;
+        if (node->dsc.dim > 0) {
+            if (node->dsc.enc != 1) {
+                frame = writeChars(frame, node->dsc.ptr.l, node->dsc.dim);
+                *frame++ = 0;
+            }
+            else {
+                frame = writeUcs2s(frame, node->dsc.ptr.u, node->dsc.dim);
+                *frame++ = 0;
+                *frame++ = 0;
+            }
+        }
         if (node->txt.enc != 1) {
             frame = writeChars(frame, node->txt.ptr.l, node->txt.dim);
         }
@@ -1190,6 +1299,32 @@ id3tag_set_fieldvalue(lame_global_flags * gfp, const char *fieldvalue)
     }
     id3tag_add_v2(gfp);
     return 0;
+}
+
+int
+id3tag_set_fieldvalue_ucs2(lame_global_flags * gfp, const unsigned short *fieldvalue)
+{
+    if (fieldvalue && *fieldvalue) {
+        size_t dx = hasUcs2ByteOrderMarker(fieldvalue[0]);
+        char fid[5] = {0,0,0,0,0};
+        uint32_t const frame_id = toID3v2TagId_ucs2(fieldvalue+dx);
+        if (local_ucs2_strlen(fieldvalue) < (5+dx) || fieldvalue[dx+4] != '=') {
+            return -1;
+        }
+        fid[0] = (fieldvalue[dx+0] & 0x0ff);
+        fid[1] = (fieldvalue[dx+1] & 0x0ff);
+        fid[2] = (fieldvalue[dx+2] & 0x0ff);
+        fid[3] = (fieldvalue[dx+3] & 0x0ff);
+        if (frame_id != 0) {
+            unsigned short* txt = 0;
+            int     rc;
+            local_ucs2_substr(&txt, fieldvalue, dx+5, local_ucs2_strlen(fieldvalue));
+            rc = id3tag_set_textinfo_ucs2(gfp, fid, txt);
+            free(txt);
+            return rc;
+        }
+    }
+    return -1;
 }
 
 size_t

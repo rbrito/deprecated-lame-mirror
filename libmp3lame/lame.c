@@ -4,7 +4,7 @@
  *
  *      Copyright (c) 1999-2000 Mark Taylor
  *      Copyright (c) 2000-2005 Takehiro Tominaga
- *      Copyright (c) 2000-2005 Robert Hegemann
+ *      Copyright (c) 2000-2010 Robert Hegemann
  *      Copyright (c) 2000-2005 Gabriel Bouvigne
  *      Copyright (c) 2000-2004 Alexander Leidinger
  *
@@ -1591,6 +1591,56 @@ calcNeeded(SessionConfig_t const * cfg)
     return mf_needed;
 }
 
+static void
+lame_in_data_transform(lame_internal_flags* gfc, int nsamples, FLOAT s)
+{
+    SessionConfig_t const *const cfg = &gfc->cfg;
+    EncStateVar_t *const esv = &gfc->sv_enc;
+    sample_t* buffer_l = esv->in_buffer_0;
+    sample_t* buffer_r = esv->in_buffer_1;
+    FLOAT   m[2][2] = { {1, 0}, {0, 1} };
+    int     i;
+
+    /* Apply user defined re-scaling */
+
+    /* user selected scaling of the samples */
+    if (NEQ(cfg->scale, 0) && NEQ(cfg->scale, 1.0)) {
+        m[0][0] *= cfg->scale;
+        m[0][1] *= cfg->scale;
+        m[1][0] *= cfg->scale;
+        m[1][1] *= cfg->scale;
+    }
+    /* user selected scaling of the channel 0 (left) samples */
+    if (NEQ(cfg->scale_left, 0) && NEQ(cfg->scale_left, 1.0)) {
+        m[0][0] *= cfg->scale_left;
+        m[0][1] *= cfg->scale_left;
+    }
+    /* user selected scaling of the channel 1 (right) samples */
+    if (NEQ(cfg->scale_right, 0) && NEQ(cfg->scale_right, 1.0)) {
+        m[1][0] *= cfg->scale_right;
+        m[1][1] *= cfg->scale_right;
+    }
+    /* Downsample to Mono if 2 channels in and 1 channel out */
+    if (cfg->channels_in == 2 && cfg->channels_out == 1) {
+        m[0][0] = 0.5 * (m[0][0] + m[1][0]);
+        m[0][1] = 0.5 * (m[0][1] + m[1][1]);
+        m[1][0] = 0;
+        m[1][1] = 0;
+    }
+    m[0][0] *= s;
+    m[0][1] *= s;
+    m[1][0] *= s;
+    m[1][1] *= s;
+
+    for (i = 0; i < nsamples; ++i) {
+        sample_t const l = buffer_l[i];
+        sample_t const r = buffer_r[i];
+        sample_t const u = l * m[0][0] + r * m[0][1];
+        sample_t const v = l * m[1][0] + r * m[1][1];
+        buffer_l[i] = u; 
+        buffer_r[i] = v;
+    }
+}
 
 /*
  * THE MAIN LAME ENCODING INTERFACE
@@ -1614,8 +1664,6 @@ calcNeeded(SessionConfig_t const * cfg)
 */
 static int
 lame_encode_buffer_sample_t(lame_internal_flags * gfc,
-                            sample_t buffer_l[],
-                            sample_t buffer_r[],
                             int nsamples, unsigned char *mp3buf, const int mp3buf_size)
 {
     SessionConfig_t const *const cfg = &gfc->cfg;
@@ -1639,43 +1687,8 @@ lame_encode_buffer_sample_t(lame_internal_flags * gfc,
     mp3buf += mp3out;
     mp3size += mp3out;
 
-
-    in_buffer[0] = buffer_l;
-    in_buffer[1] = buffer_r;
-
-
-    /* Apply user defined re-scaling */
-
-    /* user selected scaling of the samples */
-    if (NEQ(cfg->scale, 0) && NEQ(cfg->scale, 1.0)) {
-        for (i = 0; i < nsamples; ++i) {
-            in_buffer[0][i] *= cfg->scale;
-            if (cfg->channels_out == 2)
-                in_buffer[1][i] *= cfg->scale;
-        }
-    }
-
-    /* user selected scaling of the channel 0 (left) samples */
-    if (NEQ(cfg->scale_left, 0) && NEQ(cfg->scale_left, 1.0)) {
-        for (i = 0; i < nsamples; ++i) {
-            in_buffer[0][i] *= cfg->scale_left;
-        }
-    }
-
-    /* user selected scaling of the channel 1 (right) samples */
-    if (NEQ(cfg->scale_right, 0) && NEQ(cfg->scale_right, 1.0)) {
-        for (i = 0; i < nsamples; ++i) {
-            in_buffer[1][i] *= cfg->scale_right;
-        }
-    }
-
-    /* Downsample to Mono if 2 channels in and 1 channel out */
-    if (cfg->channels_in == 2 && cfg->channels_out == 1) {
-        for (i = 0; i < nsamples; ++i) {
-            in_buffer[0][i] = 0.5 * ((FLOAT) in_buffer[0][i] + in_buffer[1][i]);
-            in_buffer[1][i] = 0.0;
-        }
-    }
+    in_buffer[0] = esv->in_buffer_0;
+    in_buffer[1] = esv->in_buffer_1;
 
     mf_needed = calcNeeded(cfg);
 
@@ -1781,14 +1794,22 @@ lame_encode_buffer(lame_global_flags * gfp,
             in_buffer[1] = esv->in_buffer_1;
 
             /* make a copy of input buffer, changing type to sample_t */
-            for (i = 0; i < nsamples; i++) {
-                in_buffer[0][i] = buffer_l[i];
-                if (cfg->channels_in > 1)
+            if (cfg->channels_in > 1) {
+                for (i = 0; i < nsamples; i++) {
+                    in_buffer[0][i] = buffer_l[i];
                     in_buffer[1][i] = buffer_r[i];
+                }
+            }
+            else {
+                for (i = 0; i < nsamples; i++) {
+                    in_buffer[0][i] = buffer_l[i];
+                    in_buffer[1][i] = 0;
+                }
             }
 
-            return lame_encode_buffer_sample_t(gfc, in_buffer[0], in_buffer[1],
-                                               nsamples, mp3buf, mp3buf_size);
+            lame_in_data_transform(gfc, nsamples, 1.0);
+
+            return lame_encode_buffer_sample_t(gfc, nsamples, mp3buf, mp3buf_size);
         }
     }
     return -3;
@@ -1820,14 +1841,22 @@ lame_encode_buffer_float(lame_global_flags * gfp,
             in_buffer[1] = esv->in_buffer_1;
 
             /* make a copy of input buffer, changing type to sample_t */
-            for (i = 0; i < nsamples; i++) {
-                in_buffer[0][i] = buffer_l[i];
-                if (cfg->channels_in > 1)
+            if (cfg->channels_in > 1) {
+                for (i = 0; i < nsamples; i++) {
+                    in_buffer[0][i] = buffer_l[i];
                     in_buffer[1][i] = buffer_r[i];
+                }
+            }
+            else {
+                for (i = 0; i < nsamples; i++) {
+                    in_buffer[0][i] = buffer_l[i];
+                    in_buffer[1][i] = 0;
+                }
             }
 
-            return lame_encode_buffer_sample_t(gfc, in_buffer[0], in_buffer[1],
-                                               nsamples, mp3buf, mp3buf_size);
+            lame_in_data_transform(gfc, nsamples, 1.0);
+
+            return lame_encode_buffer_sample_t(gfc, nsamples, mp3buf, mp3buf_size);
         }
     }
     return -3;
@@ -1835,51 +1864,9 @@ lame_encode_buffer_float(lame_global_flags * gfp,
 
 
 int
-lame_encode_buffer_int(lame_global_flags * gfp,
-                       const int buffer_l[],
-                       const int buffer_r[],
-                       const int nsamples, unsigned char *mp3buf, const int mp3buf_size)
-{
-    if (is_lame_global_flags_valid(gfp)) {
-        lame_internal_flags *const gfc = gfp->internal_flags;
-        if (is_lame_internal_flags_valid(gfc)) {
-            SessionConfig_t const *const cfg = &gfc->cfg;
-            EncStateVar_t *const esv = &gfc->sv_enc;
-            sample_t *in_buffer[2];
-            int     i;
-
-            if (nsamples == 0)
-                return 0;
-
-            if (update_inbuffer_size(gfc, nsamples) != 0) {
-                return -2;
-            }
-
-            in_buffer[0] = esv->in_buffer_0;
-            in_buffer[1] = esv->in_buffer_1;
-
-            /* make a copy of input buffer, changing type to sample_t */
-            for (i = 0; i < nsamples; i++) {
-                /* internal code expects +/- 32768.0 */
-                in_buffer[0][i] = buffer_l[i] * (1.0 / (1L << (8 * sizeof(int) - 16)));
-                if (cfg->channels_in > 1)
-                    in_buffer[1][i] = buffer_r[i] * (1.0 / (1L << (8 * sizeof(int) - 16)));
-            }
-
-            return lame_encode_buffer_sample_t(gfc, in_buffer[0], in_buffer[1],
-                                               nsamples, mp3buf, mp3buf_size);
-        }
-    }
-    return -3;
-}
-
-
-
-
-int
-lame_encode_buffer_long2(lame_global_flags * gfp,
-                         const long buffer_l[],
-                         const long buffer_r[],
+lame_encode_buffer_ieee_float(lame_t gfp,
+                         const float buffer_l[],
+                         const float buffer_r[],
                          const int nsamples, unsigned char *mp3buf, const int mp3buf_size)
 {
     if (is_lame_global_flags_valid(gfp)) {
@@ -1901,15 +1888,168 @@ lame_encode_buffer_long2(lame_global_flags * gfp,
             in_buffer[1] = esv->in_buffer_1;
 
             /* make a copy of input buffer, changing type to sample_t */
-            for (i = 0; i < nsamples; i++) {
-                /* internal code expects +/- 32768.0 */
-                in_buffer[0][i] = buffer_l[i] * (1.0 / (1L << (8 * sizeof(long) - 16)));
-                if (cfg->channels_in > 1)
-                    in_buffer[1][i] = buffer_r[i] * (1.0 / (1L << (8 * sizeof(long) - 16)));
+            if (cfg->channels_in > 1) {
+                for (i = 0; i < nsamples; i++) {
+                    in_buffer[0][i] = buffer_l[i];
+                    in_buffer[1][i] = buffer_r[i];
+                }
+            }
+            else {
+                for (i = 0; i < nsamples; i++) {
+                    in_buffer[0][i] = buffer_l[i];
+                    in_buffer[1][i] = 0;
+                }
             }
 
-            return lame_encode_buffer_sample_t(gfc, in_buffer[0], in_buffer[1],
-                                               nsamples, mp3buf, mp3buf_size);
+            lame_in_data_transform(gfc, nsamples, 32767.0);
+
+            return lame_encode_buffer_sample_t(gfc, nsamples, mp3buf, mp3buf_size);
+        }
+    }
+    return -3;
+}
+
+
+int
+lame_encode_buffer_interleaved_ieee_float(lame_t gfp,
+                         const float buffer[],
+                         const int nsamples, unsigned char *mp3buf, const int mp3buf_size)
+{
+    if (is_lame_global_flags_valid(gfp)) {
+        lame_internal_flags *const gfc = gfp->internal_flags;
+        if (is_lame_internal_flags_valid(gfc)) {
+            SessionConfig_t const *const cfg = &gfc->cfg;
+            EncStateVar_t *const esv = &gfc->sv_enc;
+            sample_t *in_buffer[2];
+            int     i;
+
+            if (nsamples == 0)
+                return 0;
+
+            if (update_inbuffer_size(gfc, nsamples) != 0) {
+                return -2;
+            }
+
+            in_buffer[0] = esv->in_buffer_0;
+            in_buffer[1] = esv->in_buffer_1;
+
+            /* make a copy of input buffer, changing type to sample_t */
+            if (cfg->channels_in > 1) {
+                for (i = 0; i < nsamples; i++) {
+                    in_buffer[0][i] = buffer[2*i];
+                    in_buffer[1][i] = buffer[2*i+1];
+                }
+            }
+            else {
+                for (i = 0; i < nsamples; i++) {
+                    in_buffer[0][i] = buffer[i];
+                    in_buffer[1][i] = 0;
+                }
+            }
+
+            lame_in_data_transform(gfc, nsamples, 32767.0);
+
+            return lame_encode_buffer_sample_t(gfc, nsamples, mp3buf, mp3buf_size);
+        }
+    }
+    return -3;
+}
+
+
+int
+lame_encode_buffer_int(lame_global_flags * gfp,
+                       const int buffer_l[],
+                       const int buffer_r[],
+                       const int nsamples, unsigned char *mp3buf, const int mp3buf_size)
+{
+    if (is_lame_global_flags_valid(gfp)) {
+        lame_internal_flags *const gfc = gfp->internal_flags;
+        if (is_lame_internal_flags_valid(gfc)) {
+            SessionConfig_t const *const cfg = &gfc->cfg;
+            EncStateVar_t *const esv = &gfc->sv_enc;
+            sample_t *in_buffer[2];
+            int     i;
+            /* internal code expects +/- 32768.0 */
+            FLOAT const norm = (1.0 / (1L << (8 * sizeof(int) - 16)));
+
+            if (nsamples == 0)
+                return 0;
+
+            if (update_inbuffer_size(gfc, nsamples) != 0) {
+                return -2;
+            }
+
+            in_buffer[0] = esv->in_buffer_0;
+            in_buffer[1] = esv->in_buffer_1;
+
+            /* make a copy of input buffer, changing type to sample_t */
+            if (cfg->channels_in > 1) {
+                for (i = 0; i < nsamples; i++) {
+                    in_buffer[0][i] = buffer_l[i];
+                    in_buffer[1][i] = buffer_r[i];
+                }
+            }
+            else {
+                for (i = 0; i < nsamples; i++) {
+                    in_buffer[0][i] = buffer_l[i];
+                    in_buffer[1][i] = 0;
+                }
+            }
+
+            lame_in_data_transform(gfc, nsamples, norm);
+
+            return lame_encode_buffer_sample_t(gfc, nsamples, mp3buf, mp3buf_size);
+        }
+    }
+    return -3;
+}
+
+
+
+
+int
+lame_encode_buffer_long2(lame_global_flags * gfp,
+                         const long buffer_l[],
+                         const long buffer_r[],
+                         const int nsamples, unsigned char *mp3buf, const int mp3buf_size)
+{
+    if (is_lame_global_flags_valid(gfp)) {
+        lame_internal_flags *const gfc = gfp->internal_flags;
+        if (is_lame_internal_flags_valid(gfc)) {
+            SessionConfig_t const *const cfg = &gfc->cfg;
+            EncStateVar_t *const esv = &gfc->sv_enc;
+            sample_t *in_buffer[2];
+            int     i;
+            /* internal code expects +/- 32768.0 */
+            FLOAT const norm = (1.0 / (1L << (8 * sizeof(long) - 16)));
+
+            if (nsamples == 0)
+                return 0;
+
+            if (update_inbuffer_size(gfc, nsamples) != 0) {
+                return -2;
+            }
+
+            in_buffer[0] = esv->in_buffer_0;
+            in_buffer[1] = esv->in_buffer_1;
+
+            /* make a copy of input buffer, changing type to sample_t */
+            if (cfg->channels_in > 1) {
+                for (i = 0; i < nsamples; i++) {
+                    in_buffer[0][i] = buffer_l[i];
+                    in_buffer[1][i] = buffer_r[i];
+                }
+            }
+            else {
+                for (i = 0; i < nsamples; i++) {
+                    in_buffer[0][i] = buffer_l[i];
+                    in_buffer[1][i] = 0;
+                }
+            }
+
+            lame_in_data_transform(gfc, nsamples, norm);
+
+            return lame_encode_buffer_sample_t(gfc, nsamples, mp3buf, mp3buf_size);
         }
     }
     return -3;
@@ -1942,26 +2082,26 @@ lame_encode_buffer_long(lame_global_flags * gfp,
             in_buffer[1] = esv->in_buffer_1;
 
             /* make a copy of input buffer, changing type to sample_t */
-            for (i = 0; i < nsamples; i++) {
-                in_buffer[0][i] = buffer_l[i];
-                if (cfg->channels_in > 1)
+            if (cfg->channels_in > 1) {
+                for (i = 0; i < nsamples; i++) {
+                    in_buffer[0][i] = buffer_l[i];
                     in_buffer[1][i] = buffer_r[i];
+                }
+            }
+            else {
+                for (i = 0; i < nsamples; i++) {
+                    in_buffer[0][i] = buffer_l[i];
+                    in_buffer[1][i] = 0;
+                }
             }
 
-            return lame_encode_buffer_sample_t(gfc, in_buffer[0], in_buffer[1],
-                                               nsamples, mp3buf, mp3buf_size);
+            lame_in_data_transform(gfc, nsamples, 1.0);
+
+            return lame_encode_buffer_sample_t(gfc, nsamples, mp3buf, mp3buf_size);
         }
     }
     return -3;
 }
-
-
-
-
-
-
-
-
 
 
 
@@ -1988,8 +2128,10 @@ lame_encode_buffer_interleaved(lame_global_flags * gfp,
                 in_buffer[0][i] = buffer[2 * i];
                 in_buffer[1][i] = buffer[2 * i + 1];
             }
-            return lame_encode_buffer_sample_t(gfc, in_buffer[0], in_buffer[1], nsamples, mp3buf,
-                                               mp3buf_size);
+
+            lame_in_data_transform(gfc, nsamples, 1.0);
+
+            return lame_encode_buffer_sample_t(gfc, nsamples, mp3buf, mp3buf_size);
         }
     }
     return -3;

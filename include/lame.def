@@ -289,3 +289,4 @@ lame_get_write_id3tag_automatic	@2019
 id3tag_set_pad	@2020
 id3tag_set_comment_ucs2	@2021
 id3tag_set_textinfo_ucs2 @2022
+id3tag_set_fieldvalue_ucs2	@2023

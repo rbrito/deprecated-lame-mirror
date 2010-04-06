@@ -296,6 +296,7 @@ set_id3v2tag(lame_global_flags* gfp, int type, unsigned short const* str)
         case 'g': return id3tag_set_textinfo_ucs2(gfp, "TCON", str);
         case 'c': return id3tag_set_comment_ucs2(gfp, 0, 0, str);
         case 'n': return id3tag_set_textinfo_ucs2(gfp, "TRCK", str);
+        case 'v': return id3tag_set_fieldvalue_ucs2(gfp, str);
     }
     return 0;
 }
@@ -1375,7 +1376,7 @@ set_id3_albumart(lame_t gfp, char const* file_name)
     case 1: error_printf("Could not find: '%s'.\n", file_name); break;
     case 2: error_printf("Insufficient memory for reading the albumart.\n"); break;
     case 3: error_printf("Read error: '%s'.\n", file_name); break;
-    case 4: error_printf("Unsupported image: '%s'.\nSpecify JPEG/PNG/GIF image (128KB maximum)\n", file_name); break;
+    case 4: error_printf("Unsupported image: '%s'.\nSpecify JPEG/PNG/GIF image\n", file_name); break;
     default: break;
     }
     return ret;
@@ -1753,7 +1754,7 @@ parse_args(lame_global_flags * gfp, int argc, char **argv,
                 T_ELIF("uAlbum")  argUsed = 1; id3_tag(gfp, 'l', TENC_UCS2, nextArg);
                 T_ELIF("uGenre")  argUsed = 1; id3_tag(gfp, 'g', TENC_UCS2, nextArg);
                 T_ELIF("uComment")argUsed = 1; id3_tag(gfp, 'c', TENC_UCS2, nextArg);
-                /*
+                
                 T_ELIF("uFieldvalue")
                     argUsed = 1;
                     if (id3_tag(gfp, 'v', TENC_UCS2, nextArg)) {
@@ -1761,7 +1762,7 @@ parse_args(lame_global_flags * gfp, int argc, char **argv,
                             error_printf("Invalid field value: '%s'. Ignored\n", nextArg);
                         }
                     }
-                */
+                
 #endif
 
                 T_ELIF("lowpass")
