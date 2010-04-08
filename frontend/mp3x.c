@@ -49,7 +49,10 @@ lame_main(lame_t gf, int argc, char **argv)
     }
     (void) lame_set_analysis(gf, 1);
 
-    init_infile(gf, inPath);
+    if (init_infile(gf, inPath) < 0) {
+        error_printf("Can't init infile '%s'\n", inPath);
+        return 1;
+    }
     lame_init_params(gf);
     lame_print_config(gf);
 

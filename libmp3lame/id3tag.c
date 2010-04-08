@@ -391,23 +391,24 @@ local_ucs2_strlen(unsigned short const *s)
 static size_t
 local_ucs2_substr(unsigned short** dst, unsigned short const* src, size_t start, size_t end)
 {
-    unsigned short *ptr;
-    size_t len = 1 + 1 + ((start < end) ? (end - start) : 0);
-    ptr = malloc(len * sizeof(ptr[0]));
+    size_t const len = 1 + 1 + ((start < end) ? (end - start) : 0);
+    size_t n = 0;
+    unsigned short *ptr = calloc(len, sizeof(ptr[0]));
     *dst = ptr;
-    if (ptr == 0) return 0;
+    if (ptr == 0 || src == 0) {
+        return 0;
+    }
     if (hasUcs2ByteOrderMarker(src[0])) {
-        *ptr++ = src[0];
+        ptr[n++] = src[0];
         if (start == 0) {
             ++start;
         }
     }
     while (start < end) {
-        *ptr++ = src[start];
-        ++start;
+        ptr[n++] = src[start++];
     }
-    *ptr++ = 0;
-    return len;
+    ptr[n] = 0;
+    return n;
 }
 
 static int

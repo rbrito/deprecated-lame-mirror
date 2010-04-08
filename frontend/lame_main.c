@@ -148,7 +148,10 @@ init_files(lame_global_flags * gf, char const *inPath, char const *outPath)
      * if you want to do your own file input, skip this call and set
      * samplerate, num_channels and num_samples yourself.
      */
-    init_infile(gf, inPath);
+    if (init_infile(gf, inPath) < 0) {
+        error_printf("Can't init infile '%s'\n", inPath);
+        return NULL;
+    }
     if ((outf = init_outfile(outPath, lame_get_decode_only(gf))) == NULL) {
         error_printf("Can't init outfile '%s'\n", outPath);
         return NULL;

@@ -82,7 +82,7 @@ char   *strchr(), *strrchr();
 
 #ifdef LIBSNDFILE
 
-#include "sndfile.h"
+#include <sndfile.h>
 
 
 #else
@@ -437,7 +437,7 @@ setSkipStartAndEnd(lame_t gfp, int enc_delay, int enc_padding)
 
 
 
-void
+int
 init_infile(lame_t gfp, char const *inPath)
 {
     int     enc_delay = 0, enc_padding = 0;
@@ -460,6 +460,7 @@ init_infile(lame_t gfp, char const *inPath)
           lame_set_num_samples(gfp, n > discard ? n - discard : 0);
       }
     }
+    return global.musicin != NULL ? 1 : -1;
 }
 
 int
@@ -822,12 +823,6 @@ OpenSndFile(lame_t gfp, char const *inPath, int *enc_delay, int *enc_padding)
         }
         (void) lame_set_in_samplerate(gfp, global_decoder.mp3input_data.samplerate);
         (void) lame_set_num_samples(gfp, global_decoder.mp3input_data.nsamp);
-    }
-    else if (global_reader.input_format == sf_ogg) {
-        if (global_ui_config.silent < 10) {
-            error_printf("sorry, vorbis support in LAME is deprecated.\n");
-        }
-        exit(1);
     }
     else {
         /* Try to open the sound file */

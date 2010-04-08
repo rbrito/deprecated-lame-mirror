@@ -2348,11 +2348,6 @@ parse_args(lame_global_flags * gfp, int argc, char **argv,
     }
 #endif
 
-
-    if (global_reader.input_format == sf_ogg) {
-        error_printf("sorry, vorbis support in LAME is deprecated.\n");
-        return -1;
-    }
     /* default guess for number of channels */
     if (autoconvert)
         (void) lame_set_num_channels(gfp, 2);

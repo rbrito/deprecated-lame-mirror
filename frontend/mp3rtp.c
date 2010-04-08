@@ -208,7 +208,10 @@ lame_main(lame_t gf, int argc, char **argv)
      * if you want to do your own file input, skip this call and set
      * these values yourself.  
      */
-    init_infile(gf, inPath);
+    if (init_infile(gf, inPath) < 0) {
+        error_printf("Can't init infile '%s'\n", inPath);
+        return 1;
+    }
 
 
     /* Now that all the options are set, lame needs to analyze them and

@@ -44,7 +44,7 @@ typedef enum sound_file_format_e {
 
 int     is_mpeg_file_format( int input_format );
 
-void    init_infile(lame_t gfp, char const * inPath);
+int     init_infile(lame_t gfp, char const * inPath);
 int     samples_to_skip_at_start(void);
 int     samples_to_skip_at_end(void);
 void    close_infile(void);
