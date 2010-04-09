@@ -782,11 +782,12 @@ CloseSndFile(sound_file_format input, FILE * musicin)
 }
 
 
+extern SNDFILE* sf_wchar_open (wchar_t const* wpath, int mode, SF_INFO *sfinfo) ;
 
 static FILE   *
 OpenSndFile(lame_t gfp, char const *inPath, int *enc_delay, int *enc_padding)
 {
-    char   *lpszFileName = inPath;
+    char const *lpszFileName = inPath;
     FILE   *musicin;
     SNDFILE *gs_pSndFileIn = NULL;
     SF_INFO gs_wfInfo;
@@ -825,13 +826,20 @@ OpenSndFile(lame_t gfp, char const *inPath, int *enc_delay, int *enc_padding)
         (void) lame_set_num_samples(gfp, global_decoder.mp3input_data.nsamp);
     }
     else {
+#ifdef _WIN32
+        wchar_t * file_name = utf8ToUnicode(lpszFileName);
+#endif
         /* Try to open the sound file */
         memset(&gs_wfInfo, 0, sizeof(gs_wfInfo));
+#ifdef _WIN32
+        gs_pSndFileIn = sf_wchar_open(file_name, SFM_READ, &gs_wfInfo);
+#else
         gs_pSndFileIn = sf_open(lpszFileName, SFM_READ, &gs_wfInfo);
+#endif
 
         if (gs_pSndFileIn == NULL) {
             if (global_raw_pcm.in_signed == 0 && global_raw_pcm.in_bitwidth != 8) {
-                fputs("Unsigned input only supported with bitwidth 8\n", stderr);
+                error_printf("Unsigned input only supported with bitwidth 8\n");
                 exit(1);
             }
             /* set some defaults incase input is raw PCM */
@@ -861,9 +869,15 @@ OpenSndFile(lame_t gfp, char const *inPath, int *enc_delay, int *enc_padding)
             default:
                 break;
             }
+#ifdef _WIN32
+            gs_pSndFileIn = sf_wchar_open(file_name, SFM_READ, &gs_wfInfo);
+#else
             gs_pSndFileIn = sf_open(lpszFileName, SFM_READ, &gs_wfInfo);
+#endif
         }
-
+#ifdef _WIN32
+        free(file_name);
+#endif
         musicin = (FILE *) gs_pSndFileIn;
 
         /* Check result */

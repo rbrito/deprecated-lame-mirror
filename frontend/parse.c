@@ -881,15 +881,13 @@ presets_longinfo_dm(FILE * msgfp)
     fprintf(msgfp,
             "The following options are also available for the corresponding profiles:\n"
             "\n"
-            "   <fast>        standard\n"
-            "   <fast>        extreme\n"
+            "                 standard\n"
+            "                 extreme\n"
             "                 insane\n"
             "   <cbr> (ABR Mode) - The ABR Mode is implied. To use it,\n"
             "                      simply specify a bitrate. For example:\n"
             "                      \"--preset 185\" activates this\n"
             "                      preset and uses 185 as an average kbps.\n" "\n");
-    fprintf(msgfp,
-            "   \"fast\" - Enables the fast VBR mode for a particular profile.\n" "\n");
     fprintf(msgfp,
             "   \"cbr\"  - If you use the ABR mode (read above) with a significant\n"
             "            bitrate such as 80, 96, 112, 128, 160, 192, 224, 256, 320,\n"
@@ -900,7 +898,7 @@ presets_longinfo_dm(FILE * msgfp)
     fprintf(msgfp,
             "    For example:\n"
             "\n"
-            "    \"--preset fast standard <input file> <output file>\"\n"
+            "    \"--preset standard <input file> <output file>\"\n"
             " or \"--preset cbr 192 <input file> <output file>\"\n"
             " or \"--preset 172 <input file> <output file>\"\n"
             " or \"--preset extreme <input file> <output file>\"\n" "\n" "\n");
@@ -963,34 +961,19 @@ presets_set(lame_t gfp, int fast, int cbr, const char *preset_name, const char *
 
     if (strcmp(preset_name, "medium") == 0) {
         lame_set_VBR_q(gfp, 4);
-        if (fast > 0) {
-            lame_set_VBR(gfp, vbr_mtrh);
-        }
-        else {
-            lame_set_VBR(gfp, vbr_rh);
-        }
+        lame_set_VBR(gfp, vbr_default);
         return 0;
     }
 
     if (strcmp(preset_name, "standard") == 0) {
         lame_set_VBR_q(gfp, 2);
-        if (fast > 0) {
-            lame_set_VBR(gfp, vbr_mtrh);
-        }
-        else {
-            lame_set_VBR(gfp, vbr_rh);
-        }
+        lame_set_VBR(gfp, vbr_default);
         return 0;
     }
 
     else if (strcmp(preset_name, "extreme") == 0) {
         lame_set_VBR_q(gfp, 0);
-        if (fast > 0) {
-            lame_set_VBR(gfp, vbr_mtrh);
-        }
-        else {
-            lame_set_VBR(gfp, vbr_rh);
-        }
+        lame_set_VBR(gfp, vbr_default);
         return 0;
     }
 
@@ -1031,9 +1014,9 @@ presets_set(lame_t gfp, int fast, int cbr, const char *preset_name, const char *
                  "\n"
                  "Available profiles are:\n"
                  "\n"
-                 "   <fast>        medium\n"
-                 "   <fast>        standard\n"
-                 "   <fast>        extreme\n"
+                 "                 medium\n"
+                 "                 standard\n"
+                 "                 extreme\n"
                  "                 insane\n"
                  "          <cbr> (ABR Mode) - The ABR Mode is implied. To use it,\n"
                  "                             simply specify a bitrate. For example:\n"
@@ -1041,7 +1024,7 @@ presets_set(lame_t gfp, int fast, int cbr, const char *preset_name, const char *
                  "                             preset and uses 185 as an average kbps.\n" "\n");
     error_printf("    Some examples:\n"
                  "\n"
-                 " or \"%s --preset fast standard <input file> <output file>\"\n"
+                 " or \"%s --preset standard <input file> <output file>\"\n"
                  " or \"%s --preset cbr 192 <input file> <output file>\"\n"
                  " or \"%s --preset 172 <input file> <output file>\"\n"
                  " or \"%s --preset extreme <input file> <output file>\"\n"

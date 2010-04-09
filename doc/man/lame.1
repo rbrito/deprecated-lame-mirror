@@ -412,7 +412,7 @@ disabled in the build of LAME.
 See also:
 .B \-\-replaygain-accurate
 .TP
-.B \-\-preset " [fast] type | [cbr] kbps"
+.B \-\-preset " type | [cbr] kbps"
 Use one of the built-in presets.
 
 Have a look at the PRESETS section below.
@@ -420,7 +420,7 @@ Have a look at the PRESETS section below.
 .B \-\-preset help
 gives more infos about the the used options in these presets.
 .TP
-.B \-\-preset " [fast] type | [cbr] kbps"
+.B \-\-preset " type | [cbr] kbps"
 Use one of the built-in  presets.
 .TP
 .B \-\-noasm " type"
@@ -999,13 +999,10 @@ and usually will not attain the same level of quality as VBR at higher bitrates.
 .PP
 The following options are also available for the corresponding profiles:
 .PP
-.B fast standard|extreme
+.B standard|extreme
 .br
 .B cbr " kbps"
 .PP
-.TP
-.B fast
-Enables the new fast VBR for a particular profile.
 .TP
 .B cbr
 If you use the ABR mode (read above) with a significant bitrate such as 80,
@@ -1094,10 +1091,10 @@ with downsampling to 22.05 kHz:
 
 .LP
 Encode with the
-.B fast standard
+.B standard
 preset:
 .IP
-.B lame \-\-preset fast standard
+.B lame \-\-preset standard
 .I sample.wav sample.mp3
 
 .SH BUGS

@@ -91,6 +91,9 @@ extern char* utf8ToConsole8Bit(const char* str);
 extern char* utf8ToLocal8Bit(const char* str);
 extern unsigned short* utf8ToUcs2(char const* str);
 extern char* utf8ToLatin1(char const* str);
+#ifdef _WIN32
+extern wchar_t* utf8ToUnicode(char const* str);
+#endif
 
 extern void dosToLongFileName(char* filename);
 extern void setProcessPriority(int priority);
