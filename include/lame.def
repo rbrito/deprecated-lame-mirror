@@ -243,6 +243,10 @@ get_lame_os_bitness	@166
 lame_set_VBR_quality	@167
 lame_get_VBR_quality	@168
 
+lame_encode_buffer_ieee_float	@169
+lame_encode_buffer_interleaved_ieee_float	@170
+lame_encode_buffer_ieee_double	@171
+lame_encode_buffer_interleaved_ieee_double	@172
 
 lame_get_bitrate	@502
 lame_get_samplerate	@503
