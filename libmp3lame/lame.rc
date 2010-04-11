@@ -2,6 +2,7 @@
 #include "version.h"
 
 #ifdef _DLL
+IDI_ICON1		ICON		DISCARDABLE	"logoe.ico"
 #else
 IDI_ICON1		ICON		DISCARDABLE	"logoe.ico"
 #endif
@@ -37,6 +38,7 @@ VS_VERSION_INFO VERSIONINFO
 				VALUE "OriginalFilename", STR(_APP) "\0"
 #endif
 				VALUE "ProductName", "L.A.M.E.\0"
+				VALUE "ProductVersion", LAME_VERSION_STRING "\0"
 			END
 		END
 	END

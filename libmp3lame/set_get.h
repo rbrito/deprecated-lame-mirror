@@ -21,18 +21,11 @@
 #ifndef __SET_GET_H__
 #define __SET_GET_H__
 
+#include <lame.h>
 
 #if defined(__cplusplus)
 extern  "C" {
 #endif
-
-#if defined(WIN32)
-#undef CDECL
-#define CDECL _cdecl
-#else
-#define CDECL
-#endif
-
 
 /* select psychoacoustic model */
 
