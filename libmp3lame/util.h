@@ -455,10 +455,6 @@ extern  "C" {
         int     ATHshort;    /* only use ATH for short blocks        */
         int     noATH;       /* disable ATH                          */
 
-        float   scale;       /* scale input by this amount before encoding at least not used for MP3 decoding */
-        float   scale_left;  /* scale input of channel 0 (left) by this amount before encoding */
-        float   scale_right; /* scale input of channel 1 (right) by this amount before encoding */
-
         float   adjust_alto;
         float   adjust_bass;
         float   adjust_treble;
@@ -470,7 +466,8 @@ extern  "C" {
         FLOAT   lowpass1, lowpass2; /* normalized frequency bounds of passband */
         FLOAT   highpass1, highpass2; /* normalized frequency bounds of passband */
 
-
+        /* scale input by this amount before encoding at least not used for MP3 decoding */
+        FLOAT   pcm_transform[2][2];    
     } SessionConfig_t;
 
 

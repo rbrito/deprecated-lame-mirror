@@ -1164,9 +1164,6 @@ lame_init_params(lame_global_flags * gfp)
     cfg->ATHonly = gfp->ATHonly;
     cfg->ATHshort = gfp->ATHshort;
     cfg->noATH = gfp->noATH;
-    cfg->scale = gfp->scale;
-    cfg->scale_left = gfp->scale_left;
-    cfg->scale_right = gfp->scale_right;
 
     cfg->quant_comp = gfp->quant_comp;
     cfg->quant_comp_short = gfp->quant_comp_short;
@@ -1197,6 +1194,41 @@ lame_init_params(lame_global_flags * gfp)
         cfg->adjust_sfb21 = cfg->adjust_treble * pow(10, i / 4.0 / 10.0);
     }
 
+    /* Setting up the PCM input data transform matrix, to apply 
+     * user defined re-scaling, and or two-to-one channel downmix.
+     */
+    {
+        FLOAT   m[2][2] = { {1.0f, 0.0f}, {0.0f, 1.0f} };
+
+        /* user selected scaling of the samples */
+        if (NEQ(gfp->scale, 0) && NEQ(gfp->scale, 1.0)) {
+            m[0][0] *= gfp->scale;
+            m[0][1] *= gfp->scale;
+            m[1][0] *= gfp->scale;
+            m[1][1] *= gfp->scale;
+        }
+        /* user selected scaling of the channel 0 (left) samples */
+        if (NEQ(gfp->scale_left, 0) && NEQ(gfp->scale_left, 1.0)) {
+            m[0][0] *= gfp->scale_left;
+            m[0][1] *= gfp->scale_left;
+        }
+        /* user selected scaling of the channel 1 (right) samples */
+        if (NEQ(gfp->scale_right, 0) && NEQ(gfp->scale_right, 1.0)) {
+            m[1][0] *= gfp->scale_right;
+            m[1][1] *= gfp->scale_right;
+        }
+        /* Downsample to Mono if 2 channels in and 1 channel out */
+        if (cfg->channels_in == 2 && cfg->channels_out == 1) {
+            m[0][0] = 0.5f * (m[0][0] + m[1][0]);
+            m[0][1] = 0.5f * (m[0][1] + m[1][1]);
+            m[1][0] = 0;
+            m[1][1] = 0;
+        }
+        cfg->pcm_transform[0][0] = m[0][0];
+        cfg->pcm_transform[0][1] = m[0][1];
+        cfg->pcm_transform[1][0] = m[1][0];
+        cfg->pcm_transform[1][1] = m[1][1];
+    }
 
     /* padding method as described in
      * "MPEG-Layer3 / Bitstream Syntax and Decoding"
@@ -1340,9 +1372,9 @@ lame_print_internals(const lame_global_flags * gfp)
      */
     MSGF(gfc, "\nmisc:\n\n");
 
-    MSGF(gfc, "\tscaling: %g\n", cfg->scale);
-    MSGF(gfc, "\tch0 (left) scaling: %g\n", cfg->scale_left);
-    MSGF(gfc, "\tch1 (right) scaling: %g\n", cfg->scale_right);
+    MSGF(gfc, "\tscaling: %g\n", gfp->scale);
+    MSGF(gfc, "\tch0 (left) scaling: %g\n", gfp->scale_left);
+    MSGF(gfc, "\tch1 (right) scaling: %g\n", gfp->scale_right);
     switch (cfg->use_best_huffman) {
     default:
         pc = "normal";
@@ -1520,14 +1552,7 @@ save_gain_values(lame_internal_flags * gfc)
         rov->noclipGainChange = (int) ceil(log10(rov->PeakSample / 32767.0) * 20.0 * 10.0); /* round up */
 
         if (rov->noclipGainChange > 0) { /* clipping occurs */
-            if (EQ(cfg->scale, 1.0f) || EQ(cfg->scale, 0.0f))
-                rov->noclipScale = floor((32767.0f / rov->PeakSample) * 100.0f) / 100.0f; /* round down */
-            else
-                /* the user specified his own scaling factor. We could suggest
-                 * the scaling factor of (32767.0/gfc->PeakSample)*(cfg->scale)
-                 * but it's usually very inaccurate. So we'd rather not advice him
-                 * on the scaling factor. */
-                rov->noclipScale = -1.0f;
+            rov->noclipScale = floor((32767.0f / rov->PeakSample) * 100.0f) / 100.0f; /* round down */
         }
         else            /* no clipping */
             rov->noclipScale = -1.0f;
@@ -1598,40 +1623,14 @@ lame_in_data_transform(lame_internal_flags* gfc, int nsamples, FLOAT s)
     EncStateVar_t *const esv = &gfc->sv_enc;
     sample_t* buffer_l = esv->in_buffer_0;
     sample_t* buffer_r = esv->in_buffer_1;
-    FLOAT   m[2][2] = { {1, 0}, {0, 1} };
+    FLOAT   m[2][2];
     int     i;
 
     /* Apply user defined re-scaling */
-
-    /* user selected scaling of the samples */
-    if (NEQ(cfg->scale, 0) && NEQ(cfg->scale, 1.0)) {
-        m[0][0] *= cfg->scale;
-        m[0][1] *= cfg->scale;
-        m[1][0] *= cfg->scale;
-        m[1][1] *= cfg->scale;
-    }
-    /* user selected scaling of the channel 0 (left) samples */
-    if (NEQ(cfg->scale_left, 0) && NEQ(cfg->scale_left, 1.0)) {
-        m[0][0] *= cfg->scale_left;
-        m[0][1] *= cfg->scale_left;
-    }
-    /* user selected scaling of the channel 1 (right) samples */
-    if (NEQ(cfg->scale_right, 0) && NEQ(cfg->scale_right, 1.0)) {
-        m[1][0] *= cfg->scale_right;
-        m[1][1] *= cfg->scale_right;
-    }
-    /* Downsample to Mono if 2 channels in and 1 channel out */
-    if (cfg->channels_in == 2 && cfg->channels_out == 1) {
-        m[0][0] = 0.5 * (m[0][0] + m[1][0]);
-        m[0][1] = 0.5 * (m[0][1] + m[1][1]);
-        m[1][0] = 0;
-        m[1][1] = 0;
-    }
-    m[0][0] *= s;
-    m[0][1] *= s;
-    m[1][0] *= s;
-    m[1][1] *= s;
-
+    m[0][0] = s * cfg->pcm_transform[0][0];
+    m[0][1] = s * cfg->pcm_transform[0][1];
+    m[1][0] = s * cfg->pcm_transform[1][0];
+    m[1][1] = s * cfg->pcm_transform[1][1];
     for (i = 0; i < nsamples; ++i) {
         sample_t const l = buffer_l[i];
         sample_t const r = buffer_r[i];

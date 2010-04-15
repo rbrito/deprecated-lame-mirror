@@ -775,8 +775,6 @@ PutLameVBR(lame_global_flags const *gfp, size_t nMusicLength, uint8_t * pbtStrea
     /*Check if the user overrided the default LAME behaviour with some nasty options */
 
     if (cfg->short_blocks == short_block_forced || cfg->short_blocks == short_block_dispensed || ((cfg->lowpassfreq == -1) && (cfg->highpassfreq == -1)) || /* "-k" */
-        (cfg->scale_left < cfg->scale_right) ||
-        (cfg->scale_left > cfg->scale_right) ||
         (cfg->disable_reservoir && cfg->avg_bitrate < 320) ||
         cfg->noATH || cfg->ATHonly || (nAthType == 0) || cfg->samplerate_in <= 32000)
         bNonOptimal = 1;
