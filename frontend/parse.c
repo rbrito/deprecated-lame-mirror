@@ -1440,7 +1440,7 @@ parse_args(lame_global_flags * gfp, int argc, char **argv,
                     lame_set_VBR(gfp, vbr_rh);
 
                 T_ELIF("vbr-new")
-                    lame_set_VBR(gfp, vbr_mtrh);
+                    lame_set_VBR(gfp, vbr_mt);
 
                 T_ELIF("vbr-mtrh")
                     lame_set_VBR(gfp, vbr_mtrh);

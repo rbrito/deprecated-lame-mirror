@@ -519,12 +519,12 @@ reduce_side(int targ_bits[2], FLOAT ms_ener_ratio, int mean_bits, int max_bits)
  */
 
 FLOAT
-athAdjust(FLOAT a, FLOAT x, FLOAT athFloor)
+athAdjust(FLOAT a, FLOAT x, FLOAT athFloor, int sw)
 {
     /*  work in progress
      */
     FLOAT const o = 90.30873362;
-    FLOAT const p = 94.82444863;
+    FLOAT const p = (sw == 0) ? 94.82444863 : 100.;
     FLOAT   u = FAST_LOG10_X(x, 10.0);
     FLOAT const v = a * a;
     FLOAT   w = 0.0;
@@ -567,8 +567,8 @@ calc_xmin_(lame_internal_flags const *gfc,
         FLOAT   en0, xmin;
         int     width, l;
 
-        if (cfg->vbr == vbr_rh)
-            xmin = athAdjust(ATH->adjust, ATH->l[gsfb], ATH->floor);
+        if (cfg->vbr == vbr_rh || cfg->vbr == vbr_mt)
+            xmin = athAdjust(ATH->adjust, ATH->l[gsfb], ATH->floor, 0);
         else
             xmin = ATH->adjust * ATH->l[gsfb];
 
@@ -602,7 +602,7 @@ calc_xmin_(lame_internal_flags const *gfc,
     max_nonzero = 575;
     if (cod_info->block_type != SHORT_TYPE) { /* NORM, START or STOP type, but not SHORT */
         k = 576;
-        while (k-- && EQ(xr[k], 0)) {
+        while (k-- && fabs(xr[k]) < 1e-12f) {
             max_nonzero = k;
         }
     }
@@ -613,8 +613,8 @@ calc_xmin_(lame_internal_flags const *gfc,
     for (sfb = cod_info->sfb_smin; gsfb < cod_info->psymax; sfb++, gsfb += 3) {
         int     width, b, l;
         FLOAT   tmpATH;
-        if (cfg->vbr == vbr_rh)
-            tmpATH = athAdjust(ATH->adjust, ATH->s[sfb], ATH->floor);
+        if (cfg->vbr == vbr_rh || cfg->vbr == vbr_mt)
+            tmpATH = athAdjust(ATH->adjust, ATH->s[sfb], ATH->floor, 0);
         else
             tmpATH = ATH->adjust * ATH->s[sfb];
 
@@ -671,7 +671,7 @@ calc_xmin_new(lame_internal_flags const *gfc,
         FLOAT   rh1, rh2;
         int     width, l;
 
-        xmin = athAdjust(ATH->adjust, ATH->l[gsfb], ATH->floor);
+        xmin = athAdjust(ATH->adjust, ATH->l[gsfb], ATH->floor, cfg->vbr == vbr_mt ? 1 : 0);
 
         width = cod_info->width[gsfb];
         rh1 = xmin / width;
@@ -696,9 +696,9 @@ calc_xmin_new(lame_internal_flags const *gfc,
                 rh2 = x;
             }
         }
-
-        xmin = rh2;
-
+        if (cfg->vbr == vbr_mtrh) {
+        	xmin = rh2;
+        }
         if (!cfg->ATHonly) {
             FLOAT const e = ratio->en.l[gsfb];
             if (e > 0.0f) {
@@ -710,7 +710,6 @@ calc_xmin_new(lame_internal_flags const *gfc,
                     xmin = x;
             }
         }
-
         *pxmin++ = xmin;
     }                   /* end of long block loop */
 
@@ -721,7 +720,7 @@ calc_xmin_new(lame_internal_flags const *gfc,
     max_nonzero = 575;
     if (cod_info->block_type != SHORT_TYPE) { /* NORM, START or STOP type, but not SHORT */
         k = 576;
-        while (k-- && EQ(xr[k], 0)) {
+        while (k-- && fabs(xr[k]) < 1e-12f) {
             max_nonzero = k;
         }
     }
@@ -733,11 +732,11 @@ calc_xmin_new(lame_internal_flags const *gfc,
         int     width, b, l;
         FLOAT   tmpATH;
 
-        tmpATH = athAdjust(ATH->adjust, ATH->s[sfb], ATH->floor);
+        tmpATH = athAdjust(ATH->adjust, ATH->s[sfb], ATH->floor, cfg->vbr == vbr_mt ? 1 : 0);
 
         width = cod_info->width[gsfb];
         for (b = 0; b < 3; b++) {
-            FLOAT   en0 = 0.0, xmin;
+            FLOAT   en0 = 0.0, xmin = tmpATH;
             FLOAT   rh1, rh2;
 
             rh1 = tmpATH / width;
@@ -760,9 +759,9 @@ calc_xmin_new(lame_internal_flags const *gfc,
                     rh2 = x;
                 }
             }
-
-            xmin = rh2;
-
+            if (cfg->vbr == vbr_mtrh) {
+                xmin = rh2;
+            }
             if (!cfg->ATHonly && !cfg->ATHshort) {
                 FLOAT const e = ratio->en.s[sfb][b];
                 if (e > 0.0f) {
@@ -774,7 +773,6 @@ calc_xmin_new(lame_internal_flags const *gfc,
                         xmin = x;
                 }
             }
-
             *pxmin++ = xmin;
         }               /* b */
         if (cfg->use_temporal_masking_effect) {

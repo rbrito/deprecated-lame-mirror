@@ -121,7 +121,7 @@ void    huffman_init(lame_internal_flags * const gfc);
 
 void    init_xrpow_core_init(lame_internal_flags * const gfc);
 
-FLOAT   athAdjust(FLOAT a, FLOAT x, FLOAT athFloor);
+FLOAT   athAdjust(FLOAT a, FLOAT x, FLOAT athFloor, int sw);
 
 #define LARGE_BITS 100000
 

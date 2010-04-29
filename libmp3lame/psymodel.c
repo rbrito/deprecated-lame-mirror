@@ -1786,9 +1786,16 @@ vbrpsy_skip_masking_s(lame_internal_flags * gfc, int chn, int sblock)
         FLOAT  *nbs1 = &gfc->sv_psy.nb_s1[chn][0];
         int const n = gfc->cd_psy->s.npart;
         int     b;
-        for (b = 0; b < n; b++) {
-            nbs2[b] = nbs1[b];
-            nbs1[b] = 0;
+        if (gfc->cfg.vbr == vbr_mt) {
+            for (b = 0; b < n; b++) {
+                nbs2[b] = nbs1[b];
+            }
+        }
+        else {
+            for (b = 0; b < n; b++) {
+                nbs2[b] = nbs1[b];
+                nbs1[b] = 0;
+            }
         }
     }
 }
@@ -1801,9 +1808,16 @@ vbrpsy_skip_masking_l(lame_internal_flags * gfc, int chn)
     FLOAT  *nbl1 = &gfc->sv_psy.nb_l1[chn][0];
     int const n = gfc->cd_psy->l.npart;
     int     b;
-    for (b = 0; b < n; b++) {
-        nbl2[b] = nbl1[b];
-        nbl1[b] = 0;
+    if (gfc->cfg.vbr == vbr_mt) {
+        for (b = 0; b < n; b++) {
+            nbl2[b] = nbl1[b];
+        }
+    }
+    else {
+        for (b = 0; b < n; b++) {
+            nbl2[b] = nbl1[b];
+            nbl1[b] = 0;
+        }
     }
 }
 
@@ -2846,6 +2860,7 @@ psymodel_init(lame_global_flags const* gfp)
     FLOAT const sfreq = cfg->samplerate_out;
     
     FLOAT   xav = 10, xbv = 12;
+    FLOAT const minval_low = (cfg->vbr == vbr_mt) ? (0.f - cfg->minval) : -15;
 
     if (gfc->cd_psy != 0) {
         return 0;
@@ -2980,8 +2995,8 @@ psymodel_init(lame_global_flags const* gfp)
             x = -10;
         }
 #else
-        if (x < -15) {
-            x = -15;
+        if (x < minval_low) {
+            x = minval_low;
         }
 #endif
         if (cfg->samplerate_out < 44000) {
@@ -3063,8 +3078,8 @@ psymodel_init(lame_global_flags const* gfp)
             x = -10;
         }
 #else
-        if (x < -15) {
-            x = -15;
+        if (x < minval_low) {
+            x = minval_low;
         }
 #endif
         if (cfg->samplerate_out < 44000) {

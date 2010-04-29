@@ -689,6 +689,19 @@ lame_init_params(lame_global_flags * gfp)
                 }
                 break;
             }
+        case vbr_mt:{
+                int const x[11] = {
+                    20500, 19500, 18500, 18000, 17500, 16500, 16500, 16500, 16500, 15100, 3950
+                };
+                if (0 <= gfp->VBR_q && gfp->VBR_q <= 9) {
+                    double  a = x[gfp->VBR_q], b = x[gfp->VBR_q + 1], m = gfp->VBR_q_frac;
+                    lowpass = linear_int(a, b, m);
+                }
+                else {
+                    lowpass = 21500;
+                }
+                break;
+            }
         default:{
                 int const x[11] = {
                     19500, 19000, 18500, 18000, 17500, 16500, 15500, 14500, 12500, 9500, 3950
@@ -952,8 +965,6 @@ lame_init_params(lame_global_flags * gfp)
     switch (gfp->VBR) {
 
     case vbr_mt:
-        gfp->VBR = vbr_mtrh;
-        /*lint --fallthrough */
     case vbr_mtrh:{
             if (gfp->useTemporal < 0) {
                 gfp->useTemporal = 0; /* off by default for this VBR mode */
@@ -1191,7 +1202,7 @@ lame_init_params(lame_global_flags * gfp)
         i = (gfp->exp_nspsytune >> 20) & 63;
         if (i >= 32)
             i -= 64;
-        cfg->adjust_sfb21 = cfg->adjust_treble * pow(10, i / 4.0 / 10.0);
+        cfg->adjust_sfb21 = cfg->adjust_treble * pow(10, ((cfg->vbr == vbr_mt ? 3 : 0) + i / 4.0) / 10.0);
     }
 
     /* Setting up the PCM input data transform matrix, to apply 

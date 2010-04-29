@@ -467,7 +467,9 @@ extern  "C" {
         FLOAT   highpass1, highpass2; /* normalized frequency bounds of passband */
 
         /* scale input by this amount before encoding at least not used for MP3 decoding */
-        FLOAT   pcm_transform[2][2];    
+        FLOAT   pcm_transform[2][2];
+
+        FLOAT   minval;
     } SessionConfig_t;
 
 

@@ -147,10 +147,6 @@ init_xrpow(lame_internal_flags * gfc, gr_info * const cod_info, FLOAT xrpow[576]
 
 
 
-extern FLOAT athAdjust(FLOAT a, FLOAT x, FLOAT athFloor);
-
-
-
 /*
 Gabriel Bouvigne feb/apr 2003
 Analog silence detection in partitionned sfb21
@@ -165,7 +161,17 @@ psfb21_analogsilence(lame_internal_flags const *gfc, gr_info * const cod_info)
 {
     ATH_t const *const ATH = gfc->ATH;
     FLOAT  *const xr = cod_info->xr;
+    int const vbr = gfc->cfg.vbr;
+    int const sw = (gfc->cfg.vbr == vbr_mt) ? 1 : 0;
 
+    if (vbr == vbr_mt) {
+        int     j;
+        for (j = 0; j < 576; ++j) {
+            FLOAT x = xr[j];
+            xr[j] = (fabs(x) >= 1e-12f) ? x : 0;
+        }
+        return;
+    }
     if (cod_info->block_type != SHORT_TYPE) { /* NORM, START or STOP type, but not SHORT blocks */
         int     gsfb;
         int     stop = 0;
@@ -174,7 +180,7 @@ psfb21_analogsilence(lame_internal_flags const *gfc, gr_info * const cod_info)
             int const end = gfc->scalefac_band.psfb21[gsfb + 1];
             int     j;
             FLOAT   ath21;
-            ath21 = athAdjust(ATH->adjust, ATH->psfb21[gsfb], ATH->floor);
+            ath21 = athAdjust(ATH->adjust, ATH->psfb21[gsfb], ATH->floor, sw);
 
             if (gfc->sv_qnt.longfact[21] > 1e-12f)
                 ath21 *= gfc->sv_qnt.longfact[21];
@@ -204,7 +210,7 @@ psfb21_analogsilence(lame_internal_flags const *gfc, gr_info * const cod_info)
                     start + (gfc->scalefac_band.psfb12[gsfb + 1] - gfc->scalefac_band.psfb12[gsfb]);
                 int     j;
                 FLOAT   ath12;
-                ath12 = athAdjust(ATH->adjust, ATH->psfb12[gsfb], ATH->floor);
+                ath12 = athAdjust(ATH->adjust, ATH->psfb12[gsfb], ATH->floor, sw);
 
                 if (gfc->sv_qnt.shortfact[12] > 1e-12f)
                     ath12 *= gfc->sv_qnt.shortfact[12];
@@ -1172,7 +1178,7 @@ outer_loop(lame_internal_flags * gfc, gr_info * const cod_info, const FLOAT * co
     assert((cod_info->global_gain + cod_info->scalefac_scale) <= 255);
     /*  finish up
      */
-    if (cfg->vbr == vbr_rh || cfg->vbr == vbr_mtrh)
+    if (cfg->vbr == vbr_rh || cfg->vbr == vbr_mtrh || cfg->vbr == vbr_mt)
         /* restore for reuse on next try */
         memcpy(xrpow, save_xrpow, sizeof(FLOAT) * 576);
     /*  do the 'substep shaping'
