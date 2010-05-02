@@ -2097,4 +2097,9 @@ put_audio16(FILE* outf, short Buffer[2][1152], int iread, int nch)
     }
 }
 
+hip_t get_hip(void)
+{
+    return global.hip;
+}
+
 /* end of get_audio.c */

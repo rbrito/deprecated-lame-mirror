@@ -203,7 +203,7 @@ free_aligned(aligned_pointer_t * ptr)
 their minimum value for input = -1*/
 
 static  FLOAT
-ATHformula_GB(FLOAT f, FLOAT value)
+ATHformula_GB(FLOAT f, FLOAT value, FLOAT f_min, FLOAT f_max)
 {
     /* from Painter & Spanias
        modified by Gabriel Bouvigne to better fit the reality
@@ -234,9 +234,9 @@ bitrate is more balanced according to the -V value.*/
         f = 3410;
 
     f /= 1000;          /* convert to khz */
-    f = Max(0.1, f);
-/*  f  = Min(21.0, f);
-*/
+    f = Max(f_min, f);
+    f = Min(f_max, f);
+
     ath = 3.640 * pow(f, -0.8)
         - 6.800 * exp(-0.6 * pow(f - 3.4, 2.0))
         + 6.000 * exp(-0.15 * pow(f - 8.7, 2.0))
@@ -252,22 +252,25 @@ ATHformula(SessionConfig_t const *cfg, FLOAT f)
     FLOAT   ath;
     switch (cfg->ATHtype) {
     case 0:
-        ath = ATHformula_GB(f, 9);
+        ath = ATHformula_GB(f, 9, 0.1f, 24.0f);
         break;
     case 1:
-        ath = ATHformula_GB(f, -1); /*over sensitive, should probably be removed */
+        ath = ATHformula_GB(f, -1, 0.1f, 24.0f); /*over sensitive, should probably be removed */
         break;
     case 2:
-        ath = ATHformula_GB(f, 0);
+        ath = ATHformula_GB(f, 0, 0.1f, 24.0f);
         break;
     case 3:
-        ath = ATHformula_GB(f, 1) + 6; /*modification of GB formula by Roel */
+        ath = ATHformula_GB(f, 1, 0.1f, 24.0f) + 6; /*modification of GB formula by Roel */
         break;
     case 4:
-        ath = ATHformula_GB(f, cfg->ATHcurve);
+        ath = ATHformula_GB(f, cfg->ATHcurve, 0.1f, 24.0f);
+        break;
+    case 5:
+        ath = ATHformula_GB(f, cfg->ATHcurve, 3.41f, 14.5f);
         break;
     default:
-        ath = ATHformula_GB(f, 0);
+        ath = ATHformula_GB(f, 0, 0.1f, 24.0f);
         break;
     }
     return ath;

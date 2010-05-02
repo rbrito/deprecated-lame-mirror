@@ -153,6 +153,7 @@ gtkmakeframe(void)
     hip_set_pinfo(hip, pinfo);
 
     if (is_mpeg_file_format(global_reader.input_format)) {
+        hip_set_pinfo(get_hip(), pplot);
         iread = get_audio16(gfp, Buffer);
 
 

@@ -51,10 +51,12 @@ void    close_infile(void);
 int     get_audio(lame_t gfp, int buffer[2][1152]);
 int     get_audio16(lame_t gfp, short buffer[2][1152]);
 int     get_audio_float(lame_t gfp, float buffer[2][1152]);
+hip_t   get_hip(void);
 
 FILE   *init_outfile(char const *outPath, int decode);
 int     WriteWaveHeader(FILE * const fp, int pcmbytes, int freq, int channels, int bits);
 void    put_audio16(FILE* outf, short Buffer[2][1152], int iread, int nch);
+
 /*
 struct AudioReader;
 typedef struct AudioReader* AudioReader;
