@@ -2280,7 +2280,7 @@ lame_init_old(lame_global_flags * gfp)
      * best value, UNLESS the calling program as set it
      * (and the value is no longer -1)
      */
-
+    gfp->strict_ISO = -1; /* not set */
 
     gfp->mode = NOT_SET;
     gfp->original = 1;

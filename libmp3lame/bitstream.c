@@ -109,6 +109,9 @@ get_max_frame_buffer_size_by_constraint(SessionConfig_t const * cfg, int constra
         else {
             max_kbps = bitrate_table[cfg->version][14];
         }
+        if (cfg->vbr == vbr_mt && constraint == -1) {
+            constraint = MDB_MAXIMUM;
+        }
         switch (constraint) 
         {
         default:
