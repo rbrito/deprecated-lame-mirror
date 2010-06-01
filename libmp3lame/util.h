@@ -454,6 +454,8 @@ extern  "C" {
         int     ATHonly;     /* only use ATH                         */
         int     ATHshort;    /* only use ATH for short blocks        */
         int     noATH;       /* disable ATH                          */
+        
+        float   ATHfixpoint;
 
         float   adjust_alto_db;
         float   adjust_bass_db;

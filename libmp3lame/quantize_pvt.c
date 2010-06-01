@@ -214,7 +214,12 @@ ATHmdct(SessionConfig_t const *cfg, FLOAT f)
 
     ath = ATHformula(cfg, f);
 
-    ath -= NSATHSCALE;
+    if (cfg->vbr == vbr_mt && cfg->ATHfixpoint > 0) {
+        ath -= cfg->ATHfixpoint;
+    }
+    else {
+        ath -= NSATHSCALE;
+    }
 
     /* modify the MDCT scaling for the ATH and convert to energy */
     ath = pow(10.0, ath / 10.0 + cfg->ATHlower);
@@ -545,12 +550,12 @@ reduce_side(int targ_bits[2], FLOAT ms_ener_ratio, int mean_bits, int max_bits)
  */
 
 FLOAT
-athAdjust(FLOAT a, FLOAT x, FLOAT athFloor, int sw)
+athAdjust(FLOAT a, FLOAT x, FLOAT athFloor, float ATHfixpoint)
 {
     /*  work in progress
      */
     FLOAT const o = 90.30873362;
-    FLOAT const p = (sw == 0) ? 94.82444863 : 100.;
+    FLOAT const p = (ATHfixpoint < 1) ? 94.82444863 : ATHfixpoint;
     FLOAT   u = FAST_LOG10_X(x, 10.0);
     FLOAT const v = a * a;
     FLOAT   w = 0.0;
@@ -697,7 +702,7 @@ calc_xmin_new(lame_internal_flags const *gfc,
         FLOAT   rh1, rh2;
         int     width, l;
 
-        xmin = athAdjust(ATH->adjust, ATH->l[gsfb], ATH->floor, cfg->vbr == vbr_mt ? 1 : 0);
+        xmin = athAdjust(ATH->adjust, ATH->l[gsfb], ATH->floor, cfg->vbr == vbr_mt ? cfg->ATHfixpoint : 0);
 
         width = cod_info->width[gsfb];
         rh1 = xmin / width;
@@ -758,7 +763,7 @@ calc_xmin_new(lame_internal_flags const *gfc,
         int     width, b, l;
         FLOAT   tmpATH;
 
-        tmpATH = athAdjust(ATH->adjust, ATH->s[sfb], ATH->floor, cfg->vbr == vbr_mt ? 1 : 0);
+        tmpATH = athAdjust(ATH->adjust, ATH->s[sfb], ATH->floor, cfg->vbr == vbr_mt ? cfg->ATHfixpoint : 0);
 
         width = cod_info->width[gsfb];
         for (b = 0; b < 3; b++) {
