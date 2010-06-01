@@ -146,24 +146,4 @@ lame_set_stream_binary_mode(FILE * const fp)
 }
 
 
-#if defined(__riscos__)
-# include <kernel.h>
-# include <sys/swis.h>
-#elif defined(_WIN32)
-# include <sys/types.h>
-# include <sys/stat.h>
-#else
-# include <sys/stat.h>
-#endif
-
-off_t
-lame_get_file_size(const char *const filename)
-{
-    struct stat sb;
-
-    if (0 == stat(filename, &sb))
-        return sb.st_size;
-    return (off_t) - 1;
-}
-
 /* End of lametime.c */

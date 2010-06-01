@@ -325,6 +325,7 @@ iteration_init(lame_internal_flags * gfc)
 {
     SessionConfig_t const *const cfg = &gfc->cfg;
     III_side_info_t *const l3_side = &gfc->l3_side;
+    FLOAT   adjust, db;
     int     i;
 
     if (gfc->iteration_init_init == 0) {
@@ -354,31 +355,56 @@ iteration_init(lame_internal_flags * gfc)
         huffman_init(gfc);
         init_xrpow_core_init(gfc);
 
-        for (i = 0; i < SBMAX_l; i++) {
-            FLOAT   f;
-            if (i <= 6)
-                f = cfg->adjust_bass;
-            else if (i <= 13)
-                f = cfg->adjust_alto;
-            else if (i <= 20)
-                f = cfg->adjust_treble;
-            else
-                f = cfg->adjust_sfb21;
-
-            gfc->sv_qnt.longfact[i] = f;
+        /* long */
+        db = cfg->adjust_bass_db;
+        if (cfg->vbr == vbr_mt) db -= 2.0f;
+        adjust = powf(10.f, db * 0.1f);
+        for (i = 0; i <= 6; ++i) {
+            gfc->sv_qnt.longfact[i] = adjust;
         }
-        for (i = 0; i < SBMAX_s; i++) {
-            FLOAT   f;
-            if (i <= 5)
-                f = cfg->adjust_bass;
-            else if (i <= 10)
-                f = cfg->adjust_alto;
-            else if (i <= 11)
-                f = cfg->adjust_treble;
-            else
-                f = cfg->adjust_sfb21;
+        db = cfg->adjust_alto_db;
+        if (cfg->vbr == vbr_mt) db -= 1.0f;
+        adjust = powf(10.f, db * 0.1f);
+        for (; i <= 13; ++i) {
+            gfc->sv_qnt.longfact[i] = adjust;
+        }
+        db = cfg->adjust_treble_db;
+        if (cfg->vbr == vbr_mt) db -= 0.025f;
+        adjust = powf(10.f, db * 0.1f);
+        for (; i <= 20; ++i) {
+            gfc->sv_qnt.longfact[i] = adjust;
+        }
+        db = cfg->adjust_sfb21_db;
+        if (cfg->vbr == vbr_mt) db += 1.f;
+        adjust = powf(10.f, db * 0.1f);
+        for (; i < SBMAX_l; ++i) {
+            gfc->sv_qnt.longfact[i] = adjust;
+        }
 
-            gfc->sv_qnt.shortfact[i] = f;
+        /* short */
+        db = cfg->adjust_bass_db;
+        if (cfg->vbr == vbr_mt) db -= 8.f;
+        adjust = powf(10.f, db * 0.1f);
+        for (i = 0; i <= 2; ++i) {
+            gfc->sv_qnt.shortfact[i] = adjust;
+        }
+        db = cfg->adjust_alto_db;
+        if (cfg->vbr == vbr_mt) db -= 4.5f;
+        adjust = powf(10.f, db * 0.1f);
+        for (; i <= 6; ++i) {
+            gfc->sv_qnt.shortfact[i] = adjust;
+        }
+        db = cfg->adjust_treble_db;
+        if (cfg->vbr == vbr_mt) db -= 0.5f;
+        adjust = powf(10.f, db * 0.1f);
+        for (; i <= 11; ++i) {
+            gfc->sv_qnt.shortfact[i] = adjust;
+        }
+        db = cfg->adjust_sfb21_db;
+        if (cfg->vbr == vbr_mt) db += 1.f;
+        adjust = powf(10.f, db * 0.1f);
+        for (; i < SBMAX_s; ++i) {
+            gfc->sv_qnt.shortfact[i] = adjust;
         }
     }
 }

@@ -267,7 +267,7 @@ ATHformula(SessionConfig_t const *cfg, FLOAT f)
         ath = ATHformula_GB(f, cfg->ATHcurve, 0.1f, 24.0f);
         break;
     case 5:
-        ath = ATHformula_GB(f, cfg->ATHcurve, 3.41f, 14.5f);
+        ath = ATHformula_GB(f, cfg->ATHcurve, 3.41f, 16.1f);
         break;
     default:
         ath = ATHformula_GB(f, 0, 0.1f, 24.0f);

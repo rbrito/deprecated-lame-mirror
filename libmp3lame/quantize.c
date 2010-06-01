@@ -170,7 +170,6 @@ psfb21_analogsilence(lame_internal_flags const *gfc, gr_info * const cod_info)
             FLOAT x = xr[j];
             xr[j] = (fabs(x) >= 1e-12f) ? x : 0;
         }
-        return;
     }
     if (cod_info->block_type != SHORT_TYPE) { /* NORM, START or STOP type, but not SHORT blocks */
         int     gsfb;

@@ -455,10 +455,10 @@ extern  "C" {
         int     ATHshort;    /* only use ATH for short blocks        */
         int     noATH;       /* disable ATH                          */
 
-        float   adjust_alto;
-        float   adjust_bass;
-        float   adjust_treble;
-        float   adjust_sfb21;
+        float   adjust_alto_db;
+        float   adjust_bass_db;
+        float   adjust_treble_db;
+        float   adjust_sfb21_db;
 
         float   compression_ratio; /* sizeof(wav file)/sizeof(mp3 file)          */
 

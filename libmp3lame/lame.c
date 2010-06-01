@@ -1182,27 +1182,28 @@ lame_init_params(lame_global_flags * gfp)
     cfg->use_temporal_masking_effect = gfp->useTemporal;
     cfg->use_safe_joint_stereo = gfp->exp_nspsytune & 2;
     {
-        i = (gfp->exp_nspsytune >> 2) & 63;
-        if (i >= 32)
-            i -= 64;
-        cfg->adjust_bass = pow(10, i / 4.0 / 10.0);
+        cfg->adjust_bass_db = (gfp->exp_nspsytune >> 2) & 63;
+        if (cfg->adjust_bass_db >= 32.f)
+            cfg->adjust_bass_db -= 64.f;
+        cfg->adjust_bass_db *= 0.25f;
 
-        i = (gfp->exp_nspsytune >> 8) & 63;
-        if (i >= 32)
-            i -= 64;
-        cfg->adjust_alto = pow(10, i / 4.0 / 10.0);
+        cfg->adjust_alto_db = (gfp->exp_nspsytune >> 8) & 63;
+        if (cfg->adjust_alto_db >= 32.f)
+            cfg->adjust_alto_db -= 64.f;
+        cfg->adjust_alto_db *= 0.25f;
 
-        i = (gfp->exp_nspsytune >> 14) & 63;
-        if (i >= 32)
-            i -= 64;
-        cfg->adjust_treble = pow(10, i / 4.0 / 10.0);
+        cfg->adjust_treble_db = (gfp->exp_nspsytune >> 14) & 63;
+        if (cfg->adjust_treble_db >= 32.f)
+            cfg->adjust_treble_db -= 64.f;
+        cfg->adjust_treble_db *= 0.25f;
 
         /*  to be compatible with Naoki's original code, the next 6 bits
          *  define only the amount of changing treble for sfb21 */
-        i = (gfp->exp_nspsytune >> 20) & 63;
-        if (i >= 32)
-            i -= 64;
-        cfg->adjust_sfb21 = cfg->adjust_treble * pow(10, ((cfg->vbr == vbr_mt ? 3 : 0) + i / 4.0) / 10.0);
+        cfg->adjust_sfb21_db = (gfp->exp_nspsytune >> 20) & 63;
+        if (cfg->adjust_sfb21_db >= 32.f)
+            cfg->adjust_sfb21_db -= 64.f;
+        cfg->adjust_sfb21_db *= 0.25f;
+        cfg->adjust_sfb21_db += cfg->adjust_treble_db;
     }
 
     /* Setting up the PCM input data transform matrix, to apply 
@@ -1627,30 +1628,6 @@ calcNeeded(SessionConfig_t const * cfg)
     return mf_needed;
 }
 
-static void
-lame_in_data_transform(lame_internal_flags* gfc, int nsamples, FLOAT s)
-{
-    SessionConfig_t const *const cfg = &gfc->cfg;
-    EncStateVar_t *const esv = &gfc->sv_enc;
-    sample_t* buffer_l = esv->in_buffer_0;
-    sample_t* buffer_r = esv->in_buffer_1;
-    FLOAT   m[2][2];
-    int     i;
-
-    /* Apply user defined re-scaling */
-    m[0][0] = s * cfg->pcm_transform[0][0];
-    m[0][1] = s * cfg->pcm_transform[0][1];
-    m[1][0] = s * cfg->pcm_transform[1][0];
-    m[1][1] = s * cfg->pcm_transform[1][1];
-    for (i = 0; i < nsamples; ++i) {
-        sample_t const l = buffer_l[i];
-        sample_t const r = buffer_r[i];
-        sample_t const u = l * m[0][0] + r * m[0][1];
-        sample_t const v = l * m[1][0] + r * m[1][1];
-        buffer_l[i] = u; 
-        buffer_r[i] = v;
-    }
-}
 
 /*
  * THE MAIN LAME ENCODING INTERFACE
@@ -1787,68 +1764,54 @@ enum PCMSampleType
 };
 
 static void
-lame_copy_inbuffer(void const* l, void const* r, int nsamples,
-                   enum PCMSampleType pcm_type, int jump,
-                   sample_t* ib0, sample_t* ib1)
+lame_copy_inbuffer(lame_internal_flags* gfc, 
+                   void const* l, void const* r, int nsamples,
+                   enum PCMSampleType pcm_type, int jump, FLOAT s)
 {
-    int     i;
+    SessionConfig_t const *const cfg = &gfc->cfg;
+    EncStateVar_t *const esv = &gfc->sv_enc;
+    sample_t* ib0 = esv->in_buffer_0;
+    sample_t* ib1 = esv->in_buffer_1;
+    FLOAT   m[2][2];
+
+    /* Apply user defined re-scaling */
+    m[0][0] = s * cfg->pcm_transform[0][0];
+    m[0][1] = s * cfg->pcm_transform[0][1];
+    m[1][0] = s * cfg->pcm_transform[1][0];
+    m[1][1] = s * cfg->pcm_transform[1][1];
+
     /* make a copy of input buffer, changing type to sample_t */
+#define COPY_AND_TRANSFORM(T) \
+{ \
+    T const *bl = l, *br = r; \
+    int     i; \
+    for (i = 0; i < nsamples; i++) { \
+        sample_t const l = *bl; \
+        sample_t const r = *br; \
+        sample_t const u = l * m[0][0] + r * m[0][1]; \
+        sample_t const v = l * m[1][0] + r * m[1][1]; \
+        ib0[i] = u; \
+        ib1[i] = v; \
+        bl += jump; \
+        br += jump; \
+    } \
+}
     switch ( pcm_type ) {
-    case pcm_short_type:
-        {
-            short int const *bl = l, *br = r;
-            for (i = 0; i < nsamples; i++) {
-                *ib0++ = *bl;
-                *ib1++ = *br;
-                bl += jump;
-                br += jump;
-            }
-            break;
-        }
+    case pcm_short_type: 
+        COPY_AND_TRANSFORM(short int);
+        break;
     case pcm_int_type:
-        {
-            int const *bl = l, *br = r;
-            for (i = 0; i < nsamples; i++) {
-                *ib0++ = *bl;
-                *ib1++ = *br;
-                bl += jump;
-                br += jump;
-            }
-            break;
-        }
+        COPY_AND_TRANSFORM(int);
+        break;
     case pcm_long_type:
-        {
-            long int const* bl = l, *br = r;
-            for (i = 0; i < nsamples; i++) {
-                *ib0++ = *bl;
-                *ib1++ = *br;
-                bl += jump;
-                br += jump;
-            }
-            break;
-        }
+        COPY_AND_TRANSFORM(long int);
+        break;
     case pcm_float_type:
-        {
-            float const *bl = l, *br = r;
-            for (i = 0; i < nsamples; i++) {
-                *ib0++ = *bl;
-                *ib1++ = *br;
-                bl += jump;
-                br += jump;
-            }
-            break;
-        }
+        COPY_AND_TRANSFORM(float);
+        break;
     case pcm_double_type:
-        {
-            double const *bl = l, *br = r;
-            for (i = 0; i < nsamples; i++) {
-                *ib0++ = *bl;
-                *ib1++ = *br;
-                bl += jump;
-                br += jump;
-            }
-            break;
-        }
+        COPY_AND_TRANSFORM(double);
+        break;
     }
 }
 
@@ -1862,7 +1825,6 @@ lame_encode_buffer_template(lame_global_flags * gfp,
         lame_internal_flags *const gfc = gfp->internal_flags;
         if (is_lame_internal_flags_valid(gfc)) {
             SessionConfig_t const *const cfg = &gfc->cfg;
-            EncStateVar_t *const esv = &gfc->sv_enc;
 
             if (nsamples == 0)
                 return 0;
@@ -1875,16 +1837,14 @@ lame_encode_buffer_template(lame_global_flags * gfp,
                 if (buffer_l == 0 || buffer_r == 0) {
                     return 0;
                 }
-                lame_copy_inbuffer(buffer_l, buffer_r, nsamples, pcm_type, aa, esv->in_buffer_0, esv->in_buffer_1);
+                lame_copy_inbuffer(gfc, buffer_l, buffer_r, nsamples, pcm_type, aa, norm);
             }
             else {
                 if (buffer_l == 0) {
                     return 0;
                 }
-                lame_copy_inbuffer(buffer_l, buffer_l, nsamples, pcm_type, aa, esv->in_buffer_0, esv->in_buffer_1);
+                lame_copy_inbuffer(gfc, buffer_l, buffer_l, nsamples, pcm_type, aa, norm);
             }
-
-            lame_in_data_transform(gfc, nsamples, norm);
 
             return lame_encode_buffer_sample_t(gfc, nsamples, mp3buf, mp3buf_size);
         }
