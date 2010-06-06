@@ -172,7 +172,7 @@ extern  "C" {
         FLOAT   aa_sensitivity_p; /* factor for tuning the (sample power)
                                      point below which adaptive threshold
                                      of hearing adjustment occurs */
-        FLOAT   adjust;      /* lowering based on peak volume, 1 = no lowering */
+        FLOAT   adjust_factor; /* lowering based on peak volume, 1 = no lowering */
         FLOAT   adjust_limit; /* limit for dynamic ATH adjust */
         FLOAT   decay;       /* determined to lower x dB each second */
         FLOAT   floor;       /* lowest ATH value */
@@ -190,6 +190,7 @@ extern  "C" {
      */
 
     typedef struct {
+        FLOAT   masking_lower[CBANDS];
         FLOAT   minval[CBANDS];
         FLOAT   mld[SBMAX_l];
         FLOAT   bo_weight[SBMAX_l]; /* band weight long scalefactor bands, at transition */
@@ -206,6 +207,7 @@ extern  "C" {
 
 
     typedef struct {
+        FLOAT   masking_lower[CBANDS];
         FLOAT   minval[CBANDS];
         FLOAT   mld[SBMAX_s];
         FLOAT   bo_weight[SBMAX_s]; /* band weight short scalefactor bands, at transition */
@@ -448,7 +450,8 @@ extern  "C" {
 
         float   interChRatio;
         float   msfix;       /* Naoki's adjustment of Mid/Side maskings */
-        float   ATHlower;    /* lower ATH by this many db            */
+        float   ATH_offset_db;/* add to ATH this many db            */
+        float   ATH_offset_factor;/* change ATH by this factor, derived from ATH_offset_db */
         float   ATHcurve;    /* change ATH formula 4 shape           */
         int     ATHtype;
         int     ATHonly;     /* only use ATH                         */

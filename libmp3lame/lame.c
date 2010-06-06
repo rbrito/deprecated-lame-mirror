@@ -1169,7 +1169,8 @@ lame_init_params(lame_global_flags * gfp)
 
     cfg->interChRatio = gfp->interChRatio;
     cfg->msfix = gfp->msfix;
-    cfg->ATHlower = gfp->ATHlower;
+    cfg->ATH_offset_db = 0-gfp->ATH_lower_db;
+    cfg->ATH_offset_factor = powf(10.f, cfg->ATH_offset_db * 0.1f);
     cfg->ATHcurve = gfp->ATHcurve;
     cfg->ATHtype = gfp->ATHtype;
     cfg->ATHonly = gfp->ATHonly;
@@ -1524,7 +1525,7 @@ lame_print_internals(const lame_global_flags * gfp)
     MSGF(gfc, "\tATH: %s\n", pc);
     MSGF(gfc, "\t ^ type: %d\n", cfg->ATHtype);
     MSGF(gfc, "\t ^ shape: %g%s\n", cfg->ATHcurve, " (only for type 4)");
-    MSGF(gfc, "\t ^ level adjustement: %g\n", cfg->ATHlower);
+    MSGF(gfc, "\t ^ level adjustement: %g dB\n", cfg->ATH_offset_db);
     MSGF(gfc, "\t ^ adjust type: %d\n", gfc->ATH->use_adjust);
     MSGF(gfc, "\t ^ adjust sensitivity power: %f\n", gfc->ATH->aa_sensitivity_p);
 

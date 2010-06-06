@@ -134,7 +134,7 @@ struct lame_global_struct {
     int     noATH;           /* disable ATH                          */
     int     ATHtype;         /* select ATH formula                   */
     float   ATHcurve;        /* change ATH formula 4 shape           */
-    float   ATHlower;        /* lower ATH by this many db            */
+    float   ATH_lower_db;    /* lower ATH by this many db            */
     int     athaa_type;      /* select ATH auto-adjust scheme        */
     float   athaa_sensitivity; /* dB, tune active region of auto-level */
     short_block_t short_blocks;

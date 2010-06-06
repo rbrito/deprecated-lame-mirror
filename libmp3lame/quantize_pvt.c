@@ -220,9 +220,10 @@ ATHmdct(SessionConfig_t const *cfg, FLOAT f)
     else {
         ath -= NSATHSCALE;
     }
+    ath += cfg->ATH_offset_db;
 
     /* modify the MDCT scaling for the ATH and convert to energy */
-    ath = pow(10.0, ath / 10.0 + cfg->ATHlower);
+    ath = powf(10.0f, ath * 0.1f);
     return ath;
 }
 
@@ -362,13 +363,13 @@ iteration_init(lame_internal_flags * gfc)
 
         /* long */
         db = cfg->adjust_bass_db;
-        if (cfg->vbr == vbr_mt) db -= 2.0f;
+        if (cfg->vbr == vbr_mt) db -= 1.0f;
         adjust = powf(10.f, db * 0.1f);
         for (i = 0; i <= 6; ++i) {
             gfc->sv_qnt.longfact[i] = adjust;
         }
         db = cfg->adjust_alto_db;
-        if (cfg->vbr == vbr_mt) db -= 1.0f;
+        if (cfg->vbr == vbr_mt) db -= 0.5f;
         adjust = powf(10.f, db * 0.1f);
         for (; i <= 13; ++i) {
             gfc->sv_qnt.longfact[i] = adjust;
@@ -380,7 +381,7 @@ iteration_init(lame_internal_flags * gfc)
             gfc->sv_qnt.longfact[i] = adjust;
         }
         db = cfg->adjust_sfb21_db;
-        if (cfg->vbr == vbr_mt) db += 1.f;
+        if (cfg->vbr == vbr_mt) db += 0.5f;
         adjust = powf(10.f, db * 0.1f);
         for (; i < SBMAX_l; ++i) {
             gfc->sv_qnt.longfact[i] = adjust;
@@ -388,13 +389,13 @@ iteration_init(lame_internal_flags * gfc)
 
         /* short */
         db = cfg->adjust_bass_db;
-        if (cfg->vbr == vbr_mt) db -= 8.f;
+        if (cfg->vbr == vbr_mt) db -= 3.f;
         adjust = powf(10.f, db * 0.1f);
         for (i = 0; i <= 2; ++i) {
             gfc->sv_qnt.shortfact[i] = adjust;
         }
         db = cfg->adjust_alto_db;
-        if (cfg->vbr == vbr_mt) db -= 4.5f;
+        if (cfg->vbr == vbr_mt) db -= 1.5f;
         adjust = powf(10.f, db * 0.1f);
         for (; i <= 6; ++i) {
             gfc->sv_qnt.shortfact[i] = adjust;
@@ -406,7 +407,7 @@ iteration_init(lame_internal_flags * gfc)
             gfc->sv_qnt.shortfact[i] = adjust;
         }
         db = cfg->adjust_sfb21_db;
-        if (cfg->vbr == vbr_mt) db += 1.f;
+        if (cfg->vbr == vbr_mt) db += 0.5f;
         adjust = powf(10.f, db * 0.1f);
         for (; i < SBMAX_s; ++i) {
             gfc->sv_qnt.shortfact[i] = adjust;
@@ -554,20 +555,20 @@ athAdjust(FLOAT a, FLOAT x, FLOAT athFloor, float ATHfixpoint)
 {
     /*  work in progress
      */
-    FLOAT const o = 90.30873362;
-    FLOAT const p = (ATHfixpoint < 1) ? 94.82444863 : ATHfixpoint;
-    FLOAT   u = FAST_LOG10_X(x, 10.0);
+    FLOAT const o = 90.30873362f;
+    FLOAT const p = (ATHfixpoint < 1.f) ? 94.82444863f : ATHfixpoint;
+    FLOAT   u = FAST_LOG10_X(x, 10.0f);
     FLOAT const v = a * a;
-    FLOAT   w = 0.0;
+    FLOAT   w = 0.0f;
     u -= athFloor;      /* undo scaling */
-    if (v > 1E-20)
-        w = 1. + FAST_LOG10_X(v, 10.0 / o);
+    if (v > 1E-20f)
+        w = 1.f + FAST_LOG10_X(v, 10.0f / o);
     if (w < 0)
-        w = 0.;
+        w = 0.f;
     u *= w;
     u += athFloor + o - p; /* redo scaling */
 
-    return pow(10., 0.1 * u);
+    return powf(10.f, 0.1f * u);
 }
 
 
@@ -599,9 +600,9 @@ calc_xmin_(lame_internal_flags const *gfc,
         int     width, l;
 
         if (cfg->vbr == vbr_rh || cfg->vbr == vbr_mt)
-            xmin = athAdjust(ATH->adjust, ATH->l[gsfb], ATH->floor, 0);
+            xmin = athAdjust(ATH->adjust_factor, ATH->l[gsfb], ATH->floor, 0);
         else
-            xmin = ATH->adjust * ATH->l[gsfb];
+            xmin = ATH->adjust_factor * ATH->l[gsfb];
 
         en0 = 0.0;
         width = cod_info->width[gsfb];
@@ -645,9 +646,9 @@ calc_xmin_(lame_internal_flags const *gfc,
         int     width, b, l;
         FLOAT   tmpATH;
         if (cfg->vbr == vbr_rh || cfg->vbr == vbr_mt)
-            tmpATH = athAdjust(ATH->adjust, ATH->s[sfb], ATH->floor, 0);
+            tmpATH = athAdjust(ATH->adjust_factor, ATH->s[sfb], ATH->floor, 0);
         else
-            tmpATH = ATH->adjust * ATH->s[sfb];
+            tmpATH = ATH->adjust_factor * ATH->s[sfb];
 
         width = cod_info->width[gsfb];
         for (b = 0; b < 3; b++) {
@@ -699,10 +700,11 @@ calc_xmin_new(lame_internal_flags const *gfc,
 
     for (gsfb = 0; gsfb < cod_info->psy_lmax; gsfb++) {
         FLOAT   en0, xmin;
-        FLOAT   rh1, rh2;
+        FLOAT   rh1, rh2, rh3;
         int     width, l;
 
-        xmin = athAdjust(ATH->adjust, ATH->l[gsfb], ATH->floor, cfg->vbr == vbr_mt ? cfg->ATHfixpoint : 0);
+        xmin = athAdjust(ATH->adjust_factor, ATH->l[gsfb], ATH->floor, cfg->vbr == vbr_mt ? cfg->ATHfixpoint : 0);
+        xmin *= gfc->sv_qnt.longfact[gsfb];
 
         width = cod_info->width[gsfb];
         rh1 = xmin / width;
@@ -721,21 +723,26 @@ calc_xmin_new(lame_internal_flags const *gfc,
         if (en0 > xmin)
             ath_over++;
 
-        if (gsfb == SBPSY_l) {
-            FLOAT   x = xmin * gfc->sv_qnt.longfact[gsfb];
-            if (rh2 < x) {
-                rh2 = x;
-            }
+        if (en0 < xmin) {
+            rh3 = en0;
         }
-        if (cfg->vbr == vbr_mtrh) {
-        	xmin = rh2;
+        else if (rh2 < xmin) {
+            rh3 = xmin;
         }
-        if (!cfg->ATHonly) {
+        else {
+            rh3 = rh2;
+        }
+        if (cfg->vbr == vbr_mt || gsfb == SBPSY_l) {
+            xmin = rh3;
+        }
+        else {
+            xmin = rh2;
+        }
+        {
             FLOAT const e = ratio->en.l[gsfb];
-            if (e > 0.0f) {
+            if (e > 1e-12f) {
                 FLOAT   x;
                 x = en0 * ratio->thm.l[gsfb] / e;
-
                 x *= gfc->sv_qnt.longfact[gsfb];
                 if (xmin < x)
                     xmin = x;
@@ -763,12 +770,13 @@ calc_xmin_new(lame_internal_flags const *gfc,
         int     width, b, l;
         FLOAT   tmpATH;
 
-        tmpATH = athAdjust(ATH->adjust, ATH->s[sfb], ATH->floor, cfg->vbr == vbr_mt ? cfg->ATHfixpoint : 0);
-
+        tmpATH = athAdjust(ATH->adjust_factor, ATH->s[sfb], ATH->floor, cfg->vbr == vbr_mt ? cfg->ATHfixpoint : 0);
+        tmpATH *= gfc->sv_qnt.shortfact[sfb];
+        
         width = cod_info->width[gsfb];
         for (b = 0; b < 3; b++) {
             FLOAT   en0 = 0.0, xmin = tmpATH;
-            FLOAT   rh1, rh2;
+            FLOAT   rh1, rh2, rh3;
 
             rh1 = tmpATH / width;
 #ifdef DBL_EPSILON
@@ -784,21 +792,27 @@ calc_xmin_new(lame_internal_flags const *gfc,
             }
             if (en0 > tmpATH)
                 ath_over++;
-            if (sfb == SBPSY_s) {
-                FLOAT   x = tmpATH * gfc->sv_qnt.shortfact[sfb];
-                if (rh2 < x) {
-                    rh2 = x;
-                }
+            
+            if (en0 < tmpATH) {
+                rh3 = en0;
             }
-            if (cfg->vbr == vbr_mtrh) {
+            else if (rh2 < tmpATH) {
+                rh3 = tmpATH;
+            }
+            else {
+                rh3 = rh2;
+            }
+            if (cfg->vbr == vbr_mt || sfb == SBPSY_s) {
+                xmin = rh3;
+            }
+            else {
                 xmin = rh2;
             }
-            if (!cfg->ATHonly && !cfg->ATHshort) {
+            {
                 FLOAT const e = ratio->en.s[sfb][b];
-                if (e > 0.0f) {
+                if (e > 1e-12f) {
                     FLOAT   x;
                     x = en0 * ratio->thm.s[sfb][b] / e;
-
                     x *= gfc->sv_qnt.shortfact[sfb];
                     if (xmin < x)
                         xmin = x;
@@ -806,12 +820,6 @@ calc_xmin_new(lame_internal_flags const *gfc,
             }
             *pxmin++ = xmin;
         }               /* b */
-        if (cfg->use_temporal_masking_effect) {
-            if (pxmin[-3] > pxmin[-3 + 1])
-                pxmin[-3 + 1] += (pxmin[-3] - pxmin[-3 + 1]) * gfc->cd_psy->decay;
-            if (pxmin[-3 + 1] > pxmin[-3 + 2])
-                pxmin[-3 + 2] += (pxmin[-3 + 1] - pxmin[-3 + 2]) * gfc->cd_psy->decay;
-        }
     }                   /* end of short block sfb loop */
 
     return ath_over;

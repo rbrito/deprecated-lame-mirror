@@ -59,7 +59,7 @@ adjust_ATH(lame_internal_flags const *const gfc)
     FLOAT   gr2_max, max_pow;
 
     if (gfc->ATH->use_adjust == 0) {
-        gfc->ATH->adjust = 1.0; /* no adjustment */
+        gfc->ATH->adjust_factor = 1.0; /* no adjustment */
         return;
     }
 
@@ -98,15 +98,15 @@ adjust_ATH(lame_internal_flags const *const gfc)
     /* towards adjust_limit gradually. */
     /* max_pow is a loudness squared or a power. */
     if (max_pow > 0.03125) { /* ((1 - 0.000625)/ 31.98) from curve below */
-        if (gfc->ATH->adjust >= 1.0) {
-            gfc->ATH->adjust = 1.0;
+        if (gfc->ATH->adjust_factor >= 1.0) {
+            gfc->ATH->adjust_factor = 1.0;
         }
         else {
             /* preceding frame has lower ATH adjust; */
             /* ascend only to the preceding adjust_limit */
             /* in case there is leading low volume */
-            if (gfc->ATH->adjust < gfc->ATH->adjust_limit) {
-                gfc->ATH->adjust = gfc->ATH->adjust_limit;
+            if (gfc->ATH->adjust_factor < gfc->ATH->adjust_limit) {
+                gfc->ATH->adjust_factor = gfc->ATH->adjust_limit;
             }
         }
         gfc->ATH->adjust_limit = 1.0;
@@ -114,20 +114,20 @@ adjust_ATH(lame_internal_flags const *const gfc)
     else {              /* adjustment curve */
         /* about 32 dB maximum adjust (0.000625) */
         FLOAT const adj_lim_new = 31.98 * max_pow + 0.000625;
-        if (gfc->ATH->adjust >= adj_lim_new) { /* descend gradually */
-            gfc->ATH->adjust *= adj_lim_new * 0.075 + 0.925;
-            if (gfc->ATH->adjust < adj_lim_new) { /* stop descent */
-                gfc->ATH->adjust = adj_lim_new;
+        if (gfc->ATH->adjust_factor >= adj_lim_new) { /* descend gradually */
+            gfc->ATH->adjust_factor *= adj_lim_new * 0.075 + 0.925;
+            if (gfc->ATH->adjust_factor < adj_lim_new) { /* stop descent */
+                gfc->ATH->adjust_factor = adj_lim_new;
             }
         }
         else {          /* ascend */
             if (gfc->ATH->adjust_limit >= adj_lim_new) {
-                gfc->ATH->adjust = adj_lim_new;
+                gfc->ATH->adjust_factor = adj_lim_new;
             }
             else {      /* preceding frame has lower ATH adjust; */
                 /* ascend only to the preceding adjust_limit */
-                if (gfc->ATH->adjust < gfc->ATH->adjust_limit) {
-                    gfc->ATH->adjust = gfc->ATH->adjust_limit;
+                if (gfc->ATH->adjust_factor < gfc->ATH->adjust_limit) {
+                    gfc->ATH->adjust_factor = gfc->ATH->adjust_limit;
                 }
             }
         }
