@@ -70,6 +70,12 @@ struct rtpheader {           /* in network byte order */
 
 #include <sys/types.h>
 #include <sys/socket.h>
+#ifdef __int8_t_defined
+#undef uint8_t
+#undef uint16_t
+#undef uint32_t
+#undef uint64_t
+#endif
 #include <netinet/in.h>
 #include <arpa/inet.h>
 
