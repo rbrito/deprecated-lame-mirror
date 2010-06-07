@@ -3093,14 +3093,37 @@ psymodel_init(lame_global_flags const* gfp)
         gd->attack_threshold[0] = gd->attack_threshold[1] = gd->attack_threshold[2] = x;
         gd->attack_threshold[3] = y;
     }
-    
-    for (b = 0; b < gd->s.npart; b++) {
-        float m = (float)(gd->s.npart - b) / gd->s.npart;
-        gd->s.masking_lower[b] = powf(10.f, (-10.f * m) * 0.1f);
-    }    
-    for (b = 0; b < gd->l.npart; b++) {
-        float m = (float)(gd->l.npart - b) / gd->l.npart;
-        gd->l.masking_lower[b] = powf(10.f, (-4.7f * m) * 0.1f);
-    }    
+    {
+        float sk_s = -10.f, sk_l = -4.7f;
+#ifdef TEST_2010_06_07_RH
+        static float const sk[] = { -7.4, -7.4, -7.4, -9.5, -7.4, -6.1, -5.5, -4.7, -4.7, -4.7, -4.7 };
+        if (gfp->VBR_q < 3) {
+            sk_l = sk_s = sk[0];
+        }
+        else {
+            sk_l = sk_s = sk[gfp->VBR_q] + gfp->VBR_q_frac * (sk[gfp->VBR_q]-sk[gfp->VBR_q+1]);
+        }
+#endif
+        b = 0;
+        if (cfg->vbr == vbr_mt) {
+            for (; b < gd->s.npart; b++) {
+                float m = (float)(gd->s.npart - b) / gd->s.npart;
+                gd->s.masking_lower[b] = powf(10.f, sk_s * m * 0.1f);
+            }
+        }
+        for (; b < CBANDS; ++b) {
+            gd->s.masking_lower[b] = 1.f;
+        }    
+        b = 0;
+        if (cfg->vbr == vbr_mt) {
+            for (; b < gd->l.npart; b++) {
+                float m = (float)(gd->l.npart - b) / gd->l.npart;
+                gd->l.masking_lower[b] = powf(10.f, sk_l * m * 0.1f);
+            }
+        }
+        for (; b < CBANDS; ++b) {
+            gd->l.masking_lower[b] = 1.f;
+        }    
+    }
     return 0;
 }

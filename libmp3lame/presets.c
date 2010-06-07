@@ -211,6 +211,13 @@ apply_vbr_preset(lame_global_flags * gfp, int a, int enforce)
         gfp->VBR_q_frac = x;
     }
     gfp->internal_flags->cfg.minval = set->minval;
+#ifdef TEST_2010_06_07_RH
+    if (lame_get_VBR(gfp) == vbr_mt) {
+        if (set->minval > 5) {
+            gfp->internal_flags->cfg.minval = 5; /* --> psymodel.c */
+        }
+    }
+#endif
     gfp->internal_flags->cfg.ATHfixpoint = set->ath_fixpoint;
 }
 
