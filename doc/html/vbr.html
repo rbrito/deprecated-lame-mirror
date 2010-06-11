@@ -5,14 +5,23 @@
   <meta name="generator" content="PSPad editor, www.pspad.com" />
   <meta http-equiv="content-type" content="text/html; charset=UTF-8" />
   <link rel="stylesheet" type="text/css" href="styles/lame.css" />
-  <title>LAME High-End MPEG Layer III (MP3) Encoder</title>
+	<title>LAME MP3 Encoder :: Variable Bit Rate</title>
  </head>
  <body>
 <div id="menu">
 	<ul>
 		<li><a href="index.html">Index page</a></li>
 		<li><a href="about.html">About LAME</a></li>
-		<li><a href="introduction.html">Intro to encoding</a></li>
+		<li><a style="border: 0" href="introduction.html">Intro to encoding</a>
+    <div id="submenu">
+    	<ul>
+    		<li><a href="cbr.html">CBR </a></li>
+    		<li><a href="abr.html">ABR </a></li>
+        <li><a href="vbr.html">VBR </a></li>
+        <li><a style="border: 0" href="ms_stereo.html">M/S Stereo</a></li>
+    	</ul>
+    </div>
+    </li>
 		<li><a href="usage.html">Usage of LAME</a></li>
 		<li><a href="history.html">Version history</a></li>
 		<li><a href="contributors.html">Coders of LAME</a></li>
@@ -25,29 +34,30 @@
 
 <div align="center">
 	<img src="images/logo.gif" width="358" height="231" alt="LAME Official Logo" />
-	<h2 class="hilight">The LAME Project</h2>
+	<h2 class="hilight">LAME - Variable Bit Rate</h2>
 </div>
 
-<p>
-	LAME is a high quality MPEG Audio Layer III (MP3) encoder licensed under the 
-	LGPL.
-</p>
-<p>
-  It is developed as an educational tool to be used in learning about MP3
-  encoding. The goal of the LAME project is to use the open source model to
-  improve the psycho acoustics, noise shaping and speed of MP3. 
-</p>
-<p>
- LAME is not for everyone - it is distributed as source code only and requires
- the ability to use a C compiler. However, many popular ripping and encoding
- programs include the LAME encoding engine, see: <a class="markedlink" href="links.html">Software
- which uses LAME</a>.
-</p>
-<p> Using the LAME encoding engine (or other mp3 encoding technology) in your
- software may require a <a href="links.html#Patents">patent license</a> in some
-	countries.
-</p>
+<p>Suggested usage:</p>
+<blockquote class="code">lame -V2 input.wav output.mp3</blockquote>
 
+<p>
+In Variable Bitrate (VBR) coding, the user chooses a desired quality level
+instead of a bitrate. A correct implementation should be able to maintain the
+same quality perception, changing the bitrate to a higher or lower one whenever
+the audio file is more or less complex. With MP3, this is not always possible.
+</p>
+<p>
+VBR encoding is the logical way of encoding data. General data compressors (like
+.zip and .rar) are VBR, as lossless codecs are as well. Being able to indicate
+a quality value, the encoder decides for each frame, which is the most appropiate
+bitrate to keep it.
+</p>
+<p>
+The main advantage of using VBR is that the encoder will use the smallest amount
+of bytes needed to keep the asked quality. The inconvenience is that the
+file size is quite unpredictable, and can change from file to file in more than
+50kbps. (or nearly double the size, with different genres and quasi-mono content)
+</p>
 </div>
 <div id="footer">
 
@@ -69,5 +79,5 @@ href="http://www.brightercreative.co.uk">Sam Fisher</a>.</p>
 </div>
 </div>
 
- </body>
+</body>
 </html>

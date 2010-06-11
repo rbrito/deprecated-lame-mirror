@@ -8,16 +8,19 @@ htmldir = $(docdir)/html
 pkghtmldir = $(pkgdocdir)/html
 
 pkghtml_DATA = \
-        basic.html \
+    about.html \
+	abr.html \
+	cbr.html \
+	contact.html \
 	contributors.html \
-	examples.html \
-	history.html \
-	id3.html \
+	detailed.html \
 	index.html \
-	lame.css \
-	modes.html \
-	node6.html \
-	switchs.html
+	introduction \
+	links.html \
+	list.html \
+	ms_stereo.html \
+	usage.html \
+	vbr.html
 
 EXTRA_DIST = $(pkghtml_DATA)
 

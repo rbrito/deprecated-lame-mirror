@@ -1,0 +1,144 @@
+/* $Id$ */
+body {
+  background: #FFFFFF;
+  color: #000000;
+  font-family: Verdana, Arial, Helvetica, sans-serif;
+  margin: 0;
+  padding: 0;
+  text-align: justify;
+}
+
+#content {
+  margin: 10px 5em 10px 10em;
+  padding: 0;
+  font-family: Verdana, Arial, Helvetica, sans-serif;
+  font-size: 14px;
+}
+
+#menu {
+  position: fixed;
+  top: 10px;
+  left: 10px;
+  background: #17529D;
+  border: 1px outset #808080;
+  text-align: center;
+  width: 7em;
+}
+
+#menu ul {
+  list-style: none;
+  margin: 0;
+  padding: 0.1em 0.5em;
+}
+
+#menu a {
+  border-bottom: 2px solid #ABD74C;
+  color: white;
+  display: block;
+  font-weight: bold;
+  padding: 10px;
+  text-decoration: none;
+}
+
+#menu a:hover {
+  background: #82A439;
+}
+
+#submenu {
+  left: 20px;
+  background: #17529D;
+  border: 2px solid #ABD74C;
+  text-align: center;
+  width: 7em;
+}
+
+#submenu ul {
+  list-style: none;
+  margin: 0;
+  padding: 0.1em 0.5em;
+}
+
+#submenu a {
+  border-bottom: 2px solid #ABD74C;
+  color: white;
+  display: block;
+  font-weight: bold;
+  padding: 10px;
+  text-decoration: none;
+}
+
+#submenu a:hover {
+  background: #82A439;
+}
+
+
+
+#footer {
+  border-top: 1px solid;
+  padding: 4px;
+  text-align: center;
+  font-size: x-small;
+  color: silver;
+}
+
+#footer img {
+   margin: 0px 10px;
+}
+
+ul.sitemap {
+  padding: 0px;
+}
+
+ul.sitemap li {
+  list-style: none;
+}
+
+table {
+  background:white;
+  color:black;
+  font-family: Verdana, Arial, Helvetica, sans-serif;
+  font-size: 12px;
+  border: 1px #ABD74C solid;
+  margin-bottom: 5px;
+}
+table th {
+  background-color: #DFFF9C;
+  border-bottom: 1px  #ABD74C solid;
+}
+table td {
+  border-bottom: 1px  #ABD74C solid;
+}
+table.devlist th {
+  font-size: 18px;
+}
+
+.code {
+  font-family: Courier, fixed;
+  white-space: pre;
+}
+
+h3#latest_release {
+  text-align: center;
+  background: #CFF57C;
+  border: 2px solid #ABD74C;
+}
+
+.hilight {
+  text-align: center;
+  background: #CFF57C;
+  border: 2px solid #ABD74C;
+}
+.settingtitle {
+  border-bottom: 1px solid #ABD74C;
+}
+img {
+  border: 0px;
+}
+
+a {
+  border-bottom: 2px solid #ABD74C;
+  text-decoration: none;
+}
+a:hover {
+  background: #CFF57C;
+}
