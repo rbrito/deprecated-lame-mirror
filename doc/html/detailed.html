@@ -190,7 +190,7 @@ the input .mp3 file</td></tr>
 
 <tr><th colspan="2">Experimental switches for developers. Only enabled in alpha/debug 
 versions:</th></tr>
-<tr><td>--nores</td><td>Disable the bit reservoir</td></tr>
+<tr><td>--nores</td><td>Each frame will then become independent from previous ones, but the quality will be lower. </td></tr>
 <tr><td>--noshort</td><td>Disable use of short blocks</td></tr>
 <tr><td>--short</td><td>Allow the use of short blocs (default)</td></tr>
 <tr><td>--allshort</td><td>Use only short blocks</td></tr>
@@ -234,7 +234,7 @@ versions:</th></tr>
 <h3>Detailed description in alphabetical order</h3>
 
 <p class="settingtitle">
-<span class="hilight">-a</span> Downmix
+<a name="a"><span class="hilight">-a</span></a> Downmix
 </p>
 <p>  
 mix the stereo input file to mono and encode as mono.<br/>  
@@ -250,7 +250,7 @@ mono .mp3 file from both mono and stereo input.
 </p>
 
 <p class="settingtitle">
-<span class="hilight">--abr n</span> Average bitrate encoding (aka Safe VBR)
+<a name="abr"><span class="hilight">--abr n</span></a> Average bitrate encoding (aka Safe VBR)
 </p>
 <p>
 turns on encoding with a targeted average bitrate of n kbps, allowing
@@ -259,7 +259,7 @@ kbps, you can use any integer value within that range.
 </p>
 
 <p class="settingtitle">
-<span class="hilight">--add-id3v2</span> Force addition of version 2 tag
+<a name="add-id3v2"><span class="hilight">--add-id3v2</span></a> Force addition of version 2 tag
 </p>
 <p>
 Tells LAME to add the tag information as id3v2. This implies adding both, a version 1
@@ -268,7 +268,7 @@ and a version 2 tag, if the values fit on a version 1 tag. See --id3v1-only and
 </p>
 
 <p class="settingtitle">
-<span class="hilight">-b n</span> Bitrate
+<a name="b"><span class="hilight">-b n</span></a> Bitrate
 </p>
 <table cellpadding="5">
 <tr><th>Codec</th>
@@ -292,7 +292,7 @@ a buggy hardware device with strange bitrate constrains.
 </p>
 
 <p class="settingtitle">
-<span class="hilight">-B  n</span> Max bitrate
+<a name="B"><span class="hilight">-B  n</span></a> Max bitrate
 </p>
 <p>
 see also option "-b" for allowed bitrates.
@@ -310,7 +310,7 @@ device with strange bitrate constrains.
 </p>
 
 <p class="settingtitle">
-<span class="hilight">--big-endian</span> Set the byte endiannes to big. 
+<a name="big-endian"><span class="hilight">--big-endian</span></a> Set the byte endiannes to big. 
 </p>
 <p>
 This switch tells LAME that the RAW pcm input is encoded in big-endian instead
@@ -318,7 +318,7 @@ of little-endian.
 </p>
 
 <p class="settingtitle">
-<span class="hilight">--bitwidth</span> Sets the bitwidth value
+<a name="bitwidth"><span class="hilight">--bitwidth</span></a> Sets the bitwidth value
 </p>
 <p>
 With RAW pcm input, this switch lets specify the bitwidth of the same (8 bits,
@@ -326,14 +326,14 @@ With RAW pcm input, this switch lets specify the bitwidth of the same (8 bits,
 </p>
 
 <p class="settingtitle">
-<span class="hilight">-c</span> copyright flag   
+<a name="c"><span class="hilight">-c</span></a> copyright flag   
 </p>
 <p>
 mark the encoded file as copyrighted
 </p>
 
 <p class="settingtitle">
-<span class="hilight">--cbr</span> Enforce constant bitrate encoding
+<a name="cbr"><span class="hilight">--cbr</span></a> Enforce constant bitrate encoding
 </p>
 <p>This switch disables the VBR encoding. Examples:</p>
 <pre>lame -V 0 --cbr input.wav</pre>
@@ -344,7 +344,7 @@ Will encode at -b 160 (ignore ABR and use the specified birtrate)
 Will encode at -b 192 (ignore ABR and use the nearest bitrate to the one specified)
 
 <p class="settingtitle">
-<span class="hilight">--clipdetect</span> Clipping detection
+<a name="clipdetect"><span class="hilight">--clipdetect</span></a> Clipping detection
 </p>
 <p>
 Enable --replaygain-accurate and print a message whether clipping 
@@ -359,7 +359,7 @@ See also: --replaygain-accurate
 </p>
 
 <p class="settingtitle">
-<span class="hilight">--comp x</span> Indicate a compression ratio instead of a bitrate 
+<a name="comp"><span class="hilight">--comp x</span></a> Indicate a compression ratio instead of a bitrate 
 </p>
 <p>
 Use this in place of the -b setting if you preffer to indicate a compression ratio (integer value).
@@ -367,7 +367,7 @@ The ratio is the value of <sup>original-filesize</sup>/<sub>desired-filesize</su
 </p>
 
 <p class="settingtitle">
-<span class="hilight">--decode</span> Mpglib decode capability
+<a name="decode"><span class="hilight">--decode</span></a> Mpglib decode capability
 </p> 
 <p>
 This just uses LAME's mpg123/mpglib interface to decode an MP3 file to
@@ -384,7 +384,7 @@ in the build of LAME.
 </p>
 
 <p class="settingtitle">
-<span class="hilight">--decode-mp3delay x</span> Indicate a different encoder delay
+<a name="decode-mp3delay"><span class="hilight">--decode-mp3delay x</span></a> Indicate a different encoder delay
 for decoding 
 </p>
 <p>
@@ -395,7 +395,7 @@ is possible to compensate for the delay of mp3's generated with other encoders.
 </p>
 
 <p class="settingtitle">
-<span class="hilight">--disptime secs</span> Update the display each secs
+<a name="disptime"><span class="hilight">--disptime secs</span></a> Update the display each secs
 </p>
 <p>
 Use this setting to change the frequency that LAME updates the display when
@@ -403,7 +403,7 @@ encoding a file. Allows decimal values (like 0.5)
 </p>
 
 <p class="settingtitle">
-<span class="hilight">-e  n/5/c</span> Write the de-emphasis flag
+<a name="e"><span class="hilight">-e  n/5/c</span></a> Write the de-emphasis flag
 </p>
 <p>
   n = (none, default)<br/>
@@ -423,7 +423,7 @@ utility before encoding, and then encode without -e.
 </p>
 
 <p class="settingtitle">
-<span class="hilight">-F</span> Enforce the minimum bitrate
+<a name="F"><span class="hilight">-F</span></a> Enforce the minimum bitrate
 </p>
 <p>
 Enforces the minimum bitrate. Without this option, passages of analog
@@ -432,7 +432,7 @@ MPEG mode).
 </p>
 
 <p class="settingtitle">
-<span class="hilight">--flush</span> Flush the output stream as soon as possible
+<a name="flush"><span class="hilight">--flush</span></a> Flush the output stream as soon as possible
 </p>
 <p>
 This setting forces a flush of the data written as soon as the operation has
@@ -441,7 +441,7 @@ performance, since the OS has to write to disk in smaller chunks.
 </p>
 
 <p class="settingtitle">
-<span class="hilight">--freeformat</span> Encode to freeformat stream
+<a name="freeformat"><span class="hilight">--freeformat</span></a> Encode to freeformat stream
 </p>
 <p>
 LAME will produce a fixed bitrate, free format bitstream.
@@ -463,14 +463,15 @@ Decoders which can handle free format:
 </table>
 
 <p class="settingtitle">
-<span class="hilight">--genre-list</span> Print alphabetical ordered list of
+<a name="genre-list"><span class="hilight">--genre-list</span></a> Print alphabetical ordered list of
 known genres
 </p>
 <p>
 Tell LAME to print the list of genres with their index to be used with the --tg
  setting.
+</p>
 <table cellpadding="4">
-<tr><td>123 Acappella<br />
+<tr><td style="border-bottom-width:0px;">123 Acappella<br />
  34 Acid<br />
  74 Acid Jazz<br />
  73 Acid Punk<br />
@@ -506,7 +507,7 @@ Tell LAME to print the list of genres with their index to be used with the --tg
 140 Contemporary Christian<br />
   2 Country<br />
 139 Crossover<br />
- 58 Cult</td><td>
+ 58 Cult</td><td style="border-bottom-width:0px;">
   3 Dance<br />
 125 Dance Hall<br />
  50 Darkwave<br />
@@ -542,7 +543,7 @@ Tell LAME to print the list of genres with their index to be used with the --tg
   7 Hip-Hop<br />
  35 House<br />
 100 Humour<br />
-131 Indie</td><td>
+131 Indie</td><td style="border-bottom-width:0px;">
  19 Industrial<br />
  33 Instrumental<br />
  46 Instrumental Pop<br />
@@ -579,7 +580,7 @@ Tell LAME to print the list of genres with their index to be used with the --tg
  67 Psychedelic<br />
  93 Psychedelic Rock<br />
  43 Punk<br />
-121 Punk Rock</td><td>
+121 Punk Rock</td><td style="border-bottom-width:0px;">
  15 Rap<br />
  68 Rave<br />
  14 R&amp;B<br />
@@ -619,17 +620,16 @@ Tell LAME to print the list of genres with their index to be used with the --tg
  27 Trip-Hop<br />
  28 Vocal</td></tr>
 </table>
-</p>
 
 <p class="settingtitle">
-<span class="hilight">--help</span> Print the command line help.
+<a name="help"><span class="hilight">--help</span></a> Print the command line help.
 </p>
 <p>
 Print the short command line help and exit.
 </p>
 
 <p class="settingtitle">
-<span class="hilight">--highpass number</span> Use a highpass filter when encoding
+<a name="highpass"><span class="hilight">--highpass number</span></a> Use a highpass filter when encoding
 </p>
 <p>
 Enables a highpass filter of the specified frequency when encoding the source.
@@ -639,7 +639,7 @@ remove an interference signal on 50Hz or 60Hz, or a DC offset. (default: disable
 </p>
 
 <p class="settingtitle">
-<span class="hilight">--highpass width</span> Set the width of the decaying curve.
+<a name="highpass-width"><span class="hilight">--highpass-width width</span></a> Set the width of the decaying curve.
 </p>
 <p>
 Specify the width in Hz of the decaying curve of the highpass. The highpass is in
@@ -647,7 +647,7 @@ the center of this curve. Default value 15% of highpass frequency.
 </p>
 
 <p class="settingtitle">
-<span class="hilight">--id3v1-only</span> Disable the use of id3v2.
+<a name="id3v1-only"><span class="hilight">--id3v1-only</span></a> Disable the use of id3v2.
 </p>
 <p>
 Put it before any tag setting.<br/>
@@ -656,7 +656,7 @@ it thinks it should.
 </p>
 
 <p class="settingtitle">
-<span class="hilight">--id3v2-only</span> Disable the user ov id3v1.
+<a name="id3v2-only"><span class="hilight">--id3v2-only</span></a> Disable the user ov id3v1.
 </p>
 <p>
 Put it before any tag setting.<br/>
@@ -664,7 +664,7 @@ This setting tells LAME to use ID3 v2 tag only. An ID3 v1 tag would not be writt
 </p>
 
 <p class="settingtitle">
-<span class="hilight">--ignore-tag-errors</span> Ignore tag information errors
+<a name="ignore-tag-errors"><span class="hilight">--ignore-tag-errors</span></a> Ignore tag information errors
 </p>
 <p>
 Put it before any tag setting.<br/>
@@ -674,14 +674,14 @@ does not start.
 </p>
 
 <p class="settingtitle">
-<span class="hilight">--license</span> Print the license page
+<a name="license"><span class="hilight">--license</span></a> Print the license page
 </p>
 <p>
 Prints version and license information about LAME encoder.
 </p>
 
 <p class="settingtitle">
-<span class="hilight">--little-endian</span> Set the byte endiannes to little. 
+<a name="little-endian"><span class="hilight">--little-endian</span></a> Set the byte endiannes to little. 
 </p>
 <p>
 This switch tells LAME that the RAW pcm input is encoded in little-endian. It is
@@ -689,7 +689,7 @@ the default setting.
 </p>
 
 <p class="settingtitle">
-<span class="hilight">--longhelp</span> Shows the detailed help 
+<a name="longhelp"><span class="hilight">--longhelp</span></a> Shows the detailed help 
 </p>
 <p>
 Prints a help page with all of the commandline switches and a brief explanation
@@ -697,7 +697,7 @@ of them.
 </p>
 
 <p class="settingtitle">
-<span class="hilight">--lowpass number</span> Use a lowpass filter when encoding
+<a name="lowpass"><span class="hilight">--lowpass number</span></a> Use a lowpass filter when encoding
 </p>
 <p>
 Enables a lowpass filter of the specified frequency when encoding the source.
@@ -711,7 +711,7 @@ change it as a general basis.
 </p>
 
 <p class="settingtitle">
-<span class="hilight">--lowpass width</span> Set the width of the decaying curve.
+<a name="lowpass-width"><span class="hilight">--lowpass-width width</span></a> Set the width of the decaying curve.
 </p>
 <p>
 Specify the width in Hz of the decaying curve of the lowpass. The lowpass is in
@@ -720,7 +720,7 @@ the center of this curve. Default value 15% of lowpass frequency.
 </p>
 
 <p class="settingtitle">
-<span class="hilight">-m x</span> Channel modes
+<a name="m"><span class="hilight">-m x</span></a> Channel modes
 </p>
 <table cellpadding="4">
 <tr><td>-m m</td><td>mono</td></tr>
@@ -762,8 +762,9 @@ The main use of Dual channel is to encode content in two languages.
 </p>
 
 <p class="settingtitle">
-<span class="hilight">--mp1input</span> <span class="hilight">--mp2input</span>
- <span class="hilight">--mp3input</span> MPEG layer I, II or III input file
+<a name="mp1input"><span class="hilight">--mp1input</span></a>
+ <a name="mp2input"><span class="hilight">--mp2input</span></a>
+ <a name="mp3input"><span class="hilight">--mp3input</span></a> MPEG layer I, II or III input file
 </p>
 <p>
 Assume the input file is an MP1/2/3 file.  LAME will decode the input file
@@ -775,7 +776,7 @@ to use this switch.
 </p>
 
 <p class="settingtitle">
-<span class="hilight">--noasm value</span> Disables the specified assembler 
+<a name="noasm"><span class="hilight">--noasm value</span></a> Disables the specified assembler 
 instructions
 </p>
 <p>
@@ -786,7 +787,7 @@ check the speed difference.
 </p>
 
 <p class="settingtitle">
-<span class="hilight">--nogap file1 file2 [...]</span> Encodes multiple continuous
+<a name="nogap"><span class="hilight">--nogap file1 file2 [...]</span></a> Encodes multiple continuous
 files.
 </p>
 <p>
@@ -804,7 +805,7 @@ compute the encoding.
 </p>
 
 <p class="settingtitle">
-<span class="hilight">--nogapout dir</span> Specify a directory for the output
+<a name="nogapout"><span class="hilight">--nogapout dir</span></a> Specify a directory for the output
 of the files encoded with --nogap
 </p>
 <p>
@@ -814,7 +815,7 @@ directory.
 </p>
 
 <p class="settingtitle">
-<span class="hilight">--nogaptags</span> Enables the use of VBR tags with files
+<a name="nogaptags"><span class="hilight">--nogaptags</span></a> Enables the use of VBR tags with files
 encoded with --nogap
 </p>
 <p>
@@ -823,7 +824,7 @@ modes. Else, using the --nogap option doesn't generate it.
 </p>
 
 <p class="settingtitle">
-<span class="hilight">--nohist</span> Disable bitrate Histogram
+<a name="nohist"><span class="hilight">--nohist</span></a> Disable bitrate Histogram
 </p>
 <p>
 By default, LAME will display a bitrate histogram while producing
@@ -831,7 +832,7 @@ VBR mp3 files.  This will disable that feature.
 </p>
 
 <p class="settingtitle">
-<span class="hilight">--noreplaygain</span> Disable ReplayGain analysis
+<a name="noreplaygain"><span class="hilight">--noreplaygain</span></a> Disable ReplayGain analysis
 </p>
 <p>
 By default ReplayGain analysis is enabled. This switch disables it.
@@ -841,30 +842,32 @@ See also: --replaygain-accurate, --replaygain-fast
 </p>
 
 <p class="settingtitle">
-<span class="hilight">-o</span> non-original   
+<a name="o"><span class="hilight">-o</span></a> non-original   
 </p>
 <p>
 Mark the encoded file as a copy
 </p>
 
 <p class="settingtitle">
-<span class="hilight">-p</span> CRC error detection  
+<a name="p"><span class="hilight">-p</span></a> CRC error detection  
 </p>
 <p>
-Turn on CRC error detection.  
-Yes this really does work correctly in LAME.  However, it takes 
-16 bits per frame that would otherwise be used for encoding.
+Turn on CRC error protection.
+It will add a cyclic redundancy check (CRC) code in each frame, allowing to 
+detect transmission errors that could occur on the MP3 stream. However, it 
+takes 16 bits per frame that would otherwise be used for encoding, and then
+will slightly reduce the sound quality.
 </p>
 
 <p class="settingtitle">
-<span class="hilight">--pad-id3v2</span> Pad ID3v2 tag.  
+<a name="pad-id3v2"><span class="hilight">--pad-id3v2</span></a> Pad ID3v2 tag.  
 </p>
 <p>
 Pads the ID3v2 tag with extra 128bytes to allow it to expand. 
 </p>
 
 <p class="settingtitle">
-<span class="hilight">--preset x</span> Enable one of the presets
+<a name="preset"><span class="hilight">--preset x</span></a> Enable one of the presets
 </p>
 <table cellpadding="4">
 <tr><th>Setting</th><th>Meaning</th></tr>
@@ -888,7 +891,7 @@ Pads the ID3v2 tag with extra 128bytes to allow it to expand.
 </table>
 
 <p class="settingtitle">
-<span class="hilight">--priority value</span> Set process priority
+<a name="priority"><span class="hilight">--priority value</span></a> Set process priority
 </p>
 <p>
 (Windows and OS/2 only)
@@ -917,7 +920,7 @@ priority 0 will be assumed.
 </p>
 
 <p class="settingtitle">
-<span class="hilight">-q n</span> Algorithm quality selection
+<a name="q"><span class="hilight">-q n</span></a> Algorithm quality selection
 </p>  
 <p>
 Bitrate is of course the main influence on quality.  The higher the bitrate,
@@ -933,7 +936,7 @@ to determine the best scalefactors and huffman encoding (noise shaping).
 </table>
 
 <p class="settingtitle">
-<span class="hilight">--quiet</span> Dont print any output in the screen  
+<a name="quiet"><span class="hilight">--quiet</span></a> Dont print any output in the screen  
 </p>
 <p>
 Disables the screen output. Useful for job processing or other times where
@@ -941,7 +944,7 @@ screen output is undesiderable.
 </p>
 
 <p class="settingtitle">
-<span class="hilight">-r</span> Input file is raw pcm  
+<a name="r"><span class="hilight">-r</span></a> Input file is raw pcm  
 </p>
 <p>
 Assume the input file is raw pcm.  Sampling rate and mono/stereo
@@ -953,7 +956,7 @@ Not supported if LAME is compiled to use LIBSNDFILE.
 </p>
 
 <p class="settingtitle">
-<span class="hilight">--replaygain-accurate</span> Slightly more accurate
+<a name="replaygain-accurate"><span class="hilight">--replaygain-accurate</span></a> Slightly more accurate
  ReplayGain analysis and finding the peak sample
 </p>
 <p>
@@ -1010,7 +1013,7 @@ See also: --replaygain-fast, --noreplaygain, --clipdetect
 </p>
 
 <p class="settingtitle">
-<span class="hilight">--replaygain-fast</span> Fast ReplayGain analysis
+<a name="replaygain-fast"><span class="hilight">--replaygain-fast</span></a> Fast ReplayGain analysis
 </p>
 <p>
 Compute "Radio" ReplayGain of the input data stream after user-specified
@@ -1036,7 +1039,7 @@ See also: --replaygain-accurate, --noreplaygain
 </p>
 
 <p class="settingtitle">
-<span class="hilight">--resample  n</span> Output sampling frequency in kHz
+<a name="resample"><span class="hilight">--resample  n</span></a> Output sampling frequency in kHz
 </p>
 <p>
 where n = 8, 11.025, 12, 16, 22.05, 24, 32, 44.1, 48
@@ -1054,7 +1057,7 @@ perform any extra computations.
 </p>
 
 <p class="settingtitle">
-<span class="hilight">-s  n</span> Sampling frequency in kHz
+<a name="s"><span class="hilight">-s  n</span></a> Sampling frequency in kHz
 </p>
 <p>
 where n = sampling rate in kHz.
@@ -1069,8 +1072,9 @@ supported MP3 samplerates if necessary.
 </p>
 
 <p class="settingtitle">
-<span class="hilight">--scale arg</span> <span class="hilight">--scale-l arg</span> 
-<span class="hilight">--scale.r arg</span> Scale the amplitude of the input file
+<a name="scale"><span class="hilight">--scale arg</span></a>
+<a name="scale-l"><span class="hilight">--scale-l arg</span></a>
+<a name="scale-r"><span class="hilight">--scale-r arg</span></a> Scale the amplitude of the input file
 </p>
 <p>
 Scales input by arg.  This just multiplies the PCM data
@@ -1091,7 +1095,7 @@ The <i>l</i> and <i>r</i> variants apply the scaling only to left (channel 0) or
 </p>
 
 <p class="settingtitle">
-<span class="hilight">--signed</span> Input RAW uses signed values   
+<a name="signed"><span class="hilight">--signed</span></a> Input RAW uses signed values   
 </p>
 <p>
 Use with RAW pcm to indicate if the data is signed (values centered at zero) or
@@ -1099,7 +1103,7 @@ unsigned (all positive values). This is the default value.
 </p>
 
 <p class="settingtitle">
-<span class="hilight">--silent</span> Don't print any output in the screen  
+<a name="silent"><span class="hilight">--silent</span></a> Don't print any output in the screen  
 </p>
 <p>
 Disables the screen output. Useful for job processing or other times where
@@ -1107,14 +1111,14 @@ screen output is undesiderable.
 </p>
 
 <p class="settingtitle">
-<span class="hilight">--space-id3v1</span> Use spaces for padding.  
+<a name="space-id3v1"><span class="hilight">--space-id3v1</span></a> Use spaces for padding.  
 </p>
 <p>
 Use spaces instead of null values for padding data in an ID3v1 tag.
 </p>
 
 <p class="settingtitle">
-<span class="hilight">--strictly-enforce-ISO</span> Strict ISO complience   
+<a name="strictly-enforce-ISO"><span class="hilight">--strictly-enforce-ISO</span></a> Strict ISO complience   
 </p>
 <p>
 With this option, LAME will enforce the 7680 bit limitation on
@@ -1123,7 +1127,7 @@ high bitrate encodings. Some decoders need it.
 </p>
 
 <p class="settingtitle">
-<span class="hilight">-t</span> Disable VBR tag or disable WAV header            
+<a name="t"><span class="hilight">-t</span></a> Disable VBR tag or disable WAV header            
 </p>
 <p>
 When encoding to VBR, this setting enables writing the VBR Tag. This tag is
@@ -1137,7 +1141,7 @@ native endian format.  Use -x to swap bytes.
 </p>
 
 <p class="settingtitle">
-<span class="hilight">-T</span> Force the usage of the LAME tag            
+<a name="T"><span class="hilight">-T</span></a> Force the usage of the LAME tag            
 </p>
 <p>
 By default, LAME already adds a LAME tag when encoding.
@@ -1145,7 +1149,7 @@ This setting overrides the -t setting, and implies --nogaptags.
 </p>
 
 <p class="settingtitle">
-<span class="hilight">--unsigned</span> Input RAW uses unsigned values   
+<a name="unsigned"><span class="hilight">--unsigned</span></a> Input RAW uses unsigned values   
 </p>
 <p>
 Use with RAW pcm to indicate if the data is signed (values centered at zero) or
@@ -1153,14 +1157,14 @@ unsigned (all positive values).
 </p>
 
 <p class="settingtitle">
-<span class="hilight">--usage</span> Print the command line help.
+<a name="usage"><span class="hilight">--usage</span></a> Print the command line help.
 </p>
 <p>
 Print the short command line help and exit.
 </p>
 
 <p class="settingtitle">
-<span class="hilight">-V n</span> Enable VBR encoding
+<a name="V"><span class="hilight">-V n</span></a> Enable VBR encoding
 </p>       
 <p>
 Encodes using the VBR algorithm, at the indicated quality.<br/>
@@ -1173,14 +1177,7 @@ ABR usually produces better results.
 </p>
 
 <p class="settingtitle">
-<span class="hilight">--vbr-old</span> Uses the old VBR method of encoding
-</p>
-<p>
-Tells LAME to encode to VBR using the old (slower) method of encoding.
-</p>
-
-<p class="settingtitle">
-<span class="hilight">--vbr-new</span> Uses the new VBR method of encoding
+<a name="vbr-new"><span class="hilight">--vbr-new</span></a> Uses the new VBR method of encoding
 </p>
 <p>
 Tells LAME to encode to VBR using the new (faster, improved) method of encoding.
@@ -1188,14 +1185,28 @@ This is the default.
 </p>
 
 <p class="settingtitle">
-<span class="hilight">--version</span> Prints the license page
+<a name="vbr-old"><span class="hilight">--vbr-old</span></a> Uses the old VBR method of encoding
+</p>
+<p>
+Tells LAME to encode to VBR using the old (slower) method of encoding.
+</p>
+
+<p class="settingtitle">
+<a name="verbose"><span class="hilight">--verbose</span></a>Program verbosity
+</p>
+<p>
+Print a lot of information on screen. 
+</p>
+
+<p class="settingtitle">
+<a name="version"><span class="hilight">--version</span></a> Prints the license page
 </p>
 <p>
 Prints version and license information about LAME encoder.
 </p>
 
 <p class="settingtitle">
-<span class="hilight">-x</span> Swap input bytes
+<a name="x"><span class="hilight">-x</span></a> Swap input bytes
 </p>
 <p>
 swap bytes in the input file (and output file when using --decode).
@@ -1204,7 +1215,7 @@ encodings sound like static, try this first.
 </p>
 
 <p class="settingtitle">
-<span class="hilight">-Y</span> Ignore noise in sbf21, like in CBR
+<a name="Y"><span class="hilight">-Y</span></a> Ignore noise in sbf21, like in CBR
 </p>
 <p>
 Allows -V2, -V1 and -V0 to ignore noise in the scalefactor band 21, like CBR does.
