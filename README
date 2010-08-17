@@ -3,8 +3,9 @@
                  http://lame.sf.net
 	             August 2010
 
-Originally developed by Mike Cheng (www.uq.net.au/~zzmcheng).  Now
-maintained by Mark Taylor (www.mp3dev.org).
+Originally developed by Mike Cheng (www.uq.net.au/~zzmcheng) and was
+latter developed by Mark Taylor (www.mp3dev.org). Currently maintained
+by The LAME Project.
 
 This code is distributed under the GNU LESSER PUBLIC LICENSE
 (LGPL, see www.gnu.org) with the following modification:
