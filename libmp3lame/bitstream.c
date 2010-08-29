@@ -468,12 +468,11 @@ Huf_count1(bit_stream_t *bs, gr_info *gi)
 {
     int i, wcode, remain, bitidx;
     const unsigned char * const hcode = quadcode[gi->table_select[3]];
-    unsigned char *ptr;
+    unsigned char *ptr, *ptr0;
     assert((unsigned int)gi->table_select[3] < 2u);
 
-    ptr = &bs->buf[bs->bitidx >> 3];
+    ptr0 = ptr = &bs->buf[bs->bitidx >> 3];
     remain = 32 - (bs->bitidx & 7);
-    bitidx = bs->bitidx - (bs->bitidx & 7);
     wcode = *ptr << 24;
     for (i = gi->big_values; i < gi->count1; i += 4) {
 	int huffbits = 0, p = 0;
@@ -484,21 +483,19 @@ Huf_count1(bit_stream_t *bs, gr_info *gi)
 	    p = 8;
 	    huffbits = signbits(gi->xr[i  ]);
 	}
-
 	if (gi->l3_enc[i+1]) {
 	    p += 4;
 	    huffbits = huffbits*2 + signbits(gi->xr[i+1]);
 	}
-
 	if (gi->l3_enc[i+2]) {
 	    p += 2;
 	    huffbits = huffbits*2 + signbits(gi->xr[i+2]);
 	}
-
 	if (gi->l3_enc[i+3]) {
 	    p++;
 	    huffbits = huffbits*2 + signbits(gi->xr[i+3]);
 	}
+
 	/* 0 < hcode[p] <= 10 */
 	wcode |= (huffbits + hcode[p+16]) << (remain - hcode[p]);
 	remain -= hcode[p];
@@ -507,9 +504,11 @@ Huf_count1(bit_stream_t *bs, gr_info *gi)
 	    *ptr++ = wcode >> 16;
 	    remain += 16;
 	    wcode <<= 16;
-	    bitidx += 16;
 	}
     }
+    assert(i == gi->count1);
+
+    bitidx = (bs->bitidx & ~7u) + (ptr - ptr0) * 8;
     remain -= 32;
     if (remain) {
 	*ptr++ = wcode >> 24;
@@ -517,7 +516,6 @@ Huf_count1(bit_stream_t *bs, gr_info *gi)
 	bitidx -= remain;
     }
     bs->bitidx = bitidx;
-    assert(i == gi->count1);
 }
 
 /* Implements the pseudocode of page 98 of the IS */
