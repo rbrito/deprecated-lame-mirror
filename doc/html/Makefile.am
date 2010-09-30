@@ -14,8 +14,9 @@ pkghtml_DATA = \
 	contact.html \
 	contributors.html \
 	detailed.html \
+	history.html \
 	index.html \
-	introduction \
+	introduction.html \
 	links.html \
 	list.html \
 	ms_stereo.html \
