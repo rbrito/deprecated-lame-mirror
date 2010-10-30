@@ -30,7 +30,6 @@ DEFS = @DEFS@ @CONFIG_DEFS@
 
 EXTRA_DIST = \
 	lame.rc \
-	libmp3lame_vc8.vcproj \
 	vbrquantize.h \
 	logoe.ico
 

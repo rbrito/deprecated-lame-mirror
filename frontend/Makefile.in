@@ -249,8 +249,6 @@ EXTRA_PROGRAMS = lame$(EXEEXT) mp3rtp$(EXEEXT) mp3x$(EXEEXT)
 brhist_sources = brhist.c brhist.h
 EXTRA_DIST = \
 	$(brhist_sources) \
-	lame_vc8.vcproj \
-	mp3x_vc8.vcproj \
 	amiga_mpega.c
 
 common_sources = \

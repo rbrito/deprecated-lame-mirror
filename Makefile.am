@@ -25,7 +25,6 @@ EXTRA_DIST = \
 	lame.bat \
 	lame.spec.in \
 	lame.spec \
-	lame_vc8.sln \
 	testcase.mp3 \
 	testcase.wav
 
