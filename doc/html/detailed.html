@@ -120,7 +120,8 @@ the input .mp3 file</td></tr>
 <tr><th colspan="2">Noise shaping &amp; psycho acoustic algorithms</th></tr>
 <tr><td><a href="#q">-q</a> number</td><td>number = 0...9.  Default  -q 3<br/>
                     -q 0:  Highest quality, very slow<br/>
-                    -q 9:  Poor quality, but fast</td></tr>
+                    -q 9:  Poor quality, but fast<br/>
+					Please, see notes in the detailed description</td></tr>
 <tr><td><a href="#m">-m</a> mode</td><td><b>j</b>oint, <b>s</b>imple, <b>f</b>orce, <b>d</b>ual-mono,
  <b>m</b>ono. default is <b>j</b>.<br/>
                     joint  = joins the best possible of MS and LR stereo<br/>
@@ -227,7 +228,7 @@ versions:</th></tr>
 <a href="http://www.mega-nerd.com/libsndfile/">libsndfile</a> instead</td></tr>
 <tr><td>-Z</td><td>Currently unused</td></tr>
 <tr><td>--brief</td><td>Currently unused</td></tr>
-<tr><td>--nspsytune</td><td>Currently unused</td></tr>
+<tr><td style="border-bottom:0px;">--nspsytune</td><td style="border-bottom:0px;">Currently unused</td></tr>
 </table>
 
 <h3>Detailed description in alphabetical order</h3>
@@ -456,7 +457,7 @@ Decoders which can handle free format:
 <tr><th></th><th>Supports up to</th></tr>
 <tr><td>MAD</td><td>640 kbps</td></tr>
 <tr><td>"lame --decode"</td><td>640 kbps</td></tr>
-<tr><td>l3dec</td><td>310 kbps</td></tr>
+<tr><td style="border-bottom:0px;">l3dec</td><td style="border-bottom:0px;">310 kbps</td></tr>
 </table>
 
 <p class="settingtitle">
@@ -728,7 +729,7 @@ The minimum (and default) width is 75% of a band's width (which is 1/64th of the
 <tr><td>-m s</td><td>forced L/R stereo</td></tr>
 <tr><td>-m j</td><td>automatic switch between L/R and M/S stereo</td></tr>
 <tr><td>-m f</td><td>forced mid/side stereo</td></tr>
-<tr><td>-m d</td><td>dual (independent) channels</td></tr>
+<tr><td style="border-bottom:0px;">-m d</td><td style="border-bottom:0px;">dual (independent) channels</td></tr>
 </table>
 <p>
 MONO is the default mode for mono input files.  If "-m m" is specified
@@ -917,7 +918,7 @@ The valid parameters are:
 <tr><td>1</td><td>Medium priority </td><td>IDLE_PRIORITY_CLASS</td><td>IDLE, delta = +31</td></tr>
 <tr><td>2</td><td>Regular priority </td><td>NORMAL_PRIORITY_CLASS</td><td>REGULAR, delta = -31</td></tr>
 <tr><td>3</td><td>High priority </td><td>HIGH_PRIORITY_CLASS</td><td>REGULAR, delta = 0</td></tr>
-<tr><td>4</td><td>Maximum priority </td><td>HIGH_PRIORITY_CLASS</td><td>REGULAR, delta = +31</td></tr>
+<tr><td style="border-bottom:0px;">4</td><td style="border-bottom:0px;">Maximum priority </td><td style="border-bottom:0px;">HIGH_PRIORITY_CLASS</td><td style="border-bottom:0px;">REGULAR, delta = +31</td></tr>
 </tbody>
 </table>
 <p>
@@ -933,14 +934,23 @@ Bitrate is of course the main influence on quality.  The higher the bitrate,
 the higher the quality.  But for a given bitrate, we have a choice of algorithms
 to determine the best scalefactors and huffman encoding (noise shaping).
 </p>
+<p>
+For CBR, ABR and --vbr-old modes, the following table applies
+</p>
 <table cellpadding="4">
 <tr><td>-q 0</td><td>Use slowest &amp; best possible version of all algorithms.</td></tr>
 <tr><td>-q 3</td><td>Default value.  Good speed, good quality</td></tr>
 <tr><td>-q 7</td><td>Very fast, ok quality.  (psycho acoustics are
       used for pre-echo &amp; M/S, but no noise shaping is done.</td></tr>
-<tr><td>-q 9</td><td>Disables almost all algorithms including psy-model. Poor quality.</td></tr>
+<tr><td style="border-bottom:0px;">-q 9</td><td style="border-bottom:0px;">Disables almost all algorithms including psy-model. Poor quality.</td></tr>
 </table>
-
+<p>
+For the default VBR mode since LAME 3.98, the following table applies
+</p>
+<table cellpadding="4">
+<tr><td>-q 0 to -q 4</td><td>Use the best algorithm.</td></tr>
+<tr><td style="border-bottom:0px;">-q 5 to -q 9</td><td style="border-bottom:0px;">Use the not so good algorithm</td></tr>
+</table>
 <p class="settingtitle">
 <a name="quiet"><span class="hilight">--quiet</span></a> Dont print any output in the screen  
 </p>
