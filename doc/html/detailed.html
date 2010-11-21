@@ -38,7 +38,7 @@
 <h3>Options ordered by feature</h3>
 <table class="settings" cellpadding="4">
 
-<tr><th>Setting</th><th>Brief description</th></tr>
+<tr><th style="width:20%">Setting</th><th>Brief description</th></tr>
 <tr><th colspan="2">Input options</th></tr>
 <tr><td colspan="2">By default, LAME accepts a PCM audio sample inside a .WAV
 container as the input file, in 8, 16, 24 and 32 bits integer and in IEEE FLOAT.
@@ -47,117 +47,115 @@ then it also supports the extra formats that the library supports.<br/>
 There is also support for RAW PCM data and and piped input</td></tr>
 <tr><td>-</td><td>For piped/streamed Input, use "-" as the input and/or output
  file name.</td></tr>
-<tr><td>--mp1input<a href="#note1"><sup>1</sup></a></td><td>Input file is an MPEG
+<tr><td><a href="#mp1input">--mp1input</a><a href="#note1"><sup>1</sup></a></td><td>Input file is an MPEG
  layer I file. Implicit if extension is .mp1</td></tr>
-<tr><td>--mp2input<a href="#note1"><sup>1</sup></a></td><td>Input file is an MPEG
+<tr><td><a href="#mp2input">--mp2input</a><a href="#note1"><sup>1</sup></a></td><td>Input file is an MPEG
  layer II file. Implicit if extension is .mp2</td></tr>
-<tr><td>--mp3input<a href="#note1"><sup>1</sup></a></td><td>Input file is an MPEG
+<tr><td><a href="#mp3input">--mp3input</a><a href="#note1"><sup>1</sup></a></td><td>Input file is an MPEG
  layer III file. Implicit if extension is .mp3</td></tr>
-<tr><td>--scale number</td><td>Scale input (multiply PCM data) by number.</td></tr>
-<tr><td>--scale-l number</td><td>Scale channel 0 (left) input (multiply PCM data
+<tr><td><a href="#scale">--scale</a> number</td><td>Scale input (multiply PCM data) by number.</td></tr>
+<tr><td><a href="#scale-l">--scale-l</a> number</td><td>Scale channel 0 (left) input (multiply PCM data
 ) by number</td></tr>
-<tr><td>--scale-r number</td><td>Scale channel 1 (right) input (multiply PCM data)
+<tr><td><a href="#scale-r">--scale-r</a> number</td><td>Scale channel 1 (right) input (multiply PCM data)
  by number</td></tr>
-<tr><td>--nogap file1 file2 ...</td><td>Gapless encoding for a set of contiguous
+<tr><td><a href="#nogap">--nogap</a> file1 file2 ...</td><td>Gapless encoding for a set of contiguous
  files</td></tr>
-<tr><td>--nogapout dir</td><td>Output dir for gapless encoding (must precede
+<tr><td><a href="#nogapout">--nogapout</a> dir</td><td>Output dir for gapless encoding (must precede
  --nogap)</td></tr>
-<tr><td>--nogaptags</td><td>Allow the use of VBR tags in gapless encoding</td></tr>
+<tr><td><a href="#nogaptags">--nogaptags</a></td><td>Allow the use of VBR tags in gapless encoding</td></tr>
 
 <tr><th colspan="2">Input options for RAW PCM</th></tr>
-<tr><td>-r</td><td>Assume input file is raw PCM.</td></tr>
-<tr><td>-s  number</td><td>Input sampling frequency in kHz</td></tr>
-<tr><td>-x</td><td> Force byte-swapping of input</td></tr>
-<tr><td>--bitwidth w</td><td> Input bit width is w (default 16)</td></tr>
-<tr><td>--signed / --unsigned</td><td> Input is signed (default) or unsigned</td></tr>
-<tr><td>--little-endian / --big-endian</td><td> Input is little-endian (default)
+<tr><td><a href="#r">-r</a></td><td>Assume input file is raw PCM.</td></tr>
+<tr><td><a href="#s">-s</a> number</td><td>Input sampling frequency in kHz</td></tr>
+<tr><td><a href="#x">-x</a></td><td> Force byte-swapping of input</td></tr>
+<tr><td><a href="#bitwidth">--bitwidth</a> w</td><td> Input bit width is w (default 16)</td></tr>
+<tr><td><a href="#signed">--signed</a> / <a href="#unsigned">--unsigned</a></td><td> Input is signed (default) or unsigned</td></tr>
+<tr><td><a href="#little-endian">--little-endian</a> / <a href="#big-endian">--big-endian</a></td><td> Input is little-endian (default)
  or big-endian</td></tr>
-<tr><td>-a</td><td>Downmix from stereo to mono file for mono encoding</td></tr>
+<tr><td><a href="#a">-a</a></td><td>Downmix from stereo to mono file for mono encoding</td></tr>
 
 <tr><th colspan="2">Constant Bit Rate (CBR)</th></tr>
-<tr><td>-b  number</td><td>Set the bitrate in kbps, default 128 kbps</td></tr>
-<tr><td>--cbr</td><td>Enforce use of constant bitrate</td></tr>
-<tr><td>--comp ratio</td><td>Choose bitrate to obtain the specified compression
+<tr><td><a href="#b">-b</a>  number</td><td>Set the bitrate in kbps, default 128 kbps</td></tr>
+<tr><td><a href="#cbr">--cbr</a></td><td>Enforce use of constant bitrate</td></tr>
+<tr><td><a href="#comp">--comp</a> ratio</td><td>Choose bitrate to obtain the specified compression
  ratio</td></tr>
-<tr><td>--freeformat</td><td>Produce a free format bitstream instead of the 
+<tr><td><a href="#freeformat">--freeformat</a></td><td>Produce a free format bitstream instead of the 
 standard one. Supported bitrates between 8 and 640 kbps. Scarce support by
 decoders.</td></tr>
 
 <tr><th colspan="2">Variable Bit Rate (<a href="abr.html">ABR</a>)</th></tr>
-<tr><td>--abr number</td><td>Specify average bitrate desired (instead of quality)
+<tr><td><a href="#abr">--abr</a> number</td><td>Specify average bitrate desired (instead of quality)
 </td></tr>
 
 <tr><th colspan="2">Variable Bit Rate (<a href="vbr.html">VBR</a>)</th></tr>
-<tr><td>-V number</td><td>Quality setting for VBR.  default number=4.<br/>
+<tr><td><a href="#V">-V</a> number</td><td>Quality setting for VBR.  default number=4.<br/>
                     Decimal values can be specified, like: 4.51<br/>
                     0=highest quality, bigger files. 9.999=lowest quality,
                      smaller files</td></tr>
-<tr><td>--vbr-old</td><td>Use old variable bitrate (VBR) routine</td></tr>
-<tr><td>--vbr-new</td><td>Use new variable bitrate (VBR) routine (default)</td></tr>
-<tr><td>-b  number</td><td>Specify a minimum allowed bitrate. default 32 kbps</td></tr>
-<tr><td>-B  number</td><td>Specify a maximum allowed bitrate. default 320 kbps</td></tr>
-<tr><td>-F</td><td>Strictly enforce the -b option, for use with players that
+<tr><td><a href="#vbr-old">--vbr-old</a></td><td>Use old variable bitrate (VBR) routine</td></tr>
+<tr><td><a href="#b">-b</a>  number</td><td>Specify a minimum allowed bitrate. default 32 kbps</td></tr>
+<tr><td><a href="#B">-B</a>  number</td><td>Specify a maximum allowed bitrate. default 320 kbps</td></tr>
+<tr><td><a href="#F">-F</a></td><td>Strictly enforce the -b option, for use with players that
                     do not support low bitrate mp3</td></tr>
-<tr><td>-t</td><td>Disable VBR informational tag</td></tr>
-<tr><td>-T</td><td>Enable and force writing LAME Tag</td></tr>
-<tr><td>-Y</td><td>Allows -V2, -V1 and -V0 to ignore noise in sfb21, like in CBR.
-Useful to prevent so-called bitrate bloat</td></tr>
+<tr><td><a href="#t">-t</a></td><td>Disable VBR informational tag</td></tr>
+<tr><td><a href="#T">-T</a></td><td>Enable and force writing LAME Tag</td></tr>
+<tr><td><a href="#Y">-Y</a></td><td>Allows -V2, -V1 and -V0 to not to encode the highest frequencies accurately, if doing so causes disproportional increases in bitrate. This is the same that CBR and ABR modes do.</td></tr>
 
 <tr><th colspan="2">Operational options</th></tr>
-<tr><td>--preset type</td><td>Enables some preconfigured settings. Check below
+<tr><td><a href="#preset">--preset</a> type</td><td>Enables some preconfigured settings. Check below
 for each of the valid values</td></tr>
-<tr><td>--resample sfreq</td><td>Sampling frequency of output file(kHz)- 
+<tr><td><a href="#resample">--resample</a> sfreq</td><td>Sampling frequency of output file(kHz)- 
 default=automatic</td></tr>
-<tr><td>--priority number</td><td>Sets the process priority:<br/>
-                         0,1 = Low priority (IDLE_PRIORITY_CLASS)<br/>
-                         2 = normal priority (NORMAL_PRIORITY_CLASS, default)<br/>
-                         3,4 = High priority (HIGH_PRIORITY_CLASS))</td></tr>
-<tr><td>--flush</td><td>Flush output stream as soon as possible</td></tr>
-<tr><td>--decode</td><td>Input=mp3 file, output=wav</td></tr>
-<tr><td>--decode-mp3delay samples</td><td>Set the encoder delay to use to decode 
+<tr><td><a href="#priority">--priority</a> number</td><td>Sets the process priority:<br/>
+                         0,1 = Low priority <br/>
+                         2 = normal priority (default)<br/>
+                         3,4 = High priority </td></tr>
+<tr><td><a href="#flush">--flush</a></td><td>Flush output stream as soon as possible</td></tr>
+<tr><td><a href="#decode">--decode</a></td><td>Input=mp3 file, output=wav</td></tr>
+<tr><td><a href="#decode-mp3delay">--decode-mp3delay</a> samples</td><td>Set the encoder delay to use to decode 
 the input .mp3 file</td></tr>
-<tr><td>-t</td><td>Disable writing wav header when using --decode</td></tr>
-<tr><td>--noasm type</td><td>Disable assembly optimizations for mmx/3dnow/sse</td></tr>
+<tr><td><a href="#t">-t</a></td><td>Disable writing wav header when using --decode</td></tr>
+<tr><td><a href="#noasm">--noasm</a> type</td><td>Disable assembly optimizations for mmx/3dnow/sse</td></tr>
 
 <tr><th colspan="2">Noise shaping &amp; psycho acoustic algorithms</th></tr>
-<tr><td>-q number</td><td>number = 0...9.  Default  -q 3<br/>
+<tr><td><a href="#q">-q</a> number</td><td>number = 0...9.  Default  -q 3<br/>
                     -q 0:  Highest quality, very slow<br/>
                     -q 9:  Poor quality, but fast</td></tr>
-<tr><td>-m mode</td><td><b>j</b>oint, <b>s</b>imple, <b>f</b>orce, <b>d</b>ual-mono,
+<tr><td><a href="#m">-m</a> mode</td><td><b>j</b>oint, <b>s</b>imple, <b>f</b>orce, <b>d</b>ual-mono,
  <b>m</b>ono. default is <b>j</b>.<br/>
                     joint  = joins the best possible of MS and LR stereo<br/>
                     simple = force LR stereo on all frames<br/>
                     force  = force MS stereo on all frames.</td></tr>
 
 <tr><th colspan="2">Filter options:</th></tr>
-<tr><td>--lowpass number</td><td>Frequency(kHz), lowpass filter cutoff above freq.
+<tr><td><a href="#lowpass">--lowpass</a> number</td><td>Frequency(kHz), lowpass filter cutoff above freq.
  Range [0.001..50]kHz or [50..50000]Hz</td></tr>
-<tr><td>--lowpass-width number</td><td>Frequency(kHz), lowpass window width. Range [0.001..16]kHz or
- [16..50000]Hz - default one polyphase filter band</td></tr>
-<tr><td>--highpass number</td><td>Frequency(kHz), highpass filter cutoff below freq.  Range [0.001..16]kHz or
- [16..50000]Hz</td></tr>
-<tr><td>--highpass-width number</td><td>Frequency(kHz), highpass window width - default one polyphase filter band</td></tr>
+<tr><td><a href="#lowpass">--lowpass</a>-width number</td><td>Frequency(kHz), lowpass window width. Range [0.001..16]kHz or
+ [16..50000]Hz - (See further restriction in the detailed explanation)</td></tr>
+<tr><td><a href="#highpass">--highpass</a> number</td><td>Frequency(kHz), highpass filter cutoff below freq.  Range [0.001..16]kHz or
+ [16..50000]Hz (See further restriction in the detailed explanation)</td></tr>
+<tr><td><a href="#highpass">--highpass</a>-width number</td><td>Frequency(kHz), highpass window width - (See further restriction in the detailed explanation)</td></tr>
 
 <tr><th colspan="2">ID3 tag Information</th></tr>
-<tr><td>--tt title</td><td>Audio/song title (max 30 chars for version 1 tag)</td></tr>
-<tr><td>--ta artist</td><td>Audio/song artist (max 30 chars for version 1 tag)</td></tr>
-<tr><td>--tl album</td><td>Audio/song album (max 30 chars for version 1 tag)</td></tr>
-<tr><td>--ty year</td><td>Audio/song year of issue (1 to 9999)</td></tr>
-<tr><td>--tc comment</td><td>User-defined text (max 30 chars for v1 tag, 28 for v1.1)</td></tr>
-<tr><td>--tn track[/total]</td><td>Audio/song track number and (optionally) the total
+<tr><td><a href="#tt">--tt</a> title</td><td>Audio/song title (max 30 chars for version 1 tag)</td></tr>
+<tr><td><a href="#ta">--ta</a> artist</td><td>Audio/song artist (max 30 chars for version 1 tag)</td></tr>
+<tr><td><a href="#tl">--tl</a> album</td><td>Audio/song album (max 30 chars for version 1 tag)</td></tr>
+<tr><td><a href="#ty">--ty</a> year</td><td>Audio/song year of issue (1 to 9999)</td></tr>
+<tr><td><a href="#tc">--tc</a> comment</td><td>User-defined text (max 30 chars for v1 tag, 28 for v1.1)</td></tr>
+<tr><td><a href="#tn">--tn</a> track[/total]</td><td>Audio/song track number and (optionally) the total
                            number of tracks on the original recording.<br/> (track
                            and total each 1 to 255. just the track number
                            creates v1.1 tag, providing a total forces v2.0).</td></tr>
-<tr><td>--tg genre</td><td>Audio/song genre (name or number in list)</td></tr>
-<tr><td>--ti file</td><td>Audio/song albumArt (jpeg/png/gif file, 128KB max, v2.3)</td></tr>
-<tr><td>--tv id=value</td><td>User-defined frame specified by id and value (v2.3 tag)</td></tr>
-<tr><td>--add-id3v2</td><td>Force addition of version 2 tag</td></tr>
-<tr><td>--id3v1-only</td><td>Add only a version 1 tag</td></tr>
-<tr><td>--id3v2-only</td><td>Add only a version 2 tag</td></tr>
-<tr><td>--space-id3v1</td><td>Pad version 1 tag with spaces instead of nulls</td></tr>
-<tr><td>--pad-id3v2-size n</td><td>Adds ID3v2 tag with n padding bytes</td></tr>
-<tr><td>--genre-list</td><td>Print alphabetically sorted ID3 genre list and exit</td></tr>
-<tr><td>--ignore-tag-errors</td><td>Ignore errors in values passed for tags</td></tr>
+<tr><td><a href="#tg">--tg</a> genre</td><td>Audio/song genre (name or number in list)</td></tr>
+<tr><td><a href="#ti">--ti</a> file</td><td>Audio/song albumArt (jpeg/png/gif file, 128KB max, v2.3)</td></tr>
+<tr><td><a href="#tv">--tv</a> id=value</td><td>User-defined frame specified by id and value (v2.3 tag)</td></tr>
+<tr><td><a href="#add-id3v2">--add-id3v2</a></td><td>Force addition of version 2 tag</td></tr>
+<tr><td><a href="#id3v1-only">--id3v1-only</a></td><td>Add only a version 1 tag</td></tr>
+<tr><td><a href="#id3v2-only">--id3v2-only</a></td><td>Add only a version 2 tag</td></tr>
+<tr><td><a href="#space-id3v1">--space-id3v1</a></td><td>Pad version 1 tag with spaces instead of nulls</td></tr>
+<tr><td><a href="#pad-id3v2-size">--pad-id3v2-size</a> n</td><td>Adds ID3v2 tag with n padding bytes</td></tr>
+<tr><td><a href="#genre-list">--genre-list</a></td><td>Print alphabetically sorted ID3 genre list and exit</td></tr>
+<tr><td><a href="#ignore-tag-errors">--ignore-tag-errors</a></td><td>Ignore errors in values passed for tags</td></tr>
 <tr><td colspan="2">
     Note: A version 2 tag will NOT be added unless one of the input fields
     won't fit in a version 1 tag (e.g. the title string is longer than 30
@@ -165,28 +163,28 @@ the input .mp3 file</td></tr>
     or output is redirected to stdout.</td></tr>
 
 <tr><th colspan="2">MP3 header/stream options:</th></tr>
-<tr><td>-e mode</td><td>De-emphasis n/5/c  (obsolete)</td></tr>
-<tr><td>-c</td><td>Mark as copyright</td></tr>
-<tr><td>-o</td><td>Mark as non-original</td></tr>
-<tr><td>-p</td><td>Error detection.  adds 16 bit checksum to every frame
+<tr><td><a href="#e">-e</a> mode</td><td>De-emphasis n/5/c  (obsolete)</td></tr>
+<tr><td><a href="#c">-c</a></td><td>Mark as copyright</td></tr>
+<tr><td><a href="#o">-o</a></td><td>Mark as non-original</td></tr>
+<tr><td><a href="#p">-p</a></td><td>Error detection.  adds 16 bit checksum to every frame
                     (the checksum is computed correctly)</td></tr>
-<tr><td>--strictly-enforce-ISO</td><td>Comply as much as possible to ISO MPEG spec</td></tr>
-<tr><td>--replaygain-fast</td><td>Compute RG fast but slightly inaccurately (default)</td></tr>
-<tr><td>--replaygain-accurate<a href="#note1"><sup>1</sup></a></td><td>Compute RG
+<tr><td><a href="#strictly-enforce-ISO">--strictly-enforce-ISO</a></td><td>Comply as much as possible to ISO MPEG spec</td></tr>
+<tr><td><a href="#replaygain-fast">--replaygain-fast</a></td><td>Compute RG fast but slightly inaccurately (default)</td></tr>
+<tr><td><a href="#replaygain-accurate">--replaygain-accurate</a><a href="#note1"><sup>1</sup></a></td><td>Compute RG
  more accurately and find the peak sample</td></tr>
-<tr><td>--noreplaygain</td><td>Disable ReplayGain analysis</td></tr>
-<tr><td>--clipdetect<a href="#note1"><sup>1</sup></a></td><td>Enable
+<tr><td><a href="#noreplaygain">--noreplaygain</a></td><td>Disable ReplayGain analysis</td></tr>
+<tr><td><a href="#clipdetect">--clipdetect</a><a href="#note1"><sup>1</sup></a></td><td>Enable
  --replaygain-accurate and print a message whether
  clipping occurs and how far the waveform is from full scale</td></tr>
 
 <tr><th colspan="2">Verbosity:</th></tr>
-<tr><td>--disptime secs</td><td>Print progress report every secs seconds</td></tr>
-<tr><td>--nohist</td><td>Disable VBR histogram display</td></tr>
-<tr><td>--silent / --quiet</td><td>Don't print anything on screen</td></tr>
-<tr><td>--verbose</td><td>Print a lot of useful information</td></tr>
-<tr><td>--version / --license</td><td>Print License information</td></tr>
-<tr><td>--help / --usage</td><td>Shows the common list of switches</td></tr>
-<tr><td>--longhelp</td><td>Shows the complete list of switches</td></tr>
+<tr><td><a href="#disptime">--disptime</a> secs</td><td>Print progress report every secs seconds</td></tr>
+<tr><td><a href="#nohist">--nohist</a></td><td>Disable VBR histogram display</td></tr>
+<tr><td><a href="#silent">--silent</a> / <a href="#quiet">--quiet</a></td><td>Don't print anything on screen</td></tr>
+<tr><td><a href="#verbose">--verbose</a></td><td>Print a lot of useful information</td></tr>
+<tr><td><a href="#version">--version</a> / <a href="#license">--license</a></td><td>Print License information</td></tr>
+<tr><td><a href="#help">--help</a> / <a href="#usage">--usage</a></td><td>Shows the common list of switches</td></tr>
+<tr><td><a href="#longhelp">--longhelp</a></td><td>Shows the complete list of switches</td></tr>
 
 <tr><th colspan="2">Experimental switches for developers. Only enabled in alpha/debug 
 versions:</th></tr>
@@ -211,6 +209,7 @@ versions:</th></tr>
 <tr><td>--athshort</td><td>ATH only for short blocks</td></tr>
 <tr><td>--athlower x</td><td>Lower the ATH by x.x dB's</td></tr>
 <tr><td>--athtype x</td><td>Select ATH type curve</td></tr>
+<tr><td>--vbr-new</td><td>In LAME 3.98, the new VBR was made default, and this switch is now used for experimental tweaks</td></tr>
 
 <tr><th colspan="2">Aliases and removed settings</th></tr>
 <tr><td>-f</td><td>Alias of -q 7.</td></tr>
@@ -219,7 +218,7 @@ versions:</th></tr>
 <tr><td>-S</td><td>Alias of --silent</td></tr>
 <tr><td>--alt-preset</td><td>Alias of --preset</td></tr>
 <tr><td>--r3mix</td><td>Alias of -V 3</td></tr>
-<tr><td>--vbr-mtrh</td><td>Alias of --vbr-new</td></tr>
+<tr><td>--vbr-mtrh</td><td>Alias of LAME 3.98 default vbr mode</td></tr>
 <tr><td>--pad-id3v2</td><td>Alias of --pad-id3v2-size 128</td></tr>
 <tr><td>-d</td><td>No longer supported</td></tr>
 <tr><td>-k</td><td>No longer supported</td></tr>
@@ -367,12 +366,10 @@ The ratio is the value of <sup>original-filesize</sup>/<sub>desired-filesize</su
 </p>
 
 <p class="settingtitle">
-<a name="decode"><span class="hilight">--decode</span></a> Mpglib decode capability
+<a name="decode"><span class="hilight">--decode</span></a> MP3 decode capability
 </p> 
 <p>
-This just uses LAME's mpg123/mpglib interface to decode an MP3 file to
-a wav file.  The input file can be any input type supported by
-encoding, including .mp3 (layers 1, 2 and 3) and .ogg.  
+This uses LAME's HIP<a href="#note2"><sup>2</sup></a> decoder to decode an MP3 (layers 1, 2 and 3) file to a wav file.
 </p>
 <p>
 If -t is used (disable wav header), LAME will output
@@ -407,8 +404,8 @@ encoding a file. Allows decimal values (like 0.5)
 </p>
 <p>
   n = (none, default)<br/>
-  5 = 0/15 microseconds<br/>
-  c = citt j.17<br/>
+  5 = 50/15 microseconds<br/>
+  c = ccitt j.17<br/>
 </p>
 <p>
 All this does is set a flag in the bitstream.  If you have a PCM
@@ -458,7 +455,7 @@ Decoders which can handle free format:
 <table cellpadding="4">
 <tr><th></th><th>Supports up to</th></tr>
 <tr><td>MAD</td><td>640 kbps</td></tr>
-<tr><td>"lame --decode"</td><td>550 kbps</td></tr>
+<tr><td>"lame --decode"</td><td>640 kbps</td></tr>
 <tr><td>l3dec</td><td>310 kbps</td></tr>
 </table>
 
@@ -635,15 +632,18 @@ Print the short command line help and exit.
 Enables a highpass filter of the specified frequency when encoding the source.
 Range [0.001..50]kHz or [50..50000]Hz.<br/>
 This is usually not required, and the gains are usually minimal. May be useful to
-remove an interference signal on 50Hz or 60Hz, or a DC offset. (default: disabled) 
+remove an interference signal on 50Hz or 60Hz, or a DC offset. (default: disabled)<br/>
+Note: The current implementation has a minimum highpass frequency of (67.5/62)% of the samplerate
+(I.e. 481Hz at 44Khz).
 </p>
 
 <p class="settingtitle">
 <a name="highpass-width"><span class="hilight">--highpass-width width</span></a> Set the width of the decaying curve.
 </p>
 <p>
-Specify the width in Hz of the decaying curve of the highpass. The highpass is in
-the center of this curve. Default value 15% of highpass frequency.
+Specify the width in Hz of the decaying curve of the highpass. Range [16..50000]Hz<br/>
+The minimum (and default) width is 75% of a band's width (which is 1/64th of the samplerate).<br/>
+Note: See the remark in the --highpass command above.
 </p>
 
 <p class="settingtitle">
@@ -701,7 +701,7 @@ of them.
 </p>
 <p>
 Enables a lowpass filter of the specified frequency when encoding the source.
-Range [0.001..50]kHz or [50..50000]Hz
+Range [0.001..50]kHz or [50..50000]Hz<br />
 </p>
 <p>
 Using a lowpass filter helps reducing the amount of data to encode. This is
@@ -714,9 +714,10 @@ change it as a general basis.
 <a name="lowpass-width"><span class="hilight">--lowpass-width width</span></a> Set the width of the decaying curve.
 </p>
 <p>
-Specify the width in Hz of the decaying curve of the lowpass. The lowpass is in
-the center of this curve. Default value 15% of lowpass frequency.
- Range [0.001..16]kHz or [16..50000]Hz
+Specify the width in Hz of the decaying curve of the lowpass. Range [0.001..16]kHz or [16..50000]Hz <br/>
+The lowpass is in the center of this curve. 
+The minimum (and default) width is 75% of a band's width (which is 1/64th of the samplerate).
+ 
 </p>
 
 <p class="settingtitle">
@@ -875,19 +876,19 @@ Pads the ID3v2 tag with extra 128bytes to allow it to expand.
 <tr><td>--preset standard</td><td>-V 2 --vbr-old</td></tr>
 <tr><td>--preset extreme</td><td>-V 0 --vbr-old</td></tr>
 <tr><td>--preset insane</td><td>-b 320 --vbr-old</td></tr>
-<tr><td>--preset fast xxx</td><td>Enables the --vbr-new routine. kept for compatibility</td></tr>
+<tr><td>--preset fast xxx</td><td>Adding the "fast" keyword before the mentioned presets enables the LAME 3.98 default vbr routine.</td></tr>
 <tr><td colspan="2">&nbsp;</td></tr>
 <tr><td>--preset number</td><td>--abr number</td></tr>
 <tr><td>--preset cbr number</td><td>-b number</td></tr>
 <tr><th colspan="2">Old compatibility settings. Meaningless</th></tr>
-<tr><td>phone</td><td>-b 16 -m m</td></tr>
-<tr><td>phon+ / lw / mw-eu</td><td>-b 24 -m m</td></tr>
-<tr><td>mw-us</td><td>-b 40 -m m</td></tr>
-<tr><td>voice</td><td>-b 56 -m m</td></tr>
-<tr><td>fm / radio</td><td>-b 112</td></tr>
-<tr><td>hifi</td><td>-b 160</td></tr>
-<tr><td>cd</td><td>-b 192</td></tr>
-<tr><td style="border-bottom:0px;">studio</td><td style="border-bottom:0px;">-b 256</td></tr>
+<tr><td>--preset phone</td><td>-b 16 -m m</td></tr>
+<tr><td>--preset phon+ / lw / mw-eu</td><td>-b 24 -m m</td></tr>
+<tr><td>--preset mw-us</td><td>-b 40 -m m</td></tr>
+<tr><td>--preset voice</td><td>-b 56 -m m</td></tr>
+<tr><td>--preset fm / radio</td><td>-b 112</td></tr>
+<tr><td>--preset hifi</td><td>-b 160</td></tr>
+<tr><td>--preset cd</td><td>-b 192</td></tr>
+<tr><td style="border-bottom:0px;">--preset studio</td><td style="border-bottom:0px;">-b 256</td></tr>
 </table>
 
 <p class="settingtitle">
@@ -908,11 +909,16 @@ minimal if you use priority 0 to 2.
 The valid parameters are:
 </p>
 <table cellpadding="4">
-<tr><td>0</td><td>Low priority (IDLE, delta = 0)</td></tr>
-<tr><td>1</td><td>Medium priority (IDLE, delta = +31)</td></tr>
-<tr><td>2</td><td>Regular priority (REGULAR, delta = -31)</td></tr>
-<tr><td>3</td><td>High priority (REGULAR, delta = 0)</td></tr>
-<tr><td>4</td><td>Maximum priority (REGULAR, delta = +31)</td></tr>
+<thead>
+<tr><th></th><th>Priority</th><th>Windows</th><th>OS/2</th></tr>
+</thead>
+<tbody>
+<tr><td>0</td><td>Low priority </td><td>IDLE_PRIORITY_CLASS</td><td>IDLE, delta = 0</td></tr>
+<tr><td>1</td><td>Medium priority </td><td>IDLE_PRIORITY_CLASS</td><td>IDLE, delta = +31</td></tr>
+<tr><td>2</td><td>Regular priority </td><td>NORMAL_PRIORITY_CLASS</td><td>REGULAR, delta = -31</td></tr>
+<tr><td>3</td><td>High priority </td><td>HIGH_PRIORITY_CLASS</td><td>REGULAR, delta = 0</td></tr>
+<tr><td>4</td><td>Maximum priority </td><td>HIGH_PRIORITY_CLASS</td><td>REGULAR, delta = +31</td></tr>
+</tbody>
 </table>
 <p>
 Note that if you call '--priority' without a parameter, then 
@@ -1215,22 +1221,29 @@ encodings sound like static, try this first.
 </p>
 
 <p class="settingtitle">
-<a name="Y"><span class="hilight">-Y</span></a> Ignore noise in sbf21, like in CBR
+<a name="Y"><span class="hilight">-Y</span></a> Ignore noise in sbf21, like CBR mode does
 </p>
 <p>
-Allows -V2, -V1 and -V0 to ignore noise in the scalefactor band 21, like CBR does.
+Allows -V2, -V1 and -V0 to not to encode the highest frequencies accurately,
+if doing so causes disproportional increases in bitrate. This is the same that
+CBR and ABR modes do.<br/>
 Due to the design of the MP3 format, to keep precision in the last scalefactor
-band, an encoder needs to increase the precision in all the bands (not only this
-one).<br/>
-This causes an important increase of bitrate (+60kbps in some cases) compared to
+band, an encoder needs to increase the precision in all the bands (not only in
+this one).<br/>
+The consequence is an increase of bitrate (+60kbps in some cases) compared to
 not keeping that precision. Generally, this band should allow for distortions,
 so using it shouldn't cause harm.
 </p>
 
+<p>&nbsp;
+</p>
 
 <div id="notes">
 <ol>
-<li><a name="note1"></a>If compiled with <a href="http://www.mpg123.de/api/">mpglib</a></li>
+<li><a name="note1"></a>If compiled with decoding capabilities</li>
+<li><a name="note2"></a>HIP stands for Hip Isn't a Player and is based off of
+ Michael Hipp's <a href="http://www.mpg123.de">mpglib 0.2a</a></li>
+
 </ol>
 </div>
 
