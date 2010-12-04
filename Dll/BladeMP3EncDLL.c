@@ -34,13 +34,13 @@
 #define _RELEASEDEBUG 0
 
 // lame_enc DLL version number
-const int MAJORVERSION = 1;
-const int MINORVERSION = 32;
+const BYTE MAJORVERSION = 1;
+const BYTE MINORVERSION = 32;
 
 
 // Local variables
 static DWORD				dwSampleBufferSize=0;
-static HANDLE				gs_hModule=NULL;
+static HMODULE				gs_hModule=NULL;
 static BOOL					gs_bLogFile=FALSE;
 static lame_global_flags*	gfp_save = NULL;
 
@@ -220,7 +220,6 @@ __declspec(dllexport) BE_ERR	beInitStream(PBE_CONFIG pbeConfig, PDWORD dwSamples
 {
     int actual_bitrate;
     //2001-12-18
-    int					nDllArgC = 0;
     BE_CONFIG			lameConfig = { 0, };
     int					nInitReturn = 0;
     lame_global_flags*	gfp = NULL;
@@ -633,10 +632,10 @@ __declspec(dllexport) VOID		beVersion(PBE_VERSION pbeVersion)
     get_lame_version_numerical ( &lv );
 
     // Set Engine version number (Same as Lame version)
-    pbeVersion->byMajorVersion = lv.major;
-    pbeVersion->byMinorVersion = lv.minor;
-    pbeVersion->byAlphaLevel   = lv.alpha;
-    pbeVersion->byBetaLevel	   = lv.beta;
+    pbeVersion->byMajorVersion = (BYTE)lv.major;
+    pbeVersion->byMinorVersion = (BYTE)lv.minor;
+    pbeVersion->byAlphaLevel   = (BYTE)lv.alpha;
+    pbeVersion->byBetaLevel    = (BYTE)lv.beta;
 
 #ifdef MMX_choose_table
     pbeVersion->byMMXEnabled=1;
@@ -669,10 +668,10 @@ __declspec(dllexport) VOID		beVersion(PBE_VERSION pbeVersion)
     if (strcmp(lpszTemp,"Dec")==0)	pbeVersion->byMonth = 12;
 
     // Get day of month string (char [4..5])
-    pbeVersion->byDay=atoi( lpszDate + 4 );
+    pbeVersion->byDay = (BYTE) atoi( lpszDate + 4 );
 
     // Get year of compilation date (char [7..10])
-    pbeVersion->wYear = atoi( lpszDate + 7 );
+    pbeVersion->wYear = (WORD) atoi( lpszDate + 7 );
 
     memset( pbeVersion->zHomepage, 0x00, BE_MAX_HOMEPAGE );
 
@@ -827,7 +826,7 @@ updateLameTagFrame(lame_global_flags* gfp, FILE* fpStream)
             return BE_ERR_INVALID_FORMAT_PARAMETERS;
         }
 
-        buffer = malloc( n );
+        buffer = (unsigned char*)malloc( n );
 
         if ( buffer == 0 ) 
         {
@@ -909,6 +908,7 @@ BOOL APIENTRY DllMain(HANDLE hModule,
                       DWORD  ul_reason_for_call, 
                       LPVOID lpReserved)
 {
+    (void) lpReserved;
     gs_hModule=hModule;
 
     switch( ul_reason_for_call )
@@ -1005,7 +1005,7 @@ static void dump_config( 	lame_global_flags*	gfp )
     DebugPrintf("ATH type               =%d\n", lame_get_ATHtype( gfp ) );
     DebugPrintf("ATH lower              =%f\n", lame_get_ATHlower( gfp ) );
     DebugPrintf("ATH aa                 =%d\n", lame_get_athaa_type( gfp ) );
-    DebugPrintf("ATH aa  loudapprox     =%d\n", lame_get_athaa_loudapprox( gfp ) );
+    //DebugPrintf("ATH aa  loudapprox     =%d\n", lame_get_athaa_loudapprox( gfp ) );
     DebugPrintf("ATH aa  sensitivity    =%f\n", lame_get_athaa_sensitivity( gfp ) );
 
     DebugPrintf("Experimental nspsytune =%d\n", lame_get_exp_nspsytune( gfp ) );
