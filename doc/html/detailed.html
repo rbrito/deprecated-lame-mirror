@@ -5,7 +5,7 @@
   <meta name="generator" content="PSPad editor, www.pspad.com" />
   <meta http-equiv="content-type" content="text/html; charset=UTF-8" />
   <link rel="stylesheet" type="text/css" href="styles/lame.css" />
-  <title>Detailed commandline switches</title>
+  <title>Detailed command-line switches</title>
  </head>
  <body>
 <div id="menu">
@@ -93,10 +93,9 @@ decoders.</td></tr>
                     0=highest quality, bigger files. 9.999=lowest quality,
                      smaller files</td></tr>
 <tr><td><a href="#vbr-old">--vbr-old</a></td><td>Use old variable bitrate (VBR) routine</td></tr>
-<tr><td><a href="#b">-b</a>  number</td><td>Specify a minimum allowed bitrate. default 32 kbps</td></tr>
+<tr><td><a href="#b">-b</a>  number</td><td>Specify a minimum allowed bitrate. default 32 kbps (See -F setting below)</td></tr>
 <tr><td><a href="#B">-B</a>  number</td><td>Specify a maximum allowed bitrate. default 320 kbps</td></tr>
-<tr><td><a href="#F">-F</a></td><td>Strictly enforce the -b option, for use with players that
-                    do not support low bitrate mp3</td></tr>
+<tr><td><a href="#F">-F</a></td><td>Enforce -b option for digital silence frames too, rather than encoding them at 8 or 32 kbps.</td></tr>
 <tr><td><a href="#t">-t</a></td><td>Disable VBR informational tag</td></tr>
 <tr><td><a href="#T">-T</a></td><td>Enable and force writing LAME Tag</td></tr>
 <tr><td><a href="#Y">-Y</a></td><td>Allows -V2, -V1 and -V0 to not to encode the highest frequencies accurately, if doing so causes disproportional increases in bitrate. This is the same that CBR and ABR modes do.</td></tr>
@@ -114,7 +113,7 @@ default=automatic</td></tr>
 <tr><td><a href="#decode">--decode</a></td><td>Input=mp3 file, output=wav</td></tr>
 <tr><td><a href="#decode-mp3delay">--decode-mp3delay</a> samples</td><td>Set the encoder delay to use to decode 
 the input .mp3 file</td></tr>
-<tr><td><a href="#t">-t</a></td><td>Disable writing wav header when using --decode</td></tr>
+<tr><td><a href="#t_deco">-t</a></td><td>Disable writing wav header when using --decode</td></tr>
 <tr><td><a href="#noasm">--noasm</a> type</td><td>Disable assembly optimizations for mmx/3dnow/sse</td></tr>
 
 <tr><th colspan="2">Noise shaping &amp; psycho acoustic algorithms</th></tr>
@@ -283,12 +282,13 @@ and a version 2 tag, if the values fit on a version 1 tag. See --id3v1-only and
 <td style="border-bottom:0px;">8 16 24 32 40 48 56 64</td></tr>
 </table>
 <p>
-The bitrate to be used.  Default is 128 kbps MPEG1, 80 kbps MPEG2.
+The bitrate to be used. Default for CBR is 128 kbps MPEG1, 80 kbps MPEG2.
 </p>
 <p>
 When used with variable bitrate encodings (VBR), -b specifies the
-minimum bitrate to use.  This is useful only if you need to circumvent
-a buggy hardware device with strange bitrate constrains.
+minimum bitrate to use. This is useful only if you need to circumvent
+a buggy hardware device with strange bitrate constrains. (You will need the -F setting too for digital silence).<br/>
+Default for ABR/VBR is the minimum allowed bitrate for the MPEG version. (i.e. no limit)
 </p>
 
 <p class="settingtitle">
@@ -304,13 +304,14 @@ Maximum allowed bitrate when using VBR/ABR.
 Using -B is NOT RECOMMENDED.  A 128 kbps CBR bitstream, because of the
 bit reservoir, can actually have frames which use as many bits as a
 320 kbps frame.  ABR/VBR modes minimize the use of the bit reservoir, and
-thus need to allow 320 kbps frames to get the same flexability as CBR
+thus need to allow 320 kbps frames to get the same flexibility as CBR
 streams.  This is useful only if you need to circumvent a buggy hardware
-device with strange bitrate constrains.
+device with strange bitrate constrains.<br/>
+Default value is the maximum allowed bitrate for the MPEG versio (i.e. no limit)
 </p>
 
 <p class="settingtitle">
-<a name="big-endian"><span class="hilight">--big-endian</span></a> Set the byte endiannes to big. 
+<a name="big-endian"><span class="hilight">--big-endian</span></a> Set the byte order to big-endian.
 </p>
 <p>
 This switch tells LAME that the RAW pcm input is encoded in big-endian instead
@@ -339,7 +340,7 @@ mark the encoded file as copyrighted
 <pre>lame -V 0 --cbr input.wav</pre>
 Will encode at -b 128 (ignore completely -V and encode at default bitrate)
 <pre>lame --preset 160 --cbr</pre>
-Will encode at -b 160 (ignore ABR and use the specified birtrate)
+Will encode at -b 160 (ignore ABR and use the specified bitrate)
 <pre>lame --abr 200 --cbr</pre>
 Will encode at -b 192 (ignore ABR and use the nearest bitrate to the one specified)
 
@@ -362,7 +363,7 @@ See also: --replaygain-accurate
 <a name="comp"><span class="hilight">--comp x</span></a> Indicate a compression ratio instead of a bitrate 
 </p>
 <p>
-Use this in place of the -b setting if you preffer to indicate a compression ratio (integer value).
+Use this in place of the -b setting if you prefer to indicate a compression ratio (integer value).
 The ratio is the value of <sup>original-filesize</sup>/<sub>desired-filesize</sub>
 </p>
 
@@ -425,8 +426,8 @@ utility before encoding, and then encode without -e.
 </p>
 <p>
 Enforces the minimum bitrate. Without this option, passages of analog
-silence will be encoded at the minimum possible bitrate (32 or 8, depending on
-MPEG mode).
+silence will be encoded at the minimum bitrate possible (32 or 8, depending on
+MPEG version).
 </p>
 
 <p class="settingtitle">
@@ -634,7 +635,7 @@ Enables a highpass filter of the specified frequency when encoding the source.
 Range [0.001..50]kHz or [50..50000]Hz.<br/>
 This is usually not required, and the gains are usually minimal. May be useful to
 remove an interference signal on 50Hz or 60Hz, or a DC offset. (default: disabled)<br/>
-Note: The current implementation has a minimum highpass frequency of (67.5/62)% of the samplerate
+Note: The current implementation has a minimum highpass frequency of (67.5/62)% of the sample rate
 (I.e. 481Hz at 44Khz).
 </p>
 
@@ -643,7 +644,7 @@ Note: The current implementation has a minimum highpass frequency of (67.5/62)% 
 </p>
 <p>
 Specify the width in Hz of the decaying curve of the highpass. Range [16..50000]Hz<br/>
-The minimum (and default) width is 75% of a band's width (which is 1/64th of the samplerate).<br/>
+The minimum (and default) width is 75% of a band's width (which is 1/64th of the sample rate).<br/>
 Note: See the remark in the --highpass command above.
 </p>
 
@@ -682,7 +683,7 @@ Prints version and license information about LAME encoder.
 </p>
 
 <p class="settingtitle">
-<a name="little-endian"><span class="hilight">--little-endian</span></a> Set the byte endiannes to little. 
+<a name="little-endian"><span class="hilight">--little-endian</span></a> Set the byte order to little-endian.
 </p>
 <p>
 This switch tells LAME that the RAW pcm input is encoded in little-endian. It is
@@ -693,7 +694,7 @@ the default setting.
 <a name="longhelp"><span class="hilight">--longhelp</span></a> Shows the detailed help 
 </p>
 <p>
-Prints a help page with all of the commandline switches and a brief explanation
+Prints a help page with all of the command-line switches and a brief explanation
 of them.
 </p>
 
@@ -717,7 +718,7 @@ change it as a general basis.
 <p>
 Specify the width in Hz of the decaying curve of the lowpass. Range [0.001..16]kHz or [16..50000]Hz <br/>
 The lowpass is in the center of this curve. 
-The minimum (and default) width is 75% of a band's width (which is 1/64th of the samplerate).
+The minimum (and default) width is 75% of a band's width (which is 1/64th of the sample rate).
  
 </p>
 
@@ -773,7 +774,7 @@ Assume the input file is an MP1/2/3 file.  LAME will decode the input file
 before re-encoding it.  Since MP3 is a lossy format, this is 
 not recommended in general.  But it is useful for creating low bitrate
 mp3s from high bitrate mp3s.  If the filename ends in ".mp3" LAME will assume
-it is an MP3.  For stdin or MP3 files which dont end in .mp3 you need
+it is an MP3.  For stdin or MP3 files which don't end in .mp3 you need
 to use this switch.
 </p>
 
@@ -811,7 +812,7 @@ compute the encoding.
 of the files encoded with --nogap
 </p>
 <p>
-This setting should preced --nogap, and is used to specify the alternate 
+This setting should precede --nogap, and is used to specify the alternate 
 directory where to store the encoded files. The default one is the input file
 directory.
 </p>
@@ -932,7 +933,7 @@ priority 0 will be assumed.
 <p>
 Bitrate is of course the main influence on quality.  The higher the bitrate,
 the higher the quality.  But for a given bitrate, we have a choice of algorithms
-to determine the best scalefactors and huffman encoding (noise shaping).
+to determine the best scalefactors and Huffman coding (noise shaping).
 </p>
 <p>
 For CBR, ABR and --vbr-old modes, the following table applies
@@ -952,11 +953,11 @@ For the default VBR mode since LAME 3.98, the following table applies
 <tr><td style="border-bottom:0px;">-q 5 to -q 9</td><td style="border-bottom:0px;">Use the not so good algorithm</td></tr>
 </table>
 <p class="settingtitle">
-<a name="quiet"><span class="hilight">--quiet</span></a> Dont print any output in the screen  
+<a name="quiet"><span class="hilight">--quiet</span></a> Don't print any output in the screen  
 </p>
 <p>
 Disables the screen output. Useful for job processing or other times where
-screen output is undesiderable.
+screen output is undesirable.
 </p>
 
 <p class="settingtitle">
@@ -1067,8 +1068,8 @@ Output sampling frequency.  Resample the input if necessary.
 If not specified, LAME may sometimes resample automatically 
 when faced with extreme compression conditions (like encoding
 a 44.1 kHz input file at 32 kbps).  To disable this automatic
-resampling, you have to use --resample to set the output samplerate
-equal to the input samplerate.  In that case, LAME will not
+resampling, you have to use --resample to set the output sample rate
+equal to the input sample rate.  In that case, LAME will not
 perform any extra computations.
 </p>
 
@@ -1084,7 +1085,7 @@ from the header information in the input file.
 </p>
 <p>
 LAME will automatically resample the input file to one of the
-supported MP3 samplerates if necessary.
+supported MP3 sample rates if necessary.
 </p>
 
 <p class="settingtitle">
@@ -1123,7 +1124,7 @@ unsigned (all positive values). This is the default value.
 </p>
 <p>
 Disables the screen output. Useful for job processing or other times where
-screen output is undesiderable.
+screen output is undesirable.
 </p>
 
 <p class="settingtitle">
@@ -1134,7 +1135,7 @@ Use spaces instead of null values for padding data in an ID3v1 tag.
 </p>
 
 <p class="settingtitle">
-<a name="strictly-enforce-ISO"><span class="hilight">--strictly-enforce-ISO</span></a> Strict ISO complience   
+<a name="strictly-enforce-ISO"><span class="hilight">--strictly-enforce-ISO</span></a> Strict ISO compliance   
 </p>
 <p>
 With this option, LAME will enforce the 7680 bit limitation on
@@ -1145,13 +1146,14 @@ high bitrate encodings. Some decoders need it.
 <p class="settingtitle">
 <a name="t"><span class="hilight">-t</span></a> Disable VBR tag or disable WAV header            
 </p>
+<p>This setting has two different uses:</p>
 <p>
-When encoding to VBR, this setting enables writing the VBR Tag. This tag is
-embedded in the frame 0 of the MP3 file. It lets VBR aware players to correctly
-seek and compute playing times in such files.
+When encoding to VBR, this setting disables writing the VBR Tag (also known as XING tag).
+This tag is embedded by default in the frame 0 of the MP3 file. It lets VBR aware players 
+to correctly seek and compute playing times in such files.<br/>
 </p>
 <p>
-When '--decode' is specified (decode mp3 to wav), this flag will 
+When decoding MP3 to WAV using --decode, this flag will 
 disable writing the WAV header.  The output will be raw pcm,
 native endian format.  Use -x to swap bytes.
 </p>
