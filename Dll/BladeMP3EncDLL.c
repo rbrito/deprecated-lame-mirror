@@ -909,7 +909,7 @@ BOOL APIENTRY DllMain(HANDLE hModule,
                       LPVOID lpReserved)
 {
     (void) lpReserved;
-    gs_hModule=hModule;
+    gs_hModule = (HMODULE) hModule;
 
     switch( ul_reason_for_call )
     {
@@ -928,7 +928,7 @@ BOOL APIENTRY DllMain(HANDLE hModule,
 }
 
 
-static void dump_config( 	lame_global_flags*	gfp )
+static void dump_config( lame_global_flags* gfp )
 {
     DebugPrintf("\n\nLame_enc configuration options:\n");
     DebugPrintf("==========================================================\n");
