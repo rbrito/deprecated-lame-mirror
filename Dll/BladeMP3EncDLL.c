@@ -27,6 +27,9 @@
 
 #include <lame.h>
 
+#ifdef	__cplusplus
+extern "C" {
+#endif
 
 #define         Min(A, B)       ((A) < (B) ? (A) : (B))
 #define         Max(A, B)       ((A) > (B) ? (A) : (B))
@@ -1019,3 +1022,7 @@ static void DispErr(char const* strErr)
 {
     MessageBoxA(NULL,strErr,"LAME_ENC.DLL",MB_OK|MB_ICONHAND);
 }
+
+#ifdef	__cplusplus
+}
+#endif
