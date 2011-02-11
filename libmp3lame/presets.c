@@ -2,7 +2,7 @@
  * presets.c -- Apply presets
  *
  *	Copyright (c) 2002-2008 Gabriel Bouvigne
- *	Copyright (c) 2007-2010 Robert Hegemann
+ *	Copyright (c) 2007-2011 Robert Hegemann
  *
  * This library is free software; you can redistribute it and/or
  * modify it under the terms of the GNU Lesser General Public
@@ -202,7 +202,12 @@ apply_vbr_preset(lame_global_flags * gfp, int a, int enforce)
         (void) lame_set_exp_nspsytune(gfp, lame_get_exp_nspsytune(gfp) | 2);
     }
     if (set->sfb21mod > 0) {
-        (void) lame_set_exp_nspsytune(gfp, lame_get_exp_nspsytune(gfp) | (set->sfb21mod << 20));
+        int const nsp = lame_get_exp_nspsytune(gfp);
+        int const val = (nsp >> 20) & 63;
+        if (val == 0) {
+            int const x = (set->sfb21mod << 20) | nsp;
+            (void) lame_set_exp_nspsytune(gfp, x);
+        }
     }
     SET__OPTION(msfix, set->msfix, -1);
 
@@ -211,7 +216,7 @@ apply_vbr_preset(lame_global_flags * gfp, int a, int enforce)
         gfp->VBR_q_frac = x;
     }
     gfp->internal_flags->cfg.minval = set->minval;
-#ifdef TEST_2010_06_07_RH
+#if 1
     if (lame_get_VBR(gfp) == vbr_mt) {
         if (set->minval > 5) {
             gfp->internal_flags->cfg.minval = 5; /* --> psymodel.c */
@@ -224,8 +229,6 @@ apply_vbr_preset(lame_global_flags * gfp, int a, int enforce)
 static int
 apply_abr_preset(lame_global_flags * gfp, int preset, int enforce)
 {
-    int     k;
-
     typedef struct {
         int     abr_kbps;
         int     quant_comp;
@@ -234,7 +237,6 @@ apply_abr_preset(lame_global_flags * gfp, int preset, int enforce)
         FLOAT   nsmsfix;
         FLOAT   st_lrm;      /*short threshold */
         FLOAT   st_s;
-        FLOAT   nsbass;
         FLOAT   scale;
         FLOAT   masking_adj;
         FLOAT   ath_lower;
@@ -250,24 +252,24 @@ apply_abr_preset(lame_global_flags * gfp, int preset, int enforce)
      *  Switch mappings for ABR mode
      */
     const abr_presets_t abr_switch_map[] = {        
-    /* kbps  quant q_s safejoint nsmsfix st_lrm  st_s  ns-bass scale   msk ath_lwr ath_curve  interch , sfscale */
-      {  8,     9,  9,        0,      0,  6.60,  145,       0, 0.95,    0,  -30.0,     11,    0.0012,        1}, /*   8, impossible to use in stereo */
-      { 16,     9,  9,        0,      0,  6.60,  145,       0, 0.95,    0,  -25.0,     11,    0.0010,        1}, /*  16 */
-      { 24,     9,  9,        0,      0,  6.60,  145,       0, 0.95,    0,  -20.0,     11,    0.0010,        1}, /*  24 */
-      { 32,     9,  9,        0,      0,  6.60,  145,       0, 0.95,    0,  -15.0,     11,    0.0010,        1}, /*  32 */
-      { 40,     9,  9,        0,      0,  6.60,  145,       0, 0.95,    0,  -10.0,     11,    0.0009,        1}, /*  40 */
-      { 48,     9,  9,        0,      0,  6.60,  145,       0, 0.95,    0,  -10.0,     11,    0.0009,        1}, /*  48 */
-      { 56,     9,  9,        0,      0,  6.60,  145,       0, 0.95,    0,   -6.0,     11,    0.0008,        1}, /*  56 */
-      { 64,     9,  9,        0,      0,  6.60,  145,       0, 0.95,    0,   -2.0,     11,    0.0008,        1}, /*  64 */
-      { 80,     9,  9,        0,      0,  6.60,  145,       0, 0.95,    0,     .0,      8,    0.0007,        1}, /*  80 */
-      { 96,     9,  9,        0,   2.50,  6.60,  145,       0, 0.95,    0,    1.0,      5.5,  0.0006,        1}, /*  96 */
-      {112,     9,  9,        0,   2.25,  6.60,  145,       0, 0.95,    0,    2.0,      4.5,  0.0005,        1}, /* 112 */
-      {128,     9,  9,        0,   1.95,  6.40,  140,       0, 0.95,    0,    3.0,      4,    0.0002,        1}, /* 128 */
-      {160,     9,  9,        1,   1.79,  6.00,  135,       0, 0.95,   -2,    5.0,      3.5,  0,             1}, /* 160 */
-      {192,     9,  9,        1,   1.49,  5.60,  125,       0, 0.97,   -4,    7.0,      3,    0,             0}, /* 192 */
-      {224,     9,  9,        1,   1.25,  5.20,  125,       0, 0.98,   -6,    9.0,      2,    0,             0}, /* 224 */
-      {256,     9,  9,        1,   0.97,  5.20,  125,       0, 1.00,   -8,   10.0,      1,    0,             0}, /* 256 */
-      {320,     9,  9,        1,   0.90,  5.20,  125,       0, 1.00,  -10,   12.0,      0,    0,             0}  /* 320 */
+    /* kbps  quant q_s safejoint nsmsfix st_lrm  st_s  scale   msk ath_lwr ath_curve  interch , sfscale */
+      {  8,     9,  9,        0,      0,  6.60,  145,  0.95,    0,  -30.0,     11,    0.0012,        1}, /*   8, impossible to use in stereo */
+      { 16,     9,  9,        0,      0,  6.60,  145,  0.95,    0,  -25.0,     11,    0.0010,        1}, /*  16 */
+      { 24,     9,  9,        0,      0,  6.60,  145,  0.95,    0,  -20.0,     11,    0.0010,        1}, /*  24 */
+      { 32,     9,  9,        0,      0,  6.60,  145,  0.95,    0,  -15.0,     11,    0.0010,        1}, /*  32 */
+      { 40,     9,  9,        0,      0,  6.60,  145,  0.95,    0,  -10.0,     11,    0.0009,        1}, /*  40 */
+      { 48,     9,  9,        0,      0,  6.60,  145,  0.95,    0,  -10.0,     11,    0.0009,        1}, /*  48 */
+      { 56,     9,  9,        0,      0,  6.60,  145,  0.95,    0,   -6.0,     11,    0.0008,        1}, /*  56 */
+      { 64,     9,  9,        0,      0,  6.60,  145,  0.95,    0,   -2.0,     11,    0.0008,        1}, /*  64 */
+      { 80,     9,  9,        0,      0,  6.60,  145,  0.95,    0,     .0,      8,    0.0007,        1}, /*  80 */
+      { 96,     9,  9,        0,   2.50,  6.60,  145,  0.95,    0,    1.0,      5.5,  0.0006,        1}, /*  96 */
+      {112,     9,  9,        0,   2.25,  6.60,  145,  0.95,    0,    2.0,      4.5,  0.0005,        1}, /* 112 */
+      {128,     9,  9,        0,   1.95,  6.40,  140,  0.95,    0,    3.0,      4,    0.0002,        1}, /* 128 */
+      {160,     9,  9,        1,   1.79,  6.00,  135,  0.95,   -2,    5.0,      3.5,  0,             1}, /* 160 */
+      {192,     9,  9,        1,   1.49,  5.60,  125,  0.97,   -4,    7.0,      3,    0,             0}, /* 192 */
+      {224,     9,  9,        1,   1.25,  5.20,  125,  0.98,   -6,    9.0,      2,    0,             0}, /* 224 */
+      {256,     9,  9,        1,   0.97,  5.20,  125,  1.00,   -8,   10.0,      1,    0,             0}, /* 256 */
+      {320,     9,  9,        1,   0.90,  5.20,  125,  1.00,  -10,   12.0,      0,    0,             0}  /* 320 */
     };
 
     /* *INDENT-ON* */
@@ -292,16 +294,6 @@ apply_abr_preset(lame_global_flags * gfp, int preset, int enforce)
 
     if (abr_switch_map[r].sfscale > 0)
         (void) lame_set_sfscale(gfp, 1);
-
-    /* ns-bass tweaks */
-    if (fabs(abr_switch_map[r].nsbass) > 0) {
-        k = (int) (abr_switch_map[r].nsbass * 4);
-        if (k < 0)
-            k += 64;
-        (void) lame_set_exp_nspsytune(gfp, lame_get_exp_nspsytune(gfp) | (k << 2));
-    }
-
-
 
 
     SET_OPTION(quant_comp, abr_switch_map[r].quant_comp, -1);

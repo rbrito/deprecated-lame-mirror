@@ -4,7 +4,7 @@
  *      Copyright (c) 1999-2000 Mark Taylor
  *      Copyright (c) 2001-2002 Naoki Shibata
  *      Copyright (c) 2000-2003 Takehiro Tominaga
- *      Copyright (c) 2000-2008 Robert Hegemann
+ *      Copyright (c) 2000-2011 Robert Hegemann
  *      Copyright (c) 2000-2005 Gabriel Bouvigne
  *      Copyright (c) 2000-2005 Alexander Leidinger
  *
@@ -2292,13 +2292,16 @@ L3psycho_anal_vbr(lame_internal_flags * gfc,
             wsamp_l = wsamp_L + ch01;
             vbrpsy_compute_fft_l(gfc, buffer, chn, gr_out, fftenergy, wsamp_l);
             vbrpsy_compute_loudness_approximation_l(gfc, gr_out, chn, fftenergy);
-
+#if 1
+            vbrpsy_compute_masking_l(gfc, fftenergy, eb[chn], thr[chn], chn);
+#else
             if (uselongblock[ch01]) {
                 vbrpsy_compute_masking_l(gfc, fftenergy, eb[chn], thr[chn], chn);
             }
             else {
                 vbrpsy_skip_masking_l(gfc, chn);
             }
+#endif
         }
         if ((uselongblock[0] + uselongblock[1]) == 2) {
             /* M/S channel */
@@ -3095,7 +3098,7 @@ psymodel_init(lame_global_flags const* gfp)
     }
     {
         float sk_s = -10.f, sk_l = -4.7f;
-#ifdef TEST_2010_06_07_RH
+#if 1
         static float const sk[] = { -7.4, -7.4, -7.4, -9.5, -7.4, -6.1, -5.5, -4.7, -4.7, -4.7, -4.7 };
         if (gfp->VBR_q < 3) {
             sk_l = sk_s = sk[0];

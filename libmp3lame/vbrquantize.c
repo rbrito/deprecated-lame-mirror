@@ -2,7 +2,7 @@
  *	MP3 quantization
  *
  *	Copyright (c) 1999-2000 Mark Taylor
- *	Copyright (c) 2000-2007 Robert Hegemann
+ *	Copyright (c) 2000-2011 Robert Hegemann
  *
  * This library is free software; you can redistribute it and/or
  * modify it under the terms of the GNU Lesser General Public
@@ -41,9 +41,11 @@ struct algo_s;
 typedef struct algo_s algo_t;
 
 typedef void (*alloc_sf_f) (const algo_t *, const int *, const int *, int);
+typedef uint8_t (*find_sf_f) (const FLOAT *, const FLOAT *, FLOAT, unsigned int, uint8_t);
 
 struct algo_s {
     alloc_sf_f alloc;
+    find_sf_f  find;
     const FLOAT *xr34orig;
     lame_internal_flags *gfc;
     gr_info *cod_info;
@@ -67,9 +69,16 @@ struct algo_s {
 #  define VOLATILE volatile
 #  else
 #  define VOLATILE
+#  ifndef FORCEINLINE
+#    define FORCEINLINE __forceinline
+#  endif
 #  endif
 #else
 #  define VOLATILE
+#endif
+
+#ifndef FORCEINLINE 
+#define FORCEINLINE
 #endif
 
 typedef VOLATILE union {
@@ -110,16 +119,14 @@ static DOUBLEX const ROUNDFAC = ROUNDFAC_def;
 static DOUBLEX const MAGIC_FLOAT = MAGIC_FLOAT_def;
 
 
-
-
-static  FLOAT
-max_x34(const FLOAT * xr34, unsigned int bw)
+FORCEINLINE static  float
+vec_max_c(const float * xr34, unsigned int bw)
 {
-    FLOAT   xfsf = 0;
-    unsigned int j = bw >> 1;
-    unsigned int const remaining = (j & 0x01u);
+    float   xfsf = 0;
+    unsigned int j = bw >> 2u;
+    unsigned int const remaining = (bw & 0x03u);
 
-    for (j >>= 1; j > 0; --j) {
+    for (j; j > 0; --j) {
         if (xfsf < xr34[0]) {
             xfsf = xr34[0];
         }
@@ -134,28 +141,48 @@ max_x34(const FLOAT * xr34, unsigned int bw)
         }
         xr34 += 4;
     }
-    if (remaining) {
-        if (xfsf < xr34[0]) {
-            xfsf = xr34[0];
-        }
-        if (xfsf < xr34[1]) {
-            xfsf = xr34[1];
-        }
+    switch( remaining ) {
+    case 3: if (xfsf < xr34[2]) xfsf = xr34[2];
+    case 2: if (xfsf < xr34[1]) xfsf = xr34[1];
+    case 1: if (xfsf < xr34[0]) xfsf = xr34[0];
+    default: break;
     }
     return xfsf;
 }
 
+FORCEINLINE static float
+vec_sum_sq_c(const float * xr, unsigned int bw)
+{
+    float   sum = 0.0f;
+    unsigned int l = bw >> 2u;
+    unsigned int const remaining = bw & 0x03u;    
+    for (l; l > 0; --l) {
+        sum += xr[0] * xr[0];
+        sum += xr[1] * xr[1];
+        sum += xr[2] * xr[2];
+        sum += xr[3] * xr[3];
+        xr += 4;
+    }
+    switch( remaining ) {
+    case 3: sum += xr[2] * xr[2];
+    case 2: sum += xr[1] * xr[1];
+    case 1: sum += xr[0] * xr[0];
+    default: break;
+    }
+    return sum;
+}
 
 
-static  uint8_t
+FORCEINLINE static  uint8_t
 find_lowest_scalefac(const FLOAT xr34)
 {
     uint8_t sf_ok = 255;
     uint8_t sf = 128, delsf = 64;
     uint8_t i;
+    FLOAT const ixmax_val = IXMAX_VAL;
     for (i = 0; i < 8; ++i) {
         FLOAT const xfsf = ipow20[sf] * xr34;
-        if (xfsf <= IXMAX_VAL) {
+        if (xfsf <= ixmax_val) {
             sf_ok = sf;
             sf -= delsf;
         }
@@ -168,20 +195,15 @@ find_lowest_scalefac(const FLOAT xr34)
 }
 
 
-static int
-below_noise_floor(const FLOAT * xr, FLOAT l3xmin, unsigned int bw)
+FORCEINLINE static int
+below_noise_floor(FLOAT sum, FLOAT l3xmin)
 {
-    FLOAT   sum = 0.0;
-    unsigned int i, j;
-    for (i = 0, j = bw; j > 0; ++i, --j) {
-        FLOAT const x = xr[i];
-        sum += x * x;
-    }
-    return (l3xmin - sum) >= -1E-20 ? 1 : 0;
+    FLOAT const d = -1E-20;
+    return (l3xmin - sum) >= d ? 1 : 0;
 }
 
 
-static void
+FORCEINLINE static void
 k_34_4(DOUBLEX x[4], int l3[4])
 {
 #ifdef TAKEHIRO_IEEE754_HACK
@@ -223,32 +245,6 @@ k_34_4(DOUBLEX x[4], int l3[4])
 
 
 
-static void
-k_34_2(DOUBLEX x[2], int l3[2])
-{
-#ifdef TAKEHIRO_IEEE754_HACK
-    fi_union fi[2];
-
-    assert(x[0] <= IXMAX_VAL && x[1] <= IXMAX_VAL);
-    x[0] += MAGIC_FLOAT;
-    fi[0].f = x[0];
-    x[1] += MAGIC_FLOAT;
-    fi[1].f = x[1];
-    fi[0].f = x[0] + adj43asm[fi[0].i - MAGIC_INT];
-    fi[1].f = x[1] + adj43asm[fi[1].i - MAGIC_INT];
-    l3[0] = fi[0].i - MAGIC_INT;
-    l3[1] = fi[1].i - MAGIC_INT;
-#else
-    assert(x[0] <= IXMAX_VAL && x[1] <= IXMAX_VAL);
-    XRPOW_FTOI(x[0], l3[0]);
-    XRPOW_FTOI(x[1], l3[1]);
-    x[0] += QUANTFAC(l3[0]);
-    x[1] += QUANTFAC(l3[1]);
-    XRPOW_FTOI(x[0], l3[0]);
-    XRPOW_FTOI(x[1], l3[1]);
-#endif
-}
-
 
 
 /*  do call the calc_sfb_noise_* functions only with sf values
@@ -264,10 +260,10 @@ calc_sfb_noise_x34(const FLOAT * xr, const FLOAT * xr34, unsigned int bw, uint8_
     const FLOAT sfpow34 = ipow20[sf]; /*pow(sfpow,-3.0/4.0); */
 
     FLOAT   xfsf = 0;
-    unsigned int j = bw >> 1;
-    unsigned int const remaining = (j & 0x01u);
+    unsigned int j = bw >> 2u;
+    unsigned int const remaining = (bw & 0x03u);
 
-    for (j >>= 1; j > 0; --j) {
+    for (j; j > 0; --j) {
         x[0] = sfpow34 * xr34[0];
         x[1] = sfpow34 * xr34[1];
         x[2] = sfpow34 * xr34[2];
@@ -275,24 +271,32 @@ calc_sfb_noise_x34(const FLOAT * xr, const FLOAT * xr34, unsigned int bw, uint8_
 
         k_34_4(x, l3);
 
-        x[0] = fabs(xr[0]) - sfpow * pow43[l3[0]];
-        x[1] = fabs(xr[1]) - sfpow * pow43[l3[1]];
-        x[2] = fabs(xr[2]) - sfpow * pow43[l3[2]];
-        x[3] = fabs(xr[3]) - sfpow * pow43[l3[3]];
+        x[0] = fabsf(xr[0]) - sfpow * pow43[l3[0]];
+        x[1] = fabsf(xr[1]) - sfpow * pow43[l3[1]];
+        x[2] = fabsf(xr[2]) - sfpow * pow43[l3[2]];
+        x[3] = fabsf(xr[3]) - sfpow * pow43[l3[3]];
         xfsf += (x[0] * x[0] + x[1] * x[1]) + (x[2] * x[2] + x[3] * x[3]);
 
         xr += 4;
         xr34 += 4;
     }
     if (remaining) {
-        x[0] = sfpow34 * xr34[0];
-        x[1] = sfpow34 * xr34[1];
+        x[0] = x[1] = x[2] = x[3] = 0;
+        switch( remaining ) {
+        case 3: x[2] = sfpow34 * xr34[2];
+        case 2: x[1] = sfpow34 * xr34[1];
+        case 1: x[0] = sfpow34 * xr34[0];
+        }
 
-        k_34_2(x, l3);
+        k_34_4(x, l3);
+        x[0] = x[1] = x[2] = x[3] = 0;
 
-        x[0] = fabs(xr[0]) - sfpow * pow43[l3[0]];
-        x[1] = fabs(xr[1]) - sfpow * pow43[l3[1]];
-        xfsf += x[0] * x[0] + x[1] * x[1];
+        switch( remaining ) {
+        case 3: x[2] = fabsf(xr[2]) - sfpow * pow43[l3[2]];
+        case 2: x[1] = fabsf(xr[1]) - sfpow * pow43[l3[1]];
+        case 1: x[0] = fabsf(xr[0]) - sfpow * pow43[l3[0]];
+        }
+        xfsf += (x[0] * x[0] + x[1] * x[1]) + (x[2] * x[2] + x[3] * x[3]);
     }
     return xfsf;
 }
@@ -341,7 +345,7 @@ tri_calc_sfb_noise_x34(const FLOAT * xr, const FLOAT * xr34, FLOAT l3_xmin, unsi
     return 0;
 }
 
-#if 0
+
 /**
  *  Robert Hegemann 2001-05-01
  *  calculates quantization step size determined by allowed masking
@@ -350,9 +354,20 @@ static int
 calc_scalefac(FLOAT l3_xmin, int bw)
 {
     FLOAT const c = 5.799142446; /* 10 * 10^(2/3) * log10(4/3) */
-    return 210 + (int) (c * log10(l3_xmin / bw) - .5);
+    return 210 + (int) (c * log10f(l3_xmin / bw) - .5f);
 }
-#endif
+
+static uint8_t
+guess_scalefac_x34(const FLOAT * xr, const FLOAT * xr34, FLOAT l3_xmin, unsigned int bw, uint8_t sf_min)
+{
+    int const guess = calc_scalefac(l3_xmin, bw);
+    if (guess < sf_min) return sf_min;
+    if (guess >= 255) return 255;
+    (void) xr;
+    (void) xr34;
+    return guess;
+}
+
 
 /* the find_scalefac* routines calculate
  * a quantization step size which would
@@ -440,7 +455,7 @@ block_sf(algo_t * that, const FLOAT l3_xmin[SFBMAX], int vbrsf[SFBMAX], int vbrs
         if (l > m) {
             l = m;
         }
-        max_xr34 = max_x34(&xr34_orig[j], l);
+        max_xr34 = vec_max_c(&xr34_orig[j], l);
 
         m1 = find_lowest_scalefac(max_xr34);
         vbrsfmin[sfb] = m1;
@@ -454,8 +469,9 @@ block_sf(algo_t * that, const FLOAT l3_xmin[SFBMAX], int vbrsf[SFBMAX], int vbrs
             i = 0;
         }
         if (sfb < psymax) {
-            if (below_noise_floor(&xr[j], l3_xmin[sfb], l) == 0) {
-                m2 = find_scalefac_x34(&xr[j], &xr34_orig[j], l3_xmin[sfb], l, m1);
+            float sum_sq = vec_sum_sq_c(&xr[j], l);
+            if (below_noise_floor(sum_sq, l3_xmin[sfb]) == 0) {
+                m2 = that->find(&xr[j], &xr34_orig[j], l3_xmin[sfb], l, m1);
 #if 0
                 if (0) {
                     /** Robert Hegemann 2007-09-29:
@@ -463,7 +479,7 @@ block_sf(algo_t * that, const FLOAT l3_xmin[SFBMAX], int vbrsf[SFBMAX], int vbrs
                      *  Current find method does 11-18 quantization calculations.
                      *  Using a "good guess" may help to reduce this amount.
                      */
-                    int     guess = calc_scalefac(l3_xmin[sfb], l);
+                    uint8_t guess = calc_scalefac(l3_xmin[sfb], l);
                     DEBUGF(that->gfc, "sfb=%3d guess=%3d found=%3d diff=%3d\n", sfb, guess, m2,
                            m2 - guess);
                 }
@@ -540,10 +556,10 @@ quantize_x34(const algo_t * that)
         }
         j += w;
         ++sfb;
-        l >>= 1;
-        remaining = (l & 1);
+        remaining = (l & 0x03u);
+        l >>= 2;
 
-        for (l >>= 1; l > 0; --l) {
+        for (l; l > 0; --l) {
             x[0] = sfpow34 * xr34_orig[0];
             x[1] = sfpow34 * xr34_orig[1];
             x[2] = sfpow34 * xr34_orig[2];
@@ -555,13 +571,17 @@ quantize_x34(const algo_t * that)
             xr34_orig += 4;
         }
         if (remaining) {
-            x[0] = sfpow34 * xr34_orig[0];
-            x[1] = sfpow34 * xr34_orig[1];
+            x[0] = x[1] = x[2] = x[3] = 0;
+            switch( remaining ) {
+            case 3: x[2] = sfpow34 * xr34_orig[2];
+            case 2: x[1] = sfpow34 * xr34_orig[1];
+            case 1: x[0] = sfpow34 * xr34_orig[0];
+            }
 
-            k_34_2(x, l3);
+            k_34_4(x, l3);
 
-            l3 += 2;
-            xr34_orig += 2;
+            l3 += remaining;
+            xr34_orig += remaining;
         }
     }
 }
@@ -1282,6 +1302,7 @@ VBR_encode_frame(lame_internal_flags * gfc, const FLOAT xr34orig[2][2][576],
             use_nbits_ch[gr][ch] = 0;
             max_nbits_gr[gr] += max_bits[gr][ch];
             max_nbits_fr += max_bits[gr][ch];
+            that_[gr][ch].find = (cfg->full_outer_loop < 0) ? guess_scalefac_x34 : find_scalefac_x34;
             that_[gr][ch].gfc = gfc;
             that_[gr][ch].cod_info = &gfc->l3_side.tt[gr][ch];
             that_[gr][ch].xr34orig = xr34orig[gr][ch];
@@ -1325,16 +1346,7 @@ VBR_encode_frame(lame_internal_flags * gfc, const FLOAT xr34orig[2][2][576],
         for (ch = 0; ch < nch; ++ch) {
             algo_t const *that = &that_[gr][ch];
             if (max_bits[gr][ch] > 0) {
-                unsigned int const max_nonzero_coeff =
-                    (unsigned int) that->cod_info->max_nonzero_coeff;
-
-                assert(max_nonzero_coeff < 576);
-#if 0
-                memset(&that->cod_info->l3_enc[max_nonzero_coeff], 0,
-                       (576u - max_nonzero_coeff) * sizeof(that->cod_info->l3_enc[0]));
-#else
                 memset(&that->cod_info->l3_enc[0], 0, sizeof(that->cod_info->l3_enc));
-#endif
                 (void) quantizeAndCountBits(that);
             }
             else {

@@ -3,7 +3,7 @@
  *
  *      Copyright (c) 1999-2000 Mark Taylor
  *      Copyright (c) 1999-2003 Takehiro Tominaga
- *      Copyright (c) 2000-2007 Robert Hegemann
+ *      Copyright (c) 2000-2011 Robert Hegemann
  *      Copyright (c) 2001-2005 Gabriel Bouvigne
  *
  * This library is free software; you can redistribute it and/or
@@ -334,7 +334,9 @@ init_outer_loop(lame_internal_flags const *gfc, gr_info * const cod_info)
      */
     memset(cod_info->scalefac, 0, sizeof(cod_info->scalefac));
 
-    psfb21_analogsilence(gfc, cod_info);
+    if (cfg->vbr != vbr_mt && cfg->vbr != vbr_mtrh) {
+        psfb21_analogsilence(gfc, cod_info);
+    }
 }
 
 

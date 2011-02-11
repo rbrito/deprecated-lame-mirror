@@ -4,7 +4,7 @@
  *
  *      Copyright (c) 1999-2000 Mark Taylor
  *      Copyright (c) 2000-2005 Takehiro Tominaga
- *      Copyright (c) 2000-2010 Robert Hegemann
+ *      Copyright (c) 2000-2011 Robert Hegemann
  *      Copyright (c) 2000-2005 Gabriel Bouvigne
  *      Copyright (c) 2000-2004 Alexander Leidinger
  *
@@ -384,6 +384,9 @@ lame_init_qval(lame_global_flags * gfp)
         cfg->noise_shaping_stop = 0;
         cfg->use_best_huffman = 0;
         cfg->full_outer_loop = 0;
+        if (gfp->VBR == vbr_mt || gfp->VBR == vbr_mtrh) {
+            cfg->full_outer_loop  = -1;
+        }
         break;
 
     case 6:
@@ -691,7 +694,7 @@ lame_init_params(lame_global_flags * gfp)
             }
         case vbr_mt:{
                 int const x[11] = {
-                    20500, 19500, 18500, 18000, 17500, 17000, 16500, 15600, 15200, 9960, 3950
+                    24000, 19500, 18500, 18000, 17500, 17000, 16500, 15600, 15200, 9960, 3950
                 };
                 if (0 <= gfp->VBR_q && gfp->VBR_q <= 9) {
                     double  a = x[gfp->VBR_q], b = x[gfp->VBR_q + 1], m = gfp->VBR_q_frac;
@@ -728,8 +731,12 @@ lame_init_params(lame_global_flags * gfp)
         }
         gfp->samplerate_out = optimum_samplefreq((int) gfp->lowpassfreq, gfp->samplerate_in);
     }
-
-    gfp->lowpassfreq = Min(20500, gfp->lowpassfreq);
+    if (gfp->VBR == vbr_mt) {
+        gfp->lowpassfreq = Min(24000, gfp->lowpassfreq);
+    }
+    else {
+        gfp->lowpassfreq = Min(20500, gfp->lowpassfreq);
+    }
     gfp->lowpassfreq = Min(gfp->samplerate_out / 2, gfp->lowpassfreq);
 
     if (gfp->VBR == vbr_off) {
@@ -980,8 +987,8 @@ lame_init_params(lame_global_flags * gfp)
                 gfp->quality = LAME_DEFAULT_QUALITY;
             if (gfp->quality < 5)
                 gfp->quality = 0;
-            if (gfp->quality > 5)
-                gfp->quality = 5;
+            if (gfp->quality > 7)
+                gfp->quality = 7;
 
             /*  sfb21 extra only with MPEG-1 at higher sampling rates
              */
