@@ -98,6 +98,8 @@ extern wchar_t* utf8ToUnicode(char const* str);
 extern void dosToLongFileName(char* filename);
 extern void setProcessPriority(int priority);
 
+extern int lame_main(lame_t gf, int argc, char** argv);
+
 #if defined(__cplusplus)
 }
 #endif

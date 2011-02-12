@@ -123,10 +123,10 @@ FORCEINLINE static  float
 vec_max_c(const float * xr34, unsigned int bw)
 {
     float   xfsf = 0;
-    unsigned int j = bw >> 2u;
+    unsigned int i = bw >> 2u;
     unsigned int const remaining = (bw & 0x03u);
 
-    for (j; j > 0; --j) {
+    while (i-- > 0) {
         if (xfsf < xr34[0]) {
             xfsf = xr34[0];
         }
@@ -154,9 +154,9 @@ FORCEINLINE static float
 vec_sum_sq_c(const float * xr, unsigned int bw)
 {
     float   sum = 0.0f;
-    unsigned int l = bw >> 2u;
+    unsigned int i = bw >> 2u;
     unsigned int const remaining = bw & 0x03u;    
-    for (l; l > 0; --l) {
+    while (i-- > 0) {
         sum += xr[0] * xr[0];
         sum += xr[1] * xr[1];
         sum += xr[2] * xr[2];
@@ -260,10 +260,10 @@ calc_sfb_noise_x34(const FLOAT * xr, const FLOAT * xr34, unsigned int bw, uint8_
     const FLOAT sfpow34 = ipow20[sf]; /*pow(sfpow,-3.0/4.0); */
 
     FLOAT   xfsf = 0;
-    unsigned int j = bw >> 2u;
+    unsigned int i = bw >> 2u;
     unsigned int const remaining = (bw & 0x03u);
 
-    for (j; j > 0; --j) {
+    while (i-- > 0) {
         x[0] = sfpow34 * xr34[0];
         x[1] = sfpow34 * xr34[1];
         x[2] = sfpow34 * xr34[2];
@@ -407,10 +407,10 @@ find_scalefac_x34(const FLOAT * xr, const FLOAT * xr34, FLOAT l3_xmin, unsigned 
     /*  returning a scalefac without distortion, if possible
      */
     if (seen_good_one > 0) {
-        return sf_ok;
+        sf = sf_ok;
     }
     if (sf <= sf_min) {
-        return sf_min;
+        sf = sf_min;
     }
     return sf;
 }
@@ -501,7 +501,7 @@ block_sf(algo_t * that, const FLOAT l3_xmin[SFBMAX], int vbrsf[SFBMAX], int vbrs
         }
         vbrsf[sfb] = m2;
         ++sfb;
-        j += w;
+        j += w;        
     }
     for (; sfb < SFBMAX; ++sfb) {
         vbrsf[sfb] = maxsf;
@@ -545,21 +545,18 @@ quantize_x34(const algo_t * that)
         FLOAT const sfpow34 = ipow20[sfac];
         unsigned int const w = (unsigned int) cod_info->width[sfb];
         unsigned int const m = (unsigned int) (max_nonzero_coeff - j + 1);
-        unsigned int l = w;
-        unsigned int remaining;
+        unsigned int i, remaining;
 
         assert((cod_info->global_gain - s) >= 0);
         assert(cod_info->width[sfb] >= 0);
-
-        if (l > m) {
-            l = m;
-        }
         j += w;
         ++sfb;
-        remaining = (l & 0x03u);
-        l >>= 2;
+        
+        i = (w <= m) ? w : m;
+        remaining = (i & 0x03u);
+        i >>= 2u;
 
-        for (l; l > 0; --l) {
+        while (i-- > 0) {
             x[0] = sfpow34 * xr34_orig[0];
             x[1] = sfpow34 * xr34_orig[1];
             x[2] = sfpow34 * xr34_orig[2];
@@ -571,6 +568,7 @@ quantize_x34(const algo_t * that)
             xr34_orig += 4;
         }
         if (remaining) {
+            int tmp_l3[4];
             x[0] = x[1] = x[2] = x[3] = 0;
             switch( remaining ) {
             case 3: x[2] = sfpow34 * xr34_orig[2];
@@ -578,7 +576,13 @@ quantize_x34(const algo_t * that)
             case 1: x[0] = sfpow34 * xr34_orig[0];
             }
 
-            k_34_4(x, l3);
+            k_34_4(x, tmp_l3);
+
+            switch( remaining ) {
+            case 3: l3[2] = tmp_l3[2];
+            case 2: l3[1] = tmp_l3[1];
+            case 1: l3[0] = tmp_l3[0];
+            }
 
             l3 += remaining;
             xr34_orig += remaining;
@@ -1314,7 +1318,6 @@ VBR_encode_frame(lame_internal_flags * gfc, const FLOAT xr34orig[2][2][576],
             }
         }               /* for ch */
     }
-
     /* searches scalefactors
      */
     for (gr = 0; gr < ngr; ++gr) {
@@ -1337,7 +1340,6 @@ VBR_encode_frame(lame_internal_flags * gfc, const FLOAT xr34orig[2][2][576],
             }
         }               /* for ch */
     }
-
     /* encode 'as is'
      */
     use_nbits_fr = 0;
@@ -1389,7 +1391,7 @@ VBR_encode_frame(lame_internal_flags * gfc, const FLOAT xr34orig[2][2][576],
             return use_nbits_fr;
         }
     }
-
+    
     /* OK, we are in trouble and have to define how many bits are
      * to be used for each granule
      */

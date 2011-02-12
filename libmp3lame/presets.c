@@ -205,8 +205,8 @@ apply_vbr_preset(lame_global_flags * gfp, int a, int enforce)
         int const nsp = lame_get_exp_nspsytune(gfp);
         int const val = (nsp >> 20) & 63;
         if (val == 0) {
-            int const x = (set->sfb21mod << 20) | nsp;
-            (void) lame_set_exp_nspsytune(gfp, x);
+            int const sf21mod = (set->sfb21mod << 20) | nsp;
+            (void) lame_set_exp_nspsytune(gfp, sf21mod);
         }
     }
     SET__OPTION(msfix, set->msfix, -1);
