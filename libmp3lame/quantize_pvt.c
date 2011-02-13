@@ -599,7 +599,7 @@ calc_xmin_(lame_internal_flags const *gfc,
         FLOAT   en0, xmin;
         int     width, l;
 
-        if (cfg->vbr == vbr_rh || cfg->vbr == vbr_mt)
+        if (cfg->vbr == vbr_rh)
             xmin = athAdjust(ATH->adjust_factor, ATH->l[gsfb], ATH->floor, 0);
         else
             xmin = ATH->adjust_factor * ATH->l[gsfb];
@@ -645,7 +645,7 @@ calc_xmin_(lame_internal_flags const *gfc,
     for (sfb = cod_info->sfb_smin; gsfb < cod_info->psymax; sfb++, gsfb += 3) {
         int     width, b, l;
         FLOAT   tmpATH;
-        if (cfg->vbr == vbr_rh || cfg->vbr == vbr_mt)
+        if (cfg->vbr == vbr_rh)
             tmpATH = athAdjust(ATH->adjust_factor, ATH->s[sfb], ATH->floor, 0);
         else
             tmpATH = ATH->adjust_factor * ATH->s[sfb];
