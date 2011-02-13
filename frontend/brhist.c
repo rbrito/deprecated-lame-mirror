@@ -137,7 +137,6 @@ brhist_disp_line(int i, int br_hist_TOT, int br_hist_LR, int full, int frames)
     char    brppt[14];       /* [%] and max. 10 characters for kbps */
     int     barlen_TOT;
     int     barlen_LR;
-    int     ppt = 0;
     int     res = digits(frames) + 3 + 4 + 1;
 
     if (full != 0) {
@@ -148,9 +147,6 @@ brhist_disp_line(int i, int br_hist_TOT, int br_hist_LR, int full, int frames)
     else {
         barlen_TOT = barlen_LR = 0;
     }
-
-    if (frames > 0)
-        ppt = (1000 * br_hist_TOT + frames / 2) / frames; /* round nearest */
 
     sprintf(brppt, " [%*i]", digits(frames), br_hist_TOT);
 
