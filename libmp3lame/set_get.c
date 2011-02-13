@@ -115,7 +115,7 @@ int
 lame_set_scale(lame_global_flags * gfp, float scale)
 {
     if (is_lame_global_flags_valid(gfp)) {
-        /* default = 0 */
+        /* default = 1 */
         gfp->scale = scale;
         return 0;
     }
@@ -138,7 +138,7 @@ int
 lame_set_scale_left(lame_global_flags * gfp, float scale)
 {
     if (is_lame_global_flags_valid(gfp)) {
-        /* default = 0 */
+        /* default = 1 */
         gfp->scale_left = scale;
         return 0;
     }
@@ -161,7 +161,7 @@ int
 lame_set_scale_right(lame_global_flags * gfp, float scale)
 {
     if (is_lame_global_flags_valid(gfp)) {
-        /* default = 0 */
+        /* default = 1 */
         gfp->scale_right = scale;
         return 0;
     }

@@ -306,7 +306,7 @@ apply_abr_preset(lame_global_flags * gfp, int preset, int enforce)
 
     /* ABR seems to have big problems with clipping, especially at low bitrates */
     /* so we compensate for that here by using a scale value depending on bitrate */
-    SET_OPTION(scale, abr_switch_map[r].scale, -1);
+    lame_set_scale(gfp, lame_get_scale(gfp) * abr_switch_map[r].scale);
 
     SET_OPTION(maskingadjust, abr_switch_map[r].masking_adj, 0);
     if (abr_switch_map[r].masking_adj > 0) {

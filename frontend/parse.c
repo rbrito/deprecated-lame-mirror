@@ -2,7 +2,7 @@
  *      Command line parsing related functions
  *
  *      Copyright (c) 1999 Mark Taylor
- *                    2010 Robert Hegemann
+ *                    2000-2011 Robert Hegemann
  *
  * This library is free software; you can redistribute it and/or
  * modify it under the terms of the GNU Lesser General Public
@@ -579,7 +579,7 @@ long_help(const lame_global_flags * gfp, FILE * const fp, const char *ProgramNam
     fprintf(fp,
             "  Operational options:\n"
             "    -a              downmix from stereo to mono file for mono encoding\n"
-            "    -m <mode>       (j)oint, (s)imple, (f)orce, (d)dual-mono, (m)ono\n"
+            "    -m <mode>       (j)oint, (s)imple, (f)orce, (d)ual-mono, (m)ono (l)eft (r)ight\n"
             "                    default is (j) or (s) depending on bitrate\n"
             "                    joint  = joins the best possible of MS and LR stereo\n"
             "                    simple = force LR stereo on all frames\n"
@@ -2080,6 +2080,16 @@ parse_args(lame_global_flags * gfp, int argc, char **argv,
                             break;
                         case 'm':
                             (void) lame_set_mode(gfp, MONO);
+                            break;
+                        case 'l':
+                            (void) lame_set_mode(gfp, MONO);
+                            (void) lame_set_scale_left(gfp, 2);
+                            (void) lame_set_scale_right(gfp, 0);
+                            break;
+                        case 'r':
+                            (void) lame_set_mode(gfp, MONO);
+                            (void) lame_set_scale_left(gfp, 0);
+                            (void) lame_set_scale_right(gfp, 2);
                             break;
                         case 'a':
                             (void) lame_set_mode(gfp, JOINT_STEREO);
