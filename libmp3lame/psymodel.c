@@ -1121,17 +1121,19 @@ L3psycho_anal_ns(lame_internal_flags * gfc,
     if (cfg->mode == JOINT_STEREO)
         numchn = 4;
 
-    if (cfg->vbr == vbr_off)
+    if (cfg->vbr == vbr_off) {
         pcfact =
             gfc->sv_enc.ResvMax ==
             0 ? 0 : ((FLOAT) gfc->sv_enc.ResvSize) / gfc->sv_enc.ResvMax * 0.5;
-    else if (cfg->vbr == vbr_rh || cfg->vbr == vbr_mtrh || cfg->vbr == vbr_mt) {
+    }
+    else if (cfg->vbr == vbr_abr) {
+        pcfact = 1.0;
+    }
+    else {
         /*static const FLOAT pcQns[10]={1.0,1.0,1.0,0.8,0.6,0.5,0.4,0.3,0.2,0.1};
            pcfact = pcQns[gfp->VBR_q]; */
         pcfact = 0.6;
     }
-    else
-        pcfact = 1.0;
 
     /**********************************************************************
      *  Apply HPF of fs/4 to the input signal.

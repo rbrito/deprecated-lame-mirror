@@ -3,7 +3,7 @@
  *
  *      Copyright (c) 1999 Mark Taylor
  *      Copyright (c) 2000-2002 Takehiro Tominaga
- *      Copyright (c) 2000-2005 Robert Hegemann
+ *      Copyright (c) 2000-2011 Robert Hegemann
  *      Copyright (c) 2001 Gabriel Bouvigne
  *      Copyright (c) 2001 John Dahlstrom
  *
@@ -370,7 +370,7 @@ lame_encode_mp3_frame(       /* Output */
             for (ch = 0; ch < cfg->channels_out; ch++) {
                 bufp[ch] = &inbuf[ch][576 + gr * 576 - FFTOFFSET];
             }
-            if (cfg->vbr == vbr_mtrh || cfg->vbr == vbr_mt) {
+            if (cfg->vbr == vbr_mtrh || cfg->vbr == vbr_mt || cfg->vbr == vbr_abr || cfg->vbr == vbr_off) {
                 ret = L3psycho_anal_vbr(gfc, bufp, gr,
                                         masking_LR, masking_MS,
                                         pe[gr], pe_MS[gr], tot_ener[gr], blocktype);

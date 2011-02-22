@@ -325,7 +325,7 @@ init_outer_loop(lame_internal_flags const *gfc, gr_info * const cod_info)
      */
     memset(cod_info->scalefac, 0, sizeof(cod_info->scalefac));
 
-    if (cfg->vbr != vbr_mt && cfg->vbr != vbr_mtrh) {
+    if (cfg->vbr != vbr_mt && cfg->vbr != vbr_mtrh && cfg->vbr != vbr_abr && cfg->vbr != vbr_off) {
         psfb21_analogsilence(gfc, cod_info);
     }
 }

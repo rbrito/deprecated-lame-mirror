@@ -974,6 +974,9 @@ lame_init_params(lame_global_flags * gfp)
 
     case vbr_mt:
     case vbr_mtrh:{
+            if (gfp->strict_ISO < 0) {
+                gfp->strict_ISO = MDB_MAXIMUM;
+            }
             if (gfp->useTemporal < 0) {
                 gfp->useTemporal = 0; /* off by default for this VBR mode */
             }
@@ -2280,7 +2283,7 @@ lame_init_old(lame_global_flags * gfp)
      * best value, UNLESS the calling program as set it
      * (and the value is no longer -1)
      */
-    gfp->strict_ISO = -1; /* not set */
+    gfp->strict_ISO = MDB_MAXIMUM;
 
     gfp->mode = NOT_SET;
     gfp->original = 1;
