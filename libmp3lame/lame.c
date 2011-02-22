@@ -612,11 +612,6 @@ lame_init_params(lame_global_flags * gfp)
     if (gfp->VBR == vbr_off && gfp->VBR_mean_bitrate_kbps != 128 && gfp->brate == 0)
         gfp->brate = gfp->VBR_mean_bitrate_kbps;
 
-    /* FIXME: make mtrh and mt modes the same */
-    if (gfp->VBR == vbr_mtrh) {
-        gfp->VBR = vbr_mt;
-    }
-
     switch (gfp->VBR) {
     case vbr_off:
     case vbr_mtrh:
@@ -697,6 +692,7 @@ lame_init_params(lame_global_flags * gfp)
                 }
                 break;
             }
+        case vbr_mtrh:
         case vbr_mt:{
                 int const x[11] = {
                     24000, 19500, 18500, 18000, 17500, 17000, 16500, 15600, 15200, 9960, 3950
@@ -736,7 +732,7 @@ lame_init_params(lame_global_flags * gfp)
         }
         gfp->samplerate_out = optimum_samplefreq((int) gfp->lowpassfreq, gfp->samplerate_in);
     }
-    if (gfp->VBR == vbr_mt) {
+    if (gfp->VBR == vbr_mt || gfp->VBR == vbr_mtrh) {
         gfp->lowpassfreq = Min(24000, gfp->lowpassfreq);
     }
     else {

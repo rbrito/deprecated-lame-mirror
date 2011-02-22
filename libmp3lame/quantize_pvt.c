@@ -214,7 +214,7 @@ ATHmdct(SessionConfig_t const *cfg, FLOAT f)
 
     ath = ATHformula(cfg, f);
 
-    if (cfg->vbr == vbr_mt && cfg->ATHfixpoint > 0) {
+    if (cfg->ATHfixpoint > 0) {
         ath -= cfg->ATHfixpoint;
     }
     else {
@@ -321,7 +321,14 @@ compute_ath(lame_internal_flags const* gfc)
 }
 
 
-
+static float const payload_long[2][4] = 
+{ {-0.000f, -0.000f, -0.000f, +0.000f}
+, {-1.000f, -0.500f, -0.025f, +0.500f}
+};
+static float const payload_short[2][4] = 
+{ {-0.000f, -0.000f, -0.000f, +0.000f}
+, {-3.000f, -1.500f, -0.500f, +0.500f}
+};
 
 /************************************************************************/
 /*  initialization for iteration_loop */
@@ -332,7 +339,7 @@ iteration_init(lame_internal_flags * gfc)
     SessionConfig_t const *const cfg = &gfc->cfg;
     III_side_info_t *const l3_side = &gfc->l3_side;
     FLOAT   adjust, db;
-    int     i;
+    int     i, sel;
 
     if (gfc->iteration_init_init == 0) {
         gfc->iteration_init_init = 1;
@@ -361,53 +368,47 @@ iteration_init(lame_internal_flags * gfc)
         huffman_init(gfc);
         init_xrpow_core_init(gfc);
 
+        sel = (cfg->vbr == vbr_mt || cfg->vbr == vbr_mtrh) ? 1 : 0;
+
         /* long */
-        db = cfg->adjust_bass_db;
-        if (cfg->vbr == vbr_mt) db -= 1.0f;
+        db = cfg->adjust_bass_db + payload_long[sel][0];
         adjust = powf(10.f, db * 0.1f);
         for (i = 0; i <= 6; ++i) {
             gfc->sv_qnt.longfact[i] = adjust;
         }
-        db = cfg->adjust_alto_db;
-        if (cfg->vbr == vbr_mt) db -= 0.5f;
+        db = cfg->adjust_alto_db + payload_long[sel][1];
         adjust = powf(10.f, db * 0.1f);
         for (; i <= 13; ++i) {
             gfc->sv_qnt.longfact[i] = adjust;
         }
-        db = cfg->adjust_treble_db;
-        if (cfg->vbr == vbr_mt) db -= 0.025f;
+        db = cfg->adjust_treble_db + payload_long[sel][2];
         adjust = powf(10.f, db * 0.1f);
         for (; i <= 20; ++i) {
             gfc->sv_qnt.longfact[i] = adjust;
         }
-        db = cfg->adjust_sfb21_db;
-        if (cfg->vbr == vbr_mt) db += 0.5f;
+        db = cfg->adjust_sfb21_db + payload_long[sel][3];
         adjust = powf(10.f, db * 0.1f);
         for (; i < SBMAX_l; ++i) {
             gfc->sv_qnt.longfact[i] = adjust;
         }
 
         /* short */
-        db = cfg->adjust_bass_db;
-        if (cfg->vbr == vbr_mt) db -= 3.f;
+        db = cfg->adjust_bass_db + payload_short[sel][0];
         adjust = powf(10.f, db * 0.1f);
         for (i = 0; i <= 2; ++i) {
             gfc->sv_qnt.shortfact[i] = adjust;
         }
-        db = cfg->adjust_alto_db;
-        if (cfg->vbr == vbr_mt) db -= 1.5f;
+        db = cfg->adjust_alto_db + payload_short[sel][1];
         adjust = powf(10.f, db * 0.1f);
         for (; i <= 6; ++i) {
             gfc->sv_qnt.shortfact[i] = adjust;
         }
-        db = cfg->adjust_treble_db;
-        if (cfg->vbr == vbr_mt) db -= 0.5f;
+        db = cfg->adjust_treble_db + payload_short[sel][2];
         adjust = powf(10.f, db * 0.1f);
         for (; i <= 11; ++i) {
             gfc->sv_qnt.shortfact[i] = adjust;
         }
-        db = cfg->adjust_sfb21_db;
-        if (cfg->vbr == vbr_mt) db += 0.5f;
+        db = cfg->adjust_sfb21_db + payload_short[sel][3];
         adjust = powf(10.f, db * 0.1f);
         for (; i < SBMAX_s; ++i) {
             gfc->sv_qnt.shortfact[i] = adjust;
@@ -703,7 +704,7 @@ calc_xmin_new(lame_internal_flags const *gfc,
         FLOAT   rh1, rh2, rh3;
         int     width, l;
 
-        xmin = athAdjust(ATH->adjust_factor, ATH->l[gsfb], ATH->floor, cfg->vbr == vbr_mt ? cfg->ATHfixpoint : 0);
+        xmin = athAdjust(ATH->adjust_factor, ATH->l[gsfb], ATH->floor, cfg->ATHfixpoint);
         xmin *= gfc->sv_qnt.longfact[gsfb];
 
         width = cod_info->width[gsfb];
@@ -732,12 +733,7 @@ calc_xmin_new(lame_internal_flags const *gfc,
         else {
             rh3 = rh2;
         }
-        if (cfg->vbr == vbr_mt || gsfb == SBPSY_l) {
-            xmin = rh3;
-        }
-        else {
-            xmin = rh2;
-        }
+        xmin = rh3;
         {
             FLOAT const e = ratio->en.l[gsfb];
             if (e > 1e-12f) {
@@ -770,7 +766,7 @@ calc_xmin_new(lame_internal_flags const *gfc,
         int     width, b, l;
         FLOAT   tmpATH;
 
-        tmpATH = athAdjust(ATH->adjust_factor, ATH->s[sfb], ATH->floor, cfg->vbr == vbr_mt ? cfg->ATHfixpoint : 0);
+        tmpATH = athAdjust(ATH->adjust_factor, ATH->s[sfb], ATH->floor, cfg->ATHfixpoint);
         tmpATH *= gfc->sv_qnt.shortfact[sfb];
         
         width = cod_info->width[gsfb];
@@ -802,12 +798,7 @@ calc_xmin_new(lame_internal_flags const *gfc,
             else {
                 rh3 = rh2;
             }
-            if (cfg->vbr == vbr_mt || sfb == SBPSY_s) {
-                xmin = rh3;
-            }
-            else {
-                xmin = rh2;
-            }
+            xmin = rh3;
             {
                 FLOAT const e = ratio->en.s[sfb][b];
                 if (e > 1e-12f) {

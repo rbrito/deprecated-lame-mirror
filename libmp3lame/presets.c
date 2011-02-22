@@ -102,28 +102,13 @@ typedef struct {
         {10,      9,       9,    1,   6.60, 145.0,       2.0,    2.0,     -36,        12,        -25,   0.0008,         0,       0,  0,    15, 100}
     };
     
-    static const vbr_presets_t vbr_psy_switch_map[] = {
-    /*vbr_q  qcomp_l  qcomp_s  expY  st_lrm   st_s  mask adj_l  adj_s  ath_lower  ath_curve  ath_sens  interChR  safejoint sfb21mod  msfix */
-        {0,       9,       9,    0,   4.20,  25.0,      -7.0,   -4.0,       7.5,       1,          0,   0,              2,      29,  0.97, 15, 100},
-        {1,       9,       9,    0,   4.20,  25.0,      -5.6,   -3.6,       4.5,       1.5,        0,   0,              2,      24,  1.35, 15, 100},
-        {2,       9,       9,    0,   4.20,  25.0,      -4.4,   -1.8,       2,         2,          0,   0,              2,      19,  1.49, 15, 100},
-        {3,       9,       9,    1,   4.20,  25.0,      -3.4,   -1.25,      1.1,       3,         -4,   0,              2,      15,  1.64, 15, 100},
-        {4,       9,       9,    1,   4.20,  25.0,      -2.2,    0.1,       0,         3.5,       -8,   0,              2,       0,  1.79, 15, 100},
-        {5,       9,       9,    1,   4.20,  25.0,      -1.0,    1.65,     -7.7,       4,        -12,   0.0002,         0,       0,  1.95, 15, 100},
-        {6,       9,       9,    1,   4.20,  25.0,      -0.0,    2.47,     -7.7,       6.5,      -19,   0.0004,         0,       0,  2   , 15, 100},
-        {7,       9,       9,    1,   4.20,  25.0,       0.5,    2.0,     -14.5,       8,        -22,   0.0006,         0,       0,  2   , 15, 100},
-        {8,       9,       9,    1,   4.20,  25.0,       1.0,    2.4,     -22.0,      10,        -23,   0.0007,         0,       0,  2   , 15, 100},
-        {9,       9,       9,    1,   4.20,  25.0,       1.5,    2.95,    -30.0,      11,        -25,   0.0008,         0,       0,  2   , 15, 100},
-        {10,      9,       9,    1,   4.20,  25.0,       2.0,    2.95,    -36.0,      12,        -30,   0.0008,         0,       0,  2   , 15, 100}
-    };
-    
     static const vbr_presets_t vbr_mt_psy_switch_map[] = {
     /*vbr_q  qcomp_l  qcomp_s  expY  st_lrm   st_s  mask adj_l  adj_s  ath_lower  ath_curve  ath_sens  ---  safejoint sfb21mod  msfix */
-        {0,       9,       9,    0,   4.20,  25.0,      -6.8,   -6.8,       7.1,       1,          0,   0,         2,      31,  1.000, 11, 100},
-        {1,       9,       9,    0,   4.20,  25.0,      -4.8,   -4.8,       5.4,       1.4,       -1,   0,         2,      27,  1.122, 10,  98},
-        {2,       9,       9,    0,   4.20,  25.0,      -2.6,   -2.6,       3.6,       2.0,       -3,   0,         2,      23,  1.288,  9,  97},
-        {3,       9,       9,    1,   4.20,  25.0,      -2.0,   -2.0,       3.0,       2.0,       -5,   0,         2,      18,  1.479,  8,  96},
-        {4,       9,       9,    1,   4.20,  25.0,      -0.0,   -0.0,       0.0,       2.0,       -8,   0,         2,      12,  1.698,  7,  95},
+        {0,       9,       9,    0,   4.20,  25.0,      -6.8,   -6.8,       7.1,       1,          0,   0,         2,      31,  1.000,  5, 100},
+        {1,       9,       9,    0,   4.20,  25.0,      -4.8,   -4.8,       5.4,       1.4,       -1,   0,         2,      27,  1.122,  5,  98},
+        {2,       9,       9,    0,   4.20,  25.0,      -2.6,   -2.6,       3.6,       2.0,       -3,   0,         2,      23,  1.288,  5,  97},
+        {3,       9,       9,    1,   4.20,  25.0,      -2.0,   -2.0,       3.0,       2.0,       -5,   0,         2,      18,  1.479,  5,  96},
+        {4,       9,       9,    1,   4.20,  25.0,      -0.0,   -0.0,       0.0,       2.0,       -8,   0,         2,      12,  1.698,  5,  95},
         {5,       9,       9,    1,   4.20,  25.0,       1.2,    1.2,      -5,         3.2,      -11,   0,         2,       8,  1.950,  5,  94.2},
         {6,       9,       9,    1,   4.50, 100.0,       2.0,    2.0,     -11.0,       6.0,      -14,   0,         2,       4,  2.239,  3,  93.9},
         {7,       9,       9,    1,   4.80, 200.0,       2.7,    2.7,     -17.0,       8.0,      -17,   0,         2,       0,  2.570,  0,  93.6},
@@ -138,10 +123,9 @@ static vbr_presets_t const*
 get_vbr_preset(int v)
 {
     switch (v) {
+    case vbr_mtrh:
     case vbr_mt:
         return &vbr_mt_psy_switch_map[0];
-    case vbr_mtrh:
-        return &vbr_psy_switch_map[0];
     default:
         return &vbr_old_switch_map[0];
     }
@@ -187,7 +171,7 @@ apply_vbr_preset(lame_global_flags * gfp, int a, int enforce)
     SET_OPTION(short_threshold_s, set->st_s, -1);
     SET_OPTION(maskingadjust, set->masking_adj, 0);
     SET_OPTION(maskingadjust_short, set->masking_adj_short, 0);
-    if (lame_get_VBR(gfp) == vbr_mt) {
+    if (lame_get_VBR(gfp) == vbr_mt || lame_get_VBR(gfp) == vbr_mtrh) {
         lame_set_ATHtype(gfp, 5);
     }
     SET_OPTION(ATHlower, set->ath_lower, 0);
@@ -216,13 +200,6 @@ apply_vbr_preset(lame_global_flags * gfp, int a, int enforce)
         gfp->VBR_q_frac = x;
     }
     gfp->internal_flags->cfg.minval = set->minval;
-#if 1
-    if (lame_get_VBR(gfp) == vbr_mt) {
-        if (set->minval > 5) {
-            gfp->internal_flags->cfg.minval = 5; /* --> psymodel.c */
-        }
-    }
-#endif
     gfp->internal_flags->cfg.ATHfixpoint = set->ath_fixpoint;
 }
 

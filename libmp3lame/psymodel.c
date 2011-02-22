@@ -1769,37 +1769,8 @@ vbrpsy_skip_masking_s(lame_internal_flags * gfc, int chn, int sblock)
         FLOAT  *nbs1 = &gfc->sv_psy.nb_s1[chn][0];
         int const n = gfc->cd_psy->s.npart;
         int     b;
-        if (gfc->cfg.vbr == vbr_mt) {
-            for (b = 0; b < n; b++) {
-                nbs2[b] = nbs1[b];
-            }
-        }
-        else {
-            for (b = 0; b < n; b++) {
-                nbs2[b] = nbs1[b];
-                nbs1[b] = 0;
-            }
-        }
-    }
-}
-
-
-static void
-vbrpsy_skip_masking_l(lame_internal_flags * gfc, int chn)
-{
-    FLOAT  *nbl2 = &gfc->sv_psy.nb_l2[chn][0];
-    FLOAT  *nbl1 = &gfc->sv_psy.nb_l1[chn][0];
-    int const n = gfc->cd_psy->l.npart;
-    int     b;
-    if (gfc->cfg.vbr == vbr_mt) {
         for (b = 0; b < n; b++) {
-            nbl2[b] = nbl1[b];
-        }
-    }
-    else {
-        for (b = 0; b < n; b++) {
-            nbl2[b] = nbl1[b];
-            nbl1[b] = 0;
+            nbs2[b] = nbs1[b];
         }
     }
 }
@@ -2292,16 +2263,7 @@ L3psycho_anal_vbr(lame_internal_flags * gfc,
             wsamp_l = wsamp_L + ch01;
             vbrpsy_compute_fft_l(gfc, buffer, chn, gr_out, fftenergy, wsamp_l);
             vbrpsy_compute_loudness_approximation_l(gfc, gr_out, chn, fftenergy);
-#if 1
             vbrpsy_compute_masking_l(gfc, fftenergy, eb[chn], thr[chn], chn);
-#else
-            if (uselongblock[ch01]) {
-                vbrpsy_compute_masking_l(gfc, fftenergy, eb[chn], thr[chn], chn);
-            }
-            else {
-                vbrpsy_skip_masking_l(gfc, chn);
-            }
-#endif
         }
         if ((uselongblock[0] + uselongblock[1]) == 2) {
             /* M/S channel */
@@ -2803,7 +2765,7 @@ psymodel_init(lame_global_flags const* gfp)
     FLOAT const sfreq = cfg->samplerate_out;
     
     FLOAT   xav = 10, xbv = 12;
-    FLOAT const minval_low = (cfg->vbr == vbr_mt) ? (0.f - cfg->minval) : -15;
+    FLOAT const minval_low = (0.f - cfg->minval);
 
     if (gfc->cd_psy != 0) {
         return 0;
@@ -3098,7 +3060,6 @@ psymodel_init(lame_global_flags const* gfp)
     }
     {
         float sk_s = -10.f, sk_l = -4.7f;
-#if 1
         static float const sk[] = { -7.4, -7.4, -7.4, -9.5, -7.4, -6.1, -5.5, -4.7, -4.7, -4.7, -4.7 };
         if (gfp->VBR_q < 3) {
             sk_l = sk_s = sk[0];
@@ -3106,23 +3067,18 @@ psymodel_init(lame_global_flags const* gfp)
         else {
             sk_l = sk_s = sk[gfp->VBR_q] + gfp->VBR_q_frac * (sk[gfp->VBR_q]-sk[gfp->VBR_q+1]);
         }
-#endif
         b = 0;
-        if (cfg->vbr == vbr_mt) {
-            for (; b < gd->s.npart; b++) {
-                float m = (float)(gd->s.npart - b) / gd->s.npart;
-                gd->s.masking_lower[b] = powf(10.f, sk_s * m * 0.1f);
-            }
+        for (; b < gd->s.npart; b++) {
+            float m = (float)(gd->s.npart - b) / gd->s.npart;
+            gd->s.masking_lower[b] = powf(10.f, sk_s * m * 0.1f);
         }
         for (; b < CBANDS; ++b) {
             gd->s.masking_lower[b] = 1.f;
         }    
         b = 0;
-        if (cfg->vbr == vbr_mt) {
-            for (; b < gd->l.npart; b++) {
-                float m = (float)(gd->l.npart - b) / gd->l.npart;
-                gd->l.masking_lower[b] = powf(10.f, sk_l * m * 0.1f);
-            }
+        for (; b < gd->l.npart; b++) {
+            float m = (float)(gd->l.npart - b) / gd->l.npart;
+            gd->l.masking_lower[b] = powf(10.f, sk_l * m * 0.1f);
         }
         for (; b < CBANDS; ++b) {
             gd->l.masking_lower[b] = 1.f;

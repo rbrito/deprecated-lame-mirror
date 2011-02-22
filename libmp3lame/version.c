@@ -90,10 +90,10 @@ get_lame_short_version(void)
 
 #if   LAME_ALPHA_VERSION
     static /*@observer@ */ const char *const str =
-        STR(LAME_MAJOR_VERSION) "." STR(LAME_MINOR_VERSION) " (alpha)";
+        STR(LAME_MAJOR_VERSION) "." STR(LAME_MINOR_VERSION) " (alpha " STR(LAME_PATCH_VERSION) ")";
 #elif LAME_BETA_VERSION
     static /*@observer@ */ const char *const str =
-        STR(LAME_MAJOR_VERSION) "." STR(LAME_MINOR_VERSION) " (beta)";
+        STR(LAME_MAJOR_VERSION) "." STR(LAME_MINOR_VERSION) " (beta " STR(LAME_PATCH_VERSION) ")";
 #elif LAME_RELEASE_VERSION && (LAME_PATCH_VERSION > 0)
     static /*@observer@ */ const char *const str =
         STR(LAME_MAJOR_VERSION) "." STR(LAME_MINOR_VERSION) "." STR(LAME_PATCH_VERSION);
@@ -117,21 +117,22 @@ get_lame_very_short_version(void)
 {
     /* adding date and time to version string makes it harder for output
        validation */
-
 #if   LAME_ALPHA_VERSION
-    static /*@observer@ */ const char *const str =
-        "LAME" STR(LAME_MAJOR_VERSION) "." STR(LAME_MINOR_VERSION) "a";
+#define P "a"
 #elif LAME_BETA_VERSION
-    static /*@observer@ */ const char *const str =
-        "LAME" STR(LAME_MAJOR_VERSION) "." STR(LAME_MINOR_VERSION) "b";
+#define P "b"
 #elif LAME_RELEASE_VERSION && (LAME_PATCH_VERSION > 0)
-    static /*@observer@ */ const char *const str =
-        "LAME" STR(LAME_MAJOR_VERSION) "." STR(LAME_MINOR_VERSION) "r";
+#define P "r";
 #else
-    static /*@observer@ */ const char *const str =
-        "LAME" STR(LAME_MAJOR_VERSION) "." STR(LAME_MINOR_VERSION) " ";
+#define P " ";
 #endif
-
+    static /*@observer@ */ const char *const str =
+#if (LAME_PATCH_VERSION > 0)
+      "L" STR(LAME_MAJOR_VERSION) "." STR(LAME_MINOR_VERSION) P STR(LAME_PATCH_VERSION)
+#else
+      "LAME" STR(LAME_MAJOR_VERSION) "." STR(LAME_MINOR_VERSION) P
+#endif
+      ;
     return str;
 }
 
