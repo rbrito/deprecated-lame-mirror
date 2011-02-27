@@ -228,7 +228,6 @@ apply_abr_preset(lame_global_flags * gfp, int preset, int enforce)
     /* 
      *  Switch mappings for ABR mode
      */
-#if 1
     const abr_presets_t abr_switch_map[] = {        
     /* kbps  quant q_s safejoint nsmsfix st_lrm  st_s  scale   msk ath_lwr ath_curve  interch , sfscale */
       {  8,     9,  9,        0,      0,  6.60,  145,  0.95,    0,  -30.0,     11,    0.0012,        1}, /*   8, impossible to use in stereo */
@@ -249,28 +248,6 @@ apply_abr_preset(lame_global_flags * gfp, int preset, int enforce)
       {256,     9,  9,        1,   0.97,  5.20,  125,  1.00,   -8,   10.0,      1,    0,             0}, /* 256 */
       {320,     9,  9,        1,   0.90,  5.20,  125,  1.00,  -10,   12.0,      0,    0,             0}  /* 320 */
     };
-#else
-    const abr_presets_t abr_switch_map[] = {        
-        /* kbps  quant q_s safejoint nsmsfix st_lrm  st_s  scale   msk ath_lwr ath_curve  interch , sfscale */
-        {  8,     9,  9,        0,   3.50,  6.60,  145,  1.00,  2.8,  -30.0,     12,    0.0012,        1}, /*   8, impossible to use in stereo */
-        { 16,     9,  9,        0,   3.50,  6.60,  145,  1.00,  2.8,  -26.0,     12,    0.0010,        1}, /*  16 */
-        { 24,     9,  9,        0,   3.50,  6.60,  145,  1.00,  2.8,  -25.0,     11,    0.0010,        1}, /*  24 */
-        { 32,     9,  9,        0,   3.50,  6.60,  145,  1.00,  2.8,  -24.0,     11,    0.0010,        1}, /*  32 */
-        { 40,     9,  9,        0,   3.50,  6.60,  145,  1.00,  2.8,  -23.0,     11,    0.0009,        1}, /*  40 */
-        { 48,     9,  9,        0,   3.50,  6.60,  145,  1.00,  2.8,  -22.0,     11,    0.0009,        1}, /*  48 */
-        { 56,     9,  9,        0,   3.50,  6.60,  145,  1.00,  2.8,  -21.0,     11,    0.0008,        1}, /*  56 */
-        { 64,     9,  9,        0,   3.39,  6.60,  145,  1.00,  2.8,  -20.0,     10,    0.0008,        1}, /*  64 */
-        { 80,     9,  9,        0,   2.90,  5.30,  100,  1.00,  2.7,  -18.0,     10,    0.0007,        1}, /*  80 */
-        { 96,     9,  9,        2,   2.50,  4.80,   25,  1.00,  2.2,  -12.0,      9.0,  0.0006,        1}, /*  96 */
-        {112,     9,  9,        2,   2.25,  4.50,   25,  1.00,  1.3,   -6.0,      6.0,  0.0005,        1}, /* 112 */
-        {128,     9,  9,        2,   1.95,  4.20,   25,  1.00,    0,    0.0,      3.5,  0.0002,        1}, /* 128 */
-        {160,     9,  9,        2,   1.50,  4.20,   25,  1.00, -1.9,    2.5,      2,    0,             1}, /* 160 */
-        {192,     9,  9,        2,   1.29,  4.20,   25,  1.00, -2.6,    3.7,      2,    0,             0}, /* 192 */
-        {224,     9,  9,        2,   1.15,  4.20,   25,  1.00, -4.8,    5.4,    1.4,    0,             0}, /* 224 */
-        {256,     9,  9,        2,   1.00,  4.20,   25,  1.00, -6.8,    7.0,      1,    0,             0}, /* 256 */
-        {320,     9,  9,        2,   0.00,  4.20,   25,  1.00, -8.0,    8.0,      1,    0,             0}  /* 320 */
-    };
-#endif
 
     /* *INDENT-ON* */
 
@@ -279,9 +256,7 @@ apply_abr_preset(lame_global_flags * gfp, int preset, int enforce)
     int     actual_bitrate = preset;
 
     r = nearestBitrateFullIndex(preset);
-#if 0
-    lame_set_ATHtype(gfp, 5);
-#endif
+    
     (void) lame_set_VBR(gfp, vbr_abr);
     (void) lame_set_VBR_mean_bitrate_kbps(gfp, (actual_bitrate));
     (void) lame_set_VBR_mean_bitrate_kbps(gfp, min_int(lame_get_VBR_mean_bitrate_kbps(gfp), 320));
