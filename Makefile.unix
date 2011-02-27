@@ -176,14 +176,18 @@ ifeq ($(CFG),RH_SSE)
    CPP_OPTS += -DFLOAT8=float -DREAL_IS_FLOAT=1 -DHAVE_ICONV -DHAVE_XMMINTRIN_H -DMIN_ARCH_SSE -D_ALLOW_INTERNAL_OPTIONS
 # these options for gcc-3.2 & AthlonXP
    CC_OPTS = \
-	-std=c89 -pipe -O3 -fstrict-aliasing \
+	-std=c99 -pipe -O3 -fstrict-aliasing \
 	-Wall -W -Wmissing-declarations -Wfloat-equal \
 	-Wcast-qual -Wcast-align -Wdisabled-optimization -Wshadow \
-	-Wunsafe-loop-optimizations -funsafe-loop-optimizations \
+	-Wunsafe-loop-optimizations \
 	-march=k8 \
-	-ffast-math -funsafe-math-optimizations -mfpmath=sse -msse -msse2  \
+	-ffast-math \
+	-mfpmath=sse -msse -msse2  \
 	-malign-double \
+	-funsafe-math-optimizations \
+	-funsafe-loop-optimizations \
 	-maccumulate-outgoing-args
+# -Dpowf=pow -Dfabsf=fabs -Dlog10f=log10
 #	-fsingle-precision-constant \
 #	-Wconversion -Wunreachable-code \
 # -ftree-vectorizer-verbose=10 \

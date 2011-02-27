@@ -470,9 +470,7 @@ lame_init_qval(lame_global_flags * gfp)
             cfg->subblock_gain = 1;
         cfg->use_best_huffman = 1; /*type 2 disabled because of it slowness,
                                       in favor of full outer loop search */
-        cfg->full_outer_loop = 0; /* full outer loop search disabled because
-                                     of audible distortions it may generate
-                                     rh 060629 */
+        cfg->full_outer_loop = 1;
         break;
     }
 
@@ -662,10 +660,54 @@ lame_init_params(lame_global_flags * gfp)
             gfp->VBR_mean_bitrate_kbps = Min(gfp->VBR_mean_bitrate_kbps, 320);
         }
     }
+    /* WORK IN PROGRESS */
+    /* mapping VBR scale to internal VBR quality settings */
+    if (gfp->samplerate_out == 0 && (gfp->VBR == vbr_mt || gfp->VBR == vbr_mtrh)) {
+        float const qval = gfp->VBR_q + gfp->VBR_q_frac;
+        struct q_map { int sr_a; float qa, qb, ta, tb; int lp; };
+        struct q_map m[9]
+        = { {48000, 0.0,6.5, 0.00,6.5, 23700}
+          , {44100, 0.0,6.5, 0.00,6.5, 21780}
+          , {32000, 6.5,8.0, 5.20,7.0, 15800}
+          , {24000, 8.0,8.6, 5.10,7.0, 11850}
+          , {22050, 8.6,9.0, 6.00,7.0, 10892}
+          , {16000, 9.0,9.5, 4.99,7.0,  7903}
+          , {12000, 9.5,9.6, 4.50,7.0,  5928}
+          , {11025, 9.6,9.9, 6.00,7.0,  5446}
+          , { 8000, 9.9,10., 5.00,10.,  3952}
+        };
+        for (i = 2; i < 9; ++i) {
+            if (gfp->samplerate_in == m[i].sr_a) {
+                if (qval < m[i].qa) {
+                    double d = qval / m[i].qa;
+                    d = d * m[i].ta;
+                    gfp->VBR_q = (int)d;
+                    gfp->VBR_q_frac = d - gfp->VBR_q;
+                }
+            }
+            if (gfp->samplerate_in >= m[i].sr_a) {
+                if (m[i].qa <= qval && qval <= m[i].qb) {
+                    float const q_ = m[i].qb-m[i].qa;
+                    float const t_ = m[i].tb-m[i].ta;
+                    gfp->samplerate_out = m[i].sr_a;
+                    gfp->lowpassfreq = m[i].lp;
+                    {
+                        double d = (qval-m[i].qa) / q_;
+                        d = m[i].ta + d * t_;
+                        gfp->VBR_q = (int)d;
+                        gfp->VBR_q_frac = d - gfp->VBR_q;
+                    }
+                    break;
+                }
+                else {
+                }
+            }
+        }
+    }
 
-  /****************************************************************/
+    /****************************************************************/
     /* if a filter has not been enabled, see if we should add one: */
-  /****************************************************************/
+    /****************************************************************/
     if (gfp->lowpassfreq == 0) {
         double  lowpass = 16000;
         double  highpass;
@@ -695,7 +737,7 @@ lame_init_params(lame_global_flags * gfp)
         case vbr_mtrh:
         case vbr_mt:{
                 int const x[11] = {
-                    24000, 19500, 18500, 18000, 17500, 17000, 16500, 15600, 15200, 9960, 3950
+                    24000, 19500, 18500, 18000, 17500, 17000, 16500, 15600, 15200, 7230, 3950
                 };
                 if (0 <= gfp->VBR_q && gfp->VBR_q <= 9) {
                     double  a = x[gfp->VBR_q], b = x[gfp->VBR_q + 1], m = gfp->VBR_q_frac;
