@@ -468,7 +468,7 @@ block_sf(algo_t * that, const FLOAT l3_xmin[SFBMAX], int vbrsf[SFBMAX], int vbrs
         if (++i > 2) {
             i = 0;
         }
-        if (sfb < psymax) {
+        if (sfb < psymax && w > 2) { /* mpeg2.5 at 8 kHz doesn't use all scalefactors, unused have width 2 */
             float sum_sq = vec_sum_sq_c(&xr[j], l);
             if (below_noise_floor(sum_sq, l3_xmin[sfb]) == 0) {
                 m2 = that->find(&xr[j], &xr34_orig[j], l3_xmin[sfb], l, m1);

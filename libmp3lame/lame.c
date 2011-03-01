@@ -665,7 +665,7 @@ lame_init_params(lame_global_flags * gfp)
     if (gfp->samplerate_out == 0 && (gfp->VBR == vbr_mt || gfp->VBR == vbr_mtrh)) {
         float const qval = gfp->VBR_q + gfp->VBR_q_frac;
         struct q_map { int sr_a; float qa, qb, ta, tb; int lp; };
-        struct q_map m[9]
+        struct q_map const m[9]
         = { {48000, 0.0,6.5,  0.0,6.5, 23700}
           , {44100, 0.0,6.5,  0.0,6.5, 21780}
           , {32000, 6.5,8.0,  5.2,6.5, 15800}
@@ -689,19 +689,14 @@ lame_init_params(lame_global_flags * gfp)
                 if (m[i].qa <= qval && qval < m[i].qb) {
                     float const q_ = m[i].qb-m[i].qa;
                     float const t_ = m[i].tb-m[i].ta;
+                    double d = m[i].ta + t_ * (qval-m[i].qa) / q_;
+                    gfp->VBR_q = (int)d;
+                    gfp->VBR_q_frac = d - gfp->VBR_q;
                     gfp->samplerate_out = m[i].sr_a;
                     if (gfp->lowpassfreq == 0) {
-                        gfp->lowpassfreq = m[i].lp;
-                    }
-                    {
-                        double d = (qval-m[i].qa) / q_;
-                        d = m[i].ta + d * t_;
-                        gfp->VBR_q = (int)d;
-                        gfp->VBR_q_frac = d - gfp->VBR_q;
+                        gfp->lowpassfreq = -1;
                     }
                     break;
-                }
-                else {
                 }
             }
         }
@@ -912,7 +907,9 @@ lame_init_params(lame_global_flags * gfp)
         cfg->highpass2 = 0;
     }
     /* apply user driven low pass filter */
-    if (cfg->lowpassfreq > 0) {
+    cfg->lowpass1 = 0;
+    cfg->lowpass2 = 0;
+    if (cfg->lowpassfreq > 0 && cfg->lowpassfreq < (cfg->samplerate_out / 2) ) {
         cfg->lowpass2 = 2. * cfg->lowpassfreq;
         if (gfp->lowpasswidth >= 0) {
             cfg->lowpass1 = 2. * (cfg->lowpassfreq - gfp->lowpasswidth);
@@ -924,10 +921,6 @@ lame_init_params(lame_global_flags * gfp)
         }
         cfg->lowpass1 /= cfg->samplerate_out;
         cfg->lowpass2 /= cfg->samplerate_out;
-    }
-    else {
-        cfg->lowpass1 = 0;
-        cfg->lowpass2 = 0;
     }
 
 
