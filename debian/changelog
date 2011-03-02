@@ -9,8 +9,13 @@ lame (3.99~cvs20110302) UNRELEASED; urgency=low
     + Change B-D on nasm to allow any i386 platform (no amd64, though).
     + Update the B-D on debhelper to >= 7.0.50~, as we use overrides in
       debian/rules.
+    + Fix lintian's debhelper-but-no-misc-depends from the binary packages.
+    + Remove unused Conflicts: and Replaces: fields.
+    + Verified that the packaging conforms to the Policy version 3.9.1.
+  * debian/changelog:
+    + Put my SF email or we get warnings from lintian.
 
- -- Rogério Brito <rbrito@users.sf.net>  Wed, 02 Mar 2011 11:22:50 -0300
+ -- Rogério Brito <rbrito@users.sf.net>  Wed, 02 Mar 2011 13:31:29 -0300
 
 lame (3.99~cvs20091122) unstable; urgency=low
 
