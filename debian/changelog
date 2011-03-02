@@ -10,7 +10,7 @@ lame (3.99~cvs20110302) UNRELEASED; urgency=low
     + Update the B-D on debhelper to >= 7.0.50~, as we use overrides in
       debian/rules.
 
- -- Rogério Brito <rbrito@ime.usp.br>  Wed, 02 Mar 2011 11:22:50 -0300
+ -- Rogério Brito <rbrito@users.sf.net>  Wed, 02 Mar 2011 11:22:50 -0300
 
 lame (3.99~cvs20091122) unstable; urgency=low
 
