@@ -4,7 +4,11 @@ Priority: optional
 Maintainer: Rogério Brito <rbrito@users.sf.net>
 Bugs: mailto:lame-dev@lists.sourceforge.net
 Homepage: http://lame.sourceforge.net/
-Build-Depends: debhelper (>= 7), libncurses5-dev, nasm [i386], libsndfile1-dev, autotools-dev
+Build-Depends: debhelper (>= 7.0.50~),
+	       libncurses5-dev,
+	       nasm [i386],
+	       libsndfile1-dev,
+	       autotools-dev
 Standards-Version: 3.8.0
 
 Package: lame
