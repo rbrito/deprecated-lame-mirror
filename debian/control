@@ -40,8 +40,6 @@ Package: libmp3lame-dev
 Architecture: any
 Section: libdevel
 Depends: libmp3lame0 (= ${binary:Version}), ${misc:Depends}
-Conflicts: liblame-dev
-Replaces: liblame-dev
 Description: development files for lame
  Lame is a program which can be used to create compressed
  audio files. (Lame aint MP3 encoder). These audio files
