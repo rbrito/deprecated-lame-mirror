@@ -1,3 +1,12 @@
+lame (3.99~cvs20110302) unstable; urgency=low
+
+  * New update of the debian infra-structure.
+  * debian/rules:
+    + Transition to the short debhelper 7 format.
+    + Use the --parallel flag so that building in parallel is supported.
+
+ -- Rogério Brito <rbrito@ime.usp.br>  Wed, 02 Mar 2011 11:22:50 -0300
+
 lame (3.99~cvs20091122) unstable; urgency=low
 
   * Update based on many suggestions by Fabian Greffrath.
