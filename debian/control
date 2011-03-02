@@ -6,7 +6,7 @@ Bugs: mailto:lame-dev@lists.sourceforge.net
 Homepage: http://lame.sourceforge.net/
 Build-Depends: debhelper (>= 7.0.50~),
 	       libncurses5-dev,
-	       nasm [i386],
+	       nasm [any-i386],
 	       libsndfile1-dev,
 	       autotools-dev
 Standards-Version: 3.8.0
