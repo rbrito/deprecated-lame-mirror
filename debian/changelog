@@ -1,9 +1,14 @@
-lame (3.99~cvs20110302) unstable; urgency=low
+lame (3.99~cvs20110302) UNRELEASED; urgency=low
 
   * New update of the debian infra-structure.
   * debian/rules:
     + Transition to the short debhelper 7 format.
     + Use the --parallel flag so that building in parallel is supported.
+  * debian/control:
+    + Rewrap the Build-Depends field for legibility.
+    + Change B-D on nasm to allow any i386 platform (no amd64, though).
+    + Update the B-D on debhelper to >= 7.0.50~, as we use overrides in
+      debian/rules.
 
  -- Rogério Brito <rbrito@ime.usp.br>  Wed, 02 Mar 2011 11:22:50 -0300
 
