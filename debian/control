@@ -9,7 +9,7 @@ Build-Depends: debhelper (>= 7.0.50~),
 	       nasm [any-i386],
 	       libsndfile1-dev,
 	       autotools-dev
-Standards-Version: 3.8.0
+Standards-Version: 3.8.1
 
 Package: lame
 Architecture: any
