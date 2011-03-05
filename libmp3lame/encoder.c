@@ -370,16 +370,9 @@ lame_encode_mp3_frame(       /* Output */
             for (ch = 0; ch < cfg->channels_out; ch++) {
                 bufp[ch] = &inbuf[ch][576 + gr * 576 - FFTOFFSET];
             }
-            if (cfg->vbr == vbr_mtrh || cfg->vbr == vbr_mt || cfg->vbr == vbr_abr || cfg->vbr == vbr_off) {
-                ret = L3psycho_anal_vbr(gfc, bufp, gr,
-                                        masking_LR, masking_MS,
-                                        pe[gr], pe_MS[gr], tot_ener[gr], blocktype);
-            }
-            else {
-                ret = L3psycho_anal_ns(gfc, bufp, gr,
-                                       masking_LR, masking_MS,
-                                       pe[gr], pe_MS[gr], tot_ener[gr], blocktype);
-            }
+            ret = L3psycho_anal_vbr(gfc, bufp, gr,
+                                    masking_LR, masking_MS,
+                                    pe[gr], pe_MS[gr], tot_ener[gr], blocktype);
             if (ret != 0)
                 return -4;
 

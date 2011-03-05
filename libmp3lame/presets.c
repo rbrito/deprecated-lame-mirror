@@ -317,11 +317,6 @@ apply_preset(lame_global_flags * gfp, int preset, int enforce)
             break;
         }
     case MEDIUM:
-        {
-            preset = V4;
-            (void) lame_set_VBR(gfp, vbr_rh);
-            break;
-        }
     case MEDIUM_FAST:
         {
             preset = V4;
@@ -329,11 +324,6 @@ apply_preset(lame_global_flags * gfp, int preset, int enforce)
             break;
         }
     case STANDARD:
-        {
-            preset = V2;
-            (void) lame_set_VBR(gfp, vbr_rh);
-            break;
-        }
     case STANDARD_FAST:
         {
             preset = V2;
@@ -341,11 +331,6 @@ apply_preset(lame_global_flags * gfp, int preset, int enforce)
             break;
         }
     case EXTREME:
-        {
-            preset = V0;
-            (void) lame_set_VBR(gfp, vbr_rh);
-            break;
-        }
     case EXTREME_FAST:
         {
             preset = V0;

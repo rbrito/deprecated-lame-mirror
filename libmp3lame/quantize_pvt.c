@@ -585,113 +585,10 @@ athAdjust(FLOAT a, FLOAT x, FLOAT athFloor, float ATHfixpoint)
 
   returns number of sfb's with energy > ATH
 */
-static int
-calc_xmin_(lame_internal_flags const *gfc,
-           III_psy_ratio const *const ratio, gr_info * const cod_info, FLOAT * pxmin)
-{
-    SessionConfig_t const *const cfg = &gfc->cfg;
-    int     sfb, gsfb, j = 0, ath_over = 0, k;
-    ATH_t const *const ATH = gfc->ATH;
-    const FLOAT *const xr = cod_info->xr;
-    int     max_nonzero;
-    FLOAT   masking_lower = gfc->sv_qnt.masking_lower;
 
-    for (gsfb = 0; gsfb < cod_info->psy_lmax; gsfb++) {
-        FLOAT   en0, xmin;
-        int     width, l;
-
-        if (cfg->vbr == vbr_rh)
-            xmin = athAdjust(ATH->adjust_factor, ATH->l[gsfb], ATH->floor, 0);
-        else
-            xmin = ATH->adjust_factor * ATH->l[gsfb];
-
-        en0 = 0.0;
-        width = cod_info->width[gsfb];
-        for (l = 0; l < width; ++l) {
-            FLOAT const xa = xr[j++];
-            FLOAT const x2 = xa * xa;
-            en0 += x2;
-        }
-        if (en0 > xmin)
-            ath_over++;
-
-        if (!cfg->ATHonly) {
-            FLOAT const e = ratio->en.l[gsfb];
-            if (e > 0.0f) {
-                FLOAT   x;
-                x = en0 * ratio->thm.l[gsfb] * masking_lower / e;
-                if (xmin < x)
-                    xmin = x;
-            }
-        }
-
-        *pxmin++ = xmin * gfc->sv_qnt.longfact[gsfb];
-    }                   /* end of long block loop */
-
-
-
-
-    /*use this function to determine the highest non-zero coeff */
-    max_nonzero = 575;
-    if (cod_info->block_type != SHORT_TYPE) { /* NORM, START or STOP type, but not SHORT */
-        k = 576;
-        while (k-- && fabs(xr[k]) < 1e-12f) {
-            max_nonzero = k;
-        }
-    }
-    cod_info->max_nonzero_coeff = max_nonzero;
-
-
-
-    for (sfb = cod_info->sfb_smin; gsfb < cod_info->psymax; sfb++, gsfb += 3) {
-        int     width, b, l;
-        FLOAT   tmpATH;
-        if (cfg->vbr == vbr_rh)
-            tmpATH = athAdjust(ATH->adjust_factor, ATH->s[sfb], ATH->floor, 0);
-        else
-            tmpATH = ATH->adjust_factor * ATH->s[sfb];
-
-        width = cod_info->width[gsfb];
-        for (b = 0; b < 3; b++) {
-            FLOAT   en0 = 0.0, xmin;
-
-            for (l = 0; l < width; ++l) {
-                FLOAT const xa = xr[j++];
-                FLOAT const x2 = xa * xa;
-                en0 += x2;
-            }
-            if (en0 > tmpATH)
-                ath_over++;
-
-            xmin = tmpATH;
-
-            if (!cfg->ATHonly && !cfg->ATHshort) {
-                FLOAT const e = ratio->en.s[sfb][b];
-                if (e > 0.0f) {
-                    FLOAT   x;
-                    x = en0 * ratio->thm.s[sfb][b] * masking_lower / e;
-
-                    if (xmin < x)
-                        xmin = x;
-                }
-            }
-
-            *pxmin++ = xmin * gfc->sv_qnt.shortfact[sfb];
-        }               /* b */
-        if (cfg->use_temporal_masking_effect) {
-            if (pxmin[-3] > pxmin[-3 + 1])
-                pxmin[-3 + 1] += (pxmin[-3] - pxmin[-3 + 1]) * gfc->cd_psy->decay;
-            if (pxmin[-3 + 1] > pxmin[-3 + 2])
-                pxmin[-3 + 2] += (pxmin[-3 + 1] - pxmin[-3 + 2]) * gfc->cd_psy->decay;
-        }
-    }                   /* end of short block sfb loop */
-
-    return ath_over;
-}
-
-static int
-calc_xmin_new(lame_internal_flags const *gfc,
-           III_psy_ratio const *const ratio, gr_info * const cod_info, FLOAT * pxmin)
+int
+calc_xmin(lame_internal_flags const *gfc,
+          III_psy_ratio const *const ratio, gr_info * const cod_info, FLOAT * pxmin)
 {
     SessionConfig_t const *const cfg = &gfc->cfg;
     int     sfb, gsfb, j = 0, ath_over = 0, k;
@@ -821,22 +718,6 @@ calc_xmin_new(lame_internal_flags const *gfc,
 
     return ath_over;
 }
-
-int
-calc_xmin(lame_internal_flags const *gfc,
-          III_psy_ratio const *const ratio, gr_info * const cod_info, FLOAT * pxmin)
-{
-    switch ( gfc->cfg.vbr ) {
-        default:
-            return calc_xmin_(gfc, ratio, cod_info, pxmin);
-        case vbr_off:
-        case vbr_abr:
-        case vbr_mtrh:
-        case vbr_mt:
-            return calc_xmin_new(gfc, ratio, cod_info, pxmin);
-    }
-}
-
 
 
 static  FLOAT
