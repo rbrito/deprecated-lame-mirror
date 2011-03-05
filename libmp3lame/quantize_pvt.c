@@ -368,7 +368,7 @@ iteration_init(lame_internal_flags * gfc)
         huffman_init(gfc);
         init_xrpow_core_init(gfc);
 
-        sel = (cfg->vbr == vbr_mt || cfg->vbr == vbr_mtrh) ? 1 : 0;
+        sel = 1;/* RH: all modes like vbr-new (cfg->vbr == vbr_mt || cfg->vbr == vbr_mtrh) ? 1 : 0;*/
 
         /* long */
         db = cfg->adjust_bass_db + payload_long[sel][0];
