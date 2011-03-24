@@ -32,15 +32,20 @@ affect speed</font> <br>
 black = usability, portability, other
 
 <hr>
-<h3>LAME 3.99 alpha 2&nbsp; &nbsp;not yet released</h3>
+<h3>LAME 3.99 alpha 15&nbsp; &nbsp;not yet released</h3>
 <ul>
+  <li>Josep Maria Antolín Segura
+    <ul>
+      <li>Documentation work
+      </li>
+    </ul>
+  </li>
   <li>Rog&eacute;rio Brito
     <ul>
       <li>Improve Debian packaging.
 	<ul>
 	  <li>Include suggestions made by Fabian Greffrat</li>
-	  <li>Update version of the Debian package to reflect that it is
-	    taken from CVS.</li>
+	  <li>Update version of the Debian package to reflect that it is taken from CVS.</li>
 	  <li>Get rid of a transitional package</li>
 	  <li>Much more to come...</li>
 	</ul>
@@ -54,13 +59,39 @@ black = usability, portability, other
       </li>
       <li>Fix: <font color="#ff0000">for free format mp3 above 320 kbps, the maximum allowed bits was limited too far.</font>
       </li>
-      <li>New switch --swap-channel added, see tracker item <i>[ 1118412 ] RFE: option to swap L and R channels</i>
-      </li>
       <li>Changed behaviour: LAME replaces common suffixes by MP3/WAV when no output filename was given. For example, a simple <tt>lame x.wav</tt> will create output file <tt>x.mp3</tt>
+      </li>
+      <li>UNICODE support on Windows OS, file names and ID3v2 tags;
+       related: Bugtracker item <i>[ 3052230 ] Lame.exe can't find files with non-ASCII names</i>
+      </li>
+      <li>Added  support for WAVE FORMAT IEEE FLOAT input files
+      </li>
+      <li>New switch <b>--swap-channel</b> added, see tracker item <i>[ 1118412 ] RFE: option to swap L and R channels</i>
+      </li>
+      <li>New switches <b>-m l</b> and <b>-m r</b> to select either left or right channel for mono encoding.
+      </li>
+      <li>Feature request item <i>[ 3134258 ] Allow larger images with LAME (>128KB)</i>
       </li>
       <li>Fix for Bugtracker item <i>[ 2962223 ] Encoder delay and padding values ignored when re-encoding</i>
       </li>
-      <li>Added  support for WAVE FORMAT IEEE FLOAT input files
+      <li>Fix for Bugtracker item <i>[ 2986823 ] Error when building Lame with NASM support -still exists</i>
+      </li>
+      <li>Fix for Bugtracker item <i>[ 3125235 ] make -f Makefile.mingw32 fails</i>
+      </li>
+      <li>Fix for Bugtracker item <i>[ 3021935 ] ID3 tag TXXX cannot be used more than once</i>
+      </li>
+      <li>Fix for Bugtracker item <i>[ 3025801 ] gain_analysis.h needs int constants</i>
+      </li>
+      <li>Changes in new VBR code:
+      	<ul>
+      	  <li><font color="#ff0000">tuning on PSY model</font></li>
+      	  <li><font color="#770000">tuning on VBR scale and resulting bitrates</font></li>
+      	  <li><font color="#ff0000">Minor bug fix for sfb21 encoding</font></li>
+      	</ul>
+      </li>
+      <li><font color="#ff0000">All encoding modes use the PSY model from new VBR code, addresses Bugtracker item <i>[ 3187397 ] Strange compression behavior</i></font>
+      </li>
+      <li>Fix for a possible out of bounds array access in HIP decoder, addresses Bugtracker item <i>[ 3091776 ] crash at III_dequantize_sample</i>
       </li>
     </ul>
   </li>
