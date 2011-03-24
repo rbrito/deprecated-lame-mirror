@@ -1,4 +1,4 @@
-<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
+﻿<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
         "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
 <html xmlns="http://www.w3.org/1999/xhtml" xml:lang="en" lang="en">
  <head>
@@ -122,7 +122,7 @@ the input .mp3 file</td></tr>
                     -q 9:  Poor quality, but fast<br/>
 					Please, see notes in the detailed description</td></tr>
 <tr><td><a href="#m">-m</a> mode</td><td><b>j</b>oint, <b>s</b>imple, <b>f</b>orce, <b>d</b>ual-mono,
- <b>m</b>ono. default is <b>j</b>.<br/>
+ <b>m</b>ono, <b>l</b>eft, <b>r</b>ight. default is <b>j</b>.<br/>
                     joint  = joins the best possible of MS and LR stereo<br/>
                     simple = force LR stereo on all frames<br/>
                     force  = force MS stereo on all frames.</td></tr>
@@ -152,6 +152,8 @@ the input .mp3 file</td></tr>
 <tr><td><a href="#add-id3v2">--add-id3v2</a></td><td>Force addition of version 2 tag</td></tr>
 <tr><td><a href="#id3v1-only">--id3v1-only</a></td><td>Add only a version 1 tag</td></tr>
 <tr><td><a href="#id3v2-only">--id3v2-only</a></td><td>Add only a version 2 tag</td></tr>
+<tr><td><a href="#id3v2-latin1">--id3v2-latin1</a></td><td>Add a version 2 tag, strings represented as ISO-8859-1</td></tr>
+<tr><td><a href="#id3v2-ucs2">--id3v2-ucs2</a></td><td>Add only a version 2 tag, strings represented as 16-bit unicode 2.0 (ISO/IEC 10646-1:1993)</td></tr>
 <tr><td><a href="#space-id3v1">--space-id3v1</a></td><td>Pad version 1 tag with spaces instead of nulls</td></tr>
 <tr><td><a href="#pad-id3v2-size">--pad-id3v2-size</a> n</td><td>Adds ID3v2 tag with n padding bytes</td></tr>
 <tr><td><a href="#genre-list">--genre-list</a></td><td>Print alphabetically sorted ID3 genre list and exit</td></tr>

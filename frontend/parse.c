@@ -296,6 +296,7 @@ set_id3v2tag(lame_global_flags* gfp, int type, unsigned short const* str)
         case 'g': return id3tag_set_textinfo_ucs2(gfp, "TCON", str);
         case 'c': return id3tag_set_comment_ucs2(gfp, 0, 0, str);
         case 'n': return id3tag_set_textinfo_ucs2(gfp, "TRCK", str);
+        case 'y': return id3tag_set_textinfo_ucs2(gfp, "TYER", str);
         case 'v': return id3tag_set_fieldvalue_ucs2(gfp, str);
     }
     return 0;
@@ -741,6 +742,10 @@ long_help(const lame_global_flags * gfp, FILE * const fp, const char *ProgramNam
             "    --add-id3v2     force addition of version 2 tag\n"
             "    --id3v1-only    add only a version 1 tag\n"
             "    --id3v2-only    add only a version 2 tag\n"
+#ifdef ID3TAGS_EXTENDED
+            "    --id3v2-ucs2    strings using 16-bit unicode 2.0 (ISO/IEC 10646-1:1993)\n"
+            "    --id3v2-latin1  strings represented as ISO-8859-1\n"
+#endif
             "    --space-id3v1   pad version 1 tag with spaces instead of nulls\n"
             "    --pad-id3v2     same as '--pad-id3v2-size 128'\n"
             "    --pad-id3v2-size <value> adds version 2 tag, pad with extra <value> bytes\n"
@@ -1397,6 +1402,7 @@ parse_args(lame_global_flags * gfp, int argc, char **argv,
     int     noreplaygain = 0; /* is RG explicitly disabled by the user */
     int     id3tag_mode = ID3TAG_MODE_DEFAULT;
     int     ignore_tag_errors = 0;  /* Ignore errors in values passed for tags */
+    enum TextEncoding id3_tenc = TENC_LATIN1;
 
     inPath[0] = '\0';
     outPath[0] = '\0';
@@ -1594,28 +1600,39 @@ parse_args(lame_global_flags * gfp, int argc, char **argv,
 #endif
 
                 /* options for ID3 tag */
+#ifdef ID3TAGS_EXTENDED
+                T_ELIF("id3v2-ucs2")
+                    id3_tenc = TENC_UCS2;
+                    id3tag_v2_only(gfp);
+                    id3tag_mode = ID3TAG_MODE_V2_ONLY;
+
+                T_ELIF("id3v2-latin1")
+                    id3_tenc = TENC_LATIN1;
+                    id3tag_add_v2(gfp);
+#endif
+
                 T_ELIF("tt")
                     argUsed = 1;
-                    id3_tag(gfp, 't', TENC_LATIN1, nextArg);
+                    id3_tag(gfp, 't', id3_tenc, nextArg);
 
                 T_ELIF("ta")
                     argUsed = 1;
-                    id3_tag(gfp, 'a', TENC_LATIN1, nextArg);
+                    id3_tag(gfp, 'a', id3_tenc, nextArg);
 
                 T_ELIF("tl")
                     argUsed = 1;
-                    id3_tag(gfp, 'l', TENC_LATIN1, nextArg);
+                    id3_tag(gfp, 'l', id3_tenc, nextArg);
 
                 T_ELIF("ty")
                     argUsed = 1;
-                    id3_tag(gfp, 'y', TENC_LATIN1, nextArg);
+                    id3_tag(gfp, 'y', id3_tenc, nextArg);
 
                 T_ELIF("tc")
                     argUsed = 1;
-                    id3_tag(gfp, 'c', TENC_LATIN1, nextArg);
+                    id3_tag(gfp, 'c', id3_tenc, nextArg);
 
                 T_ELIF("tn")
-                    int ret = id3_tag(gfp, 'n', TENC_LATIN1, nextArg);
+                    int ret = id3_tag(gfp, 'n', id3_tenc, nextArg);
                     argUsed = 1;
                     if (ret != 0) {
                         if (0 == ignore_tag_errors) {
@@ -1637,7 +1654,7 @@ parse_args(lame_global_flags * gfp, int argc, char **argv,
                     }
 
                 T_ELIF("tg")
-                    int ret = id3_tag(gfp, 'g', TENC_LATIN1, nextArg);
+                    int ret = id3_tag(gfp, 'g', id3_tenc, nextArg);
                     argUsed = 1;
                     if (ret != 0) {
                         if (0 == ignore_tag_errors) {
@@ -1669,7 +1686,7 @@ parse_args(lame_global_flags * gfp, int argc, char **argv,
 
                 T_ELIF("tv")
                     argUsed = 1;
-                    if (id3_tag(gfp, 'v', TENC_LATIN1, nextArg)) {
+                    if (id3_tag(gfp, 'v', id3_tenc, nextArg)) {
                         if (global_ui_config.silent < 9) {
                             error_printf("Invalid field value: '%s'. Ignored\n", nextArg);
                         }
@@ -1715,38 +1732,6 @@ parse_args(lame_global_flags * gfp, int argc, char **argv,
                     id3tag_genre_list(genre_list_handler, NULL);
                     return -2;
 
-#ifdef ID3TAGS_EXTENDED
-                    /* some experimental switches for setting ID3 tags
-                     * with proper character encodings
-                    */
-                T_ELIF("lTitle")  argUsed = 1; id3_tag(gfp, 't', TENC_LATIN1, nextArg);
-                T_ELIF("lArtist") argUsed = 1; id3_tag(gfp, 'a', TENC_LATIN1, nextArg);
-                T_ELIF("lAlbum")  argUsed = 1; id3_tag(gfp, 'l', TENC_LATIN1, nextArg);
-                T_ELIF("lGenre")  argUsed = 1; id3_tag(gfp, 'g', TENC_LATIN1, nextArg);
-                T_ELIF("lComment")argUsed = 1; id3_tag(gfp, 'c', TENC_LATIN1, nextArg);
-                T_ELIF("lFieldvalue")
-                    argUsed = 1;
-                    if (id3_tag(gfp, 'v', TENC_LATIN1, nextArg)) {
-                        if (global_ui_config.silent < 9) {
-                            error_printf("Invalid field value: '%s'. Ignored\n", nextArg);
-                        }
-                    }
-
-                T_ELIF("uTitle")  argUsed = 1; id3_tag(gfp, 't', TENC_UCS2, nextArg);
-                T_ELIF("uArtist") argUsed = 1; id3_tag(gfp, 'a', TENC_UCS2, nextArg);
-                T_ELIF("uAlbum")  argUsed = 1; id3_tag(gfp, 'l', TENC_UCS2, nextArg);
-                T_ELIF("uGenre")  argUsed = 1; id3_tag(gfp, 'g', TENC_UCS2, nextArg);
-                T_ELIF("uComment")argUsed = 1; id3_tag(gfp, 'c', TENC_UCS2, nextArg);
-                
-                T_ELIF("uFieldvalue")
-                    argUsed = 1;
-                    if (id3_tag(gfp, 'v', TENC_UCS2, nextArg)) {
-                        if (global_ui_config.silent < 9) {
-                            error_printf("Invalid field value: '%s'. Ignored\n", nextArg);
-                        }
-                    }
-                
-#endif
 
                 T_ELIF("lowpass")
                     val = atof(nextArg);

@@ -2,7 +2,7 @@
  * id3tag.c -- Write ID3 version 1 and 2 tags.
  *
  * Copyright (C) 2000 Don Melton
- * Copyright (C) 2008 Robert Hegemann
+ * Copyright (C) 2011 Robert Hegemann
  *
  * This library is free software; you can redistribute it and/or
  * modify it under the terms of the GNU Lesser General Public
@@ -528,6 +528,7 @@ toID3v2TagId_ucs2(unsigned short const *s)
     return x;
 }
 
+#if 0
 static int
 isNumericString(uint32_t frame_id)
 {
@@ -541,6 +542,7 @@ isNumericString(uint32_t frame_id)
     }
     return 0;
 }
+#endif
 
 static int
 isMultiFrame(uint32_t frame_id)
@@ -785,9 +787,11 @@ id3tag_set_textinfo_ucs2(lame_global_flags * gfp, char const *id, unsigned short
         return -1;
     }
     if ((frame_id & t_mask) == t_mask) {
+#if 0
         if (isNumericString(frame_id)) {
             return -2;  /* must be Latin-1 encoded */
         }
+#endif
         if (text == 0) {
             return 0;
         }

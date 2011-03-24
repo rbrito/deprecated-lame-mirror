@@ -110,7 +110,7 @@ Operational options:
 .TP
 .BI \-m  " mode"
 .I mode
-= s, j, f, d, m
+= s, j, f, d, m, l, r
 
 Joint-stereo is the default mode for stereo files with VBR when
 .B \-V
@@ -175,6 +175,19 @@ If it was a stereo signal,
 it will be downsampled to mono.
 The downmix is calculated as the sum of the left and right channel,
 attenuated by 6 dB.
+
+.B (l)eft channel only
+.br
+The input will be encoded as a mono signal.
+If it was a stereo signal,
+the left channel will be encoded only.
+
+.B (r)ight channel only
+.br
+The input will be encoded as a mono signal.
+If it was a stereo signal,
+the right channel will be encoded only.
+
 .TP
 .B \-a
 Mix the stereo input file to mono and encode as mono.
@@ -878,6 +891,12 @@ add only a version 1 tag
 .TP
 .B \-\-id3v2-only
 add only a version 2 tag
+.TP
+.B \-\-id3v2-latin1
+add a version 2 tag, strings represented in ISO-8859-1 character set.
+.TP
+.B \-\-id3v2-ucs2
+add only a version 2 tag, strings using 16-bit unicode 2.0 (ISO/IEC 10646-1:1993) character set.
 .TP
 .B \-\-space-id3v1
 pad version 1 tag with spaces instead of nulls
