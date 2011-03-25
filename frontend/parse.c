@@ -422,13 +422,6 @@ print_license(FILE * const fp)
     fprintf(fp,
             "4. If you determine that distribution of LAME requires a patent license,\n"
             "   you must obtain such license.\n" "\n" "\n");
-    fprintf(fp,
-            "*** IMPORTANT NOTE ***\n"
-            "\n"
-            "The decoding functions provided in LAME use the mpglib decoding engine which\n"
-            "is under the GPL.  They may not be used by any program not released under the\n"
-            "GPL unless you obtain such permission from the MPG123 project (www.mpg123.de).\n"
-            "\n");
     return 0;
 }
 
