@@ -466,7 +466,7 @@ NS_INTERP(FLOAT x, FLOAT y, FLOAT r)
     if (r <= 0.0f)
         return y;
     if (y > 0.0f)
-        return pow(x / y, r) * y; /* rest of the time */
+        return powf(x / y, r) * y; /* rest of the time */
     return 0.0f;         /* never happens */
 }
 
@@ -1396,7 +1396,6 @@ vbrpsy_compute_MS_thresholds(const FLOAT eb[4][CBANDS], FLOAT thr[4][CBANDS], co
 }
 
 
-
 /*
  * NOTE: the bitrate reduction from the inter-channel masking effect is low
  * compared to the chance of getting annyoing artefacts. L3psycho_anal_vbr does
@@ -1417,6 +1416,8 @@ L3psycho_anal_vbr(lame_internal_flags * gfc,
     PsyConst_s_t const *const gds = &gfc->cd_psy->s;
     plotting_data *plt = cfg->analysis ? gfc->pinfo : 0;
 
+    III_psy_xmin last_thm[4];
+
     /* fft and energy calculation   */
     FLOAT(*wsamp_l)[BLKSIZE];
     FLOAT(*wsamp_s)[3][BLKSIZE_s];
@@ -1431,7 +1432,6 @@ L3psycho_anal_vbr(lame_internal_flags * gfc,
     FLOAT   pcfact = 0.6f;
     FLOAT const ath_factor = (cfg->msfix > 0.f) ? (cfg->ATH_offset_factor * gfc->ATH->adjust_factor) : 1.f;
 
-    
     const FLOAT (*const_eb)[CBANDS] = (const FLOAT (*)[CBANDS])eb;
     const FLOAT (*const_fftenergy_s)[HBLKSIZE_s] = (const FLOAT (*)[HBLKSIZE_s])fftenergy_s;
 
@@ -1444,6 +1444,8 @@ L3psycho_anal_vbr(lame_internal_flags * gfc,
 
     /* chn=2 and 3 = Mid and Side channels */
     int const n_chn_psy = (cfg->mode == JOINT_STEREO) ? 4 : cfg->channels_out;
+
+    memcpy(&last_thm[0], &psv->thm[0], sizeof(last_thm));
 
     vbrpsy_attack_detection(gfc, buffer, gr_out, masking_ratio, masking_MS_ratio, energy,
                             sub_short_factor, ns_attacks, uselongblock);
@@ -1460,7 +1462,11 @@ L3psycho_anal_vbr(lame_internal_flags * gfc,
             vbrpsy_compute_loudness_approximation_l(gfc, gr_out, chn, fftenergy);
             vbrpsy_compute_masking_l(gfc, fftenergy, eb[chn], thr[chn], chn);
         }
+#if 0
         if ((uselongblock[0] + uselongblock[1]) == 2) {
+#else
+        {
+#endif
             /* M/S channel */
             if (cfg->mode == JOINT_STEREO) {
                 vbrpsy_compute_MS_thresholds(const_eb, thr, gdl->mld_cb, gfc->ATH->cb_l,
@@ -1474,30 +1480,41 @@ L3psycho_anal_vbr(lame_internal_flags * gfc,
         }
         /* TODO: apply adaptive ATH masking here ?? */
         for (chn = 0; chn < n_chn_psy; chn++) {
+#if 0
             int const ch01 = chn & 0x01;
             if (uselongblock[ch01]) {
+#else
+            {
+#endif
                 convert_partition2scalefac_l(gfc, eb[chn], thr[chn], chn);
             }
         }
     }
-
+#define SHORT_BLOCK_DPENDENCY_ON_PREVIOUS_FRAME
     /* SHORT BLOCKS CASE */
     {
         for (sblock = 0; sblock < 3; sblock++) {
             for (chn = 0; chn < n_chn_psy; ++chn) {
                 int const ch01 = chn & 0x01;
-
+#ifdef SHORT_BLOCK_DPENDENCY_ON_PREVIOUS_FRAME
+#else
                 if (uselongblock[ch01]) {
                     vbrpsy_skip_masking_s(gfc, chn, sblock);
-                }
-                else {
+                } 
+                else
+#endif
+                {
                     /* compute masking thresholds for short blocks */
                     wsamp_s = wsamp_S + ch01;
                     vbrpsy_compute_fft_s(gfc, buffer, chn, sblock, fftenergy_s, wsamp_s);
                     vbrpsy_compute_masking_s(gfc, const_fftenergy_s, eb[chn], thr[chn], chn, sblock);
                 }
             }
-            if ((uselongblock[0] + uselongblock[1]) == 0) {
+#ifdef SHORT_BLOCK_DPENDENCY_ON_PREVIOUS_FRAME
+#else
+            if ((uselongblock[0] + uselongblock[1]) == 0)
+#endif
+            {
                 /* M/S channel */
                 if (cfg->mode == JOINT_STEREO) {
                     vbrpsy_compute_MS_thresholds(const_eb, thr, gds->mld_cb, gfc->ATH->cb_s,
@@ -1512,7 +1529,11 @@ L3psycho_anal_vbr(lame_internal_flags * gfc,
             /* TODO: apply adaptive ATH masking here ?? */
             for (chn = 0; chn < n_chn_psy; ++chn) {
                 int const ch01 = chn & 0x01;
-                if (!uselongblock[ch01]) {
+#ifdef SHORT_BLOCK_DPENDENCY_ON_PREVIOUS_FRAME
+#else
+                if (!uselongblock[ch01]) 
+#endif
+                {
                     convert_partition2scalefac_s(gfc, eb[chn], thr[chn], chn, sblock);
                 }
             }
@@ -1521,35 +1542,45 @@ L3psycho_anal_vbr(lame_internal_flags * gfc,
         /****   short block pre-echo control   ****/
         for (chn = 0; chn < n_chn_psy; chn++) {
             int const ch01 = chn & 0x01;
-
+#ifdef SHORT_BLOCK_DPENDENCY_ON_PREVIOUS_FRAME
+#else
             if (uselongblock[ch01]) {
                 continue;
             }
+#endif
             for (sb = 0; sb < SBMAX_s; sb++) {
-                FLOAT   new_thmm[3];
+                FLOAT   new_thmm[3], prev_thm, t1, t2;
                 for (sblock = 0; sblock < 3; sblock++) {
                     thmm = psv->thm[chn].s[sb][sblock];
                     thmm *= NS_PREECHO_ATT0;
+                    t1 = t2 = thmm;
 
+                    if (sblock > 0) {
+                        prev_thm = new_thmm[sblock-1];
+                    }
+                    else {
+                        prev_thm = last_thm[chn].s[sb][2];
+                    }
                     if (ns_attacks[chn][sblock] >= 2 || ns_attacks[chn][sblock + 1] == 1) {
-                        int const idx = (sblock != 0) ? sblock - 1 : 2;
-                        double const p = NS_INTERP(psv->thm[chn].s[sb][idx],
-                                                   thmm, NS_PREECHO_ATT1 * pcfact);
-                        thmm = Min(thmm, p);
+                        t1 = NS_INTERP(prev_thm, thmm, NS_PREECHO_ATT1*pcfact);
                     }
-                    else if (ns_attacks[chn][sblock] == 1) {
-                        int const idx = (sblock != 0) ? sblock - 1 : 2;
-                        double const p = NS_INTERP(psv->thm[chn].s[sb][idx],
-                                                   thmm, NS_PREECHO_ATT2 * pcfact);
-                        thmm = Min(thmm, p);
+                    if (ns_attacks[chn][sblock] == 1) {
+                        t2 = NS_INTERP(prev_thm, t1, NS_PREECHO_ATT2*pcfact);
                     }
-                    else if ((sblock != 0 && ns_attacks[chn][sblock - 1] == 3)
-                             || (sblock == 0 && psv->last_attacks[chn] == 3)) {
-                        int const idx = (sblock != 2) ? sblock + 1 : 0;
-                        double const p = NS_INTERP(psv->thm[chn].s[sb][idx],
-                                                   thmm, NS_PREECHO_ATT2 * pcfact);
-                        thmm = Min(thmm, p);
+#if 1
+                    else if ((sblock == 0 && psv->last_attacks[chn] == 3)
+                           ||(sblock > 0 && ns_attacks[chn][sblock-1] == 3))
+                    {   /* 2nd preceeding block */
+                        switch (sblock) 
+                        {
+                            case 0: prev_thm = last_thm[chn].s[sb][1]; break;
+                            case 1: prev_thm = last_thm[chn].s[sb][2]; break;
+                            case 2: prev_thm = new_thmm[0]; break;
+                        }
+                        t2 = NS_INTERP(prev_thm, t1, NS_PREECHO_ATT2*pcfact);
                     }
+#endif
+                    thmm = Min(t1, t2);
 
                     /* pulse like signal detection for fatboy.wav and so on */
                     thmm *= sub_short_factor[chn][sblock];
