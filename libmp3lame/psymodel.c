@@ -1553,6 +1553,7 @@ L3psycho_anal_vbr(lame_internal_flags * gfc,
                 for (sblock = 0; sblock < 3; sblock++) {
                     thmm = psv->thm[chn].s[sb][sblock];
                     thmm *= NS_PREECHO_ATT0;
+
                     t1 = t2 = thmm;
 
                     if (sblock > 0) {
@@ -1564,10 +1565,10 @@ L3psycho_anal_vbr(lame_internal_flags * gfc,
                     if (ns_attacks[chn][sblock] >= 2 || ns_attacks[chn][sblock + 1] == 1) {
                         t1 = NS_INTERP(prev_thm, thmm, NS_PREECHO_ATT1*pcfact);
                     }
+                    thmm = Min(t1, thmm);
                     if (ns_attacks[chn][sblock] == 1) {
-                        t2 = NS_INTERP(prev_thm, t1, NS_PREECHO_ATT2*pcfact);
+                        t2 = NS_INTERP(prev_thm, thmm, NS_PREECHO_ATT2*pcfact);
                     }
-#if 1
                     else if ((sblock == 0 && psv->last_attacks[chn] == 3)
                            ||(sblock > 0 && ns_attacks[chn][sblock-1] == 3))
                     {   /* 2nd preceeding block */
@@ -1577,10 +1578,11 @@ L3psycho_anal_vbr(lame_internal_flags * gfc,
                             case 1: prev_thm = last_thm[chn].s[sb][2]; break;
                             case 2: prev_thm = new_thmm[0]; break;
                         }
-                        t2 = NS_INTERP(prev_thm, t1, NS_PREECHO_ATT2*pcfact);
+                        t2 = NS_INTERP(prev_thm, thmm, NS_PREECHO_ATT2*pcfact);
                     }
-#endif
-                    thmm = Min(t1, t2);
+
+                    thmm = Min(t1, thmm);
+                    thmm = Min(t2, thmm);
 
                     /* pulse like signal detection for fatboy.wav and so on */
                     thmm *= sub_short_factor[chn][sblock];
