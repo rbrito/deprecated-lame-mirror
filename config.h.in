@@ -3,8 +3,8 @@
 /* debug define */
 #undef ABORTFP
 
-/* enable VBR bitrate histogram */
-#undef BRHIST
+/* Define if building universal (internal helper macro) */
+#undef AC_APPLE_UNIVERSAL_BUILD
 
 /* Define to one of `_getb67', `GETB67', `getb67' for Cray-2 and Cray-YMP
    systems. This function is required for `alloca.c' support on those systems.
@@ -22,9 +22,6 @@
 
 /* double is faster than float on Alpha */
 #undef FLOAT
-
-/* float instead of double */
-#undef FLOAT8
 
 /* Define to 1 if you have `alloca', as a function or macro. */
 #undef HAVE_ALLOCA
@@ -198,6 +195,10 @@
 /* set to 1 if you have libsndfile */
 #undef LIBSNDFILE
 
+/* Define to the sub-directory in which libtool stores uninstalled libraries.
+   */
+#undef LT_OBJDIR
+
 /* use MMX version of choose_table */
 #undef MMX_choose_table
 
@@ -221,6 +222,9 @@
 
 /* Define to the one symbol short name of this package. */
 #undef PACKAGE_TARNAME
+
+/* Define to the home page for this package. */
+#undef PACKAGE_URL
 
 /* Define to the version of this package. */
 #undef PACKAGE_VERSION
@@ -281,45 +285,6 @@
 /* faster log implementation with less but enough precission */
 #undef USE_FAST_LOG
 
-/* build with layer 1 decoding */
-#undef USE_LAYER_1
-
-/* build with layer 2 decoding */
-#undef USE_LAYER_2
-
-/* Version number of package */
-#undef VERSION
-
-/* Define if using the dmalloc debugging malloc package */
-#undef WITH_DMALLOC
-
-/* Define WORDS_BIGENDIAN to 1 if your processor stores words with the most
-   significant byte first (like Motorola and SPARC, unlike Intel and VAX). */
-#if defined __BIG_ENDIAN__
-# define WORDS_BIGENDIAN 1
-#elif ! defined __LITTLE_ENDIAN__
-# undef WORDS_BIGENDIAN
-#endif
-
-/* Number of bits in a file offset, on hosts where this is settable. */
-#undef _FILE_OFFSET_BITS
-
-/* Define for large files, on AIX-style hosts. */
-#undef _LARGE_FILES
-
-/* Define to 1 if on MINIX. */
-#undef _MINIX
-
-/* Define to 2 if the system does not provide POSIX.1 features except with
-   this defined. */
-#undef _POSIX_1_SOURCE
-
-/* Define to 1 if you need to in order for `stat' and other things to work. */
-#undef _POSIX_SOURCE
-
-/* we're on DEC Alpha */
-#undef __DECALPHA__
-
 /* Enable extensions on AIX 3, Interix.  */
 #ifndef _ALL_SOURCE
 # undef _ALL_SOURCE
@@ -341,6 +306,43 @@
 # undef __EXTENSIONS__
 #endif
 
+
+/* Version number of package */
+#undef VERSION
+
+/* Define if using the dmalloc debugging malloc package */
+#undef WITH_DMALLOC
+
+/* Define WORDS_BIGENDIAN to 1 if your processor stores words with the most
+   significant byte first (like Motorola and SPARC, unlike Intel). */
+#if defined AC_APPLE_UNIVERSAL_BUILD
+# if defined __BIG_ENDIAN__
+#  define WORDS_BIGENDIAN 1
+# endif
+#else
+# ifndef WORDS_BIGENDIAN
+#  undef WORDS_BIGENDIAN
+# endif
+#endif
+
+/* Number of bits in a file offset, on hosts where this is settable. */
+#undef _FILE_OFFSET_BITS
+
+/* Define for large files, on AIX-style hosts. */
+#undef _LARGE_FILES
+
+/* Define to 1 if on MINIX. */
+#undef _MINIX
+
+/* Define to 2 if the system does not provide POSIX.1 features except with
+   this defined. */
+#undef _POSIX_1_SOURCE
+
+/* Define to 1 if you need to in order for `stat' and other things to work. */
+#undef _POSIX_SOURCE
+
+/* we're on DEC Alpha */
+#undef __DECALPHA__
 
 /* work around a glibc bug */
 #undef __NO_MATH_INLINES
