@@ -17,9 +17,10 @@ dnl FRONTEND_LDFLAGS
 dnl FRONTEND_CFLAGS
 dnl FRONTEND_LDADD
 
-AC_PREREQ(2.59)
+AC_PREREQ(2.68)
 AC_INIT([lame],[3.99],[lame-dev@lists.sf.net])
 AC_CONFIG_SRCDIR([libmp3lame/lame.c])
+AC_LANG([C])
 
 dnl check system
 AC_CANONICAL_HOST
@@ -609,6 +610,18 @@ case $host in
 esac
 
 
+dnl configure use of VBR bitrate histogram
+dnl todo: always use yes as default, use simulation instead ?
+AC_MSG_CHECKING(use of VBR bitrate histogram)
+if test "x${HAVE_TERMCAP}" != "x"; then
+  FRONTEND_LDADD="-l${HAVE_TERMCAP} ${FRONTEND_LDADD}"
+  AC_DEFINE(HAVE_TERMCAP, 1, have termcap)
+  TERMCAP_DEFAULT="yes"
+else
+  TERMCAP_DEFAULT="no"
+fi
+
+
 dnl ### processor specific options ###
 WITH_VECTOR=no
 case $host_cpu in
@@ -655,24 +668,6 @@ AM_CONDITIONAL(WITH_XMM, test "x${WITH_XMM}" = "xyes")
 AM_CONDITIONAL(WITH_VECTOR, test "x${WITH_VECTOR}" = "xyes")
 AC_MSG_CHECKING(if I have to build the internal vector lib)
 AC_MSG_RESULT(${WITH_VECTOR})
-
-AC_MSG_CHECKING(for FLOAT8 as float)
-AC_ARG_ENABLE(all-float,
-  [  --enable-all-float         Whether to make all floting point variables as float, not double]
-  [                           [default=no]],   
-    CONFIG_ALLFLOAT="${enableval}", CONFIG_ALLFLOAT="no")
-case "${CONFIG_ALLFLOAT}" in
-no)
-	;;
-yes)
-	AC_DEFINE(FLOAT8, float, float instead of double)
-	;;
-*)
-	AC_MSG_ERROR(bad value �${CONFIG_ALLFLOAT}� for all-float option)
-	;;
-esac
-AC_MSG_RESULT(${CONFIG_ALLFLOAT})
-
 
 
 AC_PATH_PROG(NASM, nasm, no)
@@ -884,7 +879,7 @@ if test "x$GCC" = "xyes"; then
 					-mtune=native"
 				;;
 			*86)
-				OPTIMIZATION="${OPTIMIZATION} -march=generic \
+				OPTIMIZATION="${OPTIMIZATION} -march=native \
 					-mtune=native"
 				;;
 			esac
