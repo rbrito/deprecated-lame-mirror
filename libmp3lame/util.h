@@ -192,46 +192,31 @@ extern  "C" {
     typedef struct {
         FLOAT   masking_lower[CBANDS];
         FLOAT   minval[CBANDS];
-        FLOAT   mld[SBMAX_l];
-        FLOAT   bo_weight[SBMAX_l]; /* band weight long scalefactor bands, at transition */
         FLOAT   rnumlines[CBANDS];
         FLOAT   mld_cb[CBANDS];
+        FLOAT   mld[Max(SBMAX_l,SBMAX_s)];
+        FLOAT   bo_weight[Max(SBMAX_l,SBMAX_s)]; /* band weight long scalefactor bands, at transition */
         FLOAT   attack_threshold; /* short block tuning */
-        int     numlines[CBANDS];
-        int     bm[SBMAX_l];
-        int     bo[SBMAX_l];
-        int     npart;
         int     s3ind[CBANDS][2];
-        FLOAT  *s3;
-    } PsyConst_l_t;
-
-
-    typedef struct {
-        FLOAT   masking_lower[CBANDS];
-        FLOAT   minval[CBANDS];
-        FLOAT   mld[SBMAX_s];
-        FLOAT   bo_weight[SBMAX_s]; /* band weight short scalefactor bands, at transition */
-        FLOAT   rnumlines[CBANDS];
-        FLOAT   mld_cb[CBANDS];
-        FLOAT   attack_threshold; /* short block tuning */
         int     numlines[CBANDS];
-        int     bm[SBMAX_s];
-        int     bo[SBMAX_s];
+        int     bm[Max(SBMAX_l,SBMAX_s)];
+        int     bo[Max(SBMAX_l,SBMAX_s)];
         int     npart;
-        int     s3ind[CBANDS][2];
+        int     n_sb; /* SBMAX_l or SBMAX_s */
         FLOAT  *s3;
-    } PsyConst_s_t;
-
+    } PsyConst_CB2SB_t;
 
 
     /**
      *  global data constants
      */
     typedef struct {
-        PsyConst_l_t l;
-        PsyConst_s_t s;
+        PsyConst_CB2SB_t l;
+        PsyConst_CB2SB_t s;
+        PsyConst_CB2SB_t l_to_s;
         FLOAT   attack_threshold[4];
         FLOAT   decay;
+        int     force_short_block_calc;
     } PsyConst_t;
 
 
