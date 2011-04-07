@@ -2,7 +2,7 @@
  *      Get Audio routines source file
  *
  *      Copyright (c) 1999 Albert L Faber
- *                    2010 Robert Hegemann
+ *                    2008-2011 Robert Hegemann
  *
  * This library is free software; you can redistribute it and/or
  * modify it under the terms of the GNU Lesser General Public
@@ -1797,7 +1797,7 @@ lame_decode_initfile(FILE * fd, mp3data_struct * mp3data, int *enc_delay, int *e
     len = 4;
     if (fread(buf, 1, len, fd) != len)
         return -1;      /* failed */
-    if (buf[0] == 'I' && buf[1] == 'D' && buf[2] == '3') {
+    while (buf[0] == 'I' && buf[1] == 'D' && buf[2] == '3') {
         if (global_ui_config.silent < 9) {
             console_printf("ID3v2 found. "
                            "Be aware that the ID3 tag is currently lost when transcoding.\n");
