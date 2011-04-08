@@ -3,7 +3,7 @@
  *
  *      Copyright (c) 1999 Mark Taylor
  *                    2000 Takehiro TOMIANGA
- *                    2010 Robert Hegemann
+ *                    2010-2011 Robert Hegemann
  *
  * This library is free software; you can redistribute it and/or
  * modify it under the terms of the GNU Lesser General Public
@@ -99,6 +99,7 @@ extern void dosToLongFileName(char* filename);
 extern void setProcessPriority(int priority);
 
 extern int lame_main(lame_t gf, int argc, char** argv);
+extern char* lame_getenv(char const* var);
 
 #if defined(__cplusplus)
 }
