@@ -318,7 +318,7 @@ vbrpsy_mask_add(FLOAT m1, FLOAT m2, int b)
             return m1 + m2;
         }
         else {
-            int     i = (int) (FAST_LOG10_X(ratio, 16.0));
+            int     i = (int) (FAST_LOG10_X(ratio, 16.0f));
             return (m1 + m2) * table2[i];
         }
     }
@@ -419,8 +419,9 @@ convert_partition2scalefac_l_to_s(lame_internal_flags * gfc, FLOAT const *eb, FL
     int     sb, sblock;
     convert_partition2scalefac(gds, eb, thr, enn, thm);
     for (sb = 0; sb < SBMAX_s; ++sb) {
+        FLOAT const scale = 1. / 64.f;
         FLOAT const tmp_enn = enn[sb];
-        FLOAT const tmp_thm = thm[sb] / 64.f;
+        FLOAT const tmp_thm = thm[sb] * scale;
         for (sblock = 0; sblock < 3; ++sblock) {
             psv->en[chn].s[sb][sblock] = tmp_enn;
             psv->thm[chn].s[sb][sblock] = tmp_thm;
@@ -466,17 +467,17 @@ pecalc_s(III_psy_ratio const *mr, FLOAT masking_lower)
     };
     unsigned int sb, sblock;
 
-    pe_s = 1236.28 / 4;
+    pe_s = 1236.28f / 4;
     for (sb = 0; sb < SBMAX_s - 1; sb++) {
         for (sblock = 0; sblock < 3; sblock++) {
             FLOAT const thm = mr->thm.s[sb][sblock];
             assert(sb < dimension_of(regcoef_s));
-            if (thm > 0.0) {
+            if (thm > 0.0f) {
                 FLOAT const x = thm * masking_lower;
                 FLOAT const en = mr->en.s[sb][sblock];
                 if (en > x) {
-                    if (en > x * 1e10) {
-                        pe_s += regcoef_s[sb] * (10.0 * LOG10);
+                    if (en > x * 1e10f) {
+                        pe_s += regcoef_s[sb] * (10.0f * LOG10);
                     }
                     else {
                         assert(x > 0);
@@ -520,16 +521,16 @@ pecalc_l(III_psy_ratio const *mr, FLOAT masking_lower)
     };
     unsigned int sb;
 
-    pe_l = 1124.23 / 4;
+    pe_l = 1124.23f / 4;
     for (sb = 0; sb < SBMAX_l - 1; sb++) {
         FLOAT const thm = mr->thm.l[sb];
         assert(sb < dimension_of(regcoef_l));
-        if (thm > 0.0) {
+        if (thm > 0.0f) {
             FLOAT const x = thm * masking_lower;
             FLOAT const en = mr->en.l[sb];
             if (en > x) {
-                if (en > x * 1e10) {
-                    pe_l += regcoef_l[sb] * (10.0 * LOG10);
+                if (en > x * 1e10f) {
+                    pe_l += regcoef_l[sb] * (10.0f * LOG10);
                 }
                 else {
                     assert(x > 0);
@@ -581,12 +582,12 @@ calc_mask_index_l(lame_internal_flags const *gfc, FLOAT const *max,
     b = 0;
     a = avg[b] + avg[b + 1];
     assert(a >= 0);
-    if (a > 0.0) {
+    if (a > 0.0f) {
         m = max[b];
         if (m < max[b + 1])
             m = max[b + 1];
         assert((gdl->numlines[b] + gdl->numlines[b + 1] - 1) > 0);
-        a = 20.0 * (m * 2.0 - a)
+        a = 20.0f * (m * 2.0f - a)
             / (a * (gdl->numlines[b] + gdl->numlines[b + 1] - 1));
         k = (int) a;
         if (k > last_tab_entry)
@@ -600,14 +601,14 @@ calc_mask_index_l(lame_internal_flags const *gfc, FLOAT const *max,
     for (b = 1; b < gdl->npart - 1; b++) {
         a = avg[b - 1] + avg[b] + avg[b + 1];
         assert(a >= 0);
-        if (a > 0.0) {
+        if (a > 0.0f) {
             m = max[b - 1];
             if (m < max[b])
                 m = max[b];
             if (m < max[b + 1])
                 m = max[b + 1];
             assert((gdl->numlines[b - 1] + gdl->numlines[b] + gdl->numlines[b + 1] - 1) > 0);
-            a = 20.0 * (m * 3.0 - a)
+            a = 20.0f * (m * 3.0f - a)
                 / (a * (gdl->numlines[b - 1] + gdl->numlines[b] + gdl->numlines[b + 1] - 1));
             k = (int) a;
             if (k > last_tab_entry)
@@ -623,12 +624,12 @@ calc_mask_index_l(lame_internal_flags const *gfc, FLOAT const *max,
 
     a = avg[b - 1] + avg[b];
     assert(a >= 0);
-    if (a > 0.0) {
+    if (a > 0.0f) {
         m = max[b - 1];
         if (m < max[b])
             m = max[b];
         assert((gdl->numlines[b - 1] + gdl->numlines[b] - 1) > 0);
-        a = 20.0 * (m * 2.0 - a)
+        a = 20.0f * (m * 2.0f - a)
             / (a * (gdl->numlines[b - 1] + gdl->numlines[b] - 1));
         k = (int) a;
         if (k > last_tab_entry)
@@ -655,12 +656,13 @@ vbrpsy_compute_fft_l(lame_internal_flags * gfc, const sample_t * const buffer[2]
         fft_long(gfc, *wsamp_l, chn, buffer);
     }
     else if (chn == 2) {
+        FLOAT const sqrt2_half = SQRT2 * 0.5f;
         /* FFT data for mid and side channel is derived from L & R */
         for (j = BLKSIZE - 1; j >= 0; --j) {
             FLOAT const l = wsamp_l[0][j];
             FLOAT const r = wsamp_l[1][j];
-            wsamp_l[0][j] = (l + r) * (FLOAT) (SQRT2 * 0.5f);
-            wsamp_l[1][j] = (l - r) * (FLOAT) (SQRT2 * 0.5f);
+            wsamp_l[0][j] = (l + r) * sqrt2_half;
+            wsamp_l[1][j] = (l - r) * sqrt2_half;
         }
     }
 
@@ -703,12 +705,13 @@ vbrpsy_compute_fft_s(lame_internal_flags const *gfc, const sample_t * const buff
         fft_short(gfc, *wsamp_s, chn, buffer);
     }
     if (chn == 2) {
+        FLOAT const sqrt2_half = SQRT2 * 0.5f;
         /* FFT data for mid and side channel is derived from L & R */
         for (j = BLKSIZE_s - 1; j >= 0; --j) {
             FLOAT const l = wsamp_s[0][sblock][j];
             FLOAT const r = wsamp_s[1][sblock][j];
-            wsamp_s[0][sblock][j] = (l + r) * (FLOAT) (SQRT2 * 0.5f);
-            wsamp_s[1][sblock][j] = (l - r) * (FLOAT) (SQRT2 * 0.5f);
+            wsamp_s[0][sblock][j] = (l + r) * sqrt2_half;
+            wsamp_s[1][sblock][j] = (l - r) * sqrt2_half;
         }
     }
 
@@ -997,7 +1000,7 @@ vbrpsy_calc_mask_index_s(lame_internal_flags const *gfc, FLOAT const *max,
 
     a = avg[b - 1] + avg[b];
     assert(a >= 0);
-    if (a > 0.0) {
+    if (a > 0.0f) {
         m = max[b - 1];
         if (m < max[b])
             m = max[b];
@@ -1330,8 +1333,10 @@ vbrpsy_compute_MS_thresholds(const FLOAT eb[4][CBANDS], FLOAT thr[4][CBANDS],
         if (thmL <= 1.58f * thmR && thmR <= 1.58f * thmL) {
             FLOAT const mld_m = cb_mld[b] * ebS;
             FLOAT const mld_s = cb_mld[b] * ebM;
-            rmid = Max(thmM, Min(thmS, mld_m));
-            rside = Max(thmS, Min(thmM, mld_s));
+            FLOAT const tmp_m = Min(thmS, mld_m);
+            FLOAT const tmp_s = Min(thmM, mld_s);
+            rmid = Max(thmM, tmp_m);
+            rside = Max(thmS, tmp_s);
         }
         else {
             rmid = thmM;
@@ -1344,7 +1349,9 @@ vbrpsy_compute_MS_thresholds(const FLOAT eb[4][CBANDS], FLOAT thr[4][CBANDS],
             /* Naoki Shibata 2000 */
             FLOAT   thmLR, thmMS;
             FLOAT const ath = ath_cb[b] * athlower;
-            thmLR = Min(Max(thmL, ath), Max(thmR, ath));
+            FLOAT const tmp_l = Max(thmL, ath);
+            FLOAT const tmp_r = Max(thmR, ath);
+            thmLR = Min(tmp_l, tmp_r);
             thmM = Max(rmid, ath);
             thmS = Max(rside, ath);
             thmMS = thmM + thmS;
@@ -1448,8 +1455,6 @@ L3psycho_anal_vbr(lame_internal_flags * gfc,
             convert_partition2scalefac_l_to_s(gfc, eb[chn], thr[chn], chn);
         }
     }
-#undef SHORT_BLOCK_DPENDENCY_ON_PREVIOUS_FRAME
-//#define SHORT_BLOCK_DPENDENCY_ON_PREVIOUS_FRAME
     /* SHORT BLOCKS CASE */
     {
         int const force_short_block_calc = gfc->cd_psy->force_short_block_calc;
@@ -1484,7 +1489,6 @@ L3psycho_anal_vbr(lame_internal_flags * gfc,
 
         /****   short block pre-echo control   ****/
         for (chn = 0; chn < n_chn_psy; chn++) {
-            int const ch01 = chn & 0x01;
             for (sb = 0; sb < SBMAX_s; sb++) {
                 FLOAT   new_thmm[3], prev_thm, t1, t2;
                 for (sblock = 0; sblock < 3; sblock++) {
@@ -1875,9 +1879,9 @@ psymodel_init(lame_global_flags const *gfp)
 
     gd = calloc(1, sizeof(PsyConst_t));
     gfc->cd_psy = gd;
-    
+
     gd->force_short_block_calc = gfp->experimentalZ;
-    
+
     psv->blocktype_old[0] = psv->blocktype_old[1] = NORM_TYPE; /* the vbr header is long blocks */
 
     for (i = 0; i < 4; ++i) {
