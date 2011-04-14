@@ -502,6 +502,10 @@ short_help(const lame_global_flags * gfp, FILE * const fp, const char *ProgramNa
             "                     3 = High priority\n"
             "                     4 = Maximum priority\n" "\n"
 #endif
+            "    --help id3      ID3 tagging related options\n" "\n"
+            DEV_HELP(
+            "    --help dev      developer options\n" "\n"
+            )
             "    --longhelp      full list of options\n" "\n"
             "    --license       print License information\n\n"
             );
@@ -528,6 +532,91 @@ wait_for(FILE * const fp, int lessmode)
         fprintf(fp, "\n");
     }
     fprintf(fp, "\n");
+}
+
+static void
+help_id3tag(FILE * const fp)
+{
+    fprintf(fp,
+            "  ID3 tag options:\n"
+            "    --tt <title>    audio/song title (max 30 chars for version 1 tag)\n"
+            "    --ta <artist>   audio/song artist (max 30 chars for version 1 tag)\n"
+            "    --tl <album>    audio/song album (max 30 chars for version 1 tag)\n"
+            "    --ty <year>     audio/song year of issue (1 to 9999)\n"
+            "    --tc <comment>  user-defined text (max 30 chars for v1 tag, 28 for v1.1)\n"
+            "    --tn <track[/total]>   audio/song track number and (optionally) the total\n"
+            "                           number of tracks on the original recording. (track\n"
+            "                           and total each 1 to 255. just the track number\n"
+            "                           creates v1.1 tag, providing a total forces v2.0).\n"
+            "    --tg <genre>    audio/song genre (name or number in list)\n"
+            "    --ti <file>     audio/song albumArt (jpeg/png/gif file, v2.3 tag)\n"
+            "    --tv <id=value> user-defined frame specified by id and value (v2.3 tag)\n"
+            );
+    fprintf(fp,
+            "    --add-id3v2     force addition of version 2 tag\n"
+            "    --id3v1-only    add only a version 1 tag\n"
+            "    --id3v2-only    add only a version 2 tag\n"
+#ifdef ID3TAGS_EXTENDED
+            "    --id3v2-ucs2    strings using 16-bit unicode 2.0 (ISO/IEC 10646-1:1993)\n"
+            "    --id3v2-latin1  strings represented as ISO-8859-1\n"
+#endif
+            "    --space-id3v1   pad version 1 tag with spaces instead of nulls\n"
+            "    --pad-id3v2     same as '--pad-id3v2-size 128'\n"
+            "    --pad-id3v2-size <value> adds version 2 tag, pad with extra <value> bytes\n"
+            "    --genre-list    print alphabetically sorted ID3 genre list and exit\n"
+            "    --ignore-tag-errors  ignore errors in values passed for tags\n" "\n"
+            );
+    fprintf(fp,
+            "    Note: A version 2 tag will NOT be added unless one of the input fields\n"
+            "    won't fit in a version 1 tag (e.g. the title string is longer than 30\n"
+            "    characters), or the '--add-id3v2' or '--id3v2-only' options are used,\n"
+            "    or output is redirected to stdout.\n"
+            );
+}
+
+static void
+help_developer_switches(FILE * const fp)
+{
+    fprintf(fp,
+            "  ATH related:\n"
+            "    --noath         turns ATH down to a flat noise floor\n"
+            "    --athshort      ignore GPSYCHO for short blocks, use ATH only\n"
+            "    --athonly       ignore GPSYCHO completely, use ATH only\n"
+            "    --athtype n     selects between different ATH types [0-4]\n"
+            "    --athlower x    lowers ATH by x dB\n"
+            );
+    fprintf(fp,
+            "    --athaa-type n  ATH auto adjust: 0 'no' else 'loudness based'\n"
+/** OBSOLETE "    --athaa-loudapprox n   n=1 total energy or n=2 equal loudness curve\n"*/
+            "    --athaa-sensitivity x  activation offset in -/+ dB for ATH auto-adjustment\n"
+            "\n");
+    fprintf(fp,
+            "  PSY related:\n"
+            "    --short         use short blocks when appropriate\n"
+            "    --noshort       do not use short blocks\n"
+            "    --allshort      use only short blocks\n"
+            );
+    fprintf(fp,
+            "(1) --temporal-masking x   x=0 disables, x=1 enables temporal masking effect\n"
+            "    --nssafejoint   M/S switching criterion\n"
+            "    --nsmsfix <arg> M/S switching tuning [effective 0-3.5]\n"
+            "(2) --interch x     adjust inter-channel masking ratio\n"
+            "    --ns-bass x     adjust masking for sfbs  0 -  6 (long)  0 -  5 (short)\n"
+            "    --ns-alto x     adjust masking for sfbs  7 - 13 (long)  6 - 10 (short)\n"
+            "    --ns-treble x   adjust masking for sfbs 14 - 21 (long) 11 - 12 (short)\n"
+            );
+    fprintf(fp,
+            "    --ns-sfb21 x    change ns-treble by x dB for sfb21\n"
+            "    --shortthreshold x,y  short block switching threshold,\n"
+            "                          x for L/R/M channel, y for S channel\n"
+            "    -Z [n]          always do calculate short block maskings\n"
+            "  Noise Shaping related:\n"
+            "(1) --substep n     use pseudo substep noise shaping method types 0-2\n"
+            "(1) -X n[,m]        selects between different noise measurements\n"
+            "                    n for long block, m for short. if m is omitted, m = n\n"
+            " 1: CBR, ABR and VBR-old encoding modes only\n"
+            " 2: ignored\n"
+           );
 }
 
 int
@@ -634,6 +723,7 @@ long_help(const lame_global_flags * gfp, FILE * const fp, const char *ProgramNam
             "    -v              the same as -V 4\n"
             "    --vbr-old       use old variable bitrate (VBR) routine\n"
             "    --vbr-new       use new variable bitrate (VBR) routine (default)\n"
+            "    -Y              lets LAME ignore noise in sfb21, like in CBR\n"
             ,
             lame_get_VBR_q(gfp));
     fprintf(fp,
@@ -645,53 +735,10 @@ long_help(const lame_global_flags * gfp, FILE * const fp, const char *ProgramNam
             "    -T              enable and force writing LAME Tag\n");
 
     wait_for(fp, lessmode);
-    DEV_HELP(fprintf(fp,
-                     "  ATH related:\n"
-                     "    --noath         turns ATH down to a flat noise floor\n"
-                     "    --athshort      ignore GPSYCHO for short blocks, use ATH only\n"
-                     "    --athonly       ignore GPSYCHO completely, use ATH only\n"
-                     "    --athtype n     selects between different ATH types [0-4]\n"
-                     "    --athlower x    lowers ATH by x dB\n");
-             fprintf(fp, "    --athaa-type n  ATH auto adjust: 0 'no' else 'loudness based'\n"
-/** OBSOLETE "    --athaa-loudapprox n   n=1 total energy or n=2 equal loudness curve\n"*/
-                     "    --athaa-sensitivity x  activation offset in -/+ dB for ATH auto-adjustment\n"
-                     "\n");
-        fprintf(fp,
-                "  PSY related:\n"
-                "    --short         use short blocks when appropriate\n"
-                "    --noshort       do not use short blocks\n"
-                "    --allshort      use only short blocks\n"
-        );
-    fprintf(fp,
-            "    --temporal-masking x   x=0 disables, x=1 enables temporal masking effect\n"
-            "    --nssafejoint   M/S switching criterion\n"
-            "    --nsmsfix <arg> M/S switching tuning [effective 0-3.5]\n"
-            "    --interch x     adjust inter-channel masking ratio\n"
-            "    --ns-bass x     adjust masking for sfbs  0 -  6 (long)  0 -  5 (short)\n"
-            "    --ns-alto x     adjust masking for sfbs  7 - 13 (long)  6 - 10 (short)\n"
-            "    --ns-treble x   adjust masking for sfbs 14 - 21 (long) 11 - 12 (short)\n");
-    fprintf(fp,
-            "    --ns-sfb21 x    change ns-treble by x dB for sfb21\n"
-            "    --shortthreshold x,y  short block switching threshold,\n"
-            "                          x for L/R/M channel, y for S channel\n"
-            "  Noise Shaping related:\n"
-            "    --substep n     use pseudo substep noise shaping method types 0-2\n"
-        );
-
-    wait_for(fp, lessmode);
+    DEV_HELP(
+        help_developer_switches(fp);
+        wait_for(fp, lessmode);
             )
-
-    fprintf(fp,
-            "  experimental switches:\n"
-            "    -Y              lets LAME ignore noise in sfb21, like in CBR\n"
-            DEV_HELP(
-            "    -X n[,m]        selects between different noise measurements\n"
-            "                    n for long block, m for short. if m is omitted, m = n\n"
-            "    -Z [n]          currently no effects\n"
-            )
-            );
-
-    wait_for(fp, lessmode);
 
     fprintf(fp,
             "  MP3 header/stream options:\n"
@@ -717,38 +764,8 @@ long_help(const lame_global_flags * gfp, FILE * const fp, const char *ProgramNam
             "  --resample <sfreq>  sampling frequency of output file(kHz)- default=automatic\n");
 
     wait_for(fp, lessmode);
+    help_id3tag(fp);
     fprintf(fp,
-            "  ID3 tag options:\n"
-            "    --tt <title>    audio/song title (max 30 chars for version 1 tag)\n"
-            "    --ta <artist>   audio/song artist (max 30 chars for version 1 tag)\n"
-            "    --tl <album>    audio/song album (max 30 chars for version 1 tag)\n"
-            "    --ty <year>     audio/song year of issue (1 to 9999)\n"
-            "    --tc <comment>  user-defined text (max 30 chars for v1 tag, 28 for v1.1)\n"
-            "    --tn <track[/total]>   audio/song track number and (optionally) the total\n"
-            "                           number of tracks on the original recording. (track\n"
-            "                           and total each 1 to 255. just the track number\n"
-            "                           creates v1.1 tag, providing a total forces v2.0).\n"
-            "    --tg <genre>    audio/song genre (name or number in list)\n"
-            "    --ti <file>     audio/song albumArt (jpeg/png/gif file, 128KB max, v2.3)\n"
-            "    --tv <id=value> user-defined frame specified by id and value (v2.3 tag)\n");
-    fprintf(fp,
-            "    --add-id3v2     force addition of version 2 tag\n"
-            "    --id3v1-only    add only a version 1 tag\n"
-            "    --id3v2-only    add only a version 2 tag\n"
-#ifdef ID3TAGS_EXTENDED
-            "    --id3v2-ucs2    strings using 16-bit unicode 2.0 (ISO/IEC 10646-1:1993)\n"
-            "    --id3v2-latin1  strings represented as ISO-8859-1\n"
-#endif
-            "    --space-id3v1   pad version 1 tag with spaces instead of nulls\n"
-            "    --pad-id3v2     same as '--pad-id3v2-size 128'\n"
-            "    --pad-id3v2-size <value> adds version 2 tag, pad with extra <value> bytes\n"
-            "    --genre-list    print alphabetically sorted ID3 genre list and exit\n"
-            "    --ignore-tag-errors  ignore errors in values passed for tags\n" "\n");
-    fprintf(fp,
-            "    Note: A version 2 tag will NOT be added unless one of the input fields\n"
-            "    won't fit in a version 1 tag (e.g. the title string is longer than 30\n"
-            "    characters), or the '--add-id3v2' or '--id3v2-only' options are used,\n"
-            "    or output is redirected to stdout.\n"
 #if defined(WIN32)
             "\n\nMS-Windows-specific options:\n"
             "    --priority <type>  sets the process priority:\n"
@@ -1898,7 +1915,15 @@ parse_args(lame_global_flags * gfp, int argc, char **argv,
                 return -2;
 
                 T_ELIF2("help", "usage")
-                    short_help(gfp, stdout, ProgramName);
+                    if (0 == strnicmp(nextArg, "id3", 3)) {
+                        help_id3tag(stdout);
+                    }
+                    else if (0 == strnicmp(nextArg, "dev", 3)) {
+                        help_developer_switches(stdout);
+                    }
+                    else {
+                        short_help(gfp, stdout, ProgramName);
+                    }
                 return -2;
 
                 T_ELIF("longhelp")
