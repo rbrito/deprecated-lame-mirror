@@ -577,6 +577,11 @@ help_id3tag(FILE * const fp)
 static void
 help_developer_switches(FILE * const fp)
 {
+    if ( !internal_opts_enabled ) {
+    fprintf(fp,
+            "    Note: Almost all of the following switches aren't available in this build!\n\n"
+            );
+    }
     fprintf(fp,
             "  ATH related:\n"
             "    --noath         turns ATH down to a flat noise floor\n"
@@ -2206,12 +2211,12 @@ parse_args(lame_global_flags * gfp, int argc, char **argv,
                         break;
                     case 'Z':
                         /*  experimental switch -Z:
-                            this switch is obsolete
                          */
                         {
                             int     n = 1;
                             argUsed = sscanf(arg, "%d", &n);
-                            if (internal_opts_enabled) {
+                            /*if (internal_opts_enabled)*/
+                            {
                                 lame_set_experimentalZ(gfp, n);
                             }
                         }
