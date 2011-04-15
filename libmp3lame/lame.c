@@ -1595,8 +1595,12 @@ save_gain_values(lame_internal_flags * gfc)
     /* save the ReplayGain value */
     if (cfg->findReplayGain) {
         FLOAT const RadioGain = (FLOAT) GetTitleGain(rsv->rgdata);
-        assert(NEQ(RadioGain, GAIN_NOT_ENOUGH_SAMPLES));
-        rov->RadioGain = (int) floor(RadioGain * 10.0 + 0.5); /* round to nearest */
+        if (NEQ(RadioGain, GAIN_NOT_ENOUGH_SAMPLES)) {
+            rov->RadioGain = (int) floor(RadioGain * 10.0 + 0.5); /* round to nearest */
+        }
+        else {
+            rov->RadioGain = 0;
+        }
     }
 
     /* find the gain and scale change required for no clipping */
