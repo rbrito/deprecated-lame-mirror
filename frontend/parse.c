@@ -677,7 +677,7 @@ long_help(const lame_global_flags * gfp, FILE * const fp, const char *ProgramNam
             "                    on the value specified, appropriate quality settings will\n"
             "                    be used.\n"
             "                    \"--preset help\" gives more info on these\n"
-            "    --comp  <arg>   choose bitrate to achive a compression ratio of <arg>\n");
+            "    --comp  <arg>   choose bitrate to achieve a compression ratio of <arg>\n");
     fprintf(fp, "    --replaygain-fast   compute RG fast but slightly inaccurately (default)\n"
 #ifdef DECODE_ON_THE_FLY
             "    --replaygain-accurate   compute RG more accurately and find the peak sample\n"
@@ -1092,6 +1092,29 @@ local_strcasecmp(const char *s1, const char *s2)
         }
         ++s1;
         ++s2;
+    } while (c1 == c2);
+    return c1 - c2;
+}
+
+static int
+local_strncasecmp(const char *s1, const char *s2, int n)
+{
+    unsigned char c1 = 0;
+    unsigned char c2 = 0;
+    int     cnt = 0;
+
+    do {
+        if (cnt == n) {
+            break;
+        }
+        c1 = (unsigned char) tolower(*s1);
+        c2 = (unsigned char) tolower(*s2);
+        if (!c1) {
+            break;
+        }
+        ++s1;
+        ++s2;
+        ++cnt;
     } while (c1 == c2);
     return c1 - c2;
 }
@@ -1920,10 +1943,10 @@ parse_args(lame_global_flags * gfp, int argc, char **argv,
                 return -2;
 
                 T_ELIF2("help", "usage")
-                    if (0 == strnicmp(nextArg, "id3", 3)) {
+                    if (0 == local_strncasecmp(nextArg, "id3", 3)) {
                         help_id3tag(stdout);
                     }
-                    else if (0 == strnicmp(nextArg, "dev", 3)) {
+                    else if (0 == local_strncasecmp(nextArg, "dev", 3)) {
                         help_developer_switches(stdout);
                     }
                     else {
