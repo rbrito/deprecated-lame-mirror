@@ -45,6 +45,9 @@
 /* Define to 1 if you have the `gettimeofday' function. */
 #undef HAVE_GETTIMEOFDAY
 
+/* Define if you have the iconv() function and it works. */
+#undef HAVE_ICONV
+
 /* add ieee754_float32_t type */
 #undef HAVE_IEEE754_FLOAT32_T
 #ifndef HAVE_IEEE754_FLOAT32_T
@@ -188,6 +191,9 @@
 
 /* Define to 1 if you have the <xmmintrin.h> header file. */
 #undef HAVE_XMMINTRIN_H
+
+/* Define as const if the declaration of iconv() needs const. */
+#undef ICONV_CONST
 
 /* requested by Frank, seems to be temporary needed for a smooth transition */
 #undef LAME_LIBRARY_BUILD
