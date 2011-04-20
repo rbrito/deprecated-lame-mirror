@@ -370,6 +370,8 @@ AC_CHECK_HEADERS(ncurses/termcap.h)
 AC_CHECK_LIB(termcap, initscr, HAVE_TERMCAP="termcap")
 AC_CHECK_LIB(curses, initscr, HAVE_TERMCAP="curses")
 AC_CHECK_LIB(ncurses, initscr, HAVE_TERMCAP="ncurses")
+
+AM_ICONV
  
 dnl math lib
 AC_CHECK_LIB(m, cos, USE_LIBM="-lm")
@@ -612,7 +614,7 @@ esac
 
 dnl configure use of VBR bitrate histogram
 dnl todo: always use yes as default, use simulation instead ?
-AC_MSG_CHECKING(use of VBR bitrate histogram)
+AC_MSG_CHECKING(for termcap)
 if test "x${HAVE_TERMCAP}" != "x"; then
   FRONTEND_LDADD="-l${HAVE_TERMCAP} ${FRONTEND_LDADD}"
   AC_DEFINE(HAVE_TERMCAP, 1, have termcap)
@@ -620,6 +622,7 @@ if test "x${HAVE_TERMCAP}" != "x"; then
 else
   TERMCAP_DEFAULT="no"
 fi
+AC_MSG_RESULT(${TERMCAP_DEFAULT})
 
 
 dnl ### processor specific options ###
@@ -1105,7 +1108,8 @@ fi
 
 CFLAGS="${OPTIMIZATION} ${CFLAGS}"
 LDADD="${LDADD}"
-FRONTEND_LDADD="${FRONTEND_LDADD} ${CONFIG_MATH_LIB}"
+FRONTEND_CFLAGS="${INCICONV} ${FRONTEND_CFLAGS}"
+FRONTEND_LDADD="${FRONTEND_LDADD} ${LTLIBICONV} ${CONFIG_MATH_LIB}"
 
 
 AC_SUBST(INCLUDES)
