@@ -2138,7 +2138,7 @@ lame_encode_flush(lame_global_flags * gfp, unsigned char *mp3buffer, int mp3buff
 
         mp3buffer += imp3;
         mp3count += imp3;
-        frames_left -= (frame_num != gfc->ov_enc.frame_number) ? 1 : 0;
+        frames_left -= ((frame_num != gfc->ov_enc.frame_number) ? 1 : 0);
     }
     /* Set esv->mf_samples_to_encode to 0, so we may detect
      * and break loops calling it more than once in a row.
