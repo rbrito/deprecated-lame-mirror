@@ -1,18 +1,25 @@
                       LAME 3.xx
                LAME Ain't an MP3 Encoder
                  http://lame.sf.net
-	             August 2010
+	             May 2011
 
 Originally developed by Mike Cheng (www.uq.net.au/~zzmcheng) and was
 latter developed by Mark Taylor (www.mp3dev.org). Currently maintained
 by The LAME Project.
 
 This code is distributed under the GNU LESSER PUBLIC LICENSE
-(LGPL, see www.gnu.org) with the following modification:
+(LGPL, see www.gnu.org), version 2.
 
-   If you determine that distribution of LAME requires a patent license,
-   and you obtain a patent license, you may distribute LAME even though
-   redistribution of LAME may also require a patent license.
+As LAME may contain software for which some companies may claim software
+patents, if you are in a location where software patents are recognized, it is
+suggested that you seek legal advice before deploying and/or redistributing
+LAME.
+
+In particular, it is suggested to visit
+
+    http://www.mp3licensing.com/
+
+if it applies to your jurisdiction.
 
 ============================================================================
 
