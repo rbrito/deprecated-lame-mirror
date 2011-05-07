@@ -885,6 +885,13 @@ if test "x$GCC" = "xyes"; then
 				OPTIMIZATION="${OPTIMIZATION} -march=native \
 					-mtune=native"
 				;;
+			arm*-gnueabi)
+				if [ -z "$(echo ${GCC_version} | awk '/4\.0/')" ]; then
+					# Work round buggy softfloat optimization in ARM EABI compilers
+					# -gnueabi in only gcc-4.1 onwards
+					OPTIMIZATION="${OPTIMIZATION} -fno-finite-math-only"
+				fi
+				;;
 			esac
 			;;
 		*)
