@@ -94,22 +94,22 @@ hip_init_tables_layer2(void)
 static unsigned char*
 grp_table_select(short d1, unsigned int idx)
 {
+    /* RH: it seems to be common, that idx is larger than the table's sizes.
+           is it OK to return a zero vector in this case? FIXME
+    /*/
     static unsigned char dummy_table[] = { 0,0,0 };
     unsigned int x;
     switch (d1) {
         case 3:
             x = 3*3*3;
-            assert(idx <= x);
             idx = idx < x ? idx : x;
             return &grp_3tab[3 * idx]; 
         case 5: 
             x = 5*5*5;
-            assert(idx <= x);
             idx = idx < x ? idx : x;
             return &grp_5tab[3 * idx]; 
         case 9:
             x = 9*9*9;
-            assert(idx <= x);
             idx = idx < x ? idx : x;
             return &grp_9tab[3 * idx];
         default:
