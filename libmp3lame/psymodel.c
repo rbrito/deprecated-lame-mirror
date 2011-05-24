@@ -267,7 +267,16 @@ static const FLOAT tab[] = {
     0.11749             /*pow(10, -0.93) */
 };
 
+static const int tab_mask_add_delta[] = { 2, 2, 2, 1, 1, 1, 0, 0, -1 };
+#define STATIC_ASSERT_EQUAL_DIMENSION(A,B) {extern char static_assert_##A[dimension_of(A) == dimension_of(B) ? 1 : -1];(void) static_assert_##A;}
 
+inline static int
+mask_add_delta(int i)
+{
+    STATIC_ASSERT_EQUAL_DIMENSION(tab_mask_add_delta,tab);
+    assert(i < (int)dimension_of(tab));
+    return tab_mask_add_delta[i];
+}
 
 
 static void
@@ -283,7 +292,7 @@ init_mask_add_max_values(void)
 
 /* addition of simultaneous masking   Naoki Shibata 2000/7 */
 inline static FLOAT
-vbrpsy_mask_add(FLOAT m1, FLOAT m2, int b)
+vbrpsy_mask_add(FLOAT m1, FLOAT m2, int b, int delta)
 {
     static const FLOAT table2[] = {
         1.33352 * 1.33352, 1.35879 * 1.35879, 1.38454 * 1.38454, 1.39497 * 1.39497,
@@ -312,7 +321,7 @@ vbrpsy_mask_add(FLOAT m1, FLOAT m2, int b)
     else {
         ratio = m1 / m2;
     }
-    if (-2 <= b && b <= 2) { /* approximately, 1 bark = 3 partitions */
+    if (abs(b) <= delta) {       /* approximately, 1 bark = 3 partitions */
         /* originally 'if(i > 8)' */
         if (ratio >= ma_max_i1) {
             return m1 + m2;
@@ -1054,6 +1063,7 @@ vbrpsy_compute_masking_s(lame_internal_flags * gfc, const FLOAT(*fftenergy_s)[HB
     for (j = b = 0; b < gds->npart; b++) {
         int     kk = gds->s3ind[b][0];
         int const last = gds->s3ind[b][1];
+        int const delta = mask_add_delta(mask_idx_s[b]);
         int     dd, dd_n;
         FLOAT   x, ecb, avg_mask;
         FLOAT const masking_lower = gds->masking_lower[b] * gfc->sv_qnt.masking_lower;
@@ -1066,7 +1076,7 @@ vbrpsy_compute_masking_s(lame_internal_flags * gfc, const FLOAT(*fftenergy_s)[HB
             dd += mask_idx_s[kk];
             dd_n += 1;
             x = gds->s3[j] * eb[kk] * tab[mask_idx_s[kk]];
-            ecb = vbrpsy_mask_add(ecb, x, kk - b);
+            ecb = vbrpsy_mask_add(ecb, x, kk - b, delta);
             ++j, ++kk;
         }
         dd = (1 + 2 * dd) / (2 * dd_n);
@@ -1148,7 +1158,9 @@ vbrpsy_compute_masking_l(lame_internal_flags * gfc, const FLOAT fftenergy[HBLKSI
         /* convolve the partitioned energy with the spreading function */
         int     kk = gdl->s3ind[b][0];
         int const last = gdl->s3ind[b][1];
+        int const delta = mask_add_delta(mask_idx_l[b]);
         int     dd = 0, dd_n = 0;
+
         dd = mask_idx_l[kk];
         dd_n += 1;
         ecb = gdl->s3[k] * eb_l[kk] * tab[mask_idx_l[kk]];
@@ -1157,7 +1169,7 @@ vbrpsy_compute_masking_l(lame_internal_flags * gfc, const FLOAT fftenergy[HBLKSI
             dd += mask_idx_l[kk];
             dd_n += 1;
             x = gdl->s3[k] * eb_l[kk] * tab[mask_idx_l[kk]];
-            t = vbrpsy_mask_add(ecb, x, kk - b);
+            t = vbrpsy_mask_add(ecb, x, kk - b, delta);
 #if 0
             ecb += eb_l[kk];
             if (ecb > t) {
@@ -1409,7 +1421,7 @@ L3psycho_anal_vbr(lame_internal_flags * gfc,
 
     FLOAT   sub_short_factor[4][3];
     FLOAT   thmm;
-    FLOAT   pcfact = 0.6f;
+    FLOAT const pcfact = 0.6f;
     FLOAT const ath_factor =
         (cfg->msfix > 0.f) ? (cfg->ATH_offset_factor * gfc->ATH->adjust_factor) : 1.f;
 
@@ -1918,6 +1930,7 @@ psymodel_init(lame_global_flags const *gfp)
     init_numline(&gd->l, sfreq, BLKSIZE, 576, SBMAX_l, gfc->scalefac_band.l);
     assert(gd->l.npart < CBANDS);
     compute_bark_values(&gd->l, sfreq, BLKSIZE, bval, bval_width);
+
     /* compute the spreading function */
     for (i = 0; i < gd->l.npart; i++) {
         double  snr = snr_l_a;

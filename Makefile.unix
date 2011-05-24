@@ -159,7 +159,7 @@ ifeq ($(CFG),RH)
 # these options for gcc-3.2 & AthlonXP
    CC_OPTS = \
 	-pipe -O3 \
-	-Wall -W -Wmissing-declarations -Wfloat-equal \
+	-Wall -W -Wmissing-declarations -Wfloat-equal -Wformat \
 	-Wcast-qual -Wcast-align -Wdisabled-optimization -Wshadow \
 	-march=athlon-xp \
 	-malign-double \
@@ -177,7 +177,7 @@ ifeq ($(CFG),RH_SSE)
 # these options for gcc-3.2 & AthlonXP
    CC_OPTS = \
 	-std=c99 -pipe -O3 -fstrict-aliasing \
-	-Wall -W -Wmissing-declarations -Wfloat-equal \
+	-Wall -W -Wmissing-declarations -Wfloat-equal -Wformat \
 	-Wcast-qual -Wcast-align -Wdisabled-optimization -Wshadow \
 	-Wunsafe-loop-optimizations \
 	-march=k8 \
