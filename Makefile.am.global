@@ -2,6 +2,6 @@
 
 # global section for every Makefile.am
 
-AUTOMAKE_OPTIONS = 1.11 foreign $(top_srcdir)/ansi2knr
+AUTOMAKE_OPTIONS = 1.11 foreign
 
 # end global section
