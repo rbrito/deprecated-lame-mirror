@@ -396,32 +396,24 @@ print_license(FILE * const fp)
 {                       /* print version & license */
     lame_version_print(fp);
     fprintf(fp,
-            "Can I use LAME in my commercial program?\n"
+            "Copyright (c) 1999-2011 by The LAME Project\n"
+            "Copyright (c) 1999,2000,2001 by Mark Taylor\n"
+            "Copyright (c) 1998 by Michael Cheng\n"
+            "Copyright (c) 1995,1996,1997 by Michael Hipp: mpglib\n" "\n");
+    fprintf(fp,
+            "This library is free software; you can redistribute it and/or\n"
+            "modify it under the terms of the GNU Library General Public\n"
+            "License as published by the Free Software Foundation; either\n"
+            "version 2 of the License, or (at your option) any later version.\n"
             "\n"
-            "Yes, you can, under the restrictions of the LGPL.  In particular, you\n"
-            "can include a compiled version of the LAME library (for example,\n"
-            "lame.dll) with a commercial program.  Some notable requirements of\n"
-            "the LGPL:\n" "\n");
-    fprintf(fp,
-            "1. In your program, you cannot include any source code from LAME, with\n"
-            "   the exception of files whose only purpose is to describe the library\n"
-            "   interface (such as lame.h).\n" "\n");
-    fprintf(fp,
-            "2. Any modifications of LAME must be released under the LGPL.\n"
-            "   The LAME project (www.mp3dev.org) would appreciate being\n"
-            "   notified of any modifications.\n" "\n");
-    fprintf(fp,
-            "3. You must give prominent notice that your program is:\n"
-            "      A. using LAME (including version number)\n"
-            "      B. LAME is under the LGPL\n"
-            "      C. Provide a copy of the LGPL.  (the file COPYING contains the LGPL)\n"
-            "      D. Provide a copy of LAME source, or a pointer where the LAME\n"
-            "         source can be obtained (such as www.mp3dev.org)\n"
-            "   An example of prominent notice would be an \"About the LAME encoding engine\"\n"
-            "   button in some pull down menu within the executable of your program.\n" "\n");
-    fprintf(fp,
-            "4. If you determine that distribution of LAME requires a patent license,\n"
-            "   you must obtain such license.\n" "\n" "\n");
+            "This library is distributed in the hope that it will be useful,\n"
+            "but WITHOUT ANY WARRANTY; without even the implied warranty of\n"
+            "MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the GNU\n"
+            "Library General Public License for more details.\n"
+            "\n"
+            "You should have received a copy of the GNU Library General Public\n"
+            "License along with this program. If not, see\n"
+            "<http://www.gnu.org/licenses/>.\n");
     return 0;
 }
 
