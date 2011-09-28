@@ -2,7 +2,7 @@
 <VisualStudioProject
 	ProjectType="Visual C++"
 	Version="9,00"
-	Name="libmp3lame"
+	Name="libmp3lame-static"
 	ProjectGUID="{20536101-3B0E-43EF-94F9-080D595DAC57}"
 	RootNamespace="libmp3lame"
 	TargetFrameworkVersion="0"
@@ -51,7 +51,6 @@
 				FavorSizeOrSpeed="1"
 				AdditionalIncludeDirectories="../mpglib,../include,.."
 				PreprocessorDefinitions="NDEBUG;_WINDOWS;HAVE_MPGLIB;WIN32;HAVE_CONFIG_H;HAVE_NASM;MMX_choose_table;_CRT_SECURE_NO_DEPRECATE"
-				RuntimeLibrary="2"
 			/>
 			<Tool
 				Name="VCManagedResourceCompilerTool"
@@ -116,7 +115,6 @@
 				FavorSizeOrSpeed="1"
 				AdditionalIncludeDirectories="../mpglib,../include,.."
 				PreprocessorDefinitions="NDEBUG;_WINDOWS;HAVE_MPGLIB;WIN32;HAVE_CONFIG_H"
-				RuntimeLibrary="2"
 			/>
 			<Tool
 				Name="VCManagedResourceCompilerTool"
@@ -178,7 +176,7 @@
 				Optimization="0"
 				AdditionalIncludeDirectories="../mpglib,../include,.."
 				PreprocessorDefinitions="_DEBUG;_WINDOWS;HAVE_MPGLIB;WIN32;HAVE_CONFIG_H"
-				RuntimeLibrary="3"
+				RuntimeLibrary="1"
 				ProgramDataBaseFileName="$(OutDir)\$(TargetName).pdb"
 				DebugInformationFormat="3"
 			/>
@@ -245,7 +243,6 @@
 				FavorSizeOrSpeed="1"
 				AdditionalIncludeDirectories="../mpglib,../include,.."
 				PreprocessorDefinitions="NDEBUG;_WINDOWS;HAVE_MPGLIB;WIN32;HAVE_CONFIG_H"
-				RuntimeLibrary="2"
 			/>
 			<Tool
 				Name="VCManagedResourceCompilerTool"

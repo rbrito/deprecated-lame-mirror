@@ -338,10 +338,11 @@ id3_tag(lame_global_flags* gfp, int type, TextEncoding enc, char* str)
     switch (enc)
     {
         default:
-        case TENC_RAW:
-        case TENC_LATIN1: result = set_id3tag(gfp, type, x);   break;
 #ifdef ID3TAGS_EXTENDED
+        case TENC_LATIN1: result = set_id3tag(gfp, type, x);   break;
         case TENC_UCS2:   result = set_id3v2tag(gfp, type, x); break;
+#else
+        case TENC_RAW:    result = set_id3tag(gfp, type, x);   break;
 #endif
     }
     free(x);
@@ -365,11 +366,11 @@ lame_version_print(FILE * const fp)
     const char *b = get_lame_os_bitness();
     const char *v = get_lame_version();
     const char *u = get_lame_url();
-    const unsigned int lenb = strlen(b);
-    const unsigned int lenv = strlen(v);
-    const unsigned int lenu = strlen(u);
-    const unsigned int lw = 80;       /* line width of terminal in characters */
-    const unsigned int sw = 16;       /* static width of text */
+    const size_t lenb = strlen(b);
+    const size_t lenv = strlen(v);
+    const size_t lenu = strlen(u);
+    const size_t lw = 80;       /* line width of terminal in characters */
+    const size_t sw = 16;       /* static width of text */
 
     if (lw >= lenb + lenv + lenu + sw || lw < lenu + 2)
         /* text fits in 80 chars per line, or line even too small for url */
@@ -377,13 +378,14 @@ lame_version_print(FILE * const fp)
             fprintf(fp, "LAME %s version %s (%s)\n\n", b, v, u);
         else
             fprintf(fp, "LAME version %s (%s)\n\n", v, u);
-    else
+    else {
+        int const n_white_spaces = ((lenu+2) > lw ? 0 : lw-2-lenu);
         /* text too long, wrap url into next line, right aligned */
-    if (lenb > 0)
-        fprintf(fp, "LAME %s version %s\n%*s(%s)\n\n", b, v, lw - 2 - lenu, "", u);
-    else
-        fprintf(fp, "LAME version %s\n%*s(%s)\n\n", v, lw - 2 - lenu, "", u);
-
+        if (lenb > 0)
+            fprintf(fp, "LAME %s version %s\n%*s(%s)\n\n", b, v, n_white_spaces, "", u);
+        else
+            fprintf(fp, "LAME version %s\n%*s(%s)\n\n", v, n_white_spaces, "", u);
+    }
     if (lame_alpha_version_enabled)
         fprintf(fp, "warning: alpha versions should be used for testing only\n\n");
 
@@ -1432,7 +1434,11 @@ parse_args(lame_global_flags * gfp, int argc, char **argv,
     int     noreplaygain = 0; /* is RG explicitly disabled by the user */
     int     id3tag_mode = ID3TAG_MODE_DEFAULT;
     int     ignore_tag_errors = 0;  /* Ignore errors in values passed for tags */
+#ifdef ID3TAGS_EXTENDED
+    enum TextEncoding id3_tenc = TENC_UCS2;
+#else
     enum TextEncoding id3_tenc = TENC_LATIN1;
+#endif
 
     inPath[0] = '\0';
     outPath[0] = '\0';
@@ -1633,8 +1639,7 @@ parse_args(lame_global_flags * gfp, int argc, char **argv,
 #ifdef ID3TAGS_EXTENDED
                 T_ELIF("id3v2-ucs2")
                     id3_tenc = TENC_UCS2;
-                    id3tag_v2_only(gfp);
-                    id3tag_mode = ID3TAG_MODE_V2_ONLY;
+                    id3tag_add_v2(gfp);
 
                 T_ELIF("id3v2-latin1")
                     id3_tenc = TENC_LATIN1;

@@ -151,6 +151,25 @@ typedef enum MiscIDs { ID_TXXX = FRAME_ID('T', 'X', 'X', 'X')
 } MiscIDs;
 
 
+static int
+frame_id_matches(int id, int mask)
+{
+    int     result = 0, i, window = 0xff;
+    for (i = 0; i < 4; ++i, window <<= 8) {
+        int const mw = (mask & window);
+        int const iw = (id & window);
+        if (mw != 0 && mw != iw) {
+            result |= iw;
+        }
+    }
+    return result;
+}
+
+static int
+isFrameIdMatching(int id, int mask)
+{
+    return frame_id_matches(id, mask) == 0 ? 1 : 0;
+}
 
 static int
 test_tag_spec_flags(lame_internal_flags const *gfc, unsigned int tst)
@@ -745,7 +764,7 @@ id3v2_add_latin1(lame_internal_flags * gfc, uint32_t frame_id, char const *lang,
 
 
 static int
-id3tag_set_userinfo_latin1(lame_internal_flags* gfc, char const *fieldvalue)
+id3tag_set_userinfo_latin1(lame_internal_flags* gfc, uint32_t id, char const *fieldvalue)
 {
     int     rc;
     char* dsc = 0, *val;
@@ -758,13 +777,13 @@ id3tag_set_userinfo_latin1(lame_internal_flags* gfc, char const *fieldvalue)
         }
         ++val;
     }
-    rc = id3v2_add_latin1(gfc, ID_TXXX, "XXX", dsc, val);
+    rc = id3v2_add_latin1(gfc, id, "XXX", dsc, val);
     free(dsc);
     return rc;
 }
 
 static int
-id3tag_set_userinfo_ucs2(lame_internal_flags* gfc, unsigned short const *fieldvalue)
+id3tag_set_userinfo_ucs2(lame_internal_flags* gfc, uint32_t id, unsigned short const *fieldvalue)
 {
     int     a, b, rc;
     unsigned short* dsc = 0, *val = 0;
@@ -772,7 +791,7 @@ id3tag_set_userinfo_ucs2(lame_internal_flags* gfc, unsigned short const *fieldva
     a = local_ucs2_pos(fieldvalue, '=');
     local_ucs2_substr(&dsc, fieldvalue, 0, a);
     local_ucs2_substr(&val, fieldvalue, a+1, b);
-    rc = id3v2_add_ucs2(gfc, ID_TXXX, "XXX", dsc, val);
+    rc = id3v2_add_ucs2(gfc, id, "XXX", dsc, val);
     free(dsc);
     free(val);
     return rc;
@@ -781,12 +800,12 @@ id3tag_set_userinfo_ucs2(lame_internal_flags* gfc, unsigned short const *fieldva
 int
 id3tag_set_textinfo_ucs2(lame_global_flags * gfp, char const *id, unsigned short const *text)
 {
-    uint32_t const t_mask = FRAME_ID('T', 0, 0, 0);
     uint32_t const frame_id = toID3v2TagId(id);
     if (frame_id == 0) {
         return -1;
     }
-    if ((frame_id & t_mask) == t_mask) {
+    if (isFrameIdMatching(frame_id, FRAME_ID('T', 0, 0, 0))
+      ||isFrameIdMatching(frame_id, FRAME_ID('W', 0, 0, 0))) {
 #if 0
         if (isNumericString(frame_id)) {
             return -2;  /* must be Latin-1 encoded */
@@ -799,8 +818,8 @@ id3tag_set_textinfo_ucs2(lame_global_flags * gfp, char const *id, unsigned short
             return -3;  /* BOM missing */
         }
         if (gfp != 0) {
-            if (frame_id == ID_TXXX) {
-                return id3tag_set_userinfo_ucs2(gfp->internal_flags, text);
+            if (frame_id == ID_TXXX || frame_id == ID_WXXX) {
+                return id3tag_set_userinfo_ucs2(gfp->internal_flags, frame_id, text);
             }
             return id3v2_add_ucs2(gfp->internal_flags, frame_id, 0, 0, text);
         }
@@ -811,18 +830,18 @@ id3tag_set_textinfo_ucs2(lame_global_flags * gfp, char const *id, unsigned short
 int
 id3tag_set_textinfo_latin1(lame_global_flags * gfp, char const *id, char const *text)
 {
-    uint32_t const t_mask = FRAME_ID('T', 0, 0, 0);
     uint32_t const frame_id = toID3v2TagId(id);
     if (frame_id == 0) {
         return -1;
     }
-    if ((frame_id & t_mask) == t_mask) {
+    if (isFrameIdMatching(frame_id, FRAME_ID('T', 0, 0, 0))
+      ||isFrameIdMatching(frame_id, FRAME_ID('W', 0, 0, 0))) {
         if (text == 0) {
             return 0;
         }
         if (gfp != 0) {
-            if (frame_id == ID_TXXX) {
-                return id3tag_set_userinfo_latin1(gfp->internal_flags, text);
+            if (frame_id == ID_TXXX || frame_id == ID_WXXX) {
+                return id3tag_set_userinfo_latin1(gfp->internal_flags, frame_id, text);
             }
             return id3v2_add_latin1(gfp->internal_flags, frame_id, 0, 0, text);
         }
@@ -1154,6 +1173,37 @@ sizeOfCommentNode(FrameDataNode const *node)
     return n;
 }
 
+static size_t
+sizeOfWxxxNode(FrameDataNode const *node)
+{
+    size_t  n = 0;
+    if (node) {
+        n = 10;         /* header size */
+        if (node->dsc.dim > 0) {
+            n += 1;         /* text encoding flag */
+            switch (node->dsc.enc) {
+            default:
+            case 0:
+                n += 1 + node->dsc.dim;
+                break;
+            case 1:
+                n += 2 + node->dsc.dim * 2;
+                break;
+            }
+        }
+        switch (node->txt.enc) {
+        default:
+        case 0:
+            n += node->txt.dim;
+            break;
+        case 1:
+            n += node->txt.dim; /* UCS2 -> Latin1 */
+            break;
+        }
+    }
+    return n;
+}
+
 static unsigned char *
 writeChars(unsigned char *frame, char const *str, size_t n)
 {
@@ -1169,6 +1219,20 @@ writeUcs2s(unsigned char *frame, unsigned short const *str, size_t n)
     while (n--) {
         *frame++ = 0xff & (*str >> 8);
         *frame++ = 0xff & (*str++);
+    }
+    return frame;
+}
+
+static unsigned char *
+writeLoBytes(unsigned char *frame, unsigned short const *str, size_t n)
+{
+    *str++;
+    while (n--) {
+        unsigned short c = *str++;
+        if (c < 0x20u || 0xff < c) {
+            c = 0x20; /* blank */
+        }
+        *frame++ = c;
     }
     return frame;
 }
@@ -1238,6 +1302,39 @@ set_frame_custom2(unsigned char *frame, FrameDataNode const *node)
         }
         else {
             frame = writeUcs2s(frame, node->txt.ptr.u, node->txt.dim);
+        }
+    }
+    return frame;
+}
+
+static unsigned char *
+set_frame_wxxx(unsigned char *frame, FrameDataNode const *node)
+{
+    size_t const n = sizeOfWxxxNode(node);
+    if (n > 10) {
+        frame = set_4_byte_value(frame, node->fid);
+        frame = set_4_byte_value(frame, (unsigned long) (n - 10));
+        /* clear 2-byte header flags */
+        *frame++ = 0;
+        *frame++ = 0;
+        if (node->dsc.dim > 0) {
+            /* clear 1 encoding descriptor byte to indicate ISO-8859-1 format */
+            *frame++ = node->txt.enc == 1 ? 1 : 0;
+            if (node->dsc.enc != 1) {
+                frame = writeChars(frame, node->dsc.ptr.l, node->dsc.dim);
+                *frame++ = 0;
+            }
+            else {
+                frame = writeUcs2s(frame, node->dsc.ptr.u, node->dsc.dim);
+                *frame++ = 0;
+                *frame++ = 0;
+            }
+        }
+        if (node->txt.enc != 1) {
+            frame = writeChars(frame, node->txt.ptr.l, node->txt.dim);
+        }
+        else {
+            frame = writeLoBytes(frame, node->txt.ptr.u, node->txt.dim);
         }
     }
     return frame;
@@ -1404,14 +1501,14 @@ lame_get_id3v2_tag(lame_global_flags * gfp, unsigned char *buffer, size_t size)
                 if (tag->v2_head != 0) {
                     FrameDataNode *node;
                     for (node = tag->v2_head; node != 0; node = node->nxt) {
-                        switch (node->fid) {
-                        case ID_COMMENT:
+                        if (node->fid == ID_COMMENT) {
                             tag_size += sizeOfCommentNode(node);
-                            break;
-
-                        default:
+                        }
+                        else if (isFrameIdMatching(node->fid, FRAME_ID('W',0,0,0))) {
+                            tag_size += sizeOfWxxxNode(node);
+                        }
+                        else {
                             tag_size += sizeOfNode(node);
-                            break;
                         }
                     }
                 }
@@ -1461,14 +1558,14 @@ lame_get_id3v2_tag(lame_global_flags * gfp, unsigned char *buffer, size_t size)
                 if (tag->v2_head != 0) {
                     FrameDataNode *node;
                     for (node = tag->v2_head; node != 0; node = node->nxt) {
-                        switch (node->fid) {
-                        case ID_COMMENT:
+                        if (node->fid == ID_COMMENT) {
                             p = set_frame_comment(p, node);
-                            break;
-
-                        default:
+                        }
+                        else if (isFrameIdMatching(node->fid,FRAME_ID('W',0,0,0))) {
+                            p = set_frame_wxxx(p, node);
+                        }
+                        else {
                             p = set_frame_custom2(p, node);
-                            break;
                         }
                     }
                 }

@@ -2,7 +2,7 @@
 <VisualStudioProject
 	ProjectType="Visual C++"
 	Version="9,00"
-	Name="libmp3lameDLL"
+	Name="libmp3lame"
 	ProjectGUID="{92BD50AA-04D6-4FBF-ACE1-468FAF6778F2}"
 	RootNamespace="libmp3lameDLL"
 	TargetFrameworkVersion="0"
@@ -68,6 +68,7 @@
 			/>
 			<Tool
 				Name="VCLinkerTool"
+				UseLibraryDependencyInputs="false"
 				OutputFile="$(OutDir)/libmp3lame.dll"
 				ModuleDefinitionFile="..\include\lame.def"
 				ImportLibrary="$(OutDir)/libmp3lame.lib"
@@ -144,6 +145,7 @@
 			/>
 			<Tool
 				Name="VCLinkerTool"
+				UseLibraryDependencyInputs="false"
 				OutputFile="$(OutDir)/libmp3lame.dll"
 				ModuleDefinitionFile="..\include\lame.def"
 				ImportLibrary="$(OutDir)/libmp3lame.lib"
@@ -218,6 +220,7 @@
 			/>
 			<Tool
 				Name="VCLinkerTool"
+				UseLibraryDependencyInputs="false"
 				OutputFile="$(OutDir)/libmp3lame.dll"
 				ModuleDefinitionFile="..\include\lame.def"
 				GenerateDebugInformation="true"

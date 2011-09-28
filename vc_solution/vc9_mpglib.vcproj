@@ -2,8 +2,9 @@
 <VisualStudioProject
 	ProjectType="Visual C++"
 	Version="9,00"
-	Name="mpglib"
+	Name="libmpghip-static"
 	ProjectGUID="{E2DAB91A-8248-4625-8A85-2C2C2A390DD8}"
+	RootNamespace="libmpghip"
 	TargetFrameworkVersion="0"
 	>
 	<Platforms>
@@ -44,7 +45,6 @@
 				FavorSizeOrSpeed="1"
 				AdditionalIncludeDirectories="../libmp3lame,../include,.."
 				PreprocessorDefinitions="NDEBUG;HAVE_MPGLIB;_WINDOWS;USE_LAYER_2;WIN32;HAVE_CONFIG_H"
-				RuntimeLibrary="2"
 			/>
 			<Tool
 				Name="VCManagedResourceCompilerTool"
@@ -58,7 +58,7 @@
 			/>
 			<Tool
 				Name="VCLibrarianTool"
-				OutputFile="$(OutDir)/mpglib-static.lib"
+				OutputFile="$(OutDir)/libmpghip-static.lib"
 			/>
 			<Tool
 				Name="VCALinkTool"
@@ -106,7 +106,6 @@
 				FavorSizeOrSpeed="1"
 				AdditionalIncludeDirectories="../libmp3lame,../include,.."
 				PreprocessorDefinitions="NDEBUG;HAVE_MPGLIB;_WINDOWS;USE_LAYER_2;WIN32;HAVE_CONFIG_H"
-				RuntimeLibrary="2"
 			/>
 			<Tool
 				Name="VCManagedResourceCompilerTool"
@@ -120,7 +119,7 @@
 			/>
 			<Tool
 				Name="VCLibrarianTool"
-				OutputFile="$(OutDir)/mpglib-static.lib"
+				OutputFile="$(OutDir)/libmpghip-static.lib"
 			/>
 			<Tool
 				Name="VCALinkTool"
@@ -165,7 +164,7 @@
 				Optimization="0"
 				AdditionalIncludeDirectories="../libmp3lame,../include,.."
 				PreprocessorDefinitions="_DEBUG;_WINDOWS;USE_LAYER_2;HAVE_MPGLIB;WIN32;HAVE_CONFIG_H"
-				RuntimeLibrary="3"
+				RuntimeLibrary="1"
 				ProgramDataBaseFileName="$(OutDir)\$(TargetName).pdb"
 				DebugInformationFormat="3"
 			/>
@@ -181,7 +180,7 @@
 			/>
 			<Tool
 				Name="VCLibrarianTool"
-				OutputFile="$(OutDir)/mpglib-static.lib"
+				OutputFile="$(OutDir)/libmpghip-static.lib"
 			/>
 			<Tool
 				Name="VCALinkTool"
@@ -229,7 +228,6 @@
 				FavorSizeOrSpeed="1"
 				AdditionalIncludeDirectories="../libmp3lame,../include,.."
 				PreprocessorDefinitions="NDEBUG;HAVE_MPGLIB;_WINDOWS;USE_LAYER_2;WIN32;HAVE_CONFIG_H"
-				RuntimeLibrary="2"
 			/>
 			<Tool
 				Name="VCManagedResourceCompilerTool"
@@ -243,7 +241,7 @@
 			/>
 			<Tool
 				Name="VCLibrarianTool"
-				OutputFile="$(OutDir)/mpglib-static.lib"
+				OutputFile="$(OutDir)/libmpghip-static.lib"
 			/>
 			<Tool
 				Name="VCALinkTool"
