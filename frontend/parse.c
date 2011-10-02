@@ -1957,9 +1957,9 @@ parse_args(lame_global_flags * gfp, int argc, char **argv,
 
                 T_ELIF("?")
 #ifdef __unix__
-                FILE   *fp = popen("less -Mqc", "w");
-                long_help(gfp, fp, ProgramName, 0 /* lessmode=NO */ );
-                pclose(fp);
+                    FILE   *fp = popen("less -Mqc", "w");
+                    long_help(gfp, fp, ProgramName, 0 /* lessmode=NO */ );
+                    pclose(fp);
 #else
                     long_help(gfp, stdout, ProgramName, 1 /* lessmode=YES */ );
 #endif

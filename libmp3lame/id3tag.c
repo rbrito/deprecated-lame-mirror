@@ -798,12 +798,6 @@ id3tag_set_userinfo_ucs2(lame_internal_flags* gfc, uint32_t id, unsigned short c
 }
 
 int
-id3tag_set_textinfo_ucs2(lame_global_flags * gfp, char const *id, unsigned short const *text)
-{
-    return id3tag_set_textinfo_utf16(gfp, id, text);
-}
-
-int
 id3tag_set_textinfo_utf16(lame_global_flags * gfp, char const *id, unsigned short const *text)
 {
     uint32_t const frame_id = toID3v2TagId(id);
@@ -831,6 +825,15 @@ id3tag_set_textinfo_utf16(lame_global_flags * gfp, char const *id, unsigned shor
         }
     }
     return -255;        /* not supported by now */
+}
+
+extern int
+id3tag_set_textinfo_ucs2(lame_global_flags * gfp, char const *id, unsigned short const *text);
+
+int
+id3tag_set_textinfo_ucs2(lame_global_flags * gfp, char const *id, unsigned short const *text)
+{
+    return id3tag_set_textinfo_utf16(gfp, id, text);
 }
 
 int
@@ -868,13 +871,6 @@ id3tag_set_comment_latin1(lame_global_flags * gfp, char const *lang, char const 
 
 
 int
-id3tag_set_comment_ucs2(lame_global_flags * gfp, char const *lang, unsigned short const *desc,
-                        unsigned short const *text)
-{
-    return id3tag_set_comment_utf16(gfp, lang, desc, text);
-}
-
-int
 id3tag_set_comment_utf16(lame_global_flags * gfp, char const *lang, unsigned short const *desc,
                          unsigned short const *text)
 {
@@ -882,6 +878,18 @@ id3tag_set_comment_utf16(lame_global_flags * gfp, char const *lang, unsigned sho
         return id3v2_add_ucs2(gfp->internal_flags, ID_COMMENT, lang, desc, text);
     }
     return -255;
+}
+
+extern int
+id3tag_set_comment_ucs2(lame_global_flags * gfp, char const *lang, unsigned short const *desc,
+                        unsigned short const *text);
+
+
+int
+id3tag_set_comment_ucs2(lame_global_flags * gfp, char const *lang, unsigned short const *desc,
+                        unsigned short const *text)
+{
+    return id3tag_set_comment_utf16(gfp, lang, desc, text);
 }
 
 
@@ -1239,7 +1247,7 @@ writeUcs2s(unsigned char *frame, unsigned short const *str, size_t n)
 static unsigned char *
 writeLoBytes(unsigned char *frame, unsigned short const *str, size_t n)
 {
-    *str++;
+    str++; /* skip BOM */
     while (n--) {
         unsigned short c = *str++;
         if (c < 0x20u || 0xff < c) {
@@ -1417,12 +1425,6 @@ id3tag_set_fieldvalue(lame_global_flags * gfp, const char *fieldvalue)
 }
 
 int
-id3tag_set_fieldvalue_ucs2(lame_global_flags * gfp, const unsigned short *fieldvalue)
-{
-    return id3tag_set_fieldvalue_utf16(gfp, fieldvalue);
-}
-
-int
 id3tag_set_fieldvalue_utf16(lame_global_flags * gfp, const unsigned short *fieldvalue)
 {
     if (fieldvalue && *fieldvalue) {
@@ -1446,6 +1448,15 @@ id3tag_set_fieldvalue_utf16(lame_global_flags * gfp, const unsigned short *field
         }
     }
     return -1;
+}
+
+extern int
+id3tag_set_fieldvalue_ucs2(lame_global_flags * gfp, const unsigned short *fieldvalue);
+
+int
+id3tag_set_fieldvalue_ucs2(lame_global_flags * gfp, const unsigned short *fieldvalue)
+{
+    return id3tag_set_fieldvalue_utf16(gfp, fieldvalue);
 }
 
 size_t
