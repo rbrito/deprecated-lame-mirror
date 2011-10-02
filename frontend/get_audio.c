@@ -1311,6 +1311,16 @@ static short const WAVE_FORMAT_EXTENSIBLE = 0xFFFE;
 #endif
 
 
+static long
+make_even_number_of_bytes_in_length(long x)
+{
+    if ((x & 0x01) != 0) {
+        return x + 1;
+    }
+    return x;
+}
+
+
 /*****************************************************************************
  *
  *	Read Microsoft Wave headers
@@ -1344,6 +1354,7 @@ parse_wave_header(lame_global_flags * gfp, FILE * sf)
 
         if (type == WAV_ID_FMT) {
             subSize = read_32_bits_low_high(sf);
+            subSize = make_even_number_of_bytes_in_length(subSize);
             if (subSize < 16) {
                 /*DEBUGF(
                    "'fmt' chunk too short (only %ld bytes)!", subSize);  */
@@ -1391,12 +1402,12 @@ parse_wave_header(lame_global_flags * gfp, FILE * sf)
         }
         else {
             subSize = read_32_bits_low_high(sf);
+            subSize = make_even_number_of_bytes_in_length(subSize);
             if (fskip(sf, (long) subSize, SEEK_CUR) != 0) {
                 return -1;
             }
         }
     }
-
     if (is_wav) {        
         if (format_tag != WAVE_FORMAT_PCM && format_tag != WAVE_FORMAT_IEEE_FLOAT) {
             if (global_ui_config.silent < 10) {
@@ -1472,16 +1483,6 @@ aiff_check2(IFF_AIFF * const pcm_aiff_data)
        } */
 
     return 0;
-}
-
-
-static long
-make_even_number_of_bytes_in_length(long x)
-{
-    if ((x & 0x01) != 0) {
-        return x + 1;
-    }
-    return x;
 }
 
 
