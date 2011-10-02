@@ -74,7 +74,6 @@ char   *strchr(), *strrchr();
 #include "lame.h"
 #include "main.h"
 #include "get_audio.h"
-#include "portableio.h"
 #include "lametime.h"
 #include "console.h"
 
@@ -89,6 +88,125 @@ char   *strchr(), *strrchr();
 #endif
 
 
+#define FLOAT_TO_UNSIGNED(f) ((unsigned long)(((long)((f) - 2147483648.0)) + 2147483647L + 1))
+#define UNSIGNED_TO_FLOAT(u) (((double)((long)((u) - 2147483647L - 1))) + 2147483648.0)
+
+static uint32_t
+uint32_high_low(unsigned char* bytes)
+{
+    uint32_t const hh = bytes[0];
+    uint32_t const hl = bytes[1];
+    uint32_t const lh = bytes[2];
+    uint32_t const ll = bytes[3];
+    return (hh << 24) | (hl << 16) | (lh << 8) | ll;
+}
+
+static double
+read_ieee_extended_high_low(FILE * fp)
+{
+    unsigned char bytes[10];
+    memset(bytes, 0, 10);
+    fread(bytes, 1, 10, fp);
+    {
+        int32_t const s = (bytes[0] & 0x80);
+        int32_t const e_h = (bytes[0] & 0x7F);
+        int32_t const e_l = bytes[1];
+        int32_t e = (e_h << 8) | e_l;
+        uint32_t const hm = uint32_high_low(bytes+2);
+        uint32_t const lm = uint32_high_low(bytes+6);
+        double result = 0;
+        if (e != 0 || hm != 0 || lm != 0) {
+            if (e == 0x7fff) {
+                result = HUGE_VAL;
+            }
+            else {
+                double mantissa_h = UNSIGNED_TO_FLOAT(hm);
+                double mantissa_l = UNSIGNED_TO_FLOAT(lm);
+                e -= 0x3fff;
+                e -= 31;
+                result = ldexp(mantissa_h, e);
+                e -= 32;
+                result += ldexp(mantissa_l, e);
+            }
+        }
+        return s ? -result : result;
+    }
+}
+
+
+static int
+read_16_bits_low_high(FILE * fp)
+{
+    unsigned char bytes[2] = {0,0};
+    fread(bytes, 1, 2, fp);
+    {
+        int32_t const low = bytes[0];
+        int32_t const high = (signed char)(bytes[1]);
+        return (high << 8) | low;
+    }
+}
+
+
+static int
+read_32_bits_low_high(FILE * fp)
+{
+    unsigned char bytes[4] = {0,0,0,0};
+    fread(bytes, 1, 4, fp);
+    {
+        int32_t const low  = bytes[0];
+        int32_t const medl = bytes[1];
+        int32_t const medh = bytes[2];
+        int32_t const high = (signed char)(bytes[3]);
+        return (high << 24) | (medh << 16) | (medl << 8) | low;
+    }
+}
+
+static int
+read_16_bits_high_low(FILE * fp)
+{
+    unsigned char bytes[2] = {0,0};
+    fread(bytes, 1, 2, fp);
+    {
+        int32_t const low = bytes[1];
+        int32_t const high = (signed char)(bytes[0]);
+        return (high << 8) | low;
+    }
+}
+
+static int
+read_32_bits_high_low(FILE * fp)
+{
+    unsigned char bytes[4] = {0,0,0,0};
+    fread(bytes, 1, 4, fp);
+    {
+        int32_t const low = bytes[3];
+        int32_t const medl = bytes[2];
+        int32_t const medh = bytes[1];
+        int32_t const high = (signed char)(bytes[0]);
+        return (high << 24) | (medh << 16) | (medl << 8) | low;
+    }
+}
+
+static void
+write_16_bits_low_high(FILE * fp, int val)
+{
+    unsigned char bytes[2];
+    bytes[0] = (val & 0xff);
+    bytes[1] = ((val >> 8) & 0xff);
+    fwrite(bytes, 1, 2, fp);
+}
+
+static void
+write_32_bits_low_high(FILE * fp, int val)
+{
+    unsigned char bytes[4];
+    bytes[0] = (val & 0xff);
+    bytes[1] = ((val >> 8) & 0xff);
+    bytes[2] = ((val >> 16) & 0xff);
+    bytes[3] = ((val >> 24) & 0xff);
+    fwrite(bytes, 1, 4, fp);
+}
+
 #ifdef LIBSNDFILE
 
 #include <sndfile.h>
@@ -98,7 +216,6 @@ char   *strchr(), *strrchr();
 /*****************************************************************
  * LAME/ISO built in audio file I/O routines 
  *******************************************************************/
-#include "portableio.h"
 
 
 typedef struct blockAlign_struct {
@@ -771,17 +888,17 @@ WriteWaveHeader(FILE * const fp, int pcmbytes, int freq, int channels, int bits)
 
     /* quick and dirty, but documented */
     fwrite("RIFF", 1, 4, fp); /* label */
-    Write32BitsLowHigh(fp, pcmbytes + 44 - 8); /* length in bytes without header */
+    write_32_bits_low_high(fp, pcmbytes + 44 - 8); /* length in bytes without header */
     fwrite("WAVEfmt ", 2, 4, fp); /* 2 labels */
-    Write32BitsLowHigh(fp, 2 + 2 + 4 + 4 + 2 + 2); /* length of PCM format declaration area */
-    Write16BitsLowHigh(fp, 1); /* is PCM? */
-    Write16BitsLowHigh(fp, channels); /* number of channels */
-    Write32BitsLowHigh(fp, freq); /* sample frequency in [Hz] */
-    Write32BitsLowHigh(fp, freq * channels * bytes); /* bytes per second */
-    Write16BitsLowHigh(fp, channels * bytes); /* bytes per sample time */
-    Write16BitsLowHigh(fp, bits); /* bits per sample */
+    write_32_bits_low_high(fp, 2 + 2 + 4 + 4 + 2 + 2); /* length of PCM format declaration area */
+    write_16_bits_low_high(fp, 1); /* is PCM? */
+    write_16_bits_low_high(fp, channels); /* number of channels */
+    write_32_bits_low_high(fp, freq); /* sample frequency in [Hz] */
+    write_32_bits_low_high(fp, freq * channels * bytes); /* bytes per second */
+    write_16_bits_low_high(fp, channels * bytes); /* bytes per sample time */
+    write_16_bits_low_high(fp, bits); /* bits per sample */
     fwrite("data", 1, 4, fp); /* label */
-    Write32BitsLowHigh(fp, pcmbytes); /* length in bytes of raw PCM data */
+    write_32_bits_low_high(fp, pcmbytes); /* length in bytes of raw PCM data */
 
     return ferror(fp) ? -1 : 0;
 }
@@ -1218,41 +1335,41 @@ parse_wave_header(lame_global_flags * gfp, FILE * sf)
     long    data_length = 0, file_length, subSize = 0;
     int     loop_sanity = 0;
 
-    file_length = Read32BitsHighLow(sf);
-    if (Read32BitsHighLow(sf) != WAV_ID_WAVE)
+    file_length = read_32_bits_high_low(sf);
+    if (read_32_bits_high_low(sf) != WAV_ID_WAVE)
         return -1;
 
     for (loop_sanity = 0; loop_sanity < 20; ++loop_sanity) {
-        int     type = Read32BitsHighLow(sf);
+        int     type = read_32_bits_high_low(sf);
 
         if (type == WAV_ID_FMT) {
-            subSize = Read32BitsLowHigh(sf);
+            subSize = read_32_bits_low_high(sf);
             if (subSize < 16) {
                 /*DEBUGF(
                    "'fmt' chunk too short (only %ld bytes)!", subSize);  */
                 return -1;
             }
 
-            format_tag = Read16BitsLowHigh(sf);
+            format_tag = read_16_bits_low_high(sf);
             subSize -= 2;
-            channels = Read16BitsLowHigh(sf);
+            channels = read_16_bits_low_high(sf);
             subSize -= 2;
-            samples_per_sec = Read32BitsLowHigh(sf);
+            samples_per_sec = read_32_bits_low_high(sf);
             subSize -= 4;
-            avg_bytes_per_sec = Read32BitsLowHigh(sf);
+            avg_bytes_per_sec = read_32_bits_low_high(sf);
             subSize -= 4;
-            block_align = Read16BitsLowHigh(sf);
+            block_align = read_16_bits_low_high(sf);
             subSize -= 2;
-            bits_per_sample = Read16BitsLowHigh(sf);
+            bits_per_sample = read_16_bits_low_high(sf);
             subSize -= 2;
 
             /* WAVE_FORMAT_EXTENSIBLE support */
             if ((subSize > 9) && (format_tag == WAVE_FORMAT_EXTENSIBLE)) {
-                Read16BitsLowHigh(sf); /* cbSize */
-                Read16BitsLowHigh(sf); /* ValidBitsPerSample */
-                Read32BitsLowHigh(sf); /* ChannelMask */
+                read_16_bits_low_high(sf); /* cbSize */
+                read_16_bits_low_high(sf); /* ValidBitsPerSample */
+                read_32_bits_low_high(sf); /* ChannelMask */
                 /* SubType coincident with format_tag for PCM int or float */
-                format_tag = Read16BitsLowHigh(sf);
+                format_tag = read_16_bits_low_high(sf);
                 subSize -= 10;
             }
 
@@ -1265,7 +1382,7 @@ parse_wave_header(lame_global_flags * gfp, FILE * sf)
 
         }
         else if (type == WAV_ID_DATA) {
-            subSize = Read32BitsLowHigh(sf);
+            subSize = read_32_bits_low_high(sf);
             data_length = subSize;
             is_wav = 1;
             /* We've found the audio data. Read no further! */
@@ -1273,7 +1390,7 @@ parse_wave_header(lame_global_flags * gfp, FILE * sf)
 
         }
         else {
-            subSize = Read32BitsLowHigh(sf);
+            subSize = read_32_bits_low_high(sf);
             if (fskip(sf, (long) subSize, SEEK_CUR) != 0) {
                 return -1;
             }
@@ -1386,15 +1503,15 @@ parse_aiff_header(lame_global_flags * gfp, FILE * sf)
     long    pcm_data_pos = -1;
 
     memset(&aiff_info, 0, sizeof(aiff_info));
-    chunkSize = Read32BitsHighLow(sf);
+    chunkSize = read_32_bits_high_low(sf);
 
-    typeID = Read32BitsHighLow(sf);
+    typeID = read_32_bits_high_low(sf);
     if ((typeID != IFF_ID_AIFF) && (typeID != IFF_ID_AIFC))
         return -1;
 
     while (chunkSize > 0) {
         long    ckSize;
-        int     type = Read32BitsHighLow(sf);
+        int     type = read_32_bits_high_low(sf);
         chunkSize -= 4;
 
         /* DEBUGF(
@@ -1403,20 +1520,20 @@ parse_aiff_header(lame_global_flags * gfp, FILE * sf)
         /* don't use a switch here to make it easier to use 'break' for SSND */
         if (type == IFF_ID_COMM) {
             seen_comm_chunk = seen_ssnd_chunk + 1;
-            subSize = Read32BitsHighLow(sf);
+            subSize = read_32_bits_high_low(sf);
             ckSize = make_even_number_of_bytes_in_length(subSize);
             chunkSize -= ckSize;
 
-            aiff_info.numChannels = (short) Read16BitsHighLow(sf);
+            aiff_info.numChannels = (short) read_16_bits_high_low(sf);
             ckSize -= 2;
-            aiff_info.numSampleFrames = Read32BitsHighLow(sf);
+            aiff_info.numSampleFrames = read_32_bits_high_low(sf);
             ckSize -= 4;
-            aiff_info.sampleSize = (short) Read16BitsHighLow(sf);
+            aiff_info.sampleSize = (short) read_16_bits_high_low(sf);
             ckSize -= 2;
-            aiff_info.sampleRate = ReadIeeeExtendedHighLow(sf);
+            aiff_info.sampleRate = read_ieee_extended_high_low(sf);
             ckSize -= 10;
             if (typeID == IFF_ID_AIFC) {
-                dataType = Read32BitsHighLow(sf);
+                dataType = read_32_bits_high_low(sf);
                 ckSize -= 4;
             }
             if (fskip(sf, ckSize, SEEK_CUR) != 0)
@@ -1424,13 +1541,13 @@ parse_aiff_header(lame_global_flags * gfp, FILE * sf)
         }
         else if (type == IFF_ID_SSND) {
             seen_ssnd_chunk = 1;
-            subSize = Read32BitsHighLow(sf);
+            subSize = read_32_bits_high_low(sf);
             ckSize = make_even_number_of_bytes_in_length(subSize);
             chunkSize -= ckSize;
 
-            aiff_info.blkAlgn.offset = Read32BitsHighLow(sf);
+            aiff_info.blkAlgn.offset = read_32_bits_high_low(sf);
             ckSize -= 4;
-            aiff_info.blkAlgn.blockSize = Read32BitsHighLow(sf);
+            aiff_info.blkAlgn.blockSize = read_32_bits_high_low(sf);
             ckSize -= 4;
 
             aiff_info.sampleType = IFF_ID_SSND;
@@ -1449,7 +1566,7 @@ parse_aiff_header(lame_global_flags * gfp, FILE * sf)
                 return -1;
         }
         else {
-            subSize = Read32BitsHighLow(sf);
+            subSize = read_32_bits_high_low(sf);
             ckSize = make_even_number_of_bytes_in_length(subSize);
             chunkSize -= ckSize;
 
@@ -1520,7 +1637,7 @@ static int
 parse_file_header(lame_global_flags * gfp, FILE * sf)
 {
 
-    int     type = Read32BitsHighLow(sf);
+    int     type = read_32_bits_high_low(sf);
     /*
        DEBUGF(
        "First word of input stream: %08x '%4.4s'\n", type, (char*) &type); 

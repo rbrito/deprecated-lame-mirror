@@ -17,7 +17,6 @@ common_sources = \
 	get_audio.c \
 	lametime.c \
 	parse.c \
-	portableio.c \
 	timestatus.c
 
 noinst_HEADERS = \
@@ -29,7 +28,6 @@ noinst_HEADERS = \
 	lametime.h \
 	main.h \
 	parse.h \
-	portableio.h \
 	timestatus.h
 
 lame_SOURCES = lame_main.c $(common_sources)

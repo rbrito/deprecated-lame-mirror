@@ -54,7 +54,7 @@ am__installdirs = "$(DESTDIR)$(bindir)"
 PROGRAMS = $(bin_PROGRAMS)
 am__objects_1 = main$U.$(OBJEXT) brhist$U.$(OBJEXT) \
 	console$U.$(OBJEXT) get_audio$U.$(OBJEXT) lametime$U.$(OBJEXT) \
-	parse$U.$(OBJEXT) portableio$U.$(OBJEXT) \
+	parse$U.$(OBJEXT) \
 	timestatus$U.$(OBJEXT)
 am_lame_OBJECTS = lame_main$U.$(OBJEXT) $(am__objects_1)
 lame_OBJECTS = $(am_lame_OBJECTS)
@@ -247,7 +247,6 @@ common_sources = \
 	get_audio.c \
 	lametime.c \
 	parse.c \
-	portableio.c \
 	timestatus.c
 
 noinst_HEADERS = \
@@ -259,7 +258,6 @@ noinst_HEADERS = \
 	lametime.h \
 	main.h \
 	parse.h \
-	portableio.h \
 	timestatus.h
 
 lame_SOURCES = lame_main.c $(common_sources)
@@ -386,7 +384,6 @@ mostlyclean-kr:
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/mp3rtp$U.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/mp3x$U.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/parse$U.Po@am__quote@
-@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/portableio$U.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/rtp$U.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/timestatus$U.Po@am__quote@
 
@@ -432,8 +429,6 @@ mp3x_.c: mp3x.c $(ANSI2KNR)
 	$(CPP) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) `if test -f $(srcdir)/mp3x.c; then echo $(srcdir)/mp3x.c; else echo mp3x.c; fi` | sed 's/^# \([0-9]\)/#line \1/' | $(ANSI2KNR) > $@ || rm -f $@
 parse_.c: parse.c $(ANSI2KNR)
 	$(CPP) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) `if test -f $(srcdir)/parse.c; then echo $(srcdir)/parse.c; else echo parse.c; fi` | sed 's/^# \([0-9]\)/#line \1/' | $(ANSI2KNR) > $@ || rm -f $@
-portableio_.c: portableio.c $(ANSI2KNR)
-	$(CPP) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) `if test -f $(srcdir)/portableio.c; then echo $(srcdir)/portableio.c; else echo portableio.c; fi` | sed 's/^# \([0-9]\)/#line \1/' | $(ANSI2KNR) > $@ || rm -f $@
 rtp_.c: rtp.c $(ANSI2KNR)
 	$(CPP) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) `if test -f $(srcdir)/rtp.c; then echo $(srcdir)/rtp.c; else echo rtp.c; fi` | sed 's/^# \([0-9]\)/#line \1/' | $(ANSI2KNR) > $@ || rm -f $@
 timestatus_.c: timestatus.c $(ANSI2KNR)
@@ -443,7 +438,7 @@ get_audio_.$(OBJEXT) get_audio_.lo gpkplotting_.$(OBJEXT) \
 gpkplotting_.lo gtkanal_.$(OBJEXT) gtkanal_.lo lame_main_.$(OBJEXT) \
 lame_main_.lo lametime_.$(OBJEXT) lametime_.lo main_.$(OBJEXT) \
 main_.lo mp3rtp_.$(OBJEXT) mp3rtp_.lo mp3x_.$(OBJEXT) mp3x_.lo \
-parse_.$(OBJEXT) parse_.lo portableio_.$(OBJEXT) portableio_.lo \
+parse_.$(OBJEXT) parse_.lo \
 rtp_.$(OBJEXT) rtp_.lo timestatus_.$(OBJEXT) timestatus_.lo : \
 $(ANSI2KNR)
 

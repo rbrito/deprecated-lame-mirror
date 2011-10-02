@@ -340,10 +340,6 @@
 				>
 			</File>
 			<File
-				RelativePath="..\frontend\portableio.c"
-				>
-			</File>
-			<File
 				RelativePath="..\frontend\rtp.c"
 				>
 			</File>
@@ -378,10 +374,6 @@
 			</File>
 			<File
 				RelativePath="..\frontend\parse.h"
-				>
-			</File>
-			<File
-				RelativePath="..\frontend\portableio.h"
 				>
 			</File>
 			<File

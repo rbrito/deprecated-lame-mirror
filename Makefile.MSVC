@@ -452,7 +452,6 @@ dll_sources = \
 
 common_sources = \
 	frontend/main.c \
-	frontend/portableio.c \
 	frontend/get_audio.c \
 	frontend/parse.c \
 	frontend/timestatus.c \
