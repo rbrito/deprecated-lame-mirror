@@ -89,7 +89,7 @@ extern RawPCMConfig global_raw_pcm;
 extern FILE* lame_fopen(char const* file, char const* mode);
 extern char* utf8ToConsole8Bit(const char* str);
 extern char* utf8ToLocal8Bit(const char* str);
-extern unsigned short* utf8ToUcs2(char const* str);
+extern unsigned short* utf8ToUtf16(char const* str);
 extern char* utf8ToLatin1(char const* str);
 #ifdef _WIN32
 extern wchar_t* utf8ToUnicode(char const* str);

@@ -294,3 +294,6 @@ id3tag_set_pad	@2020
 id3tag_set_comment_ucs2	@2021
 id3tag_set_textinfo_ucs2 @2022
 id3tag_set_fieldvalue_ucs2	@2023
+id3tag_set_comment_utf16	@2024
+id3tag_set_textinfo_utf16 @2025
+id3tag_set_fieldvalue_utf16	@2026

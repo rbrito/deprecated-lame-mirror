@@ -1250,12 +1250,14 @@ int CDECL lame_get_write_id3tag_automatic(lame_global_flags const* gfp);
 int CDECL id3tag_set_textinfo_latin1(lame_global_flags * gfp, char const *id, char const *text);
 
 /* experimental */
-int CDECL id3tag_set_textinfo_ucs2(lame_global_flags * gfp,
-                                   char const *id, unsigned short const *text);
-
-/* experimental */
 int CDECL id3tag_set_comment_latin1(lame_global_flags * gfp,
                                     char const *lang, char const *desc, char const *text);
+
+#if DEPRECATED_OR_OBSOLETE_CODE_REMOVED
+#else
+/* experimental */
+int CDECL id3tag_set_textinfo_ucs2(lame_global_flags * gfp,
+                                   char const *id, unsigned short const *text);
 
 /* experimental */
 int CDECL id3tag_set_comment_ucs2(lame_global_flags * gfp,
@@ -1264,6 +1266,20 @@ int CDECL id3tag_set_comment_ucs2(lame_global_flags * gfp,
 
 /* experimental */
 int CDECL id3tag_set_fieldvalue_ucs2(lame_t gfp, const unsigned short *fieldvalue);
+#endif
+
+/* experimental */
+int CDECL id3tag_set_fieldvalue_utf16(lame_t gfp, const unsigned short *fieldvalue);
+
+/* experimental */
+int CDECL id3tag_set_textinfo_utf16(lame_global_flags * gfp,
+                                    char const *id, unsigned short const *text);
+
+/* experimental */
+int CDECL id3tag_set_comment_utf16(lame_global_flags * gfp,
+                                   char const *lang,
+                                   unsigned short const *desc, unsigned short const *text);
+
 
 /***********************************************************************
 *

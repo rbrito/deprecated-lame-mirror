@@ -800,6 +800,12 @@ id3tag_set_userinfo_ucs2(lame_internal_flags* gfc, uint32_t id, unsigned short c
 int
 id3tag_set_textinfo_ucs2(lame_global_flags * gfp, char const *id, unsigned short const *text)
 {
+    return id3tag_set_textinfo_utf16(gfp, id, text);
+}
+
+int
+id3tag_set_textinfo_utf16(lame_global_flags * gfp, char const *id, unsigned short const *text)
+{
     uint32_t const frame_id = toID3v2TagId(id);
     if (frame_id == 0) {
         return -1;
@@ -864,6 +870,13 @@ id3tag_set_comment_latin1(lame_global_flags * gfp, char const *lang, char const 
 int
 id3tag_set_comment_ucs2(lame_global_flags * gfp, char const *lang, unsigned short const *desc,
                         unsigned short const *text)
+{
+    return id3tag_set_comment_utf16(gfp, lang, desc, text);
+}
+
+int
+id3tag_set_comment_utf16(lame_global_flags * gfp, char const *lang, unsigned short const *desc,
+                         unsigned short const *text)
 {
     if (gfp != 0) {
         return id3v2_add_ucs2(gfp->internal_flags, ID_COMMENT, lang, desc, text);
@@ -1405,6 +1418,12 @@ id3tag_set_fieldvalue(lame_global_flags * gfp, const char *fieldvalue)
 
 int
 id3tag_set_fieldvalue_ucs2(lame_global_flags * gfp, const unsigned short *fieldvalue)
+{
+    return id3tag_set_fieldvalue_utf16(gfp, fieldvalue);
+}
+
+int
+id3tag_set_fieldvalue_utf16(lame_global_flags * gfp, const unsigned short *fieldvalue)
 {
     if (fieldvalue && *fieldvalue) {
         size_t dx = hasUcs2ByteOrderMarker(fieldvalue[0]);

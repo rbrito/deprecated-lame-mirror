@@ -353,7 +353,7 @@ char* utf8ToLatin1(char const* str)
   return mbsToMbs(str, CP_UTF8, 28591); /* Latin-1 is code page 28591 */
 }
 
-unsigned short* utf8ToUcs2(char const* mbstr) /* additional Byte-Order-Marker */
+unsigned short* utf8ToUtf16(char const* mbstr) /* additional Byte-Order-Marker */
 {
   int n = MultiByteToWideChar(CP_UTF8, 0, mbstr, -1, NULL, 0);
   wchar_t* wstr = malloc( (n+1)*sizeof(wstr[0]) );
