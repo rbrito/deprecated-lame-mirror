@@ -325,6 +325,9 @@ id3_tag(lame_global_flags* gfp, int type, TextEncoding enc, char* str)
 {
     void* x = 0;
     int result;
+    if (enc == TENC_UTF16 && type != 'v' ) {
+        id3_tag(gfp, type, TENC_LATIN1, str); /* for id3v1 */
+    }
     switch (enc) 
     {
         default:
