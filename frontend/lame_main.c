@@ -3,7 +3,7 @@
  *
  *      Copyright (c) 1999 Mark Taylor
  *                    2000 Takehiro TOMINAGA
- *                    2010 Robert Hegemann
+ *                    2010-2011 Robert Hegemann
  *
  * This library is free software; you can redistribute it and/or
  * modify it under the terms of the GNU Library General Public
@@ -309,9 +309,6 @@ print_lame_tag_leading_info(lame_global_flags * gf)
 static void
 print_trailing_info(lame_global_flags * gf)
 {
-    if (lame_get_bWriteVbrTag(gf))
-        console_printf("done\n");
-
     if (lame_get_findReplayGain(gf)) {
         int     RadioGain = lame_get_RadioGain(gf);
         console_printf("ReplayGain: %s%.1fdB\n", RadioGain > 0 ? "+" : "",
@@ -364,12 +361,18 @@ print_trailing_info(lame_global_flags * gf)
 
 
 static int
-write_xing_frame(lame_global_flags * gf, FILE * outf)
+write_xing_frame(lame_global_flags * gf, FILE * outf, size_t offset)
 {
     unsigned char mp3buffer[LAME_MAXMP3BUFFER];
     size_t  imp3, owrite;
     
     imp3 = lame_get_lametag_frame(gf, mp3buffer, sizeof(mp3buffer));
+    if (imp3 <= 0) {
+        return 0; /* nothing to do */
+    }
+    if (global_ui_config.silent <= 0) {
+        console_printf("Writing LAME Tag...");
+    }
     if (imp3 > sizeof(mp3buffer)) {
         error_printf("Error writing LAME-tag frame: buffer too small: buffer size=%d  frame size=%d\n"
                     , sizeof(mp3buffer)
@@ -377,18 +380,45 @@ write_xing_frame(lame_global_flags * gf, FILE * outf)
                     );
         return -1;
     }
-    if (imp3 <= 0) {
-        return 0;
+    if (fseek(outf, offset, SEEK_SET) != 0) {
+        error_printf("fatal error: can't update LAME-tag frame!\n");
+        return -1;
     }
     owrite = (int) fwrite(mp3buffer, 1, imp3, outf);
     if (owrite != imp3) {
         error_printf("Error writing LAME-tag \n");
         return -1;
     }
-    if (global_writer.flush_write == 1) {
-        fflush(outf);
+    if (global_ui_config.silent <= 0) {
+        console_printf("done\n");
     }
     return imp3;
+}
+
+
+static int
+write_id3v1_tag(lame_t gf, FILE * outf)
+{
+    unsigned char mp3buffer[128];
+    int     imp3, owrite;
+
+    imp3 = lame_get_id3v1_tag(gf, mp3buffer, sizeof(mp3buffer));
+    if (imp3 <= 0) {
+        return 0;
+    }
+    if ((size_t)imp3 > sizeof(mp3buffer)) {
+        error_printf("Error writing ID3v1 tag: buffer too small: buffer size=%d  ID3v1 size=%d\n"
+                    , sizeof(mp3buffer)
+                    , imp3
+                    );
+        return 0; /* not critical */
+    }
+    owrite = (int) fwrite(mp3buffer, 1, imp3, outf);
+    if (owrite != imp3) {
+        error_printf("Error writing ID3v1 tag \n");
+        return 1;
+    }
+    return 0;
 }
 
 
@@ -475,40 +505,20 @@ lame_encoder_loop(lame_global_flags * gf, FILE * outf, int nogap, char *inPath, 
     if (global_writer.flush_write == 1) {
         fflush(outf);
     }
-
-    imp3 = lame_get_id3v1_tag(gf, mp3buffer, sizeof(mp3buffer));
-    if ((size_t)imp3 > sizeof(mp3buffer)) {
-        error_printf("Error writing ID3v1 tag: buffer too small: buffer size=%d  ID3v1 size=%d\n"
-                    , sizeof(mp3buffer)
-                    , imp3
-                    );
+    imp3 = write_id3v1_tag(gf, outf);
+    if (global_writer.flush_write == 1) {
+        fflush(outf);
+    }    
+    if (imp3) {
+        return 1;
     }
-    else {
-        if (imp3 > 0) {
-            owrite = (int) fwrite(mp3buffer, 1, imp3, outf);
-            if (owrite != imp3) {
-                error_printf("Error writing ID3v1 tag \n");
-                return 1;
-            }
-            if (global_writer.flush_write == 1) {
-                fflush(outf);
-            }
-        }
-    }
-    
-    if (global_ui_config.silent <= 0) {
-        print_lame_tag_leading_info(gf);
-    }
-    if (fseek(outf, id3v2_size, SEEK_SET) != 0) {
-        error_printf("fatal error: can't update LAME-tag frame!\n");                    
-    }
-    else {
-        write_xing_frame(gf, outf);
-    }
-
+    write_xing_frame(gf, outf, id3v2_size);
+    if (global_writer.flush_write == 1) {
+        fflush(outf);
+    }    
     if (global_ui_config.silent <= 0) {
         print_trailing_info(gf);
-    }    
+    }
     return 0;
 }
 
