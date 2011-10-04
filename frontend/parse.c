@@ -2160,7 +2160,7 @@ parse_args(lame_global_flags * gfp, int argc, char **argv,
                         argUsed = 1;
                         val = atof(arg);
                         val = (int) (val * (val <= 192 ? 1.e3 : 1.e0) + 0.5);
-                        global_reader.input_samplerate = val;
+                        global_reader.input_samplerate = (int)val;
                         (void) lame_set_in_samplerate(gfp, (int)val);
                         break;
                     case 'b':
