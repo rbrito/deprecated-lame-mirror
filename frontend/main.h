@@ -47,6 +47,7 @@ typedef struct ReaderConfig
     sound_file_format input_format;
     int   swapbytes;                /* force byte swapping   default=0 */
     int   swap_channel;             /* 0: no-op, 1: swaps input channels */
+    int   input_samplerate;
 } ReaderConfig;
 
 typedef struct WriterConfig

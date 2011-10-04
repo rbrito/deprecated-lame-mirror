@@ -161,13 +161,13 @@ init_files(lame_global_flags * gf, char const *inPath, char const *outPath)
 }
 
 
-static
-void printInputFormat(lame_t gfp)
+static void
+printInputFormat(lame_t gfp)
 {
-    int const v_main = 2-lame_get_version(gfp);
-    char const* v_ex = lame_get_out_samplerate(gfp) < 16000 ? ".5" : "";
+    int const v_main = 2 - lame_get_version(gfp);
+    char const *v_ex = lame_get_out_samplerate(gfp) < 16000 ? ".5" : "";
     switch (global_reader.input_format) {
-    case sf_mp123: /* FIXME: !!! */
+    case sf_mp123:     /* FIXME: !!! */
         break;
     case sf_mp3:
         console_printf("MPEG-%u%s Layer %s", v_main, v_ex, "III");
@@ -213,8 +213,8 @@ lame_decoder(lame_t gfp, FILE * outf, char *inPath, char *outPath)
     DecoderProgress dp = 0;
 
     if (!(tmp_num_channels >= 1 && tmp_num_channels <= 2)) {
-      error_printf("Internal error.  Aborting.");
-      exit(-1);
+        error_printf("Internal error.  Aborting.");
+        exit(-1);
     }
 
     if (global_ui_config.silent < 9) {
@@ -223,7 +223,7 @@ lame_decoder(lame_t gfp, FILE * outf, char *inPath, char *outPath)
                        strlen(inPath) > 26 ? "\n\t" : "  ",
                        lame_get_in_samplerate(gfp) / 1.e3,
                        tmp_num_channels, tmp_num_channels != 1 ? "s" : "");
-        
+
         printInputFormat(gfp);
 
         console_printf(")\noutput: %s%s(16 bit, Microsoft WAVE)\n",
@@ -286,8 +286,7 @@ lame_decoder(lame_t gfp, FILE * outf, char *inPath, char *outPath)
     /* if outf is seekable, rewind and adjust length */
     if (!global_decoder.disable_wav_header && strcmp("-", outPath)
         && !fseek(outf, 0l, SEEK_SET))
-        WriteWaveHeader(outf, (int) wavsize, lame_get_in_samplerate(gfp),
-                        tmp_num_channels, 16);
+        WriteWaveHeader(outf, (int) wavsize, lame_get_in_samplerate(gfp), tmp_num_channels, 16);
     fclose(outf);
     close_infile();
 
@@ -299,14 +298,6 @@ lame_decoder(lame_t gfp, FILE * outf, char *inPath, char *outPath)
 
 
 static void
-print_lame_tag_leading_info(lame_global_flags * gf)
-{
-    if (lame_get_bWriteVbrTag(gf))
-        console_printf("Writing LAME Tag...");
-}
-
-
-static void
 print_trailing_info(lame_global_flags * gf)
 {
     if (lame_get_findReplayGain(gf)) {
@@ -315,20 +306,20 @@ print_trailing_info(lame_global_flags * gf)
                        ((float) RadioGain) / 10.0);
         if (RadioGain > 0x1FE || RadioGain < -0x1FE)
             error_printf
-                    ("WARNING: ReplayGain exceeds the -51dB to +51dB range. Such a result is too\n"
-                    "         high to be stored in the header.\n");
+                ("WARNING: ReplayGain exceeds the -51dB to +51dB range. Such a result is too\n"
+                 "         high to be stored in the header.\n");
     }
 
     /* if (the user requested printing info about clipping) and (decoding
-    on the fly has actually been performed) */
+       on the fly has actually been performed) */
     if (global_ui_config.print_clipping_info && lame_get_decode_on_the_fly(gf)) {
         float   noclipGainChange = (float) lame_get_noclipGainChange(gf) / 10.0f;
         float   noclipScale = lame_get_noclipScale(gf);
 
         if (noclipGainChange > 0.0) { /* clipping occurs */
             console_printf
-                    ("WARNING: clipping occurs at the current gain. Set your decoder to decrease\n"
-                    "         the  gain  by  at least %.1fdB or encode again ", noclipGainChange);
+                ("WARNING: clipping occurs at the current gain. Set your decoder to decrease\n"
+                 "         the  gain  by  at least %.1fdB or encode again ", noclipGainChange);
 
             /* advice the user on the scale factor */
             if (noclipScale > 0) {
@@ -337,23 +328,23 @@ print_trailing_info(lame_global_flags * gf)
             }
             else {
                 /* the user specified his own scale factor. We could suggest
-                * the scale factor of (32767.0/gfp->PeakSample)*(gfp->scale)
-                * but it's usually very inaccurate. So we'd rather advice him to
-                * disable scaling first and see our suggestion on the scale factor then. */
+                 * the scale factor of (32767.0/gfp->PeakSample)*(gfp->scale)
+                 * but it's usually very inaccurate. So we'd rather advice him to
+                 * disable scaling first and see our suggestion on the scale factor then. */
                 console_printf("using --scale <arg>\n"
-                        "         (For   a   suggestion  on  the  optimal  value  of  <arg>  encode\n"
-                        "         with  --scale 1  first)\n");
+                               "         (For   a   suggestion  on  the  optimal  value  of  <arg>  encode\n"
+                               "         with  --scale 1  first)\n");
             }
 
         }
         else {          /* no clipping */
             if (noclipGainChange > -0.1)
                 console_printf
-                        ("\nThe waveform does not clip and is less than 0.1dB away from full scale.\n");
+                    ("\nThe waveform does not clip and is less than 0.1dB away from full scale.\n");
             else
                 console_printf
-                        ("\nThe waveform does not clip and is at least %.1fdB away from full scale.\n",
-                         -noclipGainChange);
+                    ("\nThe waveform does not clip and is at least %.1fdB away from full scale.\n",
+                     -noclipGainChange);
         }
     }
 
@@ -365,19 +356,18 @@ write_xing_frame(lame_global_flags * gf, FILE * outf, size_t offset)
 {
     unsigned char mp3buffer[LAME_MAXMP3BUFFER];
     size_t  imp3, owrite;
-    
+
     imp3 = lame_get_lametag_frame(gf, mp3buffer, sizeof(mp3buffer));
     if (imp3 <= 0) {
-        return 0; /* nothing to do */
+        return 0;       /* nothing to do */
     }
     if (global_ui_config.silent <= 0) {
         console_printf("Writing LAME Tag...");
     }
     if (imp3 > sizeof(mp3buffer)) {
-        error_printf("Error writing LAME-tag frame: buffer too small: buffer size=%d  frame size=%d\n"
-                    , sizeof(mp3buffer)
-                    , imp3
-                    );
+        error_printf
+            ("Error writing LAME-tag frame: buffer too small: buffer size=%d  frame size=%d\n",
+             sizeof(mp3buffer), imp3);
         return -1;
     }
     if (fseek(outf, offset, SEEK_SET) != 0) {
@@ -406,12 +396,10 @@ write_id3v1_tag(lame_t gf, FILE * outf)
     if (imp3 <= 0) {
         return 0;
     }
-    if ((size_t)imp3 > sizeof(mp3buffer)) {
-        error_printf("Error writing ID3v1 tag: buffer too small: buffer size=%d  ID3v1 size=%d\n"
-                    , sizeof(mp3buffer)
-                    , imp3
-                    );
-        return 0; /* not critical */
+    if ((size_t) imp3 > sizeof(mp3buffer)) {
+        error_printf("Error writing ID3v1 tag: buffer too small: buffer size=%d  ID3v1 size=%d\n",
+                     sizeof(mp3buffer), imp3);
+        return 0;       /* not critical */
     }
     owrite = (int) fwrite(mp3buffer, 1, imp3, outf);
     if (owrite != imp3) {
@@ -434,10 +422,10 @@ lame_encoder_loop(lame_global_flags * gf, FILE * outf, int nogap, char *inPath, 
 
     id3v2_size = lame_get_id3v2_tag(gf, 0, 0);
     if (id3v2_size > 0) {
-        unsigned char* id3v2tag = malloc(id3v2_size);
+        unsigned char *id3v2tag = malloc(id3v2_size);
         if (id3v2tag != 0) {
             imp3 = lame_get_id3v2_tag(gf, id3v2tag, id3v2_size);
-            owrite = (int) fwrite(id3v2tag, 1, imp3, outf);    
+            owrite = (int) fwrite(id3v2tag, 1, imp3, outf);
             free(id3v2tag);
             if (owrite != imp3) {
                 encoder_progress_end(gf);
@@ -448,8 +436,8 @@ lame_encoder_loop(lame_global_flags * gf, FILE * outf, int nogap, char *inPath, 
     }
     if (global_writer.flush_write == 1) {
         fflush(outf);
-    }    
-    
+    }
+
     /* encode until we hit eof */
     do {
         /* read in 'iread' samples */
@@ -496,7 +484,7 @@ lame_encoder_loop(lame_global_flags * gf, FILE * outf, int nogap, char *inPath, 
     }
 
     encoder_progress_end(gf);
-    
+
     owrite = (int) fwrite(mp3buffer, 1, imp3, outf);
     if (owrite != imp3) {
         error_printf("Error writing mp3 output \n");
@@ -508,14 +496,14 @@ lame_encoder_loop(lame_global_flags * gf, FILE * outf, int nogap, char *inPath, 
     imp3 = write_id3v1_tag(gf, outf);
     if (global_writer.flush_write == 1) {
         fflush(outf);
-    }    
+    }
     if (imp3) {
         return 1;
     }
     write_xing_frame(gf, outf, id3v2_size);
     if (global_writer.flush_write == 1) {
         fflush(outf);
-    }    
+    }
     if (global_ui_config.silent <= 0) {
         print_trailing_info(gf);
     }
@@ -529,8 +517,8 @@ lame_encoder(lame_global_flags * gf, FILE * outf, int nogap, char *inPath, char 
     int     ret;
 
     ret = lame_encoder_loop(gf, outf, nogap, inPath, outPath);
-    fclose(outf); /* close the output file */
-    close_infile(); /* close the input file */
+    fclose(outf);       /* close the output file */
+    close_infile();     /* close the input file */
     return ret;
 }
 
@@ -608,7 +596,8 @@ parse_nogap_filenames(int nogapout, char const *inPath, char *outPath, char *out
 }
 
 
-int lame_main(lame_t gf, int argc, char** argv)
+int
+lame_main(lame_t gf, int argc, char **argv)
 {
     char    inPath[PATH_MAX + 1];
     char    outPath[PATH_MAX + 1];
@@ -617,14 +606,14 @@ int lame_main(lame_t gf, int argc, char** argv)
 #define MAX_NOGAP 200
     int     nogapout = 0;
     int     max_nogap = MAX_NOGAP;
-    char    nogap_inPath_[MAX_NOGAP][PATH_MAX+1];
-    char*   nogap_inPath[MAX_NOGAP];
+    char    nogap_inPath_[MAX_NOGAP][PATH_MAX + 1];
+    char   *nogap_inPath[MAX_NOGAP];
 
     int     ret;
     int     i;
     FILE   *outf;
 
-    lame_set_msgf  (gf, &frontend_msgf);
+    lame_set_msgf(gf, &frontend_msgf);
     lame_set_errorf(gf, &frontend_errorf);
     lame_set_debugf(gf, &frontend_debugf);
     if (argc <= 1) {
@@ -645,7 +634,7 @@ int lame_main(lame_t gf, int argc, char** argv)
      * (see the file API and lame.h for documentation about these parameters)
      */
     {
-        char* str = lame_getenv("LAMEOPT");
+        char   *str = lame_getenv("LAMEOPT");
         parse_args_from_string(gf, str, inPath, outPath);
         free(str);
     }
@@ -694,7 +683,7 @@ int lame_main(lame_t gf, int argc, char** argv)
     }
 
     if (global_ui_config.silent > 0) {
-        global_ui_config.brhist = 0;     /* turn off VBR histogram */
+        global_ui_config.brhist = 0; /* turn off VBR histogram */
     }
 
     if (lame_get_decode_only(gf)) {
@@ -719,7 +708,7 @@ int lame_main(lame_t gf, int argc, char** argv)
                 lame_init_bitstream(gf);
             }
             lame_set_nogap_total(gf, max_nogap);
-            lame_set_nogap_currentindex(gf, i);                
+            lame_set_nogap_currentindex(gf, i);
             ret = lame_encoder(gf, outf, use_flush_nogap, nogap_inPath[i], outPath);
         }
     }

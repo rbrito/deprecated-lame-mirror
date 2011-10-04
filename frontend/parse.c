@@ -87,7 +87,7 @@ static int const internal_opts_enabled = INTERNAL_OPTS;
 /* GLOBAL VARIABLES.  set by parse_args() */
 /* we need to clean this up */
 
-ReaderConfig global_reader = { sf_unknown, 0, 0 };
+ReaderConfig global_reader = { sf_unknown, 0, 0, 0 };
 WriterConfig global_writer = { 0 };
 
 UiConfig global_ui_config = {0,0,0,0};
@@ -2159,9 +2159,9 @@ parse_args(lame_global_flags * gfp, int argc, char **argv,
                     case 's':
                         argUsed = 1;
                         val = atof(arg);
-                        (void) lame_set_in_samplerate(gfp,
-                                                      (int) (val * (val <= 192 ? 1.e3 : 1.e0) +
-                                                             0.5));
+                        val = (int) (val * (val <= 192 ? 1.e3 : 1.e0) + 0.5);
+                        global_reader.input_samplerate = val;
+                        (void) lame_set_in_samplerate(gfp, (int)val);
                         break;
                     case 'b':
                         argUsed = 1;
