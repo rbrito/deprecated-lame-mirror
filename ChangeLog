@@ -11,6 +11,350 @@
 
 -- 
 
+2011-10-06 23:07  robert
+
+	* frontend/: get_audio.c, parse.c:
+
+	let iconv use transliteration
+
+2011-10-04 15:37  robert
+
+	* frontend/parse.c:
+
+	fixing compiler warning
+
+2011-10-04 11:42  robert
+
+	* frontend/: get_audio.c, lame_main.c, main.h, parse.c:
+
+	using our input file reading functions when reading from stdin
+	allow -s to overwrite input samplerate for non RAW input files too
+
+2011-10-03 13:28  robert
+
+	* doc/html/history.html, frontend/lame_main.c:
+
+	fix for tracker item ID: 3034259 Fix for confusing fatal error: can't update LAME-tag frame!
+
+2011-10-03 13:22  robert
+
+	* libmp3lame/id3tag.c, frontend/parse.c:
+
+	making sure, the id3v1 tags get filled
+
+2011-10-02 21:45  robert
+
+	* doc/html/history.html, frontend/get_audio.c:
+
+	Bug fix for tracker item ID: 3368977 Wave Parser doesn't pad chunks
+
+2011-10-02 18:39  robert
+
+	* frontend/: portableio.c, portableio.h:
+
+	removing portableio.[ch] files, not needed anymore
+
+2011-10-02 18:24  robert
+
+	* frontend/parse.c, libmp3lame/id3tag.c:
+
+	fixing some compiler warnings
+
+2011-10-02 17:13  robert
+
+	* Makefile.MSVC, frontend/Makefile.am, frontend/Makefile.in,
+	  frontend/get_audio.c, frontend/mp3rtp.c, Makefile.unix,
+	  vc_solution/vc9_lame_lame.vcproj,
+	  vc_solution/vc9_lame_mp3rtp.vcproj,
+	  vc_solution/vc9_lame_mp3x.vcproj:
+
+	replacing "portableio" by own code in get_audio.c
+
+2011-10-02 14:52  robert
+
+	* doc/html/detailed.html, doc/man/lame.1, libmp3lame/id3tag.c,
+	  frontend/main.c, frontend/main.h, frontend/parse.c,
+	  include/lame.def, include/lame.h:
+
+	clearify, unicode tags are utf-16
+
+2011-09-28 19:11  robert
+
+	* doc/html/history.html, libmp3lame/id3tag.c, frontend/parse.c,
+	  vc_solution/vc9_lame.sln, vc_solution/vc9_lame_lame.vcproj,
+	  vc_solution/vc9_lame_mp3rtp.vcproj,
+	  vc_solution/vc9_lame_mp3x.vcproj,
+	  vc_solution/vc9_libmp3lame.vcproj,
+	  vc_solution/vc9_libmp3lame_dll.vcproj,
+	  vc_solution/vc9_mpglib.vcproj:
+
+	bug fix for tracker item  3395813: id3tag_set_fieldvalue for URL link frames Broken
+
+	now one can add URL link frames to the ID3v2 tag, like:
+	--tv "WOAR=www.mypage.com" --tv "WXXX=get remixes here=www.dj.org"
+
+2011-09-25 17:08  robert
+
+	* libmp3lame/version.h:
+
+	increasing patch level
+
+2011-07-26 11:48  rbrito
+
+	* frontend/parse.c:
+
+	frontend: Update licensing message.
+
+	Patch supplied by Andres Mejia <mcitadel@gmail.com> according to previous
+	discussions in the mailing lists `lame-dev` and `pkg-multimedia-maintainers`.
+
+	    http://lists.alioth.debian.org/pipermail/pkg-multimedia-maintainers/2011-July/020417.html
+
+2011-06-17 06:22  aleidinger
+
+	* Makefile.am.global:
+
+	Remove ansi2knr part. It will be deprecated and subsequently removed from
+	automake.
+
+	Notified by:	Stefano Lattarini <stefano.lattarini@gmail.com>
+
+2011-05-24 20:45  robert
+
+	* Makefile.unix, libmp3lame/psymodel.c, libmp3lame/quantize_pvt.c:
+
+	small change in addition of simultaneous maskings
+
+2011-05-24 20:40  robert
+
+	* mpglib/layer2.c:
+
+	workaround for tracker item 3301963:"assertion failed in layer 2 decoding"
+
+2011-05-07 16:05  rbrito
+
+	* README, Dll/BladeMP3EncDLL.c, Dll/BladeMP3EncDLL.h,
+	  Dll/Example.cpp, debian/copyright, frontend/brhist.c,
+	  frontend/brhist.h, frontend/get_audio.c, frontend/get_audio.h,
+	  frontend/gpkplotting.c, frontend/gpkplotting.h,
+	  frontend/gtkanal.c, frontend/gtkanal.h, frontend/lame_main.c,
+	  frontend/lametime.c, frontend/lametime.h, frontend/main.c,
+	  frontend/main.h, frontend/mp3rtp.c, frontend/parse.c,
+	  frontend/rtp.c, frontend/rtp.h, frontend/timestatus.c,
+	  frontend/timestatus.h, include/lame.h, libmp3lame/VbrTag.c,
+	  libmp3lame/VbrTag.h, libmp3lame/bitstream.c,
+	  libmp3lame/bitstream.h, libmp3lame/encoder.c,
+	  libmp3lame/encoder.h, libmp3lame/fft.h, libmp3lame/id3tag.c,
+	  libmp3lame/l3side.h, libmp3lame/lame-analysis.h,
+	  libmp3lame/lame.c, libmp3lame/machine.h,
+	  libmp3lame/mpglib_interface.c, libmp3lame/newmdct.c,
+	  libmp3lame/newmdct.h, libmp3lame/presets.c,
+	  libmp3lame/psymodel.c, libmp3lame/psymodel.h,
+	  libmp3lame/quantize.c, libmp3lame/quantize.h,
+	  libmp3lame/quantize_pvt.c, libmp3lame/quantize_pvt.h,
+	  libmp3lame/reservoir.c, libmp3lame/reservoir.h,
+	  libmp3lame/set_get.c, libmp3lame/set_get.h, libmp3lame/tables.c,
+	  libmp3lame/tables.h, libmp3lame/takehiro.c, libmp3lame/util.c,
+	  libmp3lame/util.h, libmp3lame/vbrquantize.c,
+	  libmp3lame/vbrquantize.h, libmp3lame/version.c,
+	  libmp3lame/version.h, libmp3lame/vector/lame_intrin.h,
+	  libmp3lame/vector/xmm_quantize_sub.c, test/lame_test.cpp:
+
+	Make explicit that the licence is the Library GPLv2.
+
+	According to Jonas Smedegaard, there is no Lesser GPLv2, only Lesser GPLv2.1.
+
+	Thanks to Andres.
+
+2011-05-07 15:56  rbrito
+
+	* frontend/parse.c:
+
+	Fix some warnings in 64-bit arches. Changing s/size_t/unsigned int/
+
+	This should not be a problem with the variables in question, as they can't
+	be much larger than what an unsigned int is able to hold.
+
+	Patch from:
+
+	    http://git.debian.org/?p=pkg-multimedia/lame.git;a=blob;f=debian/patches/07-field-width-fix.patch
+
+	Sent by Andres.
+
+2011-05-07 15:44  rbrito
+
+	* configure.in:
+
+	Work round buggy softfloat optimization in ARM EABI compilers.
+
+	A bug present in gcc-4.[123] up to 4.3.3 makes a buggy optimization
+	for single-precision floats when -ffinite-math-only (enabled by -ffast-math)
+	Refer to the following.
+
+	https://sourceforge.net/tracker/index.php?func=detail&aid=2681646&group_id=290&atid=100290
+	https://trac.xiph.org/ticket/1526
+	http://gcc.gnu.org/bugzilla/show_bug.cgi?id=39501
+
+	Thanks to Andres Mejia. This fixes SF bug 2681646.
+
+2011-05-07 15:35  rbrito
+
+	* libmp3lame/i386/nasm.h:
+
+	Disable executable patch.
+
+	Patch from Russell Coker to disable executable stack from Christian
+	Marillat's packaging. Sent by Andres Mejia.
+
+2011-05-07 01:23  rbrito
+
+	* README:
+
+	Tweak slightly the disclaimer of patents from the README file.
+
+	This change was proposed by me with suggestions made by Andres Mejia.
+
+2011-05-06 20:14  rbrito
+
+	* libmp3lame/lame.c:
+
+	libmp3lame: lame: Put some parentheses to shut up some static analysis tools.
+
+	The statement
+
+	        frames_left -= ((frame_num != gfc->ov_enc.frame_number) ? 1 : 0);
+
+	could probably be written as
+
+	        frames_left -= (frame_num != gfc->ov_enc.frame_number);
+
+	unless we know of some platform where a boolean evaluation does not result
+	in a 1 in case of it being true.
+
+2011-05-06 19:59  rbrito
+
+	* README:
+
+	Remove problematic restriction to the LGPL, to make it legally OK.
+
+	Also update the copyright years of the LAME team.
+
+2011-04-20 13:03  aleidinger
+
+	* config.rpath:
+
+	looks like this is needed now
+
+2011-04-20 12:52  aleidinger
+
+	* aclocal.m4, Makefile.in, configure, ACM/Makefile.in,
+	  ACM/ADbg/Makefile.in, ACM/ddk/Makefile.in,
+	  ACM/tinyxml/Makefile.in, Dll/Makefile.in, debian/Makefile.in,
+	  doc/Makefile.in, doc/html/Makefile.in, doc/man/Makefile.in,
+	  dshow/Makefile.in, frontend/Makefile.in, include/Makefile.in,
+	  libmp3lame/Makefile.in, libmp3lame/i386/Makefile.in,
+	  libmp3lame/vector/Makefile.in, mac/Makefile.in,
+	  macosx/Makefile.in, macosx/English.lproj/Makefile.in,
+	  macosx/LAME.xcodeproj/Makefile.in, misc/Makefile.in,
+	  mpglib/Makefile.in, vc_solution/Makefile.in, config.h.in:
+
+	regen
+
+2011-04-20 12:51  aleidinger
+
+	* configure.in:
+
+	- correct the VBR check message to something more correct (curses)
+	- check for libiconv and use it in the frontend
+
+2011-04-19 15:36  robert
+
+	* doc/man/lame.1, frontend/parse.c:
+
+	lame(1) manpage patch - ID: 3161674
+	Typo in --longhelp - ID: 3288886
+	replaced strnicmp, isn't portable
+
+2011-04-15 20:17  robert
+
+	* libmp3lame/lame.c:
+
+	Bug fix: when aborting an encode before any samples were fed into the encoder, an assert was falsely triggered.
+
+2011-04-14 20:48  robert
+
+	* frontend/parse.c:
+
+	Allow -Z switch in none alpha builds (for now)
+
+2011-04-14 19:36  robert
+
+	* doc/html/history.html, frontend/parse.c, libmp3lame/presets.c,
+	  libmp3lame/version.h:
+
+	3.99 beta phase
+
+2011-04-08 23:50  robert
+
+	* misc/mk_mp3.sh:
+
+	mk_mp3.sh - script to encode and tag CDs
+
+2011-04-08 22:55  robert
+
+	* libmp3lame/psymodel.c:
+
+	some code cleanup: unused vars, defines, etc.
+
+2011-04-08 19:26  robert
+
+	* frontend/: lame_main.c, main.c, main.h:
+
+	Unicode support for extra options passed via environment varialbe LAMEOPT
+
+2011-04-07 23:03  robert
+
+	* frontend/get_audio.c:
+
+	quick fix for tracker item 3277412: Segmentation fault at layer2.c:105 with
+	--decode
+	(problem sample contains multiple ID3v2 tags)
+
+2011-04-07 23:01  robert
+
+	* libmp3lame/: psymodel.c, util.h:
+
+	- some code cleanup
+	- calculate short block thm from long blocks, in case we eventually
+	  may need it for pre-echo control of the next granule
+
+2011-04-05 19:17  jaz001
+
+	* doc/html/detailed.html:
+
+	corrected spelling.
+
+2011-04-04 19:40  robert
+
+	* libmp3lame/psymodel.c:
+
+	small update for the pre-echo control
+
+2011-04-04 11:49  aleidinger
+
+	* ChangeLog:
+
+	Update upto now.
+
+2011-04-04 11:48  aleidinger
+
+	* make_changelog.sh:
+
+	Add the script to generate the changelog, not added to Makefile.am as it
+	does not make sense to distribute it.
+
+	I keep the "cvs log" output in '../log_output', the script expects it there.
+
 2011-04-04 09:54  aleidinger
 
 	* Makefile.in, config.h.in, configure, ACM/Makefile.in,
@@ -3310,6 +3654,18 @@
 
 	we are now at 3.98 beta 5, a release candidate for 3.98 stable?
 
+2007-08-12 00:04  robert
+
+	* logo/: logoERGB.ai, logoEncodedRGB.ai, logoPDF.pdf, logoRGB.ai,
+	  logoRGB.eps, logoRGB.svg, logoe.ai, logoe.eps, logoe.svg,
+	  logofull.ai, logofull.eps, logofull.svg, logomini.ai,
+	  logomini.eps, logomini.svg:
+
+	Removing the 6 MB fat logo files from encoder sources.
+	We can expect the logo files to be almost static and
+	having them in a separate directory seems to be the
+	better choice.
+
 2007-08-11 23:06  robert
 
 	* testcase.mp3:
@@ -3586,6 +3942,15 @@
 	bug fix: [ 1730875 ] TLEN calculation wrong
 	fixing the calculation of "playlength in ms" written into the ID3v2 tag TLEN
 
+2007-05-30 23:17  rjamorim
+
+	* logo/: logoERGB.ai, logoEncodedRGB.ai, logoPDF.pdf, logoRGB.ai,
+	  logoRGB.eps, logoRGB.svg, logoe.ai, logoe.eps, logoe.svg,
+	  logofull.ai, logofull.eps, logofull.svg, logomini.ai,
+	  logomini.eps, logomini.svg:
+
+	Initial import of the Lame logo in several vectorial formats
+
 2007-05-25 03:38  robert
 
 	* libmp3lame/vbrquantize.c:
@@ -3728,6 +4093,16 @@
 	* libmp3lame/: lame.c, mpglib_interface.c, psymodel.c:
 
 	fix the easy warnings
+
+2007-01-09 10:37  aleidinger
+
+	* libmp3lame/x86_64/: Makefile.am, Makefile.in, lame_intrin.h,
+	  quantize_sub.c:
+
+	Remove all files, they reside in the vector directory now.
+
+	This breaks the VC build until Gabriel or Robert catch up with those
+	changes.
 
 2007-01-09 10:31  aleidinger
 
@@ -3923,6 +4298,24 @@
 	relaxing the FhG bitreservoir restriction a little bit:
 	at 320 kbps it seems to be possible to use the reservoir if we limit it to almost the size of bits used for sideinfo
 
+2006-12-23 13:54  aleidinger
+
+	* libmp3lame/x86_64/Makefile.in:
+
+	regen
+
+2006-12-23 13:54  aleidinger
+
+	* libmp3lame/x86_64/Makefile.am:
+
+	fix the build on non x86 CPUs
+
+2006-12-21 09:19  aleidinger
+
+	* libmp3lame/x86_64/quantize_sub.c:
+
+	Add a comment to the #endif so that you know where it belongs.
+
 2006-12-21 09:15  aleidinger
 
 	* Makefile.in, ACM/Makefile.in, Dll/Makefile.in,
@@ -3931,7 +4324,8 @@
 	  libmp3lame/Makefile.in, mac/Makefile.in, misc/Makefile.in,
 	  mpglib/Makefile.in, ACM/ddk/Makefile.in, ACM/tinyxml/Makefile.in,
 	  doc/html/Makefile.in, doc/man/Makefile.in,
-	  libmp3lame/i386/Makefile.in, configure:
+	  libmp3lame/i386/Makefile.in, libmp3lame/x86_64/Makefile.in,
+	  configure:
 
 	regen
 
@@ -3964,6 +4358,12 @@
 	* acinclude.m4:
 
 	Properly quote some parts according to the new rules auf aclocal.
+
+2006-12-21 09:02  aleidinger
+
+	* libmp3lame/x86_64/Makefile.am:
+
+	First cut on adding the x86_64 code. Only tested on IA32.
 
 2006-12-21 09:00  aleidinger
 
@@ -4100,7 +4500,8 @@
 
 2006-11-11 17:58  bouvigne
 
-	* libmp3lame/: libmp3lame_vc8.vcproj, quantize.c:
+	* libmp3lame/: libmp3lame_vc8.vcproj, quantize.c,
+	  x86_64/lame_intrin.h, x86_64/quantize_sub.c:
 
 	intrinsics functions are now in a separate directory (as in v4)
 
@@ -4689,7 +5090,8 @@
 	  doc/Makefile.in, doc/html/Makefile.in, doc/man/Makefile.in,
 	  dshow/Makefile.in, frontend/Makefile.in, include/Makefile.in,
 	  libmp3lame/Makefile.in, libmp3lame/libmp3lame.pc.in,
-	  libmp3lame/i386/Makefile.in, mac/Makefile.in, misc/Makefile.in,
+	  libmp3lame/i386/Makefile.in, libmp3lame/ppc/Makefile.in,
+	  libmp3lame/x86_64/Makefile.in, mac/Makefile.in, misc/Makefile.in,
 	  mpglib/Makefile.in (takehiro-2002_05_07-experimental):
 
 	prepare for pkgconfig support
@@ -5503,9 +5905,15 @@
 
 	forgot to commit when adding sfb energy caching. sorry.
 
+2005-09-04 03:24  takehiro
+
+	* libmp3lame/x86_64/.cvsignore (takehiro-2002_05_07-experimental):
+
+	to ignore Makefile
+
 2005-09-04 03:10  takehiro
 
-	* libmp3lame/: quantize.c, i386/quantSSE.nas
+	* libmp3lame/: quantize.c, i386/quantSSE.nas, x86_64/quantize_sub.c
 	  (takehiro-2002_05_07-experimental):
 
 	caching sfb energy = sum of xr^2
@@ -5516,6 +5924,13 @@
 	  (takehiro-2002_05_07-experimental):
 
 	suppress conditional jump
+
+2005-09-04 02:42  takehiro
+
+	* libmp3lame/x86_64/quantize_sub.c
+	  (takehiro-2002_05_07-experimental):
+
+	fix lr2ms_SSE() when the length is 4*n+2
 
 2005-09-04 02:21  takehiro
 
@@ -5537,6 +5952,14 @@
 
 	trivial optimization
 
+2005-09-04 02:08  takehiro
+
+	* libmp3lame/x86_64/quantize_sub.c
+	  (takehiro-2002_05_07-experimental):
+
+	use setzero_* intrinsic to fix warnings.
+	add experimental SSE2 version of ix_max() (not used currently)
+
 2005-09-03 15:38  takehiro
 
 	* libmp3lame/psymodel.c (takehiro-2002_05_07-experimental):
@@ -5552,7 +5975,7 @@
 
 2005-09-03 13:38  takehiro
 
-	* libmp3lame/i386/choose_table.nas
+	* libmp3lame/: i386/choose_table.nas, x86_64/quantize_sub.c
 	  (takehiro-2002_05_07-experimental):
 
 	trivial optimization
@@ -5573,9 +5996,17 @@
 
 2005-09-03 12:45  takehiro
 
-	* libmp3lame/i386/quantSSE.nas (takehiro-2002_05_07-experimental):
+	* libmp3lame/: i386/quantSSE.nas, x86_64/quantize_sub.c
+	  (takehiro-2002_05_07-experimental):
 
 	use SSE register for data backup.
+
+2005-09-03 12:34  takehiro
+
+	* libmp3lame/x86_64/quantize_sub.c
+	  (takehiro-2002_05_07-experimental):
+
+	make it aligned memory access.
 
 2005-09-03 12:28  takehiro
 
@@ -5585,8 +6016,8 @@
 
 2005-09-03 11:16  takehiro
 
-	* libmp3lame/: quantize.c, i386/choose_table.nas
-	  (takehiro-2002_05_07-experimental):
+	* libmp3lame/: quantize.c, i386/choose_table.nas,
+	  x86_64/quantize_sub.c (takehiro-2002_05_07-experimental):
 
 	SSE version of xrmax()
 
@@ -5772,7 +6203,8 @@
 
 2005-08-21 06:38  takehiro
 
-	* libmp3lame/quantize.c (takehiro-2002_05_07-experimental):
+	* libmp3lame/: quantize.c, x86_64/quantize_sub.c
+	  (takehiro-2002_05_07-experimental):
 
 	clean up x86_64 code.
 
@@ -5826,24 +6258,54 @@
 
 	ASM code support for x86_64 environment (only tested with FedoraCore3@cf.sf.net)
 
+2005-08-20 18:00  takehiro
+
+	* libmp3lame/x86_64/quantize_sub.c
+	  (takehiro-2002_05_07-experimental):
+
+	SSE-ed last operation of sumofsqr_SSE()
+
 2005-08-20 17:48  bouvigne
 
 	* doc/html/switchs.html:
 
 	typo
 
+2005-08-20 17:34  takehiro
+
+	* libmp3lame/x86_64/quantize_sub.c
+	  (takehiro-2002_05_07-experimental):
+
+	fix "max" operation.
+
 2005-08-20 16:47  takehiro
 
 	* configure, configure.in, libmp3lame/Makefile.am,
-	  libmp3lame/Makefile.in (takehiro-2002_05_07-experimental):
+	  libmp3lame/Makefile.in, libmp3lame/x86_64/Makefile.am,
+	  libmp3lame/x86_64/Makefile.in (takehiro-2002_05_07-experimental):
 
 	auto* things for x86_64 related files.
+
+2005-08-20 16:06  takehiro
+
+	* libmp3lame/x86_64/quantize_sub.c
+	  (takehiro-2002_05_07-experimental):
+
+	now it works.
 
 2005-08-20 14:21  takehiro
 
 	* libmp3lame/i386/ssesub.c (takehiro-2002_05_07-experimental):
 
 	remove unused files/dirs
+
+2005-08-20 14:16  takehiro
+
+	* libmp3lame/x86_64/quantize_sub.c
+	  (takehiro-2002_05_07-experimental):
+
+	asm code for EMT64/AMD64. For these environment, compilers should support
+	SSE intrinsics. So I decided to use intrinsics for them.
 
 2005-08-20 13:42  takehiro
 
@@ -6361,8 +6823,8 @@
 	  doc/Makefile.in, doc/html/Makefile.in, doc/man/Makefile.in,
 	  dshow/Makefile.in, frontend/Makefile.in, include/Makefile.in,
 	  libmp3lame/Makefile.in, libmp3lame/i386/Makefile.in,
-	  mac/Makefile.in, misc/Makefile.in, mpglib/Makefile.in
-	  (takehiro-2002_05_07-experimental):
+	  libmp3lame/ppc/Makefile.in, mac/Makefile.in, misc/Makefile.in,
+	  mpglib/Makefile.in (takehiro-2002_05_07-experimental):
 
 	regen with automake1.9.5
 
@@ -7389,6 +7851,12 @@
 
 	display 'LR+i' as '%' character.
 
+2005-03-14 05:18  takehiro
+
+	* libmp3lame/ppc/.cvsignore (takehiro-2002_05_07-experimental):
+
+	added to ignore Makefile and so on.
+
 2005-03-13 17:20  robert
 
 	* libmp3lame/presets.c:
@@ -7506,6 +7974,12 @@
 	fix "stupid" message when -S
 	(bugid #1145932)
 
+2005-03-12 13:59  takehiro
+
+	* libmp3lame/ppc/Makefile.in (takehiro-2002_05_07-experimental):
+
+	added.
+
 2005-03-12 13:58  takehiro
 
 	* frontend/gtkanal.c (takehiro-2002_05_07-experimental):
@@ -7515,7 +7989,8 @@
 2005-03-12 13:54  takehiro
 
 	* configure, configure.in, libmp3lame/Makefile.am,
-	  libmp3lame/Makefile.in (takehiro-2002_05_07-experimental):
+	  libmp3lame/Makefile.in, libmp3lame/ppc/Makefile.am,
+	  libmp3lame/ppc/count_bits.c (takehiro-2002_05_07-experimental):
 
 	added ppc directory
 
@@ -7877,6 +8352,16 @@
 	* configMS.h:
 
 	intrinsics support for ICL
+
+2005-02-25 16:13  takehiro
+
+	* libmp3lame/ppc/: configMacOS.h, fft_apple_veclib.c,
+	  fft_apple_veclib.h (takehiro-2002_05_07-experimental):
+
+	add PPC version of FFT, from the pending patch on Alex's site.
+
+	These do not work at all. They are only for the people willing to develop the
+	altivec-ed LAME.
 
 2005-02-25 01:21  robert
 
@@ -8468,6 +8953,12 @@
 
 	part of cleaning up LIBSNDFILE
 
+2005-01-15 09:04  takehiro
+
+	* libmp3lame/ppc/count_bits.c (takehiro-2002_05_07-experimental):
+
+	PPC optimized version of count_bit_ESC(), written by Robert Stiles.
+
 2005-01-15 07:25  takehiro
 
 	* frontend/: get_audio.c, get_audio.h, gtkanal.c, parse.c
@@ -8514,6 +9005,13 @@
 	  (takehiro-2002_05_07-experimental):
 
 	patches from the latest debian package, including some boundary check code.
+
+2005-01-12 13:49  takehiro
+
+	* libmp3lame/ppc/ixmax.s (takehiro-2002_05_07-experimental):
+
+	added for ppc optimization, from Robert Stiles.
+	but, this code is not used at all, currently.
 
 2005-01-10 17:38  takehiro
 
@@ -28138,6 +28636,12 @@
 	updated test case
 	(Takehiro fixed a bug which I introduced, which changes test cases).
 
+2001-01-14 17:28  aleidinger
+
+	* analyzer/.cvsignore:
+
+	obsolete
+
 2001-01-14 17:25  aleidinger
 
 	* DEFINES, Makefile.in, aclocal.m4, config.guess, config.sub,
@@ -30448,6 +30952,14 @@
 
 	data encapsulating Naoki's psymode
 
+2000-10-29 12:54  aleidinger
+
+	* analyzer/: Makefile.in, Makefile.in.old, README.Win32,
+	  gpkplotting.c, gpkplotting.h, gtkanal.c, gtkanal.h, mp3x.c,
+	  mp3x.dsp, mp3x.dsw:
+
+	they life now in frontend/...
+
 2000-10-29 12:52  aleidinger
 
 	* .cvsignore:
@@ -31032,6 +31544,12 @@
 
 	Fixed histgramming display for Win32, added fflush
 
+2000-10-20 21:11  afaber
+
+	* analyzer/: .cvsignore, README.Win32, README.Win32~:
+
+	Small fixes to the Win32 installation instructions, Added Win32 type to the .cvsignore file
+
 2000-10-20 20:50  afaber
 
 	* frontend/: brhist.c, brhist.h:
@@ -31065,13 +31583,20 @@
 
 2000-10-18 17:34  robert
 
-	* libmp3lame/lame-analysis.h:
+	* analyzer/mp3x.c, libmp3lame/lame-analysis.h:
 
 	no way to disable analysis for lame-lib
 
+2000-10-18 17:04  robert
+
+	* analyzer/gtkanal.h:
+
+	first commit
+
 2000-10-18 16:47  robert
 
-	* libmp3lame/lame-analysis.h, mpglib/layer3.c, mpglib/mpglib.h:
+	* analyzer/gtkanal.c, analyzer/mp3x.c, libmp3lame/lame-analysis.h,
+	  mpglib/layer3.c, mpglib/mpglib.h:
 
 	fixed some ambiguities
 	define NOANALYSIS as suggested in INSTALL if you don't want
@@ -31132,8 +31657,8 @@
 
 2000-10-16 19:55  florian
 
-	* Makefile.in, configure, configure.in, libmp3lame/Makefile.in,
-	  libmp3lame/lame.c, mpglib/Makefile.in:
+	* Makefile.in, configure, configure.in, analyzer/Makefile.in,
+	  libmp3lame/Makefile.in, libmp3lame/lame.c, mpglib/Makefile.in:
 
 	integrated Alexanders patch, minor bug fixes
 
@@ -31182,7 +31707,7 @@
 
 2000-10-16 02:12  markt
 
-	* API, Makefile.in, configure, configure.in:
+	* API, Makefile.in, configure, configure.in, analyzer/mp3x.c:
 
 	broken frame analyzer fixed - -DANALYSIS was missing from default
 	library build
@@ -31358,7 +31883,7 @@
 2000-10-13 05:17  florian
 
 	* Makefile.in, Makefile.in.old, configure, configure.in,
-	  configure.in.old:
+	  configure.in.old, analyzer/Makefile.in, analyzer/Makefile.in.old:
 
 	prepare for automake: new vars, system dependent checks to configure.in
 
@@ -31442,6 +31967,12 @@
 	solution: two new functions splitting lame_encode_finish()
 	          into lame_encode_flush() and lame_close()
 
+2000-10-11 01:03  florian
+
+	* analyzer/.cvsignore:
+
+	[no log message]
+
 2000-10-10 23:18  pfk
 
 	* libmp3lame/util.c:
@@ -31499,7 +32030,9 @@
 
 2000-10-09 19:55  markt
 
-	* TODO, frontend/timestatus.c, include/lame.h:
+	* TODO, analyzer/Makefile.in, analyzer/gpkplotting.c,
+	  analyzer/gtkanal.c, analyzer/mp3x.c, frontend/timestatus.c,
+	  include/lame.h:
 
 	generic cleanup
 
@@ -31516,17 +32049,28 @@
 
 	attept to fix Makefiles.B32, DJGPP, MSVC.
 
-2000-10-09 16:27  markt
+2000-10-09 16:25  markt
 
-	* libmp3lame/lame-analysis.h:
+	* mp3x/.cvsignore, libmp3lame/lame-analysis.h:
 
 	[no log message]
+
+2000-10-09 16:24  markt
+
+	* mp3x/: Makefile.in, README.Win32, aclocal.m4, config.status,
+	  configure, configure.in, gpkplotting.c, gpkplotting.h, gtkanal.c,
+	  mp3x.c, mp3x.dsp, mp3x.dsw:
+
+	removing mp3x
 
 2000-10-09 16:23  markt
 
 	* Makefile.in, Makefile.unix, aclocal.m4, configure, configure.in,
-	  frontend/Makefile.in, frontend/main.h,
-	  libmp3lame/lame-analysis.h:
+	  analyzer/Makefile.in, analyzer/README.Win32,
+	  analyzer/README.Win32~, analyzer/gpkplotting.c,
+	  analyzer/gpkplotting.h, analyzer/gtkanal.c, analyzer/mp3x.c,
+	  analyzer/mp3x.dsp, analyzer/mp3x.dsw, frontend/Makefile.in,
+	  frontend/main.h, libmp3lame/lame-analysis.h:
 
 	moved mp3x -> analyzer (name was clashing with executable name)
 	work on configure to get mp3x to compile (not yet done)
@@ -31552,7 +32096,7 @@
 	  frontend/main.h, frontend/mp3rtp.c, frontend/parse.c,
 	  frontend/parse.h, frontend/timestatus.c, frontend/timestatus.h,
 	  include/lame.h, libmp3lame/lame.c, libmp3lame/version.c,
-	  libmp3lame/version.h:
+	  libmp3lame/version.h, mp3x/gtkanal.c, mp3x/mp3x.c:
 
 	lots of changes, just trying to get things to compile.
 
@@ -31573,6 +32117,12 @@
 	* libmp3lame/: id3tag.c, util.h:
 
 	missing id3tag.h include files for util.h, id3tag.c
+
+2000-10-07 05:03  markt
+
+	* mp3x/gtkanal.c:
+
+	id3tag struct in id3tag.h
 
 2000-10-07 05:00  markt
 
@@ -31664,6 +32214,12 @@
 
 	needs Windows Script >= 5.1, donated by Ralf Kempkens <Ralf.Kempkens@epost.de>
 
+2000-10-04 22:04  afaber
+
+	* mp3x/mp3x.dsp:
+
+	MSVC project file update
+
 2000-10-04 17:13  afaber
 
 	* Dll/Example.dsw, Dll/MP3EncDll.dsp, libmp3lame/libmp3lame.dsp,
@@ -31679,8 +32235,12 @@
 
 2000-10-04 12:13  takehiro
 
-	* libmp3lame/i386/: choose_table.nas, fft.nas, fft3dn.nas,
-	  fftfpu.nas, fftsse.nas, ffttbl.nas, nasm.h:
+	* i386/choose_table.nas, i386/fft.nas, i386/fft3dn.nas,
+	  i386/fftfpu.nas, i386/fftsse.nas, i386/ffttbl.nas, i386/nasm.h,
+	  libmp3lame/i386/choose_table.nas, libmp3lame/i386/fft.nas,
+	  libmp3lame/i386/fft3dn.nas, libmp3lame/i386/fftfpu.nas,
+	  libmp3lame/i386/fftsse.nas, libmp3lame/i386/ffttbl.nas,
+	  libmp3lame/i386/nasm.h:
 
 	moved i386 directory
 
@@ -31762,10 +32322,18 @@
 
 	new configure that doesn't run configure in all the subdirectories!
 
+2000-10-03 22:22  afaber
+
+	* mp3x/gtkanal.c:
+
+	Fixes to MP3x app, seems like frame number was never increased, caused assert error
+	and mp3done was not set when file/quit menu option was selected (caused assert error also)
+
 2000-10-03 22:08  afaber
 
 	* README.WINGTK, lamelib.dsp, frontend/lame.dsp, frontend/lame.dsw,
-	  libmp3lame/libmp3lame.dsp, mpglib/mpglib.dsp:
+	  libmp3lame/libmp3lame.dsp, mp3x/.cvsignore, mp3x/README.Win32,
+	  mp3x/mp3x.c, mp3x/mp3x.dsp, mp3x/mp3x.dsw, mpglib/mpglib.dsp:
 
 	Re-organized some of the MSVC project files, fixes to compile mp3x again on Win32 platform
 
@@ -31808,6 +32376,12 @@
 
 	[no log message]
 
+2000-10-03 03:52  markt
+
+	* mp3x/: Makefile.in, aclocal.m4, configure, configure.in:
+
+	better gtk check for mp3x
+
 2000-10-02 10:15  markt
 
 	* Makefile.in:
@@ -31816,14 +32390,14 @@
 
 2000-10-02 09:00  markt
 
-	* quantize_pvt.h:
+	* quantize_pvt.h, mp3x/gtkanal.c:
 
 	Fix for winamp bug.  (commented out for now)
 
 2000-10-02 06:20  markt
 
 	* aclocal.m4, configure, configure.in, frontend/configure,
-	  frontend/configure.in:
+	  frontend/configure.in, mp3x/config.log:
 
 	configure updates
 
@@ -31844,7 +32418,7 @@
 	* INSTALL, Makefile.in, id3tag.c, lame-analysis.h, lame.c,
 	  frontend/Makefile.in, frontend/configure, frontend/configure.in,
 	  frontend/main.c, frontend/parse.c, include/lame-analysis.h,
-	  include/lame-id3tag.h, include/lame.h:
+	  include/lame-id3tag.h, include/lame.h, mp3x/Makefile.in:
 
 	trying to move decoding back into library
 
@@ -31856,8 +32430,12 @@
 
 2000-10-01 17:17  markt
 
-	* frontend/: gpkplotting.c, gpkplotting.h, gtkanal.c, main.c,
-	  mp3x.c:
+	* frontend/gpkplotting.c, frontend/gpkplotting.h,
+	  frontend/gtkanal.c, frontend/main.c, frontend/mp3x.c,
+	  mp3x/Makefile.in, mp3x/aclocal.m4, mp3x/config.log,
+	  mp3x/config.status, mp3x/configure, mp3x/configure.in,
+	  mp3x/gpkplotting.c, mp3x/gpkplotting.h, mp3x/gtkanal.c,
+	  mp3x/mp3x.c:
 
 	moved GTK frame analyzer stuff into mp3x
 
@@ -34142,7 +34720,7 @@
 
 2000-07-26 13:25  takehiro
 
-	* machine.h, quantize-pvt.h, takehiro.c:
+	* machine.h, quantize-pvt.h, takehiro.c, i386/nasm.h:
 
 	i hope this fix make intel native asm code available on VC
 
@@ -34997,7 +35575,7 @@
 
 2000-06-13 11:27  takehiro
 
-	* tables.c, takehiro.c:
+	* tables.c, takehiro.c, i386/choose_table.nas:
 
 	completely MMXed choose table routine. faster!
 
@@ -35269,6 +35847,12 @@
 
 	signed/unsigned fixes
 
+2000-05-30 12:00  takehiro
+
+	* i386/nasm.h:
+
+	some difinition added
+
 2000-05-30 00:20  markt
 
 	* Makefile:
@@ -35362,7 +35946,7 @@
 
 2000-05-28 05:01  takehiro
 
-	* Makefile, takehiro.c:
+	* Makefile, takehiro.c, i386/choose_table.nas, i386/nasm.h:
 
 	initial MMX implementation attempt..
 	use MMX to huffman coding.
@@ -37891,6 +38475,12 @@
 
 	minor code cleanup
 
+2000-02-02 14:58  takehiro
+
+	* i386/fft.nas:
+
+	merging interface
+
 2000-02-02 10:31  markt
 
 	* Makefile:
@@ -37966,6 +38556,13 @@
 	* fft.c:
 
 	Use INLINE define instead of inline.
+
+2000-01-30 22:53  takehiro
+
+	* i386/: fft.nas, fft3dn.nas, fftfpu.nas, fftsse.nas, ffttbl.nas:
+
+	initial check in of asm code from GOGO
+	not working :)
 
 2000-01-30 22:19  markt
 
