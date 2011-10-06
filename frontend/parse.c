@@ -225,12 +225,12 @@ char* toLatin1( char* src )
             char* env_lang = getenv("LANG");
             char* xxx_code = env_lang == NULL ? NULL : strrchr(env_lang, '.');
             char* cur_code = xxx_code == NULL ? "" : xxx_code+1;
-            iconv_t xiconv = iconv_open("ISO_8859-1", cur_code);
+            iconv_t xiconv = iconv_open("ISO_8859-1//TRANSLIT", cur_code);
             if (xiconv != (iconv_t)-1) {
                 char* i_ptr = (char*)src;
                 char* o_ptr = dst;
                 size_t srcln = l*w;
-                size_t avail = n;                
+                size_t avail = n;
                 iconv(xiconv, &i_ptr, &srcln, &o_ptr, &avail);
                 iconv_close(xiconv);
             }
@@ -253,7 +253,7 @@ char* toUtf16( char* src )
             char* env_lang = getenv("LANG");
             char* xxx_code = env_lang == NULL ? NULL : strrchr(env_lang, '.');
             char* cur_code = xxx_code == NULL ? "" : xxx_code+1;
-            iconv_t xiconv = iconv_open("UTF-16LE", cur_code);
+            iconv_t xiconv = iconv_open("UTF-16LE//TRANSLIT", cur_code);
             dst[0] = 0xff;
             dst[1] = 0xfe;
             if (xiconv != (iconv_t)-1) {

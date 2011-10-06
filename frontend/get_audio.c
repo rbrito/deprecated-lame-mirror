@@ -50,6 +50,13 @@ char   *strchr(), *strrchr();
 # endif
 #endif
 
+#ifdef HAVE_INTTYPES_H
+# include <inttypes.h>
+#else
+# ifdef HAVE_STDINT_H
+#  include <stdint.h>
+# endif
+#endif
 
 #define         MAX_U_32_NUM            0xFFFFFFFF
 
@@ -91,8 +98,7 @@ char   *strchr(), *strrchr();
 #define FLOAT_TO_UNSIGNED(f) ((unsigned long)(((long)((f) - 2147483648.0)) + 2147483647L + 1))
 #define UNSIGNED_TO_FLOAT(u) (((double)((long)((u) - 2147483647L - 1))) + 2147483648.0)
 
-static  uint32_t
-uint32_high_low(unsigned char *bytes)
+static unsigned int uint32_high_low(unsigned char *bytes)
 {
     uint32_t const hh = bytes[0];
     uint32_t const hl = bytes[1];
