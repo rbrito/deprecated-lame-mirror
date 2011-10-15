@@ -11,6 +11,25 @@
 
 -- 
 
+2011-10-15 14:31  robert
+
+	* testcase.mp3, debian/Makefile.am, debian/Makefile.in,
+	  doc/html/detailed.html, libmp3lame/version.h:
+
+	preparing release
+
+2011-10-15 12:38  robert
+
+	* misc/mk_mp3.sh:
+
+	updating script for building mp3 collection from lossless archive
+
+2011-10-06 23:12  robert
+
+	* ChangeLog:
+
+	updating changelog
+
 2011-10-06 23:07  robert
 
 	* frontend/: get_audio.c, parse.c:
