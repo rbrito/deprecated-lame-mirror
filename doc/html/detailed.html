@@ -1,4 +1,4 @@
-﻿<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
         "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
 <html xmlns="http://www.w3.org/1999/xhtml" xml:lang="en" lang="en">
  <head>
@@ -47,6 +47,7 @@ then it also supports the extra formats that the library supports.<br/>
 There is also support for RAW PCM data and and piped input</td></tr>
 <tr><td>-</td><td>For piped/streamed Input, use "-" as the input and/or output
  file name.</td></tr>
+<tr><td>--out-dir path</td><td>If no explicit output file is specified, a file will be written at given path. Ignored when using piped/streamed input</td></tr>
 <tr><td><a href="#mp1input">--mp1input</a><a href="#note1"><sup>1</sup></a></td><td>Input file is an MPEG
  layer I file. Implicit if extension is .mp1</td></tr>
 <tr><td><a href="#mp2input">--mp2input</a><a href="#note1"><sup>1</sup></a></td><td>Input file is an MPEG
@@ -58,6 +59,7 @@ There is also support for RAW PCM data and and piped input</td></tr>
 ) by number</td></tr>
 <tr><td><a href="#scale-r">--scale-r</a> number</td><td>Scale channel 1 (right) input (multiply PCM data)
  by number</td></tr>
+<tr><td>--swap-channel</td><td>Swap input channels</td></tr>
 <tr><td><a href="#nogap">--nogap</a> file1 file2 ...</td><td>Gapless encoding for a set of contiguous
  files</td></tr>
 <tr><td><a href="#nogapout">--nogapout</a> dir</td><td>Output dir for gapless encoding (must precede
@@ -148,7 +150,7 @@ the input .mp3 file</td></tr>
                            creates v1.1 tag, providing a total forces v2.0).</td></tr>
 <tr><td><a href="#tg">--tg</a> genre</td><td>Audio/song genre (name or number in list)</td></tr>
 <tr><td><a href="#ti">--ti</a> file</td><td>Audio/song albumArt (jpeg/png/gif file, 128KB max, v2.3)</td></tr>
-<tr><td><a href="#tv">--tv</a> id=value</td><td>User-defined frame specified by id and value (v2.3 tag)</td></tr>
+<tr><td><a href="#tv">--tv</a> id=value</td><td>Text or URL frame specified by id and value (v2.3 tag), user defined text frame syntax: --tv "TXXX=description=content"</td></tr>
 <tr><td><a href="#add-id3v2">--add-id3v2</a></td><td>Force addition of version 2 tag</td></tr>
 <tr><td><a href="#id3v1-only">--id3v1-only</a></td><td>Add only a version 1 tag</td></tr>
 <tr><td><a href="#id3v2-only">--id3v2-only</a></td><td>Add only a version 2 tag</td></tr>
@@ -185,7 +187,7 @@ the input .mp3 file</td></tr>
 <tr><td><a href="#silent">--silent</a> / <a href="#quiet">--quiet</a></td><td>Don't print anything on screen</td></tr>
 <tr><td><a href="#verbose">--verbose</a></td><td>Print a lot of useful information</td></tr>
 <tr><td><a href="#version">--version</a> / <a href="#license">--license</a></td><td>Print License information</td></tr>
-<tr><td><a href="#help">--help</a> / <a href="#usage">--usage</a></td><td>Shows the common list of switches</td></tr>
+<tr><td><a href="#help">--help</a> / <a href="#usage">--usage</a></td><td>Shows the common list of switches. Add <i>id3</i> or <i>dev</i> to get help for a specified topic</td></tr>
 <tr><td><a href="#longhelp">--longhelp</a></td><td>Shows the complete list of switches</td></tr>
 
 <tr><th colspan="2">Experimental switches for developers. Only enabled in alpha/debug 
@@ -212,6 +214,7 @@ versions:</th></tr>
 <tr><td>--athlower x</td><td>Lower the ATH by x.x dB's</td></tr>
 <tr><td>--athtype x</td><td>Select ATH type curve</td></tr>
 <tr><td>--vbr-new</td><td>In LAME 3.98, the new VBR was made default, and this switch is now used for experimental tweaks</td></tr>
+<tr><td>--buffer-constraint <i>x</i></td><td>available values for <i>x</i>: default, strict, maximum</td></tr>
 
 <tr><th colspan="2">Aliases and removed settings</th></tr>
 <tr><td>-f</td><td>Alias of -q 7.</td></tr>
