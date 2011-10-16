@@ -28,6 +28,7 @@ noinst_HEADERS = \
 	lametime.h \
 	main.h \
 	parse.h \
+	rtp.h \
 	timestatus.h
 
 lame_SOURCES = lame_main.c $(common_sources)
