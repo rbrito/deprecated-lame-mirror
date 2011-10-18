@@ -1304,6 +1304,13 @@ lame_init_params(lame_global_flags * gfp)
     return 0;
 }
 
+static void
+concatSep(char* dest, char const* sep, char const* str)
+{
+    if (*dest != 0) strcat(dest, sep);
+    strcat(dest, str);
+}
+
 /*
  *  print_config
  *
@@ -1328,6 +1335,7 @@ lame_print_config(const lame_global_flags * gfp)
 #endif
     if (gfc->CPU_features.MMX
         || gfc->CPU_features.AMD_3DNow || gfc->CPU_features.SSE || gfc->CPU_features.SSE2) {
+        char    text[256] = { 0 };
         int     fft_asm_used = 0;
 #ifdef HAVE_NASM
         if (gfc->CPU_features.AMD_3DNow) {
@@ -1336,44 +1344,34 @@ lame_print_config(const lame_global_flags * gfp)
         else if (gfc->CPU_features.SSE) {
             fft_asm_used = 2;
         }
-        else
-#endif
+#else
+# if defined( HAVE_XMMINTRIN_H ) && defined( MIN_ARCH_SSE )
         {
-            fft_asm_used = 0;
+            fft_asm_used = 3;
         }
-        MSGF(gfc, "CPU features: ");
-
+# endif
+#endif
         if (gfc->CPU_features.MMX) {
 #ifdef MMX_choose_table
-            MSGF(gfc, "MMX (ASM used)");
+            concatSep(text, ", ", "MMX (ASM used)");
 #else
-            MSGF(gfc, "MMX");
+            concatSep(text, ", ", "MMX");
 #endif
         }
         if (gfc->CPU_features.AMD_3DNow) {
-            if (fft_asm_used == 1) {
-                MSGF(gfc, ", 3DNow! (ASM used)");
-            }
-            else {
-                MSGF(gfc, ", 3DNow!");
-            }
+            concatSep(text, ", ", (fft_asm_used == 1) ? "3DNow! (ASM used)" : "3DNow!");
         }
         if (gfc->CPU_features.SSE) {
 #if defined(HAVE_XMMINTRIN_H)
-            MSGF(gfc, ", SSE (ASM used)");
+            concatSep(text, ", ", "SSE (ASM used)");
 #else
-            if (fft_asm_used == 2) {
-                MSGF(gfc, ", SSE (ASM used)");
-            }
-            else {
-                MSGF(gfc, ", SSE");
-            }
+            concatSep(text, ", ", (fft_asm_used == 2) ? "SSE (ASM used)" : "SSE");
 #endif
         }
         if (gfc->CPU_features.SSE2) {
-            MSGF(gfc, ", SSE2");
+            concatSep(text, ", ", (fft_asm_used == 3) ? "SSE2 (ASM used)" : "SSE2");
         }
-        MSGF(gfc, "\n");
+        MSGF(gfc, "CPU features: %s\n", text);
     }
 
     if (cfg->channels_in == 2 && cfg->channels_out == 1 /* mono */ ) {
