@@ -42,7 +42,7 @@ extern "C" {
 
 /* type definitions */
 
-typedef		unsigned long			HBE_STREAM;
+typedef		void*			HBE_STREAM;
 typedef		HBE_STREAM				*PHBE_STREAM;
 typedef		unsigned long			BE_ERR;
 
