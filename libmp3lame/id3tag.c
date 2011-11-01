@@ -342,6 +342,32 @@ hasUcs2ByteOrderMarker(unsigned short bom)
 }
 
 
+static unsigned short
+swap_bytes(unsigned short w)
+{
+    return (0xff00u & (w << 8)) | (0x00ffu & (w >> 8));
+}
+
+
+static unsigned short
+toLittleEndian(unsigned short bom, unsigned short c)
+{
+    if (bom == 0xFFFEu) {
+        return swap_bytes(c);
+    }
+    return c;
+}
+
+static unsigned short
+fromLatin1Char(const unsigned short* s, unsigned short c)
+{
+    if (s[0] == 0xFFFEu) {
+        return swap_bytes(c);
+    }
+    return c;
+}
+
+
 static  size_t
 local_strdup(char **dst, const char *src)
 {
@@ -530,19 +556,23 @@ static uint32_t
 toID3v2TagId_ucs2(unsigned short const *s)
 {
     unsigned int i, x = 0;
+    unsigned short bom = 0;
     if (s == 0) {
         return 0;
     }
+    bom = s[0];
+    if (hasUcs2ByteOrderMarker(bom)) {
+        ++s;
+    }
     for (i = 0; i < 4 && s[i] != 0; ++i) {
-        unsigned short const c = s[i];
-        unsigned int const u = 0x0ff & c;
-        x <<= 8;
-        x |= u;
+        unsigned short const c = toLittleEndian(bom, s[i]);
         if (c < 'A' || 'Z' < c) {
             if (c < '0' || '9' < c) {
                 return 0;
             }
         }
+        x <<= 8;
+        x |= c;
     }
     return x;
 }
@@ -785,15 +815,18 @@ id3tag_set_userinfo_latin1(lame_internal_flags* gfc, uint32_t id, char const *fi
 static int
 id3tag_set_userinfo_ucs2(lame_internal_flags* gfc, uint32_t id, unsigned short const *fieldvalue)
 {
-    int     a, b, rc;
-    unsigned short* dsc = 0, *val = 0;
+    int     a, b, rc = -7;
+    unsigned short const separator = fromLatin1Char(fieldvalue,'=');
     b = local_ucs2_strlen(fieldvalue);
-    a = local_ucs2_pos(fieldvalue, '=');
-    local_ucs2_substr(&dsc, fieldvalue, 0, a);
-    local_ucs2_substr(&val, fieldvalue, a+1, b);
-    rc = id3v2_add_ucs2(gfc, id, "XXX", dsc, val);
-    free(dsc);
-    free(val);
+    a = local_ucs2_pos(fieldvalue, separator);
+    if (a >= 0 && a <= b) { 
+        unsigned short* dsc = 0, *val = 0;
+        local_ucs2_substr(&dsc, fieldvalue, 0, a);
+        local_ucs2_substr(&val, fieldvalue, a+1, b);
+        rc = id3v2_add_ucs2(gfc, id, "XXX", dsc, val);
+        free(dsc);
+        free(val);
+    }
     return rc;
 }
 
@@ -1218,7 +1251,7 @@ sizeOfWxxxNode(FrameDataNode const *node)
             n += node->txt.dim;
             break;
         case 1:
-            n += node->txt.dim; /* UCS2 -> Latin1 */
+            n += node->txt.dim - 1; /* UCS2 -> Latin1, skip BOM */
             break;
         }
     }
@@ -1237,9 +1270,13 @@ writeChars(unsigned char *frame, char const *str, size_t n)
 static unsigned char *
 writeUcs2s(unsigned char *frame, unsigned short const *str, size_t n)
 {
-    while (n--) {
-        *frame++ = 0xff & (*str >> 8);
-        *frame++ = 0xff & (*str++);
+    if (n > 0) {
+        unsigned short const bom = *str;
+        while (n--) {
+            unsigned short const c = toLittleEndian(bom, *str++);
+            *frame++ = 0x00ffu & (c >> 8);
+            *frame++ = 0x00ffu & c;
+        }
     }
     return frame;
 }
@@ -1247,13 +1284,20 @@ writeUcs2s(unsigned char *frame, unsigned short const *str, size_t n)
 static unsigned char *
 writeLoBytes(unsigned char *frame, unsigned short const *str, size_t n)
 {
-    str++; /* skip BOM */
-    while (n--) {
-        unsigned short c = *str++;
-        if (c < 0x20u || 0xff < c) {
-            c = 0x20; /* blank */
+    if (n > 0) {
+        unsigned short const bom = *str;
+        if (hasUcs2ByteOrderMarker(bom)) {
+            str++; n--; /* skip BOM */
         }
-        *frame++ = c;
+        while (n--) {
+            unsigned short const c = toLittleEndian(bom, *str++);
+            if (c < 0x0020u || 0x00ffu < c) {
+                *frame++ = 0x0020; /* blank */
+            }
+            else {
+                *frame++ = c;
+            }
+        }
     }
     return frame;
 }
@@ -1429,15 +1473,16 @@ id3tag_set_fieldvalue_utf16(lame_global_flags * gfp, const unsigned short *field
 {
     if (fieldvalue && *fieldvalue) {
         size_t dx = hasUcs2ByteOrderMarker(fieldvalue[0]);
+        unsigned short const separator = fromLatin1Char(fieldvalue, '=');
         char fid[5] = {0,0,0,0,0};
-        uint32_t const frame_id = toID3v2TagId_ucs2(fieldvalue+dx);
-        if (local_ucs2_strlen(fieldvalue) < (5+dx) || fieldvalue[dx+4] != '=') {
+        uint32_t const frame_id = toID3v2TagId_ucs2(fieldvalue);
+        if (local_ucs2_strlen(fieldvalue) < (5+dx) || fieldvalue[4+dx] != separator) {
             return -1;
         }
-        fid[0] = (fieldvalue[dx+0] & 0x0ff);
-        fid[1] = (fieldvalue[dx+1] & 0x0ff);
-        fid[2] = (fieldvalue[dx+2] & 0x0ff);
-        fid[3] = (fieldvalue[dx+3] & 0x0ff);
+        fid[0] = (frame_id >> 24) & 0x0ff;
+        fid[1] = (frame_id >> 16) & 0x0ff;
+        fid[2] = (frame_id >> 8) & 0x0ff;
+        fid[3] = frame_id & 0x0ff;
         if (frame_id != 0) {
             unsigned short* txt = 0;
             int     rc;

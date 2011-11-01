@@ -260,7 +260,7 @@ char* toUtf16( char* src )
                 char* i_ptr = (char*)src;
                 char* o_ptr = &dst[2];
                 size_t srcln = l*w;
-                size_t avail = n;                
+                size_t avail = n;
                 iconv(xiconv, &i_ptr, &srcln, &o_ptr, &avail);
                 iconv_close(xiconv);
             }
