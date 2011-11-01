@@ -1274,8 +1274,8 @@ writeUcs2s(unsigned char *frame, unsigned short const *str, size_t n)
         unsigned short const bom = *str;
         while (n--) {
             unsigned short const c = toLittleEndian(bom, *str++);
-            *frame++ = 0x00ffu & (c >> 8);
             *frame++ = 0x00ffu & c;
+            *frame++ = 0x00ffu & (c >> 8);
         }
     }
     return frame;
