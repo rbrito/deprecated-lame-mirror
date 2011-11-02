@@ -231,13 +231,13 @@ CC_OPTS = $(CC_OPTS) /W$(WARN)
 CC_OPTS = $(CC_OPTS) /DFLOAT8=float /DREAL_IS_FLOAT=1
 !	ENDIF
 
-CC_OPTS = $(CC_OPTS) /DNDEBUG /MD
+CC_OPTS = $(CC_OPTS) /DNDEBUG /MT
 
 LN_OPTS = /nologo /opt:NOWIN98 /pdb:none
 LN_DLL = /nologo /DLL /opt:NOWIN98
 
 CC_OUT = /Fo
-LN_OUT = /force /OUT:
+LN_OUT = /OUT:
 
 CC = cl
 LN = link

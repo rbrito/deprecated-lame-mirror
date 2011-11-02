@@ -175,4 +175,13 @@ typedef FLOAT sample_t;
 
 #endif
 
+#ifdef _MSC_VER
+#  if _MSC_VER < 1400
+#  define fabsf fabs
+#  define powf pow
+#  define log10f log10
+#  endif
+#endif
+
+
 /* end of machine.h */
