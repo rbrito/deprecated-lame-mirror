@@ -10,7 +10,8 @@ EXTRA_SCRIPTS = \
 	auenc \
 	lameid3.pl \
 	mugeco.sh \
-	mlame
+	mlame \
+	mk_mp3.sh
 
 EXTRA_DIST = \
 	$(EXTRA_SCRIPTS) \
