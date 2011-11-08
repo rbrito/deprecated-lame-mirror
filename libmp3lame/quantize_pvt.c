@@ -654,6 +654,34 @@ calc_xmin(lame_internal_flags const *gfc,
         while (k-- && fabs(xr[k]) < 1e-12f) {
             max_nonzero = k;
         }
+        max_nonzero |= 1; /* only odd numbers */
+    }
+    else {
+        int max_nonzero_s = 191;
+        k = 192;
+        while (k--
+          && fabs(xr[3*k+0]) < 1e-12f
+          && fabs(xr[3*k+1]) < 1e-12f
+          && fabs(xr[3*k+2]) < 1e-12f
+          ) {
+            max_nonzero_s = k;
+        }
+        max_nonzero_s |= 1; /* only odd numbers */
+        max_nonzero = 3 * max_nonzero_s + 2;
+    }
+    if (gfc->sv_qnt.sfb21_extra == 0 && cfg->samplerate_out < 44000) {
+      int const sfb_l = (cfg->samplerate_out <= 8000) ? 17 : 21;
+      int const sfb_s = (cfg->samplerate_out <= 8000) ?  9 : 12;
+      int   limit = 575;
+      if (cod_info->block_type != SHORT_TYPE) { /* NORM, START or STOP type, but not SHORT */
+          limit = gfc->scalefac_band.l[sfb_l]-1;
+      }
+      else {
+          limit = 3*gfc->scalefac_band.s[sfb_s]-1;
+      }
+      if (max_nonzero > limit) {
+          max_nonzero = limit;
+      }
     }
     cod_info->max_nonzero_coeff = max_nonzero;
 
