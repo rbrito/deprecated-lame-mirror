@@ -65,7 +65,7 @@
 #define XING_BITRATE2  64
 #define XING_BITRATE25 32
 
-
+extern const char* get_lame_tag_encoder_short_version(void);
 
 static const char VBRTag0[] = { "Xing" };
 static const char VBRTag1[] = { "Info" };
@@ -629,7 +629,17 @@ PutLameVBR(lame_global_flags const *gfp, size_t nMusicLength, uint8_t * pbtStrea
     int     nQuality = (100 - 10 * gfp->VBR_q - gfp->quality);
 
 
-    const char *szVersion = get_lame_very_short_version();
+    /*
+    NOTE:
+            Even though the specification for the LAME VBR tag
+            did explicitly mention other encoders than LAME,
+            many SW/HW decoder seem to be able to make use of
+            this tag only, if the encoder version starts with LAME.
+            To be compatible with such decoders, ANY encoder will
+            be forced to write a fake LAME version string!
+            As a result, the encoder version info becomes worthless.
+    */
+    const char *szVersion = get_lame_tag_encoder_short_version();
     uint8_t nVBR;
     uint8_t nRevision = 0x00;
     uint8_t nRevMethod;
