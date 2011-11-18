@@ -360,6 +360,8 @@ typedef struct get_audio_global_data_struct {
     hip_t   hip;
     PcmBuffer pcm32;
     PcmBuffer pcm16;
+    size_t  in_id3v2_size;
+    unsigned char* in_id3v2_tag;
 } get_audio_global_data;
 
 static get_audio_global_data global;
@@ -599,6 +601,8 @@ init_infile(lame_t gfp, char const *inPath)
     global. hip = 0;
     global. music_in = 0;
     global. snd_file = 0;
+    global. in_id3v2_size = 0;
+    global. in_id3v2_tag = 0;
     if (is_mpeg_file_format(global_reader.input_format)) {
         global. music_in = open_mpeg_file(gfp, inPath, &enc_delay, &enc_padding);
     }
@@ -654,6 +658,9 @@ close_infile(void)
     freePcmBuffer(&global.pcm32);
     freePcmBuffer(&global.pcm16);
     global. music_in = 0;
+    free(global.in_id3v2_tag);
+    global.in_id3v2_tag = 0;
+    global.in_id3v2_size = 0;
 }
 
 
@@ -1915,6 +1922,16 @@ is_syncword_mp123(const void *const headerptr)
     return 1;
 }
 
+static size_t
+lenOfId3v2Tag(unsigned char const* buf)
+{
+    unsigned int b0 = buf[0] & 127;
+    unsigned int b1 = buf[1] & 127;
+    unsigned int b2 = buf[2] & 127;
+    unsigned int b3 = buf[3] & 127;
+    return (((((b0 << 7) + b1) << 7) + b2) << 7) + b3;
+}
+
 int
 lame_decode_initfile(FILE * fd, mp3data_struct * mp3data, int *enc_delay, int *enc_padding)
 {
@@ -1940,18 +1957,23 @@ lame_decode_initfile(FILE * fd, mp3data_struct * mp3data, int *enc_delay, int *e
     if (fread(buf, 1, len, fd) != len)
         return -1;      /* failed */
     while (buf[0] == 'I' && buf[1] == 'D' && buf[2] == '3') {
-        if (global_ui_config.silent < 9) {
-            console_printf("ID3v2 found. "
-                           "Be aware that the ID3 tag is currently lost when transcoding.\n");
-        }
         len = 6;
-        if (fread(&buf, 1, len, fd) != len)
+        if (fread(&buf[4], 1, len, fd) != len)
             return -1;  /* failed */
-        buf[2] &= 127;
-        buf[3] &= 127;
-        buf[4] &= 127;
-        buf[5] &= 127;
-        len = (((((buf[2] << 7) + buf[3]) << 7) + buf[4]) << 7) + buf[5];
+        len = lenOfId3v2Tag(&buf[6]);
+        if (global.in_id3v2_size < 1) {
+            global.in_id3v2_size = 10 + len;
+            global.in_id3v2_tag = malloc(global.in_id3v2_size);
+            if (global.in_id3v2_tag) {
+                memcpy(global.in_id3v2_tag, buf, 10);
+                if (fread(&global.in_id3v2_tag[10], 1, len, fd) != len)
+                    return -1;  /* failed */
+                len = 0; /* copied, nothing to skip */
+            }
+            else {
+                global.in_id3v2_size = 0;
+            }
+        }
         fskip(fd, len, SEEK_CUR);
         len = 4;
         if (fread(&buf, 1, len, fd) != len)
@@ -2175,6 +2197,20 @@ hip_t
 get_hip(void)
 {
     return global.hip;
+}
+
+size_t
+sizeOfOldTag(lame_t gf)
+{
+    (void) gf;
+    return global.in_id3v2_size;
+}
+
+unsigned char*
+getOldTag(lame_t gf)
+{
+    (void) gf;
+    return global.in_id3v2_tag;
 }
 
 /* end of get_audio.c */

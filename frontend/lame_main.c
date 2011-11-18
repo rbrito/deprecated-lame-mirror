@@ -434,6 +434,18 @@ lame_encoder_loop(lame_global_flags * gf, FILE * outf, int nogap, char *inPath, 
             }
         }
     }
+    else {
+        unsigned char* id3v2tag = getOldTag(gf);
+        id3v2_size = sizeOfOldTag(gf);
+        if ( id3v2_size > 0 ) {
+            size_t owrite = fwrite(id3v2tag, 1, id3v2_size, outf);
+            if (owrite != id3v2_size) {
+                encoder_progress_end(gf);
+                error_printf("Error writing ID3v2 tag \n");
+                return 1;
+            }
+        }
+    }
     if (global_writer.flush_write == 1) {
         fflush(outf);
     }
