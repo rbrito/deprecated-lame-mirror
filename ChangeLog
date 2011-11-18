@@ -11,6 +11,84 @@
 
 -- 
 
+2011-11-18 09:30  robert
+
+	* configure, configure.in (lame3_99):
+
+	releasing 3.99.2 stable
+
+2011-11-18 09:18  robert
+
+	* testcase.mp3, doc/html/history.html, libmp3lame/VbrTag.c,
+	  libmp3lame/version.c, libmp3lame/version.h (lame3_99):
+
+	Due to some bugs in 3rd party HW/SW decoders, those were not
+	be able to make use of LAME's extended info tag anymore,
+	resulting in problems with things like gapless playback.
+
+2011-11-18 08:38  robert
+
+	* frontend/: get_audio.c, get_audio.h, lame_main.c (lame3_99):
+
+	copy old id3v2 tag
+
+2011-11-10 21:39  robert
+
+	* libmp3lame/version.c (lame3_99):
+
+	small fix
+
+2011-11-10 18:46  robert
+
+	* libmp3lame/version.c:
+
+	small fix
+
+2011-11-10 13:19  robert
+
+	* frontend/: get_audio.c, get_audio.h, lame_main.c:
+
+	when transcoding, copy old id3v2 tag. feature requests:
+	 ID: 1985551 lame --pass-ID3-tags-unscathed
+	 ID: 977304 ID3 tags lost when transcoding
+
+2011-11-09 00:15  robert
+
+	* libmp3lame/: quantize.c, quantize_pvt.c:
+
+	aiming for a more balanced bit reservoir usage
+
+2011-11-08 19:36  robert
+
+	* libmp3lame/quantize_pvt.c:
+
+	at lower sample rates, make a cut at last usable scalefactor band
+
+2011-11-08 18:19  robert
+
+	* libmp3lame/quantize.c:
+
+	8kHz mpeg2.5 uses fewer scale factor bands.
+
+2011-11-06 18:34  robert
+
+	* libmp3lame/encoder.c:
+
+	use same meaning of PE in cbr and vbr modes
+
+2011-11-05 17:53  robert
+
+	* configure, configure.in, doc/html/history.html,
+	  libmp3lame/version.h:
+
+	main-branch open for next development cycle
+
+2011-11-05 17:33  robert
+
+	* ChangeLog, configure, configure.in (lame3_99):
+
+	releasing 3.99.1
+
 2011-11-05 17:00  robert
 
 	* doc/html/history.html, libmp3lame/version.h (lame3_99):
