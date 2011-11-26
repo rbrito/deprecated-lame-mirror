@@ -468,6 +468,88 @@ local_ucs2_pos(unsigned short const* str, unsigned short c)
     return -1;
 }
 
+static int
+maybeLatin1(unsigned short const* text)
+{
+    if (text) {
+        unsigned short bom = *text++;
+        while (*text) {
+            unsigned short c = toLittleEndian(bom, *text++);
+            if (c > 0x00fe) return 0;
+        }
+    }
+    return 1;
+}
+
+static int searchGenre(char const* genre);
+static int sloppySearchGenre(char const* genre);
+
+static int
+lookupGenre(char const* genre)
+{
+    char   *str;
+    int     num = strtol(genre, &str, 10);
+    /* is the input a string or a valid number? */
+    if (*str) {
+        num = searchGenre(genre);
+        if (num == GENRE_NAME_COUNT) {
+            num = sloppySearchGenre(genre);
+        }
+        if (num == GENRE_NAME_COUNT) {
+            return -2; /* no common genre text found */
+        }
+    }
+    else {
+        if ((num < 0) || (num >= GENRE_NAME_COUNT)) {
+            return -1; /* number unknown */
+        }
+    }
+    return num;
+}
+
+static unsigned char *
+writeLoBytes(unsigned char *frame, unsigned short const *str, size_t n);
+
+static char*
+local_strdup_utf16_to_latin1(unsigned short const* utf16)
+{
+    size_t  len = local_ucs2_strlen(utf16);
+    unsigned char* latin1 = calloc(len+1, 1);
+    writeLoBytes(latin1, utf16, len);
+    return (char*)latin1;
+}
+
+
+static int
+id3tag_set_genre_utf16(lame_t gfp, unsigned short const* text)
+{
+    lame_internal_flags* gfc = gfp->internal_flags;
+    int   ret;
+    if (text == 0) {
+        return -3;
+    }
+    if (!hasUcs2ByteOrderMarker(text[0])) {
+        return -3;
+    }
+    if (maybeLatin1(text)) {
+        char*   latin1 = local_strdup_utf16_to_latin1(text);
+        int     num = lookupGenre(latin1);
+        free(latin1);
+        if (num == -1) return -1; /* number out of range */
+        if (num >= 0) {           /* common genre found  */
+            gfc->tag_spec.flags |= CHANGED_FLAG;
+            gfc->tag_spec.genre_id3v1 = num;
+            copyV1ToV2(gfc, ID_GENRE, genre_names[num]);
+            return 0;
+        }
+    }
+    ret = id3v2_add_ucs2(gfp->internal_flags, ID_GENRE, 0, 0, text);
+    if (ret == 0) {
+        gfc->tag_spec.flags |= CHANGED_FLAG;
+        gfc->tag_spec.genre_id3v1 = GENRE_INDEX_OTHER;
+    }
+    return ret;
+}
 
 /*
 Some existing options for ID3 tag can be specified by --tv option
@@ -854,6 +936,9 @@ id3tag_set_textinfo_utf16(lame_global_flags * gfp, char const *id, unsigned shor
             if (frame_id == ID_TXXX || frame_id == ID_WXXX) {
                 return id3tag_set_userinfo_ucs2(gfp->internal_flags, frame_id, text);
             }
+            if (frame_id == ID_GENRE) {
+                return id3tag_set_genre_utf16(gfp, text);
+            }
             return id3v2_add_ucs2(gfp->internal_flags, frame_id, 0, 0, text);
         }
     }
@@ -1115,31 +1200,15 @@ id3tag_set_genre(lame_global_flags * gfp, const char *genre)
     lame_internal_flags *gfc = gfp->internal_flags;
     int     ret = 0;
     if (genre && *genre) {
-        char   *str;
-        int     num = strtol(genre, &str, 10);
-        /* is the input a string or a valid number? */
-        if (*str) {
-            num = searchGenre(genre);
-            if (num == GENRE_NAME_COUNT) {
-                num = sloppySearchGenre(genre);
-            }
-            if (num == GENRE_NAME_COUNT) {
-                num = GENRE_INDEX_OTHER;
-                ret = -2;
-            }
-            else {
-                genre = genre_names[num];
-            }
-        }
-        else {
-            if ((num < 0) || (num >= GENRE_NAME_COUNT)) {
-                return -1;
-            }
+        int const num = lookupGenre(genre);
+        if (num == -1) return num;
+        gfc->tag_spec.flags |= CHANGED_FLAG;
+        if (num >= 0) {
+            gfc->tag_spec.genre_id3v1 = num;
             genre = genre_names[num];
         }
-        gfc->tag_spec.genre_id3v1 = num;
-        gfc->tag_spec.flags |= CHANGED_FLAG;
-        if (ret) {
+        else {
+            gfc->tag_spec.genre_id3v1 = GENRE_INDEX_OTHER;
             gfc->tag_spec.flags |= ADD_V2_FLAG;
         }
         copyV1ToV2(gfc, ID_GENRE, genre);
