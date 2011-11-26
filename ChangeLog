@@ -11,6 +11,31 @@
 
 -- 
 
+2011-11-26 18:26  robert
+
+	* doc/html/history.html, libmp3lame/id3tag.c:
+
+	bug fix for tracker item ID: 3441349: --tg does not handle genre number when adding unicode tag
+
+2011-11-26 18:15  robert
+
+	* doc/html/history.html, libmp3lame/id3tag.c, libmp3lame/version.h
+	  (lame3_99):
+
+	bug fix for tracker item ID: 3441349: --tg does not handle genre number when adding unicode tag
+
+2011-11-18 09:51  robert
+
+	* doc/html/history.html, libmp3lame/VbrTag.c, libmp3lame/version.c:
+
+	merge with 3.99 branch modifications
+
+2011-11-18 09:39  robert
+
+	* ChangeLog (lame3_99):
+
+	releasing 3.99.2
+
 2011-11-18 09:30  robert
 
 	* configure, configure.in (lame3_99):
