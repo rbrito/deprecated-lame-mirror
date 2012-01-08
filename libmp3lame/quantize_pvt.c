@@ -2,7 +2,7 @@
  *      quantize_pvt source file
  *
  *      Copyright (c) 1999-2002 Takehiro Tominaga
- *      Copyright (c) 2000-2011 Robert Hegemann
+ *      Copyright (c) 2000-2012 Robert Hegemann
  *      Copyright (c) 2001 Naoki Shibata
  *      Copyright (c) 2002-2005 Gabriel Bouvigne
  *
@@ -641,19 +641,42 @@ calc_xmin(lame_internal_flags const *gfc,
                     xmin = x;
             }
         }
-        *pxmin++ = xmin;
+        *pxmin++ = Max(xmin, 1e-20f);
     }                   /* end of long block loop */
 
 
 
 
     /*use this function to determine the highest non-zero coeff */
-    max_nonzero = 575;
-    if (cod_info->block_type != SHORT_TYPE) { /* NORM, START or STOP type, but not SHORT */
-        k = 576;
-        while (k-- && fabs(xr[k]) < 1e-12f) {
+    max_nonzero = 0;
+    for (k = 575; k > 0; --k) {
+        if (fabs(xr[k]) > 1e-12f) {
             max_nonzero = k;
+            break;
         }
+    }
+    if (cod_info->block_type != SHORT_TYPE) { /* NORM, START or STOP type, but not SHORT */
+        max_nonzero |= 1; /* only odd numbers */
+    }
+    else {
+        max_nonzero /= 6; /* 3 short blocks */
+        max_nonzero *= 6;
+        max_nonzero += 5;
+    }
+
+    if (gfc->sv_qnt.sfb21_extra == 0 && cfg->samplerate_out < 44000) {
+      int const sfb_l = (cfg->samplerate_out <= 8000) ? 17 : 21;
+      int const sfb_s = (cfg->samplerate_out <= 8000) ?  9 : 12;
+      int   limit = 575;
+      if (cod_info->block_type != SHORT_TYPE) { /* NORM, START or STOP type, but not SHORT */
+          limit = gfc->scalefac_band.l[sfb_l]-1;
+      }
+      else {
+          limit = 3*gfc->scalefac_band.s[sfb_s]-1;
+      }
+      if (max_nonzero > limit) {
+          max_nonzero = limit;
+      }
     }
     cod_info->max_nonzero_coeff = max_nonzero;
 
@@ -706,7 +729,7 @@ calc_xmin(lame_internal_flags const *gfc,
                         xmin = x;
                 }
             }
-            *pxmin++ = xmin;
+            *pxmin++ = Max(xmin, 1e-20f);
         }               /* b */
         if (cfg->use_temporal_masking_effect) {
             if (pxmin[-3] > pxmin[-3 + 1])
@@ -805,14 +828,15 @@ calc_noise(gr_info const *const cod_info,
             cod_info->global_gain - (((*scalefac++) + (cod_info->preflag ? pretab[sfb] : 0))
                                      << (cod_info->scalefac_scale + 1))
             - cod_info->subblock_gain[cod_info->window[sfb]] * 8;
-        FLOAT   noise = 0.0;
+        FLOAT const r_l3_xmin = 1.f / *l3_xmin++;
+        FLOAT   distort_ = 0.0f;
+        FLOAT   noise = 0.0f;
 
         if (prev_noise && (prev_noise->step[sfb] == s)) {
 
             /* use previously computed values */
-            noise = prev_noise->noise[sfb];
             j += cod_info->width[sfb];
-            *distort++ = noise / *l3_xmin++;
+            distort_ = r_l3_xmin * prev_noise->noise[sfb];
 
             noise = prev_noise->noise_log[sfb];
 
@@ -840,16 +864,17 @@ calc_noise(gr_info const *const cod_info,
                 prev_noise->noise[sfb] = noise;
             }
 
-            noise = *distort++ = noise / *l3_xmin++;
+            distort_ = r_l3_xmin * noise;
 
             /* multiplying here is adding in dB, but can overflow */
-            noise = FAST_LOG10(Max(noise, 1E-20));
+            noise = FAST_LOG10(Max(distort_, 1E-20f));
 
             if (prev_noise) {
                 /* save noise values */
                 prev_noise->noise_log[sfb] = noise;
             }
         }
+        *distort++ = distort_;
 
         if (prev_noise) {
             /* save noise values */

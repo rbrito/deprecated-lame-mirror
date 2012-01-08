@@ -47,8 +47,6 @@ typedef struct id3tag_spec {
     unsigned int albumart_size;
     unsigned int padding_size;
     int     albumart_mimetype;
-    char  **values;
-    unsigned int num_values;
     FrameDataNode *v2_head, *v2_tail;
 } id3tag_spec;
 
