@@ -2,7 +2,7 @@
  * id3tag.c -- Write ID3 version 1 and 2 tags.
  *
  * Copyright (C) 2000 Don Melton
- * Copyright (C) 2011 Robert Hegemann
+ * Copyright (C) 2011-2012 Robert Hegemann
  *
  * This library is free software; you can redistribute it and/or
  * modify it under the terms of the GNU Library General Public
@@ -60,6 +60,7 @@ char   *strchr(), *strrchr();
 #include "util.h"
 #include "bitstream.h"
 
+#define lame_calloc(TYPE, COUNT) ((TYPE*)calloc(COUNT, sizeof(TYPE)))
 
 static const char *const genre_names[] = {
     /*
@@ -148,6 +149,9 @@ typedef enum MiscIDs { ID_TXXX = FRAME_ID('T', 'X', 'X', 'X')
         , ID_GRID = FRAME_ID('G', 'R', 'I', 'D')
         , ID_PRIV = FRAME_ID('P', 'R', 'I', 'V')
         , ID_VSLT = FRAME_ID('V', 'S', 'L', 'T') /* full text string */
+        , ID_USER = FRAME_ID('U', 'S', 'E', 'R') /* full text string */
+        , ID_PCST = FRAME_ID('P', 'C', 'S', 'T') /* iTunes Podcast indicator, only presence important */
+        , ID_WFED = FRAME_ID('W', 'F', 'E', 'D') /* iTunes Podcast URL as TEXT FRAME !!! violates standard */
 } MiscIDs;
 
 
@@ -194,26 +198,27 @@ debug_tag_spec_flags(lame_internal_flags * gfc, const char* info)
 
 
 static int
-id3v2_add_ucs2(lame_internal_flags * gfc, uint32_t frame_id, char const *lang,
-               unsigned short const *desc, unsigned short const *text);
+id3v2_add_ucs2(lame_t gfp, uint32_t frame_id, char const *lang, unsigned short const *desc, unsigned short const *text);
 static int
-id3v2_add_latin1(lame_internal_flags * gfc, uint32_t frame_id, char const *lang, char const *desc,
-                 char const *text);
+id3v2_add_latin1(lame_t gfp, uint32_t frame_id, char const *lang, char const *desc, char const *text);
 
 static void
-copyV1ToV2(lame_internal_flags * gfc, int frame_id, char const *s)
+copyV1ToV2(lame_t gfp, int frame_id, char const *s)
 {
-    unsigned int flags = gfc->tag_spec.flags;
-    id3v2_add_latin1(gfc, frame_id, 0, 0, s);
-    gfc->tag_spec.flags = flags;
+    lame_internal_flags *gfc = gfp != 0 ? gfp->internal_flags : 0;
+    if (gfc != 0) {
+        unsigned int flags = gfc->tag_spec.flags;
+        id3v2_add_latin1(gfp, frame_id, "XXX", 0, s);
+        gfc->tag_spec.flags = flags;
 #if 0
-    debug_tag_spec_flags(gfc, "copyV1ToV2");
+        debug_tag_spec_flags(gfc, "copyV1ToV2");
 #endif
+    }
 }
 
 
 static void
-id3v2AddLameVersion(lame_internal_flags * gfc)
+id3v2AddLameVersion(lame_t gfp)
 {
     char    buffer[1024];
     const char *b = get_lame_os_bitness();
@@ -227,12 +232,13 @@ id3v2AddLameVersion(lame_internal_flags * gfc)
     else {
         sprintf(buffer, "LAME version %s (%s)", v, u);
     }
-    copyV1ToV2(gfc, ID_ENCODER, buffer);
+    copyV1ToV2(gfp, ID_ENCODER, buffer);
 }
 
 static void
-id3v2AddAudioDuration(lame_internal_flags * gfc, double ms)
+id3v2AddAudioDuration(lame_t gfp, double ms)
 {
+    lame_internal_flags *gfc = gfp != 0 ? gfp->internal_flags : 0;
     SessionConfig_t const *const cfg = &gfc->cfg;
     char    buffer[1024];
     double const max_ulong = MAX_U_32_NUM;
@@ -250,7 +256,7 @@ id3v2AddAudioDuration(lame_internal_flags * gfc, double ms)
         playlength_ms = ms;
     }
     sprintf(buffer, "%lu", playlength_ms);
-    copyV1ToV2(gfc, ID_PLAYLENGTH, buffer);
+    copyV1ToV2(gfp, ID_PLAYLENGTH, buffer);
 }
 
 void
@@ -272,20 +278,20 @@ id3tag_genre_list(void (*handler) (int, const char *, void *), void *cookie)
 
 
 void
-id3tag_init(lame_global_flags * gfp)
+id3tag_init(lame_t gfp)
 {
     lame_internal_flags *gfc = gfp->internal_flags;
     free_id3tag(gfc);
     memset(&gfc->tag_spec, 0, sizeof gfc->tag_spec);
     gfc->tag_spec.genre_id3v1 = GENRE_NUM_UNKNOWN;
     gfc->tag_spec.padding_size = 128;
-    id3v2AddLameVersion(gfc);
+    id3v2AddLameVersion(gfp);
 }
 
 
 
 void
-id3tag_add_v2(lame_global_flags * gfp)
+id3tag_add_v2(lame_t gfp)
 {
     lame_internal_flags *gfc = gfp->internal_flags;
     gfc->tag_spec.flags &= ~V1_ONLY_FLAG;
@@ -293,7 +299,7 @@ id3tag_add_v2(lame_global_flags * gfp)
 }
 
 void
-id3tag_v1_only(lame_global_flags * gfp)
+id3tag_v1_only(lame_t gfp)
 {
     lame_internal_flags *gfc = gfp->internal_flags;
     gfc->tag_spec.flags &= ~(ADD_V2_FLAG | V2_ONLY_FLAG);
@@ -301,7 +307,7 @@ id3tag_v1_only(lame_global_flags * gfp)
 }
 
 void
-id3tag_v2_only(lame_global_flags * gfp)
+id3tag_v2_only(lame_t gfp)
 {
     lame_internal_flags *gfc = gfp->internal_flags;
     gfc->tag_spec.flags &= ~V1_ONLY_FLAG;
@@ -309,7 +315,7 @@ id3tag_v2_only(lame_global_flags * gfp)
 }
 
 void
-id3tag_space_v1(lame_global_flags * gfp)
+id3tag_space_v1(lame_t gfp)
 {
     lame_internal_flags *gfc = gfp->internal_flags;
     gfc->tag_spec.flags &= ~V2_ONLY_FLAG;
@@ -317,19 +323,19 @@ id3tag_space_v1(lame_global_flags * gfp)
 }
 
 void
-id3tag_pad_v2(lame_global_flags * gfp)
+id3tag_pad_v2(lame_t gfp)
 {
     id3tag_set_pad(gfp, 128);
 }
 
 void
-id3tag_set_pad(lame_global_flags * gfp, size_t n)
+id3tag_set_pad(lame_t gfp, size_t n)
 {
     lame_internal_flags *gfc = gfp->internal_flags;
     gfc->tag_spec.flags &= ~V1_ONLY_FLAG;
     gfc->tag_spec.flags |= PAD_V2_FLAG;
     gfc->tag_spec.flags |= ADD_V2_FLAG;
-    gfc->tag_spec.padding_size = n;
+    gfc->tag_spec.padding_size = (unsigned int)n;
 }
 
 static int
@@ -382,7 +388,7 @@ local_strdup(char **dst, const char *src)
         }
         if (n > 0) {    /* string length without zero termination */
             assert(sizeof(*src) == sizeof(**dst));
-            *dst = malloc((n + 1) * sizeof(**dst));
+            *dst = lame_calloc(char, n + 1);
             if (*dst != 0) {
                 memcpy(*dst, src, n * sizeof(**dst));
                 (*dst)[n] = 0;
@@ -408,7 +414,7 @@ local_ucs2_strdup(unsigned short **dst, unsigned short const *src)
         if (n > 0) {    /* string length without zero termination */
             assert(sizeof(*src) >= 2);
             assert(sizeof(*src) == sizeof(**dst));
-            *dst = malloc((n + 1) * sizeof(**dst));
+            *dst = lame_calloc(unsigned short, n + 1);
             if (*dst != 0) {
                 memcpy(*dst, src, n * sizeof(**dst));
                 (*dst)[n] = 0;
@@ -438,7 +444,7 @@ local_ucs2_substr(unsigned short** dst, unsigned short const* src, size_t start,
 {
     size_t const len = 1 + 1 + ((start < end) ? (end - start) : 0);
     size_t n = 0;
-    unsigned short *ptr = calloc(len, sizeof(ptr[0]));
+    unsigned short *ptr = lame_calloc(unsigned short, len);
     *dst = ptr;
     if (ptr == 0 || src == 0) {
         return 0;
@@ -458,6 +464,18 @@ local_ucs2_substr(unsigned short** dst, unsigned short const* src, size_t start,
 
 static int
 local_ucs2_pos(unsigned short const* str, unsigned short c)
+{
+    int     i;
+    for (i = 0; str != 0 && str[i] != 0; ++i) {
+        if (str[i] == c) {
+            return i;
+        }
+    }
+    return -1;
+}
+
+static int
+local_char_pos(char const* str, char c)
 {
     int     i;
     for (i = 0; str != 0 && str[i] != 0; ++i) {
@@ -514,7 +532,7 @@ static char*
 local_strdup_utf16_to_latin1(unsigned short const* utf16)
 {
     size_t  len = local_ucs2_strlen(utf16);
-    unsigned char* latin1 = calloc(len+1, 1);
+    unsigned char* latin1 = lame_calloc(unsigned char, len+1);
     writeLoBytes(latin1, utf16, len);
     return (char*)latin1;
 }
@@ -539,11 +557,11 @@ id3tag_set_genre_utf16(lame_t gfp, unsigned short const* text)
         if (num >= 0) {           /* common genre found  */
             gfc->tag_spec.flags |= CHANGED_FLAG;
             gfc->tag_spec.genre_id3v1 = num;
-            copyV1ToV2(gfc, ID_GENRE, genre_names[num]);
+            copyV1ToV2(gfp, ID_GENRE, genre_names[num]);
             return 0;
         }
     }
-    ret = id3v2_add_ucs2(gfp->internal_flags, ID_GENRE, 0, 0, text);
+    ret = id3v2_add_ucs2(gfp, ID_GENRE, 0, 0, text);
     if (ret == 0) {
         gfc->tag_spec.flags |= CHANGED_FLAG;
         gfc->tag_spec.genre_id3v1 = GENRE_INDEX_OTHER;
@@ -563,7 +581,7 @@ as follows.
 (although some are not exactly same)*/
 
 int
-id3tag_set_albumart(lame_global_flags * gfp, const char *image, size_t size)
+id3tag_set_albumart(lame_t gfp, const char *image, size_t size)
 {
     int     mimetype = 0;
     unsigned char const *data = (unsigned char const *) image;
@@ -591,10 +609,10 @@ id3tag_set_albumart(lame_global_flags * gfp, const char *image, size_t size)
     if (size < 1) {
         return 0;
     }
-    gfc->tag_spec.albumart = malloc(size);
+    gfc->tag_spec.albumart = lame_calloc(unsigned char, size);
     if (gfc->tag_spec.albumart != 0) {
         memcpy(gfc->tag_spec.albumart, image, size);
-        gfc->tag_spec.albumart_size = size;
+        gfc->tag_spec.albumart_size = (unsigned int)size;
         gfc->tag_spec.albumart_mimetype = mimetype;
         gfc->tag_spec.flags |= CHANGED_FLAG;
         id3tag_add_v2(gfp);
@@ -805,12 +823,11 @@ isSameDescriptorUcs2(FrameDataNode const *node, unsigned short const *dsc)
 }
 
 static int
-id3v2_add_ucs2(lame_internal_flags * gfc, uint32_t frame_id, char const *lang,
-               unsigned short const *desc, unsigned short const *text)
+id3v2_add_ucs2(lame_t gfp, uint32_t frame_id, char const *lang, unsigned short const *desc, unsigned short const *text)
 {
+    lame_internal_flags *gfc = gfp != 0 ? gfp->internal_flags : 0;
     if (gfc != 0) {
-        FrameDataNode *node = 0;
-        node = findNode(&gfc->tag_spec, frame_id, 0);
+        FrameDataNode *node = findNode(&gfc->tag_spec, frame_id, 0);
         if (isMultiFrame(frame_id)) {
             while (node) {
                 if (isSameLang(node->lng, lang)) {
@@ -822,7 +839,7 @@ id3v2_add_ucs2(lame_internal_flags * gfc, uint32_t frame_id, char const *lang,
             }
         }
         if (node == 0) {
-            node = calloc(1, sizeof(FrameDataNode));
+            node = lame_calloc(FrameDataNode, 1);
             if (node == 0) {
                 return -254; /* memory problem */
             }
@@ -835,17 +852,17 @@ id3v2_add_ucs2(lame_internal_flags * gfc, uint32_t frame_id, char const *lang,
         node->txt.dim = local_ucs2_strdup(&node->txt.ptr.u, text);
         node->txt.enc = 1;
         gfc->tag_spec.flags |= (CHANGED_FLAG | ADD_V2_FLAG);
+        return 0;
     }
-    return 0;
+    return -255;
 }
 
 static int
-id3v2_add_latin1(lame_internal_flags * gfc, uint32_t frame_id, char const *lang, char const *desc,
-                 char const *text)
+id3v2_add_latin1(lame_t gfp, uint32_t frame_id, char const *lang, char const *desc, char const *text)
 {
+    lame_internal_flags *gfc = gfp != 0 ? gfp->internal_flags : 0;
     if (gfc != 0) {
-        FrameDataNode *node = 0;
-        node = findNode(&gfc->tag_spec, frame_id, 0);
+        FrameDataNode *node = findNode(&gfc->tag_spec, frame_id, 0);
         if (isMultiFrame(frame_id)) {
             while (node) {
                 if (isSameLang(node->lng, lang)) {
@@ -857,7 +874,7 @@ id3v2_add_latin1(lame_internal_flags * gfc, uint32_t frame_id, char const *lang,
             }
         }
         if (node == 0) {
-            node = calloc(1, sizeof(FrameDataNode));
+            node = lame_calloc(FrameDataNode, 1);
             if (node == 0) {
                 return -254; /* memory problem */
             }
@@ -870,42 +887,40 @@ id3v2_add_latin1(lame_internal_flags * gfc, uint32_t frame_id, char const *lang,
         node->txt.dim = local_strdup(&node->txt.ptr.l, text);
         node->txt.enc = 0;
         gfc->tag_spec.flags |= (CHANGED_FLAG | ADD_V2_FLAG);
+        return 0;
     }
-    return 0;
+    return -255;
 }
 
 
 static int
-id3tag_set_userinfo_latin1(lame_internal_flags* gfc, uint32_t id, char const *fieldvalue)
+id3tag_set_userinfo_latin1(lame_t gfp, uint32_t id, char const *fieldvalue)
 {
-    int     rc;
-    char* dsc = 0, *val;
-    local_strdup(&dsc, fieldvalue);
-    val = dsc;
-    while (*val) {
-        if (*val == '=') {
-            *val++ = 0;
-            break;
-        }
-        ++val;
+    char const separator = '=';
+    int     rc = -7;
+    int     a = local_char_pos(fieldvalue, separator);
+    if (a >= 0) {
+        char*   dup = 0;
+        local_strdup(&dup, fieldvalue);
+        dup[a] = 0;
+        rc = id3v2_add_latin1(gfp, id, "XXX", dup, dup+a+1);
+        free(dup);
     }
-    rc = id3v2_add_latin1(gfc, id, "XXX", dsc, val);
-    free(dsc);
     return rc;
 }
 
 static int
-id3tag_set_userinfo_ucs2(lame_internal_flags* gfc, uint32_t id, unsigned short const *fieldvalue)
+id3tag_set_userinfo_ucs2(lame_t gfp, uint32_t id, unsigned short const *fieldvalue)
 {
-    int     a, b, rc = -7;
     unsigned short const separator = fromLatin1Char(fieldvalue,'=');
-    b = local_ucs2_strlen(fieldvalue);
-    a = local_ucs2_pos(fieldvalue, separator);
-    if (a >= 0 && a <= b) { 
+    int     rc = -7;
+    size_t  b = local_ucs2_strlen(fieldvalue);
+    int     a = local_ucs2_pos(fieldvalue, separator);
+    if (a >= 0) { 
         unsigned short* dsc = 0, *val = 0;
         local_ucs2_substr(&dsc, fieldvalue, 0, a);
         local_ucs2_substr(&val, fieldvalue, a+1, b);
-        rc = id3v2_add_ucs2(gfc, id, "XXX", dsc, val);
+        rc = id3v2_add_ucs2(gfp, id, "XXX", dsc, val);
         free(dsc);
         free(val);
     }
@@ -913,11 +928,32 @@ id3tag_set_userinfo_ucs2(lame_internal_flags* gfc, uint32_t id, unsigned short c
 }
 
 int
-id3tag_set_textinfo_utf16(lame_global_flags * gfp, char const *id, unsigned short const *text)
+id3tag_set_textinfo_utf16(lame_t gfp, char const *id, unsigned short const *text)
 {
     uint32_t const frame_id = toID3v2TagId(id);
     if (frame_id == 0) {
         return -1;
+    }
+    if (text == 0) {
+        return 0;
+    }
+    if (!hasUcs2ByteOrderMarker(text[0])) {
+        return -3;  /* BOM missing */
+    }
+    if (frame_id == ID_TXXX || frame_id == ID_WXXX || frame_id == ID_COMMENT) {
+        return id3tag_set_userinfo_ucs2(gfp, frame_id, text);
+    }
+    if (frame_id == ID_GENRE) {
+        return id3tag_set_genre_utf16(gfp, text);
+    }
+    if (frame_id == ID_PCST) {
+        return id3v2_add_ucs2(gfp, frame_id, 0, 0, text);
+    }
+    if (frame_id == ID_USER) {
+        return id3v2_add_ucs2(gfp, frame_id, "XXX", text, 0);
+    }
+    if (frame_id == ID_WFED) {
+        return id3v2_add_ucs2(gfp, frame_id, 0, text, 0); /* iTunes expects WFED to be a text frame */
     }
     if (isFrameIdMatching(frame_id, FRAME_ID('T', 0, 0, 0))
       ||isFrameIdMatching(frame_id, FRAME_ID('W', 0, 0, 0))) {
@@ -926,129 +962,115 @@ id3tag_set_textinfo_utf16(lame_global_flags * gfp, char const *id, unsigned shor
             return -2;  /* must be Latin-1 encoded */
         }
 #endif
-        if (text == 0) {
-            return 0;
-        }
-        if (!hasUcs2ByteOrderMarker(text[0])) {
-            return -3;  /* BOM missing */
-        }
-        if (gfp != 0) {
-            if (frame_id == ID_TXXX || frame_id == ID_WXXX) {
-                return id3tag_set_userinfo_ucs2(gfp->internal_flags, frame_id, text);
-            }
-            if (frame_id == ID_GENRE) {
-                return id3tag_set_genre_utf16(gfp, text);
-            }
-            return id3v2_add_ucs2(gfp->internal_flags, frame_id, 0, 0, text);
-        }
+        return id3v2_add_ucs2(gfp, frame_id, 0, 0, text);
     }
     return -255;        /* not supported by now */
 }
 
 extern int
-id3tag_set_textinfo_ucs2(lame_global_flags * gfp, char const *id, unsigned short const *text);
+id3tag_set_textinfo_ucs2(lame_t gfp, char const *id, unsigned short const *text);
 
 int
-id3tag_set_textinfo_ucs2(lame_global_flags * gfp, char const *id, unsigned short const *text)
+id3tag_set_textinfo_ucs2(lame_t gfp, char const *id, unsigned short const *text)
 {
     return id3tag_set_textinfo_utf16(gfp, id, text);
 }
 
 int
-id3tag_set_textinfo_latin1(lame_global_flags * gfp, char const *id, char const *text)
+id3tag_set_textinfo_latin1(lame_t gfp, char const *id, char const *text)
 {
     uint32_t const frame_id = toID3v2TagId(id);
     if (frame_id == 0) {
         return -1;
     }
+    if (text == 0) {
+        return 0;
+    }
+    if (frame_id == ID_TXXX || frame_id == ID_WXXX || frame_id == ID_COMMENT) {
+        return id3tag_set_userinfo_latin1(gfp, frame_id, text);
+    }
+    if (frame_id == ID_GENRE) {
+        return id3tag_set_genre(gfp, text);
+    }
+    if (frame_id == ID_PCST) {
+        return id3v2_add_latin1(gfp, frame_id, 0, 0, text);
+    }
+    if (frame_id == ID_USER) {
+        return id3v2_add_latin1(gfp, frame_id, "XXX", text, 0);
+    }
+    if (frame_id == ID_WFED) {
+        return id3v2_add_latin1(gfp, frame_id, 0, text, 0); /* iTunes expects WFED to be a text frame */
+    }
     if (isFrameIdMatching(frame_id, FRAME_ID('T', 0, 0, 0))
       ||isFrameIdMatching(frame_id, FRAME_ID('W', 0, 0, 0))) {
-        if (text == 0) {
-            return 0;
-        }
-        if (gfp != 0) {
-            if (frame_id == ID_TXXX || frame_id == ID_WXXX) {
-                return id3tag_set_userinfo_latin1(gfp->internal_flags, frame_id, text);
-            }
-            return id3v2_add_latin1(gfp->internal_flags, frame_id, 0, 0, text);
-        }
+        return id3v2_add_latin1(gfp, frame_id, 0, 0, text);
     }
     return -255;        /* not supported by now */
 }
 
 
 int
-id3tag_set_comment_latin1(lame_global_flags * gfp, char const *lang, char const *desc,
-                          char const *text)
+id3tag_set_comment_latin1(lame_t gfp, char const *lang, char const *desc, char const *text)
 {
-    if (gfp != 0) {
-        return id3v2_add_latin1(gfp->internal_flags, ID_COMMENT, lang, desc, text);
-    }
-    return -255;
+    return id3v2_add_latin1(gfp, ID_COMMENT, lang, desc, text);
 }
 
 
 int
-id3tag_set_comment_utf16(lame_global_flags * gfp, char const *lang, unsigned short const *desc,
-                         unsigned short const *text)
+id3tag_set_comment_utf16(lame_t gfp, char const *lang, unsigned short const *desc, unsigned short const *text)
 {
-    if (gfp != 0) {
-        return id3v2_add_ucs2(gfp->internal_flags, ID_COMMENT, lang, desc, text);
-    }
-    return -255;
+    return id3v2_add_ucs2(gfp, ID_COMMENT, lang, desc, text);
 }
 
 extern int
-id3tag_set_comment_ucs2(lame_global_flags * gfp, char const *lang, unsigned short const *desc,
-                        unsigned short const *text);
+id3tag_set_comment_ucs2(lame_t gfp, char const *lang, unsigned short const *desc, unsigned short const *text);
 
 
 int
-id3tag_set_comment_ucs2(lame_global_flags * gfp, char const *lang, unsigned short const *desc,
-                        unsigned short const *text)
+id3tag_set_comment_ucs2(lame_t gfp, char const *lang, unsigned short const *desc, unsigned short const *text)
 {
     return id3tag_set_comment_utf16(gfp, lang, desc, text);
 }
 
 
 void
-id3tag_set_title(lame_global_flags * gfp, const char *title)
+id3tag_set_title(lame_t gfp, const char *title)
 {
-    lame_internal_flags *gfc = gfp->internal_flags;
-    if (title && *title) {
+    lame_internal_flags *gfc = gfp != 0 ? gfp->internal_flags : 0;
+    if (gfc && title && *title) {
         local_strdup(&gfc->tag_spec.title, title);
         gfc->tag_spec.flags |= CHANGED_FLAG;
-        copyV1ToV2(gfc, ID_TITLE, title);
+        copyV1ToV2(gfp, ID_TITLE, title);
     }
 }
 
 void
-id3tag_set_artist(lame_global_flags * gfp, const char *artist)
+id3tag_set_artist(lame_t gfp, const char *artist)
 {
-    lame_internal_flags *gfc = gfp->internal_flags;
-    if (artist && *artist) {
+    lame_internal_flags *gfc = gfp != 0 ? gfp->internal_flags : 0;
+    if (gfc && artist && *artist) {
         local_strdup(&gfc->tag_spec.artist, artist);
         gfc->tag_spec.flags |= CHANGED_FLAG;
-        copyV1ToV2(gfc, ID_ARTIST, artist);
+        copyV1ToV2(gfp, ID_ARTIST, artist);
     }
 }
 
 void
-id3tag_set_album(lame_global_flags * gfp, const char *album)
+id3tag_set_album(lame_t gfp, const char *album)
 {
-    lame_internal_flags *gfc = gfp->internal_flags;
-    if (album && *album) {
+    lame_internal_flags *gfc = gfp != 0 ? gfp->internal_flags : 0;
+    if (gfc && album && *album) {
         local_strdup(&gfc->tag_spec.album, album);
         gfc->tag_spec.flags |= CHANGED_FLAG;
-        copyV1ToV2(gfc, ID_ALBUM, album);
+        copyV1ToV2(gfp, ID_ALBUM, album);
     }
 }
 
 void
-id3tag_set_year(lame_global_flags * gfp, const char *year)
+id3tag_set_year(lame_t gfp, const char *year)
 {
-    lame_internal_flags *gfc = gfp->internal_flags;
-    if (year && *year) {
+    lame_internal_flags *gfc = gfp != 0 ? gfp->internal_flags : 0;
+    if (gfc && year && *year) {
         int     num = atoi(year);
         if (num < 0) {
             num = 0;
@@ -1061,33 +1083,33 @@ id3tag_set_year(lame_global_flags * gfp, const char *year)
             gfc->tag_spec.year = num;
             gfc->tag_spec.flags |= CHANGED_FLAG;
         }
-        copyV1ToV2(gfc, ID_YEAR, year);
+        copyV1ToV2(gfp, ID_YEAR, year);
     }
 }
 
 void
-id3tag_set_comment(lame_global_flags * gfp, const char *comment)
+id3tag_set_comment(lame_t gfp, const char *comment)
 {
-    lame_internal_flags *gfc = gfp->internal_flags;
-    if (comment && *comment) {
+    lame_internal_flags *gfc = gfp != 0 ? gfp->internal_flags : 0;
+    if (gfc && comment && *comment) {
         local_strdup(&gfc->tag_spec.comment, comment);
         gfc->tag_spec.flags |= CHANGED_FLAG;
         {
             uint32_t const flags = gfc->tag_spec.flags;
-            id3v2_add_latin1(gfc, ID_COMMENT, "XXX", "", comment);
+            id3v2_add_latin1(gfp, ID_COMMENT, "XXX", "", comment);
             gfc->tag_spec.flags = flags;
         }
     }
 }
 
 int
-id3tag_set_track(lame_global_flags * gfp, const char *track)
+id3tag_set_track(lame_t gfp, const char *track)
 {
     char const *trackcount;
-    lame_internal_flags *gfc = gfp->internal_flags;
+    lame_internal_flags *gfc = gfp != 0 ? gfp->internal_flags : 0;
     int     ret = 0;
 
-    if (track && *track) {
+    if (gfc && track && *track) {
         int     num = atoi(track);
         /* check for valid ID3v1 track number range */
         if (num < 1 || num > 255) {
@@ -1104,7 +1126,7 @@ id3tag_set_track(lame_global_flags * gfp, const char *track)
         if (trackcount && *trackcount) {
             gfc->tag_spec.flags |= (CHANGED_FLAG | ADD_V2_FLAG);
         }
-        copyV1ToV2(gfc, ID_TRACK, track);
+        copyV1ToV2(gfp, ID_TRACK, track);
     }
     return ret;
 }
@@ -1195,7 +1217,7 @@ searchGenre(const char* genre)
 
 
 int
-id3tag_set_genre(lame_global_flags * gfp, const char *genre)
+id3tag_set_genre(lame_t gfp, const char *genre)
 {
     lame_internal_flags *gfc = gfp->internal_flags;
     int     ret = 0;
@@ -1211,34 +1233,11 @@ id3tag_set_genre(lame_global_flags * gfp, const char *genre)
             gfc->tag_spec.genre_id3v1 = GENRE_INDEX_OTHER;
             gfc->tag_spec.flags |= ADD_V2_FLAG;
         }
-        copyV1ToV2(gfc, ID_GENRE, genre);
+        copyV1ToV2(gfp, ID_GENRE, genre);
     }
     return ret;
 }
 
-
-static unsigned char *
-set_frame_custom(unsigned char *frame, const char *fieldvalue)
-{
-    if (fieldvalue && *fieldvalue) {
-        const char *value = fieldvalue + 5;
-        size_t  length = strlen(value);
-        *frame++ = *fieldvalue++;
-        *frame++ = *fieldvalue++;
-        *frame++ = *fieldvalue++;
-        *frame++ = *fieldvalue++;
-        frame = set_4_byte_value(frame, (unsigned long) (strlen(value) + 1));
-        /* clear 2-byte header flags */
-        *frame++ = 0;
-        *frame++ = 0;
-        /* clear 1 encoding descriptor byte to indicate ISO-8859-1 format */
-        *frame++ = 0;
-        while (length--) {
-            *frame++ = *value++;
-        }
-    }
-    return frame;
-}
 
 static  size_t
 sizeOfNode(FrameDataNode const *node)
@@ -1314,14 +1313,16 @@ sizeOfWxxxNode(FrameDataNode const *node)
                 break;
             }
         }
-        switch (node->txt.enc) {
-        default:
-        case 0:
-            n += node->txt.dim;
-            break;
-        case 1:
-            n += node->txt.dim - 1; /* UCS2 -> Latin1, skip BOM */
-            break;
+        if (node->txt.dim > 0) {
+            switch (node->txt.enc) {
+            default:
+            case 0:
+                n += node->txt.dim;
+                break;
+            case 1:
+                n += node->txt.dim - 1; /* UCS2 -> Latin1, skip BOM */
+                break;
+            }
         }
     }
     return n;
@@ -1453,7 +1454,7 @@ set_frame_wxxx(unsigned char *frame, FrameDataNode const *node)
         *frame++ = 0;
         if (node->dsc.dim > 0) {
             /* clear 1 encoding descriptor byte to indicate ISO-8859-1 format */
-            *frame++ = node->txt.enc == 1 ? 1 : 0;
+            *frame++ = node->dsc.enc == 1 ? 1 : 0;
             if (node->dsc.enc != 1) {
                 frame = writeChars(frame, node->dsc.ptr.l, node->dsc.dim);
                 *frame++ = 0;
@@ -1511,34 +1512,19 @@ set_frame_apic(unsigned char *frame, const char *mimetype, const unsigned char *
 }
 
 int
-id3tag_set_fieldvalue(lame_global_flags * gfp, const char *fieldvalue)
+id3tag_set_fieldvalue(lame_t gfp, const char *fieldvalue)
 {
-    lame_internal_flags *gfc = gfp->internal_flags;
     if (fieldvalue && *fieldvalue) {
-        uint32_t const frame_id = toID3v2TagId(fieldvalue);
-        char  **p = NULL;
         if (strlen(fieldvalue) < 5 || fieldvalue[4] != '=') {
             return -1;
         }
-        if (frame_id != 0) {
-            if (id3tag_set_textinfo_latin1(gfp, fieldvalue, &fieldvalue[5])) {
-                p = (char **) realloc(gfc->tag_spec.values,
-                                      sizeof(char *) * (gfc->tag_spec.num_values + 1));
-                if (!p) {
-                    return -1;
-                }
-                gfc->tag_spec.values = (char **) p;
-                local_strdup(&gfc->tag_spec.values[gfc->tag_spec.num_values++], fieldvalue);
-            }
-        }
-        gfc->tag_spec.flags |= CHANGED_FLAG;
+        return id3tag_set_textinfo_latin1(gfp, fieldvalue, &fieldvalue[5]);
     }
-    id3tag_add_v2(gfp);
     return 0;
 }
 
 int
-id3tag_set_fieldvalue_utf16(lame_global_flags * gfp, const unsigned short *fieldvalue)
+id3tag_set_fieldvalue_utf16(lame_t gfp, const unsigned short *fieldvalue)
 {
     if (fieldvalue && *fieldvalue) {
         size_t dx = hasUcs2ByteOrderMarker(fieldvalue[0]);
@@ -1556,7 +1542,7 @@ id3tag_set_fieldvalue_utf16(lame_global_flags * gfp, const unsigned short *field
             unsigned short* txt = 0;
             int     rc;
             local_ucs2_substr(&txt, fieldvalue, dx+5, local_ucs2_strlen(fieldvalue));
-            rc = id3tag_set_textinfo_ucs2(gfp, fid, txt);
+            rc = id3tag_set_textinfo_utf16(gfp, fid, txt);
             free(txt);
             return rc;
         }
@@ -1565,16 +1551,16 @@ id3tag_set_fieldvalue_utf16(lame_global_flags * gfp, const unsigned short *field
 }
 
 extern int
-id3tag_set_fieldvalue_ucs2(lame_global_flags * gfp, const unsigned short *fieldvalue);
+id3tag_set_fieldvalue_ucs2(lame_t gfp, const unsigned short *fieldvalue);
 
 int
-id3tag_set_fieldvalue_ucs2(lame_global_flags * gfp, const unsigned short *fieldvalue)
+id3tag_set_fieldvalue_ucs2(lame_t gfp, const unsigned short *fieldvalue)
 {
     return id3tag_set_fieldvalue_utf16(gfp, fieldvalue);
 }
 
 size_t
-lame_get_id3v2_tag(lame_global_flags * gfp, unsigned char *buffer, size_t size)
+lame_get_id3v2_tag(lame_t gfp, unsigned char *buffer, size_t size)
 {
     lame_internal_flags *gfc;
     if (gfp == 0) {
@@ -1609,21 +1595,17 @@ lame_get_id3v2_tag(lame_global_flags * gfp, unsigned char *buffer, size_t size)
             size_t  tag_size;
             unsigned char *p;
             size_t  adjusted_tag_size;
-            unsigned int i;
             const char *albumart_mime = NULL;
             static const char *mime_jpeg = "image/jpeg";
             static const char *mime_png = "image/png";
             static const char *mime_gif = "image/gif";
 
             if (gfp->num_samples != MAX_U_32_NUM) {
-                id3v2AddAudioDuration(gfc, gfp->num_samples);
+                id3v2AddAudioDuration(gfp, gfp->num_samples);
             }
 
             /* calulate size of tag starting with 10-byte tag header */
             tag_size = 10;
-            for (i = 0; i < gfc->tag_spec.num_values; ++i) {
-                tag_size += 6 + strlen(gfc->tag_spec.values[i]);
-            }
             if (gfc->tag_spec.albumart && gfc->tag_spec.albumart_size) {
                 switch (gfc->tag_spec.albumart_mimetype) {
                 case MIMETYPE_JPEG:
@@ -1645,7 +1627,7 @@ lame_get_id3v2_tag(lame_global_flags * gfp, unsigned char *buffer, size_t size)
                 if (tag->v2_head != 0) {
                     FrameDataNode *node;
                     for (node = tag->v2_head; node != 0; node = node->nxt) {
-                        if (node->fid == ID_COMMENT) {
+                        if (node->fid == ID_COMMENT || node->fid == ID_USER) {
                             tag_size += sizeOfCommentNode(node);
                         }
                         else if (isFrameIdMatching(node->fid, FRAME_ID('W',0,0,0))) {
@@ -1702,7 +1684,7 @@ lame_get_id3v2_tag(lame_global_flags * gfp, unsigned char *buffer, size_t size)
                 if (tag->v2_head != 0) {
                     FrameDataNode *node;
                     for (node = tag->v2_head; node != 0; node = node->nxt) {
-                        if (node->fid == ID_COMMENT) {
+                        if (node->fid == ID_COMMENT || node->fid == ID_USER) {
                             p = set_frame_comment(p, node);
                         }
                         else if (isFrameIdMatching(node->fid,FRAME_ID('W',0,0,0))) {
@@ -1713,9 +1695,6 @@ lame_get_id3v2_tag(lame_global_flags * gfp, unsigned char *buffer, size_t size)
                         }
                     }
                 }
-            }
-            for (i = 0; i < gfc->tag_spec.num_values; ++i) {
-                p = set_frame_custom(p, gfc->tag_spec.values[i]);
             }
             if (albumart_mime) {
                 p = set_frame_apic(p, albumart_mime, gfc->tag_spec.albumart,
@@ -1730,7 +1709,7 @@ lame_get_id3v2_tag(lame_global_flags * gfp, unsigned char *buffer, size_t size)
 }
 
 int
-id3tag_write_v2(lame_global_flags * gfp)
+id3tag_write_v2(lame_t gfp)
 {
     lame_internal_flags *gfc = gfp->internal_flags;
 #if 0
@@ -1744,7 +1723,7 @@ id3tag_write_v2(lame_global_flags * gfp)
         size_t  tag_size, n;
 
         n = lame_get_id3v2_tag(gfp, 0, 0);
-        tag = malloc(n);
+        tag = lame_calloc(unsigned char, n);
         if (tag == 0) {
             return -1;
         }
@@ -1781,7 +1760,7 @@ set_text_field(unsigned char *field, const char *text, size_t size, int pad)
 }
 
 size_t
-lame_get_id3v1_tag(lame_global_flags * gfp, unsigned char *buffer, size_t size)
+lame_get_id3v1_tag(lame_t gfp, unsigned char *buffer, size_t size)
 {
     size_t const tag_size = 128;
     lame_internal_flags *gfc;
@@ -1831,7 +1810,7 @@ lame_get_id3v1_tag(lame_global_flags * gfp, unsigned char *buffer, size_t size)
 }
 
 int
-id3tag_write_v1(lame_global_flags * gfp)
+id3tag_write_v1(lame_t gfp)
 {
     lame_internal_flags *const gfc = gfp->internal_flags;
     size_t  i, n, m;

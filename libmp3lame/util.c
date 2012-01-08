@@ -71,15 +71,6 @@ free_id3tag(lame_internal_flags * const gfc)
         gfc->tag_spec.albumart_size = 0;
         gfc->tag_spec.albumart_mimetype = MIMETYPE_NONE;
     }
-    if (gfc->tag_spec.values != 0) {
-        unsigned int i;
-        for (i = 0; i < gfc->tag_spec.num_values; ++i) {
-            free(gfc->tag_spec.values[i]);
-        }
-        free(gfc->tag_spec.values);
-        gfc->tag_spec.values = 0;
-        gfc->tag_spec.num_values = 0;
-    }
     if (gfc->tag_spec.v2_head != 0) {
         FrameDataNode *node = gfc->tag_spec.v2_head;
         do {
