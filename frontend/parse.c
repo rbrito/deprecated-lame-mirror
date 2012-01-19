@@ -2,7 +2,7 @@
  *      Command line parsing related functions
  *
  *      Copyright (c) 1999 Mark Taylor
- *                    2000-2011 Robert Hegemann
+ *                    2000-2012 Robert Hegemann
  *
  * This library is free software; you can redistribute it and/or
  * modify it under the terms of the GNU Library General Public
@@ -57,6 +57,9 @@ char   *strchr(), *strrchr();
 #include "get_audio.h"
 #include "version.h"
 #include "console.h"
+
+#undef dimension_of
+#define dimension_of(array) (sizeof(array)/sizeof(array[0]))
 
 #ifdef WITH_DMALLOC
 #include <dmalloc.h>
@@ -1251,15 +1254,16 @@ size_t scanBasename(char const* s, char const** a, char const** b)
 static 
 int isCommonSuffix(char const* s_ext)
 {
-    char* suffixes[] = 
+    char const* suffixes[] = 
     { ".WAV", ".RAW", ".MP1", ".MP2"
     , ".MP3", ".MPG", ".MPA", ".CDA"
     , ".OGG", ".AIF", ".AIFF", ".AU"
     , ".SND", ".FLAC", ".WV", ".OFR"
     , ".TAK", ".MP4", ".M4A", ".PCM"
+    , ".W64"
     };
     size_t i;
-    for (i = 0; i < sizeof(suffixes); ++i) {
+    for (i = 0; i < dimension_of(suffixes); ++i) {
         if (local_strcasecmp(s_ext, suffixes[i]) == 0) {
             return 1;
         }
