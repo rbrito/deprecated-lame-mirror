@@ -11,6 +11,233 @@
 
 -- 
 
+2012-01-25 12:47  robert
+
+	* configure, configure.in, testcase.mp3 (lame3_99):
+
+	Bug-fix release 3.99.4
+
+2012-01-25 12:33  robert
+
+	* ChangeLog, testcase.mp3, doc/html/history.html (lame3_99):
+
+	updating history and changelog
+
+2012-01-19 14:27  robert
+
+	* frontend/parse.c (lame3_99):
+
+	fix for tracker item ID: 3475581 - lame crashes at .w64 input file
+
+2012-01-19 12:15  robert
+
+	* frontend/parse.c:
+
+	fix for tracker item ID: 3475581 - lame crashes at .w64 input file
+
+2012-01-08 23:49  robert
+
+	* include/lame.h, libmp3lame/id3tag.c, libmp3lame/id3tag.h,
+	  libmp3lame/quantize.c, libmp3lame/quantize_pvt.c,
+	  libmp3lame/util.c, libmp3lame/version.h (lame3_99),
+	  include/lame.h, libmp3lame/id3tag.c, libmp3lame/id3tag.h,
+	  libmp3lame/quantize_pvt.c, libmp3lame/util.c:
+
+	Addressing things brought to attention by tracker item ID: 3463197: 3.99.x problem WFED and PCST frames
+
+	+ WFED and PCST frames can now be added, to tag podcasts iTunes recognizes
+	+ USER frames are now supported
+	+ COMM frames can now have a description, when passed via --tv "COMM=<description>=<full text>"
+
+	- possible divide-by-zero exception should be fixed
+	- adding malformed user-defined-frames could result in abnormal program termination, fixed
+
+2011-12-04 12:35  robert
+
+	* libmp3lame/: lame.rc (lame3_99), lame.rc:
+
+	re tracker ID: 3449748 Incomplete resource definition file
+	A translation value seems to be mandatory by convention.
+
+2011-11-26 19:49  robert
+
+	* ChangeLog, configure, configure.in (lame3_99):
+
+	releasing 3.99.3
+
+2011-11-26 18:26  robert
+
+	* doc/html/history.html, libmp3lame/id3tag.c:
+
+	bug fix for tracker item ID: 3441349: --tg does not handle genre number when adding unicode tag
+
+2011-11-26 18:15  robert
+
+	* doc/html/history.html, libmp3lame/id3tag.c, libmp3lame/version.h
+	  (lame3_99):
+
+	bug fix for tracker item ID: 3441349: --tg does not handle genre number when adding unicode tag
+
+2011-11-18 09:51  robert
+
+	* doc/html/history.html, libmp3lame/VbrTag.c, libmp3lame/version.c:
+
+	merge with 3.99 branch modifications
+
+2011-11-18 09:39  robert
+
+	* ChangeLog (lame3_99):
+
+	releasing 3.99.2
+
+2011-11-18 09:30  robert
+
+	* configure, configure.in (lame3_99):
+
+	releasing 3.99.2 stable
+
+2011-11-18 09:18  robert
+
+	* testcase.mp3, doc/html/history.html, libmp3lame/VbrTag.c,
+	  libmp3lame/version.c, libmp3lame/version.h (lame3_99):
+
+	Due to some bugs in 3rd party HW/SW decoders, those were not
+	be able to make use of LAME's extended info tag anymore,
+	resulting in problems with things like gapless playback.
+
+2011-11-18 08:38  robert
+
+	* frontend/: get_audio.c, get_audio.h, lame_main.c (lame3_99):
+
+	copy old id3v2 tag
+
+2011-11-10 21:39  robert
+
+	* libmp3lame/version.c (lame3_99):
+
+	small fix
+
+2011-11-10 18:46  robert
+
+	* libmp3lame/version.c:
+
+	small fix
+
+2011-11-10 13:19  robert
+
+	* frontend/: get_audio.c, get_audio.h, lame_main.c:
+
+	when transcoding, copy old id3v2 tag. feature requests:
+	 ID: 1985551 lame --pass-ID3-tags-unscathed
+	 ID: 977304 ID3 tags lost when transcoding
+
+2011-11-09 00:15  robert
+
+	* libmp3lame/: quantize.c, quantize_pvt.c:
+
+	aiming for a more balanced bit reservoir usage
+
+2011-11-08 19:36  robert
+
+	* libmp3lame/quantize_pvt.c:
+
+	at lower sample rates, make a cut at last usable scalefactor band
+
+2011-11-08 18:19  robert
+
+	* libmp3lame/quantize.c:
+
+	8kHz mpeg2.5 uses fewer scale factor bands.
+
+2011-11-06 18:34  robert
+
+	* libmp3lame/encoder.c:
+
+	use same meaning of PE in cbr and vbr modes
+
+2011-11-05 17:53  robert
+
+	* configure, configure.in, doc/html/history.html,
+	  libmp3lame/version.h:
+
+	main-branch open for next development cycle
+
+2011-11-05 17:33  robert
+
+	* ChangeLog, configure, configure.in (lame3_99):
+
+	releasing 3.99.1
+
+2011-11-05 17:00  robert
+
+	* doc/html/history.html, libmp3lame/version.h (lame3_99):
+
+	releasing 3.99.1 stable
+
+2011-11-05 16:32  robert
+
+	* misc/: Makefile.am, Makefile.in:
+
+	adding mk_mp3.sh to dist files
+
+2011-11-02 00:20  robert
+
+	* Makefile.MSVC, libmp3lame/machine.h:
+
+	fixing vc6 compile problem, VC6 seems to miss exporting some inline functions from math.h.
+
+2011-11-01 19:50  robert
+
+	* libmp3lame/id3tag.c:
+
+	oops, fixing writing unicode strings in id3tags
+
+2011-11-01 16:59  robert
+
+	* doc/html/history.html, frontend/parse.c, libmp3lame/id3tag.c:
+
+	Fixes for several issues with ID3v2 unicode tags, using Big-Endian text
+	encodings. Because of several other software (like Windows Media Player),
+	LAME writes Little-Endian unicode tags only.
+	Thanks to Taihei Monma, for reporting these issues.
+	Tracker items: [ 3431203, 3431222, 3431241 ]
+
+2011-10-18 21:54  robert
+
+	* Dll/BladeMP3EncDLL.h:
+
+	Fixing typedef HBE_STREAM, has to be a pointer type.
+
+2011-10-18 21:51  robert
+
+	* libmp3lame/: lame.c, util.c:
+
+	Fixing a small display problem for x64 platform
+
+2011-10-17 23:15  robert
+
+	* libmp3lame/id3tag.c:
+
+	bug fix: ID3 tags are always added
+
+2011-10-16 13:09  robert
+
+	* frontend/: Makefile.am, Makefile.in:
+
+	file rtp.h was missing in distribution list
+
+2011-10-15 15:46  robert
+
+	* doc/html/history.html:
+
+	Updating history
+
+2011-10-15 14:37  robert
+
+	* ChangeLog:
+
+	updating Changelog
+
 2011-10-15 14:31  robert
 
 	* testcase.mp3, debian/Makefile.am, debian/Makefile.in,
