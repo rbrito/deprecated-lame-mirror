@@ -11,6 +11,48 @@
 
 -- 
 
+2012-01-19 14:27  robert
+
+	* frontend/parse.c (lame3_99):
+
+	fix for tracker item ID: 3475581 - lame crashes at .w64 input file
+
+2012-01-19 12:15  robert
+
+	* frontend/parse.c:
+
+	fix for tracker item ID: 3475581 - lame crashes at .w64 input file
+
+2012-01-08 23:49  robert
+
+	* include/lame.h, libmp3lame/id3tag.c, libmp3lame/id3tag.h,
+	  libmp3lame/quantize.c, libmp3lame/quantize_pvt.c,
+	  libmp3lame/util.c, libmp3lame/version.h (lame3_99),
+	  include/lame.h, libmp3lame/id3tag.c, libmp3lame/id3tag.h,
+	  libmp3lame/quantize_pvt.c, libmp3lame/util.c:
+
+	Addressing things brought to attention by tracker item ID: 3463197: 3.99.x problem WFED and PCST frames
+
+	+ WFED and PCST frames can now be added, to tag podcasts iTunes recognizes
+	+ USER frames are now supported
+	+ COMM frames can now have a description, when passed via --tv "COMM=<description>=<full text>"
+
+	- possible divide-by-zero exception should be fixed
+	- adding malformed user-defined-frames could result in abnormal program termination, fixed
+
+2011-12-04 12:35  robert
+
+	* libmp3lame/: lame.rc (lame3_99), lame.rc:
+
+	re tracker ID: 3449748 Incomplete resource definition file
+	A translation value seems to be mandatory by convention.
+
+2011-11-26 19:49  robert
+
+	* ChangeLog, configure, configure.in (lame3_99):
+
+	releasing 3.99.3
+
 2011-11-26 18:26  robert
 
 	* doc/html/history.html, libmp3lame/id3tag.c:
