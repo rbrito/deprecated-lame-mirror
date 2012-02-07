@@ -641,7 +641,9 @@ calc_xmin(lame_internal_flags const *gfc,
                     xmin = x;
             }
         }
-        *pxmin++ = Max(xmin, 1e-20f);
+        xmin = Max(xmin, DBL_EPSILON);
+        cod_info->energy_above_cutoff[gsfb] = (en0 > xmin+1e-14f) ? 1 : 0;
+        *pxmin++ = xmin;
     }                   /* end of long block loop */
 
 
@@ -729,7 +731,9 @@ calc_xmin(lame_internal_flags const *gfc,
                         xmin = x;
                 }
             }
-            *pxmin++ = Max(xmin, 1e-20f);
+            xmin = Max(xmin, DBL_EPSILON);
+            cod_info->energy_above_cutoff[gsfb+b] = (en0 > xmin+1e-14f) ? 1 : 0;
+            *pxmin++ = xmin;
         }               /* b */
         if (cfg->use_temporal_masking_effect) {
             if (pxmin[-3] > pxmin[-3 + 1])

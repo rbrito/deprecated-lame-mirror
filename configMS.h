@@ -1,3 +1,6 @@
+#ifndef CONFIGMS_H_INCLUDED
+#define CONFIGMS_H_INCLUDED
+
 /* The number of bytes in a double.  */
 #define SIZEOF_DOUBLE 8
 
@@ -112,4 +115,6 @@ void acm_Free( void * mem);
 
 #ifdef _M_X64
         #define HAVE_XMMINTRIN_H
+#endif
+
 #endif
