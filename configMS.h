@@ -113,7 +113,7 @@ void acm_Free( void * mem);
     #endif
 #endif
 
-#ifdef _M_X64
+#if defined(_M_X64) && !defined(HAVE_XMMINTRIN_H)
         #define HAVE_XMMINTRIN_H
 #endif
 
