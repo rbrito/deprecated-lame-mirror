@@ -1,5 +1,8 @@
 /* config.h.in.  Generated from configure.in by autoheader.  */
 
+#ifndef LAME_CONFIG_H
+#define LAME_CONFIG_H
+
 /* debug define */
 #undef ABORTFP
 
@@ -367,3 +370,5 @@
 
 /* Define to `unsigned int' if <sys/types.h> does not define. */
 #undef size_t
+
+#endif /* LAME_CONFIG_H */
