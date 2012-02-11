@@ -2,7 +2,7 @@
  *      Get Audio routines source file
  *
  *      Copyright (c) 1999 Albert L Faber
- *                    2008-2011 Robert Hegemann
+ *                    2008-2012 Robert Hegemann
  *
  * This library is free software; you can redistribute it and/or
  * modify it under the terms of the GNU Library General Public
@@ -296,22 +296,26 @@ addPcmBuffer(PcmBuffer * b, void *a0, void *a1, int read)
     a_n = read - b->skip_start;
 
     if (b != 0 && a_n > 0) {
-        int const b_free = b->n - b->u;
-        int const a_need = b->w * a_n;
+        int const a_skip = b->w * b->skip_start;
+        int const a_want = b->w * a_n;
         int const b_used = b->w * b->u;
-        if (b_free < a_need) {
-            b->n += a_n;
-            b->ch[0] = realloc(b->ch[0], b->w * b->n);
-            b->ch[1] = realloc(b->ch[1], b->w * b->n);
+        int const b_have = b->w * b->n;
+        int const b_need = b->w * (b->u + a_n);
+        if (b_have < b_need) {
+            b->n = b->u + a_n;
+            b->ch[0] = realloc(b->ch[0], b_need);
+            b->ch[1] = realloc(b->ch[1], b_need);
         }
         b->u += a_n;
         if (b->ch[0] != 0 && a0 != 0) {
             char   *src = a0;
-            memcpy((char *) b->ch[0] + b_used, src + b->skip_start, a_need);
+            char   *dst = b->ch[0];
+            memcpy(dst + b_used, src + a_skip, a_want);
         }
         if (b->ch[1] != 0 && a1 != 0) {
             char   *src = a1;
-            memcpy((char *) b->ch[1] + b_used, src + b->skip_start, a_need);
+            char   *dst = b->ch[1];
+            memcpy(dst + b_used, src + a_skip, a_want);
         }
     }
     b->skip_start = 0;
