@@ -163,7 +163,7 @@ hip_init_tables_layer3(void)
         ispow[i] = pow((double) i, (double) 4.0 / 3.0);
 
     for (i = 0; i < 8; i++) {
-        static double Ci[8] = { -0.6, -0.535, -0.33, -0.185, -0.095, -0.041, -0.0142, -0.0037 };
+        static const double Ci[8] = { -0.6, -0.535, -0.33, -0.185, -0.095, -0.041, -0.0142, -0.0037 };
         double  sq = sqrt(1.0 + Ci[i] * Ci[i]);
         aa_cs[i] = 1.0 / sq;
         aa_ca[i] = Ci[i] / sq;
@@ -1666,6 +1666,8 @@ decode_layer3_frame(PMPSTR mp, unsigned char *pcm_sample, int *pcm_point,
     int     ms_stereo, i_stereo;
     int     sfreq = fr->sampling_frequency;
     int     stereo1, granules;
+    real    hybridIn[2][SBLIMIT][SSLIMIT];
+    real    hybridOut[2][SSLIMIT][SBLIMIT];
 
     if (set_pointer(mp, (int) mp->sideinfo.main_data_begin) == MP3_ERR)
         return 0;
@@ -1695,8 +1697,6 @@ decode_layer3_frame(PMPSTR mp, unsigned char *pcm_sample, int *pcm_point,
     }
 
     for (gr = 0; gr < granules; gr++) {
-        static real hybridIn[2][SBLIMIT][SSLIMIT];
-        static real hybridOut[2][SSLIMIT][SBLIMIT];
 
         {
             struct gr_info_s *gr_infos = &(mp->sideinfo.ch[0].gr[gr]);
