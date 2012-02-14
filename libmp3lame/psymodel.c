@@ -1852,7 +1852,7 @@ init_s3_values(FLOAT ** p, int (*s3ind)[2], int npart,
         s3ind[i][1] = j;
         numberOfNoneZero += (s3ind[i][1] - s3ind[i][0] + 1);
     }
-    *p = malloc(sizeof(FLOAT) * numberOfNoneZero);
+    *p = lame_calloc(FLOAT, numberOfNoneZero);
     if (!*p)
         return -1;
 
@@ -1889,7 +1889,7 @@ psymodel_init(lame_global_flags const *gfp)
     }
     memset(norm, 0, sizeof(norm));
 
-    gd = calloc(1, sizeof(PsyConst_t));
+    gd = lame_calloc(PsyConst_t, 1);
     gfc->cd_psy = gd;
 
     gd->force_short_block_calc = gfp->experimentalZ;

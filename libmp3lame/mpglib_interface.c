@@ -329,7 +329,7 @@ lame_decode(unsigned char *buffer, int len, short pcm_l[], short pcm_r[])
 
 hip_t hip_decode_init(void)
 {
-    hip_t hip = calloc(1, sizeof(hip_global_flags));
+    hip_t hip = lame_calloc(hip_global_flags, 1);
     InitMP3(hip);
     return hip;
 }

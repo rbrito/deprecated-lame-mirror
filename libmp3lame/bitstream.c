@@ -1101,7 +1101,7 @@ init_bit_stream_w(lame_internal_flags * gfc)
     esv->h_ptr = esv->w_ptr = 0;
     esv->header[esv->h_ptr].write_timing = 0;
 
-    gfc->bs.buf = (unsigned char *) malloc(BUFFER_SIZE);
+    gfc->bs.buf = lame_calloc(unsigned char, BUFFER_SIZE);
     gfc->bs.buf_size = BUFFER_SIZE;
     gfc->bs.buf_byte_idx = -1;
     gfc->bs.buf_bit_idx = 0;

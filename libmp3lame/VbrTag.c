@@ -548,7 +548,7 @@ InitVbrTag(lame_global_flags * gfp)
     gfc->VBR_seek_table.pos = 0;
 
     if (gfc->VBR_seek_table.bag == NULL) {
-        gfc->VBR_seek_table.bag = malloc(400 * sizeof(int));
+        gfc->VBR_seek_table.bag = lame_calloc(int, 400);
         if (gfc->VBR_seek_table.bag != NULL) {
             gfc->VBR_seek_table.size = 400;
         }

@@ -4,7 +4,7 @@
  *
  *      Copyright (c) 1999-2000 Mark Taylor
  *      Copyright (c) 2000-2005 Takehiro Tominaga
- *      Copyright (c) 2000-2011 Robert Hegemann
+ *      Copyright (c) 2000-2012 Robert Hegemann
  *      Copyright (c) 2000-2005 Gabriel Bouvigne
  *      Copyright (c) 2000-2004 Alexander Leidinger
  *
@@ -384,7 +384,7 @@ lame_init_qval(lame_global_flags * gfp)
         cfg->noise_shaping_stop = 0;
         cfg->use_best_huffman = 0;
         cfg->full_outer_loop = 0;
-        if (gfp->VBR == vbr_mt || gfp->VBR == vbr_mtrh) {
+        if (cfg->vbr == vbr_mt || cfg->vbr == vbr_mtrh) {
             cfg->full_outer_loop  = -1;
         }
         break;
@@ -540,8 +540,17 @@ lame_init_params(lame_global_flags * gfp)
 
     int     i;
     int     j;
-    lame_internal_flags *const gfc = gfp->internal_flags;
-    SessionConfig_t *const cfg = &gfc->cfg;
+    lame_internal_flags *gfc;
+    SessionConfig_t *cfg;
+
+    if (!is_lame_global_flags_valid(gfp)) 
+        return -1;
+
+    gfc = gfp->internal_flags;
+    if (gfc == 0) 
+        return -1;
+
+    cfg = &gfc->cfg;
 
     gfc->class_id = 0;
 
@@ -579,20 +588,7 @@ lame_init_params(lame_global_flags * gfp)
     }
 
 
-    if (NULL == gfc->ATH)
-        gfc->ATH = calloc(1, sizeof(ATH_t));
-
-    if (NULL == gfc->ATH)
-        return -2;      /* maybe error codes should be enumerated in lame.h ?? */
-
-    if (NULL == gfc->sv_rpg.rgdata)
-        gfc->sv_rpg.rgdata = calloc(1, sizeof(replaygain_t));
-    if (NULL == gfc->sv_rpg.rgdata) {
-        freegfc(gfc);
-        gfp->internal_flags = NULL;
-        return -2;
-    }
-
+    cfg->vbr = gfp->VBR;
     cfg->error_protection = gfp->error_protection;
     cfg->copyright = gfp->copyright;
     cfg->original = gfp->original;
@@ -607,10 +603,10 @@ lame_init_params(lame_global_flags * gfp)
         gfp->force_ms = 0; /* don't allow forced mid/side stereo for mono output */
     cfg->force_ms = gfp->force_ms;
 
-    if (gfp->VBR == vbr_off && gfp->VBR_mean_bitrate_kbps != 128 && gfp->brate == 0)
+    if (cfg->vbr == vbr_off && gfp->VBR_mean_bitrate_kbps != 128 && gfp->brate == 0)
         gfp->brate = gfp->VBR_mean_bitrate_kbps;
 
-    switch (gfp->VBR) {
+    switch (cfg->vbr) {
     case vbr_off:
     case vbr_mtrh:
     case vbr_mt:
@@ -623,14 +619,14 @@ lame_init_params(lame_global_flags * gfp)
 
     cfg->free_format = gfp->free_format;
 
-    if (gfp->VBR == vbr_off && gfp->brate == 0) {
+    if (cfg->vbr == vbr_off && gfp->brate == 0) {
         /* no bitrate or compression ratio specified, use 11.025 */
         if (EQ(gfp->compression_ratio, 0))
             gfp->compression_ratio = 11.025; /* rate to compress a CD down to exactly 128000 bps */
     }
 
     /* find bitrate if user specify a compression ratio */
-    if (gfp->VBR == vbr_off && gfp->compression_ratio > 0) {
+    if (cfg->vbr == vbr_off && gfp->compression_ratio > 0) {
 
         if (gfp->samplerate_out == 0)
             gfp->samplerate_out = map2MP3Frequency((int) (0.97 * gfp->samplerate_in)); /* round up with a margin of 3% */
@@ -662,7 +658,7 @@ lame_init_params(lame_global_flags * gfp)
     }
     /* WORK IN PROGRESS */
     /* mapping VBR scale to internal VBR quality settings */
-    if (gfp->samplerate_out == 0 && (gfp->VBR == vbr_mt || gfp->VBR == vbr_mtrh)) {
+    if (gfp->samplerate_out == 0 && (cfg->vbr == vbr_mt || cfg->vbr == vbr_mtrh)) {
         float const qval = gfp->VBR_q + gfp->VBR_q_frac;
         struct q_map { int sr_a; float qa, qb, ta, tb; int lp; };
         struct q_map const m[9]
@@ -709,7 +705,7 @@ lame_init_params(lame_global_flags * gfp)
         double  lowpass = 16000;
         double  highpass;
 
-        switch (gfp->VBR) {
+        switch (cfg->vbr) {
         case vbr_off:{
                 optimum_bandwidth(&lowpass, &highpass, gfp->brate);
                 break;
@@ -759,7 +755,7 @@ lame_init_params(lame_global_flags * gfp)
             }
         }
 
-        if (gfp->mode == MONO && (gfp->VBR == vbr_off || gfp->VBR == vbr_abr))
+        if (gfp->mode == MONO && (cfg->vbr == vbr_off || cfg->vbr == vbr_abr))
             lowpass *= 1.5;
 
         gfp->lowpassfreq = lowpass;
@@ -771,7 +767,7 @@ lame_init_params(lame_global_flags * gfp)
         }
         gfp->samplerate_out = optimum_samplefreq((int) gfp->lowpassfreq, gfp->samplerate_in);
     }
-    if (gfp->VBR == vbr_mt || gfp->VBR == vbr_mtrh) {
+    if (cfg->vbr == vbr_mt || cfg->vbr == vbr_mtrh) {
         gfp->lowpassfreq = Min(24000, gfp->lowpassfreq);
     }
     else {
@@ -779,48 +775,13 @@ lame_init_params(lame_global_flags * gfp)
     }
     gfp->lowpassfreq = Min(gfp->samplerate_out / 2, gfp->lowpassfreq);
 
-    if (gfp->VBR == vbr_off) {
+    if (cfg->vbr == vbr_off) {
         gfp->compression_ratio = gfp->samplerate_out * 16 * cfg->channels_out / (1.e3 * gfp->brate);
     }
-    if (gfp->VBR == vbr_abr) {
+    if (cfg->vbr == vbr_abr) {
         gfp->compression_ratio =
             gfp->samplerate_out * 16 * cfg->channels_out / (1.e3 * gfp->VBR_mean_bitrate_kbps);
     }
-
-    /* do not compute ReplayGain values and do not find the peak sample
-       if we can't store them */
-    if (!gfp->write_lame_tag) {
-        gfp->findReplayGain = 0;
-        gfp->decode_on_the_fly = 0;
-        cfg->findPeakSample = 0;
-    }
-
-    cfg->findReplayGain = gfp->findReplayGain;
-    cfg->decode_on_the_fly = gfp->decode_on_the_fly;
-
-    if (cfg->decode_on_the_fly)
-        cfg->findPeakSample = 1;
-
-    if (cfg->findReplayGain) {
-        if (InitGainAnalysis(gfc->sv_rpg.rgdata, gfp->samplerate_out) == INIT_GAIN_ANALYSIS_ERROR) {
-            freegfc(gfc);
-            gfp->internal_flags = NULL;
-            return -6;
-        }
-    }
-
-#ifdef DECODE_ON_THE_FLY
-    if (cfg->decode_on_the_fly && !gfp->decode_only) {
-        if (gfc->hip) {
-            hip_decode_exit(gfc->hip);
-        }
-        gfc->hip = hip_decode_init();
-        /* report functions */
-        hip_set_errorf(gfc->hip, gfp->report.errorf);
-        hip_set_debugf(gfc->hip, gfp->report.debugf);
-        hip_set_msgf(gfc->hip, gfp->report.msgf);
-    }
-#endif
 
     cfg->disable_reservoir = gfp->disable_reservoir;
     cfg->lowpassfreq = gfp->lowpassfreq;
@@ -828,7 +789,6 @@ lame_init_params(lame_global_flags * gfp)
     cfg->samplerate_in = gfp->samplerate_in;
     cfg->samplerate_out = gfp->samplerate_out;
     cfg->mode_gr = cfg->samplerate_out <= 24000 ? 1 : 2; /* Number of granules per frame */
-    gfc->ov_enc.encoder_delay = ENCDELAY;
 
 
     /*
@@ -859,7 +819,7 @@ lame_init_params(lame_global_flags * gfp)
      *  for lower bitrates, downsample with --resample
      */
 
-    switch (gfp->VBR) {
+    switch (cfg->vbr) {
     case vbr_mt:
     case vbr_rh:
     case vbr_mtrh:
@@ -937,12 +897,10 @@ lame_init_params(lame_global_flags * gfp)
    *******************************************************/
     cfg->samplerate_index = SmpFrqIndex(cfg->samplerate_out, &cfg->version);
     if (cfg->samplerate_index < 0) {
-        freegfc(gfc);
-        gfp->internal_flags = NULL;
         return -1;
     }
 
-    if (gfp->VBR == vbr_off) {
+    if (cfg->vbr == vbr_off) {
         if (cfg->free_format) {
             gfc->ov_enc.bitrate_index = 0;
         }
@@ -950,8 +908,6 @@ lame_init_params(lame_global_flags * gfp)
             gfp->brate = FindNearestBitrate(gfp->brate, cfg->version, cfg->samplerate_out);
             gfc->ov_enc.bitrate_index = BitrateIndex(gfp->brate, cfg->version, cfg->samplerate_out);
             if (gfc->ov_enc.bitrate_index <= 0) {
-                freegfc(gfc);
-                gfp->internal_flags = NULL;
                 return -1;
             }
         }
@@ -1007,7 +963,7 @@ lame_init_params(lame_global_flags * gfp)
     assert(gfp->VBR_q <= 9);
     assert(gfp->VBR_q >= 0);
 
-    switch (gfp->VBR) {
+    switch (cfg->vbr) {
 
     case vbr_mt:
     case vbr_mtrh:{
@@ -1038,7 +994,6 @@ lame_init_params(lame_global_flags * gfp)
             else
                 gfc->sv_qnt.sfb21_extra = (cfg->samplerate_out > 44000);
 
-            gfc->iteration_loop = VBR_new_iteration_loop;
             break;
 
         }
@@ -1065,12 +1020,10 @@ lame_init_params(lame_global_flags * gfp)
             if (gfp->quality < 0)
                 gfp->quality = LAME_DEFAULT_QUALITY;
 
-            gfc->iteration_loop = VBR_old_iteration_loop;
             break;
         }
 
     default:           /* cbr/abr */  {
-            vbr_mode vbrmode;
 
             /*  no sfb21 extra with CBR code
              */
@@ -1080,19 +1033,12 @@ lame_init_params(lame_global_flags * gfp)
                 gfp->quality = LAME_DEFAULT_QUALITY;
 
 
-            vbrmode = gfp->VBR;
-            if (vbrmode == vbr_off)
+            if (cfg->vbr == vbr_off)
                 (void) lame_set_VBR_mean_bitrate_kbps(gfp, gfp->brate);
             /* second, set parameters depending on bitrate */
             (void) apply_preset(gfp, gfp->VBR_mean_bitrate_kbps, 0);
-            gfp->VBR = vbrmode;
+            gfp->VBR = cfg->vbr;
 
-            if (vbrmode == vbr_off) {
-                gfc->iteration_loop = CBR_iteration_loop;
-            }
-            else {
-                gfc->iteration_loop = ABR_iteration_loop;
-            }
             break;
         }
     }
@@ -1109,7 +1055,7 @@ lame_init_params(lame_global_flags * gfp)
     }
 
 
-    if (gfp->VBR != vbr_off) { /* choose a min/max bitrate for VBR */
+    if (cfg->vbr != vbr_off) { /* choose a min/max bitrate for VBR */
         /* if the user didn't specify VBR_max_bitrate: */
         cfg->vbr_min_bitrate_index = 1; /* default: allow   8 kbps (MPEG-2) or  32 kbps (MPEG-1) */
         cfg->vbr_max_bitrate_index = 14; /* default: allow 160 kbps (MPEG-2) or 320 kbps (MPEG-1) */
@@ -1143,7 +1089,6 @@ lame_init_params(lame_global_flags * gfp)
 
     cfg->preset = gfp->preset;
     cfg->write_lame_tag = gfp->write_lame_tag;
-    cfg->vbr = gfp->VBR;
     gfc->sv_qnt.substep_shaping = gfp->substep_shaping;
     cfg->noise_shaping = gfp->noise_shaping;
     cfg->subblock_gain = gfp->subblock_gain;
@@ -1301,6 +1246,40 @@ lame_init_params(lame_global_flags * gfp)
     (void) psymodel_init(gfp);
 
     cfg->buffer_constraint = get_max_frame_buffer_size_by_constraint(cfg, gfp->strict_ISO);
+
+
+    /* do not compute ReplayGain values and do not find the peak sample
+       if we can't store them */
+    if (!gfp->write_lame_tag) {
+        gfp->findReplayGain = 0;
+        gfp->decode_on_the_fly = 0;
+        cfg->findPeakSample = 0;
+    }
+
+    cfg->findReplayGain = gfp->findReplayGain;
+    cfg->decode_on_the_fly = gfp->decode_on_the_fly;
+
+    if (cfg->decode_on_the_fly)
+        cfg->findPeakSample = 1;
+
+    if (cfg->findReplayGain) {
+        if (InitGainAnalysis(gfc->sv_rpg.rgdata, cfg->samplerate_out) == INIT_GAIN_ANALYSIS_ERROR) {
+            return -6;
+        }
+    }
+
+#ifdef DECODE_ON_THE_FLY
+    if (cfg->decode_on_the_fly && !gfp->decode_only) {
+        if (gfc->hip) {
+            hip_decode_exit(gfc->hip);
+        }
+        gfc->hip = hip_decode_init();
+        /* report functions */
+        hip_set_errorf(gfc->hip, gfp->report.errorf);
+        hip_set_debugf(gfc->hip, gfp->report.debugf);
+        hip_set_msgf(gfc->hip, gfp->report.msgf);
+    }
+#endif
     return 0;
 }
 
@@ -1626,8 +1605,8 @@ update_inbuffer_size(lame_internal_flags * gfc, const int nsamples)
         if (esv->in_buffer_1) {
             free(esv->in_buffer_1);
         }
-        esv->in_buffer_0 = calloc(nsamples, sizeof(sample_t));
-        esv->in_buffer_1 = calloc(nsamples, sizeof(sample_t));
+        esv->in_buffer_0 = lame_calloc(sample_t, nsamples);
+        esv->in_buffer_1 = lame_calloc(sample_t, nsamples);
         esv->in_buffer_nsamples = nsamples;
     }
     if (esv->in_buffer_0 == NULL || esv->in_buffer_1 == NULL) {
@@ -2293,6 +2272,53 @@ lame_mp3_tags_fid(lame_global_flags * gfp, FILE * fpStream)
 }
 
 
+static int
+lame_init_internal_flags(lame_internal_flags* gfc)
+{
+    if (NULL == gfc)
+        return -1;
+
+    gfc->cfg.vbr_min_bitrate_index = 1; /* not  0 ????? */
+    gfc->cfg.vbr_max_bitrate_index = 13; /* not 14 ????? */
+    gfc->cfg.decode_on_the_fly = 0;
+    gfc->cfg.findReplayGain = 0;
+    gfc->cfg.findPeakSample = 0;
+
+    gfc->sv_qnt.OldValue[0] = 180;
+    gfc->sv_qnt.OldValue[1] = 180;
+    gfc->sv_qnt.CurrentStep[0] = 4;
+    gfc->sv_qnt.CurrentStep[1] = 4;
+    gfc->sv_qnt.masking_lower = 1;
+
+    /* The reason for
+     *       int mf_samples_to_encode = ENCDELAY + POSTDELAY;
+     * ENCDELAY = internal encoder delay.  And then we have to add POSTDELAY=288
+     * because of the 50% MDCT overlap.  A 576 MDCT granule decodes to
+     * 1152 samples.  To synthesize the 576 samples centered under this granule
+     * we need the previous granule for the first 288 samples (no problem), and
+     * the next granule for the next 288 samples (not possible if this is last
+     * granule).  So we need to pad with 288 samples to make sure we can
+     * encode the 576 samples we are interested in.
+     */
+    gfc->sv_enc.mf_samples_to_encode = ENCDELAY + POSTDELAY;
+    gfc->sv_enc.mf_size = ENCDELAY - MDCTDELAY; /* we pad input with this many 0's */
+    gfc->ov_enc.encoder_padding = 0;
+    gfc->ov_enc.encoder_delay = ENCDELAY;
+
+    gfc->ov_rpg.RadioGain = 0;
+    gfc->ov_rpg.noclipGainChange = 0;
+    gfc->ov_rpg.noclipScale = -1.0;
+
+    gfc->ATH = lame_calloc(ATH_t, 1);
+    if (NULL == gfc->ATH)
+        return -2;      /* maybe error codes should be enumerated in lame.h ?? */
+
+    gfc->sv_rpg.rgdata = lame_calloc(replaygain_t, 1);
+    if (NULL == gfc->sv_rpg.rgdata) {
+        return -2;
+    }
+    return 0;
+}
 
 /* initialize mp3 encoder */
 #if DEPRECATED_OR_OBSOLETE_CODE_REMOVED
@@ -2302,19 +2328,11 @@ static
 int
 lame_init_old(lame_global_flags * gfp)
 {
-    lame_internal_flags *gfc;
-    SessionConfig_t *cfg;
-
     disable_FPE();      /* disable floating point exceptions */
 
     memset(gfp, 0, sizeof(lame_global_flags));
 
     gfp->class_id = LAME_ID;
-
-    if (NULL == (gfc = gfp->internal_flags = calloc(1, sizeof(lame_internal_flags))))
-        return -1;
-
-    cfg = &gfc->cfg;
 
     /* Global flags.  set defaults here for non-zero values */
     /* see lame.h for description */
@@ -2342,24 +2360,15 @@ lame_init_old(lame_global_flags * gfp)
 
     gfp->VBR = vbr_off;
     gfp->VBR_q = 4;
-    gfp->ATHcurve = -1;
     gfp->VBR_mean_bitrate_kbps = 128;
     gfp->VBR_min_bitrate_kbps = 0;
     gfp->VBR_max_bitrate_kbps = 0;
     gfp->VBR_hard_min = 0;
-    cfg->vbr_min_bitrate_index = 1; /* not  0 ????? */
-    cfg->vbr_max_bitrate_index = 13; /* not 14 ????? */
 
     gfp->quant_comp = -1;
     gfp->quant_comp_short = -1;
 
     gfp->msfix = -1;
-
-    gfc->sv_qnt.OldValue[0] = 180;
-    gfc->sv_qnt.OldValue[1] = 180;
-    gfc->sv_qnt.CurrentStep[0] = 4;
-    gfc->sv_qnt.CurrentStep[1] = 4;
-    gfc->sv_qnt.masking_lower = 1;
 
     gfp->attackthre = -1;
     gfp->attackthre_s = -1;
@@ -2368,37 +2377,16 @@ lame_init_old(lame_global_flags * gfp)
     gfp->scale_left = 1;
     gfp->scale_right = 1;
 
-    gfp->athaa_type = -1;
+    gfp->ATHcurve = -1;
     gfp->ATHtype = -1;  /* default = -1 = set in lame_init_params */
     /* 2 = equal loudness curve */
     gfp->athaa_sensitivity = 0.0; /* no offset */
+    gfp->athaa_type = -1;
     gfp->useTemporal = -1;
     gfp->interChRatio = -1;
 
-    /* The reason for
-     *       int mf_samples_to_encode = ENCDELAY + POSTDELAY;
-     * ENCDELAY = internal encoder delay.  And then we have to add POSTDELAY=288
-     * because of the 50% MDCT overlap.  A 576 MDCT granule decodes to
-     * 1152 samples.  To synthesize the 576 samples centered under this granule
-     * we need the previous granule for the first 288 samples (no problem), and
-     * the next granule for the next 288 samples (not possible if this is last
-     * granule).  So we need to pad with 288 samples to make sure we can
-     * encode the 576 samples we are interested in.
-     */
-    gfc->sv_enc.mf_samples_to_encode = ENCDELAY + POSTDELAY;
-    gfc->ov_enc.encoder_padding = 0;
-    gfc->sv_enc.mf_size = ENCDELAY - MDCTDELAY; /* we pad input with this many 0's */
-
     gfp->findReplayGain = 0;
     gfp->decode_on_the_fly = 0;
-
-    gfc->cfg.decode_on_the_fly = 0;
-    gfc->cfg.findReplayGain = 0;
-    gfc->cfg.findPeakSample = 0;
-
-    gfc->ov_rpg.RadioGain = 0;
-    gfc->ov_rpg.noclipGainChange = 0;
-    gfc->ov_rpg.noclipScale = -1.0;
 
     gfp->asm_optimizations.mmx = 1;
     gfp->asm_optimizations.amd3dnow = 1;
@@ -2411,6 +2399,14 @@ lame_init_old(lame_global_flags * gfp)
     gfp->report.debugf = &lame_report_def;
     gfp->report.errorf = &lame_report_def;
     gfp->report.msgf = &lame_report_def;
+
+    gfp->internal_flags = lame_calloc(lame_internal_flags, 1);
+
+    if (lame_init_internal_flags(gfp->internal_flags) < 0) {
+        freegfc(gfp->internal_flags);
+        gfp->internal_flags = 0;
+        return -1;
+    }
     return 0;
 }
 
@@ -2423,7 +2419,7 @@ lame_init(void)
 
     init_log_table();
 
-    gfp = calloc(1, sizeof(lame_global_flags));
+    gfp = lame_calloc(lame_global_flags, 1);
     if (gfp == NULL)
         return NULL;
 

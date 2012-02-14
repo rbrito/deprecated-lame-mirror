@@ -40,6 +40,7 @@
 #include "lame-analysis.h"
 #include "bitstream.h"
 #include "VbrTag.h"
+#include "quantize.h"
 #include "quantize_pvt.h"
 
 
@@ -515,7 +516,23 @@ lame_encode_mp3_frame(       /* Output */
             }
         }
     }
-    gfc->iteration_loop(gfc, (const FLOAT (*)[2])pe_use, ms_ener_ratio, masking);
+    switch (cfg->vbr)
+    {
+    default:
+    case vbr_off:
+        CBR_iteration_loop(gfc, (const FLOAT (*)[2])pe_use, ms_ener_ratio, masking);
+        break;
+    case vbr_abr:
+        ABR_iteration_loop(gfc, (const FLOAT (*)[2])pe_use, ms_ener_ratio, masking);
+        break;
+    case vbr_rh:
+        VBR_old_iteration_loop(gfc, (const FLOAT (*)[2])pe_use, ms_ener_ratio, masking);
+        break;
+    case vbr_mt:
+    case vbr_mtrh:
+        VBR_new_iteration_loop(gfc, (const FLOAT (*)[2])pe_use, ms_ener_ratio, masking);
+        break;
+    }
 
 
     /****************************************

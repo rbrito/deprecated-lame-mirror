@@ -111,6 +111,7 @@ freegfc(lame_internal_flags * const gfc)
 {                       /* bit stream structure */
     int     i;
 
+    if (gfc == 0) return;
 
     for (i = 0; i <= 2 * BPC; i++)
         if (gfc->sv_enc.blackfilt[i] != NULL) {
@@ -555,10 +556,10 @@ fill_buffer_resample(lame_internal_flags * gfc,
     BLACKSIZE = filter_l + 1; /* size of data needed for FIR */
 
     if (gfc->fill_buffer_resample_init == 0) {
-        esv->inbuf_old[0] = calloc(BLACKSIZE, sizeof(esv->inbuf_old[0][0]));
-        esv->inbuf_old[1] = calloc(BLACKSIZE, sizeof(esv->inbuf_old[0][0]));
+        esv->inbuf_old[0] = lame_calloc(sample_t, BLACKSIZE);
+        esv->inbuf_old[1] = lame_calloc(sample_t, BLACKSIZE);
         for (i = 0; i <= 2 * bpc; ++i)
-            esv->blackfilt[i] = calloc(BLACKSIZE, sizeof(esv->blackfilt[0][0]));
+            esv->blackfilt[i] = lame_calloc(sample_t, BLACKSIZE);
 
         esv->itime[0] = 0;
         esv->itime[1] = 0;
