@@ -11,6 +11,89 @@
 
 -- 
 
+2012-02-11 12:11  robert
+
+	* frontend/get_audio.c:
+
+	Bug fix for tracker item ID: 3486753 Artifacts at the beginning of decoded file
+
+2012-02-11 12:10  robert
+
+	* mpglib/layer3.c:
+
+	some hidden global temporary variable removed, could have been some multi threading issue
+
+2012-02-11 12:00  robert
+
+	* frontend/get_audio.c (lame3_99):
+
+	Bug fix for tracker item ID: 3486753 Artifacts at the beginning of decoded file
+
+2012-02-11 11:03  robert
+
+	* mpglib/layer3.c (lame3_99):
+
+	some hidden global temporary variable removed, could have been some multi threading issue
+
+2012-02-10 18:13  rbrito
+
+	* config.h.in, configure.in:
+
+	autotools: Fix compilation on alpha using proper ifdef guards.
+
+	Thanks to Andres Mejia <amejia004@gmail.com> for the patch (with minor
+	whitespace adjustments).
+
+2012-02-10 18:11  rbrito
+
+	* doc/html/history.html:
+
+	doc: Correctly spell Fabian Greffrath's name to give proper credit.
+
+2012-02-10 18:06  rbrito
+
+	* config.h.in, configure.in (lame3_99):
+
+	autotools: Fix compilation on alpha using proper ifdef guards.
+
+	Thanks to Andres Mejia <amejia004@gmail.com> for the patch (with minor
+	whitespace adjustments).
+
+2012-02-10 18:05  rbrito
+
+	* doc/html/history.html (lame3_99):
+
+	doc: Correctly spell Fabian Greffrath's name to give proper credit.
+
+2012-02-07 13:52  robert
+
+	* configMS.h (lame3_99), configMS.h:
+
+	reduce compiler warnings for SSE2 build with VC 11
+
+2012-02-07 13:40  robert
+
+	* configMS.h, frontend/parse.c, libmp3lame/l3side.h,
+	  libmp3lame/machine.h, libmp3lame/quantize_pvt.c,
+	  libmp3lame/vbrquantize.c, libmp3lame/version.h (lame3_99):
+
+	- workaround for cygwin build problem
+	- fix "fast floating point math" problem (possible bitrate bloat on quiet pieces)
+
+2012-02-07 13:36  robert
+
+	* configMS.h, libmp3lame/l3side.h, libmp3lame/machine.h,
+	  libmp3lame/quantize_pvt.c, libmp3lame/vbrquantize.c:
+
+	- workaround for cygwin build problem
+	- fix "fast floating point math" problem (possible bitrate bloat on quiet pieces)
+
+2012-01-25 13:01  robert
+
+	* ChangeLog, doc/html/history.html:
+
+	updating Changelog and History
+
 2012-01-25 12:47  robert
 
 	* configure, configure.in, testcase.mp3 (lame3_99):
