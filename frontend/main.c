@@ -142,7 +142,7 @@ dosToLongFileName(char *fn)
     WIN32_FIND_DATAA lpFindFileData;
     HANDLE  h = FindFirstFileA(fn, &lpFindFileData);
     if (h != INVALID_HANDLE_VALUE) {
-        int     a;
+        size_t  a;
         char   *q, *p;
         FindClose(h);
         for (a = 0; a < MSIZE; a++) {

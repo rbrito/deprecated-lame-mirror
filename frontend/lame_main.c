@@ -370,11 +370,12 @@ write_xing_frame(lame_global_flags * gf, FILE * outf, size_t offset)
              sizeof(mp3buffer), imp3);
         return -1;
     }
-    if (fseek(outf, offset, SEEK_SET) != 0) {
+    assert( offset <= LONG_MAX );
+    if (fseek(outf, (long) offset, SEEK_SET) != 0) {
         error_printf("fatal error: can't update LAME-tag frame!\n");
         return -1;
     }
-    owrite = (int) fwrite(mp3buffer, 1, imp3, outf);
+    owrite = fwrite(mp3buffer, 1, imp3, outf);
     if (owrite != imp3) {
         error_printf("Error writing LAME-tag \n");
         return -1;
@@ -382,7 +383,8 @@ write_xing_frame(lame_global_flags * gf, FILE * outf, size_t offset)
     if (global_ui_config.silent <= 0) {
         console_printf("done\n");
     }
-    return imp3;
+    assert( imp3 <= INT_MAX );
+    return (int) imp3;
 }
 
 
@@ -390,18 +392,18 @@ static int
 write_id3v1_tag(lame_t gf, FILE * outf)
 {
     unsigned char mp3buffer[128];
-    int     imp3, owrite;
+    size_t  imp3, owrite;
 
     imp3 = lame_get_id3v1_tag(gf, mp3buffer, sizeof(mp3buffer));
     if (imp3 <= 0) {
         return 0;
     }
-    if ((size_t) imp3 > sizeof(mp3buffer)) {
+    if (imp3 > sizeof(mp3buffer)) {
         error_printf("Error writing ID3v1 tag: buffer too small: buffer size=%d  ID3v1 size=%d\n",
                      sizeof(mp3buffer), imp3);
         return 0;       /* not critical */
     }
-    owrite = (int) fwrite(mp3buffer, 1, imp3, outf);
+    owrite = fwrite(mp3buffer, 1, imp3, outf);
     if (owrite != imp3) {
         error_printf("Error writing ID3v1 tag \n");
         return 1;
@@ -424,10 +426,10 @@ lame_encoder_loop(lame_global_flags * gf, FILE * outf, int nogap, char *inPath, 
     if (id3v2_size > 0) {
         unsigned char *id3v2tag = malloc(id3v2_size);
         if (id3v2tag != 0) {
-            imp3 = lame_get_id3v2_tag(gf, id3v2tag, id3v2_size);
-            owrite = (int) fwrite(id3v2tag, 1, imp3, outf);
+            size_t  n_bytes = lame_get_id3v2_tag(gf, id3v2tag, id3v2_size);
+            size_t  written = fwrite(id3v2tag, 1, n_bytes, outf);
             free(id3v2tag);
-            if (owrite != imp3) {
+            if (written != n_bytes) {
                 encoder_progress_end(gf);
                 error_printf("Error writing ID3v2 tag \n");
                 return 1;

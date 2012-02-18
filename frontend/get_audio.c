@@ -455,7 +455,8 @@ fskip(FILE * fp, long offset, int whence)
                     if (read < 1) {
                         return -1;
                     }
-                    offset -= read;
+                    assert( read <= LONG_MAX );
+                    offset -= (long) read;
                 }
                 return 0;
             }
@@ -480,7 +481,8 @@ fskip(FILE * fp, long offset, int whence)
         if (read < 1) {
             return -1;
         }
-        offset -= read;
+        assert( read <= LONG_MAX );
+        offset -= (long) read;
     }
 
     return 0;
@@ -1175,18 +1177,22 @@ static int
 unpack_read_samples(const int samples_to_read, const int bytes_per_sample,
                     const int swap_order, int *sample_buffer, FILE * pcm_in)
 {
-    size_t  samples_read;
+    int     samples_read;
     int     i;
     int    *op;              /* output pointer */
     unsigned char *ip = (unsigned char *) sample_buffer; /* input pointer */
     const int b = sizeof(int) * 8;
 
+    {
+        size_t  samples_read_ = fread(sample_buffer, bytes_per_sample, samples_to_read, pcm_in);
+        assert( samples_read_ <= INT_MAX );
+        samples_read = (int) samples_read_;
+    }
+    op = sample_buffer + samples_read;
+
 #define GA_URS_IFLOOP( ga_urs_bps ) \
     if( bytes_per_sample == ga_urs_bps ) \
       for( i = samples_read * bytes_per_sample; (i -= bytes_per_sample) >=0;)
-
-    samples_read = fread(sample_buffer, bytes_per_sample, samples_to_read, pcm_in);
-    op = sample_buffer + samples_read;
 
     if (swap_order == 0) {
         GA_URS_IFLOOP(1)
@@ -1978,7 +1984,8 @@ lame_decode_initfile(FILE * fd, mp3data_struct * mp3data, int *enc_delay, int *e
                 global.in_id3v2_size = 0;
             }
         }
-        fskip(fd, len, SEEK_CUR);
+        assert( len <= LONG_MAX );
+        fskip(fd, (long) len, SEEK_CUR);
         len = 4;
         if (fread(&buf, 1, len, fd) != len)
             return -1;  /* failed */

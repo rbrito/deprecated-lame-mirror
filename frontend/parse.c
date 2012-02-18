@@ -385,7 +385,7 @@ lame_version_print(FILE * const fp)
         else
             fprintf(fp, "LAME version %s (%s)\n\n", v, u);
     else {
-        int const n_white_spaces = ((lenu+2) > lw ? 0 : lw-2-lenu);
+        int const n_white_spaces = (int)((lenu+2) > lw ? 0 : lw-2-lenu);
         /* text too long, wrap url into next line, right aligned */
         if (lenb > 0)
             fprintf(fp, "LAME %s version %s\n%*s(%s)\n\n", b, v, n_white_spaces, "", u);

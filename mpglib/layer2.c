@@ -144,14 +144,14 @@ II_step_one(PMPSTR mp, sideinfo_layer_II *si, struct frame *fr)
             short   step = alloc1->bits;
             unsigned char b0 = get_leq_8_bits(mp, step);
             unsigned char b1 = get_leq_8_bits(mp, step);
-            alloc1 += (1 << step);
+            alloc1 += ((size_t)1 << step);
             si->allocation[i][0] = b0;
             si->allocation[i][1] = b1;
         }
         for (i = jsbound; i < sblimit; ++i) {
             short   step = alloc1->bits;
             unsigned char b0 = get_leq_8_bits(mp, step);
-            alloc1 += (1 << step);
+            alloc1 += ((size_t)1 << step);
             si->allocation[i][0] = b0;
             si->allocation[i][1] = b0;
         }
@@ -168,7 +168,7 @@ II_step_one(PMPSTR mp, sideinfo_layer_II *si, struct frame *fr)
         for (i = 0; i < sblimit; ++i) {
             short   step = alloc1->bits;
             unsigned char b0 = get_leq_8_bits(mp, step);
-            alloc1 += (1 << step);
+            alloc1 += ((size_t)1 << step);
             si->allocation[i][0] = b0;
         }
         for (i = 0; i < sblimit; ++i) {
@@ -262,7 +262,7 @@ II_step_two(PMPSTR mp, sideinfo_layer_II* si, struct frame *fr, int gr, real fra
                 fraction[ch][0][i] = fraction[ch][1][i] = fraction[ch][2][i] = 0.0;
             }
         }
-        alloc1 += (1 << step);
+        alloc1 += ((size_t)1 << step);
     }
 
     for (i = jsbound; i < sblimit; i++) {
@@ -314,7 +314,7 @@ II_step_two(PMPSTR mp, sideinfo_layer_II* si, struct frame *fr, int gr, real fra
             fraction[0][0][i] = fraction[0][1][i] = fraction[0][2][i] = 0.0;
             fraction[1][0][i] = fraction[1][1][i] = fraction[1][2][i] = 0.0;
         }
-        alloc1 += (1 << step);
+        alloc1 += ((size_t)1 << step);
     }
     if (sblimit > fr->down_sample_sblimit) {
         sblimit = fr->down_sample_sblimit; 

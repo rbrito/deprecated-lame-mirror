@@ -126,7 +126,7 @@ lame_decode_init(void)
  */
 
 static int
-decode1_headersB_clipchoice(PMPSTR pmp, unsigned char *buffer, int len,
+decode1_headersB_clipchoice(PMPSTR pmp, unsigned char *buffer, size_t len,
                             char pcm_l_raw[], char pcm_r_raw[], mp3data_struct * mp3data,
                             int *enc_delay, int *enc_padding,
                             char *p, size_t psize, int decoded_sample_size,
@@ -143,10 +143,11 @@ decode1_headersB_clipchoice(PMPSTR pmp, unsigned char *buffer, int len,
     int     processed_samples; /* processed samples per channel */
     int     ret;
     int     i;
+    int const len_l = len < INT_MAX ? (int) len : INT_MAX;
+    int const psize_l = psize < INT_MAX ? (int) psize : INT_MAX;
 
     mp3data->header_parsed = 0;
-
-    ret = (*decodeMP3_ptr) (pmp, buffer, len, p, (int) psize, &processed_bytes);
+    ret = (*decodeMP3_ptr) (pmp, buffer, len_l, p, psize_l, &processed_bytes);
     /* three cases:  
      * 1. headers parsed, but data not complete
      *       pmp->header_parsed==1 
