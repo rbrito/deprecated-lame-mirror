@@ -11,6 +11,33 @@
 
 -- 
 
+2012-02-19 00:02  robert
+
+	* libmp3lame/: gain_analysis.c, machine.h:
+
+	rearranging gain analysis kernel table and calc loops to allow better code vectorization
+
+2012-02-18 13:08  robert
+
+	* frontend/get_audio.c, frontend/lame_main.c, frontend/main.c,
+	  frontend/parse.c, libmp3lame/mpglib_interface.c, mpglib/layer2.c:
+
+	removing VC11 x86-64 compiler warnings
+
+2012-02-14 14:24  robert
+
+	* libmp3lame/: VbrTag.c, bitstream.c, encoder.c, id3tag.c, lame.c,
+	  machine.h, mpglib_interface.c, psymodel.c, util.c, util.h:
+
+	some code refactorings
+
+2012-02-14 11:06  robert
+
+	* ChangeLog, doc/html/history.html (lame3_99), ChangeLog,
+	  doc/html/history.html:
+
+	updating history/changelog
+
 2012-02-11 12:11  robert
 
 	* frontend/get_audio.c:
