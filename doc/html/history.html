@@ -34,6 +34,25 @@ black = usability, portability, other
 <hr>
 <h3>LAME 3.100&nbsp; &nbsp;not yet released</h3>
 <ul>
+  <li>Rog&eacute;rio Brito
+    <ul>
+      <li>
+	Don't include the debian directory as one that is needed during
+	builds.  Patch taken from Debian's packaging of lame.
+      </li>
+      <li>
+	Resurrect Owen Taylor's code dated from 97-11-3 to properly deal
+	with GTK1.  This was transplanted back from aclocal.m4 with a patch
+	provided by Andres Mejia. This change makes it easy to regenerate
+	autotools' files with a simple invocation of <code>autoconf -vfi</code>.
+      </li>
+      <li>
+	Fix possible race condition causing build failures in libmp3lame.
+	Discovered in automated builds by the Debian project with patch
+	provided by Andres Mejia.
+      </li>
+    </ul>
+  </li>
 </ul>
 
 <br>
