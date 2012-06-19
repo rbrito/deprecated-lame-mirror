@@ -4,7 +4,7 @@ include $(top_srcdir)/Makefile.am.global
 
 .PHONY: test
 
-SUBDIRS = mpglib libmp3lame frontend Dll debian doc include misc dshow ACM \
+SUBDIRS = mpglib libmp3lame frontend Dll doc include misc dshow ACM \
 	mac macosx vc_solution
 
 CLEANFILES = testcase.new.mp3
@@ -22,6 +22,7 @@ EXTRA_DIST = \
 	STYLEGUIDE \
 	USAGE \
 	configMS.h \
+	debian \
 	lame.bat \
 	lame.spec.in \
 	lame.spec \

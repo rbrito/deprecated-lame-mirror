@@ -1164,7 +1164,6 @@ AC_CONFIG_FILES([Makefile \
 		 include/Makefile \
 		 Dll/Makefile \
 		 misc/Makefile \
-		 debian/Makefile \
 		 dshow/Makefile \
 		 ACM/Makefile \
 		 ACM/ADbg/Makefile \
