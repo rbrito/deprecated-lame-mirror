@@ -732,6 +732,8 @@ The minimum (and default) width is 75% of a band's width (which is 1/64th of the
 </p>
 <table cellpadding="4">
 <tr><td>-m m</td><td>mono</td></tr>
+<tr><td>-m l</td><td>get only the left channel of a stereo signal for a mono output</td></tr>
+<tr><td>-m r</td><td>get only the right channel of a stereo signal for a mono output</td></tr>
 <tr><td>-m s</td><td>forced L/R stereo</td></tr>
 <tr><td>-m j</td><td>automatic switch between L/R and M/S stereo</td></tr>
 <tr><td>-m f</td><td>forced mid/side stereo</td></tr>
@@ -1233,7 +1235,7 @@ encodings sound like static, try this first.
 <a name="Y"><span class="hilight">-Y</span></a> Ignore noise in sbf21, like CBR mode does
 </p>
 <p>
-Allows -V2, -V1 and -V0 to not to encode the highest frequencies accurately,
+Allows -V2, -V1 and -V0 to not encode the highest frequencies accurately,
 if doing so causes disproportional increases in bitrate. This is the same that
 CBR and ABR modes do.<br/>
 Due to the design of the MP3 format, to keep precision in the last scalefactor
@@ -1241,7 +1243,7 @@ band, an encoder needs to increase the precision in all the bands (not only in
 this one).<br/>
 The consequence is an increase of bitrate (+60kbps in some cases) compared to
 not keeping that precision. Generally, this band should allow for distortions,
-so using it shouldn't cause harm.
+so using this switch shouldn't cause harm.
 </p>
 
 <p>&nbsp;
