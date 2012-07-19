@@ -389,7 +389,7 @@ static int read_samples_mp3(lame_t gfp, FILE * musicin, short int mpg123pcm[2][1
 static SNDFILE *open_snd_file(lame_t gfp, char const *inPath);
 #endif
 static FILE *open_mpeg_file(lame_t gfp, char const *inPath, int *enc_delay, int *enc_padding);
-static FILE *open_wave_file(lame_t gfp, char const *inPath);
+static FILE *open_wave_file(lame_t gfp, char const *inPath, int *enc_delay, int *enc_padding);
 static int close_input_file(FILE * musicin);
 
 
@@ -619,7 +619,7 @@ init_infile(lame_t gfp, char const *inPath)
         }
 #endif
         if (global.snd_file == 0) {
-            global. music_in = open_wave_file(gfp, inPath);
+            global. music_in = open_wave_file(gfp, inPath, &enc_delay, &enc_padding);
         }
     }
     initPcmBuffer(&global.pcm32, sizeof(int));
@@ -1433,6 +1433,9 @@ parse_wave_header(lame_global_flags * gfp, FILE * sf)
         }
     }
     if (is_wav) {
+        if (format_tag == 0x0050 || format_tag == 0x0055) {
+            return sf_mp123;
+        }
         if (format_tag != WAVE_FORMAT_PCM && format_tag != WAVE_FORMAT_IEEE_FLOAT) {
             if (global_ui_config.silent < 10) {
                 error_printf("Unsupported data format: 0x%04X\n", format_tag);
@@ -1687,6 +1690,10 @@ parse_file_header(lame_global_flags * gfp, FILE * sf)
     if (type == WAV_ID_RIFF) {
         /* It's probably a WAV file */
         int const ret = parse_wave_header(gfp, sf);
+        if (ret == sf_mp123) {
+        	global. count_samples_carefully = 1;
+            return sf_mp123;
+        }
         if (ret > 0) {
             global. count_samples_carefully = 1;
             return sf_wave;
@@ -1719,8 +1726,39 @@ parse_file_header(lame_global_flags * gfp, FILE * sf)
 }
 
 
+static int
+open_mpeg_file_part2(lame_t gfp, FILE* musicin, char const *inPath, int *enc_delay, int *enc_padding)
+{
+#ifdef HAVE_MPGLIB
+    if (-1 == lame_decode_initfile(musicin, &global_decoder.mp3input_data, enc_delay, enc_padding)) {
+        if (global_ui_config.silent < 10) {
+            error_printf("Error reading headers in mp3 input file %s.\n", inPath);
+        }
+        close_input_file(musicin);
+        return 0;
+    }
+#endif
+    if (-1 == lame_set_num_channels(gfp, global_decoder.mp3input_data.stereo)) {
+        if (global_ui_config.silent < 10) {
+            error_printf("Unsupported number of channels: %ud\n",
+                         global_decoder.mp3input_data.stereo);
+        }
+        close_input_file(musicin);
+        return 0;
+    }
+    if (global_reader.input_samplerate == 0) {
+        (void) lame_set_in_samplerate(gfp, global_decoder.mp3input_data.samplerate);
+    }
+    else {
+        (void) lame_set_in_samplerate(gfp, global_reader.input_samplerate);
+    }
+    (void) lame_set_num_samples(gfp, global_decoder.mp3input_data.nsamp);
+    return 1;
+}
+
+
 static FILE *
-open_wave_file(lame_t gfp, char const *inPath)
+open_wave_file(lame_t gfp, char const *inPath, int *enc_delay, int *enc_padding)
 {
     FILE   *musicin;
 
@@ -1758,6 +1796,11 @@ open_wave_file(lame_t gfp, char const *inPath)
     }
     else {
         global_reader.input_format = parse_file_header(gfp, musicin);
+    }
+    if (global_reader.input_format == sf_mp123) {
+        if (open_mpeg_file_part2(gfp, musicin, inPath, enc_delay, enc_padding))
+            return musicin;
+        exit(2);
     }
     if (global_reader.input_format == sf_unknown) {
         exit(1);
@@ -1806,31 +1849,9 @@ open_mpeg_file(lame_t gfp, char const *inPath, int *enc_delay, int *enc_padding)
         return 0;
     }
 #endif
-#ifdef HAVE_MPGLIB
-    if (-1 == lame_decode_initfile(musicin, &global_decoder.mp3input_data, enc_delay, enc_padding)) {
-        if (global_ui_config.silent < 10) {
-            error_printf("Error reading headers in mp3 input file %s.\n", inPath);
-        }
-        close_input_file(musicin);
+    if ( 0 == open_mpeg_file_part2(gfp, musicin, inPath, enc_delay, enc_padding) ) {
         return 0;
     }
-#endif
-    if (-1 == lame_set_num_channels(gfp, global_decoder.mp3input_data.stereo)) {
-        if (global_ui_config.silent < 10) {
-            error_printf("Unsupported number of channels: %ud\n",
-                         global_decoder.mp3input_data.stereo);
-        }
-        close_input_file(musicin);
-        return 0;
-    }
-    if (global_reader.input_samplerate == 0) {
-        (void) lame_set_in_samplerate(gfp, global_decoder.mp3input_data.samplerate);
-    }
-    else {
-        (void) lame_set_in_samplerate(gfp, global_reader.input_samplerate);
-    }
-    (void) lame_set_num_samples(gfp, global_decoder.mp3input_data.nsamp);
-
     if (lame_get_num_samples(gfp) == MAX_U_32_NUM && musicin != stdin) {
         double  flen = lame_get_file_size(musicin); /* try to figure out num_samples */
         if (flen >= 0) {

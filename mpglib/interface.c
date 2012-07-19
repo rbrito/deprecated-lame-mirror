@@ -1,7 +1,7 @@
 /*
  * interface.c
  *
- * Copyright (C) 1999-2010 The L.A.M.E. project
+ * Copyright (C) 1999-2012 The L.A.M.E. project
  *
  * Initially written by Michael Hipp, see also AUTHORS and README.
  *  
@@ -472,7 +472,9 @@ decodeMP3_clipchoice(PMPSTR mp, unsigned char *in, int isize, char *out, int *do
              * to make sure we do not overflow buffer
              */
             int     size;
-            lame_report_fnc(mp->report_err, "hip: bitstream problem, resyncing skipping %d bytes...\n", bytes);
+            if (mp->fsizeold != -1) {
+                lame_report_fnc(mp->report_err, "hip: bitstream problem, resyncing skipping %d bytes...\n", bytes);
+            }
             mp->old_free_format = 0;
 #if 1
             /* FIXME: correct ??? */
