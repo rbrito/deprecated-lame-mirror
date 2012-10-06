@@ -639,6 +639,7 @@ long_help(const lame_global_flags * gfp, FILE * const fp, const char *ProgramNam
             "    --scale <arg>   scale input (multiply PCM data) by <arg>\n"
             "    --scale-l <arg> scale channel 0 (left) input (multiply PCM data) by <arg>\n"
             "    --scale-r <arg> scale channel 1 (right) input (multiply PCM data) by <arg>\n"
+            "    --gain <arg>    apply Gain adjustment in decibels, range -20.0 to +12.0\n"
 #if (defined HAVE_MPGLIB || defined AMIGA_MPEGA)
             "    --mp1input      input file is a MPEG Layer I   file\n"
             "    --mp2input      input file is a MPEG Layer II  file\n"
@@ -649,6 +650,7 @@ long_help(const lame_global_flags * gfp, FILE * const fp, const char *ProgramNam
             "    --nogapout <dir>\n"
             "                    output dir for gapless encoding (must precede --nogap)\n"
             "    --nogaptags     allow the use of VBR tags in gapless encoding\n"
+            "    --out-dir <dir> output dir, must exist\n"
            );
     fprintf(fp,
             "\n"
@@ -1596,6 +1598,15 @@ parse_args(lame_global_flags * gfp, int argc, char **argv,
                 T_ELIF("scale-r")
                     argUsed = 1;
                 (void) lame_set_scale_right(gfp, (float) atof(nextArg));
+
+                T_ELIF("gain")
+                    double gain = atof(nextArg);
+                    gain = gain > -20.f ? gain : -20.f;
+                    gain = gain < 12.f ? gain : 12.f;
+                    gain = pow(10.f, gain*0.05);
+                    argUsed = 1;
+                (void) lame_set_scale(gfp, (float) gain);
+
 
                 T_ELIF("noasm")
                     argUsed = 1;
