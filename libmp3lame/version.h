@@ -37,13 +37,13 @@
 # define LAME_MAJOR_VERSION      3 /* Major version number */
 # define LAME_MINOR_VERSION    100 /* Minor version number */
 # define LAME_TYPE_VERSION       0 /* 0:alpha 1:beta 2:release */
-# define LAME_PATCH_VERSION      1 /* Patch level */
+# define LAME_PATCH_VERSION      2 /* Patch level */
 # define LAME_ALPHA_VERSION     (LAME_TYPE_VERSION==0)
 # define LAME_BETA_VERSION      (LAME_TYPE_VERSION==1)
 # define LAME_RELEASE_VERSION   (LAME_TYPE_VERSION==2)
 
 # define PSY_MAJOR_VERSION       1 /* Major version number */
-# define PSY_MINOR_VERSION       0 /* Minor version number */
+# define PSY_MINOR_VERSION       1 /* Minor version number */
 # define PSY_ALPHA_VERSION       0 /* Set number if this is an alpha version, otherwise zero */
 # define PSY_BETA_VERSION        0 /* Set number if this is a beta version, otherwise zero */
 
