@@ -82,6 +82,15 @@ char   *strchr(), *strrchr();
 #define DEV_HELP(a) a
 #else
 #define DEV_HELP(a)
+#define lame_set_tune(a,b) (void)0
+#define lame_set_short_threshold(a,b,c) (void)0
+#define lame_set_maskingadjust(a,b) (void)0
+#define lame_set_maskingadjust_short(a,b) (void)0
+#define lame_set_ATHcurve(a,b) (void)0
+#define lame_set_preset_notune(a,b) (void)0
+#define lame_set_substep(a,b) (void)0
+#define lame_set_subblock_gain(a,b) (void)0
+#define lame_set_sfscale(a,b) (void)0
 #endif
 
 static int const lame_alpha_version_enabled = LAME_ALPHA_VERSION;
@@ -1418,14 +1427,39 @@ enum ID3TAG_MODE
 , ID3TAG_MODE_V2_ONLY
 };
 
+static int dev_only_with_arg(char const* str, char const* token, char const* nextArg, int* argIgnored, int* argUsed)
+{
+    if (0 != local_strcasecmp(token,str)) return 0;
+    *argUsed = 1;
+    if (internal_opts_enabled) return 1;
+    *argIgnored = 1;
+    error_printf("WARNING: ignoring developer-only switch --%s %s\n", token, nextArg);
+    return 0;
+}
+
+static int dev_only_without_arg(char const* str, char const* token, int* argIgnored)
+{
+    if (0 != local_strcasecmp(token,str)) return 0;
+    if (internal_opts_enabled) return 1;
+    *argIgnored = 1;
+    error_printf("WARNING: ignoring developer-only switch --%s\n", token);
+    return 0;
+}
+
 /* Ugly, NOT final version */
 
 #define T_IF(str)          if ( 0 == local_strcasecmp (token,str) ) {
 #define T_ELIF(str)        } else if ( 0 == local_strcasecmp (token,str) ) {
-#define T_ELIF_INTERNAL(str) } else if (internal_opts_enabled && (0 == local_strcasecmp (token,str)) ) {
 #define T_ELIF2(str1,str2) } else if ( 0 == local_strcasecmp (token,str1)  ||  0 == local_strcasecmp (token,str2) ) {
 #define T_ELSE             } else {
 #define T_END              }
+
+#define T_ELIF_INTERNAL(str) \
+                           } else if (dev_only_without_arg(str,token,&argIgnored)) {
+
+#define T_ELIF_INTERNAL_WITH_ARG(str) \
+                           } else if (dev_only_with_arg(str,token,nextArg,&argIgnored,&argUsed)) {
+
 
 int
 parse_args(lame_global_flags * gfp, int argc, char **argv,
@@ -1467,6 +1501,7 @@ parse_args(lame_global_flags * gfp, int argc, char **argv,
         char   *arg;
         char   *nextArg;
         int     argUsed;
+        int     argIgnored=0;
 
         token = argv[i];
         if (*token++ == '-') {
@@ -1546,16 +1581,6 @@ parse_args(lame_global_flags * gfp, int argc, char **argv,
                 T_ELIF("ogginput")
                     error_printf("sorry, vorbis support in LAME is deprecated.\n");
                 return -1;
-#if INTERNAL_OPTS
-                T_ELIF_INTERNAL("noshort")
-                    (void) lame_set_no_short_blocks(gfp, 1);
-
-                T_ELIF_INTERNAL("short")
-                    (void) lame_set_no_short_blocks(gfp, 0);
-
-                T_ELIF_INTERNAL("allshort")
-                    (void) lame_set_force_short_blocks(gfp, 1);
-#endif
 
                 T_ELIF("decode")
                     (void) lame_set_decode_only(gfp, 1);
@@ -1846,94 +1871,7 @@ parse_args(lame_global_flags * gfp, int argc, char **argv,
                     return -1;
                 }
                 lame_set_compression_ratio(gfp, (float) val);
-#if INTERNAL_OPTS
-                T_ELIF_INTERNAL("notemp")
-                    (void) lame_set_useTemporal(gfp, 0);
 
-                T_ELIF_INTERNAL("interch")
-                    argUsed = 1;
-                (void) lame_set_interChRatio(gfp, (float) atof(nextArg));
-
-                T_ELIF_INTERNAL("temporal-masking")
-                    argUsed = 1;
-                (void) lame_set_useTemporal(gfp, atoi(nextArg) ? 1 : 0);
-
-                T_ELIF_INTERNAL("nspsytune")
-                    ;
-
-                T_ELIF_INTERNAL("nssafejoint")
-                    lame_set_exp_nspsytune(gfp, lame_get_exp_nspsytune(gfp) | 2);
-
-                T_ELIF_INTERNAL("nsmsfix")
-                    argUsed = 1;
-                (void) lame_set_msfix(gfp, atof(nextArg));
-
-                T_ELIF_INTERNAL("ns-bass")
-                    argUsed = 1;
-                {
-                    double  d;
-                    int     k;
-                    d = atof(nextArg);
-                    k = (int) (d * 4);
-                    if (k < -32)
-                        k = -32;
-                    if (k > 31)
-                        k = 31;
-                    if (k < 0)
-                        k += 64;
-                    lame_set_exp_nspsytune(gfp, lame_get_exp_nspsytune(gfp) | (k << 2));
-                }
-
-                T_ELIF_INTERNAL("ns-alto")
-                    argUsed = 1;
-                {
-                    double  d;
-                    int     k;
-                    d = atof(nextArg);
-                    k = (int) (d * 4);
-                    if (k < -32)
-                        k = -32;
-                    if (k > 31)
-                        k = 31;
-                    if (k < 0)
-                        k += 64;
-                    lame_set_exp_nspsytune(gfp, lame_get_exp_nspsytune(gfp) | (k << 8));
-                }
-
-                T_ELIF_INTERNAL("ns-treble")
-                    argUsed = 1;
-                {
-                    double  d;
-                    int     k;
-                    d = atof(nextArg);
-                    k = (int) (d * 4);
-                    if (k < -32)
-                        k = -32;
-                    if (k > 31)
-                        k = 31;
-                    if (k < 0)
-                        k += 64;
-                    lame_set_exp_nspsytune(gfp, lame_get_exp_nspsytune(gfp) | (k << 14));
-                }
-
-                T_ELIF_INTERNAL("ns-sfb21")
-                    /*  to be compatible with Naoki's original code,
-                     *  ns-sfb21 specifies how to change ns-treble for sfb21 */
-                    argUsed = 1;
-                {
-                    double  d;
-                    int     k;
-                    d = atof(nextArg);
-                    k = (int) (d * 4);
-                    if (k < -32)
-                        k = -32;
-                    if (k > 31)
-                        k = 31;
-                    if (k < 0)
-                        k += 64;
-                    lame_set_exp_nspsytune(gfp, lame_get_exp_nspsytune(gfp) | (k << 20));
-                }
-#endif
                 /* some more GNU-ish options could be added
                  * brief         => few messages on screen (name, status report)
                  * o/output file => specifies output filename
@@ -2018,50 +1956,134 @@ parse_args(lame_global_flags * gfp, int argc, char **argv,
                 T_ELIF("out-dir")
                     /* FIXME: replace strcpy by safer strncpy */
                     strcpy(outDir, nextArg);
-                argUsed = 1;
+                    argUsed = 1;
 
                 T_ELIF("nogap")
                     nogap = 1;
 
                 T_ELIF("swap-channel")
                     global_reader.swap_channel = 1;
-#if INTERNAL_OPTS
-                T_ELIF_INTERNAL("tune") /*without helptext */
-                    argUsed = 1;
+
+                T_ELIF ("athaa-sensitivity")
+                    argUsed=1;
+                    lame_set_athaa_sensitivity(gfp, (float) atof(nextArg));
+
+                /* ---------------- lots of dead switches ---------------- */
+
+                T_ELIF_INTERNAL("noshort")
+                    (void) lame_set_no_short_blocks(gfp, 1);
+
+                T_ELIF_INTERNAL("short")
+                    (void) lame_set_no_short_blocks(gfp, 0);
+
+                T_ELIF_INTERNAL("allshort")
+                    (void) lame_set_force_short_blocks(gfp, 1);
+
+                T_ELIF_INTERNAL("notemp")
+                    (void) lame_set_useTemporal(gfp, 0);
+
+                T_ELIF_INTERNAL_WITH_ARG("interch")
+                    (void) lame_set_interChRatio(gfp, (float) atof(nextArg));
+
+                T_ELIF_INTERNAL_WITH_ARG("temporal-masking")
+                    (void) lame_set_useTemporal(gfp, atoi(nextArg) ? 1 : 0);
+
+                T_ELIF_INTERNAL("nspsytune")
+                    ;
+
+                T_ELIF_INTERNAL("nssafejoint")
+                    lame_set_exp_nspsytune(gfp, lame_get_exp_nspsytune(gfp) | 2);
+
+                T_ELIF_INTERNAL_WITH_ARG("nsmsfix")
+                    (void) lame_set_msfix(gfp, atof(nextArg));
+
+                T_ELIF_INTERNAL_WITH_ARG("ns-bass")
+                {
+                    double  d;
+                    int     k;
+                    d = atof(nextArg);
+                    k = (int) (d * 4);
+                    if (k < -32)
+                        k = -32;
+                    if (k > 31)
+                        k = 31;
+                    if (k < 0)
+                        k += 64;
+                    lame_set_exp_nspsytune(gfp, lame_get_exp_nspsytune(gfp) | (k << 2));
+                }
+                T_ELIF_INTERNAL_WITH_ARG("ns-alto")
+                {
+                    double  d;
+                    int     k;
+                    d = atof(nextArg);
+                    k = (int) (d * 4);
+                    if (k < -32)
+                        k = -32;
+                    if (k > 31)
+                        k = 31;
+                    if (k < 0)
+                        k += 64;
+                    lame_set_exp_nspsytune(gfp, lame_get_exp_nspsytune(gfp) | (k << 8));
+                }
+                T_ELIF_INTERNAL_WITH_ARG("ns-treble")
+                {
+                    double  d;
+                    int     k;
+                    d = atof(nextArg);
+                    k = (int) (d * 4);
+                    if (k < -32)
+                        k = -32;
+                    if (k > 31)
+                        k = 31;
+                    if (k < 0)
+                        k += 64;
+                    lame_set_exp_nspsytune(gfp, lame_get_exp_nspsytune(gfp) | (k << 14));
+                }
+                T_ELIF_INTERNAL_WITH_ARG("ns-sfb21")
+                    /*  to be compatible with Naoki's original code,
+                     *  ns-sfb21 specifies how to change ns-treble for sfb21 */
+                {
+                    double  d;
+                    int     k;
+                    d = atof(nextArg);
+                    k = (int) (d * 4);
+                    if (k < -32)
+                        k = -32;
+                    if (k > 31)
+                        k = 31;
+                    if (k < 0)
+                        k += 64;
+                    lame_set_exp_nspsytune(gfp, lame_get_exp_nspsytune(gfp) | (k << 20));
+                }
+                T_ELIF_INTERNAL_WITH_ARG("tune") /*without helptext */
                     lame_set_tune(gfp, (float) atof(nextArg));
 
-                T_ELIF_INTERNAL("shortthreshold") {
+                T_ELIF_INTERNAL_WITH_ARG("shortthreshold")
+                {
                     float   x, y;
                     int     n = sscanf(nextArg, "%f,%f", &x, &y);
                     if (n == 1) {
                         y = x;
                     }
-                    argUsed = 1;
                     (void) lame_set_short_threshold(gfp, x, y);
                 }
+                T_ELIF_INTERNAL_WITH_ARG("maskingadjust") /*without helptext */
+                    (void) lame_set_maskingadjust(gfp, (float) atof(nextArg));
 
-                T_ELIF_INTERNAL("maskingadjust") /*without helptext */
-                    argUsed = 1;
-                (void) lame_set_maskingadjust(gfp, (float) atof(nextArg));
+                T_ELIF_INTERNAL_WITH_ARG("maskingadjustshort") /*without helptext */
+                    (void) lame_set_maskingadjust_short(gfp, (float) atof(nextArg));
 
-                T_ELIF_INTERNAL("maskingadjustshort") /*without helptext */
-                    argUsed = 1;
-                (void) lame_set_maskingadjust_short(gfp, (float) atof(nextArg));
-
-                T_ELIF_INTERNAL("athcurve") /*without helptext */
-                    argUsed = 1;
-                (void) lame_set_ATHcurve(gfp, (float) atof(nextArg));
+                T_ELIF_INTERNAL_WITH_ARG("athcurve") /*without helptext */
+                    (void) lame_set_ATHcurve(gfp, (float) atof(nextArg));
 
                 T_ELIF_INTERNAL("no-preset-tune") /*without helptext */
                     (void) lame_set_preset_notune(gfp, 0);
 
-                T_ELIF_INTERNAL("substep")
-                    argUsed = 1;
-                (void) lame_set_substep(gfp, atoi(nextArg));
+                T_ELIF_INTERNAL_WITH_ARG("substep")
+                    (void) lame_set_substep(gfp, atoi(nextArg));
 
-                T_ELIF_INTERNAL("sbgain") /*without helptext */
-                    argUsed = 1;
-                (void) lame_set_subblock_gain(gfp, atoi(nextArg));
+                T_ELIF_INTERNAL_WITH_ARG("sbgain") /*without helptext */
+                    (void) lame_set_subblock_gain(gfp, atoi(nextArg));
 
                 T_ELIF_INTERNAL("sfscale") /*without helptext */
                     (void) lame_set_sfscale(gfp, 1);
@@ -2075,31 +2097,26 @@ parse_args(lame_global_flags * gfp, int argc, char **argv,
                 T_ELIF_INTERNAL("athshort")
                     (void) lame_set_ATHshort(gfp, 1);
 
-                T_ELIF_INTERNAL("athlower")
-                    argUsed = 1;
-                (void) lame_set_ATHlower(gfp, (float) atof(nextArg));
+                T_ELIF_INTERNAL_WITH_ARG("athlower")
+                    (void) lame_set_ATHlower(gfp, (float) atof(nextArg));
 
-                T_ELIF_INTERNAL("athtype")
-                    argUsed = 1;
-                (void) lame_set_ATHtype(gfp, atoi(nextArg));
+                T_ELIF_INTERNAL_WITH_ARG("athtype")
+                    (void) lame_set_ATHtype(gfp, atoi(nextArg));
 
-                T_ELIF_INTERNAL("athaa-type") /*  switch for developing, no DOCU */
-                    argUsed = 1; /* once was 1:Gaby, 2:Robert, 3:Jon, else:off */
-                lame_set_athaa_type(gfp, atoi(nextArg)); /* now: 0:off else:Jon */
-#endif
-                T_ELIF ("athaa-sensitivity")
-                    argUsed=1;
-                lame_set_athaa_sensitivity(gfp, (float) atof(nextArg));
+                T_ELIF_INTERNAL_WITH_ARG("athaa-type") /*  switch for developing, no DOCU */
+                    /* once was 1:Gaby, 2:Robert, 3:Jon, else:off */
+                    lame_set_athaa_type(gfp, atoi(nextArg)); /* now: 0:off else:Jon */
 
-                T_ELIF_INTERNAL("debug-file") /* switch for developing, no DOCU */
-                    argUsed = 1; /* file name to print debug info into */
-                {
+                T_ELIF_INTERNAL_WITH_ARG("debug-file") /* switch for developing, no DOCU */
+                    /* file name to print debug info into */
                     set_debug_file(nextArg);
-                }
 
                 T_ELSE {
-                    error_printf("%s: unrecognized option --%s\n", ProgramName, token);
-                    return -1;
+                    if (!argIgnored) {
+                        error_printf("%s: unrecognized option --%s\n", ProgramName, token);
+                        return -1;
+                    }
+                    argIgnored = 0;
                 }
                 T_END   i += argUsed;
 
