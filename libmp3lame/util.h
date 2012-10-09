@@ -193,6 +193,8 @@ extern  "C" {
         FLOAT   mld[Max(SBMAX_l,SBMAX_s)];
         FLOAT   bo_weight[Max(SBMAX_l,SBMAX_s)]; /* band weight long scalefactor bands, at transition */
         FLOAT   attack_threshold; /* short block tuning */
+        FLOAT   tab_tonality[9];
+        FLOAT   tab_average[9];
         int     s3ind[CBANDS][2];
         int     numlines[CBANDS];
         int     bm[Max(SBMAX_l,SBMAX_s)];

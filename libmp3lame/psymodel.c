@@ -226,6 +226,32 @@ psycho_loudness_approx(FLOAT const *energy, FLOAT const *eql_w)
     return loudness_power;
 }
 
+
+static FLOAT
+median(FLOAT a[], int N) /* note, re-arranges input data in array a */
+{
+    FLOAT tmp, v = 0;
+    int i, j;
+    int l = 1-1, r = N-1, k = (N+1)/2;
+    while (r > l) {
+        v = a[r], i = l-1, j = r;
+        for (;;) {
+            while (a[++i] < v);
+            while (a[--j] > v);
+            if (i >= j) break;
+            tmp = a[i];
+            a[i] = a[j];
+            a[j] = tmp;
+        }
+        tmp = a[i];
+        a[i] = a[r];
+        a[r] = tmp;
+        if (i >= k) r = i-1;
+        if (i <= k) l = l+1;
+    }
+    return a[k];
+}
+
 /* mask_add optimization */
 /* init the limit values used to avoid computing log in mask_add when it is not necessary */
 
@@ -279,6 +305,7 @@ static FLOAT ma_max_m;
 #define __9_30_dB 0.117489755
 #define _12_00_dB 0.063095734
 #define _12_30_dB 0.058884365
+#define _14_00_dB 0.039810717
 #define _16_00_dB 0.025118864
 #define _18_00_dB 0.015848931
 #define _24_00_dB 0.003981072
@@ -287,11 +314,6 @@ static FLOAT ma_max_m;
 static const FLOAT tab[] = 
 { __0_00_dB, __1_00_dB, __2_00_dB, __2_00_dB, __2_00_dB, __2_00_dB, __2_00_dB, __6_00_dB, __9_30_dB };
 
-static const FLOAT tab_s[] = 
-{ __3_00_dB, __4_00_dB, __5_00_dB, __5_00_dB, __5_00_dB, __5_00_dB, __5_00_dB, __9_00_dB, _12_30_dB };
-
-static const FLOAT tab_l[] = 
-{ __3_00_dB, __4_00_dB, __5_00_dB, __5_00_dB, __5_00_dB, __5_00_dB, __5_00_dB, __9_00_dB, _12_30_dB };
 
 static const int tab_mask_add_delta[] = { 2, 2, 2, 1, 1, 1, 0, 0, -1 };
 #define STATIC_ASSERT_EQUAL_DIMENSION(A,B) {extern char static_assert_##A[dimension_of(A) == dimension_of(B) ? 1 : -1];(void) static_assert_##A;}
@@ -580,8 +602,9 @@ pecalc_l(III_psy_ratio const *mr, FLOAT masking_lower)
 
 
 static void
-calc_energy(PsyConst_CB2SB_Ptr pcd, FLOAT const *fftenergy, FLOAT * eb, FLOAT * max, FLOAT * avg)
+calc_energy(PsyConst_CB2SB_Ptr pcd, FLOAT const *fftenergy, FLOAT * eb, FLOAT * max, FLOAT * avg, int opt)
 {
+    FLOAT tmp[1024];
     int const npart = pcd->npart;
     int     b, j, i;
 
@@ -591,6 +614,7 @@ calc_energy(PsyConst_CB2SB_Ptr pcd, FLOAT const *fftenergy, FLOAT * eb, FLOAT * 
         for (i = 0; i < numlines_b; ++i, ++j) {
             FLOAT const el = fftenergy[j];
             assert(el >= 0);
+            tmp[i] = el;
             ebb += el;
             if (m < el)
                 m = el;
@@ -598,6 +622,10 @@ calc_energy(PsyConst_CB2SB_Ptr pcd, FLOAT const *fftenergy, FLOAT * eb, FLOAT * 
         eb[b] = ebb;
         max[b] = m;
         avg[b] = ebb * pcd->rnumlines[b];
+        if (numlines_b >= 3 && numlines_b < opt) {
+            FLOAT mdn = median(tmp, numlines_b);
+            avg[b] = ((opt-numlines_b) * mdn + numlines_b * avg[b]) / opt;
+        }
         assert(pcd->rnumlines[b] >= 0);
         assert(ebb >= 0);
         assert(eb[b] >= 0);
@@ -983,6 +1011,7 @@ vbrpsy_skip_masking_s(lame_internal_flags * gfc, int chn, int sblock)
 static FLOAT
 vbrpsy_conv_lo_to_hi(PsyConst_CB2SB_Ptr pcd, FLOAT eb[CBANDS], unsigned char mask_idx[CBANDS + 2], int b, int k, int lo, int hi, int delta)
 {
+    FLOAT const *tab = pcd->tab_tonality;
     int u_k = k;
     int u_kk = lo;
     FLOAT ecb = pcd->s3[u_k] * eb[u_kk] * tab[mask_idx[u_kk]];
@@ -998,6 +1027,7 @@ vbrpsy_conv_lo_to_hi(PsyConst_CB2SB_Ptr pcd, FLOAT eb[CBANDS], unsigned char mas
 static FLOAT
 vbrpsy_conv_hi_to_lo(PsyConst_CB2SB_Ptr pcd, FLOAT eb[CBANDS], unsigned char mask_idx[CBANDS + 2], int b, int k, int lo, int hi, int delta)
 {
+    FLOAT const *tab = pcd->tab_tonality;
     int u_k = k + (hi-lo);
     int u_kk = hi;
     FLOAT ecb = pcd->s3[u_k] * eb[u_kk] * tab[mask_idx[u_kk]];
@@ -1013,6 +1043,7 @@ vbrpsy_conv_hi_to_lo(PsyConst_CB2SB_Ptr pcd, FLOAT eb[CBANDS], unsigned char mas
 static FLOAT
 vbrpsy_conv_mix_hilo(PsyConst_CB2SB_Ptr pcd, FLOAT eb[CBANDS], unsigned char mask_idx[CBANDS + 2], int b, int k, int lo, int hi, int delta)
 {
+    FLOAT const *tab = pcd->tab_tonality;
     int u_k = k + (b-lo);
     int u_kk = b;
     FLOAT ecb = pcd->s3[u_k] * eb[u_kk] * tab[mask_idx[u_kk]];
@@ -1039,24 +1070,30 @@ vbrpsy_mask_conv_max(PsyConst_CB2SB_Ptr pcd, FLOAT eb[CBANDS], unsigned char mas
     int const lo = pcd->s3ind[b][0];
     int const hi = pcd->s3ind[b][1];
     int const delta = mask_add_delta(mask_idx[b]);
+#if 1
+    FLOAT const ecb_u = vbrpsy_conv_lo_to_hi(pcd, eb, mask_idx, b, k, lo, hi, delta);
+    FLOAT const ecb_d = vbrpsy_conv_hi_to_lo(pcd, eb, mask_idx, b, k, lo, hi, delta);
+    return Max(ecb_u, ecb_d);
+#else
     FLOAT const ecb_u = vbrpsy_conv_lo_to_hi(pcd, eb, mask_idx, b, k, lo, hi, delta);
     FLOAT const ecb_d = vbrpsy_conv_hi_to_lo(pcd, eb, mask_idx, b, k, lo, hi, delta);
     FLOAT const ecb_m = vbrpsy_conv_mix_hilo(pcd, eb, mask_idx, b, k, lo, hi, delta);
     FLOAT const ecb = Max(ecb_u, ecb_d);
     return Max(ecb, ecb_m);
+#endif
 }
 
-static int
-vbrpsy_avg_mask_idx( PsyConst_CB2SB_Ptr pcd, unsigned char mask_idx[CBANDS + 2], int b)
+static FLOAT
+vbrpsy_avg_mask(PsyConst_CB2SB_Ptr pcd, unsigned char mask_idx[CBANDS + 2], int b)
 {
+    FLOAT const* t = pcd->tab_average;
     int     last = pcd->s3ind[b][1];
-    int     i = pcd->s3ind[b][0], dd_n = 1;
-    int     dd = mask_idx[i++];
-    while (i <= last) {
-        dd += mask_idx[i++];
-        dd_n += 1;
+    int     i = pcd->s3ind[b][0], dd_n = last - i + 1;
+    FLOAT   y = t[mask_idx[i]];
+    while (++i <= last) {
+        y += t[mask_idx[i]];
     }
-    return (1 + 2 * dd) / (2 * dd_n);
+    return y / dd_n;
 }
 
 
@@ -1068,20 +1105,14 @@ vbrpsy_compute_masking_s(lame_internal_flags * gfc, const FLOAT(*fftenergy_s)[HB
     PsyConst_CB2SB_Ptr pcd = &gfc->cd_psy->s;
     FLOAT   max[CBANDS], avg[CBANDS];
     int     j, b;
-    unsigned char mask_idx[CBANDS];
 
     memset(eb, 0, sizeof(eb[0])*CBANDS);
     memset(thr, 0, sizeof(thr[0])*CBANDS);
 
-    calc_energy(pcd, fftenergy_s[sblock], eb, max, avg);
-    calc_mask_index(pcd, max, avg, mask_idx);
-    for (b = 0; b < pcd->npart; b++) {
-      mask_idx[b] = Max(mask_idx[b], m_l_to_s[b]);
-    }
+    calc_energy(pcd, fftenergy_s[sblock], eb, max, avg, 0);
     for (j = b = 0; b < pcd->npart; b++) {
-        int     dd = vbrpsy_avg_mask_idx(pcd, mask_idx, b);
-        FLOAT   avg_mask = tab_s[dd];
-        FLOAT   ecb = avg_mask * vbrpsy_mask_conv_max(pcd, eb, mask_idx, b, j);
+        FLOAT   avg_mask = vbrpsy_avg_mask(pcd, m_l_to_s, b);
+        FLOAT   ecb = avg_mask * vbrpsy_mask_conv_max(pcd, eb, m_l_to_s, b, j);
 
         j += pcd->s3ind[b][1] - pcd->s3ind[b][0] + 1;
 
@@ -1116,7 +1147,7 @@ vbrpsy_compute_masking_s(lame_internal_flags * gfc, const FLOAT(*fftenergy_s)[HB
             }
         }
         {
-          FLOAT const masking_lower = gfc->sv_qnt.masking_lower;
+          FLOAT const masking_lower = pcd->masking_lower[b] * gfc->sv_qnt.masking_lower;
           if (masking_lower > 1) {
               thr[b] *= masking_lower;
           }
@@ -1126,7 +1157,6 @@ vbrpsy_compute_masking_s(lame_internal_flags * gfc, const FLOAT(*fftenergy_s)[HB
           if (masking_lower < 1) {
               thr[b] *= masking_lower;
           }
-          thr[b] *= pcd->masking_lower[b];
         }
         assert(thr[b] >= 0);
     }
@@ -1149,7 +1179,7 @@ vbrpsy_compute_masking_l(lame_internal_flags * gfc, const FLOAT fftenergy[HBLKSI
  /*********************************************************************
     *    Calculate the energy and the tonality of each partition.
  *********************************************************************/
-    calc_energy(pcd, fftenergy, eb, max, avg);
+    calc_energy(pcd, fftenergy, eb, max, avg, 1);
     calc_mask_index(pcd, max, avg, mask_idx);
 
  /*********************************************************************
@@ -1158,8 +1188,7 @@ vbrpsy_compute_masking_l(lame_internal_flags * gfc, const FLOAT fftenergy[HBLKSI
  ********************************************************************/
     k = 0;
     for (b = 0; b < pcd->npart; b++) {
-        int     dd = vbrpsy_avg_mask_idx(pcd, mask_idx, b);
-        FLOAT   avg_mask = tab_l[dd];
+        FLOAT   avg_mask = vbrpsy_avg_mask(pcd, mask_idx, b);
         FLOAT   ecb = avg_mask * vbrpsy_mask_conv_max(pcd, eb, mask_idx, b, k);
 
         k += pcd->s3ind[b][1] - pcd->s3ind[b][0] + 1;
@@ -1225,7 +1254,7 @@ vbrpsy_compute_masking_l(lame_internal_flags * gfc, const FLOAT fftenergy[HBLKSI
             }
         }
         {
-          FLOAT   masking_lower = gfc->sv_qnt.masking_lower;
+          FLOAT   masking_lower = pcd->masking_lower[b] * gfc->sv_qnt.masking_lower;
           if (masking_lower > 1) {
               thr[b] *= masking_lower;
           }
@@ -1235,7 +1264,6 @@ vbrpsy_compute_masking_l(lame_internal_flags * gfc, const FLOAT fftenergy[HBLKSI
           if (masking_lower < 1) {
               thr[b] *= masking_lower;
           }
-          thr[b] *= pcd->masking_lower[b];
         }
         assert(thr[b] >= 0);
     }
@@ -1439,7 +1467,7 @@ L3psycho_anal_vbr(lame_internal_flags * gfc,
             {   /* estimate tonality for short blocks from long block fft */
                 PsyConst_CB2SB_Ptr pcd = &gfc->cd_psy->l_to_s;
                 FLOAT   eb[CBANDS], max[CBANDS], avg[CBANDS];
-                calc_energy(pcd, fftenergy, eb, max, avg);
+                calc_energy(pcd, fftenergy, eb, max, avg, 1);
                 calc_mask_index(pcd, max, avg, mask_idx_l_to_s[chn]);
             }
         }
@@ -2166,5 +2194,19 @@ psymodel_init(lame_global_flags const *gfp)
     }
     memcpy(&gd->l_to_s, &gd->l, sizeof(gd->l_to_s));
     init_numline(&gd->l_to_s, sfreq, BLKSIZE, 192, SBMAX_s, gfc->scalefac_band.s);
+    {
+      static FLOAT const t1[] =
+      {__0_00_dB,__1_00_dB,__2_00_dB,__2_50_dB,__3_00_dB,__3_50_dB,__4_50_dB,__7_50_dB,_18_00_dB};
+      static FLOAT const t2[] = 
+      {__0_00_dB,__1_00_dB,__2_00_dB,__2_00_dB,__2_00_dB,__2_50_dB,__3_50_dB,__6_00_dB,__9_30_dB};
+      static FLOAT const t3[] = 
+      {__3_00_dB,__4_00_dB,__5_00_dB,__5_00_dB,__5_00_dB,__5_50_dB,__6_00_dB,__6_50_dB,__7_00_dB};
+      /* TODO: make them configurable by VBR q settings */
+      for (i = 0; i < 9; ++i) {
+        gd->l.tab_tonality[i] = t1[i];
+        gd->s.tab_tonality[i] = t2[i];
+        gd->l.tab_average[i] = gd->s.tab_average[i] = t3[i];
+      }
+    }
     return 0;
 }
