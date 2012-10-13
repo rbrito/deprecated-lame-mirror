@@ -296,6 +296,33 @@ unsigned short* toUtf16(char const* s)
 }
 #endif
 
+static int evaluateArgument(char const* token, char const* arg, char* _EndPtr)
+{
+    if (arg != 0 && arg != _EndPtr)
+        return 1;
+    error_printf("WARNING: argument missing for '%s'\n", token);
+    return 0;
+}
+
+static int getDoubleValue(char const* token, char const* arg, double* ptr)
+{
+    char *_EndPtr=0;
+    double d = strtod(arg, &_EndPtr);
+    if (ptr != 0) {
+        *ptr = d;
+    }
+    return evaluateArgument(token, arg, _EndPtr);
+}
+
+static int getIntValue(char const* token, char const* arg, int* ptr)
+{
+    char *_EndPtr=0;
+    long d = strtol(arg, &_EndPtr, 10);
+    if (ptr != 0) {
+        *ptr = d;
+    }
+    return evaluateArgument(token, arg, _EndPtr);
+}
 
 static int
 set_id3v2tag(lame_global_flags* gfp, int type, unsigned short const* str)
@@ -1480,7 +1507,6 @@ parse_args(lame_global_flags * gfp, int argc, char **argv,
     int     input_file = 0;  /* set to 1 if we parse an input file name  */
     int     i;
     int     autoconvert = 0;
-    double  val;
     int     nogap = 0;
     int     nogap_tags = 0;  /* set to 1 to use VBR tags in NOGAP mode */
     const char *ProgramName = argv[0];
@@ -1527,11 +1553,14 @@ parse_args(lame_global_flags * gfp, int argc, char **argv,
                     strncpy(outPath, argv[i], PATH_MAX + 1);
             }
             if (*token == '-') { /* GNU style */
+                double  double_value = 0;
+                int     int_value = 0;
                 token++;
 
                 T_IF("resample")
-                    argUsed = 1;
-                (void) lame_set_out_samplerate(gfp, resample_rate(atof(nextArg)));
+                    argUsed = getDoubleValue(token, nextArg, &double_value);
+                    if (argUsed) 
+                        (void) lame_set_out_samplerate(gfp, resample_rate(double_value));
 
                 T_ELIF("vbr-old")
                     lame_set_VBR(gfp, vbr_rh);
@@ -1547,26 +1576,28 @@ parse_args(lame_global_flags * gfp, int argc, char **argv,
 
                 T_ELIF("abr")
                     /* values larger than 8000 are bps (like Fraunhofer), so it's strange to get 320000 bps MP3 when specifying 8000 bps MP3 */
-                    int m = atoi(nextArg);
-                    argUsed = 1;
-                    if (m >= 8000) {
-                        m = (m + 500) / 1000;
+                    argUsed = getIntValue(token, nextArg, &int_value);
+                    if (argUsed) {
+                        if (int_value >= 8000) {
+                            int_value = (int_value + 500) / 1000;
+                        }
+                        if (int_value > 320) {
+                            int_value = 320;
+                        }
+                        if (int_value < 8) {
+                            int_value = 8;
+                        }
+                        lame_set_VBR(gfp, vbr_abr);
+                        lame_set_VBR_mean_bitrate_kbps(gfp, int_value);
                     }
-                    if (m > 320) {
-                        m = 320;
-                    }
-                    if (m < 8) {
-                        m = 8;
-                    }
-                    lame_set_VBR(gfp, vbr_abr);
-                    lame_set_VBR_mean_bitrate_kbps(gfp, m);
 
                 T_ELIF("r3mix")
                     lame_set_preset(gfp, R3MIX);
 
                 T_ELIF("bitwidth")
-                    argUsed = 1;
-                    global_raw_pcm.in_bitwidth = atoi(nextArg);
+                    argUsed = getIntValue(token, nextArg, &int_value);
+                    if (argUsed) 
+                        global_raw_pcm.in_bitwidth = int_value;
                 
                 T_ELIF("signed")
                     global_raw_pcm.in_signed = 1;
@@ -1600,9 +1631,11 @@ parse_args(lame_global_flags * gfp, int argc, char **argv,
                     global_writer.flush_write = 1;
 
                 T_ELIF("decode-mp3delay")
-                    global_decoder.mp3_delay = atoi(nextArg);
-                    global_decoder.mp3_delay_set = 1;
-                    argUsed = 1;
+                    argUsed = getIntValue(token, nextArg, &int_value);
+                    if (argUsed) {
+                        global_decoder.mp3_delay = int_value;
+                        global_decoder.mp3_delay_set = 1;
+                    }
 
                 T_ELIF("nores")
                     lame_set_disable_reservoir(gfp, 1);
@@ -1624,25 +1657,29 @@ parse_args(lame_global_flags * gfp, int argc, char **argv,
                 }
 
                 T_ELIF("scale")
-                    argUsed = 1;
-                (void) lame_set_scale(gfp, (float) atof(nextArg));
+                    argUsed = getDoubleValue(token, nextArg, &double_value);
+                    if (argUsed)
+                        (void) lame_set_scale(gfp, (float) double_value);
 
                 T_ELIF("scale-l")
-                    argUsed = 1;
-                (void) lame_set_scale_left(gfp, (float) atof(nextArg));
+                    argUsed = getDoubleValue(token, nextArg, &double_value);
+                    if (argUsed)
+                        (void) lame_set_scale_left(gfp, (float) double_value);
 
                 T_ELIF("scale-r")
-                    argUsed = 1;
-                (void) lame_set_scale_right(gfp, (float) atof(nextArg));
+                    argUsed = getDoubleValue(token, nextArg, &double_value);
+                    if (argUsed)
+                        (void) lame_set_scale_right(gfp, (float) double_value);
 
                 T_ELIF("gain")
-                    double gain = atof(nextArg);
-                    gain = gain > -20.f ? gain : -20.f;
-                    gain = gain < 12.f ? gain : 12.f;
-                    gain = pow(10.f, gain*0.05);
-                    argUsed = 1;
-                (void) lame_set_scale(gfp, (float) gain);
-
+                    argUsed = getDoubleValue(token, nextArg, &double_value);
+                    if (argUsed) {
+                        double gain = double_value;
+                        gain = gain > -20.f ? gain : -20.f;
+                        gain = gain < 12.f ? gain : 12.f;
+                        gain = pow(10.f, gain*0.05);
+                        (void) lame_set_scale(gfp, (float) gain);
+                    }
 
                 T_ELIF("noasm")
                     argUsed = 1;
@@ -1681,12 +1718,9 @@ parse_args(lame_global_flags * gfp, int argc, char **argv,
 
 #if defined(__OS2__) || defined(WIN32)
                 T_ELIF("priority")
-                char   *endptr;
-                int     priority = (int) strtol(nextArg, &endptr, 10);
-                if (endptr != nextArg) {
-                    argUsed = 1;
-                }
-                setProcessPriority(priority);
+                    argUsed = getIntValue(token, nextArg, &int_value);
+                    if (argUsed)
+                        setProcessPriority(int_value);
 #endif
 
                 /* options for ID3 tag */
@@ -1813,12 +1847,12 @@ parse_args(lame_global_flags * gfp, int argc, char **argv,
                     id3tag_pad_v2(gfp);
 
                 T_ELIF("pad-id3v2-size")
-                    int n = atoi(nextArg);
-                    n = n <= 128000 ? n : 128000;
-                    n = n >= 0      ? n : 0;
-                    id3tag_set_pad(gfp, n);
-                    argUsed = 1;
-
+                    argUsed = getIntValue(token, nextArg, &int_value);
+                    if (argUsed) {
+                        int_value = int_value <= 128000 ? int_value : 128000;
+                        int_value = int_value >= 0      ? int_value : 0;
+                        id3tag_set_pad(gfp, int_value);
+                    }
 
                 T_ELIF("genre-list")
                     id3tag_genre_list(genre_list_handler, NULL);
@@ -1826,65 +1860,69 @@ parse_args(lame_global_flags * gfp, int argc, char **argv,
 
 
                 T_ELIF("lowpass")
-                    val = atof(nextArg);
-                argUsed = 1;
-                if (val < 0) {
-                    lame_set_lowpassfreq(gfp, -1);
-                }
-                else {
-                    /* useful are 0.001 kHz...50 kHz, 50 Hz...50000 Hz */
-                    if (val < 0.001 || val > 50000.) {
-                        error_printf("Must specify lowpass with --lowpass freq, freq >= 0.001 kHz\n");
-                        return -1;
-                    }
-                    lame_set_lowpassfreq(gfp, (int) (val * (val < 50. ? 1.e3 : 1.e0) + 0.5));
-                }
+                    argUsed = getDoubleValue(token, nextArg, &double_value);
+                    if (argUsed)
+                        if (double_value < 0) {
+                            lame_set_lowpassfreq(gfp, -1);
+                        }
+                        else {
+                            /* useful are 0.001 kHz...50 kHz, 50 Hz...50000 Hz */
+                            if (double_value < 0.001 || double_value > 50000.) {
+                                error_printf("Must specify lowpass with --lowpass freq, freq >= 0.001 kHz\n");
+                                return -1;
+                            }
+                            lame_set_lowpassfreq(gfp, (int) (double_value * (double_value < 50. ? 1.e3 : 1.e0) + 0.5));
+                        }
                 
                 T_ELIF("lowpass-width")
-                    val = atof(nextArg);
-                argUsed = 1;
-                /* useful are 0.001 kHz...16 kHz, 16 Hz...50000 Hz */
-                if (val < 0.001 || val > 50000.) {
-                    error_printf
-                        ("Must specify lowpass width with --lowpass-width freq, freq >= 0.001 kHz\n");
-                    return -1;
-                }
-                lame_set_lowpasswidth(gfp, (int) (val * (val < 16. ? 1.e3 : 1.e0) + 0.5));
+                    argUsed = getDoubleValue(token, nextArg, &double_value);
+                    if (argUsed) {
+                        /* useful are 0.001 kHz...16 kHz, 16 Hz...50000 Hz */
+                        if (double_value < 0.001 || double_value > 50000.) {
+                            error_printf
+                                ("Must specify lowpass width with --lowpass-width freq, freq >= 0.001 kHz\n");
+                            return -1;
+                        }
+                        lame_set_lowpasswidth(gfp, (int) (double_value * (double_value < 16. ? 1.e3 : 1.e0) + 0.5));
+                    }
 
                 T_ELIF("highpass")
-                    val = atof(nextArg);
-                argUsed = 1;
-                if (val < 0.0) {
-                    lame_set_highpassfreq(gfp, -1);
-                }
-                else {
-                    /* useful are 0.001 kHz...16 kHz, 16 Hz...50000 Hz */
-                    if (val < 0.001 || val > 50000.) {
-                        error_printf("Must specify highpass with --highpass freq, freq >= 0.001 kHz\n");
-                        return -1;
-                    }
-                    lame_set_highpassfreq(gfp, (int) (val * (val < 16. ? 1.e3 : 1.e0) + 0.5));
-                }
+                    argUsed = getDoubleValue(token, nextArg, &double_value);
+                    if (argUsed)
+                        if (double_value < 0.0) {
+                            lame_set_highpassfreq(gfp, -1);
+                        }
+                        else {
+                            /* useful are 0.001 kHz...16 kHz, 16 Hz...50000 Hz */
+                            if (double_value < 0.001 || double_value > 50000.) {
+                                error_printf("Must specify highpass with --highpass freq, freq >= 0.001 kHz\n");
+                                return -1;
+                            }
+                            lame_set_highpassfreq(gfp, (int) (double_value * (double_value < 16. ? 1.e3 : 1.e0) + 0.5));
+                        }
                 
                 T_ELIF("highpass-width")
-                    val = atof(nextArg);
-                argUsed = 1;
-                /* useful are 0.001 kHz...16 kHz, 16 Hz...50000 Hz */
-                if (val < 0.001 || val > 50000.) {
-                    error_printf
-                        ("Must specify highpass width with --highpass-width freq, freq >= 0.001 kHz\n");
-                    return -1;
-                }
-                lame_set_highpasswidth(gfp, (int) val);
+                    argUsed = getDoubleValue(token, nextArg, &double_value);
+                    if (argUsed) {
+                        /* useful are 0.001 kHz...16 kHz, 16 Hz...50000 Hz */
+                        if (double_value < 0.001 || double_value > 50000.) {
+                            error_printf
+                                ("Must specify highpass width with --highpass-width freq, freq >= 0.001 kHz\n");
+                            return -1;
+                        }
+                        lame_set_highpasswidth(gfp, (int) double_value);
+                    }
 
                 T_ELIF("comp")
-                    argUsed = 1;
-                val = atof(nextArg);
-                if (val < 1.0) {
-                    error_printf("Must specify compression ratio >= 1.0\n");
-                    return -1;
-                }
-                lame_set_compression_ratio(gfp, (float) val);
+                    argUsed = getDoubleValue(token, nextArg, &double_value);
+                    if (argUsed)
+                        if (double_value < 1.0) {
+                            error_printf("Must specify compression ratio >= 1.0\n");
+                            return -1;
+                        }
+                        else {
+                            lame_set_compression_ratio(gfp, (float) double_value);
+                        }
 
                 /* some more GNU-ish options could be added
                  * brief         => few messages on screen (name, status report)
@@ -1956,8 +1994,9 @@ parse_args(lame_global_flags * gfp, int argc, char **argv,
                 }
 
                 T_ELIF("disptime")
-                    argUsed = 1;
-                    global_ui_config.update_interval = (float) atof(nextArg);
+                    argUsed = getDoubleValue(token, nextArg, &double_value);
+                    if (argUsed)
+                        global_ui_config.update_interval = (float) double_value;
 
                 T_ELIF("nogaptags")
                     nogap_tags = 1;
@@ -1979,8 +2018,9 @@ parse_args(lame_global_flags * gfp, int argc, char **argv,
                     global_reader.swap_channel = 1;
 
                 T_ELIF ("athaa-sensitivity")
-                    argUsed=1;
-                    lame_set_athaa_sensitivity(gfp, (float) atof(nextArg));
+                    argUsed = getDoubleValue(token, nextArg, &double_value);
+                    if (argUsed)
+                        lame_set_athaa_sensitivity(gfp, (float) double_value);
 
                 /* ---------------- lots of dead switches ---------------- */
 
@@ -1997,10 +2037,14 @@ parse_args(lame_global_flags * gfp, int argc, char **argv,
                     (void) lame_set_useTemporal(gfp, 0);
 
                 T_ELIF_INTERNAL_WITH_ARG("interch")
-                    (void) lame_set_interChRatio(gfp, (float) atof(nextArg));
+                    argUsed = getDoubleValue(token, nextArg, &double_value);
+                    if (argUsed)
+                        (void) lame_set_interChRatio(gfp, (float) double_value);
 
                 T_ELIF_INTERNAL_WITH_ARG("temporal-masking")
-                    (void) lame_set_useTemporal(gfp, atoi(nextArg) ? 1 : 0);
+                    argUsed = getIntValue(token, nextArg, &int_value);
+                    if (argUsed) 
+                        (void) lame_set_useTemporal(gfp, int_value ? 1 : 0);
 
                 T_ELIF_INTERNAL("nspsytune")
                     ;
@@ -2009,68 +2053,68 @@ parse_args(lame_global_flags * gfp, int argc, char **argv,
                     lame_set_exp_nspsytune(gfp, lame_get_exp_nspsytune(gfp) | 2);
 
                 T_ELIF_INTERNAL_WITH_ARG("nsmsfix")
-                    (void) lame_set_msfix(gfp, atof(nextArg));
+                    argUsed = getDoubleValue(token, nextArg, &double_value);
+                    if (argUsed)
+                        (void) lame_set_msfix(gfp, double_value);
 
                 T_ELIF_INTERNAL_WITH_ARG("ns-bass")
-                {
-                    double  d;
-                    int     k;
-                    d = atof(nextArg);
-                    k = (int) (d * 4);
-                    if (k < -32)
-                        k = -32;
-                    if (k > 31)
-                        k = 31;
-                    if (k < 0)
-                        k += 64;
-                    lame_set_exp_nspsytune(gfp, lame_get_exp_nspsytune(gfp) | (k << 2));
-                }
+                    argUsed = getDoubleValue(token, nextArg, &double_value);
+                    if (argUsed) {
+                        int     k = (int) (double_value * 4);
+                        if (k < -32)
+                            k = -32;
+                        if (k > 31)
+                            k = 31;
+                        if (k < 0)
+                            k += 64;
+                        lame_set_exp_nspsytune(gfp, lame_get_exp_nspsytune(gfp) | (k << 2));
+                    }
+
                 T_ELIF_INTERNAL_WITH_ARG("ns-alto")
-                {
-                    double  d;
-                    int     k;
-                    d = atof(nextArg);
-                    k = (int) (d * 4);
-                    if (k < -32)
-                        k = -32;
-                    if (k > 31)
-                        k = 31;
-                    if (k < 0)
-                        k += 64;
-                    lame_set_exp_nspsytune(gfp, lame_get_exp_nspsytune(gfp) | (k << 8));
-                }
+                    argUsed = getDoubleValue(token, nextArg, &double_value);
+                    if (argUsed) {
+                        int     k = (int) (double_value * 4);
+                        if (k < -32)
+                            k = -32;
+                        if (k > 31)
+                            k = 31;
+                        if (k < 0)
+                            k += 64;
+                        lame_set_exp_nspsytune(gfp, lame_get_exp_nspsytune(gfp) | (k << 8));
+                    }
+
                 T_ELIF_INTERNAL_WITH_ARG("ns-treble")
-                {
-                    double  d;
-                    int     k;
-                    d = atof(nextArg);
-                    k = (int) (d * 4);
-                    if (k < -32)
-                        k = -32;
-                    if (k > 31)
-                        k = 31;
-                    if (k < 0)
-                        k += 64;
-                    lame_set_exp_nspsytune(gfp, lame_get_exp_nspsytune(gfp) | (k << 14));
-                }
+                    argUsed = getDoubleValue(token, nextArg, &double_value);
+                    if (argUsed) {
+                        int     k = (int) (double_value * 4);
+                        if (k < -32)
+                            k = -32;
+                        if (k > 31)
+                            k = 31;
+                        if (k < 0)
+                            k += 64;
+                        lame_set_exp_nspsytune(gfp, lame_get_exp_nspsytune(gfp) | (k << 14));
+                    }
+
                 T_ELIF_INTERNAL_WITH_ARG("ns-sfb21")
                     /*  to be compatible with Naoki's original code,
                      *  ns-sfb21 specifies how to change ns-treble for sfb21 */
-                {
-                    double  d;
-                    int     k;
-                    d = atof(nextArg);
-                    k = (int) (d * 4);
-                    if (k < -32)
-                        k = -32;
-                    if (k > 31)
-                        k = 31;
-                    if (k < 0)
-                        k += 64;
-                    lame_set_exp_nspsytune(gfp, lame_get_exp_nspsytune(gfp) | (k << 20));
-                }
+                    argUsed = getDoubleValue(token, nextArg, &double_value);
+                    if (argUsed) {
+                        int     k = (int) (double_value * 4);
+                        if (k < -32)
+                            k = -32;
+                        if (k > 31)
+                            k = 31;
+                        if (k < 0)
+                            k += 64;
+                        lame_set_exp_nspsytune(gfp, lame_get_exp_nspsytune(gfp) | (k << 20));
+                    }
+
                 T_ELIF_INTERNAL_WITH_ARG("tune") /*without helptext */
-                    lame_set_tune(gfp, (float) atof(nextArg));
+                    argUsed = getDoubleValue(token, nextArg, &double_value);
+                    if (argUsed)
+                        lame_set_tune(gfp, (float) double_value);
 
                 T_ELIF_INTERNAL_WITH_ARG("shortthreshold")
                 {
@@ -2082,22 +2126,32 @@ parse_args(lame_global_flags * gfp, int argc, char **argv,
                     (void) lame_set_short_threshold(gfp, x, y);
                 }
                 T_ELIF_INTERNAL_WITH_ARG("maskingadjust") /*without helptext */
-                    (void) lame_set_maskingadjust(gfp, (float) atof(nextArg));
+                    argUsed = getDoubleValue(token, nextArg, &double_value);
+                    if (argUsed)
+                        (void) lame_set_maskingadjust(gfp, (float) double_value);
 
                 T_ELIF_INTERNAL_WITH_ARG("maskingadjustshort") /*without helptext */
-                    (void) lame_set_maskingadjust_short(gfp, (float) atof(nextArg));
+                    argUsed = getDoubleValue(token, nextArg, &double_value);
+                    if (argUsed)
+                        (void) lame_set_maskingadjust_short(gfp, (float) double_value);
 
                 T_ELIF_INTERNAL_WITH_ARG("athcurve") /*without helptext */
-                    (void) lame_set_ATHcurve(gfp, (float) atof(nextArg));
+                    argUsed = getDoubleValue(token, nextArg, &double_value);
+                    if (argUsed)
+                        (void) lame_set_ATHcurve(gfp, (float) double_value);
 
                 T_ELIF_INTERNAL("no-preset-tune") /*without helptext */
                     (void) lame_set_preset_notune(gfp, 0);
 
                 T_ELIF_INTERNAL_WITH_ARG("substep")
-                    (void) lame_set_substep(gfp, atoi(nextArg));
+                    argUsed = getIntValue(token, nextArg, &int_value);
+                    if (argUsed)
+                        (void) lame_set_substep(gfp, int_value);
 
                 T_ELIF_INTERNAL_WITH_ARG("sbgain") /*without helptext */
-                    (void) lame_set_subblock_gain(gfp, atoi(nextArg));
+                    argUsed = getIntValue(token, nextArg, &int_value);
+                    if (argUsed) 
+                        (void) lame_set_subblock_gain(gfp, int_value);
 
                 T_ELIF_INTERNAL("sfscale") /*without helptext */
                     (void) lame_set_sfscale(gfp, 1);
@@ -2112,14 +2166,20 @@ parse_args(lame_global_flags * gfp, int argc, char **argv,
                     (void) lame_set_ATHshort(gfp, 1);
 
                 T_ELIF_INTERNAL_WITH_ARG("athlower")
-                    (void) lame_set_ATHlower(gfp, (float) atof(nextArg));
+                    argUsed = getDoubleValue(token, nextArg, &double_value);
+                    if (argUsed)
+                        (void) lame_set_ATHlower(gfp, (float) double_value);
 
                 T_ELIF_INTERNAL_WITH_ARG("athtype")
-                    (void) lame_set_ATHtype(gfp, atoi(nextArg));
+                    argUsed = getIntValue(token, nextArg, &int_value);
+                    if (argUsed)
+                        (void) lame_set_ATHtype(gfp, int_value);
 
                 T_ELIF_INTERNAL_WITH_ARG("athaa-type") /*  switch for developing, no DOCU */
                     /* once was 1:Gaby, 2:Robert, 3:Jon, else:off */
-                    lame_set_athaa_type(gfp, atoi(nextArg)); /* now: 0:off else:Jon */
+                    argUsed = getIntValue(token, nextArg, &int_value);
+                    if (argUsed)
+                        (void) lame_set_athaa_type(gfp, int_value); /* now: 0:off else:Jon */
 
                 T_ELIF_INTERNAL_WITH_ARG("debug-file") /* switch for developing, no DOCU */
                     /* file name to print debug info into */
@@ -2137,6 +2197,8 @@ parse_args(lame_global_flags * gfp, int argc, char **argv,
             }
             else {
                 while ((c = *token++) != '\0') {
+                    double double_value = 0;
+                    int int_value = 0;
                     arg = *token ? token : nextArg;
                     switch (c) {
                     case 'm':
@@ -2179,11 +2241,13 @@ parse_args(lame_global_flags * gfp, int argc, char **argv,
                         break;
 
                     case 'V':
-                        argUsed = 1;
-                        /* to change VBR default look in lame.h */
-                        if (lame_get_VBR(gfp) == vbr_off)
-                            lame_set_VBR(gfp, vbr_default);
-                        lame_set_VBR_quality(gfp, (float)atof(arg));
+                        argUsed = getDoubleValue("V", arg, &double_value);
+                        if (argUsed) {
+                            /* to change VBR default look in lame.h */
+                            if (lame_get_VBR(gfp) == vbr_off)
+                                lame_set_VBR(gfp, vbr_default);
+                            lame_set_VBR_quality(gfp, (float) double_value);
+                        }
                         break;
                     case 'v':
                         /* to change VBR default look in lame.h */
@@ -2192,8 +2256,9 @@ parse_args(lame_global_flags * gfp, int argc, char **argv,
                         break;
 
                     case 'q':
-                        argUsed = 1;
-                        (void) lame_set_quality(gfp, atoi(arg));
+                        argUsed = getIntValue("q", arg, &int_value);
+                        if (argUsed) 
+                            (void) lame_set_quality(gfp, int_value);
                         break;
                     case 'f':
                         (void) lame_set_quality(gfp, 7);
@@ -2203,20 +2268,25 @@ parse_args(lame_global_flags * gfp, int argc, char **argv,
                         break;
 
                     case 's':
-                        argUsed = 1;
-                        val = atof(arg);
-                        val = (int) (val * (val <= 192 ? 1.e3 : 1.e0) + 0.5);
-                        global_reader.input_samplerate = (int)val;
-                        (void) lame_set_in_samplerate(gfp, (int)val);
+                        argUsed = getDoubleValue("s", arg, &double_value);
+                        if (argUsed) {
+                            double_value = (int) (double_value * (double_value <= 192 ? 1.e3 : 1.e0) + 0.5);
+                            global_reader.input_samplerate = (int)double_value;
+                            (void) lame_set_in_samplerate(gfp, (int)double_value);
+                        }
                         break;
                     case 'b':
-                        argUsed = 1;
-                        lame_set_brate(gfp, atoi(arg));
-                        lame_set_VBR_min_bitrate_kbps(gfp, lame_get_brate(gfp));
+                        argUsed = getIntValue("b", arg, &int_value);
+                        if (argUsed) {
+                            lame_set_brate(gfp, int_value);
+                            lame_set_VBR_min_bitrate_kbps(gfp, lame_get_brate(gfp));
+                        }
                         break;
                     case 'B':
-                        argUsed = 1;
-                        lame_set_VBR_max_bitrate_kbps(gfp, atoi(arg));
+                        argUsed = getIntValue("B", arg, &int_value);
+                        if (argUsed) {
+                            lame_set_VBR_max_bitrate_kbps(gfp, int_value);
+                        }
                         break;
                     case 'F':
                         lame_set_VBR_hard_min(gfp, 1);
