@@ -1497,7 +1497,7 @@ parse_args(lame_global_flags * gfp, int argc, char **argv,
     inPath[0] = '\0';
     outPath[0] = '\0';
     /* turn on display options. user settings may turn them off below */
-    global_ui_config.silent = 0;
+    global_ui_config.silent = 0; /* default */
     global_ui_config.brhist = 1;
     global_decoder.mp3_delay = 0;
     global_decoder.mp3_delay_set = 0;
@@ -2373,8 +2373,11 @@ parse_args(lame_global_flags * gfp, int argc, char **argv,
         return -1;
     }
 
-    if (inPath[0] == '-')
-        global_ui_config.silent = (global_ui_config.silent <= 1 ? 1 : global_ui_config.silent);
+    if (inPath[0] == '-') {
+        if (global_ui_config.silent == 0) { /* user didn't overrule default behaviour */
+            global_ui_config.silent = 1;
+        }
+    }
 #ifdef WIN32
     else
         dosToLongFileName(inPath);
