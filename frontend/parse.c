@@ -1743,8 +1743,11 @@ parse_args(lame_global_flags * gfp, int argc, char **argv,
                     }
 
                 T_ELIF("tg")
-                    int ret = id3_tag(gfp, 'g', id3_tenc, nextArg);
+                    int ret = 0;
                     argUsed = 1;
+                    if (nextArg != 0 && strlen(nextArg) > 0) {
+                        ret = id3_tag(gfp, 'g', id3_tenc, nextArg);
+                    }
                     if (ret != 0) {
                         if (0 == ignore_tag_errors) {
                             if (ret == -1) {
