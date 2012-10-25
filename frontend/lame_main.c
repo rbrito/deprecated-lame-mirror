@@ -3,7 +3,7 @@
  *
  *      Copyright (c) 1999 Mark Taylor
  *                    2000 Takehiro TOMINAGA
- *                    2010-2011 Robert Hegemann
+ *                    2010-2012 Robert Hegemann
  *
  * This library is free software; you can redistribute it and/or
  * modify it under the terms of the GNU Library General Public
@@ -92,41 +92,6 @@ char   *strchr(), *strrchr();
 * psychoacoustic model.
 *
 ************************************************************************/
-
-
-static int
-parse_args_from_string(lame_global_flags * const gfp, const char *p, char *inPath, char *outPath)
-{                       /* Quick & very Dirty */
-    char   *q;
-    char   *f;
-    char   *r[128];
-    int     c = 0;
-    int     ret;
-
-    if (p == NULL || *p == '\0')
-        return 0;
-
-    f = q = malloc(strlen(p) + 1);
-    strcpy(q, p);
-
-    r[c++] = "lhama";
-    for (;;) {
-        r[c++] = q;
-        while (*q != ' ' && *q != '\0')
-            q++;
-        if (*q == '\0')
-            break;
-        *q++ = '\0';
-    }
-    r[c] = NULL;
-
-    ret = parse_args(gfp, c, r, inPath, outPath, NULL, NULL);
-    free(f);
-    return ret;
-}
-
-
-
 
 
 static FILE *
@@ -647,11 +612,6 @@ lame_main(lame_t gf, int argc, char **argv)
      * skip this call and set the values of interest in the gf struct.
      * (see the file API and lame.h for documentation about these parameters)
      */
-    {
-        char   *str = lame_getenv("LAMEOPT");
-        parse_args_from_string(gf, str, inPath, outPath);
-        free(str);
-    }
     ret = parse_args(gf, argc, argv, inPath, outPath, nogap_inPath, &max_nogap);
     if (ret < 0) {
         return ret == -2 ? 0 : 1;

@@ -1499,8 +1499,8 @@ static int dev_only_without_arg(char const* str, char const* token, int* argIgno
                            } else if (dev_only_with_arg(str,token,nextArg,&argIgnored,&argUsed)) {
 
 
-int
-parse_args(lame_global_flags * gfp, int argc, char **argv,
+static int
+parse_args_(lame_global_flags * gfp, int argc, char **argv,
            char *const inPath, char *const outPath, char **nogap_inPath, int *num_nogap)
 {
     char    outDir[1024] = "";
@@ -2511,5 +2511,89 @@ parse_args(lame_global_flags * gfp, int argc, char **argv,
     return 0;
 }
 
+static int
+string_to_argv(char* str, char** argv, int N)
+{
+    int     argc = 0;
+    if (str == 0) return argc;
+    argv[argc++] = "lhama";
+    for (;;) {
+        int     quoted = 0;
+        while (isspace(*str)) { /* skip blanks */
+            ++str;
+        }
+        if (*str == '\"') { /* is quoted argument ? */
+            quoted = 1;
+            ++str;
+        }
+        if (*str == '\0') { /* end of string reached */
+            break;
+        }
+        /* found beginning of some argument */
+        if (argc < N) {
+            argv[argc++] = str;
+        }
+        /* look out for end of argument, either end of string, blank or quote */
+        for(; *str != '\0'; ++str) {
+            if (quoted) {
+                if (*str == '\"') { /* end of quotation reached */
+                    *str++ = '\0';
+                    break;
+                }
+            }
+            else {
+                if (isspace(*str)) { /* parameter separator reached */
+                    *str++ = '\0';
+                    break;
+                }
+            }
+        }
+    }
+    return argc;
+}
+
+static int
+merge_argv(int argc, char** argv, int str_argc, char** str_argv, int N)
+{
+    int     i;
+    if (argc > 0) {
+        str_argv[0] = argv[0];
+        if (str_argc < 1) str_argc = 1;
+    }
+    for (i = 1; i < argc; ++i) {
+        int     j = str_argc + i - 1;
+        if (j < N) {
+            str_argv[j] = argv[i];
+        }
+    }
+    return argc + str_argc - 1;
+}
+
+#ifdef DEBUG
+static void
+dump_argv(int argc, char** argv)
+{
+    int     i;
+    for (i = 0; i < argc; ++i) {
+        printf("%d: \"%s\"\n",i,argv[i]);
+    }
+}
+#endif
+
+
+int parse_args(lame_t gfp, int argc, char **argv, char *const inPath, char *const outPath, char **nogap_inPath, int *num_nogap)
+{
+    char   *str_argv[512], *str;
+    int     str_argc, ret;
+    str = lame_getenv("LAMEOPT");
+    str_argc = string_to_argv(str, str_argv, dimension_of(str_argv));
+    str_argc = merge_argv(argc, argv, str_argc, str_argv, dimension_of(str_argv));
+#ifdef DEBUG
+    dump_argv(str_argc, str_argv);
+#endif
+    ret = parse_args_(gfp, str_argc, str_argv, inPath, outPath, nogap_inPath, num_nogap);
+    free(str);
+    return ret;
+}
 
 /* end of parse.c */
