@@ -134,6 +134,7 @@ int main(int argc, char *argv[])
 	if(pFileOut == NULL)
 	{
 		fprintf(stderr,"Error creating file %s", strFileOut);
+		fclose(pFileIn);
 		return -1;
 	}
 
@@ -175,6 +176,8 @@ int main(int argc, char *argv[])
 	if(err != BE_ERR_SUCCESSFUL)
 	{
 		fprintf(stderr,"Error opening encoding stream (%lu)", err);
+		fclose(pFileIn);
+		fclose(pFileOut);
 		return -1;
 	}
 
@@ -189,6 +192,8 @@ int main(int argc, char *argv[])
 	if(!pMP3Buffer || !pWAVBuffer)
 	{
 		printf("Out of memory");
+		fclose(pFileIn);
+		fclose(pFileOut);
 		return -1;
 	}
 
