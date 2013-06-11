@@ -193,7 +193,7 @@ progress_line(const lame_global_flags * gf, int full, int frames)
     sec = (unsigned int)time_in_sec;
     if (full != 0) {
         if (hour > 0) {
-            sprintf(rst, "%*d:%02u:%02u", digits(hour), hour, min, sec);
+            sprintf(rst, "%*u:%02u:%02u", digits(hour), hour, min, sec);
             res += digits(hour) + 1 + 5;
         }
         else {
