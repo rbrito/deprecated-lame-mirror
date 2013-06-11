@@ -22,6 +22,7 @@ endif
 libmp3lame_la_LIBADD =	$(cpu_ldadd) $(vector_ldadd) $(decoder_ldadd) \
 			$(CONFIG_MATH_LIB)
 libmp3lame_la_LDFLAGS = -version-info @LIB_MAJOR_VERSION@:@LIB_MINOR_VERSION@ \
+			-export-symbols $(top_builddir)/include/libmp3lame.sym \
 			-no-undefined
 
 INCLUDES = @INCLUDES@ -I$(top_srcdir)/mpglib -I$(top_builddir)
