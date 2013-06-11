@@ -1117,7 +1117,7 @@ open_snd_file(lame_t gfp, char const *inPath)
 
         printf("\n");
         printf("sections          :%d\n", gs_wfInfo.sections);
-        printf("seekable          :\n", gs_wfInfo.seekable);
+        printf("seekable          :%d\n", gs_wfInfo.seekable);
 #endif
         /* Check result */
         if (gs_pSndFileIn == NULL) {
