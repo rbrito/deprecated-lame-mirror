@@ -77,9 +77,6 @@ if test "${GCC}" = "yes"; then
 	AC_MSG_RESULT(${GCC_version})
 fi
 
-dnl more automake stuff
-AM_C_PROTOTYPES
-
 AC_CHECK_HEADER(dmalloc.h)
 if test "${ac_cv_header_dmalloc_h}" = "yes"; then
 	AM_WITH_DMALLOC

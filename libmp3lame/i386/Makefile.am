@@ -1,6 +1,6 @@
 ## $Id$
 
-AUTOMAKE_OPTIONS = foreign $(top_srcdir)/ansi2knr
+AUTOMAKE_OPTIONS = foreign
 
 DEFS = @DEFS@ @CONFIG_DEFS@
 

@@ -1,6 +1,6 @@
 ## $Id$
 
-AUTOMAKE_OPTIONS = foreign ansi2knr
+AUTOMAKE_OPTIONS = foreign
 
 docdir = $(datadir)/doc
 pkgdocdir = $(docdir)/$(PACKAGE)
