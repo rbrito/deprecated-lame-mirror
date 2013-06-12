@@ -24,4 +24,3 @@ pkghtml_DATA = \
 	vbr.html
 
 EXTRA_DIST = $(pkghtml_DATA)
-

@@ -26,7 +26,7 @@ dnl AM_PATH_GTK([MINIMUM-VERSION, [ACTION-IF-FOUND [, ACTION-IF-NOT-FOUND [, MOD
 dnl Test for GTK, and define GTK_CFLAGS and GTK_LIBS
 dnl
 AC_DEFUN([AM_PATH_GTK],
-[dnl 
+[dnl
 dnl Get the cflags and libraries from the gtk-config script
 dnl
 AC_ARG_WITH(gtk-prefix,[  --with-gtk-prefix=PFX   Prefix where GTK is installed (optional)],
@@ -39,7 +39,7 @@ AC_ARG_ENABLE(gtktest, [  --disable-gtktest       Do not try to compile and run 
   for module in . $4
   do
       case "$module" in
-         gthread) 
+         gthread)
              gtk_config_args="$gtk_config_args gthread"
          ;;
       esac
@@ -88,7 +88,7 @@ dnl
 #include <stdio.h>
 #include <stdlib.h>
 
-int 
+int
 main ()
 {
   int major, minor, micro;
@@ -107,7 +107,7 @@ main ()
       (gtk_minor_version != $gtk_config_minor_version) ||
       (gtk_micro_version != $gtk_config_micro_version))
     {
-      printf("\n*** 'gtk-config --version' returned %d.%d.%d, but GTK+ (%d.%d.%d)\n", 
+      printf("\n*** 'gtk-config --version' returned %d.%d.%d, but GTK+ (%d.%d.%d)\n",
              $gtk_config_major_version, $gtk_config_minor_version, $gtk_config_micro_version,
              gtk_major_version, gtk_minor_version, gtk_micro_version);
       printf ("*** was found! If gtk-config was correct, then it is best\n");
@@ -118,7 +118,7 @@ main ()
       printf("*** If gtk-config was wrong, set the environment variable GTK_CONFIG\n");
       printf("*** to point to the correct copy of gtk-config, and remove the file config.cache\n");
       printf("*** before re-running configure\n");
-    } 
+    }
 #if defined (GTK_MAJOR_VERSION) && defined (GTK_MINOR_VERSION) && defined (GTK_MICRO_VERSION)
   else if ((gtk_major_version != GTK_MAJOR_VERSION) ||
 	   (gtk_minor_version != GTK_MINOR_VERSION) ||
@@ -164,7 +164,7 @@ main ()
   fi
   if test "x$no_gtk" = x ; then
      AC_MSG_RESULT(yes)
-     ifelse([$2], , :, [$2])     
+     ifelse([$2], , :, [$2])
   else
      AC_MSG_RESULT(no)
      if test "$GTK_CONFIG" = "no" ; then
@@ -2677,7 +2677,7 @@ fi
 # Invoke $ECHO with all args, space-separated.
 func_echo_all ()
 {
-    $ECHO "$*" 
+    $ECHO "$*"
 }
 
 case "$ECHO" in
@@ -9501,7 +9501,7 @@ _LT_DECL(, macro_revision, 0)
 # included after everything else.  This provides aclocal with the
 # AC_DEFUNs it wants, but when m4 processes it, it doesn't do anything
 # because those macros already exist, or will be overwritten later.
-# We use AC_DEFUN over AU_DEFUN for compatibility with aclocal-1.6. 
+# We use AC_DEFUN over AU_DEFUN for compatibility with aclocal-1.6.
 #
 # Anytime we withdraw an AC_DEFUN or AU_DEFUN, remember to add it here.
 # Yes, that means every name once taken will need to remain here until
@@ -9575,7 +9575,7 @@ m4_ifndef([_LT_PROG_CXX],		[AC_DEFUN([_LT_PROG_CXX])])
 
 # pkg.m4 - Macros to locate and utilise pkg-config.            -*- Autoconf -*-
 # serial 1 (pkg-config-0.24)
-# 
+#
 # Copyright © 2004 Scott James Remnant <scott@netsplit.com>.
 #
 # This program is free software; you can redistribute it and/or modify
@@ -9696,7 +9696,7 @@ if test $pkg_failed = yes; then
         _PKG_SHORT_ERRORS_SUPPORTED
         if test $_pkg_short_errors_supported = yes; then
 	        $1[]_PKG_ERRORS=`$PKG_CONFIG --short-errors --print-errors "$2" 2>&1`
-        else 
+        else
 	        $1[]_PKG_ERRORS=`$PKG_CONFIG --print-errors "$2" 2>&1`
         fi
 	# Put the nasty error message in config.log where it belongs
