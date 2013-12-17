@@ -161,7 +161,7 @@ typedef FLOAT sample_t;
 
 #define dimension_of(array) (sizeof(array)/sizeof(array[0]))
 #define beyond(array) (array+dimension_of(array))
-#define compiletime_assert(expression) extern char static_assert_##FILE##_##LINE[expression?1:0]
+#define compiletime_assert(expression) enum{static_assert_##FILE##_##LINE = 1/((expression)?1:0)}
 #define lame_calloc(TYPE, COUNT) ((TYPE*)calloc(COUNT, sizeof(TYPE)))
 #define multiple_of(CHUNK, COUNT) ((COUNT) + ((COUNT) % (CHUNK)))
 

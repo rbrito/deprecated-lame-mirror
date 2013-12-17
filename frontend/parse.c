@@ -28,6 +28,7 @@
 
 #include <assert.h>
 #include <ctype.h>
+#include <math.h>
  
 #ifdef STDC_HEADERS
 # include <stdio.h>
@@ -99,7 +100,7 @@ static int const internal_opts_enabled = INTERNAL_OPTS;
 /* GLOBAL VARIABLES.  set by parse_args() */
 /* we need to clean this up */
 
-ReaderConfig global_reader = { sf_unknown, 0, 0, 0 };
+ReaderConfig global_reader = { sf_unknown, 0, 0, 0, 0 };
 WriterConfig global_writer = { 0 };
 
 UiConfig global_ui_config = {0,0,0,0};
@@ -324,6 +325,7 @@ static int getIntValue(char const* token, char const* arg, int* ptr)
     return evaluateArgument(token, arg, _EndPtr);
 }
 
+#ifdef ID3TAGS_EXTENDED
 static int
 set_id3v2tag(lame_global_flags* gfp, int type, unsigned short const* str)
 {
@@ -340,7 +342,7 @@ set_id3v2tag(lame_global_flags* gfp, int type, unsigned short const* str)
     }
     return 0;
 }
-
+#endif
 
 static int
 set_id3tag(lame_global_flags* gfp, int type, char const* str)
@@ -449,12 +451,14 @@ print_license(FILE * const fp)
             "modify it under the terms of the GNU Library General Public\n"
             "License as published by the Free Software Foundation; either\n"
             "version 2 of the License, or (at your option) any later version.\n"
-            "\n"
+            "\n");
+    fprintf(fp,
             "This library is distributed in the hope that it will be useful,\n"
             "but WITHOUT ANY WARRANTY; without even the implied warranty of\n"
             "MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the GNU\n"
             "Library General Public License for more details.\n"
-            "\n"
+            "\n");
+    fprintf(fp,
             "You should have received a copy of the GNU Library General Public\n"
             "License along with this program. If not, see\n"
             "<http://www.gnu.org/licenses/>.\n");
@@ -579,15 +583,17 @@ help_id3tag(FILE * const fp)
             "    --ta <artist>   audio/song artist (max 30 chars for version 1 tag)\n"
             "    --tl <album>    audio/song album (max 30 chars for version 1 tag)\n"
             "    --ty <year>     audio/song year of issue (1 to 9999)\n"
-            "    --tc <comment>  user-defined text (max 30 chars for v1 tag, 28 for v1.1)\n"
+            "    --tc <comment>  user-defined text (max 30 chars for v1 tag, 28 for v1.1)\n");
+    fprintf(fp,
             "    --tn <track[/total]>   audio/song track number and (optionally) the total\n"
             "                           number of tracks on the original recording. (track\n"
             "                           and total each 1 to 255. just the track number\n"
-            "                           creates v1.1 tag, providing a total forces v2.0).\n"
+            "                           creates v1.1 tag, providing a total forces v2.0).\n");
+    fprintf(fp,
             "    --tg <genre>    audio/song genre (name or number in list)\n"
             "    --ti <file>     audio/song albumArt (jpeg/png/gif file, v2.3 tag)\n"
             "    --tv <id=value> user-defined frame specified by id and value (v2.3 tag)\n"
-			"                    syntax: --tv \"TXXX=description=content\"\n"
+            "                    syntax: --tv \"TXXX=description=content\"\n"
             );
     fprintf(fp,
             "    --add-id3v2     force addition of version 2 tag\n"
@@ -651,7 +657,8 @@ help_developer_switches(FILE * const fp)
             "    --ns-sfb21 x    change ns-treble by x dB for sfb21\n"
             "    --shortthreshold x,y  short block switching threshold,\n"
             "                          x for L/R/M channel, y for S channel\n"
-            "    -Z [n]          always do calculate short block maskings\n"
+            "    -Z [n]          always do calculate short block maskings\n");
+    fprintf(fp,
             "  Noise Shaping related:\n"
             "(1) --substep n     use pseudo substep noise shaping method types 0-2\n"
             "(1) -X n[,m]        selects between different noise measurements\n"
@@ -677,12 +684,17 @@ long_help(const lame_global_flags * gfp, FILE * const fp, const char *ProgramNam
             "    --scale-l <arg> scale channel 0 (left) input (multiply PCM data) by <arg>\n"
             "    --scale-r <arg> scale channel 1 (right) input (multiply PCM data) by <arg>\n"
             "    --swap-channel  swap L/R channels\n"
+            "    --ignorelength  ignore file length in WAV header\n"
             "    --gain <arg>    apply Gain adjustment in decibels, range -20.0 to +12.0\n"
+           );
 #if (defined HAVE_MPGLIB || defined AMIGA_MPEGA)
+    fprintf(fp,
             "    --mp1input      input file is a MPEG Layer I   file\n"
             "    --mp2input      input file is a MPEG Layer II  file\n"
             "    --mp3input      input file is a MPEG Layer III file\n"
+           );
 #endif
+    fprintf(fp,
             "    --nogap <file1> <file2> <...>\n"
             "                    gapless encoding for a set of contiguous files\n"
             "    --nogapout <dir>\n"
@@ -712,6 +724,8 @@ long_help(const lame_global_flags * gfp, FILE * const fp, const char *ProgramNam
             "                    joint  = Uses the best possible of MS and LR stereo\n"
             "                    simple = force LR stereo on all frames\n"
             "                    force  = force MS stereo on all frames.\n"
+	   );
+    fprintf(fp,
             "    --preset type   type must be \"medium\", \"standard\", \"extreme\", \"insane\",\n"
             "                    or a value for an average desired bitrate and depending\n"
             "                    on the value specified, appropriate quality settings will\n"
@@ -1850,7 +1864,7 @@ parse_args_(lame_global_flags * gfp, int argc, char **argv,
 
                 T_ELIF("lowpass")
                     argUsed = getDoubleValue(token, nextArg, &double_value);
-                    if (argUsed)
+                    if (argUsed) {
                         if (double_value < 0) {
                             lame_set_lowpassfreq(gfp, -1);
                         }
@@ -1862,6 +1876,7 @@ parse_args_(lame_global_flags * gfp, int argc, char **argv,
                             }
                             lame_set_lowpassfreq(gfp, (int) (double_value * (double_value < 50. ? 1.e3 : 1.e0) + 0.5));
                         }
+                    }
                 
                 T_ELIF("lowpass-width")
                     argUsed = getDoubleValue(token, nextArg, &double_value);
@@ -1877,7 +1892,7 @@ parse_args_(lame_global_flags * gfp, int argc, char **argv,
 
                 T_ELIF("highpass")
                     argUsed = getDoubleValue(token, nextArg, &double_value);
-                    if (argUsed)
+                    if (argUsed) {
                         if (double_value < 0.0) {
                             lame_set_highpassfreq(gfp, -1);
                         }
@@ -1889,7 +1904,8 @@ parse_args_(lame_global_flags * gfp, int argc, char **argv,
                             }
                             lame_set_highpassfreq(gfp, (int) (double_value * (double_value < 16. ? 1.e3 : 1.e0) + 0.5));
                         }
-                
+                    }
+                    
                 T_ELIF("highpass-width")
                     argUsed = getDoubleValue(token, nextArg, &double_value);
                     if (argUsed) {
@@ -1904,7 +1920,7 @@ parse_args_(lame_global_flags * gfp, int argc, char **argv,
 
                 T_ELIF("comp")
                     argUsed = getDoubleValue(token, nextArg, &double_value);
-                    if (argUsed)
+                    if (argUsed) {
                         if (double_value < 1.0) {
                             error_printf("Must specify compression ratio >= 1.0\n");
                             return -1;
@@ -1912,7 +1928,8 @@ parse_args_(lame_global_flags * gfp, int argc, char **argv,
                         else {
                             lame_set_compression_ratio(gfp, (float) double_value);
                         }
-
+                    }
+    
                 /* some more GNU-ish options could be added
                  * brief         => few messages on screen (name, status report)
                  * o/output file => specifies output filename
@@ -2005,6 +2022,9 @@ parse_args_(lame_global_flags * gfp, int argc, char **argv,
 
                 T_ELIF("swap-channel")
                     global_reader.swap_channel = 1;
+
+                T_ELIF("ignorelength")
+                    global_reader.ignorewavlength = 1;
 
                 T_ELIF ("athaa-sensitivity")
                     argUsed = getDoubleValue(token, nextArg, &double_value);

@@ -316,7 +316,7 @@ static const FLOAT tab[] =
 
 
 static const int tab_mask_add_delta[] = { 2, 2, 2, 1, 1, 1, 0, 0, -1 };
-#define STATIC_ASSERT_EQUAL_DIMENSION(A,B) {extern char static_assert_##A[dimension_of(A) == dimension_of(B) ? 1 : -1];(void) static_assert_##A;}
+#define STATIC_ASSERT_EQUAL_DIMENSION(A,B) enum{static_assert_##A=1/((dimension_of(A) == dimension_of(B))?1:0)}
 
 inline static int
 mask_add_delta(int i)
@@ -1040,6 +1040,7 @@ vbrpsy_conv_hi_to_lo(PsyConst_CB2SB_Ptr pcd, FLOAT eb[CBANDS], unsigned char mas
     return ecb;
 }
 
+#if 0
 static FLOAT
 vbrpsy_conv_mix_hilo(PsyConst_CB2SB_Ptr pcd, FLOAT eb[CBANDS], unsigned char mask_idx[CBANDS + 2], int b, int k, int lo, int hi, int delta)
 {
@@ -1063,6 +1064,7 @@ vbrpsy_conv_mix_hilo(PsyConst_CB2SB_Ptr pcd, FLOAT eb[CBANDS], unsigned char mas
     }
     return ecb;
 }
+#endif
 
 static FLOAT
 vbrpsy_mask_conv_max(PsyConst_CB2SB_Ptr pcd, FLOAT eb[CBANDS], unsigned char mask_idx[CBANDS + 2], int b, int k)
@@ -1878,30 +1880,6 @@ init_s3_values(FLOAT ** p, int (*s3ind)[2], int npart,
             (*p)[k++] = s3[i][j];
 
     return 0;
-}
-
-
-static int test1(PsyConst_CB2SB_Ptr pcd)
-{
-    int     i, last = -1;
-    for (i = 0; i < pcd->npart; ++i) {
-        if (pcd->numlines[i] >= last) {
-            last = pcd->numlines[i];
-        }
-    }
-    return i;
-}
-
-static int test2(PsyConst_CB2SB_Ptr pcd, int n)
-{
-    int     i, mi = 0, last = -1;
-    for (i = 0; i < pcd->npart; ++i) {
-        if (pcd->numlines[i] >= last && pcd->numlines[i] <= n) {
-            last = pcd->numlines[i];
-            mi = i;
-        }
-    }
-    return mi;
 }
 
 

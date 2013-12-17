@@ -738,7 +738,7 @@ get_audio_common(lame_t gfp, int buffer[2][1152], short buffer16[2][1152])
     int     samples_read;
     int     framesize;
     int     samples_to_read;
-    unsigned int remaining, tmp_num_samples;
+    unsigned int remaining;
     int     i;
     int    *p;
 
@@ -752,13 +752,6 @@ get_audio_common(lame_t gfp, int buffer[2][1152], short buffer16[2][1152])
     samples_to_read = framesize = lame_get_framesize(gfp);
     assert(framesize <= 1152);
 
-    /* get num_samples */
-    if (is_mpeg_file_format(global_reader.input_format)) {
-        tmp_num_samples = global_decoder.mp3input_data.nsamp;
-    }
-    else {
-        tmp_num_samples = lame_get_num_samples(gfp);
-    }
 
     /* if this flag has been set, then we are carefull to read
      * exactly num_samples and no more.  This is useful for .wav and .aiff
@@ -766,6 +759,14 @@ get_audio_common(lame_t gfp, int buffer[2][1152], short buffer16[2][1152])
      * are using LIBSNDFILE, this is not necessary 
      */
     if (global.count_samples_carefully) {
+        unsigned int tmp_num_samples;
+        /* get num_samples */
+        if (is_mpeg_file_format(global_reader.input_format)) {
+            tmp_num_samples = global_decoder.mp3input_data.nsamp;
+        }
+        else {
+            tmp_num_samples = lame_get_num_samples(gfp);
+        }
         if (global.num_samples_read < tmp_num_samples) {
             remaining = tmp_num_samples - global.num_samples_read;
         }
@@ -858,9 +859,9 @@ get_audio_common(lame_t gfp, int buffer[2][1152], short buffer16[2][1152])
     }
 
 
-    /* if num_samples = MAX_U_32_NUM, then it is considered infinitely long.
+    /* if ... then it is considered infinitely long.
        Don't count the samples */
-    if (tmp_num_samples != MAX_U_32_NUM)
+    if (global.count_samples_carefully)
         global. num_samples_read += samples_read;
 
     return samples_read;
@@ -948,12 +949,12 @@ open_snd_file(lame_t gfp, char const *inPath)
     SF_INFO gs_wfInfo;
 
     {
-#ifdef _WIN32
+#if defined( _WIN32 ) && !defined(__MINGW32__)
         wchar_t *file_name = utf8ToUnicode(lpszFileName);
 #endif
         /* Try to open the sound file */
         memset(&gs_wfInfo, 0, sizeof(gs_wfInfo));
-#ifdef _WIN32
+#if defined( _WIN32 ) && !defined(__MINGW32__)
         gs_pSndFileIn = sf_wchar_open(file_name, SFM_READ, &gs_wfInfo);
 #else
         gs_pSndFileIn = sf_open(lpszFileName, SFM_READ, &gs_wfInfo);
@@ -993,13 +994,13 @@ open_snd_file(lame_t gfp, char const *inPath)
             default:
                 break;
             }
-#ifdef _WIN32
+#if defined( _WIN32 ) && !defined(__MINGW32__)
             gs_pSndFileIn = sf_wchar_open(file_name, SFM_READ, &gs_wfInfo);
 #else
             gs_pSndFileIn = sf_open(lpszFileName, SFM_READ, &gs_wfInfo);
 #endif
         }
-#ifdef _WIN32
+#if defined( _WIN32 ) && !defined(__MINGW32__)
         free(file_name);
 #endif
 
@@ -1129,7 +1130,10 @@ open_snd_file(lame_t gfp, char const *inPath)
         }
 
 
-        (void) lame_set_num_samples(gfp, gs_wfInfo.frames);
+        if(gs_wfInfo.frames >= 0 && gs_wfInfo.frames < (sf_count_t)(unsigned)MAX_U_32_NUM)
+            (void) lame_set_num_samples(gfp, gs_wfInfo.frames);
+        else
+            (void) lame_set_num_samples(gfp, MAX_U_32_NUM);
         if (-1 == lame_set_num_channels(gfp, gs_wfInfo.channels)) {
             if (global_ui_config.silent < 10) {
                 error_printf("Unsupported number of channels: %ud\n", gs_wfInfo.channels);
@@ -1331,7 +1335,7 @@ static short const WAVE_FORMAT_PCM = 0x0001;
 static short const WAVE_FORMAT_IEEE_FLOAT = 0x0003;
 #endif
 #ifndef WAVE_FORMAT_EXTENSIBLE
-static short const WAVE_FORMAT_EXTENSIBLE = 0xFFFE;
+static short const WAVE_FORMAT_EXTENSIBLE = (short)0xFFFE;
 #endif
 
 
@@ -1359,17 +1363,15 @@ parse_wave_header(lame_global_flags * gfp, FILE * sf)
 {
     int     format_tag = 0;
     int     channels = 0;
-    int     block_align = 0;
     int     bits_per_sample = 0;
     int     samples_per_sec = 0;
-    int     avg_bytes_per_sec = 0;
 
 
     int     is_wav = 0;
-    long    data_length = 0, file_length, subSize = 0;
+    unsigned long    data_length = 0, subSize = 0;
     int     loop_sanity = 0;
 
-    file_length = read_32_bits_high_low(sf);
+    (void) read_32_bits_high_low(sf); /* file_length */
     if (read_32_bits_high_low(sf) != WAV_ID_WAVE)
         return -1;
 
@@ -1391,9 +1393,9 @@ parse_wave_header(lame_global_flags * gfp, FILE * sf)
             subSize -= 2;
             samples_per_sec = read_32_bits_low_high(sf);
             subSize -= 4;
-            avg_bytes_per_sec = read_32_bits_low_high(sf);
+            (void) read_32_bits_low_high(sf); /* avg_bytes_per_sec */
             subSize -= 4;
-            block_align = read_16_bits_low_high(sf);
+            (void) read_16_bits_low_high(sf); /* block_align */
             subSize -= 2;
             bits_per_sample = read_16_bits_low_high(sf);
             subSize -= 2;
@@ -1460,7 +1462,10 @@ parse_wave_header(lame_global_flags * gfp, FILE * sf)
         global. pcmbitwidth = bits_per_sample;
         global. pcm_is_unsigned_8bit = 1;
         global. pcm_is_ieee_float = (format_tag == WAVE_FORMAT_IEEE_FLOAT ? 1 : 0);
-        (void) lame_set_num_samples(gfp, data_length / (channels * ((bits_per_sample + 7) / 8)));
+        if (data_length == MAX_U_32_NUM)
+            (void) lame_set_num_samples(gfp, MAX_U_32_NUM);
+        else
+            (void) lame_set_num_samples(gfp, data_length / (channels * ((bits_per_sample + 7) / 8)));
         return 1;
     }
     return -1;
@@ -1695,7 +1700,13 @@ parse_file_header(lame_global_flags * gfp, FILE * sf)
             return sf_mp123;
         }
         if (ret > 0) {
-            global. count_samples_carefully = 1;
+            if (lame_get_num_samples(gfp) == MAX_U_32_NUM || global_reader.ignorewavlength == 1)
+            {
+                global. count_samples_carefully = 0;
+                lame_set_num_samples(gfp, MAX_U_32_NUM);
+            }
+            else
+                global. count_samples_carefully = 1;
             return sf_wave;
         }
         if (ret < 0) {
@@ -1812,6 +1823,7 @@ open_wave_file(lame_t gfp, char const *inPath, int *enc_delay, int *enc_padding)
             /* try file size, assume 2 bytes per sample */
             unsigned long fsize = (unsigned long) (flen / (2 * lame_get_num_channels(gfp)));
             (void) lame_set_num_samples(gfp, fsize);
+            global. count_samples_carefully = 0;
         }
     }
     return musicin;
@@ -1864,6 +1876,7 @@ open_mpeg_file(lame_t gfp, char const *inPath, int *enc_delay, int *enc_padding)
 
                 (void) lame_set_num_samples(gfp, tmp_num_samples);
                 global_decoder.mp3input_data.nsamp = tmp_num_samples;
+                global. count_samples_carefully = 0;
             }
         }
     }
