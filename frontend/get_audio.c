@@ -1335,7 +1335,7 @@ static short const WAVE_FORMAT_PCM = 0x0001;
 static short const WAVE_FORMAT_IEEE_FLOAT = 0x0003;
 #endif
 #ifndef WAVE_FORMAT_EXTENSIBLE
-static short const WAVE_FORMAT_EXTENSIBLE = (short)0xFFFE;
+static short const WAVE_FORMAT_EXTENSIBLE = 0xFFFE;
 #endif
 
 

@@ -138,7 +138,7 @@ set_process_affinity()
 void
 dosToLongFileName(char *fn)
 {
-    const int MSIZE = PATH_MAX + 1 - 4; /*  we wanna add ".mp3" later */
+    const size_t MSIZE = PATH_MAX + 1 - 4; /*  we wanna add ".mp3" later */
     WIN32_FIND_DATAA lpFindFileData;
     HANDLE  h = FindFirstFileA(fn, &lpFindFileData);
     if (h != INVALID_HANDLE_VALUE) {

@@ -24,10 +24,6 @@
 
 #include "version.h"
 
-#if (LAME_RELEASE_VERSION == 0)
-#undef NDEBUG
-#endif
-
 #include <stdio.h>
 #include <assert.h>
 
@@ -176,8 +172,6 @@ typedef FLOAT sample_t;
 
 #define NEQ(a,b) (!EQ(a,b))
 
-#endif
-
 #ifdef _MSC_VER
 #  if _MSC_VER < 1400
 #  define fabsf fabs
@@ -186,5 +180,6 @@ typedef FLOAT sample_t;
 #  endif
 #endif
 
+#endif
 
 /* end of machine.h */

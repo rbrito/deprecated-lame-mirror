@@ -1248,14 +1248,6 @@ lame_init_params(lame_global_flags * gfp)
     cfg->buffer_constraint = get_max_frame_buffer_size_by_constraint(cfg, gfp->strict_ISO);
 
 
-    /* do not compute ReplayGain values and do not find the peak sample
-       if we can't store them */
-    if (!gfp->write_lame_tag) {
-        gfp->findReplayGain = 0;
-        gfp->decode_on_the_fly = 0;
-        cfg->findPeakSample = 0;
-    }
-
     cfg->findReplayGain = gfp->findReplayGain;
     cfg->decode_on_the_fly = gfp->decode_on_the_fly;
 
