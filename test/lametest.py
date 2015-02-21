@@ -1,8 +1,9 @@
 #!/usr/bin/env python
 from string import *
-import os
+
 import commands
 import getopt
+import os
 import sys
 
 
@@ -40,7 +41,7 @@ def fdiff(name1, name2):
     out = commands.getoutput(cmd)
     out = split(out, "\n")
     out = out[-1]
-    if (-1 == find(out, "No")):
+    if find(out, "No") == -1:
         diff = atof(out)
 
         status = os.access(name1, os.R_OK)
@@ -63,7 +64,7 @@ def fdiff(name1, name2):
 
 
 def compare(name1, name2, decode):
-    if (decode):
+    if decode:
         print "converting mp3 to wav for comparison..."
         # XXX shouldn't we use lame1 instead of a hardcoded lame?
         os.system("lame --quiet --mp3input --decode " + name1)
@@ -73,10 +74,10 @@ def compare(name1, name2, decode):
 
     rcode = 0
     diff, size = fdiff(name1, name2)
-    if (diff == 0):
+    if diff == 0:
         print "output identical:  diff=%i  total=%i" % (diff, size)
         rcode = 1
-    elif (diff > 0):
+    elif diff > 0:
         print "output different: diff=%i  total=%i  %2.0f%%" % \
             (diff, size, 100 * float(diff) / size)
     else:
@@ -110,7 +111,7 @@ if len(args) < 3:
 if len(args) > 4:
     Usage("Too many arguments.")
 
-if (lame2 == "makeref"):
+if lame2 == "makeref":
     if len(args) != 3:
         Usage("Too many arguments for -r/-m mode.")
 else:
@@ -127,12 +128,12 @@ if len(args) >= 4:
 
 # check readability of options_file
 status = os.access(options_file, os.R_OK)
-if 1 != status:
+if status != 1:
     Usage(options_file + " not readable")
 
 # check readability of input_file
 status = os.access(input_file, os.R_OK)
-if 1 != status:
+if status != 1:
     Usage(input_file + " not readable")
 
 
@@ -147,20 +148,20 @@ lame2_ok = 0
 # check for executable lame1
 for x in path:
     status = os.access(os.path.join(x, lame1), os.X_OK)
-    if 1 == status:
+    if status == 1:
         lame1_ok = 1
         break
-if 1 != lame1_ok:
+if lame1_ok != 1:
     Usage(lame1 + " is not executable")
 
 if not (lame2 == "ref" or lame2 == "makeref"):
     # check for executable lame2
     for x in path:
         status = os.access(os.path.join(x, lame2), os.X_OK)
-        if 1 == status:
+        if status == 1:
             lame2_ok = 1
             break
-    if 1 != lame2_ok:
+    if lame2_ok != 1:
         Usage(lame2 + " is not executable")
 
 
@@ -181,7 +182,7 @@ while line:
 
     print      # empty line
 
-    if (lame2 == 'ref'):
+    if lame2 == 'ref':
         cmd = "rm -f " + name1
         os.system(cmd)
         cmd = lame1 + " --quiet " + line + " " + input_file + " " + name1
@@ -192,7 +193,7 @@ while line:
         print cmd
         os.system(cmd)
         num_ok = num_ok + compare(name1, name2, decode)
-    elif (lame2 == 'makeref'):
+    elif lame2 == 'makeref':
         cmd = "rm -f " + name2
         os.system(cmd)
         print "executable: ", lame1
