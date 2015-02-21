@@ -17,7 +17,7 @@ def Usage(mesg):
     print "Mode 3. Generate reference solutions using lame1:"
     print "./lametest.py -m options_file input.wav lame1" + os.linesep
 
-    print "options: "	
+    print "options: "
     print "   -w   convert mp3's to wav's before comparison"
 
     sys.exit(0)
@@ -26,7 +26,7 @@ def Usage(mesg):
 
 ##################################################################
 # compare two files, return # bytes which differ and the
-# number of bytes in larger file 
+# number of bytes in larger file
 ##################################################################
 def fdiff(name1,name2):
     cmd = "cmp -l "+name1 + " " + name2 + " | wc -l"
@@ -48,15 +48,15 @@ def fdiff(name1,name2):
             size1 = os.path.getsize(name1)
         size2 = os.path.getsize(name2)
         diff = diff + abs(size1-size2)
-        size = max(size1,size2) 
+        size = max(size1,size2)
     else:
         diff = -1
         size = 0
     return (diff,size)
 
-################################################################## 
+##################################################################
 # compare two files, return # bytes which differ and the
-# number of bytes in larger file 
+# number of bytes in larger file
 ##################################################################
 def compare(name1,name2,decode):
     if (decode):
@@ -87,7 +87,7 @@ def compare(name1,name2,decode):
 
 
 
-################################################################## 
+##################################################################
 # main program
 ##################################################################
 try:
@@ -114,7 +114,7 @@ if (lame2=="makeref"):
     if len(args) != 3:
     	Usage("Too many arguments for -r/-m mode.")
 else:
-    if len(args) ==3:	
+    if len(args) ==3:
         lame2="ref"
 
 # populate variables from args and normalize & expand path
@@ -158,7 +158,7 @@ if not (lame2=="ref" or lame2=="makeref"):
     for x in path:
         status = os.access(os.path.join(x, lame2), os.X_OK)
         if 1 == status:
-            lame2_ok = 1 
+            lame2_ok = 1
             break
     if 1 != lame2_ok:
         Usage(lame2 + " is not executable")
@@ -187,7 +187,7 @@ while line:
         cmd = lame1 + " --quiet " + line + " " + input_file + " " + name1
         print "executable:      ",lame1
         print "options:         ",line
-        print "input:           ",input_file 
+        print "input:           ",input_file
         print "reference output:",name2
         print cmd
         os.system(cmd)
@@ -197,7 +197,7 @@ while line:
         os.system(cmd)
         print "executable: ",lame1
         print "options:    ",line
-        print "input:      ",input_file 
+        print "input:      ",input_file
         print "output:     ",name2
         cmd = lame1 + " --quiet " + line + " " + input_file + " " + name2
         os.system(cmd)
