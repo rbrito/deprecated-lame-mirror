@@ -1459,6 +1459,10 @@ parse_wave_header(lame_global_flags * gfp, FILE * sf)
         else {
             (void) lame_set_in_samplerate(gfp, global_reader.input_samplerate);
         }
+        /* avoid division by zero */
+        if (bits_per_sample < 1)
+            return -1;
+
         global. pcmbitwidth = bits_per_sample;
         global. pcm_is_unsigned_8bit = 1;
         global. pcm_is_ieee_float = (format_tag == WAVE_FORMAT_IEEE_FLOAT ? 1 : 0);
