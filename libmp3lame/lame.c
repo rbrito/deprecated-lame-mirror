@@ -783,12 +783,6 @@ lame_init_params(lame_global_flags * gfp)
             gfp->samplerate_out * 16 * cfg->channels_out / (1.e3 * gfp->VBR_mean_bitrate_kbps);
     }
 
-    if (gfp->samplerate_in < 0) {
-        freegfc(gfc);
-        gfp->internal_flags = NULL;
-        return -1;
-    }
-
     if (gfp->samplerate_in < 0 || gfp->num_channels < 0) {
         freegfc(gfc);
         gfp->internal_flags = NULL;
