@@ -17,7 +17,7 @@ dnl FRONTEND_LDFLAGS
 dnl FRONTEND_CFLAGS
 dnl FRONTEND_LDADD
 
-AC_PREREQ(2.68)
+AC_PREREQ(2.69)
 AC_INIT([lame],[3.100],[lame-dev@lists.sf.net])
 AC_CONFIG_SRCDIR([libmp3lame/lame.c])
 AC_LANG([C])
@@ -74,6 +74,14 @@ AC_PROG_CC()
 if test "${GCC}" = "yes"; then
 	AC_MSG_CHECKING(version of GCC)
 	GCC_version=`${CC} --version | sed -n '1s/^[[^ ]]* (.*) //;s/ .*$//;1p'`
+	case ${GCC_version} in
+	[0-9]*[0-9]*)
+		;;
+	*)
+		# probably not gcc...
+		GCC_version=`${CC} --version | sed -n 's/.*clang version /clang_version_/;s/ .*$//;1p'`
+		;;
+	esac
 	AC_MSG_RESULT(${GCC_version})
 fi
 
@@ -93,8 +101,18 @@ AC_CHECK_HEADERS( \
 		 sys/soundcard.h \
 		 sys/time.h \
 		 unistd.h \
-		 xmmintrin.h \
 		 linux/soundcard.h)
+
+dnl Checks for actually working SSE intrinsics
+AC_MSG_CHECKING(working SSE intrinsics)
+AC_COMPILE_IFELSE(
+	[AC_LANG_PROGRAM(
+		[[#include <xmmintrin.h>]],
+		[[_mm_sfence();]])],
+	[AC_DEFINE([HAVE_XMMINTRIN_H], [1], [Define if SSE intrinsics work.])
+	 ac_cv_header_xmmintrin_h=yes],
+	[ac_cv_header_xmmintrin_h=no])
+AC_MSG_RESULT(${ac_cv_header_xmmintrin_h})
 
 dnl Checks for typedefs, structures, and compiler characteristics.
 AC_C_CONST
@@ -779,6 +797,11 @@ if test "x$GCC" = "xyes"; then
 		OPTIMIZATION="-O3 -fomit-frame-pointer -ffast-math"
 		OPTIMIZATION_FULL="-fbranch-count-reg -fforce-addr"
 		;;
+	clang_version_3.*)
+		OPTIMIZATION="-O3 ${OMIT_FRAME_POINTER} -ffast-math"
+		OPTIMIZATION_FULL="-fmove-all-movables -freduce-all-givs \
+			-fbranch-count-reg -fforce-addr -fforce-mem"
+		;;
 	*)
 		# default
 		OPTIMIZATION="-O3 ${OMIT_FRAME_POINTER} -ffast-math \
@@ -938,7 +961,11 @@ if test "x$GCC" = "xyes"; then
 
 	case "${CONFIG_DEBUG}" in
 	no)
-		AC_DEFINE(NDEBUG, 1, no debug build)
+dnl	Comment out the NDEBUG on release build, they check for issues
+dnl	which should also be rejected in a release build.
+dnl	The real solution would be to do user friendly error messages
+dnl	instead of a core dump. This is a quick and user-unfriendly fix.
+dnl		AC_DEFINE(NDEBUG, 1, no debug build)
 		;;
 	norm|yes)
 		AC_DEFINE(ABORTFP, 1, debug define)

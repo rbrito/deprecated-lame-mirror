@@ -231,7 +231,9 @@ CC_OPTS = $(CC_OPTS) /W$(WARN)
 CC_OPTS = $(CC_OPTS) /DFLOAT8=float /DREAL_IS_FLOAT=1
 !	ENDIF
 
-CC_OPTS = $(CC_OPTS) /DNDEBUG /MT
+# temporary remove NDEBUG, see configure.in
+#CC_OPTS = $(CC_OPTS) /DNDEBUG /MT
+CC_OPTS = $(CC_OPTS) /MT
 
 LN_OPTS = /nologo /pdb:none
 LN_DLL = /nologo /DLL

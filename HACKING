@@ -43,7 +43,7 @@ lame_encode_frame_mp3():
 ************************************************************************
 ADDING NEW OPTIONS
 
-control variable goes in lame_global_flags sturct.
+control variable goes in lame_global_flags struct.
 Assume the variable is called 'new_variable'.
 
 You also need to write (in set_get.c):
@@ -70,7 +70,7 @@ THREADSAFE:
 
 Lame should now be thread safe and re-entrant. 
 The only problem seems to be some OS's allocate small
-stacks (< 128K) to threads launched by applictions, and this
+stacks (< 128K) to threads launched by applications, and this
 is not enough for LAME.  Fix is to increase the stack space,
 or move some of our automatic variables onto the heap with
 by using bug-prove malloc()'s and free().
@@ -81,11 +81,11 @@ by using bug-prove malloc()'s and free().
 Global Variables:
 
 There are two types of global variables.  All data in
-both strucs is initialized to zero.
+both structs is initialized to zero.
 
 1. lame_global_flags *gfp
 
-These are input paramters which are set by the calling program,
+These are input parameters which are set by the calling program,
 and some information which the calling program may be interested in.
 
 This struct instantiated by the call to lame_init().  
@@ -99,7 +99,7 @@ All internal data not set by the user.  All 'static' data from
 old non-reentrant code should be moved here.
 
 Defined in util.h.  Data for which the size is known
-in advace should be explicitly declaired (for example,
+in advance should be explicitly declaired (for example,
 float xr[576]);  Data which needs to be malloc'd is
 handled by:  
 
