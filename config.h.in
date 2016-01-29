@@ -1,7 +1,9 @@
 /* config.h.in.  Generated from configure.in by autoheader.  */
 
+
 #ifndef LAME_CONFIG_H
 #define LAME_CONFIG_H
+
 
 /* debug define */
 #undef ABORTFP
@@ -192,7 +194,7 @@
 /* Define to 1 if you have the <unistd.h> header file. */
 #undef HAVE_UNISTD_H
 
-/* Define to 1 if you have the <xmmintrin.h> header file. */
+/* Define if SSE intrinsics work. */
 #undef HAVE_XMMINTRIN_H
 
 /* Define as const if the declaration of iconv() needs const. */
@@ -204,15 +206,11 @@
 /* set to 1 if you have libsndfile */
 #undef LIBSNDFILE
 
-/* Define to the sub-directory in which libtool stores uninstalled libraries.
-   */
+/* Define to the sub-directory where libtool stores uninstalled libraries. */
 #undef LT_OBJDIR
 
 /* use MMX version of choose_table */
 #undef MMX_choose_table
-
-/* no debug build */
-#undef NDEBUG
 
 /* build without hooks for analyzer */
 #undef NOANALYSIS
@@ -237,9 +235,6 @@
 
 /* Define to the version of this package. */
 #undef PACKAGE_VERSION
-
-/* Define to 1 if the C compiler supports function prototypes. */
-#undef PROTOTYPES
 
 /* The size of `double', as computed by sizeof. */
 #undef SIZEOF_DOUBLE
@@ -334,6 +329,11 @@
 # endif
 #endif
 
+/* Enable large inode numbers on Mac OS X 10.5.  */
+#ifndef _DARWIN_USE_64_BIT_INODE
+# define _DARWIN_USE_64_BIT_INODE 1
+#endif
+
 /* Number of bits in a file offset, on hosts where this is settable. */
 #undef _FILE_OFFSET_BITS
 
@@ -355,9 +355,6 @@
 
 /* work around a glibc bug */
 #undef __NO_MATH_INLINES
-
-/* Define like PROTOTYPES; this can be used by system headers. */
-#undef __PROTOTYPES
 
 /* Define to empty if `const' does not conform to ANSI C. */
 #undef const
