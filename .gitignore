@@ -1,0 +1,15 @@
+.deps*
+*.o
+*.lo
+*.la
+.libs*
+Makefile
+config.log
+config.status
+frontend/lame
+libtool
+stamp-h1
+.git
+.hg*
+config.h
+lame.spec
