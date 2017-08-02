@@ -445,12 +445,8 @@ on_pe(lame_internal_flags * gfc, const FLOAT pe[][2], int targ_bits[2], int mean
          * allocate bits for each channel 
          ******************************************************************/
         targ_bits[ch] = Min(MAX_BITS_PER_CHANNEL, tbits / cfg->channels_out);
-        if (cbr) {
-            add_bits[ch] = targ_bits[ch] * pe[gr][ch] / 700.0 - targ_bits[ch];
-        }
-        else {
-            add_bits[ch] = targ_bits[ch] * pe[gr][ch] / 1800.0;
-        }
+
+        add_bits[ch] = targ_bits[ch] * pe[gr][ch] / 700.0 - targ_bits[ch];
 
         /* at most increase bits by 1.5*average */
         if (add_bits[ch] > mean_bits * 3 / 4)
